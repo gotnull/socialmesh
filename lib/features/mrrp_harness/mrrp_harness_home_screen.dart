@@ -292,11 +292,20 @@ class _StatusRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final iconColor = valueColor ?? context.accentColor;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing4),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: context.textTertiary),
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(AppTheme.radius8),
+            ),
+            child: Icon(icon, size: 14, color: iconColor),
+          ),
           const SizedBox(width: AppTheme.spacing12),
           Text(
             label,

@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../providers/mrrp_providers.dart';
 import '../../../services/protocol/sip/mrrp_codec.dart';
+import '../../../core/logging.dart';
 import '../../../services/protocol/sip/mrrp_constants.dart';
 import '../../../services/protocol/sip/mrrp_frame.dart';
 import '../../../services/protocol/sip/mrrp_messages_advert.dart';
@@ -598,7 +599,12 @@ QaScenario _simPeerRoundTrip() {
         verify: (ref) async {
           if (ref == null) return false;
           final engine = ref.read(mrrpEngineProvider);
-          if (engine == null) return false;
+          if (engine == null) {
+            AppLogging.mrrpHarness(
+              'MRRP_QA: step3 FAIL — engine is null', // lint-allow: hardcoded-string
+            );
+            return false;
+          }
 
           final payload = Uint8List.fromList([0xDE, 0xAD, 0xBE, 0xEF]);
           final request = MrrpFrame(
@@ -614,10 +620,30 @@ QaScenario _simPeerRoundTrip() {
             payload: payload,
           );
 
-          final result = await engine.sendRequest(request);
-          return result.isSuccess &&
-              result.response != null &&
-              result.response!.payload.length == payload.length;
+          try {
+            final result = await engine.sendRequest(request);
+            final passed =
+                result.isSuccess &&
+                result.response != null &&
+                result.response!.payload.length == payload.length;
+
+            if (!passed) {
+              AppLogging.mrrpHarness(
+                'MRRP_QA: step3 FAIL — '
+                'isSuccess=${result.isSuccess}, '
+                'status=${result.status.name}, '
+                'hasResponse=${result.response != null}, '
+                'responsePayloadLen=${result.response?.payload.length}, '
+                'expectedPayloadLen=${payload.length}', // lint-allow: hardcoded-string
+              );
+            }
+            return passed;
+          } on Object catch (e) {
+            AppLogging.mrrpHarness(
+              'MRRP_QA: step3 EXCEPTION — $e', // lint-allow: hardcoded-string
+            );
+            return false;
+          }
         },
       ),
       QaStep(

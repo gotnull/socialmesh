@@ -231,27 +231,43 @@ class _FlagChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final chipColor = _flagColor(label);
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppTheme.spacing8,
         vertical: 3,
       ),
       decoration: BoxDecoration(
-        color: context.textPrimary.withValues(alpha: 0.08),
+        color: chipColor.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(AppTheme.radius8),
         border: Border.all(
-          color: context.border.withValues(alpha: 0.3),
+          color: chipColor.withValues(alpha: 0.25),
           width: 0.5,
         ),
       ),
       child: Text(
         label,
         style: TextStyle(
-          color: context.textSecondary,
+          color: chipColor,
           fontSize: 11,
-          fontWeight: FontWeight.w500,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.2,
         ),
       ),
     );
+  }
+
+  static Color _flagColor(String label) {
+    return switch (label) {
+      'request' => AccentColors.teal, // lint-allow: hardcoded-string
+      'response' => AccentColors.indigo, // lint-allow: hardcoded-string
+      'handshake' => AccentColors.orange, // lint-allow: hardcoded-string
+      'identity' => AccentColors.purple, // lint-allow: hardcoded-string
+      'cached' => AccentColors.yellow, // lint-allow: hardcoded-string
+      'test' => SemanticColors.muted, // lint-allow: hardcoded-string
+      'ephemeral' => AccentColors.pink, // lint-allow: hardcoded-string
+      'visible' => SemanticColors.success, // lint-allow: hardcoded-string
+      _ => SemanticColors.muted,
+    };
   }
 }

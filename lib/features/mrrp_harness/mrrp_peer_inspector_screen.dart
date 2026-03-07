@@ -81,6 +81,47 @@ class _MrrpPeerInspectorScreenState
                 ),
               ]
             : [
+                // Info card
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppTheme.spacing16,
+                      AppTheme.spacing8,
+                      AppTheme.spacing16,
+                      AppTheme.spacing4,
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.all(AppTheme.spacing12),
+                      decoration: BoxDecoration(
+                        color: context.accentColor.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
+                        border: Border.all(
+                          color: context.accentColor.withValues(alpha: 0.2),
+                          width: 0.5,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            size: 20,
+                            color: context.accentColor,
+                          ),
+                          const SizedBox(width: AppTheme.spacing8),
+                          Expanded(
+                            child: Text(
+                              l10n.mrrpHarnessPeerInspectorInfoText,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: context.textSecondary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppTheme.spacing16,

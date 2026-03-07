@@ -8,6 +8,7 @@ import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/animations.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/section_header.dart';
 import '../../services/haptic_service.dart';
@@ -43,9 +44,15 @@ class _MrrpQaRunnerScreenState extends ConsumerState<MrrpQaRunnerScreen>
 
     for (var i = 0; i < scenario.steps.length; i++) {
       final step = scenario.steps[i];
-      final passed = await step.verify(ref);
+      bool passed;
+      try {
+        passed = await step.verify(ref);
+      } on Object catch (e) {
+        passed = false;
+        step.actualOutcome = 'Exception: $e'; // lint-allow: hardcoded-string
+      }
       step.status = passed ? QaStepStatus.pass : QaStepStatus.fail;
-      step.actualOutcome = passed
+      step.actualOutcome ??= passed
           ? step.expectedOutcome
           : 'Verification failed'; // lint-allow: hardcoded-string
 
@@ -208,20 +215,32 @@ class _ScenarioTileState extends State<_ScenarioTile> {
                   // Header row: name + pass/fail badge + run button
                   Row(
                     children: [
-                      if (hasRun)
-                        Icon(
-                          s.passed ? Icons.check_circle : Icons.cancel,
-                          size: 20,
-                          color: s.passed
-                              ? SemanticColors.success
-                              : SemanticColors.error,
-                        )
-                      else
-                        Icon(
-                          Icons.pending_outlined,
-                          size: 20,
-                          color: context.textTertiary,
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: hasRun
+                              ? (s.passed
+                                        ? SemanticColors.success
+                                        : SemanticColors.error)
+                                    .withValues(alpha: 0.12)
+                              : context.textTertiary.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(AppTheme.radius8),
                         ),
+                        child: hasRun
+                            ? Icon(
+                                s.passed ? Icons.check_circle : Icons.cancel,
+                                size: 18,
+                                color: s.passed
+                                    ? SemanticColors.success
+                                    : SemanticColors.error,
+                              )
+                            : Icon(
+                                Icons.pending_outlined,
+                                size: 18,
+                                color: context.textTertiary,
+                              ),
+                      ),
                       const SizedBox(width: AppTheme.spacing8),
                       Expanded(
                         child: Column(
@@ -268,9 +287,28 @@ class _ScenarioTileState extends State<_ScenarioTile> {
                           ),
                         ),
                       const SizedBox(width: AppTheme.spacing8),
-                      TextButton(
-                        onPressed: widget.onRun,
-                        child: Text(l10n.mrrpHarnessQaRunScenario),
+                      BouncyTap(
+                        onTap: widget.onRun,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppTheme.spacing12,
+                            vertical: AppTheme.spacing6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: context.accentColor.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius8,
+                            ),
+                          ),
+                          child: Text(
+                            l10n.mrrpHarnessQaRunScenario,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: context.accentColor,
+                            ),
+                          ),
+                        ),
                       ),
                       Icon(
                         _expanded ? Icons.expand_less : Icons.expand_more,
@@ -330,18 +368,29 @@ class _StepRow extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppTheme.spacing4),
+      padding: const EdgeInsets.only(bottom: AppTheme.spacing6),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '$index.',
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: context.textTertiary,
-              fontWeight: FontWeight.w600,
+          Container(
+            width: 20,
+            height: 20,
+            decoration: BoxDecoration(
+              color: statusColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(AppTheme.radius4),
+            ),
+            child: Center(
+              child: Text(
+                '$index',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: statusColor,
+                ),
+              ),
             ),
           ),
-          const SizedBox(width: AppTheme.spacing4),
+          const SizedBox(width: AppTheme.spacing8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

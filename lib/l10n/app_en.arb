@@ -40927,6 +40927,70 @@
     "@mrrpHarnessTrafficFilterService": {
         "description": "Filter label for service in traffic console."
     },
+    "mrrpHarnessTrafficFilterAll": "All",
+    "@mrrpHarnessTrafficFilterAll": {
+        "description": "Filter chip label showing all traffic events (no filter)."
+    },
+    "mrrpHarnessTrafficFilterRequest": "Request",
+    "@mrrpHarnessTrafficFilterRequest": {
+        "description": "Filter chip for MRRP request messages."
+    },
+    "mrrpHarnessTrafficFilterResponse": "Response",
+    "@mrrpHarnessTrafficFilterResponse": {
+        "description": "Filter chip for MRRP response messages."
+    },
+    "mrrpHarnessTrafficFilterError": "Error",
+    "@mrrpHarnessTrafficFilterError": {
+        "description": "Filter chip for MRRP error messages."
+    },
+    "mrrpHarnessTrafficFilterCancel": "Cancel",
+    "@mrrpHarnessTrafficFilterCancel": {
+        "description": "Filter chip for MRRP cancel messages."
+    },
+    "mrrpHarnessTrafficFilterAdvert": "Advert",
+    "@mrrpHarnessTrafficFilterAdvert": {
+        "description": "Filter chip for MRRP service advert messages."
+    },
+    "mrrpHarnessTrafficFilterDirReq": "Dir Req",
+    "@mrrpHarnessTrafficFilterDirReq": {
+        "description": "Filter chip for MRRP service directory request messages."
+    },
+    "mrrpHarnessTrafficFilterDirResp": "Dir Resp",
+    "@mrrpHarnessTrafficFilterDirResp": {
+        "description": "Filter chip for MRRP service directory response messages."
+    },
+    "mrrpHarnessTrafficSearchHint": "Search events...",
+    "@mrrpHarnessTrafficSearchHint": {
+        "description": "Hint text for the search field in traffic console."
+    },
+    "mrrpHarnessComposerInfoText": "Select a discovered peer, service, and action to compose an MRRP request frame. The payload field accepts raw hex bytes.",
+    "@mrrpHarnessComposerInfoText": {
+        "description": "Info card text explaining the request composer."
+    },
+    "mrrpHarnessComposerSectionTarget": "TARGET",
+    "@mrrpHarnessComposerSectionTarget": {
+        "description": "Section header for target peer/service/action selection."
+    },
+    "mrrpHarnessComposerSectionPayload": "PAYLOAD",
+    "@mrrpHarnessComposerSectionPayload": {
+        "description": "Section header for payload and TTL configuration."
+    },
+    "mrrpHarnessSimLabInfoText": "Create virtual MRRP peers for testing. Each peer advertises echo.test and can simulate different response modes including delays, errors, and malformed data.",
+    "@mrrpHarnessSimLabInfoText": {
+        "description": "Info card text explaining the simulated peer lab."
+    },
+    "mrrpHarnessResponseSectionRequest": "REQUEST",
+    "@mrrpHarnessResponseSectionRequest": {
+        "description": "Section header for request details in response viewer."
+    },
+    "mrrpHarnessResponseSectionResult": "RESULT",
+    "@mrrpHarnessResponseSectionResult": {
+        "description": "Section header for result details in response viewer."
+    },
+    "mrrpHarnessPeerInspectorInfoText": "Discovered peers advertising MRRP services over SIP. Expand a peer to view its service directory and test requests.",
+    "@mrrpHarnessPeerInspectorInfoText": {
+        "description": "Info card text explaining the peer inspector."
+    },
     "mrrpHarnessTrafficCopy": "Copy event",
     "@mrrpHarnessTrafficCopy": {
         "description": "Action to copy a traffic event to clipboard."

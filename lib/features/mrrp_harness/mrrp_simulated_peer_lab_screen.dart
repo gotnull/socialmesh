@@ -93,6 +93,47 @@ class MrrpSimulatedPeerLabScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
+                // Info card
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.spacing16,
+                  ),
+                  sliver: SliverToBoxAdapter(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: context.accentColor.withAlpha(20),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
+                        border: Border.all(
+                          color: context.accentColor.withAlpha(50),
+                        ),
+                      ),
+                      padding: const EdgeInsets.all(AppTheme.spacing16),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            color: context.accentColor,
+                            size: 20,
+                          ),
+                          const SizedBox(width: AppTheme.spacing12),
+                          Expanded(
+                            child: Text(
+                              l10n.mrrpHarnessSimLabInfoText,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: context.textSecondary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SliverPadding(
+                  padding: EdgeInsets.only(bottom: AppTheme.spacing32),
+                ),
               ],
       ),
     );
@@ -364,12 +405,9 @@ class _SimPeerCard extends ConsumerWidget {
                     vertical: AppTheme.spacing4,
                   ),
                   decoration: BoxDecoration(
-                    color: context.card,
-                    borderRadius: BorderRadius.circular(AppTheme.radius12),
-                    border: Border.all(
-                      color: context.border.withValues(alpha: 0.5),
-                      width: 0.5,
-                    ),
+                    color: context.background,
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
+                    border: Border.all(color: context.border),
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<MrrpStatusCode>(
@@ -378,10 +416,8 @@ class _SimPeerCard extends ConsumerWidget {
                       dropdownColor: context.card,
                       style: TextStyle(
                         fontSize: 14,
-                        fontWeight: FontWeight.w500,
                         color: context.textPrimary,
                       ),
-                      iconEnabledColor: context.textSecondary,
                       items:
                           <MrrpStatusCode>[
                                 MrrpStatusCode.busy,

@@ -153,8 +153,12 @@ class _DetailChip extends StatelessWidget {
         vertical: 2,
       ),
       decoration: BoxDecoration(
-        color: chipColor.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(AppTheme.radius4),
+        color: chipColor.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
+        border: Border.all(
+          color: chipColor.withValues(alpha: 0.25),
+          width: 0.5,
+        ),
       ),
       child: Text(
         label,
@@ -162,7 +166,8 @@ class _DetailChip extends StatelessWidget {
           color: chipColor,
           fontFamily: AppTheme.fontFamily,
           fontSize: 10,
-          fontWeight: FontWeight.w500,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.2,
         ),
       ),
     );

@@ -30522,6 +30522,57 @@ class AppLocalizationsRu extends AppLocalizations {
   String get mrrpHarnessTrafficFilterService => 'Filter by service';
 
   @override
+  String get mrrpHarnessTrafficFilterAll => 'All';
+
+  @override
+  String get mrrpHarnessTrafficFilterRequest => 'Request';
+
+  @override
+  String get mrrpHarnessTrafficFilterResponse => 'Response';
+
+  @override
+  String get mrrpHarnessTrafficFilterError => 'Error';
+
+  @override
+  String get mrrpHarnessTrafficFilterCancel => 'Cancel';
+
+  @override
+  String get mrrpHarnessTrafficFilterAdvert => 'Advert';
+
+  @override
+  String get mrrpHarnessTrafficFilterDirReq => 'Dir Req';
+
+  @override
+  String get mrrpHarnessTrafficFilterDirResp => 'Dir Resp';
+
+  @override
+  String get mrrpHarnessTrafficSearchHint => 'Search events...';
+
+  @override
+  String get mrrpHarnessComposerInfoText =>
+      'Select a discovered peer, service, and action to compose an MRRP request frame. The payload field accepts raw hex bytes.';
+
+  @override
+  String get mrrpHarnessComposerSectionTarget => 'TARGET';
+
+  @override
+  String get mrrpHarnessComposerSectionPayload => 'PAYLOAD';
+
+  @override
+  String get mrrpHarnessSimLabInfoText =>
+      'Create virtual MRRP peers for testing. Each peer advertises echo.test and can simulate different response modes including delays, errors, and malformed data.';
+
+  @override
+  String get mrrpHarnessResponseSectionRequest => 'REQUEST';
+
+  @override
+  String get mrrpHarnessResponseSectionResult => 'RESULT';
+
+  @override
+  String get mrrpHarnessPeerInspectorInfoText =>
+      'Discovered peers advertising MRRP services over SIP. Expand a peer to view its service directory and test requests.';
+
+  @override
   String get mrrpHarnessTrafficCopy => 'Copy event';
 
   @override

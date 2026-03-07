@@ -77,11 +77,24 @@ class _MrrpResponseViewerScreenState extends State<MrrpResponseViewerScreen> {
           sliver: SliverList(
             delegate: SliverChildListDelegate([
               // Request info
+              // REQUEST section header
+              Padding(
+                padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
+                child: Text(
+                  l10n.mrrpHarnessResponseSectionRequest,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: context.textTertiary,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ),
               Container(
                 padding: const EdgeInsets.all(AppTheme.spacing16),
                 decoration: BoxDecoration(
                   color: context.card,
-                  borderRadius: BorderRadius.circular(AppTheme.radius16),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                   border: Border.all(
                     color: context.border.withValues(alpha: 0.5),
                     width: 0.5,
@@ -121,7 +134,31 @@ class _MrrpResponseViewerScreenState extends State<MrrpResponseViewerScreen> {
                   ),
                 ),
               ] else ...[
-                _buildResultSection(context),
+                // RESULT section header
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
+                  child: Text(
+                    l10n.mrrpHarnessResponseSectionResult,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: context.textTertiary,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.all(AppTheme.spacing16),
+                  decoration: BoxDecoration(
+                    color: context.card,
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
+                    border: Border.all(
+                      color: context.border.withValues(alpha: 0.5),
+                      width: 0.5,
+                    ),
+                  ),
+                  child: _buildResultSection(context),
+                ),
               ],
             ]),
           ),
@@ -265,10 +302,20 @@ class _InfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dotColor = valueColor ?? context.accentColor;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing4),
       child: Row(
         children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(
+              color: dotColor.withValues(alpha: 0.5),
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: AppTheme.spacing8),
           Text(
             label,
             style: Theme.of(

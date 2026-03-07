@@ -53884,6 +53884,102 @@ abstract class AppLocalizations {
   /// **'Filter by service'**
   String get mrrpHarnessTrafficFilterService;
 
+  /// Filter chip label showing all traffic events (no filter).
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get mrrpHarnessTrafficFilterAll;
+
+  /// Filter chip for MRRP request messages.
+  ///
+  /// In en, this message translates to:
+  /// **'Request'**
+  String get mrrpHarnessTrafficFilterRequest;
+
+  /// Filter chip for MRRP response messages.
+  ///
+  /// In en, this message translates to:
+  /// **'Response'**
+  String get mrrpHarnessTrafficFilterResponse;
+
+  /// Filter chip for MRRP error messages.
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get mrrpHarnessTrafficFilterError;
+
+  /// Filter chip for MRRP cancel messages.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get mrrpHarnessTrafficFilterCancel;
+
+  /// Filter chip for MRRP service advert messages.
+  ///
+  /// In en, this message translates to:
+  /// **'Advert'**
+  String get mrrpHarnessTrafficFilterAdvert;
+
+  /// Filter chip for MRRP service directory request messages.
+  ///
+  /// In en, this message translates to:
+  /// **'Dir Req'**
+  String get mrrpHarnessTrafficFilterDirReq;
+
+  /// Filter chip for MRRP service directory response messages.
+  ///
+  /// In en, this message translates to:
+  /// **'Dir Resp'**
+  String get mrrpHarnessTrafficFilterDirResp;
+
+  /// Hint text for the search field in traffic console.
+  ///
+  /// In en, this message translates to:
+  /// **'Search events...'**
+  String get mrrpHarnessTrafficSearchHint;
+
+  /// Info card text explaining the request composer.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a discovered peer, service, and action to compose an MRRP request frame. The payload field accepts raw hex bytes.'**
+  String get mrrpHarnessComposerInfoText;
+
+  /// Section header for target peer/service/action selection.
+  ///
+  /// In en, this message translates to:
+  /// **'TARGET'**
+  String get mrrpHarnessComposerSectionTarget;
+
+  /// Section header for payload and TTL configuration.
+  ///
+  /// In en, this message translates to:
+  /// **'PAYLOAD'**
+  String get mrrpHarnessComposerSectionPayload;
+
+  /// Info card text explaining the simulated peer lab.
+  ///
+  /// In en, this message translates to:
+  /// **'Create virtual MRRP peers for testing. Each peer advertises echo.test and can simulate different response modes including delays, errors, and malformed data.'**
+  String get mrrpHarnessSimLabInfoText;
+
+  /// Section header for request details in response viewer.
+  ///
+  /// In en, this message translates to:
+  /// **'REQUEST'**
+  String get mrrpHarnessResponseSectionRequest;
+
+  /// Section header for result details in response viewer.
+  ///
+  /// In en, this message translates to:
+  /// **'RESULT'**
+  String get mrrpHarnessResponseSectionResult;
+
+  /// Info card text explaining the peer inspector.
+  ///
+  /// In en, this message translates to:
+  /// **'Discovered peers advertising MRRP services over SIP. Expand a peer to view its service directory and test requests.'**
+  String get mrrpHarnessPeerInspectorInfoText;
+
   /// Action to copy a traffic event to clipboard.
   ///
   /// In en, this message translates to:
