@@ -136,7 +136,7 @@ class MrrpEngine {
       'service=${frame.serviceName}', // lint-allow: hardcoded-string
     );
 
-    _routeFrame(frame, senderNodeId);
+    _routeFrame(frame, senderNodeId, sipPayload.length);
   }
 
   /// Record a traffic event for the harness console.
@@ -162,13 +162,13 @@ class MrrpEngine {
     );
   }
 
-  void _routeFrame(MrrpFrame frame, int senderNodeId) {
+  void _routeFrame(MrrpFrame frame, int senderNodeId, int frameSizeBytes) {
     // Record inbound traffic event.
     _recordTraffic(
       'RX', // lint-allow: hardcoded-string
       frame,
       peerNodeId: senderNodeId,
-      sizeBytes: MrrpCodec.encode(frame)?.length ?? 0,
+      sizeBytes: frameSizeBytes,
     );
 
     switch (frame.msgType) {

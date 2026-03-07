@@ -97,6 +97,8 @@ class MrrpDispatcher {
   ///
   /// Returns a RESPONSE or ERROR frame to be sent back to the requester.
   Future<MrrpFrame> dispatch(MrrpFrame request, int senderNodeId) async {
+    counters?.recordRequestReceived(serviceId: request.serviceId);
+
     final handler = _registry.getHandler(request.serviceId);
 
     if (handler == null) {
@@ -105,6 +107,7 @@ class MrrpDispatcher {
         'service=0x${request.serviceId.toRadixString(16).padLeft(8, '0')} '
         '-> NOT_FOUND', // lint-allow: hardcoded-string
       );
+      counters?.recordErrorSent();
       return _buildError(request, MrrpStatusCode.notFound);
     }
 
@@ -115,6 +118,7 @@ class MrrpDispatcher {
         'action=0x${request.actionId.toRadixString(16)} '
         '-> UNSUPPORTED', // lint-allow: hardcoded-string
       );
+      counters?.recordErrorSent();
       return _buildError(request, MrrpStatusCode.unsupported);
     }
 
@@ -124,8 +128,6 @@ class MrrpDispatcher {
       'action=0x${request.actionId.toRadixString(16).padLeft(4, '0')} '
       '-> handler found', // lint-allow: hardcoded-string
     );
-
-    counters?.recordRequestReceived(serviceId: request.serviceId);
 
     try {
       final response = await handler.handleRequest(request, senderNodeId);
@@ -251,9 +253,12 @@ class MrrpDispatcher {
     pending.timeoutTimer?.cancel();
     final latency = DateTime.now().difference(pending.sentAt);
 
+    final statusTlv = frame.isError
+        ? frame.findExtension(MrrpTlvType.statusCode)
+        : null;
+
     MrrpStatusCode status;
     if (frame.isError) {
-      final statusTlv = frame.findExtension(MrrpTlvType.statusCode);
       final statusCode = statusTlv != null && statusTlv.value.isNotEmpty
           ? MrrpStatusCode.fromCode(statusTlv.value[0])
           : null;
@@ -271,11 +276,9 @@ class MrrpDispatcher {
     );
 
     if (frame.isError) {
-      final statusTlvForCounter = frame.findExtension(MrrpTlvType.statusCode);
       counters?.recordErrorReceived(
-        statusCode:
-            statusTlvForCounter != null && statusTlvForCounter.value.isNotEmpty
-            ? statusTlvForCounter.value[0]
+        statusCode: statusTlv != null && statusTlv.value.isNotEmpty
+            ? statusTlv.value[0]
             : null,
       );
     } else {

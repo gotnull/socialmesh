@@ -200,7 +200,7 @@ class MrrpSimPeersNotifier extends Notifier<List<MrrpSimulatedPeer>> {
   void updateMode(String simId, SimResponseMode mode) {
     state = [
       for (final p in state)
-        if (p.simId == simId) ...[p..mode = mode] else p,
+        if (p.simId == simId) p..mode = mode else p,
     ];
   }
 
@@ -208,7 +208,7 @@ class MrrpSimPeersNotifier extends Notifier<List<MrrpSimulatedPeer>> {
   void updateDelay(String simId, int seconds) {
     state = [
       for (final p in state)
-        if (p.simId == simId) ...[p..delaySeconds = seconds] else p,
+        if (p.simId == simId) p..delaySeconds = seconds else p,
     ];
   }
 
@@ -216,7 +216,7 @@ class MrrpSimPeersNotifier extends Notifier<List<MrrpSimulatedPeer>> {
   void updateErrorStatus(String simId, MrrpStatusCode status) {
     state = [
       for (final p in state)
-        if (p.simId == simId) ...[p..errorStatus = status] else p,
+        if (p.simId == simId) p..errorStatus = status else p,
     ];
   }
 

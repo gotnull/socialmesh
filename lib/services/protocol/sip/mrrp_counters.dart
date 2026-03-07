@@ -277,6 +277,7 @@ class MrrpCounters {
     lastAdvertSent = null;
     lastAdvertReceived = null;
     _latencies.clear();
+    _notify();
   }
 }
 
