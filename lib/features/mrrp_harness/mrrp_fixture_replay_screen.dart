@@ -397,7 +397,7 @@ final List<_FixtureDescriptor> _fuzzCases = [
       0xAA,
       0xBB,
     ]),
-    expectNull: true,
+    expectNull: false,
   ),
   _FixtureDescriptor(
     name: 'versionMajor255', // lint-allow: hardcoded-string

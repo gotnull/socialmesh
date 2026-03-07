@@ -227,9 +227,16 @@ final mrrpEngineProvider = Provider<MrrpEngine?>((ref) {
 });
 
 /// All cached advert services (from remote peers), keyed by node ID.
+///
+/// Watches [mrrpEngineProvider] to ensure the engine is created and attached
+/// to the protocol service before reading cached services. Without this
+/// dependency the engine never starts, send callbacks are never wired,
+/// and incoming SERVICE_ADVERT frames are silently dropped.
 final mrrpCachedServicesProvider = Provider<Map<int, List<MrrpCachedService>>>((
   ref,
 ) {
+  // Ensure the engine is created, attached, and running.
+  ref.watch(mrrpEngineProvider);
   ref.watch(mrrpAdvertEpochProvider);
   final advertEngine = ref.watch(mrrpAdvertEngineProvider);
   return advertEngine?.getAllCachedServices() ?? {};
