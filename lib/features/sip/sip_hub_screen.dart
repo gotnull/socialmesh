@@ -64,6 +64,7 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
   Timer? _autoScanTimer;
   Timer? _scanTimeoutTimer;
   int _scanStartEpoch = -1;
+  String _lastLogSignature = '';
 
   /// Continuous rotation controller for the radar icon when auto-scan is on.
   late final AnimationController _radarController;
@@ -248,10 +249,16 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
     // Stop scanning indicator when peers arrive (epoch bumps).
     if (_scanning) _checkScanComplete(peerEpoch);
 
-    AppLogging.sip(
-      'SIP_HUB: build — enabled=$sipEnabled, peers=$peerCount, '
-      'sessions=${sessions.length}',
-    );
+    // Deduplicate identical log lines across rebuilds.
+    final sig =
+        '$sipEnabled|$peerCount|${sessions.length}'; // lint-allow: hardcoded-string
+    if (sig != _lastLogSignature) {
+      _lastLogSignature = sig;
+      AppLogging.sip(
+        'SIP_HUB: build — enabled=$sipEnabled, peers=$peerCount, '
+        'sessions=${sessions.length}', // lint-allow: hardcoded-string
+      );
+    }
 
     // Filter out peers that already have an active DM session —
     // those appear under Conversations only (issue 3).
