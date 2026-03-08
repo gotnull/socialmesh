@@ -487,6 +487,21 @@ class ProtocolService {
     }
   }
 
+  /// Clear both startup buffers, discarding any undelivered frames.
+  ///
+  /// Called by [start] to ensure stale frames from a prior BLE session cannot
+  /// be replayed to a new session's [SipDiscovery] or [MrrpEngine].
+  void _clearStartupBuffers() {
+    if (_sipStartupBuffer.isNotEmpty || _mrrpStartupBuffer.isNotEmpty) {
+      AppLogging.sip(
+        'SIP_STARTUP: discarding ${_sipStartupBuffer.length} SIP + '
+        '${_mrrpStartupBuffer.length} MRRP buffered frames (new session)',
+      );
+    }
+    _sipStartupBuffer.clear();
+    _mrrpStartupBuffer.clear();
+  }
+
   /// Drain frames buffered before [SipDiscovery] was attached.
   void _drainSipStartupBuffer() {
     if (_sipStartupBuffer.isEmpty) return;
@@ -498,6 +513,7 @@ class ProtocolService {
     for (final item in buffered) {
       _handleSipPacket(item.packet, item.payload);
     }
+    AppLogging.sip('SIP_STARTUP: drain complete');
   }
 
   /// Attach a SipHandshakeManager for inbound handshake frames.
@@ -555,6 +571,7 @@ class ProtocolService {
     for (final item in buffered) {
       _handleMrrpPacket(item.senderNodeId, item.frame);
     }
+    AppLogging.mrrp('MRRP_STARTUP: drain complete');
   }
 
   /// Callback invoked when an identity claim is verified, for NodeDex bridging.
@@ -974,6 +991,10 @@ class ProtocolService {
     _nodes.clear();
     _myNodeNum = null;
     _configurationComplete = false;
+    // Discard any SIP/MRRP frames buffered from a prior BLE session.
+    // Without this, frames from Device A remain in the buffer and are
+    // replayed to Device B's SipDiscovery / MrrpEngine after reconnect.
+    _clearStartupBuffers();
 
     _configCompleter = Completer<void>();
     var waitingForConfig = false; // Track if we're past initial setup
@@ -4291,6 +4312,19 @@ class ProtocolService {
   /// SIP packets are being buffered for later delivery. Exposed for unit tests.
   @visibleForTesting
   int get sipStartupBufferLength => _sipStartupBuffer.length;
+
+  /// Number of MRRP frames currently held in the pre-attachment startup buffer.
+  ///
+  /// Exposed for unit tests.
+  @visibleForTesting
+  int get mrrpStartupBufferLength => _mrrpStartupBuffer.length;
+
+  /// Clear both startup buffers, discarding all buffered frames.
+  ///
+  /// Exposed for unit tests to simulate the BLE reconnect path without
+  /// executing the full async [start] method.
+  @visibleForTesting
+  void clearStartupBuffersForTest() => _clearStartupBuffers();
 
   /// Send a SIP packet and record the TX counter.
   Future<bool> _sendSipAndCount(Uint8List payload, SipMessageType type) async {

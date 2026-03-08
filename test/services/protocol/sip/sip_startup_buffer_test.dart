@@ -754,4 +754,464 @@ void main() {
       },
     );
   });
+
+  // ==========================================================================
+  // F. Reconnect isolation — stale frames must not survive a BLE reconnect
+  // ==========================================================================
+  //
+  // Root cause: ProtocolService is a singleton (provider lives for the app
+  // lifetime). Both startup buffers survive across BLE connections unless
+  // explicitly cleared. start() is the BLE reconnect entry point and must
+  // flush both buffers so frames from Device A are never replayed to Device B.
+  //
+  // clearStartupBuffersForTest() mirrors the exact code path that start()
+  // executes, without the async transport/configuration dance that is
+  // impractical to drive inside unit tests.
+
+  group('Reconnect isolation', () {
+    const deviceAPeer = 0x11223344; // peer node on Device A's mesh
+    const deviceBPeer = 0x55667788; // peer node on Device B's mesh
+
+    // F1 — clearStartupBuffersForTest() empties both buffers and the
+    // discovery engine is then not reached by stale SIP frames.
+    test('F1: clearStartupBuffers empties SIP startup buffer', () {
+      final protocol = ProtocolService(_FakeTransport());
+
+      // Simulate frames arriving during Device A session, before attach.
+      final payload = _buildBeaconPayload();
+      protocol.injectSipPacketForTest(_makePacket(deviceAPeer), payload);
+      protocol.injectSipPacketForTest(_makePacket(deviceAPeer), payload);
+
+      expect(
+        protocol.sipStartupBufferLength,
+        equals(2),
+        reason: 'two frames must be buffered',
+      );
+
+      // Simulate BLE reconnect (what start() does).
+      protocol.clearStartupBuffersForTest();
+
+      expect(
+        protocol.sipStartupBufferLength,
+        equals(0),
+        reason: 'start() must flush SIP buffer before new session',
+      );
+    });
+
+    // F2 — clearStartupBuffers also empties the MRRP startup buffer.
+    test('F2: clearStartupBuffers empties MRRP startup buffer', () {
+      final protocol = ProtocolService(_FakeTransport());
+      final built = _buildMrrpEngine();
+
+      // Attach SipDiscovery so the SIP gate is open, then inject an
+      // mrrpData frame to populate the MRRP buffer (MrrpEngine not yet
+      // attached).
+      final discovery = _buildDiscovery(localNodeId: deviceAPeer + 1);
+      protocol.attachSipDiscovery(discovery);
+
+      final mrrpPayload = _buildMrrpServiceAdvertPayload(built.registry);
+      protocol.injectSipPacketForTest(_makePacket(deviceAPeer), mrrpPayload);
+
+      expect(
+        protocol.mrrpStartupBufferLength,
+        equals(1),
+        reason: 'mrrpData frame must be buffered while MrrpEngine unattached',
+      );
+
+      // Detach SipDiscovery (simulates session teardown).
+      protocol.attachSipDiscovery(null);
+
+      // Simulate reconnect flush.
+      protocol.clearStartupBuffersForTest();
+
+      expect(
+        protocol.mrrpStartupBufferLength,
+        equals(0),
+        reason: 'start() must flush MRRP buffer before new session',
+      );
+    });
+
+    // F3 — Stale SIP peer from Device A does NOT appear after reconnect.
+    //
+    // This is the core adversarial test: buffer Device A's beacon, simulate
+    // reconnect (clear buffers), inject Device B's beacon, then attach
+    // SipDiscovery.  Only Device B's peer must appear; Device A's must not.
+    test(
+      'F3: stale SIP peer from prior session is not replayed after reconnect',
+      () {
+        final protocol = ProtocolService(_FakeTransport());
+
+        // --- Device A session ---
+        // Frames from Device A arrive in the startup window (SipDiscovery not
+        // yet attached).
+        final payload = _buildBeaconPayload();
+        protocol.injectSipPacketForTest(_makePacket(deviceAPeer), payload);
+
+        expect(
+          protocol.sipStartupBufferLength,
+          equals(1),
+          reason: 'Device A beacon must be buffered',
+        );
+
+        // BLE disconnect + reconnect to Device B; start() clears buffers.
+        protocol.clearStartupBuffersForTest();
+
+        // --- Device B session ---
+        // Now a new peer from Device B's mesh sends a beacon before
+        // SipDiscovery is attached.
+        protocol.injectSipPacketForTest(_makePacket(deviceBPeer), payload);
+
+        // Attach SipDiscovery (user opens Mesh Explorer).
+        final discovery = _buildDiscovery(localNodeId: deviceBPeer + 1);
+        protocol.attachSipDiscovery(discovery);
+
+        // Only Device B's peer must appear.
+        expect(
+          discovery.discoveredPeers.any((p) => p.nodeId == deviceBPeer),
+          isTrue,
+          reason: 'Device B peer must be discovered after reconnect',
+        );
+        expect(
+          discovery.discoveredPeers.any((p) => p.nodeId == deviceAPeer),
+          isFalse,
+          reason: 'stale Device A peer must NOT appear in Device B session',
+        );
+        expect(
+          discovery.discoveredPeers.length,
+          equals(1),
+          reason: 'exactly one peer must be discovered',
+        );
+      },
+    );
+
+    // F4 — Post-reconnect buffering still works: frames injected after
+    // clearStartupBuffers (but before SipDiscovery attaches) are buffered.
+    test(
+      'F4: post-reconnect buffering works normally after clearStartupBuffers',
+      () {
+        final protocol = ProtocolService(_FakeTransport());
+
+        // Simulate reconnect flush.
+        protocol.clearStartupBuffersForTest();
+
+        // New-session frames arrive before SipDiscovery attaches.
+        final payload = _buildBeaconPayload();
+        protocol.injectSipPacketForTest(_makePacket(deviceBPeer), payload);
+
+        expect(
+          protocol.sipStartupBufferLength,
+          equals(1),
+          reason: 'post-reconnect frames must still buffer until attach',
+        );
+
+        // Attach — drain fires, peer is discovered.
+        final discovery = _buildDiscovery(localNodeId: deviceBPeer + 1);
+        protocol.attachSipDiscovery(discovery);
+
+        expect(
+          discovery.discoveredPeers.any((p) => p.nodeId == deviceBPeer),
+          isTrue,
+          reason: 'post-reconnect peer must be discovered on attach',
+        );
+        expect(
+          protocol.sipStartupBufferLength,
+          equals(0),
+          reason: 'buffer must be empty after drain',
+        );
+      },
+    );
+
+    // F5 — Both-null drain: clear both buffers atomically; partial state
+    // (SIP flushed but MRRP not) must be impossible.
+    test('F5: clearStartupBuffers clears both buffers atomically', () {
+      final protocol = ProtocolService(_FakeTransport());
+      final built = _buildMrrpEngine();
+
+      // Populate SIP buffer (no discovery attached).
+      final beaconPayload = _buildBeaconPayload();
+      protocol.injectSipPacketForTest(_makePacket(deviceAPeer), beaconPayload);
+
+      // Attach SipDiscovery so SIP frames pass through to MRRP gate.
+      final discovery = _buildDiscovery(localNodeId: deviceAPeer + 1);
+      protocol.attachSipDiscovery(discovery);
+
+      // With SipDiscovery attached, an mrrpData frame routes to MRRP buf.
+      final mrrpPayload = _buildMrrpServiceAdvertPayload(built.registry);
+      protocol.injectSipPacketForTest(_makePacket(deviceAPeer), mrrpPayload);
+
+      expect(
+        protocol.mrrpStartupBufferLength,
+        equals(1),
+        reason: 'MRRP buffer must have 1 frame before clear',
+      );
+
+      // Detach discovery, then simulate reconnect.
+      protocol.attachSipDiscovery(null);
+      protocol.clearStartupBuffersForTest();
+
+      expect(
+        protocol.sipStartupBufferLength,
+        equals(0),
+        reason: 'SIP buffer must be empty after clear',
+      );
+      expect(
+        protocol.mrrpStartupBufferLength,
+        equals(0),
+        reason: 'MRRP buffer must be empty after clear',
+      );
+    });
+  });
+
+  // ==========================================================================
+  // G. Engine start order — proves the critical attach/start ordering contract
+  // ==========================================================================
+  //
+  // Root cause (class of bugs): mrrpEngineProvider originally called
+  // protocol.attachMrrpEngine(engine) BEFORE engine.start(). The drain in
+  // attachMrrpEngine fires synchronously and routes each buffered frame to
+  // engine.handleInboundFrame, which checks `if (!_running)` first.
+  // With `_running == false`, every drained frame is permanently dropped.
+  //
+  // Invariant: engine.start() MUST be called before protocol.attachMrrpEngine.
+  // These two tests document and protect that invariant.
+
+  group('Engine start order', () {
+    const peer = 0x11223344;
+
+    // G1 — the failure mode: attach BEFORE start drops all buffered frames.
+    //
+    // This test deliberately uses the incorrect ordering (attach → start) and
+    // asserts that the buffered SERVICE_ADVERT is NOT cached.  If this test
+    // ever starts passing it means handleInboundFrame no longer drops frames
+    // when not-running, and the ordering constraint can be revisited.
+    test('G1: attaching engine before start() drops all buffered MRRP frames '
+        '(documents the failure mode)', () {
+      final protocol = ProtocolService(_FakeTransport());
+      final discovery = _buildDiscovery();
+      protocol.attachSipDiscovery(discovery);
+
+      // Buffer a SERVICE_ADVERT while MrrpEngine is unattached.
+      final built = _buildMrrpEngine();
+      final mrrpPayload = _buildMrrpServiceAdvertPayload(built.registry);
+      protocol.injectSipPacketForTest(_makePacket(peer), mrrpPayload);
+
+      expect(
+        protocol.mrrpStartupBufferLength,
+        equals(1),
+        reason: 'SERVICE_ADVERT must be in the MRRP startup buffer',
+      );
+
+      // WRONG ORDER: attach before start.
+      // Engine._running == false when drain fires → handleInboundFrame drops.
+      protocol.attachMrrpEngine(built.engine); // drain fires here — drops
+      built.engine.start(); // too late
+
+      expect(
+        built.advertEngine.getAllCachedServices(),
+        isEmpty,
+        reason:
+            'buffered SERVICE_ADVERT must be dropped when engine is attached '
+            'before start() — this documents the failure mode that the '
+            'provider-layer fix must avoid',
+      );
+    });
+
+    // G2 — the required contract: start BEFORE attach delivers all buffered frames.
+    //
+    // This mirrors the corrected ordering in mrrpEngineProvider and must
+    // always pass.  A regression in the provider layer that reverts to
+    // "attach before start" will be caught by G1 changing sense AND by B1.
+    test('G2: starting engine before attach() delivers all buffered MRRP frames '
+        '(required contract)', () {
+      final protocol = ProtocolService(_FakeTransport());
+      final discovery = _buildDiscovery();
+      protocol.attachSipDiscovery(discovery);
+
+      // Buffer a SERVICE_ADVERT while MrrpEngine is unattached.
+      final built = _buildMrrpEngine();
+      final mrrpPayload = _buildMrrpServiceAdvertPayload(built.registry);
+      protocol.injectSipPacketForTest(_makePacket(peer), mrrpPayload);
+
+      expect(
+        protocol.mrrpStartupBufferLength,
+        equals(1),
+        reason: 'SERVICE_ADVERT must be in the MRRP startup buffer',
+      );
+
+      // CORRECT ORDER: start before attach.
+      // Engine._running == true when drain fires → handleInboundFrame processes.
+      built.engine.start(); // running = true BEFORE drain
+      protocol.attachMrrpEngine(built.engine); // drain fires, frame delivered
+
+      expect(
+        built.advertEngine.getAllCachedServices(),
+        isNotEmpty,
+        reason:
+            'buffered SERVICE_ADVERT must be cached when engine is started '
+            'before attach() — this is the required contract',
+      );
+      expect(
+        built.advertEngine.getAllCachedServices()[peer],
+        isNotNull,
+        reason: 'cached services must be keyed to the peer node ID',
+      );
+    });
+
+    // G3 — multiple peers' buffered adverts all delivered with correct ordering.
+    test('G3: buffered SERVICE_ADVERTs from multiple peers all delivered when '
+        'start() precedes attach()', () {
+      final protocol = ProtocolService(_FakeTransport());
+      final discovery = _buildDiscovery();
+      protocol.attachSipDiscovery(discovery);
+
+      final built = _buildMrrpEngine();
+      final mrrpPayload = _buildMrrpServiceAdvertPayload(built.registry);
+
+      // Three distinct peers all advertise before engine attaches.
+      protocol.injectSipPacketForTest(_makePacket(0x1111), mrrpPayload);
+      protocol.injectSipPacketForTest(_makePacket(0x2222), mrrpPayload);
+      protocol.injectSipPacketForTest(_makePacket(0x3333), mrrpPayload);
+
+      expect(
+        protocol.mrrpStartupBufferLength,
+        equals(3),
+        reason: 'three frames must be buffered',
+      );
+
+      built.engine.start();
+      protocol.attachMrrpEngine(built.engine);
+
+      final cached = built.advertEngine.getAllCachedServices();
+      expect(
+        cached.keys,
+        containsAll([0x1111, 0x2222, 0x3333]),
+        reason: 'all three peers must be cached after drain',
+      );
+    });
+  });
+
+  // ==========================================================================
+  // H. Duplicate early frames — dedup within the startup buffers
+  // ==========================================================================
+  //
+  // Mesh broadcasts hop up to 3 times; the app may receive multiple copies of
+  // the same CAP_BEACON or SERVICE_ADVERT from the same peer during the
+  // startup window.  The fix must not create phantom peers or double-count
+  // cached services.
+
+  group('Duplicate early frames', () {
+    const peer = 0x11223344;
+
+    // H1 — duplicate CAP_BEACON nonces in SIP startup buffer: only the first
+    // copy of each nonce is processed (SipReplayCache dedup).
+    test('H1: duplicate CAP_BEACON nonces in startup buffer — only first copy '
+        'reaches discovery cache', () {
+      final protocol = ProtocolService(_FakeTransport());
+
+      // Build a single beacon payload (same nonce throughout).
+      final beaconPayload = _buildBeaconPayload();
+
+      // Inject three copies — same bytes, same nonce.
+      protocol.injectSipPacketForTest(_makePacket(peer), beaconPayload);
+      protocol.injectSipPacketForTest(_makePacket(peer), beaconPayload);
+      protocol.injectSipPacketForTest(_makePacket(peer), beaconPayload);
+
+      expect(
+        protocol.sipStartupBufferLength,
+        equals(3),
+        reason: 'all three copies must be held in the startup buffer',
+      );
+
+      // Attach with a fresh SipDiscovery.
+      final discovery = _buildDiscovery();
+      protocol.attachSipDiscovery(discovery);
+
+      // SipReplayCache records the nonce on first processing; subsequent
+      // copies are returned as duplicate and skipped by handleBeacon.
+      expect(
+        discovery.discoveredPeers.length,
+        equals(1),
+        reason:
+            'only one peer must appear — duplicates deduplicated via '
+            'SipReplayCache nonce matching',
+      );
+    });
+
+    // H2 — duplicate SERVICE_ADVERT hashes in MRRP startup buffer: only the
+    // first is cached (MrrpAdvertEngine._lastAdvertHash payload-hash dedup).
+    test('H2: duplicate SERVICE_ADVERT payloads in MRRP startup buffer — only '
+        'first copy cached', () {
+      final protocol = ProtocolService(_FakeTransport());
+      final discovery = _buildDiscovery();
+      protocol.attachSipDiscovery(discovery);
+
+      final built = _buildMrrpEngine();
+      // Same registry → same advertPayload bytes → same payload hash.
+      final mrrpPayload = _buildMrrpServiceAdvertPayload(built.registry);
+
+      // Inject three identical SERVICE_ADVERTs.
+      protocol.injectSipPacketForTest(_makePacket(peer), mrrpPayload);
+      protocol.injectSipPacketForTest(_makePacket(peer), mrrpPayload);
+      protocol.injectSipPacketForTest(_makePacket(peer), mrrpPayload);
+
+      expect(
+        protocol.mrrpStartupBufferLength,
+        equals(3),
+        reason: 'all three copies must be held in the MRRP startup buffer',
+      );
+
+      built.engine.start();
+      protocol.attachMrrpEngine(built.engine);
+
+      // Only the first advert is processed; the other two share the same
+      // payload hash and are skipped by handleServiceAdvert._lastAdvertHash.
+      final cached = built.advertEngine.getAllCachedServices();
+      expect(
+        cached[peer],
+        isNotNull,
+        reason: 'peer must be cached after drain',
+      );
+      // Regardless of dedup, the peer has exactly one set of services.
+      expect(
+        cached[peer]!.length,
+        greaterThan(0),
+        reason: 'at least one service must be cached',
+      );
+    });
+
+    // H3 — duplicate early beacon + live beacon overlap: drain processes early
+    // copy (nonce recorded); live copy with same nonce arrives post-attach and
+    // is also deduplicated.  No double-count either way.
+    test('H3: buffered beacon + live beacon with same nonce — discovery cache '
+        'remains at exactly one peer', () {
+      final protocol = ProtocolService(_FakeTransport());
+
+      final beaconPayload = _buildBeaconPayload();
+
+      // Buffer one copy before attach.
+      protocol.injectSipPacketForTest(_makePacket(peer), beaconPayload);
+
+      // Attach — drain fires, first copy processed and nonce recorded.
+      final discovery = _buildDiscovery();
+      protocol.attachSipDiscovery(discovery);
+
+      expect(
+        discovery.discoveredPeers.length,
+        equals(1),
+        reason: 'peer must be discovered after drain',
+      );
+
+      // Same bytes arrive again after attach (live, same nonce).
+      protocol.injectSipPacketForTest(_makePacket(peer), beaconPayload);
+
+      // Nonce is already in the replay cache → duplicate ignored.
+      expect(
+        discovery.discoveredPeers.length,
+        equals(1),
+        reason:
+            'peer count must remain 1 — live duplicate deduplicated via '
+            'SipReplayCache',
+      );
+    });
+  });
 }

@@ -337,12 +337,22 @@ final mrrpEngineProvider = Provider<MrrpEngine?>((ref) {
     ref.read(mrrpTrafficEventsProvider.notifier).add(event);
   };
 
-  // Attach to protocol service.
+  // Start the engine BEFORE attaching to the protocol service.
+  //
+  // CRITICAL ORDER: engine.start() must precede protocol.attachMrrpEngine().
+  // Attachment triggers an immediate synchronous drain of the MRRP startup
+  // buffer (_drainMrrpStartupBuffer). Each drained frame calls
+  // engine.handleInboundFrame(), which checks `if (!_running)` first and
+  // silently drops the frame if the engine is not yet running. Calling
+  // start() after attach means every frame in the startup buffer (e.g.,
+  // SERVICE_ADVERTs received before MrrpEngine was first built) is permanently
+  // dropped — the entire MRRP buffering fix is rendered ineffective.
+  engine.start();
+
+  // Attach to protocol service — drain of any buffered startup frames fires
+  // here. The engine is already running, so handleInboundFrame processes them.
   final protocol = ref.read(protocolServiceProvider);
   protocol.attachMrrpEngine(engine);
-
-  // Auto-start.
-  engine.start();
 
   ref.onDispose(() {
     protocol.attachMrrpEngine(null);
