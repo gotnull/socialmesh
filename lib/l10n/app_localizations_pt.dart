@@ -31121,4 +31121,244 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get mrrpHarnessCountersSimFaults => 'Simulated Faults';
+
+  @override
+  String get meshExplorerTitle => 'Mesh Explorer';
+
+  @override
+  String get meshExplorerDrawerLabel => 'Mesh Explorer';
+
+  @override
+  String get meshExplorerHeroConnected => 'Connected to mesh';
+
+  @override
+  String get meshExplorerHeroDisconnected => 'No radio connected';
+
+  @override
+  String meshExplorerHeroPeersCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count nearby peers',
+      one: '1 nearby peer',
+      zero: 'No nearby peers',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meshExplorerHeroServicesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count services',
+      one: '1 service',
+      zero: 'No services',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshExplorerSectionNearby => 'Nearby';
+
+  @override
+  String get meshExplorerSectionServices => 'Services';
+
+  @override
+  String get meshExplorerSectionBoard => 'Board Activity';
+
+  @override
+  String get meshExplorerEmptyNearbyTitle => 'No nearby peers';
+
+  @override
+  String get meshExplorerEmptyNearbyBody =>
+      'Peers will appear when mesh devices are in range';
+
+  @override
+  String get meshExplorerEmptyServicesTitle => 'No services found';
+
+  @override
+  String get meshExplorerEmptyServicesBody =>
+      'Nearby peers will advertise services here';
+
+  @override
+  String get meshExplorerEmptyBoardTitle => 'No board activity';
+
+  @override
+  String get meshExplorerEmptyBoardBody =>
+      'Board posts from nearby peers will appear here';
+
+  @override
+  String get meshExplorerNotConnectedTitle => 'Radio not connected';
+
+  @override
+  String get meshExplorerNotConnectedBody =>
+      'Connect a Meshtastic radio to discover the mesh around you';
+
+  @override
+  String get meshExplorerPeerAnonymous => 'Nearby peer';
+
+  @override
+  String get meshExplorerPeerHandshaked => 'Handshaked';
+
+  @override
+  String get meshExplorerPeerVerified => 'Verified';
+
+  @override
+  String get meshExplorerPeerPinned => 'Pinned';
+
+  @override
+  String meshExplorerHopCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hops',
+      one: '1 hop',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshExplorerHopCountFar => '3+ hops';
+
+  @override
+  String meshExplorerServiceCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count services',
+      one: '1 service',
+      zero: 'No services',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshExplorerActionHandshake => 'Handshake';
+
+  @override
+  String get meshExplorerActionView => 'View';
+
+  @override
+  String get meshExplorerActionRequestIdentity => 'Request Identity';
+
+  @override
+  String get meshExplorerActionOpenNodeDex => 'Open in NodeDex';
+
+  @override
+  String get meshExplorerActionBlock => 'Block';
+
+  @override
+  String get meshExplorerActionPin => 'Pin Peer';
+
+  @override
+  String get meshExplorerActionUnpin => 'Unpin Peer';
+
+  @override
+  String get meshExplorerPeerDetail => 'Peer Detail';
+
+  @override
+  String get meshExplorerPeerDetailIdentity => 'Identity';
+
+  @override
+  String get meshExplorerPeerDetailServices => 'Available Services';
+
+  @override
+  String get meshExplorerPeerDetailActions => 'Actions';
+
+  @override
+  String get meshExplorerServiceBulletinBoard => 'Bulletin Board';
+
+  @override
+  String get meshExplorerServiceBulletinBoardSub => 'Local mesh posts';
+
+  @override
+  String get meshExplorerServicePeerProfile => 'Peer Profile';
+
+  @override
+  String get meshExplorerServicePeerProfileSub => 'Shared identity info';
+
+  @override
+  String get meshExplorerServiceGeneric => 'Service';
+
+  @override
+  String get meshExplorerServiceGenericSub => 'Available nearby';
+
+  @override
+  String get meshExplorerServiceOpenBoard => 'Open Board';
+
+  @override
+  String get meshExplorerServiceViewProfile => 'View Profile';
+
+  @override
+  String get meshExplorerServiceDetails => 'Details';
+
+  @override
+  String get meshExplorerServiceRequiresHandshake => 'Requires handshake';
+
+  @override
+  String get meshExplorerServiceRequiresIdentity => 'Requires identity';
+
+  @override
+  String meshExplorerServicePeerCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count peers',
+      one: '1 peer',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshExplorerPrivacyTitle => 'Mesh Privacy';
+
+  @override
+  String get meshExplorerPrivacySectionVisibility => 'Visibility';
+
+  @override
+  String get meshExplorerPrivacySectionSharing => 'Sharing';
+
+  @override
+  String get meshExplorerPrivacySectionActions => 'Actions';
+
+  @override
+  String get meshExplorerPrivacyDiscoverable => 'Discoverable';
+
+  @override
+  String get meshExplorerPrivacyDiscoverableSub =>
+      'Broadcast your presence to nearby mesh peers';
+
+  @override
+  String get meshExplorerPrivacyProfileSharing => 'Profile Sharing';
+
+  @override
+  String get meshExplorerPrivacyProfileSharingSub =>
+      'Respond to profile requests from peers';
+
+  @override
+  String get meshExplorerPrivacyDmAvailable => 'Direct Messages';
+
+  @override
+  String get meshExplorerPrivacyDmAvailableSub =>
+      'Allow direct messages from identified peers';
+
+  @override
+  String get meshExplorerPrivacyClearCache => 'Clear Nearby Cache';
+
+  @override
+  String get meshExplorerPrivacyClearCacheSub =>
+      'Remove all discovered nearby peer data';
+
+  @override
+  String get meshExplorerPrivacyCacheCleared => 'Nearby cache cleared';
+
+  @override
+  String get meshExplorerScanAction => 'Scan';
+
+  @override
+  String get meshExplorerRefreshAction => 'Refresh';
+
+  @override
+  String get meshExplorerChangedKey => 'Changed key';
 }

@@ -382,6 +382,20 @@ class AppFeatureFlags {
       return false;
     }
   }
+
+  /// Whether the Mesh Explorer public-facing discovery experience is enabled.
+  /// Set `MESH_EXPLORER_ENABLED=true` in `.env` to enable.
+  /// Requires both [isSipEnabled] and [isMrrpEnabled] to be true.
+  /// Default: false.
+  static bool get isMeshExplorerEnabled {
+    if (!isSipEnabled || !isMrrpEnabled) return false;
+    try {
+      final raw = dotenv.env['MESH_EXPLORER_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
 }
 
 /// Privacy level for content visibility

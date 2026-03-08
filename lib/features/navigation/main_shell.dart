@@ -67,6 +67,7 @@ import '../aether/widgets/aether_flight_detected_overlay.dart';
 // import '../global_layer/screens/global_layer_hub_screen.dart';
 import '../sip/sip_hub_screen.dart';
 import '../mrrp_harness/mrrp_harness_home_screen.dart';
+import '../mesh_explorer/mesh_explorer_screen.dart';
 import '../tak/screens/tak_screen.dart';
 import '../../providers/activity_providers.dart';
 import '../../providers/whats_new_providers.dart';
@@ -404,6 +405,14 @@ class _MainShellState extends ConsumerState<MainShell> {
       iconColor: AccentColors.blue,
       requiresConnection: false, // Shows global mesh data from server
     ),
+    if (AppFeatureFlags.isMeshExplorerEnabled)
+      DrawerMenuItem(
+        icon: Icons.explore_outlined,
+        label: l10n.meshExplorerDrawerLabel,
+        screen: const MeshExplorerScreen(),
+        iconColor: AccentColors.teal,
+        requiresConnection: true,
+      ),
 
     // Identity section — your social presence and interactions
     if (AppFeatureFlags.isSocialEnabled)

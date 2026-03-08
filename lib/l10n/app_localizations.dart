@@ -54411,6 +54411,384 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Simulated Faults'**
   String get mrrpHarnessCountersSimFaults;
+
+  /// Title for the Mesh Explorer screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh Explorer'**
+  String get meshExplorerTitle;
+
+  /// Drawer menu label for Mesh Explorer.
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh Explorer'**
+  String get meshExplorerDrawerLabel;
+
+  /// Hero status when radio is connected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected to mesh'**
+  String get meshExplorerHeroConnected;
+
+  /// Hero status when no radio is connected.
+  ///
+  /// In en, this message translates to:
+  /// **'No radio connected'**
+  String get meshExplorerHeroDisconnected;
+
+  /// Peer count in the hero section.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No nearby peers} =1{1 nearby peer} other{{count} nearby peers}}'**
+  String meshExplorerHeroPeersCount(int count);
+
+  /// Service count in the hero section.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No services} =1{1 service} other{{count} services}}'**
+  String meshExplorerHeroServicesCount(int count);
+
+  /// Section header for nearby peers.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby'**
+  String get meshExplorerSectionNearby;
+
+  /// Section header for nearby services.
+  ///
+  /// In en, this message translates to:
+  /// **'Services'**
+  String get meshExplorerSectionServices;
+
+  /// Section header for board posts.
+  ///
+  /// In en, this message translates to:
+  /// **'Board Activity'**
+  String get meshExplorerSectionBoard;
+
+  /// Empty state title when no peers are nearby.
+  ///
+  /// In en, this message translates to:
+  /// **'No nearby peers'**
+  String get meshExplorerEmptyNearbyTitle;
+
+  /// Empty state body when no peers are nearby.
+  ///
+  /// In en, this message translates to:
+  /// **'Peers will appear when mesh devices are in range'**
+  String get meshExplorerEmptyNearbyBody;
+
+  /// Empty state title when no services are nearby.
+  ///
+  /// In en, this message translates to:
+  /// **'No services found'**
+  String get meshExplorerEmptyServicesTitle;
+
+  /// Empty state body when no services are nearby.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby peers will advertise services here'**
+  String get meshExplorerEmptyServicesBody;
+
+  /// Empty state title when no board posts exist.
+  ///
+  /// In en, this message translates to:
+  /// **'No board activity'**
+  String get meshExplorerEmptyBoardTitle;
+
+  /// Empty state body when no board posts exist.
+  ///
+  /// In en, this message translates to:
+  /// **'Board posts from nearby peers will appear here'**
+  String get meshExplorerEmptyBoardBody;
+
+  /// Empty state title when no radio is connected.
+  ///
+  /// In en, this message translates to:
+  /// **'Radio not connected'**
+  String get meshExplorerNotConnectedTitle;
+
+  /// Empty state body when no radio is connected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect a Meshtastic radio to discover the mesh around you'**
+  String get meshExplorerNotConnectedBody;
+
+  /// Label for an anonymous peer tile.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby peer'**
+  String get meshExplorerPeerAnonymous;
+
+  /// Badge label for handshaked peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Handshaked'**
+  String get meshExplorerPeerHandshaked;
+
+  /// Badge label for verified identity peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified'**
+  String get meshExplorerPeerVerified;
+
+  /// Badge label for pinned peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned'**
+  String get meshExplorerPeerPinned;
+
+  /// Hop count label for peer proximity.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 hop} other{{count} hops}}'**
+  String meshExplorerHopCount(int count);
+
+  /// Label for peers more than 2 hops away.
+  ///
+  /// In en, this message translates to:
+  /// **'3+ hops'**
+  String get meshExplorerHopCountFar;
+
+  /// Service count on peer tile.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No services} =1{1 service} other{{count} services}}'**
+  String meshExplorerServiceCount(int count);
+
+  /// Action button to initiate SIP handshake.
+  ///
+  /// In en, this message translates to:
+  /// **'Handshake'**
+  String get meshExplorerActionHandshake;
+
+  /// Action button to view peer details.
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get meshExplorerActionView;
+
+  /// Action button to request identity exchange.
+  ///
+  /// In en, this message translates to:
+  /// **'Request Identity'**
+  String get meshExplorerActionRequestIdentity;
+
+  /// Action to open full NodeDex detail.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in NodeDex'**
+  String get meshExplorerActionOpenNodeDex;
+
+  /// Action to block a peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Block'**
+  String get meshExplorerActionBlock;
+
+  /// Action to pin an identified peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin Peer'**
+  String get meshExplorerActionPin;
+
+  /// Action to unpin a pinned peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpin Peer'**
+  String get meshExplorerActionUnpin;
+
+  /// Title for peer detail bottom sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Peer Detail'**
+  String get meshExplorerPeerDetail;
+
+  /// Section in peer detail for identity info.
+  ///
+  /// In en, this message translates to:
+  /// **'Identity'**
+  String get meshExplorerPeerDetailIdentity;
+
+  /// Section in peer detail for services.
+  ///
+  /// In en, this message translates to:
+  /// **'Available Services'**
+  String get meshExplorerPeerDetailServices;
+
+  /// Section in peer detail for available actions.
+  ///
+  /// In en, this message translates to:
+  /// **'Actions'**
+  String get meshExplorerPeerDetailActions;
+
+  /// Public name for board.v1 service.
+  ///
+  /// In en, this message translates to:
+  /// **'Bulletin Board'**
+  String get meshExplorerServiceBulletinBoard;
+
+  /// Subtitle for board.v1 service.
+  ///
+  /// In en, this message translates to:
+  /// **'Local mesh posts'**
+  String get meshExplorerServiceBulletinBoardSub;
+
+  /// Public name for profile.v1 service.
+  ///
+  /// In en, this message translates to:
+  /// **'Peer Profile'**
+  String get meshExplorerServicePeerProfile;
+
+  /// Subtitle for profile.v1 service.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared identity info'**
+  String get meshExplorerServicePeerProfileSub;
+
+  /// Fallback name for unknown MRRP services.
+  ///
+  /// In en, this message translates to:
+  /// **'Service'**
+  String get meshExplorerServiceGeneric;
+
+  /// Fallback subtitle for unknown services.
+  ///
+  /// In en, this message translates to:
+  /// **'Available nearby'**
+  String get meshExplorerServiceGenericSub;
+
+  /// Action label for board service.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Board'**
+  String get meshExplorerServiceOpenBoard;
+
+  /// Action label for profile service.
+  ///
+  /// In en, this message translates to:
+  /// **'View Profile'**
+  String get meshExplorerServiceViewProfile;
+
+  /// Generic action label for services.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get meshExplorerServiceDetails;
+
+  /// Chip label when a service requires SIP handshake.
+  ///
+  /// In en, this message translates to:
+  /// **'Requires handshake'**
+  String get meshExplorerServiceRequiresHandshake;
+
+  /// Chip label when a service requires identity verification.
+  ///
+  /// In en, this message translates to:
+  /// **'Requires identity'**
+  String get meshExplorerServiceRequiresIdentity;
+
+  /// Peer count offering a service.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 peer} other{{count} peers}}'**
+  String meshExplorerServicePeerCount(int count);
+
+  /// Title for mesh privacy settings screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh Privacy'**
+  String get meshExplorerPrivacyTitle;
+
+  /// Section header for visibility toggles.
+  ///
+  /// In en, this message translates to:
+  /// **'Visibility'**
+  String get meshExplorerPrivacySectionVisibility;
+
+  /// Section header for sharing toggles.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing'**
+  String get meshExplorerPrivacySectionSharing;
+
+  /// Section header for privacy actions.
+  ///
+  /// In en, this message translates to:
+  /// **'Actions'**
+  String get meshExplorerPrivacySectionActions;
+
+  /// Toggle label: broadcast presence to mesh.
+  ///
+  /// In en, this message translates to:
+  /// **'Discoverable'**
+  String get meshExplorerPrivacyDiscoverable;
+
+  /// Description for discoverable toggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Broadcast your presence to nearby mesh peers'**
+  String get meshExplorerPrivacyDiscoverableSub;
+
+  /// Toggle label: respond to profile requests.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile Sharing'**
+  String get meshExplorerPrivacyProfileSharing;
+
+  /// Description for profile sharing toggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Respond to profile requests from peers'**
+  String get meshExplorerPrivacyProfileSharingSub;
+
+  /// Toggle label: allow DMs from identified peers.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct Messages'**
+  String get meshExplorerPrivacyDmAvailable;
+
+  /// Description for DM toggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow direct messages from identified peers'**
+  String get meshExplorerPrivacyDmAvailableSub;
+
+  /// Action label: clear nearby peer data.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Nearby Cache'**
+  String get meshExplorerPrivacyClearCache;
+
+  /// Description for clear cache action.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove all discovered nearby peer data'**
+  String get meshExplorerPrivacyClearCacheSub;
+
+  /// Snackbar message after clearing cache.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby cache cleared'**
+  String get meshExplorerPrivacyCacheCleared;
+
+  /// App bar action to scan for nearby peers.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan'**
+  String get meshExplorerScanAction;
+
+  /// Action to refresh mesh data.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get meshExplorerRefreshAction;
+
+  /// Badge label for peer with changed identity key.
+  ///
+  /// In en, this message translates to:
+  /// **'Changed key'**
+  String get meshExplorerChangedKey;
 }
 
 class _AppLocalizationsDelegate

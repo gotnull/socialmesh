@@ -41323,5 +41323,283 @@
     "mrrpHarnessCountersSimFaults": "Simulated Faults",
     "@mrrpHarnessCountersSimFaults": {
         "description": "Counter label: simulated faults injected."
+    },
+
+    "meshExplorerTitle": "Mesh Explorer",
+    "@meshExplorerTitle": {
+        "description": "Title for the Mesh Explorer screen."
+    },
+    "meshExplorerDrawerLabel": "Mesh Explorer",
+    "@meshExplorerDrawerLabel": {
+        "description": "Drawer menu label for Mesh Explorer."
+    },
+    "meshExplorerHeroConnected": "Connected to mesh",
+    "@meshExplorerHeroConnected": {
+        "description": "Hero status when radio is connected."
+    },
+    "meshExplorerHeroDisconnected": "No radio connected",
+    "@meshExplorerHeroDisconnected": {
+        "description": "Hero status when no radio is connected."
+    },
+    "meshExplorerHeroPeersCount": "{count, plural, =0{No nearby peers} =1{1 nearby peer} other{{count} nearby peers}}",
+    "@meshExplorerHeroPeersCount": {
+        "description": "Peer count in the hero section.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "meshExplorerHeroServicesCount": "{count, plural, =0{No services} =1{1 service} other{{count} services}}",
+    "@meshExplorerHeroServicesCount": {
+        "description": "Service count in the hero section.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "meshExplorerSectionNearby": "Nearby",
+    "@meshExplorerSectionNearby": {
+        "description": "Section header for nearby peers."
+    },
+    "meshExplorerSectionServices": "Services",
+    "@meshExplorerSectionServices": {
+        "description": "Section header for nearby services."
+    },
+    "meshExplorerSectionBoard": "Board Activity",
+    "@meshExplorerSectionBoard": {
+        "description": "Section header for board posts."
+    },
+    "meshExplorerEmptyNearbyTitle": "No nearby peers",
+    "@meshExplorerEmptyNearbyTitle": {
+        "description": "Empty state title when no peers are nearby."
+    },
+    "meshExplorerEmptyNearbyBody": "Peers will appear when mesh devices are in range",
+    "@meshExplorerEmptyNearbyBody": {
+        "description": "Empty state body when no peers are nearby."
+    },
+    "meshExplorerEmptyServicesTitle": "No services found",
+    "@meshExplorerEmptyServicesTitle": {
+        "description": "Empty state title when no services are nearby."
+    },
+    "meshExplorerEmptyServicesBody": "Nearby peers will advertise services here",
+    "@meshExplorerEmptyServicesBody": {
+        "description": "Empty state body when no services are nearby."
+    },
+    "meshExplorerEmptyBoardTitle": "No board activity",
+    "@meshExplorerEmptyBoardTitle": {
+        "description": "Empty state title when no board posts exist."
+    },
+    "meshExplorerEmptyBoardBody": "Board posts from nearby peers will appear here",
+    "@meshExplorerEmptyBoardBody": {
+        "description": "Empty state body when no board posts exist."
+    },
+    "meshExplorerNotConnectedTitle": "Radio not connected",
+    "@meshExplorerNotConnectedTitle": {
+        "description": "Empty state title when no radio is connected."
+    },
+    "meshExplorerNotConnectedBody": "Connect a Meshtastic radio to discover the mesh around you",
+    "@meshExplorerNotConnectedBody": {
+        "description": "Empty state body when no radio is connected."
+    },
+    "meshExplorerPeerAnonymous": "Nearby peer",
+    "@meshExplorerPeerAnonymous": {
+        "description": "Label for an anonymous peer tile."
+    },
+    "meshExplorerPeerHandshaked": "Handshaked",
+    "@meshExplorerPeerHandshaked": {
+        "description": "Badge label for handshaked peer."
+    },
+    "meshExplorerPeerVerified": "Verified",
+    "@meshExplorerPeerVerified": {
+        "description": "Badge label for verified identity peer."
+    },
+    "meshExplorerPeerPinned": "Pinned",
+    "@meshExplorerPeerPinned": {
+        "description": "Badge label for pinned peer."
+    },
+    "meshExplorerHopCount": "{count, plural, =1{1 hop} other{{count} hops}}",
+    "@meshExplorerHopCount": {
+        "description": "Hop count label for peer proximity.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "meshExplorerHopCountFar": "3+ hops",
+    "@meshExplorerHopCountFar": {
+        "description": "Label for peers more than 2 hops away."
+    },
+    "meshExplorerServiceCount": "{count, plural, =0{No services} =1{1 service} other{{count} services}}",
+    "@meshExplorerServiceCount": {
+        "description": "Service count on peer tile.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "meshExplorerActionHandshake": "Handshake",
+    "@meshExplorerActionHandshake": {
+        "description": "Action button to initiate SIP handshake."
+    },
+    "meshExplorerActionView": "View",
+    "@meshExplorerActionView": {
+        "description": "Action button to view peer details."
+    },
+    "meshExplorerActionRequestIdentity": "Request Identity",
+    "@meshExplorerActionRequestIdentity": {
+        "description": "Action button to request identity exchange."
+    },
+    "meshExplorerActionOpenNodeDex": "Open in NodeDex",
+    "@meshExplorerActionOpenNodeDex": {
+        "description": "Action to open full NodeDex detail."
+    },
+    "meshExplorerActionBlock": "Block",
+    "@meshExplorerActionBlock": {
+        "description": "Action to block a peer."
+    },
+    "meshExplorerActionPin": "Pin Peer",
+    "@meshExplorerActionPin": {
+        "description": "Action to pin an identified peer."
+    },
+    "meshExplorerActionUnpin": "Unpin Peer",
+    "@meshExplorerActionUnpin": {
+        "description": "Action to unpin a pinned peer."
+    },
+    "meshExplorerPeerDetail": "Peer Detail",
+    "@meshExplorerPeerDetail": {
+        "description": "Title for peer detail bottom sheet."
+    },
+    "meshExplorerPeerDetailIdentity": "Identity",
+    "@meshExplorerPeerDetailIdentity": {
+        "description": "Section in peer detail for identity info."
+    },
+    "meshExplorerPeerDetailServices": "Available Services",
+    "@meshExplorerPeerDetailServices": {
+        "description": "Section in peer detail for services."
+    },
+    "meshExplorerPeerDetailActions": "Actions",
+    "@meshExplorerPeerDetailActions": {
+        "description": "Section in peer detail for available actions."
+    },
+    "meshExplorerServiceBulletinBoard": "Bulletin Board",
+    "@meshExplorerServiceBulletinBoard": {
+        "description": "Public name for board.v1 service."
+    },
+    "meshExplorerServiceBulletinBoardSub": "Local mesh posts",
+    "@meshExplorerServiceBulletinBoardSub": {
+        "description": "Subtitle for board.v1 service."
+    },
+    "meshExplorerServicePeerProfile": "Peer Profile",
+    "@meshExplorerServicePeerProfile": {
+        "description": "Public name for profile.v1 service."
+    },
+    "meshExplorerServicePeerProfileSub": "Shared identity info",
+    "@meshExplorerServicePeerProfileSub": {
+        "description": "Subtitle for profile.v1 service."
+    },
+    "meshExplorerServiceGeneric": "Service",
+    "@meshExplorerServiceGeneric": {
+        "description": "Fallback name for unknown MRRP services."
+    },
+    "meshExplorerServiceGenericSub": "Available nearby",
+    "@meshExplorerServiceGenericSub": {
+        "description": "Fallback subtitle for unknown services."
+    },
+    "meshExplorerServiceOpenBoard": "Open Board",
+    "@meshExplorerServiceOpenBoard": {
+        "description": "Action label for board service."
+    },
+    "meshExplorerServiceViewProfile": "View Profile",
+    "@meshExplorerServiceViewProfile": {
+        "description": "Action label for profile service."
+    },
+    "meshExplorerServiceDetails": "Details",
+    "@meshExplorerServiceDetails": {
+        "description": "Generic action label for services."
+    },
+    "meshExplorerServiceRequiresHandshake": "Requires handshake",
+    "@meshExplorerServiceRequiresHandshake": {
+        "description": "Chip label when a service requires SIP handshake."
+    },
+    "meshExplorerServiceRequiresIdentity": "Requires identity",
+    "@meshExplorerServiceRequiresIdentity": {
+        "description": "Chip label when a service requires identity verification."
+    },
+    "meshExplorerServicePeerCount": "{count, plural, =1{1 peer} other{{count} peers}}",
+    "@meshExplorerServicePeerCount": {
+        "description": "Peer count offering a service.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "meshExplorerPrivacyTitle": "Mesh Privacy",
+    "@meshExplorerPrivacyTitle": {
+        "description": "Title for mesh privacy settings screen."
+    },
+    "meshExplorerPrivacySectionVisibility": "Visibility",
+    "@meshExplorerPrivacySectionVisibility": {
+        "description": "Section header for visibility toggles."
+    },
+    "meshExplorerPrivacySectionSharing": "Sharing",
+    "@meshExplorerPrivacySectionSharing": {
+        "description": "Section header for sharing toggles."
+    },
+    "meshExplorerPrivacySectionActions": "Actions",
+    "@meshExplorerPrivacySectionActions": {
+        "description": "Section header for privacy actions."
+    },
+    "meshExplorerPrivacyDiscoverable": "Discoverable",
+    "@meshExplorerPrivacyDiscoverable": {
+        "description": "Toggle label: broadcast presence to mesh."
+    },
+    "meshExplorerPrivacyDiscoverableSub": "Broadcast your presence to nearby mesh peers",
+    "@meshExplorerPrivacyDiscoverableSub": {
+        "description": "Description for discoverable toggle."
+    },
+    "meshExplorerPrivacyProfileSharing": "Profile Sharing",
+    "@meshExplorerPrivacyProfileSharing": {
+        "description": "Toggle label: respond to profile requests."
+    },
+    "meshExplorerPrivacyProfileSharingSub": "Respond to profile requests from peers",
+    "@meshExplorerPrivacyProfileSharingSub": {
+        "description": "Description for profile sharing toggle."
+    },
+    "meshExplorerPrivacyDmAvailable": "Direct Messages",
+    "@meshExplorerPrivacyDmAvailable": {
+        "description": "Toggle label: allow DMs from identified peers."
+    },
+    "meshExplorerPrivacyDmAvailableSub": "Allow direct messages from identified peers",
+    "@meshExplorerPrivacyDmAvailableSub": {
+        "description": "Description for DM toggle."
+    },
+    "meshExplorerPrivacyClearCache": "Clear Nearby Cache",
+    "@meshExplorerPrivacyClearCache": {
+        "description": "Action label: clear nearby peer data."
+    },
+    "meshExplorerPrivacyClearCacheSub": "Remove all discovered nearby peer data",
+    "@meshExplorerPrivacyClearCacheSub": {
+        "description": "Description for clear cache action."
+    },
+    "meshExplorerPrivacyCacheCleared": "Nearby cache cleared",
+    "@meshExplorerPrivacyCacheCleared": {
+        "description": "Snackbar message after clearing cache."
+    },
+    "meshExplorerScanAction": "Scan",
+    "@meshExplorerScanAction": {
+        "description": "App bar action to scan for nearby peers."
+    },
+    "meshExplorerRefreshAction": "Refresh",
+    "@meshExplorerRefreshAction": {
+        "description": "Action to refresh mesh data."
+    },
+    "meshExplorerChangedKey": "Changed key",
+    "@meshExplorerChangedKey": {
+        "description": "Badge label for peer with changed identity key."
     }
 }

@@ -69,6 +69,7 @@ class AppLogging {
   static bool? _sipLoggingEnabled;
   static bool? _mrrpDebugEnabled;
   static bool? _mrrpHarnessDebugEnabled;
+  static bool? _meshExplorerDebugEnabled;
   static bool? _forceEmptyStates;
   static Logger? _bleLogger;
   static Logger? _mapLogger;
@@ -585,6 +586,18 @@ class AppLogging {
     if (mrrpHarnessDebugEnabled) debugPrint('MRRP_HARNESS: $message');
   }
 
+  /// Mesh Explorer debug logging.
+  /// Enable with MESH_EXPLORER_DEBUG=true in .env file.
+  static bool get meshExplorerDebugEnabled {
+    _meshExplorerDebugEnabled ??=
+        _safeGetEnv('MESH_EXPLORER_DEBUG')?.toLowerCase() == 'true';
+    return _meshExplorerDebugEnabled!;
+  }
+
+  static void meshExplorer(String message) {
+    if (meshExplorerDebugEnabled) debugPrint('MESH_EXPLORER: $message');
+  }
+
   static void reset() {
     _bleLoggingEnabled = null;
     _protocolLoggingEnabled = null;
@@ -630,6 +643,7 @@ class AppLogging {
     _sipLoggingEnabled = null;
     _mrrpDebugEnabled = null;
     _mrrpHarnessDebugEnabled = null;
+    _meshExplorerDebugEnabled = null;
     _bleLogger = null;
     _noOpLogger = null;
   }

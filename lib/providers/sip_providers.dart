@@ -163,6 +163,12 @@ final sipDiscoveryProvider = Provider<SipDiscovery?>((ref) {
   discovery.lastBeaconMs = nowMs;
   discovery.lastRollcallReqMs = nowMs;
 
+  // Wire send callback so periodic beacons reach the mesh transport.
+  discovery.onSend = (encoded) async {
+    final protocol = ref.read(protocolServiceProvider);
+    return protocol.sendSipPacket(encoded);
+  };
+
   // Listen for app lifecycle transitions. Use the rate limiter's resume
   // suppression window to prevent post-resume SIP burst transmissions.
   ref.listen<bool>(appLifecycleProvider, (previous, isForeground) {
@@ -183,10 +189,12 @@ final sipDiscoveryProvider = Provider<SipDiscovery?>((ref) {
   final counters = ref.read(sipCountersProvider);
   protocol.attachSipCounters(counters);
 
+  // Start periodic CAP_BEACON broadcast.
+  discovery.start();
+
   // Detach when this provider is disposed (SIP disabled or page torn down).
   ref.onDispose(() {
-    discovery.onPeersChanged = null;
-    discovery.onPeerDiscovered = null;
+    discovery.dispose();
     protocol.attachSipDiscovery(null);
     protocol.attachSipCounters(null);
   });

@@ -8,6 +8,7 @@
 /// rate-limited by the SIP token bucket.
 library;
 
+import 'dart:async';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -105,6 +106,11 @@ class SipDiscovery {
        _replayCache = replayCache,
        _clock = clock;
 
+  /// Callback to send an encoded SIP frame via the mesh transport.
+  ///
+  /// Set by the provider layer to wire into ProtocolService.
+  Future<bool> Function(Uint8List encoded)? onSend;
+
   /// Optional callback invoked whenever the peer cache changes.
   ///
   /// Set by the provider layer to trigger Riverpod invalidation so the
@@ -122,6 +128,9 @@ class SipDiscovery {
   final SipCounters? _counters;
   final SipReplayCache? _replayCache;
   final int? Function()? _clock;
+
+  /// Timer for periodic CAP_BEACON broadcast.
+  Timer? _beaconTimer;
 
   /// Maximum peers in the capability cache.
   final int maxPeers;
@@ -162,6 +171,50 @@ class SipDiscovery {
   int _nowMs() => _clock?.call() ?? DateTime.now().millisecondsSinceEpoch;
 
   int _nowS() => _nowMs() ~/ 1000;
+
+  // ---------------------------------------------------------------------------
+  // Lifecycle
+  // ---------------------------------------------------------------------------
+
+  /// Start the periodic CAP_BEACON broadcast.
+  void start() {
+    _scheduleNextBeacon();
+    AppLogging.sip(
+      'SIP_DISCOVERY: CAP_BEACON scheduled, '
+      'interval=${beaconIntervalMs ~/ 1000}s+jitter', // lint-allow: hardcoded-string
+    );
+  }
+
+  /// Stop the periodic beacon broadcast.
+  void stop() {
+    _beaconTimer?.cancel();
+    _beaconTimer = null;
+  }
+
+  /// Dispose: stop timer and clear state.
+  void dispose() {
+    stop();
+    _cache.clear();
+    _lastRollcallRespMs.clear();
+    onSend = null;
+    onPeersChanged = null;
+    onPeerDiscovered = null;
+  }
+
+  void _scheduleNextBeacon() {
+    final jitterMs = _jitterRng.nextInt(beaconJitterMs + 1);
+    final delayMs = beaconIntervalMs + jitterMs;
+    _beaconTimer?.cancel();
+    _beaconTimer = Timer(Duration(milliseconds: delayMs), _emitPeriodicBeacon);
+  }
+
+  Future<void> _emitPeriodicBeacon() async {
+    final outbound = buildBeacon();
+    if (outbound != null) {
+      await onSend?.call(outbound.encoded);
+    }
+    _scheduleNextBeacon();
+  }
 
   // ---------------------------------------------------------------------------
   // Peer cache
