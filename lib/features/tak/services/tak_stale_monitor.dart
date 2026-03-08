@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:async';
 
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/logging.dart';
 import '../../../services/notifications/notification_service.dart';
 import '../models/tak_event.dart';
@@ -98,7 +99,7 @@ class TakStaleMonitor {
     _notifiedUids.removeWhere((uid) => !trackedUids.contains(uid));
   }
 
-  void _fireNotification(TakEvent event) {
+  Future<void> _fireNotification(TakEvent event) async {
     final age = DateTime.now().millisecondsSinceEpoch - event.timeUtcMs;
     final minutes = age ~/ 60000;
     final timeAgo = minutes < 1
@@ -110,6 +111,10 @@ class TakStaleMonitor {
     AppLogging.tak(
       'StaleMonitor: firing notification for ${event.displayName}',
     );
+
+    // Gate on master notification toggle.
+    final prefs = await SharedPreferences.getInstance();
+    if (!(prefs.getBool('notifications_enabled') ?? true)) return;
 
     _notificationService.showTakStaleNotification(
       uid: event.uid,

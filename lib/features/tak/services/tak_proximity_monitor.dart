@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/logging.dart';
 import '../../../services/notifications/notification_service.dart';
 import '../models/tak_event.dart';
@@ -131,7 +132,7 @@ class TakProximityMonitor {
     _insideRadius.removeWhere((uid) => !activeUids.contains(uid));
   }
 
-  void _fireAlert(TakEvent event, double distKm) {
+  Future<void> _fireAlert(TakEvent event, double distKm) async {
     final affiliation = parseAffiliation(event.type);
     final callsign = event.callsign ?? event.uid;
     final distance = distKm < 1.0
@@ -148,6 +149,10 @@ class TakProximityMonitor {
     } else {
       body = '${affiliation.label} entity at $distance -- stationary';
     }
+
+    // Gate on master notification toggle.
+    final prefs = await SharedPreferences.getInstance();
+    if (!(prefs.getBool('notifications_enabled') ?? true)) return;
 
     _notificationService.showTakProximityNotification(
       uid: event.uid,

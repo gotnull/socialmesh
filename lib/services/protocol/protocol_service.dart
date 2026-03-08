@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/logging.dart';
 import '../../core/transport.dart';
 import '../../models/mesh_models.dart';
@@ -4232,11 +4233,17 @@ class ProtocolService {
     _sipCounters?.recordHandshakeInitiated();
 
     // Notify the user that a peer is requesting a handshake.
-    final peerName = NodeDisplayNameResolver.defaultShortName(senderNodeId);
-    NotificationService().showSipHandshakeRequestNotification(
-      peerName: peerName,
-      peerNodeId: senderNodeId,
-    );
+    // Gated on master + DM notification preferences.
+    () async {
+      final prefs = await SharedPreferences.getInstance();
+      if (!(prefs.getBool('notifications_enabled') ?? true)) return;
+      if (!(prefs.getBool('dm_notifications_enabled') ?? true)) return;
+      final peerName = NodeDisplayNameResolver.defaultShortName(senderNodeId);
+      NotificationService().showSipHandshakeRequestNotification(
+        peerName: peerName,
+        peerNodeId: senderNodeId,
+      );
+    }();
 
     final challengeFrame = hs.handleHello(senderNodeId, frame);
     if (challengeFrame != null) {
@@ -4329,11 +4336,17 @@ class ProtocolService {
     );
 
     // Fire local notification for handshake completion.
-    final peerName = NodeDisplayNameResolver.defaultShortName(peerNodeId);
-    NotificationService().showSipHandshakeCompleteNotification(
-      peerName: peerName,
-      peerNodeId: peerNodeId,
-    );
+    // Gated on master + DM notification preferences.
+    () async {
+      final prefs = await SharedPreferences.getInstance();
+      if (!(prefs.getBool('notifications_enabled') ?? true)) return;
+      if (!(prefs.getBool('dm_notifications_enabled') ?? true)) return;
+      final peerName = NodeDisplayNameResolver.defaultShortName(peerNodeId);
+      NotificationService().showSipHandshakeCompleteNotification(
+        peerName: peerName,
+        peerNodeId: peerNodeId,
+      );
+    }();
   }
 
   // ---------------------------------------------------------------------------
@@ -4414,16 +4427,22 @@ class ProtocolService {
     final message = dm.handleInboundDm(frame);
     if (message != null) {
       // Fire local notification for inbound SIP DM.
+      // Gated on master + DM notification preferences.
       final session = dm.getSession(frame.sessionId);
       if (session != null) {
-        final peerName = NodeDisplayNameResolver.defaultShortName(
-          session.peerNodeId,
-        );
-        NotificationService().showSipDmNotification(
-          peerName: peerName,
-          message: message.text,
-          sessionTag: frame.sessionId,
-        );
+        () async {
+          final prefs = await SharedPreferences.getInstance();
+          if (!(prefs.getBool('notifications_enabled') ?? true)) return;
+          if (!(prefs.getBool('dm_notifications_enabled') ?? true)) return;
+          final peerName = NodeDisplayNameResolver.defaultShortName(
+            session.peerNodeId,
+          );
+          NotificationService().showSipDmNotification(
+            peerName: peerName,
+            message: message.text,
+            sessionTag: frame.sessionId,
+          );
+        }();
       }
     }
   }
