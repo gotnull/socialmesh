@@ -456,13 +456,47 @@ class ProtocolService {
   // --- MRRP protocol component ---
   MrrpEngine? _mrrpEngine;
 
+  // --- Startup buffers ---
+  //
+  // SIP frames and MRRP frames that arrive before the respective runtime
+  // components are attached are held here and replayed once attachment
+  // occurs. Without this buffer, every packet that arrives during the
+  // startup window (between BLE connection and the first UI screen that
+  // watches sipDiscoveryProvider / mrrpEngineProvider) is permanently
+  // lost — including SERVICE_ADVERT frames that populate Mesh Explorer.
+  //
+  // Both buffers are bounded to prevent unbounded memory growth if
+  // attachment never happens (e.g. SIP is later disabled).
+  static const int _kSipStartupBufferMax = 16;
+  final List<({pb.MeshPacket packet, Uint8List payload})> _sipStartupBuffer =
+      [];
+
+  static const int _kMrrpStartupBufferMax = 16;
+  final List<({int senderNodeId, SipFrame frame})> _mrrpStartupBuffer = [];
+
   /// Attach a SipDiscovery instance so inbound SIP packets can be routed.
   ///
   /// Called from the provider layer once the discovery engine is created.
+  /// Any frames buffered during the pre-attachment startup window are
+  /// drained synchronously before this method returns.
   void attachSipDiscovery(SipDiscovery? discovery) {
     _sipDiscovery = discovery;
     if (discovery != null) {
       AppLogging.sip('ProtocolService: SipDiscovery attached');
+      _drainSipStartupBuffer();
+    }
+  }
+
+  /// Drain frames buffered before [SipDiscovery] was attached.
+  void _drainSipStartupBuffer() {
+    if (_sipStartupBuffer.isEmpty) return;
+    final buffered = List.of(_sipStartupBuffer);
+    _sipStartupBuffer.clear();
+    AppLogging.sip(
+      'SIP_STARTUP: draining ${buffered.length} buffered early frame(s)',
+    );
+    for (final item in buffered) {
+      _handleSipPacket(item.packet, item.payload);
     }
   }
 
@@ -499,10 +533,27 @@ class ProtocolService {
   }
 
   /// Attach an MrrpEngine for inbound MRRP frames.
+  ///
+  /// Any MRRP frames buffered during the pre-attachment startup window are
+  /// drained synchronously before this method returns.
   void attachMrrpEngine(MrrpEngine? engine) {
     _mrrpEngine = engine;
     if (engine != null) {
       AppLogging.mrrp('ProtocolService: MrrpEngine attached');
+      _drainMrrpStartupBuffer();
+    }
+  }
+
+  /// Drain MRRP frames buffered before [MrrpEngine] was attached.
+  void _drainMrrpStartupBuffer() {
+    if (_mrrpStartupBuffer.isEmpty) return;
+    final buffered = List.of(_mrrpStartupBuffer);
+    _mrrpStartupBuffer.clear();
+    AppLogging.mrrp(
+      'MRRP_STARTUP: draining ${buffered.length} buffered mrrpData frame(s)',
+    );
+    for (final item in buffered) {
+      _handleMrrpPacket(item.senderNodeId, item.frame);
     }
   }
 
@@ -4089,7 +4140,20 @@ class ProtocolService {
 
     final discovery = _sipDiscovery;
     if (discovery == null) {
-      AppLogging.sip('SIP_RX: no SipDiscovery attached — dropping');
+      // Buffer early frames so they are processed once SipDiscovery attaches.
+      // Without this, every packet arriving before the first SIP-aware screen
+      // opens (e.g. SIP Hub, Mesh Explorer) is permanently lost.
+      if (_sipStartupBuffer.length < _kSipStartupBufferMax) {
+        _sipStartupBuffer.add((packet: packet, payload: payload));
+        AppLogging.sip(
+          'SIP_STARTUP: buffering early frame '
+          '(${_sipStartupBuffer.length}/$_kSipStartupBufferMax)',
+        );
+      } else {
+        AppLogging.sip(
+          'SIP_STARTUP: startup buffer full — discarding early frame',
+        );
+      }
       return;
     }
 
@@ -4193,11 +4257,40 @@ class ProtocolService {
   void _handleMrrpPacket(int senderNodeId, SipFrame frame) {
     final engine = _mrrpEngine;
     if (engine == null) {
-      AppLogging.mrrp('SIP_RX: no MrrpEngine attached — dropping mrrpData');
+      // Buffer early MRRP frames so they survive the gap between BLE connect
+      // and mrrpEngineProvider being built (when a Mesh Explorer or harness
+      // screen is first opened).
+      if (_mrrpStartupBuffer.length < _kMrrpStartupBufferMax) {
+        _mrrpStartupBuffer.add((senderNodeId: senderNodeId, frame: frame));
+        AppLogging.mrrp(
+          'MRRP_STARTUP: buffering early mrrpData frame '
+          '(${_mrrpStartupBuffer.length}/$_kMrrpStartupBufferMax)',
+        );
+      } else {
+        AppLogging.mrrp(
+          'MRRP_STARTUP: startup buffer full — discarding mrrpData frame',
+        );
+      }
       return;
     }
     engine.handleInboundFrame(senderNodeId, frame.payload);
   }
+
+  /// Inject a raw SIP PRIVATE_APP payload directly into the receive path.
+  ///
+  /// Intended for unit tests only. Bypasses BLE/USB framing and lets tests
+  /// drive [_handleSipPacket] without constructing a full [pb.FromRadio].
+  @visibleForTesting
+  void injectSipPacketForTest(pb.MeshPacket packet, Uint8List payload) {
+    _handleSipPacket(packet, payload);
+  }
+
+  /// Number of SIP frames currently held in the pre-attachment startup buffer.
+  ///
+  /// A non-zero value means [attachSipDiscovery] has not been called yet and
+  /// SIP packets are being buffered for later delivery. Exposed for unit tests.
+  @visibleForTesting
+  int get sipStartupBufferLength => _sipStartupBuffer.length;
 
   /// Send a SIP packet and record the TX counter.
   Future<bool> _sendSipAndCount(Uint8List payload, SipMessageType type) async {
