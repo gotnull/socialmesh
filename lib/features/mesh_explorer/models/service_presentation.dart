@@ -11,6 +11,7 @@ library;
 import 'package:flutter/material.dart';
 
 import '../../../services/protocol/sip/mrrp_types.dart';
+import '../../mesh_services/services/mesh_service_engine.dart';
 
 /// A public-facing card representation of an MRRP service.
 class ServicePresentation {
@@ -89,6 +90,15 @@ abstract final class ServicePresentationCatalog {
       requiresIdentity: true,
       actionLabel: 'Details', // lint-allow: hardcoded-string
       privacyClass: ServicePrivacyClass.identityGated,
+    ),
+    kMeshServicesInstanceServiceId: ServicePresentation(
+      title: 'Mesh Services', // lint-allow: hardcoded-string
+      subtitle: 'User-created services', // lint-allow: hardcoded-string
+      icon: Icons.miscellaneous_services_outlined,
+      requiresHandshake: false,
+      requiresIdentity: false,
+      actionLabel: 'Browse', // lint-allow: hardcoded-string
+      privacyClass: ServicePrivacyClass.open,
     ),
   };
 

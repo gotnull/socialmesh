@@ -31384,4 +31384,180 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get meshExplorerChangedKey => 'Changed key';
+
+  @override
+  String get meshServicesDrawerLabel => 'My Services';
+
+  @override
+  String get meshServicesTitle => 'My Services';
+
+  @override
+  String get meshServicesEmpty => 'No services yet';
+
+  @override
+  String get meshServicesEmptyDescription =>
+      'Create a service to share something useful on the mesh';
+
+  @override
+  String get meshServicesCreateAction => 'Create Service';
+
+  @override
+  String get meshServicesCreateTitle => 'Create a Service';
+
+  @override
+  String get meshServicesCreateSubtitle =>
+      'Choose what you want to share on the mesh';
+
+  @override
+  String get meshServicesTemplateBoard => 'Bulletin Board';
+
+  @override
+  String get meshServicesTemplateBoardDescription =>
+      'Share short posts with nearby peers';
+
+  @override
+  String get meshServicesTemplateSignal => 'Signal Beacon';
+
+  @override
+  String get meshServicesTemplateSignalDescription =>
+      'Broadcast a signal to nearby peers';
+
+  @override
+  String get meshServicesTemplatePoll => 'Quick Poll';
+
+  @override
+  String get meshServicesTemplatePollDescription =>
+      'Ask a question with multiple choice answers';
+
+  @override
+  String get meshServicesTemplateChecklist => 'Shared Checklist';
+
+  @override
+  String get meshServicesTemplateChecklistDescription =>
+      'Collaborate on a checklist with nearby peers';
+
+  @override
+  String get meshServicesTemplateResourceList => 'Resource List';
+
+  @override
+  String get meshServicesTemplateResourceListDescription =>
+      'Share a list of useful resources or supplies';
+
+  @override
+  String get meshServicesFieldTitle => 'Title';
+
+  @override
+  String get meshServicesFieldDescription => 'Description';
+
+  @override
+  String get meshServicesFieldDuration => 'Duration';
+
+  @override
+  String get meshServicesFieldQuestion => 'Question';
+
+  @override
+  String meshServicesFieldOption(int index) {
+    return 'Option $index';
+  }
+
+  @override
+  String get meshServicesFieldAddOption => 'Add Option';
+
+  @override
+  String meshServicesFieldItem(int index) {
+    return 'Item $index';
+  }
+
+  @override
+  String get meshServicesFieldAddItem => 'Add Item';
+
+  @override
+  String get meshServicesPreviewTitle => 'Preview';
+
+  @override
+  String get meshServicesPreviewSubtitle =>
+      'This is what nearby peers will see';
+
+  @override
+  String get meshServicesPublishAction => 'Publish';
+
+  @override
+  String get meshServicesPublishSuccess => 'Service published';
+
+  @override
+  String get meshServicesStatusActive => 'Active';
+
+  @override
+  String get meshServicesStatusStopped => 'Stopped';
+
+  @override
+  String get meshServicesStatusExpired => 'Expired';
+
+  @override
+  String get meshServicesStopAction => 'Stop';
+
+  @override
+  String get meshServicesDeleteAction => 'Delete';
+
+  @override
+  String get meshServicesActionsLabel => 'Actions';
+
+  @override
+  String get meshServicesStopConfirm =>
+      'Stop this service? Nearby peers will no longer see it.';
+
+  @override
+  String get meshServicesDeleteConfirm =>
+      'Delete this service? This cannot be undone.';
+
+  @override
+  String get meshServicesDetailTitle => 'Service Details';
+
+  @override
+  String meshServicesRemainingTime(String duration) {
+    return '$duration remaining';
+  }
+
+  @override
+  String meshServicesDurationMinutes(int count) {
+    return '$count min';
+  }
+
+  @override
+  String meshServicesDurationHours(int count) {
+    return '$count hr';
+  }
+
+  @override
+  String get meshServicesTitleRequired => 'Title is required';
+
+  @override
+  String get meshServicesMinOptions => 'At least 2 options required';
+
+  @override
+  String get meshServicesMinItems => 'At least 1 item required';
+
+  @override
+  String get meshServicesConfirmAction => 'Confirm';
+
+  @override
+  String get meshServicesCancelAction => 'Cancel';
+
+  @override
+  String get meshServicesSearchHint => 'Search services';
+
+  @override
+  String get meshServicesFilterAll => 'All';
+
+  @override
+  String get meshServicesFilterActive => 'Active';
+
+  @override
+  String get meshServicesFilterExpired => 'Expired';
+
+  @override
+  String get meshServicesFilterStopped => 'Stopped';
+
+  @override
+  String get meshServicesNoResults => 'No matching services';
 }

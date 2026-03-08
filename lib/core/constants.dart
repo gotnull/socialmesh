@@ -396,6 +396,20 @@ class AppFeatureFlags {
       return false;
     }
   }
+
+  /// Whether the Mesh Services (Create Service) feature is enabled.
+  /// Set `MESH_SERVICES_ENABLED=true` in `.env` to enable.
+  /// Requires both [isSipEnabled] and [isMrrpEnabled] to be true.
+  /// Default: false.
+  static bool get isMeshServicesEnabled {
+    if (!isSipEnabled || !isMrrpEnabled) return false;
+    try {
+      final raw = dotenv.env['MESH_SERVICES_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
 }
 
 /// Privacy level for content visibility

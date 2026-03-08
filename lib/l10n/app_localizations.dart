@@ -54789,6 +54789,318 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Changed key'**
   String get meshExplorerChangedKey;
+
+  /// Drawer menu label for the Mesh Services screen.
+  ///
+  /// In en, this message translates to:
+  /// **'My Services'**
+  String get meshServicesDrawerLabel;
+
+  /// App bar title for the My Services management screen.
+  ///
+  /// In en, this message translates to:
+  /// **'My Services'**
+  String get meshServicesTitle;
+
+  /// Empty state headline when user has no service instances.
+  ///
+  /// In en, this message translates to:
+  /// **'No services yet'**
+  String get meshServicesEmpty;
+
+  /// Empty state description on My Services screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a service to share something useful on the mesh'**
+  String get meshServicesEmptyDescription;
+
+  /// Button label to create a new service instance.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Service'**
+  String get meshServicesCreateAction;
+
+  /// App bar title for the template picker / create service screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a Service'**
+  String get meshServicesCreateTitle;
+
+  /// Subtitle on the template picker screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose what you want to share on the mesh'**
+  String get meshServicesCreateSubtitle;
+
+  /// Template display name for mesh bulletin board.
+  ///
+  /// In en, this message translates to:
+  /// **'Bulletin Board'**
+  String get meshServicesTemplateBoard;
+
+  /// Template description for mesh bulletin board.
+  ///
+  /// In en, this message translates to:
+  /// **'Share short posts with nearby peers'**
+  String get meshServicesTemplateBoardDescription;
+
+  /// Template display name for signal beacon.
+  ///
+  /// In en, this message translates to:
+  /// **'Signal Beacon'**
+  String get meshServicesTemplateSignal;
+
+  /// Template description for signal beacon.
+  ///
+  /// In en, this message translates to:
+  /// **'Broadcast a signal to nearby peers'**
+  String get meshServicesTemplateSignalDescription;
+
+  /// Template display name for quick poll.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Poll'**
+  String get meshServicesTemplatePoll;
+
+  /// Template description for quick poll.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask a question with multiple choice answers'**
+  String get meshServicesTemplatePollDescription;
+
+  /// Template display name for shared checklist.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared Checklist'**
+  String get meshServicesTemplateChecklist;
+
+  /// Template description for shared checklist.
+  ///
+  /// In en, this message translates to:
+  /// **'Collaborate on a checklist with nearby peers'**
+  String get meshServicesTemplateChecklistDescription;
+
+  /// Template display name for resource list.
+  ///
+  /// In en, this message translates to:
+  /// **'Resource List'**
+  String get meshServicesTemplateResourceList;
+
+  /// Template description for resource list.
+  ///
+  /// In en, this message translates to:
+  /// **'Share a list of useful resources or supplies'**
+  String get meshServicesTemplateResourceListDescription;
+
+  /// Label for the service title input field.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get meshServicesFieldTitle;
+
+  /// Label for the service description input field.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get meshServicesFieldDescription;
+
+  /// Label for the service duration/TTL selector.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get meshServicesFieldDuration;
+
+  /// Label for poll question input field.
+  ///
+  /// In en, this message translates to:
+  /// **'Question'**
+  String get meshServicesFieldQuestion;
+
+  /// Label for poll option input field.
+  ///
+  /// In en, this message translates to:
+  /// **'Option {index}'**
+  String meshServicesFieldOption(int index);
+
+  /// Button label to add a poll option.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Option'**
+  String get meshServicesFieldAddOption;
+
+  /// Label for checklist/resource list item input.
+  ///
+  /// In en, this message translates to:
+  /// **'Item {index}'**
+  String meshServicesFieldItem(int index);
+
+  /// Button label to add an item to checklist or resource list.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Item'**
+  String get meshServicesFieldAddItem;
+
+  /// App bar title for the service preview screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get meshServicesPreviewTitle;
+
+  /// Subtitle on the preview screen.
+  ///
+  /// In en, this message translates to:
+  /// **'This is what nearby peers will see'**
+  String get meshServicesPreviewSubtitle;
+
+  /// Button label to publish/create the service instance.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish'**
+  String get meshServicesPublishAction;
+
+  /// Snackbar message after successfully creating a service.
+  ///
+  /// In en, this message translates to:
+  /// **'Service published'**
+  String get meshServicesPublishSuccess;
+
+  /// Status badge label for active instances.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get meshServicesStatusActive;
+
+  /// Status badge label for stopped instances.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped'**
+  String get meshServicesStatusStopped;
+
+  /// Status badge label for expired instances.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get meshServicesStatusExpired;
+
+  /// Action label to stop an active service instance.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get meshServicesStopAction;
+
+  /// Action label to delete a service instance.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get meshServicesDeleteAction;
+
+  /// Section label for instance detail sheet actions.
+  ///
+  /// In en, this message translates to:
+  /// **'Actions'**
+  String get meshServicesActionsLabel;
+
+  /// Confirmation message when stopping a service.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop this service? Nearby peers will no longer see it.'**
+  String get meshServicesStopConfirm;
+
+  /// Confirmation message when deleting a service.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this service? This cannot be undone.'**
+  String get meshServicesDeleteConfirm;
+
+  /// App bar title for the service instance detail screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Service Details'**
+  String get meshServicesDetailTitle;
+
+  /// Shows remaining time before service expires.
+  ///
+  /// In en, this message translates to:
+  /// **'{duration} remaining'**
+  String meshServicesRemainingTime(String duration);
+
+  /// Short duration label in minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} min'**
+  String meshServicesDurationMinutes(int count);
+
+  /// Short duration label in hours.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} hr'**
+  String meshServicesDurationHours(int count);
+
+  /// Validation error when title is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Title is required'**
+  String get meshServicesTitleRequired;
+
+  /// Validation error for poll with fewer than 2 options.
+  ///
+  /// In en, this message translates to:
+  /// **'At least 2 options required'**
+  String get meshServicesMinOptions;
+
+  /// Validation error for checklist/resource list with no items.
+  ///
+  /// In en, this message translates to:
+  /// **'At least 1 item required'**
+  String get meshServicesMinItems;
+
+  /// Generic confirm button label.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get meshServicesConfirmAction;
+
+  /// Generic cancel button label.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get meshServicesCancelAction;
+
+  /// Hint text for the search field on the My Services screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Search services'**
+  String get meshServicesSearchHint;
+
+  /// Filter chip label for all service instances.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get meshServicesFilterAll;
+
+  /// Filter chip label for active service instances.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get meshServicesFilterActive;
+
+  /// Filter chip label for expired service instances.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get meshServicesFilterExpired;
+
+  /// Filter chip label for stopped service instances.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped'**
+  String get meshServicesFilterStopped;
+
+  /// Empty state text when search or filter yields no results.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching services'**
+  String get meshServicesNoResults;
 }
 
 class _AppLocalizationsDelegate

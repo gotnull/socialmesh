@@ -41601,5 +41601,239 @@
     "meshExplorerChangedKey": "Changed key",
     "@meshExplorerChangedKey": {
         "description": "Badge label for peer with changed identity key."
+    },
+
+    "meshServicesDrawerLabel": "My Services",
+    "@meshServicesDrawerLabel": {
+        "description": "Drawer menu label for the Mesh Services screen."
+    },
+    "meshServicesTitle": "My Services",
+    "@meshServicesTitle": {
+        "description": "App bar title for the My Services management screen."
+    },
+    "meshServicesEmpty": "No services yet",
+    "@meshServicesEmpty": {
+        "description": "Empty state headline when user has no service instances."
+    },
+    "meshServicesEmptyDescription": "Create a service to share something useful on the mesh",
+    "@meshServicesEmptyDescription": {
+        "description": "Empty state description on My Services screen."
+    },
+    "meshServicesCreateAction": "Create Service",
+    "@meshServicesCreateAction": {
+        "description": "Button label to create a new service instance."
+    },
+    "meshServicesCreateTitle": "Create a Service",
+    "@meshServicesCreateTitle": {
+        "description": "App bar title for the template picker / create service screen."
+    },
+    "meshServicesCreateSubtitle": "Choose what you want to share on the mesh",
+    "@meshServicesCreateSubtitle": {
+        "description": "Subtitle on the template picker screen."
+    },
+    "meshServicesTemplateBoard": "Bulletin Board",
+    "@meshServicesTemplateBoard": {
+        "description": "Template display name for mesh bulletin board."
+    },
+    "meshServicesTemplateBoardDescription": "Share short posts with nearby peers",
+    "@meshServicesTemplateBoardDescription": {
+        "description": "Template description for mesh bulletin board."
+    },
+    "meshServicesTemplateSignal": "Signal Beacon",
+    "@meshServicesTemplateSignal": {
+        "description": "Template display name for signal beacon."
+    },
+    "meshServicesTemplateSignalDescription": "Broadcast a signal to nearby peers",
+    "@meshServicesTemplateSignalDescription": {
+        "description": "Template description for signal beacon."
+    },
+    "meshServicesTemplatePoll": "Quick Poll",
+    "@meshServicesTemplatePoll": {
+        "description": "Template display name for quick poll."
+    },
+    "meshServicesTemplatePollDescription": "Ask a question with multiple choice answers",
+    "@meshServicesTemplatePollDescription": {
+        "description": "Template description for quick poll."
+    },
+    "meshServicesTemplateChecklist": "Shared Checklist",
+    "@meshServicesTemplateChecklist": {
+        "description": "Template display name for shared checklist."
+    },
+    "meshServicesTemplateChecklistDescription": "Collaborate on a checklist with nearby peers",
+    "@meshServicesTemplateChecklistDescription": {
+        "description": "Template description for shared checklist."
+    },
+    "meshServicesTemplateResourceList": "Resource List",
+    "@meshServicesTemplateResourceList": {
+        "description": "Template display name for resource list."
+    },
+    "meshServicesTemplateResourceListDescription": "Share a list of useful resources or supplies",
+    "@meshServicesTemplateResourceListDescription": {
+        "description": "Template description for resource list."
+    },
+    "meshServicesFieldTitle": "Title",
+    "@meshServicesFieldTitle": {
+        "description": "Label for the service title input field."
+    },
+    "meshServicesFieldDescription": "Description",
+    "@meshServicesFieldDescription": {
+        "description": "Label for the service description input field."
+    },
+    "meshServicesFieldDuration": "Duration",
+    "@meshServicesFieldDuration": {
+        "description": "Label for the service duration/TTL selector."
+    },
+    "meshServicesFieldQuestion": "Question",
+    "@meshServicesFieldQuestion": {
+        "description": "Label for poll question input field."
+    },
+    "meshServicesFieldOption": "Option {index}",
+    "@meshServicesFieldOption": {
+        "description": "Label for poll option input field.",
+        "placeholders": {
+            "index": {
+                "type": "int"
+            }
+        }
+    },
+    "meshServicesFieldAddOption": "Add Option",
+    "@meshServicesFieldAddOption": {
+        "description": "Button label to add a poll option."
+    },
+    "meshServicesFieldItem": "Item {index}",
+    "@meshServicesFieldItem": {
+        "description": "Label for checklist/resource list item input.",
+        "placeholders": {
+            "index": {
+                "type": "int"
+            }
+        }
+    },
+    "meshServicesFieldAddItem": "Add Item",
+    "@meshServicesFieldAddItem": {
+        "description": "Button label to add an item to checklist or resource list."
+    },
+    "meshServicesPreviewTitle": "Preview",
+    "@meshServicesPreviewTitle": {
+        "description": "App bar title for the service preview screen."
+    },
+    "meshServicesPreviewSubtitle": "This is what nearby peers will see",
+    "@meshServicesPreviewSubtitle": {
+        "description": "Subtitle on the preview screen."
+    },
+    "meshServicesPublishAction": "Publish",
+    "@meshServicesPublishAction": {
+        "description": "Button label to publish/create the service instance."
+    },
+    "meshServicesPublishSuccess": "Service published",
+    "@meshServicesPublishSuccess": {
+        "description": "Snackbar message after successfully creating a service."
+    },
+    "meshServicesStatusActive": "Active",
+    "@meshServicesStatusActive": {
+        "description": "Status badge label for active instances."
+    },
+    "meshServicesStatusStopped": "Stopped",
+    "@meshServicesStatusStopped": {
+        "description": "Status badge label for stopped instances."
+    },
+    "meshServicesStatusExpired": "Expired",
+    "@meshServicesStatusExpired": {
+        "description": "Status badge label for expired instances."
+    },
+    "meshServicesStopAction": "Stop",
+    "@meshServicesStopAction": {
+        "description": "Action label to stop an active service instance."
+    },
+    "meshServicesDeleteAction": "Delete",
+    "@meshServicesDeleteAction": {
+        "description": "Action label to delete a service instance."
+    },
+    "meshServicesActionsLabel": "Actions",
+    "@meshServicesActionsLabel": {
+        "description": "Section label for instance detail sheet actions."
+    },
+    "meshServicesStopConfirm": "Stop this service? Nearby peers will no longer see it.",
+    "@meshServicesStopConfirm": {
+        "description": "Confirmation message when stopping a service."
+    },
+    "meshServicesDeleteConfirm": "Delete this service? This cannot be undone.",
+    "@meshServicesDeleteConfirm": {
+        "description": "Confirmation message when deleting a service."
+    },
+    "meshServicesDetailTitle": "Service Details",
+    "@meshServicesDetailTitle": {
+        "description": "App bar title for the service instance detail screen."
+    },
+    "meshServicesRemainingTime": "{duration} remaining",
+    "@meshServicesRemainingTime": {
+        "description": "Shows remaining time before service expires.",
+        "placeholders": {
+            "duration": {
+                "type": "String"
+            }
+        }
+    },
+    "meshServicesDurationMinutes": "{count} min",
+    "@meshServicesDurationMinutes": {
+        "description": "Short duration label in minutes.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "meshServicesDurationHours": "{count} hr",
+    "@meshServicesDurationHours": {
+        "description": "Short duration label in hours.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "meshServicesTitleRequired": "Title is required",
+    "@meshServicesTitleRequired": {
+        "description": "Validation error when title is empty."
+    },
+    "meshServicesMinOptions": "At least 2 options required",
+    "@meshServicesMinOptions": {
+        "description": "Validation error for poll with fewer than 2 options."
+    },
+    "meshServicesMinItems": "At least 1 item required",
+    "@meshServicesMinItems": {
+        "description": "Validation error for checklist/resource list with no items."
+    },
+    "meshServicesConfirmAction": "Confirm",
+    "@meshServicesConfirmAction": {
+        "description": "Generic confirm button label."
+    },
+    "meshServicesCancelAction": "Cancel",
+    "@meshServicesCancelAction": {
+        "description": "Generic cancel button label."
+    },
+    "meshServicesSearchHint": "Search services",
+    "@meshServicesSearchHint": {
+        "description": "Hint text for the search field on the My Services screen."
+    },
+    "meshServicesFilterAll": "All",
+    "@meshServicesFilterAll": {
+        "description": "Filter chip label for all service instances."
+    },
+    "meshServicesFilterActive": "Active",
+    "@meshServicesFilterActive": {
+        "description": "Filter chip label for active service instances."
+    },
+    "meshServicesFilterExpired": "Expired",
+    "@meshServicesFilterExpired": {
+        "description": "Filter chip label for expired service instances."
+    },
+    "meshServicesFilterStopped": "Stopped",
+    "@meshServicesFilterStopped": {
+        "description": "Filter chip label for stopped service instances."
+    },
+    "meshServicesNoResults": "No matching services",
+    "@meshServicesNoResults": {
+        "description": "Empty state text when search or filter yields no results."
     }
 }
