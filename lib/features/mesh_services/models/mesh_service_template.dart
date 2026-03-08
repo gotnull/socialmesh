@@ -12,7 +12,18 @@ import 'package:flutter/material.dart';
 import '../../../core/theme.dart';
 
 /// Identifies a built-in service template.
-enum MeshServiceTemplateId { board, signal, poll, checklist, resourceList }
+enum MeshServiceTemplateId {
+  board,
+  signal,
+  poll,
+  checklist,
+  resourceList,
+  weatherStation,
+  sensorNode,
+  taskBoard,
+  trailConditions,
+  lostAndFound,
+}
 
 /// A built-in service template definition.
 ///
@@ -115,8 +126,69 @@ abstract final class MeshServiceTemplateCatalog {
     maxDescriptionLength: 100,
   );
 
+  static const weatherStation = MeshServiceTemplate(
+    id: MeshServiceTemplateId.weatherStation,
+    icon: Icons.cloud_outlined,
+    accentColor: AccentColors.blue,
+    defaultTtlMinutes: 1440,
+    maxTtlMinutes: 4320, // 72h
+    maxTitleLength: 40,
+    maxDescriptionLength: 100,
+  );
+
+  static const sensorNode = MeshServiceTemplate(
+    id: MeshServiceTemplateId.sensorNode,
+    icon: Icons.speed_outlined,
+    accentColor: AccentColors.teal,
+    defaultTtlMinutes: 1440,
+    maxTtlMinutes: 4320,
+    maxTitleLength: 40,
+    maxDescriptionLength: 100,
+  );
+
+  static const taskBoard = MeshServiceTemplate(
+    id: MeshServiceTemplateId.taskBoard,
+    icon: Icons.view_kanban_outlined,
+    accentColor: AccentColors.indigo,
+    defaultTtlMinutes: 120,
+    maxTtlMinutes: 1440,
+    maxTitleLength: 40,
+    maxDescriptionLength: 100,
+  );
+
+  static const trailConditions = MeshServiceTemplate(
+    id: MeshServiceTemplateId.trailConditions,
+    icon: Icons.terrain_outlined,
+    accentColor: AccentColors.emerald,
+    defaultTtlMinutes: 240,
+    maxTtlMinutes: 1440,
+    maxTitleLength: 40,
+    maxDescriptionLength: 100,
+  );
+
+  static const lostAndFound = MeshServiceTemplate(
+    id: MeshServiceTemplateId.lostAndFound,
+    icon: Icons.search_outlined,
+    accentColor: AccentColors.coral,
+    defaultTtlMinutes: 1440,
+    maxTtlMinutes: 4320,
+    maxTitleLength: 40,
+    maxDescriptionLength: 140,
+  );
+
   /// All available templates in display order.
-  static const all = [board, signal, poll, checklist, resourceList];
+  static const all = [
+    board,
+    signal,
+    poll,
+    checklist,
+    resourceList,
+    weatherStation,
+    sensorNode,
+    taskBoard,
+    trailConditions,
+    lostAndFound,
+  ];
 
   /// Look up a template by ID.
   static MeshServiceTemplate? byId(MeshServiceTemplateId id) {

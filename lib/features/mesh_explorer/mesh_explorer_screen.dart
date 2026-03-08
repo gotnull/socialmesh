@@ -17,8 +17,10 @@ import '../../core/widgets/section_header.dart';
 import '../../core/logging.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/mesh_explorer_providers.dart';
+import '../../providers/nearby_activity_provider.dart';
 import '../../providers/sip_providers.dart';
 import '../../services/haptic_service.dart';
+import 'widgets/mesh_explorer_activity_section.dart';
 import 'widgets/mesh_explorer_hero.dart';
 import 'widgets/mesh_explorer_nearby_section.dart';
 import 'widgets/mesh_explorer_services_section.dart';
@@ -63,6 +65,7 @@ class _MeshExplorerScreenState extends ConsumerState<MeshExplorerScreen>
     final summary = ref.watch(meshExplorerSummaryProvider);
     final peers = ref.watch(meshExplorerPeersProvider);
     final services = ref.watch(meshExplorerServicesProvider);
+    final activities = ref.watch(nearbyActivityProvider);
 
     return GlassScaffold(
       title: l10n.meshExplorerTitle,
@@ -77,6 +80,20 @@ class _MeshExplorerScreenState extends ConsumerState<MeshExplorerScreen>
       slivers: [
         // Hero summary
         SliverToBoxAdapter(child: MeshExplorerHero(summary: summary)),
+
+        // Activity section — ambient nearby events
+        if (summary.isConnected && activities.isNotEmpty) ...[
+          SliverPersistentHeader(
+            pinned: false,
+            delegate: SectionHeaderDelegate(
+              title: l10n.nearbyActivitySectionTitle,
+              count: activities.length,
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: MeshExplorerActivitySection(activities: activities),
+          ),
+        ],
 
         // Nearby peers section
         if (summary.isConnected) ...[

@@ -41395,6 +41395,18 @@
     "@meshExplorerEmptyBoardBody": {
         "description": "Empty state body when no board posts exist."
     },
+    "nearbyActivitySectionTitle": "Activity",
+    "@nearbyActivitySectionTitle": {
+        "description": "Section header title for nearby activity in Mesh Explorer."
+    },
+    "nearbyActivityEmptyTitle": "No recent activity",
+    "@nearbyActivityEmptyTitle": {
+        "description": "Empty state title when no nearby activity exists."
+    },
+    "nearbyActivityEmptyBody": "Nearby services and signals will appear here",
+    "@nearbyActivityEmptyBody": {
+        "description": "Empty state body when no nearby activity exists."
+    },
     "meshExplorerNotConnectedTitle": "Radio not connected",
     "@meshExplorerNotConnectedTitle": {
         "description": "Empty state title when no radio is connected."
@@ -41670,6 +41682,107 @@
     "meshServicesTemplateResourceListDescription": "Share a list of useful resources or supplies",
     "@meshServicesTemplateResourceListDescription": {
         "description": "Template description for resource list."
+    },
+    "meshServicesTemplateWeatherStation": "Weather Station",
+    "@meshServicesTemplateWeatherStation": {
+        "description": "Template display name for weather station."
+    },
+    "meshServicesTemplateWeatherStationDescription": "Share local weather readings with nearby peers",
+    "@meshServicesTemplateWeatherStationDescription": {
+        "description": "Template description for weather station."
+    },
+    "meshServicesTemplateSensorNode": "Sensor Node",
+    "@meshServicesTemplateSensorNode": {
+        "description": "Template display name for sensor node."
+    },
+    "meshServicesTemplateSensorNodeDescription": "Publish sensor data from a connected device",
+    "@meshServicesTemplateSensorNodeDescription": {
+        "description": "Template description for sensor node."
+    },
+    "meshServicesTemplateTaskBoard": "Task Board",
+    "@meshServicesTemplateTaskBoard": {
+        "description": "Template display name for task board."
+    },
+    "meshServicesTemplateTaskBoardDescription": "Coordinate tasks with nearby peers",
+    "@meshServicesTemplateTaskBoardDescription": {
+        "description": "Template description for task board."
+    },
+    "meshServicesTemplateTrailConditions": "Trail Conditions",
+    "@meshServicesTemplateTrailConditions": {
+        "description": "Template display name for trail conditions."
+    },
+    "meshServicesTemplateTrailConditionsDescription": "Report trail and route conditions for others",
+    "@meshServicesTemplateTrailConditionsDescription": {
+        "description": "Template description for trail conditions."
+    },
+    "meshServicesTemplateLostAndFound": "Lost & Found",
+    "@meshServicesTemplateLostAndFound": {
+        "description": "Template display name for lost and found."
+    },
+    "meshServicesTemplateLostAndFoundDescription": "Post lost or found items for nearby peers",
+    "@meshServicesTemplateLostAndFoundDescription": {
+        "description": "Template description for lost and found."
+    },
+    "schemaFieldNoData": "No data",
+    "@schemaFieldNoData": {
+        "description": "Placeholder shown when a schema field has no value."
+    },
+    "schemaFieldEmptyList": "Empty list",
+    "@schemaFieldEmptyList": {
+        "description": "Placeholder shown when a list-type schema field is empty."
+    },
+    "schemaFieldMoreItems": "{count} more",
+    "@schemaFieldMoreItems": {
+        "description": "Label showing number of additional list items not displayed.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "schemaFieldJustNow": "Just now",
+    "@schemaFieldJustNow": {
+        "description": "Relative time label for timestamps less than a minute ago."
+    },
+    "schemaFieldMinutesAgo": "{count}m ago",
+    "@schemaFieldMinutesAgo": {
+        "description": "Relative time label for timestamps minutes ago.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "schemaFieldHoursAgo": "{count}h ago",
+    "@schemaFieldHoursAgo": {
+        "description": "Relative time label for timestamps hours ago.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "schemaFieldDaysAgo": "{count}d ago",
+    "@schemaFieldDaysAgo": {
+        "description": "Relative time label for timestamps days ago.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "serviceDetailUnknownTitle": "Unknown Service",
+    "@serviceDetailUnknownTitle": {
+        "description": "Title shown when a service type is not recognized."
+    },
+    "serviceDetailUnknownBody": "Service type \"{serviceType}\" is not recognized by this version of the app.",
+    "@serviceDetailUnknownBody": {
+        "description": "Body text shown when a service type is not recognized.",
+        "placeholders": {
+            "serviceType": {
+                "type": "String"
+            }
+        }
     },
     "meshServicesFieldTitle": "Title",
     "@meshServicesFieldTitle": {

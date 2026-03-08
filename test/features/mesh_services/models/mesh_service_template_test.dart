@@ -7,8 +7,8 @@ import 'package:socialmesh/features/mesh_services/models/mesh_service_template.d
 
 void main() {
   group('MeshServiceTemplateCatalog', () {
-    test('all contains exactly 5 templates', () {
-      expect(MeshServiceTemplateCatalog.all.length, 5);
+    test('all contains exactly 10 templates', () {
+      expect(MeshServiceTemplateCatalog.all.length, 10);
     });
 
     test('all template IDs are unique', () {

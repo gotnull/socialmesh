@@ -13,6 +13,9 @@ import 'package:flutter/material.dart';
 import '../../../services/protocol/sip/mrrp_types.dart';
 import '../../mesh_services/services/mesh_service_engine.dart';
 
+/// Signal service ID (signal.v1 = 0x00000004).
+const int _signalV1ServiceId = 0x00000004;
+
 /// A public-facing card representation of an MRRP service.
 class ServicePresentation {
   /// Human-readable service title (e.g., "Bulletin Board").
@@ -90,6 +93,15 @@ abstract final class ServicePresentationCatalog {
       requiresIdentity: true,
       actionLabel: 'Details', // lint-allow: hardcoded-string
       privacyClass: ServicePrivacyClass.identityGated,
+    ),
+    _signalV1ServiceId: ServicePresentation(
+      title: 'Signals', // lint-allow: hardcoded-string
+      subtitle: 'Anonymous status broadcasts', // lint-allow: hardcoded-string
+      icon: Icons.cell_tower_outlined,
+      requiresHandshake: false,
+      requiresIdentity: false,
+      actionLabel: 'View', // lint-allow: hardcoded-string
+      privacyClass: ServicePrivacyClass.open,
     ),
     kMeshServicesInstanceServiceId: ServicePresentation(
       title: 'Mesh Services', // lint-allow: hardcoded-string

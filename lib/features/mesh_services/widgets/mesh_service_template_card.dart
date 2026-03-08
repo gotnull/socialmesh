@@ -137,6 +137,26 @@ class MeshServiceTemplateCard extends StatelessWidget {
         l10n.meshServicesTemplateResourceList as String,
         l10n.meshServicesTemplateResourceListDescription as String,
       ),
+      MeshServiceTemplateId.weatherStation => (
+        l10n.meshServicesTemplateWeatherStation as String,
+        l10n.meshServicesTemplateWeatherStationDescription as String,
+      ),
+      MeshServiceTemplateId.sensorNode => (
+        l10n.meshServicesTemplateSensorNode as String,
+        l10n.meshServicesTemplateSensorNodeDescription as String,
+      ),
+      MeshServiceTemplateId.taskBoard => (
+        l10n.meshServicesTemplateTaskBoard as String,
+        l10n.meshServicesTemplateTaskBoardDescription as String,
+      ),
+      MeshServiceTemplateId.trailConditions => (
+        l10n.meshServicesTemplateTrailConditions as String,
+        l10n.meshServicesTemplateTrailConditionsDescription as String,
+      ),
+      MeshServiceTemplateId.lostAndFound => (
+        l10n.meshServicesTemplateLostAndFound as String,
+        l10n.meshServicesTemplateLostAndFoundDescription as String,
+      ),
     };
   }
 }

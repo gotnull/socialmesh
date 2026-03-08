@@ -54502,6 +54502,24 @@ abstract class AppLocalizations {
   /// **'Board posts from nearby peers will appear here'**
   String get meshExplorerEmptyBoardBody;
 
+  /// Section header title for nearby activity in Mesh Explorer.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get nearbyActivitySectionTitle;
+
+  /// Empty state title when no nearby activity exists.
+  ///
+  /// In en, this message translates to:
+  /// **'No recent activity'**
+  String get nearbyActivityEmptyTitle;
+
+  /// Empty state body when no nearby activity exists.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby services and signals will appear here'**
+  String get nearbyActivityEmptyBody;
+
   /// Empty state title when no radio is connected.
   ///
   /// In en, this message translates to:
@@ -54891,6 +54909,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Share a list of useful resources or supplies'**
   String get meshServicesTemplateResourceListDescription;
+
+  /// Template display name for weather station.
+  ///
+  /// In en, this message translates to:
+  /// **'Weather Station'**
+  String get meshServicesTemplateWeatherStation;
+
+  /// Template description for weather station.
+  ///
+  /// In en, this message translates to:
+  /// **'Share local weather readings with nearby peers'**
+  String get meshServicesTemplateWeatherStationDescription;
+
+  /// Template display name for sensor node.
+  ///
+  /// In en, this message translates to:
+  /// **'Sensor Node'**
+  String get meshServicesTemplateSensorNode;
+
+  /// Template description for sensor node.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish sensor data from a connected device'**
+  String get meshServicesTemplateSensorNodeDescription;
+
+  /// Template display name for task board.
+  ///
+  /// In en, this message translates to:
+  /// **'Task Board'**
+  String get meshServicesTemplateTaskBoard;
+
+  /// Template description for task board.
+  ///
+  /// In en, this message translates to:
+  /// **'Coordinate tasks with nearby peers'**
+  String get meshServicesTemplateTaskBoardDescription;
+
+  /// Template display name for trail conditions.
+  ///
+  /// In en, this message translates to:
+  /// **'Trail Conditions'**
+  String get meshServicesTemplateTrailConditions;
+
+  /// Template description for trail conditions.
+  ///
+  /// In en, this message translates to:
+  /// **'Report trail and route conditions for others'**
+  String get meshServicesTemplateTrailConditionsDescription;
+
+  /// Template display name for lost and found.
+  ///
+  /// In en, this message translates to:
+  /// **'Lost & Found'**
+  String get meshServicesTemplateLostAndFound;
+
+  /// Template description for lost and found.
+  ///
+  /// In en, this message translates to:
+  /// **'Post lost or found items for nearby peers'**
+  String get meshServicesTemplateLostAndFoundDescription;
+
+  /// Placeholder shown when a schema field has no value.
+  ///
+  /// In en, this message translates to:
+  /// **'No data'**
+  String get schemaFieldNoData;
+
+  /// Placeholder shown when a list-type schema field is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty list'**
+  String get schemaFieldEmptyList;
+
+  /// Label showing number of additional list items not displayed.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} more'**
+  String schemaFieldMoreItems(int count);
+
+  /// Relative time label for timestamps less than a minute ago.
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get schemaFieldJustNow;
+
+  /// Relative time label for timestamps minutes ago.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}m ago'**
+  String schemaFieldMinutesAgo(int count);
+
+  /// Relative time label for timestamps hours ago.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}h ago'**
+  String schemaFieldHoursAgo(int count);
+
+  /// Relative time label for timestamps days ago.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}d ago'**
+  String schemaFieldDaysAgo(int count);
+
+  /// Title shown when a service type is not recognized.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown Service'**
+  String get serviceDetailUnknownTitle;
+
+  /// Body text shown when a service type is not recognized.
+  ///
+  /// In en, this message translates to:
+  /// **'Service type \"{serviceType}\" is not recognized by this version of the app.'**
+  String serviceDetailUnknownBody(String serviceType);
 
   /// Label for the service title input field.
   ///

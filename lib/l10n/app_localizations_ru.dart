@@ -30868,6 +30868,16 @@ class AppLocalizationsRu extends AppLocalizations {
       'Board posts from nearby peers will appear here';
 
   @override
+  String get nearbyActivitySectionTitle => 'Activity';
+
+  @override
+  String get nearbyActivityEmptyTitle => 'No recent activity';
+
+  @override
+  String get nearbyActivityEmptyBody =>
+      'Nearby services and signals will appear here';
+
+  @override
   String get meshExplorerNotConnectedTitle => 'Radio not connected';
 
   @override
@@ -31098,6 +31108,78 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get meshServicesTemplateResourceListDescription =>
       'Share a list of useful resources or supplies';
+
+  @override
+  String get meshServicesTemplateWeatherStation => 'Weather Station';
+
+  @override
+  String get meshServicesTemplateWeatherStationDescription =>
+      'Share local weather readings with nearby peers';
+
+  @override
+  String get meshServicesTemplateSensorNode => 'Sensor Node';
+
+  @override
+  String get meshServicesTemplateSensorNodeDescription =>
+      'Publish sensor data from a connected device';
+
+  @override
+  String get meshServicesTemplateTaskBoard => 'Task Board';
+
+  @override
+  String get meshServicesTemplateTaskBoardDescription =>
+      'Coordinate tasks with nearby peers';
+
+  @override
+  String get meshServicesTemplateTrailConditions => 'Trail Conditions';
+
+  @override
+  String get meshServicesTemplateTrailConditionsDescription =>
+      'Report trail and route conditions for others';
+
+  @override
+  String get meshServicesTemplateLostAndFound => 'Lost & Found';
+
+  @override
+  String get meshServicesTemplateLostAndFoundDescription =>
+      'Post lost or found items for nearby peers';
+
+  @override
+  String get schemaFieldNoData => 'No data';
+
+  @override
+  String get schemaFieldEmptyList => 'Empty list';
+
+  @override
+  String schemaFieldMoreItems(int count) {
+    return '$count more';
+  }
+
+  @override
+  String get schemaFieldJustNow => 'Just now';
+
+  @override
+  String schemaFieldMinutesAgo(int count) {
+    return '${count}m ago';
+  }
+
+  @override
+  String schemaFieldHoursAgo(int count) {
+    return '${count}h ago';
+  }
+
+  @override
+  String schemaFieldDaysAgo(int count) {
+    return '${count}d ago';
+  }
+
+  @override
+  String get serviceDetailUnknownTitle => 'Unknown Service';
+
+  @override
+  String serviceDetailUnknownBody(String serviceType) {
+    return 'Service type \"$serviceType\" is not recognized by this version of the app.';
+  }
 
   @override
   String get meshServicesFieldTitle => 'Title';

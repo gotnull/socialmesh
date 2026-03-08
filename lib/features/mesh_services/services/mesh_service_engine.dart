@@ -24,6 +24,8 @@ import '../../../services/protocol/sip/mrrp_service_handler.dart';
 import '../../../services/protocol/sip/mrrp_types.dart';
 import '../models/mesh_service_instance.dart';
 import '../models/mesh_service_template.dart';
+import '../models/service_schema.dart';
+import '../models/template_schemas.dart';
 import 'mesh_service_store.dart';
 
 /// Well-known MRRP service ID for user-created mesh service instances.
@@ -43,6 +45,9 @@ abstract final class MeshServicesAction {
 
   /// Interact with an instance (template-specific: vote, check item, etc).
   static const int interact = 0x0003;
+
+  /// Get the schema descriptor for a specific instance.
+  static const int getSchema = 0x0004;
 }
 
 /// MRRP service handler for user-created mesh service instances.
@@ -67,6 +72,7 @@ class MeshServicesHandler implements MrrpServiceHandler {
     MeshServicesAction.listInstances,
     MeshServicesAction.getInstance,
     MeshServicesAction.interact,
+    MeshServicesAction.getSchema,
   };
 
   @override
@@ -78,6 +84,8 @@ class MeshServicesHandler implements MrrpServiceHandler {
         return _handleGetInstance(request);
       case MeshServicesAction.interact:
         return _handleInteract(request, senderNodeId);
+      case MeshServicesAction.getSchema:
+        return _handleGetSchema(request);
       default:
         return _buildError(request, MrrpStatusCode.unsupported);
     }
@@ -167,6 +175,29 @@ class MeshServicesHandler implements MrrpServiceHandler {
     }
 
     return _buildResponse(request, result);
+  }
+
+  Future<MrrpFrame> _handleGetSchema(MrrpFrame request) async {
+    if (request.payload.length < 16) {
+      return _buildError(request, MrrpStatusCode.invalid);
+    }
+    final instanceId = decodeInstanceId(request.payload);
+    final inst = await _store.get(instanceId);
+    if (inst == null || !inst.isActive) {
+      return _buildError(request, MrrpStatusCode.notFound);
+    }
+
+    final schema = TemplateSchemas.forTemplate(inst.templateId);
+    if (schema == null) {
+      return _buildError(request, MrrpStatusCode.notFound);
+    }
+
+    final encoded = ServiceSchemaCodec.encode(schema);
+    if (encoded == null) {
+      return _buildError(request, MrrpStatusCode.internal);
+    }
+
+    return _buildResponse(request, encoded);
   }
 
   MrrpFrame _buildResponse(MrrpFrame request, Uint8List payload) {
