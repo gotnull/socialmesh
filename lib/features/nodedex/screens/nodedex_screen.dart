@@ -559,11 +559,13 @@ class _NodeDexStatsCard extends StatelessWidget {
           ),
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Explorer title — full width, never truncated
+            // Explorer title — centered
             Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(Icons.auto_awesome, size: 14, color: context.accentColor),
                 const SizedBox(width: AppTheme.spacing6),
@@ -583,30 +585,38 @@ class _NodeDexStatsCard extends StatelessWidget {
               ],
             ),
 
-            const SizedBox(height: AppTheme.spacing6),
+            const SizedBox(height: AppTheme.spacing8),
 
-            // Compact stats row — full width below the title
+            // Stats chips — full width, evenly spaced
             Row(
               children: [
-                _CompactStat(
-                  icon: Icons.hexagon_outlined,
-                  value: stats.totalNodes.toString(),
+                Expanded(
+                  child: _StatChip(
+                    icon: Icons.hexagon_outlined,
+                    value: stats.totalNodes.toString(),
+                  ),
                 ),
-                const SizedBox(width: AppTheme.spacing10),
-                _CompactStat(
-                  icon: Icons.public_outlined,
-                  value: stats.totalRegions.toString(),
+                const SizedBox(width: AppTheme.spacing6),
+                Expanded(
+                  child: _StatChip(
+                    icon: Icons.public_outlined,
+                    value: stats.totalRegions.toString(),
+                  ),
                 ),
-                const SizedBox(width: AppTheme.spacing10),
-                _CompactStat(
-                  icon: Icons.repeat,
-                  value: _compactNumber(stats.totalEncounters),
+                const SizedBox(width: AppTheme.spacing6),
+                Expanded(
+                  child: _StatChip(
+                    icon: Icons.repeat,
+                    value: _compactNumber(stats.totalEncounters),
+                  ),
                 ),
                 if (stats.longestDistance != null) ...[
-                  const SizedBox(width: AppTheme.spacing10),
-                  _CompactStat(
-                    icon: Icons.straighten,
-                    value: _formatDistance(stats.longestDistance),
+                  const SizedBox(width: AppTheme.spacing6),
+                  Expanded(
+                    child: _StatChip(
+                      icon: Icons.straighten,
+                      value: _formatDistance(stats.longestDistance),
+                    ),
                   ),
                 ],
               ],
@@ -632,29 +642,44 @@ class _NodeDexStatsCard extends StatelessWidget {
   }
 }
 
-class _CompactStat extends StatelessWidget {
+class _StatChip extends StatelessWidget {
   final IconData icon;
   final String value;
 
-  const _CompactStat({required this.icon, required this.value});
+  const _StatChip({required this.icon, required this.value});
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 12, color: context.textTertiary),
-        const SizedBox(width: AppTheme.spacing3),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            color: context.textPrimary,
-            fontFamily: AppTheme.fontFamily,
-          ),
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing8,
+        vertical: AppTheme.spacing4,
+      ),
+      decoration: BoxDecoration(
+        color: context.surface,
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
+        border: Border.all(
+          color: context.border.withValues(alpha: 0.4),
+          width: 0.5,
         ),
-      ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: context.textTertiary),
+          const SizedBox(width: AppTheme.spacing3),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: context.textPrimary,
+              fontFamily: AppTheme.fontFamily,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
