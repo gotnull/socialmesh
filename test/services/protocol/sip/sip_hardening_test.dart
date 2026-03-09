@@ -332,7 +332,8 @@ void main() {
       // Complete a full handshake.
       final helloFrame = initiator.initiateHandshake(0xBBBB);
       expect(helloFrame, isNotNull);
-      final challengeFrame = responder.handleHello(0xAAAA, helloFrame!);
+      responder.handleHello(0xAAAA, helloFrame!);
+      final challengeFrame = responder.acceptHandshake(0xAAAA);
       expect(challengeFrame, isNotNull);
       final responseFrame = await initiator.handleChallenge(
         0xBBBB,
@@ -802,17 +803,17 @@ void main() {
         localNodeId: 0x1111,
       );
 
-      // First HELLO: creates session and returns challenge.
+      // First HELLO: queues for consent. Accept to move to challengeSent.
       final hello1 = _makeHelloFrame(nonce: 500);
-      final challenge = mgr.handleHello(0xAAAA, hello1);
-      expect(challenge, isNotNull);
+      mgr.handleHello(0xAAAA, hello1);
+      expect(mgr.getState(0xAAAA), SipHandshakeState.pendingApproval);
+      mgr.acceptHandshake(0xAAAA);
       expect(mgr.getState(0xAAAA), SipHandshakeState.challengeSent);
 
       // Duplicate HELLO (different nonce but same peer, session in progress):
       // absorbed without restarting the session.
       final hello2 = _makeHelloFrame(nonce: 501);
-      final result = mgr.handleHello(0xAAAA, hello2);
-      expect(result, isNull);
+      mgr.handleHello(0xAAAA, hello2);
       // State unchanged.
       expect(mgr.getState(0xAAAA), SipHandshakeState.challengeSent);
     });
@@ -829,7 +830,8 @@ void main() {
 
       // Complete a full handshake.
       final helloFrame = initiator.initiateHandshake(0xBBBB);
-      final challengeFrame = responder.handleHello(0xAAAA, helloFrame!);
+      responder.handleHello(0xAAAA, helloFrame!);
+      final challengeFrame = responder.acceptHandshake(0xAAAA);
       final responseFrame = await initiator.handleChallenge(
         0xBBBB,
         challengeFrame!,
@@ -843,8 +845,7 @@ void main() {
       // Responder has completed result pending. A stale HELLO should be
       // ignored.
       final staleHello = _makeHelloFrame(nonce: 999);
-      final result = responder.handleHello(0xAAAA, staleHello);
-      expect(result, isNull);
+      responder.handleHello(0xAAAA, staleHello);
 
       // Completed result still intact.
       final completed = responder.consumeResult(0xAAAA);
@@ -959,7 +960,8 @@ void main() {
       final hello = initiator.initiateHandshake(0xBBBB);
       expect(stateChanges, 1);
 
-      final challenge = responder.handleHello(0xAAAA, hello!);
+      responder.handleHello(0xAAAA, hello!);
+      final challenge = responder.acceptHandshake(0xAAAA);
 
       // Handle challenge: challengeReceived + responseSent (2 changes).
       await initiator.handleChallenge(0xBBBB, challenge!);
@@ -993,7 +995,8 @@ void main() {
 
       // Complete a full handshake.
       final hello = initiator.initiateHandshake(0xBBBB);
-      final challenge = responder.handleHello(0xAAAA, hello!);
+      responder.handleHello(0xAAAA, hello!);
+      final challenge = responder.acceptHandshake(0xAAAA);
       final response = await initiator.handleChallenge(0xBBBB, challenge!);
       await responder.handleResponse(0xAAAA, response!);
 

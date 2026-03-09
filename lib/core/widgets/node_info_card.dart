@@ -25,6 +25,9 @@ class NodeInfoCard extends ConsumerWidget {
   final double? bearingFromMe;
   final VoidCallback? onShareLocation;
   final VoidCallback? onCopyCoordinates;
+  final VoidCallback? onTraceroute;
+  final VoidCallback? onViewDetails;
+  final VoidCallback? onViewHistory;
 
   /// If true, shows a compact version without action buttons
   final bool compact;
@@ -39,6 +42,9 @@ class NodeInfoCard extends ConsumerWidget {
     this.bearingFromMe,
     this.onShareLocation,
     this.onCopyCoordinates,
+    this.onTraceroute,
+    this.onViewDetails,
+    this.onViewHistory,
     this.compact = false,
   });
 
@@ -542,6 +548,81 @@ class NodeInfoCard extends ConsumerWidget {
                           Icons.copy,
                           size: 18,
                           color: context.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+              if (onTraceroute != null) ...[
+                const SizedBox(width: AppTheme.spacing8),
+                Tooltip(
+                  message: context.l10n.nodeInfoTraceroute,
+                  child: SizedBox(
+                    width: 36,
+                    height: 36,
+                    child: Material(
+                      color: context.background,
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
+                      child: InkWell(
+                        onTap: onTraceroute,
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
+                        child: Center(
+                          child: Icon(
+                            Icons.route,
+                            size: 18,
+                            color: context.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+              if (onViewDetails != null) ...[
+                const SizedBox(width: AppTheme.spacing8),
+                Tooltip(
+                  message: context.l10n.nodeInfoViewDetails,
+                  child: SizedBox(
+                    width: 36,
+                    height: 36,
+                    child: Material(
+                      color: context.background,
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
+                      child: InkWell(
+                        onTap: onViewDetails,
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
+                        child: Center(
+                          child: Icon(
+                            Icons.open_in_new,
+                            size: 18,
+                            color: context.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+              if (onViewHistory != null) ...[
+                const SizedBox(width: AppTheme.spacing8),
+                Tooltip(
+                  message: context.l10n.nodeInfoViewHistory,
+                  child: SizedBox(
+                    width: 36,
+                    height: 36,
+                    child: Material(
+                      color: context.background,
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
+                      child: InkWell(
+                        onTap: onViewHistory,
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
+                        child: Center(
+                          child: Icon(
+                            Icons.history,
+                            size: 18,
+                            color: context.textSecondary,
+                          ),
                         ),
                       ),
                     ),

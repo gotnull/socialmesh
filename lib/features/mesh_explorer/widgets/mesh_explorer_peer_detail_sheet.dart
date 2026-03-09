@@ -354,7 +354,7 @@ class _ActionButtons extends ConsumerWidget {
       SipHandshakeState.helloSent ||
       SipHandshakeState.challengeReceived ||
       SipHandshakeState.responseSent ||
-      SipHandshakeState.helloReceived ||
+      SipHandshakeState.pendingApproval ||
       SipHandshakeState.challengeSent ||
       SipHandshakeState.responseReceived => true,
       _ => false,
@@ -389,8 +389,16 @@ class _ActionButtons extends ConsumerWidget {
   Future<void> _onRequestIdentity(BuildContext context, WidgetRef ref) async {
     final haptics = ref.read(hapticServiceProvider);
     final identity = ref.read(sipIdentityHandlerProvider);
+    final protocol = ref.read(protocolServiceProvider);
     await haptics.trigger(HapticType.medium);
-    identity?.buildIdReq();
+    final outbound = identity?.buildIdReq();
+    if (outbound != null) {
+      await protocol.sendSipPayload(outbound.encoded, SipMessageType.idReq);
+      AppLogging.sip(
+        'MESH_EXPLORER: ID_REQ sent to '
+        'node=0x${peer.nodeId.toRadixString(16)}',
+      );
+    }
     if (context.mounted) Navigator.of(context).pop();
   }
 

@@ -3552,6 +3552,15 @@ class AppLocalizationsPt extends AppLocalizations {
   String get nodeInfoMessage => 'Mensagem';
 
   @override
+  String get nodeInfoTraceroute => 'Traceroute';
+
+  @override
+  String get nodeInfoViewDetails => 'View Details';
+
+  @override
+  String get nodeInfoViewHistory => 'Traceroute History';
+
+  @override
   String get bindingSelectorNoResults => 'Nenhuma variável encontrada';
 
   @override
@@ -30454,6 +30463,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get sipHandshakeFailed => 'Handshake failed';
 
   @override
+  String get sipHandshakePendingLabel => 'Request Pending';
+
+  @override
   String get sipRequestIdentity => 'Request Identity';
 
   @override
@@ -30567,11 +30579,76 @@ class AppLocalizationsPt extends AppLocalizations {
   String get sipHubSectionConversations => 'Conversations';
 
   @override
+  String get sipHubSectionIncomingRequests => 'Incoming Requests';
+
+  @override
+  String sipHubIncomingRequestFrom(String peerName) {
+    return '$peerName wants to connect';
+  }
+
+  @override
+  String get sipHubAccept => 'Accept';
+
+  @override
+  String get sipHubDecline => 'Decline';
+
+  @override
   String get sipHubEmptyTitle => 'No peers nearby';
 
   @override
   String get sipHubEmptyDescription =>
       'Tap Scan to look for other Socialmesh users on the mesh.';
+
+  @override
+  String get sipHubScanningTitlePrefix => 'No peers ';
+
+  @override
+  String get sipHubScanningTitleKeyword => 'nearby';
+
+  @override
+  String get sipHubScanningTitleSuffix => '';
+
+  @override
+  String get sipHubScanningTagline1 =>
+      'Listens for Socialmesh beacons over the radio mesh';
+
+  @override
+  String get sipHubScanningTagline2 =>
+      'Tap Scan to send a rollcall — wakes up nearby peers';
+
+  @override
+  String get sipHubScanningTagline3 =>
+      'Peers respond anonymously — no account needed';
+
+  @override
+  String get sipHubScanningTagline4 =>
+      'Found one? Initiate a handshake to start chatting';
+
+  @override
+  String get sipHubHelp => 'Help';
+
+  @override
+  String get helpSipHubOverviewTitle => 'Socialmesh';
+
+  @override
+  String get helpSipHubOverviewDescription =>
+      'Discover and chat with nearby Socialmesh peers';
+
+  @override
+  String get helpSipHubIntroBubble =>
+      'Welcome to **Socialmesh**! This is your peer discovery hub. Nearby devices running Socialmesh appear here once they beacon or respond to a rollcall.';
+
+  @override
+  String get helpSipHubScanBubble =>
+      'Tap the **scan icon** to send a rollcall request. Nearby peers will respond within seconds. Auto-scan fires every 60 seconds in the background.';
+
+  @override
+  String get helpSipHubHandshakeBubble =>
+      'Once you see a peer, tap **Handshake** to exchange identity. After the handshake you can open an **end-to-end encrypted** ephemeral DM — no servers, no accounts.';
+
+  @override
+  String get helpSipHubPrivacyBubble =>
+      'All discovery is **anonymous by default**. Peers only reveal a rotating 4-byte ambient ID until you mutually agree to a handshake.';
 
   @override
   String sipHubLastSeen(String time) {
@@ -30650,29 +30727,37 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String notificationSipDmTitle(String peerName) {
-    return 'SIP: $peerName';
+    return '$peerName';
   }
 
   @override
-  String get notificationSipHandshakeTitle => 'SIP Handshake Complete';
+  String get notificationSipHandshakeTitle => 'Secure Chat Ready';
 
   @override
   String notificationSipHandshakeBody(String peerName) {
-    return 'Ephemeral DM session established with $peerName.';
+    return 'You can now send private messages with $peerName.';
   }
 
   @override
-  String get notificationChannelSipMessages => 'SIP Ephemeral Messages';
+  String get notificationChannelSipMessages => 'Ephemeral Messages';
 
   @override
-  String get notificationChannelSipHandshake => 'SIP Handshakes';
+  String get notificationChannelSipHandshake => 'Connection Requests';
 
   @override
-  String get notificationSipHandshakeRequestTitle => 'Handshake Request';
+  String get notificationSipHandshakeRequestTitle => 'Chat Request';
 
   @override
   String notificationSipHandshakeRequestBody(String peerName) {
-    return '$peerName wants to start an ephemeral DM session.';
+    return '$peerName wants to start a private chat.';
+  }
+
+  @override
+  String get notificationSipHandshakeDeclinedTitle => 'Connection Declined';
+
+  @override
+  String notificationSipHandshakeDeclinedBody(String peerName) {
+    return '$peerName declined your connection request.';
   }
 
   @override
@@ -31220,6 +31305,70 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get meshExplorerSectionBoard => 'Board Activity';
+
+  @override
+  String get meshExplorerScanningTitlePrefix => 'No peers ';
+
+  @override
+  String get meshExplorerScanningTitleKeyword => 'nearby';
+
+  @override
+  String get meshExplorerScanningTitleSuffix => '';
+
+  @override
+  String get meshExplorerScanningTagline1 =>
+      'Scans for Socialmesh peers broadcasting on the mesh';
+
+  @override
+  String get meshExplorerScanningTagline2 =>
+      'Tap Scan to send a rollcall — wakes up nearby peers';
+
+  @override
+  String get meshExplorerScanningTagline3 =>
+      'Peers appear anonymously — handshake to identify them';
+
+  @override
+  String get meshExplorerScanningTagline4 =>
+      'Radio range matters — try moving closer to the mesh';
+
+  @override
+  String get meshExplorerHelp => 'Help';
+
+  @override
+  String get helpMeshExplorerOverviewTitle => 'Mesh Explorer';
+
+  @override
+  String get helpMeshExplorerOverviewDescription =>
+      'Explore nearby peers and mesh services';
+
+  @override
+  String get helpMeshExplorerIntroBubble =>
+      'Welcome to **Mesh Explorer**! This shows all Socialmesh-capable peers currently in radio range. Anonymous peers appear instantly — no handshake needed.';
+
+  @override
+  String get helpMeshExplorerPeersBubble =>
+      'Each tile shows a **peer\'s ambient sigil** and capabilities. Tap a peer to view details or initiate a **SIP handshake** for identity exchange.';
+
+  @override
+  String get helpMeshExplorerServicesBubble =>
+      'The **Services** section shows what nearby peers are offering — Bulletin Boards, Profiles, and more. Tap a service tile to interact with it.';
+
+  @override
+  String get helpMeshExplorerScanBubble =>
+      'Tap the **sensor icon** to broadcast a rollcall to the mesh. Peers respond within seconds. The explorer refreshes automatically when new peers are heard.';
+
+  @override
+  String get meshExplorerScanningAction => 'Scan now';
+
+  @override
+  String get notificationSipPeerFoundTitle => 'Peer found nearby';
+
+  @override
+  String get notificationSipPeerFoundBody =>
+      'A Socialmesh peer is in range. Open Mesh Explorer to connect.';
+
+  @override
+  String get notificationChannelSipDiscovery => 'Peer Discovery';
 
   @override
   String get meshExplorerEmptyNearbyTitle => 'No nearby peers';

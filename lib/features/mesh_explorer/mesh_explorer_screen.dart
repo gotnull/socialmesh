@@ -12,12 +12,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/logging.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/mesh_explorer_providers.dart';
 import '../../providers/nearby_activity_provider.dart';
+import '../../providers/help_providers.dart';
 import '../../providers/sip_providers.dart';
 import '../../services/haptic_service.dart';
 import '../../utils/snackbar.dart';
@@ -42,6 +45,17 @@ class MeshExplorerScreen extends ConsumerStatefulWidget {
 class _MeshExplorerScreenState extends ConsumerState<MeshExplorerScreen>
     with LifecycleSafeMixin {
   bool _isScanning = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // User is now looking at the screen — clear unseen peer badge.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.read(newMeshPeerCountProvider.notifier).clear();
+      }
+    });
+  }
 
   Future<void> _onScan() async {
     if (_isScanning) return;
@@ -85,80 +99,113 @@ class _MeshExplorerScreenState extends ConsumerState<MeshExplorerScreen>
     final services = ref.watch(meshExplorerServicesProvider);
     final activities = ref.watch(nearbyActivityProvider);
 
-    return GlassScaffold(
-      title: l10n.meshExplorerTitle,
-      actions: [
-        if (summary.isConnected)
-          _isScanning
-              ? Padding(
-                  padding: const EdgeInsets.all(AppTheme.spacing12),
-                  child: SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: context.accentColor,
+    return HelpTourController(
+      topicId: 'mesh_explorer_overview',
+      stepKeys: const {},
+      child: GlassScaffold(
+        title: l10n.meshExplorerTitle,
+        actions: [
+          if (summary.isConnected)
+            _isScanning
+                ? Padding(
+                    padding: const EdgeInsets.all(AppTheme.spacing12),
+                    child: SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: context.accentColor,
+                      ),
                     ),
+                  )
+                : IconButton(
+                    icon: const Icon(Icons.sensors, size: 22),
+                    tooltip: l10n.meshExplorerScanAction,
+                    onPressed: _onScan,
                   ),
-                )
-              : IconButton(
-                  icon: const Icon(Icons.sensors, size: 22),
-                  tooltip: l10n.meshExplorerScanAction,
-                  onPressed: _onScan,
+          AppBarOverflowMenu<String>(
+            onSelected: (value) {
+              if (value == 'help') {
+                ref
+                    .read(helpProvider.notifier)
+                    .startTour(
+                      'mesh_explorer_overview',
+                    ); // lint-allow: hardcoded-string
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'help', // lint-allow: hardcoded-string
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.help_outline,
+                      size: 18,
+                      color: context.textSecondary,
+                    ),
+                    SizedBox(width: AppTheme.spacing8),
+                    Text(l10n.meshExplorerHelp),
+                  ],
                 ),
-      ],
-      slivers: [
-        // Hero summary
-        SliverToBoxAdapter(child: MeshExplorerHero(summary: summary)),
-
-        // Activity section — ambient nearby events
-        if (summary.isConnected && activities.isNotEmpty) ...[
-          SliverPersistentHeader(
-            pinned: false,
-            delegate: SectionHeaderDelegate(
-              title: l10n.nearbyActivitySectionTitle,
-              count: activities.length,
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: MeshExplorerActivitySection(activities: activities),
+              ),
+            ],
           ),
         ],
+        slivers: [
+          // Hero summary
+          SliverToBoxAdapter(child: MeshExplorerHero(summary: summary)),
 
-        // Nearby peers section
-        if (summary.isConnected) ...[
-          SliverPersistentHeader(
-            pinned: false,
-            delegate: SectionHeaderDelegate(
-              title: l10n.meshExplorerSectionNearby,
-              count: peers.length,
+          // Activity section — ambient nearby events
+          if (summary.isConnected && activities.isNotEmpty) ...[
+            SliverPersistentHeader(
+              pinned: false,
+              delegate: SectionHeaderDelegate(
+                title: l10n.nearbyActivitySectionTitle,
+                count: activities.length,
+              ),
             ),
-          ),
-          SliverToBoxAdapter(child: MeshExplorerNearbySection(peers: peers)),
+            SliverToBoxAdapter(
+              child: MeshExplorerActivitySection(activities: activities),
+            ),
+          ],
 
-          // Services section
-          SliverPersistentHeader(
-            pinned: false,
-            delegate: SectionHeaderDelegate(
-              title: l10n.meshExplorerSectionServices,
-              count: services.length,
+          // Nearby peers section
+          if (summary.isConnected) ...[
+            SliverPersistentHeader(
+              pinned: false,
+              delegate: SectionHeaderDelegate(
+                title: l10n.meshExplorerSectionNearby,
+                count: peers.length,
+              ),
             ),
-          ),
-          SliverToBoxAdapter(
-            child: MeshExplorerServicesSection(services: services),
-          ),
+            SliverToBoxAdapter(
+              child: MeshExplorerNearbySection(peers: peers, onScan: _onScan),
+            ),
+
+            // Services section
+            SliverPersistentHeader(
+              pinned: false,
+              delegate: SectionHeaderDelegate(
+                title: l10n.meshExplorerSectionServices,
+                count: services.length,
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: MeshExplorerServicesSection(services: services),
+            ),
+          ],
+
+          // Not-connected state
+          if (!summary.isConnected)
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: _NotConnectedState(l10n: l10n),
+            ),
+
+          // Bottom safe area padding
+          const SliverToBoxAdapter(child: SizedBox(height: AppTheme.spacing32)),
         ],
-
-        // Not-connected state
-        if (!summary.isConnected)
-          SliverFillRemaining(
-            hasScrollBody: false,
-            child: _NotConnectedState(l10n: l10n),
-          ),
-
-        // Bottom safe area padding
-        const SliverToBoxAdapter(child: SizedBox(height: AppTheme.spacing32)),
-      ],
+      ),
     );
   }
 }

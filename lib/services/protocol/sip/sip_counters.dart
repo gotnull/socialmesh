@@ -380,6 +380,8 @@ class SipCounters {
         return 'HS_RESPONSE';
       case SipMessageType.hsAccept:
         return 'HS_ACCEPT';
+      case SipMessageType.hsDecline:
+        return 'HS_DECLINE';
       case SipMessageType.txStart:
         return 'TX_START';
       case SipMessageType.txChunk:
@@ -400,6 +402,8 @@ class SipCounters {
         return 'DM_REACTION';
       case SipMessageType.dmDelete:
         return 'DM_DELETE';
+      case SipMessageType.dmClose:
+        return 'DM_CLOSE';
       case SipMessageType.error:
         return 'ERROR';
       case SipMessageType.mrrpData:

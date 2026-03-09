@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/animated_empty_state.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/sip_providers.dart';
@@ -47,7 +48,7 @@ class _SipDiscoverySheetState extends ConsumerState<SipDiscoverySheet> {
     final haptics = ref.read(hapticServiceProvider);
     haptics.trigger(HapticType.light);
 
-    final outbound = discovery.buildRollcallReq();
+    final outbound = discovery.buildRollcallReq(force: true);
     if (outbound != null) {
       // Send the encoded SIP frame over the mesh transport.
       final protocol = ref.read(protocolServiceProvider);
@@ -120,35 +121,29 @@ class _SipDiscoverySheetState extends ConsumerState<SipDiscoverySheet> {
   }
 
   Widget _buildEmptyState(BuildContext context, dynamic l10n) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.radar,
-              size: 48,
-              color: Theme.of(
-                context,
-              ).colorScheme.onSurface.withValues(alpha: 0.4),
-            ),
-            const SizedBox(height: AppTheme.spacing12),
-            Text(
-              l10n.sipDiscoveryNoPeers,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: AppTheme.spacing4),
-            Text(
-              l10n.sipDiscoveryNoPeersDescription,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(
-                  context,
-                ).colorScheme.onSurface.withValues(alpha: 0.6),
-              ),
-              textAlign: TextAlign.center,
-            ),
+    final taglines = [
+      l10n.sipHubScanningTagline1 as String,
+      l10n.sipHubScanningTagline2 as String,
+      l10n.sipHubScanningTagline3 as String,
+      l10n.sipHubScanningTagline4 as String,
+    ];
+
+    return SizedBox(
+      height: 360,
+      child: AnimatedEmptyState(
+        config: AnimatedEmptyStateConfig(
+          icons: const [
+            Icons.sensors,
+            Icons.wifi_find,
+            Icons.radar,
+            Icons.people_outline,
+            Icons.explore_outlined,
+            Icons.person_search,
           ],
+          taglines: taglines,
+          titlePrefix: l10n.sipHubScanningTitlePrefix as String,
+          titleKeyword: l10n.sipHubScanningTitleKeyword as String,
+          titleSuffix: l10n.sipHubScanningTitleSuffix as String,
         ),
       ),
     );

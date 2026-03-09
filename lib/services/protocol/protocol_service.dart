@@ -4227,6 +4227,8 @@ class ProtocolService {
         _handleSipHandshakeResponse(senderNodeId, frame);
       case SipMessageType.hsAccept:
         _handleSipHandshakeAccept(senderNodeId, frame);
+      case SipMessageType.hsDecline:
+        _handleSipHandshakeDecline(senderNodeId, frame);
 
       // ----- SIP-1: Identity -----
       case SipMessageType.idReq:
@@ -4244,6 +4246,8 @@ class ProtocolService {
         _handleSipDmReaction(frame);
       case SipMessageType.dmDelete:
         _handleSipDmDelete(frame);
+      case SipMessageType.dmClose:
+        _handleSipDmClose(frame);
 
       // ----- SIP-0: CAP_REQ / CAP_RESP (informational) -----
       case SipMessageType.capReq:
@@ -4342,6 +4346,34 @@ class ProtocolService {
     return _sendSipAndCount(payload, type);
   }
 
+  /// Accept an incoming SIP handshake request from [peerNodeId].
+  ///
+  /// Sends HS_CHALLENGE to the peer. No-ops if no pending request exists.
+  Future<void> acceptSipHandshake(int peerNodeId) async {
+    final hs = _sipHandshake;
+    if (hs == null) return;
+    final challengeFrame = hs.acceptHandshake(peerNodeId);
+    if (challengeFrame == null) return;
+    final encoded = SipCodec.encode(challengeFrame);
+    if (encoded != null) {
+      await _sendSipAndCount(encoded, SipMessageType.hsChallenge);
+    }
+  }
+
+  /// Decline an incoming SIP handshake request from [peerNodeId].
+  ///
+  /// Sends HS_DECLINE to the peer. No-ops if no pending request exists.
+  Future<void> declineSipHandshake(int peerNodeId) async {
+    final hs = _sipHandshake;
+    if (hs == null) return;
+    final declineFrame = hs.declineHandshake(peerNodeId);
+    if (declineFrame == null) return;
+    final encoded = SipCodec.encode(declineFrame);
+    if (encoded != null) {
+      await _sendSipAndCount(encoded, SipMessageType.hsDecline);
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // SIP-1 Handshake dispatch
   // ---------------------------------------------------------------------------
@@ -4359,26 +4391,23 @@ class ProtocolService {
 
     _sipCounters?.recordHandshakeInitiated();
 
-    // Notify the user that a peer is requesting a handshake.
+    // Show a notification prompting the user to respond.
     // Gated on master + DM notification preferences.
     () async {
       final prefs = await SharedPreferences.getInstance();
       if (!(prefs.getBool('notifications_enabled') ?? true)) return;
       if (!(prefs.getBool('dm_notifications_enabled') ?? true)) return;
-      final peerName = NodeDisplayNameResolver.defaultShortName(senderNodeId);
+      final peerName =
+          _nodes[senderNodeId]?.displayName ??
+          NodeDisplayNameResolver.defaultName(senderNodeId);
       NotificationService().showSipHandshakeRequestNotification(
         peerName: peerName,
         peerNodeId: senderNodeId,
       );
     }();
 
-    final challengeFrame = hs.handleHello(senderNodeId, frame);
-    if (challengeFrame != null) {
-      final encoded = SipCodec.encode(challengeFrame);
-      if (encoded != null) {
-        _sendSipAndCount(encoded, SipMessageType.hsChallenge);
-      }
-    }
+    // Queue the request for user consent — no automatic challenge response.
+    hs.handleHello(senderNodeId, frame);
   }
 
   void _handleSipHandshakeChallenge(int senderNodeId, SipFrame frame) {
@@ -4422,6 +4451,26 @@ class ProtocolService {
     } else {
       _sipCounters?.recordHandshakeFailed();
     }
+  }
+
+  void _handleSipHandshakeDecline(int senderNodeId, SipFrame frame) {
+    final hs = _sipHandshake;
+    if (hs == null) return;
+
+    hs.handleDecline(senderNodeId, frame);
+
+    () async {
+      final prefs = await SharedPreferences.getInstance();
+      if (!(prefs.getBool('notifications_enabled') ?? true)) return;
+      if (!(prefs.getBool('dm_notifications_enabled') ?? true)) return;
+      final peerName =
+          _nodes[senderNodeId]?.displayName ??
+          NodeDisplayNameResolver.defaultName(senderNodeId);
+      NotificationService().showSipHandshakeDeclinedNotification(
+        peerName: peerName,
+        peerNodeId: senderNodeId,
+      );
+    }();
   }
 
   /// Complete a handshake: consume result, create DM session, update counters.
@@ -4468,7 +4517,9 @@ class ProtocolService {
       final prefs = await SharedPreferences.getInstance();
       if (!(prefs.getBool('notifications_enabled') ?? true)) return;
       if (!(prefs.getBool('dm_notifications_enabled') ?? true)) return;
-      final peerName = NodeDisplayNameResolver.defaultShortName(peerNodeId);
+      final peerName =
+          _nodes[peerNodeId]?.displayName ??
+          NodeDisplayNameResolver.defaultName(peerNodeId);
       NotificationService().showSipHandshakeCompleteNotification(
         peerName: peerName,
         peerNodeId: peerNodeId,
@@ -4561,9 +4612,9 @@ class ProtocolService {
           final prefs = await SharedPreferences.getInstance();
           if (!(prefs.getBool('notifications_enabled') ?? true)) return;
           if (!(prefs.getBool('dm_notifications_enabled') ?? true)) return;
-          final peerName = NodeDisplayNameResolver.defaultShortName(
-            session.peerNodeId,
-          );
+          final peerName =
+              _nodes[session.peerNodeId]?.displayName ??
+              NodeDisplayNameResolver.defaultName(session.peerNodeId);
           NotificationService().showSipDmNotification(
             peerName: peerName,
             message: message.text,
@@ -4602,6 +4653,16 @@ class ProtocolService {
     }
 
     dm.handleInboundDelete(frame);
+  }
+
+  void _handleSipDmClose(SipFrame frame) {
+    final dm = _sipDm;
+    if (dm == null) {
+      AppLogging.sip('SIP_RX: no SipDmManager — dropping DM_CLOSE');
+      return;
+    }
+
+    dm.handleInboundClose(frame);
   }
 
   /// Send a file transfer packet as broadcast on PRIVATE_APP (portnum 256).

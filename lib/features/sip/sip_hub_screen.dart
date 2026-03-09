@@ -34,6 +34,7 @@ import '../../features/nodes/node_display_name_resolver.dart';
 import '../../models/mesh_models.dart';
 import '../../core/constants.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/help_providers.dart';
 import '../../providers/sip_providers.dart';
 import '../../services/haptic_service.dart';
 import '../../services/protocol/sip/sip_codec.dart';
@@ -41,6 +42,8 @@ import '../../services/protocol/sip/sip_discovery.dart';
 import '../../services/protocol/sip/sip_dm.dart';
 import '../../services/protocol/sip/sip_handshake.dart';
 import '../../utils/snackbar.dart';
+import '../../core/widgets/animated_empty_state.dart';
+import '../../core/widgets/ico_help_system.dart';
 import '../mrrp_harness/mrrp_harness_home_screen.dart';
 import 'sip_dm_screen.dart';
 
@@ -137,7 +140,7 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
     AppLogging.sip('SIP_HUB: scan tapped, discovery=${discovery != null}');
     if (discovery == null) return;
 
-    final outbound = discovery.buildRollcallReq();
+    final outbound = discovery.buildRollcallReq(force: true);
     if (outbound != null) {
       final protocol = ref.read(protocolServiceProvider);
       protocol.sendSipPacket(outbound.encoded);
@@ -196,6 +199,7 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
     // Already handshaking — let the chip show progress, don't interrupt.
     final currentState = handshake.getState(peer.nodeId);
     if (currentState != SipHandshakeState.idle &&
+        currentState != SipHandshakeState.declined &&
         currentState != SipHandshakeState.failed &&
         currentState != SipHandshakeState.timedOut) {
       return;
@@ -245,6 +249,7 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
     final peerCount = ref.watch(sipPeerCountProvider);
     final peerEpoch = ref.watch(sipPeerCacheEpochProvider);
     final autoScanEnabled = ref.watch(sipAutoScanProvider);
+    final pendingRequestNodeIds = ref.watch(sipPendingHandshakeProvider);
 
     // Stop scanning indicator when peers arrive (epoch bumps).
     if (_scanning) _checkScanComplete(peerEpoch);
@@ -269,97 +274,130 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
 
     final hasPeers = unconnectedPeers.isNotEmpty;
     final hasSessions = sessions.isNotEmpty;
-    final isEmpty = !hasPeers && !hasSessions && !_scanning;
+    final hasPendingRequests = pendingRequestNodeIds.isNotEmpty;
+    final isEmpty =
+        !hasPeers && !hasSessions && !_scanning && !hasPendingRequests;
 
     // lint-allow: haptic-feedback — keyboard dismissal, not interactive action
-    return GestureDetector(
-      onTap: () => FocusScope.of(context).unfocus(),
-      child: GlassScaffold(
-        title: l10n.sipHubTitle,
-        actions: [
-          // Scan button — rotates continuously when auto-scan is enabled
-          IconButton(
-            icon: _scanning
-                ? SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: context.textSecondary,
+    return HelpTourController(
+      topicId: 'sip_hub_overview',
+      stepKeys: const {},
+      child: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: GlassScaffold(
+          title: l10n.sipHubTitle,
+          actions: [
+            // Scan button — rotates continuously when auto-scan is enabled
+            IconButton(
+              icon: _scanning
+                  ? SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: context.textSecondary,
+                      ),
+                    )
+                  : AnimatedBuilder(
+                      animation: _radarController,
+                      builder: (context, child) => Transform.rotate(
+                        angle: _radarController.value * 2 * 3.14159265,
+                        child: child,
+                      ),
+                      child: Icon(
+                        Icons.radar,
+                        size: 22,
+                        color: autoScanEnabled ? AccentColors.green : null,
+                      ),
                     ),
-                  )
-                : AnimatedBuilder(
-                    animation: _radarController,
-                    builder: (context, child) => Transform.rotate(
-                      angle: _radarController.value * 2 * 3.14159265,
-                      child: child,
-                    ),
-                    child: Icon(
-                      Icons.radar,
-                      size: 22,
-                      color: autoScanEnabled ? AccentColors.green : null,
-                    ),
-                  ),
-            tooltip: l10n.sipDiscoveryScanButton,
-            onPressed: _scanning
-                ? null
-                : autoScanEnabled
-                ? _toggleAutoScan
-                : _onScan,
-          ),
-          // Overflow menu
-          AppBarOverflowMenu<String>(
-            onSelected: (value) {
-              if (value == 'autoscan') {
-                _toggleAutoScan(); // lint-allow: hardcoded-string
-              }
-              if (value == 'counters') {
-                _showCounters(); // lint-allow: hardcoded-string
-              }
-              if (value == 'harness') {
-                _openHarness(); // lint-allow: hardcoded-string
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'autoscan', // lint-allow: hardcoded-string
-                child: ListTile(
-                  leading: Icon(
-                    autoScanEnabled ? Icons.sync_disabled : Icons.sync,
-                  ),
-                  title: Text(l10n.sipAutoScanToggle),
-                  trailing: autoScanEnabled
-                      ? Icon(Icons.check, size: 18, color: AccentColors.green)
-                      : null,
-                  contentPadding: EdgeInsets.zero,
-                  visualDensity: VisualDensity.compact,
-                ),
-              ),
-              PopupMenuItem(
-                value: 'counters', // lint-allow: hardcoded-string
-                child: ListTile(
-                  leading: const Icon(Icons.analytics_outlined),
-                  title: Text(l10n.sipCountersTitle),
-                  contentPadding: EdgeInsets.zero,
-                  visualDensity: VisualDensity.compact,
-                ),
-              ),
-              if (AppFeatureFlags.isMrrpHarnessEnabled)
+              tooltip: l10n.sipDiscoveryScanButton,
+              onPressed: _scanning
+                  ? null
+                  : autoScanEnabled
+                  ? _toggleAutoScan
+                  : _onScan,
+            ),
+            // Overflow menu
+            AppBarOverflowMenu<String>(
+              onSelected: (value) {
+                if (value == 'autoscan') {
+                  _toggleAutoScan(); // lint-allow: hardcoded-string
+                }
+                if (value == 'counters') {
+                  _showCounters(); // lint-allow: hardcoded-string
+                }
+                if (value == 'harness') {
+                  _openHarness(); // lint-allow: hardcoded-string
+                }
+                if (value == 'help') {
+                  ref
+                      .read(helpProvider.notifier)
+                      .startTour(
+                        'sip_hub_overview',
+                      ); // lint-allow: hardcoded-string
+                }
+              },
+              itemBuilder: (context) => [
                 PopupMenuItem(
-                  value: 'harness', // lint-allow: hardcoded-string
+                  value: 'autoscan', // lint-allow: hardcoded-string
                   child: ListTile(
-                    leading: const Icon(Icons.hub),
-                    title: Text(l10n.mrrpHarnessDrawerLabel),
+                    leading: Icon(
+                      autoScanEnabled ? Icons.sync_disabled : Icons.sync,
+                    ),
+                    title: Text(l10n.sipAutoScanToggle),
+                    trailing: autoScanEnabled
+                        ? Icon(Icons.check, size: 18, color: AccentColors.green)
+                        : null,
                     contentPadding: EdgeInsets.zero,
                     visualDensity: VisualDensity.compact,
                   ),
                 ),
-            ],
-          ),
-        ],
-        slivers: isEmpty
-            ? _buildEmptySlivers(context)
-            : _buildContentSlivers(context, unconnectedPeers, sessions),
+                PopupMenuItem(
+                  value: 'counters', // lint-allow: hardcoded-string
+                  child: ListTile(
+                    leading: const Icon(Icons.analytics_outlined),
+                    title: Text(l10n.sipCountersTitle),
+                    contentPadding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+                if (AppFeatureFlags.isMrrpHarnessEnabled)
+                  PopupMenuItem(
+                    value: 'harness', // lint-allow: hardcoded-string
+                    child: ListTile(
+                      leading: const Icon(Icons.hub),
+                      title: Text(l10n.mrrpHarnessDrawerLabel),
+                      contentPadding: EdgeInsets.zero,
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ),
+                const PopupMenuDivider(),
+                PopupMenuItem(
+                  value: 'help', // lint-allow: hardcoded-string
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.help_outline,
+                        size: 18,
+                        color: context.textSecondary,
+                      ),
+                      SizedBox(width: AppTheme.spacing8),
+                      Text(l10n.sipHubHelp),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+          slivers: isEmpty
+              ? _buildEmptySlivers(context)
+              : _buildContentSlivers(
+                  context,
+                  unconnectedPeers,
+                  sessions,
+                  pendingRequestNodeIds,
+                ),
+        ),
       ),
     );
   }
@@ -370,70 +408,37 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
 
   List<Widget> _buildEmptySlivers(BuildContext context) {
     final l10n = context.l10n;
+    final taglines = [
+      l10n.sipHubScanningTagline1,
+      l10n.sipHubScanningTagline2,
+      l10n.sipHubScanningTagline3,
+      l10n.sipHubScanningTagline4,
+    ];
 
     return [
       SliverFillRemaining(
         hasScrollBody: false,
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(AppTheme.spacing32),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.wifi_tethering,
-                  size: 56,
-                  color: context.textTertiary.withValues(alpha: 0.4),
-                ),
-                const SizedBox(height: AppTheme.spacing16),
-                Text(
-                  l10n.sipHubEmptyTitle,
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                    color: context.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spacing8),
-                Text(
-                  l10n.sipHubEmptyDescription,
-                  style: TextStyle(fontSize: 13, color: context.textTertiary),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: AppTheme.spacing24),
-                if (_scanning)
-                  Padding(
-                    padding: const EdgeInsets.only(top: AppTheme.spacing8),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: context.accentColor,
-                          ),
-                        ),
-                        const SizedBox(width: AppTheme.spacing8),
-                        Text(
-                          l10n.sipScanningIndicator,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: context.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                else
-                  FilledButton.icon(
-                    onPressed: _onScan,
-                    icon: const Icon(Icons.radar, size: 18),
-                    label: Text(l10n.sipDiscoveryScanButton),
-                  ),
-              ],
-            ),
+        child: AnimatedEmptyState(
+          config: AnimatedEmptyStateConfig(
+            icons: const [
+              Icons.sensors,
+              Icons.wifi_find,
+              Icons.radar,
+              Icons.people_outline,
+              Icons.explore_outlined,
+              Icons.person_search,
+              Icons.network_check,
+              Icons.cell_tower,
+            ],
+            taglines: taglines,
+            titlePrefix: l10n.sipHubScanningTitlePrefix,
+            titleKeyword: l10n.sipHubScanningTitleKeyword,
+            titleSuffix: l10n.sipHubScanningTitleSuffix,
+            actionLabel: l10n.sipDiscoveryScanButton,
+            actionIcon: Icons.sensors,
+            onAction: _scanning ? null : _onScan,
+            actionEnabled: !_scanning,
+            actionDisabledReason: _scanning ? l10n.sipScanningIndicator : null,
           ),
         ),
       ),
@@ -448,11 +453,34 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
     BuildContext context,
     List<SipPeerCapability> peers,
     List<SipDmSession> sessions,
+    List<int> pendingRequestNodeIds,
   ) {
     return [
       const SliverToBoxAdapter(child: SizedBox(height: AppTheme.spacing8)),
 
-      // Active conversations (shown first — most important)
+      // Incoming handshake requests — shown first, require user action
+      if (pendingRequestNodeIds.isNotEmpty) ...[
+        SliverPersistentHeader(
+          pinned: true,
+          delegate: SectionHeaderDelegate(
+            title: context.l10n.sipHubSectionIncomingRequests,
+            count: pendingRequestNodeIds.length,
+          ),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+          sliver: SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) => _IncomingRequestTile(
+                peerNodeId: pendingRequestNodeIds[index],
+              ),
+              childCount: pendingRequestNodeIds.length,
+            ),
+          ),
+        ),
+      ],
+
+      // Active conversations (shown after pending requests)
       if (sessions.isNotEmpty) ...[
         SliverPersistentHeader(
           pinned: true,
@@ -536,6 +564,124 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
         child: SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
       ),
     ];
+  }
+}
+
+// =============================================================================
+// Incoming Request Tile — Accept / Decline card for pending handshake requests
+// =============================================================================
+
+class _IncomingRequestTile extends ConsumerWidget {
+  final int peerNodeId;
+
+  const _IncomingRequestTile({required this.peerNodeId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final entry = ref.watch(nodeDexEntryProvider(peerNodeId));
+    final nodes = ref.watch(nodesProvider);
+    final node = nodes[peerNodeId];
+    final displayName =
+        entry?.localNickname ??
+        entry?.sipDisplayName ??
+        node?.displayName ??
+        entry?.lastKnownName ??
+        NodeDisplayNameResolver.defaultName(peerNodeId);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
+      child: Container(
+        decoration: BoxDecoration(
+          color: context.card,
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
+          border: Border.all(
+            color: AccentColors.orange.withValues(alpha: 0.4),
+            width: 1,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(AppTheme.spacing12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.wifi_tethering,
+                    size: 16,
+                    color: AccentColors.orange,
+                  ),
+                  const SizedBox(width: AppTheme.spacing6),
+                  Expanded(
+                    child: Text(
+                      l10n.sipHubIncomingRequestFrom(displayName),
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: context.textPrimary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppTheme.spacing12),
+              Row(
+                children: [
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: () {
+                        ref
+                            .read(hapticServiceProvider)
+                            .trigger(HapticType.medium);
+                        ref
+                            .read(protocolServiceProvider)
+                            .acceptSipHandshake(peerNodeId);
+                      },
+                      icon: const Icon(Icons.check, size: 16),
+                      label: Text(l10n.sipHubAccept),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AccentColors.green,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size.fromHeight(36),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppTheme.spacing12,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppTheme.spacing8),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        ref
+                            .read(hapticServiceProvider)
+                            .trigger(HapticType.light);
+                        ref
+                            .read(protocolServiceProvider)
+                            .declineSipHandshake(peerNodeId);
+                      },
+                      icon: const Icon(Icons.close, size: 16),
+                      label: Text(l10n.sipHubDecline),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AccentColors.red,
+                        side: BorderSide(
+                          color: AccentColors.red.withValues(alpha: 0.6),
+                        ),
+                        minimumSize: const Size.fromHeight(36),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppTheme.spacing12,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -691,9 +837,9 @@ class _PeerTile extends ConsumerWidget {
 
   static bool _isHandshaking(SipHandshakeState state) => switch (state) {
     SipHandshakeState.helloSent ||
+    SipHandshakeState.pendingApproval ||
     SipHandshakeState.challengeReceived ||
     SipHandshakeState.responseSent ||
-    SipHandshakeState.helloReceived ||
     SipHandshakeState.challengeSent ||
     SipHandshakeState.responseReceived => true,
     _ => false,
@@ -769,9 +915,9 @@ class _HandshakeChipState extends State<_HandshakeChip>
 
   static bool _isInProgress(SipHandshakeState state) => switch (state) {
     SipHandshakeState.helloSent ||
+    SipHandshakeState.pendingApproval ||
     SipHandshakeState.challengeReceived ||
     SipHandshakeState.responseSent ||
-    SipHandshakeState.helloReceived ||
     SipHandshakeState.challengeSent ||
     SipHandshakeState.responseReceived => true,
     _ => false,
@@ -794,6 +940,16 @@ class _HandshakeChipState extends State<_HandshakeChip>
               l10n.sipHubReady,
               AccentColors.green,
               Icons.check_circle_outline,
+            ),
+            SipHandshakeState.pendingApproval => (
+              l10n.sipHandshakePendingLabel,
+              AccentColors.orange,
+              Icons.schedule_outlined,
+            ),
+            SipHandshakeState.declined => (
+              l10n.sipHandshakeFailed,
+              AccentColors.red,
+              Icons.cancel_outlined,
             ),
             SipHandshakeState.failed || SipHandshakeState.timedOut => (
               l10n.sipHandshakeFailed,

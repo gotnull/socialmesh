@@ -13,6 +13,8 @@ import 'package:share_plus/share_plus.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
+import '../../core/transport.dart';
+import '../../providers/countdown_providers.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/ico_help_system.dart';
@@ -46,12 +48,133 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
   String _searchQuery = '';
   _TracerouteFilter _activeFilter = _TracerouteFilter.all;
   bool _isExporting = false;
+  bool _isSendingTraceroute = false;
   final TextEditingController _searchController = TextEditingController();
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  Future<void> _sendTraceroute() async {
+    final nodeNum = widget.nodeNum;
+    if (nodeNum == null) return;
+
+    final cooldownRemaining = ref
+        .read(countdownProvider.notifier)
+        .tracerouteRemaining(nodeNum);
+    if (_isSendingTraceroute || cooldownRemaining > 0) return;
+
+    final connectionState = ref.read(connectionStateProvider);
+    final isConnected = connectionState.maybeWhen(
+      data: (state) => state == DeviceConnectionState.connected,
+      orElse: () => false,
+    );
+
+    if (!isConnected) {
+      showErrorSnackBar(context, context.l10n.nodeDetailTracerouteNotConnected);
+      return;
+    }
+
+    safeSetState(() => _isSendingTraceroute = true);
+
+    final protocol = ref.read(protocolServiceProvider);
+    final nodes = ref.read(nodesProvider);
+    final displayName =
+        nodes[nodeNum]?.displayName ??
+        NodeDisplayNameResolver.defaultName(nodeNum);
+
+    try {
+      await protocol.sendTraceroute(nodeNum);
+
+      if (!mounted) return;
+
+      safeSetState(() => _isSendingTraceroute = false);
+
+      ref.read(countdownProvider.notifier).startTracerouteCountdown(nodeNum);
+
+      if (context.mounted) {
+        showSuccessSnackBar(
+          context,
+          context.l10n.nodeDetailTracerouteSent(displayName),
+        );
+      }
+    } catch (e) {
+      safeSetState(() => _isSendingTraceroute = false);
+      if (context.mounted) {
+        showErrorSnackBar(
+          context,
+          context.l10n.nodeDetailTracerouteError(e.toString()),
+        );
+      }
+    }
+  }
+
+  Widget _buildTracerouteAppBarAction(
+    BuildContext context,
+    int cooldownRemaining,
+    int cooldownTotal,
+  ) {
+    if (_isSendingTraceroute) {
+      return Padding(
+        padding: const EdgeInsets.all(AppTheme.spacing12),
+        child: SizedBox(
+          width: 22,
+          height: 22,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: context.accentColor,
+          ),
+        ),
+      );
+    }
+    if (cooldownRemaining > 0) {
+      return Tooltip(
+        message: context.l10n.nodeDetailTracerouteCooldownTooltip(
+          cooldownRemaining,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(AppTheme.spacing12),
+          child: SizedBox(
+            width: 22,
+            height: 22,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    value: cooldownTotal > 0
+                        ? cooldownRemaining / cooldownTotal
+                        : 0,
+                    strokeWidth: 2,
+                    color: context.accentColor.withValues(alpha: 0.4),
+                    backgroundColor: context.textTertiary.withValues(
+                      alpha: 0.15,
+                    ),
+                  ),
+                ),
+                Text(
+                  '$cooldownRemaining',
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w600,
+                    color: context.textTertiary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+    return IconButton(
+      onPressed: _sendTraceroute,
+      icon: const Icon(Icons.route),
+      tooltip: context.l10n.nodeDetailTracerouteTooltip,
+    );
   }
 
   List<TraceRouteLog> _applyFilters(List<TraceRouteLog> logs) {
@@ -101,6 +224,17 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
     final logsAsync = widget.nodeNum != null
         ? ref.watch(nodeTraceRouteLogsProvider(widget.nodeNum!))
         : ref.watch(traceRouteLogsProvider);
+    final countdowns = widget.nodeNum != null
+        ? ref.watch(countdownProvider)
+        : const <String, CountdownTask>{};
+    final traceId = widget.nodeNum != null
+        ? CountdownNotifier.tracerouteId(widget.nodeNum!)
+        : null;
+    final cooldownTask = traceId != null ? countdowns[traceId] : null;
+    final cooldownRemaining = cooldownTask?.remainingSeconds ?? 0;
+    final cooldownTotal =
+        cooldownTask?.totalSeconds ??
+        CountdownNotifier.tracerouteCooldownSeconds;
     final nodes = ref.watch(nodesProvider);
     final node = widget.nodeNum != null ? nodes[widget.nodeNum] : null;
     final nodeName = node?.displayName;
@@ -141,6 +275,12 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
               ? context.l10n.telemetryTracerouteTitle
               : null,
           actions: [
+            if (widget.nodeNum != null)
+              _buildTracerouteAppBarAction(
+                context,
+                cooldownRemaining,
+                cooldownTotal,
+              ),
             PopupMenuButton<String>(
               icon: const Icon(Icons.more_vert),
               tooltip: context.l10n.telemetryTracerouteMoreActions,

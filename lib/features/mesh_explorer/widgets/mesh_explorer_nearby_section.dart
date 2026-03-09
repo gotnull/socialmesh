@@ -25,17 +25,23 @@ import '../../../utils/snackbar.dart';
 import '../models/interaction_tier.dart';
 import '../models/mesh_explorer_peer.dart';
 import 'mesh_explorer_peer_detail_sheet.dart';
+import 'mesh_explorer_scanning_empty_state.dart';
 
 /// Display section for nearby mesh peers.
 class MeshExplorerNearbySection extends StatelessWidget {
   final List<MeshExplorerPeer> peers;
+  final VoidCallback onScan;
 
-  const MeshExplorerNearbySection({super.key, required this.peers});
+  const MeshExplorerNearbySection({
+    super.key,
+    required this.peers,
+    required this.onScan,
+  });
 
   @override
   Widget build(BuildContext context) {
     if (peers.isEmpty) {
-      return _EmptyNearby();
+      return MeshExplorerScanningEmptyState(onScan: onScan);
     }
 
     return Padding(
@@ -47,42 +53,6 @@ class MeshExplorerNearbySection extends StatelessWidget {
             if (i < peers.length - 1)
               Divider(height: 1, color: context.border.withValues(alpha: 0.15)),
           ],
-        ],
-      ),
-    );
-  }
-}
-
-/// Empty state for no nearby peers.
-class _EmptyNearby extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppTheme.spacing16,
-        vertical: AppTheme.spacing24,
-      ),
-      child: Column(
-        children: [
-          Icon(
-            Icons.people_outline,
-            size: 40,
-            color: context.textTertiary.withValues(alpha: 0.4),
-          ),
-          const SizedBox(height: AppTheme.spacing8),
-          Text(
-            l10n.meshExplorerEmptyNearbyTitle,
-            style: context.bodyStyle?.copyWith(color: context.textSecondary),
-          ),
-          const SizedBox(height: AppTheme.spacing4),
-          Text(
-            l10n.meshExplorerEmptyNearbyBody,
-            style: context.bodySmallStyle?.copyWith(
-              color: context.textTertiary,
-            ),
-            textAlign: TextAlign.center,
-          ),
         ],
       ),
     );
@@ -294,15 +264,25 @@ class _PeerAction extends ConsumerWidget {
         l10n.meshExplorerActionHandshake,
         Icons.handshake_outlined,
       ),
-      InteractionTier.handshaked => (
-        l10n.meshExplorerActionRequestIdentity,
-        Icons.verified_user_outlined,
-      ),
+      InteractionTier.handshaked => (null, Icons.verified_user_outlined),
       InteractionTier.identified || InteractionTier.pinned => (
         l10n.meshExplorerActionView,
         Icons.chevron_right,
       ),
     };
+
+    if (label == null) {
+      return IconButton(
+        onPressed: () => _onAction(context, ref),
+        icon: Icon(icon, size: 20),
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints(
+          minWidth: AppTheme.spacing32,
+          minHeight: AppTheme.spacing32,
+        ),
+        tooltip: l10n.meshExplorerActionRequestIdentity,
+      );
+    }
 
     return TextButton.icon(
       onPressed: () => _onAction(context, ref),
@@ -322,9 +302,9 @@ class _PeerAction extends ConsumerWidget {
   bool _isHandshakeInProgress(SipHandshakeState state) {
     return switch (state) {
       SipHandshakeState.helloSent ||
+      SipHandshakeState.pendingApproval ||
       SipHandshakeState.challengeReceived ||
       SipHandshakeState.responseSent ||
-      SipHandshakeState.helloReceived ||
       SipHandshakeState.challengeSent ||
       SipHandshakeState.responseReceived => true,
       _ => false,
@@ -357,7 +337,14 @@ class _PeerAction extends ConsumerWidget {
           );
         }
       case InteractionTier.handshaked:
-        identity?.buildIdReq();
+        final outbound = identity?.buildIdReq();
+        if (outbound != null) {
+          await protocol.sendSipPayload(outbound.encoded, SipMessageType.idReq);
+          AppLogging.sip(
+            'MESH_EXPLORER: ID_REQ sent to '
+            'node=0x${peer.nodeId.toRadixString(16)}',
+          );
+        }
       case InteractionTier.identified:
       case InteractionTier.pinned:
         if (!context.mounted) return;

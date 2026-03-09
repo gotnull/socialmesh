@@ -144,7 +144,11 @@ class TracerouteDatabase {
 
   /// Enable WAL mode and foreign keys before any other operations.
   Future<void> _onConfigure(Database db) async {
-    final walResult = await db.rawQuery('PRAGMA journal_mode=WAL'); assert(walResult.isNotEmpty && walResult.first['journal_mode'] == 'wal', 'WAL mode not active'); // lint-allow: hardcoded-string
+    final walResult = await db.rawQuery('PRAGMA journal_mode=WAL');
+    assert(
+      walResult.isNotEmpty && walResult.first['journal_mode'] == 'wal',
+      'WAL mode not active',
+    ); // lint-allow: hardcoded-string
     await db.execute('PRAGMA foreign_keys = ON');
   }
 

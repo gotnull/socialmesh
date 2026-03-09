@@ -2406,6 +2406,86 @@ class HelpContent {
   );
 
   // ============================================================================
+  // SIP HUB HELP
+  // ============================================================================
+
+  static final HelpTopic sipHubOverview = HelpTopic(
+    id: 'sip_hub_overview',
+    title: 'Socialmesh',
+    description: 'Discover and chat with nearby Socialmesh peers',
+    icon: Icons.sensors,
+    category: catNetwork,
+    priority: 7,
+    steps: [
+      HelpStep(
+        id: 'sip_hub_intro',
+        bubbleText:
+            "Welcome to **Socialmesh**! This is your peer discovery hub. Nearby devices running Socialmesh appear here once they beacon or respond to a rollcall.",
+        icoMood: MeshBrainMood.excited,
+        canGoBack: false,
+      ),
+      HelpStep(
+        id: 'sip_hub_scan',
+        bubbleText:
+            "Tap the **scan icon** to send a rollcall request. Nearby peers will respond within seconds. Auto-scan fires every 60 seconds in the background.",
+        icoMood: MeshBrainMood.speaking,
+      ),
+      HelpStep(
+        id: 'sip_hub_handshake',
+        bubbleText:
+            "Once you see a peer, tap **Handshake** to exchange identity. After the handshake you can open an **end-to-end encrypted** ephemeral DM — no servers, no accounts.",
+        icoMood: MeshBrainMood.approving,
+      ),
+      HelpStep(
+        id: 'sip_hub_privacy',
+        bubbleText:
+            "All discovery is **anonymous by default**. Peers only reveal a rotating 4-byte ambient ID until you mutually agree to a handshake.",
+        icoMood: MeshBrainMood.playful,
+      ),
+    ],
+  );
+
+  // ============================================================================
+  // MESH EXPLORER HELP
+  // ============================================================================
+
+  static final HelpTopic meshExplorerOverview = HelpTopic(
+    id: 'mesh_explorer_overview',
+    title: 'Mesh Explorer',
+    description: 'Explore nearby peers and mesh services',
+    icon: Icons.explore_outlined,
+    category: catNetwork,
+    priority: 8,
+    steps: [
+      HelpStep(
+        id: 'mesh_explorer_intro',
+        bubbleText:
+            "Welcome to **Mesh Explorer**! This shows all Socialmesh-capable peers currently in radio range. Anonymous peers appear instantly — no handshake needed.",
+        icoMood: MeshBrainMood.excited,
+        canGoBack: false,
+      ),
+      HelpStep(
+        id: 'mesh_explorer_peers',
+        bubbleText:
+            "Each tile shows a **peer's ambient sigil** and capabilities. Tap a peer to view details or initiate a **SIP handshake** for identity exchange.",
+        icoMood: MeshBrainMood.speaking,
+      ),
+      HelpStep(
+        id: 'mesh_explorer_services',
+        bubbleText:
+            "The **Services** section shows what nearby peers are offering — Bulletin Boards, Profiles, and more. Tap a service tile to interact with it.",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'mesh_explorer_scan',
+        bubbleText:
+            "Tap the **sensor icon** to broadcast a rollcall to the mesh. Peers respond within seconds. The explorer refreshes automatically when new peers are heard.",
+        icoMood: MeshBrainMood.approving,
+      ),
+    ],
+  );
+
+  // ============================================================================
   // ALL TOPICS
   // ============================================================================
 
@@ -2455,6 +2535,8 @@ class HelpContent {
     takGatewayOverview,
     fileTransferOverview,
     fileTransferLimits,
+    sipHubOverview,
+    meshExplorerOverview,
   ];
 
   /// Get a topic by ID
@@ -2539,6 +2621,8 @@ class HelpContent {
         'user_responsibility' => l10n.helpUserResponsibilityTitle,
         'file_transfer_overview' => l10n.helpFileTransferOverviewTitle,
         'file_transfer_limits' => l10n.helpFileTransferLimitsTitle,
+        'sip_hub_overview' => l10n.helpSipHubOverviewTitle,
+        'mesh_explorer_overview' => l10n.helpMeshExplorerOverviewTitle,
         _ => topicId,
       };
 
@@ -2590,6 +2674,8 @@ class HelpContent {
         'user_responsibility' => l10n.helpUserResponsibilityDescription,
         'file_transfer_overview' => l10n.helpFileTransferOverviewDescription,
         'file_transfer_limits' => l10n.helpFileTransferLimitsDescription,
+        'sip_hub_overview' => l10n.helpSipHubOverviewDescription,
+        'mesh_explorer_overview' => l10n.helpMeshExplorerOverviewDescription,
         _ => topicId,
       };
 
@@ -2833,6 +2919,14 @@ class HelpContent {
     'ftl_duty' => l10n.helpFtlDutyBubble,
     'ftl_cap' => l10n.helpFtlCapBubble,
     'ftl_usb' => l10n.helpFtlUsbBubble,
+    'sip_hub_intro' => l10n.helpSipHubIntroBubble,
+    'sip_hub_scan' => l10n.helpSipHubScanBubble,
+    'sip_hub_handshake' => l10n.helpSipHubHandshakeBubble,
+    'sip_hub_privacy' => l10n.helpSipHubPrivacyBubble,
+    'mesh_explorer_intro' => l10n.helpMeshExplorerIntroBubble,
+    'mesh_explorer_peers' => l10n.helpMeshExplorerPeersBubble,
+    'mesh_explorer_services' => l10n.helpMeshExplorerServicesBubble,
+    'mesh_explorer_scan' => l10n.helpMeshExplorerScanBubble,
     _ => stepId,
   };
 

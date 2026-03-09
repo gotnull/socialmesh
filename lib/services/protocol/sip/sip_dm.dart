@@ -254,6 +254,13 @@ class SipDmManager {
     return session;
   }
 
+  /// Returns true if the session exists and has been explicitly closed
+  /// (by either peer sending DM_CLOSE).
+  bool isSessionClosed(int sessionTag) {
+    final session = _sessions[sessionTag];
+    return session?.status == SipDmSessionStatus.closed;
+  }
+
   /// Get all active (non-expired) sessions.
   List<SipDmSession> get activeSessions {
     _cleanExpired();
@@ -297,19 +304,60 @@ class SipDmManager {
     return true;
   }
 
-  /// Close a session explicitly.
+  /// Close a session explicitly and build a DM_CLOSE frame to notify the peer.
   ///
-  /// Returns false if session not found.
-  bool closeSession(int sessionTag) {
+  /// Returns the encoded frame bytes to transmit, or null if the session was
+  /// not found or rate-limited.
+  Uint8List? closeSession(int sessionTag) {
     final session = _sessions[sessionTag];
-    if (session == null) return false;
+    if (session == null) return null;
 
     session.status = SipDmSessionStatus.closed;
     AppLogging.sip(
       'SIP_DM: session closed, tag=0x${sessionTag.toRadixString(16)}',
     );
+
+    // Build the DM_CLOSE frame (header-only, no payload).
+    const frameSize = SipConstants.sipWrapperMin;
+    Uint8List? encoded;
+    if (_rateLimiter.canSend(frameSize)) {
+      _rateLimiter.recordSend(frameSize);
+      final frame = SipFrame(
+        versionMajor: SipConstants.sipVersionMajor,
+        versionMinor: SipConstants.sipVersionMinor,
+        msgType: SipMessageType.dmClose,
+        flags: 0,
+        headerLen: SipConstants.sipWrapperMin,
+        sessionId: sessionTag,
+        nonce: SipCodec.generateNonce(),
+        timestampS: _clock() ~/ 1000,
+        payloadLen: 0,
+        payload: Uint8List(0),
+      );
+      encoded = SipCodec.encode(frame);
+    }
+
     onStateChanged?.call();
-    return true;
+    return encoded;
+  }
+
+  /// Handle an inbound DM_CLOSE frame from the peer.
+  ///
+  /// Marks the local session as closed and fires [onStateChanged] so the UI
+  /// can navigate back.
+  void handleInboundClose(SipFrame frame) {
+    if (frame.msgType != SipMessageType.dmClose) return;
+
+    final sessionTag = frame.sessionId;
+    final session = _sessions[sessionTag];
+    if (session == null) return;
+
+    session.status = SipDmSessionStatus.closed;
+    AppLogging.sip(
+      'SIP_DM: <- CLOSE from peer, '
+      'session=0x${sessionTag.toRadixString(16)}',
+    );
+    onStateChanged?.call();
   }
 
   // ---------------------------------------------------------------------------

@@ -16,6 +16,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/map_config.dart';
 import '../../core/theme.dart';
+import '../../core/transport.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/map_controls.dart';
@@ -34,6 +35,8 @@ import '../../services/share_link_service.dart';
 import '../../utils/presence_utils.dart';
 import '../messaging/messaging_screen.dart';
 import '../navigation/main_shell.dart';
+import '../nodes/node_detail_screen.dart';
+import '../telemetry/traceroute_log_screen.dart';
 import '../settings/settings_screen.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/constants.dart';
@@ -1688,6 +1691,27 @@ class _MapScreenState extends ConsumerState<MapScreen>
                             );
                           }
                         },
+                        onTraceroute: _selectedNode!.nodeNum != myNodeNum
+                            ? () => _sendTracerouteFromMap(_selectedNode!)
+                            : null,
+                        onViewDetails: () {
+                          final node = _selectedNode!;
+                          showNodeDetails(
+                            context,
+                            node,
+                            node.nodeNum == myNodeNum,
+                          );
+                        },
+                        onViewHistory: () {
+                          final node = _selectedNode!;
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  TraceRouteLogScreen(nodeNum: node.nodeNum),
+                            ),
+                          );
+                        },
                       ),
                     ),
                   // TAK entity info card
@@ -2408,6 +2432,57 @@ class _MapScreenState extends ConsumerState<MapScreen>
     if (myNode != null) {
       _animatedMove(LatLng(myNode.latitude, myNode.longitude), 14.0);
       HapticFeedback.lightImpact();
+    }
+  }
+
+  Future<void> _sendTracerouteFromMap(MeshNode node) async {
+    final cooldownRemaining = ref
+        .read(countdownProvider.notifier)
+        .tracerouteRemaining(node.nodeNum);
+    if (cooldownRemaining > 0) {
+      showInfoSnackBar(
+        context,
+        context.l10n.nodeDetailTracerouteCooldownTooltip(cooldownRemaining),
+      );
+      return;
+    }
+
+    final connectionState = ref.read(connectionStateProvider);
+    final isConnected = connectionState.maybeWhen(
+      data: (state) => state == DeviceConnectionState.connected,
+      orElse: () => false,
+    );
+
+    if (!isConnected) {
+      showErrorSnackBar(context, context.l10n.nodeDetailTracerouteNotConnected);
+      return;
+    }
+
+    final protocol = ref.read(protocolServiceProvider);
+    final displayName = node.displayName;
+
+    try {
+      await protocol.sendTraceroute(node.nodeNum);
+
+      if (!mounted) return;
+
+      ref
+          .read(countdownProvider.notifier)
+          .startTracerouteCountdown(node.nodeNum);
+
+      if (context.mounted) {
+        showSuccessSnackBar(
+          context,
+          context.l10n.nodeDetailTracerouteSent(displayName),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        showErrorSnackBar(
+          context,
+          context.l10n.nodeDetailTracerouteError(e.toString()),
+        );
+      }
     }
   }
 

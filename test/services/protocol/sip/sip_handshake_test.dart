@@ -155,8 +155,13 @@ void main() {
       expect(helloFrame!.msgType, SipMessageType.hsHello);
       expect(initiator.getState(nodeB), SipHandshakeState.helloSent);
 
-      // Step 2: Responder receives HS_HELLO, sends HS_CHALLENGE.
-      final challengeFrame = responder.handleHello(nodeA, helloFrame);
+      // Step 2: Responder receives HS_HELLO — queued for consent.
+      responder.handleHello(nodeA, helloFrame);
+      expect(responder.getState(nodeA), SipHandshakeState.pendingApproval);
+      expect(responder.pendingRequestNodeIds, contains(nodeA));
+
+      // User accepts — responder sends HS_CHALLENGE.
+      final challengeFrame = responder.acceptHandshake(nodeA);
       expect(challengeFrame, isNotNull);
       expect(challengeFrame!.msgType, SipMessageType.hsChallenge);
 
@@ -217,17 +222,18 @@ void main() {
         payload: Uint8List(50),
       );
 
-      // First should succeed (though payload is zeros, at least the replay
-      // cache records it).
+      // First should succeed (though payload is zeros, nonce is recorded).
       mgr.handleHello(0xAAAA, helloFrame);
       // The decode may fail because payload is all zeros, but nonce is recorded.
       // Second call with same nonce should be rejected.
       mgr.reset();
-      final second = mgr.handleHello(0xAAAA, helloFrame);
-      // The nonce was recorded in the replay cache, so this should be rejected.
-      // (both may return null due to invalid payload, but the important thing
-      // is that replay check fires)
-      expect(second, isNull);
+      mgr.handleHello(0xAAAA, helloFrame);
+      // Replay check fires — no pending request queued.
+      expect(
+        mgr.pendingRequestNodeIds,
+        isEmpty,
+        reason: 'replay rejected, nothing queued',
+      );
     });
 
     test('unexpected HS_CHALLENGE without HS_HELLO is rejected', () async {
@@ -305,7 +311,8 @@ void main() {
       );
 
       final helloFrame = initiator.initiateHandshake(0xBBBB);
-      final challengeFrame = responder.handleHello(0xAAAA, helloFrame!);
+      responder.handleHello(0xAAAA, helloFrame!);
+      final challengeFrame = responder.acceptHandshake(0xAAAA);
       final responseFrame = await initiator.handleChallenge(
         0xBBBB,
         challengeFrame!,
@@ -362,18 +369,25 @@ void main() {
       expect(mgrB.getState(nodeA), SipHandshakeState.helloSent);
 
       // A receives B's HELLO — A has higher nodeId, so A ignores it (wins).
-      final challengeFromA = mgrA.handleHello(nodeB, helloFromB!);
-      expect(challengeFromA, isNull, reason: 'A wins tie-break, ignores HELLO');
+      mgrA.handleHello(nodeB, helloFromB!);
       expect(
         mgrA.getState(nodeB),
         SipHandshakeState.helloSent,
-        reason: 'A keeps its initiator session',
+        reason: 'A wins tie-break, keeps initiator session',
       );
 
       // B receives A's HELLO — B has lower nodeId, so B yields and becomes
-      // responder. B returns an HS_CHALLENGE.
-      final challengeFromB = mgrB.handleHello(nodeA, helloFromA!);
-      expect(challengeFromB, isNotNull, reason: 'B yields, becomes responder');
+      // responder. B queues the request for user consent.
+      mgrB.handleHello(nodeA, helloFromA!);
+      expect(
+        mgrB.getState(nodeA),
+        SipHandshakeState.pendingApproval,
+        reason: 'B yields, queued for consent',
+      );
+
+      // User on B accepts.
+      final challengeFromB = mgrB.acceptHandshake(nodeA);
+      expect(challengeFromB, isNotNull, reason: 'B accepted, sends challenge');
       expect(challengeFromB!.msgType, SipMessageType.hsChallenge);
 
       // From here the normal 4-step handshake proceeds:
@@ -436,10 +450,237 @@ void main() {
       );
 
       // With equal IDs, the else branch fires (not strictly greater).
-      final challenge = mgrA.handleHello(nodeId, fakeHello);
-      // Should become a responder and return a challenge.
+      mgrA.handleHello(nodeId, fakeHello);
+      // Should queue for consent (not auto-respond).
+      expect(mgrA.getState(nodeId), SipHandshakeState.pendingApproval);
+      final challenge = mgrA.acceptHandshake(nodeId);
+      // Should return a challenge after acceptance.
       expect(challenge, isNotNull);
       expect(challenge!.msgType, SipMessageType.hsChallenge);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Consent: declineHandshake
+  // ---------------------------------------------------------------------------
+
+  group('declineHandshake', () {
+    SipFrame makeHello({required int nonce}) {
+      final payload = SipHsMessages.encodeHello(
+        SipHsHello(
+          clientNonce: Uint8List.fromList(List.generate(16, (i) => i)),
+          clientEphemeralPub: Uint8List.fromList(
+            List.generate(32, (i) => i + 16),
+          ),
+          requestedFeatures: SipFeatureBits.allV01,
+        ),
+      );
+      return SipFrame(
+        versionMajor: SipConstants.sipVersionMajor,
+        versionMinor: SipConstants.sipVersionMinor,
+        msgType: SipMessageType.hsHello,
+        flags: 0,
+        headerLen: SipConstants.sipWrapperMin,
+        sessionId: 0,
+        nonce: nonce,
+        timestampS: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+        payloadLen: payload.length,
+        payload: payload,
+      );
+    }
+
+    test('declineHandshake returns HS_DECLINE frame and clears pending', () {
+      final mgr = SipHandshakeManager(
+        replayCache: SipReplayCache(),
+        localNodeId: 0x1111,
+      );
+
+      mgr.handleHello(0xAAAA, makeHello(nonce: 100));
+      expect(mgr.getState(0xAAAA), SipHandshakeState.pendingApproval);
+
+      final decline = mgr.declineHandshake(0xAAAA);
+      expect(decline, isNotNull);
+      expect(decline!.msgType, SipMessageType.hsDecline);
+      expect(mgr.getState(0xAAAA), SipHandshakeState.idle);
+    });
+
+    test('after decline we can immediately initiate to the same peer', () {
+      // Regression: declineHandshake must not set a fail-cooldown that would
+      // block our own outbound initiateHandshake to the declined peer.
+      final mgr = SipHandshakeManager(
+        replayCache: SipReplayCache(),
+        localNodeId: 0x1111,
+      );
+
+      mgr.handleHello(0xAAAA, makeHello(nonce: 200));
+      expect(mgr.getState(0xAAAA), SipHandshakeState.pendingApproval);
+      mgr.declineHandshake(0xAAAA);
+
+      // Immediately initiate to the same peer — must not be blocked.
+      final hello = mgr.initiateHandshake(0xAAAA);
+      expect(hello, isNotNull, reason: 'decline must not set a fail-cooldown');
+      expect(hello!.msgType, SipMessageType.hsHello);
+      expect(mgr.getState(0xAAAA), SipHandshakeState.helloSent);
+    });
+
+    test('new HS_HELLO from declined peer is accepted after decline', () {
+      // Regression: a second incoming request from the same peer must
+      // still appear as pendingApproval after the first was declined.
+      final mgr = SipHandshakeManager(
+        replayCache: SipReplayCache(),
+        localNodeId: 0x1111,
+      );
+
+      mgr.handleHello(0xAAAA, makeHello(nonce: 300));
+      mgr.declineHandshake(0xAAAA);
+      expect(mgr.getState(0xAAAA), SipHandshakeState.idle);
+
+      // New HELLO with a fresh SipFrame nonce.
+      var stateChanges = 0;
+      mgr.onStateChanged = () => stateChanges++;
+
+      mgr.handleHello(0xAAAA, makeHello(nonce: 301));
+      expect(
+        mgr.getState(0xAAAA),
+        SipHandshakeState.pendingApproval,
+        reason: 'second request from same peer must re-enter pendingApproval',
+      );
+      expect(stateChanges, greaterThan(0));
+    });
+
+    test('declineHandshake returns null if no pending request', () {
+      final mgr = SipHandshakeManager(
+        replayCache: SipReplayCache(),
+        localNodeId: 0x1111,
+      );
+      expect(mgr.declineHandshake(0xAAAA), isNull);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Consent: handleDecline (initiator receives HS_DECLINE)
+  // ---------------------------------------------------------------------------
+
+  group('handleDecline', () {
+    SipFrame makeDeclineFrame(Uint8List clientNonce) {
+      final payload = SipHsMessages.encodeDecline(
+        SipHsDecline(echoedClientNonce: clientNonce, reason: 0x00),
+      );
+      return SipFrame(
+        versionMajor: SipConstants.sipVersionMajor,
+        versionMinor: SipConstants.sipVersionMinor,
+        msgType: SipMessageType.hsDecline,
+        flags: SipFlags.isResponse,
+        headerLen: SipConstants.sipWrapperMin,
+        sessionId: 0,
+        nonce: SipCodec.generateNonce(),
+        timestampS: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+        payloadLen: payload.length,
+        payload: payload,
+      );
+    }
+
+    test(
+      'handleDecline clears session and returns to idle without cooldown',
+      () {
+        final mgr = SipHandshakeManager(
+          replayCache: SipReplayCache(),
+          localNodeId: 0x1111,
+        );
+
+        final hello = mgr.initiateHandshake(0xAAAA);
+        expect(hello, isNotNull);
+        expect(mgr.getState(0xAAAA), SipHandshakeState.helloSent);
+
+        // Peer declines us.
+        final clientNonce = Uint8List.fromList(List.generate(16, (i) => i));
+        mgr.handleDecline(0xAAAA, makeDeclineFrame(clientNonce));
+        expect(mgr.getState(0xAAAA), SipHandshakeState.idle);
+        expect(
+          mgr.isInCooldown(0xAAAA),
+          isFalse,
+          reason: 'peer declining must not set a fail-cooldown',
+        );
+      },
+    );
+
+    test('after being declined we can immediately re-initiate', () {
+      // Regression: handleDecline must not set a fail-cooldown that would
+      // block our own re-initiation after a peer declines us.
+      final mgr = SipHandshakeManager(
+        replayCache: SipReplayCache(),
+        localNodeId: 0x1111,
+      );
+
+      final clientNonce = Uint8List.fromList(List.generate(16, (i) => i));
+      mgr.initiateHandshake(0xAAAA);
+      mgr.handleDecline(0xAAAA, makeDeclineFrame(clientNonce));
+
+      final hello2 = mgr.initiateHandshake(0xAAAA);
+      expect(
+        hello2,
+        isNotNull,
+        reason:
+            'should be able to re-initiate immediately after being declined',
+      );
+      expect(hello2!.msgType, SipMessageType.hsHello);
+    });
+
+    test('mutual decline: both sides can re-initiate immediately', () {
+      // Regression: after A declines B and B declines A, both should be
+      // able to initiate a fresh handshake straight away.
+      final replayCacheA = SipReplayCache();
+      final replayCacheB = SipReplayCache();
+
+      final mgrA = SipHandshakeManager(
+        replayCache: replayCacheA,
+        localNodeId: 0x1111, // lower — yields on simultaneous-open
+      );
+      final mgrB = SipHandshakeManager(
+        replayCache: replayCacheB,
+        localNodeId: 0x2222, // higher — wins on simultaneous-open
+      );
+
+      // A initiates to B, B queues for consent.
+      final helloFromA = mgrA.initiateHandshake(0x2222)!;
+      mgrB.handleHello(0x1111, helloFromA);
+      expect(mgrB.getState(0x1111), SipHandshakeState.pendingApproval);
+
+      // B initiates to A; A is currently in helloSent — A yields (lower ID),
+      // discards its initiator session, and queues B's request for consent.
+      final helloFromB = mgrB.initiateHandshake(0x1111)!;
+      mgrA.handleHello(0x2222, helloFromB);
+      expect(mgrA.getState(0x2222), SipHandshakeState.pendingApproval);
+
+      // B declines A's queued request → sends HS_DECLINE to A.
+      // A declines B's queued request → sends HS_DECLINE to B.
+      final declineFromB = mgrB.declineHandshake(0x1111)!;
+      final declineFromA = mgrA.declineHandshake(0x2222)!;
+
+      // Each side processes the incoming HS_DECLINE.
+      //
+      // B had its own helloSent session for A (from mgrB.initiateHandshake)
+      // which A resolved via the yield path above. The HS_DECLINE from A
+      // will be treated as unexpected (the session no longer exists) and
+      // ignored. What matters for this regression test is that mgrB's
+      // helloSent session for A is cleared by processing the decline from A.
+      mgrA.handleDecline(0x2222, declineFromB);
+      mgrB.handleDecline(0x1111, declineFromA);
+
+      // After mutual decline: both sides must be in idle with no cooldown.
+      expect(mgrA.getState(0x2222), SipHandshakeState.idle);
+      expect(mgrB.getState(0x1111), SipHandshakeState.idle);
+      expect(mgrA.isInCooldown(0x2222), isFalse);
+      expect(mgrB.isInCooldown(0x1111), isFalse);
+
+      // Both sides can immediately attempt a fresh handshake.
+      final retryA = mgrA.initiateHandshake(0x2222);
+      expect(retryA, isNotNull, reason: 'A must be able to re-initiate');
+
+      // Reset mgrA before B retries so their sessions don't conflict.
+      mgrA.reset();
+      final retryB = mgrB.initiateHandshake(0x1111);
+      expect(retryB, isNotNull, reason: 'B must be able to re-initiate');
     });
   });
 }

@@ -191,8 +191,14 @@ void main() {
       expect(helloFrame!.msgType, equals(SipMessageType.hsHello));
       expect(hsManagerA.getState(nodeB), equals(SipHandshakeState.helloSent));
 
-      // Step 2: B receives HS_HELLO, sends HS_CHALLENGE.
-      final challengeFrame = hsManagerB.handleHello(nodeA, helloFrame);
+      // Step 2: B receives HS_HELLO, queues for consent.
+      hsManagerB.handleHello(nodeA, helloFrame);
+      expect(
+        hsManagerB.getState(nodeA),
+        equals(SipHandshakeState.pendingApproval),
+      );
+      // B accepts: sends HS_CHALLENGE.
+      final challengeFrame = hsManagerB.acceptHandshake(nodeA);
       expect(challengeFrame, isNotNull);
       expect(challengeFrame!.msgType, equals(SipMessageType.hsChallenge));
       expect(
@@ -247,14 +253,21 @@ void main() {
       expect(hello, isNotNull);
 
       // B handles the hello once.
-      final challenge1 = hsManagerB.handleHello(nodeA, hello!);
+      hsManagerB.handleHello(nodeA, hello!);
+      expect(
+        hsManagerB.getState(nodeA),
+        equals(SipHandshakeState.pendingApproval),
+      );
+      final challenge1 = hsManagerB.acceptHandshake(nodeA);
       expect(challenge1, isNotNull);
 
-      // Replay the same hello to B (second time should be rejected).
-      final challenge2 = hsManagerB.handleHello(nodeA, hello);
-      // The session already exists for nodeA, so second handleHello overrides.
-      // But the replay cache should catch the nonce.
-      expect(challenge2, isNull); // Replayed nonce -> rejected
+      // Replay the same hello to B (second time should be absorbed).
+      // Session is in challengeSent — duplicate HS_HELLO dropped.
+      hsManagerB.handleHello(nodeA, hello);
+      expect(
+        hsManagerB.getState(nodeA),
+        equals(SipHandshakeState.challengeSent),
+      );
     });
 
     test('post-handshake reset clears all state', () async {
@@ -263,7 +276,8 @@ void main() {
 
       // Complete a handshake.
       final hello = hsManagerA.initiateHandshake(nodeB)!;
-      final challenge = hsManagerB.handleHello(nodeA, hello)!;
+      hsManagerB.handleHello(nodeA, hello);
+      final challenge = hsManagerB.acceptHandshake(nodeA)!;
       final response = (await hsManagerA.handleChallenge(nodeB, challenge))!;
       await hsManagerB.handleResponse(nodeA, response);
 
@@ -320,7 +334,8 @@ void main() {
       int nodeB,
     ) async {
       final hello = hsManagerA.initiateHandshake(nodeB)!;
-      final challenge = hsManagerB.handleHello(nodeA, hello)!;
+      hsManagerB.handleHello(nodeA, hello);
+      final challenge = hsManagerB.acceptHandshake(nodeA)!;
       final response = (await hsManagerA.handleChallenge(nodeB, challenge))!;
       final accept = (await hsManagerB.handleResponse(nodeA, response))!;
       final resultB = hsManagerB.consumeResult(nodeA)!;
@@ -1078,7 +1093,8 @@ void main() {
         final hello = hsA.initiateHandshake(0x11223344)!;
         counters.recordTx(SipMessageType.hsHello, 48);
 
-        final challenge = hsB.handleHello(0xAABBCCDD, hello)!;
+        hsB.handleHello(0xAABBCCDD, hello);
+        final challenge = hsB.acceptHandshake(0xAABBCCDD)!;
         counters.recordRx(SipMessageType.hsChallenge, 96);
 
         final response = (await hsA.handleChallenge(0x11223344, challenge))!;

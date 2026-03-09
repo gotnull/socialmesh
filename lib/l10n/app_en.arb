@@ -4666,6 +4666,18 @@
     "@nodeInfoMessage": {
         "description": "Label for send message button."
     },
+    "nodeInfoTraceroute": "Traceroute",
+    "@nodeInfoTraceroute": {
+        "description": "Tooltip for the quick traceroute icon button on the node info card."
+    },
+    "nodeInfoViewDetails": "View Details",
+    "@nodeInfoViewDetails": {
+        "description": "Tooltip for the node detail navigation icon button on the node info card."
+    },
+    "nodeInfoViewHistory": "Traceroute History",
+    "@nodeInfoViewHistory": {
+        "description": "Tooltip for the traceroute history icon button on the node info card."
+    },
     "bindingSelectorNoResults": "No variables found",
     "@bindingSelectorNoResults": {
         "description": "Empty state text when no binding variables match the search."
@@ -40375,6 +40387,10 @@
     "@sipHandshakeFailed": {
         "description": "Status text when handshake fails."
     },
+    "sipHandshakePendingLabel": "Request Pending",
+    "@sipHandshakePendingLabel": {
+        "description": "Chip label shown on a peer tile when they have sent an incoming handshake request awaiting user action."
+    },
     "sipRequestIdentity": "Request Identity",
     "@sipRequestIdentity": {
         "description": "Button label to request identity from a SIP peer."
@@ -40514,6 +40530,28 @@
     "@sipHubSectionConversations": {
         "description": "Section header for active DM sessions."
     },
+    "sipHubSectionIncomingRequests": "Incoming Requests",
+    "@sipHubSectionIncomingRequests": {
+        "description": "Section header for pending handshake consent requests."
+    },
+    "sipHubIncomingRequestFrom": "{peerName} wants to connect",
+    "@sipHubIncomingRequestFrom": {
+        "description": "Incoming handshake request label.",
+        "placeholders": {
+            "peerName": {
+                "type": "String",
+                "example": "Node 1A2B"
+            }
+        }
+    },
+    "sipHubAccept": "Accept",
+    "@sipHubAccept": {
+        "description": "Accept button label for incoming handshake requests."
+    },
+    "sipHubDecline": "Decline",
+    "@sipHubDecline": {
+        "description": "Decline button label for incoming handshake requests."
+    },
     "sipHubEmptyTitle": "No peers nearby",
     "@sipHubEmptyTitle": {
         "description": "Empty state title when no SIP peers are found."
@@ -40521,6 +40559,62 @@
     "sipHubEmptyDescription": "Tap Scan to look for other Socialmesh users on the mesh.",
     "@sipHubEmptyDescription": {
         "description": "Empty state description when no SIP peers are found."
+    },
+    "sipHubScanningTitlePrefix": "No peers ",
+    "@sipHubScanningTitlePrefix": {
+        "description": "Prefix for the animated SIP Hub scanning empty state title (trailing space separates from keyword)."
+    },
+    "sipHubScanningTitleKeyword": "nearby",
+    "@sipHubScanningTitleKeyword": {
+        "description": "Keyword for the animated SIP Hub scanning empty state title (gradient-animated)."
+    },
+    "sipHubScanningTitleSuffix": "",
+    "@sipHubScanningTitleSuffix": {
+        "description": "Suffix for the animated SIP Hub scanning empty state title."
+    },
+    "sipHubScanningTagline1": "Listens for Socialmesh beacons over the radio mesh",
+    "@sipHubScanningTagline1": {
+        "description": "SIP Hub animated scanning state tagline 1."
+    },
+    "sipHubScanningTagline2": "Tap Scan to send a rollcall — wakes up nearby peers",
+    "@sipHubScanningTagline2": {
+        "description": "SIP Hub animated scanning state tagline 2."
+    },
+    "sipHubScanningTagline3": "Peers respond anonymously — no account needed",
+    "@sipHubScanningTagline3": {
+        "description": "SIP Hub animated scanning state tagline 3."
+    },
+    "sipHubScanningTagline4": "Found one? Initiate a handshake to start chatting",
+    "@sipHubScanningTagline4": {
+        "description": "SIP Hub animated scanning state tagline 4."
+    },
+    "sipHubHelp": "Help",
+    "@sipHubHelp": {
+        "description": "Help overflow menu item label for the SIP Hub screen."
+    },
+    "helpSipHubOverviewTitle": "Socialmesh",
+    "@helpSipHubOverviewTitle": {
+        "description": "Help topic title for the SIP Hub screen."
+    },
+    "helpSipHubOverviewDescription": "Discover and chat with nearby Socialmesh peers",
+    "@helpSipHubOverviewDescription": {
+        "description": "Help topic description for the SIP Hub screen."
+    },
+    "helpSipHubIntroBubble": "Welcome to **Socialmesh**! This is your peer discovery hub. Nearby devices running Socialmesh appear here once they beacon or respond to a rollcall.",
+    "@helpSipHubIntroBubble": {
+        "description": "Help bubble: SIP Hub intro step."
+    },
+    "helpSipHubScanBubble": "Tap the **scan icon** to send a rollcall request. Nearby peers will respond within seconds. Auto-scan fires every 60 seconds in the background.",
+    "@helpSipHubScanBubble": {
+        "description": "Help bubble: SIP Hub scan step."
+    },
+    "helpSipHubHandshakeBubble": "Once you see a peer, tap **Handshake** to exchange identity. After the handshake you can open an **end-to-end encrypted** ephemeral DM — no servers, no accounts.",
+    "@helpSipHubHandshakeBubble": {
+        "description": "Help bubble: SIP Hub handshake step."
+    },
+    "helpSipHubPrivacyBubble": "All discovery is **anonymous by default**. Peers only reveal a rotating 4-byte ambient ID until you mutually agree to a handshake.",
+    "@helpSipHubPrivacyBubble": {
+        "description": "Help bubble: SIP Hub privacy step."
     },
     "sipHubLastSeen": "Seen {time}",
     "@sipHubLastSeen": {
@@ -40633,9 +40727,9 @@
     "@sipDmDeleteConfirmMessage": {
         "description": "Body text for the message delete confirmation bottom sheet."
     },
-    "notificationSipDmTitle": "SIP: {peerName}",
+    "notificationSipDmTitle": "{peerName}",
     "@notificationSipDmTitle": {
-        "description": "Notification title for an incoming SIP ephemeral DM.",
+        "description": "Notification title for an incoming ephemeral DM.",
         "placeholders": {
             "peerName": {
                 "type": "String",
@@ -40643,11 +40737,11 @@
             }
         }
     },
-    "notificationSipHandshakeTitle": "SIP Handshake Complete",
+    "notificationSipHandshakeTitle": "Secure Chat Ready",
     "@notificationSipHandshakeTitle": {
-        "description": "Notification title when a SIP handshake completes and a DM session is created."
+        "description": "Notification title when a secure chat session is established."
     },
-    "notificationSipHandshakeBody": "Ephemeral DM session established with {peerName}.",
+    "notificationSipHandshakeBody": "You can now send private messages with {peerName}.",
     "@notificationSipHandshakeBody": {
         "description": "Notification body when a SIP handshake completes.",
         "placeholders": {
@@ -40657,21 +40751,35 @@
             }
         }
     },
-    "notificationChannelSipMessages": "SIP Ephemeral Messages",
+    "notificationChannelSipMessages": "Ephemeral Messages",
     "@notificationChannelSipMessages": {
-        "description": "Android notification channel name for SIP DM messages."
+        "description": "Android notification channel name for ephemeral DM messages."
     },
-    "notificationChannelSipHandshake": "SIP Handshakes",
+    "notificationChannelSipHandshake": "Connection Requests",
     "@notificationChannelSipHandshake": {
-        "description": "Android notification channel name for SIP handshake events."
+        "description": "Android notification channel name for secure chat connection events."
     },
-    "notificationSipHandshakeRequestTitle": "Handshake Request",
+    "notificationSipHandshakeRequestTitle": "Chat Request",
     "@notificationSipHandshakeRequestTitle": {
-        "description": "Notification title when another peer sends a handshake request."
+        "description": "Notification title when another peer sends a secure chat request."
     },
-    "notificationSipHandshakeRequestBody": "{peerName} wants to start an ephemeral DM session.",
+    "notificationSipHandshakeRequestBody": "{peerName} wants to start a private chat.",
     "@notificationSipHandshakeRequestBody": {
         "description": "Notification body when an incoming SIP handshake request (HS_HELLO) is received.",
+        "placeholders": {
+            "peerName": {
+                "type": "String",
+                "example": "Node 1A2B"
+            }
+        }
+    },
+    "notificationSipHandshakeDeclinedTitle": "Connection Declined",
+    "@notificationSipHandshakeDeclinedTitle": {
+        "description": "Notification title when a SIP handshake request is declined by the remote peer."
+    },
+    "notificationSipHandshakeDeclinedBody": "{peerName} declined your connection request.",
+    "@notificationSipHandshakeDeclinedBody": {
+        "description": "Notification body when an outgoing SIP handshake is declined.",
         "placeholders": {
             "peerName": {
                 "type": "String",
@@ -41443,6 +41551,78 @@
     "meshExplorerSectionBoard": "Board Activity",
     "@meshExplorerSectionBoard": {
         "description": "Section header for board posts."
+    },
+    "meshExplorerScanningTitlePrefix": "No peers ",
+    "@meshExplorerScanningTitlePrefix": {
+        "description": "Prefix for the animated scanning empty state title (trailing space separates from keyword)."
+    },
+    "meshExplorerScanningTitleKeyword": "nearby",
+    "@meshExplorerScanningTitleKeyword": {
+        "description": "Keyword for the animated scanning empty state title (gradient-animated)."
+    },
+    "meshExplorerScanningTitleSuffix": "",
+    "@meshExplorerScanningTitleSuffix": {
+        "description": "Suffix for the animated scanning empty state title."
+    },
+    "meshExplorerScanningTagline1": "Scans for Socialmesh peers broadcasting on the mesh",
+    "@meshExplorerScanningTagline1": {
+        "description": "Animated scanning state tagline 1."
+    },
+    "meshExplorerScanningTagline2": "Tap Scan to send a rollcall — wakes up nearby peers",
+    "@meshExplorerScanningTagline2": {
+        "description": "Animated scanning state tagline 2."
+    },
+    "meshExplorerScanningTagline3": "Peers appear anonymously — handshake to identify them",
+    "@meshExplorerScanningTagline3": {
+        "description": "Animated scanning state tagline 3."
+    },
+    "meshExplorerScanningTagline4": "Radio range matters — try moving closer to the mesh",
+    "@meshExplorerScanningTagline4": {
+        "description": "Animated scanning state tagline 4."
+    },
+    "meshExplorerHelp": "Help",
+    "@meshExplorerHelp": {
+        "description": "Help overflow menu item label for the Mesh Explorer screen."
+    },
+    "helpMeshExplorerOverviewTitle": "Mesh Explorer",
+    "@helpMeshExplorerOverviewTitle": {
+        "description": "Help topic title for the Mesh Explorer screen."
+    },
+    "helpMeshExplorerOverviewDescription": "Explore nearby peers and mesh services",
+    "@helpMeshExplorerOverviewDescription": {
+        "description": "Help topic description for the Mesh Explorer screen."
+    },
+    "helpMeshExplorerIntroBubble": "Welcome to **Mesh Explorer**! This shows all Socialmesh-capable peers currently in radio range. Anonymous peers appear instantly — no handshake needed.",
+    "@helpMeshExplorerIntroBubble": {
+        "description": "Help bubble: Mesh Explorer intro step."
+    },
+    "helpMeshExplorerPeersBubble": "Each tile shows a **peer's ambient sigil** and capabilities. Tap a peer to view details or initiate a **SIP handshake** for identity exchange.",
+    "@helpMeshExplorerPeersBubble": {
+        "description": "Help bubble: Mesh Explorer peers step."
+    },
+    "helpMeshExplorerServicesBubble": "The **Services** section shows what nearby peers are offering — Bulletin Boards, Profiles, and more. Tap a service tile to interact with it.",
+    "@helpMeshExplorerServicesBubble": {
+        "description": "Help bubble: Mesh Explorer services step."
+    },
+    "helpMeshExplorerScanBubble": "Tap the **sensor icon** to broadcast a rollcall to the mesh. Peers respond within seconds. The explorer refreshes automatically when new peers are heard.",
+    "@helpMeshExplorerScanBubble": {
+        "description": "Help bubble: Mesh Explorer scan step."
+    },
+    "meshExplorerScanningAction": "Scan now",
+    "@meshExplorerScanningAction": {
+        "description": "Action button label on the animated scanning empty state."
+    },
+    "notificationSipPeerFoundTitle": "Peer found nearby",
+    "@notificationSipPeerFoundTitle": {
+        "description": "Notification title when a new SIP peer is discovered."
+    },
+    "notificationSipPeerFoundBody": "A Socialmesh peer is in range. Open Mesh Explorer to connect.",
+    "@notificationSipPeerFoundBody": {
+        "description": "Notification body when a new SIP peer is discovered."
+    },
+    "notificationChannelSipDiscovery": "Peer Discovery",
+    "@notificationChannelSipDiscovery": {
+        "description": "Notification channel name for SIP peer discovery alerts."
     },
     "meshExplorerEmptyNearbyTitle": "No nearby peers",
     "@meshExplorerEmptyNearbyTitle": {

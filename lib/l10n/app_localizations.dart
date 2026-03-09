@@ -6298,6 +6298,24 @@ abstract class AppLocalizations {
   /// **'Message'**
   String get nodeInfoMessage;
 
+  /// Tooltip for the quick traceroute icon button on the node info card.
+  ///
+  /// In en, this message translates to:
+  /// **'Traceroute'**
+  String get nodeInfoTraceroute;
+
+  /// Tooltip for the node detail navigation icon button on the node info card.
+  ///
+  /// In en, this message translates to:
+  /// **'View Details'**
+  String get nodeInfoViewDetails;
+
+  /// Tooltip for the traceroute history icon button on the node info card.
+  ///
+  /// In en, this message translates to:
+  /// **'Traceroute History'**
+  String get nodeInfoViewHistory;
+
   /// Empty state text when no binding variables match the search.
   ///
   /// In en, this message translates to:
@@ -53218,6 +53236,12 @@ abstract class AppLocalizations {
   /// **'Handshake failed'**
   String get sipHandshakeFailed;
 
+  /// Chip label shown on a peer tile when they have sent an incoming handshake request awaiting user action.
+  ///
+  /// In en, this message translates to:
+  /// **'Request Pending'**
+  String get sipHandshakePendingLabel;
+
   /// Button label to request identity from a SIP peer.
   ///
   /// In en, this message translates to:
@@ -53404,6 +53428,30 @@ abstract class AppLocalizations {
   /// **'Conversations'**
   String get sipHubSectionConversations;
 
+  /// Section header for pending handshake consent requests.
+  ///
+  /// In en, this message translates to:
+  /// **'Incoming Requests'**
+  String get sipHubSectionIncomingRequests;
+
+  /// Incoming handshake request label.
+  ///
+  /// In en, this message translates to:
+  /// **'{peerName} wants to connect'**
+  String sipHubIncomingRequestFrom(String peerName);
+
+  /// Accept button label for incoming handshake requests.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get sipHubAccept;
+
+  /// Decline button label for incoming handshake requests.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get sipHubDecline;
+
   /// Empty state title when no SIP peers are found.
   ///
   /// In en, this message translates to:
@@ -53415,6 +53463,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tap Scan to look for other Socialmesh users on the mesh.'**
   String get sipHubEmptyDescription;
+
+  /// Prefix for the animated SIP Hub scanning empty state title (trailing space separates from keyword).
+  ///
+  /// In en, this message translates to:
+  /// **'No peers '**
+  String get sipHubScanningTitlePrefix;
+
+  /// Keyword for the animated SIP Hub scanning empty state title (gradient-animated).
+  ///
+  /// In en, this message translates to:
+  /// **'nearby'**
+  String get sipHubScanningTitleKeyword;
+
+  /// Suffix for the animated SIP Hub scanning empty state title.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get sipHubScanningTitleSuffix;
+
+  /// SIP Hub animated scanning state tagline 1.
+  ///
+  /// In en, this message translates to:
+  /// **'Listens for Socialmesh beacons over the radio mesh'**
+  String get sipHubScanningTagline1;
+
+  /// SIP Hub animated scanning state tagline 2.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap Scan to send a rollcall — wakes up nearby peers'**
+  String get sipHubScanningTagline2;
+
+  /// SIP Hub animated scanning state tagline 3.
+  ///
+  /// In en, this message translates to:
+  /// **'Peers respond anonymously — no account needed'**
+  String get sipHubScanningTagline3;
+
+  /// SIP Hub animated scanning state tagline 4.
+  ///
+  /// In en, this message translates to:
+  /// **'Found one? Initiate a handshake to start chatting'**
+  String get sipHubScanningTagline4;
+
+  /// Help overflow menu item label for the SIP Hub screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Help'**
+  String get sipHubHelp;
+
+  /// Help topic title for the SIP Hub screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Socialmesh'**
+  String get helpSipHubOverviewTitle;
+
+  /// Help topic description for the SIP Hub screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover and chat with nearby Socialmesh peers'**
+  String get helpSipHubOverviewDescription;
+
+  /// Help bubble: SIP Hub intro step.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to **Socialmesh**! This is your peer discovery hub. Nearby devices running Socialmesh appear here once they beacon or respond to a rollcall.'**
+  String get helpSipHubIntroBubble;
+
+  /// Help bubble: SIP Hub scan step.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the **scan icon** to send a rollcall request. Nearby peers will respond within seconds. Auto-scan fires every 60 seconds in the background.'**
+  String get helpSipHubScanBubble;
+
+  /// Help bubble: SIP Hub handshake step.
+  ///
+  /// In en, this message translates to:
+  /// **'Once you see a peer, tap **Handshake** to exchange identity. After the handshake you can open an **end-to-end encrypted** ephemeral DM — no servers, no accounts.'**
+  String get helpSipHubHandshakeBubble;
+
+  /// Help bubble: SIP Hub privacy step.
+  ///
+  /// In en, this message translates to:
+  /// **'All discovery is **anonymous by default**. Peers only reveal a rotating 4-byte ambient ID until you mutually agree to a handshake.'**
+  String get helpSipHubPrivacyBubble;
 
   /// Last seen time label for a peer.
   ///
@@ -53548,47 +53680,59 @@ abstract class AppLocalizations {
   /// **'This will delete the message for both you and the recipient.'**
   String get sipDmDeleteConfirmMessage;
 
-  /// Notification title for an incoming SIP ephemeral DM.
+  /// Notification title for an incoming ephemeral DM.
   ///
   /// In en, this message translates to:
-  /// **'SIP: {peerName}'**
+  /// **'{peerName}'**
   String notificationSipDmTitle(String peerName);
 
-  /// Notification title when a SIP handshake completes and a DM session is created.
+  /// Notification title when a secure chat session is established.
   ///
   /// In en, this message translates to:
-  /// **'SIP Handshake Complete'**
+  /// **'Secure Chat Ready'**
   String get notificationSipHandshakeTitle;
 
   /// Notification body when a SIP handshake completes.
   ///
   /// In en, this message translates to:
-  /// **'Ephemeral DM session established with {peerName}.'**
+  /// **'You can now send private messages with {peerName}.'**
   String notificationSipHandshakeBody(String peerName);
 
-  /// Android notification channel name for SIP DM messages.
+  /// Android notification channel name for ephemeral DM messages.
   ///
   /// In en, this message translates to:
-  /// **'SIP Ephemeral Messages'**
+  /// **'Ephemeral Messages'**
   String get notificationChannelSipMessages;
 
-  /// Android notification channel name for SIP handshake events.
+  /// Android notification channel name for secure chat connection events.
   ///
   /// In en, this message translates to:
-  /// **'SIP Handshakes'**
+  /// **'Connection Requests'**
   String get notificationChannelSipHandshake;
 
-  /// Notification title when another peer sends a handshake request.
+  /// Notification title when another peer sends a secure chat request.
   ///
   /// In en, this message translates to:
-  /// **'Handshake Request'**
+  /// **'Chat Request'**
   String get notificationSipHandshakeRequestTitle;
 
   /// Notification body when an incoming SIP handshake request (HS_HELLO) is received.
   ///
   /// In en, this message translates to:
-  /// **'{peerName} wants to start an ephemeral DM session.'**
+  /// **'{peerName} wants to start a private chat.'**
   String notificationSipHandshakeRequestBody(String peerName);
+
+  /// Notification title when a SIP handshake request is declined by the remote peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection Declined'**
+  String get notificationSipHandshakeDeclinedTitle;
+
+  /// Notification body when an outgoing SIP handshake is declined.
+  ///
+  /// In en, this message translates to:
+  /// **'{peerName} declined your connection request.'**
+  String notificationSipHandshakeDeclinedBody(String peerName);
 
   /// Title for the MRRP protocol harness home screen.
   ///
@@ -54567,6 +54711,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Board Activity'**
   String get meshExplorerSectionBoard;
+
+  /// Prefix for the animated scanning empty state title (trailing space separates from keyword).
+  ///
+  /// In en, this message translates to:
+  /// **'No peers '**
+  String get meshExplorerScanningTitlePrefix;
+
+  /// Keyword for the animated scanning empty state title (gradient-animated).
+  ///
+  /// In en, this message translates to:
+  /// **'nearby'**
+  String get meshExplorerScanningTitleKeyword;
+
+  /// Suffix for the animated scanning empty state title.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get meshExplorerScanningTitleSuffix;
+
+  /// Animated scanning state tagline 1.
+  ///
+  /// In en, this message translates to:
+  /// **'Scans for Socialmesh peers broadcasting on the mesh'**
+  String get meshExplorerScanningTagline1;
+
+  /// Animated scanning state tagline 2.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap Scan to send a rollcall — wakes up nearby peers'**
+  String get meshExplorerScanningTagline2;
+
+  /// Animated scanning state tagline 3.
+  ///
+  /// In en, this message translates to:
+  /// **'Peers appear anonymously — handshake to identify them'**
+  String get meshExplorerScanningTagline3;
+
+  /// Animated scanning state tagline 4.
+  ///
+  /// In en, this message translates to:
+  /// **'Radio range matters — try moving closer to the mesh'**
+  String get meshExplorerScanningTagline4;
+
+  /// Help overflow menu item label for the Mesh Explorer screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Help'**
+  String get meshExplorerHelp;
+
+  /// Help topic title for the Mesh Explorer screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh Explorer'**
+  String get helpMeshExplorerOverviewTitle;
+
+  /// Help topic description for the Mesh Explorer screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore nearby peers and mesh services'**
+  String get helpMeshExplorerOverviewDescription;
+
+  /// Help bubble: Mesh Explorer intro step.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to **Mesh Explorer**! This shows all Socialmesh-capable peers currently in radio range. Anonymous peers appear instantly — no handshake needed.'**
+  String get helpMeshExplorerIntroBubble;
+
+  /// Help bubble: Mesh Explorer peers step.
+  ///
+  /// In en, this message translates to:
+  /// **'Each tile shows a **peer\'s ambient sigil** and capabilities. Tap a peer to view details or initiate a **SIP handshake** for identity exchange.'**
+  String get helpMeshExplorerPeersBubble;
+
+  /// Help bubble: Mesh Explorer services step.
+  ///
+  /// In en, this message translates to:
+  /// **'The **Services** section shows what nearby peers are offering — Bulletin Boards, Profiles, and more. Tap a service tile to interact with it.'**
+  String get helpMeshExplorerServicesBubble;
+
+  /// Help bubble: Mesh Explorer scan step.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the **sensor icon** to broadcast a rollcall to the mesh. Peers respond within seconds. The explorer refreshes automatically when new peers are heard.'**
+  String get helpMeshExplorerScanBubble;
+
+  /// Action button label on the animated scanning empty state.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan now'**
+  String get meshExplorerScanningAction;
+
+  /// Notification title when a new SIP peer is discovered.
+  ///
+  /// In en, this message translates to:
+  /// **'Peer found nearby'**
+  String get notificationSipPeerFoundTitle;
+
+  /// Notification body when a new SIP peer is discovered.
+  ///
+  /// In en, this message translates to:
+  /// **'A Socialmesh peer is in range. Open Mesh Explorer to connect.'**
+  String get notificationSipPeerFoundBody;
+
+  /// Notification channel name for SIP peer discovery alerts.
+  ///
+  /// In en, this message translates to:
+  /// **'Peer Discovery'**
+  String get notificationChannelSipDiscovery;
 
   /// Empty state title when no peers are nearby.
   ///

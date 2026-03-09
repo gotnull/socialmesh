@@ -24,8 +24,10 @@ import '../services/protocol/sip/sip_keypair.dart';
 import '../services/protocol/sip/sip_rate_limiter.dart';
 import '../services/protocol/sip/sip_replay_cache.dart';
 import '../services/protocol/sip/sip_types.dart';
+import '../services/notifications/notification_service.dart';
 import 'app_providers.dart';
 import 'app_lifecycle_provider.dart';
+import 'mesh_explorer_providers.dart';
 import 'sip_nodedex_bridge.dart';
 
 /// Whether SIP is enabled (sourced from SmFeatureFlag).
@@ -153,8 +155,11 @@ final sipDiscoveryProvider = Provider<SipDiscovery?>((ref) {
   };
 
   // Bridge discovered peers into NodeDex as SIP-capable.
+  // Also bump the unseen-peer badge counter and fire a local notification.
   discovery.onPeerDiscovered = (nodeId) {
     sipBridgeMarkCapableFromRef(ref, nodeId);
+    ref.read(newMeshPeerCountProvider.notifier).bump();
+    NotificationService().showSipPeerFoundNotification(peerNodeId: nodeId);
   };
 
   // Resume-safe: set initial timestamps to "now" so we don't burst
@@ -372,4 +377,14 @@ final sipHandshakeStateProvider = Provider.family<SipHandshakeState, int>((
   ref.watch(sipHandshakeEpochProvider); // rebuild on handshake state changes
   final hs = ref.watch(sipHandshakeProvider);
   return hs?.getState(nodeId) ?? SipHandshakeState.idle;
+});
+
+/// Node IDs of peers with incoming handshake requests awaiting user consent.
+///
+/// Rebuilds whenever [sipHandshakeEpochProvider] is bumped, which happens
+/// on every handshake state change including new incoming requests.
+final sipPendingHandshakeProvider = Provider<List<int>>((ref) {
+  ref.watch(sipHandshakeEpochProvider);
+  final hs = ref.watch(sipHandshakeProvider);
+  return hs?.pendingRequestNodeIds ?? const [];
 });

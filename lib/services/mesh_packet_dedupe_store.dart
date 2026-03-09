@@ -121,7 +121,11 @@ class MeshPacketDedupeStore {
   }
 
   Future<void> _onConfigure(Database db) async {
-    final walResult = await db.rawQuery('PRAGMA journal_mode=WAL'); assert(walResult.isNotEmpty && walResult.first['journal_mode'] == 'wal', 'WAL mode not active'); // lint-allow: hardcoded-string
+    final walResult = await db.rawQuery('PRAGMA journal_mode=WAL');
+    assert(
+      walResult.isNotEmpty && walResult.first['journal_mode'] == 'wal',
+      'WAL mode not active',
+    ); // lint-allow: hardcoded-string
   }
 
   /// Create the database schema.

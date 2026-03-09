@@ -5,9 +5,11 @@
 ///
 /// Manages the consent-first handshake flow:
 /// 1. Initiator sends HS_HELLO
-/// 2. Responder sends HS_CHALLENGE
-/// 3. Initiator sends HS_RESPONSE
-/// 4. Responder sends HS_ACCEPT
+/// 2. Responder queues request for user consent (pendingApproval)
+/// 3. User accepts → Responder sends HS_CHALLENGE
+///    User declines → Responder sends HS_DECLINE → flow ends
+/// 4. Initiator sends HS_RESPONSE
+/// 5. Responder sends HS_ACCEPT → session established
 ///
 /// Each peer tracks handshake state per remote node.
 library;
@@ -27,15 +29,16 @@ import 'sip_types.dart';
 /// Handshake states for initiator and responder.
 enum SipHandshakeState {
   idle,
-  helloSent,
-  challengeReceived,
-  responseSent,
-  helloReceived,
-  challengeSent,
-  responseReceived,
-  accepted,
-  failed,
-  timedOut,
+  helloSent, // Initiator: sent HS_HELLO, awaiting response
+  pendingApproval, // Responder: received HS_HELLO, awaiting user consent
+  challengeReceived, // Initiator: received HS_CHALLENGE
+  responseSent, // Initiator: sent HS_RESPONSE
+  challengeSent, // Responder: user accepted, challenge sent
+  responseReceived, // Responder: received HS_RESPONSE
+  accepted, // Both: session established
+  declined, // Responder: user declined the request
+  failed, // Either: protocol error or nonce mismatch
+  timedOut, // Either: no response within timeout window
 }
 
 /// Result of a completed handshake.
@@ -70,6 +73,23 @@ class _HandshakeSession {
   bool get isTimedOut {
     return DateTime.now().difference(startedAt) > SipConstants.handshakeTimeout;
   }
+}
+
+/// An incoming handshake request queued for user consent.
+class _PendingHandshake {
+  final int peerNodeId;
+  final SipHsHello hello;
+  final SipFrame originalFrame;
+  final DateTime receivedAt;
+
+  _PendingHandshake({
+    required this.peerNodeId,
+    required this.hello,
+    required this.originalFrame,
+  }) : receivedAt = DateTime.now();
+
+  bool get isExpired =>
+      DateTime.now().difference(receivedAt) > SipConstants.handshakeTimeout;
 }
 
 /// Wrapper for completed handshake results with TTL tracking.
@@ -109,6 +129,9 @@ class SipHandshakeManager {
   /// Active sessions keyed by peer node ID.
   final Map<int, _HandshakeSession> _sessions = {};
 
+  /// Incoming handshake requests pending user consent (responder side).
+  final Map<int, _PendingHandshake> _pendingRequests = {};
+
   /// Completed handshake results waiting to be consumed.
   final Map<int, _CompletedEntry> _completed = {};
 
@@ -119,6 +142,10 @@ class SipHandshakeManager {
 
   /// Called whenever any session state changes (progress, accept, fail).
   void Function()? onStateChanged;
+
+  /// Called when a new incoming handshake request arrives and needs user
+  /// consent. The UI should show an Accept/Decline prompt.
+  void Function(int peerNodeId)? onHandshakeRequest;
 
   // ---------------------------------------------------------------------------
   // Initiator flow
@@ -331,19 +358,21 @@ class SipHandshakeManager {
 
   /// Process a received HS_HELLO (responder receives this).
   ///
-  /// Returns the HS_CHALLENGE [SipFrame] to send, or null on error.
+  /// Queues the request for user consent — does NOT send an immediate
+  /// HS_CHALLENGE. The UI must show an Accept/Decline prompt, then call
+  /// [acceptHandshake] or [declineHandshake] to proceed.
   ///
   /// **Simultaneous-open tie-breaker:** When both peers initiate at the
   /// same time, each receives the other's HS_HELLO while in `helloSent`
   /// state. The node with the higher node ID keeps the initiator role
   /// (ignores the incoming HELLO); the lower node ID yields, discards its
-  /// initiator session, and becomes the responder.
-  SipFrame? handleHello(int peerNodeId, SipFrame frame) {
+  /// initiator session, and becomes the responder — still requiring consent.
+  void handleHello(int peerNodeId, SipFrame frame) {
     _cleanExpired();
     _cleanCompletedResults();
 
     final hello = SipHsMessages.decodeHello(frame.payload);
-    if (hello == null) return null;
+    if (hello == null) return;
 
     // Simultaneous-open detection: we already sent HS_HELLO to this peer.
     final existing = _sessions[peerNodeId];
@@ -356,10 +385,10 @@ class SipHandshakeManager {
           'we win tie-break (local=0x${_localNodeId.toRadixString(16)} > '
           'peer=0x${peerNodeId.toRadixString(16)}), keeping initiator role',
         );
-        return null;
+        return;
       } else {
         // We lose the tie-break — discard our initiator session, become
-        // the responder for this peer's HELLO.
+        // the responder for this peer's HELLO. Still requires consent.
         AppLogging.sip(
           'SIP_HS: simultaneous-open with '
           'node=0x${peerNodeId.toRadixString(16)}: '
@@ -370,10 +399,9 @@ class SipHandshakeManager {
       }
     }
 
-    // Duplicate HELLO absorption: if we have already sent a CHALLENGE
-    // (or are further along), absorb the duplicate without restarting
-    // the session. This prevents multi-hop rebroadcast from forking
-    // the state machine.
+    // Duplicate HELLO absorption: if we are already past the HELLO stage,
+    // absorb the duplicate without restarting. This prevents multi-hop
+    // rebroadcast from forking the state machine.
     if (existing != null &&
         existing.state != SipHandshakeState.helloSent &&
         existing.state != SipHandshakeState.idle) {
@@ -382,7 +410,7 @@ class SipHandshakeManager {
         'peer=0x${peerNodeId.toRadixString(16)} '
         'state=${existing.state.name}',
       );
-      return null;
+      return;
     }
 
     // Already completed — ignore stale HELLO retransmit.
@@ -391,10 +419,19 @@ class SipHandshakeManager {
         'SIP_HS: duplicate HELLO ignored for '
         'peer=0x${peerNodeId.toRadixString(16)} (already completed)',
       );
-      return null;
+      return;
     }
 
-    // Check replay.
+    // Already pending consent — ignore duplicate.
+    if (_pendingRequests.containsKey(peerNodeId)) {
+      AppLogging.sip(
+        'SIP_HS: duplicate HELLO ignored for '
+        'peer=0x${peerNodeId.toRadixString(16)} (already pending approval)',
+      );
+      return;
+    }
+
+    // Replay check.
     if (_replayCache.isReplay(
       nodeId: peerNodeId,
       nonce: frame.nonce,
@@ -405,7 +442,7 @@ class SipHandshakeManager {
         'node=0x${peerNodeId.toRadixString(16)}',
       );
       _counters?.recordReplayReject();
-      return null;
+      return;
     }
     _replayCache.recordNonce(
       nodeId: peerNodeId,
@@ -413,6 +450,46 @@ class SipHandshakeManager {
       msgType: frame.msgType.code,
       timestampS: frame.timestampS,
     );
+
+    // Queue for user consent.
+    _pendingRequests[peerNodeId] = _PendingHandshake(
+      peerNodeId: peerNodeId,
+      hello: hello,
+      originalFrame: frame,
+    );
+
+    AppLogging.sip(
+      'SIP_HS: <- HS_HELLO from '
+      'node=0x${peerNodeId.toRadixString(16)}, '
+      'client_nonce=${_hexPrefix(hello.clientNonce)} — '
+      'queued for user consent',
+    );
+
+    onStateChanged?.call();
+    onHandshakeRequest?.call(peerNodeId);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Consent actions (responder side)
+  // ---------------------------------------------------------------------------
+
+  /// User accepted the incoming handshake request from [peerNodeId].
+  ///
+  /// Moves the pending request to an active session in `challengeSent` state
+  /// and returns the HS_CHALLENGE [SipFrame] to transmit.
+  /// Returns null if no pending request exists or it has expired.
+  SipFrame? acceptHandshake(int peerNodeId) {
+    final pending = _pendingRequests.remove(peerNodeId);
+    if (pending == null || pending.isExpired) {
+      AppLogging.sip(
+        'SIP_HS: acceptHandshake — no valid pending request for '
+        'node=0x${peerNodeId.toRadixString(16)}',
+      );
+      onStateChanged?.call();
+      return null;
+    }
+
+    final hello = pending.hello;
 
     final session = _HandshakeSession(peerNodeId: peerNodeId);
     session.clientNonce = hello.clientNonce;
@@ -433,9 +510,8 @@ class SipHandshakeManager {
     final payload = SipHsMessages.encodeChallenge(challenge);
 
     AppLogging.sip(
-      'SIP_HS: <- HS_HELLO from '
-      'node=0x${peerNodeId.toRadixString(16)}, '
-      'client_nonce=${_hexPrefix(hello.clientNonce)}\n'
+      'SIP_HS: user ACCEPTED handshake from '
+      'node=0x${peerNodeId.toRadixString(16)}\n'
       'SIP_HS: -> HS_CHALLENGE, '
       'server_nonce=${_hexPrefix(session.serverNonce!)}',
     );
@@ -453,6 +529,83 @@ class SipHandshakeManager {
       payload: payload,
     );
   }
+
+  /// User declined the incoming handshake request from [peerNodeId].
+  ///
+  /// Removes the pending request and returns the HS_DECLINE [SipFrame] to
+  /// transmit back to the initiator.
+  /// Returns null if no pending request exists.
+  SipFrame? declineHandshake(int peerNodeId) {
+    final pending = _pendingRequests.remove(peerNodeId);
+    if (pending == null) {
+      AppLogging.sip(
+        'SIP_HS: declineHandshake — no pending request for '
+        'node=0x${peerNodeId.toRadixString(16)}',
+      );
+      return null;
+    }
+
+    onStateChanged?.call();
+
+    AppLogging.sip(
+      'SIP_HS: user DECLINED handshake from '
+      'node=0x${peerNodeId.toRadixString(16)}\n'
+      'SIP_HS: -> HS_DECLINE',
+    );
+
+    final decline = SipHsDecline(
+      echoedClientNonce: pending.hello.clientNonce,
+      reason: 0x00, // user declined
+    );
+    final payload = SipHsMessages.encodeDecline(decline);
+
+    return SipFrame(
+      versionMajor: SipConstants.sipVersionMajor,
+      versionMinor: SipConstants.sipVersionMinor,
+      msgType: SipMessageType.hsDecline,
+      flags: SipFlags.isResponse,
+      headerLen: SipConstants.sipWrapperMin,
+      sessionId: 0,
+      nonce: SipCodec.generateNonce(),
+      timestampS: _nowS(),
+      payloadLen: payload.length,
+      payload: payload,
+    );
+  }
+
+  /// Process a received HS_DECLINE (initiator receives this).
+  ///
+  /// Clears the in-progress initiator session without applying a cooldown.
+  /// The peer declined by choice — this is not a protocol failure, so the
+  /// initiator is free to retry immediately (subject only to its UI/UX flow).
+  void handleDecline(int peerNodeId, SipFrame frame) {
+    final session = _sessions[peerNodeId];
+    if (session == null || session.state != SipHandshakeState.helloSent) {
+      AppLogging.sip(
+        'SIP_HS: unexpected HS_DECLINE from '
+        'node=0x${peerNodeId.toRadixString(16)} '
+        '(state=${session?.state})',
+      );
+      return;
+    }
+
+    _sessions.remove(peerNodeId);
+    _counters?.recordHandshakeFailed();
+    onStateChanged?.call();
+
+    final decline = SipHsMessages.decodeDecline(frame.payload);
+    final reason = decline?.reason ?? 0xFF;
+
+    AppLogging.sip(
+      'SIP_HS: HS_DECLINE from '
+      'node=0x${peerNodeId.toRadixString(16)} '
+      '(reason=0x${reason.toRadixString(16)}) — session cleared, no cooldown',
+    );
+  }
+
+  /// Node IDs of peers with incoming handshake requests pending consent.
+  List<int> get pendingRequestNodeIds =>
+      List.unmodifiable(_pendingRequests.keys);
 
   /// Process a received HS_RESPONSE (responder receives this).
   ///
@@ -560,12 +713,21 @@ class SipHandshakeManager {
 
   /// Get the current handshake state for a peer.
   ///
-  /// Also returns [SipHandshakeState.accepted] when a completed result
-  /// is waiting to be consumed.
+  /// Returns [SipHandshakeState.accepted] when a completed result is waiting
+  /// to be consumed, [SipHandshakeState.pendingApproval] when the user has
+  /// not yet acted on an incoming request, or the active session state.
   SipHandshakeState getState(int peerNodeId) {
-    final completedEntry = _completed[peerNodeId];
-    if (completedEntry != null) {
+    if (_completed.containsKey(peerNodeId)) {
       return SipHandshakeState.accepted;
+    }
+    final pending = _pendingRequests[peerNodeId];
+    if (pending != null) {
+      if (pending.isExpired) {
+        _pendingRequests.remove(peerNodeId);
+        onStateChanged?.call();
+        return SipHandshakeState.timedOut;
+      }
+      return SipHandshakeState.pendingApproval;
     }
     final session = _sessions[peerNodeId];
     if (session != null && session.isTimedOut) {
@@ -583,8 +745,9 @@ class SipHandshakeManager {
   /// Whether a handshake is in progress for [peerNodeId].
   bool hasActiveSession(int peerNodeId) => _sessions.containsKey(peerNodeId);
 
-  /// Cancel an in-progress handshake.
+  /// Cancel an in-progress handshake or discard a pending request.
   void cancelHandshake(int peerNodeId) {
+    _pendingRequests.remove(peerNodeId);
     _failSession(peerNodeId, 'cancelled');
   }
 
@@ -598,6 +761,7 @@ class SipHandshakeManager {
   /// Reset all handshake state.
   void reset() {
     _sessions.clear();
+    _pendingRequests.clear();
     _completed.clear();
     _failCooldownMs.clear();
   }
@@ -632,6 +796,21 @@ class SipHandshakeManager {
     }
     for (final nodeId in expired) {
       _failSession(nodeId, 'timeout');
+    }
+
+    // Expire pending consent requests that were never acted on.
+    final expiredPending = _pendingRequests.keys
+        .where((id) => _pendingRequests[id]!.isExpired)
+        .toList();
+    if (expiredPending.isNotEmpty) {
+      for (final nodeId in expiredPending) {
+        _pendingRequests.remove(nodeId);
+        AppLogging.sip(
+          'SIP_HS: pending request from '
+          'node=0x${nodeId.toRadixString(16)} expired without user action',
+        );
+      }
+      onStateChanged?.call();
     }
   }
 

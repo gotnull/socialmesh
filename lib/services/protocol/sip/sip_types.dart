@@ -24,6 +24,7 @@ enum SipMessageType {
   hsChallenge(0x14),
   hsResponse(0x15),
   hsAccept(0x16),
+  hsDecline(0x17),
 
   // SIP-3: Micro-Exchange
   txStart(0x30),
@@ -38,6 +39,7 @@ enum SipMessageType {
   dmTyping(0x41),
   dmReaction(0x42),
   dmDelete(0x43),
+  dmClose(0x44),
 
   // MRRP (Mesh Request/Response Protocol)
   mrrpData(0x50),

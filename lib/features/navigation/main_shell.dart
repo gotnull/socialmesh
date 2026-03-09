@@ -71,6 +71,7 @@ import '../mesh_explorer/mesh_explorer_screen.dart';
 import '../mesh_services/screens/my_services_screen.dart';
 import '../tak/screens/tak_screen.dart';
 import '../../providers/activity_providers.dart';
+import '../../providers/mesh_explorer_providers.dart';
 import '../../providers/whats_new_providers.dart';
 import '../../core/whats_new/whats_new_sheet.dart';
 import 'widgets/drawer_admin_section.dart';
@@ -157,10 +158,12 @@ class HamburgerMenuButton extends ConsumerWidget {
     final theme = Theme.of(context);
     final adminNotificationCount = ref.watch(adminNotificationCountProvider);
     final activityCount = ref.watch(unreadActivityCountProvider);
+    final newPeerCount = ref.watch(newMeshPeerCountProvider);
     final hasUnseenWhatsNew = ref.watch(whatsNewHasUnseenProvider);
 
-    // Combine admin and activity counts for hamburger badge
-    final totalBadgeCount = adminNotificationCount + activityCount;
+    // Combine admin, activity, and new-peer counts for hamburger badge
+    final totalBadgeCount =
+        adminNotificationCount + activityCount + newPeerCount;
 
     // Determine which badge to show on the icon itself
     Widget menuIcon = Icon(
@@ -413,6 +416,7 @@ class _MainShellState extends ConsumerState<MainShell> {
         screen: const MeshExplorerScreen(),
         iconColor: AccentColors.teal,
         requiresConnection: true,
+        badgeProviderKey: 'mesh_explorer',
       ),
     if (AppFeatureFlags.isMeshServicesEnabled)
       DrawerMenuItem(
@@ -749,6 +753,9 @@ class _MainShellState extends ConsumerState<MainShell> {
               int? badgeCount;
               if (item.badgeProviderKey == 'activity') {
                 badgeCount = ref.watch(unreadActivityCountProvider);
+              } else if (item.badgeProviderKey == 'mesh_explorer') {
+                badgeCount = ref.watch(newMeshPeerCountProvider);
+                if (badgeCount == 0) badgeCount = null;
               }
 
               // Check if this item should show a NEW chip
@@ -780,6 +787,12 @@ class _MainShellState extends ConsumerState<MainShell> {
                               ref
                                   .read(whatsNewProvider.notifier)
                                   .dismissBadgeKey(item.whatsNewBadgeKey!);
+                            }
+                            // Dismiss peer-found badge immediately on tapping Mesh Explorer
+                            if (item.badgeProviderKey == 'mesh_explorer') {
+                              ref
+                                  .read(newMeshPeerCountProvider.notifier)
+                                  .clear();
                             }
                             if (item.tabIndex != null) {
                               // Tab-based item — switch bottom-nav index

@@ -200,7 +200,10 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
     if (dm == null) return;
 
     ref.read(hapticServiceProvider).trigger(HapticType.medium);
-    dm.closeSession(widget.sessionTag);
+    final encoded = dm.closeSession(widget.sessionTag);
+    if (encoded != null) {
+      ref.read(protocolServiceProvider).sendSipPacket(encoded);
+    }
     if (mounted) Navigator.of(context).pop();
   }
 
@@ -397,6 +400,15 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
     final session = dm?.getSession(widget.sessionTag);
     ref.watch(sipDmEpochProvider); // Rebuild on new messages
     ref.watch(sipDmTypingEpochProvider); // Rebuild on typing indicators
+
+    // Auto-pop when the peer closes the session remotely.
+    ref.listen<int>(sipDmEpochProvider, (_, epoch) {
+      final currentDm = ref.read(sipDmManagerProvider);
+      if (currentDm?.isSessionClosed(widget.sessionTag) == true && mounted) {
+        safeShowSnackBar(l10n.sipDmSessionClosed);
+        Navigator.of(context).pop();
+      }
+    });
 
     // Check if the peer is currently typing.
     final peerIsTyping = dm?.isPeerTyping(widget.sessionTag) ?? false;
@@ -997,16 +1009,56 @@ class _MessageBubble extends ConsumerWidget {
     WidgetRef ref,
     bool isOutbound,
   ) {
-    // Same emoji from both users — single pill with count.
+    // Same emoji from both users — single pill with both sigils.
     if (entry.localReaction != null &&
         entry.peerReaction != null &&
         entry.localReaction == entry.peerReaction) {
       final emoji = SipDmReactionEmojis.all[entry.localReaction!];
+      final myNodeNum = ref.watch(myNodeNumProvider);
+      final myNdxEntry = myNodeNum != null
+          ? ref.watch(nodeDexEntryProvider(myNodeNum))
+          : null;
+      final myPatinaResult = myNodeNum != null
+          ? ref.watch(nodeDexPatinaProvider(myNodeNum))
+          : null;
+      final myTraitResult = myNodeNum != null
+          ? ref.watch(nodeDexTraitProvider(myNodeNum))
+          : null;
+      final peerNdxEntry = ref.watch(nodeDexEntryProvider(peerNodeId));
+      final peerPatinaResult = ref.watch(nodeDexPatinaProvider(peerNodeId));
+      final peerTraitResult = ref.watch(nodeDexTraitProvider(peerNodeId));
       return _reactionPill(
         context,
-        child: Text(
-          '$emoji 2', // lint-allow: hardcoded-string
-          style: const TextStyle(fontSize: 14),
+        tint: context.accentColor.withValues(alpha: 0.12),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (myNdxEntry?.sigil != null && myNodeNum != null) ...[
+              SigilAvatar(
+                sigil: myNdxEntry!.sigil,
+                nodeNum: myNodeNum,
+                size: 18,
+                evolution: SigilEvolution.fromPatina(
+                  myPatinaResult?.score ?? 0,
+                  trait: myTraitResult?.primary,
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing2),
+            ],
+            if (peerNdxEntry?.sigil != null) ...[
+              SigilAvatar(
+                sigil: peerNdxEntry!.sigil,
+                nodeNum: peerNodeId,
+                size: 18,
+                evolution: SigilEvolution.fromPatina(
+                  peerPatinaResult.score,
+                  trait: peerTraitResult.primary,
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing2),
+            ],
+            Text(emoji, style: const TextStyle(fontSize: 14)),
+          ],
         ),
       );
     }

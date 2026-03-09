@@ -22,6 +22,7 @@ import 'package:sqflite/sqflite.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/l10n/l10n_extension.dart';
+import '../../../utils/snackbar.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Database manifest
@@ -379,15 +380,7 @@ class _DbResultTile extends StatelessWidget {
       onLongPress: () {
         HapticFeedback.mediumImpact();
         Clipboard.setData(ClipboardData(text: result.path));
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              context.l10n.adminStoragePathCopied,
-              style: const TextStyle(fontSize: 12),
-            ),
-            duration: const Duration(seconds: 2),
-          ),
-        );
+        showInfoSnackBar(context, context.l10n.adminStoragePathCopied);
       },
       child: Container(
         padding: const EdgeInsets.all(AppTheme.spacing12),
@@ -527,7 +520,7 @@ class _Chip extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 11, color: color),
-        const SizedBox(width: 3),
+        const SizedBox(width: AppTheme.spacing3),
         Text(
           label,
           style: TextStyle(

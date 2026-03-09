@@ -34,14 +34,16 @@ final meshExplorerPeersProvider = Provider<List<MeshExplorerPeer>>((ref) {
   final enabled = ref.watch(meshExplorerEnabledProvider);
   if (!enabled) return const [];
 
-  // Watch epoch providers to rebuild on discovery/handshake/identity changes
+  // Watch epoch providers to rebuild on discovery/handshake/identity/DM changes
   ref.watch(sipPeerCacheEpochProvider);
   ref.watch(sipHandshakeEpochProvider);
+  ref.watch(sipDmEpochProvider);
 
   final peers = ref.watch(sipDiscoveredPeersProvider);
   final cachedServices = ref.watch(mrrpCachedServicesProvider);
   final identityStore = ref.watch(sipIdentityStoreProvider);
   final handshake = ref.watch(sipHandshakeProvider);
+  final activeDmSessions = ref.watch(sipActiveSessionsProvider);
 
   final result = <MeshExplorerPeer>[];
 
@@ -61,6 +63,11 @@ final meshExplorerPeersProvider = Provider<List<MeshExplorerPeer>>((ref) {
     // Check identity state
     final identity = identityStore.getByNodeId(peer.nodeId);
     final hsState = handshake?.getState(peer.nodeId) ?? SipHandshakeState.idle;
+    // A peer is handshaked if their result is still pending consumption OR
+    // if a DM session already exists (result was consumed but session lives on).
+    final hasDmSession = activeDmSessions.any(
+      (s) => s.peerNodeId == peer.nodeId,
+    );
 
     if (identity != null &&
         (identity.state == SipIdentityState.verifiedTofu ||
@@ -83,7 +90,7 @@ final meshExplorerPeersProvider = Provider<List<MeshExplorerPeer>>((ref) {
           mrrpServiceIds: serviceIds,
         ),
       );
-    } else if (hsState == SipHandshakeState.accepted) {
+    } else if (hsState == SipHandshakeState.accepted || hasDmSession) {
       // Handshaked but not yet identified
       result.add(
         IdentifiedPeer(
@@ -187,3 +194,23 @@ bool _isPublicService(int serviceId, int serviceFlags) {
   if (serviceFlags & MrrpServiceFlags.testOnly != 0) return false;
   return true;
 }
+
+// ---------------------------------------------------------------------------
+// New-peer badge counter
+// ---------------------------------------------------------------------------
+
+/// Tracks the count of newly discovered peers that have not yet been seen
+/// by the user in Mesh Explorer. Used to drive the hamburger badge and
+/// drawer item indicator.
+class NewMeshPeerCountNotifier extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  void bump() => state = state + 1;
+  void clear() => state = 0;
+}
+
+final newMeshPeerCountProvider =
+    NotifierProvider<NewMeshPeerCountNotifier, int>(
+      NewMeshPeerCountNotifier.new,
+    );

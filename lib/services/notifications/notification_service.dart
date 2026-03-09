@@ -1260,4 +1260,100 @@ class NotificationService {
       '🔔 Showed SIP handshake request notification from: $peerName',
     );
   }
+
+  /// Show notification when a peer declines our SIP handshake request.
+  Future<void> showSipHandshakeDeclinedNotification({
+    required String peerName,
+    required int peerNodeId,
+  }) async {
+    if (!_initialized) return;
+
+    final androidDetails = AndroidNotificationDetails(
+      'sip_handshakes',
+      'SIP Handshakes', // lint-allow: hardcoded-string
+      channelDescription: _l10n.notificationChannelSipHandshake,
+      importance: Importance.defaultImportance,
+      priority: Priority.defaultPriority,
+      icon: '@mipmap/ic_launcher',
+      groupKey: 'sip_handshakes',
+      playSound: false,
+      enableVibration: false,
+      color: AccentColors.red,
+    );
+
+    final iosDetails = const DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: false,
+      presentSound: false,
+      threadIdentifier: 'sip_handshakes',
+    );
+
+    final notificationDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+      macOS: iosDetails,
+    );
+
+    final notificationId = (peerNodeId.abs() % 1000000) + 7000000;
+
+    await _notifications.show(
+      id: notificationId,
+      title: _l10n.notificationSipHandshakeDeclinedTitle,
+      body: _l10n.notificationSipHandshakeDeclinedBody(peerName),
+      notificationDetails: notificationDetails,
+      payload: 'sip_handshake_declined:$peerNodeId',
+    );
+
+    AppLogging.notifications(
+      '🔔 Showed SIP handshake declined notification from: $peerName',
+    );
+  }
+
+  /// Show notification when a new SIP peer is discovered nearby.
+  ///
+  /// Fires on the `sip_discovery` channel. Intended to run in the background
+  /// so the user knows to open Mesh Explorer and connect.
+  Future<void> showSipPeerFoundNotification({required int peerNodeId}) async {
+    if (!_initialized) return;
+
+    final androidDetails = AndroidNotificationDetails(
+      'sip_discovery',
+      'Peer Discovery', // lint-allow: hardcoded-string
+      channelDescription: _l10n.notificationChannelSipDiscovery,
+      importance: Importance.high,
+      priority: Priority.high,
+      icon: '@mipmap/ic_launcher',
+      groupKey: 'sip_discovery',
+      playSound: false,
+      enableVibration: false,
+      color: AccentColors.teal,
+    );
+
+    final iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: false,
+      threadIdentifier: 'sip_discovery',
+    );
+
+    final notificationDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+      macOS: iosDetails,
+    );
+
+    final notificationId = (peerNodeId.abs() % 1000000) + 7000000;
+
+    await _notifications.show(
+      id: notificationId,
+      title: _l10n.notificationSipPeerFoundTitle,
+      body: _l10n.notificationSipPeerFoundBody,
+      notificationDetails: notificationDetails,
+      payload: 'sip_peer_found:$peerNodeId',
+    );
+
+    AppLogging.notifications(
+      '🔔 Showed SIP peer found notification for: $peerNodeId',
+    );
+  }
 }
