@@ -41792,6 +41792,10 @@
     "@meshServicesFieldDescription": {
         "description": "Label for the service description input field."
     },
+    "meshServicesDescriptionHint": "Describe your service for other mesh users...",
+    "@meshServicesDescriptionHint": {
+        "description": "Hint text for the service description text field."
+    },
     "meshServicesFieldDuration": "Duration",
     "@meshServicesFieldDuration": {
         "description": "Label for the service duration/TTL selector."

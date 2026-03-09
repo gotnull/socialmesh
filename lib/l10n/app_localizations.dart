@@ -55036,6 +55036,12 @@ abstract class AppLocalizations {
   /// **'Description'**
   String get meshServicesFieldDescription;
 
+  /// Hint text for the service description text field.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe your service for other mesh users...'**
+  String get meshServicesDescriptionHint;
+
   /// Label for the service duration/TTL selector.
   ///
   /// In en, this message translates to:

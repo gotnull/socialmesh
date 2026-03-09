@@ -31509,6 +31509,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshServicesFieldDescription => 'Description';
 
   @override
+  String get meshServicesDescriptionHint =>
+      'Describe your service for other mesh users...';
+
+  @override
   String get meshServicesFieldDuration => 'Duration';
 
   @override
