@@ -20,6 +20,7 @@ import '../../providers/mesh_explorer_providers.dart';
 import '../../providers/nearby_activity_provider.dart';
 import '../../providers/sip_providers.dart';
 import '../../services/haptic_service.dart';
+import '../../utils/snackbar.dart';
 import 'widgets/mesh_explorer_activity_section.dart';
 import 'widgets/mesh_explorer_hero.dart';
 import 'widgets/mesh_explorer_nearby_section.dart';
@@ -40,23 +41,40 @@ class MeshExplorerScreen extends ConsumerStatefulWidget {
 
 class _MeshExplorerScreenState extends ConsumerState<MeshExplorerScreen>
     with LifecycleSafeMixin {
+  bool _isScanning = false;
+
   Future<void> _onScan() async {
+    if (_isScanning) return;
+
     final haptics = ref.read(hapticServiceProvider);
     final discovery = ref.read(sipDiscoveryProvider);
     final protocol = ref.read(protocolServiceProvider);
+    final scanSentMsg = context.l10n.meshExplorerScanSent;
+    final scanCooldownMsg = context.l10n.meshExplorerScanCooldown;
     await haptics.trigger(HapticType.medium);
     if (!mounted) return;
 
     if (discovery == null) return;
 
-    final outbound = discovery.buildRollcallReq();
+    setState(() => _isScanning = true);
+
+    final outbound = discovery.buildRollcallReq(force: true);
     if (outbound != null) {
       protocol.sendSipPacket(outbound.encoded);
       AppLogging.sip(
         'MESH_EXPLORER: ROLLCALL_REQ dispatched '
         '${outbound.encoded.length}B', // lint-allow: hardcoded-string
       );
+      if (mounted) {
+        showInfoSnackBar(context, scanSentMsg);
+      }
+    } else if (mounted) {
+      showWarningSnackBar(context, scanCooldownMsg);
     }
+
+    // Keep scanning indicator briefly for visual feedback.
+    await Future<void>.delayed(const Duration(seconds: 2));
+    if (mounted) setState(() => _isScanning = false);
   }
 
   @override
@@ -71,11 +89,23 @@ class _MeshExplorerScreenState extends ConsumerState<MeshExplorerScreen>
       title: l10n.meshExplorerTitle,
       actions: [
         if (summary.isConnected)
-          IconButton(
-            icon: const Icon(Icons.sensors, size: 22),
-            tooltip: l10n.meshExplorerScanAction,
-            onPressed: _onScan,
-          ),
+          _isScanning
+              ? Padding(
+                  padding: const EdgeInsets.all(AppTheme.spacing12),
+                  child: SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: context.accentColor,
+                    ),
+                  ),
+                )
+              : IconButton(
+                  icon: const Icon(Icons.sensors, size: 22),
+                  tooltip: l10n.meshExplorerScanAction,
+                  onPressed: _onScan,
+                ),
       ],
       slivers: [
         // Hero summary

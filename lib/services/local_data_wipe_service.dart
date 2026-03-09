@@ -31,6 +31,10 @@ class LocalDataWipeService {
     'automations.db',
     'widgets.db',
     'tak_events.db',
+    'incidents.db',
+    'tasks.db',
+    'file_transfers.db',
+    'mesh_services.db',
   ];
 
   /// Database in a subdirectory.

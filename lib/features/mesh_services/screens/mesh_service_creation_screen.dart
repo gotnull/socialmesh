@@ -279,64 +279,66 @@ class _MeshServiceCreationScreenState
   // ─────────────────── primary title input ───────────────────
 
   Widget _buildTitleInput(dynamic l10n, Color accent) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-        border: Border.all(color: context.border.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
+    return TextFormField(
+      controller: _titleController,
+      focusNode: _titleFocusNode,
+      enabled: !_publishing,
+      maxLines: 2,
+      minLines: 1,
+      maxLength: widget.template.maxTitleLength,
+      maxLengthEnforcement: MaxLengthEnforcement.enforced,
+      textCapitalization: TextCapitalization.sentences,
+      inputFormatters: [
+        LengthLimitingTextInputFormatter(widget.template.maxTitleLength),
+      ],
+      style: TextStyle(color: context.textPrimary),
+      decoration: InputDecoration(
+        labelText:
             (_isPoll
                     ? l10n.meshServicesFieldQuestion
                     : l10n.meshServicesFieldTitle)
                 as String,
-            style: TextStyle(
-              color: context.textTertiary,
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing4),
-          TextFormField(
-            controller: _titleController,
-            focusNode: _titleFocusNode,
-            enabled: !_publishing,
-            maxLines: 2,
-            minLines: 1,
-            maxLength: widget.template.maxTitleLength,
-            maxLengthEnforcement: MaxLengthEnforcement.enforced,
-            textCapitalization: TextCapitalization.sentences,
-            inputFormatters: [
-              LengthLimitingTextInputFormatter(widget.template.maxTitleLength),
-            ],
-            style: TextStyle(color: context.textPrimary, fontSize: 14),
-            decoration: InputDecoration(
-              hintText: _isPoll
-                  ? l10n.meshServicesFieldQuestion as String
-                  : l10n.meshServicesFieldTitle as String,
-              hintStyle: TextStyle(color: context.textTertiary, fontSize: 14),
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              disabledBorder: InputBorder.none,
-              isDense: true,
-              contentPadding: EdgeInsets.zero,
-              counterText: '',
-            ),
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return l10n.meshServicesTitleRequired as String;
-              }
-              return null;
-            },
-            onChanged: (_) => setState(() {}),
-          ),
-        ],
+        labelStyle: TextStyle(color: context.textSecondary),
+        hintText: _isPoll
+            ? l10n.meshServicesFieldQuestion as String
+            : l10n.meshServicesFieldTitle as String,
+        hintStyle: TextStyle(color: context.textSecondary.withAlpha(128)),
+        filled: true,
+        fillColor: context.surface,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
+          borderSide: BorderSide(color: accent, width: 2),
+        ),
+        disabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
+          borderSide: BorderSide.none,
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
+          borderSide: BorderSide.none,
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
+          borderSide: BorderSide(color: accent, width: 2),
+        ),
+        counterStyle: TextStyle(color: context.textSecondary),
+        counterText: '',
       ),
+      validator: (value) {
+        if (value == null || value.trim().isEmpty) {
+          return l10n.meshServicesTitleRequired as String;
+        }
+        return null;
+      },
+      onChanged: (_) => setState(() {}),
     );
   }
 

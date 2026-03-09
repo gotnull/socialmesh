@@ -11,10 +11,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
+import '../../../core/logging.dart';
 import '../../../core/theme.dart';
 import '../../../features/nodedex/widgets/sigil_painter.dart';
+import '../../../providers/app_providers.dart';
 import '../../../providers/sip_providers.dart';
 import '../../../services/haptic_service.dart';
+import '../../../services/protocol/sip/sip_codec.dart';
+import '../../../services/protocol/sip/sip_handshake.dart';
+import '../../../services/protocol/sip/sip_types.dart';
+import '../../../utils/snackbar.dart';
 import '../models/interaction_tier.dart';
 import '../models/mesh_explorer_peer.dart';
 import '../models/service_presentation.dart';
@@ -265,15 +271,37 @@ class _ActionButtons extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
 
+    // Watch handshake state for anonymous peers.
+    final hsState = peer.tier == InteractionTier.anonymous
+        ? ref.watch(sipHandshakeStateProvider(peer.nodeId))
+        : SipHandshakeState.idle;
+
+    final handshakeInProgress = _isHandshakeInProgress(hsState);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // Primary action based on tier
         if (peer.tier == InteractionTier.anonymous)
           FilledButton.icon(
-            onPressed: () => _onHandshake(context, ref),
-            icon: const Icon(Icons.handshake_outlined, size: 18),
-            label: Text(l10n.meshExplorerActionHandshake),
+            onPressed: handshakeInProgress
+                ? null
+                : () => _onHandshake(context, ref),
+            icon: handshakeInProgress
+                ? SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: context.textTertiary,
+                    ),
+                  )
+                : const Icon(Icons.handshake_outlined, size: 18),
+            label: Text(
+              handshakeInProgress
+                  ? l10n.meshExplorerHandshakeInProgress
+                  : l10n.meshExplorerActionHandshake,
+            ),
           ),
 
         if (peer.tier == InteractionTier.handshaked)
@@ -321,12 +349,41 @@ class _ActionButtons extends ConsumerWidget {
     );
   }
 
+  bool _isHandshakeInProgress(SipHandshakeState state) {
+    return switch (state) {
+      SipHandshakeState.helloSent ||
+      SipHandshakeState.challengeReceived ||
+      SipHandshakeState.responseSent ||
+      SipHandshakeState.helloReceived ||
+      SipHandshakeState.challengeSent ||
+      SipHandshakeState.responseReceived => true,
+      _ => false,
+    };
+  }
+
   Future<void> _onHandshake(BuildContext context, WidgetRef ref) async {
     final haptics = ref.read(hapticServiceProvider);
     final hs = ref.read(sipHandshakeProvider);
+    final protocol = ref.read(protocolServiceProvider);
     await haptics.trigger(HapticType.medium);
-    hs?.initiateHandshake(peer.nodeId);
-    if (context.mounted) Navigator.of(context).pop();
+
+    final frame = hs?.initiateHandshake(peer.nodeId);
+    if (frame != null) {
+      final encoded = SipCodec.encode(frame);
+      if (encoded != null) {
+        await protocol.sendSipPayload(encoded, SipMessageType.hsHello);
+        AppLogging.sip(
+          'MESH_EXPLORER: HS_HELLO sent to '
+          'node=0x${peer.nodeId.toRadixString(16)}',
+        );
+        if (context.mounted) {
+          showInfoSnackBar(context, context.l10n.meshExplorerHandshakeSent);
+          Navigator.of(context).pop();
+        }
+      }
+    } else if (context.mounted) {
+      showWarningSnackBar(context, context.l10n.meshExplorerHandshakeCooldown);
+    }
   }
 
   Future<void> _onRequestIdentity(BuildContext context, WidgetRef ref) async {

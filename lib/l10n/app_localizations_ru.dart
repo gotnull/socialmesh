@@ -25828,6 +25828,60 @@ class AppLocalizationsRu extends AppLocalizations {
       'Provider-bound device conformance & stress tests';
 
   @override
+  String get adminPanelStorageHealth => 'Storage Health';
+
+  @override
+  String get adminPanelStorageHealthSub =>
+      'Verify WAL mode is active on all SQLite databases';
+
+  @override
+  String get adminStorageHealthTitle => 'Storage Health';
+
+  @override
+  String get adminStorageHealthRefresh => 'Refresh';
+
+  @override
+  String get adminStorageHealthChecking => 'Checking databases…';
+
+  @override
+  String get adminStorageHealthAllPass => 'All databases in WAL mode';
+
+  @override
+  String get adminStorageHealthSomeFail => 'Some databases not in WAL mode';
+
+  @override
+  String adminStorageHealthSummary(int pass, int fail, int total) {
+    return '$pass passed · $fail failed · $total total';
+  }
+
+  @override
+  String get adminStorageStatusWal => 'WAL';
+
+  @override
+  String get adminStorageStatusUnknown => 'UNKNOWN';
+
+  @override
+  String get adminStorageStatusMissing => 'NOT OPENED';
+
+  @override
+  String get adminStorageStatusError => 'ERROR';
+
+  @override
+  String get adminStorageWalPresent => '-wal present';
+
+  @override
+  String get adminStorageWalAbsent => '-wal absent';
+
+  @override
+  String get adminStorageShmPresent => '-shm present';
+
+  @override
+  String get adminStorageShmAbsent => '-shm absent';
+
+  @override
+  String get adminStoragePathCopied => 'Path copied to clipboard';
+
+  @override
   String get adminPanelBadgeOverflow => '99+';
 
   @override
@@ -31050,6 +31104,22 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get meshExplorerChangedKey => 'Changed key';
+
+  @override
+  String get meshExplorerScanSent => 'Scanning for nearby peers…';
+
+  @override
+  String get meshExplorerScanCooldown => 'Mesh is busy, scan blocked';
+
+  @override
+  String get meshExplorerHandshakeSent => 'Handshake request sent';
+
+  @override
+  String get meshExplorerHandshakeCooldown =>
+      'Handshake on cooldown, try again shortly';
+
+  @override
+  String get meshExplorerHandshakeInProgress => 'In progress…';
 
   @override
   String get meshServicesDrawerLabel => 'My Services';

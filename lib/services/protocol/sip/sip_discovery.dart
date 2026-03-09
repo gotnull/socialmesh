@@ -333,15 +333,28 @@ class SipDiscovery {
   // Outbound: ROLLCALL_REQ
   // ---------------------------------------------------------------------------
 
-  /// Build a ROLLCALL_REQ frame. Rate-limited to 1 per cooldown plus jitter.
+  /// Build a ROLLCALL_REQ frame.
   ///
-  /// Returns null if rate-limited, budget insufficient, or non-essential
-  /// sends are suppressed.
-  SipOutbound? buildRollcallReq() {
+  /// For periodic/automatic sends, rate-limited to 1 per cooldown plus jitter.
+  /// For user-initiated scans, pass [force] = true to bypass the time cooldown
+  /// and resume-suppression window while still respecting active mesh
+  /// congestion and the hard byte budget.
+  ///
+  /// Returns null if rate-limited, budget insufficient, or congested.
+  SipOutbound? buildRollcallReq({bool force = false}) {
     final nowMs = _nowMs();
 
-    // Suppress non-essential discovery during congestion or budget pressure.
-    if (_rateLimiter.shouldSuppressNonEssential) {
+    // Always suppress during active mesh congestion. For automatic sends also
+    // suppress on budget pressure / resume suppression window.
+    if (force) {
+      if (_rateLimiter.isCongested) {
+        AppLogging.sip(
+          'SIP_DISCOVERY: ROLLCALL_REQ (force) suppressed '
+          '(active congestion)',
+        );
+        return null;
+      }
+    } else if (_rateLimiter.shouldSuppressNonEssential) {
       AppLogging.sip(
         'SIP_DISCOVERY: ROLLCALL_REQ suppressed (non-essential suppression '
         'active, congested=${_rateLimiter.isCongested}, '
@@ -351,19 +364,22 @@ class SipDiscovery {
       return null;
     }
 
-    final jitterMs = _jitterRng.nextInt(
-      SipConstants.rollcallReqJitter.inMilliseconds + 1,
-    );
-    final effectiveCooldownMs = rollcallCooldownMs + jitterMs;
-
-    if (nowMs - lastRollcallReqMs < effectiveCooldownMs) {
-      AppLogging.sip(
-        'SIP_DISCOVERY: ROLLCALL_REQ rate-limited '
-        '(${(nowMs - lastRollcallReqMs) ~/ 1000}s < '
-        '${effectiveCooldownMs ~/ 1000}s, '
-        'base=${rollcallCooldownMs ~/ 1000}s jitter=${jitterMs ~/ 1000}s)',
+    // Time cooldown only applies to automatic (non-forced) sends.
+    if (!force) {
+      final jitterMs = _jitterRng.nextInt(
+        SipConstants.rollcallReqJitter.inMilliseconds + 1,
       );
-      return null;
+      final effectiveCooldownMs = rollcallCooldownMs + jitterMs;
+
+      if (nowMs - lastRollcallReqMs < effectiveCooldownMs) {
+        AppLogging.sip(
+          'SIP_DISCOVERY: ROLLCALL_REQ rate-limited '
+          '(${(nowMs - lastRollcallReqMs) ~/ 1000}s < '
+          '${effectiveCooldownMs ~/ 1000}s, '
+          'base=${rollcallCooldownMs ~/ 1000}s jitter=${jitterMs ~/ 1000}s)',
+        );
+        return null;
+      }
     }
 
     final frame = SipFrame(

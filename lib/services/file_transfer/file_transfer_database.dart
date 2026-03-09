@@ -42,6 +42,9 @@ class FileTransferDatabase {
       _db = await openDatabase(
         dbPath,
         version: _dbVersion,
+        onConfigure: (db) async {
+          final walResult = await db.rawQuery('PRAGMA journal_mode=WAL'); assert(walResult.isNotEmpty && walResult.first['journal_mode'] == 'wal', 'WAL mode not active'); // lint-allow: hardcoded-string
+        },
         onCreate: (db, version) async {
           AppLogging.fileTransfer('DB: creating tables (v$version)');
           await _createTables(db);

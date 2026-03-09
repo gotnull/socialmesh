@@ -11,11 +11,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
+import '../../../core/logging.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../features/nodedex/widgets/sigil_painter.dart';
+import '../../../providers/app_providers.dart';
 import '../../../providers/sip_providers.dart';
 import '../../../services/haptic_service.dart';
+import '../../../services/protocol/sip/sip_codec.dart';
+import '../../../services/protocol/sip/sip_handshake.dart';
+import '../../../services/protocol/sip/sip_types.dart';
+import '../../../utils/snackbar.dart';
 import '../models/interaction_tier.dart';
 import '../models/mesh_explorer_peer.dart';
 import 'mesh_explorer_peer_detail_sheet.dart';
@@ -250,6 +256,39 @@ class _PeerAction extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
 
+    // Watch handshake state for anonymous peers to show progress.
+    final hsState = peer.tier == InteractionTier.anonymous
+        ? ref.watch(sipHandshakeStateProvider(peer.nodeId))
+        : SipHandshakeState.idle;
+
+    // While handshake is in-flight, show a progress indicator.
+    if (_isHandshakeInProgress(hsState)) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppTheme.spacing8,
+          vertical: AppTheme.spacing4,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 14,
+              height: 14,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: context.accentColor,
+              ),
+            ),
+            const SizedBox(width: AppTheme.spacing6),
+            Text(
+              l10n.meshExplorerHandshakeInProgress,
+              style: TextStyle(fontSize: 12, color: context.textTertiary),
+            ),
+          ],
+        ),
+      );
+    }
+
     final (label, icon) = switch (peer.tier) {
       InteractionTier.anonymous => (
         l10n.meshExplorerActionHandshake,
@@ -280,15 +319,43 @@ class _PeerAction extends ConsumerWidget {
     );
   }
 
+  bool _isHandshakeInProgress(SipHandshakeState state) {
+    return switch (state) {
+      SipHandshakeState.helloSent ||
+      SipHandshakeState.challengeReceived ||
+      SipHandshakeState.responseSent ||
+      SipHandshakeState.helloReceived ||
+      SipHandshakeState.challengeSent ||
+      SipHandshakeState.responseReceived => true,
+      _ => false,
+    };
+  }
+
   Future<void> _onAction(BuildContext context, WidgetRef ref) async {
     final haptics = ref.read(hapticServiceProvider);
     final hs = ref.read(sipHandshakeProvider);
+    final protocol = ref.read(protocolServiceProvider);
     final identity = ref.read(sipIdentityHandlerProvider);
     await haptics.trigger(HapticType.medium);
 
     switch (peer.tier) {
       case InteractionTier.anonymous:
-        hs?.initiateHandshake(peer.nodeId);
+        final frame = hs?.initiateHandshake(peer.nodeId);
+        if (frame != null) {
+          final encoded = SipCodec.encode(frame);
+          if (encoded != null) {
+            await protocol.sendSipPayload(encoded, SipMessageType.hsHello);
+            AppLogging.sip(
+              'MESH_EXPLORER: HS_HELLO sent to '
+              'node=0x${peer.nodeId.toRadixString(16)}',
+            );
+          }
+        } else if (context.mounted) {
+          showWarningSnackBar(
+            context,
+            context.l10n.meshExplorerHandshakeCooldown,
+          );
+        }
       case InteractionTier.handshaked:
         identity?.buildIdReq();
       case InteractionTier.identified:

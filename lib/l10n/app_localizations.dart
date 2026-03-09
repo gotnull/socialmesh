@@ -45864,6 +45864,108 @@ abstract class AppLocalizations {
   /// **'Provider-bound device conformance & stress tests'**
   String get adminPanelConformanceSub;
 
+  /// Admin panel tile label for the storage health screen
+  ///
+  /// In en, this message translates to:
+  /// **'Storage Health'**
+  String get adminPanelStorageHealth;
+
+  /// Admin panel tile subtitle for the storage health screen
+  ///
+  /// In en, this message translates to:
+  /// **'Verify WAL mode is active on all SQLite databases'**
+  String get adminPanelStorageHealthSub;
+
+  /// App bar title for the admin storage health screen
+  ///
+  /// In en, this message translates to:
+  /// **'Storage Health'**
+  String get adminStorageHealthTitle;
+
+  /// Tooltip for the refresh button on the storage health screen
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get adminStorageHealthRefresh;
+
+  /// Status text shown while WAL checks are running
+  ///
+  /// In en, this message translates to:
+  /// **'Checking databases…'**
+  String get adminStorageHealthChecking;
+
+  /// Summary header when every database passes the WAL check
+  ///
+  /// In en, this message translates to:
+  /// **'All databases in WAL mode'**
+  String get adminStorageHealthAllPass;
+
+  /// Summary header when one or more databases fail the WAL check
+  ///
+  /// In en, this message translates to:
+  /// **'Some databases not in WAL mode'**
+  String get adminStorageHealthSomeFail;
+
+  /// Summary line showing pass/fail/total counts
+  ///
+  /// In en, this message translates to:
+  /// **'{pass} passed · {fail} failed · {total} total'**
+  String adminStorageHealthSummary(int pass, int fail, int total);
+
+  /// Badge label when a database is confirmed in WAL mode
+  ///
+  /// In en, this message translates to:
+  /// **'WAL'**
+  String get adminStorageStatusWal;
+
+  /// Badge label when the journal mode could not be determined
+  ///
+  /// In en, this message translates to:
+  /// **'UNKNOWN'**
+  String get adminStorageStatusUnknown;
+
+  /// Badge label when a database file does not exist yet
+  ///
+  /// In en, this message translates to:
+  /// **'NOT OPENED'**
+  String get adminStorageStatusMissing;
+
+  /// Badge label when the WAL check threw an exception
+  ///
+  /// In en, this message translates to:
+  /// **'ERROR'**
+  String get adminStorageStatusError;
+
+  /// Chip label when the WAL sidecar file exists
+  ///
+  /// In en, this message translates to:
+  /// **'-wal present'**
+  String get adminStorageWalPresent;
+
+  /// Chip label when the WAL sidecar file does not exist
+  ///
+  /// In en, this message translates to:
+  /// **'-wal absent'**
+  String get adminStorageWalAbsent;
+
+  /// Chip label when the SHM sidecar file exists
+  ///
+  /// In en, this message translates to:
+  /// **'-shm present'**
+  String get adminStorageShmPresent;
+
+  /// Chip label when the SHM sidecar file does not exist
+  ///
+  /// In en, this message translates to:
+  /// **'-shm absent'**
+  String get adminStorageShmAbsent;
+
+  /// Snackbar message after long-pressing a database tile to copy its path
+  ///
+  /// In en, this message translates to:
+  /// **'Path copied to clipboard'**
+  String get adminStoragePathCopied;
+
   /// Text displayed in admin panel
   ///
   /// In en, this message translates to:
@@ -54807,6 +54909,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Changed key'**
   String get meshExplorerChangedKey;
+
+  /// Snackbar message after rollcall request sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanning for nearby peers…'**
+  String get meshExplorerScanSent;
+
+  /// Snackbar when scan is blocked due to active mesh congestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh is busy, scan blocked'**
+  String get meshExplorerScanCooldown;
+
+  /// Snackbar after HS_HELLO sent to peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Handshake request sent'**
+  String get meshExplorerHandshakeSent;
+
+  /// Snackbar when handshake is rate-limited or already in progress.
+  ///
+  /// In en, this message translates to:
+  /// **'Handshake on cooldown, try again shortly'**
+  String get meshExplorerHandshakeCooldown;
+
+  /// Label shown on peer tile while handshake is in-flight.
+  ///
+  /// In en, this message translates to:
+  /// **'In progress…'**
+  String get meshExplorerHandshakeInProgress;
 
   /// Drawer menu label for the Mesh Services screen.
   ///

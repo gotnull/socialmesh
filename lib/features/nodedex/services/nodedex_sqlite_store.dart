@@ -920,6 +920,12 @@ class NodeDexSqliteStore {
     required String toState,
     required DateTime timestamp,
   }) async {
+    if (!isReady) {
+      AppLogging.storage(
+        'NodeDexSqliteStore: insertPresenceTransition skipped — database not open',
+      );
+      return;
+    }
     await _db.insert(NodeDexTables.presenceTransitions, {
       NodeDexTables.colPtNodeNum: nodeNum,
       NodeDexTables.colPtFromState: fromState,

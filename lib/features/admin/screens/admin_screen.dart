@@ -20,6 +20,7 @@ import '../bug_reports/admin_bug_reports_screen.dart';
 import '../conformance/ui/admin_conformance_screen.dart';
 import 'admin_broadcast_screen.dart';
 import 'admin_diagnostics_screen.dart';
+import 'admin_storage_health_screen.dart';
 import 'qr_style_preview_screen.dart';
 import 'user_purchases_admin_screen.dart';
 
@@ -153,6 +154,14 @@ class AdminScreen extends ConsumerWidget {
                 iconColor: Colors.amber.shade400,
                 onTap: () =>
                     _navigateTo(context, const AdminConformanceScreen()),
+              ),
+              _AdminTile(
+                icon: Icons.storage_rounded,
+                label: context.l10n.adminPanelStorageHealth,
+                subtitle: context.l10n.adminPanelStorageHealthSub,
+                iconColor: Colors.teal.shade400,
+                onTap: () =>
+                    _navigateTo(context, const AdminStorageHealthScreen()),
               ),
               // Bottom padding
               SizedBox(height: MediaQuery.of(context).padding.bottom + 16),

@@ -35018,6 +35018,79 @@
     "@adminPanelConformanceSub": {
         "description": "Text displayed in admin panel"
     },
+    "adminPanelStorageHealth": "Storage Health",
+    "@adminPanelStorageHealth": {
+        "description": "Admin panel tile label for the storage health screen"
+    },
+    "adminPanelStorageHealthSub": "Verify WAL mode is active on all SQLite databases",
+    "@adminPanelStorageHealthSub": {
+        "description": "Admin panel tile subtitle for the storage health screen"
+    },
+    "adminStorageHealthTitle": "Storage Health",
+    "@adminStorageHealthTitle": {
+        "description": "App bar title for the admin storage health screen"
+    },
+    "adminStorageHealthRefresh": "Refresh",
+    "@adminStorageHealthRefresh": {
+        "description": "Tooltip for the refresh button on the storage health screen"
+    },
+    "adminStorageHealthChecking": "Checking databases…",
+    "@adminStorageHealthChecking": {
+        "description": "Status text shown while WAL checks are running"
+    },
+    "adminStorageHealthAllPass": "All databases in WAL mode",
+    "@adminStorageHealthAllPass": {
+        "description": "Summary header when every database passes the WAL check"
+    },
+    "adminStorageHealthSomeFail": "Some databases not in WAL mode",
+    "@adminStorageHealthSomeFail": {
+        "description": "Summary header when one or more databases fail the WAL check"
+    },
+    "adminStorageHealthSummary": "{pass} passed · {fail} failed · {total} total",
+    "@adminStorageHealthSummary": {
+        "description": "Summary line showing pass/fail/total counts",
+        "placeholders": {
+            "pass": { "type": "int" },
+            "fail": { "type": "int" },
+            "total": { "type": "int" }
+        }
+    },
+    "adminStorageStatusWal": "WAL",
+    "@adminStorageStatusWal": {
+        "description": "Badge label when a database is confirmed in WAL mode"
+    },
+    "adminStorageStatusUnknown": "UNKNOWN",
+    "@adminStorageStatusUnknown": {
+        "description": "Badge label when the journal mode could not be determined"
+    },
+    "adminStorageStatusMissing": "NOT OPENED",
+    "@adminStorageStatusMissing": {
+        "description": "Badge label when a database file does not exist yet"
+    },
+    "adminStorageStatusError": "ERROR",
+    "@adminStorageStatusError": {
+        "description": "Badge label when the WAL check threw an exception"
+    },
+    "adminStorageWalPresent": "-wal present",
+    "@adminStorageWalPresent": {
+        "description": "Chip label when the WAL sidecar file exists"
+    },
+    "adminStorageWalAbsent": "-wal absent",
+    "@adminStorageWalAbsent": {
+        "description": "Chip label when the WAL sidecar file does not exist"
+    },
+    "adminStorageShmPresent": "-shm present",
+    "@adminStorageShmPresent": {
+        "description": "Chip label when the SHM sidecar file exists"
+    },
+    "adminStorageShmAbsent": "-shm absent",
+    "@adminStorageShmAbsent": {
+        "description": "Chip label when the SHM sidecar file does not exist"
+    },
+    "adminStoragePathCopied": "Path copied to clipboard",
+    "@adminStoragePathCopied": {
+        "description": "Snackbar message after long-pressing a database tile to copy its path"
+    },
     "adminPanelBadgeOverflow": "99+",
     "@adminPanelBadgeOverflow": {
         "description": "Text displayed in admin panel"
@@ -41613,6 +41686,26 @@
     "meshExplorerChangedKey": "Changed key",
     "@meshExplorerChangedKey": {
         "description": "Badge label for peer with changed identity key."
+    },
+    "meshExplorerScanSent": "Scanning for nearby peers\u2026",
+    "@meshExplorerScanSent": {
+        "description": "Snackbar message after rollcall request sent."
+    },
+    "meshExplorerScanCooldown": "Mesh is busy, scan blocked",
+    "@meshExplorerScanCooldown": {
+        "description": "Snackbar when scan is blocked due to active mesh congestion."
+    },
+    "meshExplorerHandshakeSent": "Handshake request sent",
+    "@meshExplorerHandshakeSent": {
+        "description": "Snackbar after HS_HELLO sent to peer."
+    },
+    "meshExplorerHandshakeCooldown": "Handshake on cooldown, try again shortly",
+    "@meshExplorerHandshakeCooldown": {
+        "description": "Snackbar when handshake is rate-limited or already in progress."
+    },
+    "meshExplorerHandshakeInProgress": "In progress\u2026",
+    "@meshExplorerHandshakeInProgress": {
+        "description": "Label shown on peer tile while handshake is in-flight."
     },
 
     "meshServicesDrawerLabel": "My Services",

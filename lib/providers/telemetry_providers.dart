@@ -750,56 +750,38 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
     // the actual metric values have not changed, each metric type keeps
     // a per-node fingerprint of the last logged values.
     _nodeSubscription = _protocol.nodeStream.listen((node) async {
-      final id = node.nodeNum;
+      try {
+        final id = node.nodeNum;
 
-      // Log device metrics only when values actually change
-      if (node.batteryLevel != null || node.voltage != null) {
-        final cached = _lastDevice[id];
-        if (cached == null || !cached.matches(node)) {
-          _lastDevice[id] = _DeviceMetricsFingerprint(
-            batteryLevel: node.batteryLevel,
-            voltage: node.voltage,
-            channelUtilization: node.channelUtilization,
-            airUtilTx: node.airUtilTx,
-            uptimeSeconds: node.uptimeSeconds,
-          );
-          await storage.addDeviceMetrics(
-            DeviceMetricsLog(
-              nodeNum: id,
+        // Log device metrics only when values actually change
+        if (node.batteryLevel != null || node.voltage != null) {
+          final cached = _lastDevice[id];
+          if (cached == null || !cached.matches(node)) {
+            _lastDevice[id] = _DeviceMetricsFingerprint(
               batteryLevel: node.batteryLevel,
               voltage: node.voltage,
               channelUtilization: node.channelUtilization,
               airUtilTx: node.airUtilTx,
               uptimeSeconds: node.uptimeSeconds,
-            ),
-          );
+            );
+            await storage.addDeviceMetrics(
+              DeviceMetricsLog(
+                nodeNum: id,
+                batteryLevel: node.batteryLevel,
+                voltage: node.voltage,
+                channelUtilization: node.channelUtilization,
+                airUtilTx: node.airUtilTx,
+                uptimeSeconds: node.uptimeSeconds,
+              ),
+            );
+          }
         }
-      }
 
-      // Log environment metrics only when values actually change
-      if (node.temperature != null || node.humidity != null) {
-        final cached = _lastEnv[id];
-        if (cached == null || !cached.matches(node)) {
-          _lastEnv[id] = _EnvMetricsFingerprint(
-            temperature: node.temperature,
-            humidity: node.humidity,
-            barometricPressure: node.barometricPressure,
-            gasResistance: node.gasResistance,
-            iaq: node.iaq,
-            lux: node.lux,
-            whiteLux: node.whiteLux,
-            uvLux: node.uvLux,
-            windDirection: node.windDirection,
-            windSpeed: node.windSpeed,
-            windGust: node.windGust,
-            rainfall1h: node.rainfall1h,
-            rainfall24h: node.rainfall24h,
-            soilMoisture: node.soilMoisture,
-            soilTemperature: node.soilTemperature,
-          );
-          await storage.addEnvironmentMetrics(
-            EnvironmentMetricsLog(
-              nodeNum: id,
+        // Log environment metrics only when values actually change
+        if (node.temperature != null || node.humidity != null) {
+          final cached = _lastEnv[id];
+          if (cached == null || !cached.matches(node)) {
+            _lastEnv[id] = _EnvMetricsFingerprint(
               temperature: node.temperature,
               humidity: node.humidity,
               barometricPressure: node.barometricPressure,
@@ -815,63 +797,65 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
               rainfall24h: node.rainfall24h,
               soilMoisture: node.soilMoisture,
               soilTemperature: node.soilTemperature,
-            ),
-          );
+            );
+            await storage.addEnvironmentMetrics(
+              EnvironmentMetricsLog(
+                nodeNum: id,
+                temperature: node.temperature,
+                humidity: node.humidity,
+                barometricPressure: node.barometricPressure,
+                gasResistance: node.gasResistance,
+                iaq: node.iaq,
+                lux: node.lux,
+                whiteLux: node.whiteLux,
+                uvLux: node.uvLux,
+                windDirection: node.windDirection,
+                windSpeed: node.windSpeed,
+                windGust: node.windGust,
+                rainfall1h: node.rainfall1h,
+                rainfall24h: node.rainfall24h,
+                soilMoisture: node.soilMoisture,
+                soilTemperature: node.soilTemperature,
+              ),
+            );
+          }
         }
-      }
 
-      // Log power metrics only when values actually change
-      if (node.ch1Voltage != null ||
-          node.ch2Voltage != null ||
-          node.ch3Voltage != null) {
-        final cached = _lastPower[id];
-        if (cached == null || !cached.matches(node)) {
-          _lastPower[id] = _PowerMetricsFingerprint(
-            ch1Voltage: node.ch1Voltage,
-            ch1Current: node.ch1Current,
-            ch2Voltage: node.ch2Voltage,
-            ch2Current: node.ch2Current,
-            ch3Voltage: node.ch3Voltage,
-            ch3Current: node.ch3Current,
-          );
-          await storage.addPowerMetrics(
-            PowerMetricsLog(
-              nodeNum: id,
+        // Log power metrics only when values actually change
+        if (node.ch1Voltage != null ||
+            node.ch2Voltage != null ||
+            node.ch3Voltage != null) {
+          final cached = _lastPower[id];
+          if (cached == null || !cached.matches(node)) {
+            _lastPower[id] = _PowerMetricsFingerprint(
               ch1Voltage: node.ch1Voltage,
               ch1Current: node.ch1Current,
               ch2Voltage: node.ch2Voltage,
               ch2Current: node.ch2Current,
               ch3Voltage: node.ch3Voltage,
               ch3Current: node.ch3Current,
-            ),
-          );
+            );
+            await storage.addPowerMetrics(
+              PowerMetricsLog(
+                nodeNum: id,
+                ch1Voltage: node.ch1Voltage,
+                ch1Current: node.ch1Current,
+                ch2Voltage: node.ch2Voltage,
+                ch2Current: node.ch2Current,
+                ch3Voltage: node.ch3Voltage,
+                ch3Current: node.ch3Current,
+              ),
+            );
+          }
         }
-      }
 
-      // Log air quality only when values actually change
-      if (node.pm10Standard != null ||
-          node.pm25Standard != null ||
-          node.co2 != null) {
-        final cached = _lastAirQuality[id];
-        if (cached == null || !cached.matches(node)) {
-          _lastAirQuality[id] = _AirQualityFingerprint(
-            pm10Standard: node.pm10Standard,
-            pm25Standard: node.pm25Standard,
-            pm100Standard: node.pm100Standard,
-            pm10Environmental: node.pm10Environmental,
-            pm25Environmental: node.pm25Environmental,
-            pm100Environmental: node.pm100Environmental,
-            particles03um: node.particles03um,
-            particles05um: node.particles05um,
-            particles10um: node.particles10um,
-            particles25um: node.particles25um,
-            particles50um: node.particles50um,
-            particles100um: node.particles100um,
-            co2: node.co2,
-          );
-          await storage.addAirQualityMetrics(
-            AirQualityMetricsLog(
-              nodeNum: id,
+        // Log air quality only when values actually change
+        if (node.pm10Standard != null ||
+            node.pm25Standard != null ||
+            node.co2 != null) {
+          final cached = _lastAirQuality[id];
+          if (cached == null || !cached.matches(node)) {
+            _lastAirQuality[id] = _AirQualityFingerprint(
               pm10Standard: node.pm10Standard,
               pm25Standard: node.pm25Standard,
               pm100Standard: node.pm100Standard,
@@ -885,31 +869,51 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
               particles50um: node.particles50um,
               particles100um: node.particles100um,
               co2: node.co2,
-            ),
-          );
+            );
+            await storage.addAirQualityMetrics(
+              AirQualityMetricsLog(
+                nodeNum: id,
+                pm10Standard: node.pm10Standard,
+                pm25Standard: node.pm25Standard,
+                pm100Standard: node.pm100Standard,
+                pm10Environmental: node.pm10Environmental,
+                pm25Environmental: node.pm25Environmental,
+                pm100Environmental: node.pm100Environmental,
+                particles03um: node.particles03um,
+                particles05um: node.particles05um,
+                particles10um: node.particles10um,
+                particles25um: node.particles25um,
+                particles50um: node.particles50um,
+                particles100um: node.particles100um,
+                co2: node.co2,
+              ),
+            );
+          }
         }
-      }
 
-      // Log position only when values actually change
-      if (node.hasPosition) {
-        final cached = _lastPosition[id];
-        if (cached == null || !cached.matches(node)) {
-          _lastPosition[id] = _PositionFingerprint(
-            latitude: node.latitude!,
-            longitude: node.longitude!,
-            altitude: node.altitude,
-            satsInView: node.satsInView,
-          );
-          await storage.addPositionLog(
-            PositionLog(
-              nodeNum: id,
+        // Log position only when values actually change
+        if (node.hasPosition) {
+          final cached = _lastPosition[id];
+          if (cached == null || !cached.matches(node)) {
+            _lastPosition[id] = _PositionFingerprint(
               latitude: node.latitude!,
               longitude: node.longitude!,
               altitude: node.altitude,
               satsInView: node.satsInView,
-            ),
-          );
+            );
+            await storage.addPositionLog(
+              PositionLog(
+                nodeNum: id,
+                latitude: node.latitude!,
+                longitude: node.longitude!,
+                altitude: node.altitude,
+                satsInView: node.satsInView,
+              ),
+            );
+          }
         }
+      } catch (e) {
+        AppLogging.storage('TelemetryLogger: node metrics write failed: $e');
       }
     });
   }

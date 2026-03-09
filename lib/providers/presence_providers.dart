@@ -368,12 +368,18 @@ class PresenceNotifier extends Notifier<Map<int, NodePresence>> {
     final store = storeAsync.asData?.value;
     if (store != null) {
       unawaited(
-        store.insertPresenceTransition(
-          nodeNum: node.nodeNum,
-          fromState: previous.name,
-          toState: current.name,
-          timestamp: ref.read(presenceClockProvider)(),
-        ),
+        store
+            .insertPresenceTransition(
+              nodeNum: node.nodeNum,
+              fromState: previous.name,
+              toState: current.name,
+              timestamp: ref.read(presenceClockProvider)(),
+            )
+            .catchError((Object e) {
+              AppLogging.storage(
+                'PresenceNotifier: insertPresenceTransition failed: $e',
+              );
+            }),
       );
     }
 

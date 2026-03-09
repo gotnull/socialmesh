@@ -72,6 +72,9 @@ class TelemetryDatabase {
   final String? _testDbPath;
   bool _migrationAttempted = false;
 
+  /// Whether the database is open and ready for queries.
+  bool get isOpen => _db != null && _db!.isOpen;
+
   TelemetryDatabase({String? testDbPath}) : _testDbPath = testDbPath;
 
   /// Initialize the database, creating tables if needed and migrating
@@ -90,6 +93,13 @@ class TelemetryDatabase {
     _db = await openDatabase(
       dbPath,
       version: _dbVersion,
+      onConfigure: (db) async {
+        final walResult = await db.rawQuery('PRAGMA journal_mode=WAL');
+        assert(
+          walResult.isNotEmpty && walResult.first['journal_mode'] == 'wal',
+          'WAL mode not active',
+        ); // lint-allow: hardcoded-string
+      },
       onCreate: (db, version) async {
         AppLogging.storage('Creating telemetry database v$version');
         await _createTables(db);
@@ -251,6 +261,12 @@ class TelemetryDatabase {
   // ---------------------------------------------------------------------------
 
   Future<void> _addEntry(String type, TelemetryLogEntry entry) async {
+    if (!isOpen) {
+      AppLogging.storage(
+        'TelemetryDatabase: _addEntry skipped — database not open',
+      );
+      return;
+    }
     final json = entry.toJson();
     // Strip columns that live in dedicated fields
     final data = Map<String, dynamic>.from(json)
