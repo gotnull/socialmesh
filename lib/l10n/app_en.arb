@@ -4075,6 +4075,14 @@
     "@channelOptionsShowButton": {
         "description": "Button label in channel configuration"
     },
+    "channelOptionsMuteNotifications": "Mute Notifications",
+    "@channelOptionsMuteNotifications": {
+        "description": "Action to mute notifications for a channel"
+    },
+    "channelOptionsUnmuteNotifications": "Unmute Notifications",
+    "@channelOptionsUnmuteNotifications": {
+        "description": "Action to unmute notifications for a channel"
+    },
     "channelOptionsViewKey": "View Encryption Key",
     "@channelOptionsViewKey": {
         "description": "Text displayed in channel configuration"

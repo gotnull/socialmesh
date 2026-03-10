@@ -13,6 +13,7 @@ import '../../core/transport.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/muted_channels_provider.dart';
 import '../../utils/snackbar.dart';
 import 'channel_form_screen.dart';
 import 'channel_share_utils.dart';
@@ -33,7 +34,16 @@ Future<void> showChannelOptionsSheet(
           ? context.l10n.channelOptionsDefaultName(channel.index)
           : channel.name);
 
+  final isMuted = ref.read(mutedChannelsProvider).contains(channel.index);
+
   final actions = [
+    BottomSheetAction(
+      icon: isMuted ? Icons.notifications : Icons.notifications_off,
+      label: isMuted
+          ? context.l10n.channelOptionsUnmuteNotifications
+          : context.l10n.channelOptionsMuteNotifications,
+      value: 'mute',
+    ),
     BottomSheetAction(
       icon: Icons.edit,
       label: context.l10n.channelOptionsEdit,
@@ -81,6 +91,8 @@ Future<void> showChannelOptionsSheet(
   if (result == null || !context.mounted) return;
 
   switch (result) {
+    case 'mute':
+      await ref.read(mutedChannelsProvider.notifier).toggleMute(channel.index);
     case 'edit':
       Navigator.push(
         context,

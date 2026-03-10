@@ -5524,6 +5524,18 @@ abstract class AppLocalizations {
   /// **'Show'**
   String get channelOptionsShowButton;
 
+  /// Action to mute notifications for a channel
+  ///
+  /// In en, this message translates to:
+  /// **'Mute Notifications'**
+  String get channelOptionsMuteNotifications;
+
+  /// Action to unmute notifications for a channel
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute Notifications'**
+  String get channelOptionsUnmuteNotifications;
+
   /// Text displayed in channel configuration
   ///
   /// In en, this message translates to:

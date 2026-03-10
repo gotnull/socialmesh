@@ -3101,6 +3101,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get channelOptionsShowButton => 'Mostrar';
 
   @override
+  String get channelOptionsMuteNotifications => 'Mute Notifications';
+
+  @override
+  String get channelOptionsUnmuteNotifications => 'Unmute Notifications';
+
+  @override
   String get channelOptionsViewKey => 'Ver chave de criptografia';
 
   @override

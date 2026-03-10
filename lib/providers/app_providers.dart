@@ -50,6 +50,7 @@ import 'telemetry_providers.dart';
 import 'connection_providers.dart';
 import 'age_eligibility_provider.dart';
 import 'file_transfer_providers.dart';
+import 'muted_channels_provider.dart';
 
 // App initialization state - purely about app lifecycle, NOT device connection
 // Device connection is handled separately by DeviceConnectionNotifier in connection_providers.dart
@@ -3025,6 +3026,15 @@ class MessagesNotifier extends Notifier<List<Message>> {
       channelName =
           channel?.name ??
           'Channel ${message.channel}'; // lint-allow: hardcoded-string
+
+      // Suppress notification if the user has muted this channel.
+      final mutedChannels = ref.read(mutedChannelsProvider);
+      if (mutedChannels.contains(message.channel)) {
+        AppLogging.app(
+          'Channel ${message.channel} is muted, skipping notification',
+        );
+        return;
+      }
 
       AppLogging.debug(
         '🔔 Queueing channel notification: $senderName in $channelName',
