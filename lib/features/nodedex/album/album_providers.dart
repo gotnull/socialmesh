@@ -16,12 +16,8 @@
 // that consume nodeDexProvider and nodeDexStatsProvider. They perform
 // no side effects and produce immutable snapshots of album state.
 
-import 'dart:ui' show PlatformDispatcher;
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import '../../../l10n/app_localizations.dart';
 
 import '../models/nodedex_entry.dart';
 import '../providers/nodedex_providers.dart';

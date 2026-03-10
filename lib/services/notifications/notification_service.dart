@@ -3,7 +3,7 @@
 import '../../core/logging.dart';
 import 'dart:async';
 import 'dart:io';
-import 'dart:ui' show Color, PlatformDispatcher;
+import 'dart:ui' show Color;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:socialmesh/l10n/app_localizations.dart';
 import '../../models/mesh_models.dart';
@@ -62,8 +62,7 @@ class NotificationService {
 
   /// Resolve [AppLocalizations] from the platform locale.
   /// Usable without [BuildContext] for background notifications.
-  AppLocalizations get _l10n =>
-      safeL10n();
+  AppLocalizations get _l10n => safeL10n();
 
   final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();

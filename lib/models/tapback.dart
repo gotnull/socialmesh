@@ -1,8 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-import 'dart:ui' show PlatformDispatcher;
-
-import 'package:socialmesh/l10n/app_localizations.dart';
 import 'package:uuid/uuid.dart';
 import 'package:socialmesh/l10n/l10n_utils.dart';
 

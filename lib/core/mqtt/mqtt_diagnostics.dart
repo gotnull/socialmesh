@@ -15,8 +15,6 @@
 library;
 
 import 'dart:convert';
-import 'dart:ui' show PlatformDispatcher;
-
 import '../../l10n/app_localizations.dart';
 import 'mqtt_config.dart';
 import 'mqtt_connection_state.dart';

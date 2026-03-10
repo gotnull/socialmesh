@@ -26,7 +26,6 @@ import 'dart:async' show Timer, unawaited;
 import 'package:clock/clock.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
-import 'package:socialmesh/l10n/app_localizations.dart';
 
 import '../../../core/logging.dart';
 import '../../../models/mesh_models.dart';

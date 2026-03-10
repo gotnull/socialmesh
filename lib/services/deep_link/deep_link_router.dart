@@ -1,15 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-import 'dart:ui' show PlatformDispatcher;
-
-import 'package:socialmesh/l10n/app_localizations.dart';
-
 import '../../core/logging.dart';
+import 'package:socialmesh/l10n/app_localizations.dart';
 import 'deep_link_types.dart';
 import 'package:socialmesh/l10n/l10n_utils.dart';
 
-AppLocalizations get _l10n =>
-    safeL10n();
+AppLocalizations get _l10n => safeL10n();
 
 /// Routes parsed deep links to the appropriate screens.
 ///

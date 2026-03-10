@@ -6,7 +6,6 @@ import 'package:flutter/foundation.dart';
 
 import '../../core/logging.dart';
 import '../../core/transport.dart';
-import '../../l10n/app_localizations.dart';
 import '../../models/mesh_device.dart';
 import '../../providers/meshcore_providers.dart';
 import '../protocol/protocol_service.dart';
