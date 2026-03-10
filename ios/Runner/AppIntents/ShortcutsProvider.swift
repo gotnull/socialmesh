@@ -59,18 +59,6 @@ struct SocialmeshShortcuts: AppShortcutsProvider {
             systemImageName: "network"
         )
         
-        // Open Node
-        AppShortcut(
-            intent: OpenNodeIntent(),
-            phrases: [
-                "Open node in \(.applicationName)",
-                "Show node using \(.applicationName)",
-                "View node with \(.applicationName)"
-            ],
-            shortTitle: "Open Node",
-            systemImageName: "person.circle"
-        )
-        
         // Open Map
         AppShortcut(
             intent: OpenMapIntent(),
@@ -107,16 +95,40 @@ struct SocialmeshShortcuts: AppShortcutsProvider {
             systemImageName: "gearshape.2"
         )
         
-        // List Automations
+        // Shut Down Node
         AppShortcut(
-            intent: ListAutomationsIntent(),
+            intent: ShutDownNodeIntent(),
             phrases: [
-                "List automations in \(.applicationName)",
-                "Show automations from \(.applicationName)",
-                "What automations are in \(.applicationName)"
+                "Shut down \(.applicationName) node",
+                "Turn off my \(.applicationName) node",
+                "Power down \(.applicationName) node"
             ],
-            shortTitle: "List Automations",
-            systemImageName: "list.bullet"
+            shortTitle: "Shut Down Node",
+            systemImageName: "power"
+        )
+
+        // Restart Node
+        AppShortcut(
+            intent: RestartNodeIntent(),
+            phrases: [
+                "Restart \(.applicationName) node",
+                "Reboot \(.applicationName) node",
+                "Restart my \(.applicationName) node"
+            ],
+            shortTitle: "Restart Node",
+            systemImageName: "arrow.circlepath"
+        )
+
+        // Disconnect Node
+        AppShortcut(
+            intent: DisconnectNodeIntent(),
+            phrases: [
+                "Disconnect \(.applicationName) node",
+                "Disconnect from \(.applicationName)",
+                "Stop \(.applicationName) connection"
+            ],
+            shortTitle: "Disconnect Node",
+            systemImageName: "antenna.radiowaves.left.and.right.slash"
         )
     }
 }

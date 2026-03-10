@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-import 'dart:ui' show PlatformDispatcher;
-
-import 'package:socialmesh/l10n/app_localizations.dart';
+import 'package:socialmesh/l10n/l10n_utils.dart';
 
 /// All supported deep link types in Socialmesh.
 ///
@@ -277,9 +275,7 @@ class DeepLinkRouteResult {
   /// Fallback route when the primary route cannot be reached.
   static DeepLinkRouteResult get fallback => DeepLinkRouteResult(
     routeName: '/main',
-    fallbackMessage: lookupAppLocalizations(
-      PlatformDispatcher.instance.locale,
-    ).deepLinkUnableToOpenLink,
+    fallbackMessage: safeL10n().deepLinkUnableToOpenLink,
   );
 
   @override

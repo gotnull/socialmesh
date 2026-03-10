@@ -3528,6 +3528,35 @@ class AppLocalizationsRu extends AppLocalizations {
   String get nodeInfoViewHistory => 'Traceroute History';
 
   @override
+  String get nodeInfoShareLocation => 'Share Location';
+
+  @override
+  String get nodeInfoCopyCoordinates => 'Copy Coordinates';
+
+  @override
+  String get nodeInfoPositionConfirmTitle => 'Request Position';
+
+  @override
+  String nodeInfoPositionConfirmMessage(String name) {
+    return 'Request $name\'s current position over the mesh?';
+  }
+
+  @override
+  String get nodeInfoShareConfirmTitle => 'Share Location';
+
+  @override
+  String get nodeInfoShareConfirmMessage =>
+      'Share this node\'s coordinates as a link?';
+
+  @override
+  String get nodeInfoTracerouteConfirmTitle => 'Send Traceroute';
+
+  @override
+  String nodeInfoTracerouteConfirmMessage(String name) {
+    return 'Send a traceroute packet to $name? This uses mesh airtime.';
+  }
+
+  @override
   String get bindingSelectorNoResults => 'No variables found';
 
   @override

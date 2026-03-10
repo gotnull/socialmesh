@@ -8,6 +8,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:socialmesh/l10n/app_localizations.dart';
 import '../../models/mesh_models.dart';
 import 'package:socialmesh/core/theme.dart';
+import 'package:socialmesh/l10n/l10n_utils.dart';
 
 /// Represents a pending message notification for batching
 class PendingMessageNotification {
@@ -62,7 +63,7 @@ class NotificationService {
   /// Resolve [AppLocalizations] from the platform locale.
   /// Usable without [BuildContext] for background notifications.
   AppLocalizations get _l10n =>
-      lookupAppLocalizations(PlatformDispatcher.instance.locale);
+      safeL10n();
 
   final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();

@@ -4678,6 +4678,50 @@
     "@nodeInfoViewHistory": {
         "description": "Tooltip for the traceroute history icon button on the node info card."
     },
+    "nodeInfoShareLocation": "Share Location",
+    "@nodeInfoShareLocation": {
+        "description": "Tooltip for the share location icon button on the node info card."
+    },
+    "nodeInfoCopyCoordinates": "Copy Coordinates",
+    "@nodeInfoCopyCoordinates": {
+        "description": "Tooltip for the copy coordinates icon button on the node info card."
+    },
+    "nodeInfoPositionConfirmTitle": "Request Position",
+    "@nodeInfoPositionConfirmTitle": {
+        "description": "Title of the confirmation sheet before requesting a position exchange."
+    },
+    "nodeInfoPositionConfirmMessage": "Request {name}'s current position over the mesh?",
+    "@nodeInfoPositionConfirmMessage": {
+        "description": "Body of the confirmation sheet before requesting a position exchange.",
+        "placeholders": {
+            "name": {
+                "type": "String",
+                "description": "Display name of the target node."
+            }
+        }
+    },
+    "nodeInfoShareConfirmTitle": "Share Location",
+    "@nodeInfoShareConfirmTitle": {
+        "description": "Title of the confirmation sheet before sharing a node's location."
+    },
+    "nodeInfoShareConfirmMessage": "Share this node's coordinates as a link?",
+    "@nodeInfoShareConfirmMessage": {
+        "description": "Body of the confirmation sheet before sharing a node's location."
+    },
+    "nodeInfoTracerouteConfirmTitle": "Send Traceroute",
+    "@nodeInfoTracerouteConfirmTitle": {
+        "description": "Title of the confirmation sheet before sending a traceroute."
+    },
+    "nodeInfoTracerouteConfirmMessage": "Send a traceroute packet to {name}? This uses mesh airtime.",
+    "@nodeInfoTracerouteConfirmMessage": {
+        "description": "Body of the confirmation sheet before sending a traceroute.",
+        "placeholders": {
+            "name": {
+                "type": "String",
+                "description": "Display name of the target node."
+            }
+        }
+    },
     "bindingSelectorNoResults": "No variables found",
     "@bindingSelectorNoResults": {
         "description": "Empty state text when no binding variables match the search."

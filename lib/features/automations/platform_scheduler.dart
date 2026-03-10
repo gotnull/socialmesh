@@ -14,6 +14,7 @@ import 'package:timezone/timezone.dart' as tz;
 import '../../core/logging.dart';
 import 'models/schedule_spec.dart';
 import 'scheduler_service.dart';
+import 'package:socialmesh/l10n/l10n_utils.dart';
 
 /// Key used to store scheduled task IDs in SharedPreferences
 const _scheduledTasksKey = 'scheduled_platform_tasks';
@@ -401,7 +402,7 @@ class IOSBGTaskScheduler implements PlatformScheduler {
     // Strategy B: Schedule a local notification for exact-time UX
     // This doesn't execute code but alerts the user
     if (_notifications != null) {
-      final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+      final l10n = safeL10n();
       await _scheduleLocalNotification(
         taskId: taskId,
         scheduledFor: scheduledFor,

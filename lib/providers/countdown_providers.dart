@@ -15,6 +15,7 @@ import '../providers/app_providers.dart';
 import '../features/nodes/node_display_name_resolver.dart';
 import '../utils/snackbar.dart';
 import 'package:flutter/material.dart';
+import 'package:socialmesh/l10n/l10n_utils.dart';
 
 /// The type of countdown operation. Used for grouping, deduplication, and
 /// visual styling in the [CountdownBanner].
@@ -173,7 +174,7 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
     final displayName =
         node?.displayName ?? NodeDisplayNameResolver.defaultName(nodeNum);
 
-    final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    final l10n = safeL10n();
 
     startCountdown(
       id: tracerouteId(nodeNum),
@@ -210,7 +211,7 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
   /// Shown after requesting positions from all mesh nodes. The countdown
   /// sets user expectations for how long positions take to trickle in.
   void startPositionRequestCountdown() {
-    final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    final l10n = safeL10n();
     startCountdown(
       id: positionRequestId,
       label: l10n.countdownRequestingPositions,
@@ -223,7 +224,7 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
   ///
   /// Shown after sharing the local device position to the mesh.
   void startPositionBroadcastCountdown() {
-    final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    final l10n = safeL10n();
     startCountdown(
       id: positionBroadcastId,
       label: l10n.countdownBroadcastingPosition,
@@ -326,7 +327,7 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
     final targetNodeNum = task.targetNodeNum;
     if (targetNodeNum == null) return;
 
-    final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    final l10n = safeL10n();
     showGlobalActionSnackBar(
       'Traceroute results may be ready', // lint-allow: hardcoded-string
       actionLabel: l10n.actionView,

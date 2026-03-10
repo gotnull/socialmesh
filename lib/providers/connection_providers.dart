@@ -15,12 +15,10 @@
 
 import 'dart:async';
 import 'dart:io' show Platform;
-import 'dart:ui' show PlatformDispatcher;
 
 import 'package:flutter/foundation.dart' show kDebugMode, visibleForTesting;
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:socialmesh/l10n/app_localizations.dart';
 
 import '../core/logging.dart';
 import '../core/safety/error_handler.dart';
@@ -30,6 +28,7 @@ import '../services/transport/background_ble_service.dart';
 import 'app_providers.dart';
 import 'connectivity_providers.dart';
 import 'meshcore_providers.dart';
+import 'package:socialmesh/l10n/l10n_utils.dart';
 
 // =============================================================================
 // DEVICE PAIRING STATE
@@ -788,7 +787,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     final btState = await FlutterBluePlus.adapterState.first;
     if (btState != BluetoothAdapterState.on) {
       AppLogging.connection('🔌 startBackgroundConnection: Bluetooth is off');
-      final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+      final l10n = safeL10n();
       state = state.copyWith(
         state: DevicePairingState.error,
         reason: DisconnectReason.bluetoothDisabled,
@@ -1078,7 +1077,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     final btState = await FlutterBluePlus.adapterState.first;
     if (btState != BluetoothAdapterState.on) {
       AppLogging.connection('🔌 MeshCore background connect: Bluetooth is off');
-      final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+      final l10n = safeL10n();
       state = state.copyWith(
         state: DevicePairingState.error,
         reason: DisconnectReason.bluetoothDisabled,
@@ -1203,9 +1202,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
         state = state.copyWith(
           state: DevicePairingState.disconnected,
           reason: DisconnectReason.deviceNotFound,
-          errorMessage: lookupAppLocalizations(
-            PlatformDispatcher.instance.locale,
-          ).connectionErrorDeviceNotFound,
+          errorMessage: safeL10n().connectionErrorDeviceNotFound,
         );
         ref
             .read(autoReconnectStateProvider.notifier)
@@ -1323,9 +1320,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     state = state.copyWith(
       state: DevicePairingState.disconnected,
       reason: DisconnectReason.deviceNotFound,
-      errorMessage: lookupAppLocalizations(
-        PlatformDispatcher.instance.locale,
-      ).connectionErrorDeviceNotFound,
+      errorMessage: safeL10n().connectionErrorDeviceNotFound,
     );
 
     return false;
@@ -1389,9 +1384,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     state = DeviceConnectionState2(
       state: DevicePairingState.pairedDeviceInvalidated,
       reason: DisconnectReason.deviceNotFound,
-      errorMessage: lookupAppLocalizations(
-        PlatformDispatcher.instance.locale,
-      ).connectionErrorDeviceReset,
+      errorMessage: safeL10n().connectionErrorDeviceReset,
       connectionSessionId: _connectionSessionId,
     );
   }

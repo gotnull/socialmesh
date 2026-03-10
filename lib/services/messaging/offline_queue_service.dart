@@ -2,8 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import '../../core/logging.dart';
 import 'dart:async';
-import 'dart:ui' show PlatformDispatcher;
-import 'package:socialmesh/l10n/app_localizations.dart';
+import 'package:socialmesh/l10n/l10n_utils.dart';
 import '../../models/mesh_models.dart';
 
 /// A pending message waiting to be sent when connection is restored
@@ -208,9 +207,7 @@ class OfflineQueueService {
           _updateCallback?.call(
             message.id,
             MessageStatus.failed,
-            errorMessage: lookupAppLocalizations(
-              PlatformDispatcher.instance.locale,
-            ).offlineQueueMaxRetries(e.toString()),
+            errorMessage: safeL10n().offlineQueueMaxRetries(e.toString()),
           );
           _queue.removeAt(0);
           _queueController.add(List.unmodifiable(_queue));

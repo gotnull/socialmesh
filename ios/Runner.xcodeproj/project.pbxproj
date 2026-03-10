@@ -19,6 +19,10 @@
 		AI0001012024120800000001 /* AppIntentErrors.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI0001012024120800000010 /* AppIntentErrors.swift */; };
 		AI00010120241208000000010 /* ShortcutsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI00010120241208000000100 /* ShortcutsProvider.swift */; };
 		AI00010120241208000000011 /* RunAutomationIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI00010120241208000000110 /* RunAutomationIntent.swift */; };
+		AI00010120241208000000012 /* ShutDownNodeIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI00010120241208000000120 /* ShutDownNodeIntent.swift */; };
+		AI00010120241208000000013 /* RestartNodeIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI00010120241208000000130 /* RestartNodeIntent.swift */; };
+		AI00010120241208000000014 /* DisconnectNodeIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI00010120241208000000140 /* DisconnectNodeIntent.swift */; };
+		AI00010120241208000000015 /* TracerouteIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI00010120241208000000150 /* TracerouteIntent.swift */; };
 		AI0001012024120800000002 /* AppIntentsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI0001012024120800000020 /* AppIntentsManager.swift */; };
 		AI0001012024120800000003 /* SendMessageIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI0001012024120800000030 /* SendMessageIntent.swift */; };
 		AI0001012024120800000004 /* SendChannelMessageIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI0001012024120800000040 /* SendChannelMessageIntent.swift */; };
@@ -94,6 +98,10 @@
 		AI0001012024120800000010 /* AppIntentErrors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIntentErrors.swift; sourceTree = "<group>"; };
 		AI00010120241208000000100 /* ShortcutsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutsProvider.swift; sourceTree = "<group>"; };
 		AI00010120241208000000110 /* RunAutomationIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunAutomationIntent.swift; sourceTree = "<group>"; };
+		AI00010120241208000000120 /* ShutDownNodeIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShutDownNodeIntent.swift; sourceTree = "<group>"; };
+		AI00010120241208000000130 /* RestartNodeIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestartNodeIntent.swift; sourceTree = "<group>"; };
+		AI00010120241208000000140 /* DisconnectNodeIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisconnectNodeIntent.swift; sourceTree = "<group>"; };
+		AI00010120241208000000150 /* TracerouteIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TracerouteIntent.swift; sourceTree = "<group>"; };
 		AI0001012024120800000020 /* AppIntentsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIntentsManager.swift; sourceTree = "<group>"; };
 		AI0001012024120800000030 /* SendMessageIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendMessageIntent.swift; sourceTree = "<group>"; };
 		AI0001012024120800000040 /* SendChannelMessageIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendChannelMessageIntent.swift; sourceTree = "<group>"; };
@@ -271,6 +279,10 @@
 				AI0001012024120800000090 /* OpenMessagesIntent.swift */,
 				AI00010120241208000000100 /* ShortcutsProvider.swift */,
 				AI00010120241208000000110 /* RunAutomationIntent.swift */,
+				AI00010120241208000000120 /* ShutDownNodeIntent.swift */,
+				AI00010120241208000000130 /* RestartNodeIntent.swift */,
+				AI00010120241208000000140 /* DisconnectNodeIntent.swift */,
+				AI00010120241208000000150 /* TracerouteIntent.swift */,
 			);
 			path = AppIntents;
 			sourceTree = "<group>";
@@ -621,6 +633,10 @@
 				AI0001012024120800000009 /* OpenMessagesIntent.swift in Sources */,
 				AI00010120241208000000010 /* ShortcutsProvider.swift in Sources */,
 				AI00010120241208000000011 /* RunAutomationIntent.swift in Sources */,
+				AI00010120241208000000012 /* ShutDownNodeIntent.swift in Sources */,
+				AI00010120241208000000013 /* RestartNodeIntent.swift in Sources */,
+				AI00010120241208000000014 /* DisconnectNodeIntent.swift in Sources */,
+				AI00010120241208000000015 /* TracerouteIntent.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

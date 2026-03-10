@@ -17,6 +17,7 @@ import 'meshcore_ble_transport.dart';
 import 'meshcore_detector.dart';
 import 'meshtastic_adapter.dart';
 import 'protocol/meshcore_capture.dart';
+import 'package:socialmesh/l10n/l10n_utils.dart';
 
 /// Result of a connection attempt through the coordinator.
 class ConnectionResult {
@@ -64,7 +65,7 @@ class ConnectionResult {
 
   /// Factory for "already connecting" guard result.
   factory ConnectionResult.alreadyConnecting() {
-    final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    final l10n = safeL10n();
     return ConnectionResult._(
       success: false,
       errorMessage: l10n.connectionAlreadyInProgress,
@@ -74,7 +75,7 @@ class ConnectionResult {
 
   /// Factory for cancelled connection result.
   factory ConnectionResult.cancelled() {
-    final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    final l10n = safeL10n();
     return ConnectionResult._(
       success: false,
       errorMessage: l10n.connectionCancelled,

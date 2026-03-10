@@ -28,6 +28,7 @@ import 'models/schedule_spec.dart';
 import 'automation_repository.dart';
 import 'scheduler_service.dart';
 import 'services/notification_renderer/notification_renderer_module.dart';
+import 'package:socialmesh/l10n/l10n_utils.dart';
 
 /// Message model for automation processing (local to avoid import conflict)
 class AutomationMessage {
@@ -822,7 +823,7 @@ class AutomationEngine {
     Automation automation,
   ) async {
     final actionName = action.type.displayName;
-    final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    final l10n = safeL10n();
 
     try {
       switch (action.type) {

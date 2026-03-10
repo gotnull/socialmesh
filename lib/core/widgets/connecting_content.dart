@@ -8,6 +8,7 @@ import '../theme.dart';
 import '../../providers/splash_mesh_provider.dart';
 import 'animated_tagline.dart';
 import 'split_flap_text.dart';
+import 'package:socialmesh/l10n/l10n_utils.dart';
 
 /// Status information for the connecting screen
 class ConnectionStatusInfo {
@@ -25,7 +26,7 @@ class ConnectionStatusInfo {
 
   /// Predefined status for initializing state
   static ConnectionStatusInfo initializing(Color accentColor) {
-    final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    final l10n = safeL10n();
     return ConnectionStatusInfo(
       text: l10n.connectingStatusInitializing,
       icon: Icons.hourglass_empty_rounded,
@@ -36,7 +37,7 @@ class ConnectionStatusInfo {
 
   /// Predefined status for scanning state
   static ConnectionStatusInfo scanning(Color accentColor) {
-    final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    final l10n = safeL10n();
     return ConnectionStatusInfo(
       text: l10n.connectingStatusScanning,
       icon: Icons.bluetooth_searching_rounded,
@@ -47,7 +48,7 @@ class ConnectionStatusInfo {
 
   /// Predefined status for connecting state
   static ConnectionStatusInfo connecting(Color accentColor) {
-    final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    final l10n = safeL10n();
     return ConnectionStatusInfo(
       text: l10n.connectingStatusConnecting,
       icon: Icons.bluetooth_connected_rounded,
@@ -58,7 +59,7 @@ class ConnectionStatusInfo {
 
   /// Predefined status for auto-reconnecting state
   static ConnectionStatusInfo autoReconnecting(Color accentColor) {
-    final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    final l10n = safeL10n();
     return ConnectionStatusInfo(
       text: l10n.connectingStatusAutoReconnecting,
       icon: Icons.bluetooth_connected_rounded,
@@ -69,7 +70,7 @@ class ConnectionStatusInfo {
 
   /// Predefined status for configuring state
   static ConnectionStatusInfo configuring(Color accentColor) {
-    final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    final l10n = safeL10n();
     return ConnectionStatusInfo(
       text: l10n.connectingStatusConfiguring,
       icon: Icons.settings_rounded,
@@ -80,7 +81,7 @@ class ConnectionStatusInfo {
 
   /// Predefined status for connected state
   static ConnectionStatusInfo connected() {
-    final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    final l10n = safeL10n();
     return ConnectionStatusInfo(
       text: l10n.connectingStatusConnected,
       icon: Icons.check_circle_rounded,
@@ -91,7 +92,7 @@ class ConnectionStatusInfo {
 
   /// Predefined status for failed state
   static ConnectionStatusInfo failed() {
-    final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    final l10n = safeL10n();
     return ConnectionStatusInfo(
       text: l10n.connectingStatusFailed,
       icon: Icons.error_outline_rounded,

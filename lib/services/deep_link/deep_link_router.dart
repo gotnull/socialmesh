@@ -6,9 +6,10 @@ import 'package:socialmesh/l10n/app_localizations.dart';
 
 import '../../core/logging.dart';
 import 'deep_link_types.dart';
+import 'package:socialmesh/l10n/l10n_utils.dart';
 
 AppLocalizations get _l10n =>
-    lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    safeL10n();
 
 /// Routes parsed deep links to the appropriate screens.
 ///

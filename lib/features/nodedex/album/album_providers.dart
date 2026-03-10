@@ -26,6 +26,7 @@ import '../../../l10n/app_localizations.dart';
 import '../models/nodedex_entry.dart';
 import '../providers/nodedex_providers.dart';
 import '../widgets/sigil_card.dart';
+import 'package:socialmesh/l10n/l10n_utils.dart';
 
 // =============================================================================
 // View mode
@@ -406,7 +407,7 @@ List<AlbumPage> _groupByRarity(Ref ref, List<NodeDexEntry> all) {
     CardRarity.common,
   ];
 
-  final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+  final l10n = safeL10n();
   final pages = <AlbumPage>[];
   for (final rarity in orderedRarities) {
     final list = groups[rarity];

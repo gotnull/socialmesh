@@ -4,6 +4,7 @@ import 'dart:ui' show PlatformDispatcher;
 
 import 'package:socialmesh/l10n/app_localizations.dart';
 import 'package:uuid/uuid.dart';
+import 'package:socialmesh/l10n/l10n_utils.dart';
 
 /// A canned (quick) response for fast messaging
 class CannedResponse {
@@ -58,7 +59,7 @@ class CannedResponse {
 /// Default canned responses
 class DefaultCannedResponses {
   static List<CannedResponse> get all {
-    final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    final l10n = safeL10n();
     return [
       CannedResponse(
         id: 'default_ok',

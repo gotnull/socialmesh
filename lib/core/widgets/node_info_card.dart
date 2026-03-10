@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/mesh_models.dart';
+import 'app_bottom_sheet.dart';
 import '../transport_path.dart';
 import '../widgets/gradient_border_container.dart';
 import '../../models/presence_confidence.dart';
@@ -62,6 +63,45 @@ class NodeInfoCard extends ConsumerWidget {
     const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
     final index = ((bearing + 22.5) / 45).floor() % 8;
     return '${bearing.round()}° ${directions[index]}';
+  }
+
+  Future<void> _confirmAndExchangePositions(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    final confirmed = await AppBottomSheet.showConfirm(
+      context: context,
+      title: context.l10n.nodeInfoPositionConfirmTitle,
+      message: context.l10n.nodeInfoPositionConfirmMessage(node.displayName),
+      confirmLabel: context.l10n.actionSheetSend,
+    );
+    if (confirmed == true && context.mounted) {
+      await _exchangePositions(context, ref);
+    }
+  }
+
+  Future<void> _confirmShare(BuildContext context) async {
+    final confirmed = await AppBottomSheet.showConfirm(
+      context: context,
+      title: context.l10n.nodeInfoShareConfirmTitle,
+      message: context.l10n.nodeInfoShareConfirmMessage,
+      confirmLabel: context.l10n.nodeInfoShareLocation,
+    );
+    if (confirmed == true && context.mounted) {
+      onShareLocation?.call();
+    }
+  }
+
+  Future<void> _confirmTraceroute(BuildContext context) async {
+    final confirmed = await AppBottomSheet.showConfirm(
+      context: context,
+      title: context.l10n.nodeInfoTracerouteConfirmTitle,
+      message: context.l10n.nodeInfoTracerouteConfirmMessage(node.displayName),
+      confirmLabel: context.l10n.actionSheetSend,
+    );
+    if (confirmed == true && context.mounted) {
+      onTraceroute?.call();
+    }
   }
 
   Future<void> _exchangePositions(BuildContext context, WidgetRef ref) async {
@@ -451,57 +491,54 @@ class NodeInfoCard extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: AppTheme.spacing12),
-          // Action buttons: all in a single row — flexible text buttons
-          // followed by fixed-size icon buttons. Flexible ensures the text
-          // buttons shrink gracefully on narrow devices (Nothing Phone,
-          // older iPhones, small Androids) without render overflow.
-          // Position and Message are hidden for our own node since they
-          // serve no purpose there.
+          // Action buttons — all uniform 36×36 icon buttons.
+          // Message navigates directly (no confirmation needed).
+          // Position and Traceroute send mesh packets and confirm first.
+          // Share confirms before opening the system share sheet.
+          // Copy, View Details, and View History execute immediately.
           Row(
             children: [
               if (!isMyNode && onMessage != null) ...[
-                Flexible(
+                Tooltip(
+                  message: context.l10n.nodeInfoPosition,
                   child: SizedBox(
-                    height: 40,
-                    child: OutlinedButton.icon(
-                      onPressed: () => _exchangePositions(context, ref),
-                      icon: const Icon(Icons.swap_horiz, size: 18),
-                      label: Text(
-                        context.l10n.nodeInfoPosition,
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: context.accentColor,
-                        side: BorderSide(
-                          color: context.accentColor.withValues(alpha: 0.5),
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppTheme.radius8),
+                    width: 36,
+                    height: 36,
+                    child: Material(
+                      color: context.background,
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
+                      child: InkWell(
+                        onTap: () => _confirmAndExchangePositions(context, ref),
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
+                        child: Center(
+                          child: Icon(
+                            Icons.swap_horiz,
+                            size: 18,
+                            color: context.accentColor,
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
                 const SizedBox(width: AppTheme.spacing8),
-                Flexible(
+                Tooltip(
+                  message: context.l10n.nodeInfoMessage,
                   child: SizedBox(
-                    height: 40,
-                    child: ElevatedButton.icon(
-                      onPressed: onMessage,
-                      icon: const Icon(Icons.message, size: 18),
-                      label: Text(
-                        context.l10n.nodeInfoMessage,
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: context.accentColor,
-                        foregroundColor: SemanticColors.onAccent,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppTheme.radius8),
+                    width: 36,
+                    height: 36,
+                    child: Material(
+                      color: context.accentColor,
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
+                      child: InkWell(
+                        onTap: onMessage,
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
+                        child: const Center(
+                          child: Icon(
+                            Icons.message,
+                            size: 18,
+                            color: SemanticColors.onAccent,
+                          ),
                         ),
                       ),
                     ),
@@ -511,20 +548,23 @@ class NodeInfoCard extends ConsumerWidget {
               if (onShareLocation != null) ...[
                 if (!isMyNode && onMessage != null)
                   const SizedBox(width: AppTheme.spacing8),
-                SizedBox(
-                  width: 36,
-                  height: 36,
-                  child: Material(
-                    color: context.background,
-                    borderRadius: BorderRadius.circular(AppTheme.radius8),
-                    child: InkWell(
-                      onTap: onShareLocation,
+                Tooltip(
+                  message: context.l10n.nodeInfoShareLocation,
+                  child: SizedBox(
+                    width: 36,
+                    height: 36,
+                    child: Material(
+                      color: context.background,
                       borderRadius: BorderRadius.circular(AppTheme.radius8),
-                      child: Center(
-                        child: Icon(
-                          Icons.share,
-                          size: 18,
-                          color: context.textSecondary,
+                      child: InkWell(
+                        onTap: () => _confirmShare(context),
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
+                        child: Center(
+                          child: Icon(
+                            Icons.share,
+                            size: 18,
+                            color: context.textSecondary,
+                          ),
                         ),
                       ),
                     ),
@@ -534,20 +574,23 @@ class NodeInfoCard extends ConsumerWidget {
               if (onCopyCoordinates != null) ...[
                 if (onShareLocation != null || (!isMyNode && onMessage != null))
                   const SizedBox(width: AppTheme.spacing8),
-                SizedBox(
-                  width: 36,
-                  height: 36,
-                  child: Material(
-                    color: context.background,
-                    borderRadius: BorderRadius.circular(AppTheme.radius8),
-                    child: InkWell(
-                      onTap: onCopyCoordinates,
+                Tooltip(
+                  message: context.l10n.nodeInfoCopyCoordinates,
+                  child: SizedBox(
+                    width: 36,
+                    height: 36,
+                    child: Material(
+                      color: context.background,
                       borderRadius: BorderRadius.circular(AppTheme.radius8),
-                      child: Center(
-                        child: Icon(
-                          Icons.copy,
-                          size: 18,
-                          color: context.textSecondary,
+                      child: InkWell(
+                        onTap: onCopyCoordinates,
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
+                        child: Center(
+                          child: Icon(
+                            Icons.copy,
+                            size: 18,
+                            color: context.textSecondary,
+                          ),
                         ),
                       ),
                     ),
@@ -565,7 +608,7 @@ class NodeInfoCard extends ConsumerWidget {
                       color: context.background,
                       borderRadius: BorderRadius.circular(AppTheme.radius8),
                       child: InkWell(
-                        onTap: onTraceroute,
+                        onTap: () => _confirmTraceroute(context),
                         borderRadius: BorderRadius.circular(AppTheme.radius8),
                         child: Center(
                           child: Icon(

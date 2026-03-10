@@ -4,6 +4,7 @@ import 'dart:ui' show PlatformDispatcher;
 
 import 'package:socialmesh/l10n/app_localizations.dart';
 import 'package:uuid/uuid.dart';
+import 'package:socialmesh/l10n/l10n_utils.dart';
 
 /// Message tapback reaction
 enum TapbackType {
@@ -96,7 +97,7 @@ class TapbackConfig {
 /// Default tapback configurations matching Meshtastic iOS
 class DefaultTapbacks {
   static List<TapbackConfig> get all {
-    final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    final l10n = safeL10n();
     return [
       TapbackConfig(
         id: 'default_wave',

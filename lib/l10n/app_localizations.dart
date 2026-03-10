@@ -6316,6 +6316,54 @@ abstract class AppLocalizations {
   /// **'Traceroute History'**
   String get nodeInfoViewHistory;
 
+  /// Tooltip for the share location icon button on the node info card.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Location'**
+  String get nodeInfoShareLocation;
+
+  /// Tooltip for the copy coordinates icon button on the node info card.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Coordinates'**
+  String get nodeInfoCopyCoordinates;
+
+  /// Title of the confirmation sheet before requesting a position exchange.
+  ///
+  /// In en, this message translates to:
+  /// **'Request Position'**
+  String get nodeInfoPositionConfirmTitle;
+
+  /// Body of the confirmation sheet before requesting a position exchange.
+  ///
+  /// In en, this message translates to:
+  /// **'Request {name}\'s current position over the mesh?'**
+  String nodeInfoPositionConfirmMessage(String name);
+
+  /// Title of the confirmation sheet before sharing a node's location.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Location'**
+  String get nodeInfoShareConfirmTitle;
+
+  /// Body of the confirmation sheet before sharing a node's location.
+  ///
+  /// In en, this message translates to:
+  /// **'Share this node\'s coordinates as a link?'**
+  String get nodeInfoShareConfirmMessage;
+
+  /// Title of the confirmation sheet before sending a traceroute.
+  ///
+  /// In en, this message translates to:
+  /// **'Send Traceroute'**
+  String get nodeInfoTracerouteConfirmTitle;
+
+  /// Body of the confirmation sheet before sending a traceroute.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a traceroute packet to {name}? This uses mesh airtime.'**
+  String nodeInfoTracerouteConfirmMessage(String name);
+
   /// Empty state text when no binding variables match the search.
   ///
   /// In en, this message translates to:

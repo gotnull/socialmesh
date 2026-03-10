@@ -112,6 +112,14 @@ class AppIntentsService {
         return _handleRunAutomation(args);
       case 'listAutomations':
         return _handleListAutomations();
+      case 'shutdownNode':
+        return _handleShutdownNode();
+      case 'restartNode':
+        return _handleRestartNode();
+      case 'disconnectNode':
+        return _handleDisconnectNode();
+      case 'sendTraceroute':
+        return _handleSendTraceroute(args);
       default:
         throw Exception('Unknown intent: $intentName');
     }
@@ -321,6 +329,51 @@ class AppIntentsService {
         .toList();
 
     return {'automations': automationList};
+  }
+
+  Future<Map<String, dynamic>?> _handleShutdownNode() async {
+    final transport = _ref.read(transportProvider);
+    if (!transport.isConnected) {
+      throw Exception('Not connected to a node');
+    }
+    final protocol = _ref.read(protocolServiceProvider);
+    await protocol.shutdown();
+    return {'sent': true};
+  }
+
+  Future<Map<String, dynamic>?> _handleRestartNode() async {
+    final transport = _ref.read(transportProvider);
+    if (!transport.isConnected) {
+      throw Exception('Not connected to a node');
+    }
+    final protocol = _ref.read(protocolServiceProvider);
+    await protocol.reboot();
+    return {'sent': true};
+  }
+
+  Future<Map<String, dynamic>?> _handleDisconnectNode() async {
+    final transport = _ref.read(transportProvider);
+    if (!transport.isConnected) {
+      throw Exception('Not connected to a node');
+    }
+    await transport.disconnect();
+    return {'disconnected': true};
+  }
+
+  Future<Map<String, dynamic>?> _handleSendTraceroute(
+    Map<Object?, Object?> args,
+  ) async {
+    final nodeNum = args['nodeNum'] as int?;
+    if (nodeNum == null) {
+      throw Exception('Missing nodeNum');
+    }
+    final transport = _ref.read(transportProvider);
+    if (!transport.isConnected) {
+      throw Exception('Not connected to a node');
+    }
+    final protocol = _ref.read(protocolServiceProvider);
+    await protocol.sendTraceroute(nodeNum);
+    return {'sent': true};
   }
 
   Future<void> _sendResult(

@@ -46,6 +46,7 @@ import '../services/progressive_disclosure.dart';
 import '../services/sigil_generator.dart';
 import '../services/trait_engine.dart';
 import '../services/trust_score.dart';
+import 'package:socialmesh/l10n/l10n_utils.dart';
 
 // =============================================================================
 // Storage Provider
@@ -1183,7 +1184,7 @@ Future<List<NodeActivityEvent>> _buildTimeline(Ref ref, int nodeNum) async {
   if (entry != null) {
     events.addAll(_groupEncounters(entry.encounters));
 
-    final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    final l10n = safeL10n();
 
     // 2. First-seen milestone.
     events.add(
