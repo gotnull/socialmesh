@@ -595,8 +595,12 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
   bool _playingSelected = false;
   int _libraryToneCount = 0; // Total tones in the library
 
-  /// Maximum RTTTL string length supported by Meshtastic devices
-  static const int _maxRtttlLength = 230;
+  /// Maximum RTTTL string length supported by Meshtastic devices.
+  /// The firmware allocates a 228-byte buffer for the ringtone field
+  /// (see Meshtastic AdminModule); strings longer than 228 bytes are
+  /// silently truncated by the device, which can corrupt the RTTTL
+  /// and cause the buzzer to produce no sound at all.
+  static const int _maxRtttlLength = 228;
 
   /// Validate RTTTL format
   /// Returns null if valid, error message if invalid
@@ -2176,7 +2180,7 @@ class _AddCustomRingtoneContentState extends State<_AddCustomRingtoneContent> {
             label: context.l10n.ringtoneAddCustomRtttl,
             hint: '24:d=4,o=5,b=120:c,e,g',
             maxLines: 3,
-            maxLength: 230,
+            maxLength: 228,
             monospace: true,
             errorText: _error,
             onChanged: (value) {

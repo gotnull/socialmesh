@@ -80,7 +80,10 @@ class RtttlLibraryItem {
 /// Service for loading and searching RTTTL tones from the JSON library
 class RtttlLibraryService {
   static const _jsonPath = 'assets/rtttl_library.json';
-  static const int maxRtttlLength = 230;
+
+  /// Maximum RTTTL string length supported by Meshtastic devices.
+  /// Constrained to 228 bytes to match the firmware's buffer allocation.
+  static const int maxRtttlLength = 228;
 
   List<RtttlLibraryItem>? _cachedTones;
   bool _loaded = false;
