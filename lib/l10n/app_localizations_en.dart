@@ -6186,25 +6186,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get legalEligibilityBody =>
-      'Socialmesh is intended for people aged 16 or older. You must confirm you are 16+ to continue.';
+      'This helps us apply the right privacy settings. Your age range is not shared with other users.';
 
   @override
-  String get legalEligibilityConfirmButton => 'I Am 16 or Older';
+  String get legalEligibilityConfirmButton => 'Continue';
 
   @override
   String get legalEligibilityConfirmSemantics =>
-      'I am 16 or older. Tap to confirm and continue.';
+      'Continue. Tap to confirm your age selection and proceed.';
 
   @override
   String get legalEligibilityExitBody =>
-      'You must confirm you are 16 or older to use Socialmesh. You can confirm whenever you are ready.';
+      'You must confirm your age to use Socialmesh. You can confirm whenever you are ready.';
 
   @override
   String get legalEligibilityExitButton => 'Exit';
 
   @override
   String get legalEligibilityExitSemantics =>
-      'Exit. You must be 16 or older to use Socialmesh.';
+      'Exit. You must confirm your age to use Socialmesh.';
 
   @override
   String get legalEligibilityExitTitle => 'Age Confirmation Required';
@@ -6231,13 +6231,47 @@ class AppLocalizationsEn extends AppLocalizations {
   String get legalEligibilityTermsLink => 'Terms';
 
   @override
-  String get legalEligibilityTitle => 'Ages 16+';
+  String get legalEligibilityTitle => 'Age Confirmation';
 
   @override
   String get legalEligibilityViewPrivacySemantics => 'View Privacy Policy';
 
   @override
   String get legalEligibilityViewTermsSemantics => 'View Terms of Service';
+
+  @override
+  String get legalEligibilityAgePrompt => 'Select your age range to continue.';
+
+  @override
+  String get legalEligibilityOptionUnder13 => 'Under 13';
+
+  @override
+  String get legalEligibilityOptionUnder13Subtitle => 'App not available';
+
+  @override
+  String get legalEligibilityOptionTeen => '13 to 17';
+
+  @override
+  String get legalEligibilityOptionTeenSubtitle =>
+      'Privacy-enhanced settings apply';
+
+  @override
+  String get legalEligibilityOptionAdult => '18 or Older';
+
+  @override
+  String get settingsAgeGroupTitle => 'Age Group';
+
+  @override
+  String get settingsAgeGroupSubtitleUnknown => 'Not set';
+
+  @override
+  String get settingsAgeGroupSubtitleUnder13 => 'Under 13';
+
+  @override
+  String get settingsAgeGroupSubtitleTeen => '13 to 17';
+
+  @override
+  String get settingsAgeGroupSubtitleAdult => '18 or older';
 
   @override
   String get lilygoModelPriceUnavailable => 'Price unavailable';

@@ -15,6 +15,8 @@ import '../../config/revenuecat_config.dart';
 import '../../core/transport.dart' show DeviceConnectionState;
 import '../../models/user_profile.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/age_eligibility_provider.dart';
+import '../../core/legal/age_group.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/profile_providers.dart';
 // import '../../providers/social_providers.dart';
@@ -309,6 +311,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               builder: (_) => const AccountSubscriptionsScreen(),
             ),
           ),
+        ),
+
+        // Age Group
+        _SearchableSettingItem(
+          icon: Icons.cake_outlined,
+          title: context.l10n.settingsAgeGroupTitle,
+          subtitle: context.l10n.settingsAgeGroupSubtitleUnknown,
+          keywords: ['age', 'minor', 'teen', 'adult', 'eligibility', 'safety'],
+          section: context.l10n.settingsSectionAccount,
         ),
 
         // Social Notifications
@@ -1950,6 +1961,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
+
+                          _AgeGroupTile(),
 
                           // _FollowRequestsTile()
 
@@ -4370,6 +4383,78 @@ class _SocialNotificationsSectionState
           ),
         ),
       ],
+    );
+  }
+}
+
+class _AgeGroupTile extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final policy = ref.watch(ageSafetyPolicyProvider);
+    final subtitle = switch (policy.ageGroup) {
+      AgeGroup.under13 => context.l10n.settingsAgeGroupSubtitleUnder13,
+      AgeGroup.teen => context.l10n.settingsAgeGroupSubtitleTeen,
+      AgeGroup.adult => context.l10n.settingsAgeGroupSubtitleAdult,
+      AgeGroup.unknown => context.l10n.settingsAgeGroupSubtitleUnknown,
+    };
+
+    return _SettingsTile(
+      icon: Icons.cake_outlined,
+      title: context.l10n.settingsAgeGroupTitle,
+      subtitle: subtitle,
+      trailing: Icon(Icons.chevron_right, color: context.textTertiary),
+      onTap: () {
+        final notifier = ref.read(ageEligibilityProvider.notifier);
+        AppBottomSheet.showPicker<AgeGroup>(
+          context: context,
+          title: context.l10n.settingsAgeGroupTitle,
+          items: const [AgeGroup.teen, AgeGroup.adult],
+          selectedItem:
+              policy.ageGroup == AgeGroup.unknown ||
+                  policy.ageGroup == AgeGroup.under13
+              ? null
+              : policy.ageGroup,
+          itemBuilder: (group, isSelected) {
+            final label = switch (group) {
+              AgeGroup.teen => context.l10n.legalEligibilityOptionTeen,
+              AgeGroup.adult => context.l10n.legalEligibilityOptionAdult,
+              AgeGroup.under13 || AgeGroup.unknown => '',
+            };
+            final groupSubtitle = switch (group) {
+              AgeGroup.teen => context.l10n.legalEligibilityOptionTeenSubtitle,
+              AgeGroup.adult || AgeGroup.under13 || AgeGroup.unknown => '',
+            };
+            return ListTile(
+              leading: Icon(
+                isSelected
+                    ? Icons.radio_button_checked
+                    : Icons.radio_button_unchecked,
+                color: isSelected ? context.accentColor : context.textTertiary,
+              ),
+              title: Text(
+                label,
+                style: TextStyle(
+                  color: context.textPrimary,
+                  fontFamily: AppTheme.fontFamily,
+                ),
+              ),
+              subtitle: groupSubtitle.isNotEmpty
+                  ? Text(
+                      groupSubtitle,
+                      style: TextStyle(
+                        color: context.textTertiary,
+                        fontSize: 12,
+                      ),
+                    )
+                  : null,
+            );
+          },
+        ).then((selected) {
+          if (selected != null) {
+            notifier.confirm(ageGroup: selected);
+          }
+        });
+      },
     );
   }
 }

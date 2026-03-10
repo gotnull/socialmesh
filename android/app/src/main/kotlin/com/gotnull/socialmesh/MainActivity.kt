@@ -14,6 +14,8 @@ class MainActivity : FlutterActivity() {
         super.configureFlutterEngine(flutterEngine)
         // Register GlyphMatrix plugin for Nothing Phone 3
         flutterEngine.plugins.add(GlyphMatrixPlugin())
+        // Register age signal plugin (scaffold — returns unknown until SDK wired)
+        flutterEngine.plugins.add(AgeSignalPlugin())
         
         // Register settings method channel
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, SETTINGS_CHANNEL).setMethodCallHandler { call, result ->

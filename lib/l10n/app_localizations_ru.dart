@@ -6237,6 +6237,40 @@ class AppLocalizationsRu extends AppLocalizations {
   String get legalEligibilityViewTermsSemantics => 'View Terms of Service';
 
   @override
+  String get legalEligibilityAgePrompt => 'Select your age range to continue.';
+
+  @override
+  String get legalEligibilityOptionUnder13 => 'Under 13';
+
+  @override
+  String get legalEligibilityOptionUnder13Subtitle => 'App not available';
+
+  @override
+  String get legalEligibilityOptionTeen => '13 to 17';
+
+  @override
+  String get legalEligibilityOptionTeenSubtitle =>
+      'Privacy-enhanced settings apply';
+
+  @override
+  String get legalEligibilityOptionAdult => '18 or Older';
+
+  @override
+  String get settingsAgeGroupTitle => 'Age Group';
+
+  @override
+  String get settingsAgeGroupSubtitleUnknown => 'Not set';
+
+  @override
+  String get settingsAgeGroupSubtitleUnder13 => 'Under 13';
+
+  @override
+  String get settingsAgeGroupSubtitleTeen => '13 to 17';
+
+  @override
+  String get settingsAgeGroupSubtitleAdult => '18 or older';
+
+  @override
   String get lilygoModelPriceUnavailable => 'Price unavailable';
 
   @override

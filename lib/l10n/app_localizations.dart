@@ -11039,25 +11039,25 @@ abstract class AppLocalizations {
   /// Body text explaining the age requirement and that confirmation is needed to proceed
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh is intended for people aged 16 or older. You must confirm you are 16+ to continue.'**
+  /// **'This helps us apply the right privacy settings. Your age range is not shared with other users.'**
   String get legalEligibilityBody;
 
-  /// Primary action button confirming the user meets the minimum age requirement to use the app
+  /// Primary action button that confirms the user's age selection and proceeds into the app
   ///
   /// In en, this message translates to:
-  /// **'I Am 16 or Older'**
+  /// **'Continue'**
   String get legalEligibilityConfirmButton;
 
   /// Semantics label for the confirm button on the eligibility gate screen
   ///
   /// In en, this message translates to:
-  /// **'I am 16 or older. Tap to confirm and continue.'**
+  /// **'Continue. Tap to confirm your age selection and proceed.'**
   String get legalEligibilityConfirmSemantics;
 
   /// Explanation shown on iOS when user taps Exit, since iOS cannot force-quit; informs them they can return and confirm later
   ///
   /// In en, this message translates to:
-  /// **'You must confirm you are 16 or older to use Socialmesh. You can confirm whenever you are ready.'**
+  /// **'You must confirm your age to use Socialmesh. You can confirm whenever you are ready.'**
   String get legalEligibilityExitBody;
 
   /// Secondary button to exit the app if the user does not meet the age requirement
@@ -11069,7 +11069,7 @@ abstract class AppLocalizations {
   /// Semantics label for the exit button on the eligibility gate screen
   ///
   /// In en, this message translates to:
-  /// **'Exit. You must be 16 or older to use Socialmesh.'**
+  /// **'Exit. You must confirm your age to use Socialmesh.'**
   String get legalEligibilityExitSemantics;
 
   /// Title shown on the iOS exit explanation screen when user taps Exit
@@ -11120,10 +11120,10 @@ abstract class AppLocalizations {
   /// **'Terms'**
   String get legalEligibilityTermsLink;
 
-  /// Title on the age eligibility gate screen indicating the minimum age requirement
+  /// Title on the age eligibility gate screen
   ///
   /// In en, this message translates to:
-  /// **'Ages 16+'**
+  /// **'Age Confirmation'**
   String get legalEligibilityTitle;
 
   /// Semantics label for the Privacy Policy link on the eligibility gate screen
@@ -11137,6 +11137,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'View Terms of Service'**
   String get legalEligibilityViewTermsSemantics;
+
+  /// Prompt above the age range selector on the eligibility gate screen
+  ///
+  /// In en, this message translates to:
+  /// **'Select your age range to continue.'**
+  String get legalEligibilityAgePrompt;
+
+  /// Age range option: under 13 years old
+  ///
+  /// In en, this message translates to:
+  /// **'Under 13'**
+  String get legalEligibilityOptionUnder13;
+
+  /// Subtitle shown beneath the Under 13 age range option
+  ///
+  /// In en, this message translates to:
+  /// **'App not available'**
+  String get legalEligibilityOptionUnder13Subtitle;
+
+  /// Age range option: 13 to 17 years old
+  ///
+  /// In en, this message translates to:
+  /// **'13 to 17'**
+  String get legalEligibilityOptionTeen;
+
+  /// Subtitle shown beneath the 13 to 17 age range option
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy-enhanced settings apply'**
+  String get legalEligibilityOptionTeenSubtitle;
+
+  /// Age range option: 18 years or older
+  ///
+  /// In en, this message translates to:
+  /// **'18 or Older'**
+  String get legalEligibilityOptionAdult;
+
+  /// Title for the age group tile in Settings
+  ///
+  /// In en, this message translates to:
+  /// **'Age Group'**
+  String get settingsAgeGroupTitle;
+
+  /// Subtitle when the user has not yet selected an age group
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get settingsAgeGroupSubtitleUnknown;
+
+  /// Subtitle showing the Under 13 age group in Settings
+  ///
+  /// In en, this message translates to:
+  /// **'Under 13'**
+  String get settingsAgeGroupSubtitleUnder13;
+
+  /// Subtitle showing the 13 to 17 age group in Settings
+  ///
+  /// In en, this message translates to:
+  /// **'13 to 17'**
+  String get settingsAgeGroupSubtitleTeen;
+
+  /// Subtitle showing the 18+ age group in Settings
+  ///
+  /// In en, this message translates to:
+  /// **'18 or older'**
+  String get settingsAgeGroupSubtitleAdult;
 
   /// UI text: lilygo model price unavailable
   ///

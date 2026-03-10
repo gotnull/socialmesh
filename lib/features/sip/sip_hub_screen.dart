@@ -34,6 +34,7 @@ import '../../features/nodes/node_display_name_resolver.dart';
 import '../../models/mesh_models.dart';
 import '../../core/constants.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/age_eligibility_provider.dart';
 import '../../providers/help_providers.dart';
 import '../../providers/sip_providers.dart';
 import '../../services/haptic_service.dart';
@@ -455,11 +456,15 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
     List<SipDmSession> sessions,
     List<int> pendingRequestNodeIds,
   ) {
+    final shouldRestrict = ref
+        .read(ageSafetyPolicyProvider)
+        .shouldRestrictUnsolicitedContact;
     return [
       const SliverToBoxAdapter(child: SizedBox(height: AppTheme.spacing8)),
 
-      // Incoming handshake requests — shown first, require user action
-      if (pendingRequestNodeIds.isNotEmpty) ...[
+      // Incoming handshake requests — shown first, require user action.
+      // Hidden when user is a confirmed minor (contact restriction).
+      if (pendingRequestNodeIds.isNotEmpty && !shouldRestrict) ...[
         SliverPersistentHeader(
           pinned: true,
           delegate: SectionHeaderDelegate(

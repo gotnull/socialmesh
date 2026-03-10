@@ -440,14 +440,28 @@ class SettingsService {
   String? get termsAcceptedBuild =>
       _preferences.getString('terms_accepted_build');
 
-  // Age eligibility confirmation (16+)
-  Future<void> setAgeEligibilityConfirmed({required int policyVersion}) async {
+  // Age eligibility confirmation (18+)
+  Future<void> setAgeEligibilityConfirmed({
+    required int policyVersion,
+    required String ageGroupName,
+    String ageSource = 'selfAttestation',
+  }) async {
     await _preferences.setBool('age_eligibility_confirmed', true);
     await _preferences.setString(
       'age_eligibility_confirmed_at',
       DateTime.now().toUtc().toIso8601String(),
     );
     await _preferences.setInt('age_eligibility_policy_version', policyVersion);
+    await _preferences.setString('age_eligibility_age_group', ageGroupName);
+    await _preferences.setString('age_eligibility_age_source', ageSource);
+  }
+
+  /// Clear age-eligibility confirmation so the gate re-appears.
+  Future<void> clearAgeEligibility() async {
+    await _preferences.setBool('age_eligibility_confirmed', false);
+    await _preferences.setInt('age_eligibility_policy_version', 0);
+    await _preferences.setString('age_eligibility_age_group', 'unknown');
+    await _preferences.setString('age_eligibility_age_source', 'unknown');
   }
 
   bool get ageEligibilityConfirmed =>
@@ -458,6 +472,12 @@ class SettingsService {
 
   int get ageEligibilityPolicyVersion =>
       _preferences.getInt('age_eligibility_policy_version') ?? 0;
+
+  String? get ageEligibilityAgeGroupName =>
+      _preferences.getString('age_eligibility_age_group');
+
+  String? get ageEligibilityAgeSourceName =>
+      _preferences.getString('age_eligibility_age_source');
 
   // Canned responses
   Future<void> setCannedResponses(List<CannedResponse> responses) async {

@@ -23,6 +23,7 @@ import '../../features/nodedex/services/trait_engine.dart';
 import '../../features/nodedex/widgets/sigil_painter.dart';
 import '../../features/nodes/node_display_name_resolver.dart';
 import '../../models/mesh_models.dart';
+import '../../providers/age_eligibility_provider.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/sip_providers.dart';
 import '../../services/haptic_service.dart';
@@ -332,6 +333,12 @@ class _HandshakeButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final hsState = ref.watch(sipHandshakeStateProvider(peer.nodeId));
+    final policy = ref.watch(ageSafetyPolicyProvider);
+
+    // Minor contact restriction: disable handshake initiation entirely.
+    if (policy.shouldRestrictUnsolicitedContact) {
+      return const SizedBox.shrink();
+    }
 
     final (label, icon, enabled) = switch (hsState) {
       SipHandshakeState.idle => (

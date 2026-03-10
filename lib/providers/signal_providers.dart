@@ -12,6 +12,7 @@ import '../services/notifications/push_notification_service.dart';
 import '../services/protocol/protocol_service.dart';
 import '../services/signal_service.dart';
 import '../utils/location_privacy.dart';
+import 'age_eligibility_provider.dart';
 import 'app_lifecycle_provider.dart';
 import 'app_providers.dart';
 import 'auth_providers.dart';
@@ -680,8 +681,10 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
         .canUseCloud;
     final meshOnlyDebug = ref.read(meshOnlyDebugModeProvider);
     final canUseCloud = (useCloud ?? detectedCanUseCloud) && !meshOnlyDebug;
-    final safeLocation = LocationPrivacy.coarsenLocation(
+    final policy = ref.read(ageSafetyPolicyProvider);
+    final safeLocation = LocationPrivacy.coarsenForPolicy(
       location,
+      policy,
       radiusMeters: settings.signalLocationRadiusMeters,
     );
 

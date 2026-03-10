@@ -4392,9 +4392,21 @@ class ProtocolService {
     _sipCounters?.recordHandshakeInitiated();
 
     // Show a notification prompting the user to respond.
-    // Gated on master + DM notification preferences.
+    // Gated on master + DM notification preferences + minor contact restriction.
     () async {
       final prefs = await SharedPreferences.getInstance();
+
+      // Minor contact restriction: confirmed teen/under-13 users should not
+      // receive unsolicited handshake requests. Auto-decline silently.
+      final ageGroup = prefs.getString('age_eligibility_age_group') ?? '';
+      if (ageGroup == 'under13' || ageGroup == 'teen') {
+        AppLogging.sip(
+          'SIP_HS: suppressing incoming HS_HELLO — minor contact restriction',
+        );
+        hs.declineHandshake(senderNodeId);
+        return;
+      }
+
       if (!(prefs.getBool('notifications_enabled') ?? true)) return;
       if (!(prefs.getBool('dm_notifications_enabled') ?? true)) return;
       final peerName =

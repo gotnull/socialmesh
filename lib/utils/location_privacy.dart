@@ -2,9 +2,17 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:math';
 
+import '../core/legal/age_safety_policy.dart';
 import '../models/social.dart';
 
 const int kDefaultSignalLocationRadiusMeters = 250;
+
+/// Location blur radius applied when [AgeSafetyPolicy.shouldHidePreciseLocation]
+/// is true (minor users). Four times the default radius produces an area that
+/// is ~16× larger, which prevents street-level resolution while still
+/// allowing city-level context.
+const int kMinorSignalLocationRadiusMeters = 1000;
+
 const double _metersPerDegreeLat = 111320.0;
 
 class LocationPrivacy {
@@ -47,6 +55,48 @@ class LocationPrivacy {
       longitude: quantized.longitude,
       name: location.name,
     );
+  }
+
+  /// Coarsen [location] using radius settings appropriate for the user's
+  /// [AgeSafetyPolicy].
+  ///
+  /// When [policy.shouldHidePreciseLocation] is true the effective radius is
+  /// the larger of [minorRadiusMeters] and [radiusMeters], ensuring that minor
+  /// users always receive a minimum blur regardless of their settings.
+  static PostLocation? coarsenForPolicy(
+    PostLocation? location,
+    AgeSafetyPolicy policy, {
+    int radiusMeters = kDefaultSignalLocationRadiusMeters,
+    int minorRadiusMeters = kMinorSignalLocationRadiusMeters,
+  }) {
+    if (location == null) return null;
+    final effective = policy.shouldHidePreciseLocation
+        ? minorRadiusMeters > radiusMeters
+              ? minorRadiusMeters
+              : radiusMeters
+        : radiusMeters;
+    return coarsenLocation(location, radiusMeters: effective);
+  }
+
+  /// Coarsen raw latitude/longitude pair according to [policy].
+  ///
+  /// Returns $1 the input values unchanged when the user is an adult, or
+  /// $2 quantized values when [policy.shouldHidePreciseLocation] is true.
+  /// Used by map share/copy actions that work with raw coordinates.
+  static ({double latitude, double longitude}) coarsenCoordsForPolicy(
+    double latitude,
+    double longitude,
+    AgeSafetyPolicy policy, {
+    int radiusMeters = kDefaultSignalLocationRadiusMeters,
+    int minorRadiusMeters = kMinorSignalLocationRadiusMeters,
+  }) {
+    final effective = policy.shouldHidePreciseLocation
+        ? minorRadiusMeters > radiusMeters
+              ? minorRadiusMeters
+              : radiusMeters
+        : radiusMeters;
+    final q = _quantizeLatLon(latitude, longitude, effective);
+    return (latitude: q.latitude, longitude: q.longitude);
   }
 
   static _QuantizedLatLon _quantizeLatLon(

@@ -8097,19 +8097,19 @@
   "@legalAcceptanceViewTermsSemantics": {
     "description": "Semantics label for the Terms of Service link on the legal acceptance screen"
   },
-  "legalEligibilityBody": "O Socialmesh é destinado a pessoas com 16 anos ou mais. Você deve confirmar que tem 16+ anos para continuar.",
+  "legalEligibilityBody": "Isso nos ajuda a aplicar as configurações de privacidade corretas. Sua faixa etária não é compartilhada com outros usuários.",
   "@legalEligibilityBody": {
     "description": "Body text explaining the age requirement and that confirmation is needed to proceed"
   },
-  "legalEligibilityConfirmButton": "Tenho 16 anos ou mais",
+  "legalEligibilityConfirmButton": "Continuar",
   "@legalEligibilityConfirmButton": {
-    "description": "Primary action button confirming the user meets the minimum age requirement to use the app"
+    "description": "Primary action button that confirms the user's age selection and proceeds into the app"
   },
-  "legalEligibilityConfirmSemantics": "Tenho 16 anos ou mais. Toque para confirmar e continuar.",
+  "legalEligibilityConfirmSemantics": "Continuar. Toque para confirmar sua seleção de idade e prosseguir.",
   "@legalEligibilityConfirmSemantics": {
     "description": "Semantics label for the confirm button on the eligibility gate screen"
   },
-  "legalEligibilityExitBody": "Você deve confirmar que tem 16 anos ou mais para usar o Socialmesh. Você pode confirmar quando quiser.",
+  "legalEligibilityExitBody": "Você deve confirmar sua idade para usar o Socialmesh. Você pode confirmar quando quiser.",
   "@legalEligibilityExitBody": {
     "description": "Explanation shown on iOS when user taps Exit, since iOS cannot force-quit; informs them they can return and confirm later"
   },
@@ -8117,7 +8117,7 @@
   "@legalEligibilityExitButton": {
     "description": "Secondary button to exit the app if the user does not meet the age requirement"
   },
-  "legalEligibilityExitSemantics": "Sair. Você deve ter 16 anos ou mais para usar o Socialmesh.",
+  "legalEligibilityExitSemantics": "Sair. Você deve confirmar sua idade para usar o Socialmesh.",
   "@legalEligibilityExitSemantics": {
     "description": "Semantics label for the exit button on the eligibility gate screen"
   },
@@ -8153,9 +8153,9 @@
   "@legalEligibilityTermsLink": {
     "description": "Tappable link text to view the Terms of Service from the eligibility gate"
   },
-  "legalEligibilityTitle": "Idade 16+",
+  "legalEligibilityTitle": "Confirmação de Idade",
   "@legalEligibilityTitle": {
-    "description": "Title on the age eligibility gate screen indicating the minimum age requirement"
+    "description": "Title on the age eligibility gate screen"
   },
   "legalEligibilityViewPrivacySemantics": "Ver Política de Privacidade",
   "@legalEligibilityViewPrivacySemantics": {
@@ -8164,6 +8164,50 @@
   "legalEligibilityViewTermsSemantics": "Ver Termos de Serviço",
   "@legalEligibilityViewTermsSemantics": {
     "description": "Semantics label for the Terms of Service link on the eligibility gate screen"
+  },
+  "legalEligibilityAgePrompt": "Selecione sua faixa etária para continuar.",
+  "@legalEligibilityAgePrompt": {
+    "description": "Prompt above the age range selector on the eligibility gate screen"
+  },
+  "legalEligibilityOptionUnder13": "Menos de 13",
+  "@legalEligibilityOptionUnder13": {
+    "description": "Age range option: under 13 years old"
+  },
+  "legalEligibilityOptionUnder13Subtitle": "Aplicativo não disponível",
+  "@legalEligibilityOptionUnder13Subtitle": {
+    "description": "Subtitle shown beneath the Under 13 age range option"
+  },
+  "legalEligibilityOptionTeen": "13 a 17",
+  "@legalEligibilityOptionTeen": {
+    "description": "Age range option: 13 to 17 years old"
+  },
+  "legalEligibilityOptionTeenSubtitle": "Configurações de privacidade aprimoradas serão aplicadas",
+  "@legalEligibilityOptionTeenSubtitle": {
+    "description": "Subtitle shown beneath the 13 to 17 age range option"
+  },
+  "legalEligibilityOptionAdult": "18 anos ou mais",
+  "@legalEligibilityOptionAdult": {
+    "description": "Age range option: 18 years or older"
+  },
+  "settingsAgeGroupTitle": "Faixa Etária",
+  "@settingsAgeGroupTitle": {
+    "description": "Title for the age group tile in Settings"
+  },
+  "settingsAgeGroupSubtitleUnknown": "Não definido",
+  "@settingsAgeGroupSubtitleUnknown": {
+    "description": "Subtitle when the user has not yet selected an age group"
+  },
+  "settingsAgeGroupSubtitleUnder13": "Menor de 13",
+  "@settingsAgeGroupSubtitleUnder13": {
+    "description": "Subtitle showing the Under 13 age group in Settings"
+  },
+  "settingsAgeGroupSubtitleTeen": "13 a 17",
+  "@settingsAgeGroupSubtitleTeen": {
+    "description": "Subtitle showing the 13 to 17 age group in Settings"
+  },
+  "settingsAgeGroupSubtitleAdult": "18 anos ou mais",
+  "@settingsAgeGroupSubtitleAdult": {
+    "description": "Subtitle showing the 18+ age group in Settings"
   },
   "lilygoModelPriceUnavailable": "Preço indisponível",
   "@lilygoModelPriceUnavailable": {

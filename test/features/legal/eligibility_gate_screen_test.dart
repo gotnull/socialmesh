@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:socialmesh/core/legal/age_eligibility_state.dart';
+import 'package:socialmesh/core/legal/age_group.dart';
 import 'package:socialmesh/core/legal/legal_constants.dart';
 import 'package:socialmesh/features/legal/eligibility_gate_screen.dart';
 import 'package:socialmesh/l10n/app_localizations.dart';
@@ -45,21 +46,43 @@ void main() {
       await tester.pumpWidget(_buildTestApp());
       await tester.pumpAndSettle();
 
-      expect(find.text('Ages 16+'), findsOneWidget);
+      expect(find.text('Age Confirmation'), findsOneWidget);
     });
 
-    testWidgets('shows body text', (tester) async {
+    testWidgets('shows age range options', (tester) async {
       await tester.pumpWidget(_buildTestApp());
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('16 or older'), findsWidgets);
+      expect(find.text('Under 13'), findsOneWidget);
+      expect(find.text('13 to 17'), findsOneWidget);
+      expect(find.text('18 or Older'), findsOneWidget);
     });
 
-    testWidgets('shows confirm button', (tester) async {
+    testWidgets('shows Continue button disabled with no selection', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildTestApp());
       await tester.pumpAndSettle();
 
-      expect(find.text('I Am 16 or Older'), findsOneWidget);
+      final continueButton = tester.widget<FilledButton>(
+        find.byType(FilledButton).first,
+      );
+      expect(continueButton.onPressed, isNull);
+    });
+
+    testWidgets('Continue button enables after selecting adult', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_buildTestApp());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('18 or Older'));
+      await tester.pumpAndSettle();
+
+      final continueButton = tester.widget<FilledButton>(
+        find.byType(FilledButton).first,
+      );
+      expect(continueButton.onPressed, isNotNull);
     });
 
     testWidgets('shows exit button', (tester) async {
@@ -90,9 +113,8 @@ void main() {
       await tester.pumpWidget(_buildTestApp());
       await tester.pumpAndSettle();
 
-      // The gate screen is showing with its title
-      expect(find.text('Ages 16+'), findsOneWidget);
-      expect(find.text('I Am 16 or Older'), findsOneWidget);
+      expect(find.text('Age Confirmation'), findsOneWidget);
+      expect(find.text('Continue'), findsOneWidget);
     });
 
     testWidgets('gate appears when policy version is outdated', (tester) async {
@@ -108,7 +130,16 @@ void main() {
       await tester.pumpAndSettle();
 
       // The gate should still show since policy version is outdated
-      expect(find.text('Ages 16+'), findsOneWidget);
+      expect(find.text('Age Confirmation'), findsOneWidget);
+    });
+
+    testWidgets('selecting teen shows privacy-enhanced subtitle', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_buildTestApp());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Privacy-enhanced settings apply'), findsOneWidget);
     });
   });
 }
@@ -123,12 +154,17 @@ class _FakeAgeEligibilityNotifier extends AgeEligibilityNotifier {
   Future<AgeEligibilityState> build() async => _initial;
 
   @override
-  Future<void> confirm() async {
+  Future<void> confirm({
+    required AgeGroup ageGroup,
+    AgeSource source = AgeSource.selfAttestation,
+  }) async {
     state = AsyncData(
       AgeEligibilityState(
         hasConfirmed: true,
         confirmedAt: DateTime.now().toUtc(),
         policyVersion: LegalConstants.ageEligibilityPolicyVersion,
+        ageGroup: ageGroup,
+        source: source,
       ),
     );
   }

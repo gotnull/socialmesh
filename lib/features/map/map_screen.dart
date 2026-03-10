@@ -27,11 +27,13 @@ import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../models/mesh_models.dart';
 import '../../models/presence_confidence.dart';
+import '../../providers/age_eligibility_provider.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/presence_providers.dart';
 import '../../providers/help_providers.dart';
 import '../../services/haptic_service.dart';
 import '../../services/share_link_service.dart';
+import '../../utils/location_privacy.dart';
 import '../../utils/presence_utils.dart';
 import '../messaging/messaging_screen.dart';
 import '../navigation/main_shell.dart';
@@ -488,6 +490,15 @@ class _MapScreenState extends ConsumerState<MapScreen>
   }
 
   void _shareLocation(LatLng point, {String? label}) {
+    // Coarsen coordinates when the user is a confirmed minor.
+    final policy = ref.read(ageSafetyPolicyProvider);
+    final coarsened = LocationPrivacy.coarsenCoordsForPolicy(
+      point.latitude,
+      point.longitude,
+      policy,
+    );
+    final sharePoint = LatLng(coarsened.latitude, coarsened.longitude);
+
     // Get share position for iPad support
     final box = context.findRenderObject() as RenderBox?;
     final sharePositionOrigin = box != null
@@ -497,16 +508,23 @@ class _MapScreenState extends ConsumerState<MapScreen>
     ref
         .read(shareLinkServiceProvider)
         .shareLocation(
-          latitude: point.latitude,
-          longitude: point.longitude,
+          latitude: sharePoint.latitude,
+          longitude: sharePoint.longitude,
           label: label,
           sharePositionOrigin: sharePositionOrigin,
         );
   }
 
   void _copyCoordinates(LatLng point) {
-    final lat = point.latitude.toStringAsFixed(6);
-    final lng = point.longitude.toStringAsFixed(6);
+    // Coarsen coordinates when the user is a confirmed minor.
+    final policy = ref.read(ageSafetyPolicyProvider);
+    final coarsened = LocationPrivacy.coarsenCoordsForPolicy(
+      point.latitude,
+      point.longitude,
+      policy,
+    );
+    final lat = coarsened.latitude.toStringAsFixed(6);
+    final lng = coarsened.longitude.toStringAsFixed(6);
     Clipboard.setData(
       ClipboardData(text: '$lat, $lng'),
     ); // lint-allow: hardcoded-string

@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/l10n_extension.dart';
+import '../../core/legal/age_group.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/legal_document_sheet.dart';
@@ -15,14 +16,19 @@ import '../../providers/age_eligibility_provider.dart';
 import '../../providers/app_providers.dart';
 import '../../services/haptic_service.dart';
 
-/// Full-screen 16+ age eligibility gate.
+/// Full-screen age eligibility gate.
 ///
 /// Shown before any other app flow (onboarding, terms, scanner) when the
-/// user has not confirmed they are 16+ or when the eligibility policy
+/// user has not confirmed their age group or when the eligibility policy
 /// version has been bumped.
 ///
-/// This is an eligibility affirmation, NOT age verification. No DOB or ID
-/// is collected. The user simply confirms they are 16 or older.
+/// The user selects one of three age ranges (Under 13 / 13–17 / 18+).
+/// - Under 13: app exits (age requirement not met).
+/// - 13–17: confirmed as [AgeGroup.teen] — privacy-enhanced defaults apply.
+/// - 18+: confirmed as [AgeGroup.adult] — standard app experience.
+///
+/// This is an eligibility attestation, NOT age verification. No DOB or ID
+/// is collected.
 class EligibilityGateScreen extends ConsumerStatefulWidget {
   const EligibilityGateScreen({super.key});
 
@@ -33,10 +39,19 @@ class EligibilityGateScreen extends ConsumerStatefulWidget {
 
 class _EligibilityGateScreenState extends ConsumerState<EligibilityGateScreen>
     with LifecycleSafeMixin {
+  AgeGroup? _selectedGroup;
   bool _confirming = false;
+  bool _showExitExplanation = false;
 
   Future<void> _handleConfirm() async {
-    if (_confirming) return;
+    final group = _selectedGroup;
+    if (group == null || _confirming) return;
+
+    // Under-13 selection is handled as an exit condition.
+    if (group == AgeGroup.under13) {
+      _handleExit();
+      return;
+    }
 
     safeSetState(() => _confirming = true);
 
@@ -45,7 +60,7 @@ class _EligibilityGateScreenState extends ConsumerState<EligibilityGateScreen>
 
     if (!mounted) return;
     final notifier = ref.read(ageEligibilityProvider.notifier);
-    await notifier.confirm();
+    await notifier.confirm(ageGroup: group);
 
     if (!mounted) return;
 
@@ -64,8 +79,6 @@ class _EligibilityGateScreenState extends ConsumerState<EligibilityGateScreen>
       safeSetState(() => _showExitExplanation = true);
     }
   }
-
-  bool _showExitExplanation = false;
 
   void _openTerms() {
     LegalDocumentSheet.showTerms(context);
@@ -113,7 +126,7 @@ class _EligibilityGateScreenState extends ConsumerState<EligibilityGateScreen>
                         textAlign: TextAlign.center,
                       ),
                     ),
-                    const SizedBox(height: AppTheme.spacing16),
+                    const SizedBox(height: AppTheme.spacing12),
 
                     // Body
                     Semantics(
@@ -127,7 +140,11 @@ class _EligibilityGateScreenState extends ConsumerState<EligibilityGateScreen>
                         textAlign: TextAlign.center,
                       ),
                     ),
-                    const SizedBox(height: AppTheme.spacing32),
+                    const SizedBox(height: AppTheme.spacing24),
+
+                    // Age range selector
+                    _buildAgeSelector(context, theme),
+                    const SizedBox(height: AppTheme.spacing20),
 
                     // Legal links
                     _buildLegalLinks(context, theme),
@@ -182,6 +199,137 @@ class _EligibilityGateScreenState extends ConsumerState<EligibilityGateScreen>
     );
   }
 
+  Widget _buildAgeSelector(BuildContext context, ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: AppTheme.spacing12),
+          child: Text(
+            context.l10n.legalEligibilityAgePrompt,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: context.textSecondary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        _buildAgeOption(
+          context,
+          theme,
+          group: AgeGroup.under13,
+          label: context.l10n.legalEligibilityOptionUnder13,
+          subtitle: context.l10n.legalEligibilityOptionUnder13Subtitle,
+          isDestructive: true,
+        ),
+        const SizedBox(height: AppTheme.spacing8),
+        _buildAgeOption(
+          context,
+          theme,
+          group: AgeGroup.teen,
+          label: context.l10n.legalEligibilityOptionTeen,
+          subtitle: context.l10n.legalEligibilityOptionTeenSubtitle,
+        ),
+        const SizedBox(height: AppTheme.spacing8),
+        _buildAgeOption(
+          context,
+          theme,
+          group: AgeGroup.adult,
+          label: context.l10n.legalEligibilityOptionAdult,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAgeOption(
+    BuildContext context,
+    ThemeData theme, {
+    required AgeGroup group,
+    required String label,
+    String? subtitle,
+    bool isDestructive = false,
+  }) {
+    final isSelected = _selectedGroup == group;
+    final accentColor = isDestructive
+        ? const Color(0xFFE53935)
+        : context.accentColor;
+
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          safeSetState(() => _selectedGroup = group);
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppTheme.spacing16,
+            vertical: AppTheme.spacing12,
+          ),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppTheme.radius14),
+            border: Border.all(
+              color: isSelected
+                  ? accentColor
+                  : context.textTertiary.withValues(alpha: 0.3),
+              width: isSelected ? 1.5 : 1.0,
+            ),
+            color: isSelected
+                ? accentColor.withValues(alpha: 0.08)
+                : Colors.transparent,
+          ),
+          child: Row(
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isSelected ? accentColor : context.textTertiary,
+                    width: 2,
+                  ),
+                  color: isSelected ? accentColor : Colors.transparent,
+                ),
+                child: isSelected
+                    ? const Icon(Icons.check, size: 12, color: Colors.white)
+                    : null,
+              ),
+              const SizedBox(width: AppTheme.spacing12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: isSelected ? accentColor : context.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: AppTheme.spacing2),
+                      Text(
+                        subtitle,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: isSelected
+                              ? accentColor.withValues(alpha: 0.8)
+                              : context.textTertiary,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildLegalLinks(BuildContext context, ThemeData theme) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -228,17 +376,19 @@ class _EligibilityGateScreenState extends ConsumerState<EligibilityGateScreen>
   }
 
   Widget _buildActionButtons(BuildContext context, ThemeData theme) {
+    final canContinue = _selectedGroup != null && !_confirming;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Confirm button
+        // Continue button — disabled until a selection is made
         Semantics(
           button: true,
           label: context.l10n.legalEligibilityConfirmSemantics,
           child: SizedBox(
             height: 52,
             child: FilledButton(
-              onPressed: _confirming ? null : _handleConfirm,
+              onPressed: canContinue ? _handleConfirm : null,
               style: FilledButton.styleFrom(
                 backgroundColor: context.accentColor,
                 foregroundColor: Colors.white,
@@ -246,7 +396,7 @@ class _EligibilityGateScreenState extends ConsumerState<EligibilityGateScreen>
                   borderRadius: BorderRadius.circular(AppTheme.radius14),
                 ),
                 disabledBackgroundColor: context.accentColor.withValues(
-                  alpha: 0.5,
+                  alpha: 0.3,
                 ),
               ),
               child: _confirming
@@ -260,7 +410,7 @@ class _EligibilityGateScreenState extends ConsumerState<EligibilityGateScreen>
                     )
                   : Text(
                       context.l10n.legalEligibilityConfirmButton,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
                       ),
@@ -286,7 +436,7 @@ class _EligibilityGateScreenState extends ConsumerState<EligibilityGateScreen>
               ),
               child: Text(
                 context.l10n.legalEligibilityExitButton,
-                style: TextStyle(fontSize: 16),
+                style: const TextStyle(fontSize: 16),
               ),
             ),
           ),
@@ -357,7 +507,7 @@ class _EligibilityGateScreenState extends ConsumerState<EligibilityGateScreen>
                     ),
                     child: Text(
                       context.l10n.legalEligibilityGoBackButton,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
                       ),
