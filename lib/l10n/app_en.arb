@@ -8744,6 +8744,22 @@
     "@mapLosAnalysisSubtitle": {
         "description": "Subtitle in map view"
     },
+    "mapLosFetchingTerrain": "Fetching terrain…",
+    "@mapLosFetchingTerrain": {
+        "description": "Shown on measurement line while terrain elevation data is loading"
+    },
+    "mapLosLegendClear": "Clear",
+    "@mapLosLegendClear": {
+        "description": "LOS legend label for green (clear path)"
+    },
+    "mapLosLegendMarginal": "Marginal",
+    "@mapLosLegendMarginal": {
+        "description": "LOS legend label for yellow (marginal path)"
+    },
+    "mapLosLegendObstructed": "Obstructed",
+    "@mapLosLegendObstructed": {
+        "description": "LOS legend label for red (obstructed path)"
+    },
     "mapLosBulgeAndFresnel": "Bulge: {bulge}m · F1: {fresnel}m",
     "@mapLosBulgeAndFresnel": {
         "placeholders": {
@@ -12434,7 +12450,7 @@
     "@nodeDetailTracerouteNotConnected": {
         "description": "Error when sending traceroute while disconnected."
     },
-    "nodeDetailTracerouteSent": "Traceroute sent to {name} — check Traceroute History for results",
+    "nodeDetailTracerouteSent": "Traceroute sent to {name}",
     "@nodeDetailTracerouteSent": {
         "description": "Success snackbar after sending a traceroute.",
         "placeholders": {
@@ -12446,6 +12462,69 @@
     "nodeDetailTracerouteTooltip": "Traceroute",
     "@nodeDetailTracerouteTooltip": {
         "description": "Tooltip for the traceroute button."
+    },
+    "nodeDetailTracerouteComplete": "Traceroute complete",
+    "@nodeDetailTracerouteComplete": {
+        "description": "Snackbar title when a traceroute result arrives."
+    },
+    "nodeDetailTracerouteSummaryRfDirect": "RF • direct • SNR {snr} dB",
+    "@nodeDetailTracerouteSummaryRfDirect": {
+        "description": "Traceroute summary for RF direct connection.",
+        "placeholders": {
+            "snr": {
+                "type": "String"
+            }
+        }
+    },
+    "nodeDetailTracerouteSummaryRf": "RF • {hops} hops • SNR {snr} dB",
+    "@nodeDetailTracerouteSummaryRf": {
+        "description": "Traceroute summary for RF with hops.",
+        "placeholders": {
+            "hops": {
+                "type": "int"
+            },
+            "snr": {
+                "type": "String"
+            }
+        }
+    },
+    "nodeDetailTracerouteSummaryMqttDirect": "MQTT • direct • SNR {snr} dB",
+    "@nodeDetailTracerouteSummaryMqttDirect": {
+        "description": "Traceroute summary for MQTT direct connection.",
+        "placeholders": {
+            "snr": {
+                "type": "String"
+            }
+        }
+    },
+    "nodeDetailTracerouteSummaryMqtt": "MQTT • {hops} hops • SNR {snr} dB",
+    "@nodeDetailTracerouteSummaryMqtt": {
+        "description": "Traceroute summary for MQTT with hops.",
+        "placeholders": {
+            "hops": {
+                "type": "int"
+            },
+            "snr": {
+                "type": "String"
+            }
+        }
+    },
+    "nodeDetailTracerouteSummaryDirectNoSnr": "Direct connection",
+    "@nodeDetailTracerouteSummaryDirectNoSnr": {
+        "description": "Traceroute summary for direct connection without SNR."
+    },
+    "nodeDetailTracerouteSummaryHopsOnly": "{hops} hops",
+    "@nodeDetailTracerouteSummaryHopsOnly": {
+        "description": "Traceroute summary showing only hop count.",
+        "placeholders": {
+            "hops": {
+                "type": "int"
+            }
+        }
+    },
+    "nodeDetailTracerouteViewDetails": "View details",
+    "@nodeDetailTracerouteViewDetails": {
+        "description": "Action button label to open full traceroute log."
     },
     "nodeDetailUnmuteTooltip": "Unmute node",
     "@nodeDetailUnmuteTooltip": {

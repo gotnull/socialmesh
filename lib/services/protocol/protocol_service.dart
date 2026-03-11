@@ -1574,6 +1574,9 @@ class ProtocolService {
       // Aggregate SNR from the received packet (already in dB)
       final rxSnr = packet.hasRxSnr() ? packet.rxSnr.toDouble() : null;
 
+      // Transport flag: true if this packet arrived via MQTT gateway
+      final mqtt = packet.hasViaMqtt() ? packet.viaMqtt : null;
+
       final log = TraceRouteLog(
         nodeNum: targetNode,
         targetNode: targetNode,
@@ -1583,6 +1586,7 @@ class ProtocolService {
         hopsBack: backRoute.length,
         hops: [...forwardHops, ...backHops],
         snr: rxSnr,
+        viaMqtt: mqtt,
       );
 
       AppLogging.protocol(

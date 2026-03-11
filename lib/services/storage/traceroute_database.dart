@@ -23,7 +23,7 @@ import '../../core/logging.dart';
 ///
 /// Bump this when adding tables, columns, or indices.
 /// Migration logic runs in [_onUpgrade].
-const int tracerouteSchemaVersion = 1;
+const int tracerouteSchemaVersion = 2;
 
 /// Table and column name constants for Traceroute SQLite schema.
 abstract final class TracerouteTables {
@@ -37,6 +37,7 @@ abstract final class TracerouteTables {
   static const colReturnHops = 'return_hops';
   static const colResponseReceived = 'response_received';
   static const colSnr = 'snr';
+  static const colViaMqtt = 'via_mqtt';
 
   // -- traceroute_hops --
   static const hops = 'traceroute_hops';
@@ -166,7 +167,8 @@ class TracerouteDatabase {
         ${TracerouteTables.colForwardHops} INTEGER,
         ${TracerouteTables.colReturnHops} INTEGER,
         ${TracerouteTables.colResponseReceived} INTEGER NOT NULL DEFAULT 0,
-        ${TracerouteTables.colSnr} REAL
+        ${TracerouteTables.colSnr} REAL,
+        ${TracerouteTables.colViaMqtt} INTEGER
       )
     ''');
 
@@ -218,6 +220,12 @@ class TracerouteDatabase {
 
     // Future migrations go here:
     // if (oldVersion < 2) { ... }
+    if (oldVersion < 2) {
+      await db.execute(
+        'ALTER TABLE ${TracerouteTables.runs} '
+        'ADD COLUMN ${TracerouteTables.colViaMqtt} INTEGER', // lint-allow: hardcoded-string
+      );
+    }
   }
 
   /// Handle downgrades by recreating.

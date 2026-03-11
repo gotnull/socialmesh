@@ -446,6 +446,38 @@ void main() {
       expect(log.hops.first.name, 'Hop1');
       expect(log.snr, 6.0);
     });
+
+    test('viaMqtt defaults to null', () {
+      final log = TraceRouteLog(nodeNum: 1, targetNode: 2);
+      expect(log.viaMqtt, isNull);
+    });
+
+    test('viaMqtt roundtrips through JSON', () {
+      final log = TraceRouteLog(nodeNum: 1, targetNode: 2, viaMqtt: true);
+      final json = log.toJson();
+      expect(json['viaMqtt'], true);
+
+      final restored = TraceRouteLog.fromJson(json);
+      expect(restored.viaMqtt, true);
+    });
+
+    test('viaMqtt false roundtrips through JSON', () {
+      final log = TraceRouteLog(nodeNum: 1, targetNode: 2, viaMqtt: false);
+      final json = log.toJson();
+      expect(json['viaMqtt'], false);
+
+      final restored = TraceRouteLog.fromJson(json);
+      expect(restored.viaMqtt, false);
+    });
+
+    test('viaMqtt null roundtrips through JSON', () {
+      final log = TraceRouteLog(nodeNum: 1, targetNode: 2);
+      final json = log.toJson();
+      expect(json['viaMqtt'], isNull);
+
+      final restored = TraceRouteLog.fromJson(json);
+      expect(restored.viaMqtt, isNull);
+    });
   });
 
   group('TraceRouteHop', () {

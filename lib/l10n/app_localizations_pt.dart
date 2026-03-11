@@ -6568,6 +6568,18 @@ class AppLocalizationsPt extends AppLocalizations {
       'Curvatura terrestre + verificação da zona de Fresnel';
 
   @override
+  String get mapLosFetchingTerrain => 'Fetching terrain…';
+
+  @override
+  String get mapLosLegendClear => 'Clear';
+
+  @override
+  String get mapLosLegendMarginal => 'Marginal';
+
+  @override
+  String get mapLosLegendObstructed => 'Obstructed';
+
+  @override
   String mapLosBulgeAndFresnel(String bulge, String fresnel) {
     return 'Protuberância: ${bulge}m · F1: ${fresnel}m';
   }
@@ -9236,6 +9248,40 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get nodeDetailTracerouteTooltip => 'Traceroute';
+
+  @override
+  String get nodeDetailTracerouteComplete => 'Traceroute complete';
+
+  @override
+  String nodeDetailTracerouteSummaryRfDirect(String snr) {
+    return 'RF • direct • SNR $snr dB';
+  }
+
+  @override
+  String nodeDetailTracerouteSummaryRf(int hops, String snr) {
+    return 'RF • $hops hops • SNR $snr dB';
+  }
+
+  @override
+  String nodeDetailTracerouteSummaryMqttDirect(String snr) {
+    return 'MQTT • direct • SNR $snr dB';
+  }
+
+  @override
+  String nodeDetailTracerouteSummaryMqtt(int hops, String snr) {
+    return 'MQTT • $hops hops • SNR $snr dB';
+  }
+
+  @override
+  String get nodeDetailTracerouteSummaryDirectNoSnr => 'Direct connection';
+
+  @override
+  String nodeDetailTracerouteSummaryHopsOnly(int hops) {
+    return '$hops hops';
+  }
+
+  @override
+  String get nodeDetailTracerouteViewDetails => 'View details';
 
   @override
   String get nodeDetailUnmuteTooltip => 'Reativar som do nó';

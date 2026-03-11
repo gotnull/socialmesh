@@ -20,8 +20,10 @@ import '../../core/widgets/info_table.dart';
 import '../../core/widgets/node_avatar.dart';
 import '../../core/widgets/qr_share_sheet.dart';
 import '../../models/mesh_models.dart';
+import '../../models/telemetry_log.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/countdown_providers.dart';
+import '../../providers/telemetry_providers.dart';
 import '../../utils/snackbar.dart';
 
 import '../device/device_config_screen.dart';
@@ -67,6 +69,10 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
   bool _isTogglingFavorite = false;
   bool _isTogglingMute = false;
   bool _isSendingTraceroute = false;
+
+  /// Tracks the ID of the last traceroute result shown in the summary snackbar.
+  /// Prevents duplicate popups for the same result across rebuilds.
+  String? _lastShownTracerouteId;
 
   final ScrollController _scrollController = ScrollController();
   bool _showAppBarIdentity = false;
@@ -361,6 +367,40 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
         builder: (_) => TraceRouteLogScreen(nodeNum: node.nodeNum),
       ),
     );
+  }
+
+  /// Formats a one-line traceroute summary: transport + hops + SNR.
+  String _formatTracerouteSummary(BuildContext context, TraceRouteLog log) {
+    final l10n = context.l10n;
+    final hops = log.hopsTowards;
+    final snr = log.snr;
+    final mqtt = log.viaMqtt ?? false;
+    final isDirect = hops == 0;
+
+    if (mqtt) {
+      if (isDirect && snr != null) {
+        return l10n.nodeDetailTracerouteSummaryMqttDirect(
+          snr.toStringAsFixed(1),
+        );
+      }
+      if (!isDirect && snr != null) {
+        return l10n.nodeDetailTracerouteSummaryMqtt(
+          hops,
+          snr.toStringAsFixed(1),
+        );
+      }
+    } else {
+      if (isDirect && snr != null) {
+        return l10n.nodeDetailTracerouteSummaryRfDirect(snr.toStringAsFixed(1));
+      }
+      if (!isDirect && snr != null) {
+        return l10n.nodeDetailTracerouteSummaryRf(hops, snr.toStringAsFixed(1));
+      }
+    }
+
+    // Fallback: no SNR available
+    if (isDirect) return l10n.nodeDetailTracerouteSummaryDirectNoSnr;
+    return l10n.nodeDetailTracerouteSummaryHopsOnly(hops);
   }
 
   Future<void> _showRebootConfirmation(
@@ -1205,6 +1245,38 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
     // Watch the nodes provider to get latest state
     final nodesMap = ref.watch(nodesProvider);
     final node = nodesMap[_initialNode.nodeNum] ?? _initialNode;
+
+    // Listen for new traceroute results and show a one-time summary popup.
+    ref.listen<AsyncValue<List<TraceRouteLog>>>(
+      nodeTraceRouteLogsProvider(node.nodeNum),
+      (prev, next) {
+        final logs = next.value;
+        if (logs == null || logs.isEmpty) return;
+
+        // Find the most recent completed result
+        final latest = logs.firstWhere(
+          (l) => l.response,
+          orElse: () => logs.first,
+        );
+        if (!latest.response) return;
+        if (latest.id == _lastShownTracerouteId) return;
+
+        _lastShownTracerouteId = latest.id;
+
+        if (!mounted) return;
+        final l10n = context.l10n;
+        final summary = _formatTracerouteSummary(context, latest);
+        showActionSnackBar(
+          context,
+          '${l10n.nodeDetailTracerouteComplete}\n$summary',
+          actionLabel: l10n.nodeDetailTracerouteViewDetails,
+          onAction: () => _showTracerouteHistory(context, node),
+          type: SnackBarType.success,
+          duration: const Duration(seconds: 6),
+        );
+        HapticFeedback.mediumImpact();
+      },
+    );
 
     return GlassScaffold(
       controller: _scrollController,

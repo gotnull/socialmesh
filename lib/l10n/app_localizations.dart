@@ -11606,6 +11606,30 @@ abstract class AppLocalizations {
   /// **'Earth curvature + Fresnel zone check'**
   String get mapLosAnalysisSubtitle;
 
+  /// Shown on measurement line while terrain elevation data is loading
+  ///
+  /// In en, this message translates to:
+  /// **'Fetching terrain…'**
+  String get mapLosFetchingTerrain;
+
+  /// LOS legend label for green (clear path)
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get mapLosLegendClear;
+
+  /// LOS legend label for yellow (marginal path)
+  ///
+  /// In en, this message translates to:
+  /// **'Marginal'**
+  String get mapLosLegendMarginal;
+
+  /// LOS legend label for red (obstructed path)
+  ///
+  /// In en, this message translates to:
+  /// **'Obstructed'**
+  String get mapLosLegendObstructed;
+
   /// Text in map view Parameters: {bulge}, {fresnel}.
   ///
   /// In en, this message translates to:
@@ -16366,7 +16390,7 @@ abstract class AppLocalizations {
   /// Success snackbar after sending a traceroute.
   ///
   /// In en, this message translates to:
-  /// **'Traceroute sent to {name} — check Traceroute History for results'**
+  /// **'Traceroute sent to {name}'**
   String nodeDetailTracerouteSent(String name);
 
   /// Tooltip for the traceroute button.
@@ -16374,6 +16398,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Traceroute'**
   String get nodeDetailTracerouteTooltip;
+
+  /// Snackbar title when a traceroute result arrives.
+  ///
+  /// In en, this message translates to:
+  /// **'Traceroute complete'**
+  String get nodeDetailTracerouteComplete;
+
+  /// Traceroute summary for RF direct connection.
+  ///
+  /// In en, this message translates to:
+  /// **'RF • direct • SNR {snr} dB'**
+  String nodeDetailTracerouteSummaryRfDirect(String snr);
+
+  /// Traceroute summary for RF with hops.
+  ///
+  /// In en, this message translates to:
+  /// **'RF • {hops} hops • SNR {snr} dB'**
+  String nodeDetailTracerouteSummaryRf(int hops, String snr);
+
+  /// Traceroute summary for MQTT direct connection.
+  ///
+  /// In en, this message translates to:
+  /// **'MQTT • direct • SNR {snr} dB'**
+  String nodeDetailTracerouteSummaryMqttDirect(String snr);
+
+  /// Traceroute summary for MQTT with hops.
+  ///
+  /// In en, this message translates to:
+  /// **'MQTT • {hops} hops • SNR {snr} dB'**
+  String nodeDetailTracerouteSummaryMqtt(int hops, String snr);
+
+  /// Traceroute summary for direct connection without SNR.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct connection'**
+  String get nodeDetailTracerouteSummaryDirectNoSnr;
+
+  /// Traceroute summary showing only hop count.
+  ///
+  /// In en, this message translates to:
+  /// **'{hops} hops'**
+  String nodeDetailTracerouteSummaryHopsOnly(int hops);
+
+  /// Action button label to open full traceroute log.
+  ///
+  /// In en, this message translates to:
+  /// **'View details'**
+  String get nodeDetailTracerouteViewDetails;
 
   /// Tooltip for unmuting a node.
   ///

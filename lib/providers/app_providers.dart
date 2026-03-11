@@ -5257,46 +5257,52 @@ class NotificationBatchNotifier extends Notifier<NotificationBatchState> {
     final notificationService = NotificationService();
 
     // Show batched notifications
-    if (messages.length == 1) {
-      // Single message - show regular notification
-      final msg = messages.first;
-      if (msg.isChannelMessage) {
-        await notificationService.showChannelMessageNotification(
-          senderName: msg.senderName,
-          senderShortName: msg.senderShortName,
-          channelName: msg.channelName ?? 'Channel',
-          message: msg.message,
-          channelIndex: msg.channelIndex!,
-          fromNodeNum: msg.fromNodeNum,
-          playSound: playSound,
-          vibrate: vibrate,
-        );
-      } else {
-        await notificationService.showNewMessageNotification(
-          senderName: msg.senderName,
-          senderShortName: msg.senderShortName,
-          message: msg.message,
-          fromNodeNum: msg.fromNodeNum,
+    try {
+      if (messages.length == 1) {
+        // Single message - show regular notification
+        final msg = messages.first;
+        if (msg.isChannelMessage) {
+          await notificationService.showChannelMessageNotification(
+            senderName: msg.senderName,
+            senderShortName: msg.senderShortName,
+            channelName: msg.channelName ?? 'Channel',
+            message: msg.message,
+            channelIndex: msg.channelIndex!,
+            fromNodeNum: msg.fromNodeNum,
+            playSound: playSound,
+            vibrate: vibrate,
+          );
+        } else {
+          await notificationService.showNewMessageNotification(
+            senderName: msg.senderName,
+            senderShortName: msg.senderShortName,
+            message: msg.message,
+            fromNodeNum: msg.fromNodeNum,
+            playSound: playSound,
+            vibrate: vibrate,
+          );
+        }
+      } else if (messages.isNotEmpty) {
+        // Multiple messages - show batched
+        await notificationService.showBatchedMessagesNotification(
+          messages: messages,
           playSound: playSound,
           vibrate: vibrate,
         );
       }
-    } else if (messages.isNotEmpty) {
-      // Multiple messages - show batched
-      await notificationService.showBatchedMessagesNotification(
-        messages: messages,
-        playSound: playSound,
-        vibrate: vibrate,
-      );
-    }
 
-    if (nodes.isNotEmpty) {
-      // Nodes - batched handles single vs multiple internally
-      await notificationService.showBatchedNodesNotification(
-        nodes: nodes,
-        playSound: playSound,
-        vibrate: vibrate,
-      );
+      if (nodes.isNotEmpty) {
+        // Nodes - batched handles single vs multiple internally
+        await notificationService.showBatchedNodesNotification(
+          nodes: nodes,
+          playSound: playSound,
+          vibrate: vibrate,
+        );
+      }
+    } catch (e) {
+      // Platform channel errors from the notification plugin are non-critical.
+      // Log and swallow so they don't propagate as unhandled exceptions.
+      AppLogging.notifications('🔔 Error showing batched notification: $e');
     }
   }
 

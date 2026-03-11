@@ -360,6 +360,7 @@ class TraceRouteLog extends TelemetryLogEntry {
   final int hopsBack;
   final List<TraceRouteHop> hops;
   final double? snr;
+  final bool? viaMqtt;
 
   TraceRouteLog({
     super.id,
@@ -372,6 +373,7 @@ class TraceRouteLog extends TelemetryLogEntry {
     this.hopsBack = 0,
     this.hops = const [],
     this.snr,
+    this.viaMqtt,
   });
 
   factory TraceRouteLog.fromJson(Map<String, dynamic> json) {
@@ -392,6 +394,7 @@ class TraceRouteLog extends TelemetryLogEntry {
               .toList() ??
           [],
       snr: (json['snr'] as num?)?.toDouble(),
+      viaMqtt: json['viaMqtt'] as bool?,
     );
   }
 
@@ -407,6 +410,7 @@ class TraceRouteLog extends TelemetryLogEntry {
     'hopsBack': hopsBack,
     'hops': hops.map((h) => h.toJson()).toList(),
     'snr': _sanitizeDouble(snr),
+    'viaMqtt': viaMqtt,
   };
 }
 

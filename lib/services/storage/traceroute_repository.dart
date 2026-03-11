@@ -381,6 +381,9 @@ class SqliteTracerouteRepository implements TracerouteHistoryRepository {
       TracerouteTables.colReturnHops: run.hopsBack,
       TracerouteTables.colResponseReceived: run.response ? 1 : 0,
       TracerouteTables.colSnr: run.snr,
+      TracerouteTables.colViaMqtt: run.viaMqtt == null
+          ? null
+          : (run.viaMqtt! ? 1 : 0),
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
@@ -470,6 +473,9 @@ class SqliteTracerouteRepository implements TracerouteHistoryRepository {
       hopsBack: row[TracerouteTables.colReturnHops] as int? ?? 0,
       hops: hops,
       snr: row[TracerouteTables.colSnr] as double?,
+      viaMqtt: row[TracerouteTables.colViaMqtt] == null
+          ? null
+          : (row[TracerouteTables.colViaMqtt] as int) == 1,
     );
   }
 

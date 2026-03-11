@@ -44,6 +44,7 @@ import '../../core/widgets/loading_indicator.dart';
 import '../../core/constants.dart';
 import '../../core/logging.dart';
 import '../../core/los_analysis.dart';
+import '../../services/terrain/elevation_service.dart';
 import '../../models/telemetry_log.dart';
 import '../../providers/telemetry_providers.dart';
 import '../tak/models/tak_event.dart';
@@ -143,6 +144,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
   MeshNode? _measureNodeA;
   MeshNode? _measureNodeB;
 
+  // Terrain-aware measurement line segments
+  List<Polyline>? _measureTerrainPolylines;
+  bool _terrainFetchInProgress = false;
+  ElevationService? _elevationService;
+
   // Waypoints dropped by user
   final List<_Waypoint> _waypoints = [];
 
@@ -181,6 +187,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     _mapController.dispose();
     _searchController.dispose();
     _takSearchController.dispose();
+    _elevationService = null;
     super.dispose();
   }
 
@@ -1245,19 +1252,21 @@ class _MapScreenState extends ConsumerState<MapScreen>
                             myNodeNum,
                           ),
                         ),
-                      // Measurement line
+                      // Measurement line — terrain-colored when available
                       if (_measureStart != null && _measureEnd != null)
                         PolylineLayer(
-                          polylines: [
-                            Polyline(
-                              points: [_measureStart!, _measureEnd!],
-                              color: AppTheme.warningYellow,
-                              strokeWidth: 3,
-                              pattern: const StrokePattern.dotted(
-                                spacingFactor: 1.5,
-                              ),
-                            ),
-                          ],
+                          polylines:
+                              _measureTerrainPolylines ??
+                              [
+                                Polyline(
+                                  points: [_measureStart!, _measureEnd!],
+                                  color: AppTheme.warningYellow,
+                                  strokeWidth: 3,
+                                  pattern: const StrokePattern.dotted(
+                                    spacingFactor: 1.5,
+                                  ),
+                                ),
+                              ],
                         ),
                       // Waypoint markers
                       MarkerLayer(
@@ -1342,6 +1351,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                                     _measureEnd = null;
                                     _measureNodeA = n.node;
                                     _measureNodeB = null;
+                                    _measureTerrainPolylines = null;
                                     _selectedNode = null;
                                     _selectedTakEntity = null;
                                   });
@@ -1534,11 +1544,15 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         end: _measureEnd!,
                         nodeA: _measureNodeA,
                         nodeB: _measureNodeB,
+                        hasTerrainSegments:
+                            _measureTerrainPolylines != null &&
+                            _measureTerrainPolylines!.length > 1,
                         onClear: () => setState(() {
                           _measureStart = null;
                           _measureEnd = null;
                           _measureNodeA = null;
                           _measureNodeB = null;
+                          _measureTerrainPolylines = null;
                         }),
                         onShare: () => _shareLocation(
                           _measureStart!,
@@ -1559,17 +1573,22 @@ class _MapScreenState extends ConsumerState<MapScreen>
                           _measureEnd = null;
                           _measureNodeA = null;
                           _measureNodeB = null;
+                          _measureTerrainPolylines = null;
                         }),
-                        onSwap: () => setState(() {
-                          final tmpStart = _measureStart;
-                          final tmpEnd = _measureEnd;
-                          final tmpNodeA = _measureNodeA;
-                          final tmpNodeB = _measureNodeB;
-                          _measureStart = tmpEnd;
-                          _measureEnd = tmpStart;
-                          _measureNodeA = tmpNodeB;
-                          _measureNodeB = tmpNodeA;
-                        }),
+                        onSwap: () {
+                          setState(() {
+                            final tmpStart = _measureStart;
+                            final tmpEnd = _measureEnd;
+                            final tmpNodeA = _measureNodeA;
+                            final tmpNodeB = _measureNodeB;
+                            _measureStart = tmpEnd;
+                            _measureEnd = tmpStart;
+                            _measureNodeA = tmpNodeB;
+                            _measureNodeB = tmpNodeA;
+                            _measureTerrainPolylines = null;
+                          });
+                          _fetchMeasurementTerrain();
+                        },
                         onCopyCoordinates: () {
                           final a = _measureStart!;
                           final b = _measureEnd!;
@@ -1968,6 +1987,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
         _measureEnd = null;
         _measureNodeA = null;
         _measureNodeB = null;
+        _measureTerrainPolylines = null;
       } else if (_measureEnd == null) {
         _measureEnd = point;
         _measureNodeB = null;
@@ -1976,9 +1996,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
         _measureEnd = null;
         _measureNodeA = null;
         _measureNodeB = null;
+        _measureTerrainPolylines = null;
       }
     });
     HapticFeedback.selectionClick();
+    if (_measureStart != null && _measureEnd != null) {
+      _fetchMeasurementTerrain();
+    }
   }
 
   void _handleMeasureNodeTap(_NodeWithPosition n) {
@@ -1989,6 +2013,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
         _measureEnd = null;
         _measureNodeA = n.node;
         _measureNodeB = null;
+        _measureTerrainPolylines = null;
       } else if (_measureEnd == null) {
         _measureEnd = point;
         _measureNodeB = n.node;
@@ -1997,9 +2022,145 @@ class _MapScreenState extends ConsumerState<MapScreen>
         _measureEnd = null;
         _measureNodeA = n.node;
         _measureNodeB = null;
+        _measureTerrainPolylines = null;
       }
     });
     HapticFeedback.selectionClick();
+    if (_measureStart != null && _measureEnd != null) {
+      _fetchMeasurementTerrain();
+    }
+  }
+
+  Future<void> _fetchMeasurementTerrain() async {
+    final start = _measureStart;
+    final end = _measureEnd;
+    if (start == null || end == null) return;
+    if (_terrainFetchInProgress) return;
+
+    _elevationService ??= ElevationService();
+    setState(() => _terrainFetchInProgress = true);
+
+    final result = await _elevationService!.fetchProfile(start, end);
+    if (!mounted) return;
+
+    // Verify measurement hasn't changed while fetching
+    if (_measureStart != start || _measureEnd != end) {
+      setState(() => _terrainFetchInProgress = false);
+      return;
+    }
+
+    switch (result) {
+      case ElevationProfileSuccess(:final samples):
+        final altA = _measureNodeA?.altitude;
+        final altB = _measureNodeB?.altitude;
+        final terrainResult = evaluateLosFromProfile(
+          samples: samples
+              .map(
+                (s) => (
+                  distanceMeters: s.distanceMeters,
+                  latitude: s.latitude,
+                  longitude: s.longitude,
+                  elevationMeters: s.elevationMeters,
+                ),
+              )
+              .toList(),
+          altAMeters: altA,
+          altBMeters: altB,
+        );
+        safeSetState(() {
+          _measureTerrainPolylines = _buildTerrainAwarePolylines(
+            samples,
+            terrainResult,
+          );
+          _terrainFetchInProgress = false;
+        });
+      case ElevationProfileOffline():
+      case ElevationProfileFailure():
+        // Offline or API error — fall back to single-color line
+        safeSetState(() {
+          _measureTerrainPolylines = _buildFallbackMeasurePolylines();
+          _terrainFetchInProgress = false;
+        });
+    }
+  }
+
+  List<Polyline> _buildTerrainAwarePolylines(
+    List<ElevationSample> samples,
+    TerrainLosResult terrainResult,
+  ) {
+    if (samples.length < 2) return _buildFallbackMeasurePolylines();
+
+    // If no altitude data, color segments by terrain-only (all same color)
+    if (!terrainResult.hasAltitudeData) {
+      return _buildFallbackMeasurePolylines();
+    }
+
+    final polylines = <Polyline>[];
+    for (var i = 0; i < samples.length - 1; i++) {
+      final clearance = terrainResult.perSampleClearanceMeters[i];
+      final nextClearance = terrainResult.perSampleClearanceMeters[i + 1];
+      // Use the worse clearance of the two endpoints for this segment
+      final segClearance = math.min(clearance, nextClearance);
+
+      Color segColor;
+      if (segClearance < 0) {
+        segColor = AppTheme.errorRed;
+      } else if (segClearance <
+          terrainResult.perSampleFresnelRadiusMeters[i] * 0.4) {
+        segColor = AppTheme.warningYellow;
+      } else {
+        segColor = AppTheme.successGreen;
+      }
+
+      polylines.add(
+        Polyline(
+          points: [
+            LatLng(samples[i].latitude, samples[i].longitude),
+            LatLng(samples[i + 1].latitude, samples[i + 1].longitude),
+          ],
+          color: segColor,
+          strokeWidth: 3,
+          pattern: const StrokePattern.dotted(spacingFactor: 1.5),
+        ),
+      );
+    }
+    return polylines;
+  }
+
+  List<Polyline> _buildFallbackMeasurePolylines() {
+    final start = _measureStart;
+    final end = _measureEnd;
+    if (start == null || end == null) return [];
+
+    final altA = _measureNodeA?.altitude;
+    final altB = _measureNodeB?.altitude;
+    final distanceM = const Distance().as(LengthUnit.Meter, start, end);
+
+    Color lineColor;
+    if (altA != null && altB != null) {
+      final result = evaluateLos(
+        altA: altA,
+        altB: altB,
+        distanceMeters: distanceM,
+      );
+      lineColor = switch (result.verdict) {
+        LosVerdict.clear => AppTheme.successGreen,
+        LosVerdict.marginal => AppTheme.warningYellow,
+        LosVerdict.obstructed => AppTheme.errorRed,
+        LosVerdict.unknown => AppTheme.warningYellow,
+      };
+    } else {
+      lineColor = AppTheme.warningYellow;
+    }
+
+    return [
+      Polyline(
+        points: [start, end],
+        color: lineColor,
+        strokeWidth: 3,
+        pattern: const StrokePattern.dotted(spacingFactor: 1.5),
+      ),
+    ];
   }
 
   void _showWaypointMenu(LatLng point) {
@@ -3200,6 +3361,7 @@ class _MeasurementCard extends StatefulWidget {
   final VoidCallback onExitMeasureMode;
   final VoidCallback? onSwap;
   final VoidCallback? onCopyCoordinates;
+  final bool hasTerrainSegments;
 
   const _MeasurementCard({
     required this.start,
@@ -3210,6 +3372,7 @@ class _MeasurementCard extends StatefulWidget {
     required this.onShare,
     required this.onExitMeasureMode,
     this.onSwap,
+    this.hasTerrainSegments = false,
     this.onCopyCoordinates,
   });
 
@@ -3547,6 +3710,11 @@ class _MeasurementCardState extends State<_MeasurementCard> {
               context.l10n.mapLongPressForActions,
               style: TextStyle(fontSize: 10, color: context.textTertiary),
             ),
+            // Terrain LOS color legend
+            if (widget.hasTerrainSegments) ...[
+              const SizedBox(height: AppTheme.spacing8),
+              _LosColorLegend(),
+            ],
             // LOS result panel (toggled from actions sheet)
             if (_showLos && hasElevation) ...[
               const SizedBox(height: AppTheme.spacing8),
@@ -3559,6 +3727,46 @@ class _MeasurementCardState extends State<_MeasurementCard> {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Compact inline legend for terrain-aware LOS measurement line colors.
+class _LosColorLegend extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _legendDot(AppTheme.successGreen),
+        const SizedBox(width: AppTheme.spacing4),
+        Text(
+          context.l10n.mapLosLegendClear,
+          style: TextStyle(fontSize: 10, color: context.textTertiary),
+        ),
+        const SizedBox(width: AppTheme.spacing12),
+        _legendDot(AppTheme.warningYellow),
+        const SizedBox(width: AppTheme.spacing4),
+        Text(
+          context.l10n.mapLosLegendMarginal,
+          style: TextStyle(fontSize: 10, color: context.textTertiary),
+        ),
+        const SizedBox(width: AppTheme.spacing12),
+        _legendDot(AppTheme.errorRed),
+        const SizedBox(width: AppTheme.spacing4),
+        Text(
+          context.l10n.mapLosLegendObstructed,
+          style: TextStyle(fontSize: 10, color: context.textTertiary),
+        ),
+      ],
+    );
+  }
+
+  static Widget _legendDot(Color color) {
+    return Container(
+      width: 8,
+      height: 8,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
     );
   }
 }
