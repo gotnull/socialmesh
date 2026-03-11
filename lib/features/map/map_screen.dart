@@ -146,6 +146,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
   // Terrain-aware measurement line segments
   List<Polyline>? _measureTerrainPolylines;
+  TerrainLosResult? _measureTerrainResult;
   bool _terrainFetchInProgress = false;
   ElevationService? _elevationService;
 
@@ -1352,6 +1353,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                                     _measureNodeA = n.node;
                                     _measureNodeB = null;
                                     _measureTerrainPolylines = null;
+                                    _measureTerrainResult = null;
                                     _selectedNode = null;
                                     _selectedTakEntity = null;
                                   });
@@ -1547,12 +1549,14 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         hasTerrainSegments:
                             _measureTerrainPolylines != null &&
                             _measureTerrainPolylines!.length > 1,
+                        terrainResult: _measureTerrainResult,
                         onClear: () => setState(() {
                           _measureStart = null;
                           _measureEnd = null;
                           _measureNodeA = null;
                           _measureNodeB = null;
                           _measureTerrainPolylines = null;
+                          _measureTerrainResult = null;
                         }),
                         onShare: () => _shareLocation(
                           _measureStart!,
@@ -1574,6 +1578,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                           _measureNodeA = null;
                           _measureNodeB = null;
                           _measureTerrainPolylines = null;
+                          _measureTerrainResult = null;
                         }),
                         onSwap: () {
                           setState(() {
@@ -1586,6 +1591,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                             _measureNodeA = tmpNodeB;
                             _measureNodeB = tmpNodeA;
                             _measureTerrainPolylines = null;
+                            _measureTerrainResult = null;
                           });
                           _fetchMeasurementTerrain();
                         },
@@ -1988,6 +1994,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
         _measureNodeA = null;
         _measureNodeB = null;
         _measureTerrainPolylines = null;
+        _measureTerrainResult = null;
       } else if (_measureEnd == null) {
         _measureEnd = point;
         _measureNodeB = null;
@@ -1997,6 +2004,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
         _measureNodeA = null;
         _measureNodeB = null;
         _measureTerrainPolylines = null;
+        _measureTerrainResult = null;
       }
     });
     HapticFeedback.selectionClick();
@@ -2014,6 +2022,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
         _measureNodeA = n.node;
         _measureNodeB = null;
         _measureTerrainPolylines = null;
+        _measureTerrainResult = null;
       } else if (_measureEnd == null) {
         _measureEnd = point;
         _measureNodeB = n.node;
@@ -2023,6 +2032,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
         _measureNodeA = n.node;
         _measureNodeB = null;
         _measureTerrainPolylines = null;
+        _measureTerrainResult = null;
       }
     });
     HapticFeedback.selectionClick();
@@ -2072,6 +2082,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
             samples,
             terrainResult,
           );
+          _measureTerrainResult = terrainResult;
           _terrainFetchInProgress = false;
         });
       case ElevationProfileOffline():
@@ -2079,6 +2090,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
         // Offline or API error — fall back to single-color line
         safeSetState(() {
           _measureTerrainPolylines = _buildFallbackMeasurePolylines();
+          _measureTerrainResult = null;
           _terrainFetchInProgress = false;
         });
     }
@@ -3362,6 +3374,7 @@ class _MeasurementCard extends StatefulWidget {
   final VoidCallback? onSwap;
   final VoidCallback? onCopyCoordinates;
   final bool hasTerrainSegments;
+  final TerrainLosResult? terrainResult;
 
   const _MeasurementCard({
     required this.start,
@@ -3373,6 +3386,7 @@ class _MeasurementCard extends StatefulWidget {
     required this.onExitMeasureMode,
     this.onSwap,
     this.hasTerrainSegments = false,
+    this.terrainResult,
     this.onCopyCoordinates,
   });
 
@@ -3722,6 +3736,7 @@ class _MeasurementCardState extends State<_MeasurementCard> {
                 altA: altA,
                 altB: altB,
                 distanceMeters: distanceM,
+                terrainResult: widget.terrainResult,
               ),
             ],
           ],
@@ -3776,24 +3791,32 @@ class _LosResultPanel extends StatelessWidget {
   final int altA;
   final int altB;
   final double distanceMeters;
+  final TerrainLosResult? terrainResult;
 
   const _LosResultPanel({
     required this.altA,
     required this.altB,
     required this.distanceMeters,
+    this.terrainResult,
   });
 
   @override
   Widget build(BuildContext context) {
-    final result = evaluateLos(
+    final basicResult = evaluateLos(
       altA: altA,
       altB: altB,
       distanceMeters: distanceMeters,
     );
 
+    // Use terrain-based verdict when terrain data is available and has
+    // altitude information; otherwise fall back to earth-bulge-only.
+    final terrain = terrainResult;
+    final useTerrain = terrain != null && terrain.hasAltitudeData;
+    final verdict = useTerrain ? terrain.verdict : basicResult.verdict;
+
     Color verdictColor;
     IconData verdictIcon;
-    switch (result.verdict) {
+    switch (verdict) {
       case LosVerdict.clear:
         verdictColor = AppTheme.successGreen;
         verdictIcon = Icons.check_circle;
@@ -3807,6 +3830,31 @@ class _LosResultPanel extends StatelessWidget {
         verdictColor = context.textTertiary;
         verdictIcon = Icons.help_outline;
     }
+
+    // Explanation text: terrain-aware when available, earth-bulge-only otherwise
+    final explanationText = useTerrain
+        ? switch (verdict) {
+            LosVerdict.unknown => context.l10n.losExplanationNoAltitude,
+            LosVerdict.obstructed =>
+              context.l10n.terrainLosExplanationObstructed(
+                (-terrain.worstClearanceMeters!).toStringAsFixed(0),
+              ),
+            LosVerdict.marginal => context.l10n.terrainLosExplanationMarginal,
+            LosVerdict.clear => context.l10n.terrainLosExplanationClear,
+          }
+        : switch (basicResult.verdict) {
+            LosVerdict.unknown => context.l10n.losExplanationNoAltitude,
+            LosVerdict.obstructed => context.l10n.losExplanationObstructed(
+              (-basicResult.actualClearanceMeters).toStringAsFixed(0),
+            ),
+            LosVerdict.clear => context.l10n.losExplanationClear(
+              basicResult.actualClearanceMeters.toStringAsFixed(0),
+            ),
+            LosVerdict.marginal => context.l10n.losExplanationMarginal(
+              basicResult.actualClearanceMeters.toStringAsFixed(0),
+              basicResult.requiredClearanceMeters.toStringAsFixed(0),
+            ),
+          };
 
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing8),
@@ -3823,7 +3871,7 @@ class _LosResultPanel extends StatelessWidget {
               Icon(verdictIcon, size: 16, color: verdictColor),
               const SizedBox(width: AppTheme.spacing4),
               Text(
-                context.l10n.mapLosVerdict(switch (result.verdict) {
+                context.l10n.mapLosVerdict(switch (verdict) {
                   LosVerdict.clear => context.l10n.losVerdictClear,
                   LosVerdict.marginal => context.l10n.losVerdictMarginal,
                   LosVerdict.obstructed => context.l10n.losVerdictObstructed,
@@ -3838,27 +3886,18 @@ class _LosResultPanel extends StatelessWidget {
               const Spacer(),
               Text(
                 context.l10n.mapLosBulgeAndFresnel(
-                  result.earthBulgeMeters.toStringAsFixed(1),
-                  result.fresnelRadiusMeters.toStringAsFixed(1),
+                  basicResult.earthBulgeMeters.toStringAsFixed(1),
+                  basicResult.fresnelRadiusMeters.toStringAsFixed(1),
                 ),
                 style: TextStyle(fontSize: 11, color: context.textTertiary),
               ),
             ],
           ),
           const SizedBox(height: AppTheme.spacing4),
-          Text(switch (result.verdict) {
-            LosVerdict.unknown => context.l10n.losExplanationNoAltitude,
-            LosVerdict.obstructed => context.l10n.losExplanationObstructed(
-              (-result.actualClearanceMeters).toStringAsFixed(0),
-            ),
-            LosVerdict.clear => context.l10n.losExplanationClear(
-              result.actualClearanceMeters.toStringAsFixed(0),
-            ),
-            LosVerdict.marginal => context.l10n.losExplanationMarginal(
-              result.actualClearanceMeters.toStringAsFixed(0),
-              result.requiredClearanceMeters.toStringAsFixed(0),
-            ),
-          }, style: TextStyle(fontSize: 11, color: context.textSecondary)),
+          Text(
+            explanationText,
+            style: TextStyle(fontSize: 11, color: context.textSecondary),
+          ),
         ],
       ),
     );
