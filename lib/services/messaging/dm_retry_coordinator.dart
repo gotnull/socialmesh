@@ -59,7 +59,14 @@ class DmRetryCoordinator {
 
     // On start: reset any messages stuck in retrying state from a previous
     // session (the timer was cancelled when the app was killed).
-    _resetStaleRetrying();
+    // Deferred to a microtask so that messagesProvider finishes building
+    // before we attempt to read it — start() is called from within the
+    // dmRetryCoordinatorProvider factory, which is itself watched during
+    // MessagesNotifier.build, creating a circular read if done synchronously.
+    Future.microtask(() {
+      if (_disposed) return;
+      _resetStaleRetrying();
+    });
 
     _tickTimer = Timer.periodic(
       DmRetryConstants.coordinatorTickInterval,
