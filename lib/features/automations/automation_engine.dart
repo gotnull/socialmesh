@@ -805,7 +805,10 @@ class AutomationEngine {
         automationName: automation.name,
         timestamp: DateTime.now(),
         success: overallSuccess,
-        triggerDetails: _buildTriggerDetails(event),
+        triggerEventType: event.type.name,
+        triggerNodeName: event.nodeName,
+        triggerBatteryLevel: event.batteryLevel,
+        triggerMessageText: event.messageText,
         actionsExecuted: actionsExecuted,
         actionResults: actionResults,
         errorMessage: errorMessage,
@@ -1396,28 +1399,6 @@ class AutomationEngine {
     }
 
     return result;
-  }
-
-  /// Build trigger details string for logging
-  String _buildTriggerDetails(AutomationEvent event) {
-    final parts = <String>[];
-    parts.add(
-      'Trigger: ${event.type.displayName}',
-    ); // lint-allow: hardcoded-string
-    if (event.nodeName != null) {
-      parts.add('Node: ${event.nodeName}'); // lint-allow: hardcoded-string
-    }
-    if (event.batteryLevel != null) {
-      parts.add(
-        'Battery: ${event.batteryLevel}%',
-      ); // lint-allow: hardcoded-string
-    }
-    if (event.messageText != null) {
-      parts.add(
-        'Message: ${event.messageText}',
-      ); // lint-allow: hardcoded-string
-    }
-    return parts.join(', ');
   }
 
   /// Build input text for iOS Shortcut from event data

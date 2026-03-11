@@ -39725,6 +39725,33 @@
     "@automationScheduledBody": {
         "description": "Text displayed in automations"
     },
+    "automationLogNode": "Node: {nodeName}",
+    "@automationLogNode": {
+        "description": "Label for node name in automation log entry details",
+        "placeholders": {
+            "nodeName": {
+                "type": "String"
+            }
+        }
+    },
+    "automationLogBattery": "Battery: {level}%",
+    "@automationLogBattery": {
+        "description": "Label for battery level in automation log entry details",
+        "placeholders": {
+            "level": {
+                "type": "int"
+            }
+        }
+    },
+    "automationLogMessage": "Message: {text}",
+    "@automationLogMessage": {
+        "description": "Label for message text in automation log entry details",
+        "placeholders": {
+            "text": {
+                "type": "String"
+            }
+        }
+    },
     "authErrorGoogleSignInCancelled": "Google sign in was cancelled",
     "@authErrorGoogleSignInCancelled": {
         "description": "Error message shown to the user"

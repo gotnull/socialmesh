@@ -21,6 +21,7 @@ import '../../utils/snackbar.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/edge_fade.dart';
 import 'automation_providers.dart';
+import '../../l10n/app_localizations.dart';
 import 'automation_repository.dart';
 import 'automation_share_utils.dart';
 import 'models/automation.dart';
@@ -998,9 +999,7 @@ class AutomationsScreen extends ConsumerWidget {
                             ),
                             title: Text(entry.automationName),
                             subtitle: Text(
-                              entry.triggerDetails ?? '',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                              _buildTriggerDetails(entry, context.l10n),
                             ),
                             trailing: Text(
                               _formatTime(context, entry.timestamp),
@@ -1018,6 +1017,29 @@ class AutomationsScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  String _buildTriggerDetails(AutomationLogEntry entry, AppLocalizations l10n) {
+    final typeName = entry.triggerEventType;
+    if (typeName == null) return entry.triggerDetails ?? '';
+
+    TriggerType? triggerType;
+    try {
+      triggerType = TriggerType.values.byName(typeName);
+    } catch (_) {}
+
+    final parts = <String>[
+      triggerType != null ? triggerType.localizedName(l10n) : typeName,
+    ];
+    final nodeName = entry.triggerNodeName;
+    if (nodeName != null) parts.add(l10n.automationLogNode(nodeName));
+    final batteryLevel = entry.triggerBatteryLevel;
+    if (batteryLevel != null) {
+      parts.add(l10n.automationLogBattery(batteryLevel));
+    }
+    final messageText = entry.triggerMessageText;
+    if (messageText != null) parts.add(l10n.automationLogMessage(messageText));
+    return parts.join(', ');
   }
 
   String _formatTime(BuildContext context, DateTime time) {

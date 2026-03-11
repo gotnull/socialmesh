@@ -29604,6 +29604,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get automationScheduledBody => 'Tap to run scheduled automation';
 
   @override
+  String automationLogNode(String nodeName) {
+    return 'Node: $nodeName';
+  }
+
+  @override
+  String automationLogBattery(int level) {
+    return 'Battery: $level%';
+  }
+
+  @override
+  String automationLogMessage(String text) {
+    return 'Message: $text';
+  }
+
+  @override
   String get authErrorGoogleSignInCancelled => 'Google sign in was cancelled';
 
   @override

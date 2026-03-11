@@ -973,6 +973,10 @@ class AutomationLogEntry {
   final DateTime timestamp;
   final bool success;
   final String? triggerDetails;
+  final String? triggerEventType;
+  final String? triggerNodeName;
+  final int? triggerBatteryLevel;
+  final String? triggerMessageText;
   final List<String> actionsExecuted;
   final List<ActionResult>? actionResults;
   final String? errorMessage;
@@ -983,6 +987,10 @@ class AutomationLogEntry {
     required this.timestamp,
     required this.success,
     this.triggerDetails,
+    this.triggerEventType,
+    this.triggerNodeName,
+    this.triggerBatteryLevel,
+    this.triggerMessageText,
     required this.actionsExecuted,
     this.actionResults,
     this.errorMessage,
@@ -1005,6 +1013,10 @@ class AutomationLogEntry {
     'timestamp': timestamp.toIso8601String(),
     'success': success,
     'triggerDetails': triggerDetails,
+    'triggerEventType': triggerEventType,
+    'triggerNodeName': triggerNodeName,
+    'triggerBatteryLevel': triggerBatteryLevel,
+    'triggerMessageText': triggerMessageText,
     'actionsExecuted': actionsExecuted,
     'actionResults': actionResults?.map((r) => r.toJson()).toList(),
     'errorMessage': errorMessage,
@@ -1017,6 +1029,10 @@ class AutomationLogEntry {
       timestamp: DateTime.parse(json['timestamp'] as String),
       success: json['success'] as bool,
       triggerDetails: json['triggerDetails'] as String?,
+      triggerEventType: json['triggerEventType'] as String?,
+      triggerNodeName: json['triggerNodeName'] as String?,
+      triggerBatteryLevel: json['triggerBatteryLevel'] as int?,
+      triggerMessageText: json['triggerMessageText'] as String?,
       actionsExecuted: (json['actionsExecuted'] as List).cast<String>(),
       actionResults: (json['actionResults'] as List?)
           ?.map((r) => ActionResult.fromJson(r as Map<String, dynamic>))

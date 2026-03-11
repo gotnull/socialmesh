@@ -52306,6 +52306,24 @@ abstract class AppLocalizations {
   /// **'Tap to run scheduled automation'**
   String get automationScheduledBody;
 
+  /// Label for node name in automation log entry details
+  ///
+  /// In en, this message translates to:
+  /// **'Node: {nodeName}'**
+  String automationLogNode(String nodeName);
+
+  /// Label for battery level in automation log entry details
+  ///
+  /// In en, this message translates to:
+  /// **'Battery: {level}%'**
+  String automationLogBattery(int level);
+
+  /// Label for message text in automation log entry details
+  ///
+  /// In en, this message translates to:
+  /// **'Message: {text}'**
+  String automationLogMessage(String text);
+
   /// Error message shown to the user
   ///
   /// In en, this message translates to:

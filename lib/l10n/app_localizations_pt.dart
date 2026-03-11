@@ -29915,6 +29915,21 @@ class AppLocalizationsPt extends AppLocalizations {
       'Toque para executar a automação agendada';
 
   @override
+  String automationLogNode(String nodeName) {
+    return 'Node: $nodeName';
+  }
+
+  @override
+  String automationLogBattery(int level) {
+    return 'Battery: $level%';
+  }
+
+  @override
+  String automationLogMessage(String text) {
+    return 'Message: $text';
+  }
+
+  @override
   String get authErrorGoogleSignInCancelled => 'Login do Google cancelado';
 
   @override

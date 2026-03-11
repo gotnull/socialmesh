@@ -30104,6 +30104,21 @@ class AppLocalizationsRu extends AppLocalizations {
       'Нажмите, чтобы запустить автоматизацию по расписанию';
 
   @override
+  String automationLogNode(String nodeName) {
+    return 'Node: $nodeName';
+  }
+
+  @override
+  String automationLogBattery(int level) {
+    return 'Battery: $level%';
+  }
+
+  @override
+  String automationLogMessage(String text) {
+    return 'Message: $text';
+  }
+
+  @override
   String get authErrorGoogleSignInCancelled => 'Вход через Google отменён';
 
   @override

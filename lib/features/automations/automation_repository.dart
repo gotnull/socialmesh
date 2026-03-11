@@ -443,6 +443,7 @@ class AutomationRepository extends ChangeNotifier {
   Future<void> clearLog() async {
     _log.clear();
     await _saveLog();
+    notifyListeners();
   }
 
   /// Get automations by trigger type
