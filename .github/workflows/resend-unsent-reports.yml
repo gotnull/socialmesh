@@ -7,6 +7,7 @@ on:
 
 jobs:
   resend:
+    environment: IMPROVMX_SMTP_USER
     name: Resend unsent reports
     runs-on: ubuntu-latest
     steps:
