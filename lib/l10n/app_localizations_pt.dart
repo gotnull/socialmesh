@@ -3110,6 +3110,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get channelOptionsViewKey => 'Ver chave de criptografia';
 
   @override
+  String get channelOptionsViewQr => 'View QR Code';
+
+  @override
+  String get channelOptionsViewQrInfo =>
+      'Scan this QR code in Socialmesh to join this channel';
+
+  @override
   String get channelShareCreatingInvite => 'Criando link de convite...';
 
   @override

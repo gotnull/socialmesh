@@ -11,6 +11,9 @@ import '../../core/l10n/l10n_extension.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
+import '../../core/widgets/qr_share_sheet.dart';
+import '../../generated/meshtastic/channel.pb.dart' as channel_pb;
+import '../../generated/meshtastic/channel.pbenum.dart' as channel_pbenum;
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/muted_channels_provider.dart';
@@ -48,6 +51,12 @@ Future<void> showChannelOptionsSheet(
       icon: Icons.edit,
       label: context.l10n.channelOptionsEdit,
       value: 'edit',
+    ),
+    BottomSheetAction(
+      icon: Icons.qr_code,
+      label: context.l10n.channelOptionsViewQr,
+      value: 'view_qr',
+      enabled: channel.psk.isNotEmpty,
     ),
     BottomSheetAction(
       icon: Icons.key,
@@ -93,6 +102,8 @@ Future<void> showChannelOptionsSheet(
   switch (result) {
     case 'mute':
       await ref.read(mutedChannelsProvider.notifier).toggleMute(channel.index);
+    case 'view_qr':
+      _showChannelQrCode(context, channel, channelName);
     case 'edit':
       Navigator.push(
         context,
@@ -122,6 +133,49 @@ Future<void> showChannelOptionsSheet(
     case 'delete':
       _deleteChannel(context, channel, ref);
   }
+}
+
+/// Generates a local Meshtastic-compatible channel URL for QR sharing.
+///
+/// Encodes the channel settings (name, PSK, index, role) into a
+/// protobuf-serialised, base64url-encoded URL that can be scanned
+/// by any Socialmesh / Meshtastic client — fully offline.
+String _generateChannelUrl(ChannelConfig channel) {
+  final channelSettings = channel_pb.ChannelSettings()..name = channel.name;
+
+  if (channel.psk.isNotEmpty) {
+    channelSettings.psk = channel.psk;
+  }
+
+  final proto = channel_pb.Channel()
+    ..index = channel.index
+    ..settings = channelSettings
+    ..role = channel.index == 0
+        ? channel_pbenum.Channel_Role.PRIMARY
+        : channel_pbenum.Channel_Role.SECONDARY;
+
+  final bytes = proto.writeToBuffer();
+  final encoded = base64Encode(bytes).replaceAll('+', '-').replaceAll('/', '_');
+  return 'socialmesh://channel/$encoded'; // lint-allow: hardcoded-string
+}
+
+/// Shows the channel QR code bottom sheet for offline sharing.
+void _showChannelQrCode(
+  BuildContext context,
+  ChannelConfig channel,
+  String channelName,
+) {
+  final channelUrl = _generateChannelUrl(channel);
+
+  QrShareSheet.show(
+    context: context,
+    title: channelName,
+    subtitle: channel.psk.isNotEmpty
+        ? context.l10n.channelOptionsEncrypted
+        : context.l10n.channelOptionsNoEncryption,
+    qrData: channelUrl,
+    infoText: context.l10n.channelOptionsViewQrInfo,
+  );
 }
 
 /// Shows the encryption key bottom sheet.

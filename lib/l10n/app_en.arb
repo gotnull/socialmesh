@@ -4087,6 +4087,14 @@
     "@channelOptionsViewKey": {
         "description": "Text displayed in channel configuration"
     },
+    "channelOptionsViewQr": "View QR Code",
+    "@channelOptionsViewQr": {
+        "description": "Action to view the channel QR code for offline sharing"
+    },
+    "channelOptionsViewQrInfo": "Scan this QR code in Socialmesh to join this channel",
+    "@channelOptionsViewQrInfo": {
+        "description": "Info text shown below the channel QR code"
+    },
     "channelShareCreatingInvite": "Creating invite link...",
     "@channelShareCreatingInvite": {
         "description": "Text displayed in channel configuration"

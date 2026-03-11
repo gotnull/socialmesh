@@ -5542,6 +5542,18 @@ abstract class AppLocalizations {
   /// **'View Encryption Key'**
   String get channelOptionsViewKey;
 
+  /// Action to view the channel QR code for offline sharing
+  ///
+  /// In en, this message translates to:
+  /// **'View QR Code'**
+  String get channelOptionsViewQr;
+
+  /// Info text shown below the channel QR code
+  ///
+  /// In en, this message translates to:
+  /// **'Scan this QR code in Socialmesh to join this channel'**
+  String get channelOptionsViewQrInfo;
+
   /// Text displayed in channel configuration
   ///
   /// In en, this message translates to:

@@ -3081,6 +3081,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get channelOptionsViewKey => 'View Encryption Key';
 
   @override
+  String get channelOptionsViewQr => 'View QR Code';
+
+  @override
+  String get channelOptionsViewQrInfo =>
+      'Scan this QR code in Socialmesh to join this channel';
+
+  @override
   String get channelShareCreatingInvite => 'Creating invite link...';
 
   @override
