@@ -2676,7 +2676,12 @@ class _WorldLosResultPanel extends StatelessWidget {
               Icon(verdictIcon, size: 16, color: verdictColor),
               const SizedBox(width: AppTheme.spacing4),
               Text(
-                context.l10n.worldMeshLosVerdict(result.verdict.label),
+                context.l10n.worldMeshLosVerdict(switch (result.verdict) {
+                  LosVerdict.clear => context.l10n.losVerdictClear,
+                  LosVerdict.marginal => context.l10n.losVerdictMarginal,
+                  LosVerdict.obstructed => context.l10n.losVerdictObstructed,
+                  LosVerdict.unknown => context.l10n.losVerdictUnknown,
+                }),
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -2694,10 +2699,19 @@ class _WorldLosResultPanel extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppTheme.spacing4),
-          Text(
-            result.explanation,
-            style: TextStyle(fontSize: 11, color: context.textSecondary),
-          ),
+          Text(switch (result.verdict) {
+            LosVerdict.unknown => context.l10n.losExplanationNoAltitude,
+            LosVerdict.obstructed => context.l10n.losExplanationObstructed(
+              (-result.actualClearanceMeters).toStringAsFixed(0),
+            ),
+            LosVerdict.clear => context.l10n.losExplanationClear(
+              result.actualClearanceMeters.toStringAsFixed(0),
+            ),
+            LosVerdict.marginal => context.l10n.losExplanationMarginal(
+              result.actualClearanceMeters.toStringAsFixed(0),
+              result.requiredClearanceMeters.toStringAsFixed(0),
+            ),
+          }, style: TextStyle(fontSize: 11, color: context.textSecondary)),
         ],
       ),
     );

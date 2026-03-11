@@ -55749,6 +55749,186 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No matching services'**
   String get meshServicesNoResults;
+
+  /// Label for the terrain profile action in the measurement card actions sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Terrain Profile'**
+  String get mapTerrainProfile;
+
+  /// Subtitle for the terrain profile action button.
+  ///
+  /// In en, this message translates to:
+  /// **'Elevation cross-section + LOS overlay'**
+  String get mapTerrainProfileSubtitle;
+
+  /// Title for the terrain profile screen app bar.
+  ///
+  /// In en, this message translates to:
+  /// **'Terrain Profile'**
+  String get mapTerrainProfileTitle;
+
+  /// Loading message shown while the elevation API request is in progress.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetching elevation data…'**
+  String get mapTerrainProfileLoading;
+
+  /// Warning shown when the device is offline and elevation data cannot be fetched.
+  ///
+  /// In en, this message translates to:
+  /// **'Elevation data unavailable offline'**
+  String get mapTerrainProfileOffline;
+
+  /// Subtitle for the offline warning on the terrain profile screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to the internet to load terrain elevation.'**
+  String get mapTerrainProfileOfflineSubtitle;
+
+  /// Error message shown when the elevation API call fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load elevation data'**
+  String get mapTerrainProfileError;
+
+  /// Subtitle for the elevation fetch error banner.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your connection and try again.'**
+  String get mapTerrainProfileErrorSubtitle;
+
+  /// Note shown when endpoint altitude data is missing and the LOS line cannot be rendered.
+  ///
+  /// In en, this message translates to:
+  /// **'LOS overlay unavailable'**
+  String get mapTerrainProfileNeedsAltitude;
+
+  /// Subtitle explaining why the LOS overlay is hidden.
+  ///
+  /// In en, this message translates to:
+  /// **'One or both nodes have no GPS altitude. Terrain profile is still shown.'**
+  String get mapTerrainProfileNeedsAltitudeSubtitle;
+
+  /// Label showing how many elevation samples were loaded.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} elevation samples'**
+  String mapTerrainProfileSampleCount(int count);
+
+  /// Terrain-aware LOS verdict label.
+  ///
+  /// In en, this message translates to:
+  /// **'Terrain LOS: {verdict}'**
+  String mapTerrainLosVerdict(String verdict);
+
+  /// Shown when a path is obstructed and extra height is needed.
+  ///
+  /// In en, this message translates to:
+  /// **'Additional clearance needed: {meters}m'**
+  String mapTerrainAdditionalClearance(String meters);
+
+  /// Button label to retry a failed elevation fetch.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get mapTerrainRetry;
+
+  /// Explanation shown when terrain fully blocks the LOS path.
+  ///
+  /// In en, this message translates to:
+  /// **'Terrain obstructs path by {depth}m at the worst point.'**
+  String terrainLosExplanationObstructed(String depth);
+
+  /// Explanation shown when terrain causes marginal LOS degradation.
+  ///
+  /// In en, this message translates to:
+  /// **'Path clears terrain but Fresnel zone is partially obstructed. Signal may be degraded.'**
+  String get terrainLosExplanationMarginal;
+
+  /// Explanation shown when terrain LOS is fully clear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear LOS with ≥60% first Fresnel zone clearance throughout.'**
+  String get terrainLosExplanationClear;
+
+  /// Abbreviation for kilometres, used as a chart axis label.
+  ///
+  /// In en, this message translates to:
+  /// **'km'**
+  String get unitKm;
+
+  /// Abbreviation for metres, used as a chart axis label.
+  ///
+  /// In en, this message translates to:
+  /// **'m'**
+  String get unitM;
+
+  /// Altitude suffix shown next to a node name in the terrain profile endpoint row.
+  ///
+  /// In en, this message translates to:
+  /// **'· {value}m'**
+  String mapTerrainNodeAltitude(String value);
+
+  /// Endpoint label in the terrain profile screen, e.g. 'A: Node Name'.
+  ///
+  /// In en, this message translates to:
+  /// **'{prefix}: {name}'**
+  String mapTerrainEndpointLabel(String prefix, String name);
+
+  /// Endpoint label when no node name is available, showing coordinates.
+  ///
+  /// In en, this message translates to:
+  /// **'{prefix}: {lat}, {lon}'**
+  String mapTerrainEndpointCoords(String prefix, String lat, String lon);
+
+  /// LOS verdict label: clear line of sight.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get losVerdictClear;
+
+  /// LOS verdict label: marginal line of sight.
+  ///
+  /// In en, this message translates to:
+  /// **'Marginal'**
+  String get losVerdictMarginal;
+
+  /// LOS verdict label: path is obstructed.
+  ///
+  /// In en, this message translates to:
+  /// **'Obstructed'**
+  String get losVerdictObstructed;
+
+  /// LOS verdict label: insufficient data to determine LOS.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get losVerdictUnknown;
+
+  /// LOS result explanation when altitude data is missing.
+  ///
+  /// In en, this message translates to:
+  /// **'Altitude data unavailable for one or both points.'**
+  String get losExplanationNoAltitude;
+
+  /// LOS result explanation when earth curvature blocks the path.
+  ///
+  /// In en, this message translates to:
+  /// **'Earth curvature obstructs the path by {depth}m at midpoint. Terrain/obstacles not considered.'**
+  String losExplanationObstructed(String depth);
+
+  /// LOS result explanation when line of sight is clear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear line of sight with {clearance}m clearance above earth bulge. Terrain/obstacles not considered.'**
+  String losExplanationClear(String clearance);
+
+  /// LOS result explanation when clearance is below the Fresnel threshold.
+  ///
+  /// In en, this message translates to:
+  /// **'Marginal clearance ({clearance}m) — below the recommended {required}m Fresnel clearance. Terrain/obstacles not considered.'**
+  String losExplanationMarginal(String clearance, String required);
 }
 
 class _AppLocalizationsDelegate

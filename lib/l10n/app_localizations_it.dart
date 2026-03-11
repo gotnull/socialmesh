@@ -31935,4 +31935,121 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get meshServicesNoResults => 'No matching services';
+
+  @override
+  String get mapTerrainProfile => 'Terrain Profile';
+
+  @override
+  String get mapTerrainProfileSubtitle =>
+      'Elevation cross-section + LOS overlay';
+
+  @override
+  String get mapTerrainProfileTitle => 'Terrain Profile';
+
+  @override
+  String get mapTerrainProfileLoading => 'Fetching elevation data…';
+
+  @override
+  String get mapTerrainProfileOffline => 'Elevation data unavailable offline';
+
+  @override
+  String get mapTerrainProfileOfflineSubtitle =>
+      'Connect to the internet to load terrain elevation.';
+
+  @override
+  String get mapTerrainProfileError => 'Could not load elevation data';
+
+  @override
+  String get mapTerrainProfileErrorSubtitle =>
+      'Check your connection and try again.';
+
+  @override
+  String get mapTerrainProfileNeedsAltitude => 'LOS overlay unavailable';
+
+  @override
+  String get mapTerrainProfileNeedsAltitudeSubtitle =>
+      'One or both nodes have no GPS altitude. Terrain profile is still shown.';
+
+  @override
+  String mapTerrainProfileSampleCount(int count) {
+    return '$count elevation samples';
+  }
+
+  @override
+  String mapTerrainLosVerdict(String verdict) {
+    return 'Terrain LOS: $verdict';
+  }
+
+  @override
+  String mapTerrainAdditionalClearance(String meters) {
+    return 'Additional clearance needed: ${meters}m';
+  }
+
+  @override
+  String get mapTerrainRetry => 'Retry';
+
+  @override
+  String terrainLosExplanationObstructed(String depth) {
+    return 'Terrain obstructs path by ${depth}m at the worst point.';
+  }
+
+  @override
+  String get terrainLosExplanationMarginal =>
+      'Path clears terrain but Fresnel zone is partially obstructed. Signal may be degraded.';
+
+  @override
+  String get terrainLosExplanationClear =>
+      'Clear LOS with ≥60% first Fresnel zone clearance throughout.';
+
+  @override
+  String get unitKm => 'km';
+
+  @override
+  String get unitM => 'm';
+
+  @override
+  String mapTerrainNodeAltitude(String value) {
+    return '· ${value}m';
+  }
+
+  @override
+  String mapTerrainEndpointLabel(String prefix, String name) {
+    return '$prefix: $name';
+  }
+
+  @override
+  String mapTerrainEndpointCoords(String prefix, String lat, String lon) {
+    return '$prefix: $lat, $lon';
+  }
+
+  @override
+  String get losVerdictClear => 'Clear';
+
+  @override
+  String get losVerdictMarginal => 'Marginal';
+
+  @override
+  String get losVerdictObstructed => 'Obstructed';
+
+  @override
+  String get losVerdictUnknown => 'Unknown';
+
+  @override
+  String get losExplanationNoAltitude =>
+      'Altitude data unavailable for one or both points.';
+
+  @override
+  String losExplanationObstructed(String depth) {
+    return 'Earth curvature obstructs the path by ${depth}m at midpoint. Terrain/obstacles not considered.';
+  }
+
+  @override
+  String losExplanationClear(String clearance) {
+    return 'Clear line of sight with ${clearance}m clearance above earth bulge. Terrain/obstacles not considered.';
+  }
+
+  @override
+  String losExplanationMarginal(String clearance, String required) {
+    return 'Marginal clearance (${clearance}m) — below the recommended ${required}m Fresnel clearance. Terrain/obstacles not considered.';
+  }
 }

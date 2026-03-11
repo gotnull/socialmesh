@@ -54,6 +54,7 @@ import '../tak/utils/cot_affiliation.dart';
 import '../tak/screens/tak_dashboard_screen.dart';
 import '../tak/screens/tak_event_detail_screen.dart';
 import '../tak/screens/tak_navigate_screen.dart';
+import 'terrain_profile_screen.dart';
 import '../tak/widgets/tak_map_layer.dart';
 import '../tak/widgets/tak_heading_vector_layer.dart';
 import '../tak/widgets/tak_trail_layer.dart';
@@ -3304,6 +3305,24 @@ class _MeasurementCardState extends State<_MeasurementCard> {
             onTap: () => setState(() => _showLos = !_showLos),
           ),
         BottomSheetAction(
+          icon: Icons.landscape,
+          label: context.l10n.mapTerrainProfile,
+          subtitle: context.l10n.mapTerrainProfileSubtitle,
+          onTap: () {
+            final capturedContext = context;
+            Navigator.of(capturedContext).push(
+              MaterialPageRoute<void>(
+                builder: (_) => TerrainProfileScreen(
+                  start: widget.start,
+                  end: widget.end,
+                  nodeA: widget.nodeA,
+                  nodeB: widget.nodeB,
+                ),
+              ),
+            );
+          },
+        ),
+        BottomSheetAction(
           icon: Icons.share,
           label: context.l10n.mapShareMeasurement,
           subtitle: context.l10n.mapShareMeasurementSubtitle,
@@ -3596,7 +3615,12 @@ class _LosResultPanel extends StatelessWidget {
               Icon(verdictIcon, size: 16, color: verdictColor),
               const SizedBox(width: AppTheme.spacing4),
               Text(
-                context.l10n.mapLosVerdict(result.verdict.label),
+                context.l10n.mapLosVerdict(switch (result.verdict) {
+                  LosVerdict.clear => context.l10n.losVerdictClear,
+                  LosVerdict.marginal => context.l10n.losVerdictMarginal,
+                  LosVerdict.obstructed => context.l10n.losVerdictObstructed,
+                  LosVerdict.unknown => context.l10n.losVerdictUnknown,
+                }),
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -3614,10 +3638,19 @@ class _LosResultPanel extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppTheme.spacing4),
-          Text(
-            result.explanation,
-            style: TextStyle(fontSize: 11, color: context.textSecondary),
-          ),
+          Text(switch (result.verdict) {
+            LosVerdict.unknown => context.l10n.losExplanationNoAltitude,
+            LosVerdict.obstructed => context.l10n.losExplanationObstructed(
+              (-result.actualClearanceMeters).toStringAsFixed(0),
+            ),
+            LosVerdict.clear => context.l10n.losExplanationClear(
+              result.actualClearanceMeters.toStringAsFixed(0),
+            ),
+            LosVerdict.marginal => context.l10n.losExplanationMarginal(
+              result.actualClearanceMeters.toStringAsFixed(0),
+              result.requiredClearanceMeters.toStringAsFixed(0),
+            ),
+          }, style: TextStyle(fontSize: 11, color: context.textSecondary)),
         ],
       ),
     );

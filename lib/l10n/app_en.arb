@@ -42321,5 +42321,169 @@
     "meshServicesNoResults": "No matching services",
     "@meshServicesNoResults": {
         "description": "Empty state text when search or filter yields no results."
+    },
+    "mapTerrainProfile": "Terrain Profile",
+    "@mapTerrainProfile": {
+        "description": "Label for the terrain profile action in the measurement card actions sheet."
+    },
+    "mapTerrainProfileSubtitle": "Elevation cross-section + LOS overlay",
+    "@mapTerrainProfileSubtitle": {
+        "description": "Subtitle for the terrain profile action button."
+    },
+    "mapTerrainProfileTitle": "Terrain Profile",
+    "@mapTerrainProfileTitle": {
+        "description": "Title for the terrain profile screen app bar."
+    },
+    "mapTerrainProfileLoading": "Fetching elevation data\u2026",
+    "@mapTerrainProfileLoading": {
+        "description": "Loading message shown while the elevation API request is in progress."
+    },
+    "mapTerrainProfileOffline": "Elevation data unavailable offline",
+    "@mapTerrainProfileOffline": {
+        "description": "Warning shown when the device is offline and elevation data cannot be fetched."
+    },
+    "mapTerrainProfileOfflineSubtitle": "Connect to the internet to load terrain elevation.",
+    "@mapTerrainProfileOfflineSubtitle": {
+        "description": "Subtitle for the offline warning on the terrain profile screen."
+    },
+    "mapTerrainProfileError": "Could not load elevation data",
+    "@mapTerrainProfileError": {
+        "description": "Error message shown when the elevation API call fails."
+    },
+    "mapTerrainProfileErrorSubtitle": "Check your connection and try again.",
+    "@mapTerrainProfileErrorSubtitle": {
+        "description": "Subtitle for the elevation fetch error banner."
+    },
+    "mapTerrainProfileNeedsAltitude": "LOS overlay unavailable",
+    "@mapTerrainProfileNeedsAltitude": {
+        "description": "Note shown when endpoint altitude data is missing and the LOS line cannot be rendered."
+    },
+    "mapTerrainProfileNeedsAltitudeSubtitle": "One or both nodes have no GPS altitude. Terrain profile is still shown.",
+    "@mapTerrainProfileNeedsAltitudeSubtitle": {
+        "description": "Subtitle explaining why the LOS overlay is hidden."
+    },
+    "mapTerrainProfileSampleCount": "{count} elevation samples",
+    "@mapTerrainProfileSampleCount": {
+        "description": "Label showing how many elevation samples were loaded.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "mapTerrainLosVerdict": "Terrain LOS: {verdict}",
+    "@mapTerrainLosVerdict": {
+        "description": "Terrain-aware LOS verdict label.",
+        "placeholders": {
+            "verdict": {
+                "type": "String"
+            }
+        }
+    },
+    "mapTerrainAdditionalClearance": "Additional clearance needed: {meters}m",
+    "@mapTerrainAdditionalClearance": {
+        "description": "Shown when a path is obstructed and extra height is needed.",
+        "placeholders": {
+            "meters": {
+                "type": "String"
+            }
+        }
+    },
+    "mapTerrainRetry": "Retry",
+    "@mapTerrainRetry": {
+        "description": "Button label to retry a failed elevation fetch."
+    },
+    "terrainLosExplanationObstructed": "Terrain obstructs path by {depth}m at the worst point.",
+    "@terrainLosExplanationObstructed": {
+        "description": "Explanation shown when terrain fully blocks the LOS path.",
+        "placeholders": {
+            "depth": {
+                "type": "String"
+            }
+        }
+    },
+    "terrainLosExplanationMarginal": "Path clears terrain but Fresnel zone is partially obstructed. Signal may be degraded.",
+    "@terrainLosExplanationMarginal": {
+        "description": "Explanation shown when terrain causes marginal LOS degradation."
+    },
+    "terrainLosExplanationClear": "Clear LOS with ≥60% first Fresnel zone clearance throughout.",
+    "@terrainLosExplanationClear": {
+        "description": "Explanation shown when terrain LOS is fully clear."
+    },
+    "unitKm": "km",
+    "@unitKm": {
+        "description": "Abbreviation for kilometres, used as a chart axis label."
+    },
+    "unitM": "m",
+    "@unitM": {
+        "description": "Abbreviation for metres, used as a chart axis label."
+    },
+    "mapTerrainNodeAltitude": "· {value}m",
+    "@mapTerrainNodeAltitude": {
+        "description": "Altitude suffix shown next to a node name in the terrain profile endpoint row.",
+        "placeholders": {
+            "value": {
+                "type": "String"
+            }
+        }
+    },
+    "mapTerrainEndpointLabel": "{prefix}: {name}",
+    "@mapTerrainEndpointLabel": {
+        "description": "Endpoint label in the terrain profile screen, e.g. 'A: Node Name'.",
+        "placeholders": {
+            "prefix": { "type": "String" },
+            "name": { "type": "String" }
+        }
+    },
+    "mapTerrainEndpointCoords": "{prefix}: {lat}, {lon}",
+    "@mapTerrainEndpointCoords": {
+        "description": "Endpoint label when no node name is available, showing coordinates.",
+        "placeholders": {
+            "prefix": { "type": "String" },
+            "lat": { "type": "String" },
+            "lon": { "type": "String" }
+        }
+    },
+    "losVerdictClear": "Clear",
+    "@losVerdictClear": {
+        "description": "LOS verdict label: clear line of sight."
+    },
+    "losVerdictMarginal": "Marginal",
+    "@losVerdictMarginal": {
+        "description": "LOS verdict label: marginal line of sight."
+    },
+    "losVerdictObstructed": "Obstructed",
+    "@losVerdictObstructed": {
+        "description": "LOS verdict label: path is obstructed."
+    },
+    "losVerdictUnknown": "Unknown",
+    "@losVerdictUnknown": {
+        "description": "LOS verdict label: insufficient data to determine LOS."
+    },
+    "losExplanationNoAltitude": "Altitude data unavailable for one or both points.",
+    "@losExplanationNoAltitude": {
+        "description": "LOS result explanation when altitude data is missing."
+    },
+    "losExplanationObstructed": "Earth curvature obstructs the path by {depth}m at midpoint. Terrain/obstacles not considered.",
+    "@losExplanationObstructed": {
+        "description": "LOS result explanation when earth curvature blocks the path.",
+        "placeholders": {
+            "depth": { "type": "String" }
+        }
+    },
+    "losExplanationClear": "Clear line of sight with {clearance}m clearance above earth bulge. Terrain/obstacles not considered.",
+    "@losExplanationClear": {
+        "description": "LOS result explanation when line of sight is clear.",
+        "placeholders": {
+            "clearance": { "type": "String" }
+        }
+    },
+    "losExplanationMarginal": "Marginal clearance ({clearance}m) — below the recommended {required}m Fresnel clearance. Terrain/obstacles not considered.",
+    "@losExplanationMarginal": {
+        "description": "LOS result explanation when clearance is below the Fresnel threshold.",
+        "placeholders": {
+            "clearance": { "type": "String" },
+            "required": { "type": "String" }
+        }
     }
 }
