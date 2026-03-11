@@ -51,6 +51,7 @@ import 'connection_providers.dart';
 import 'age_eligibility_provider.dart';
 import 'file_transfer_providers.dart';
 import 'muted_channels_provider.dart';
+import '../services/messaging/dm_retry_coordinator.dart';
 
 // App initialization state - purely about app lifecycle, NOT device connection
 // Device connection is handled separately by DeviceConnectionNotifier in connection_providers.dart
@@ -2748,6 +2749,11 @@ class MessagesNotifier extends Notifier<List<Message>> {
     // Load persisted messages asynchronously
     _loadFromStorage();
 
+    // Ensure the retry coordinator is running for the lifetime of this
+    // provider. Watching it here (rather than in a widget) guarantees it
+    // stays alive even when no conversation screen is open.
+    ref.watch(dmRetryCoordinatorProvider);
+
     return [];
   }
 
@@ -3176,11 +3182,23 @@ class MessagesNotifier extends Notifier<List<Message>> {
       return;
     }
 
-    final updatedMessage = message.copyWith(
-      status: update.isSuccess ? MessageStatus.delivered : MessageStatus.failed,
-      routingError: update.error,
-      errorMessage: update.error?.message,
-    );
+    Message updatedMessage;
+    if (update.isSuccess) {
+      // Confirmed — clear all retry state; the message is delivered.
+      updatedMessage = message.copyWith(
+        status: MessageStatus.delivered,
+        autoRetryEnabled: false,
+        retryCount: 0,
+        acked: true,
+        clearLastAttemptAt: true,
+      );
+    } else {
+      updatedMessage = message.copyWith(
+        status: MessageStatus.failed,
+        routingError: update.error,
+        errorMessage: update.error?.message,
+      );
+    }
 
     state = [
       ...state.sublist(0, messageIndex),
@@ -3206,6 +3224,16 @@ class MessagesNotifier extends Notifier<List<Message>> {
     AppLogging.debug(
       '📨 Current tracked packets: ${_packetToMessageId.keys.toList()}',
     );
+  }
+
+  /// Remove a packet from the delivery-tracking map.
+  ///
+  /// Called before a resend so that a late delivery failure for the
+  /// *previous* packet ID cannot incorrectly overwrite the new in-flight
+  /// state.
+  void untrackPacket(int packetId) {
+    _packetToMessageId.remove(packetId);
+    AppLogging.debug('📨 Untracked stale packet $packetId');
   }
 
   void addMessage(Message message) {
@@ -3575,6 +3603,24 @@ class MessagesNotifier extends Notifier<List<Message>> {
 final messagesProvider = NotifierProvider<MessagesNotifier, List<Message>>(
   MessagesNotifier.new,
 );
+
+/// Bounded DM resend and auto-retry coordinator.
+///
+/// Kept alive by [MessagesNotifier] which watches this provider in its
+/// [build] method, so the coordinator runs for the full lifetime of the
+/// messages provider — even when no conversation screen is open.
+///
+/// The coordinator is foreground-only: the internal [Timer] only fires
+/// while the app process is active.  On app restart the coordinator will
+/// reset any messages stuck in [MessageStatus.retrying] back to
+/// [MessageStatus.unconfirmed] so that auto-retry can resume from the
+/// next tick if still within the expiry window and attempt limit.
+final dmRetryCoordinatorProvider = Provider<DmRetryCoordinator>((ref) {
+  final coordinator = DmRetryCoordinator(ref);
+  coordinator.start();
+  ref.onDispose(coordinator.dispose);
+  return coordinator;
+});
 
 // Nodes
 class NodesNotifier extends Notifier<Map<int, MeshNode>> {

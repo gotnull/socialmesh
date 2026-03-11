@@ -435,3 +435,34 @@ enum PrivacyLevel {
   final String description;
   const PrivacyLevel(this.displayName, this.description);
 }
+
+/// Constants governing the DM confirmation-timeout and bounded auto-retry
+/// feature.  Centralised here so they are easy to adjust without hunting
+/// through UI code.
+class DmRetryConstants {
+  DmRetryConstants._();
+
+  /// A sent DM with no ACK after this duration transitions from "Sent to
+  /// radio" → "Unconfirmed".
+  ///
+  /// Rationale: Meshtastic firmware retransmits up to ~5× over ~15–30 s.
+  /// Five minutes gives ample time for the packet to traverse the mesh and
+  /// for the radio's own firmware-level retry mechanism to complete.
+  static const Duration ackTimeout = Duration(minutes: 5);
+
+  /// Fixed interval between auto-retry attempts.
+  static const Duration retryInterval = Duration(seconds: 60);
+
+  /// Maximum number of auto-retry attempts before the coordinator gives up
+  /// and leaves the message in the Unconfirmed state.
+  static const int maxAutoRetries = 5;
+
+  /// Auto-retry stops after this window measured from the first send time,
+  /// regardless of [maxAutoRetries].
+  static const Duration autoRetryWindow = Duration(minutes: 10);
+
+  /// How often the retry coordinator polls for timed-out / unconfirmed
+  /// messages.  Short enough to notice timeouts promptly; long enough to
+  /// be negligible on battery.
+  static const Duration coordinatorTickInterval = Duration(seconds: 15);
+}

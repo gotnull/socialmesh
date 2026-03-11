@@ -11011,6 +11011,50 @@
     "@messagingRetryMessage": {
         "description": "Button label to retry sending a failed message."
     },
+    "messagingStatusAwaitingConfirmation": "Awaiting confirmation",
+    "@messagingStatusAwaitingConfirmation": {
+        "description": "Delivery status label shown on a DM that has been sent to the radio but no ACK has been received yet."
+    },
+    "messagingStatusUnconfirmed": "Unconfirmed",
+    "@messagingStatusUnconfirmed": {
+        "description": "Delivery status label shown on a DM that timed out without receiving an ACK."
+    },
+    "messagingStatusRetrying": "Retrying",
+    "@messagingStatusRetrying": {
+        "description": "Delivery status label shown while an auto-retry is in progress."
+    },
+    "messagingStatusConfirmed": "Confirmed",
+    "@messagingStatusConfirmed": {
+        "description": "Delivery status label shown when a DM has been confirmed by the mesh network."
+    },
+    "messagingStatusSentToRadio": "Sent to radio",
+    "@messagingStatusSentToRadio": {
+        "description": "Delivery status label shown immediately after a message has been handed to the radio."
+    },
+    "messagingResend": "Resend",
+    "@messagingResend": {
+        "description": "Action label for manually resending an unconfirmed direct message."
+    },
+    "messagingAutoRetryEnable": "Retry every 60s until confirmed",
+    "@messagingAutoRetryEnable": {
+        "description": "Action label to enable bounded automatic resend for an unconfirmed DM."
+    },
+    "messagingAutoRetryStop": "Stop retrying",
+    "@messagingAutoRetryStop": {
+        "description": "Action label to cancel an active auto-retry for a DM."
+    },
+    "messagingAutoRetryWarning": "May increase airtime and battery usage",
+    "@messagingAutoRetryWarning": {
+        "description": "Warning subtitle shown alongside the auto-retry option."
+    },
+    "messagingRetryProgress": "{count}/{max} retries",
+    "@messagingRetryProgress": {
+        "description": "Shows current retry attempt count vs maximum.",
+        "placeholders": {
+            "count": {"type": "int"},
+            "max": {"type": "int"}
+        }
+    },
     "messagingScanQrCode": "Scan QR code",
     "@messagingScanQrCode": {
         "description": "Popup menu item to scan a QR code for a channel."

@@ -27,6 +27,9 @@ class MessageContextMenu extends ConsumerStatefulWidget {
   final int? channelIndex;
   final VoidCallback? onReply;
   final VoidCallback? onDelete;
+  final VoidCallback? onResend;
+  final VoidCallback? onAutoRetry;
+  final VoidCallback? onStopRetry;
 
   const MessageContextMenu({
     super.key,
@@ -36,6 +39,9 @@ class MessageContextMenu extends ConsumerStatefulWidget {
     this.channelIndex,
     this.onReply,
     this.onDelete,
+    this.onResend,
+    this.onAutoRetry,
+    this.onStopRetry,
   });
 
   @override
@@ -117,6 +123,42 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
           _buildDetailsSection(),
 
           _buildDivider(),
+
+          // Resend (unconfirmed DMs only)
+          if (widget.onResend != null) ...[
+            _buildMenuItem(
+              icon: Icons.send,
+              label: context.l10n.messagingResend,
+              onTap: () {
+                Navigator.pop(context);
+                widget.onResend?.call();
+              },
+            ),
+          ],
+
+          // Auto-retry enable (unconfirmed DMs without active retry)
+          if (widget.onAutoRetry != null) ...[
+            _buildMenuItem(
+              icon: Icons.loop,
+              label: context.l10n.messagingAutoRetryEnable,
+              onTap: () {
+                Navigator.pop(context);
+                widget.onAutoRetry?.call();
+              },
+            ),
+          ],
+
+          // Stop retrying (active auto-retry)
+          if (widget.onStopRetry != null) ...[
+            _buildMenuItem(
+              icon: Icons.stop_circle_outlined,
+              label: context.l10n.messagingAutoRetryStop,
+              onTap: () {
+                Navigator.pop(context);
+                widget.onStopRetry?.call();
+              },
+            ),
+          ],
 
           // Delete
           _buildMenuItem(
@@ -418,6 +460,10 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
           widget.message.errorMessage ??
               'Unknown error', // lint-allow: hardcoded-string
         );
+      case MessageStatus.unconfirmed:
+        return context.l10n.messagingStatusUnconfirmed;
+      case MessageStatus.retrying:
+        return context.l10n.messagingStatusRetrying;
     }
   }
 }
@@ -431,6 +477,9 @@ Future<void> showMessageContextMenu(
   int? channelIndex,
   VoidCallback? onReply,
   VoidCallback? onDelete,
+  VoidCallback? onResend,
+  VoidCallback? onAutoRetry,
+  VoidCallback? onStopRetry,
 }) {
   HapticFeedback.selectionClick();
 
@@ -449,6 +498,9 @@ Future<void> showMessageContextMenu(
         channelIndex: channelIndex,
         onReply: onReply,
         onDelete: onDelete,
+        onResend: onResend,
+        onAutoRetry: onAutoRetry,
+        onStopRetry: onStopRetry,
       ),
     ),
   );

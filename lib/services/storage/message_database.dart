@@ -24,7 +24,7 @@ import '../../utils/text_sanitizer.dart';
 class MessageDatabase {
   static const _dbName = 'messages.db';
   static const _tableName = 'messages';
-  static const _dbVersion = 4;
+  static const _dbVersion = 5;
 
   /// Maximum messages retained per conversation (DM or channel).
   static const int maxMessagesPerConversation = 500;
@@ -103,6 +103,23 @@ class MessageDatabase {
           );
           AppLogging.storage('Added hop_count, rx_snr, rx_rssi columns (v4)');
         }
+        if (oldVersion < 5) {
+          await db.execute(
+            'ALTER TABLE $_tableName ADD COLUMN sent_at INTEGER', // lint-allow: hardcoded-string
+          );
+          await db.execute(
+            'ALTER TABLE $_tableName ADD COLUMN last_attempt_at INTEGER', // lint-allow: hardcoded-string
+          );
+          await db.execute(
+            'ALTER TABLE $_tableName ADD COLUMN retry_count INTEGER NOT NULL DEFAULT 0', // lint-allow: hardcoded-string
+          );
+          await db.execute(
+            'ALTER TABLE $_tableName ADD COLUMN auto_retry_enabled INTEGER NOT NULL DEFAULT 0', // lint-allow: hardcoded-string
+          );
+          AppLogging.storage(
+            'Added sent_at, last_attempt_at, retry_count, auto_retry_enabled columns (v5)',
+          );
+        }
       },
     );
 
@@ -146,7 +163,11 @@ class MessageDatabase {
         is_emoji INTEGER NOT NULL DEFAULT 0,
         hop_count INTEGER,
         rx_snr REAL,
-        rx_rssi INTEGER
+        rx_rssi INTEGER,
+        sent_at INTEGER,
+        last_attempt_at INTEGER,
+        retry_count INTEGER NOT NULL DEFAULT 0,
+        auto_retry_enabled INTEGER NOT NULL DEFAULT 0
       )
     ''');
 
@@ -394,6 +415,10 @@ class MessageDatabase {
       'hop_count': message.hopCount,
       'rx_snr': message.rxSnr,
       'rx_rssi': message.rxRssi,
+      'sent_at': message.sentAt?.millisecondsSinceEpoch,
+      'last_attempt_at': message.lastAttemptAt?.millisecondsSinceEpoch,
+      'retry_count': message.retryCount,
+      'auto_retry_enabled': message.autoRetryEnabled ? 1 : 0,
     };
   }
 
@@ -426,6 +451,14 @@ class MessageDatabase {
       hopCount: row['hop_count'] as int?,
       rxSnr: (row['rx_snr'] as num?)?.toDouble(),
       rxRssi: row['rx_rssi'] as int?,
+      sentAt: row['sent_at'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(row['sent_at'] as int)
+          : null,
+      lastAttemptAt: row['last_attempt_at'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(row['last_attempt_at'] as int)
+          : null,
+      retryCount: (row['retry_count'] as int?) ?? 0,
+      autoRetryEnabled: (row['auto_retry_enabled'] as int?) == 1,
     );
   }
 

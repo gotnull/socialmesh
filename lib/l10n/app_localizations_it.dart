@@ -8254,6 +8254,39 @@ class AppLocalizationsIt extends AppLocalizations {
   String get messagingRetryMessage => 'Riprova messaggio';
 
   @override
+  String get messagingStatusAwaitingConfirmation => 'Awaiting confirmation';
+
+  @override
+  String get messagingStatusUnconfirmed => 'Unconfirmed';
+
+  @override
+  String get messagingStatusRetrying => 'Retrying';
+
+  @override
+  String get messagingStatusConfirmed => 'Confirmed';
+
+  @override
+  String get messagingStatusSentToRadio => 'Sent to radio';
+
+  @override
+  String get messagingResend => 'Resend';
+
+  @override
+  String get messagingAutoRetryEnable => 'Retry every 60s until confirmed';
+
+  @override
+  String get messagingAutoRetryStop => 'Stop retrying';
+
+  @override
+  String get messagingAutoRetryWarning =>
+      'May increase airtime and battery usage';
+
+  @override
+  String messagingRetryProgress(int count, int max) {
+    return '$count/$max retries';
+  }
+
+  @override
   String get messagingScanQrCode => 'Scansiona codice QR';
 
   @override

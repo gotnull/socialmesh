@@ -14623,6 +14623,66 @@ abstract class AppLocalizations {
   /// **'Retry Message'**
   String get messagingRetryMessage;
 
+  /// Delivery status label shown on a DM that has been sent to the radio but no ACK has been received yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Awaiting confirmation'**
+  String get messagingStatusAwaitingConfirmation;
+
+  /// Delivery status label shown on a DM that timed out without receiving an ACK.
+  ///
+  /// In en, this message translates to:
+  /// **'Unconfirmed'**
+  String get messagingStatusUnconfirmed;
+
+  /// Delivery status label shown while an auto-retry is in progress.
+  ///
+  /// In en, this message translates to:
+  /// **'Retrying'**
+  String get messagingStatusRetrying;
+
+  /// Delivery status label shown when a DM has been confirmed by the mesh network.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed'**
+  String get messagingStatusConfirmed;
+
+  /// Delivery status label shown immediately after a message has been handed to the radio.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent to radio'**
+  String get messagingStatusSentToRadio;
+
+  /// Action label for manually resending an unconfirmed direct message.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend'**
+  String get messagingResend;
+
+  /// Action label to enable bounded automatic resend for an unconfirmed DM.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry every 60s until confirmed'**
+  String get messagingAutoRetryEnable;
+
+  /// Action label to cancel an active auto-retry for a DM.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop retrying'**
+  String get messagingAutoRetryStop;
+
+  /// Warning subtitle shown alongside the auto-retry option.
+  ///
+  /// In en, this message translates to:
+  /// **'May increase airtime and battery usage'**
+  String get messagingAutoRetryWarning;
+
+  /// Shows current retry attempt count vs maximum.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}/{max} retries'**
+  String messagingRetryProgress(int count, int max);
+
   /// Popup menu item to scan a QR code for a channel.
   ///
   /// In en, this message translates to:

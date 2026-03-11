@@ -7,9 +7,11 @@ import '../features/nodes/node_display_name_resolver.dart';
 /// Message status enum
 enum MessageStatus {
   pending, // Message being sent
-  sent, // Message sent to device
-  delivered, // Message delivered (acked)
-  failed, // Failed to send
+  sent, // Message sent to radio — awaiting confirmation
+  delivered, // Message confirmed (ACK received)
+  failed, // Terminal send failure (routing error, PKI, etc.)
+  unconfirmed, // Sent but no ACK within the timeout window
+  retrying, // Auto-retry in progress
 }
 
 /// Routing error codes from Meshtastic protocol
@@ -116,6 +118,23 @@ class Message {
   final int? packetId; // Meshtastic packet ID for tracking delivery
   final MessageSource source; // Where the message originated from
 
+  // --- Retry / confirmation tracking ---
+
+  /// When this message was first dispatched to the radio (epoch ms).
+  /// Set when status transitions to [MessageStatus.sent].  Null for
+  /// channel/broadcast messages (they never get ACKs) and for legacy
+  /// persisted messages created before this feature was added.
+  final DateTime? sentAt;
+
+  /// Timestamp of the most recent resend attempt.
+  final DateTime? lastAttemptAt;
+
+  /// Number of resend attempts made (manual + auto-retry).
+  final int retryCount;
+
+  /// Whether bounded auto-retry is enabled for this message.
+  final bool autoRetryEnabled;
+
   /// Meshtastic replyId — the packet ID of the message this is replying to.
   /// Used for tapback reactions and threaded replies.
   final int? replyId;
@@ -174,6 +193,10 @@ class Message {
     this.senderLongName,
     this.senderShortName,
     this.senderAvatarColor,
+    this.sentAt,
+    this.lastAttemptAt,
+    this.retryCount = 0,
+    this.autoRetryEnabled = false,
   }) : id = id ?? const Uuid().v4(),
        timestamp = timestamp ?? DateTime.now();
 
@@ -202,6 +225,12 @@ class Message {
     String? senderLongName,
     String? senderShortName,
     int? senderAvatarColor,
+    DateTime? sentAt,
+    bool clearSentAt = false,
+    DateTime? lastAttemptAt,
+    bool clearLastAttemptAt = false,
+    int? retryCount,
+    bool? autoRetryEnabled,
   }) {
     return Message(
       id: id ?? this.id,
@@ -228,6 +257,12 @@ class Message {
       senderLongName: senderLongName ?? this.senderLongName,
       senderShortName: senderShortName ?? this.senderShortName,
       senderAvatarColor: senderAvatarColor ?? this.senderAvatarColor,
+      sentAt: clearSentAt ? null : sentAt ?? this.sentAt,
+      lastAttemptAt: clearLastAttemptAt
+          ? null
+          : lastAttemptAt ?? this.lastAttemptAt,
+      retryCount: retryCount ?? this.retryCount,
+      autoRetryEnabled: autoRetryEnabled ?? this.autoRetryEnabled,
     );
   }
 
@@ -257,7 +292,21 @@ class Message {
   bool get isDirect => !isBroadcast;
   bool get isFailed => status == MessageStatus.failed;
   bool get isPending => status == MessageStatus.pending;
+  bool get isUnconfirmed => status == MessageStatus.unconfirmed;
+  bool get isRetrying => status == MessageStatus.retrying;
   bool get isRetryable => routingError?.isRetryable ?? false;
+
+  /// Returns true when a manual Resend action should be offered: the message
+  /// is a DM from us, is in an unconfirmed/failed state, and is not currently
+  /// being retried automatically.
+  bool get canResend => isDirect && (isUnconfirmed || isFailed) && !isRetrying;
+
+  /// Returns true when the user can enable bounded auto-retry.
+  bool get canEnableAutoRetry =>
+      isDirect && (isUnconfirmed || isFailed) && !autoRetryEnabled;
+
+  /// Returns true when the user can stop an active auto-retry.
+  bool get canStopAutoRetry => autoRetryEnabled || isRetrying;
 
   @override
   String toString() => 'Message(from: $from, to: $to, text: $text)';

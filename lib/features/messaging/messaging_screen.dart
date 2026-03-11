@@ -12,6 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'dart:async';
 import '../../providers/app_providers.dart';
+import '../../core/constants.dart';
 import '../../providers/help_providers.dart';
 import '../../providers/review_providers.dart';
 import '../../models/mesh_models.dart';
@@ -990,10 +991,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       // Check mounted after await before updating state
       if (!mounted) return;
 
-      // Update status to sent with packet ID
+      // Update status to sent with packet ID and sentAt for DM timeout tracking
+      final sentUpdate = pendingMessage.copyWith(
+        status: MessageStatus.sent,
+        packetId: packetId,
+      );
       messagesNotifier.updateMessage(
         messageId,
-        pendingMessage.copyWith(status: MessageStatus.sent, packetId: packetId),
+        widget.type == ConversationType.directMessage
+            ? sentUpdate.copyWith(sentAt: DateTime.now())
+            : sentUpdate,
       );
 
       // Track message sent for review prompt
@@ -1121,6 +1128,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
           errorMessage: null,
           routingError: null,
           packetId: packetId,
+          sentAt: message.sentAt ?? DateTime.now(),
+          lastAttemptAt: DateTime.now(),
+          retryCount: message.retryCount + 1,
         ),
       );
     } catch (e) {
@@ -1617,6 +1627,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                           onRetry: message.isFailed
                               ? () => _retryMessage(message)
                               : null,
+                          onResend: isFromMe && message.canResend
+                              ? () => ref
+                                    .read(dmRetryCoordinatorProvider)
+                                    .scheduleResend(message)
+                              : null,
+                          onAutoRetry: isFromMe && message.canEnableAutoRetry
+                              ? () => ref
+                                    .read(dmRetryCoordinatorProvider)
+                                    .enableAutoRetry(message.id)
+                              : null,
+                          onStopRetry: isFromMe && message.canStopAutoRetry
+                              ? () => ref
+                                    .read(dmRetryCoordinatorProvider)
+                                    .disableAutoRetry(message.id)
+                              : null,
                           onPkiFix: message.routingError?.isPkiRelated == true
                               ? () => _showPkiFixSheet(message)
                               : null,
@@ -1765,6 +1790,9 @@ class _MessageBubble extends StatelessWidget {
   final int? channelIndex;
   final VoidCallback? onReply;
   final VoidCallback? onRetry;
+  final VoidCallback? onResend;
+  final VoidCallback? onAutoRetry;
+  final VoidCallback? onStopRetry;
   final VoidCallback? onPkiFix;
   final VoidCallback? onDelete;
   final VoidCallback? onSenderTap;
@@ -1782,6 +1810,9 @@ class _MessageBubble extends StatelessWidget {
     this.channelIndex,
     this.onReply,
     this.onRetry,
+    this.onResend,
+    this.onAutoRetry,
+    this.onStopRetry,
     this.onPkiFix,
     this.onDelete,
     this.onSenderTap,
@@ -1972,6 +2003,8 @@ class _MessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final timeFormat = DateFormat('h:mm a');
     final isFailed = message.isFailed;
+    final isUnconfirmed = message.isUnconfirmed;
+    final isRetrying = message.isRetrying;
     final isPending = message.isPending;
     final isDelivered = message.status == MessageStatus.delivered;
     final sourceBadge = _buildSourceBadge(context);
@@ -2011,6 +2044,8 @@ class _MessageBubble extends StatelessWidget {
                             ? AppTheme.errorRed.withValues(alpha: 0.8)
                             : isPending
                             ? context.accentColor.withValues(alpha: 0.6)
+                            : (isUnconfirmed || isRetrying)
+                            ? context.accentColor.withValues(alpha: 0.75)
                             : context.accentColor,
                         borderRadius: BorderRadius.circular(AppTheme.radius18),
                       ),
@@ -2150,6 +2185,71 @@ class _MessageBubble extends StatelessWidget {
                 ),
               ),
             ],
+            if (isUnconfirmed || isRetrying) ...[
+              const SizedBox(height: AppTheme.spacing4),
+              Padding(
+                padding: const EdgeInsets.only(right: 4),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    if (isRetrying)
+                      SizedBox(
+                        width: 12,
+                        height: 12,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 1.5,
+                          color: const Color(0xFFF59E0B),
+                        ),
+                      )
+                    else
+                      const Icon(
+                        Icons.help_outline,
+                        size: 14,
+                        color: Color(0xFFF59E0B),
+                      ),
+                    const SizedBox(width: AppTheme.spacing4),
+                    Text(
+                      isRetrying
+                          ? context.l10n.messagingRetryProgress(
+                              message.retryCount,
+                              DmRetryConstants.maxAutoRetries,
+                            )
+                          : context.l10n.messagingStatusUnconfirmed,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: Color(0xFFF59E0B),
+                      ),
+                    ),
+                    if (onResend != null) ...[
+                      const SizedBox(width: AppTheme.spacing8),
+                      GestureDetector(
+                        onTap: onResend,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: context.card,
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius8,
+                            ),
+                          ),
+                          child: Text(
+                            context.l10n.messagingResend,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: context.accentColor,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
       );
@@ -2262,6 +2362,9 @@ class _MessageBubble extends StatelessWidget {
       channelIndex: channelIndex,
       onReply: onReply,
       onDelete: onDelete,
+      onResend: onResend,
+      onAutoRetry: onAutoRetry,
+      onStopRetry: onStopRetry,
     );
   }
 }
