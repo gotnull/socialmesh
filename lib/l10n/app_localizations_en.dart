@@ -31811,4 +31811,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String losExplanationMarginal(String clearance, String required) {
     return 'Marginal clearance (${clearance}m) — below the recommended ${required}m Fresnel clearance. Terrain/obstacles not considered.';
   }
+
+  @override
+  String get nodesScreenRequestTelemetryMenu => 'Request All Telemetry';
+
+  @override
+  String get nodesScreenViewModeCards => 'Card View';
+
+  @override
+  String get nodesScreenViewModeCompact => 'Compact View';
+
+  @override
+  String nodesScreenUptimeLabel(String uptime) {
+    return 'Up $uptime';
+  }
+
+  @override
+  String get countdownRequestingTelemetry => 'Requesting telemetry…';
 }

@@ -32138,4 +32138,21 @@ class AppLocalizationsPt extends AppLocalizations {
   String losExplanationMarginal(String clearance, String required) {
     return 'Folga marginal (${clearance}m) — abaixo dos ${required}m recomendados de folga Fresnel. Terreno/obstáculos não considerados.';
   }
+
+  @override
+  String get nodesScreenRequestTelemetryMenu => 'Request All Telemetry';
+
+  @override
+  String get nodesScreenViewModeCards => 'Card View';
+
+  @override
+  String get nodesScreenViewModeCompact => 'Compact View';
+
+  @override
+  String nodesScreenUptimeLabel(String uptime) {
+    return 'Up $uptime';
+  }
+
+  @override
+  String get countdownRequestingTelemetry => 'Requesting telemetry…';
 }

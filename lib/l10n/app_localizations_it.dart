@@ -32158,4 +32158,21 @@ class AppLocalizationsIt extends AppLocalizations {
   String losExplanationMarginal(String clearance, String required) {
     return 'Margine ridotto (${clearance}m) — sotto i ${required}m raccomandati per il margine di Fresnel. Terreno/ostacoli non considerati.';
   }
+
+  @override
+  String get nodesScreenRequestTelemetryMenu => 'Request All Telemetry';
+
+  @override
+  String get nodesScreenViewModeCards => 'Card View';
+
+  @override
+  String get nodesScreenViewModeCompact => 'Compact View';
+
+  @override
+  String nodesScreenUptimeLabel(String uptime) {
+    return 'Up $uptime';
+  }
+
+  @override
+  String get countdownRequestingTelemetry => 'Requesting telemetry…';
 }

@@ -369,6 +369,42 @@ class SettingsService {
 
   int get mapTileStyleIndex => _preferences.getInt('map_tile_style_index') ?? 0;
 
+  // Map layer toggles
+  Future<void> setMapShowRangeCircles(bool enabled) async {
+    await _preferences.setBool('map_show_range_circles', enabled);
+  }
+
+  bool get mapShowRangeCircles =>
+      _preferences.getBool('map_show_range_circles') ?? false;
+
+  Future<void> setMapShowConnectionLines(bool enabled) async {
+    await _preferences.setBool('map_show_connection_lines', enabled);
+  }
+
+  bool get mapShowConnectionLines =>
+      _preferences.getBool('map_show_connection_lines') ?? false;
+
+  Future<void> setMapShowPositionHistory(bool enabled) async {
+    await _preferences.setBool('map_show_position_history', enabled);
+  }
+
+  bool get mapShowPositionHistory =>
+      _preferences.getBool('map_show_position_history') ?? false;
+
+  Future<void> setMapConnectionMaxDistance(double km) async {
+    await _preferences.setDouble('map_connection_max_distance', km);
+  }
+
+  double get mapConnectionMaxDistance =>
+      _preferences.getDouble('map_connection_max_distance') ?? 15.0;
+
+  // Node list view mode (0 = cards, 1 = compact)
+  Future<void> setNodeViewModeIndex(int index) async {
+    await _preferences.setInt('node_view_mode_index', index);
+  }
+
+  int get nodeViewModeIndex => _preferences.getInt('node_view_mode_index') ?? 0;
+
   // 3D Animations Enabled
   Future<void> setAnimations3DEnabled(bool enabled) async {
     await _preferences.setBool('animations_3d_enabled', enabled);

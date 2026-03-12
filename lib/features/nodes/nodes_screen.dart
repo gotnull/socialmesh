@@ -25,10 +25,12 @@ import '../../core/widgets/skeleton_config.dart';
 import '../../models/mesh_models.dart';
 import '../../models/presence_confidence.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/countdown_providers.dart';
 import '../../providers/help_providers.dart';
 import '../../providers/presence_providers.dart';
 import '../../providers/social_providers.dart';
 import '../../utils/presence_utils.dart';
+import '../../utils/uptime_formatter.dart';
 import '../../core/constants.dart';
 import '../aether/providers/aether_flight_matcher_provider.dart';
 import '../aether/widgets/aether_flight_match_card.dart';
@@ -48,11 +50,43 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
   NodeFilter _activeFilter = NodeFilter.all;
   NodeSortOrder _sortOrder = NodeSortOrder.lastHeard;
   bool _showSectionHeaders = true;
+  bool _compactView = false;
   final TextEditingController _searchController = TextEditingController();
 
   /// Track node IDs that have already been seen/animated
   /// This allows new nodes to animate in while existing ones don't re-animate
   final Set<int> _seenNodeIds = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadViewMode();
+  }
+
+  Future<void> _loadViewMode() async {
+    final settings = await ref.read(settingsServiceProvider.future);
+    if (!mounted) return;
+    safeSetState(() => _compactView = settings.nodeViewModeIndex == 1);
+  }
+
+  Future<void> _toggleViewMode() async {
+    final newValue = !_compactView;
+    safeSetState(() => _compactView = newValue);
+    final settings = await ref.read(settingsServiceProvider.future);
+    if (!mounted) return;
+    await settings.setNodeViewModeIndex(newValue ? 1 : 0);
+  }
+
+  Future<void> _requestAllTelemetry() async {
+    final notifier = ref.read(countdownProvider.notifier);
+    if (notifier.isTelemetryRequestActive) return;
+
+    final protocol = ref.read(protocolServiceProvider);
+    await protocol.requestAllTelemetry();
+
+    if (!mounted) return;
+    notifier.startTelemetryRequestCountdown();
+  }
 
   @override
   void dispose() {
@@ -76,6 +110,38 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
     MeshNode node,
   ) {
     return presenceMap[node.nodeNum]?.timeSinceLastHeard ?? node.lastHeardAge;
+  }
+
+  Widget _buildNodeItem({
+    required MeshNode node,
+    required bool isMyNode,
+    required Map<int, NodePresence> presenceMap,
+    required bool animationsEnabled,
+  }) {
+    final presence = _presenceForNode(presenceMap, node);
+    final lastHeardAge = _lastHeardAgeForNode(presenceMap, node);
+
+    if (_compactView) {
+      return _CompactNodeTile(
+        node: node,
+        isMyNode: isMyNode,
+        presenceConfidence: presence,
+        lastHeardAge: lastHeardAge,
+        onTap: () => _showNodeDetails(context, node, isMyNode),
+      );
+    }
+
+    return _NodeCard(
+      node: node,
+      isMyNode: isMyNode,
+      presenceConfidence: presence,
+      lastHeardAge: lastHeardAge,
+      animationsEnabled: animationsEnabled,
+      onTap: () => _showNodeDetails(context, node, isMyNode),
+      onLongPress: isMyNode
+          ? () => _showNodeLongPressMenu(context, node, isMyNode)
+          : null,
+    );
   }
 
   @override
@@ -163,6 +229,10 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
             AppBarOverflowMenu<String>(
               onSelected: (value) {
                 switch (value) {
+                  case 'view_mode':
+                    _toggleViewMode();
+                  case 'request_telemetry':
+                    _requestAllTelemetry();
                   case 'settings':
                     Navigator.pushNamed(context, '/settings');
                   case 'help':
@@ -170,6 +240,38 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
                 }
               },
               itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'view_mode',
+                  child: Row(
+                    children: [
+                      Icon(
+                        _compactView ? Icons.view_agenda : Icons.view_list,
+                        color: context.textSecondary,
+                        size: 20,
+                      ),
+                      const SizedBox(width: AppTheme.spacing12),
+                      Text(
+                        _compactView
+                            ? context.l10n.nodesScreenViewModeCards
+                            : context.l10n.nodesScreenViewModeCompact,
+                        style: TextStyle(color: context.textPrimary),
+                      ),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'request_telemetry',
+                  child: Row(
+                    children: [
+                      Icon(Icons.speed, color: context.textSecondary, size: 20),
+                      const SizedBox(width: AppTheme.spacing12),
+                      Text(
+                        context.l10n.nodesScreenRequestTelemetryMenu,
+                        style: TextStyle(color: context.textPrimary),
+                      ),
+                    ],
+                  ),
+                ),
                 PopupMenuItem(
                   value: 'help',
                   child: Row(
@@ -470,16 +572,11 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
               index: animIndex,
               direction: SlideDirection.left,
               enabled: animationsEnabled && isNewNode,
-              child: _NodeCard(
+              child: _buildNodeItem(
                 node: node,
                 isMyNode: isMyNode,
-                presenceConfidence: _presenceForNode(presenceMap, node),
-                lastHeardAge: _lastHeardAgeForNode(presenceMap, node),
+                presenceMap: presenceMap,
                 animationsEnabled: animationsEnabled,
-                onTap: () => _showNodeDetails(context, node, isMyNode),
-                onLongPress: isMyNode
-                    ? () => _showNodeLongPressMenu(context, node, isMyNode)
-                    : null,
               ),
             );
           }, childCount: nodesList.length),
@@ -546,16 +643,11 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
               index: animIndex,
               direction: SlideDirection.left,
               enabled: animationsEnabled && isNewNode,
-              child: _NodeCard(
+              child: _buildNodeItem(
                 node: node,
                 isMyNode: isMyNode,
-                presenceConfidence: _presenceForNode(presenceMap, node),
-                lastHeardAge: _lastHeardAgeForNode(presenceMap, node),
+                presenceMap: presenceMap,
                 animationsEnabled: animationsEnabled,
-                onTap: () => _showNodeDetails(context, node, isMyNode),
-                onLongPress: isMyNode
-                    ? () => _showNodeLongPressMenu(context, node, isMyNode)
-                    : null,
               ),
             );
           }, childCount: nonEmptySections[sectionIndex].nodes.length),
@@ -1488,6 +1580,25 @@ class _NodeCard extends StatelessWidget {
                 ),
                 SizedBox(height: AppTheme.spacing4),
               ],
+              // Uptime
+              if (node.uptimeSeconds != null) ...[
+                Row(
+                  children: [
+                    Icon(Icons.timer, size: 14, color: context.textTertiary),
+                    SizedBox(width: AppTheme.spacing6),
+                    Text(
+                      context.l10n.nodesScreenUptimeLabel(
+                        formatUptime(node.uptimeSeconds!),
+                      ),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.textTertiary,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: AppTheme.spacing4),
+              ],
               // Role and GPS status
               Row(
                 children: [
@@ -1728,5 +1839,129 @@ class _NodeCard extends StatelessWidget {
       case PresenceConfidence.unknown:
         return context.textTertiary;
     }
+  }
+}
+
+class _CompactNodeTile extends StatelessWidget {
+  final MeshNode node;
+  final bool isMyNode;
+  final PresenceConfidence presenceConfidence;
+  final Duration? lastHeardAge;
+  final VoidCallback onTap;
+
+  const _CompactNodeTile({
+    required this.node,
+    required this.isMyNode,
+    required this.presenceConfidence,
+    required this.lastHeardAge,
+    required this.onTap,
+  });
+
+  Color _statusColor(BuildContext context) {
+    if (isMyNode) return context.accentColor;
+    switch (presenceConfidence) {
+      case PresenceConfidence.active:
+        return AccentColors.green;
+      case PresenceConfidence.fading:
+        return AppTheme.warningYellow;
+      case PresenceConfidence.stale:
+        return context.textSecondary;
+      case PresenceConfidence.unknown:
+        return context.textTertiary;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _statusColor(context);
+    final statusText = presenceStatusText(presenceConfidence, lastHeardAge);
+    final opacity = isMyNode ? 1.0 : presenceOpacity(presenceConfidence);
+
+    return Opacity(
+      opacity: opacity,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: AppTheme.spacing8,
+          ),
+          child: Row(
+            children: [
+              // Status dot
+              Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: color,
+                  boxShadow: presenceConfidence.isActive
+                      ? [
+                          BoxShadow(
+                            color: color.withValues(alpha: 0.4),
+                            blurRadius: 4,
+                          ),
+                        ]
+                      : null,
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing12),
+              // Name
+              Expanded(
+                child: Text(
+                  node.displayName,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: context.textPrimary,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              // Uptime (if available)
+              if (node.uptimeSeconds != null) ...[
+                Text(
+                  context.l10n.nodesScreenUptimeLabel(
+                    formatUptime(node.uptimeSeconds!),
+                  ),
+                  style: TextStyle(fontSize: 12, color: context.textTertiary),
+                ),
+                const SizedBox(width: AppTheme.spacing8),
+              ],
+              // Battery
+              if (node.batteryLevel != null && node.batteryLevel! <= 100) ...[
+                Icon(
+                  _batteryIcon(node.batteryLevel!),
+                  size: 16,
+                  color: _batteryColor(node.batteryLevel!),
+                ),
+                const SizedBox(width: AppTheme.spacing4),
+              ],
+              // Status text
+              Text(
+                statusText,
+                style: TextStyle(fontSize: 12, color: context.textSecondary),
+              ),
+              const SizedBox(width: AppTheme.spacing4),
+              Icon(Icons.chevron_right, size: 16, color: context.textTertiary),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  IconData _batteryIcon(int level) {
+    if (level >= 90) return Icons.battery_full;
+    if (level >= 60) return Icons.battery_5_bar;
+    if (level >= 30) return Icons.battery_3_bar;
+    if (level >= 10) return Icons.battery_1_bar;
+    return Icons.battery_alert;
+  }
+
+  Color _batteryColor(int level) {
+    if (level >= 50) return AccentColors.green;
+    if (level >= 20) return AppTheme.warningYellow;
+    return AppTheme.errorRed;
   }
 }

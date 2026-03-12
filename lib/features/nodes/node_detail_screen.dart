@@ -25,6 +25,7 @@ import '../../providers/app_providers.dart';
 import '../../providers/countdown_providers.dart';
 import '../../providers/telemetry_providers.dart';
 import '../../utils/snackbar.dart';
+import '../../utils/uptime_formatter.dart';
 
 import '../device/device_config_screen.dart';
 import '../map/map_screen.dart';
@@ -136,19 +137,6 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
     if (level >= 50) return AccentColors.green;
     if (level >= 20) return AppTheme.warningYellow;
     return AppTheme.errorRed;
-  }
-
-  String _formatUptime(int seconds) {
-    if (seconds < 60) return '${seconds}s';
-    if (seconds < 3600) return '${seconds ~/ 60}m';
-    if (seconds < 86400) {
-      final h = seconds ~/ 3600;
-      final m = (seconds % 3600) ~/ 60;
-      return '${h}h ${m}m';
-    }
-    final d = seconds ~/ 86400;
-    final h = (seconds % 86400) ~/ 3600;
-    return '${d}d ${h}h';
   }
 
   // ─────────────────────── actions ───────────────────────
@@ -361,6 +349,7 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
   }
 
   void _showTracerouteHistory(BuildContext context, MeshNode node) {
+    if (!mounted) return;
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -1022,7 +1011,7 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
           InfoTableRow(
             icon: Icons.timer,
             label: context.l10n.nodeDetailLabelUptime,
-            value: _formatUptime(node.uptimeSeconds!),
+            value: formatUptime(node.uptimeSeconds!),
           ),
       ],
     );

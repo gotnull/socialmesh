@@ -42643,5 +42643,29 @@
             "clearance": { "type": "String" },
             "required": { "type": "String" }
         }
+    },
+
+    "nodesScreenRequestTelemetryMenu": "Request All Telemetry",
+    "@nodesScreenRequestTelemetryMenu": {
+        "description": "Overflow menu item to request telemetry from all nodes"
+    },
+    "nodesScreenViewModeCards": "Card View",
+    "@nodesScreenViewModeCards": {
+        "description": "Tooltip for card view mode toggle"
+    },
+    "nodesScreenViewModeCompact": "Compact View",
+    "@nodesScreenViewModeCompact": {
+        "description": "Tooltip for compact view mode toggle"
+    },
+    "nodesScreenUptimeLabel": "Up {uptime}",
+    "@nodesScreenUptimeLabel": {
+        "description": "Compact uptime display on node card",
+        "placeholders": {
+            "uptime": { "type": "String" }
+        }
+    },
+    "countdownRequestingTelemetry": "Requesting telemetry…",
+    "@countdownRequestingTelemetry": {
+        "description": "Countdown label while waiting for telemetry responses"
     }
 }

@@ -56091,6 +56091,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Marginal clearance ({clearance}m) — below the recommended {required}m Fresnel clearance. Terrain/obstacles not considered.'**
   String losExplanationMarginal(String clearance, String required);
+
+  /// Overflow menu item to request telemetry from all nodes
+  ///
+  /// In en, this message translates to:
+  /// **'Request All Telemetry'**
+  String get nodesScreenRequestTelemetryMenu;
+
+  /// Tooltip for card view mode toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Card View'**
+  String get nodesScreenViewModeCards;
+
+  /// Tooltip for compact view mode toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Compact View'**
+  String get nodesScreenViewModeCompact;
+
+  /// Compact uptime display on node card
+  ///
+  /// In en, this message translates to:
+  /// **'Up {uptime}'**
+  String nodesScreenUptimeLabel(String uptime);
+
+  /// Countdown label while waiting for telemetry responses
+  ///
+  /// In en, this message translates to:
+  /// **'Requesting telemetry…'**
+  String get countdownRequestingTelemetry;
 }
 
 class _AppLocalizationsDelegate

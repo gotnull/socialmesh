@@ -204,7 +204,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
     if (!mounted) return;
     final index = settings.mapTileStyleIndex;
     if (index >= 0 && index < MapTileStyle.values.length) {
-      safeSetState(() => _mapStyle = MapTileStyle.values[index]);
+      safeSetState(() {
+        _mapStyle = MapTileStyle.values[index];
+        _showRangeCircles = settings.mapShowRangeCircles;
+        _showConnectionLines = settings.mapShowConnectionLines;
+        _showPositionHistory = settings.mapShowPositionHistory;
+        _connectionMaxDistance = settings.mapConnectionMaxDistance;
+      });
     }
   }
 
@@ -213,6 +219,16 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final settings = await settingsFuture;
     if (!mounted) return;
     await settings.setMapTileStyleIndex(style.index);
+  }
+
+  Future<void> _saveMapLayerSettings() async {
+    final settingsFuture = ref.read(settingsServiceProvider.future);
+    final settings = await settingsFuture;
+    if (!mounted) return;
+    await settings.setMapShowRangeCircles(_showRangeCircles);
+    await settings.setMapShowConnectionLines(_showConnectionLines);
+    await settings.setMapShowPositionHistory(_showPositionHistory);
+    await settings.setMapConnectionMaxDistance(_connectionMaxDistance);
   }
 
   /// Animate camera to a specific location with smooth easing
@@ -769,27 +785,35 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   break;
                 case 'connections':
                   setState(() => _showConnectionLines = !_showConnectionLines);
+                  unawaited(_saveMapLayerSettings());
                   break;
                 case 'distance_1':
                   setState(() => _connectionMaxDistance = 1.0);
+                  unawaited(_saveMapLayerSettings());
                   break;
                 case 'distance_5':
                   setState(() => _connectionMaxDistance = 5.0);
+                  unawaited(_saveMapLayerSettings());
                   break;
                 case 'distance_10':
                   setState(() => _connectionMaxDistance = 10.0);
+                  unawaited(_saveMapLayerSettings());
                   break;
                 case 'distance_25':
                   setState(() => _connectionMaxDistance = 25.0);
+                  unawaited(_saveMapLayerSettings());
                   break;
                 case 'distance_all':
                   setState(() => _connectionMaxDistance = 100.0);
+                  unawaited(_saveMapLayerSettings());
                   break;
                 case 'range':
                   setState(() => _showRangeCircles = !_showRangeCircles);
+                  unawaited(_saveMapLayerSettings());
                   break;
                 case 'history':
                   setState(() => _showPositionHistory = !_showPositionHistory);
+                  unawaited(_saveMapLayerSettings());
                   break;
                 case 'measure':
                   setState(() {
@@ -2732,7 +2756,7 @@ class _CachedPosition {
 Color _presenceColor(BuildContext context, PresenceConfidence confidence) {
   switch (confidence) {
     case PresenceConfidence.active:
-      return AppTheme.primaryPurple;
+      return AccentColors.green;
     case PresenceConfidence.fading:
       return AppTheme.warningYellow;
     case PresenceConfidence.stale:
@@ -2779,18 +2803,19 @@ class _NodeMarker extends StatelessWidget {
         ? context.accentColor
         : _presenceColor(context, presence);
     final color = isStale ? baseColor.withValues(alpha: 0.5) : baseColor;
+    final borderColor = isSelected
+        ? Colors.white
+        : color.withValues(alpha: isStale ? 0.6 : 0.9);
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
-        color: color,
+        color: color.withValues(alpha: isStale ? 0.3 : 0.7),
         shape: BoxShape.circle,
         border: Border.all(
-          color: isSelected ? Colors.white : color,
-          width: isSelected ? 3 : 2,
-          strokeAlign: isStale
-              ? BorderSide.strokeAlignOutside
-              : BorderSide.strokeAlignCenter,
+          color: borderColor,
+          width: isSelected ? 3 : 2.5,
+          strokeAlign: BorderSide.strokeAlignOutside,
         ),
         boxShadow: [
           BoxShadow(

@@ -5332,6 +5332,47 @@ class ProtocolService {
     }
   }
 
+  /// Request telemetry (device metrics) from a specific node
+  Future<void> requestTelemetry(int nodeNum) async {
+    try {
+      AppLogging.protocol('Requesting telemetry for node $nodeNum');
+
+      final tel = telemetry.Telemetry();
+
+      final data = pb.Data()
+        ..portnum = pn.PortNum.TELEMETRY_APP
+        ..payload = tel.writeToBuffer()
+        ..wantResponse = true;
+
+      final packet = MeshPacketBuilder.userPayload(
+        myNodeNum: _myNodeNum ?? 0,
+        to: nodeNum,
+        data: data,
+        packetId: _generatePacketId(),
+        wantAck: true,
+      );
+
+      final toRadio = pb.ToRadio()..packet = packet;
+      final bytes = toRadio.writeToBuffer();
+
+      await _transport.send(_prepareForSend(bytes));
+    } catch (e) {
+      AppLogging.protocol('Error requesting telemetry: $e');
+    }
+  }
+
+  /// Request telemetry from all known nodes
+  Future<void> requestAllTelemetry() async {
+    final nodeNums = _nodes.keys.toList();
+    AppLogging.protocol(
+      'Requesting telemetry from all ${nodeNums.length} known nodes',
+    );
+    for (final nodeNum in nodeNums) {
+      await requestTelemetry(nodeNum);
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+  }
+
   /// Send a traceroute request to a specific node
   /// Returns immediately - results come via mesh packet responses.
   /// Emits a placeholder [TraceRouteLog] with `response: false` so the UI
