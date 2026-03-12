@@ -552,6 +552,13 @@ class _FlightsTabContent extends StatelessWidget {
         : 0;
 
     return CustomScrollView(
+      // Nested inside SliverFillRemaining(hasScrollBody: true) within
+      // GlassScaffold's outer CustomScrollView. Use ClampingScrollPhysics
+      // to avoid bounce-fighting with the outer BouncingScrollPhysics
+      // (kGlassScrollPhysics), and primary: false so it doesn't compete
+      // for PrimaryScrollController.
+      physics: const ClampingScrollPhysics(),
+      primary: false,
       slivers: [
         // Stats summary card
         SliverToBoxAdapter(

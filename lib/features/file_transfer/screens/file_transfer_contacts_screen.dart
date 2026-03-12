@@ -228,6 +228,12 @@ class _FileTransferContactsScreenState
     final textScaler = MediaQuery.textScalerOf(context);
 
     final bodyContent = CustomScrollView(
+      // Always embedded inside TabBarView within GlassScaffold's outer
+      // CustomScrollView. Use ClampingScrollPhysics to avoid bounce-fighting
+      // with the outer BouncingScrollPhysics (kGlassScrollPhysics), and
+      // primary: false so it doesn't compete for PrimaryScrollController.
+      physics: const ClampingScrollPhysics(),
+      primary: false,
       slivers: [
         SliverPersistentHeader(
           pinned: true,

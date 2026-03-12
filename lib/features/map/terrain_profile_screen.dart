@@ -70,6 +70,10 @@ class _TerrainProfileScreenState extends ConsumerState<TerrainProfileScreen>
   bool _offline = false;
   String? _errorMessage;
 
+  /// True when terrain elevation was used as a fallback altitude for one or
+  /// both endpoints because no GPS altitude was available on the node.
+  bool _usingTerrainFallback = false;
+
   @override
   void initState() {
     super.initState();
@@ -96,8 +100,8 @@ class _TerrainProfileScreenState extends ConsumerState<TerrainProfileScreen>
     // Capture constructor params before await.
     final start = widget.start;
     final end = widget.end;
-    final altA = widget.nodeA?.altitude;
-    final altB = widget.nodeB?.altitude;
+    final gpsAltA = widget.nodeA?.altitude;
+    final gpsAltB = widget.nodeB?.altitude;
 
     final result = await _service.fetchProfile(start, end);
 
@@ -106,6 +110,23 @@ class _TerrainProfileScreenState extends ConsumerState<TerrainProfileScreen>
 
     switch (result) {
       case ElevationProfileSuccess(:final samples):
+        // When GPS altitude is missing for a point, fall back to the terrain
+        // elevation at that endpoint (first / last sample). This allows LOS
+        // analysis to run for arbitrary map points where no node altitude is
+        // known — treating ground level as the antenna height.
+        final terrainAltA = samples.isNotEmpty
+            ? samples.first.elevationMeters?.round()
+            : null;
+        final terrainAltB = samples.isNotEmpty
+            ? samples.last.elevationMeters?.round()
+            : null;
+
+        final effectiveAltA = gpsAltA ?? terrainAltA;
+        final effectiveAltB = gpsAltB ?? terrainAltB;
+        final usingFallback =
+            (gpsAltA == null && terrainAltA != null) ||
+            (gpsAltB == null && terrainAltB != null);
+
         final losResult = evaluateLosFromProfile(
           samples: samples
               .map(
@@ -117,12 +138,13 @@ class _TerrainProfileScreenState extends ConsumerState<TerrainProfileScreen>
                 ),
               )
               .toList(),
-          altAMeters: altA,
-          altBMeters: altB,
+          altAMeters: effectiveAltA,
+          altBMeters: effectiveAltB,
         );
         safeSetState(() {
           _samples = samples;
           _losResult = losResult;
+          _usingTerrainFallback = usingFallback;
           _fetching = false;
         });
       case ElevationProfileOffline():
@@ -148,7 +170,12 @@ class _TerrainProfileScreenState extends ConsumerState<TerrainProfileScreen>
     final l10n = context.l10n;
     final altA = widget.nodeA?.altitude;
     final altB = widget.nodeB?.altitude;
-    final hasAltitude = altA != null && altB != null;
+    // GPS altitude is absent for one or both endpoints.
+    final missingGpsAltitude = altA == null || altB == null;
+    // After fetching, terrain elevation may be available as a fallback.
+    final showTerrainFallbackNote = missingGpsAltitude && _usingTerrainFallback;
+    // Show the "LOS unavailable" warning only when terrain fallback also failed.
+    final showNoAltitudeWarning = missingGpsAltitude && !_usingTerrainFallback;
 
     return GlassScaffold(
       title: l10n.mapTerrainProfileTitle,
@@ -166,8 +193,17 @@ class _TerrainProfileScreenState extends ConsumerState<TerrainProfileScreen>
               ),
               const SizedBox(height: AppTheme.spacing12),
 
+              // ── Terrain elevation used as altitude fallback ────────────────
+              if (showTerrainFallbackNote) ...[
+                StatusBanner.info(
+                  title: l10n.mapTerrainProfileUsingTerrainAltitude,
+                  subtitle: l10n.mapTerrainProfileUsingTerrainAltitudeSubtitle,
+                ),
+                const SizedBox(height: AppTheme.spacing12),
+              ],
+
               // ── Altitude unavailable note ─────────────────────────────────
-              if (!hasAltitude) ...[
+              if (showNoAltitudeWarning) ...[
                 StatusBanner.warning(
                   title: l10n.mapTerrainProfileNeedsAltitude,
                   subtitle: l10n.mapTerrainProfileNeedsAltitudeSubtitle,

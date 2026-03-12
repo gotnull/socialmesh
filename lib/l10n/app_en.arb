@@ -42524,6 +42524,14 @@
     "@mapTerrainProfileNeedsAltitudeSubtitle": {
         "description": "Subtitle explaining why the LOS overlay is hidden."
     },
+    "mapTerrainProfileUsingTerrainAltitude": "Using terrain elevation for LOS",
+    "@mapTerrainProfileUsingTerrainAltitude": {
+        "description": "Info note shown when terrain elevation is used as a fallback altitude for the LOS overlay because no GPS altitude is available."
+    },
+    "mapTerrainProfileUsingTerrainAltitudeSubtitle": "No GPS altitude — ground level assumed for one or both points.",
+    "@mapTerrainProfileUsingTerrainAltitudeSubtitle": {
+        "description": "Subtitle explaining that terrain elevation is being used as a fallback for antenna altitude."
+    },
     "mapTerrainProfileSampleCount": "{count} elevation samples",
     "@mapTerrainProfileSampleCount": {
         "description": "Label showing how many elevation samples were loaded.",

@@ -1239,6 +1239,10 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
     ref.listen<AsyncValue<List<TraceRouteLog>>>(
       nodeTraceRouteLogsProvider(node.nodeNum),
       (prev, next) {
+        // Skip the initial load so pre-existing DB entries don't trigger
+        // the snackbar the moment the screen is opened.
+        if (prev == null) return;
+
         final logs = next.value;
         if (logs == null || logs.isEmpty) return;
 

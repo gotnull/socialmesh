@@ -240,6 +240,16 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
     final textScaler = MediaQuery.textScalerOf(context);
 
     final bodyContent = CustomScrollView(
+      // When embedded inside a TabBarView that is itself inside
+      // GlassScaffold's outer CustomScrollView, the inner scroll must:
+      //  - use ClampingScrollPhysics to avoid bounce-fighting with the
+      //    outer BouncingScrollPhysics (kGlassScrollPhysics),
+      //  - set primary: false so it doesn't compete for the
+      //    PrimaryScrollController.
+      // Without this, a short list (e.g. few contacts) causes cards to
+      // stick behind the pinned search header with no way to scroll down.
+      physics: widget.embedded ? const ClampingScrollPhysics() : null,
+      primary: !widget.embedded,
       slivers: [
         SliverPersistentHeader(
           pinned: true,

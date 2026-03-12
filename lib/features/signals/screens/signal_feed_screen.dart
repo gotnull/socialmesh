@@ -803,7 +803,13 @@ class _SignalFeedScreenState extends ConsumerState<SignalFeedScreen>
       color: context.accentColor,
       child: CustomScrollView(
         controller: _scrollController,
-        physics: const AlwaysScrollableScrollPhysics(),
+        // Nested inside SliverFillRemaining within GlassScaffold's outer
+        // CustomScrollView. Chain AlwaysScrollableScrollPhysics (needed by
+        // RefreshIndicator) with ClampingScrollPhysics parent to avoid
+        // bounce-fighting with the outer BouncingScrollPhysics.
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: ClampingScrollPhysics(),
+        ),
         slivers: [
           // Active count badge header
           if (signals.isNotEmpty)
@@ -1016,7 +1022,13 @@ class _SignalFeedScreenState extends ConsumerState<SignalFeedScreen>
       color: context.accentColor,
       child: CustomScrollView(
         controller: _scrollController,
-        physics: const AlwaysScrollableScrollPhysics(),
+        // Nested inside SliverFillRemaining within GlassScaffold's outer
+        // CustomScrollView. Chain AlwaysScrollableScrollPhysics (needed by
+        // RefreshIndicator) with ClampingScrollPhysics parent to avoid
+        // bounce-fighting with the outer BouncingScrollPhysics.
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: ClampingScrollPhysics(),
+        ),
         slivers: [
           // Active count badge header
           if (signals.isNotEmpty)

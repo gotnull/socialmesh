@@ -55978,6 +55978,18 @@ abstract class AppLocalizations {
   /// **'One or both nodes have no GPS altitude. Terrain profile is still shown.'**
   String get mapTerrainProfileNeedsAltitudeSubtitle;
 
+  /// Info note shown when terrain elevation is used as a fallback altitude for the LOS overlay because no GPS altitude is available.
+  ///
+  /// In en, this message translates to:
+  /// **'Using terrain elevation for LOS'**
+  String get mapTerrainProfileUsingTerrainAltitude;
+
+  /// Subtitle explaining that terrain elevation is being used as a fallback for antenna altitude.
+  ///
+  /// In en, this message translates to:
+  /// **'No GPS altitude — ground level assumed for one or both points.'**
+  String get mapTerrainProfileUsingTerrainAltitudeSubtitle;
+
   /// Label showing how many elevation samples were loaded.
   ///
   /// In en, this message translates to:

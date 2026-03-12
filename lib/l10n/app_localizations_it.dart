@@ -32080,6 +32080,14 @@ class AppLocalizationsIt extends AppLocalizations {
       'Uno o entrambi i nodi non hanno altitudine GPS. Il profilo del terreno viene comunque mostrato.';
 
   @override
+  String get mapTerrainProfileUsingTerrainAltitude =>
+      'Using terrain elevation for LOS';
+
+  @override
+  String get mapTerrainProfileUsingTerrainAltitudeSubtitle =>
+      'No GPS altitude — ground level assumed for one or both points.';
+
+  @override
   String mapTerrainProfileSampleCount(int count) {
     return '$count campioni di elevazione';
   }

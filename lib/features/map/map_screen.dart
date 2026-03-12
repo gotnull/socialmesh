@@ -2085,8 +2085,16 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
     switch (result) {
       case ElevationProfileSuccess(:final samples):
-        final altA = _measureNodeA?.altitude;
-        final altB = _measureNodeB?.altitude;
+        final gpsAltA = _measureNodeA?.altitude;
+        final gpsAltB = _measureNodeB?.altitude;
+        // Fall back to terrain elevation at the endpoint when GPS altitude is
+        // unavailable (e.g. a random map point with no node attached).
+        final terrainAltA = samples.isNotEmpty
+            ? samples.first.elevationMeters?.round()
+            : null;
+        final terrainAltB = samples.isNotEmpty
+            ? samples.last.elevationMeters?.round()
+            : null;
         final terrainResult = evaluateLosFromProfile(
           samples: samples
               .map(
@@ -2098,8 +2106,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 ),
               )
               .toList(),
-          altAMeters: altA,
-          altBMeters: altB,
+          altAMeters: gpsAltA ?? terrainAltA,
+          altBMeters: gpsAltB ?? terrainAltB,
         );
         safeSetState(() {
           _measureTerrainPolylines = _buildTerrainAwarePolylines(

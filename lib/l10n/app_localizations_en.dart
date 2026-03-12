@@ -31733,6 +31733,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'One or both nodes have no GPS altitude. Terrain profile is still shown.';
 
   @override
+  String get mapTerrainProfileUsingTerrainAltitude =>
+      'Using terrain elevation for LOS';
+
+  @override
+  String get mapTerrainProfileUsingTerrainAltitudeSubtitle =>
+      'No GPS altitude — ground level assumed for one or both points.';
+
+  @override
   String mapTerrainProfileSampleCount(int count) {
     return '$count elevation samples';
   }
