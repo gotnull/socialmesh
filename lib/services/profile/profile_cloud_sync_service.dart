@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
 
 import '../../core/logging.dart';
@@ -81,6 +83,30 @@ class ProfileCloudSyncService {
   /// Reference to banner storage path
   Reference _bannerRef(String uid) {
     return _storage.ref().child(_bannersFolder).child('$uid.jpg');
+  }
+
+  /// Re-encode an image file as JPEG.
+  ///
+  /// iOS devices may produce HEIC files even when the app names them .jpg.
+  /// Browsers cannot render HEIC, so we decode whatever format the file is
+  /// in and re-encode as actual JPEG before uploading.
+  static Future<Uint8List> _ensureJpeg(File imageFile) async {
+    final bytes = await imageFile.readAsBytes();
+    final decoded = img.decodeImage(bytes);
+    if (decoded == null) {
+      throw const FormatException(
+        'Unable to decode image', // lint-allow: hardcoded-string
+      );
+    }
+    return Uint8List.fromList(img.encodeJpg(decoded));
+  }
+
+  /// Build a public URL for a storage file (no token needed — rules allow
+  /// public read for avatars and banners).
+  static String _publicUrl(String folder, String uid) {
+    final path = Uri.encodeComponent('$folder/$uid.jpg');
+    return 'https://firebasestorage.googleapis.com/v0/b/'
+        'social-mesh-app.firebasestorage.app/o/$path?alt=media';
   }
 
   // --- Firestore Profile Sync ---
@@ -519,9 +545,12 @@ class ProfileCloudSyncService {
     try {
       final ref = _avatarRef(uid);
 
+      // Re-encode as JPEG — iOS may provide HEIC data
+      final jpegBytes = await _ensureJpeg(imageFile);
+
       // Upload with metadata
-      await ref.putFile(
-        imageFile,
+      await ref.putData(
+        jpegBytes,
         SettableMetadata(
           contentType: 'image/jpeg',
           customMetadata: {'uid': uid},
@@ -554,7 +583,7 @@ class ProfileCloudSyncService {
       }
 
       AppLogging.auth('ProfileSync: Avatar uploaded: $downloadUrl');
-      return downloadUrl;
+      return _publicUrl(_avatarsFolder, uid);
     } catch (e) {
       AppLogging.auth('ProfileSync: Error uploading avatar: $e');
       rethrow;
@@ -629,9 +658,12 @@ class ProfileCloudSyncService {
     try {
       final ref = _bannerRef(uid);
 
+      // Re-encode as JPEG — iOS may provide HEIC data
+      final jpegBytes = await _ensureJpeg(imageFile);
+
       // Upload with metadata
-      await ref.putFile(
-        imageFile,
+      await ref.putData(
+        jpegBytes,
         SettableMetadata(
           contentType: 'image/jpeg',
           customMetadata: {'uid': uid},
@@ -664,7 +696,7 @@ class ProfileCloudSyncService {
       }
 
       AppLogging.auth('ProfileSync: Banner uploaded: $downloadUrl');
-      return downloadUrl;
+      return _publicUrl(_bannersFolder, uid);
     } catch (e) {
       AppLogging.auth('ProfileSync: Error uploading banner: $e');
       rethrow;

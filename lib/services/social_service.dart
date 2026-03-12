@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image/image.dart' as img;
 
 import '../core/logging.dart';
 import '../models/social.dart';
@@ -2174,8 +2176,23 @@ class SocialService {
         .child('profile_avatars')
         .child('$currentUserId.jpg');
 
-    await ref.putFile(file);
-    final url = await ref.getDownloadURL();
+    // Re-encode as JPEG — iOS may provide HEIC data
+    final bytes = await file.readAsBytes();
+    final decoded = img.decodeImage(bytes);
+    if (decoded == null) {
+      throw const FormatException(
+        'Unable to decode image', // lint-allow: hardcoded-string
+      );
+    }
+    final jpegBytes = Uint8List.fromList(img.encodeJpg(decoded));
+
+    await ref.putData(jpegBytes, SettableMetadata(contentType: 'image/jpeg'));
+
+    // Use token-free public URL (profile_avatars has allow read: if true)
+    final path = Uri.encodeComponent('profile_avatars/$currentUserId.jpg');
+    final url =
+        'https://firebasestorage.googleapis.com/v0/b/'
+        'social-mesh-app.firebasestorage.app/o/$path?alt=media';
 
     // Update profile with new avatar URL
     await updateProfile(avatarUrl: url);
