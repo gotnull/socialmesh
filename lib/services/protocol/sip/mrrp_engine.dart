@@ -40,6 +40,13 @@ class MrrpEngine {
   /// Callback for traffic event reporting to the harness console.
   void Function(MrrpTrafficEvent event)? onTrafficEvent;
 
+  /// Whether the engine accepts inbound MRRP REQUEST frames.
+  ///
+  /// When `false` (default), inbound requests are silently dropped — the
+  /// device is "hidden" and does not respond to direct service requests.
+  /// Wired from the mesh privacy "discoverable" toggle via the provider layer.
+  bool isServicingEnabled = false;
+
   /// Per-sender inbound request timestamps for rate limiting.
   final Map<int, List<DateTime>> _inboundRequestTimestamps = {};
 
@@ -270,6 +277,15 @@ class MrrpEngine {
   // ---------------------------------------------------------------------------
 
   Future<void> _handleInboundRequest(MrrpFrame frame, int senderNodeId) async {
+    // Privacy gate: reject all inbound requests when not discoverable.
+    if (!isServicingEnabled) {
+      AppLogging.mrrp(
+        'MRRP_ENGINE: inbound REQUEST dropped — '
+        'servicing disabled (discoverable=off)', // lint-allow: hardcoded-string
+      );
+      return;
+    }
+
     final dedupKey = buildDedupKey(frame, senderNodeId);
 
     if (dedupCache.isDuplicate(dedupKey)) {

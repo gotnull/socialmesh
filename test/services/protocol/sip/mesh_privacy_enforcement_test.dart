@@ -16,9 +16,14 @@ import 'package:cryptography/cryptography.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/services/protocol/sip/mrrp_advert_engine.dart';
+import 'package:socialmesh/services/protocol/sip/mrrp_codec.dart';
 import 'package:socialmesh/services/protocol/sip/mrrp_constants.dart';
+import 'package:socialmesh/services/protocol/sip/mrrp_dedup_cache.dart';
+import 'package:socialmesh/services/protocol/sip/mrrp_dispatcher.dart';
+import 'package:socialmesh/services/protocol/sip/mrrp_engine.dart';
 import 'package:socialmesh/services/protocol/sip/mrrp_frame.dart';
 import 'package:socialmesh/services/protocol/sip/mrrp_service_handler.dart';
+import 'package:socialmesh/services/protocol/sip/mrrp_service_profile.dart';
 import 'package:socialmesh/services/protocol/sip/mrrp_service_registry.dart';
 import 'package:socialmesh/services/protocol/sip/mrrp_types.dart';
 import 'package:socialmesh/services/protocol/sip/sip_codec.dart';
@@ -431,6 +436,236 @@ void main() {
       expect(sent, isTrue);
 
       engine.stop();
+    });
+  });
+
+  // =========================================================================
+  // Discoverable → MrrpEngine (inbound REQUEST gate)
+  // =========================================================================
+  group('Discoverable → MrrpEngine (inbound REQUEST)', () {
+    late MrrpServiceRegistry registry;
+    late MrrpAdvertEngine advertEngine;
+    late MrrpDispatcher dispatcher;
+    late MrrpDedupCache dedupCache;
+    late MrrpEngine engine;
+    late List<Uint8List> sentFrames;
+
+    setUp(() {
+      registry = MrrpServiceRegistry();
+      final handler = _TestHandler(serviceId: MrrpServiceId.echoTest);
+      registry.register(
+        handler,
+        MrrpServiceDescriptor(
+          serviceId: MrrpServiceId.echoTest,
+          serviceType: MrrpServiceType.test,
+        ),
+      );
+
+      advertEngine = MrrpAdvertEngine(registry: registry, random: Random(42));
+      dispatcher = MrrpDispatcher(registry: registry);
+      dedupCache = MrrpDedupCache();
+      sentFrames = [];
+
+      Future<bool> onSend(Uint8List payload) async {
+        sentFrames.add(payload);
+        return true;
+      }
+
+      dispatcher.onSend = onSend;
+      advertEngine.onSend = onSend;
+
+      engine = MrrpEngine(
+        registry: registry,
+        advertEngine: advertEngine,
+        dispatcher: dispatcher,
+        dedupCache: dedupCache,
+        onSend: onSend,
+      );
+      engine.start();
+    });
+
+    tearDown(() {
+      engine.dispose();
+    });
+
+    /// Encode a valid MRRP REQUEST targeting echo.test as wire bytes.
+    Uint8List buildRequestPayload() {
+      final frame = MrrpFrame(
+        versionMajor: MrrpConstants.mrrpVersionMajor,
+        versionMinor: MrrpConstants.mrrpVersionMinor,
+        msgType: MrrpMessageType.request,
+        flags: 0,
+        headerLen: MrrpConstants.mrrpHeaderMin,
+        requestId: 42,
+        serviceId: MrrpServiceId.echoTest,
+        actionId: 1,
+        payloadLen: 1,
+        payload: Uint8List.fromList([0xAB]),
+      );
+      return MrrpCodec.encode(frame)!;
+    }
+
+    test(
+      'inbound REQUEST dropped when isServicingEnabled=false (default)',
+      () async {
+        expect(engine.isServicingEnabled, isFalse);
+        engine.handleInboundFrame(0xBBBB, buildRequestPayload());
+        // Give async handler a chance to run.
+        await Future<void>.delayed(Duration.zero);
+        expect(sentFrames, isEmpty);
+      },
+    );
+
+    test('inbound REQUEST dispatched when isServicingEnabled=true', () async {
+      engine.isServicingEnabled = true;
+      engine.handleInboundFrame(0xBBBB, buildRequestPayload());
+      await Future<void>.delayed(Duration.zero);
+      // Dispatcher routes to _TestHandler which builds a response.
+      expect(sentFrames, isNotEmpty);
+    });
+
+    test('toggle isServicingEnabled: off→on→off', () async {
+      final payload = buildRequestPayload();
+
+      // Off — dropped.
+      engine.handleInboundFrame(0xCC01, payload);
+      await Future<void>.delayed(Duration.zero);
+      expect(sentFrames, isEmpty);
+
+      // On — dispatched (use different sender+reqId to avoid dedup).
+      engine.isServicingEnabled = true;
+      final payload2 = MrrpCodec.encode(
+        MrrpFrame(
+          versionMajor: MrrpConstants.mrrpVersionMajor,
+          versionMinor: MrrpConstants.mrrpVersionMinor,
+          msgType: MrrpMessageType.request,
+          flags: 0,
+          headerLen: MrrpConstants.mrrpHeaderMin,
+          requestId: 43,
+          serviceId: MrrpServiceId.echoTest,
+          actionId: 1,
+          payloadLen: 1,
+          payload: Uint8List.fromList([0xAB]),
+        ),
+      )!;
+      engine.handleInboundFrame(0xCC02, payload2);
+      await Future<void>.delayed(Duration.zero);
+      expect(sentFrames, hasLength(1));
+
+      // Off again — dropped.
+      engine.isServicingEnabled = false;
+      sentFrames.clear();
+      final payload3 = MrrpCodec.encode(
+        MrrpFrame(
+          versionMajor: MrrpConstants.mrrpVersionMajor,
+          versionMinor: MrrpConstants.mrrpVersionMinor,
+          msgType: MrrpMessageType.request,
+          flags: 0,
+          headerLen: MrrpConstants.mrrpHeaderMin,
+          requestId: 44,
+          serviceId: MrrpServiceId.echoTest,
+          actionId: 1,
+          payloadLen: 1,
+          payload: Uint8List.fromList([0xAB]),
+        ),
+      )!;
+      engine.handleInboundFrame(0xCC03, payload3);
+      await Future<void>.delayed(Duration.zero);
+      expect(sentFrames, isEmpty);
+    });
+  });
+
+  // =========================================================================
+  // Profile Sharing → MrrpServiceProfile
+  // =========================================================================
+  group('Profile Sharing → MrrpServiceProfile', () {
+    late MrrpServiceProfile service;
+
+    setUp(() {
+      service = MrrpServiceProfile(
+        configProvider: () => const MrrpProfileConfig(
+          displayName: 'Test', // lint-allow: hardcoded-string
+          statusText: 'Online', // lint-allow: hardcoded-string
+        ),
+      );
+    });
+
+    MrrpFrame buildProfileRequest(int actionId) {
+      return MrrpFrame(
+        versionMajor: MrrpConstants.mrrpVersionMajor,
+        versionMinor: MrrpConstants.mrrpVersionMinor,
+        msgType: MrrpMessageType.request,
+        flags: 0,
+        headerLen: MrrpConstants.mrrpHeaderMin,
+        requestId: 99,
+        serviceId: MrrpServiceId.profileV1,
+        actionId: actionId,
+        payloadLen: 0,
+        payload: Uint8List(0),
+      );
+    }
+
+    test('isProfileSharingEnabled defaults to false', () {
+      expect(service.isProfileSharingEnabled, isFalse);
+    });
+
+    test('get_summary rejected when isProfileSharingEnabled=false', () async {
+      final resp = await service.handleRequest(
+        buildProfileRequest(ProfileAction.getSummary),
+        0xBBBB,
+      );
+      expect(resp.msgType, MrrpMessageType.error);
+      final status = MrrpStatusCode.fromCode(resp.payload[0]);
+      expect(status, MrrpStatusCode.unauthorized);
+    });
+
+    test('get_summary succeeds when isProfileSharingEnabled=true', () async {
+      service.isProfileSharingEnabled = true;
+      final resp = await service.handleRequest(
+        buildProfileRequest(ProfileAction.getSummary),
+        0xBBBB,
+      );
+      expect(resp.msgType, MrrpMessageType.response);
+    });
+
+    test(
+      'get_contact_card rejected when isProfileSharingEnabled=false',
+      () async {
+        final resp = await service.handleRequest(
+          buildProfileRequest(ProfileAction.getContactCard),
+          0xBBBB,
+        );
+        expect(resp.msgType, MrrpMessageType.error);
+      },
+    );
+
+    test(
+      'get_capabilities rejected when isProfileSharingEnabled=false',
+      () async {
+        final resp = await service.handleRequest(
+          buildProfileRequest(ProfileAction.getCapabilities),
+          0xBBBB,
+        );
+        expect(resp.msgType, MrrpMessageType.error);
+      },
+    );
+
+    test('toggle profile sharing: off→on→off', () async {
+      final req = buildProfileRequest(ProfileAction.getSummary);
+
+      // Off — rejected.
+      final r1 = await service.handleRequest(req, 0xBBBB);
+      expect(r1.msgType, MrrpMessageType.error);
+
+      // On — succeeds.
+      service.isProfileSharingEnabled = true;
+      final r2 = await service.handleRequest(req, 0xBBBB);
+      expect(r2.msgType, MrrpMessageType.response);
+
+      // Off again — rejected.
+      service.isProfileSharingEnabled = false;
+      final r3 = await service.handleRequest(req, 0xBBBB);
+      expect(r3.msgType, MrrpMessageType.error);
     });
   });
 }

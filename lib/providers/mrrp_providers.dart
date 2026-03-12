@@ -340,6 +340,17 @@ final mrrpEngineProvider = Provider<MrrpEngine?>((ref) {
     ref.read(mrrpTrafficEventsProvider.notifier).add(event);
   };
 
+  // Wire mesh privacy: gate inbound MRRP requests on discoverability.
+  engine.isServicingEnabled = ref.watch(meshPrivacyDiscoverableProvider);
+
+  // Wire profile sharing privacy on the profile.v1 handler.
+  final profileHandler = registry.getHandler(MrrpServiceId.profileV1);
+  if (profileHandler is MrrpServiceProfile) {
+    profileHandler.isProfileSharingEnabled = ref.watch(
+      meshPrivacyProfileSharingProvider,
+    );
+  }
+
   // Start the engine BEFORE attaching to the protocol service.
   //
   // CRITICAL ORDER: engine.start() must precede protocol.attachMrrpEngine().

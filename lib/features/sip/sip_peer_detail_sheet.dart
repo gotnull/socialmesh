@@ -334,6 +334,12 @@ class _HandshakeButton extends ConsumerWidget {
     final l10n = context.l10n;
     final hsState = ref.watch(sipHandshakeStateProvider(peer.nodeId));
     final policy = ref.watch(ageSafetyPolicyProvider);
+    final dmAvailable = ref.watch(meshPrivacyDmAvailableProvider);
+
+    // Privacy gate: hide handshake button when DM is disabled.
+    if (!dmAvailable) {
+      return const SizedBox.shrink();
+    }
 
     // Minor contact restriction: disable handshake initiation entirely.
     if (policy.shouldRestrictUnsolicitedContact) {

@@ -270,6 +270,7 @@ class _ActionButtons extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final dmAvailable = ref.watch(meshPrivacyDmAvailableProvider);
 
     // Watch handshake state for anonymous peers.
     final hsState = peer.tier == InteractionTier.anonymous
@@ -282,7 +283,7 @@ class _ActionButtons extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // Primary action based on tier
-        if (peer.tier == InteractionTier.anonymous)
+        if (peer.tier == InteractionTier.anonymous && dmAvailable)
           FilledButton.icon(
             onPressed: handshakeInProgress
                 ? null
