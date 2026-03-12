@@ -29079,123 +29079,123 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpNodeDexSectionSigil =>
-      'A unique procedural glyph generated from this node\'s identity. ';
+      'A unique procedural glyph generated from this node\'s identity. The shape, symmetry, and color palette are deterministic — the same node always produces the same sigil. Think of it as a visual fingerprint.';
 
   @override
   String get helpNodeDexSectionTrait =>
-      'An inferred personality archetype derived from behavioral signals: ';
+      'An inferred personality archetype derived from behavioral signals: movement patterns, encounter frequency, signal consistency, and session duration. Confidence increases as more data is collected over time.';
 
   @override
   String get helpNodeDexSectionAutoSummary =>
-      'Computed insights from this node\'s encounter history. The time-of-day ';
+      'Computed insights from this node\'s encounter history. The time-of-day distribution shows when encounters most often occur, the streak tracks consecutive observation days, and the busiest day highlights weekly patterns. All stats update automatically as new encounters arrive.';
 
   @override
   String get helpNodeDexSectionObservationTimeline =>
-      'A visual timeline of this node\'s observation history. The bar shows ';
+      'A visual timeline of this node\'s observation history. The bar shows encounter density over time, with relative labels (\"3w ago\", \"2h ago\") showing how recently each endpoint was recorded. The sighting count reflects total distinct encounters.';
 
   @override
   String get helpNodeDexSectionDiscovery =>
-      'Tracks when this node was first and last seen on your mesh, the total ';
+      'Tracks when this node was first and last seen on your mesh, the total number of encounters, and the closest recorded range. All values update automatically as new packets arrive.';
 
   @override
   String get helpNodeDexSectionSignal =>
-      'Best and most recent SNR (Signal-to-Noise Ratio) and RSSI ';
+      'Best and most recent SNR (Signal-to-Noise Ratio) and RSSI (Received Signal Strength Indicator) values. Higher SNR and less negative RSSI indicate a stronger, more reliable link.';
 
   @override
   String get helpNodeDexSectionSocialTag =>
-      'A personal label you assign to categorize this node. Social tags are ';
+      'A personal label you assign to categorize this node. Social tags are stored locally and included in NodeDex exports, but never transmitted over the mesh. Use them to mark friends, relays, base stations, or any category that helps you organize your network.';
 
   @override
   String get helpNodeDexSectionNote =>
-      'A free-text note for anything you want to remember about this node. ';
+      'A free-text note for anything you want to remember about this node. Notes are private, stored locally, and included in NodeDex exports.';
 
   @override
   String get helpNodeDexSectionRegions =>
-      'Every regulatory region where this node has been observed. Region ';
+      'Every regulatory region where this node has been observed. Region data is recorded from the node\'s configuration packets and helps track mobile nodes across different geographic areas.';
 
   @override
   String get helpNodeDexSectionEncounters =>
-      'A chronological timeline of when this node appeared on your mesh. ';
+      'A chronological timeline of when this node appeared on your mesh. Each encounter records the timestamp, signal quality (SNR/RSSI), and distance if GPS coordinates were available on both sides. The most recent 10 encounters are shown.';
 
   @override
   String get helpNodeDexSectionActivityTimeline =>
-      'A unified chronological feed of everything observed about this node: ';
+      'A unified chronological feed of everything observed about this node: encounters, messages, presence state changes, signals, and milestones. Scroll through the full narrative of your interaction history with this node. The timeline loads the most recent 50 events and can expand to show the complete history.';
 
   @override
   String get helpNodeDexSectionCoseen =>
-      'Nodes that are frequently observed in the same session as this node. ';
+      'Nodes that are frequently observed in the same session as this node. A higher count means these nodes tend to appear together — they may be co-located, part of the same deployment, or carried by the same person. Tap any link to see the full edge detail including shared encounter history and message activity.';
 
   @override
   String get helpNodeDexSectionDevice =>
-      'Live telemetry from the node: battery percentage, hardware model, ';
+      'Live telemetry from the node: battery percentage, hardware model, firmware version, channel utilization, and uptime. This data is only available when the node is actively heard on the mesh.';
 
   @override
   String get helpNodeDexSectionAlbumRarity =>
-      'Rarity tiers are computed from encounter count and inferred trait. ';
+      'Rarity tiers are computed from encounter count and inferred trait. Common nodes have few encounters, while Legendary nodes combine rare traits with deep observation history. Rarity determines the card border color and holographic shimmer intensity.';
 
   @override
   String get helpNodeDexSectionAlbumGrouping =>
-      'Cards can be grouped by Trait (behavioral archetype), Rarity ';
+      'Cards can be grouped by Trait (behavioral archetype), Rarity (encounter-based tier), or Region (geographic area where first seen). Tap the group chips below the cover to switch between views.';
 
   @override
   String get helpNodeDexSectionAlbumExplorerTitle =>
-      'Your Explorer Title reflects your overall collection progress. ';
+      'Your Explorer Title reflects your overall collection progress. Newcomer, Scout, Cartographer, Pathfinder, and Chronicler are earned by discovering more nodes, encountering them repeatedly, and exploring multiple regions.';
 
   @override
   String get helpNodeDexSectionAlbumHolographic =>
-      'The holographic shimmer on cards is a visual indicator of rarity. ';
+      'The holographic shimmer on cards is a visual indicator of rarity. Common cards have no shimmer. Uncommon cards shimmer faintly. Rare, Epic, and Legendary cards glow with increasing intensity. The effect respects your reduce-motion preference.';
 
   @override
   String get helpNodeDexSectionAlbumPatina =>
-      'Patina is a composite score reflecting how deeply you have observed ';
+      'Patina is a composite score reflecting how deeply you have observed a node — encounter frequency, signal quality, co-seen connections, and time since first discovery all contribute. Higher patina means richer visual detail on the card.';
 
   @override
   String get helpNodeDexSectionAlbumCloudSync =>
-      'With a Cloud Sync subscription, your entire NodeDex album backs up ';
+      'With a Cloud Sync subscription, your entire NodeDex album backs up to the cloud and syncs across devices — sigils, encounters, social tags, notes, co-seen links, and collection progress. If you delete the app or get a new phone, everything restores when you sign back in. Without Cloud Sync, your collection exists only on this device and is lost if the app is removed. You can still export/import as JSON for manual backups.';
 
   @override
   String get helpTakSectionStatus =>
-      'The status card shows whether the WebSocket connection to the TAK ';
+      'The status card shows whether the WebSocket connection to the TAK Gateway is active, the gateway URL, how long the connection has been up, and how many CoT events have been received since connecting.';
 
   @override
   String get helpTakSectionAffiliation =>
-      'Affiliation describes the relationship of an entity to ';
+      'Affiliation describes the relationship of an entity to the observer: Friendly (blue), Hostile (red), Neutral (green), or Unknown (yellow). Affiliation is parsed from the second character of the CoT type string (e.g. a-f-G = friendly ground).';
 
   @override
   String get helpTakSectionCotType =>
-      'The CoT type string encodes an entity\'s affiliation, dimension, ';
+      'The CoT type string encodes an entity\'s affiliation, dimension, and function using standard atoms separated by hyphens. For example, \"a-f-G-U-C-I\" is an atom (a), friendly (f), ground (G), unit (U-C), sub-type (I). The icon and color are derived from this string.';
 
   @override
   String get helpTakSectionIdentity =>
-      'The UID uniquely identifies this entity across all CoT messages. ';
+      'The UID uniquely identifies this entity across all CoT messages. The callsign is a human-readable label assigned by the TAK server. The type string determines the entity\'s icon, color, and classification.';
 
   @override
   String get helpTakSectionPosition =>
-      'Latitude and longitude in WGS-84 decimal degrees as reported in ';
+      'Latitude and longitude in WGS-84 decimal degrees as reported in the CoT event. Tap the \"Show on Map\" icon in the app bar to center the map on this position.';
 
   @override
   String get helpTakSectionMotion =>
-      'Speed, course, and altitude parsed from the CoT event\'s track and ';
+      'Speed, course, and altitude parsed from the CoT event\'s track and point elements. Speed is shown in km/h and knots. Course is the heading in degrees from true north with a compass direction. Altitude is height above ellipsoid in meters and feet. This section is hidden when the gateway does not provide motion data.';
 
   @override
   String get helpTakSectionTimestamps =>
-      'Event Time is when the CoT event was generated. Stale Time is when ';
+      'Event Time is when the CoT event was generated. Stale Time is when the entity should be considered outdated if no update arrives. Received is when Socialmesh received the event from the gateway. An entity is marked STALE when the current time exceeds Stale Time.';
 
   @override
   String get helpTakSectionTracking =>
-      'Tracked entities are pinned and highlighted on the map with a ';
+      'Tracked entities are pinned and highlighted on the map with a distinct marker ring. They remain visible even when you navigate away from the TAK screen. Long-press a tile to toggle tracking, or use the pin icon in the detail screen.';
 
   @override
   String get helpTakSectionRawPayload =>
-      'The raw JSON payload as received from the TAK Gateway WebSocket. ';
+      'The raw JSON payload as received from the TAK Gateway WebSocket. This includes all CoT fields, XML attributes, and any extension data attached to the event. Useful for debugging or verifying what the gateway is sending.';
 
   @override
   String get helpTakSectionFilters =>
-      'Filter chips let you narrow the entity list by affiliation. The ';
+      'Filter chips let you narrow the entity list by affiliation. The stale-mode chip cycles through All (show everything), Active Only (hide stale entities), and Stale Only (show only expired entities). The search bar matches against callsign and UID.';
 
   @override
   String get helpTakSectionSettings =>
-      'TAK Settings let you configure the gateway URL, toggle auto-connect ';
+      'TAK Settings let you configure the gateway URL, toggle auto-connect on screen open, and set the stale timeout duration. All settings persist locally between app sessions.';
 
   @override
   String get accessRestrictedTitle => 'Access Restricted';

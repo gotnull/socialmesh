@@ -39069,123 +39069,123 @@
     "@helpFtlUsbBubble": {
         "description": "Help bubble text for step ftl_usb"
     },
-    "helpNodeDexSectionSigil": "A unique procedural glyph generated from this node's identity. ",
+    "helpNodeDexSectionSigil": "A unique procedural glyph generated from this node's identity. The shape, symmetry, and color palette are deterministic — the same node always produces the same sigil. Think of it as a visual fingerprint.",
     "@helpNodeDexSectionSigil": {
         "description": "Section help text for sigil in nodeDexSectionHelp"
     },
-    "helpNodeDexSectionTrait": "An inferred personality archetype derived from behavioral signals: ",
+    "helpNodeDexSectionTrait": "An inferred personality archetype derived from behavioral signals: movement patterns, encounter frequency, signal consistency, and session duration. Confidence increases as more data is collected over time.",
     "@helpNodeDexSectionTrait": {
         "description": "Section help text for trait in nodeDexSectionHelp"
     },
-    "helpNodeDexSectionAutoSummary": "Computed insights from this node's encounter history. The time-of-day ",
+    "helpNodeDexSectionAutoSummary": "Computed insights from this node's encounter history. The time-of-day distribution shows when encounters most often occur, the streak tracks consecutive observation days, and the busiest day highlights weekly patterns. All stats update automatically as new encounters arrive.",
     "@helpNodeDexSectionAutoSummary": {
         "description": "Section help text for auto_summary in nodeDexSectionHelp"
     },
-    "helpNodeDexSectionObservationTimeline": "A visual timeline of this node's observation history. The bar shows ",
+    "helpNodeDexSectionObservationTimeline": "A visual timeline of this node's observation history. The bar shows encounter density over time, with relative labels (\"3w ago\", \"2h ago\") showing how recently each endpoint was recorded. The sighting count reflects total distinct encounters.",
     "@helpNodeDexSectionObservationTimeline": {
         "description": "Section help text for observation_timeline in nodeDexSectionHelp"
     },
-    "helpNodeDexSectionDiscovery": "Tracks when this node was first and last seen on your mesh, the total ",
+    "helpNodeDexSectionDiscovery": "Tracks when this node was first and last seen on your mesh, the total number of encounters, and the closest recorded range. All values update automatically as new packets arrive.",
     "@helpNodeDexSectionDiscovery": {
         "description": "Section help text for discovery in nodeDexSectionHelp"
     },
-    "helpNodeDexSectionSignal": "Best and most recent SNR (Signal-to-Noise Ratio) and RSSI ",
+    "helpNodeDexSectionSignal": "Best and most recent SNR (Signal-to-Noise Ratio) and RSSI (Received Signal Strength Indicator) values. Higher SNR and less negative RSSI indicate a stronger, more reliable link.",
     "@helpNodeDexSectionSignal": {
         "description": "Section help text for signal in nodeDexSectionHelp"
     },
-    "helpNodeDexSectionSocialTag": "A personal label you assign to categorize this node. Social tags are ",
+    "helpNodeDexSectionSocialTag": "A personal label you assign to categorize this node. Social tags are stored locally and included in NodeDex exports, but never transmitted over the mesh. Use them to mark friends, relays, base stations, or any category that helps you organize your network.",
     "@helpNodeDexSectionSocialTag": {
         "description": "Section help text for social_tag in nodeDexSectionHelp"
     },
-    "helpNodeDexSectionNote": "A free-text note for anything you want to remember about this node. ",
+    "helpNodeDexSectionNote": "A free-text note for anything you want to remember about this node. Notes are private, stored locally, and included in NodeDex exports.",
     "@helpNodeDexSectionNote": {
         "description": "Section help text for note in nodeDexSectionHelp"
     },
-    "helpNodeDexSectionRegions": "Every regulatory region where this node has been observed. Region ",
+    "helpNodeDexSectionRegions": "Every regulatory region where this node has been observed. Region data is recorded from the node's configuration packets and helps track mobile nodes across different geographic areas.",
     "@helpNodeDexSectionRegions": {
         "description": "Section help text for regions in nodeDexSectionHelp"
     },
-    "helpNodeDexSectionEncounters": "A chronological timeline of when this node appeared on your mesh. ",
+    "helpNodeDexSectionEncounters": "A chronological timeline of when this node appeared on your mesh. Each encounter records the timestamp, signal quality (SNR/RSSI), and distance if GPS coordinates were available on both sides. The most recent 10 encounters are shown.",
     "@helpNodeDexSectionEncounters": {
         "description": "Section help text for encounters in nodeDexSectionHelp"
     },
-    "helpNodeDexSectionActivityTimeline": "A unified chronological feed of everything observed about this node: ",
+    "helpNodeDexSectionActivityTimeline": "A unified chronological feed of everything observed about this node: encounters, messages, presence state changes, signals, and milestones. Scroll through the full narrative of your interaction history with this node. The timeline loads the most recent 50 events and can expand to show the complete history.",
     "@helpNodeDexSectionActivityTimeline": {
         "description": "Section help text for activity_timeline in nodeDexSectionHelp"
     },
-    "helpNodeDexSectionCoseen": "Nodes that are frequently observed in the same session as this node. ",
+    "helpNodeDexSectionCoseen": "Nodes that are frequently observed in the same session as this node. A higher count means these nodes tend to appear together — they may be co-located, part of the same deployment, or carried by the same person. Tap any link to see the full edge detail including shared encounter history and message activity.",
     "@helpNodeDexSectionCoseen": {
         "description": "Section help text for coseen in nodeDexSectionHelp"
     },
-    "helpNodeDexSectionDevice": "Live telemetry from the node: battery percentage, hardware model, ",
+    "helpNodeDexSectionDevice": "Live telemetry from the node: battery percentage, hardware model, firmware version, channel utilization, and uptime. This data is only available when the node is actively heard on the mesh.",
     "@helpNodeDexSectionDevice": {
         "description": "Section help text for device in nodeDexSectionHelp"
     },
-    "helpNodeDexSectionAlbumRarity": "Rarity tiers are computed from encounter count and inferred trait. ",
+    "helpNodeDexSectionAlbumRarity": "Rarity tiers are computed from encounter count and inferred trait. Common nodes have few encounters, while Legendary nodes combine rare traits with deep observation history. Rarity determines the card border color and holographic shimmer intensity.",
     "@helpNodeDexSectionAlbumRarity": {
         "description": "Section help text for album_rarity in nodeDexSectionHelp"
     },
-    "helpNodeDexSectionAlbumGrouping": "Cards can be grouped by Trait (behavioral archetype), Rarity ",
+    "helpNodeDexSectionAlbumGrouping": "Cards can be grouped by Trait (behavioral archetype), Rarity (encounter-based tier), or Region (geographic area where first seen). Tap the group chips below the cover to switch between views.",
     "@helpNodeDexSectionAlbumGrouping": {
         "description": "Section help text for album_grouping in nodeDexSectionHelp"
     },
-    "helpNodeDexSectionAlbumExplorerTitle": "Your Explorer Title reflects your overall collection progress. ",
+    "helpNodeDexSectionAlbumExplorerTitle": "Your Explorer Title reflects your overall collection progress. Newcomer, Scout, Cartographer, Pathfinder, and Chronicler are earned by discovering more nodes, encountering them repeatedly, and exploring multiple regions.",
     "@helpNodeDexSectionAlbumExplorerTitle": {
         "description": "Section help text for album_explorer_title in nodeDexSectionHelp"
     },
-    "helpNodeDexSectionAlbumHolographic": "The holographic shimmer on cards is a visual indicator of rarity. ",
+    "helpNodeDexSectionAlbumHolographic": "The holographic shimmer on cards is a visual indicator of rarity. Common cards have no shimmer. Uncommon cards shimmer faintly. Rare, Epic, and Legendary cards glow with increasing intensity. The effect respects your reduce-motion preference.",
     "@helpNodeDexSectionAlbumHolographic": {
         "description": "Section help text for album_holographic in nodeDexSectionHelp"
     },
-    "helpNodeDexSectionAlbumPatina": "Patina is a composite score reflecting how deeply you have observed ",
+    "helpNodeDexSectionAlbumPatina": "Patina is a composite score reflecting how deeply you have observed a node — encounter frequency, signal quality, co-seen connections, and time since first discovery all contribute. Higher patina means richer visual detail on the card.",
     "@helpNodeDexSectionAlbumPatina": {
         "description": "Section help text for album_patina in nodeDexSectionHelp"
     },
-    "helpNodeDexSectionAlbumCloudSync": "With a Cloud Sync subscription, your entire NodeDex album backs up ",
+    "helpNodeDexSectionAlbumCloudSync": "With a Cloud Sync subscription, your entire NodeDex album backs up to the cloud and syncs across devices — sigils, encounters, social tags, notes, co-seen links, and collection progress. If you delete the app or get a new phone, everything restores when you sign back in. Without Cloud Sync, your collection exists only on this device and is lost if the app is removed. You can still export/import as JSON for manual backups.",
     "@helpNodeDexSectionAlbumCloudSync": {
         "description": "Section help text for album_cloud_sync in nodeDexSectionHelp"
     },
-    "helpTakSectionStatus": "The status card shows whether the WebSocket connection to the TAK ",
+    "helpTakSectionStatus": "The status card shows whether the WebSocket connection to the TAK Gateway is active, the gateway URL, how long the connection has been up, and how many CoT events have been received since connecting.",
     "@helpTakSectionStatus": {
         "description": "Section help text for status in takSectionHelp"
     },
-    "helpTakSectionAffiliation": "Affiliation describes the relationship of an entity to ",
+    "helpTakSectionAffiliation": "Affiliation describes the relationship of an entity to the observer: Friendly (blue), Hostile (red), Neutral (green), or Unknown (yellow). Affiliation is parsed from the second character of the CoT type string (e.g. a-f-G = friendly ground).",
     "@helpTakSectionAffiliation": {
         "description": "Section help text for affiliation in takSectionHelp"
     },
-    "helpTakSectionCotType": "The CoT type string encodes an entity's affiliation, dimension, ",
+    "helpTakSectionCotType": "The CoT type string encodes an entity's affiliation, dimension, and function using standard atoms separated by hyphens. For example, \"a-f-G-U-C-I\" is an atom (a), friendly (f), ground (G), unit (U-C), sub-type (I). The icon and color are derived from this string.",
     "@helpTakSectionCotType": {
         "description": "Section help text for cot_type in takSectionHelp"
     },
-    "helpTakSectionIdentity": "The UID uniquely identifies this entity across all CoT messages. ",
+    "helpTakSectionIdentity": "The UID uniquely identifies this entity across all CoT messages. The callsign is a human-readable label assigned by the TAK server. The type string determines the entity's icon, color, and classification.",
     "@helpTakSectionIdentity": {
         "description": "Section help text for identity in takSectionHelp"
     },
-    "helpTakSectionPosition": "Latitude and longitude in WGS-84 decimal degrees as reported in ",
+    "helpTakSectionPosition": "Latitude and longitude in WGS-84 decimal degrees as reported in the CoT event. Tap the \"Show on Map\" icon in the app bar to center the map on this position.",
     "@helpTakSectionPosition": {
         "description": "Section help text for position in takSectionHelp"
     },
-    "helpTakSectionMotion": "Speed, course, and altitude parsed from the CoT event's track and ",
+    "helpTakSectionMotion": "Speed, course, and altitude parsed from the CoT event's track and point elements. Speed is shown in km/h and knots. Course is the heading in degrees from true north with a compass direction. Altitude is height above ellipsoid in meters and feet. This section is hidden when the gateway does not provide motion data.",
     "@helpTakSectionMotion": {
         "description": "Section help text for motion in takSectionHelp"
     },
-    "helpTakSectionTimestamps": "Event Time is when the CoT event was generated. Stale Time is when ",
+    "helpTakSectionTimestamps": "Event Time is when the CoT event was generated. Stale Time is when the entity should be considered outdated if no update arrives. Received is when Socialmesh received the event from the gateway. An entity is marked STALE when the current time exceeds Stale Time.",
     "@helpTakSectionTimestamps": {
         "description": "Section help text for timestamps in takSectionHelp"
     },
-    "helpTakSectionTracking": "Tracked entities are pinned and highlighted on the map with a ",
+    "helpTakSectionTracking": "Tracked entities are pinned and highlighted on the map with a distinct marker ring. They remain visible even when you navigate away from the TAK screen. Long-press a tile to toggle tracking, or use the pin icon in the detail screen.",
     "@helpTakSectionTracking": {
         "description": "Section help text for tracking in takSectionHelp"
     },
-    "helpTakSectionRawPayload": "The raw JSON payload as received from the TAK Gateway WebSocket. ",
+    "helpTakSectionRawPayload": "The raw JSON payload as received from the TAK Gateway WebSocket. This includes all CoT fields, XML attributes, and any extension data attached to the event. Useful for debugging or verifying what the gateway is sending.",
     "@helpTakSectionRawPayload": {
         "description": "Section help text for raw_payload in takSectionHelp"
     },
-    "helpTakSectionFilters": "Filter chips let you narrow the entity list by affiliation. The ",
+    "helpTakSectionFilters": "Filter chips let you narrow the entity list by affiliation. The stale-mode chip cycles through All (show everything), Active Only (hide stale entities), and Stale Only (show only expired entities). The search bar matches against callsign and UID.",
     "@helpTakSectionFilters": {
         "description": "Section help text for filters in takSectionHelp"
     },
-    "helpTakSectionSettings": "TAK Settings let you configure the gateway URL, toggle auto-connect ",
+    "helpTakSectionSettings": "TAK Settings let you configure the gateway URL, toggle auto-connect on screen open, and set the stale timeout duration. All settings persist locally between app sessions.",
     "@helpTakSectionSettings": {
         "description": "Section help text for settings in takSectionHelp"
     },
