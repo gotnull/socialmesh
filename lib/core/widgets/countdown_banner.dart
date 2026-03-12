@@ -133,8 +133,6 @@ class _CountdownRow extends StatelessWidget {
         return Icons.radar;
       case CountdownType.positionBroadcast:
         return Icons.location_on;
-      case CountdownType.telemetryRequest:
-        return Icons.monitor_heart;
     }
   }
 

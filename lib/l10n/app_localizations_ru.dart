@@ -31821,9 +31821,6 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get nodesScreenRequestTelemetryMenu => 'Request All Telemetry';
-
-  @override
   String get nodesScreenViewModeCards => 'Card View';
 
   @override
@@ -31833,9 +31830,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String nodesScreenUptimeLabel(String uptime) {
     return 'Up $uptime';
   }
-
-  @override
-  String get countdownRequestingTelemetry => 'Requesting telemetry…';
 
   @override
   String get servicePresentationBoardTitle => 'Bulletin Board';

@@ -42657,10 +42657,6 @@
         }
     },
 
-    "nodesScreenRequestTelemetryMenu": "Request All Telemetry",
-    "@nodesScreenRequestTelemetryMenu": {
-        "description": "Overflow menu item to request telemetry from all nodes"
-    },
     "nodesScreenViewModeCards": "Card View",
     "@nodesScreenViewModeCards": {
         "description": "Tooltip for card view mode toggle"
@@ -42676,11 +42672,6 @@
             "uptime": { "type": "String" }
         }
     },
-    "countdownRequestingTelemetry": "Requesting telemetry…",
-    "@countdownRequestingTelemetry": {
-        "description": "Countdown label while waiting for telemetry responses"
-    },
-
     "servicePresentationBoardTitle": "Bulletin Board",
     "@servicePresentationBoardTitle": {
         "description": "Title for the board.v1 MRRP service card"

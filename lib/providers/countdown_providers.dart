@@ -30,9 +30,6 @@ enum CountdownType {
 
   /// Broadcasting local position to the mesh.
   positionBroadcast,
-
-  /// Waiting for mesh nodes to report telemetry.
-  telemetryRequest,
 }
 
 /// Immutable snapshot of a single active countdown.
@@ -114,12 +111,6 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
 
   /// Canonical countdown id for the position broadcast operation.
   static const positionBroadcastId = 'position_broadcast';
-
-  /// Canonical countdown id for the telemetry request operation.
-  static const telemetryRequestId = 'telemetry_request';
-
-  /// Duration to wait while mesh nodes report telemetry.
-  static const telemetryRequestSeconds = 45;
 
   @override
   Map<String, CountdownTask> build() {
@@ -240,22 +231,6 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
     );
   }
 
-  /// Convenience: start a telemetry request countdown.
-  ///
-  /// Shown after requesting telemetry from all mesh nodes.
-  void startTelemetryRequestCountdown() {
-    final l10n = safeL10n();
-    startCountdown(
-      id: telemetryRequestId,
-      label: l10n.countdownRequestingTelemetry,
-      totalSeconds: telemetryRequestSeconds,
-      type: CountdownType.telemetryRequest,
-    );
-  }
-
-  /// Whether a telemetry request countdown is currently active.
-  bool get isTelemetryRequestActive => state.containsKey(telemetryRequestId);
-
   /// Cancel and remove a countdown by [id].
   void cancelCountdown(String id) {
     if (!state.containsKey(id)) return;
@@ -343,8 +318,6 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
         _onPositionRequestComplete(task);
       case CountdownType.positionBroadcast:
         _onPositionBroadcastComplete(task);
-      case CountdownType.telemetryRequest:
-        _onTelemetryRequestComplete(task);
     }
   }
 
@@ -392,13 +365,6 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
   void _onPositionBroadcastComplete(CountdownTask task) {
     showGlobalSuccessSnackBar(
       'Position broadcast complete', // lint-allow: hardcoded-string
-      duration: const Duration(seconds: 3),
-    );
-  }
-
-  void _onTelemetryRequestComplete(CountdownTask task) {
-    showGlobalSuccessSnackBar(
-      'Mesh telemetry updates received', // lint-allow: hardcoded-string
       duration: const Duration(seconds: 3),
     );
   }

@@ -25,7 +25,6 @@ import '../../core/widgets/skeleton_config.dart';
 import '../../models/mesh_models.dart';
 import '../../models/presence_confidence.dart';
 import '../../providers/app_providers.dart';
-import '../../providers/countdown_providers.dart';
 import '../../providers/help_providers.dart';
 import '../../providers/presence_providers.dart';
 import '../../providers/social_providers.dart';
@@ -75,17 +74,6 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
     final settings = await ref.read(settingsServiceProvider.future);
     if (!mounted) return;
     await settings.setNodeViewModeIndex(newValue ? 1 : 0);
-  }
-
-  Future<void> _requestAllTelemetry() async {
-    final notifier = ref.read(countdownProvider.notifier);
-    if (notifier.isTelemetryRequestActive) return;
-
-    final protocol = ref.read(protocolServiceProvider);
-    await protocol.requestAllTelemetry();
-
-    if (!mounted) return;
-    notifier.startTelemetryRequestCountdown();
   }
 
   @override
@@ -231,8 +219,6 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
                 switch (value) {
                   case 'view_mode':
                     _toggleViewMode();
-                  case 'request_telemetry':
-                    _requestAllTelemetry();
                   case 'settings':
                     Navigator.pushNamed(context, '/settings');
                   case 'help':
@@ -254,19 +240,6 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
                         _compactView
                             ? context.l10n.nodesScreenViewModeCards
                             : context.l10n.nodesScreenViewModeCompact,
-                        style: TextStyle(color: context.textPrimary),
-                      ),
-                    ],
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'request_telemetry',
-                  child: Row(
-                    children: [
-                      Icon(Icons.speed, color: context.textSecondary, size: 20),
-                      const SizedBox(width: AppTheme.spacing12),
-                      Text(
-                        context.l10n.nodesScreenRequestTelemetryMenu,
                         style: TextStyle(color: context.textPrimary),
                       ),
                     ],

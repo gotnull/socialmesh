@@ -56110,12 +56110,6 @@ abstract class AppLocalizations {
   /// **'Marginal clearance ({clearance}m) — below the recommended {required}m Fresnel clearance. Terrain/obstacles not considered.'**
   String losExplanationMarginal(String clearance, String required);
 
-  /// Overflow menu item to request telemetry from all nodes
-  ///
-  /// In en, this message translates to:
-  /// **'Request All Telemetry'**
-  String get nodesScreenRequestTelemetryMenu;
-
   /// Tooltip for card view mode toggle
   ///
   /// In en, this message translates to:
@@ -56133,12 +56127,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Up {uptime}'**
   String nodesScreenUptimeLabel(String uptime);
-
-  /// Countdown label while waiting for telemetry responses
-  ///
-  /// In en, this message translates to:
-  /// **'Requesting telemetry…'**
-  String get countdownRequestingTelemetry;
 
   /// Title for the board.v1 MRRP service card
   ///
