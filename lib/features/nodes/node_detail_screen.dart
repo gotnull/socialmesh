@@ -1239,10 +1239,6 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
     ref.listen<AsyncValue<List<TraceRouteLog>>>(
       nodeTraceRouteLogsProvider(node.nodeNum),
       (prev, next) {
-        // Skip the initial load so pre-existing DB entries don't trigger
-        // the snackbar the moment the screen is opened.
-        if (prev == null) return;
-
         final logs = next.value;
         if (logs == null || logs.isEmpty) return;
 
@@ -1252,6 +1248,15 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
           orElse: () => logs.first,
         );
         if (!latest.response) return;
+
+        // On the initial data load — whether prev was null (provider not yet
+        // observed) or prev had no value (AsyncLoading → AsyncData) — seed
+        // the dedup ID so pre-existing DB entries never trigger a snackbar.
+        if (prev == null || !prev.hasValue) {
+          _lastShownTracerouteId = latest.id;
+          return;
+        }
+
         if (latest.id == _lastShownTracerouteId) return;
 
         _lastShownTracerouteId = latest.id;
