@@ -173,6 +173,30 @@ class SettingsService {
   bool get sipAutoScanEnabled =>
       _preferences.getBool('sip_auto_scan_enabled') ?? false;
 
+  // Mesh privacy: discoverable (allow peers to discover via SIP)
+  Future<void> setMeshDiscoverable(bool enabled) async {
+    await _preferences.setBool('mesh_discoverable', enabled);
+  }
+
+  bool get meshDiscoverable =>
+      _preferences.getBool('mesh_discoverable') ?? false;
+
+  // Mesh privacy: profile sharing (let peers request profile and services)
+  Future<void> setMeshProfileSharing(bool enabled) async {
+    await _preferences.setBool('mesh_profile_sharing', enabled);
+  }
+
+  bool get meshProfileSharing =>
+      _preferences.getBool('mesh_profile_sharing') ?? false;
+
+  // Mesh privacy: DM available (accept handshakes and direct messages)
+  Future<void> setMeshDmAvailable(bool enabled) async {
+    await _preferences.setBool('mesh_dm_available', enabled);
+  }
+
+  bool get meshDmAvailable =>
+      _preferences.getBool('mesh_dm_available') ?? false;
+
   // Theme
   Future<void> setDarkMode(bool enabled) async {
     await _preferences.setBool('dark_mode', enabled);

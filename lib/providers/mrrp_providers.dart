@@ -246,6 +246,9 @@ final mrrpAdvertEngineProvider = Provider<MrrpAdvertEngine?>((ref) {
 
   final engine = MrrpAdvertEngine(registry: registry);
 
+  // Wire mesh privacy setting so advert broadcast is gated on discoverability.
+  engine.isAdvertisingEnabled = ref.watch(meshPrivacyDiscoverableProvider);
+
   engine.onCacheChanged = () {
     ref.read(mrrpAdvertEpochProvider.notifier).bump();
   };

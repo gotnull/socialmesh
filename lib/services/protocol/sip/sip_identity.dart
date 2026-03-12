@@ -76,6 +76,12 @@ class SipIdentityHandler {
   int get localNodeId => _localNodeId;
   final int _localNodeId;
 
+  /// Whether profile sharing is enabled.
+  ///
+  /// When false, auto-responses to ID_REQ and outbound ID_CLAIM broadcasts
+  /// are suppressed. Set by the provider layer from the mesh privacy setting.
+  bool isProfileSharingEnabled = false;
+
   final String _displayName;
   final String _status;
   final String _deviceModel;
@@ -354,6 +360,15 @@ class SipIdentityHandler {
     required SipFrame frame,
     required int senderNodeId,
   }) async {
+    // Privacy gate: suppress auto-respond when profile sharing is off.
+    if (!isProfileSharingEnabled) {
+      AppLogging.sip(
+        'SIP_ID: ID_REQ from node=0x${senderNodeId.toRadixString(16)} '
+        'suppressed (profileSharing=false)',
+      );
+      return null;
+    }
+
     final req = SipIdMessages.decodeIdReq(frame.payload);
     if (req == null) {
       AppLogging.sip(

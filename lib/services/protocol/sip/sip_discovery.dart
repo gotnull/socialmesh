@@ -153,6 +153,13 @@ class SipDiscovery {
   /// Peer capability cache: node_id -> capability.
   final Map<int, SipPeerCapability> _cache = {};
 
+  /// Whether discovery (beacon emission, rollcall responses) is enabled.
+  ///
+  /// Set by the provider layer from the mesh privacy discoverable setting.
+  /// When false, outbound CAP_BEACON and ROLLCALL_RESP are suppressed.
+  /// Inbound processing (caching discovered peers) continues regardless.
+  bool isDiscoverable = false;
+
   /// Timestamp (ms) of last beacon emission.
   ///
   /// Publicly settable for resume restoration (prevents burst after app resume).
@@ -229,6 +236,15 @@ class SipDiscovery {
   /// Look up a specific peer.
   SipPeerCapability? getPeer(int nodeId) => _cache[nodeId];
 
+  /// Clear the entire peer cache and notify listeners.
+  void clearPeerCache() {
+    if (_cache.isEmpty) return;
+    _cache.clear();
+    _lastRollcallRespMs.clear();
+    onPeersChanged?.call();
+    AppLogging.sip('SIP_DISCOVERY: peer cache cleared by user');
+  }
+
   /// Evict expired entries. Returns the number evicted.
   int evictExpired() {
     final nowMs = _nowMs();
@@ -255,6 +271,14 @@ class SipDiscovery {
   /// is true, skips the interval check (but still respects budget and
   /// congestion).
   SipOutbound? buildBeacon({bool force = false}) {
+    // Privacy gate: suppress beacon when not discoverable.
+    if (!isDiscoverable) {
+      AppLogging.sip(
+        'SIP_DISCOVERY: CAP_BEACON suppressed (discoverable=false)',
+      );
+      return null;
+    }
+
     final nowMs = _nowMs();
 
     // Suppress non-essential discovery during congestion or budget pressure.
@@ -425,6 +449,14 @@ class SipDiscovery {
   /// Returns null if rate-limited or budget insufficient.
   /// The caller should apply a random delay (0-3s) before sending.
   SipOutbound? buildRollcallResp(int peerNodeId) {
+    // Privacy gate: suppress rollcall responses when not discoverable.
+    if (!isDiscoverable) {
+      AppLogging.sip(
+        'SIP_DISCOVERY: ROLLCALL_RESP suppressed (discoverable=false)',
+      );
+      return null;
+    }
+
     final nowMs = _nowMs();
 
     final lastMs = _lastRollcallRespMs[peerNodeId];

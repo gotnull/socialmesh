@@ -62,6 +62,13 @@ class MrrpAdvertEngine {
   /// Instrumentation counters (optional, injected by provider layer).
   MrrpCounters? counters;
 
+  /// Whether advertising is enabled (discoverable on mesh).
+  ///
+  /// When false, SERVICE_ADVERT broadcasts and SERVICE_DIR_RESP are
+  /// suppressed. Inbound advert caching continues. Set by the provider
+  /// layer from the mesh privacy discoverable setting.
+  bool isAdvertisingEnabled = false;
+
   /// Cache of discovered services from remote peers.
   final Map<_AdvertCacheKey, MrrpCachedService> _advertCache = {};
 
@@ -134,6 +141,16 @@ class MrrpAdvertEngine {
   }
 
   Future<void> _broadcastAdvert() async {
+    // Privacy gate: suppress advert when not discoverable.
+    if (!isAdvertisingEnabled) {
+      AppLogging.mrrp(
+        'MRRP_ADVERT: SERVICE_ADVERT suppressed '
+        '(advertising=false)', // lint-allow: hardcoded-string
+      );
+      _scheduleNextAdvert();
+      return;
+    }
+
     if (_registry.isEmpty) {
       _scheduleNextAdvert();
       return;
@@ -213,6 +230,16 @@ class MrrpAdvertEngine {
 
   /// Handle an inbound SERVICE_DIR_REQ. Returns a SERVICE_DIR_RESP frame.
   MrrpFrame? handleServiceDirReq(MrrpFrame request, int senderNodeId) {
+    // Privacy gate: suppress directory responses when not discoverable.
+    if (!isAdvertisingEnabled) {
+      AppLogging.mrrp(
+        'MRRP_ADVERT: SERVICE_DIR_REQ from '
+        'node=0x${senderNodeId.toRadixString(16)} '
+        'suppressed (advertising=false)', // lint-allow: hardcoded-string
+      );
+      return null;
+    }
+
     AppLogging.mrrp(
       'MRRP_ADVERT: SERVICE_DIR_REQ received from '
       'node=0x${senderNodeId.toRadixString(16)}', // lint-allow: hardcoded-string

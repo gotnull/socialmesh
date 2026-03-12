@@ -18,6 +18,7 @@ import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../utils/snackbar.dart';
 import '../../../services/haptic_service.dart';
+import '../../../providers/sip_providers.dart';
 
 /// Screen for managing Mesh Explorer privacy settings.
 class MeshPrivacySettingsScreen extends ConsumerStatefulWidget {
@@ -31,14 +32,12 @@ class MeshPrivacySettingsScreen extends ConsumerStatefulWidget {
 class _MeshPrivacySettingsScreenState
     extends ConsumerState<MeshPrivacySettingsScreen>
     with LifecycleSafeMixin {
-  // Safe defaults: everything off (anonymous, opt-in)
-  bool _discoverable = false;
-  bool _profileSharing = false;
-  bool _dmAvailable = false;
-
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final discoverable = ref.watch(meshPrivacyDiscoverableProvider);
+    final profileSharing = ref.watch(meshPrivacyProfileSharingProvider);
+    final dmAvailable = ref.watch(meshPrivacyDmAvailableProvider);
 
     return GlassScaffold(
       title: l10n.meshExplorerPrivacyTitle,
@@ -57,8 +56,12 @@ class _MeshPrivacySettingsScreenState
               title: l10n.meshExplorerPrivacyDiscoverable,
               subtitle: l10n.meshExplorerPrivacyDiscoverableSub,
               icon: Icons.visibility_outlined,
-              value: _discoverable,
-              onChanged: (v) => setState(() => _discoverable = v),
+              value: discoverable,
+              onChanged: (v) {
+                ref
+                    .read(meshPrivacyDiscoverableProvider.notifier)
+                    .setEnabled(v);
+              },
             ),
           ),
         ),
@@ -79,8 +82,12 @@ class _MeshPrivacySettingsScreenState
                   title: l10n.meshExplorerPrivacyProfileSharing,
                   subtitle: l10n.meshExplorerPrivacyProfileSharingSub,
                   icon: Icons.person_outline,
-                  value: _profileSharing,
-                  onChanged: (v) => setState(() => _profileSharing = v),
+                  value: profileSharing,
+                  onChanged: (v) {
+                    ref
+                        .read(meshPrivacyProfileSharingProvider.notifier)
+                        .setEnabled(v);
+                  },
                 ),
                 Divider(
                   height: 1,
@@ -90,8 +97,12 @@ class _MeshPrivacySettingsScreenState
                   title: l10n.meshExplorerPrivacyDmAvailable,
                   subtitle: l10n.meshExplorerPrivacyDmAvailableSub,
                   icon: Icons.chat_bubble_outline,
-                  value: _dmAvailable,
-                  onChanged: (v) => setState(() => _dmAvailable = v),
+                  value: dmAvailable,
+                  onChanged: (v) {
+                    ref
+                        .read(meshPrivacyDmAvailableProvider.notifier)
+                        .setEnabled(v);
+                  },
                 ),
               ],
             ),
@@ -124,8 +135,9 @@ class _MeshPrivacySettingsScreenState
 
   Future<void> _clearCache(BuildContext context) async {
     final haptics = ref.read(hapticServiceProvider);
+    final discovery = ref.read(sipDiscoveryProvider);
     await haptics.trigger(HapticType.heavy);
-    // Cache clearing will be wired to SIP discovery provider
+    discovery?.clearPeerCache();
     if (!context.mounted) return;
     showSuccessSnackBar(context, context.l10n.meshExplorerPrivacyCacheCleared);
   }

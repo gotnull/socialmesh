@@ -147,6 +147,13 @@ class SipHandshakeManager {
   /// consent. The UI should show an Accept/Decline prompt.
   void Function(int peerNodeId)? onHandshakeRequest;
 
+  /// Whether DMs are available (handshakes accepted).
+  ///
+  /// When false, outbound handshake initiation returns null and incoming
+  /// HS_HELLO requests are silently ignored. Set by the provider layer
+  /// from the mesh privacy setting.
+  bool isDmAvailable = false;
+
   // ---------------------------------------------------------------------------
   // Initiator flow
   // ---------------------------------------------------------------------------
@@ -156,6 +163,14 @@ class SipHandshakeManager {
   /// Returns the HS_HELLO [SipFrame] to send, or null if a session
   /// already exists for this peer.
   SipFrame? initiateHandshake(int peerNodeId) {
+    // Privacy gate: block handshake initiation when DM not available.
+    if (!isDmAvailable) {
+      AppLogging.sip(
+        'SIP_HS: handshake initiation blocked (dmAvailable=false)',
+      );
+      return null;
+    }
+
     // Clean up timed-out sessions and stale completed results.
     _cleanExpired();
     _cleanCompletedResults();
@@ -368,6 +383,16 @@ class SipHandshakeManager {
   /// (ignores the incoming HELLO); the lower node ID yields, discards its
   /// initiator session, and becomes the responder — still requiring consent.
   void handleHello(int peerNodeId, SipFrame frame) {
+    // Privacy gate: silently ignore incoming handshake when DM not available.
+    if (!isDmAvailable) {
+      AppLogging.sip(
+        'SIP_HS: incoming HS_HELLO from '
+        'node=0x${peerNodeId.toRadixString(16)} '
+        'ignored (dmAvailable=false)',
+      );
+      return;
+    }
+
     _cleanExpired();
     _cleanCompletedResults();
 

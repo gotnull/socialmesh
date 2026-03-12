@@ -168,6 +168,9 @@ final sipDiscoveryProvider = Provider<SipDiscovery?>((ref) {
   discovery.lastBeaconMs = nowMs;
   discovery.lastRollcallReqMs = nowMs;
 
+  // Wire mesh privacy setting so discovery gates beacon/rollcall emission.
+  discovery.isDiscoverable = ref.watch(meshPrivacyDiscoverableProvider);
+
   // Wire send callback so periodic beacons reach the mesh transport.
   discovery.onSend = (encoded) async {
     final protocol = ref.read(protocolServiceProvider);
@@ -221,6 +224,9 @@ final sipHandshakeProvider = Provider<SipHandshakeManager?>((ref) {
     counters: counters,
   );
 
+  // Wire mesh privacy setting so handshake is gated on DM availability.
+  manager.isDmAvailable = ref.watch(meshPrivacyDmAvailableProvider);
+
   // Bump epoch so UI rebuilds when handshake state changes.
   manager.onStateChanged = () {
     ref.read(sipHandshakeEpochProvider.notifier).bump();
@@ -253,6 +259,11 @@ final sipIdentityHandlerProvider = Provider<SipIdentityHandler?>((ref) {
     keypair: keypair,
     store: store,
     localNodeId: nodeNum,
+  );
+
+  // Wire mesh privacy setting so identity auto-respond is gated.
+  handler.isProfileSharingEnabled = ref.watch(
+    meshPrivacyProfileSharingProvider,
   );
 
   final protocol = ref.read(protocolServiceProvider);
@@ -344,6 +355,94 @@ class SipAutoScanNotifier extends Notifier<bool> {
     state = value;
     final settings = await ref.read(settingsServiceProvider.future);
     await settings.setSipAutoScanEnabled(value);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Mesh privacy settings (persisted to SharedPreferences)
+// ---------------------------------------------------------------------------
+
+/// Whether the local node is discoverable on the mesh.
+///
+/// When false, CAP_BEACON emission, rollcall responses, and SERVICE_ADVERT
+/// broadcasts are suppressed. Defaults to false (anonymous, opt-in).
+final meshPrivacyDiscoverableProvider =
+    NotifierProvider<MeshPrivacyDiscoverableNotifier, bool>(
+      MeshPrivacyDiscoverableNotifier.new,
+    );
+
+/// Notifier for mesh discoverability (persisted).
+class MeshPrivacyDiscoverableNotifier extends Notifier<bool> {
+  @override
+  bool build() {
+    final settingsAsync = ref.watch(settingsServiceProvider);
+    return settingsAsync.maybeWhen(
+      data: (s) => s.meshDiscoverable,
+      orElse: () => false,
+    );
+  }
+
+  /// Set discoverability and persist.
+  Future<void> setEnabled(bool value) async {
+    state = value;
+    final settings = await ref.read(settingsServiceProvider.future);
+    await settings.setMeshDiscoverable(value);
+  }
+}
+
+/// Whether profile sharing is enabled on the mesh.
+///
+/// When false, identity auto-responses (ID_RESP) and profile.v1 service
+/// requests are suppressed. Defaults to false (opt-in).
+final meshPrivacyProfileSharingProvider =
+    NotifierProvider<MeshPrivacyProfileSharingNotifier, bool>(
+      MeshPrivacyProfileSharingNotifier.new,
+    );
+
+/// Notifier for mesh profile sharing (persisted).
+class MeshPrivacyProfileSharingNotifier extends Notifier<bool> {
+  @override
+  bool build() {
+    final settingsAsync = ref.watch(settingsServiceProvider);
+    return settingsAsync.maybeWhen(
+      data: (s) => s.meshProfileSharing,
+      orElse: () => false,
+    );
+  }
+
+  /// Set profile sharing and persist.
+  Future<void> setEnabled(bool value) async {
+    state = value;
+    final settings = await ref.read(settingsServiceProvider.future);
+    await settings.setMeshProfileSharing(value);
+  }
+}
+
+/// Whether DMs are available on the mesh.
+///
+/// When false, handshake initiation and incoming handshake requests are
+/// blocked. Defaults to false (opt-in).
+final meshPrivacyDmAvailableProvider =
+    NotifierProvider<MeshPrivacyDmAvailableNotifier, bool>(
+      MeshPrivacyDmAvailableNotifier.new,
+    );
+
+/// Notifier for mesh DM availability (persisted).
+class MeshPrivacyDmAvailableNotifier extends Notifier<bool> {
+  @override
+  bool build() {
+    final settingsAsync = ref.watch(settingsServiceProvider);
+    return settingsAsync.maybeWhen(
+      data: (s) => s.meshDmAvailable,
+      orElse: () => false,
+    );
+  }
+
+  /// Set DM availability and persist.
+  Future<void> setEnabled(bool value) async {
+    state = value;
+    final settings = await ref.read(settingsServiceProvider.future);
+    await settings.setMeshDmAvailable(value);
   }
 }
 
