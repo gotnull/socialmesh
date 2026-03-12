@@ -85,9 +85,12 @@ class _PeerTile extends ConsumerWidget {
     final (badgeLabel, badgeColor) = _tierBadge(peer.tier, l10n);
 
     // Hop count label
-    final hopLabel = peer.hopCount >= 3
+    final hopCount = peer.hopCount;
+    final hopLabel = hopCount == null
+        ? l10n.meshExplorerHopCountUnknown
+        : hopCount >= 3
         ? l10n.meshExplorerHopCountFar
-        : l10n.meshExplorerHopCount(peer.hopCount);
+        : l10n.meshExplorerHopCount(hopCount);
 
     return Material(
       color: Colors.transparent,

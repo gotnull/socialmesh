@@ -55210,6 +55210,12 @@ abstract class AppLocalizations {
   /// **'3+ hops'**
   String get meshExplorerHopCountFar;
 
+  /// Hop count label when hop data is unavailable from the transport layer.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby'**
+  String get meshExplorerHopCountUnknown;
+
   /// Service count on peer tile.
   ///
   /// In en, this message translates to:
@@ -56121,6 +56127,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Requesting telemetry…'**
   String get countdownRequestingTelemetry;
+
+  /// Title for the board.v1 MRRP service card
+  ///
+  /// In en, this message translates to:
+  /// **'Bulletin Board'**
+  String get servicePresentationBoardTitle;
+
+  /// Subtitle for the board.v1 MRRP service card
+  ///
+  /// In en, this message translates to:
+  /// **'Local mesh posts'**
+  String get servicePresentationBoardSubtitle;
+
+  /// Action label for the board.v1 MRRP service card
+  ///
+  /// In en, this message translates to:
+  /// **'Open Board'**
+  String get servicePresentationBoardAction;
+
+  /// Title for the profile.v1 MRRP service card
+  ///
+  /// In en, this message translates to:
+  /// **'Peer Profile'**
+  String get servicePresentationProfileTitle;
+
+  /// Subtitle for the profile.v1 MRRP service card
+  ///
+  /// In en, this message translates to:
+  /// **'Shared identity info'**
+  String get servicePresentationProfileSubtitle;
+
+  /// Action label for the profile.v1 MRRP service card
+  ///
+  /// In en, this message translates to:
+  /// **'View Profile'**
+  String get servicePresentationProfileAction;
+
+  /// Title for the meetup.v1 MRRP service card
+  ///
+  /// In en, this message translates to:
+  /// **'Coordination'**
+  String get servicePresentationMeetupTitle;
+
+  /// Subtitle for the meetup.v1 MRRP service card
+  ///
+  /// In en, this message translates to:
+  /// **'Rendezvous tokens'**
+  String get servicePresentationMeetupSubtitle;
+
+  /// Action label for the meetup.v1 MRRP service card
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get servicePresentationMeetupAction;
+
+  /// Title for the signal.v1 MRRP service card
+  ///
+  /// In en, this message translates to:
+  /// **'Signals'**
+  String get servicePresentationSignalsTitle;
+
+  /// Subtitle for the signal.v1 MRRP service card
+  ///
+  /// In en, this message translates to:
+  /// **'Anonymous status broadcasts'**
+  String get servicePresentationSignalsSubtitle;
+
+  /// Action label for the signal.v1 MRRP service card
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get servicePresentationSignalsAction;
+
+  /// Title for the user-created mesh services card
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh Services'**
+  String get servicePresentationMeshServicesTitle;
+
+  /// Subtitle for the user-created mesh services card
+  ///
+  /// In en, this message translates to:
+  /// **'User-created services'**
+  String get servicePresentationMeshServicesSubtitle;
+
+  /// Action label for the user-created mesh services card
+  ///
+  /// In en, this message translates to:
+  /// **'Browse'**
+  String get servicePresentationMeshServicesAction;
+
+  /// Title for unknown MRRP service cards
+  ///
+  /// In en, this message translates to:
+  /// **'Service'**
+  String get servicePresentationFallbackTitle;
+
+  /// Subtitle for unknown MRRP service cards
+  ///
+  /// In en, this message translates to:
+  /// **'Available nearby'**
+  String get servicePresentationFallbackSubtitle;
+
+  /// Action label for unknown MRRP service cards
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get servicePresentationFallbackAction;
 }
 
 class _AppLocalizationsDelegate

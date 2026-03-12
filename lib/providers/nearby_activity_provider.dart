@@ -15,6 +15,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../features/mesh_explorer/models/nearby_activity.dart';
 import '../features/mesh_explorer/models/service_presentation.dart';
+import '../l10n/l10n_utils.dart';
 import '../services/protocol/sip/mrrp_advert_engine.dart';
 import '../services/protocol/sip/mrrp_types.dart';
 import 'mrrp_providers.dart';
@@ -88,7 +89,10 @@ class NearbyActivityNotifier extends Notifier<List<NearbyActivity>> {
         if (_isFirstBuild) continue;
 
         // New service discovered — emit activity.
-        final presentation = ServicePresentationCatalog.forServiceId(serviceId);
+        final presentation = ServicePresentationCatalog.forServiceId(
+          serviceId,
+          safeL10n(),
+        );
         final subtitle = _subtitleForService(serviceId);
 
         _buffer.insert(

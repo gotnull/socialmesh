@@ -52,9 +52,12 @@ class MeshExplorerPeerDetailSheet extends ConsumerWidget {
       InteractionTier.pinned => l10n.meshExplorerPeerPinned,
     };
 
-    final hopLabel = peer.hopCount >= 3
+    final hopCount = peer.hopCount;
+    final hopLabel = hopCount == null
+        ? l10n.meshExplorerHopCountUnknown
+        : hopCount >= 3
         ? l10n.meshExplorerHopCountFar
-        : l10n.meshExplorerHopCount(peer.hopCount);
+        : l10n.meshExplorerHopCount(hopCount);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -222,7 +225,10 @@ class _ServiceRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final presentation = ServicePresentationCatalog.forServiceId(serviceId);
+    final presentation = ServicePresentationCatalog.forServiceId(
+      serviceId,
+      context.l10n,
+    );
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing8),

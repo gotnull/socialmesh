@@ -41951,6 +41951,10 @@
     "@meshExplorerHopCountFar": {
         "description": "Label for peers more than 2 hops away."
     },
+    "meshExplorerHopCountUnknown": "Nearby",
+    "@meshExplorerHopCountUnknown": {
+        "description": "Hop count label when hop data is unavailable from the transport layer."
+    },
     "meshExplorerServiceCount": "{count, plural, =0{No services} =1{1 service} other{{count} services}}",
     "@meshExplorerServiceCount": {
         "description": "Service count on peer tile.",
@@ -42667,5 +42671,78 @@
     "countdownRequestingTelemetry": "Requesting telemetry…",
     "@countdownRequestingTelemetry": {
         "description": "Countdown label while waiting for telemetry responses"
+    },
+
+    "servicePresentationBoardTitle": "Bulletin Board",
+    "@servicePresentationBoardTitle": {
+        "description": "Title for the board.v1 MRRP service card"
+    },
+    "servicePresentationBoardSubtitle": "Local mesh posts",
+    "@servicePresentationBoardSubtitle": {
+        "description": "Subtitle for the board.v1 MRRP service card"
+    },
+    "servicePresentationBoardAction": "Open Board",
+    "@servicePresentationBoardAction": {
+        "description": "Action label for the board.v1 MRRP service card"
+    },
+    "servicePresentationProfileTitle": "Peer Profile",
+    "@servicePresentationProfileTitle": {
+        "description": "Title for the profile.v1 MRRP service card"
+    },
+    "servicePresentationProfileSubtitle": "Shared identity info",
+    "@servicePresentationProfileSubtitle": {
+        "description": "Subtitle for the profile.v1 MRRP service card"
+    },
+    "servicePresentationProfileAction": "View Profile",
+    "@servicePresentationProfileAction": {
+        "description": "Action label for the profile.v1 MRRP service card"
+    },
+    "servicePresentationMeetupTitle": "Coordination",
+    "@servicePresentationMeetupTitle": {
+        "description": "Title for the meetup.v1 MRRP service card"
+    },
+    "servicePresentationMeetupSubtitle": "Rendezvous tokens",
+    "@servicePresentationMeetupSubtitle": {
+        "description": "Subtitle for the meetup.v1 MRRP service card"
+    },
+    "servicePresentationMeetupAction": "Details",
+    "@servicePresentationMeetupAction": {
+        "description": "Action label for the meetup.v1 MRRP service card"
+    },
+    "servicePresentationSignalsTitle": "Signals",
+    "@servicePresentationSignalsTitle": {
+        "description": "Title for the signal.v1 MRRP service card"
+    },
+    "servicePresentationSignalsSubtitle": "Anonymous status broadcasts",
+    "@servicePresentationSignalsSubtitle": {
+        "description": "Subtitle for the signal.v1 MRRP service card"
+    },
+    "servicePresentationSignalsAction": "View",
+    "@servicePresentationSignalsAction": {
+        "description": "Action label for the signal.v1 MRRP service card"
+    },
+    "servicePresentationMeshServicesTitle": "Mesh Services",
+    "@servicePresentationMeshServicesTitle": {
+        "description": "Title for the user-created mesh services card"
+    },
+    "servicePresentationMeshServicesSubtitle": "User-created services",
+    "@servicePresentationMeshServicesSubtitle": {
+        "description": "Subtitle for the user-created mesh services card"
+    },
+    "servicePresentationMeshServicesAction": "Browse",
+    "@servicePresentationMeshServicesAction": {
+        "description": "Action label for the user-created mesh services card"
+    },
+    "servicePresentationFallbackTitle": "Service",
+    "@servicePresentationFallbackTitle": {
+        "description": "Title for unknown MRRP service cards"
+    },
+    "servicePresentationFallbackSubtitle": "Available nearby",
+    "@servicePresentationFallbackSubtitle": {
+        "description": "Subtitle for unknown MRRP service cards"
+    },
+    "servicePresentationFallbackAction": "Details",
+    "@servicePresentationFallbackAction": {
+        "description": "Action label for unknown MRRP service cards"
     }
 }

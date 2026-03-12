@@ -105,7 +105,10 @@ class _ServiceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final presentation = ServicePresentationCatalog.forServiceId(serviceId);
+    final presentation = ServicePresentationCatalog.forServiceId(
+      serviceId,
+      l10n,
+    );
 
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing12),

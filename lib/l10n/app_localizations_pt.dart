@@ -31611,6 +31611,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshExplorerHopCountFar => '3+ saltos';
 
   @override
+  String get meshExplorerHopCountUnknown => 'Nearby';
+
+  @override
   String meshExplorerServiceCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -32155,4 +32158,59 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get countdownRequestingTelemetry => 'Requesting telemetry…';
+
+  @override
+  String get servicePresentationBoardTitle => 'Bulletin Board';
+
+  @override
+  String get servicePresentationBoardSubtitle => 'Local mesh posts';
+
+  @override
+  String get servicePresentationBoardAction => 'Open Board';
+
+  @override
+  String get servicePresentationProfileTitle => 'Peer Profile';
+
+  @override
+  String get servicePresentationProfileSubtitle => 'Shared identity info';
+
+  @override
+  String get servicePresentationProfileAction => 'View Profile';
+
+  @override
+  String get servicePresentationMeetupTitle => 'Coordination';
+
+  @override
+  String get servicePresentationMeetupSubtitle => 'Rendezvous tokens';
+
+  @override
+  String get servicePresentationMeetupAction => 'Details';
+
+  @override
+  String get servicePresentationSignalsTitle => 'Signals';
+
+  @override
+  String get servicePresentationSignalsSubtitle =>
+      'Anonymous status broadcasts';
+
+  @override
+  String get servicePresentationSignalsAction => 'View';
+
+  @override
+  String get servicePresentationMeshServicesTitle => 'Mesh Services';
+
+  @override
+  String get servicePresentationMeshServicesSubtitle => 'User-created services';
+
+  @override
+  String get servicePresentationMeshServicesAction => 'Browse';
+
+  @override
+  String get servicePresentationFallbackTitle => 'Service';
+
+  @override
+  String get servicePresentationFallbackSubtitle => 'Available nearby';
+
+  @override
+  String get servicePresentationFallbackAction => 'Details';
 }

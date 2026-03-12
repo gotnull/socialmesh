@@ -8,6 +8,8 @@
 /// Mesh Explorer screen.
 library;
 
+import 'dart:typed_data';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/constants.dart';
@@ -20,6 +22,15 @@ import '../services/protocol/sip/sip_handshake.dart';
 import '../services/protocol/sip/sip_types.dart';
 import 'mrrp_providers.dart';
 import 'sip_providers.dart';
+
+/// Derive a stable 32-bit sigil seed from a 16-byte persona_id.
+///
+/// Uses the first 4 bytes as a little-endian uint32. Falls back to 0
+/// if the persona_id is too short (should never happen for valid records).
+int _sigilSeedFromPersonaId(Uint8List personaId) {
+  if (personaId.length < 4) return 0;
+  return ByteData.sublistView(personaId).getUint32(0, Endian.little);
+}
 
 /// Whether Mesh Explorer is available (feature flag check).
 final meshExplorerEnabledProvider = Provider<bool>((ref) {
@@ -83,9 +94,8 @@ final meshExplorerPeersProvider = Provider<List<MeshExplorerPeer>>((ref) {
           displayName: identity.displayName.isNotEmpty
               ? identity.displayName
               : null,
-          sigilSeed: peer.nodeId,
+          sigilSeed: _sigilSeedFromPersonaId(identity.personaId),
           tier: tier,
-          hopCount: 1, // Default; real hop from Meshtastic envelope
           lastSeenMs: peer.lastSeenMs,
           mrrpServiceIds: serviceIds,
         ),
@@ -97,7 +107,6 @@ final meshExplorerPeersProvider = Provider<List<MeshExplorerPeer>>((ref) {
           nodeId: peer.nodeId,
           sigilSeed: peer.nodeId,
           tier: InteractionTier.handshaked,
-          hopCount: 1,
           lastSeenMs: peer.lastSeenMs,
           mrrpServiceIds: serviceIds,
         ),
@@ -108,7 +117,6 @@ final meshExplorerPeersProvider = Provider<List<MeshExplorerPeer>>((ref) {
         AnonymousPeer(
           nodeId: peer.nodeId,
           ambientId: peer.capsHash, // Use caps hash as ambient sigil seed
-          hopCount: 1,
           lastSeenMs: peer.lastSeenMs,
           features: peer.features,
           mrrpServiceIds: serviceIds,

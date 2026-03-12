@@ -10,6 +10,7 @@ library;
 
 import 'package:flutter/material.dart';
 
+import '../../../l10n/app_localizations.dart';
 import '../../../services/protocol/sip/mrrp_types.dart';
 import '../../mesh_services/services/mesh_service_engine.dart';
 
@@ -62,77 +63,124 @@ enum ServicePrivacyClass {
   identityGated,
 }
 
+/// Non-localized metadata for a known service.
+class _ServiceMeta {
+  final IconData icon;
+  final bool requiresHandshake;
+  final bool requiresIdentity;
+  final ServicePrivacyClass privacyClass;
+
+  const _ServiceMeta({
+    required this.icon,
+    required this.requiresHandshake,
+    required this.requiresIdentity,
+    required this.privacyClass,
+  });
+}
+
 /// Catalog that maps MRRP service IDs to public-facing presentations.
 ///
 /// Unknown services receive a graceful generic fallback.
 abstract final class ServicePresentationCatalog {
-  static const _known = <int, ServicePresentation>{
-    MrrpServiceId.boardV1: ServicePresentation(
-      title: 'Bulletin Board', // lint-allow: hardcoded-string
-      subtitle: 'Local mesh posts', // lint-allow: hardcoded-string
+  static const _meta = <int, _ServiceMeta>{
+    MrrpServiceId.boardV1: _ServiceMeta(
       icon: Icons.dashboard_outlined,
       requiresHandshake: true,
       requiresIdentity: false,
-      actionLabel: 'Open Board', // lint-allow: hardcoded-string
       privacyClass: ServicePrivacyClass.consentGated,
     ),
-    MrrpServiceId.profileV1: ServicePresentation(
-      title: 'Peer Profile', // lint-allow: hardcoded-string
-      subtitle: 'Shared identity info', // lint-allow: hardcoded-string
+    MrrpServiceId.profileV1: _ServiceMeta(
       icon: Icons.person_outline,
       requiresHandshake: true,
       requiresIdentity: true,
-      actionLabel: 'View Profile', // lint-allow: hardcoded-string
       privacyClass: ServicePrivacyClass.identityGated,
     ),
-    MrrpServiceId.meetupV1: ServicePresentation(
-      title: 'Coordination', // lint-allow: hardcoded-string
-      subtitle: 'Rendezvous tokens', // lint-allow: hardcoded-string
+    MrrpServiceId.meetupV1: _ServiceMeta(
       icon: Icons.handshake_outlined,
       requiresHandshake: true,
       requiresIdentity: true,
-      actionLabel: 'Details', // lint-allow: hardcoded-string
       privacyClass: ServicePrivacyClass.identityGated,
     ),
-    _signalV1ServiceId: ServicePresentation(
-      title: 'Signals', // lint-allow: hardcoded-string
-      subtitle: 'Anonymous status broadcasts', // lint-allow: hardcoded-string
+    _signalV1ServiceId: _ServiceMeta(
       icon: Icons.cell_tower_outlined,
       requiresHandshake: false,
       requiresIdentity: false,
-      actionLabel: 'View', // lint-allow: hardcoded-string
       privacyClass: ServicePrivacyClass.open,
     ),
-    kMeshServicesInstanceServiceId: ServicePresentation(
-      title: 'Mesh Services', // lint-allow: hardcoded-string
-      subtitle: 'User-created services', // lint-allow: hardcoded-string
+    kMeshServicesInstanceServiceId: _ServiceMeta(
       icon: Icons.miscellaneous_services_outlined,
       requiresHandshake: false,
       requiresIdentity: false,
-      actionLabel: 'Browse', // lint-allow: hardcoded-string
       privacyClass: ServicePrivacyClass.open,
     ),
   };
 
-  /// Generic fallback for unknown services.
-  static const _fallback = ServicePresentation(
-    title: 'Service', // lint-allow: hardcoded-string
-    subtitle: 'Available nearby', // lint-allow: hardcoded-string
+  static const _fallbackMeta = _ServiceMeta(
     icon: Icons.extension_outlined,
     requiresHandshake: false,
     requiresIdentity: false,
-    actionLabel: 'Details', // lint-allow: hardcoded-string
     privacyClass: ServicePrivacyClass.open,
   );
+
+  static (String, String, String) _localizedStrings(
+    int serviceId,
+    AppLocalizations l10n,
+  ) {
+    return switch (serviceId) {
+      MrrpServiceId.boardV1 => (
+        l10n.servicePresentationBoardTitle,
+        l10n.servicePresentationBoardSubtitle,
+        l10n.servicePresentationBoardAction,
+      ),
+      MrrpServiceId.profileV1 => (
+        l10n.servicePresentationProfileTitle,
+        l10n.servicePresentationProfileSubtitle,
+        l10n.servicePresentationProfileAction,
+      ),
+      MrrpServiceId.meetupV1 => (
+        l10n.servicePresentationMeetupTitle,
+        l10n.servicePresentationMeetupSubtitle,
+        l10n.servicePresentationMeetupAction,
+      ),
+      == _signalV1ServiceId => (
+        l10n.servicePresentationSignalsTitle,
+        l10n.servicePresentationSignalsSubtitle,
+        l10n.servicePresentationSignalsAction,
+      ),
+      == kMeshServicesInstanceServiceId => (
+        l10n.servicePresentationMeshServicesTitle,
+        l10n.servicePresentationMeshServicesSubtitle,
+        l10n.servicePresentationMeshServicesAction,
+      ),
+      _ => (
+        l10n.servicePresentationFallbackTitle,
+        l10n.servicePresentationFallbackSubtitle,
+        l10n.servicePresentationFallbackAction,
+      ),
+    };
+  }
 
   /// Look up the public-facing presentation for a service ID.
   ///
   /// Returns a generic card for unknown services. Test-only services
   /// (echo.test) are excluded from the public UI.
-  static ServicePresentation forServiceId(int serviceId) {
+  static ServicePresentation forServiceId(
+    int serviceId,
+    AppLocalizations l10n,
+  ) {
     // Hide test-only services from public UI
-    if (serviceId == MrrpServiceId.echoTest) return _fallback;
-    return _known[serviceId] ?? _fallback;
+    final effectiveId = serviceId == MrrpServiceId.echoTest ? -1 : serviceId;
+    final meta = _meta[effectiveId] ?? _fallbackMeta;
+    final (title, subtitle, actionLabel) = _localizedStrings(effectiveId, l10n);
+    return ServicePresentation(
+      title: title,
+      subtitle: subtitle,
+      icon: meta.icon,
+      requiresHandshake: meta.requiresHandshake,
+      requiresIdentity: meta.requiresIdentity,
+      actionLabel: actionLabel,
+      privacyClass: meta.privacyClass,
+    );
   }
 
   /// Whether a service should be displayed in the public UI.

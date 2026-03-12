@@ -15,7 +15,8 @@ sealed class MeshExplorerPeer {
   int get nodeId;
 
   /// Hop count (1 = direct RF, 2 = one relay, 3+ = two+ relays).
-  int get hopCount;
+  /// Null when hop data is not available from the transport layer.
+  int? get hopCount;
 
   /// When this peer was last seen (ms since epoch, monotonic).
   int get lastSeenMs;
@@ -36,7 +37,7 @@ class AnonymousPeer extends MeshExplorerPeer {
   final int ambientId;
 
   @override
-  final int hopCount;
+  final int? hopCount;
 
   @override
   final int lastSeenMs;
@@ -50,7 +51,7 @@ class AnonymousPeer extends MeshExplorerPeer {
   AnonymousPeer({
     required this.nodeId,
     required this.ambientId,
-    required this.hopCount,
+    this.hopCount,
     required this.lastSeenMs,
     required this.features,
     this.mrrpServiceIds = const [],
@@ -78,7 +79,7 @@ class IdentifiedPeer extends MeshExplorerPeer {
   final InteractionTier tier;
 
   @override
-  final int hopCount;
+  final int? hopCount;
 
   @override
   final int lastSeenMs;
@@ -91,7 +92,7 @@ class IdentifiedPeer extends MeshExplorerPeer {
     this.displayName,
     required this.sigilSeed,
     required this.tier,
-    required this.hopCount,
+    this.hopCount,
     required this.lastSeenMs,
     this.mrrpServiceIds = const [],
   });

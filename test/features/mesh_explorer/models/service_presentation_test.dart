@@ -4,13 +4,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/features/mesh_explorer/models/service_presentation.dart';
+import 'package:socialmesh/l10n/app_localizations.dart';
 import 'package:socialmesh/services/protocol/sip/mrrp_types.dart';
 
 void main() {
+  final l10n = lookupAppLocalizations(const Locale('en'));
+
   group('ServicePresentationCatalog', () {
     test('boardV1 returns known presentation', () {
-      final p = ServicePresentationCatalog.forServiceId(MrrpServiceId.boardV1);
-      expect(p.title, 'Bulletin Board');
+      final p = ServicePresentationCatalog.forServiceId(
+        MrrpServiceId.boardV1,
+        l10n,
+      );
+      expect(p.title, l10n.servicePresentationBoardTitle);
       expect(p.requiresHandshake, isTrue);
       expect(p.requiresIdentity, isFalse);
       expect(p.privacyClass, ServicePrivacyClass.consentGated);
@@ -20,32 +26,39 @@ void main() {
     test('profileV1 returns known presentation', () {
       final p = ServicePresentationCatalog.forServiceId(
         MrrpServiceId.profileV1,
+        l10n,
       );
-      expect(p.title, 'Peer Profile');
+      expect(p.title, l10n.servicePresentationProfileTitle);
       expect(p.requiresHandshake, isTrue);
       expect(p.requiresIdentity, isTrue);
       expect(p.privacyClass, ServicePrivacyClass.identityGated);
     });
 
     test('meetupV1 returns known presentation', () {
-      final p = ServicePresentationCatalog.forServiceId(MrrpServiceId.meetupV1);
-      expect(p.title, 'Coordination');
+      final p = ServicePresentationCatalog.forServiceId(
+        MrrpServiceId.meetupV1,
+        l10n,
+      );
+      expect(p.title, l10n.servicePresentationMeetupTitle);
       expect(p.requiresHandshake, isTrue);
       expect(p.requiresIdentity, isTrue);
     });
 
     test('unknown service returns generic fallback', () {
-      final p = ServicePresentationCatalog.forServiceId(0x9999);
-      expect(p.title, 'Service');
-      expect(p.subtitle, 'Available nearby');
+      final p = ServicePresentationCatalog.forServiceId(0x9999, l10n);
+      expect(p.title, l10n.servicePresentationFallbackTitle);
+      expect(p.subtitle, l10n.servicePresentationFallbackSubtitle);
       expect(p.requiresHandshake, isFalse);
       expect(p.requiresIdentity, isFalse);
       expect(p.privacyClass, ServicePrivacyClass.open);
     });
 
     test('echoTest returns fallback (hidden from public UI)', () {
-      final p = ServicePresentationCatalog.forServiceId(MrrpServiceId.echoTest);
-      expect(p.title, 'Service');
+      final p = ServicePresentationCatalog.forServiceId(
+        MrrpServiceId.echoTest,
+        l10n,
+      );
+      expect(p.title, l10n.servicePresentationFallbackTitle);
       expect(p.privacyClass, ServicePrivacyClass.open);
     });
 

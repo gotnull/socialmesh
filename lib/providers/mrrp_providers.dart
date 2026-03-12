@@ -68,10 +68,23 @@ final mrrpServiceRegistryProvider = Provider<MrrpServiceRegistry?>((ref) {
   );
 
   final profile = MrrpServiceProfile(
-    configProvider: () => const MrrpProfileConfig(
-      displayName: '', // lint-allow: hardcoded-string
-      registeredServices: [],
-    ),
+    configProvider: () {
+      final myNodeNum = ref.read(myNodeNumProvider);
+      final nodes = ref.read(nodesProvider);
+      final myNode = myNodeNum != null ? nodes[myNodeNum] : null;
+      final registeredIds = registry
+          .getAll()
+          .map((d) => d.serviceId)
+          .toList(growable: false);
+      return MrrpProfileConfig(
+        displayName:
+            myNode?.longName ??
+            myNode?.shortName ??
+            '', // lint-allow: hardcoded-string
+        registeredServices: registeredIds,
+        deviceClass: 1, // phone-app
+      );
+    },
   );
   registry.register(
     profile,

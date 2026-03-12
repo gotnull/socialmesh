@@ -11,7 +11,6 @@ void main() {
       final peer = AnonymousPeer(
         nodeId: 0xAABBCCDD,
         ambientId: 0x12345678,
-        hopCount: 1,
         lastSeenMs: 1000,
         features: 0x03,
       );
@@ -19,19 +18,31 @@ void main() {
       expect(peer.tier, InteractionTier.anonymous);
       expect(peer.serviceCount, 0);
       expect(peer.nodeId, 0xAABBCCDD);
+      expect(peer.hopCount, isNull);
     });
 
     test('service count matches mrrpServiceIds length', () {
       final peer = AnonymousPeer(
         nodeId: 1,
         ambientId: 2,
-        hopCount: 1,
         lastSeenMs: 1000,
         features: 0,
         mrrpServiceIds: [0x01, 0x03],
       );
 
       expect(peer.serviceCount, 2);
+    });
+
+    test('hopCount can be set explicitly', () {
+      final peer = AnonymousPeer(
+        nodeId: 1,
+        ambientId: 2,
+        hopCount: 3,
+        lastSeenMs: 1000,
+        features: 0,
+      );
+
+      expect(peer.hopCount, 3);
     });
   });
 
@@ -42,13 +53,13 @@ void main() {
         displayName: 'Alice',
         sigilSeed: 42,
         tier: InteractionTier.identified,
-        hopCount: 2,
         lastSeenMs: 2000,
       );
 
       expect(peer.tier, InteractionTier.identified);
       expect(peer.displayName, 'Alice');
       expect(peer.serviceCount, 0);
+      expect(peer.hopCount, isNull);
     });
 
     test('can be pinned tier', () {
@@ -56,7 +67,6 @@ void main() {
         nodeId: 0x11223344,
         sigilSeed: 42,
         tier: InteractionTier.pinned,
-        hopCount: 1,
         lastSeenMs: 3000,
         mrrpServiceIds: [0x02],
       );
@@ -70,7 +80,6 @@ void main() {
         nodeId: 1,
         sigilSeed: 2,
         tier: InteractionTier.handshaked,
-        hopCount: 1,
         lastSeenMs: 1000,
       );
 
@@ -83,7 +92,6 @@ void main() {
       final MeshExplorerPeer anonymous = AnonymousPeer(
         nodeId: 1,
         ambientId: 2,
-        hopCount: 1,
         lastSeenMs: 1000,
         features: 0,
       );
@@ -92,7 +100,6 @@ void main() {
         nodeId: 3,
         sigilSeed: 4,
         tier: InteractionTier.identified,
-        hopCount: 1,
         lastSeenMs: 2000,
       );
 
