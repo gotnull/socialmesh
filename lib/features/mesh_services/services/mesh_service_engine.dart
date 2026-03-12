@@ -273,6 +273,14 @@ class MeshServiceEngine {
   /// Callback fired when instances change (for provider invalidation).
   void Function()? onChanged;
 
+  /// Callback fired when a new instance is successfully published.
+  ///
+  /// Invoked after the instance is stored and [onChanged] fires.
+  /// Used by the provider layer to trigger an immediate MRRP SERVICE_ADVERT
+  /// broadcast so remote peers discover the service without waiting for the
+  /// next scheduled advert cycle.
+  Future<void> Function()? onInstancePublished;
+
   /// Timer for periodic expiry cleanup.
   Timer? _cleanupTimer;
 
@@ -341,6 +349,7 @@ class MeshServiceEngine {
     );
 
     onChanged?.call();
+    await onInstancePublished?.call();
     return instance;
   }
 

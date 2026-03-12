@@ -10,6 +10,7 @@ library;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants.dart';
+import '../../../core/logging.dart';
 import '../models/mesh_service_instance.dart';
 import '../services/mesh_service_engine.dart';
 import '../services/mesh_service_store.dart';
@@ -51,7 +52,15 @@ class _MeshServicesEpoch extends Notifier<int> {
 
 /// Mesh service engine — lifecycle management + MRRP handler.
 ///
-/// Null when feature is disabled or MRRP registry unavailable.
+/// Registration is deterministic: if the MRRP service registry is not
+/// available (feature flags, initialization order), this provider returns
+/// null instead of silently starting an unregistered engine. This eliminates
+/// the race where inbound requests to [kMeshServicesInstanceServiceId] would
+/// go unrouted without any diagnostic log.
+///
+/// The advert engine (if available) is wired so that publishing a new
+/// instance triggers an immediate SERVICE_ADVERT broadcast, allowing remote
+/// peers to discover the service without waiting for the next scheduled cycle.
 final meshServiceEngineProvider = Provider<MeshServiceEngine?>((ref) {
   final enabled = ref.watch(meshServicesEnabledProvider);
   if (!enabled) return null;
@@ -59,37 +68,56 @@ final meshServiceEngineProvider = Provider<MeshServiceEngine?>((ref) {
   final store = ref.watch(meshServiceStoreProvider);
   if (store == null) return null;
 
+  // Deterministic gate: no registry → no engine.
+  // If MRRP or SIP is disabled, the registry is null and the engine must not
+  // start without a registered handler. Returning null here surfaces the
+  // failure explicitly rather than silently dropping inbound requests.
   final registry = ref.watch(mrrpServiceRegistryProvider);
+  if (registry == null) return null;
+
+  // Advert engine for forced immediate broadcast on instance publish.
+  final advertEngine = ref.watch(mrrpAdvertEngineProvider);
 
   final engine = MeshServiceEngine(store: store);
   engine.onChanged = () {
     ref.read(meshServicesEpochProvider.notifier).bump();
   };
 
-  // Register the mesh-services instance handler in the MRRP registry.
-  if (registry != null) {
-    final handler = MeshServicesHandler(store: store, engine: engine);
-    registry.register(
-      handler,
-      MrrpServiceDescriptor(
-        serviceId: kMeshServicesInstanceServiceId,
-        serviceType: MrrpServiceType.app,
-        serviceFlags:
-            MrrpServiceFlags.supportsRequest |
-            MrrpServiceFlags.supportsResponse |
-            MrrpServiceFlags.ephemeralOnly |
-            MrrpServiceFlags.userVisible,
-      ),
+  // Wire immediate advert so remote peers discover newly-published
+  // instances without waiting for the next periodic timer cycle.
+  if (advertEngine != null) {
+    engine.onInstancePublished = advertEngine.broadcastNow;
+  }
+
+  // Register handler — fail explicitly if the MRRP service slot limit
+  // is reached. An unregistered engine must not start.
+  final handler = MeshServicesHandler(store: store, engine: engine);
+  final registered = registry.register(
+    handler,
+    MrrpServiceDescriptor(
+      serviceId: kMeshServicesInstanceServiceId,
+      serviceType: MrrpServiceType.app,
+      serviceFlags:
+          MrrpServiceFlags.supportsRequest |
+          MrrpServiceFlags.supportsResponse |
+          MrrpServiceFlags.ephemeralOnly |
+          MrrpServiceFlags.userVisible,
+    ),
+  );
+
+  if (!registered) {
+    AppLogging.mrrp(
+      'MESH_SERVICE_ENGINE: registration rejected — '
+      'MRRP service slot limit reached', // lint-allow: hardcoded-string
     );
+    return null;
   }
 
   engine.start();
 
   ref.onDispose(() {
     engine.dispose();
-    if (registry != null) {
-      registry.unregister(kMeshServicesInstanceServiceId);
-    }
+    registry.unregister(kMeshServicesInstanceServiceId);
   });
 
   return engine;

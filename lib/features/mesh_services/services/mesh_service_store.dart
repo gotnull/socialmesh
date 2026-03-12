@@ -20,26 +20,41 @@ const int _maxInstances = 50;
 
 /// SQLite store for [MeshServiceInstance].
 class MeshServiceStore {
+  /// Optional path override — used by tests to inject in-memory paths.
+  final String? _dbPathOverride;
+
   Database? _db;
+
+  /// Create a store. Pass [dbPathOverride] in tests to use an in-memory DB.
+  MeshServiceStore({String? dbPathOverride}) : _dbPathOverride = dbPathOverride;
 
   /// Open or create the database.
   Future<void> open() async {
     if (_db != null) return;
-    final dir = await getApplicationDocumentsDirectory();
-    final dbPath = p.join(
-      dir.path,
-      'mesh_services.db',
-    ); // lint-allow: hardcoded-string
+    final String dbPath;
+    if (_dbPathOverride != null) {
+      dbPath = _dbPathOverride;
+    } else {
+      final dir = await getApplicationDocumentsDirectory();
+      dbPath = p.join(
+        dir.path,
+        'mesh_services.db',
+      ); // lint-allow: hardcoded-string
+    }
 
     _db = await openDatabase(
       dbPath,
       version: 1,
       onConfigure: (db) async {
         final walResult = await db.rawQuery('PRAGMA journal_mode=WAL');
-        assert(
-          walResult.isNotEmpty && walResult.first['journal_mode'] == 'wal',
-          'WAL mode not active',
-        ); // lint-allow: hardcoded-string
+        // Only enforce WAL for on-disk databases. In-memory databases
+        // (used in tests via _dbPathOverride) do not support WAL mode.
+        if (_dbPathOverride == null) {
+          assert(
+            walResult.isNotEmpty && walResult.first['journal_mode'] == 'wal',
+            'WAL mode not active',
+          ); // lint-allow: hardcoded-string
+        }
       },
       onCreate: (db, version) async {
         await db.execute('''

@@ -1,0 +1,432 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
+
+/// Provider-level integration tests for the mesh service publication chain.
+///
+/// Verifies:
+/// 1. [meshServicesEpochProvider] bump triggers [meshServiceInstancesProvider]
+///    rebuild (My Services data source).
+/// 2. [mrrpCachedServicesProvider] changes propagate to
+///    [meshExplorerServicesProvider] and [meshExplorerSummaryProvider].
+/// 3. [nearbyActivityProvider] emits an activity event when a new service
+///    appears in the advert cache.
+/// 4. [meshExplorerSummaryProvider] correctly reflects service counts from
+///    the advert cache.
+library;
+
+import 'dart:typed_data';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:socialmesh/features/mesh_explorer/models/nearby_activity.dart';
+import 'package:socialmesh/features/mesh_services/providers/mesh_service_providers.dart';
+import 'package:socialmesh/features/mesh_services/models/mesh_service_template.dart';
+import 'package:socialmesh/features/mesh_services/services/mesh_service_engine.dart';
+import 'package:socialmesh/features/mesh_services/services/mesh_service_store.dart';
+import 'package:socialmesh/providers/mesh_explorer_providers.dart';
+import 'package:socialmesh/providers/mrrp_providers.dart';
+import 'package:socialmesh/providers/nearby_activity_provider.dart';
+import 'package:socialmesh/services/protocol/sip/mrrp_advert_engine.dart';
+import 'package:socialmesh/services/protocol/sip/mrrp_frame.dart';
+import 'package:socialmesh/services/protocol/sip/mrrp_constants.dart';
+import 'package:socialmesh/services/protocol/sip/mrrp_service_registry.dart';
+import 'package:socialmesh/services/protocol/sip/mrrp_types.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+
+// ─────────────────────────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────────────────────────
+
+/// Build a raw SERVICE_ADVERT payload for [serviceId].
+///
+/// Wire layout (per MRRP_V0_1.md):
+///   [0]       count (uint8)
+///   [1..4]    service_id (uint32 LE)
+///   [5]       service_type (uint8)   0x00 = app
+///   [6]       version_major (uint8)
+///   [7]       version_minor (uint8)
+///   [8..9]    service_flags (uint16 LE)
+///   [10]      metadata_len (uint8)  0 = no metadata
+Uint8List _advertPayload(int serviceId) {
+  final flags =
+      MrrpServiceFlags.supportsRequest |
+      MrrpServiceFlags.supportsResponse |
+      MrrpServiceFlags.ephemeralOnly |
+      MrrpServiceFlags.userVisible;
+  // count(1) + descriptor(10) = 11 bytes minimum; allocate 12 for alignment.
+  final buf = Uint8List(12);
+  buf[0] = 1; // service count
+  ByteData.sublistView(buf, 1).setUint32(0, serviceId, Endian.little);
+  buf[5] = 0x00; // service_type = app
+  buf[6] = 0x00; // version_major
+  buf[7] = 0x01; // version_minor
+  ByteData.sublistView(buf, 8).setUint16(0, flags, Endian.little);
+  buf[10] = 0; // metadata_len
+  return buf;
+}
+
+MrrpFrame _advertFrame(int serviceId) {
+  final payload = _advertPayload(serviceId);
+  return MrrpFrame(
+    versionMajor: 0,
+    versionMinor: 1,
+    msgType: MrrpMessageType.serviceAdvert,
+    flags: 0,
+    headerLen: MrrpConstants.mrrpHeaderMin,
+    requestId: 0,
+    serviceId: 0,
+    actionId: 0,
+    payloadLen: payload.length,
+    payload: payload,
+  );
+}
+
+/// Creates a [ProviderContainer] scoped to the explorer/activity tests.
+///
+/// Overrides:
+/// - [meshServicesEnabledProvider] → true
+/// - [meshExplorerEnabledProvider] → true
+/// - [mrrpServiceRegistryProvider] → real [MrrpServiceRegistry] (in-memory)
+/// - [mrrpAdvertEngineProvider]    → real [MrrpAdvertEngine] (no send wired)
+/// - [mrrpCachedServicesProvider]  → derived directly from the test engine,
+///   watching [mrrpAdvertEpochProvider] so that a bump triggers a rebuild.
+///
+/// SIP-dependent providers ([sipDiscoveredPeersProvider], etc.) are NOT
+/// overridden. In tests, [AppFeatureFlags.isSipEnabled] evaluates to false
+/// (no SIP_ENABLED=true in env), so the SIP provider chain returns null/[]
+/// harmlessly, giving [meshExplorerPeersProvider] an empty peer list.
+({
+  ProviderContainer container,
+  MrrpServiceRegistry registry,
+  MrrpAdvertEngine advertEngine,
+})
+_createContainer() {
+  final registry = MrrpServiceRegistry();
+  final advertEngine = MrrpAdvertEngine(registry: registry);
+
+  final container = ProviderContainer(
+    overrides: [
+      meshServicesEnabledProvider.overrideWithValue(true),
+      meshExplorerEnabledProvider.overrideWithValue(true),
+      mrrpServiceRegistryProvider.overrideWithValue(registry),
+      mrrpAdvertEngineProvider.overrideWithValue(advertEngine),
+      // Override the cached-services provider to read directly from the test
+      // advert engine. Watching the epoch ensures this rebuilds whenever
+      // mrrpAdvertEpochProvider is bumped (e.g. after injecting test adverts).
+      mrrpCachedServicesProvider.overrideWith((ref) {
+        ref.watch(mrrpAdvertEpochProvider);
+        return advertEngine.getAllCachedServices();
+      }),
+    ],
+  );
+
+  return (container: container, registry: registry, advertEngine: advertEngine);
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Tests
+// ─────────────────────────────────────────────────────────────────
+
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUpAll(() {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  });
+
+  // ── 1. Epoch bump → meshServiceInstancesProvider rebuilds ─────────────────
+
+  group('meshServicesEpochProvider → meshServiceInstancesProvider', () {
+    test('bumping epoch causes FutureProvider to re-execute', () async {
+      final store = MeshServiceStore(dbPathOverride: inMemoryDatabasePath);
+      await store.open();
+
+      final container = ProviderContainer(
+        overrides: [
+          meshServicesEnabledProvider.overrideWithValue(true),
+          meshServiceStoreProvider.overrideWithValue(store),
+        ],
+      );
+      addTearDown(() async {
+        container.dispose();
+        await store.close();
+      });
+
+      // Initially empty.
+      final initial = await container.read(meshServiceInstancesProvider.future);
+      expect(initial, isEmpty);
+
+      // Insert an instance via the engine and bump the epoch.
+      final engine = MeshServiceEngine(store: store);
+      engine.start();
+      addTearDown(engine.dispose);
+
+      await engine.createInstance(
+        templateId: MeshServiceTemplateId.board,
+        title: 'Provider Test Board',
+        ttlMinutes: 60,
+      );
+      // createInstance does not automatically wire the provider's epoch bump
+      // in this isolated test — simulate it manually.
+      container.read(meshServicesEpochProvider.notifier).bump();
+
+      final updated = await container.read(meshServiceInstancesProvider.future);
+      expect(updated.length, 1);
+      expect(updated.first.title, 'Provider Test Board');
+    });
+
+    test('multiple bumps result in consistent data', () async {
+      final store = MeshServiceStore(dbPathOverride: inMemoryDatabasePath);
+      await store.open();
+
+      final container = ProviderContainer(
+        overrides: [
+          meshServicesEnabledProvider.overrideWithValue(true),
+          meshServiceStoreProvider.overrideWithValue(store),
+        ],
+      );
+      addTearDown(() async {
+        container.dispose();
+        await store.close();
+      });
+
+      final engine = MeshServiceEngine(store: store);
+      engine.start();
+      addTearDown(engine.dispose);
+
+      for (var i = 1; i <= 3; i++) {
+        await engine.createInstance(
+          templateId: MeshServiceTemplateId.board,
+          title: 'Board $i',
+          ttlMinutes: 30,
+        );
+        container.read(meshServicesEpochProvider.notifier).bump();
+      }
+
+      final instances = await container.read(
+        meshServiceInstancesProvider.future,
+      );
+      expect(instances.length, 3);
+    });
+  });
+
+  // ── 2. meshExplorerServicesProvider from advert cache ─────────────────────
+
+  group('meshExplorerServicesProvider reflects advert cache', () {
+    test('returns empty map before any adverts', () {
+      final (:container, :registry, :advertEngine) = _createContainer();
+      addTearDown(() {
+        container.dispose();
+        advertEngine.dispose();
+      });
+
+      final services = container.read(meshExplorerServicesProvider);
+      expect(services, isEmpty);
+    });
+
+    test('reflects mesh services service ID after advert injection', () {
+      final (:container, :registry, :advertEngine) = _createContainer();
+      addTearDown(() {
+        container.dispose();
+        advertEngine.dispose();
+      });
+
+      // Inject before first read → fresh data on first build.
+      advertEngine.handleServiceAdvert(
+        _advertFrame(kMeshServicesInstanceServiceId),
+        0xBEEF0001,
+      );
+
+      final services = container.read(meshExplorerServicesProvider);
+      expect(services.containsKey(kMeshServicesInstanceServiceId), isTrue);
+      expect(services[kMeshServicesInstanceServiceId], 1);
+    });
+
+    test('counts multiple peers advertising the same service', () {
+      final (:container, :registry, :advertEngine) = _createContainer();
+      addTearDown(() {
+        container.dispose();
+        advertEngine.dispose();
+      });
+
+      // Inject both before first read.
+      advertEngine.handleServiceAdvert(
+        _advertFrame(kMeshServicesInstanceServiceId),
+        0x1111,
+      );
+      advertEngine.handleServiceAdvert(
+        _advertFrame(kMeshServicesInstanceServiceId),
+        0x2222,
+      );
+
+      final services = container.read(meshExplorerServicesProvider);
+      expect(services[kMeshServicesInstanceServiceId], 2);
+    });
+
+    test('excludes test-only services from count', () {
+      final (:container, :registry, :advertEngine) = _createContainer();
+      addTearDown(() {
+        container.dispose();
+        advertEngine.dispose();
+      });
+
+      // Build a SERVICE_ADVERT payload with testOnly flag set.
+      final testPayload = Uint8List(12);
+      testPayload[0] = 1; // count
+      ByteData.sublistView(
+        testPayload,
+        1,
+      ).setUint32(0, MrrpServiceId.echoTest, Endian.little);
+      testPayload[5] = 0x02; // service_type = test
+      testPayload[6] = 0x00; // version_major
+      testPayload[7] = 0x01; // version_minor
+      ByteData.sublistView(
+        testPayload,
+        8,
+      ).setUint16(0, MrrpServiceFlags.testOnly, Endian.little);
+      testPayload[10] = 0; // metadata_len
+
+      final testFrame = MrrpFrame(
+        versionMajor: 0,
+        versionMinor: 1,
+        msgType: MrrpMessageType.serviceAdvert,
+        flags: 0,
+        headerLen: MrrpConstants.mrrpHeaderMin,
+        requestId: 0,
+        serviceId: 0,
+        actionId: 0,
+        payloadLen: testPayload.length,
+        payload: testPayload,
+      );
+      advertEngine.handleServiceAdvert(testFrame, 0x9999);
+
+      final services = container.read(meshExplorerServicesProvider);
+      expect(services.containsKey(MrrpServiceId.echoTest), isFalse);
+    });
+  });
+
+  // ── 3. meshExplorerSummaryProvider service count ──────────────────────────
+
+  group('meshExplorerSummaryProvider activeServices count', () {
+    test('is 0 before any adverts', () {
+      final (:container, :registry, :advertEngine) = _createContainer();
+      addTearDown(() {
+        container.dispose();
+        advertEngine.dispose();
+      });
+
+      final summary = container.read(meshExplorerSummaryProvider);
+      expect(summary.activeServices, 0);
+    });
+
+    test('increments when a new service type is seen in cache', () {
+      final (:container, :registry, :advertEngine) = _createContainer();
+      addTearDown(() {
+        container.dispose();
+        advertEngine.dispose();
+      });
+
+      // Inject before first read.
+      advertEngine.handleServiceAdvert(
+        _advertFrame(kMeshServicesInstanceServiceId),
+        0x1234,
+      );
+
+      final summary = container.read(meshExplorerSummaryProvider);
+      expect(summary.activeServices, greaterThanOrEqualTo(1));
+    });
+
+    test('two distinct service IDs from same peer count as 2', () {
+      final (:container, :registry, :advertEngine) = _createContainer();
+      addTearDown(() {
+        container.dispose();
+        advertEngine.dispose();
+      });
+
+      // Two separate single-service adverts from the same peer.
+      // Each has a different payload hash so neither is deduped.
+      // The cache stores per (nodeId, serviceId) key, so both survive.
+      advertEngine.handleServiceAdvert(
+        _advertFrame(kMeshServicesInstanceServiceId),
+        0x5555,
+      );
+      advertEngine.handleServiceAdvert(
+        _advertFrame(MrrpServiceId.boardV1),
+        0x5555,
+      );
+
+      final services = container.read(meshExplorerServicesProvider);
+      expect(services.length, 2);
+      expect(services[kMeshServicesInstanceServiceId], 1);
+      expect(services[MrrpServiceId.boardV1], 1);
+
+      final summary = container.read(meshExplorerSummaryProvider);
+      expect(summary.activeServices, 2);
+    });
+  });
+
+  // ── 4. nearbyActivityProvider reacts to new service in advert cache ───────
+
+  group('nearbyActivityProvider', () {
+    test('emits activity event when new service appears in cache', () async {
+      final (:container, :registry, :advertEngine) = _createContainer();
+      addTearDown(() {
+        container.dispose();
+        advertEngine.dispose();
+      });
+
+      // Prime the notifier so the first-build flood suppressor fires with an
+      // empty cache. After this, _isFirstBuild = false in the notifier.
+      container.read(nearbyActivityProvider);
+
+      // Inject an advert into the test engine's cache.
+      advertEngine.handleServiceAdvert(
+        _advertFrame(kMeshServicesInstanceServiceId),
+        0xDEAD,
+      );
+
+      // Bump the epoch so mrrpCachedServicesProvider (which watches the epoch
+      // in our override) and nearbyActivityProvider (which also watches it
+      // directly) both rebuild on next read.
+      container.read(mrrpAdvertEpochProvider.notifier).bump();
+
+      final activity = container.read(nearbyActivityProvider);
+      expect(
+        activity.any((a) => a.type == NearbyActivityType.serviceAppeared),
+        isTrue,
+      );
+    });
+
+    test('clearAll removes all activity items', () {
+      final (:container, :registry, :advertEngine) = _createContainer();
+      addTearDown(() {
+        container.dispose();
+        advertEngine.dispose();
+      });
+
+      // Prime the notifier.
+      container.read(nearbyActivityProvider);
+      container.read(nearbyActivityProvider.notifier).clearAll();
+
+      final activity = container.read(nearbyActivityProvider);
+      expect(activity, isEmpty);
+    });
+  });
+
+  // ── 5. meshServiceInstancesProvider is empty when store is disabled ────────
+
+  group('meshServiceInstancesProvider feature gate', () {
+    test('returns empty list when mesh services disabled', () async {
+      final container = ProviderContainer(
+        overrides: [meshServicesEnabledProvider.overrideWithValue(false)],
+      );
+      addTearDown(container.dispose);
+
+      final instances = await container.read(
+        meshServiceInstancesProvider.future,
+      );
+      expect(instances, isEmpty);
+    });
+  });
+}

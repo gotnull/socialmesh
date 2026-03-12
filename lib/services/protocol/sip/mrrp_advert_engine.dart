@@ -82,8 +82,11 @@ class MrrpAdvertEngine {
   }) : _registry = registry,
        _random = random ?? Random();
 
+  bool _started = false;
+
   /// Start the periodic SERVICE_ADVERT broadcast.
   void start() {
+    _started = true;
     _scheduleNextAdvert();
     AppLogging.mrrp(
       'MRRP_ADVERT: SERVICE_ADVERT scheduled, '
@@ -93,8 +96,23 @@ class MrrpAdvertEngine {
 
   /// Stop the periodic broadcast.
   void stop() {
+    _started = false;
     _advertTimer?.cancel();
     _advertTimer = null;
+  }
+
+  /// Trigger an immediate SERVICE_ADVERT broadcast outside the normal schedule.
+  ///
+  /// Called by the mesh service engine when a new instance is published so
+  /// remote peers discover it without waiting for the next timer cycle.
+  /// The periodic schedule resets after the broadcast fires.
+  ///
+  /// No-op when the engine has not been started (e.g. MRRP not yet attached).
+  Future<void> broadcastNow() async {
+    if (!_started) return;
+    _advertTimer?.cancel();
+    _advertTimer = null;
+    await _broadcastAdvert();
   }
 
   /// Dispose: stop timer and clear caches.
