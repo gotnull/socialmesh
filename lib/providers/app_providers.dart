@@ -2819,7 +2819,22 @@ class MessagesNotifier extends Notifier<List<Message>> {
         if (m.replyId != null && _looksLikeEmoji(m.text)) return false;
         return true;
       }).toList();
-      state = regularMessages;
+      // Reset any messages stuck in the retrying state from a previous
+      // session (the app was killed while a retry was in flight).
+      // This is done here rather than in DmRetryCoordinator.start() to
+      // avoid a circular Riverpod dependency: messagesProvider watches
+      // dmRetryCoordinatorProvider, so the coordinator's ref cannot
+      // read messagesProvider without forming a cycle.
+      final resetMessages = regularMessages.map((m) {
+        if (m.status == MessageStatus.retrying) {
+          AppLogging.messages(
+            'MessagesNotifier: reset stale retrying → unconfirmed: ${m.id}',
+          );
+          return m.copyWith(status: MessageStatus.unconfirmed);
+        }
+        return m;
+      }).toList();
+      state = resetMessages;
       AppLogging.messages(
         'Loaded ${regularMessages.length} messages from storage '
         '(${savedMessages.length - regularMessages.length} tapbacks excluded)',

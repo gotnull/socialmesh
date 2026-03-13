@@ -34,11 +34,12 @@ import '../../providers/app_providers.dart';
 ///   background. This is documented and intentional — true background retry
 ///   would require platform-specific background execution that is outside
 ///   the current scope.
-/// - On **app restart** the coordinator calls [_resetStaleRetrying] to
-///   transition any messages stuck in [MessageStatus.retrying] back to
-///   [MessageStatus.unconfirmed]. Auto-retry eligibility is preserved
-///   through the persisted [Message.autoRetryEnabled] flag and the timer
-///   will re-trigger on the next tick within the expiry window.
+/// - On **app restart**, [MessagesNotifier._loadFromStorage] resets any
+///   messages stuck in [MessageStatus.retrying] back to
+///   [MessageStatus.unconfirmed] before the coordinator's first tick.
+///   Auto-retry eligibility is preserved through the persisted
+///   [Message.autoRetryEnabled] flag and the timer will re-trigger on the
+///   next tick within the expiry window.
 ///
 /// ## Provider wiring
 /// Instantiated and started by [dmRetryCoordinatorProvider]. The provider is
@@ -57,16 +58,11 @@ class DmRetryCoordinator {
     if (_started || _disposed) return;
     _started = true;
 
-    // On start: reset any messages stuck in retrying state from a previous
-    // session (the timer was cancelled when the app was killed).
-    // Deferred to a microtask so that messagesProvider finishes building
-    // before we attempt to read it — start() is called from within the
-    // dmRetryCoordinatorProvider factory, which is itself watched during
-    // MessagesNotifier.build, creating a circular read if done synchronously.
-    Future.microtask(() {
-      if (_disposed) return;
-      _resetStaleRetrying();
-    });
+    // Note: stale-retrying reset on app start is handled by
+    // MessagesNotifier._loadFromStorage() rather than here.  Reading
+    // messagesProvider from this ref would create a circular dependency
+    // (messagesProvider watches dmRetryCoordinatorProvider which holds
+    // this ref), which Riverpod 3.x detects at the graph level.
 
     _tickTimer = Timer.periodic(
       DmRetryConstants.coordinatorTickInterval,
@@ -273,26 +269,6 @@ class DmRetryCoordinator {
     );
 
     unawaited(_dispatchSend(message.id));
-  }
-
-  // ---------------------------------------------------------------------------
-  // Reset stale state from a prior session
-  // ---------------------------------------------------------------------------
-
-  void _resetStaleRetrying() {
-    final messages = _ref.read(messagesProvider);
-    final notifier = _ref.read(messagesProvider.notifier);
-    for (final message in messages) {
-      if (message.status == MessageStatus.retrying) {
-        notifier.updateMessage(
-          message.id,
-          message.copyWith(status: MessageStatus.unconfirmed),
-        );
-        AppLogging.messages(
-          'DmRetryCoordinator: reset stale retrying → unconfirmed: ${message.id}',
-        );
-      }
-    }
   }
 
   // ---------------------------------------------------------------------------
