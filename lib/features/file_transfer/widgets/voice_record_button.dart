@@ -106,7 +106,7 @@ class _VoiceRecordButtonState extends State<VoiceRecordButton> {
               size: 18,
               color: active ? AccentColors.cyan : AppTheme.primaryBlue,
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: AppTheme.spacing6),
             Text(
               _draggingAway
                   ? context.l10n.voiceMessageRecordingHint

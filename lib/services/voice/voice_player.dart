@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-import 'dart:typed_data';
-
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 

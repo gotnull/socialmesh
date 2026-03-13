@@ -550,23 +550,14 @@ class _FileTransferContactsScreenState
     if (!started) {
       await voiceService.dispose();
       if (!mounted) return;
-      final ctx = context;
       final permanently =
           await VoicePermissionService.isMicrophonePermanentlyDenied();
       if (!mounted) return;
-      if (permanently) {
-        showActionSnackBar(
-          ctx,
-          ctx.l10n.voiceMessagePermissionDenied,
-          actionLabel: ctx.l10n.voiceMessagePermissionSettings,
-          onAction: () => VoicePermissionService.openSettings(),
-        );
-      } else {
-        showInfoSnackBar(ctx, ctx.l10n.voiceMessagePermissionDenied);
-      }
+      _showVoicePermissionSnackBar(permanently);
       return;
     }
 
+    if (!mounted) return;
     Overlay.of(context).insert(overlayEntry!);
 
     // Wait for user to stop (handled by the PTT button in the sheet).
@@ -587,13 +578,35 @@ class _FileTransferContactsScreenState
     await voiceService.dispose();
   }
 
+  void _showVoicePermissionSnackBar(bool permanently) {
+    if (!mounted) return;
+    if (permanently) {
+      showActionSnackBar(
+        context,
+        context.l10n.voiceMessagePermissionDenied,
+        actionLabel: context.l10n.voiceMessagePermissionSettings,
+        onAction: () => VoicePermissionService.openSettings(),
+      );
+    } else {
+      showInfoSnackBar(context, context.l10n.voiceMessagePermissionDenied);
+    }
+  }
+
+  void _showVoiceSendResultSnackBar(bool sent) {
+    if (!mounted) return;
+    if (sent) {
+      showSuccessSnackBar(context, context.l10n.voiceMessageSent);
+    } else {
+      showErrorSnackBar(context, context.l10n.voiceMessageFailed);
+    }
+  }
+
   Future<void> _handleVoiceResult(
     VoiceMessageResult result,
     int nodeNum,
     FileTransferStateNotifier notifier,
   ) async {
     if (!mounted) return;
-    final ctx = context;
     switch (result.outcome) {
       case VoiceMessageOutcome.success:
         final transfer = await notifier.sendVoiceMessage(
@@ -601,15 +614,11 @@ class _FileTransferContactsScreenState
           targetNodeNum: nodeNum,
         );
         if (!mounted) return;
-        if (transfer != null) {
-          showSuccessSnackBar(ctx, ctx.l10n.voiceMessageSent);
-        } else {
-          showErrorSnackBar(ctx, ctx.l10n.voiceMessageFailed);
-        }
+        _showVoiceSendResultSnackBar(transfer != null);
       case VoiceMessageOutcome.tooShort:
-        showInfoSnackBar(ctx, ctx.l10n.voiceMessageTooShort);
+        showInfoSnackBar(context, context.l10n.voiceMessageTooShort);
       case VoiceMessageOutcome.failed:
-        showErrorSnackBar(ctx, ctx.l10n.voiceMessageFailed);
+        showErrorSnackBar(context, context.l10n.voiceMessageFailed);
     }
   }
 }
