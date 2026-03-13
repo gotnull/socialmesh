@@ -430,7 +430,7 @@ class _SideActionButton extends StatelessWidget {
           children: [
             if (icon != null) ...[
               Icon(icon, color: color, size: 22),
-              const SizedBox(height: 4),
+              SizedBox(height: AppTheme.spacing4),
             ],
             Text(
               label,
