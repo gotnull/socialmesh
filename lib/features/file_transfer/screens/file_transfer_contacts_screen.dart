@@ -32,7 +32,7 @@ import '../../nodedex/widgets/sigil_painter.dart';
 import '../widgets/file_content_preview.dart';
 import '../widgets/file_transfer_card.dart';
 import '../widgets/file_transfer_image_gallery.dart';
-import '../widgets/voice_record_button.dart';
+
 import '../widgets/voice_recording_overlay.dart';
 
 // ---------------------------------------------------------------------------
@@ -828,21 +828,23 @@ class _ContactDetailSheet extends StatelessWidget {
     required VoidCallback onSendImage,
     VoidCallback? onSendVoice,
   }) {
+    // Taller initial size when there are transfers so they're immediately
+    // visible; fall back to a compact size when there's nothing to show.
+    final initialSize = transfers.isNotEmpty ? 0.72 : 0.48;
+
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (_) => DraggableScrollableSheet(
-        initialChildSize: 0.5,
-        minChildSize: 0.3,
-        maxChildSize: 0.85,
+        initialChildSize: initialSize,
+        minChildSize: 0.35,
+        maxChildSize: 0.92,
         expand: false,
         builder: (ctx, scrollController) {
           return Container(
             decoration: BoxDecoration(
-              color: Theme.of(ctx).brightness == Brightness.dark
-                  ? const Color(0xFF1A1A2E)
-                  : const Color(0xFFF8F9FA),
+              color: ctx.card,
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(AppTheme.radius20),
               ),
@@ -892,10 +894,12 @@ class _ContactDetailSheet extends StatelessWidget {
             ? contact.displayName.substring(0, 2)
             : contact.displayName);
 
+    final isActive = contact.presence.isActive;
+
     return CustomScrollView(
       controller: scrollController,
       slivers: [
-        // Handle bar
+        // ── Drag pill ────────────────────────────────────────────────────────
         SliverToBoxAdapter(
           child: Center(
             child: Container(
@@ -910,126 +914,198 @@ class _ContactDetailSheet extends StatelessWidget {
           ),
         ),
 
-        // Header: sigil + name + stats + send button
+        // ── Compact identity row ─────────────────────────────────────────────
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.all(AppTheme.spacing20),
-            child: Column(
+            padding: const EdgeInsets.fromLTRB(
+              AppTheme.spacing20,
+              AppTheme.spacing16,
+              AppTheme.spacing20,
+              AppTheme.spacing12,
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                SigilAvatar(nodeNum: contact.nodeNum, size: AppTheme.spacing64),
-                const SizedBox(height: AppTheme.spacing12),
-                Text(
-                  contact.displayName,
-                  style: TextStyle(
-                    color: context.textPrimary,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
+                SigilAvatar(nodeNum: contact.nodeNum, size: AppTheme.spacing48),
+                const SizedBox(width: AppTheme.spacing12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        contact.displayName,
+                        style: TextStyle(
+                          color: context.textPrimary,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: AppTheme.spacing2),
+                      Row(
+                        children: [
+                          Text(
+                            '!${contact.nodeNum.toRadixString(16)}',
+                            style: TextStyle(
+                              color: context.textTertiary,
+                              fontSize: 12,
+                              fontFamily: 'monospace',
+                            ),
+                          ),
+                          const SizedBox(width: AppTheme.spacing8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppTheme.spacing6,
+                              vertical: AppTheme.spacing1,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isActive
+                                  ? AppTheme.successGreen.withValues(
+                                      alpha: 0.15,
+                                    )
+                                  : context.border.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius4,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 5,
+                                  height: 5,
+                                  decoration: BoxDecoration(
+                                    color: isActive
+                                        ? AppTheme.successGreen
+                                        : context.textTertiary,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: AppTheme.spacing4),
+                                Text(
+                                  presenceStatusText(
+                                    contact.presence,
+                                    contact.lastHeardAge,
+                                  ),
+                                  style: TextStyle(
+                                    color: isActive
+                                        ? AppTheme.successGreen
+                                        : context.textTertiary,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                  textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: AppTheme.spacing4),
-                Text(
-                  '!${contact.nodeNum.toRadixString(16)}',
-                  style: TextStyle(
+                // NodeAvatar fallback (shown when sigil is not available)
+                if (contact.avatarColor != null)
+                  NodeAvatar(
+                    text: shortText,
+                    color: Color(contact.avatarColor!),
+                    size: AppTheme.spacing40,
+                  ),
+              ],
+            ),
+          ),
+        ),
+
+        // ── Stats strip ──────────────────────────────────────────────────────
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing20),
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spacing16,
+                vertical: AppTheme.spacing10,
+              ),
+              decoration: BoxDecoration(
+                color: context.cardAlt,
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
+                border: Border.all(
+                  color: context.border.withValues(alpha: 0.12),
+                  width: 0.5,
+                ),
+              ),
+              child: Row(
+                children: [
+                  _InlineStat(
+                    icon: Icons.arrow_upward,
+                    value: '${contact.sentCount}',
+                    label: context.l10n.fileTransferContactsDetailSent,
+                    color: AppTheme.primaryBlue,
+                  ),
+                  _StatDivider(),
+                  _InlineStat(
+                    icon: Icons.arrow_downward,
+                    value: '${contact.receivedCount}',
+                    label: context.l10n.fileTransferContactsDetailReceived,
+                    color: AppTheme.primaryPurple,
+                  ),
+                  _StatDivider(),
+                  _InlineStat(
+                    icon: Icons.data_usage,
+                    value: _formatBytes(contact.totalBytes),
+                    label: context.l10n.fileTransferContactsDetailTotal,
                     color: context.textTertiary,
-                    fontSize: 13,
-                    fontFamily: 'monospace',
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+
+        // ── Action pills ─────────────────────────────────────────────────────
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppTheme.spacing20,
+              AppTheme.spacing12,
+              AppTheme.spacing20,
+              AppTheme.spacing4,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _ActionPill(
+                    icon: Icons.attach_file,
+                    label: context.l10n.fileTransferContactsSendFile,
+                    color: context.accentColor,
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      onSendFile();
+                    },
                   ),
                 ),
-                const SizedBox(height: AppTheme.spacing16),
-
-                // Stats row
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _DetailStat(
-                      label: context.l10n.fileTransferContactsDetailSent,
-                      value: '${contact.sentCount}',
-                      icon: Icons.arrow_upward,
-                      color: AppTheme.primaryBlue,
-                    ),
-                    _DetailStat(
-                      label: context.l10n.fileTransferContactsDetailReceived,
-                      value: '${contact.receivedCount}',
-                      icon: Icons.arrow_downward,
-                      color: AppTheme.primaryPurple,
-                    ),
-                    _DetailStat(
-                      label: context.l10n.fileTransferContactsDetailTotal,
-                      value: _formatBytes(contact.totalBytes),
-                      icon: Icons.data_usage,
-                      color: context.textTertiary,
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: AppTheme.spacing16),
-
-                // Presence
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    NodeAvatar(
-                      text: shortText,
-                      color: contact.avatarColor != null
-                          ? Color(contact.avatarColor!)
-                          : AppTheme.graphPurple,
-                      size: 24,
-                    ),
-                    const SizedBox(width: AppTheme.spacing8),
-                    Text(
-                      presenceStatusText(
-                        contact.presence,
-                        contact.lastHeardAge,
-                      ),
-                      style: TextStyle(
-                        color: contact.presence.isActive
-                            ? AppTheme.successGreen
-                            : context.textTertiary,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: AppTheme.spacing16),
-
-                Row(
-                  children: [
-                    Expanded(
-                      child: FilledButton.icon(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          onSendFile();
-                        },
-                        icon: const Icon(Icons.attach_file, size: 18),
-                        label: Text(context.l10n.fileTransferContactsSendFile),
-                      ),
-                    ),
-                    const SizedBox(width: AppTheme.spacing8),
-                    Expanded(
-                      child: FilledButton.icon(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          onSendImage();
-                        },
-                        icon: const Icon(Icons.image_outlined, size: 18),
-                        label: Text(context.l10n.fileTransferContactsSendImage),
-                      ),
-                    ),
-                  ],
+                const SizedBox(width: AppTheme.spacing8),
+                Expanded(
+                  child: _ActionPill(
+                    icon: Icons.image_outlined,
+                    label: context.l10n.fileTransferContactsSendImage,
+                    color: context.accentColor,
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      onSendImage();
+                    },
+                  ),
                 ),
                 if (onSendVoice != null) ...[
-                  const SizedBox(height: AppTheme.spacing8),
-                  SizedBox(
-                    width: double.infinity,
-                    child: VoiceRecordButton(
-                      onRecordStart: () {},
-                      onRecordEnd: () {
+                  const SizedBox(width: AppTheme.spacing8),
+                  Expanded(
+                    child: _ActionPill(
+                      icon: Icons.mic_none,
+                      label: context.l10n.fileTransferContactsSendVoice,
+                      color: AccentColors.cyan,
+                      onTap: () {
                         Navigator.of(context).pop();
                         onSendVoice!();
                       },
-                      onCancel: () {},
                     ),
                   ),
                 ],
@@ -1038,33 +1114,84 @@ class _ContactDetailSheet extends StatelessWidget {
           ),
         ),
 
-        // Recent transfers header
+        // ── Recent transfers header ───────────────────────────────────────────
         if (transfers.isNotEmpty)
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(
                 AppTheme.spacing20,
-                AppTheme.spacing4,
+                AppTheme.spacing20,
                 AppTheme.spacing20,
                 AppTheme.spacing8,
               ),
-              child: Text(
-                'RECENT TRANSFERS',
-                style: TextStyle(
-                  color: context.textTertiary,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 1,
-                ),
+              child: Row(
+                children: [
+                  Text(
+                    'RECENT TRANSFERS',
+                    style: TextStyle(
+                      color: context.textTertiary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                  const SizedBox(width: AppTheme.spacing8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spacing6,
+                      vertical: AppTheme.spacing1,
+                    ),
+                    decoration: BoxDecoration(
+                      color: context.accentColor.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(AppTheme.radius4),
+                    ),
+                    child: Text(
+                      '${transfers.length}',
+                      style: TextStyle(
+                        color: context.accentColor,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
 
-        // Transfer history
+        if (transfers.isEmpty)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppTheme.spacing20,
+                AppTheme.spacing24,
+                AppTheme.spacing20,
+                AppTheme.spacing8,
+              ),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.swap_horiz_rounded,
+                    size: 36,
+                    color: context.textTertiary.withValues(alpha: 0.4),
+                  ),
+                  const SizedBox(height: AppTheme.spacing8),
+                  Text(
+                    'No transfers yet',
+                    style: TextStyle(color: context.textTertiary, fontSize: 13),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+        // ── Transfer history list ─────────────────────────────────────────────
         SliverPadding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppTheme.spacing20,
-            vertical: AppTheme.spacing8,
+          padding: const EdgeInsets.fromLTRB(
+            AppTheme.spacing16,
+            AppTheme.spacing4,
+            AppTheme.spacing16,
+            AppTheme.spacing8,
           ),
           sliver: SliverList(
             delegate: SliverChildBuilderDelegate((ctx, index) {
@@ -1096,49 +1223,118 @@ class _ContactDetailSheet extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Detail stat widget
+// Inline stat (compact horizontal stat cell)
 // ---------------------------------------------------------------------------
 
-class _DetailStat extends StatelessWidget {
-  const _DetailStat({
-    required this.label,
-    required this.value,
+class _InlineStat extends StatelessWidget {
+  const _InlineStat({
     required this.icon,
+    required this.value,
+    required this.label,
     required this.color,
   });
 
-  final String label;
-  final String value;
   final IconData icon;
+  final String value;
+  final String label;
   final Color color;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          width: AppTheme.spacing40,
-          height: AppTheme.spacing40,
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.12),
-            shape: BoxShape.circle,
+    return Expanded(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 13, color: color),
+          const SizedBox(width: AppTheme.spacing4),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                value,
+                style: TextStyle(
+                  color: context.textPrimary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              Text(
+                label,
+                style: TextStyle(color: context.textTertiary, fontSize: 10),
+              ),
+            ],
           ),
-          child: Icon(icon, size: 18, color: color),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Stat divider (thin vertical separator between inline stats)
+// ---------------------------------------------------------------------------
+
+class _StatDivider extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 0.5,
+      height: 28,
+      margin: const EdgeInsets.symmetric(horizontal: AppTheme.spacing8),
+      color: context.border.withValues(alpha: 0.3),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Action pill button
+// ---------------------------------------------------------------------------
+
+class _ActionPill extends StatelessWidget {
+  const _ActionPill({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return BouncyTap(
+      onTap: onTap,
+      child: Container(
+        height: 44,
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
         ),
-        const SizedBox(height: AppTheme.spacing6),
-        Text(
-          value,
-          style: TextStyle(
-            color: context.textPrimary,
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-          ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 16, color: color),
+            const SizedBox(width: AppTheme.spacing6),
+            Flexible(
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
         ),
-        Text(
-          label,
-          style: TextStyle(color: context.textTertiary, fontSize: 11),
-        ),
-      ],
+      ),
     );
   }
 }
@@ -1190,8 +1386,20 @@ class _CompactTransferRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isOutbound = transfer.direction == TransferDirection.outbound;
-    final row = Padding(
-      padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
+    final row = Container(
+      margin: const EdgeInsets.only(bottom: AppTheme.spacing6),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing12,
+        vertical: AppTheme.spacing10,
+      ),
+      decoration: BoxDecoration(
+        color: context.cardAlt,
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+        border: Border.all(
+          color: context.border.withValues(alpha: 0.1),
+          width: 0.5,
+        ),
+      ),
       child: Row(
         children: [
           SizedBox(
