@@ -37,9 +37,12 @@ jobs:
 
       - name: Compare versions
         id: compare
+        env:
+          CURRENT_VERSION: ${{ steps.current.outputs.version }}
+          LATEST_VERSION: ${{ steps.latest.outputs.version }}
         run: |
-          CURRENT="${{ steps.current.outputs.version }}"
-          LATEST="${{ steps.latest.outputs.version }}"
+          CURRENT="$CURRENT_VERSION"
+          LATEST="$LATEST_VERSION"
 
           if [ "$CURRENT" = "$LATEST" ]; then
             echo "needs_update=false" >> $GITHUB_OUTPUT
@@ -52,8 +55,11 @@ jobs:
       - name: Check for existing issue
         id: existing
         if: steps.compare.outputs.needs_update == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LATEST_VERSION: ${{ steps.latest.outputs.version }}
         run: |
-          LATEST="${{ steps.latest.outputs.version }}"
+          LATEST="$LATEST_VERSION"
           EXISTING=$(gh issue list --label "protobuf-update" --state open --json number,title --jq ".[] | select(.title | contains(\"$LATEST\")) | .number")
 
           if [ -n "$EXISTING" ]; then
@@ -62,8 +68,6 @@ jobs:
           else
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create issue for update
         if: steps.compare.outputs.needs_update == 'true' && steps.existing.outputs.exists == 'false'
@@ -126,15 +130,19 @@ jobs:
             --body-file /tmp/issue_body.md
 
       - name: Summary
+        env:
+          CURRENT_VERSION: ${{ steps.current.outputs.version }}
+          LATEST_VERSION: ${{ steps.latest.outputs.version }}
+          NEEDS_UPDATE: ${{ steps.compare.outputs.needs_update }}
         run: |
           echo "## Protobuf Version Check" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| | Version |" >> $GITHUB_STEP_SUMMARY
           echo "|---|---|" >> $GITHUB_STEP_SUMMARY
-          echo "| Current | \`${{ steps.current.outputs.version }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| Latest | \`${{ steps.latest.outputs.version }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Current | \`$CURRENT_VERSION\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Latest | \`$LATEST_VERSION\` |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ steps.compare.outputs.needs_update }}" = "true" ]; then
+          if [ "$NEEDS_UPDATE" = "true" ]; then
             echo "**Update available!**" >> $GITHUB_STEP_SUMMARY
           else
             echo "**Up to date**" >> $GITHUB_STEP_SUMMARY
