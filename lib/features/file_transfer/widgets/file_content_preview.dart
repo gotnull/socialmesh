@@ -54,6 +54,7 @@ class FileContentPreview {
           path: transfer.savedFilePath!,
           mimeType: transfer.mimeType,
           filename: transfer.filename,
+          createdAt: transfer.createdAt,
           scrollController: scrollController,
         );
       },
@@ -586,12 +587,14 @@ class _DiskFileLoader extends StatefulWidget {
     required this.path,
     required this.mimeType,
     required this.filename,
+    required this.createdAt,
     required this.scrollController,
   });
 
   final String path;
   final String mimeType;
   final String filename;
+  final DateTime createdAt;
   final ScrollController scrollController;
 
   @override
@@ -636,6 +639,15 @@ class _DiskFileLoaderState extends State<_DiskFileLoader> {
       );
     }
     final mime = widget.mimeType.toLowerCase();
+    if (VoiceMime.isVoiceMessage(mime) ||
+        VoiceMime.hasVoiceExtension(widget.filename)) {
+      return _VoiceViewer(
+        bytes: _bytes!,
+        filename: widget.filename,
+        totalBytes: _bytes!.length,
+        receivedAt: widget.createdAt,
+      );
+    }
     if (mime.startsWith('image/')) {
       return _ImageViewer(
         bytes: _bytes!,
