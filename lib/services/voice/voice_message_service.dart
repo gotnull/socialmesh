@@ -25,6 +25,10 @@ class VoiceMessageService {
 
   bool get isActive => _active;
 
+  /// Live amplitude stream (0.0 = silence, 1.0 = peak) sourced from
+  /// [VoiceRecorder.amplitudeStream]. Returns null when no session is active.
+  Stream<double>? get amplitudeStream => _recorder?.amplitudeStream;
+
   /// Begins a recording session.
   ///
   /// Returns false when microphone permission is denied or a session is

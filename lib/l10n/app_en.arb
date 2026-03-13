@@ -6743,6 +6743,127 @@
     "@fileTransferDirectionSent": {
         "description": "Direction badge label for outbound"
     },
+    "fileTransferStatusPreparing": "Preparing\u2026",
+    "@fileTransferStatusPreparing": {
+        "description": "Transfer card status — created, not yet sent"
+    },
+    "fileTransferStatusOfferSent": "Offer sent, waiting\u2026",
+    "@fileTransferStatusOfferSent": {
+        "description": "Transfer card status — offer sent to remote node"
+    },
+    "fileTransferStatusOfferPending": "Incoming file \u2014 tap to review",
+    "@fileTransferStatusOfferPending": {
+        "description": "Transfer card status — inbound offer waiting for user acceptance"
+    },
+    "fileTransferStatusSending": "Sending {pct}%",
+    "@fileTransferStatusSending": {
+        "description": "Transfer card status — outbound transfer in progress",
+        "placeholders": {
+            "pct": {"type": "String"}
+        }
+    },
+    "fileTransferStatusReceiving": "Receiving {pct}%",
+    "@fileTransferStatusReceiving": {
+        "description": "Transfer card status — inbound transfer in progress",
+        "placeholders": {
+            "pct": {"type": "String"}
+        }
+    },
+    "fileTransferStatusRecovering": "Recovering missing chunks\u2026",
+    "@fileTransferStatusRecovering": {
+        "description": "Transfer card status — NACK recovery phase"
+    },
+    "fileTransferStatusComplete": "Complete",
+    "@fileTransferStatusComplete": {
+        "description": "Transfer card status — transfer complete and verified"
+    },
+    "fileTransferStatusCancelled": "Cancelled",
+    "@fileTransferStatusCancelled": {
+        "description": "Transfer card status — transfer cancelled"
+    },
+    "fileTransferStatusFailed": "Failed",
+    "@fileTransferStatusFailed": {
+        "description": "Transfer card status — generic failure"
+    },
+    "fileTransferFailReasonOversized": "File too large for mesh transfer",
+    "@fileTransferFailReasonOversized": {
+        "description": "Transfer fail reason — file exceeded mesh size limit"
+    },
+    "fileTransferFailReasonTimeout": "Transfer timed out",
+    "@fileTransferFailReasonTimeout": {
+        "description": "Transfer fail reason — no response within timeout"
+    },
+    "fileTransferFailReasonInvalid": "Invalid data received",
+    "@fileTransferFailReasonInvalid": {
+        "description": "Transfer fail reason — malformed chunk data"
+    },
+    "fileTransferFailReasonRateLimited": "Rate limited \u2014 try again later",
+    "@fileTransferFailReasonRateLimited": {
+        "description": "Transfer fail reason — airtime rate limiter fired"
+    },
+    "fileTransferFailReasonHashMismatch": "File verification failed",
+    "@fileTransferFailReasonHashMismatch": {
+        "description": "Transfer fail reason — SHA-256 mismatch"
+    },
+    "fileTransferFailReasonMaxRetries": "Max retries exceeded",
+    "@fileTransferFailReasonMaxRetries": {
+        "description": "Transfer fail reason — too many NACK rounds"
+    },
+    "fileTransferFailReasonExpired": "Transfer expired",
+    "@fileTransferFailReasonExpired": {
+        "description": "Transfer fail reason — transfer TTL exceeded"
+    },
+    "fileTransferMetaNodeTo": "to {nodeName}",
+    "@fileTransferMetaNodeTo": {
+        "description": "Transfer card metadata — destination node display name or short hex",
+        "placeholders": {
+            "nodeName": {"type": "String"}
+        }
+    },
+    "fileTransferMetaNodeFrom": "from {nodeName}",
+    "@fileTransferMetaNodeFrom": {
+        "description": "Transfer card metadata — source node display name or short hex",
+        "placeholders": {
+            "nodeName": {"type": "String"}
+        }
+    },
+    "fileTransferTimeJustNow": "just now",
+    "@fileTransferTimeJustNow": {
+        "description": "Transfer card relative time — less than one minute ago"
+    },
+    "fileTransferTimeMinutesAgo": "{count}m ago",
+    "@fileTransferTimeMinutesAgo": {
+        "description": "Transfer card relative time — N minutes ago",
+        "placeholders": {
+            "count": {"type": "int"}
+        }
+    },
+    "fileTransferTimeHoursAgo": "{count}h ago",
+    "@fileTransferTimeHoursAgo": {
+        "description": "Transfer card relative time — N hours ago",
+        "placeholders": {
+            "count": {"type": "int"}
+        }
+    },
+    "fileTransferTimeDaysAgo": "{count}d ago",
+    "@fileTransferTimeDaysAgo": {
+        "description": "Transfer card relative time — N days ago",
+        "placeholders": {
+            "count": {"type": "int"}
+        }
+    },
+    "fileTransferTimeDate": "{month}/{day}",
+    "@fileTransferTimeDate": {
+        "description": "Transfer card date for transfers older than one week",
+        "placeholders": {
+            "month": {"type": "String"},
+            "day": {"type": "String"}
+        }
+    },
+    "fileTransferVoiceBadge": "Voice",
+    "@fileTransferVoiceBadge": {
+        "description": "Badge label on file transfer cards for voice/audio messages"
+    },
     "fileTransferEmptyDescriptionContacts": "Go to Contacts, tap a node, and\nchoose Send File to get started",
     "@fileTransferEmptyDescriptionContacts": {
         "description": "Empty state description for inbound filter"
@@ -42806,6 +42927,17 @@
     "voiceRecordingStopButton": "Stop",
     "@voiceRecordingStopButton": {
         "description": "Label for the stop-recording button in the voice recording overlay"
+    },
+    "voiceRecordingLive": "REC",
+    "@voiceRecordingLive": {
+        "description": "Live recording indicator label shown in the recording overlay"
+    },
+    "voiceRecordingMaxSeconds": "of {seconds}s max",
+    "@voiceRecordingMaxSeconds": {
+        "description": "Recording overlay subtitle showing the maximum recording duration",
+        "placeholders": {
+            "seconds": {"type": "String"}
+        }
     },
     "voiceAttachmentCardTitle": "Voice message",
     "@voiceAttachmentCardTitle": {

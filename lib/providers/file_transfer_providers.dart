@@ -6,6 +6,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
@@ -365,9 +366,12 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
 
   /// Pick an image from gallery and compress it to fit within mesh limits.
   ///
-  /// Uses [ImagePicker] for initial selection with aggressive initial
-  /// compression, then iteratively re-encodes with the `image` package
-  /// until the result fits within [SmFileTransferLimits.maxFileSize].
+  /// Picks at full quality to preserve source fidelity, then uses
+  /// [_compressImageToFit] which binary-searches for the highest WebP
+  /// quality at each dimension step that fits within
+  /// [SmFileTransferLimits.maxFileSize]. WebP produces significantly
+  /// better visual results than JPEG at these tiny sizes. Falls back
+  /// to JPEG if native WebP encoding is unavailable.
   Future<FileTransferState?> pickAndSendImage({
     int? targetNodeNum,
     FileTransportMode transportMode = FileTransportMode.auto,
@@ -377,12 +381,9 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
       '(target=${targetNodeNum != null ? "!${targetNodeNum.toRadixString(16)}" : "none"})',
     );
     final imagePicker = ImagePicker();
-    final pickedFile = await imagePicker.pickImage(
-      source: ImageSource.gallery,
-      maxWidth: 160,
-      maxHeight: 160,
-      imageQuality: 50,
-    );
+    // Pick at full quality — we handle all compression ourselves so we
+    // can binary-search for the optimal quality/dimension trade-off.
+    final pickedFile = await imagePicker.pickImage(source: ImageSource.gallery);
 
     if (pickedFile == null) {
       AppLogging.fileTransfer('pickAndSendImage: user cancelled selection');
@@ -394,35 +395,73 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
       'path=${pickedFile.path}',
     );
 
-    Uint8List bytes = await File(pickedFile.path).readAsBytes();
-    final initialSize = bytes.length;
+    final sourceBytes = await File(pickedFile.path).readAsBytes();
+    final initialSize = sourceBytes.length;
     AppLogging.fileTransfer(
       'pickAndSendImage: initial size $initialSize bytes '
       '(limit=${SmFileTransferLimits.maxFileSize})',
     );
 
-    // Iteratively compress if still too large.
-    if (bytes.length > SmFileTransferLimits.maxFileSize) {
+    // Try WebP first (native encoder, much better at tiny sizes), then
+    // fall back to JPEG (pure-Dart encoder) if native encoding fails.
+    AppLogging.fileTransfer(
+      'pickAndSendImage: $initialSize bytes, starting binary-search '
+      'compression (WebP primary, JPEG fallback)',
+    );
+
+    var result = await _compressImageNative(
+      sourceBytes,
+      format: CompressFormat.webp,
+    );
+
+    String extension;
+    String mimeType;
+
+    if (result != null) {
+      extension = 'webp';
+      mimeType = 'image/webp';
       AppLogging.fileTransfer(
-        'pickAndSendImage: $initialSize > max, starting iterative '
-        'compression',
+        'pickAndSendImage: WebP compression succeeded '
+        '$initialSize -> ${result.length} bytes',
       );
-      final compressed = await _compressImageToFit(bytes);
-      if (compressed != null) {
-        bytes = compressed;
+    } else {
+      AppLogging.fileTransfer(
+        'pickAndSendImage: WebP failed, falling back to JPEG',
+      );
+      result = await _compressImageNative(
+        sourceBytes,
+        format: CompressFormat.jpeg,
+      );
+
+      if (result == null) {
+        // Native JPEG also failed — fall back to pure-Dart encoder.
         AppLogging.fileTransfer(
-          'pickAndSendImage: compressed $initialSize -> ${bytes.length} bytes',
+          'pickAndSendImage: native JPEG failed, trying pure-Dart fallback',
+        );
+        result = await _compressImagePureDart(sourceBytes);
+      }
+
+      extension = 'jpg';
+      mimeType = 'image/jpeg';
+
+      if (result != null) {
+        AppLogging.fileTransfer(
+          'pickAndSendImage: JPEG compression succeeded '
+          '$initialSize -> ${result.length} bytes',
         );
       } else {
         AppLogging.fileTransfer(
-          'pickAndSendImage: compression returned null — all attempts failed',
+          'pickAndSendImage: all compression attempts failed',
         );
       }
     }
 
-    if (bytes.isEmpty || bytes.length > SmFileTransferLimits.maxFileSize) {
+    if (result == null ||
+        result.isEmpty ||
+        result.length > SmFileTransferLimits.maxFileSize) {
       AppLogging.fileTransfer(
-        'pickAndSendImage REJECTED: final size ${bytes.length} exceeds '
+        'pickAndSendImage REJECTED: final size '
+        '${result?.length ?? 0} exceeds '
         'max ${SmFileTransferLimits.maxFileSize}',
       );
       return null;
@@ -430,17 +469,17 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
 
     // Generate a short filename — ImagePicker temp names can exceed
     // SmFileTransferLimits.maxFilenameBytes (64 bytes).
-    final filename = 'img_${DateTime.now().millisecondsSinceEpoch}.jpg';
+    final filename = 'img_${DateTime.now().millisecondsSinceEpoch}.$extension';
 
     AppLogging.fileTransfer(
-      'pickAndSendImage: sending "$filename" (${bytes.length} bytes) '
+      'pickAndSendImage: sending "$filename" (${result.length} bytes) '
       'to target=${targetNodeNum != null ? "!${targetNodeNum.toRadixString(16)}" : "none"}',
     );
 
     return sendFile(
       filename: filename,
-      mimeType: 'image/jpeg',
-      fileBytes: bytes,
+      mimeType: mimeType,
+      fileBytes: result,
       targetNodeNum: targetNodeNum,
       transportMode: transportMode,
     );
@@ -468,70 +507,230 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
     );
   }
 
-  /// Iteratively resize and re-encode as JPEG to fit mesh transfer limits.
-  static Future<Uint8List?> _compressImageToFit(Uint8List sourceBytes) async {
+  /// Compress an image using native platform encoding (WebP or JPEG).
+  ///
+  /// Strategy: walk a dimension ladder from large to small. At each
+  /// dimension, binary-search quality (1–85) to find the highest quality
+  /// that fits in the byte budget. This maximizes perceptual quality for
+  /// a given size — a 96×96 at Q72 looks far better than a 160×160 at
+  /// Q25 because compression artifacts at low quality are more visually
+  /// offensive than smaller dimensions.
+  ///
+  /// Uses [FlutterImageCompress] for native WebP/JPEG encoding which
+  /// produces significantly better output than pure-Dart encoders,
+  /// especially at these tiny sizes where WebP's advantage is largest.
+  static Future<Uint8List?> _compressImageNative(
+    Uint8List sourceBytes, {
+    required CompressFormat format,
+  }) async {
+    final formatName = format == CompressFormat.webp ? 'WebP' : 'JPEG';
     AppLogging.fileTransfer(
-      '_compressImageToFit: input ${sourceBytes.length} bytes',
+      '_compressImageNative($formatName): input ${sourceBytes.length} bytes',
     );
-    const attempts = [
-      (maxDim: 128, quality: 40),
-      (maxDim: 96, quality: 35),
-      (maxDim: 80, quality: 30),
-      (maxDim: 64, quality: 25),
-      (maxDim: 48, quality: 20),
-      (maxDim: 32, quality: 15),
-    ];
 
-    for (final attempt in attempts) {
+    // Dimension ladder from largest to smallest. We try each dimension
+    // and binary-search for the best quality that fits. Larger dimensions
+    // are tried first — if we can fit at 160px with acceptable quality,
+    // that's preferable to dropping to 96px.
+    const dimensions = [160, 128, 96, 80, 64, 48, 32];
+    // Quality search bounds. 85 is the ceiling — above that gains are
+    // diminishing. Floor of 20 avoids unusable artifact soup.
+    const maxQuality = 85;
+    const minQuality = 20;
+
+    for (final dim in dimensions) {
       AppLogging.fileTransfer(
-        '_compressImageToFit: trying maxDim=${attempt.maxDim}, '
-        'quality=${attempt.quality}',
+        '_compressImageNative($formatName): trying maxDim=$dim, '
+        'binary-searching quality $minQuality–$maxQuality',
       );
-      final compressed = await compute(
+
+      // First check: can we fit at minQuality? If not, this dimension
+      // is too large and we should drop to the next smaller one.
+      Uint8List smallest;
+      try {
+        smallest = await FlutterImageCompress.compressWithList(
+          sourceBytes,
+          minWidth: dim,
+          minHeight: dim,
+          quality: minQuality,
+          format: format,
+          keepExif: false,
+        );
+      } catch (e) {
+        AppLogging.fileTransfer(
+          '_compressImageNative($formatName): native encode failed at '
+          'maxDim=$dim: $e',
+        );
+        return null; // Native encoder can't handle this image — bail out.
+      }
+
+      if (smallest.isEmpty) {
+        AppLogging.fileTransfer(
+          '_compressImageNative($formatName): empty result at maxDim=$dim',
+        );
+        return null;
+      }
+
+      if (smallest.length > SmFileTransferLimits.maxFileSize) {
+        AppLogging.fileTransfer(
+          '_compressImageNative($formatName): maxDim=$dim too large even at '
+          'Q$minQuality (${smallest.length} bytes), stepping down',
+        );
+        continue; // This dimension can't fit — try a smaller one.
+      }
+
+      // Binary search: find the highest quality that still fits.
+      var lo = minQuality;
+      var hi = maxQuality;
+      Uint8List best = smallest;
+
+      while (lo <= hi) {
+        final mid = (lo + hi) ~/ 2;
+        try {
+          final candidate = await FlutterImageCompress.compressWithList(
+            sourceBytes,
+            minWidth: dim,
+            minHeight: dim,
+            quality: mid,
+            format: format,
+            keepExif: false,
+          );
+
+          if (candidate.isNotEmpty &&
+              candidate.length <= SmFileTransferLimits.maxFileSize) {
+            best = candidate;
+            lo = mid + 1; // Try higher quality.
+          } else {
+            hi = mid - 1; // Too large — try lower quality.
+          }
+        } catch (_) {
+          hi = mid - 1; // Encode failed — try lower quality.
+        }
+      }
+
+      AppLogging.fileTransfer(
+        '_compressImageNative($formatName): SUCCESS at maxDim=$dim, '
+        'quality=${hi < minQuality ? minQuality : hi}, '
+        '${best.length} bytes '
+        '(limit=${SmFileTransferLimits.maxFileSize})',
+      );
+      return best;
+    }
+
+    AppLogging.fileTransfer(
+      '_compressImageNative($formatName): EXHAUSTED all dimensions',
+    );
+    return null;
+  }
+
+  /// Pure-Dart JPEG fallback when native encoding is unavailable.
+  ///
+  /// Uses the `image` package with YUV 4:2:0 chroma subsampling for
+  /// better compression. Same binary-search strategy as the native path.
+  static Future<Uint8List?> _compressImagePureDart(
+    Uint8List sourceBytes,
+  ) async {
+    AppLogging.fileTransfer(
+      '_compressImagePureDart: input ${sourceBytes.length} bytes',
+    );
+
+    const dimensions = [160, 128, 96, 80, 64, 48, 32];
+    const maxQuality = 85;
+    const minQuality = 20;
+
+    for (final dim in dimensions) {
+      AppLogging.fileTransfer(
+        '_compressImagePureDart: trying maxDim=$dim, '
+        'binary-searching quality $minQuality–$maxQuality',
+      );
+
+      final smallest = await compute(
         _resizeAndEncodeJpeg,
         _CompressArgs(
           imageBytes: sourceBytes,
-          maxDim: attempt.maxDim,
-          quality: attempt.quality,
+          maxDim: dim,
+          quality: minQuality,
         ),
       );
-      if (compressed != null) {
+
+      if (smallest == null) {
         AppLogging.fileTransfer(
-          '_compressImageToFit: result ${compressed.length} bytes '
-          '(limit=${SmFileTransferLimits.maxFileSize})',
+          '_compressImagePureDart: decode failed at maxDim=$dim',
         );
-        if (compressed.length <= SmFileTransferLimits.maxFileSize) {
-          AppLogging.fileTransfer(
-            '_compressImageToFit: SUCCESS at maxDim=${attempt.maxDim}, '
-            'quality=${attempt.quality}',
-          );
-          return compressed;
-        }
-      } else {
-        AppLogging.fileTransfer(
-          '_compressImageToFit: encode returned null at '
-          'maxDim=${attempt.maxDim}',
-        );
+        return null;
       }
+
+      if (smallest.length > SmFileTransferLimits.maxFileSize) {
+        AppLogging.fileTransfer(
+          '_compressImagePureDart: maxDim=$dim too large even at '
+          'Q$minQuality (${smallest.length} bytes), stepping down',
+        );
+        continue;
+      }
+
+      var lo = minQuality;
+      var hi = maxQuality;
+      Uint8List best = smallest;
+
+      while (lo <= hi) {
+        final mid = (lo + hi) ~/ 2;
+        final candidate = await compute(
+          _resizeAndEncodeJpeg,
+          _CompressArgs(imageBytes: sourceBytes, maxDim: dim, quality: mid),
+        );
+
+        if (candidate != null &&
+            candidate.length <= SmFileTransferLimits.maxFileSize) {
+          best = candidate;
+          lo = mid + 1;
+        } else {
+          hi = mid - 1;
+        }
+      }
+
+      AppLogging.fileTransfer(
+        '_compressImagePureDart: SUCCESS at maxDim=$dim, '
+        'quality=${hi < minQuality ? minQuality : hi}, '
+        '${best.length} bytes '
+        '(limit=${SmFileTransferLimits.maxFileSize})',
+      );
+      return best;
     }
 
-    AppLogging.fileTransfer('_compressImageToFit: EXHAUSTED all attempts');
+    AppLogging.fileTransfer('_compressImagePureDart: EXHAUSTED all dimensions');
     return null;
   }
 
   /// Top-level function for isolate: resize and encode as JPEG.
+  ///
+  /// Uses YUV 4:2:0 chroma subsampling for better compression at small
+  /// sizes — standard for photographic content and saves ~15-20% over
+  /// 4:4:4 with no perceptible quality difference at these dimensions.
   static Uint8List? _resizeAndEncodeJpeg(_CompressArgs args) {
-    final decoded = img.decodeImage(args.imageBytes);
-    if (decoded == null) return null;
+    try {
+      final decoded = img.decodeImage(args.imageBytes);
+      if (decoded == null) return null;
 
-    final resized = img.copyResize(
-      decoded,
-      width: decoded.width > decoded.height ? args.maxDim : null,
-      height: decoded.height >= decoded.width ? args.maxDim : null,
-      interpolation: img.Interpolation.average,
-    );
+      final resized = img.copyResize(
+        decoded,
+        width: decoded.width > decoded.height ? args.maxDim : null,
+        height: decoded.height >= decoded.width ? args.maxDim : null,
+        interpolation: img.Interpolation.average,
+      );
 
-    return Uint8List.fromList(img.encodeJpg(resized, quality: args.quality));
+      return Uint8List.fromList(
+        img.encodeJpg(
+          resized,
+          quality: args.quality,
+          chroma: img.JpegChroma.yuv420,
+        ),
+      );
+    } catch (_) {
+      // The image package can throw RangeError, FormatException, etc.
+      // on malformed input instead of returning null. Treat any decode/
+      // encode failure as "this image can't be processed".
+      return null;
+    }
   }
 
   /// Cancel an active transfer.

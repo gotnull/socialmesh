@@ -575,6 +575,7 @@ class _FileTransferContactsScreenState
             onStop: () {
               if (!stopCompleter.isCompleted) stopCompleter.complete();
             },
+            amplitudeStream: voiceService.amplitudeStream,
           ),
     );
 

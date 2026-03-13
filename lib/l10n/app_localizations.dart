@@ -9094,6 +9094,150 @@ abstract class AppLocalizations {
   /// **'Sent'**
   String get fileTransferDirectionSent;
 
+  /// Transfer card status — created, not yet sent
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing…'**
+  String get fileTransferStatusPreparing;
+
+  /// Transfer card status — offer sent to remote node
+  ///
+  /// In en, this message translates to:
+  /// **'Offer sent, waiting…'**
+  String get fileTransferStatusOfferSent;
+
+  /// Transfer card status — inbound offer waiting for user acceptance
+  ///
+  /// In en, this message translates to:
+  /// **'Incoming file — tap to review'**
+  String get fileTransferStatusOfferPending;
+
+  /// Transfer card status — outbound transfer in progress
+  ///
+  /// In en, this message translates to:
+  /// **'Sending {pct}%'**
+  String fileTransferStatusSending(String pct);
+
+  /// Transfer card status — inbound transfer in progress
+  ///
+  /// In en, this message translates to:
+  /// **'Receiving {pct}%'**
+  String fileTransferStatusReceiving(String pct);
+
+  /// Transfer card status — NACK recovery phase
+  ///
+  /// In en, this message translates to:
+  /// **'Recovering missing chunks…'**
+  String get fileTransferStatusRecovering;
+
+  /// Transfer card status — transfer complete and verified
+  ///
+  /// In en, this message translates to:
+  /// **'Complete'**
+  String get fileTransferStatusComplete;
+
+  /// Transfer card status — transfer cancelled
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get fileTransferStatusCancelled;
+
+  /// Transfer card status — generic failure
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get fileTransferStatusFailed;
+
+  /// Transfer fail reason — file exceeded mesh size limit
+  ///
+  /// In en, this message translates to:
+  /// **'File too large for mesh transfer'**
+  String get fileTransferFailReasonOversized;
+
+  /// Transfer fail reason — no response within timeout
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer timed out'**
+  String get fileTransferFailReasonTimeout;
+
+  /// Transfer fail reason — malformed chunk data
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid data received'**
+  String get fileTransferFailReasonInvalid;
+
+  /// Transfer fail reason — airtime rate limiter fired
+  ///
+  /// In en, this message translates to:
+  /// **'Rate limited — try again later'**
+  String get fileTransferFailReasonRateLimited;
+
+  /// Transfer fail reason — SHA-256 mismatch
+  ///
+  /// In en, this message translates to:
+  /// **'File verification failed'**
+  String get fileTransferFailReasonHashMismatch;
+
+  /// Transfer fail reason — too many NACK rounds
+  ///
+  /// In en, this message translates to:
+  /// **'Max retries exceeded'**
+  String get fileTransferFailReasonMaxRetries;
+
+  /// Transfer fail reason — transfer TTL exceeded
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer expired'**
+  String get fileTransferFailReasonExpired;
+
+  /// Transfer card metadata — destination node display name or short hex
+  ///
+  /// In en, this message translates to:
+  /// **'to {nodeName}'**
+  String fileTransferMetaNodeTo(String nodeName);
+
+  /// Transfer card metadata — source node display name or short hex
+  ///
+  /// In en, this message translates to:
+  /// **'from {nodeName}'**
+  String fileTransferMetaNodeFrom(String nodeName);
+
+  /// Transfer card relative time — less than one minute ago
+  ///
+  /// In en, this message translates to:
+  /// **'just now'**
+  String get fileTransferTimeJustNow;
+
+  /// Transfer card relative time — N minutes ago
+  ///
+  /// In en, this message translates to:
+  /// **'{count}m ago'**
+  String fileTransferTimeMinutesAgo(int count);
+
+  /// Transfer card relative time — N hours ago
+  ///
+  /// In en, this message translates to:
+  /// **'{count}h ago'**
+  String fileTransferTimeHoursAgo(int count);
+
+  /// Transfer card relative time — N days ago
+  ///
+  /// In en, this message translates to:
+  /// **'{count}d ago'**
+  String fileTransferTimeDaysAgo(int count);
+
+  /// Transfer card date for transfers older than one week
+  ///
+  /// In en, this message translates to:
+  /// **'{month}/{day}'**
+  String fileTransferTimeDate(String month, String day);
+
+  /// Badge label on file transfer cards for voice/audio messages
+  ///
+  /// In en, this message translates to:
+  /// **'Voice'**
+  String get fileTransferVoiceBadge;
+
   /// Empty state description for inbound filter
   ///
   /// In en, this message translates to:
@@ -56319,6 +56463,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Stop'**
   String get voiceRecordingStopButton;
+
+  /// Live recording indicator label shown in the recording overlay
+  ///
+  /// In en, this message translates to:
+  /// **'REC'**
+  String get voiceRecordingLive;
+
+  /// Recording overlay subtitle showing the maximum recording duration
+  ///
+  /// In en, this message translates to:
+  /// **'of {seconds}s max'**
+  String voiceRecordingMaxSeconds(String seconds);
 
   /// Label shown at the top of the voice attachment playback card
   ///

@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 import 'dart:async';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:record/record.dart';
@@ -31,7 +32,25 @@ class VoiceRecorder {
   bool _recording = false;
   void Function()? onAutoStop;
 
+  /// Live amplitude stream while recording is active.
+  ///
+  /// Values are normalised to [0.0, 1.0]: 0.0 = silence, 1.0 = full scale.
+  /// Emits approximately every 50 ms. Returns null when not recording.
+  Stream<double>? _amplitudeStream;
+
   bool get isRecording => _recording;
+
+  /// Live amplitude stream (0.0 – 1.0) available while [isRecording] is true.
+  Stream<double>? get amplitudeStream => _amplitudeStream;
+
+  /// Converts a raw dBFS value to a [0.0, 1.0] display amplitude using a
+  /// square-root curve so quieter sounds remain visually responsive.
+  ///
+  /// Exposed as a static so the transformation can be unit-tested in isolation.
+  static double normalizeDb(double dBFS) {
+    final linear = (dBFS.clamp(-60.0, 0.0) + 60.0) / 60.0;
+    return sqrt(linear).clamp(0.0, 1.0);
+  }
 
   static const RecordConfig _config = RecordConfig(
     encoder: AudioEncoder.pcm16bits,
@@ -55,6 +74,11 @@ class VoiceRecorder {
       'recording started (sampleRate=${VoiceConstants.sampleRate}, '
       'channels=${VoiceConstants.channels})',
     );
+
+    // Wire live amplitude for the recording overlay visualisation.
+    _amplitudeStream = _recorder
+        .onAmplitudeChanged(const Duration(milliseconds: 50))
+        .map((amp) => normalizeDb(amp.current));
 
     _sub = stream.listen(
       (bytes) {
@@ -87,6 +111,7 @@ class VoiceRecorder {
 
     await _sub?.cancel();
     _sub = null;
+    _amplitudeStream = null;
     await _recorder.stop();
 
     if (_pcmBuffer.isEmpty) {
@@ -129,6 +154,7 @@ class VoiceRecorder {
     _autoStopTimer = null;
     await _sub?.cancel();
     _sub = null;
+    _amplitudeStream = null;
     await _recorder.cancel();
     _pcmBuffer.clear();
     AppLogging.voice('recording cancelled');

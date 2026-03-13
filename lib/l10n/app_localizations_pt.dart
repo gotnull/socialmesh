@@ -5128,6 +5128,96 @@ class AppLocalizationsPt extends AppLocalizations {
   String get fileTransferDirectionSent => 'Enviado';
 
   @override
+  String get fileTransferStatusPreparing => 'Preparing…';
+
+  @override
+  String get fileTransferStatusOfferSent => 'Offer sent, waiting…';
+
+  @override
+  String get fileTransferStatusOfferPending => 'Incoming file — tap to review';
+
+  @override
+  String fileTransferStatusSending(String pct) {
+    return 'Sending $pct%';
+  }
+
+  @override
+  String fileTransferStatusReceiving(String pct) {
+    return 'Receiving $pct%';
+  }
+
+  @override
+  String get fileTransferStatusRecovering => 'Recovering missing chunks…';
+
+  @override
+  String get fileTransferStatusComplete => 'Complete';
+
+  @override
+  String get fileTransferStatusCancelled => 'Cancelled';
+
+  @override
+  String get fileTransferStatusFailed => 'Failed';
+
+  @override
+  String get fileTransferFailReasonOversized =>
+      'File too large for mesh transfer';
+
+  @override
+  String get fileTransferFailReasonTimeout => 'Transfer timed out';
+
+  @override
+  String get fileTransferFailReasonInvalid => 'Invalid data received';
+
+  @override
+  String get fileTransferFailReasonRateLimited =>
+      'Rate limited — try again later';
+
+  @override
+  String get fileTransferFailReasonHashMismatch => 'File verification failed';
+
+  @override
+  String get fileTransferFailReasonMaxRetries => 'Max retries exceeded';
+
+  @override
+  String get fileTransferFailReasonExpired => 'Transfer expired';
+
+  @override
+  String fileTransferMetaNodeTo(String nodeName) {
+    return 'to $nodeName';
+  }
+
+  @override
+  String fileTransferMetaNodeFrom(String nodeName) {
+    return 'from $nodeName';
+  }
+
+  @override
+  String get fileTransferTimeJustNow => 'just now';
+
+  @override
+  String fileTransferTimeMinutesAgo(int count) {
+    return '${count}m ago';
+  }
+
+  @override
+  String fileTransferTimeHoursAgo(int count) {
+    return '${count}h ago';
+  }
+
+  @override
+  String fileTransferTimeDaysAgo(int count) {
+    return '${count}d ago';
+  }
+
+  @override
+  String fileTransferTimeDate(String month, String day) {
+    return '$month/$day';
+  }
+
+  @override
+  String get fileTransferVoiceBadge => 'Voice';
+
+  @override
   String get fileTransferEmptyDescriptionContacts =>
       'Vá em Contatos, toque em um nó e\nescolha Enviar arquivo para começar';
 
@@ -32260,6 +32350,14 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get voiceRecordingStopButton => 'Stop';
+
+  @override
+  String get voiceRecordingLive => 'REC';
+
+  @override
+  String voiceRecordingMaxSeconds(String seconds) {
+    return 'of ${seconds}s max';
+  }
 
   @override
   String get voiceAttachmentCardTitle => 'Voice message';
