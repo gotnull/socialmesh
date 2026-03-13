@@ -3,6 +3,7 @@
 // lint-allow: scaffold (embedded tab panel, GlassScaffold provided by container)
 
 import 'dart:async';
+import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -565,10 +566,15 @@ class _FileTransferContactsScreenState
     if (!started) {
       await voiceService.dispose();
       if (!mounted) return;
-      final permanently =
+      // On iOS the system permission dialog only appears once; after that the
+      // only recovery path is Settings. permission_handler sometimes still
+      // reports `denied` (not `permanentlyDenied`) on iOS, so always offer
+      // the Settings shortcut there.
+      final showSettings =
+          Platform.isIOS ||
           await VoicePermissionService.isMicrophonePermanentlyDenied();
       if (!mounted) return;
-      _showVoicePermissionSnackBar(permanently);
+      _showVoicePermissionSnackBar(showSettings);
       return;
     }
 
