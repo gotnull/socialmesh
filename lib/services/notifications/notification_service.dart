@@ -3,7 +3,7 @@
 import '../../core/logging.dart';
 import 'dart:async';
 import 'dart:io';
-import 'dart:ui' show Color;
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:socialmesh/l10n/app_localizations.dart';
 import '../../models/mesh_models.dart';
@@ -792,6 +792,35 @@ class NotificationService {
   /// Cancel all notifications
   Future<void> cancelAll() async {
     await _notifications.cancelAll();
+  }
+
+  /// Native method channel used to reset the iOS/macOS app icon badge count.
+  ///
+  /// [flutter_local_notifications]' [cancelAll] removes delivered notifications
+  /// from the notification centre but does NOT reset
+  /// [UIApplication.applicationIconBadgeNumber] (iOS) or the dock-tile badge
+  /// (macOS). Setting the badge to 0 requires an explicit native call, which
+  /// is wired up in AppDelegate.swift on both platforms.
+  static const _badgeChannel = MethodChannel('socialmesh/badge');
+
+  /// Clear the app icon badge.
+  ///
+  /// Cancels all delivered local notifications (removing them from the system
+  /// tray) and then calls the native [_badgeChannel] to set the badge count
+  /// to 0. The native call is necessary because [UIApplication
+  /// .applicationIconBadgeNumber] is a separate counter from the notification
+  /// centre — [cancelAll] alone does not reset it.
+  Future<void> clearBadge() async {
+    if (!_initialized) return;
+    await _notifications.cancelAll();
+    if (Platform.isIOS || Platform.isMacOS) {
+      try {
+        await _badgeChannel.invokeMethod<void>('clearBadge');
+      } catch (e) {
+        AppLogging.notifications('🔔 clearBadge channel error: $e');
+      }
+    }
+    AppLogging.notifications('🔔 Badge cleared');
   }
 
   /// Cancel notification by ID

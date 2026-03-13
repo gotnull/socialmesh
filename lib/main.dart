@@ -458,6 +458,10 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       // Resume RSSI polling and GPS location updates (paused on background).
       _resumeProtocolPolling();
       _resumeLocationUpdates();
+      // Clear the app icon badge whenever the user brings the app to the
+      // foreground — they are now actively using it and any unread count
+      // shown on the icon is stale.
+      NotificationService().clearBadge();
     } else if (state == AppLifecycleState.paused) {
       // Only trigger background handoff when the app is *truly* paused
       // (i.e. no longer visible). `inactive` (notification shade, system
