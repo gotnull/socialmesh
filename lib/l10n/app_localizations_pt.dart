@@ -32215,4 +32215,46 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get servicePresentationFallbackAction => 'Details';
+
+  @override
+  String get voiceMessageSendButton => 'Voice';
+
+  @override
+  String get voiceMessageRecording => 'Recording…';
+
+  @override
+  String get voiceMessageRecordingHint => 'Hold to record';
+
+  @override
+  String get voiceMessageTooShort => 'Recording too short — hold longer';
+
+  @override
+  String get voiceMessageSent => 'Voice message sent';
+
+  @override
+  String get voiceMessageFailed => 'Voice message could not be sent';
+
+  @override
+  String get voiceMessagePermissionDenied =>
+      'Microphone access is required to send voice messages';
+
+  @override
+  String get voiceMessagePermissionSettings => 'Open Settings';
+
+  @override
+  String get voiceMessagePlay => 'Play voice message';
+
+  @override
+  String get voiceMessageStop => 'Stop playback';
+
+  @override
+  String voiceMessageDuration(int seconds) {
+    return '${seconds}s';
+  }
+
+  @override
+  String get voiceMessageAutoStopped => 'Maximum recording length reached';
+
+  @override
+  String get fileTransferContactsSendVoice => 'Voice';
 }

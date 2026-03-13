@@ -129,6 +129,9 @@
 		</array>
 		<key>NSCameraUsageDescription</key>
 		<string>Socialmesh uses the camera for QR code scanning and AR Node Radar visualization</string>
+		<key>NSMicrophoneUsageDescription</key>
+		<string>Socialmesh uses the microphone to record voice messages that are compressed and sent
+			over the mesh radio network</string>
 		<key>NSLocalNetworkUsageDescription</key>
 		<string>Socialmesh uses local networking to connect to WiFi-based Meshtastic nodes</string>
 		<key>NSLocationUsageDescription</key>

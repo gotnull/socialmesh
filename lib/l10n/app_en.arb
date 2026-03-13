@@ -42743,5 +42743,64 @@
     "servicePresentationFallbackAction": "Details",
     "@servicePresentationFallbackAction": {
         "description": "Action label for unknown MRRP service cards"
+    },
+
+    "voiceMessageSendButton": "Voice",
+    "@voiceMessageSendButton": {
+        "description": "Label for the hold-to-record voice message button in the contacts detail sheet"
+    },
+    "voiceMessageRecording": "Recording…",
+    "@voiceMessageRecording": {
+        "description": "Status text shown while a voice message is being recorded"
+    },
+    "voiceMessageRecordingHint": "Hold to record",
+    "@voiceMessageRecordingHint": {
+        "description": "Hint text shown on the press-to-talk record button before recording starts"
+    },
+    "voiceMessageTooShort": "Recording too short — hold longer",
+    "@voiceMessageTooShort": {
+        "description": "Snackbar message when the user releases the PTT button too quickly"
+    },
+    "voiceMessageSent": "Voice message sent",
+    "@voiceMessageSent": {
+        "description": "Snackbar message after a voice message is successfully transmitted"
+    },
+    "voiceMessageFailed": "Voice message could not be sent",
+    "@voiceMessageFailed": {
+        "description": "Snackbar message when voice message encoding or transfer initiation fails"
+    },
+    "voiceMessagePermissionDenied": "Microphone access is required to send voice messages",
+    "@voiceMessagePermissionDenied": {
+        "description": "Snackbar message shown when microphone permission was denied"
+    },
+    "voiceMessagePermissionSettings": "Open Settings",
+    "@voiceMessagePermissionSettings": {
+        "description": "Action label on the microphone-permission-denied snackbar that opens system settings"
+    },
+    "voiceMessagePlay": "Play voice message",
+    "@voiceMessagePlay": {
+        "description": "Accessibility label / tooltip on the play button in the voice message player widget"
+    },
+    "voiceMessageStop": "Stop playback",
+    "@voiceMessageStop": {
+        "description": "Accessibility label / tooltip on the stop button in the voice message player widget"
+    },
+    "voiceMessageDuration": "{seconds}s",
+    "@voiceMessageDuration": {
+        "description": "Duration label shown in the voice message player (e.g. '12s')",
+        "placeholders": {
+            "seconds": {
+                "type": "int",
+                "example": "12"
+            }
+        }
+    },
+    "voiceMessageAutoStopped": "Maximum recording length reached",
+    "@voiceMessageAutoStopped": {
+        "description": "Snackbar message shown when recording auto-stops at the 54-second limit"
+    },
+    "fileTransferContactsSendVoice": "Voice",
+    "@fileTransferContactsSendVoice": {
+        "description": "Label for the Voice button in the contact detail sheet action row"
     }
 }

@@ -56235,6 +56235,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Details'**
   String get servicePresentationFallbackAction;
+
+  /// Label for the hold-to-record voice message button in the contacts detail sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Voice'**
+  String get voiceMessageSendButton;
+
+  /// Status text shown while a voice message is being recorded
+  ///
+  /// In en, this message translates to:
+  /// **'Recording…'**
+  String get voiceMessageRecording;
+
+  /// Hint text shown on the press-to-talk record button before recording starts
+  ///
+  /// In en, this message translates to:
+  /// **'Hold to record'**
+  String get voiceMessageRecordingHint;
+
+  /// Snackbar message when the user releases the PTT button too quickly
+  ///
+  /// In en, this message translates to:
+  /// **'Recording too short — hold longer'**
+  String get voiceMessageTooShort;
+
+  /// Snackbar message after a voice message is successfully transmitted
+  ///
+  /// In en, this message translates to:
+  /// **'Voice message sent'**
+  String get voiceMessageSent;
+
+  /// Snackbar message when voice message encoding or transfer initiation fails
+  ///
+  /// In en, this message translates to:
+  /// **'Voice message could not be sent'**
+  String get voiceMessageFailed;
+
+  /// Snackbar message shown when microphone permission was denied
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone access is required to send voice messages'**
+  String get voiceMessagePermissionDenied;
+
+  /// Action label on the microphone-permission-denied snackbar that opens system settings
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settings'**
+  String get voiceMessagePermissionSettings;
+
+  /// Accessibility label / tooltip on the play button in the voice message player widget
+  ///
+  /// In en, this message translates to:
+  /// **'Play voice message'**
+  String get voiceMessagePlay;
+
+  /// Accessibility label / tooltip on the stop button in the voice message player widget
+  ///
+  /// In en, this message translates to:
+  /// **'Stop playback'**
+  String get voiceMessageStop;
+
+  /// Duration label shown in the voice message player (e.g. '12s')
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds}s'**
+  String voiceMessageDuration(int seconds);
+
+  /// Snackbar message shown when recording auto-stops at the 54-second limit
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum recording length reached'**
+  String get voiceMessageAutoStopped;
+
+  /// Label for the Voice button in the contact detail sheet action row
+  ///
+  /// In en, this message translates to:
+  /// **'Voice'**
+  String get fileTransferContactsSendVoice;
 }
 
 class _AppLocalizationsDelegate

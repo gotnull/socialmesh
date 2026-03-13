@@ -440,6 +440,28 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
     );
   }
 
+  /// Send a Codec2 voice message payload produced by [VoiceMessageService].
+  ///
+  /// [c2Payload] is the raw `.c2` wire-format bytes (header + encoded frames).
+  /// Returns null if the payload is empty or exceeds the mesh transfer limit.
+  Future<FileTransferState?> sendVoiceMessage(
+    Uint8List c2Payload, {
+    int? targetNodeNum,
+    FileTransportMode transportMode = FileTransportMode.auto,
+  }) async {
+    AppLogging.voice(
+      'sendVoiceMessage: ${c2Payload.length} bytes '
+      '(target=${targetNodeNum != null ? "!${targetNodeNum.toRadixString(16)}" : "none"})',
+    );
+    return sendFile(
+      filename: 'voice_${DateTime.now().millisecondsSinceEpoch}.c2',
+      mimeType: 'audio/x-codec2',
+      fileBytes: c2Payload,
+      targetNodeNum: targetNodeNum,
+      transportMode: transportMode,
+    );
+  }
+
   /// Iteratively resize and re-encode as JPEG to fit mesh transfer limits.
   static Future<Uint8List?> _compressImageToFit(Uint8List sourceBytes) async {
     AppLogging.fileTransfer(

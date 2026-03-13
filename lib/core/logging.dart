@@ -70,6 +70,8 @@ class AppLogging {
   static bool? _mrrpDebugEnabled;
   static bool? _mrrpHarnessDebugEnabled;
   static bool? _meshExplorerDebugEnabled;
+  static bool? _voiceLoggingEnabled;
+  static bool? _codec2LoggingEnabled;
   static bool? _forceEmptyStates;
   static Logger? _bleLogger;
   static Logger? _mapLogger;
@@ -598,6 +600,30 @@ class AppLogging {
     if (meshExplorerDebugEnabled) debugPrint('MESH_EXPLORER: $message');
   }
 
+  /// Voice message pipeline logging.
+  /// Enable with VOICE_LOGGING_ENABLED=true in .env file.
+  static bool get voiceLoggingEnabled {
+    _voiceLoggingEnabled ??=
+        _safeGetEnv('VOICE_LOGGING_ENABLED')?.toLowerCase() == 'true';
+    return _voiceLoggingEnabled!;
+  }
+
+  static void voice(String message) {
+    if (voiceLoggingEnabled) debugPrint('Voice: $message');
+  }
+
+  /// Codec2 FFI encode/decode logging.
+  /// Enable with CODEC2_LOGGING_ENABLED=true in .env file.
+  static bool get codec2LoggingEnabled {
+    _codec2LoggingEnabled ??=
+        _safeGetEnv('CODEC2_LOGGING_ENABLED')?.toLowerCase() == 'true';
+    return _codec2LoggingEnabled!;
+  }
+
+  static void codec2(String message) {
+    if (codec2LoggingEnabled) debugPrint('Codec2: $message');
+  }
+
   static void reset() {
     _bleLoggingEnabled = null;
     _protocolLoggingEnabled = null;
@@ -644,6 +670,8 @@ class AppLogging {
     _mrrpDebugEnabled = null;
     _mrrpHarnessDebugEnabled = null;
     _meshExplorerDebugEnabled = null;
+    _voiceLoggingEnabled = null;
+    _codec2LoggingEnabled = null;
     _bleLogger = null;
     _noOpLogger = null;
   }

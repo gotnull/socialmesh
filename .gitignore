@@ -28,6 +28,11 @@ AGENTS.md
 .claude/
 /assets/screenshots/
 
+# Native codec2 builds (large, can be re-generated from source, and contain build artifacts)
+/ios/codec2/
+/macos/codec2/
+/android/app/src/main/jni/
+
 # Backend services (proprietary, not part of public repo)
 /backend/
 /tools/

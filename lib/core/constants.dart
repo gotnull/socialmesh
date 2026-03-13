@@ -272,6 +272,18 @@ class NodeDexConfig {
 class AppFeatureFlags {
   AppFeatureFlags._();
 
+  /// Whether the Voice Messages feature is enabled.
+  /// Set `VOICE_MESSAGES_ENABLED=true` in `.env` to enable.
+  /// Default: false — experimental Codec2 voice messages are hidden.
+  static bool get isVoiceMessagesEnabled {
+    try {
+      final raw = dotenv.env['VOICE_MESSAGES_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Whether the File Transfer feature is enabled.
   /// Set `FILE_TRANSFER_ENABLED=true` in `.env` to enable.
   /// Default: false — experimental mesh file transfer is hidden.

@@ -36,6 +36,7 @@ android {
     externalNativeBuild {
         cmake {
             version = "3.22.1"
+            path = file("src/main/jni/CMakeLists.txt")
         }
     }
 
@@ -59,6 +60,14 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        ndk {
+            abiFilters += listOf("arm64-v8a", "armeabi-v7a")
+        }
+        externalNativeBuild {
+            cmake {
+                cFlags("-O2 -fPIC -std=gnu11")
+            }
+        }
     }
 
     buildTypes {

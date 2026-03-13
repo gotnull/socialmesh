@@ -37,6 +37,9 @@
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
 
+    <!-- Microphone permission for Codec2 voice message recording -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
     <!-- Network permissions for WiFi-based nodes -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />

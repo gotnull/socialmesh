@@ -13,6 +13,8 @@ import '../../../core/theme.dart';
 import '../../../utils/snackbar.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../services/file_transfer/file_transfer_engine.dart';
+import '../../../services/voice/voice_mime.dart';
+import 'voice_message_player.dart';
 
 /// Displays a file content preview in a scrollable bottom sheet.
 ///
@@ -65,6 +67,10 @@ class FileContentPreview {
     final mime = transfer.mimeType.toLowerCase();
     final bytes = transfer.fileBytes!;
 
+    if (VoiceMime.isVoiceMessage(mime)) {
+      return (_) => _VoiceViewer(bytes: bytes);
+    }
+
     if (mime.startsWith('image/')) {
       return (controller) =>
           _ImageViewer(bytes: bytes, scrollController: controller);
@@ -88,6 +94,24 @@ class FileContentPreview {
       bytes: bytes,
       filename: transfer.filename,
       scrollController: controller,
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Voice viewer
+// ---------------------------------------------------------------------------
+
+class _VoiceViewer extends StatelessWidget {
+  const _VoiceViewer({required this.bytes});
+
+  final Uint8List bytes;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(AppTheme.spacing24),
+      child: Center(child: VoiceMessagePlayer(c2Payload: bytes)),
     );
   }
 }

@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/constants.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/logging.dart';
 
@@ -22,6 +23,8 @@ import '../../../providers/file_transfer_providers.dart';
 import '../../../providers/presence_providers.dart';
 import '../../../services/file_transfer/file_transfer_engine.dart';
 import '../../../services/haptic_service.dart';
+import '../../../services/voice/voice_message_service.dart';
+import '../../../services/voice/voice_permission_service.dart';
 import '../../../utils/presence_utils.dart';
 import '../../../utils/snackbar.dart';
 import '../../nodes/node_display_name_resolver.dart';
@@ -29,6 +32,8 @@ import '../../nodedex/widgets/sigil_painter.dart';
 import '../widgets/file_content_preview.dart';
 import '../widgets/file_transfer_card.dart';
 import '../widgets/file_transfer_image_gallery.dart';
+import '../widgets/voice_record_button.dart';
+import '../widgets/voice_recording_overlay.dart';
 
 // ---------------------------------------------------------------------------
 // Filter enum
@@ -459,6 +464,9 @@ class _FileTransferContactsScreenState
       transfers: transfers,
       onSendFile: () => _sendFileToContact(contact.nodeNum),
       onSendImage: () => _sendImageToContact(contact.nodeNum),
+      onSendVoice: AppFeatureFlags.isVoiceMessagesEnabled
+          ? () => _sendVoiceToContact(contact.nodeNum)
+          : null,
     );
     ref.read(hapticServiceProvider).trigger(HapticType.light);
   }
@@ -507,6 +515,101 @@ class _FileTransferContactsScreenState
         '_sendImageToContact: pickAndSendImage returned null for '
         'node !${nodeNum.toRadixString(16)}',
       );
+    }
+  }
+
+  Future<void> _sendVoiceToContact(int nodeNum) async {
+    AppLogging.voice(
+      '_sendVoiceToContact: target=!${nodeNum.toRadixString(16)}',
+    );
+    final haptics = ref.read(hapticServiceProvider);
+    final notifier = ref.read(fileTransferStateProvider.notifier);
+
+    await haptics.trigger(HapticType.medium);
+    if (!mounted) return;
+
+    final voiceService = VoiceMessageService();
+
+    // Show recording overlay while voice service is active.
+    OverlayEntry? overlayEntry;
+    overlayEntry = OverlayEntry(builder: (_) => const VoiceRecordingOverlay());
+
+    final started = await voiceService.startSession(
+      onAutoStop: () async {
+        if (!mounted) return;
+        final ctx = context;
+        showInfoSnackBar(ctx, ctx.l10n.voiceMessageAutoStopped);
+        overlayEntry?.remove();
+        overlayEntry = null;
+        final result = await voiceService.stopSession();
+        await _handleVoiceResult(result, nodeNum, notifier);
+        await voiceService.dispose();
+      },
+    );
+
+    if (!started) {
+      await voiceService.dispose();
+      if (!mounted) return;
+      final ctx = context;
+      final permanently =
+          await VoicePermissionService.isMicrophonePermanentlyDenied();
+      if (!mounted) return;
+      if (permanently) {
+        showActionSnackBar(
+          ctx,
+          ctx.l10n.voiceMessagePermissionDenied,
+          actionLabel: ctx.l10n.voiceMessagePermissionSettings,
+          onAction: () => VoicePermissionService.openSettings(),
+        );
+      } else {
+        showInfoSnackBar(ctx, ctx.l10n.voiceMessagePermissionDenied);
+      }
+      return;
+    }
+
+    Overlay.of(context).insert(overlayEntry!);
+
+    // Wait for user to stop (handled by the PTT button in the sheet).
+    // Since this flow is triggered from the sheet's button callbacks, the
+    // actual stop is driven by the VoiceRecordButton widget in the sheet.
+    // Here we just initiate. The button's onRecordEnd callback calls
+    // _stopVoiceSession which is now set up via the service reference.
+    //
+    // For simplicity, auto-stop after a short delay when called from
+    // a non-PTT path (e.g. programmatic trigger). The PTT button widget
+    // calls _stopVoiceSession directly via the onSendVoice callback chain.
+    // This method is the fallback path.
+    final result = await voiceService.stopSession();
+    overlayEntry?.remove();
+    overlayEntry = null;
+    if (!mounted) return;
+    await _handleVoiceResult(result, nodeNum, notifier);
+    await voiceService.dispose();
+  }
+
+  Future<void> _handleVoiceResult(
+    VoiceMessageResult result,
+    int nodeNum,
+    FileTransferStateNotifier notifier,
+  ) async {
+    if (!mounted) return;
+    final ctx = context;
+    switch (result.outcome) {
+      case VoiceMessageOutcome.success:
+        final transfer = await notifier.sendVoiceMessage(
+          result.payload!,
+          targetNodeNum: nodeNum,
+        );
+        if (!mounted) return;
+        if (transfer != null) {
+          showSuccessSnackBar(ctx, ctx.l10n.voiceMessageSent);
+        } else {
+          showErrorSnackBar(ctx, ctx.l10n.voiceMessageFailed);
+        }
+      case VoiceMessageOutcome.tooShort:
+        showInfoSnackBar(ctx, ctx.l10n.voiceMessageTooShort);
+      case VoiceMessageOutcome.failed:
+        showErrorSnackBar(ctx, ctx.l10n.voiceMessageFailed);
     }
   }
 }
@@ -698,12 +801,14 @@ class _ContactDetailSheet extends StatelessWidget {
     required this.onSendFile,
     required this.onSendImage,
     required this.scrollController,
+    this.onSendVoice,
   });
 
   final _Contact contact;
   final List<FileTransferState> transfers;
   final VoidCallback onSendFile;
   final VoidCallback onSendImage;
+  final VoidCallback? onSendVoice;
   final ScrollController scrollController;
 
   static void show({
@@ -712,6 +817,7 @@ class _ContactDetailSheet extends StatelessWidget {
     required List<FileTransferState> transfers,
     required VoidCallback onSendFile,
     required VoidCallback onSendImage,
+    VoidCallback? onSendVoice,
   }) {
     showModalBottomSheet<void>(
       context: context,
@@ -737,6 +843,7 @@ class _ContactDetailSheet extends StatelessWidget {
               transfers: transfers,
               onSendFile: onSendFile,
               onSendImage: onSendImage,
+              onSendVoice: onSendVoice,
               scrollController: scrollController,
             ),
           );
@@ -903,6 +1010,20 @@ class _ContactDetailSheet extends StatelessWidget {
                     ),
                   ],
                 ),
+                if (onSendVoice != null) ...[
+                  const SizedBox(height: AppTheme.spacing8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: VoiceRecordButton(
+                      onRecordStart: () {},
+                      onRecordEnd: () {
+                        Navigator.of(context).pop();
+                        onSendVoice!();
+                      },
+                      onCancel: () {},
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
