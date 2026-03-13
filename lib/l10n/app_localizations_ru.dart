@@ -31926,5 +31926,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get voiceMessageAutoStopped => 'Maximum recording length reached';
 
   @override
+  String get voiceRecordingTapToStop => 'Tap to stop recording';
+
+  @override
+  String get voiceRecordingStopButton => 'Stop';
+
+  @override
   String get fileTransferContactsSendVoice => 'Voice';
 }

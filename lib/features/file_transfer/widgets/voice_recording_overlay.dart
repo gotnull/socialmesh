@@ -4,6 +4,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
@@ -11,10 +12,15 @@ import '../../../services/voice/voice_constants.dart';
 
 /// A fullscreen overlay that is shown while a voice message is being recorded.
 ///
-/// Displays a pulsing waveform icon, the "Recording…" label, a live timer,
-/// and a progress bar that fills over [VoiceConstants.maxRecordingDuration].
+/// Displays a pulsing waveform icon, the "Recording..." label, a live timer,
+/// a progress bar that fills over [VoiceConstants.maxRecordingDuration], and
+/// a stop button. When the user taps stop (or the max duration is reached),
+/// [onStop] is called so the caller can finalise the recording.
 class VoiceRecordingOverlay extends StatefulWidget {
-  const VoiceRecordingOverlay({super.key});
+  const VoiceRecordingOverlay({super.key, required this.onStop});
+
+  /// Called when the user taps the stop button to end the recording.
+  final VoidCallback onStop;
 
   @override
   State<VoiceRecordingOverlay> createState() => _VoiceRecordingOverlayState();
@@ -93,6 +99,39 @@ class _VoiceRecordingOverlayState extends State<VoiceRecordingOverlay>
                   minHeight: 4,
                   backgroundColor: Colors.white.withValues(alpha: 0.2),
                   valueColor: AlwaysStoppedAnimation<Color>(AccentColors.cyan),
+                ),
+              ),
+              const SizedBox(height: AppTheme.spacing32),
+              // ── Stop button ─────────────────────────────────────────
+              GestureDetector(
+                onTap: () {
+                  HapticFeedback.mediumImpact();
+                  widget.onStop();
+                },
+                child: Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withValues(alpha: 0.15),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.4),
+                      width: 2,
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.stop_rounded,
+                    size: 40,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppTheme.spacing12),
+              Text(
+                context.l10n.voiceRecordingTapToStop,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.5),
+                  fontSize: 13,
                 ),
               ),
             ],

@@ -42799,6 +42799,14 @@
     "@voiceMessageAutoStopped": {
         "description": "Snackbar message shown when recording auto-stops at the 54-second limit"
     },
+    "voiceRecordingTapToStop": "Tap to stop recording",
+    "@voiceRecordingTapToStop": {
+        "description": "Hint text below the stop button in the voice recording overlay"
+    },
+    "voiceRecordingStopButton": "Stop",
+    "@voiceRecordingStopButton": {
+        "description": "Label for the stop-recording button in the voice recording overlay"
+    },
     "fileTransferContactsSendVoice": "Voice",
     "@fileTransferContactsSendVoice": {
         "description": "Label for the Voice button in the contact detail sheet action row"

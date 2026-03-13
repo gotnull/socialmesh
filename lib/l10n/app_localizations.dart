@@ -56308,6 +56308,18 @@ abstract class AppLocalizations {
   /// **'Maximum recording length reached'**
   String get voiceMessageAutoStopped;
 
+  /// Hint text below the stop button in the voice recording overlay
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to stop recording'**
+  String get voiceRecordingTapToStop;
+
+  /// Label for the stop-recording button in the voice recording overlay
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get voiceRecordingStopButton;
+
   /// Label for the Voice button in the contact detail sheet action row
   ///
   /// In en, this message translates to:

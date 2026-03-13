@@ -2,6 +2,8 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 // lint-allow: scaffold (embedded tab panel, GlassScaffold provided by container)
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -530,20 +532,33 @@ class _FileTransferContactsScreenState
 
     final voiceService = VoiceMessageService();
 
-    // Show recording overlay while voice service is active.
+    // Completer that resolves when the user taps the stop button
+    // or the max-duration auto-stop fires.
+    final stopCompleter = Completer<void>();
+
     OverlayEntry? overlayEntry;
-    overlayEntry = OverlayEntry(builder: (_) => const VoiceRecordingOverlay());
+
+    void removeOverlay() {
+      overlayEntry?.remove();
+      overlayEntry = null;
+    }
+
+    overlayEntry = OverlayEntry(
+      builder: (_) => VoiceRecordingOverlay(
+        onStop: () {
+          removeOverlay();
+          if (!stopCompleter.isCompleted) stopCompleter.complete();
+        },
+      ),
+    );
 
     final started = await voiceService.startSession(
       onAutoStop: () async {
         if (!mounted) return;
         final ctx = context;
         showInfoSnackBar(ctx, ctx.l10n.voiceMessageAutoStopped);
-        overlayEntry?.remove();
-        overlayEntry = null;
-        final result = await voiceService.stopSession();
-        await _handleVoiceResult(result, nodeNum, notifier);
-        await voiceService.dispose();
+        removeOverlay();
+        if (!stopCompleter.isCompleted) stopCompleter.complete();
       },
     );
 
@@ -560,19 +575,10 @@ class _FileTransferContactsScreenState
     if (!mounted) return;
     Overlay.of(context).insert(overlayEntry!);
 
-    // Wait for user to stop (handled by the PTT button in the sheet).
-    // Since this flow is triggered from the sheet's button callbacks, the
-    // actual stop is driven by the VoiceRecordButton widget in the sheet.
-    // Here we just initiate. The button's onRecordEnd callback calls
-    // _stopVoiceSession which is now set up via the service reference.
-    //
-    // For simplicity, auto-stop after a short delay when called from
-    // a non-PTT path (e.g. programmatic trigger). The PTT button widget
-    // calls _stopVoiceSession directly via the onSendVoice callback chain.
-    // This method is the fallback path.
+    // Wait for the user to tap stop or for auto-stop to fire.
+    await stopCompleter.future;
+
     final result = await voiceService.stopSession();
-    overlayEntry?.remove();
-    overlayEntry = null;
     if (!mounted) return;
     await _handleVoiceResult(result, nodeNum, notifier);
     await voiceService.dispose();
