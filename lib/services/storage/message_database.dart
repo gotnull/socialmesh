@@ -104,17 +104,39 @@ class MessageDatabase {
           AppLogging.storage('Added hop_count, rx_snr, rx_rssi columns (v4)');
         }
         if (oldVersion < 5) {
-          await db.execute(
+          // Guard each ALTER with a try/catch: some devices received these
+          // columns via onCreate (when the CREATE TABLE schema was ahead of
+          // the version number) and would otherwise crash with
+          // "duplicate column name" on every open.
+          Future<void> addColumnIfMissing(String sql, String column) async {
+            try {
+              await db.execute(sql);
+            } on DatabaseException catch (e) {
+              if (e.toString().contains('duplicate column')) {
+                AppLogging.storage(
+                  'v5 migration: $column already exists, skipping',
+                );
+              } else {
+                rethrow;
+              }
+            }
+          }
+
+          await addColumnIfMissing(
             'ALTER TABLE $_tableName ADD COLUMN sent_at INTEGER', // lint-allow: hardcoded-string
+            'sent_at',
           );
-          await db.execute(
+          await addColumnIfMissing(
             'ALTER TABLE $_tableName ADD COLUMN last_attempt_at INTEGER', // lint-allow: hardcoded-string
+            'last_attempt_at',
           );
-          await db.execute(
+          await addColumnIfMissing(
             'ALTER TABLE $_tableName ADD COLUMN retry_count INTEGER NOT NULL DEFAULT 0', // lint-allow: hardcoded-string
+            'retry_count',
           );
-          await db.execute(
+          await addColumnIfMissing(
             'ALTER TABLE $_tableName ADD COLUMN auto_retry_enabled INTEGER NOT NULL DEFAULT 0', // lint-allow: hardcoded-string
+            'auto_retry_enabled',
           );
           AppLogging.storage(
             'Added sent_at, last_attempt_at, retry_count, auto_retry_enabled columns (v5)',
