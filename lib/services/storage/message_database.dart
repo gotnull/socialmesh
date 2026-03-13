@@ -104,39 +104,39 @@ class MessageDatabase {
           AppLogging.storage('Added hop_count, rx_snr, rx_rssi columns (v4)');
         }
         if (oldVersion < 5) {
-          // Guard each ALTER with a try/catch: some devices received these
-          // columns via onCreate (when the CREATE TABLE schema was ahead of
-          // the version number) and would otherwise crash with
-          // "duplicate column name" on every open.
-          Future<void> addColumnIfMissing(String sql, String column) async {
-            try {
+          // Some devices received these columns via onCreate when the CREATE
+          // TABLE schema was ahead of the version number.  Check PRAGMA
+          // table_info before each ALTER to avoid duplicate column errors
+          // (which sqflite prints to the native log even when caught in Dart).
+          final existingColumns = (await db.rawQuery(
+            'PRAGMA table_info($_tableName)', // lint-allow: hardcoded-string
+          )).map((r) => r['name'] as String).toSet();
+
+          Future<void> addColumnIfMissing(String column, String sql) async {
+            if (!existingColumns.contains(column)) {
               await db.execute(sql);
-            } on DatabaseException catch (e) {
-              if (e.toString().contains('duplicate column')) {
-                AppLogging.storage(
-                  'v5 migration: $column already exists, skipping',
-                );
-              } else {
-                rethrow;
-              }
+            } else {
+              AppLogging.storage(
+                'v5 migration: $column already exists, skipping',
+              );
             }
           }
 
           await addColumnIfMissing(
-            'ALTER TABLE $_tableName ADD COLUMN sent_at INTEGER', // lint-allow: hardcoded-string
             'sent_at',
+            'ALTER TABLE $_tableName ADD COLUMN sent_at INTEGER', // lint-allow: hardcoded-string
           );
           await addColumnIfMissing(
-            'ALTER TABLE $_tableName ADD COLUMN last_attempt_at INTEGER', // lint-allow: hardcoded-string
             'last_attempt_at',
+            'ALTER TABLE $_tableName ADD COLUMN last_attempt_at INTEGER', // lint-allow: hardcoded-string
           );
           await addColumnIfMissing(
-            'ALTER TABLE $_tableName ADD COLUMN retry_count INTEGER NOT NULL DEFAULT 0', // lint-allow: hardcoded-string
             'retry_count',
+            'ALTER TABLE $_tableName ADD COLUMN retry_count INTEGER NOT NULL DEFAULT 0', // lint-allow: hardcoded-string
           );
           await addColumnIfMissing(
-            'ALTER TABLE $_tableName ADD COLUMN auto_retry_enabled INTEGER NOT NULL DEFAULT 0', // lint-allow: hardcoded-string
             'auto_retry_enabled',
+            'ALTER TABLE $_tableName ADD COLUMN auto_retry_enabled INTEGER NOT NULL DEFAULT 0', // lint-allow: hardcoded-string
           );
           AppLogging.storage(
             'Added sent_at, last_attempt_at, retry_count, auto_retry_enabled columns (v5)',
