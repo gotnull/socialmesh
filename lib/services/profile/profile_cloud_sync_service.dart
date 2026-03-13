@@ -91,22 +91,41 @@ class ProfileCloudSyncService {
   /// Browsers cannot render HEIC, so we decode whatever format the file is
   /// in and re-encode as actual JPEG before uploading.
   static Future<Uint8List> _ensureJpeg(File imageFile) async {
+    AppLogging.auth('ProfileSync: _ensureJpeg path: ${imageFile.path}');
+    final fileSize = await imageFile.length();
+    AppLogging.auth(
+      'ProfileSync: _ensureJpeg source file size: $fileSize bytes',
+    );
     final bytes = await imageFile.readAsBytes();
+    AppLogging.auth('ProfileSync: _ensureJpeg read ${bytes.length} bytes');
     final decoded = img.decodeImage(bytes);
     if (decoded == null) {
+      AppLogging.auth('ProfileSync: _ensureJpeg image decode failed');
       throw const FormatException(
         'Unable to decode image', // lint-allow: hardcoded-string
       );
     }
-    return Uint8List.fromList(img.encodeJpg(decoded));
+    AppLogging.auth(
+      'ProfileSync: _ensureJpeg decoded: ${decoded.width}x${decoded.height}',
+    );
+    final result = Uint8List.fromList(img.encodeJpg(decoded));
+    AppLogging.auth(
+      'ProfileSync: _ensureJpeg JPEG encoded: ${result.length} bytes',
+    );
+    return result;
   }
 
   /// Build a public URL for a storage file (no token needed — rules allow
   /// public read for avatars and banners).
+  ///
+  /// Appends a `v` query parameter (upload epoch millis) so that each upload
+  /// produces a distinct URL, busting the OS HTTP cache (NSURLCache / OkHttp)
+  /// and Flutter's ImageCache in one shot.
   static String _publicUrl(String folder, String uid) {
     final path = Uri.encodeComponent('$folder/$uid.jpg');
+    final v = DateTime.now().millisecondsSinceEpoch;
     return 'https://firebasestorage.googleapis.com/v0/b/'
-        'social-mesh-app.firebasestorage.app/o/$path?alt=media';
+        'social-mesh-app.firebasestorage.app/o/$path?alt=media&v=$v';
   }
 
   // --- Firestore Profile Sync ---
@@ -540,15 +559,28 @@ class ProfileCloudSyncService {
 
   /// Upload avatar to Firebase Storage
   Future<String> uploadAvatar(String uid, File imageFile) async {
-    AppLogging.auth('ProfileSync: Uploading avatar for uid: $uid');
+    AppLogging.auth(
+      'ProfileSync: uploadAvatar called — uid: $uid, path: ${imageFile.path}',
+    );
 
     try {
+      final fileSize = await imageFile.length();
+      AppLogging.auth(
+        'ProfileSync: uploadAvatar source file size: $fileSize bytes',
+      );
+
       final ref = _avatarRef(uid);
+      AppLogging.auth('ProfileSync: uploadAvatar storageRef: ${ref.fullPath}');
 
       // Re-encode as JPEG — iOS may provide HEIC data
+      AppLogging.auth('ProfileSync: uploadAvatar starting JPEG conversion...');
       final jpegBytes = await _ensureJpeg(imageFile);
+      AppLogging.auth(
+        'ProfileSync: uploadAvatar JPEG ready: ${jpegBytes.length} bytes',
+      );
 
       // Upload with metadata
+      AppLogging.auth('ProfileSync: uploadAvatar calling putData...');
       await ref.putData(
         jpegBytes,
         SettableMetadata(
@@ -556,11 +588,17 @@ class ProfileCloudSyncService {
           customMetadata: {'uid': uid},
         ),
       );
+      AppLogging.auth('ProfileSync: uploadAvatar putData complete');
 
       // Get download URL
+      AppLogging.auth('ProfileSync: uploadAvatar calling getDownloadURL...');
       final downloadUrl = await ref.getDownloadURL();
+      AppLogging.auth('ProfileSync: uploadAvatar getDownloadURL: $downloadUrl');
 
       // Validate image with Cloud Function
+      AppLogging.auth(
+        'ProfileSync: uploadAvatar calling validateImages Cloud Function...',
+      );
       try {
         final validation = await FirebaseFunctions.instance
             .httpsCallable('validateImages')
@@ -568,7 +606,13 @@ class ProfileCloudSyncService {
               'imageUrls': [downloadUrl],
             });
 
+        AppLogging.auth(
+          'ProfileSync: uploadAvatar validateImages response: ${validation.data}',
+        );
         if (validation.data['passed'] == false) {
+          AppLogging.auth(
+            'ProfileSync: uploadAvatar failed content policy: ${validation.data["message"]}',
+          );
           // Delete uploaded file
           await ref.delete();
           throw Exception(
@@ -576,14 +620,23 @@ class ProfileCloudSyncService {
                 'Content policy violation', // lint-allow: hardcoded-string
           );
         }
+        AppLogging.auth(
+          'ProfileSync: uploadAvatar passed content policy check',
+        );
       } catch (e) {
+        AppLogging.auth(
+          'ProfileSync: uploadAvatar validateImages error (cleaning up): $e',
+        );
         // Cleanup on error
         await ref.delete().catchError((_) {});
         rethrow;
       }
 
-      AppLogging.auth('ProfileSync: Avatar uploaded: $downloadUrl');
-      return _publicUrl(_avatarsFolder, uid);
+      final publicUrl = _publicUrl(_avatarsFolder, uid);
+      AppLogging.auth(
+        'ProfileSync: uploadAvatar complete — downloadUrl: $downloadUrl, publicUrl: $publicUrl',
+      );
+      return publicUrl;
     } catch (e) {
       AppLogging.auth('ProfileSync: Error uploading avatar: $e');
       rethrow;
@@ -630,22 +683,60 @@ class ProfileCloudSyncService {
 
   /// Sync local avatar to cloud and update profile with URL
   Future<void> syncAvatarToCloud(String uid) async {
+    AppLogging.auth('ProfileSync: syncAvatarToCloud called for uid: $uid');
     final profile = await _localService.getProfile();
-    if (profile == null || profile.avatarUrl == null) return;
+    if (profile == null) {
+      AppLogging.auth(
+        'ProfileSync: syncAvatarToCloud — no local profile found, skipping',
+      );
+      return;
+    }
+    if (profile.avatarUrl == null) {
+      AppLogging.auth(
+        'ProfileSync: syncAvatarToCloud — avatarUrl is null, skipping',
+      );
+      return;
+    }
+
+    AppLogging.auth(
+      'ProfileSync: syncAvatarToCloud — avatarUrl: ${profile.avatarUrl}',
+    );
 
     // Check if it's a local file path (not already a URL)
     if (!profile.avatarUrl!.startsWith('http')) {
+      AppLogging.auth(
+        'ProfileSync: syncAvatarToCloud — is local path, checking file exists...',
+      );
       final localFile = File(profile.avatarUrl!);
-      if (await localFile.exists()) {
+      final exists = await localFile.exists();
+      AppLogging.auth(
+        'ProfileSync: syncAvatarToCloud — local file exists: $exists',
+      );
+      if (exists) {
         final cloudUrl = await uploadAvatar(uid, localFile);
+        AppLogging.auth(
+          'ProfileSync: syncAvatarToCloud — uploaded, cloudUrl: $cloudUrl',
+        );
 
         // Update profile with cloud URL
         final updated = profile.copyWith(avatarUrl: cloudUrl, isSynced: true);
         await _localService.saveProfile(updated);
+        AppLogging.auth(
+          'ProfileSync: syncAvatarToCloud — local profile updated with cloud URL',
+        );
 
         // Push the cloud URL to Firestore so other clients can see it
         await _syncPublicProfile(uid, updated);
+        AppLogging.auth('ProfileSync: syncAvatarToCloud — complete');
+      } else {
+        AppLogging.auth(
+          'ProfileSync: syncAvatarToCloud — local file missing, cannot upload',
+        );
       }
+    } else {
+      AppLogging.auth(
+        'ProfileSync: syncAvatarToCloud — already a cloud URL, skipping upload',
+      );
     }
   }
 
@@ -653,15 +744,28 @@ class ProfileCloudSyncService {
 
   /// Upload banner to Firebase Storage
   Future<String> uploadBanner(String uid, File imageFile) async {
-    AppLogging.auth('ProfileSync: Uploading banner for uid: $uid');
+    AppLogging.auth(
+      'ProfileSync: uploadBanner called — uid: $uid, path: ${imageFile.path}',
+    );
 
     try {
+      final fileSize = await imageFile.length();
+      AppLogging.auth(
+        'ProfileSync: uploadBanner source file size: $fileSize bytes',
+      );
+
       final ref = _bannerRef(uid);
+      AppLogging.auth('ProfileSync: uploadBanner storageRef: ${ref.fullPath}');
 
       // Re-encode as JPEG — iOS may provide HEIC data
+      AppLogging.auth('ProfileSync: uploadBanner starting JPEG conversion...');
       final jpegBytes = await _ensureJpeg(imageFile);
+      AppLogging.auth(
+        'ProfileSync: uploadBanner JPEG ready: ${jpegBytes.length} bytes',
+      );
 
       // Upload with metadata
+      AppLogging.auth('ProfileSync: uploadBanner calling putData...');
       await ref.putData(
         jpegBytes,
         SettableMetadata(
@@ -669,11 +773,17 @@ class ProfileCloudSyncService {
           customMetadata: {'uid': uid},
         ),
       );
+      AppLogging.auth('ProfileSync: uploadBanner putData complete');
 
       // Get download URL
+      AppLogging.auth('ProfileSync: uploadBanner calling getDownloadURL...');
       final downloadUrl = await ref.getDownloadURL();
+      AppLogging.auth('ProfileSync: uploadBanner getDownloadURL: $downloadUrl');
 
       // Validate image with Cloud Function
+      AppLogging.auth(
+        'ProfileSync: uploadBanner calling validateImages Cloud Function...',
+      );
       try {
         final validation = await FirebaseFunctions.instance
             .httpsCallable('validateImages')
@@ -681,7 +791,13 @@ class ProfileCloudSyncService {
               'imageUrls': [downloadUrl],
             });
 
+        AppLogging.auth(
+          'ProfileSync: uploadBanner validateImages response: ${validation.data}',
+        );
         if (validation.data['passed'] == false) {
+          AppLogging.auth(
+            'ProfileSync: uploadBanner failed content policy: ${validation.data["message"]}',
+          );
           // Delete uploaded file
           await ref.delete();
           throw Exception(
@@ -689,14 +805,23 @@ class ProfileCloudSyncService {
                 'Content policy violation', // lint-allow: hardcoded-string
           );
         }
+        AppLogging.auth(
+          'ProfileSync: uploadBanner passed content policy check',
+        );
       } catch (e) {
+        AppLogging.auth(
+          'ProfileSync: uploadBanner validateImages error (cleaning up): $e',
+        );
         // Cleanup on error
         await ref.delete().catchError((_) {});
         rethrow;
       }
 
-      AppLogging.auth('ProfileSync: Banner uploaded: $downloadUrl');
-      return _publicUrl(_bannersFolder, uid);
+      final publicUrl = _publicUrl(_bannersFolder, uid);
+      AppLogging.auth(
+        'ProfileSync: uploadBanner complete — downloadUrl: $downloadUrl, publicUrl: $publicUrl',
+      );
+      return publicUrl;
     } catch (e) {
       AppLogging.auth('ProfileSync: Error uploading banner: $e');
       rethrow;
@@ -743,22 +868,60 @@ class ProfileCloudSyncService {
 
   /// Sync local banner to cloud and update profile with URL
   Future<void> syncBannerToCloud(String uid) async {
+    AppLogging.auth('ProfileSync: syncBannerToCloud called for uid: $uid');
     final profile = await _localService.getProfile();
-    if (profile == null || profile.bannerUrl == null) return;
+    if (profile == null) {
+      AppLogging.auth(
+        'ProfileSync: syncBannerToCloud — no local profile found, skipping',
+      );
+      return;
+    }
+    if (profile.bannerUrl == null) {
+      AppLogging.auth(
+        'ProfileSync: syncBannerToCloud — bannerUrl is null, skipping',
+      );
+      return;
+    }
+
+    AppLogging.auth(
+      'ProfileSync: syncBannerToCloud — bannerUrl: ${profile.bannerUrl}',
+    );
 
     // Check if it's a local file path (not already a URL)
     if (!profile.bannerUrl!.startsWith('http')) {
+      AppLogging.auth(
+        'ProfileSync: syncBannerToCloud — is local path, checking file exists...',
+      );
       final localFile = File(profile.bannerUrl!);
-      if (await localFile.exists()) {
+      final exists = await localFile.exists();
+      AppLogging.auth(
+        'ProfileSync: syncBannerToCloud — local file exists: $exists',
+      );
+      if (exists) {
         final cloudUrl = await uploadBanner(uid, localFile);
+        AppLogging.auth(
+          'ProfileSync: syncBannerToCloud — uploaded, cloudUrl: $cloudUrl',
+        );
 
         // Update profile with cloud URL
         final updated = profile.copyWith(bannerUrl: cloudUrl, isSynced: true);
         await _localService.saveProfile(updated);
+        AppLogging.auth(
+          'ProfileSync: syncBannerToCloud — local profile updated with cloud URL',
+        );
 
         // Push the cloud URL to Firestore so other clients can see it
         await _syncPublicProfile(uid, updated);
+        AppLogging.auth('ProfileSync: syncBannerToCloud — complete');
+      } else {
+        AppLogging.auth(
+          'ProfileSync: syncBannerToCloud — local file missing, cannot upload',
+        );
       }
+    } else {
+      AppLogging.auth(
+        'ProfileSync: syncBannerToCloud — already a cloud URL, skipping upload',
+      );
     }
   }
 

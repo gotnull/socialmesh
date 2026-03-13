@@ -2165,38 +2165,92 @@ class SocialService {
 
   /// Upload a profile avatar image.
   Future<String> uploadProfileAvatar(String filePath) async {
+    AppLogging.auth(
+      'SocialService: uploadProfileAvatar called — filePath: $filePath',
+    );
+
     final currentUserId = _currentUserId;
     if (currentUserId == null) {
+      AppLogging.auth(
+        'SocialService: uploadProfileAvatar aborted — not signed in',
+      );
       throw StateError('Must be signed in to upload avatar');
     }
+    AppLogging.auth('SocialService: uploadProfileAvatar uid: $currentUserId');
 
     final file = File(filePath);
+    final exists = await file.exists();
+    AppLogging.auth('SocialService: uploadProfileAvatar file exists: $exists');
+    if (!exists) {
+      AppLogging.auth(
+        'SocialService: uploadProfileAvatar file not found at: $filePath',
+      );
+      throw StateError(
+        'Avatar file not found: $filePath', // lint-allow: hardcoded-string
+      );
+    }
+
+    final fileLength = await file.length();
+    AppLogging.auth(
+      'SocialService: uploadProfileAvatar source file size: $fileLength bytes',
+    );
+
     final ref = FirebaseStorage.instance
         .ref()
         .child('profile_avatars')
         .child('$currentUserId.jpg');
+    AppLogging.auth(
+      'SocialService: uploadProfileAvatar storageRef: ${ref.fullPath}',
+    );
 
     // Re-encode as JPEG — iOS may provide HEIC data
+    AppLogging.auth('SocialService: uploadProfileAvatar reading file bytes...');
     final bytes = await file.readAsBytes();
+    AppLogging.auth(
+      'SocialService: uploadProfileAvatar read ${bytes.length} bytes',
+    );
+
+    AppLogging.auth('SocialService: uploadProfileAvatar decoding image...');
     final decoded = img.decodeImage(bytes);
     if (decoded == null) {
+      AppLogging.auth('SocialService: uploadProfileAvatar image decode failed');
       throw const FormatException(
         'Unable to decode image', // lint-allow: hardcoded-string
       );
     }
+    AppLogging.auth(
+      'SocialService: uploadProfileAvatar decoded: ${decoded.width}x${decoded.height}',
+    );
+
+    AppLogging.auth('SocialService: uploadProfileAvatar encoding as JPEG...');
     final jpegBytes = Uint8List.fromList(img.encodeJpg(decoded));
+    AppLogging.auth(
+      'SocialService: uploadProfileAvatar JPEG encoded: ${jpegBytes.length} bytes',
+    );
 
+    AppLogging.auth('SocialService: uploadProfileAvatar calling putData...');
     await ref.putData(jpegBytes, SettableMetadata(contentType: 'image/jpeg'));
+    AppLogging.auth('SocialService: uploadProfileAvatar putData complete');
 
-    // Use token-free public URL (profile_avatars has allow read: if true)
+    // Use token-free public URL (profile_avatars has allow read: if true).
+    // Append upload timestamp to bust OS HTTP cache.
     final path = Uri.encodeComponent('profile_avatars/$currentUserId.jpg');
+    final v = DateTime.now().millisecondsSinceEpoch;
     final url =
         'https://firebasestorage.googleapis.com/v0/b/'
-        'social-mesh-app.firebasestorage.app/o/$path?alt=media';
+        'social-mesh-app.firebasestorage.app/o/$path?alt=media&v=$v';
+    AppLogging.auth('SocialService: uploadProfileAvatar URL: $url');
 
     // Update profile with new avatar URL
+    AppLogging.auth(
+      'SocialService: uploadProfileAvatar calling updateProfile...',
+    );
     await updateProfile(avatarUrl: url);
+    AppLogging.auth(
+      'SocialService: uploadProfileAvatar updateProfile complete',
+    );
 
+    AppLogging.auth('SocialService: uploadProfileAvatar done');
     return url;
   }
 
