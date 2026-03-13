@@ -32,8 +32,7 @@ extern int codec2_bytes_per_frame(struct CODEC2 *c2);
 /* __attribute__((used)) prevents the array (and therefore each referenced
  * function) from being removed by the dead-code stripper.
  * The array is never called; its sole purpose is to hold live references. */
-__attribute__((used))
-static void *const _sm_codec2_symbol_refs[] = {
+__attribute__((used)) static void *const _sm_codec2_symbol_refs[] = {
     (void *)codec2_create,
     (void *)codec2_destroy,
     (void *)codec2_encode,
