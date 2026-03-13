@@ -4,6 +4,7 @@
 import 'dart:typed_data';
 
 import '../../core/logging.dart';
+import '../codec2/codec2_bindings.dart';
 import '../codec2/codec2_ffi.dart';
 import 'voice_constants.dart';
 
@@ -17,6 +18,10 @@ abstract final class VoiceDecoder {
   /// Returns null when [c2Data] is malformed, too short, has the wrong
   /// magic/mode byte, or Codec2 decoding fails.
   static Future<Uint8List?> decode(Uint8List c2Data) async {
+    if (!Codec2Bindings.isAvailable) {
+      AppLogging.voice('Codec2 native library not available — cannot decode');
+      return null;
+    }
     if (c2Data.length < VoiceConstants.headerSize) {
       AppLogging.voice('decode: payload too short (${c2Data.length} bytes)');
       return null;

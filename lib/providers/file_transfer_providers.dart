@@ -533,6 +533,22 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
     AppLogging.fileTransfer('cancelTransfer: $fileIdHex');
     final engine = ref.read(fileTransferEngineProvider);
     engine.cancelTransfer(fileIdHex);
+
+    // The engine only knows about in-memory transfers. If the transfer was
+    // loaded from the database after a restart, the engine won't have it.
+    // Update our own state as a fallback so the UI reflects the cancellation.
+    final current = state.transfers[fileIdHex];
+    if (current != null && current.isActive) {
+      state = state.copyWith(
+        transfers: {
+          ...state.transfers,
+          fileIdHex: current.copyWith(
+            state: TransferState.cancelled,
+            failReason: TransferFailReason.userCancelled,
+          ),
+        },
+      );
+    }
   }
 
   /// Accept a pending inbound transfer.

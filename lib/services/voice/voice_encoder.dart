@@ -4,6 +4,7 @@
 import 'dart:typed_data';
 
 import '../../core/logging.dart';
+import '../codec2/codec2_bindings.dart';
 import '../codec2/codec2_ffi.dart';
 import 'voice_constants.dart';
 
@@ -23,6 +24,10 @@ abstract final class VoiceEncoder {
   /// passed to the file transfer engine as the content bytes.
   static Future<Uint8List?> encode(Int16List pcm) async {
     if (pcm.isEmpty) return null;
+    if (!Codec2Bindings.isAvailable) {
+      AppLogging.voice('Codec2 native library not available — cannot encode');
+      return null;
+    }
     AppLogging.voice('encoding ${pcm.length} samples');
 
     final encodedFrames = await encodeCodec2Frames(pcm);

@@ -39,16 +39,10 @@ class VoicePlayer {
       }
       await _player.setAudioSource(_VoiceAudioSource(wavBytes));
       isPlaying.value = true;
-      await _player.play();
-
-      _player.playerStateStream.listen((state) {
-        if (state.processingState == ProcessingState.completed ||
-            state.processingState == ProcessingState.idle) {
-          isPlaying.value = false;
-        }
-      });
-
       AppLogging.voice('playback started (${wavBytes.length} bytes)');
+      await _player.play();
+      // play() completes when playback finishes.
+      isPlaying.value = false;
       return true;
     } catch (e) {
       isPlaying.value = false;

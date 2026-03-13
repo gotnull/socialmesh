@@ -17,6 +17,21 @@ final class Codec2Bindings {
   Codec2Bindings._();
 
   static DynamicLibrary? _lib;
+  static bool? _available;
+
+  /// Returns true if the Codec2 native library is loaded and contains the
+  /// expected symbols. Safe to call at any time — never throws.
+  static bool get isAvailable {
+    if (_available != null) return _available!;
+    try {
+      final lib = library;
+      lib.lookup<NativeFunction<Void Function()>>('codec2_create');
+      _available = true;
+    } catch (_) {
+      _available = false;
+    }
+    return _available!;
+  }
 
   static DynamicLibrary get library {
     if (_lib != null) return _lib!;

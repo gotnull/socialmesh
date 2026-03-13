@@ -536,29 +536,11 @@ class _FileTransferContactsScreenState
     // Completer that resolves when the user taps the stop button
     // or the max-duration auto-stop fires.
     final stopCompleter = Completer<void>();
-
-    OverlayEntry? overlayEntry;
-
-    void removeOverlay() {
-      overlayEntry?.remove();
-      overlayEntry = null;
-    }
-
-    overlayEntry = OverlayEntry(
-      builder: (_) => VoiceRecordingOverlay(
-        onStop: () {
-          removeOverlay();
-          if (!stopCompleter.isCompleted) stopCompleter.complete();
-        },
-      ),
-    );
+    var wasAutoStopped = false;
 
     final started = await voiceService.startSession(
       onAutoStop: () async {
-        if (!mounted) return;
-        final ctx = context;
-        showInfoSnackBar(ctx, ctx.l10n.voiceMessageAutoStopped);
-        removeOverlay();
+        wasAutoStopped = true;
         if (!stopCompleter.isCompleted) stopCompleter.complete();
       },
     );
@@ -579,10 +561,33 @@ class _FileTransferContactsScreenState
     }
 
     if (!mounted) return;
-    Overlay.of(context).insert(overlayEntry!);
+
+    // Show a fullscreen recording dialog. Using showGeneralDialog ensures
+    // the overlay lives inside the Navigator's widget tree and inherits the
+    // MaterialApp theme (preventing the yellow-underline text bug).
+    final nav = Navigator.of(context, rootNavigator: true);
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.transparent,
+      pageBuilder: (context, animation, secondaryAnimation) =>
+          VoiceRecordingOverlay(
+            onStop: () {
+              if (!stopCompleter.isCompleted) stopCompleter.complete();
+            },
+          ),
+    );
 
     // Wait for the user to tap stop or for auto-stop to fire.
     await stopCompleter.future;
+
+    // Dismiss the recording dialog.
+    if (nav.canPop()) nav.pop();
+
+    if (!mounted) return;
+    if (wasAutoStopped) {
+      showInfoSnackBar(context, context.l10n.voiceMessageAutoStopped);
+    }
 
     final result = await voiceService.stopSession();
     if (!mounted) return;
