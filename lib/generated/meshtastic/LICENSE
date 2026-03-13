@@ -1,0 +1,24 @@
+This directory contains generated Dart code produced from the Meshtastic
+protocol buffer definitions in protos/meshtastic/.
+
+  Generator:  protoc with the Dart protobuf plugin
+  Source:     protos/meshtastic/ (upstream: https://github.com/meshtastic/protobufs)
+  License:    GPL-3.0-only
+  Copyright:  Copyright (C) Meshtastic LLC
+
+Generated code inherits the license of its source .proto files. All files
+in this directory are therefore subject to the GNU General Public License,
+version 3 only (GPL-3.0-only).
+
+Do not edit these files by hand. To regenerate, run:
+
+  scripts/generate_protos.sh
+
+The full GPL-3.0 license text is available at:
+
+  https://www.gnu.org/licenses/gpl-3.0.txt
+
+and in the root LICENSE file of this repository.
+
+SPDX-License-Identifier: GPL-3.0-only
+SPDX-FileCopyrightText: Meshtastic LLC

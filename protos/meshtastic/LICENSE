@@ -1,0 +1,20 @@
+These protocol buffer definitions are sourced from the Meshtastic project.
+
+  Project:    Meshtastic
+  Repository: https://github.com/meshtastic/protobufs
+  License:    GPL-3.0-only
+  Copyright:  Copyright (C) Meshtastic LLC
+
+The Meshtastic protobufs are licensed under the GNU General Public License,
+version 3 only (GPL-3.0-only). The full license text is available at:
+
+  https://www.gnu.org/licenses/gpl-3.0.txt
+
+and in the root LICENSE file of this repository.
+
+Files in this directory are unmodified copies of upstream Meshtastic protobuf
+definitions. Any modifications made by the Socialmesh project are clearly
+marked and remain subject to GPL-3.0-only.
+
+SPDX-License-Identifier: GPL-3.0-only
+SPDX-FileCopyrightText: Meshtastic LLC

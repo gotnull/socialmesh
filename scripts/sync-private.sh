@@ -38,6 +38,9 @@ SYNC_DIRS=(
   web-redirect
   web-sprints-redirect
   .claude
+  ios/codec2
+  macos/codec2
+  android/app/src/main/jni
 )
 
 # Individual files to sync (relative to repo root)

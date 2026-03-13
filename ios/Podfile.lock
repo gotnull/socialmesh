@@ -1638,6 +1638,8 @@ PODS:
   - PurchasesHybridCommon (17.46.1):
     - RevenueCat (= 5.61.0)
   - RecaptchaInterop (101.0.0)
+  - record_ios (1.2.0):
+    - Flutter
   - RevenueCat (5.61.0)
   - SDWebImage (5.21.7):
     - SDWebImage/Core (= 5.21.7)
@@ -1699,6 +1701,7 @@ DEPENDENCIES:
   - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
   - photo_manager (from `.symlinks/plugins/photo_manager/darwin`)
   - purchases_flutter (from `.symlinks/plugins/purchases_flutter/ios`)
+  - record_ios (from `.symlinks/plugins/record_ios/ios`)
   - sensors_plus (from `.symlinks/plugins/sensors_plus/ios`)
   - share_plus (from `.symlinks/plugins/share_plus/ios`)
   - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
@@ -1827,6 +1830,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/photo_manager/darwin"
   purchases_flutter:
     :path: ".symlinks/plugins/purchases_flutter/ios"
+  record_ios:
+    :path: ".symlinks/plugins/record_ios/ios"
   sensors_plus:
     :path: ".symlinks/plugins/sensors_plus/ios"
   share_plus:
@@ -1921,6 +1926,7 @@ SPEC CHECKSUMS:
   purchases_flutter: 1a27b709af72a506ddbc2f1255cae31ba101243d
   PurchasesHybridCommon: afaf46e9650f9399984196a6966c6d697d6122a2
   RecaptchaInterop: 11e0b637842dfb48308d242afc3f448062325aba
+  record_ios: 412daca2350b228e698fffcd08f1f94ceb1e3844
   RevenueCat: 9acbd29a62000b57d59efa16166290c4a119847b
   SDWebImage: e9fc87c1aab89a8ab1bbd74eba378c6f53be8abf
   sensors_plus: 6a11ed0c2e1d0bd0b20b4029d3bad27d96e0c65b
