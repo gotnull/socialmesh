@@ -663,6 +663,21 @@ class HardwareModel extends $pb.ProtobufEnum {
       HardwareModel._(123, _omitEnumNames ? '' : 'T5_S3_EPAPER_PRO');
 
   ///
+  ///  LilyGo T-Beam BPF (144-148Mhz)
+  static const HardwareModel TBEAM_BPF =
+      HardwareModel._(124, _omitEnumNames ? '' : 'TBEAM_BPF');
+
+  ///
+  ///  LilyGo T-Mini E-paper S3 Kit
+  static const HardwareModel MINI_EPAPER_S3 =
+      HardwareModel._(125, _omitEnumNames ? '' : 'MINI_EPAPER_S3');
+
+  ///
+  ///  LilyGo T-Display S3 Pro LR1121
+  static const HardwareModel TDISPLAY_S3_PRO =
+      HardwareModel._(126, _omitEnumNames ? '' : 'TDISPLAY_S3_PRO');
+
+  ///
   ///  ------------------------------------------------------------------------------------------------------------------------------------------
   ///  Reserved ID For developing private Ports. These will show up in live traffic sparsely, so we can use a high number. Keep it within 8 bits.
   ///  ------------------------------------------------------------------------------------------------------------------------------------------
@@ -794,6 +809,9 @@ class HardwareModel extends $pb.ProtobufEnum {
     MESHSTICK_1262,
     TBEAM_1_WATT,
     T5_S3_EPAPER_PRO,
+    TBEAM_BPF,
+    MINI_EPAPER_S3,
+    TDISPLAY_S3_PRO,
     PRIVATE_HW,
   ];
 

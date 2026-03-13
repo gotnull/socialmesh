@@ -262,6 +262,11 @@ class TelemetrySensorType extends $pb.ProtobufEnum {
   static const TelemetrySensorType STC31 =
       TelemetrySensorType._(48, _omitEnumNames ? '' : 'STC31');
 
+  ///
+  ///  SCD30 CO2, humidity, temperature sensor
+  static const TelemetrySensorType SCD30 =
+      TelemetrySensorType._(49, _omitEnumNames ? '' : 'SCD30');
+
   static const $core.List<TelemetrySensorType> values = <TelemetrySensorType>[
     SENSOR_UNSET,
     BME280,
@@ -312,10 +317,11 @@ class TelemetrySensorType extends $pb.ProtobufEnum {
     HDC1080,
     SHT21,
     STC31,
+    SCD30,
   ];
 
   static final $core.List<TelemetrySensorType?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 48);
+      $pb.ProtobufEnum.$_initByValueList(values, 49);
   static TelemetrySensorType? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 

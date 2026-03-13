@@ -1877,10 +1877,12 @@ class SensorConfig extends $pb.GeneratedMessage {
   factory SensorConfig({
     SCD4X_config? scd4xConfig,
     SEN5X_config? sen5xConfig,
+    SCD30_config? scd30Config,
   }) {
     final result = create();
     if (scd4xConfig != null) result.scd4xConfig = scd4xConfig;
     if (sen5xConfig != null) result.sen5xConfig = sen5xConfig;
+    if (scd30Config != null) result.scd30Config = scd30Config;
     return result;
   }
 
@@ -1901,6 +1903,8 @@ class SensorConfig extends $pb.GeneratedMessage {
         subBuilder: SCD4X_config.create)
     ..aOM<SEN5X_config>(2, _omitFieldNames ? '' : 'sen5xConfig',
         subBuilder: SEN5X_config.create)
+    ..aOM<SCD30_config>(3, _omitFieldNames ? '' : 'scd30Config',
+        subBuilder: SCD30_config.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1947,6 +1951,19 @@ class SensorConfig extends $pb.GeneratedMessage {
   void clearSen5xConfig() => $_clearField(2);
   @$pb.TagNumber(2)
   SEN5X_config ensureSen5xConfig() => $_ensure(1);
+
+  ///
+  ///  SCD30 CO2 Sensor configuration
+  @$pb.TagNumber(3)
+  SCD30_config get scd30Config => $_getN(2);
+  @$pb.TagNumber(3)
+  set scd30Config(SCD30_config value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasScd30Config() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearScd30Config() => $_clearField(3);
+  @$pb.TagNumber(3)
+  SCD30_config ensureScd30Config() => $_ensure(2);
 }
 
 class SCD4X_config extends $pb.GeneratedMessage {
@@ -2163,6 +2180,137 @@ class SEN5X_config extends $pb.GeneratedMessage {
   $core.bool hasSetOneShotMode() => $_has(1);
   @$pb.TagNumber(2)
   void clearSetOneShotMode() => $_clearField(2);
+}
+
+class SCD30_config extends $pb.GeneratedMessage {
+  factory SCD30_config({
+    $core.bool? setAsc,
+    $core.int? setTargetCo2Conc,
+    $core.double? setTemperature,
+    $core.int? setAltitude,
+    $core.int? setMeasurementInterval,
+    $core.bool? softReset,
+  }) {
+    final result = create();
+    if (setAsc != null) result.setAsc = setAsc;
+    if (setTargetCo2Conc != null) result.setTargetCo2Conc = setTargetCo2Conc;
+    if (setTemperature != null) result.setTemperature = setTemperature;
+    if (setAltitude != null) result.setAltitude = setAltitude;
+    if (setMeasurementInterval != null)
+      result.setMeasurementInterval = setMeasurementInterval;
+    if (softReset != null) result.softReset = softReset;
+    return result;
+  }
+
+  SCD30_config._();
+
+  factory SCD30_config.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory SCD30_config.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SCD30_config',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aOB(1, _omitFieldNames ? '' : 'setAsc')
+    ..aI(2, _omitFieldNames ? '' : 'setTargetCo2Conc',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aD(3, _omitFieldNames ? '' : 'setTemperature',
+        fieldType: $pb.PbFieldType.OF)
+    ..aI(4, _omitFieldNames ? '' : 'setAltitude',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(5, _omitFieldNames ? '' : 'setMeasurementInterval',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aOB(6, _omitFieldNames ? '' : 'softReset')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SCD30_config clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SCD30_config copyWith(void Function(SCD30_config) updates) =>
+      super.copyWith((message) => updates(message as SCD30_config))
+          as SCD30_config;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static SCD30_config create() => SCD30_config._();
+  @$core.override
+  SCD30_config createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static SCD30_config getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SCD30_config>(create);
+  static SCD30_config? _defaultInstance;
+
+  ///
+  ///  Set Automatic self-calibration enabled
+  @$pb.TagNumber(1)
+  $core.bool get setAsc => $_getBF(0);
+  @$pb.TagNumber(1)
+  set setAsc($core.bool value) => $_setBool(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSetAsc() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSetAsc() => $_clearField(1);
+
+  ///
+  ///  Recalibration target CO2 concentration in ppm (FRC or ASC)
+  @$pb.TagNumber(2)
+  $core.int get setTargetCo2Conc => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set setTargetCo2Conc($core.int value) => $_setUnsignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasSetTargetCo2Conc() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSetTargetCo2Conc() => $_clearField(2);
+
+  ///
+  ///  Reference temperature in degC
+  @$pb.TagNumber(3)
+  $core.double get setTemperature => $_getN(2);
+  @$pb.TagNumber(3)
+  set setTemperature($core.double value) => $_setFloat(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasSetTemperature() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearSetTemperature() => $_clearField(3);
+
+  ///
+  ///  Altitude of sensor in meters above sea level. 0 - 3000m (overrides ambient pressure)
+  @$pb.TagNumber(4)
+  $core.int get setAltitude => $_getIZ(3);
+  @$pb.TagNumber(4)
+  set setAltitude($core.int value) => $_setUnsignedInt32(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasSetAltitude() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearSetAltitude() => $_clearField(4);
+
+  ///
+  ///  Power mode for sensor (true for low power, false for normal)
+  @$pb.TagNumber(5)
+  $core.int get setMeasurementInterval => $_getIZ(4);
+  @$pb.TagNumber(5)
+  set setMeasurementInterval($core.int value) => $_setUnsignedInt32(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasSetMeasurementInterval() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearSetMeasurementInterval() => $_clearField(5);
+
+  ///
+  ///  Perform a factory reset of the sensor
+  @$pb.TagNumber(6)
+  $core.bool get softReset => $_getBF(5);
+  @$pb.TagNumber(6)
+  set softReset($core.bool value) => $_setBool(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasSoftReset() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearSoftReset() => $_clearField(6);
 }
 
 const $core.bool _omitFieldNames =

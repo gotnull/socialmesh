@@ -585,6 +585,7 @@ const AdminMessage_ModuleConfigType$json = {
     {'1': 'PAXCOUNTER_CONFIG', '2': 12},
     {'1': 'STATUSMESSAGE_CONFIG', '2': 13},
     {'1': 'TRAFFICMANAGEMENT_CONFIG', '2': 14},
+    {'1': 'TAK_CONFIG', '2': 15},
   ],
 };
 
@@ -675,14 +676,15 @@ final $typed_data.Uint8List adminMessageDescriptor = $convert.base64Decode(
     'ZJRxABEhAKDFBPV0VSX0NPTkZJRxACEhIKDk5FVFdPUktfQ09ORklHEAMSEgoORElTUExBWV9D'
     'T05GSUcQBBIPCgtMT1JBX0NPTkZJRxAFEhQKEEJMVUVUT09USF9DT05GSUcQBhITCg9TRUNVUk'
     'lUWV9DT05GSUcQBxIVChFTRVNTSU9OS0VZX0NPTkZJRxAIEhMKD0RFVklDRVVJX0NPTkZJRxAJ'
-    'IvMCChBNb2R1bGVDb25maWdUeXBlEg8KC01RVFRfQ09ORklHEAASEQoNU0VSSUFMX0NPTkZJRx'
+    'IoMDChBNb2R1bGVDb25maWdUeXBlEg8KC01RVFRfQ09ORklHEAASEQoNU0VSSUFMX0NPTkZJRx'
     'ABEhMKD0VYVE5PVElGX0NPTkZJRxACEhcKE1NUT1JFRk9SV0FSRF9DT05GSUcQAxIUChBSQU5H'
     'RVRFU1RfQ09ORklHEAQSFAoQVEVMRU1FVFJZX0NPTkZJRxAFEhQKEENBTk5FRE1TR19DT05GSU'
     'cQBhIQCgxBVURJT19DT05GSUcQBxIZChVSRU1PVEVIQVJEV0FSRV9DT05GSUcQCBIXChNORUlH'
     'SEJPUklORk9fQ09ORklHEAkSGgoWQU1CSUVOVExJR0hUSU5HX0NPTkZJRxAKEhoKFkRFVEVDVE'
     'lPTlNFTlNPUl9DT05GSUcQCxIVChFQQVhDT1VOVEVSX0NPTkZJRxAMEhgKFFNUQVRVU01FU1NB'
-    'R0VfQ09ORklHEA0SHAoYVFJBRkZJQ01BTkFHRU1FTlRfQ09ORklHEA4iIwoOQmFja3VwTG9jYX'
-    'Rpb24SCQoFRkxBU0gQABIGCgJTRBABQhEKD3BheWxvYWRfdmFyaWFudA==');
+    'R0VfQ09ORklHEA0SHAoYVFJBRkZJQ01BTkFHRU1FTlRfQ09ORklHEA4SDgoKVEFLX0NPTkZJRx'
+    'APIiMKDkJhY2t1cExvY2F0aW9uEgkKBUZMQVNIEAASBgoCU0QQAUIRCg9wYXlsb2FkX3Zhcmlh'
+    'bnQ=');
 
 @$core.Deprecated('Use hamParametersDescriptor instead')
 const HamParameters$json = {
@@ -824,6 +826,14 @@ const SensorConfig$json = {
       '6': '.meshtastic.SEN5X_config',
       '10': 'sen5xConfig'
     },
+    {
+      '1': 'scd30_config',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.meshtastic.SCD30_config',
+      '10': 'scd30Config'
+    },
   ],
 };
 
@@ -831,7 +841,8 @@ const SensorConfig$json = {
 final $typed_data.Uint8List sensorConfigDescriptor = $convert.base64Decode(
     'CgxTZW5zb3JDb25maWcSOwoMc2NkNHhfY29uZmlnGAEgASgLMhgubWVzaHRhc3RpYy5TQ0Q0WF'
     '9jb25maWdSC3NjZDR4Q29uZmlnEjsKDHNlbjV4X2NvbmZpZxgCIAEoCzIYLm1lc2h0YXN0aWMu'
-    'U0VONVhfY29uZmlnUgtzZW41eENvbmZpZw==');
+    'U0VONVhfY29uZmlnUgtzZW41eENvbmZpZxI7CgxzY2QzMF9jb25maWcYAyABKAsyGC5tZXNodG'
+    'FzdGljLlNDRDMwX2NvbmZpZ1ILc2NkMzBDb25maWc=');
 
 @$core.Deprecated('Use sCD4X_configDescriptor instead')
 const SCD4X_config$json = {
@@ -958,3 +969,83 @@ final $typed_data.Uint8List sEN5X_configDescriptor = $convert.base64Decode(
     'CgxTRU41WF9jb25maWcSLAoPc2V0X3RlbXBlcmF0dXJlGAEgASgCSABSDnNldFRlbXBlcmF0dX'
     'JliAEBEi4KEXNldF9vbmVfc2hvdF9tb2RlGAIgASgISAFSDnNldE9uZVNob3RNb2RliAEBQhIK'
     'EF9zZXRfdGVtcGVyYXR1cmVCFAoSX3NldF9vbmVfc2hvdF9tb2Rl');
+
+@$core.Deprecated('Use sCD30_configDescriptor instead')
+const SCD30_config$json = {
+  '1': 'SCD30_config',
+  '2': [
+    {
+      '1': 'set_asc',
+      '3': 1,
+      '4': 1,
+      '5': 8,
+      '9': 0,
+      '10': 'setAsc',
+      '17': true
+    },
+    {
+      '1': 'set_target_co2_conc',
+      '3': 2,
+      '4': 1,
+      '5': 13,
+      '9': 1,
+      '10': 'setTargetCo2Conc',
+      '17': true
+    },
+    {
+      '1': 'set_temperature',
+      '3': 3,
+      '4': 1,
+      '5': 2,
+      '9': 2,
+      '10': 'setTemperature',
+      '17': true
+    },
+    {
+      '1': 'set_altitude',
+      '3': 4,
+      '4': 1,
+      '5': 13,
+      '9': 3,
+      '10': 'setAltitude',
+      '17': true
+    },
+    {
+      '1': 'set_measurement_interval',
+      '3': 5,
+      '4': 1,
+      '5': 13,
+      '9': 4,
+      '10': 'setMeasurementInterval',
+      '17': true
+    },
+    {
+      '1': 'soft_reset',
+      '3': 6,
+      '4': 1,
+      '5': 8,
+      '9': 5,
+      '10': 'softReset',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_set_asc'},
+    {'1': '_set_target_co2_conc'},
+    {'1': '_set_temperature'},
+    {'1': '_set_altitude'},
+    {'1': '_set_measurement_interval'},
+    {'1': '_soft_reset'},
+  ],
+};
+
+/// Descriptor for `SCD30_config`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List sCD30_configDescriptor = $convert.base64Decode(
+    'CgxTQ0QzMF9jb25maWcSHAoHc2V0X2FzYxgBIAEoCEgAUgZzZXRBc2OIAQESMgoTc2V0X3Rhcm'
+    'dldF9jbzJfY29uYxgCIAEoDUgBUhBzZXRUYXJnZXRDbzJDb25jiAEBEiwKD3NldF90ZW1wZXJh'
+    'dHVyZRgDIAEoAkgCUg5zZXRUZW1wZXJhdHVyZYgBARImCgxzZXRfYWx0aXR1ZGUYBCABKA1IA1'
+    'ILc2V0QWx0aXR1ZGWIAQESPQoYc2V0X21lYXN1cmVtZW50X2ludGVydmFsGAUgASgNSARSFnNl'
+    'dE1lYXN1cmVtZW50SW50ZXJ2YWyIAQESIgoKc29mdF9yZXNldBgGIAEoCEgFUglzb2Z0UmVzZX'
+    'SIAQFCCgoIX3NldF9hc2NCFgoUX3NldF90YXJnZXRfY28yX2NvbmNCEgoQX3NldF90ZW1wZXJh'
+    'dHVyZUIPCg1fc2V0X2FsdGl0dWRlQhsKGV9zZXRfbWVhc3VyZW1lbnRfaW50ZXJ2YWxCDQoLX3'
+    'NvZnRfcmVzZXQ=');

@@ -232,6 +232,12 @@ class PortNum extends $pb.ProtobufEnum {
       PortNum._(74, _omitEnumNames ? '' : 'POWERSTRESS_APP');
 
   ///
+  ///  LoraWAN Payload Transport
+  ///  ENCODING: compact binary LoRaWAN uplink (10-byte RF metadata + PHY payload) - see LoRaWANBridgeModule
+  static const PortNum LORAWAN_BRIDGE =
+      PortNum._(75, _omitEnumNames ? '' : 'LORAWAN_BRIDGE');
+
+  ///
   ///  Reticulum Network Stack Tunnel App
   ///  ENCODING: Fragmented RNS Packet. Handled by Meshtastic RNS interface
   static const PortNum RETICULUM_TUNNEL_APP =
@@ -291,6 +297,7 @@ class PortNum extends $pb.ProtobufEnum {
     ATAK_PLUGIN,
     MAP_REPORT_APP,
     POWERSTRESS_APP,
+    LORAWAN_BRIDGE,
     RETICULUM_TUNNEL_APP,
     CAYENNE_APP,
     PRIVATE_APP,

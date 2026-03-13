@@ -895,6 +895,37 @@ class Config_LoRaConfig_ModemPreset extends $pb.ProtobufEnum {
   const Config_LoRaConfig_ModemPreset._(super.value, super.name);
 }
 
+class Config_LoRaConfig_FEM_LNA_Mode extends $pb.ProtobufEnum {
+  ///
+  ///  FEM_LNA is present but disabled
+  static const Config_LoRaConfig_FEM_LNA_Mode DISABLED =
+      Config_LoRaConfig_FEM_LNA_Mode._(0, _omitEnumNames ? '' : 'DISABLED');
+
+  ///
+  ///  FEM_LNA is present and enabled
+  static const Config_LoRaConfig_FEM_LNA_Mode ENABLED =
+      Config_LoRaConfig_FEM_LNA_Mode._(1, _omitEnumNames ? '' : 'ENABLED');
+
+  ///
+  ///  FEM_LNA is not present on the device
+  static const Config_LoRaConfig_FEM_LNA_Mode NOT_PRESENT =
+      Config_LoRaConfig_FEM_LNA_Mode._(2, _omitEnumNames ? '' : 'NOT_PRESENT');
+
+  static const $core.List<Config_LoRaConfig_FEM_LNA_Mode> values =
+      <Config_LoRaConfig_FEM_LNA_Mode>[
+    DISABLED,
+    ENABLED,
+    NOT_PRESENT,
+  ];
+
+  static final $core.List<Config_LoRaConfig_FEM_LNA_Mode?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 2);
+  static Config_LoRaConfig_FEM_LNA_Mode? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const Config_LoRaConfig_FEM_LNA_Mode._(super.value, super.name);
+}
+
 class Config_BluetoothConfig_PairingMode extends $pb.ProtobufEnum {
   ///
   ///  Device generates a random PIN that will be shown on the screen of the device for pairing
