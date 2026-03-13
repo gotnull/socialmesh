@@ -6,6 +6,8 @@ on:
   pull_request:
     branches: [main]
 
+permissions: read-all
+
 jobs:
   check-licenses:
     name: SPDX headers and license boundaries
