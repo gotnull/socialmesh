@@ -14,7 +14,7 @@ import '../../../utils/snackbar.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../services/file_transfer/file_transfer_engine.dart';
 import '../../../services/voice/voice_mime.dart';
-import 'voice_message_player.dart';
+import 'voice_attachment_card.dart';
 
 /// Displays a file content preview in a scrollable bottom sheet.
 ///
@@ -67,8 +67,14 @@ class FileContentPreview {
     final mime = transfer.mimeType.toLowerCase();
     final bytes = transfer.fileBytes!;
 
-    if (VoiceMime.isVoiceMessage(mime)) {
-      return (_) => _VoiceViewer(bytes: bytes);
+    if (VoiceMime.isVoiceMessage(mime) ||
+        VoiceMime.hasVoiceExtension(transfer.filename)) {
+      return (_) => _VoiceViewer(
+        bytes: bytes,
+        filename: transfer.filename,
+        totalBytes: transfer.totalBytes,
+        receivedAt: transfer.createdAt,
+      );
     }
 
     if (mime.startsWith('image/')) {
@@ -103,15 +109,29 @@ class FileContentPreview {
 // ---------------------------------------------------------------------------
 
 class _VoiceViewer extends StatelessWidget {
-  const _VoiceViewer({required this.bytes});
+  const _VoiceViewer({
+    required this.bytes,
+    required this.filename,
+    required this.totalBytes,
+    required this.receivedAt,
+  });
 
   final Uint8List bytes;
+  final String filename;
+  final int totalBytes;
+  final DateTime receivedAt;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(AppTheme.spacing24),
-      child: Center(child: VoiceMessagePlayer(c2Payload: bytes)),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppTheme.spacing16),
+      child: VoiceAttachmentCard(
+        c2Payload: bytes,
+        cacheKey: '${filename}_$totalBytes',
+        filename: filename,
+        totalBytes: totalBytes,
+        receivedAt: receivedAt,
+      ),
     );
   }
 }

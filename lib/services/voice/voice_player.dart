@@ -12,13 +12,26 @@ import 'voice_decoder.dart';
 /// Usage:
 /// ```dart
 /// final player = VoicePlayer();
-/// await player.play(wavBytes);
+/// await player.playC2(c2Bytes);
+/// player.seekTo(const Duration(seconds: 3)); // while playing
 /// // …
 /// player.dispose();
 /// ```
 class VoicePlayer {
   final _player = AudioPlayer();
   final isPlaying = ValueNotifier<bool>(false);
+
+  /// Real-time playback position stream from just_audio.
+  Stream<Duration> get positionStream => _player.positionStream;
+
+  /// Duration stream — emits once the audio source is loaded and metadata is known.
+  Stream<Duration?> get durationStream => _player.durationStream;
+
+  /// Current playback position (synchronous snapshot).
+  Duration get currentPosition => _player.position;
+
+  /// Total duration if known, null before [playC2] or [play] is called.
+  Duration? get currentDuration => _player.duration;
 
   /// Decodes [c2Payload] from the Socialmesh `.c2` wire format and plays it.
   ///
@@ -56,6 +69,15 @@ class VoicePlayer {
     isPlaying.value = false;
     await _player.stop();
     AppLogging.voice('playback stopped');
+  }
+
+  /// Seeks to [position] in the currently loaded audio source.
+  ///
+  /// Safe to call while [play] is in progress (events are processed on the
+  /// main isolate event loop between awaits, so this always reaches the
+  /// underlying just_audio player).
+  Future<void> seekTo(Duration position) async {
+    await _player.seek(position);
   }
 
   /// Releases the underlying audio player resources.

@@ -38,6 +38,7 @@
 		D5C1D636C7F2A568A037C3D0 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = BEFF18A377E3CA3D364CF1AB /* GoogleService-Info.plist */; };
 		NSE001012026011200000001 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = NSE001012026011200000010 /* NotificationService.swift */; };
 		NSE001012026011200000002 /* NotificationServiceExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = NSE001012026011200000020 /* NotificationServiceExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		C2C0DEC220260313000000F2 /* Codec2Symbols.c in Sources */ = {isa = PBXBuildFile; fileRef = C2C0DEC220260313000000F1 /* Codec2Symbols.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -125,6 +126,7 @@
 		NSE001012026011200000011 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		NSE001012026011200000012 /* NotificationServiceExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NotificationServiceExtension.entitlements; sourceTree = "<group>"; };
 		NSE001012026011200000020 /* NotificationServiceExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = NotificationServiceExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		C2C0DEC220260313000000F1 /* Codec2Symbols.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Codec2Symbols.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -248,6 +250,7 @@
 				1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */,
 				74858FAE1ED2DC5600515810 /* AppDelegate.swift */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
+				C2C0DEC220260313000000F1 /* Codec2Symbols.c */,
 			);
 			path = Runner;
 			sourceTree = "<group>";
@@ -622,6 +625,7 @@
 			files = (
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
+				C2C0DEC220260313000000F2 /* Codec2Symbols.c in Sources */,
 				AI0001012024120800000001 /* AppIntentErrors.swift in Sources */,
 				AI0001012024120800000002 /* AppIntentsManager.swift in Sources */,
 				AI0001012024120800000003 /* SendMessageIntent.swift in Sources */,

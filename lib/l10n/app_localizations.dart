@@ -56320,6 +56320,36 @@ abstract class AppLocalizations {
   /// **'Stop'**
   String get voiceRecordingStopButton;
 
+  /// Label shown at the top of the voice attachment playback card
+  ///
+  /// In en, this message translates to:
+  /// **'Voice message'**
+  String get voiceAttachmentCardTitle;
+
+  /// Status label while waveform is being analysed in the voice attachment card
+  ///
+  /// In en, this message translates to:
+  /// **'Analysing…'**
+  String get voiceAttachmentAnalysing;
+
+  /// Error label shown when voice message playback fails
+  ///
+  /// In en, this message translates to:
+  /// **'Playback failed'**
+  String get voiceAttachmentPlaybackFailed;
+
+  /// Audio channel count label for mono (single-channel) voice messages
+  ///
+  /// In en, this message translates to:
+  /// **'Mono'**
+  String get voiceAttachmentMono;
+
+  /// Tooltip for the pause button on the voice attachment card
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get voiceAttachmentPause;
+
   /// Label for the Voice button in the contact detail sheet action row
   ///
   /// In en, this message translates to:

@@ -42807,6 +42807,26 @@
     "@voiceRecordingStopButton": {
         "description": "Label for the stop-recording button in the voice recording overlay"
     },
+    "voiceAttachmentCardTitle": "Voice message",
+    "@voiceAttachmentCardTitle": {
+        "description": "Label shown at the top of the voice attachment playback card"
+    },
+    "voiceAttachmentAnalysing": "Analysing…",
+    "@voiceAttachmentAnalysing": {
+        "description": "Status label while waveform is being analysed in the voice attachment card"
+    },
+    "voiceAttachmentPlaybackFailed": "Playback failed",
+    "@voiceAttachmentPlaybackFailed": {
+        "description": "Error label shown when voice message playback fails"
+    },
+    "voiceAttachmentMono": "Mono",
+    "@voiceAttachmentMono": {
+        "description": "Audio channel count label for mono (single-channel) voice messages"
+    },
+    "voiceAttachmentPause": "Pause",
+    "@voiceAttachmentPause": {
+        "description": "Tooltip for the pause button on the voice attachment card"
+    },
     "fileTransferContactsSendVoice": "Voice",
     "@fileTransferContactsSendVoice": {
         "description": "Label for the Voice button in the contact detail sheet action row"

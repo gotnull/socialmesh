@@ -32282,5 +32282,20 @@ class AppLocalizationsIt extends AppLocalizations {
   String get voiceRecordingStopButton => 'Stop';
 
   @override
+  String get voiceAttachmentCardTitle => 'Voice message';
+
+  @override
+  String get voiceAttachmentAnalysing => 'Analysing…';
+
+  @override
+  String get voiceAttachmentPlaybackFailed => 'Playback failed';
+
+  @override
+  String get voiceAttachmentMono => 'Mono';
+
+  @override
+  String get voiceAttachmentPause => 'Pause';
+
+  @override
   String get fileTransferContactsSendVoice => 'Voice';
 }
