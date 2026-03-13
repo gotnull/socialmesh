@@ -760,6 +760,12 @@
 					"$(inherited)",
 					"-ObjC",
 				);
+				"OTHER_LDFLAGS[sdk=iphoneos*]" = (
+					"$(inherited)",
+					"-ObjC",
+					"-force_load",
+					"$(PROJECT_DIR)/codec2/lib/libcodec2_ios.a",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.gotnull.socialmesh;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -964,6 +970,12 @@
 					"$(inherited)",
 					"-ObjC",
 				);
+				"OTHER_LDFLAGS[sdk=iphoneos*]" = (
+					"$(inherited)",
+					"-ObjC",
+					"-force_load",
+					"$(PROJECT_DIR)/codec2/lib/libcodec2_ios.a",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.gotnull.socialmesh;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1001,6 +1013,12 @@
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
+				);
+				"OTHER_LDFLAGS[sdk=iphoneos*]" = (
+					"$(inherited)",
+					"-ObjC",
+					"-force_load",
+					"$(PROJECT_DIR)/codec2/lib/libcodec2_ios.a",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.gotnull.socialmesh;
 				PRODUCT_NAME = "$(TARGET_NAME)";
