@@ -318,6 +318,12 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
       '${transfer.chunkCount} chunks)',
     );
 
+    // Eagerly persist outbound bytes to disk before the transfer starts.
+    // This ensures sent files are previewable after restart even if the app
+    // is killed before the receiver's ACK arrives (which normally triggers
+    // the auto-save microtask). Voice messages especially need this.
+    unawaited(_autoSaveFile(transfer));
+
     // Start sending.
     await engine.startTransfer(transfer.fileIdHex);
     return transfer;
