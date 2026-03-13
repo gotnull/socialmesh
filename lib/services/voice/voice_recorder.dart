@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 import 'dart:async';
-import 'dart:math';
+import 'dart:math' show sqrt;
 import 'dart:typed_data';
 
 import 'package:record/record.dart';
@@ -43,13 +43,19 @@ class VoiceRecorder {
   /// Live amplitude stream (0.0 – 1.0) available while [isRecording] is true.
   Stream<double>? get amplitudeStream => _amplitudeStream;
 
-  /// Converts a raw dBFS value to a [0.0, 1.0] display amplitude using a
-  /// square-root curve so quieter sounds remain visually responsive.
+  /// Converts a raw dBFS value to a [0.0, 1.0] display amplitude.
+  ///
+  /// A hard gate at -40 dBFS suppresses ambient room noise (typically
+  /// -50 to -60 dBFS) so the waveform stays flat during silence.
+  /// Above the gate a t^1.5 power curve stretches the contrast between
+  /// quiet and loud speech: -10 dBFS → 65%, -20 dBFS → 35%, -5 dBFS → 82%.
   ///
   /// Exposed as a static so the transformation can be unit-tested in isolation.
   static double normalizeDb(double dBFS) {
-    final linear = (dBFS.clamp(-60.0, 0.0) + 60.0) / 60.0;
-    return sqrt(linear).clamp(0.0, 1.0);
+    const double gate = -40.0;
+    if (dBFS <= gate) return 0.0;
+    final t = (dBFS.clamp(gate, 0.0) - gate) / (-gate);
+    return (t * sqrt(t)).clamp(0.0, 1.0); // t^1.5
   }
 
   static const RecordConfig _config = RecordConfig(

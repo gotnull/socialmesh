@@ -56476,6 +56476,30 @@ abstract class AppLocalizations {
   /// **'of {seconds}s max'**
   String voiceRecordingMaxSeconds(String seconds);
 
+  /// Cancel button in the voice recording overlay — discards the recording
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get voiceRecordingCancelButton;
+
+  /// Retake button in the voice recording overlay — discards and restarts the recording
+  ///
+  /// In en, this message translates to:
+  /// **'Retake'**
+  String get voiceRecordingRetakeButton;
+
+  /// Send confirmation button in the voice recording review phase
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get voiceRecordingSendButton;
+
+  /// Status shown after the user stops recording and before they confirm send
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to send'**
+  String get voiceRecordingReadyToSend;
+
   /// Label shown at the top of the voice attachment playback card
   ///
   /// In en, this message translates to:

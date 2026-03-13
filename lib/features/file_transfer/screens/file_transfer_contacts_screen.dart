@@ -44,6 +44,8 @@ import '../widgets/voice_recording_overlay.dart';
 
 enum _FileContactFilter { all, active, hasFiles, favorites }
 
+enum _RecordingAction { send, cancel }
+
 // ---------------------------------------------------------------------------
 // Contact model
 // ---------------------------------------------------------------------------
@@ -531,21 +533,32 @@ class _FileTransferContactsScreenState
     await haptics.trigger(HapticType.medium);
     if (!mounted) return;
 
-    final voiceService = VoiceMessageService();
+    final nav = Navigator.of(context, rootNavigator: true);
 
-    // Completer that resolves when the user taps the stop button
-    // or the max-duration auto-stop fires.
-    final stopCompleter = Completer<void>();
+    var voiceService = VoiceMessageService();
+    final actionCompleter = Completer<_RecordingAction>();
+    final autoStopNotifier = ValueNotifier<bool>(false);
     var wasAutoStopped = false;
+    // Holds the Future from stopSession() once the user taps the stop circle
+    // or auto-stop fires. Allows the .send case to await it idempotently.
+    Future<VoiceMessageResult>? pendingStop;
 
-    final started = await voiceService.startSession(
-      onAutoStop: () async {
-        wasAutoStopped = true;
-        if (!stopCompleter.isCompleted) stopCompleter.complete();
-      },
-    );
+    Future<bool> startFresh() async {
+      return voiceService.startSession(
+        onAutoStop: () {
+          wasAutoStopped = true;
+          // Stop the recording and signal the overlay to enter review mode.
+          // The user must tap Send to confirm; we no longer auto-send.
+          pendingStop ??= voiceService.stopSession();
+          autoStopNotifier.value = true;
+        },
+      );
+    }
+
+    final started = await startFresh();
 
     if (!started) {
+      autoStopNotifier.dispose();
       await voiceService.dispose();
       if (!mounted) return;
       // On iOS the system permission dialog only appears once; after that the
@@ -560,40 +573,80 @@ class _FileTransferContactsScreenState
       return;
     }
 
-    if (!mounted) return;
+    if (!mounted) {
+      autoStopNotifier.dispose();
+      await voiceService.cancelSession();
+      await voiceService.dispose();
+      return;
+    }
 
-    // Show a fullscreen recording dialog. Using showGeneralDialog ensures
-    // the overlay lives inside the Navigator's widget tree and inherits the
-    // MaterialApp theme (preventing the yellow-underline text bug).
-    final nav = Navigator.of(context, rootNavigator: true);
+    // Show the fullscreen recording overlay. Using showGeneralDialog ensures
+    // the overlay inherits the MaterialApp theme (prevents yellow-underline).
     showGeneralDialog(
       context: context,
       barrierDismissible: false,
       barrierColor: Colors.transparent,
       pageBuilder: (context, animation, secondaryAnimation) =>
           VoiceRecordingOverlay(
-            onStop: () {
-              if (!stopCompleter.isCompleted) stopCompleter.complete();
+            // Circle tapped: stop the mic; overlay transitions to review mode.
+            onRecordingStopped: () {
+              pendingStop ??= voiceService.stopSession();
+            },
+            // Send confirmed in review phase.
+            onSend: () {
+              if (!actionCompleter.isCompleted) {
+                actionCompleter.complete(_RecordingAction.send);
+              }
+            },
+            onCancel: () {
+              if (!actionCompleter.isCompleted) {
+                actionCompleter.complete(_RecordingAction.cancel);
+              }
+            },
+            onRestart: () async {
+              // Discard any in-flight stop, tear down current session.
+              if (pendingStop == null) await voiceService.cancelSession();
+              await voiceService.dispose();
+              // Reset stateful locals for the fresh session.
+              pendingStop = null;
+              wasAutoStopped = false;
+              autoStopNotifier.value = false;
+              voiceService = VoiceMessageService();
+              await startFresh();
+              return voiceService.amplitudeStream;
             },
             amplitudeStream: voiceService.amplitudeStream,
+            autoStopNotifier: autoStopNotifier,
           ),
     );
 
-    // Wait for the user to tap stop or for auto-stop to fire.
-    await stopCompleter.future;
-
-    // Dismiss the recording dialog.
+    final action = await actionCompleter.future;
     if (nav.canPop()) nav.pop();
-
-    if (!mounted) return;
-    if (wasAutoStopped) {
-      showInfoSnackBar(context, context.l10n.voiceMessageAutoStopped);
+    autoStopNotifier.dispose();
+    if (!mounted) {
+      if (pendingStop == null) await voiceService.cancelSession();
+      await voiceService.dispose();
+      return;
     }
 
-    final result = await voiceService.stopSession();
-    if (!mounted) return;
-    await _handleVoiceResult(result, nodeNum, notifier);
-    await voiceService.dispose();
+    switch (action) {
+      case _RecordingAction.send:
+        if (wasAutoStopped) {
+          showInfoSnackBar(context, context.l10n.voiceMessageAutoStopped);
+        }
+        // pendingStop is always set before .send can fire (the Stop circle
+        // or auto-stop must have fired first in review phase).
+        final result = await (pendingStop ?? voiceService.stopSession());
+        if (!mounted) return;
+        await _handleVoiceResult(result, nodeNum, notifier);
+        await voiceService.dispose();
+
+      case _RecordingAction.cancel:
+        // If pendingStop is set, stopSession() is already running; just
+        // let it finish and discard. Otherwise cancel normally.
+        if (pendingStop == null) await voiceService.cancelSession();
+        await voiceService.dispose();
+    }
   }
 
   void _showVoicePermissionSnackBar(bool permanently) {

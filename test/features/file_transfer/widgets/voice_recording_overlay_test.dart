@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 // Widget tests for VoiceRecordingOverlay — verifies structural elements,
-// stop-button callback, and crash-free behaviour with no amplitude stream.
+// two-phase flow (recording → reviewing), and crash-free behaviour.
 
 import 'dart:async';
 
@@ -24,12 +24,20 @@ Widget _wrap(Widget child) {
 }
 
 VoiceRecordingOverlay _overlay({
-  VoidCallback? onStop,
+  VoidCallback? onRecordingStopped,
+  VoidCallback? onSend,
+  VoidCallback? onCancel,
+  Future<Stream<double>?> Function()? onRestart,
   Stream<double>? amplitudeStream,
+  ValueNotifier<bool>? autoStopNotifier,
 }) {
   return VoiceRecordingOverlay(
-    onStop: onStop ?? () {},
+    onRecordingStopped: onRecordingStopped ?? () {},
+    onSend: onSend ?? () {},
+    onCancel: onCancel ?? () {},
+    onRestart: onRestart ?? () async => null,
     amplitudeStream: amplitudeStream,
+    autoStopNotifier: autoStopNotifier,
   );
 }
 
@@ -53,12 +61,119 @@ void main() {
       expect(find.byIcon(Icons.stop_rounded), findsOneWidget);
     });
 
-    testWidgets('stop button invokes onStop callback', (tester) async {
+    testWidgets('stop circle invokes onRecordingStopped callback', (
+      tester,
+    ) async {
       var called = false;
-      await tester.pumpWidget(_wrap(_overlay(onStop: () => called = true)));
+      await tester.pumpWidget(
+        _wrap(_overlay(onRecordingStopped: () => called = true)),
+      );
       await tester.pump();
 
       await tester.tap(find.byIcon(Icons.stop_rounded));
+      await tester.pump();
+
+      expect(called, isTrue);
+    });
+
+    testWidgets('cancel button invokes onCancel callback', (tester) async {
+      var called = false;
+      await tester.pumpWidget(_wrap(_overlay(onCancel: () => called = true)));
+      await tester.pump();
+
+      await tester.tap(find.text('Cancel'));
+      await tester.pump();
+
+      expect(called, isTrue);
+    });
+
+    testWidgets('stop circle transitions to review phase', (tester) async {
+      await tester.pumpWidget(_wrap(_overlay()));
+      await tester.pump();
+
+      expect(find.byIcon(Icons.stop_rounded), findsOneWidget);
+
+      await tester.tap(find.byIcon(Icons.stop_rounded));
+      await tester.pump();
+
+      expect(find.byIcon(Icons.arrow_upward_rounded), findsOneWidget);
+    });
+
+    testWidgets('send button in review phase invokes onSend', (tester) async {
+      var called = false;
+      await tester.pumpWidget(_wrap(_overlay(onSend: () => called = true)));
+      await tester.pump();
+
+      await tester.tap(find.byIcon(Icons.stop_rounded));
+      await tester.pump();
+
+      await tester.tap(find.byIcon(Icons.arrow_upward_rounded));
+      await tester.pump();
+
+      expect(called, isTrue);
+    });
+
+    testWidgets('autoStopNotifier transitions to review phase', (tester) async {
+      final notifier = ValueNotifier<bool>(false);
+      addTearDown(notifier.dispose);
+
+      await tester.pumpWidget(_wrap(_overlay(autoStopNotifier: notifier)));
+      await tester.pump();
+
+      expect(find.byIcon(Icons.stop_rounded), findsOneWidget);
+
+      notifier.value = true;
+      await tester.pump();
+
+      expect(find.byIcon(Icons.arrow_upward_rounded), findsOneWidget);
+    });
+
+    testWidgets('retake resets to recording phase in-place', (tester) async {
+      var restartCalled = false;
+      await tester.pumpWidget(
+        _wrap(
+          _overlay(
+            onRestart: () async {
+              restartCalled = true;
+              return null;
+            },
+          ),
+        ),
+      );
+      await tester.pump();
+
+      // Enter review phase by tapping stop.
+      await tester.tap(find.byIcon(Icons.stop_rounded));
+      await tester.pump();
+      expect(find.byIcon(Icons.arrow_upward_rounded), findsOneWidget);
+
+      // Tap Retake — overlay should reset to recording without dismissing.
+      await tester.tap(find.text('Retake'));
+      await tester.pump();
+      await tester.pump(); // settle async _handleRetake
+
+      expect(restartCalled, isTrue);
+      // Back to stop circle (recording phase).
+      expect(find.byIcon(Icons.stop_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.arrow_upward_rounded), findsNothing);
+    });
+
+    testWidgets('retake button invokes onRestart callback', (tester) async {
+      var called = false;
+      await tester.pumpWidget(
+        _wrap(
+          _overlay(
+            onRestart: () async {
+              called = true;
+              return null;
+            },
+          ),
+        ),
+      );
+      await tester.pump();
+
+      await tester.tap(find.text('Retake'));
+      await tester.pump();
       await tester.pump();
 
       expect(called, isTrue);

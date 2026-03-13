@@ -42939,6 +42939,22 @@
             "seconds": {"type": "String"}
         }
     },
+    "voiceRecordingCancelButton": "Cancel",
+    "@voiceRecordingCancelButton": {
+        "description": "Cancel button in the voice recording overlay — discards the recording"
+    },
+    "voiceRecordingRetakeButton": "Retake",
+    "@voiceRecordingRetakeButton": {
+        "description": "Retake button in the voice recording overlay — discards and restarts the recording"
+    },
+    "voiceRecordingSendButton": "Send",
+    "@voiceRecordingSendButton": {
+        "description": "Send confirmation button in the voice recording review phase"
+    },
+    "voiceRecordingReadyToSend": "Ready to send",
+    "@voiceRecordingReadyToSend": {
+        "description": "Status shown after the user stops recording and before they confirm send"
+    },
     "voiceAttachmentCardTitle": "Voice message",
     "@voiceAttachmentCardTitle": {
         "description": "Label shown at the top of the voice attachment playback card"

@@ -32380,6 +32380,18 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get voiceRecordingCancelButton => 'Cancel';
+
+  @override
+  String get voiceRecordingRetakeButton => 'Retake';
+
+  @override
+  String get voiceRecordingSendButton => 'Send';
+
+  @override
+  String get voiceRecordingReadyToSend => 'Ready to send';
+
+  @override
   String get voiceAttachmentCardTitle => 'Voice message';
 
   @override
