@@ -1639,6 +1639,23 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
         locale: ref.watch(localeProvider),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
+        localeListResolutionCallback: (locales, supportedLocales) {
+          // Flutter's default resolution can pass unsupported locales (e.g.
+          // ro_RO) to the AppLocalizations delegate, which throws a
+          // FlutterError. Resolve manually: prefer first device locale whose
+          // language code matches a supported locale, otherwise fall back to
+          // the first supported locale (English).
+          if (locales != null) {
+            for (final locale in locales) {
+              for (final supported in supportedLocales) {
+                if (supported.languageCode == locale.languageCode) {
+                  return supported;
+                }
+              }
+            }
+          }
+          return supportedLocales.first;
+        },
         navigatorObservers: [
           _KeyboardDismissObserver(),
           _DelegatingAnalyticsObserver(ref),
