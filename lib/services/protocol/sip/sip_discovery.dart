@@ -156,9 +156,25 @@ class SipDiscovery {
   /// Whether discovery (beacon emission, rollcall responses) is enabled.
   ///
   /// Set by the provider layer from the mesh privacy discoverable setting.
-  /// When false, outbound CAP_BEACON and ROLLCALL_RESP are suppressed.
+  /// When false, outbound CAP_BEACON and ROLLCALL_RESP are suppressed
+  /// (unless a scan window is active — see [_scanWindowExpiresMs]).
   /// Inbound processing (caching discovered peers) continues regardless.
   bool isDiscoverable = false;
+
+  /// Scan-window expiry timestamp (ms since epoch).
+  ///
+  /// When a user-initiated rollcall request is sent (force=true), a 10-second
+  /// scan window opens. During this window, rollcall responses bypass the
+  /// [isDiscoverable] privacy gate so that bi-directional discovery works:
+  /// Device A scans → Device B (also scanning) receives the request and
+  /// responds, even if its persistent privacy toggle is off.
+  ///
+  /// The beacon gate is NOT bypassed — beacons remain suppressed when
+  /// not discoverable, as they are unsolicited background broadcasts.
+  int _scanWindowExpiresMs = 0;
+
+  /// Whether a user-initiated scan window is currently active.
+  bool get isInScanWindow => _nowMs() < _scanWindowExpiresMs;
 
   /// Timestamp (ms) of last beacon emission.
   ///
@@ -172,6 +188,9 @@ class SipDiscovery {
 
   /// Rate limiter for per-peer rollcall responses: node_id -> last response ms.
   final Map<int, int> _lastRollcallRespMs = {};
+
+  /// Duration of the scan window opened by a user-initiated rollcall request.
+  static const int _kScanWindowMs = 10 * 1000; // 10s
 
   static final Random _jitterRng = Random();
 
@@ -433,6 +452,16 @@ class SipDiscovery {
     _rateLimiter.recordSend(encoded.length);
     lastRollcallReqMs = nowMs;
 
+    // Open scan window on user-initiated (forced) requests so that incoming
+    // rollcall responses from other scanning peers are allowed through even
+    // when the persistent discoverable toggle is off.
+    if (force) {
+      _scanWindowExpiresMs = nowMs + _kScanWindowMs;
+      AppLogging.sip(
+        'SIP_DISCOVERY: scan window opened for ${_kScanWindowMs ~/ 1000}s',
+      );
+    }
+
     AppLogging.sip(
       'SIP_DISCOVERY: ROLLCALL_REQ broadcast, ${encoded.length}B total',
     );
@@ -449,8 +478,10 @@ class SipDiscovery {
   /// Returns null if rate-limited or budget insufficient.
   /// The caller should apply a random delay (0-3s) before sending.
   SipOutbound? buildRollcallResp(int peerNodeId) {
-    // Privacy gate: suppress rollcall responses when not discoverable.
-    if (!isDiscoverable) {
+    // Privacy gate: suppress rollcall responses when not discoverable,
+    // unless a user-initiated scan window is active (allows bi-directional
+    // discovery between two scanning peers).
+    if (!isDiscoverable && !isInScanWindow) {
       AppLogging.sip(
         'SIP_DISCOVERY: ROLLCALL_RESP suppressed (discoverable=false)',
       );

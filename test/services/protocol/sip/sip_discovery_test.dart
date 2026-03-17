@@ -26,6 +26,8 @@ void main() {
       clock: () => nowMs,
       beaconJitterMs: 0, // Deterministic for testing.
     );
+    // Enable discoverable so functional tests aren't blocked by privacy gate.
+    discovery.isDiscoverable = true;
   });
 
   group('SipDiscovery', () {

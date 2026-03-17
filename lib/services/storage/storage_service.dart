@@ -179,7 +179,7 @@ class SettingsService {
   }
 
   bool get meshDiscoverable =>
-      _preferences.getBool('mesh_discoverable') ?? false;
+      _preferences.getBool('mesh_discoverable') ?? true;
 
   // Mesh privacy: profile sharing (let peers request profile and services)
   Future<void> setMeshProfileSharing(bool enabled) async {
@@ -187,15 +187,14 @@ class SettingsService {
   }
 
   bool get meshProfileSharing =>
-      _preferences.getBool('mesh_profile_sharing') ?? false;
+      _preferences.getBool('mesh_profile_sharing') ?? true;
 
   // Mesh privacy: DM available (accept handshakes and direct messages)
   Future<void> setMeshDmAvailable(bool enabled) async {
     await _preferences.setBool('mesh_dm_available', enabled);
   }
 
-  bool get meshDmAvailable =>
-      _preferences.getBool('mesh_dm_available') ?? false;
+  bool get meshDmAvailable => _preferences.getBool('mesh_dm_available') ?? true;
 
   // Theme
   Future<void> setDarkMode(bool enabled) async {

@@ -151,10 +151,20 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
       setState(() => _scanning = true);
       // Record epoch at scan start; stop scanning when it bumps (peers arrive).
       _scanStartEpoch = ref.read(sipPeerCacheEpochProvider);
-      // Safety timeout: stop scanning after 10s regardless.
+      // Poll the discovery engine's scan window state instead of using a fixed
+      // timeout. The engine tracks the real expiry; we add a grace period after
+      // the window closes for the last response to propagate back over the mesh.
       _scanTimeoutTimer?.cancel();
-      _scanTimeoutTimer = Timer(const Duration(seconds: 10), () {
-        if (mounted) setState(() => _scanning = false);
+      _scanTimeoutTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+        final d = ref.read(sipDiscoveryProvider);
+        if (d == null || !d.isInScanWindow) {
+          _scanTimeoutTimer?.cancel();
+          // Grace period: responses sent just before the window closed are
+          // still in flight. Wait for mesh propagation before giving up.
+          Future.delayed(const Duration(seconds: 5), () {
+            if (mounted && _scanning) setState(() => _scanning = false);
+          });
+        }
       });
     }
   }
@@ -162,7 +172,8 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
   /// Called from build — checks if peers arrived since scan started.
   void _checkScanComplete(int currentEpoch) {
     if (_scanning && currentEpoch > _scanStartEpoch) {
-      // Peers have arrived — keep indicator briefly for perceived smoothness.
+      // Peers have arrived — cancel the scan window poll and stop scanning
+      // after a brief delay for perceived smoothness.
       _scanTimeoutTimer?.cancel();
       Future.delayed(const Duration(milliseconds: 500), () {
         if (mounted) setState(() => _scanning = false);

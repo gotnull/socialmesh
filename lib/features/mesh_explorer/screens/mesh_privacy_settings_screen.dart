@@ -4,7 +4,7 @@
 /// Mesh privacy settings screen for Mesh Explorer.
 ///
 /// Provides toggles for visibility, sharing, and cache management.
-/// All defaults are safe (anonymous, opt-in).
+/// All defaults are on (features work out of the box; users opt out).
 library;
 
 import 'package:flutter/material.dart';

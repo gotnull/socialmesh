@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 
@@ -74,11 +75,29 @@ class _TerrainProfileScreenState extends ConsumerState<TerrainProfileScreen>
   /// both endpoints because no GPS altitude was available on the node.
   bool _usingTerrainFallback = false;
 
+  /// User-entered antenna height above ground level (meters) for each endpoint.
+  /// Only used when GPS altitude is missing for that endpoint.
+  final _heightAglControllerA = TextEditingController();
+  final _heightAglControllerB = TextEditingController();
+
+  /// Terrain elevation at endpoints (cached after fetch for AGL calculations).
+  int? _terrainAltA;
+  int? _terrainAltB;
+
   @override
   void initState() {
     super.initState();
     _service = ElevationService();
+    _heightAglControllerA.addListener(_onAntennaHeightChanged);
+    _heightAglControllerB.addListener(_onAntennaHeightChanged);
     _fetchOnce();
+  }
+
+  @override
+  void dispose() {
+    _heightAglControllerA.dispose();
+    _heightAglControllerB.dispose();
+    super.dispose();
   }
 
   /// Starts the elevation fetch exactly once.
@@ -127,24 +146,17 @@ class _TerrainProfileScreenState extends ConsumerState<TerrainProfileScreen>
             (gpsAltA == null && terrainAltA != null) ||
             (gpsAltB == null && terrainAltB != null);
 
-        final losResult = evaluateLosFromProfile(
-          samples: samples
-              .map(
-                (s) => (
-                  distanceMeters: s.distanceMeters,
-                  latitude: s.latitude,
-                  longitude: s.longitude,
-                  elevationMeters: s.elevationMeters,
-                ),
-              )
-              .toList(),
-          altAMeters: effectiveAltA,
-          altBMeters: effectiveAltB,
+        final losResult = _computeLos(
+          samples: samples,
+          effectiveAltA: effectiveAltA,
+          effectiveAltB: effectiveAltB,
         );
         safeSetState(() {
           _samples = samples;
           _losResult = losResult;
           _usingTerrainFallback = usingFallback;
+          _terrainAltA = terrainAltA;
+          _terrainAltB = terrainAltB;
           _fetching = false;
         });
       case ElevationProfileOffline():
@@ -165,6 +177,58 @@ class _TerrainProfileScreenState extends ConsumerState<TerrainProfileScreen>
     _fetchOnce();
   }
 
+  /// Compute LOS from profile samples and effective endpoint altitudes.
+  TerrainLosResult _computeLos({
+    required List<ElevationSample> samples,
+    required int? effectiveAltA,
+    required int? effectiveAltB,
+  }) {
+    return evaluateLosFromProfile(
+      samples: samples
+          .map(
+            (s) => (
+              distanceMeters: s.distanceMeters,
+              latitude: s.latitude,
+              longitude: s.longitude,
+              elevationMeters: s.elevationMeters,
+            ),
+          )
+          .toList(),
+      altAMeters: effectiveAltA,
+      altBMeters: effectiveAltB,
+    );
+  }
+
+  /// Recalculate LOS when the user changes antenna height above ground.
+  void _onAntennaHeightChanged() {
+    final samples = _samples;
+    if (samples == null) return;
+
+    final gpsAltA = widget.nodeA?.altitude;
+    final gpsAltB = widget.nodeB?.altitude;
+    final aglA = int.tryParse(_heightAglControllerA.text) ?? 0;
+    final aglB = int.tryParse(_heightAglControllerB.text) ?? 0;
+
+    // For endpoints with GPS altitude, use GPS. Otherwise use terrain + AGL.
+    final effectiveAltA =
+        gpsAltA ?? (_terrainAltA != null ? _terrainAltA! + aglA : null);
+    final effectiveAltB =
+        gpsAltB ?? (_terrainAltB != null ? _terrainAltB! + aglB : null);
+
+    final losResult = _computeLos(
+      samples: samples,
+      effectiveAltA: effectiveAltA,
+      effectiveAltB: effectiveAltB,
+    );
+
+    safeSetState(() {
+      _losResult = losResult;
+      _usingTerrainFallback =
+          (gpsAltA == null && _terrainAltA != null) ||
+          (gpsAltB == null && _terrainAltB != null);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -177,99 +241,115 @@ class _TerrainProfileScreenState extends ConsumerState<TerrainProfileScreen>
     // Show the "LOS unavailable" warning only when terrain fallback also failed.
     final showNoAltitudeWarning = missingGpsAltitude && !_usingTerrainFallback;
 
-    return GlassScaffold(
-      title: l10n.mapTerrainProfileTitle,
-      slivers: [
-        SliverPadding(
-          padding: const EdgeInsets.all(AppTheme.spacing16),
-          sliver: SliverList(
-            delegate: SliverChildListDelegate([
-              // ── Endpoint summary ──────────────────────────────────────────
-              _EndpointRow(
-                start: widget.start,
-                end: widget.end,
-                nodeA: widget.nodeA,
-                nodeB: widget.nodeB,
-              ),
-              const SizedBox(height: AppTheme.spacing12),
-
-              // ── Terrain elevation used as altitude fallback ────────────────
-              if (showTerrainFallbackNote) ...[
-                StatusBanner.info(
-                  title: l10n.mapTerrainProfileUsingTerrainAltitude,
-                  subtitle: l10n.mapTerrainProfileUsingTerrainAltitudeSubtitle,
+    return GestureDetector(
+      onTap: () =>
+          FocusScope.of(context).unfocus(), // lint-allow: haptic-feedback
+      child: GlassScaffold(
+        title: l10n.mapTerrainProfileTitle,
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.all(AppTheme.spacing16),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                // ── Endpoint summary ──────────────────────────────────────────
+                _EndpointRow(
+                  start: widget.start,
+                  end: widget.end,
+                  nodeA: widget.nodeA,
+                  nodeB: widget.nodeB,
                 ),
                 const SizedBox(height: AppTheme.spacing12),
-              ],
 
-              // ── Altitude unavailable note ─────────────────────────────────
-              if (showNoAltitudeWarning) ...[
-                StatusBanner.warning(
-                  title: l10n.mapTerrainProfileNeedsAltitude,
-                  subtitle: l10n.mapTerrainProfileNeedsAltitudeSubtitle,
-                ),
-                const SizedBox(height: AppTheme.spacing12),
-              ],
-
-              // ── Loading ───────────────────────────────────────────────────
-              if (_fetching)
-                StatusBanner.info(
-                  title: l10n.mapTerrainProfileLoading,
-                  isLoading: true,
-                ),
-
-              // ── Offline ───────────────────────────────────────────────────
-              if (!_fetching && _offline)
-                StatusBanner.warning(
-                  title: l10n.mapTerrainProfileOffline,
-                  subtitle: l10n.mapTerrainProfileOfflineSubtitle,
-                  trailing: TextButton(
-                    onPressed: _retry,
-                    child: Text(l10n.mapTerrainRetry),
+                // ── Terrain elevation used as altitude fallback ────────────────
+                if (showTerrainFallbackNote) ...[
+                  StatusBanner.info(
+                    title: l10n.mapTerrainProfileUsingTerrainAltitude,
+                    subtitle:
+                        l10n.mapTerrainProfileUsingTerrainAltitudeSubtitle,
                   ),
-                ),
-
-              // ── Error ─────────────────────────────────────────────────────
-              if (!_fetching && _errorMessage != null)
-                StatusBanner.error(
-                  title: l10n.mapTerrainProfileError,
-                  subtitle: l10n.mapTerrainProfileErrorSubtitle,
-                  trailing: TextButton(
-                    onPressed: _retry,
-                    child: Text(l10n.mapTerrainRetry),
+                  const SizedBox(height: AppTheme.spacing12),
+                  _AntennaHeightInputs(
+                    needsA: altA == null && _terrainAltA != null,
+                    needsB: altB == null && _terrainAltB != null,
+                    terrainAltA: _terrainAltA,
+                    terrainAltB: _terrainAltB,
+                    controllerA: _heightAglControllerA,
+                    controllerB: _heightAglControllerB,
+                    nodeA: widget.nodeA,
+                    nodeB: widget.nodeB,
                   ),
-                ),
+                  const SizedBox(height: AppTheme.spacing12),
+                ],
 
-              // ── Chart + verdict ───────────────────────────────────────────
-              if (!_fetching && _samples != null) ...[
-                TerrainProfileChart(
-                  samples: _samples!,
-                  losResult: (_losResult?.hasAltitudeData ?? false)
-                      ? _losResult
-                      : null,
-                ),
-                const SizedBox(height: AppTheme.spacing12),
-
-                // Sample count label
-                Text(
-                  l10n.mapTerrainProfileSampleCount(_samples!.length),
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Theme.of(
-                      context,
-                    ).textTheme.bodySmall?.color?.withValues(alpha: 0.6),
+                // ── Altitude unavailable note ─────────────────────────────────
+                if (showNoAltitudeWarning) ...[
+                  StatusBanner.warning(
+                    title: l10n.mapTerrainProfileNeedsAltitude,
+                    subtitle: l10n.mapTerrainProfileNeedsAltitudeSubtitle,
                   ),
-                ),
-                const SizedBox(height: AppTheme.spacing12),
+                  const SizedBox(height: AppTheme.spacing12),
+                ],
 
-                // LOS verdict (only when altitude data is present)
-                if (_losResult != null && _losResult!.hasAltitudeData)
-                  _TerrainVerdictPanel(result: _losResult!),
-              ],
-            ]),
+                // ── Loading ───────────────────────────────────────────────────
+                if (_fetching)
+                  StatusBanner.info(
+                    title: l10n.mapTerrainProfileLoading,
+                    isLoading: true,
+                  ),
+
+                // ── Offline ───────────────────────────────────────────────────
+                if (!_fetching && _offline)
+                  StatusBanner.warning(
+                    title: l10n.mapTerrainProfileOffline,
+                    subtitle: l10n.mapTerrainProfileOfflineSubtitle,
+                    trailing: TextButton(
+                      onPressed: _retry,
+                      child: Text(l10n.mapTerrainRetry),
+                    ),
+                  ),
+
+                // ── Error ─────────────────────────────────────────────────────
+                if (!_fetching && _errorMessage != null)
+                  StatusBanner.error(
+                    title: l10n.mapTerrainProfileError,
+                    subtitle: l10n.mapTerrainProfileErrorSubtitle,
+                    trailing: TextButton(
+                      onPressed: _retry,
+                      child: Text(l10n.mapTerrainRetry),
+                    ),
+                  ),
+
+                // ── Chart + verdict ───────────────────────────────────────────
+                if (!_fetching && _samples != null) ...[
+                  TerrainProfileChart(
+                    samples: _samples!,
+                    losResult: (_losResult?.hasAltitudeData ?? false)
+                        ? _losResult
+                        : null,
+                  ),
+                  const SizedBox(height: AppTheme.spacing12),
+
+                  // Sample count label
+                  Text(
+                    l10n.mapTerrainProfileSampleCount(_samples!.length),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.color?.withValues(alpha: 0.6),
+                    ),
+                  ),
+                  const SizedBox(height: AppTheme.spacing12),
+
+                  // LOS verdict (only when altitude data is present)
+                  if (_losResult != null && _losResult!.hasAltitudeData)
+                    _TerrainVerdictPanel(result: _losResult!),
+                ],
+              ]),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -326,6 +406,185 @@ class _EndpointRow extends StatelessWidget {
         Text(
           _label(l10n, end, nodeB, 'B'),
           style: TextStyle(fontSize: 12, color: AppTheme.warningYellow),
+        ),
+      ],
+    );
+  }
+}
+
+/// Editable antenna height above ground fields for endpoints missing GPS altitude.
+class _AntennaHeightInputs extends StatelessWidget {
+  final bool needsA;
+  final bool needsB;
+  final int? terrainAltA;
+  final int? terrainAltB;
+  final TextEditingController controllerA;
+  final TextEditingController controllerB;
+  final MeshNode? nodeA;
+  final MeshNode? nodeB;
+
+  const _AntennaHeightInputs({
+    required this.needsA,
+    required this.needsB,
+    required this.terrainAltA,
+    required this.terrainAltB,
+    required this.controllerA,
+    required this.controllerB,
+    this.nodeA,
+    this.nodeB,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spacing12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+        border: Border.all(
+          color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            l10n.mapTerrainAntennaHeightTitle,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Theme.of(context).textTheme.bodyMedium?.color,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing4),
+          Text(
+            l10n.mapTerrainAntennaHeightSubtitle,
+            style: TextStyle(
+              fontSize: 11,
+              color: Theme.of(context).textTheme.bodySmall?.color,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing12),
+          if (needsA)
+            _AntennaHeightField(
+              label: l10n.mapTerrainAntennaHeightPointLabel(
+                'A',
+                nodeA?.displayName ?? 'A',
+              ),
+              terrainAlt: terrainAltA,
+              controller: controllerA,
+            ),
+          if (needsA && needsB) const SizedBox(height: AppTheme.spacing8),
+          if (needsB)
+            _AntennaHeightField(
+              label: l10n.mapTerrainAntennaHeightPointLabel(
+                'B',
+                nodeB?.displayName ?? 'B',
+              ),
+              terrainAlt: terrainAltB,
+              controller: controllerB,
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Single antenna height input row with terrain elevation context.
+class _AntennaHeightField extends StatelessWidget {
+  final String label;
+  final int? terrainAlt;
+  final TextEditingController controller;
+
+  const _AntennaHeightField({
+    required this.label,
+    required this.terrainAlt,
+    required this.controller,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                ),
+              ),
+              if (terrainAlt != null)
+                Text(
+                  l10n.mapTerrainAntennaHeightGroundLevel(terrainAlt!),
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(width: AppTheme.spacing8),
+        SizedBox(
+          width: 80,
+          child: TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            maxLength: 4,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14,
+              color: Theme.of(context).textTheme.bodyMedium?.color,
+            ),
+            decoration: InputDecoration(
+              counterText: '',
+              hintText: '0', // lint-allow: hardcoded-string
+              hintStyle: TextStyle(
+                color: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.color?.withValues(alpha: 0.4),
+              ),
+              suffixText: l10n.unitM,
+              suffixStyle: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).textTheme.bodySmall?.color,
+              ),
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spacing8,
+                vertical: AppTheme.spacing8,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
+                borderSide: BorderSide(
+                  color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
+                borderSide: BorderSide(
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+            ),
+          ),
         ),
       ],
     );

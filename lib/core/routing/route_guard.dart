@@ -172,11 +172,12 @@ class RouteGuard {
 
     if (showBlockedMessage && result.reason != null) {
       if (result.fallbackRoute != null) {
+        final navigator = Navigator.of(context);
         showActionSnackBar(
           context,
           result.reason!,
           actionLabel: context.l10n.actionConnect,
-          onAction: () => Navigator.of(context).pushNamed('/scanner'),
+          onAction: () => navigator.pushNamed('/scanner'),
           type: SnackBarType.warning,
         );
       } else {

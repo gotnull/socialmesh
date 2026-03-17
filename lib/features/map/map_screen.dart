@@ -1986,11 +1986,12 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       (n) => n.node.nodeNum == myNodeNum,
                     ),
                     onLocationUnavailable: () {
+                      final navigator = Navigator.of(context);
                       showActionSnackBar(
                         context,
                         'No position available. Enable GPS on your device or turn on "Provide phone location" in Settings.', // lint-allow: hardcoded-string
                         actionLabel: context.l10n.actionView,
-                        onAction: () => Navigator.of(context).push(
+                        onAction: () => navigator.push(
                           MaterialPageRoute(
                             builder: (_) => const SettingsScreen(
                               initialSearchQuery: 'phone location',

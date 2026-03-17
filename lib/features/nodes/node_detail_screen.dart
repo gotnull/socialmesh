@@ -75,6 +75,11 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
   /// Prevents duplicate popups for the same result across rebuilds.
   String? _lastShownTracerouteId;
 
+  /// Timestamp of the most recent traceroute request sent from this screen.
+  /// Used to ignore late-arriving responses from previous requests that
+  /// predate the current one (the mesh has no request-response correlation).
+  DateTime? _lastTracerouteSentAt;
+
   final ScrollController _scrollController = ScrollController();
   bool _showAppBarIdentity = false;
   static const double _identityScrollThreshold = 80.0;
@@ -321,6 +326,7 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
     final displayName = node.displayName;
 
     try {
+      _lastTracerouteSentAt = DateTime.now();
       await protocol.sendTraceroute(node.nodeNum);
 
       if (!mounted) return;
@@ -1248,6 +1254,14 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
           orElse: () => logs.first,
         );
         if (!latest.response) return;
+
+        // Ignore late-arriving responses from previous traceroute requests.
+        // The mesh has no request-response correlation, so a response that
+        // arrives after a new request was sent likely belongs to the old one.
+        if (_lastTracerouteSentAt != null &&
+            latest.timestamp.isBefore(_lastTracerouteSentAt!)) {
+          return;
+        }
 
         // On the initial data load — whether prev was null (provider not yet
         // observed) or prev had no value (AsyncLoading → AsyncData) — seed

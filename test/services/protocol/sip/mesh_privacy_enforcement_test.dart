@@ -221,6 +221,85 @@ void main() {
       discovery.clearPeerCache();
       expect(discovery.peerCount, 0);
     });
+
+    // -----------------------------------------------------------------------
+    // Scan window: force=true ROLLCALL_REQ opens a 10s response window
+    // -----------------------------------------------------------------------
+
+    test('scan window opens on force=true ROLLCALL_REQ', () {
+      expect(discovery.isDiscoverable, isFalse);
+      expect(discovery.isInScanWindow, isFalse);
+
+      // Force-send opens scan window.
+      final req = discovery.buildRollcallReq(force: true);
+      expect(req, isNotNull);
+      expect(discovery.isInScanWindow, isTrue);
+    });
+
+    test(
+      'ROLLCALL_RESP allowed during scan window even when not discoverable',
+      () {
+        expect(discovery.isDiscoverable, isFalse);
+
+        // Open scan window.
+        discovery.buildRollcallReq(force: true);
+        expect(discovery.isInScanWindow, isTrue);
+
+        // Response should now succeed despite discoverable=false.
+        final resp = discovery.buildRollcallResp(0xBBBB);
+        expect(resp, isNotNull);
+      },
+    );
+
+    test('handleRollcallReq responds during scan window', () {
+      expect(discovery.isDiscoverable, isFalse);
+
+      // Open scan window.
+      discovery.buildRollcallReq(force: true);
+
+      // Incoming rollcall request from a peer should produce a response.
+      final resp = discovery.handleRollcallReq(0xBBBB);
+      expect(resp, isNotNull);
+    });
+
+    test('scan window expires after 10s', () {
+      expect(discovery.isDiscoverable, isFalse);
+
+      discovery.buildRollcallReq(force: true);
+      expect(discovery.isInScanWindow, isTrue);
+
+      // Advance past the 10s scan window.
+      nowMs += 11 * 1000;
+      expect(discovery.isInScanWindow, isFalse);
+
+      // Response should be suppressed again.
+      final resp = discovery.buildRollcallResp(0xBBBB);
+      expect(resp, isNull);
+    });
+
+    test('non-forced ROLLCALL_REQ does not open scan window', () {
+      expect(discovery.isDiscoverable, isFalse);
+
+      // Non-forced request (automatic scan) — should not open window.
+      // It will succeed because buildRollcallReq does not check
+      // isDiscoverable for outbound requests.
+      final req = discovery.buildRollcallReq();
+      expect(req, isNotNull);
+      expect(discovery.isInScanWindow, isFalse);
+    });
+
+    test('CAP_BEACON still suppressed during scan window', () {
+      expect(discovery.isDiscoverable, isFalse);
+
+      // Open scan window.
+      discovery.buildRollcallReq(force: true);
+      expect(discovery.isInScanWindow, isTrue);
+
+      // Beacon should still be suppressed — scan window only lifts the
+      // response gate, not the beacon gate.
+      final beacon = discovery.buildBeacon(force: true);
+      expect(beacon, isNull);
+    });
   });
 
   // =========================================================================

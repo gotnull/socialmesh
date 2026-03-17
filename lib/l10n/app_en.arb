@@ -42684,6 +42684,35 @@
     "@mapTerrainRetry": {
         "description": "Button label to retry a failed elevation fetch."
     },
+    "mapTerrainAntennaHeightTitle": "Antenna height above ground",
+    "@mapTerrainAntennaHeightTitle": {
+        "description": "Title for the antenna height input section on the terrain profile screen."
+    },
+    "mapTerrainAntennaHeightSubtitle": "Set antenna height above ground level for points without GPS altitude to improve LOS accuracy.",
+    "@mapTerrainAntennaHeightSubtitle": {
+        "description": "Subtitle explaining why the user should enter antenna height above ground."
+    },
+    "mapTerrainAntennaHeightPointLabel": "Point {prefix}: {name}",
+    "@mapTerrainAntennaHeightPointLabel": {
+        "description": "Label for an antenna height input field, e.g. 'Point A: NodeName'.",
+        "placeholders": {
+            "prefix": {
+                "type": "String"
+            },
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "mapTerrainAntennaHeightGroundLevel": "Ground: {altitude}m AMSL",
+    "@mapTerrainAntennaHeightGroundLevel": {
+        "description": "Shows the terrain elevation at an endpoint so the user has context for their AGL input.",
+        "placeholders": {
+            "altitude": {
+                "type": "int"
+            }
+        }
+    },
     "terrainLosExplanationObstructed": "Terrain obstructs path by {depth}m at the worst point.",
     "@terrainLosExplanationObstructed": {
         "description": "Explanation shown when terrain fully blocks the LOS path.",

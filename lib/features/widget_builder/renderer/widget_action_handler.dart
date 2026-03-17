@@ -108,11 +108,12 @@ class WidgetActionHandler {
               context.l10n.widgetBuilderLocationSharedMesh,
             );
           case PublishDecision.blockedDisabled:
+            final navigator = Navigator.of(context);
             showActionSnackBar(
               context,
               context.l10n.widgetBuilderEnablePhoneLocation,
               actionLabel: context.l10n.widgetBuilderView,
-              onAction: () => Navigator.of(context).push(
+              onAction: () => navigator.push(
                 MaterialPageRoute(
                   builder: (_) => const SettingsScreen(
                     initialSearchQuery: 'phone location',

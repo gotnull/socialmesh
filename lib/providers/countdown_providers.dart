@@ -138,7 +138,8 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
   // -----------------------------------------------------------------------
 
   /// Starts a new countdown. If a countdown with the same [id] already exists
-  /// it is replaced (restarted).
+  /// and is still running, the call is ignored to prevent timer resets when
+  /// the user retries during cooldown.
   void startCountdown({
     required String id,
     required String label,
@@ -146,6 +147,9 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
     required CountdownType type,
     int? targetNodeNum,
   }) {
+    // Don't restart an already-active countdown for the same id.
+    if (state.containsKey(id)) return;
+
     final task = CountdownTask(
       id: id,
       label: label,

@@ -365,7 +365,7 @@ class SipAutoScanNotifier extends Notifier<bool> {
 /// Whether the local node is discoverable on the mesh.
 ///
 /// When false, CAP_BEACON emission, rollcall responses, and SERVICE_ADVERT
-/// broadcasts are suppressed. Defaults to false (anonymous, opt-in).
+/// broadcasts are suppressed. Defaults to true (opt-out).
 final meshPrivacyDiscoverableProvider =
     NotifierProvider<MeshPrivacyDiscoverableNotifier, bool>(
       MeshPrivacyDiscoverableNotifier.new,
@@ -378,7 +378,7 @@ class MeshPrivacyDiscoverableNotifier extends Notifier<bool> {
     final settingsAsync = ref.watch(settingsServiceProvider);
     return settingsAsync.maybeWhen(
       data: (s) => s.meshDiscoverable,
-      orElse: () => false,
+      orElse: () => true,
     );
   }
 
@@ -393,7 +393,7 @@ class MeshPrivacyDiscoverableNotifier extends Notifier<bool> {
 /// Whether profile sharing is enabled on the mesh.
 ///
 /// When false, identity auto-responses (ID_RESP) and profile.v1 service
-/// requests are suppressed. Defaults to false (opt-in).
+/// requests are suppressed. Defaults to true (opt-out).
 final meshPrivacyProfileSharingProvider =
     NotifierProvider<MeshPrivacyProfileSharingNotifier, bool>(
       MeshPrivacyProfileSharingNotifier.new,
@@ -406,7 +406,7 @@ class MeshPrivacyProfileSharingNotifier extends Notifier<bool> {
     final settingsAsync = ref.watch(settingsServiceProvider);
     return settingsAsync.maybeWhen(
       data: (s) => s.meshProfileSharing,
-      orElse: () => false,
+      orElse: () => true,
     );
   }
 
@@ -421,7 +421,7 @@ class MeshPrivacyProfileSharingNotifier extends Notifier<bool> {
 /// Whether DMs are available on the mesh.
 ///
 /// When false, handshake initiation and incoming handshake requests are
-/// blocked. Defaults to false (opt-in).
+/// blocked. Defaults to true (opt-out).
 final meshPrivacyDmAvailableProvider =
     NotifierProvider<MeshPrivacyDmAvailableNotifier, bool>(
       MeshPrivacyDmAvailableNotifier.new,
@@ -434,7 +434,7 @@ class MeshPrivacyDmAvailableNotifier extends Notifier<bool> {
     final settingsAsync = ref.watch(settingsServiceProvider);
     return settingsAsync.maybeWhen(
       data: (s) => s.meshDmAvailable,
-      orElse: () => false,
+      orElse: () => true,
     );
   }
 

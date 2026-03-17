@@ -56158,6 +56158,30 @@ abstract class AppLocalizations {
   /// **'Retry'**
   String get mapTerrainRetry;
 
+  /// Title for the antenna height input section on the terrain profile screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Antenna height above ground'**
+  String get mapTerrainAntennaHeightTitle;
+
+  /// Subtitle explaining why the user should enter antenna height above ground.
+  ///
+  /// In en, this message translates to:
+  /// **'Set antenna height above ground level for points without GPS altitude to improve LOS accuracy.'**
+  String get mapTerrainAntennaHeightSubtitle;
+
+  /// Label for an antenna height input field, e.g. 'Point A: NodeName'.
+  ///
+  /// In en, this message translates to:
+  /// **'Point {prefix}: {name}'**
+  String mapTerrainAntennaHeightPointLabel(String prefix, String name);
+
+  /// Shows the terrain elevation at an endpoint so the user has context for their AGL input.
+  ///
+  /// In en, this message translates to:
+  /// **'Ground: {altitude}m AMSL'**
+  String mapTerrainAntennaHeightGroundLevel(int altitude);
+
   /// Explanation shown when terrain fully blocks the LOS path.
   ///
   /// In en, this message translates to:

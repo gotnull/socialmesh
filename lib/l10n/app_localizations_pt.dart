@@ -32176,6 +32176,23 @@ class AppLocalizationsPt extends AppLocalizations {
   String get mapTerrainRetry => 'Tentar novamente';
 
   @override
+  String get mapTerrainAntennaHeightTitle => 'Antenna height above ground';
+
+  @override
+  String get mapTerrainAntennaHeightSubtitle =>
+      'Set antenna height above ground level for points without GPS altitude to improve LOS accuracy.';
+
+  @override
+  String mapTerrainAntennaHeightPointLabel(String prefix, String name) {
+    return 'Point $prefix: $name';
+  }
+
+  @override
+  String mapTerrainAntennaHeightGroundLevel(int altitude) {
+    return 'Ground: ${altitude}m AMSL';
+  }
+
+  @override
   String terrainLosExplanationObstructed(String depth) {
     return 'Terreno obstrui o caminho em ${depth}m no pior ponto.';
   }
