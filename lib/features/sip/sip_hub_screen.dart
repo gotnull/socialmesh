@@ -209,7 +209,13 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
     }
 
     // Already handshaking — let the chip show progress, don't interrupt.
+    // pendingApproval means *we* need to act (accept), so route to accept.
     final currentState = handshake.getState(peer.nodeId);
+    if (currentState == SipHandshakeState.pendingApproval) {
+      final protocol = ref.read(protocolServiceProvider);
+      protocol.acceptSipHandshake(peer.nodeId);
+      return;
+    }
     if (currentState != SipHandshakeState.idle &&
         currentState != SipHandshakeState.declined &&
         currentState != SipHandshakeState.failed &&
@@ -268,13 +274,20 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
 
     // Deduplicate identical log lines across rebuilds.
     final sig =
-        '$sipEnabled|$peerCount|${sessions.length}'; // lint-allow: hardcoded-string
+        '$sipEnabled|$peerCount|${sessions.length}|${pendingRequestNodeIds.length}'; // lint-allow: hardcoded-string
     if (sig != _lastLogSignature) {
       _lastLogSignature = sig;
       AppLogging.sip(
         'SIP_HUB: build — enabled=$sipEnabled, peers=$peerCount, '
-        'sessions=${sessions.length}', // lint-allow: hardcoded-string
+        'sessions=${sessions.length}, '
+        'pendingRequests=${pendingRequestNodeIds.length}', // lint-allow: hardcoded-string
       );
+      if (pendingRequestNodeIds.isNotEmpty) {
+        AppLogging.sip(
+          'SIP_HUB: pending request nodeIds='
+          '${pendingRequestNodeIds.map((id) => '0x${id.toRadixString(16)}').join(', ')}', // lint-allow: hardcoded-string
+        );
+      }
     }
 
     // Filter out peers that already have an active DM session —
@@ -740,7 +753,6 @@ class _PeerTileState extends ConsumerState<_PeerTile>
 
   static bool _isHandshaking(SipHandshakeState state) => switch (state) {
     SipHandshakeState.helloSent ||
-    SipHandshakeState.pendingApproval ||
     SipHandshakeState.challengeReceived ||
     SipHandshakeState.responseSent ||
     SipHandshakeState.challengeSent ||
@@ -771,7 +783,8 @@ class _PeerTileState extends ConsumerState<_PeerTile>
     final hexId =
         '!${widget.peer.nodeId.toRadixString(16).toUpperCase().padLeft(4, '0')}';
 
-    // Block taps while handshake is in-progress.
+    // Block taps while handshake is in-progress (not pendingApproval —
+    // that requires user action so the card stays tappable).
     final isBusy = _isHandshaking(hsState);
     final isDeclined = _isNegative(hsState);
 
@@ -983,7 +996,6 @@ class _HandshakeChipState extends State<_HandshakeChip>
 
   static bool _isInProgress(SipHandshakeState state) => switch (state) {
     SipHandshakeState.helloSent ||
-    SipHandshakeState.pendingApproval ||
     SipHandshakeState.challengeReceived ||
     SipHandshakeState.responseSent ||
     SipHandshakeState.challengeSent ||
@@ -994,6 +1006,12 @@ class _HandshakeChipState extends State<_HandshakeChip>
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+
+    AppLogging.sip(
+      'SIP_HUB_CHIP: state=${widget.state.name}, '
+      'hasDm=${widget.hasDmSession}, '
+      'inProgress=${_isInProgress(widget.state)}', // lint-allow: hardcoded-string
+    );
 
     // If a DM session exists, show "Connected" regardless of handshake state.
     final (label, color, icon) = widget.hasDmSession

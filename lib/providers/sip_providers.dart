@@ -150,16 +150,25 @@ final sipDiscoveryProvider = Provider<SipDiscovery?>((ref) {
   );
 
   // Invalidate peer/count providers when the cache changes so the UI rebuilds.
+  // Deferred via microtask: attachSipDiscovery drains early frames
+  // synchronously during provider init, which can trigger _upsertPeer.
+  // A synchronous bump would modify _SipPeerCacheEpoch while the widget
+  // tree is still building — Riverpod forbids that.
   discovery.onPeersChanged = () {
-    ref.read(sipPeerCacheEpochProvider.notifier).bump();
+    Future.microtask(() {
+      ref.read(sipPeerCacheEpochProvider.notifier).bump();
+    });
   };
 
   // Bridge discovered peers into NodeDex as SIP-capable.
   // Also bump the unseen-peer badge counter and fire a local notification.
+  // Deferred for the same reason as onPeersChanged above.
   discovery.onPeerDiscovered = (nodeId) {
-    sipBridgeMarkCapableFromRef(ref, nodeId);
-    ref.read(newMeshPeerCountProvider.notifier).bump();
-    NotificationService().showSipPeerFoundNotification(peerNodeId: nodeId);
+    Future.microtask(() {
+      sipBridgeMarkCapableFromRef(ref, nodeId);
+      ref.read(newMeshPeerCountProvider.notifier).bump();
+      NotificationService().showSipPeerFoundNotification(peerNodeId: nodeId);
+    });
   };
 
   // Resume-safe: set initial timestamps to "now" so we don't burst
@@ -228,8 +237,14 @@ final sipHandshakeProvider = Provider<SipHandshakeManager?>((ref) {
   manager.isDmAvailable = ref.watch(meshPrivacyDmAvailableProvider);
 
   // Bump epoch so UI rebuilds when handshake state changes.
+  // Deferred via microtask: if a handshake frame arrives in the SIP startup
+  // buffer, _drainSipStartupBuffer dispatches it synchronously during
+  // provider init, and a synchronous bump would violate Riverpod's
+  // no-modify-during-build invariant.
   manager.onStateChanged = () {
-    ref.read(sipHandshakeEpochProvider.notifier).bump();
+    Future.microtask(() {
+      ref.read(sipHandshakeEpochProvider.notifier).bump();
+    });
   };
 
   final protocol = ref.read(protocolServiceProvider);
@@ -306,13 +321,18 @@ final sipDmManagerProvider = Provider<SipDmManager?>((ref) {
   final manager = SipDmManager(rateLimiter: limiter, counters: counters);
 
   // Bump epoch so UI rebuilds when sessions are created or messages arrive.
+  // Deferred via microtask for the same reason as onPeersChanged above.
   manager.onStateChanged = () {
-    ref.read(sipDmEpochProvider.notifier).bump();
+    Future.microtask(() {
+      ref.read(sipDmEpochProvider.notifier).bump();
+    });
   };
 
   // Bump typing epoch so UI shows/hides typing indicator.
   manager.onTypingReceived = (_) {
-    ref.read(sipDmTypingEpochProvider.notifier).bump();
+    Future.microtask(() {
+      ref.read(sipDmTypingEpochProvider.notifier).bump();
+    });
   };
 
   final protocol = ref.read(protocolServiceProvider);
