@@ -152,6 +152,109 @@ void main() {
         final result = discovery.handleRollcallReq(0xBBBB);
         expect(result, isNotNull);
       });
+
+      test('handleRollcallReq adds peer via passive discovery', () {
+        expect(discovery.peerCount, 0);
+        discovery.handleRollcallReq(0xBBBB);
+        expect(discovery.peerCount, 1);
+
+        final peer = discovery.getPeer(0xBBBB);
+        expect(peer, isNotNull);
+        expect(peer!.features, SipFeatureBits.sip0);
+        expect(peer.capsHash, 0);
+      });
+
+      test('passive discovery does not overwrite full capabilities', () {
+        // First: add peer with full capabilities via beacon.
+        final beacon = SipCapBeacon(
+          features: SipFeatureBits.allV01,
+          deviceClass: 1,
+          maxProtoMinor: 1,
+          mtuHint: 215,
+          rxWindowS: 10,
+        );
+        final payload = SipCapMessages.encodeCapBeacon(beacon);
+        final frame = SipFrame(
+          versionMajor: 0,
+          versionMinor: 1,
+          msgType: SipMessageType.capBeacon,
+          flags: 0,
+          headerLen: SipConstants.sipWrapperMin,
+          sessionId: 0,
+          nonce: 12345,
+          timestampS: nowMs ~/ 1000,
+          payloadLen: payload.length,
+          payload: payload,
+        );
+        discovery.handleBeacon(frame, 0xBBBB);
+        expect(discovery.getPeer(0xBBBB)!.features, SipFeatureBits.allV01);
+        final origHash = discovery.getPeer(0xBBBB)!.capsHash;
+        expect(origHash, isNot(0));
+
+        // Then: receive ROLLCALL_REQ from same peer.
+        nowMs += 1000;
+        discovery.handleRollcallReq(0xBBBB);
+
+        // Capabilities must NOT be downgraded.
+        final peer = discovery.getPeer(0xBBBB)!;
+        expect(peer.features, SipFeatureBits.allV01);
+        expect(peer.capsHash, origHash);
+        // But lastSeenMs should be refreshed.
+        expect(peer.lastSeenMs, nowMs);
+      });
+
+      test('passive discovery upgraded by ROLLCALL_RESP', () {
+        // First: passive discovery from REQ (minimal caps).
+        discovery.handleRollcallReq(0xBBBB);
+        expect(discovery.getPeer(0xBBBB)!.capsHash, 0);
+        expect(discovery.peerCount, 1);
+
+        // Then: full ROLLCALL_RESP arrives.
+        nowMs += 2000;
+        final beacon = SipCapBeacon(
+          features: SipFeatureBits.allV01,
+          deviceClass: 1,
+          maxProtoMinor: 1,
+          mtuHint: 215,
+          rxWindowS: 10,
+        );
+        final resp = SipRollcallResp(
+          capabilities: beacon,
+          capsHash: SipCapMessages.computeCapsHash(beacon),
+        );
+        final payload = SipCapMessages.encodeRollcallResp(resp);
+        final frame = SipFrame(
+          versionMajor: 0,
+          versionMinor: 1,
+          msgType: SipMessageType.rollcallResp,
+          flags: SipFlags.isResponse,
+          headerLen: SipConstants.sipWrapperMin,
+          sessionId: 0,
+          nonce: 99999,
+          timestampS: nowMs ~/ 1000,
+          payloadLen: payload.length,
+          payload: payload,
+        );
+        discovery.handleRollcallResp(frame, 0xBBBB);
+
+        // Now should have full capabilities.
+        final peer = discovery.getPeer(0xBBBB)!;
+        expect(peer.features, SipFeatureBits.allV01);
+        expect(peer.capsHash, isNot(0));
+        expect(peer.mtuHint, 215);
+      });
+
+      test('passive discovery fires onPeersChanged', () {
+        var changed = 0;
+        discovery.onPeersChanged = () => changed++;
+
+        discovery.handleRollcallReq(0xBBBB);
+        expect(changed, 1);
+
+        // Second call from same peer (already cached) — no change event.
+        discovery.handleRollcallReq(0xBBBB);
+        expect(changed, 1);
+      });
     });
 
     group('Inbound handling', () {

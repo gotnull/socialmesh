@@ -612,6 +612,12 @@ class SipDiscovery {
 
   /// Handle an inbound ROLLCALL_REQ. Returns a response to send, or null.
   ///
+  /// Also performs **passive discovery**: receiving a ROLLCALL_REQ proves the
+  /// sender is a SIP peer. If they are not already cached, an entry with
+  /// minimal capabilities (SIP-0 only, capsHash=0) is created so the peer
+  /// appears in the UI immediately. The entry is upgraded when a
+  /// ROLLCALL_RESP or CAP_BEACON arrives with full capability data.
+  ///
   /// Ignores duplicate packets seen via multi-hop.
   /// The caller should delay sending by 0-3s (random jitter).
   SipOutbound? handleRollcallReq(int senderNodeId, {SipFrame? frame}) {
@@ -620,6 +626,28 @@ class SipDiscovery {
     // Duplicate suppression for the request itself.
     if (frame != null && _isDuplicateDiscovery(senderNodeId, frame)) {
       return null;
+    }
+
+    // Passive discovery: a ROLLCALL_REQ proves the sender is a SIP peer.
+    // If already cached with full capabilities, just refresh the timestamp.
+    // Otherwise create a minimal entry so the peer is visible immediately.
+    final existing = _cache[senderNodeId];
+    if (existing != null) {
+      existing.lastSeenMs = _nowMs();
+    } else {
+      AppLogging.sip(
+        'SIP_DISCOVERY: passive discovery from ROLLCALL_REQ, '
+        'node=0x${senderNodeId.toRadixString(16)}',
+      );
+      _upsertPeer(
+        nodeId: senderNodeId,
+        features: SipFeatureBits.sip0,
+        deviceClass: 0,
+        maxProtoMinor: frame?.versionMinor ?? 0,
+        mtuHint: 0,
+        rxWindowS: 0,
+        capsHash: 0,
+      );
     }
 
     return buildRollcallResp(senderNodeId);

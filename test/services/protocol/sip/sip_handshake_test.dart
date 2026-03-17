@@ -141,10 +141,12 @@ void main() {
         replayCache: replayCache,
         localNodeId: 0xAAAA,
       );
+      initiator.isDmAvailable = true;
       final responder = SipHandshakeManager(
         replayCache: SipReplayCache(),
         localNodeId: 0xBBBB,
       );
+      responder.isDmAvailable = true;
 
       const nodeA = 0xAAAA;
       const nodeB = 0xBBBB;
@@ -196,6 +198,7 @@ void main() {
         replayCache: replayCache,
         localNodeId: 0x1111,
       );
+      mgr.isDmAvailable = true;
       final first = mgr.initiateHandshake(0x1234);
       expect(first, isNotNull);
 
@@ -208,6 +211,7 @@ void main() {
         replayCache: replayCache,
         localNodeId: 0x1111,
       );
+      mgr.isDmAvailable = true;
 
       final helloFrame = SipFrame(
         versionMajor: 0,
@@ -264,6 +268,7 @@ void main() {
         replayCache: replayCache,
         localNodeId: 0x1111,
       );
+      mgr.isDmAvailable = true;
       mgr.initiateHandshake(0x1234);
       expect(mgr.hasActiveSession(0x1234), isTrue);
 
@@ -276,6 +281,7 @@ void main() {
         replayCache: replayCache,
         localNodeId: 0x1111,
       );
+      mgr.isDmAvailable = true;
 
       final helloA = mgr.initiateHandshake(0xAAAA);
       final helloB = mgr.initiateHandshake(0xBBBB);
@@ -291,6 +297,7 @@ void main() {
         replayCache: replayCache,
         localNodeId: 0x1111,
       );
+      mgr.isDmAvailable = true;
       mgr.initiateHandshake(0xAAAA);
       mgr.initiateHandshake(0xBBBB);
 
@@ -305,10 +312,12 @@ void main() {
         replayCache: replayCache,
         localNodeId: 0xAAAA,
       );
+      initiator.isDmAvailable = true;
       final responder = SipHandshakeManager(
         replayCache: SipReplayCache(),
         localNodeId: 0xBBBB,
       );
+      responder.isDmAvailable = true;
 
       final helloFrame = initiator.initiateHandshake(0xBBBB);
       responder.handleHello(0xAAAA, helloFrame!);
@@ -353,10 +362,12 @@ void main() {
         replayCache: SipReplayCache(),
         localNodeId: nodeA,
       );
+      mgrA.isDmAvailable = true;
       final mgrB = SipHandshakeManager(
         replayCache: SipReplayCache(),
         localNodeId: nodeB,
       );
+      mgrB.isDmAvailable = true;
 
       // Both send HS_HELLO to each other simultaneously.
       final helloFromA = mgrA.initiateHandshake(nodeB);
@@ -422,6 +433,7 @@ void main() {
         replayCache: SipReplayCache(),
         localNodeId: nodeId,
       );
+      mgrA.isDmAvailable = true;
 
       final hello = mgrA.initiateHandshake(nodeId);
       expect(hello, isNotNull);
@@ -494,6 +506,7 @@ void main() {
         replayCache: SipReplayCache(),
         localNodeId: 0x1111,
       );
+      mgr.isDmAvailable = true;
 
       mgr.handleHello(0xAAAA, makeHello(nonce: 100));
       expect(mgr.getState(0xAAAA), SipHandshakeState.pendingApproval);
@@ -511,6 +524,7 @@ void main() {
         replayCache: SipReplayCache(),
         localNodeId: 0x1111,
       );
+      mgr.isDmAvailable = true;
 
       mgr.handleHello(0xAAAA, makeHello(nonce: 200));
       expect(mgr.getState(0xAAAA), SipHandshakeState.pendingApproval);
@@ -530,6 +544,7 @@ void main() {
         replayCache: SipReplayCache(),
         localNodeId: 0x1111,
       );
+      mgr.isDmAvailable = true;
 
       mgr.handleHello(0xAAAA, makeHello(nonce: 300));
       mgr.declineHandshake(0xAAAA);
@@ -553,6 +568,7 @@ void main() {
         replayCache: SipReplayCache(),
         localNodeId: 0x1111,
       );
+      mgr.isDmAvailable = true;
       expect(mgr.declineHandshake(0xAAAA), isNull);
     });
   });
@@ -581,12 +597,13 @@ void main() {
     }
 
     test(
-      'handleDecline clears session and returns to idle without cooldown',
+      'handleDecline clears session and returns to declined without cooldown',
       () {
         final mgr = SipHandshakeManager(
           replayCache: SipReplayCache(),
           localNodeId: 0x1111,
         );
+        mgr.isDmAvailable = true;
 
         final hello = mgr.initiateHandshake(0xAAAA);
         expect(hello, isNotNull);
@@ -595,7 +612,8 @@ void main() {
         // Peer declines us.
         final clientNonce = Uint8List.fromList(List.generate(16, (i) => i));
         mgr.handleDecline(0xAAAA, makeDeclineFrame(clientNonce));
-        expect(mgr.getState(0xAAAA), SipHandshakeState.idle);
+        // State is declined (visible for UI animation), not idle.
+        expect(mgr.getState(0xAAAA), SipHandshakeState.declined);
         expect(
           mgr.isInCooldown(0xAAAA),
           isFalse,
@@ -611,10 +629,14 @@ void main() {
         replayCache: SipReplayCache(),
         localNodeId: 0x1111,
       );
+      mgr.isDmAvailable = true;
 
       final clientNonce = Uint8List.fromList(List.generate(16, (i) => i));
       mgr.initiateHandshake(0xAAAA);
       mgr.handleDecline(0xAAAA, makeDeclineFrame(clientNonce));
+
+      // State is declined, but re-initiation clears it.
+      expect(mgr.getState(0xAAAA), SipHandshakeState.declined);
 
       final hello2 = mgr.initiateHandshake(0xAAAA);
       expect(
@@ -624,6 +646,8 @@ void main() {
             'should be able to re-initiate immediately after being declined',
       );
       expect(hello2!.msgType, SipMessageType.hsHello);
+      // After re-initiation, state should be helloSent (terminal cleared).
+      expect(mgr.getState(0xAAAA), SipHandshakeState.helloSent);
     });
 
     test('mutual decline: both sides can re-initiate immediately', () {
@@ -636,10 +660,12 @@ void main() {
         replayCache: replayCacheA,
         localNodeId: 0x1111, // lower — yields on simultaneous-open
       );
+      mgrA.isDmAvailable = true;
       final mgrB = SipHandshakeManager(
         replayCache: replayCacheB,
         localNodeId: 0x2222, // higher — wins on simultaneous-open
       );
+      mgrB.isDmAvailable = true;
 
       // A initiates to B, B queues for consent.
       final helloFromA = mgrA.initiateHandshake(0x2222)!;
@@ -667,13 +693,13 @@ void main() {
       mgrA.handleDecline(0x2222, declineFromB);
       mgrB.handleDecline(0x1111, declineFromA);
 
-      // After mutual decline: both sides must be in idle with no cooldown.
-      expect(mgrA.getState(0x2222), SipHandshakeState.idle);
-      expect(mgrB.getState(0x1111), SipHandshakeState.idle);
+      // After mutual decline: both sides must not be in cooldown.
+      // getState shows declined (terminal display) but no fail-cooldown.
       expect(mgrA.isInCooldown(0x2222), isFalse);
       expect(mgrB.isInCooldown(0x1111), isFalse);
 
-      // Both sides can immediately attempt a fresh handshake.
+      // Both sides can immediately attempt a fresh handshake
+      // (initiateHandshake clears the terminal display state).
       final retryA = mgrA.initiateHandshake(0x2222);
       expect(retryA, isNotNull, reason: 'A must be able to re-initiate');
 

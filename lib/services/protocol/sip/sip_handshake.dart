@@ -140,6 +140,16 @@ class SipHandshakeManager {
   /// Prevents tight retry loops against unreachable or unresponsive peers.
   final Map<int, int> _failCooldownMs = {};
 
+  /// Recently declined/failed peers: nodeId → [state, expiryMs].
+  ///
+  /// When a peer declines or a handshake fails, the terminal state is kept
+  /// here for [_kTerminalDisplayMs] so that `getState()` returns the correct
+  /// terminal state and the UI can show visual feedback (shake, red border).
+  final Map<int, (SipHandshakeState, int)> _terminalStates = {};
+
+  /// How long a terminal state (declined/failed) is visible via getState().
+  static const int _kTerminalDisplayMs = 5000;
+
   /// Called whenever any session state changes (progress, accept, fail).
   void Function()? onStateChanged;
 
@@ -174,6 +184,9 @@ class SipHandshakeManager {
     // Clean up timed-out sessions and stale completed results.
     _cleanExpired();
     _cleanCompletedResults();
+
+    // Clear any lingering terminal display state so the UI resets.
+    _terminalStates.remove(peerNodeId);
 
     if (_sessions.containsKey(peerNodeId)) {
       AppLogging.sip(
@@ -616,6 +629,12 @@ class SipHandshakeManager {
 
     _sessions.remove(peerNodeId);
     _counters?.recordHandshakeFailed();
+
+    // Keep declined state visible for the UI animation window.
+    _terminalStates[peerNodeId] = (
+      SipHandshakeState.declined,
+      _clock().millisecondsSinceEpoch + _kTerminalDisplayMs,
+    );
     onStateChanged?.call();
 
     final decline = SipHsMessages.decodeDecline(frame.payload);
@@ -759,7 +778,18 @@ class SipHandshakeManager {
       _failSession(peerNodeId, 'timeout');
       return SipHandshakeState.timedOut;
     }
-    return session?.state ?? SipHandshakeState.idle;
+    if (session != null) return session.state;
+
+    // Check for recently declined/failed terminal states that the UI
+    // should still display (shake animation, red border).
+    final terminal = _terminalStates[peerNodeId];
+    if (terminal != null) {
+      final (state, expiryMs) = terminal;
+      if (_clock().millisecondsSinceEpoch < expiryMs) return state;
+      _terminalStates.remove(peerNodeId);
+    }
+
+    return SipHandshakeState.idle;
   }
 
   /// Consume a completed handshake result for a peer.
@@ -789,6 +819,7 @@ class SipHandshakeManager {
     _pendingRequests.clear();
     _completed.clear();
     _failCooldownMs.clear();
+    _terminalStates.clear();
   }
 
   // ---------------------------------------------------------------------------
@@ -803,6 +834,12 @@ class SipHandshakeManager {
     final cooldownMs = SipConstants.handshakeCooldownPerPeer.inMilliseconds;
     _failCooldownMs[peerNodeId] = _clock().millisecondsSinceEpoch + cooldownMs;
     _boundFailCooldownMap();
+
+    // Keep failed state visible for the UI animation window.
+    _terminalStates[peerNodeId] = (
+      SipHandshakeState.failed,
+      _clock().millisecondsSinceEpoch + _kTerminalDisplayMs,
+    );
 
     onStateChanged?.call();
     AppLogging.sip(

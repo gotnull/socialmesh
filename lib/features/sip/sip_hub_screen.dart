@@ -299,36 +299,24 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
         child: GlassScaffold(
           title: l10n.sipHubTitle,
           actions: [
-            // Scan button — rotates continuously when auto-scan is enabled
-            IconButton(
-              icon: _scanning
-                  ? SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: context.textSecondary,
-                      ),
-                    )
-                  : AnimatedBuilder(
-                      animation: _radarController,
-                      builder: (context, child) => Transform.rotate(
-                        angle: _radarController.value * 2 * 3.14159265,
-                        child: child,
-                      ),
-                      child: Icon(
-                        Icons.radar,
-                        size: 22,
-                        color: autoScanEnabled ? AccentColors.green : null,
-                      ),
-                    ),
-              tooltip: l10n.sipDiscoveryScanButton,
-              onPressed: _scanning
-                  ? null
-                  : autoScanEnabled
-                  ? _toggleAutoScan
-                  : _onScan,
-            ),
+            // Scan button — hidden during scans, rotates when auto-scan on
+            if (!_scanning)
+              IconButton(
+                icon: AnimatedBuilder(
+                  animation: _radarController,
+                  builder: (context, child) => Transform.rotate(
+                    angle: _radarController.value * 2 * 3.14159265,
+                    child: child,
+                  ),
+                  child: Icon(
+                    Icons.radar,
+                    size: 22,
+                    color: autoScanEnabled ? AccentColors.green : null,
+                  ),
+                ),
+                tooltip: l10n.sipDiscoveryScanButton,
+                onPressed: autoScanEnabled ? _toggleAutoScan : _onScan,
+              ),
             // Overflow menu
             AppBarOverflowMenu<String>(
               onSelected: (value) {
@@ -524,26 +512,13 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
             title: context.l10n.sipHubSectionPeers,
             count: peers.length,
             trailing: _scanning
-                ? Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SizedBox(
-                        width: 12,
-                        height: 12,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 1.5,
-                          color: context.textTertiary,
-                        ),
-                      ),
-                      const SizedBox(width: AppTheme.spacing6),
-                      Text(
-                        context.l10n.sipScanningIndicator,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: context.textTertiary,
-                        ),
-                      ),
-                    ],
+                ? SizedBox(
+                    width: 12,
+                    height: 12,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 1.5,
+                      color: context.textTertiary,
+                    ),
                   )
                 : null,
           ),
@@ -702,116 +677,197 @@ class _IncomingRequestTile extends ConsumerWidget {
 }
 
 // =============================================================================
-// Peer tile — card container + BouncyTap (matches Channels pattern)
+// Peer tile — card container + BouncyTap with shake animation on decline
 // =============================================================================
 
-class _PeerTile extends ConsumerWidget {
+class _PeerTile extends ConsumerStatefulWidget {
   final SipPeerCapability peer;
   final VoidCallback onHandshake;
 
   const _PeerTile({required this.peer, required this.onHandshake});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final entry = ref.watch(nodeDexEntryProvider(peer.nodeId));
+  ConsumerState<_PeerTile> createState() => _PeerTileState();
+}
+
+class _PeerTileState extends ConsumerState<_PeerTile>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _shakeController;
+  late final Animation<double> _shakeAnimation;
+  SipHandshakeState? _prevHsState;
+
+  @override
+  void initState() {
+    super.initState();
+    _shakeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    // Shake: rapid horizontal oscillation that decays.
+    _shakeAnimation = TweenSequence<double>(
+      [
+        TweenSequenceItem(tween: Tween(begin: 0, end: 8), weight: 1),
+        TweenSequenceItem(tween: Tween(begin: 8, end: -8), weight: 2),
+        TweenSequenceItem(tween: Tween(begin: -8, end: 6), weight: 2),
+        TweenSequenceItem(tween: Tween(begin: 6, end: -4), weight: 2),
+        TweenSequenceItem(tween: Tween(begin: -4, end: 2), weight: 2),
+        TweenSequenceItem(tween: Tween(begin: 2, end: 0), weight: 1),
+      ],
+    ).animate(CurvedAnimation(parent: _shakeController, curve: Curves.easeOut));
+  }
+
+  @override
+  void dispose() {
+    _shakeController.dispose();
+    super.dispose();
+  }
+
+  /// Trigger shake when state transitions to declined/failed/timedOut.
+  void _onHandshakeStateChanged(SipHandshakeState newState) {
+    if (_prevHsState != null &&
+        _prevHsState != newState &&
+        _isNegative(newState)) {
+      _shakeController.forward(from: 0);
+      ref.read(hapticServiceProvider).trigger(HapticType.heavy);
+    }
+    _prevHsState = newState;
+  }
+
+  static bool _isNegative(SipHandshakeState s) =>
+      s == SipHandshakeState.declined ||
+      s == SipHandshakeState.failed ||
+      s == SipHandshakeState.timedOut;
+
+  static bool _isHandshaking(SipHandshakeState state) => switch (state) {
+    SipHandshakeState.helloSent ||
+    SipHandshakeState.pendingApproval ||
+    SipHandshakeState.challengeReceived ||
+    SipHandshakeState.responseSent ||
+    SipHandshakeState.challengeSent ||
+    SipHandshakeState.responseReceived => true,
+    _ => false,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final entry = ref.watch(nodeDexEntryProvider(widget.peer.nodeId));
     final nodes = ref.watch(nodesProvider);
-    final node = nodes[peer.nodeId];
-    final hsState = ref.watch(sipHandshakeStateProvider(peer.nodeId));
-    final patinaResult = ref.watch(nodeDexPatinaProvider(peer.nodeId));
-    final traitResult = ref.watch(nodeDexTraitProvider(peer.nodeId));
+    final node = nodes[widget.peer.nodeId];
+    final hsState = ref.watch(sipHandshakeStateProvider(widget.peer.nodeId));
+    final patinaResult = ref.watch(nodeDexPatinaProvider(widget.peer.nodeId));
+    final traitResult = ref.watch(nodeDexTraitProvider(widget.peer.nodeId));
+
+    // Detect transitions to negative states.
+    _onHandshakeStateChanged(hsState);
 
     // Check if a DM session already exists for this peer.
     ref.watch(sipDmEpochProvider); // rebuild when DM sessions change
     final dm = ref.watch(sipDmManagerProvider);
     final hasDmSession =
-        dm?.activeSessions.any((s) => s.peerNodeId == peer.nodeId) ?? false;
+        dm?.activeSessions.any((s) => s.peerNodeId == widget.peer.nodeId) ??
+        false;
 
-    final displayName = _resolveDisplayName(entry, node, peer.nodeId);
+    final displayName = _resolveDisplayName(entry, node, widget.peer.nodeId);
     final hexId =
-        '!${peer.nodeId.toRadixString(16).toUpperCase().padLeft(4, '0')}';
+        '!${widget.peer.nodeId.toRadixString(16).toUpperCase().padLeft(4, '0')}';
 
     // Block taps while handshake is in-progress.
     final isBusy = _isHandshaking(hsState);
+    final isDeclined = _isNegative(hsState);
 
-    return BouncyTap(
-      onTap: isBusy ? null : onHandshake,
-      onLongPress: isBusy ? null : onHandshake,
-      enabled: !isBusy,
-      scaleFactor: 0.98,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: AppTheme.spacing8),
-        decoration: BoxDecoration(
-          color: context.card,
-          borderRadius: BorderRadius.circular(AppTheme.radius12),
-          border: Border.all(color: context.border),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(AppTheme.spacing14),
-          child: Row(
-            children: [
-              // Sigil avatar with evolution
-              _buildAvatar(context, entry, patinaResult, traitResult),
-              const SizedBox(width: AppTheme.spacing14),
+    return AnimatedBuilder(
+      animation: _shakeAnimation,
+      builder: (context, child) => Transform.translate(
+        offset: Offset(_shakeAnimation.value, 0),
+        child: child,
+      ),
+      child: BouncyTap(
+        onTap: isBusy ? null : widget.onHandshake,
+        onLongPress: isBusy ? null : widget.onHandshake,
+        enabled: !isBusy,
+        scaleFactor: 0.98,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          margin: const EdgeInsets.only(bottom: AppTheme.spacing8),
+          decoration: BoxDecoration(
+            color: context.card,
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
+            border: Border.all(
+              color: isDeclined
+                  ? AccentColors.red.withValues(alpha: 0.6)
+                  : context.border,
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(AppTheme.spacing14),
+            child: Row(
+              children: [
+                // Sigil avatar with evolution
+                _buildAvatar(context, entry, patinaResult, traitResult),
+                const SizedBox(width: AppTheme.spacing14),
 
-              // Name, hex ID, and status badges
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Name row
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            displayName,
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: context.textPrimary,
+                // Name, hex ID, and status badges
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Name row
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              displayName,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: context.textPrimary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                        const SizedBox(width: AppTheme.spacing6),
-                        Text(
-                          hexId,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: context.textTertiary,
-                            fontFamily: AppTheme.fontFamily,
+                          const SizedBox(width: AppTheme.spacing6),
+                          Text(
+                            hexId,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: context.textTertiary,
+                              fontFamily: AppTheme.fontFamily,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppTheme.spacing6),
+                        ],
+                      ),
+                      const SizedBox(height: AppTheme.spacing6),
 
-                    // Status row: handshake state + last seen
-                    Row(
-                      children: [
-                        _HandshakeChip(
-                          state: hsState,
-                          hasDmSession: hasDmSession,
-                        ),
-                        const SizedBox(width: AppTheme.spacing8),
-                        _LastSeenChip(lastSeenMs: peer.lastSeenMs),
-                      ],
-                    ),
-                  ],
+                      // Status row: handshake state + last seen
+                      Row(
+                        children: [
+                          _HandshakeChip(
+                            state: hsState,
+                            hasDmSession: hasDmSession,
+                          ),
+                          const SizedBox(width: AppTheme.spacing8),
+                          _LastSeenChip(lastSeenMs: widget.peer.lastSeenMs),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
 
-              // Chevron — chat icon when DM session exists
-              const SizedBox(width: AppTheme.spacing4),
-              Icon(
-                hasDmSession ? Icons.chat_bubble_outline : Icons.chevron_right,
-                size: 20,
-                color: hasDmSession
-                    ? AccentColors.green.withValues(alpha: 0.7)
-                    : context.textTertiary.withValues(alpha: 0.5),
-              ),
-            ],
+                // Chevron — chat icon when DM session exists
+                const SizedBox(width: AppTheme.spacing4),
+                Icon(
+                  hasDmSession
+                      ? Icons.chat_bubble_outline
+                      : Icons.chevron_right,
+                  size: 20,
+                  color: hasDmSession
+                      ? AccentColors.green.withValues(alpha: 0.7)
+                      : context.textTertiary.withValues(alpha: 0.5),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -827,7 +883,7 @@ class _PeerTile extends ConsumerWidget {
     if (entry?.sigil != null) {
       return SigilAvatar(
         sigil: entry!.sigil,
-        nodeNum: peer.nodeId,
+        nodeNum: widget.peer.nodeId,
         size: 48,
         evolution: SigilEvolution.fromPatina(
           patinaResult.score,
@@ -850,16 +906,6 @@ class _PeerTile extends ConsumerWidget {
       ),
     );
   }
-
-  static bool _isHandshaking(SipHandshakeState state) => switch (state) {
-    SipHandshakeState.helloSent ||
-    SipHandshakeState.pendingApproval ||
-    SipHandshakeState.challengeReceived ||
-    SipHandshakeState.responseSent ||
-    SipHandshakeState.challengeSent ||
-    SipHandshakeState.responseReceived => true,
-    _ => false,
-  };
 
   static String _resolveDisplayName(
     NodeDexEntry? entry,
@@ -915,13 +961,19 @@ class _HandshakeChipState extends State<_HandshakeChip>
   }
 
   void _syncAnimation() {
-    if (!widget.hasDmSession && _isInProgress(widget.state)) {
+    if (!widget.hasDmSession &&
+        (_isInProgress(widget.state) || _isNegative(widget.state))) {
       _pulseController.repeat(reverse: true);
     } else {
       _pulseController.stop();
       _pulseController.value = 1.0;
     }
   }
+
+  static bool _isNegative(SipHandshakeState s) =>
+      s == SipHandshakeState.declined ||
+      s == SipHandshakeState.failed ||
+      s == SipHandshakeState.timedOut;
 
   @override
   void dispose() {
@@ -1005,7 +1057,8 @@ class _HandshakeChipState extends State<_HandshakeChip>
       ),
     );
 
-    if (!widget.hasDmSession && _isInProgress(widget.state)) {
+    if (!widget.hasDmSession &&
+        (_isInProgress(widget.state) || _isNegative(widget.state))) {
       chip = FadeTransition(opacity: _pulseAnimation, child: chip);
     }
 
