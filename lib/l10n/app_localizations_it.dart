@@ -32425,4 +32425,10 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get fileTransferContactsSendVoice => 'Voice';
+
+  @override
+  String get tracerouteShowOnMap => 'Show on Map';
+
+  @override
+  String get tracerouteMapTitle => 'Traceroute Map';
 }

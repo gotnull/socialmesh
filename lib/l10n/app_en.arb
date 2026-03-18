@@ -43007,5 +43007,13 @@
     "fileTransferContactsSendVoice": "Voice",
     "@fileTransferContactsSendVoice": {
         "description": "Label for the Voice button in the contact detail sheet action row"
+    },
+    "tracerouteShowOnMap": "Show on Map",
+    "@tracerouteShowOnMap": {
+        "description": "Button label in the traceroute card to open the route on the map"
+    },
+    "tracerouteMapTitle": "Traceroute Map",
+    "@tracerouteMapTitle": {
+        "description": "Title of the map screen when showing a traceroute path"
     }
 }

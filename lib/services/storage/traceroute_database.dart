@@ -4,7 +4,7 @@
 // Traceroute Database — SQLite schema and lifecycle management.
 //
 // Database: traceroute_history.db
-// Schema version: 1
+// Schema version: 3
 //
 // Tables:
 //   - traceroute_runs: each traceroute attempt (pending or completed)
@@ -23,7 +23,7 @@ import '../../core/logging.dart';
 ///
 /// Bump this when adding tables, columns, or indices.
 /// Migration logic runs in [_onUpgrade].
-const int tracerouteSchemaVersion = 2;
+const int tracerouteSchemaVersion = 3;
 
 /// Table and column name constants for Traceroute SQLite schema.
 abstract final class TracerouteTables {
@@ -48,6 +48,8 @@ abstract final class TracerouteTables {
   static const colHopSnr = 'snr';
   static const colRssi = 'rssi';
   static const colDirection = 'direction';
+  static const colLatitude = 'latitude';
+  static const colLongitude = 'longitude';
 
   /// Status values for traceroute_runs.status
   static const statusPending = 'pending';
@@ -194,6 +196,8 @@ class TracerouteDatabase {
         ${TracerouteTables.colHopSnr} REAL,
         ${TracerouteTables.colRssi} INTEGER,
         ${TracerouteTables.colDirection} TEXT NOT NULL,
+        ${TracerouteTables.colLatitude} REAL,
+        ${TracerouteTables.colLongitude} REAL,
         FOREIGN KEY(${TracerouteTables.colRunId}) REFERENCES ${TracerouteTables.runs}(${TracerouteTables.colId}) ON DELETE CASCADE
       )
     ''');
@@ -224,6 +228,16 @@ class TracerouteDatabase {
       await db.execute(
         'ALTER TABLE ${TracerouteTables.runs} '
         'ADD COLUMN ${TracerouteTables.colViaMqtt} INTEGER', // lint-allow: hardcoded-string
+      );
+    }
+    if (oldVersion < 3) {
+      await db.execute(
+        'ALTER TABLE ${TracerouteTables.hops} '
+        'ADD COLUMN ${TracerouteTables.colLatitude} REAL', // lint-allow: hardcoded-string
+      );
+      await db.execute(
+        'ALTER TABLE ${TracerouteTables.hops} '
+        'ADD COLUMN ${TracerouteTables.colLongitude} REAL', // lint-allow: hardcoded-string
       );
     }
   }

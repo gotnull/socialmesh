@@ -56559,6 +56559,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Voice'**
   String get fileTransferContactsSendVoice;
+
+  /// Button label in the traceroute card to open the route on the map
+  ///
+  /// In en, this message translates to:
+  /// **'Show on Map'**
+  String get tracerouteShowOnMap;
+
+  /// Title of the map screen when showing a traceroute path
+  ///
+  /// In en, this message translates to:
+  /// **'Traceroute Map'**
+  String get tracerouteMapTitle;
 }
 
 class _AppLocalizationsDelegate

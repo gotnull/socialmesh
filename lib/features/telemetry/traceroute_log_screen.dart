@@ -25,8 +25,10 @@ import '../../providers/splash_mesh_provider.dart';
 import '../../providers/telemetry_providers.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/help_providers.dart';
+import 'package:flutter/services.dart';
 import '../../utils/share_utils.dart';
 import '../../utils/snackbar.dart';
+import '../map/map_screen.dart';
 import '../nodes/node_display_name_resolver.dart';
 
 /// Filter options for traceroute logs
@@ -678,6 +680,25 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
 // Traceroute card
 // ---------------------------------------------------------------------------
 
+/// Whether a traceroute has enough GPS data to render on a map.
+///
+/// True when any intermediate hop has coordinates, or when the target
+/// node has a known position (covers direct connections with 0 hops).
+bool _hasMapData(TraceRouteLog log, Map<int, dynamic> allNodes) {
+  // Check intermediate hops
+  for (final h in log.hops) {
+    if (h.latitude != null &&
+        h.longitude != null &&
+        !(h.latitude == 0.0 && h.longitude == 0.0)) {
+      return true;
+    }
+  }
+  // Check target node position (covers direct connections)
+  final target = allNodes[log.targetNode];
+  if (target != null && target.hasPosition == true) return true;
+  return false;
+}
+
 class _TraceRouteCard extends StatelessWidget {
   final TraceRouteLog log;
   final Map<int, dynamic> allNodes;
@@ -846,6 +867,29 @@ class _TraceRouteCard extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          ],
+
+          // Show on Map button — visible for direct connections too
+          if (log.response && _hasMapData(log, allNodes)) ...[
+            const SizedBox(height: AppTheme.spacing12),
+            const Divider(color: Colors.white12, height: 1),
+            const SizedBox(height: AppTheme.spacing8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: () {
+                  HapticFeedback.lightImpact();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (_) => MapScreen(tracerouteLog: log),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.map_outlined, size: 16),
+                label: Text(context.l10n.tracerouteShowOnMap),
+              ),
             ),
           ],
         ],

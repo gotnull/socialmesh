@@ -1543,15 +1543,20 @@ class ProtocolService {
       final targetNode = packet.from;
 
       // Build forward-path hops (route towards destination)
+      // Snapshot each hop's GPS position from the current node table so the
+      // route can be rendered on the map even if nodes move later.
       final forwardRoute = routeDiscovery.route.toList();
       final forwardSnr = routeDiscovery.snrTowards.toList();
       final forwardHops = <TraceRouteHop>[];
       for (var i = 0; i < forwardRoute.length; i++) {
         final snrRaw = i < forwardSnr.length ? forwardSnr[i] : null;
+        final node = _nodes[forwardRoute[i]];
         forwardHops.add(
           TraceRouteHop(
             nodeNum: forwardRoute[i],
             snr: snrRaw != null ? snrRaw / 4.0 : null,
+            latitude: node != null && node.hasPosition ? node.latitude : null,
+            longitude: node != null && node.hasPosition ? node.longitude : null,
           ),
         );
       }
@@ -1562,11 +1567,14 @@ class ProtocolService {
       final backHops = <TraceRouteHop>[];
       for (var i = 0; i < backRoute.length; i++) {
         final snrRaw = i < backSnr.length ? backSnr[i] : null;
+        final node = _nodes[backRoute[i]];
         backHops.add(
           TraceRouteHop(
             nodeNum: backRoute[i],
             snr: snrRaw != null ? snrRaw / 4.0 : null,
             back: true,
+            latitude: node != null && node.hasPosition ? node.latitude : null,
+            longitude: node != null && node.hasPosition ? node.longitude : null,
           ),
         );
       }

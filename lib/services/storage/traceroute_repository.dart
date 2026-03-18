@@ -406,6 +406,8 @@ class SqliteTracerouteRepository implements TracerouteHistoryRepository {
         TracerouteTables.colHopSnr: hop.snr,
         TracerouteTables.colRssi: null,
         TracerouteTables.colDirection: direction,
+        TracerouteTables.colLatitude: hop.latitude,
+        TracerouteTables.colLongitude: hop.longitude,
       }, conflictAlgorithm: ConflictAlgorithm.replace);
     }
   }
@@ -449,6 +451,8 @@ class SqliteTracerouteRepository implements TracerouteHistoryRepository {
         nodeNum: row[TracerouteTables.colNodeId] as int,
         snr: row[TracerouteTables.colHopSnr] as double?,
         back: direction == TracerouteTables.directionReturn,
+        latitude: row[TracerouteTables.colLatitude] as double?,
+        longitude: row[TracerouteTables.colLongitude] as double?,
       );
     }).toList();
   }

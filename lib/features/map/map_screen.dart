@@ -38,6 +38,7 @@ import '../../utils/presence_utils.dart';
 import '../messaging/messaging_screen.dart';
 import '../navigation/main_shell.dart';
 import '../nodes/node_detail_screen.dart';
+import '../nodes/node_display_name_resolver.dart';
 import '../telemetry/traceroute_log_screen.dart';
 import '../settings/settings_screen.dart';
 import '../../core/widgets/loading_indicator.dart';
@@ -95,6 +96,9 @@ class MapScreen extends ConsumerStatefulWidget {
   /// Useful for viewing a specific location without clutter.
   final bool locationOnlyMode;
 
+  /// When provided, the map shows the traceroute path as polylines.
+  final TraceRouteLog? tracerouteLog;
+
   const MapScreen({
     super.key,
     this.initialNodeNum,
@@ -102,6 +106,7 @@ class MapScreen extends ConsumerStatefulWidget {
     this.initialLongitude,
     this.initialLocationLabel,
     this.locationOnlyMode = false,
+    this.tracerouteLog,
   });
 
   @override
@@ -675,8 +680,42 @@ class _MapScreenState extends ConsumerState<MapScreen>
     LatLng center = const LatLng(0, 0);
     double zoom = 2.0;
 
-    // In location only mode, use the provided coordinates
-    if (widget.locationOnlyMode &&
+    // Traceroute mode: fit camera to hop bounds
+    if (widget.tracerouteLog != null) {
+      final tracerouteBounds = _tracerouteBounds(
+        widget.tracerouteLog!,
+        nodes,
+        myNodeNum,
+      );
+      if (tracerouteBounds != null) {
+        final midLat =
+            (tracerouteBounds.southWest.latitude +
+                tracerouteBounds.northEast.latitude) /
+            2;
+        final midLng =
+            (tracerouteBounds.southWest.longitude +
+                tracerouteBounds.northEast.longitude) /
+            2;
+        center = LatLng(midLat, midLng);
+        // Rough zoom from bounds span — the map will refine in onMapReady
+        final latSpan =
+            tracerouteBounds.northEast.latitude -
+            tracerouteBounds.southWest.latitude;
+        final lngSpan =
+            tracerouteBounds.northEast.longitude -
+            tracerouteBounds.southWest.longitude;
+        final span = math.max(latSpan, lngSpan);
+        if (span < 0.01) {
+          zoom = 15.0;
+        } else if (span < 0.1) {
+          zoom = 12.0;
+        } else if (span < 1.0) {
+          zoom = 9.0;
+        } else {
+          zoom = 6.0;
+        }
+      }
+    } else if (widget.locationOnlyMode &&
         widget.initialLatitude != null &&
         widget.initialLongitude != null) {
       center = LatLng(widget.initialLatitude!, widget.initialLongitude!);
@@ -720,7 +759,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
         leading: canPop ? const BackButton() : const HamburgerMenuButton(),
         centerTitle: true,
         titleWidget: Text(
-          widget.locationOnlyMode
+          widget.tracerouteLog != null
+              ? context.l10n.tracerouteMapTitle
+              : widget.locationOnlyMode
               ? (widget.initialLocationLabel ?? context.l10n.mapLocationTitle)
               : context.l10n.mapScreenTitle,
           style: TextStyle(
@@ -1293,6 +1334,23 @@ class _MapScreenState extends ConsumerState<MapScreen>
                                 ),
                               ],
                         ),
+                      // Traceroute route overlay
+                      if (widget.tracerouteLog != null)
+                        PolylineLayer(
+                          polylines: _buildTraceroutePolylines(
+                            widget.tracerouteLog!,
+                            nodes,
+                            myNodeNum,
+                          ),
+                        ),
+                      if (widget.tracerouteLog != null)
+                        MarkerLayer(
+                          rotate: true,
+                          markers: _buildTracerouteMarkers(
+                            widget.tracerouteLog!,
+                            nodes,
+                          ),
+                        ),
                       // Waypoint markers
                       MarkerLayer(
                         rotate: true,
@@ -1345,56 +1403,71 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       if (!widget.locationOnlyMode)
                         MarkerLayer(
                           rotate: true,
-                          markers: nodesWithPosition.map((n) {
-                            final isMyNode = n.node.nodeNum == myNodeNum;
-                            final isSelected =
-                                _selectedNode?.nodeNum == n.node.nodeNum;
-                            return Marker(
-                              point: LatLng(n.latitude, n.longitude),
-                              width: isSelected ? 56 : 44,
-                              height: isSelected ? 56 : 44,
-                              child: GestureDetector(
-                                onTap: () {
-                                  HapticFeedback.selectionClick();
-                                  if (_measureMode) {
-                                    _handleMeasureNodeTap(n);
-                                  } else {
-                                    setState(() {
-                                      _selectedNode = n.node;
-                                      _selectedTakEntity = null;
-                                    });
-                                  }
-                                },
-                                onLongPress: () {
-                                  HapticFeedback.heavyImpact();
-                                  setState(() {
-                                    _measureMode = true;
-                                    _measureStart = LatLng(
-                                      n.latitude,
-                                      n.longitude,
+                          markers:
+                              ([...nodesWithPosition]..sort((a, b) {
+                                    // Own node renders last = on top
+                                    final aIsMe = a.node.nodeNum == myNodeNum;
+                                    final bIsMe = b.node.nodeNum == myNodeNum;
+                                    if (aIsMe != bIsMe) return aIsMe ? 1 : -1;
+                                    return 0;
+                                  }))
+                                  .map((n) {
+                                    final isMyNode =
+                                        n.node.nodeNum == myNodeNum;
+                                    final isSelected =
+                                        _selectedNode?.nodeNum ==
+                                        n.node.nodeNum;
+                                    return Marker(
+                                      point: LatLng(n.latitude, n.longitude),
+                                      width: isMyNode
+                                          ? 56
+                                          : (isSelected ? 56 : 44),
+                                      height: isMyNode
+                                          ? 56
+                                          : (isSelected ? 56 : 44),
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          HapticFeedback.selectionClick();
+                                          if (_measureMode) {
+                                            _handleMeasureNodeTap(n);
+                                          } else {
+                                            setState(() {
+                                              _selectedNode = n.node;
+                                              _selectedTakEntity = null;
+                                            });
+                                          }
+                                        },
+                                        onLongPress: () {
+                                          HapticFeedback.heavyImpact();
+                                          setState(() {
+                                            _measureMode = true;
+                                            _measureStart = LatLng(
+                                              n.latitude,
+                                              n.longitude,
+                                            );
+                                            _measureEnd = null;
+                                            _measureNodeA = n.node;
+                                            _measureNodeB = null;
+                                            _measureTerrainPolylines = null;
+                                            _measureTerrainResult = null;
+                                            _selectedNode = null;
+                                            _selectedTakEntity = null;
+                                          });
+                                        },
+                                        child: _NodeMarker(
+                                          node: n.node,
+                                          presence: presenceConfidenceFor(
+                                            presenceMap,
+                                            n.node,
+                                          ),
+                                          isMyNode: isMyNode,
+                                          isSelected: isSelected,
+                                          isStale: n.isStale,
+                                        ),
+                                      ),
                                     );
-                                    _measureEnd = null;
-                                    _measureNodeA = n.node;
-                                    _measureNodeB = null;
-                                    _measureTerrainPolylines = null;
-                                    _measureTerrainResult = null;
-                                    _selectedNode = null;
-                                    _selectedTakEntity = null;
-                                  });
-                                },
-                                child: _NodeMarker(
-                                  node: n.node,
-                                  presence: presenceConfidenceFor(
-                                    presenceMap,
-                                    n.node,
-                                  ),
-                                  isMyNode: isMyNode,
-                                  isSelected: isSelected,
-                                  isStale: n.isStale,
-                                ),
-                              ),
-                            );
-                          }).toList(),
+                                  })
+                                  .toList(),
                         ),
                       // TAK movement trails for tracked entities
                       if (_showTakLayer &&
@@ -2592,6 +2665,194 @@ class _MapScreenState extends ConsumerState<MapScreen>
     return lines;
   }
 
+  /// Build polylines for a traceroute route overlay.
+  ///
+  /// Forward hops are rendered in teal, return hops in purple. Only hops
+  /// with valid positions are included. The local device position is used
+  /// as the origin for the forward path and destination for the return path.
+  List<Polyline> _buildTraceroutePolylines(
+    TraceRouteLog log,
+    Map<int, MeshNode> nodes,
+    int? myNodeNum,
+  ) {
+    final polylines = <Polyline>[];
+
+    // Resolve local device position as the start of the forward route
+    LatLng? localPosition;
+    if (myNodeNum != null) {
+      final myNode = nodes[myNodeNum];
+      if (myNode != null && myNode.hasPosition) {
+        localPosition = LatLng(myNode.latitude!, myNode.longitude!);
+      }
+    }
+
+    // Resolve target node position as the end of the forward route
+    LatLng? targetPosition;
+    final targetNode = nodes[log.targetNode];
+    if (targetNode != null && targetNode.hasPosition) {
+      targetPosition = LatLng(targetNode.latitude!, targetNode.longitude!);
+    }
+
+    LatLng? positionOf(TraceRouteHop hop) {
+      if (hop.latitude != null &&
+          hop.longitude != null &&
+          !(hop.latitude == 0.0 && hop.longitude == 0.0)) {
+        return LatLng(hop.latitude!, hop.longitude!);
+      }
+      return null;
+    }
+
+    // Forward path: local → hop1 → hop2 → ... → target
+    final forwardHops = log.hops.where((h) => !h.back).toList();
+    final forwardPoints = <LatLng>[
+      if (localPosition != null) localPosition,
+      ...forwardHops.map(positionOf).whereType<LatLng>(),
+      if (targetPosition != null) targetPosition,
+    ];
+    if (forwardPoints.length >= 2) {
+      polylines.add(
+        Polyline(
+          points: forwardPoints,
+          color: AccentColors.teal,
+          strokeWidth: 3.5,
+        ),
+      );
+    }
+
+    // Return path: target → hop1 → hop2 → ... → local
+    final returnHops = log.hops.where((h) => h.back).toList();
+    final returnPoints = <LatLng>[
+      if (targetPosition != null) targetPosition,
+      ...returnHops.map(positionOf).whereType<LatLng>(),
+      if (localPosition != null) localPosition,
+    ];
+    if (returnPoints.length >= 2) {
+      polylines.add(
+        Polyline(
+          points: returnPoints,
+          color: AccentColors.purple.withValues(alpha: 0.8),
+          strokeWidth: 3.0,
+          pattern: const StrokePattern.dotted(spacingFactor: 1.5),
+        ),
+      );
+    }
+
+    return polylines;
+  }
+
+  /// Build markers for each hop in a traceroute route overlay.
+  List<Marker> _buildTracerouteMarkers(
+    TraceRouteLog log,
+    Map<int, MeshNode> nodes,
+  ) {
+    final markers = <Marker>[];
+    final seen = <int>{};
+
+    for (final hop in log.hops) {
+      if (seen.contains(hop.nodeNum)) continue;
+      seen.add(hop.nodeNum);
+
+      if (hop.latitude == null ||
+          hop.longitude == null ||
+          (hop.latitude == 0.0 && hop.longitude == 0.0)) {
+        continue;
+      }
+
+      final node = nodes[hop.nodeNum];
+      final name =
+          node?.displayName ?? NodeDisplayNameResolver.defaultName(hop.nodeNum);
+
+      markers.add(
+        Marker(
+          point: LatLng(hop.latitude!, hop.longitude!),
+          width: 80,
+          height: 32,
+          child: Center(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.black87,
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
+                border: Border.all(
+                  color: hop.back ? AccentColors.purple : AccentColors.teal,
+                  width: 1.5,
+                ),
+              ),
+              child: Text(
+                name,
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return markers;
+  }
+
+  /// Compute the bounding box that contains all traceroute hop positions
+  /// including the local device and target node.
+  LatLngBounds? _tracerouteBounds(
+    TraceRouteLog log,
+    Map<int, MeshNode> nodes,
+    int? myNodeNum,
+  ) {
+    final points = <LatLng>[];
+
+    // Local device position
+    if (myNodeNum != null) {
+      final myNode = nodes[myNodeNum];
+      if (myNode != null && myNode.hasPosition) {
+        points.add(LatLng(myNode.latitude!, myNode.longitude!));
+      }
+    }
+
+    // Target node position
+    final target = nodes[log.targetNode];
+    if (target != null && target.hasPosition) {
+      points.add(LatLng(target.latitude!, target.longitude!));
+    }
+
+    // Hop positions
+    for (final hop in log.hops) {
+      if (hop.latitude != null &&
+          hop.longitude != null &&
+          !(hop.latitude == 0.0 && hop.longitude == 0.0)) {
+        points.add(LatLng(hop.latitude!, hop.longitude!));
+      }
+    }
+
+    if (points.length < 2) return null;
+
+    var minLat = points.first.latitude;
+    var maxLat = points.first.latitude;
+    var minLng = points.first.longitude;
+    var maxLng = points.first.longitude;
+
+    for (final p in points) {
+      if (p.latitude < minLat) minLat = p.latitude;
+      if (p.latitude > maxLat) maxLat = p.latitude;
+      if (p.longitude < minLng) minLng = p.longitude;
+      if (p.longitude > maxLng) maxLng = p.longitude;
+    }
+
+    // Add padding (10% on each side)
+    final latPad = (maxLat - minLat) * 0.1;
+    final lngPad = (maxLng - minLng) * 0.1;
+
+    return LatLngBounds(
+      LatLng(minLat - latPad, minLng - lngPad),
+      LatLng(maxLat + latPad, maxLng + lngPad),
+    );
+  }
+
   /// Build distance label markers for connections from my node
   List<Marker> _buildDistanceLabels(
     List<_NodeWithPosition> nodes,
@@ -2791,7 +3052,7 @@ class _NodeWithPosition {
 }
 
 /// Custom marker widget for nodes
-class _NodeMarker extends StatelessWidget {
+class _NodeMarker extends StatefulWidget {
   final MeshNode node;
   final PresenceConfidence presence;
   final bool isMyNode;
@@ -2807,30 +3068,59 @@ class _NodeMarker extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final baseColor = isMyNode
-        ? context.accentColor
-        : _presenceColor(context, presence);
-    final color = isStale ? baseColor.withValues(alpha: 0.5) : baseColor;
-    final borderColor = isSelected
-        ? Colors.white
-        : color.withValues(alpha: isStale ? 0.6 : 0.9);
+  State<_NodeMarker> createState() => _NodeMarkerState();
+}
 
-    return AnimatedContainer(
+class _NodeMarkerState extends State<_NodeMarker>
+    with SingleTickerProviderStateMixin {
+  AnimationController? _pulseController;
+  Animation<double>? _pulseAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.isMyNode) {
+      _pulseController = AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 2000),
+      )..repeat();
+      _pulseAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(parent: _pulseController!, curve: Curves.easeOut),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _pulseController?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final baseColor = widget.isMyNode
+        ? context.accentColor
+        : _presenceColor(context, widget.presence);
+    final color = widget.isStale ? baseColor.withValues(alpha: 0.5) : baseColor;
+    final borderColor = widget.isSelected
+        ? Colors.white
+        : color.withValues(alpha: widget.isStale ? 0.6 : 0.9);
+
+    final marker = AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: isStale ? 0.3 : 0.7),
+        color: color.withValues(alpha: widget.isStale ? 0.3 : 0.7),
         shape: BoxShape.circle,
         border: Border.all(
           color: borderColor,
-          width: isSelected ? 3 : 2.5,
+          width: widget.isSelected ? 3 : 2.5,
           strokeAlign: BorderSide.strokeAlignOutside,
         ),
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: isStale ? 0.2 : 0.4),
-            blurRadius: isSelected ? 12 : 6,
-            spreadRadius: isSelected ? 2 : 0,
+            color: color.withValues(alpha: widget.isStale ? 0.2 : 0.4),
+            blurRadius: widget.isSelected ? 12 : 6,
+            spreadRadius: widget.isSelected ? 2 : 0,
           ),
         ],
       ),
@@ -2838,17 +3128,20 @@ class _NodeMarker extends StatelessWidget {
         alignment: Alignment.center,
         children: [
           Text(
-            (node.shortName?.isNotEmpty == true
-                ? node.shortName![0].toUpperCase()
-                : node.nodeNum.toRadixString(16).substring(0, 1).toUpperCase()),
+            (widget.node.shortName?.isNotEmpty == true
+                ? widget.node.shortName![0].toUpperCase()
+                : widget.node.nodeNum
+                      .toRadixString(16)
+                      .substring(0, 1)
+                      .toUpperCase()),
             style: TextStyle(
-              fontSize: isSelected ? 16 : 14,
+              fontSize: widget.isSelected ? 16 : 14,
               fontWeight: FontWeight.bold,
-              color: Colors.white.withValues(alpha: isStale ? 0.7 : 1.0),
+              color: Colors.white.withValues(alpha: widget.isStale ? 0.7 : 1.0),
             ),
           ),
           // Stale indicator (small question mark overlay)
-          if (isStale)
+          if (widget.isStale)
             Positioned(
               right: 0,
               bottom: 0,
@@ -2875,7 +3168,44 @@ class _NodeMarker extends StatelessWidget {
         ],
       ),
     );
+
+    if (!widget.isMyNode || _pulseAnimation == null) return marker;
+
+    return AnimatedBuilder(
+      animation: _pulseAnimation!,
+      builder: (context, child) {
+        final value = _pulseAnimation!.value;
+        return CustomPaint(
+          painter: _PulseRingPainter(color: color, progress: value),
+          child: child,
+        );
+      },
+      child: marker,
+    );
   }
+}
+
+class _PulseRingPainter extends CustomPainter {
+  final Color color;
+  final double progress;
+
+  _PulseRingPainter({required this.color, required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final maxRadius = size.width / 2 + 10;
+    final radius = size.width / 2 + (maxRadius - size.width / 2) * progress;
+    final paint = Paint()
+      ..color = color.withValues(alpha: 0.5 * (1.0 - progress))
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.5 * (1.0 - progress);
+    canvas.drawCircle(center, radius, paint);
+  }
+
+  @override
+  bool shouldRepaint(_PulseRingPainter oldDelegate) =>
+      oldDelegate.progress != progress;
 }
 
 /// Node list panel sliding from left
