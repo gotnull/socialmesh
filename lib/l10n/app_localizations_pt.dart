@@ -32269,6 +32269,75 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get nodesScreenLegendTitle => 'Icon Legend';
+
+  @override
+  String get nodesScreenLegendStatusActive => 'Active — heard recently';
+
+  @override
+  String get nodesScreenLegendStatusFading => 'Fading — not heard for a while';
+
+  @override
+  String get nodesScreenLegendStatusStale => 'Stale — last heard long ago';
+
+  @override
+  String get nodesScreenLegendStatusUnknown => 'Unknown — never heard directly';
+
+  @override
+  String get nodesScreenLegendSignalStrong => 'Strong signal (≥ −70 dBm)';
+
+  @override
+  String get nodesScreenLegendSignalMedium => 'Medium signal (−70 to −85 dBm)';
+
+  @override
+  String get nodesScreenLegendSignalWeak => 'Weak signal (< −85 dBm)';
+
+  @override
+  String get nodesScreenLegendHopsDirect => 'Direct — no hops';
+
+  @override
+  String get nodesScreenLegendHops1 => '1 hop away';
+
+  @override
+  String get nodesScreenLegendHops2 => '2 hops away';
+
+  @override
+  String get nodesScreenLegendHops3 => '3 hops away';
+
+  @override
+  String get nodesScreenLegendHops4Plus => '4+ hops away';
+
+  @override
+  String get nodesScreenLegendTransportRf => 'Radio frequency (RF)';
+
+  @override
+  String get nodesScreenLegendTransportMqtt => 'Internet (MQTT)';
+
+  @override
+  String get nodesScreenLegendBatteryGood => 'Battery good (≥ 50%)';
+
+  @override
+  String get nodesScreenLegendBatteryLow => 'Battery low (20–49%)';
+
+  @override
+  String get nodesScreenLegendBatteryCritical => 'Battery critical (< 20%)';
+
+  @override
+  String get nodesScreenLegendSectionStatus => 'Status';
+
+  @override
+  String get nodesScreenLegendSectionSignal => 'Signal Strength';
+
+  @override
+  String get nodesScreenLegendSectionHops => 'Hop Count';
+
+  @override
+  String get nodesScreenLegendSectionTransport => 'Transport';
+
+  @override
+  String get nodesScreenLegendSectionBattery => 'Battery';
+
+  @override
   String get servicePresentationBoardTitle => 'Bulletin Board';
 
   @override

@@ -14,6 +14,7 @@ import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/gradient_border_container.dart';
 import '../../core/widgets/ico_help_system.dart';
@@ -384,6 +385,17 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
                   ),
                 ],
                 trailingControls: [
+                  GestureDetector(
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      _NodesLegendSheet.show(context);
+                    },
+                    child: Icon(
+                      Icons.help_outline,
+                      size: 20,
+                      color: context.textSecondary,
+                    ),
+                  ),
                   SectionHeadersToggle(
                     enabled: _showSectionHeaders,
                     onToggle: () => setState(
@@ -1849,6 +1861,8 @@ class _CompactNodeTile extends StatelessWidget {
     final color = _statusColor(context);
     final statusText = presenceStatusText(presenceConfidence, lastHeardAge);
     final opacity = isMyNode ? 1.0 : presenceOpacity(presenceConfidence);
+    final signalBars = _calculateSignalBars(node.rssi);
+    final signalColor = _signalColor(node.rssi);
 
     return Opacity(
       opacity: opacity,
@@ -1859,69 +1873,142 @@ class _CompactNodeTile extends StatelessWidget {
             horizontal: 16,
             vertical: AppTheme.spacing8,
           ),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Status dot
-              Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: color,
-                  boxShadow: presenceConfidence.isActive
-                      ? [
-                          BoxShadow(
-                            color: color.withValues(alpha: 0.4),
-                            blurRadius: 4,
-                          ),
-                        ]
-                      : null,
-                ),
-              ),
-              const SizedBox(width: AppTheme.spacing12),
-              // Name
-              Expanded(
-                child: Text(
-                  node.displayName,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: context.textPrimary,
+              // Row 1: Status dot + full name (no truncation)
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: color,
+                      boxShadow: presenceConfidence.isActive
+                          ? [
+                              BoxShadow(
+                                color: color.withValues(alpha: 0.4),
+                                blurRadius: 4,
+                              ),
+                            ]
+                          : null,
+                    ),
                   ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              // Uptime (if available)
-              if (node.uptimeSeconds != null) ...[
-                Text(
-                  context.l10n.nodesScreenUptimeLabel(
-                    formatUptime(node.uptimeSeconds!),
+                  const SizedBox(width: AppTheme.spacing12),
+                  Expanded(
+                    child: Text(
+                      node.displayName,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: context.textPrimary,
+                      ),
+                    ),
                   ),
-                  style: TextStyle(fontSize: 12, color: context.textTertiary),
-                ),
-                const SizedBox(width: AppTheme.spacing8),
-              ],
-              // Battery
-              if (node.batteryLevel != null && node.batteryLevel! <= 100) ...[
-                Icon(
-                  _batteryIcon(node.batteryLevel!),
-                  size: 16,
-                  color: _batteryColor(node.batteryLevel!),
-                ),
-                const SizedBox(width: AppTheme.spacing4),
-              ],
-              // Status text
-              Text(
-                statusText,
-                style: TextStyle(fontSize: 12, color: context.textSecondary),
+                  const SizedBox(width: AppTheme.spacing8),
+                  Icon(
+                    Icons.chevron_right,
+                    size: 16,
+                    color: context.textTertiary,
+                  ),
+                ],
               ),
-              const SizedBox(width: AppTheme.spacing4),
-              Icon(Icons.chevron_right, size: 16, color: context.textTertiary),
+              const SizedBox(height: AppTheme.spacing4),
+              // Row 2: Metadata with proper spacing
+              Padding(
+                padding: const EdgeInsets.only(left: 22),
+                child: Wrap(
+                  spacing: AppTheme.spacing12,
+                  runSpacing: AppTheme.spacing4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    // Signal bars (mini)
+                    if (node.rssi != null)
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: List.generate(4, (i) {
+                          final isActive = i < signalBars;
+                          return Container(
+                            margin: const EdgeInsets.only(right: 1),
+                            width: 3,
+                            height: 6.0 + (i * 2.0),
+                            decoration: BoxDecoration(
+                              color: isActive
+                                  ? signalColor
+                                  : context.textTertiary.withValues(
+                                      alpha: 0.25,
+                                    ),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius1,
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                    // Hop count — graphical numbered dots
+                    if (node.hopCount != null)
+                      _CompactHopIndicator(hopCount: node.hopCount!),
+                    // Transport badge (RF / MQTT)
+                    Icon(
+                      node.viaMqtt ? Icons.cloud_outlined : Icons.cell_tower,
+                      size: 14,
+                      color: node.viaMqtt
+                          ? AccentColors.sky
+                          : AccentColors.emerald,
+                    ),
+                    // Battery
+                    if (node.batteryLevel != null && node.batteryLevel! <= 100)
+                      Icon(
+                        _batteryIcon(node.batteryLevel!),
+                        size: 16,
+                        color: _batteryColor(node.batteryLevel!),
+                      ),
+                    // Uptime
+                    if (node.uptimeSeconds != null)
+                      Text(
+                        context.l10n.nodesScreenUptimeLabel(
+                          formatUptime(node.uptimeSeconds!),
+                        ),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: context.textTertiary,
+                        ),
+                      ),
+                    // Status text
+                    Text(
+                      statusText,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  int _calculateSignalBars(int? rssi) {
+    if (rssi == null) return 0;
+    if (rssi >= -70) return 4;
+    if (rssi >= -80) return 3;
+    if (rssi >= -90) return 2;
+    if (rssi >= -100) return 1;
+    return 0;
+  }
+
+  Color _signalColor(int? rssi) {
+    if (rssi == null) return AppTheme.errorRed;
+    if (rssi >= -70) return AccentColors.green;
+    if (rssi >= -85) return AppTheme.warningYellow;
+    return AppTheme.errorRed;
   }
 
   IconData _batteryIcon(int level) {
@@ -1936,5 +2023,366 @@ class _CompactNodeTile extends StatelessWidget {
     if (level >= 50) return AccentColors.green;
     if (level >= 20) return AppTheme.warningYellow;
     return AppTheme.errorRed;
+  }
+}
+
+/// Graphical hop-count indicator for the compact node tile.
+///
+/// Renders a row of small numbered circles (1️⃣2️⃣3️⃣…) representing the
+/// hop count. A hop count of 0 shows a single filled accent circle labelled
+/// "D" (Direct). Caps the visual at 4 dots to keep it compact.
+class _CompactHopIndicator extends StatelessWidget {
+  final int hopCount;
+
+  const _CompactHopIndicator({required this.hopCount});
+
+  @override
+  Widget build(BuildContext context) {
+    // Direct neighbour — single accent dot with "D"
+    if (hopCount == 0) {
+      return _hopDot(
+        context,
+        label: 'D', // lint-allow: hardcoded-string
+        filled: true,
+        color: AccentColors.green,
+      );
+    }
+
+    // Show up to 4 hop dots
+    final displayCount = hopCount.clamp(1, 4);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(displayCount, (i) {
+        // Colour fades from green (nearby) → yellow → orange → red (far)
+        final color = switch (i) {
+          0 => AccentColors.green,
+          1 => AppTheme.warningYellow,
+          2 => AccentColors.orange,
+          _ => AppTheme.errorRed,
+        };
+        return _hopDot(
+          context,
+          label: '${i + 1}',
+          filled: true,
+          color: color,
+        ); // lint-allow: hardcoded-string
+      }),
+    );
+  }
+
+  Widget _hopDot(
+    BuildContext context, {
+    required String label,
+    required bool filled,
+    required Color color,
+  }) {
+    return Container(
+      width: 14,
+      height: 14,
+      margin: const EdgeInsets.only(right: 2),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: filled ? color.withValues(alpha: 0.2) : Colors.transparent,
+        border: Border.all(color: color, width: 1),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 8,
+          fontWeight: FontWeight.w700,
+          color: color,
+          height: 1,
+        ),
+      ),
+    );
+  }
+}
+
+/// Bottom sheet explaining what all the compact node tile icons mean.
+class _NodesLegendSheet extends StatelessWidget {
+  const _NodesLegendSheet();
+
+  static Future<void> show(BuildContext context) {
+    return AppBottomSheet.show(
+      context: context,
+      child: const _NodesLegendSheet(),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.nodesScreenLegendTitle,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: context.textPrimary,
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacing16),
+
+        // Status section
+        _LegendSection(
+          title: l10n.nodesScreenLegendSectionStatus,
+          items: [
+            _LegendItem(
+              icon: _statusDot(AccentColors.green, glow: true),
+              label: l10n.nodesScreenLegendStatusActive,
+            ),
+            _LegendItem(
+              icon: _statusDot(AppTheme.warningYellow),
+              label: l10n.nodesScreenLegendStatusFading,
+            ),
+            _LegendItem(
+              icon: _statusDot(context.textSecondary),
+              label: l10n.nodesScreenLegendStatusStale,
+            ),
+            _LegendItem(
+              icon: _statusDot(context.textTertiary),
+              label: l10n.nodesScreenLegendStatusUnknown,
+            ),
+          ],
+        ),
+        const SizedBox(height: AppTheme.spacing16),
+
+        // Signal section
+        _LegendSection(
+          title: l10n.nodesScreenLegendSectionSignal,
+          items: [
+            _LegendItem(
+              icon: _signalBars(4, AccentColors.green),
+              label: l10n.nodesScreenLegendSignalStrong,
+            ),
+            _LegendItem(
+              icon: _signalBars(2, AppTheme.warningYellow),
+              label: l10n.nodesScreenLegendSignalMedium,
+            ),
+            _LegendItem(
+              icon: _signalBars(1, AppTheme.errorRed),
+              label: l10n.nodesScreenLegendSignalWeak,
+            ),
+          ],
+        ),
+        const SizedBox(height: AppTheme.spacing16),
+
+        // Hops section
+        _LegendSection(
+          title: l10n.nodesScreenLegendSectionHops,
+          items: [
+            _LegendItem(
+              icon: _hopDotSample(
+                'D', // lint-allow: hardcoded-string
+                AccentColors.green,
+              ),
+              label: l10n.nodesScreenLegendHopsDirect,
+            ),
+            _LegendItem(
+              icon: _hopDotSample(
+                '1', // lint-allow: hardcoded-string
+                AccentColors.green,
+              ),
+              label: l10n.nodesScreenLegendHops1,
+            ),
+            _LegendItem(
+              icon: _hopDotSample(
+                '2', // lint-allow: hardcoded-string
+                AppTheme.warningYellow,
+              ),
+              label: l10n.nodesScreenLegendHops2,
+            ),
+            _LegendItem(
+              icon: _hopDotSample(
+                '3', // lint-allow: hardcoded-string
+                AccentColors.orange,
+              ),
+              label: l10n.nodesScreenLegendHops3,
+            ),
+            _LegendItem(
+              icon: _hopDotSample(
+                '4', // lint-allow: hardcoded-string
+                AppTheme.errorRed,
+              ),
+              label: l10n.nodesScreenLegendHops4Plus,
+            ),
+          ],
+        ),
+        const SizedBox(height: AppTheme.spacing16),
+
+        // Transport section
+        _LegendSection(
+          title: l10n.nodesScreenLegendSectionTransport,
+          items: [
+            _LegendItem(
+              icon: Icon(
+                Icons.cell_tower,
+                size: 16,
+                color: AccentColors.emerald,
+              ),
+              label: l10n.nodesScreenLegendTransportRf,
+            ),
+            _LegendItem(
+              icon: Icon(
+                Icons.cloud_outlined,
+                size: 16,
+                color: AccentColors.sky,
+              ),
+              label: l10n.nodesScreenLegendTransportMqtt,
+            ),
+          ],
+        ),
+        const SizedBox(height: AppTheme.spacing16),
+
+        // Battery section
+        _LegendSection(
+          title: l10n.nodesScreenLegendSectionBattery,
+          items: [
+            _LegendItem(
+              icon: Icon(
+                Icons.battery_full,
+                size: 16,
+                color: AccentColors.green,
+              ),
+              label: l10n.nodesScreenLegendBatteryGood,
+            ),
+            _LegendItem(
+              icon: Icon(
+                Icons.battery_3_bar,
+                size: 16,
+                color: AppTheme.warningYellow,
+              ),
+              label: l10n.nodesScreenLegendBatteryLow,
+            ),
+            _LegendItem(
+              icon: Icon(
+                Icons.battery_alert,
+                size: 16,
+                color: AppTheme.errorRed,
+              ),
+              label: l10n.nodesScreenLegendBatteryCritical,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  static Widget _statusDot(Color color, {bool glow = false}) {
+    return Container(
+      width: 10,
+      height: 10,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color,
+        boxShadow: glow
+            ? [BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 4)]
+            : null,
+      ),
+    );
+  }
+
+  static Widget _signalBars(int activeBars, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: List.generate(4, (i) {
+        final isActive = i < activeBars;
+        return Container(
+          margin: const EdgeInsets.only(right: 1),
+          width: 3,
+          height: 6.0 + (i * 2.0),
+          decoration: BoxDecoration(
+            color: isActive
+                ? color
+                : SemanticColors.disabled.withValues(alpha: 0.25),
+            borderRadius: BorderRadius.circular(AppTheme.radius1),
+          ),
+        );
+      }),
+    );
+  }
+
+  static Widget _hopDotSample(String label, Color color) {
+    return Container(
+      width: 14,
+      height: 14,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color.withValues(alpha: 0.2),
+        border: Border.all(color: color, width: 1),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 8,
+          fontWeight: FontWeight.w700,
+          color: color,
+          height: 1,
+        ),
+      ),
+    );
+  }
+}
+
+class _LegendSection extends StatelessWidget {
+  final String title;
+  final List<_LegendItem> items;
+
+  const _LegendSection({required this.title, required this.items});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: context.accentColor,
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacing8),
+        ...items,
+      ],
+    );
+  }
+}
+
+class _LegendItem extends StatelessWidget {
+  final Widget icon;
+  final String label;
+
+  const _LegendItem({required this.label, required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
+      child: Row(
+        children: [
+          SizedBox(
+            width: AppTheme.spacing24,
+            child: Center(child: icon),
+          ),
+          const SizedBox(width: AppTheme.spacing12),
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(fontSize: 14, color: context.textSecondary),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

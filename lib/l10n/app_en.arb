@@ -42822,6 +42822,98 @@
             "uptime": { "type": "String" }
         }
     },
+    "nodesScreenLegendTitle": "Icon Legend",
+    "@nodesScreenLegendTitle": {
+        "description": "Title for the nodes screen icon legend bottom sheet"
+    },
+    "nodesScreenLegendStatusActive": "Active — heard recently",
+    "@nodesScreenLegendStatusActive": {
+        "description": "Legend entry for green active status dot"
+    },
+    "nodesScreenLegendStatusFading": "Fading — not heard for a while",
+    "@nodesScreenLegendStatusFading": {
+        "description": "Legend entry for yellow fading status dot"
+    },
+    "nodesScreenLegendStatusStale": "Stale — last heard long ago",
+    "@nodesScreenLegendStatusStale": {
+        "description": "Legend entry for grey stale status dot"
+    },
+    "nodesScreenLegendStatusUnknown": "Unknown — never heard directly",
+    "@nodesScreenLegendStatusUnknown": {
+        "description": "Legend entry for dim unknown status dot"
+    },
+    "nodesScreenLegendSignalStrong": "Strong signal (≥ −70 dBm)",
+    "@nodesScreenLegendSignalStrong": {
+        "description": "Legend entry for 4-bar signal"
+    },
+    "nodesScreenLegendSignalMedium": "Medium signal (−70 to −85 dBm)",
+    "@nodesScreenLegendSignalMedium": {
+        "description": "Legend entry for 2-3 bar signal"
+    },
+    "nodesScreenLegendSignalWeak": "Weak signal (< −85 dBm)",
+    "@nodesScreenLegendSignalWeak": {
+        "description": "Legend entry for 1-bar signal"
+    },
+    "nodesScreenLegendHopsDirect": "Direct — no hops",
+    "@nodesScreenLegendHopsDirect": {
+        "description": "Legend entry for 0-hop direct connection"
+    },
+    "nodesScreenLegendHops1": "1 hop away",
+    "@nodesScreenLegendHops1": {
+        "description": "Legend entry for 1-hop node"
+    },
+    "nodesScreenLegendHops2": "2 hops away",
+    "@nodesScreenLegendHops2": {
+        "description": "Legend entry for 2-hop node"
+    },
+    "nodesScreenLegendHops3": "3 hops away",
+    "@nodesScreenLegendHops3": {
+        "description": "Legend entry for 3-hop node"
+    },
+    "nodesScreenLegendHops4Plus": "4+ hops away",
+    "@nodesScreenLegendHops4Plus": {
+        "description": "Legend entry for 4+ hop node"
+    },
+    "nodesScreenLegendTransportRf": "Radio frequency (RF)",
+    "@nodesScreenLegendTransportRf": {
+        "description": "Legend entry for RF transport icon"
+    },
+    "nodesScreenLegendTransportMqtt": "Internet (MQTT)",
+    "@nodesScreenLegendTransportMqtt": {
+        "description": "Legend entry for MQTT transport icon"
+    },
+    "nodesScreenLegendBatteryGood": "Battery good (≥ 50%)",
+    "@nodesScreenLegendBatteryGood": {
+        "description": "Legend entry for green battery"
+    },
+    "nodesScreenLegendBatteryLow": "Battery low (20–49%)",
+    "@nodesScreenLegendBatteryLow": {
+        "description": "Legend entry for yellow battery"
+    },
+    "nodesScreenLegendBatteryCritical": "Battery critical (< 20%)",
+    "@nodesScreenLegendBatteryCritical": {
+        "description": "Legend entry for red battery"
+    },
+    "nodesScreenLegendSectionStatus": "Status",
+    "@nodesScreenLegendSectionStatus": {
+        "description": "Section header for status dots in the legend"
+    },
+    "nodesScreenLegendSectionSignal": "Signal Strength",
+    "@nodesScreenLegendSectionSignal": {
+        "description": "Section header for signal bars in the legend"
+    },
+    "nodesScreenLegendSectionHops": "Hop Count",
+    "@nodesScreenLegendSectionHops": {
+        "description": "Section header for hop indicators in the legend"
+    },
+    "nodesScreenLegendSectionTransport": "Transport",
+    "@nodesScreenLegendSectionTransport": {
+        "description": "Section header for transport icons in the legend"
+    },
+    "nodesScreenLegendSectionBattery": "Battery",
+    "@nodesScreenLegendSectionBattery": {
+        "description": "Section header for battery icons in the legend"
+    },
     "servicePresentationBoardTitle": "Bulletin Board",
     "@servicePresentationBoardTitle": {
         "description": "Title for the board.v1 MRRP service card"

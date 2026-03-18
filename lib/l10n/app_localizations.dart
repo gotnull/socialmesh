@@ -56296,6 +56296,144 @@ abstract class AppLocalizations {
   /// **'Up {uptime}'**
   String nodesScreenUptimeLabel(String uptime);
 
+  /// Title for the nodes screen icon legend bottom sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Icon Legend'**
+  String get nodesScreenLegendTitle;
+
+  /// Legend entry for green active status dot
+  ///
+  /// In en, this message translates to:
+  /// **'Active — heard recently'**
+  String get nodesScreenLegendStatusActive;
+
+  /// Legend entry for yellow fading status dot
+  ///
+  /// In en, this message translates to:
+  /// **'Fading — not heard for a while'**
+  String get nodesScreenLegendStatusFading;
+
+  /// Legend entry for grey stale status dot
+  ///
+  /// In en, this message translates to:
+  /// **'Stale — last heard long ago'**
+  String get nodesScreenLegendStatusStale;
+
+  /// Legend entry for dim unknown status dot
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown — never heard directly'**
+  String get nodesScreenLegendStatusUnknown;
+
+  /// Legend entry for 4-bar signal
+  ///
+  /// In en, this message translates to:
+  /// **'Strong signal (≥ −70 dBm)'**
+  String get nodesScreenLegendSignalStrong;
+
+  /// Legend entry for 2-3 bar signal
+  ///
+  /// In en, this message translates to:
+  /// **'Medium signal (−70 to −85 dBm)'**
+  String get nodesScreenLegendSignalMedium;
+
+  /// Legend entry for 1-bar signal
+  ///
+  /// In en, this message translates to:
+  /// **'Weak signal (< −85 dBm)'**
+  String get nodesScreenLegendSignalWeak;
+
+  /// Legend entry for 0-hop direct connection
+  ///
+  /// In en, this message translates to:
+  /// **'Direct — no hops'**
+  String get nodesScreenLegendHopsDirect;
+
+  /// Legend entry for 1-hop node
+  ///
+  /// In en, this message translates to:
+  /// **'1 hop away'**
+  String get nodesScreenLegendHops1;
+
+  /// Legend entry for 2-hop node
+  ///
+  /// In en, this message translates to:
+  /// **'2 hops away'**
+  String get nodesScreenLegendHops2;
+
+  /// Legend entry for 3-hop node
+  ///
+  /// In en, this message translates to:
+  /// **'3 hops away'**
+  String get nodesScreenLegendHops3;
+
+  /// Legend entry for 4+ hop node
+  ///
+  /// In en, this message translates to:
+  /// **'4+ hops away'**
+  String get nodesScreenLegendHops4Plus;
+
+  /// Legend entry for RF transport icon
+  ///
+  /// In en, this message translates to:
+  /// **'Radio frequency (RF)'**
+  String get nodesScreenLegendTransportRf;
+
+  /// Legend entry for MQTT transport icon
+  ///
+  /// In en, this message translates to:
+  /// **'Internet (MQTT)'**
+  String get nodesScreenLegendTransportMqtt;
+
+  /// Legend entry for green battery
+  ///
+  /// In en, this message translates to:
+  /// **'Battery good (≥ 50%)'**
+  String get nodesScreenLegendBatteryGood;
+
+  /// Legend entry for yellow battery
+  ///
+  /// In en, this message translates to:
+  /// **'Battery low (20–49%)'**
+  String get nodesScreenLegendBatteryLow;
+
+  /// Legend entry for red battery
+  ///
+  /// In en, this message translates to:
+  /// **'Battery critical (< 20%)'**
+  String get nodesScreenLegendBatteryCritical;
+
+  /// Section header for status dots in the legend
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get nodesScreenLegendSectionStatus;
+
+  /// Section header for signal bars in the legend
+  ///
+  /// In en, this message translates to:
+  /// **'Signal Strength'**
+  String get nodesScreenLegendSectionSignal;
+
+  /// Section header for hop indicators in the legend
+  ///
+  /// In en, this message translates to:
+  /// **'Hop Count'**
+  String get nodesScreenLegendSectionHops;
+
+  /// Section header for transport icons in the legend
+  ///
+  /// In en, this message translates to:
+  /// **'Transport'**
+  String get nodesScreenLegendSectionTransport;
+
+  /// Section header for battery icons in the legend
+  ///
+  /// In en, this message translates to:
+  /// **'Battery'**
+  String get nodesScreenLegendSectionBattery;
+
   /// Title for the board.v1 MRRP service card
   ///
   /// In en, this message translates to:
