@@ -14,7 +14,6 @@ import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
-import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/gradient_border_container.dart';
 import '../../core/widgets/ico_help_system.dart';
@@ -36,6 +35,7 @@ import '../aether/providers/aether_flight_matcher_provider.dart';
 import '../aether/widgets/aether_flight_match_card.dart';
 import '../navigation/main_shell.dart';
 import 'node_detail_screen.dart';
+import 'widgets/nodes_legend_sheet.dart';
 
 class NodesScreen extends ConsumerStatefulWidget {
   const NodesScreen({super.key});
@@ -220,6 +220,8 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
                 switch (value) {
                   case 'view_mode':
                     _toggleViewMode();
+                  case 'legend':
+                    NodesLegendSheet.show(context);
                   case 'settings':
                     Navigator.pushNamed(context, '/settings');
                   case 'help':
@@ -246,6 +248,25 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
                     ],
                   ),
                 ),
+                if (_compactView)
+                  PopupMenuItem(
+                    value: 'legend',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          color: context.textSecondary,
+                          size: 20,
+                        ),
+                        const SizedBox(width: AppTheme.spacing12),
+                        Text(
+                          context.l10n.nodesScreenLegendTitle,
+                          style: TextStyle(color: context.textPrimary),
+                        ),
+                      ],
+                    ),
+                  ),
+                const PopupMenuDivider(),
                 PopupMenuItem(
                   value: 'help',
                   child: Row(
@@ -385,17 +406,6 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
                   ),
                 ],
                 trailingControls: [
-                  GestureDetector(
-                    onTap: () {
-                      HapticFeedback.lightImpact();
-                      _NodesLegendSheet.show(context);
-                    },
-                    child: Icon(
-                      Icons.help_outline,
-                      size: 20,
-                      color: context.textSecondary,
-                    ),
-                  ),
                   SectionHeadersToggle(
                     enabled: _showSectionHeaders,
                     onToggle: () => setState(
@@ -2094,294 +2104,6 @@ class _CompactHopIndicator extends StatelessWidget {
           color: color,
           height: 1,
         ),
-      ),
-    );
-  }
-}
-
-/// Bottom sheet explaining what all the compact node tile icons mean.
-class _NodesLegendSheet extends StatelessWidget {
-  const _NodesLegendSheet();
-
-  static Future<void> show(BuildContext context) {
-    return AppBottomSheet.show(
-      context: context,
-      child: const _NodesLegendSheet(),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          l10n.nodesScreenLegendTitle,
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: context.textPrimary,
-          ),
-        ),
-        const SizedBox(height: AppTheme.spacing16),
-
-        // Status section
-        _LegendSection(
-          title: l10n.nodesScreenLegendSectionStatus,
-          items: [
-            _LegendItem(
-              icon: _statusDot(AccentColors.green, glow: true),
-              label: l10n.nodesScreenLegendStatusActive,
-            ),
-            _LegendItem(
-              icon: _statusDot(AppTheme.warningYellow),
-              label: l10n.nodesScreenLegendStatusFading,
-            ),
-            _LegendItem(
-              icon: _statusDot(context.textSecondary),
-              label: l10n.nodesScreenLegendStatusStale,
-            ),
-            _LegendItem(
-              icon: _statusDot(context.textTertiary),
-              label: l10n.nodesScreenLegendStatusUnknown,
-            ),
-          ],
-        ),
-        const SizedBox(height: AppTheme.spacing16),
-
-        // Signal section
-        _LegendSection(
-          title: l10n.nodesScreenLegendSectionSignal,
-          items: [
-            _LegendItem(
-              icon: _signalBars(4, AccentColors.green),
-              label: l10n.nodesScreenLegendSignalStrong,
-            ),
-            _LegendItem(
-              icon: _signalBars(2, AppTheme.warningYellow),
-              label: l10n.nodesScreenLegendSignalMedium,
-            ),
-            _LegendItem(
-              icon: _signalBars(1, AppTheme.errorRed),
-              label: l10n.nodesScreenLegendSignalWeak,
-            ),
-          ],
-        ),
-        const SizedBox(height: AppTheme.spacing16),
-
-        // Hops section
-        _LegendSection(
-          title: l10n.nodesScreenLegendSectionHops,
-          items: [
-            _LegendItem(
-              icon: _hopDotSample(
-                'D', // lint-allow: hardcoded-string
-                AccentColors.green,
-              ),
-              label: l10n.nodesScreenLegendHopsDirect,
-            ),
-            _LegendItem(
-              icon: _hopDotSample(
-                '1', // lint-allow: hardcoded-string
-                AccentColors.green,
-              ),
-              label: l10n.nodesScreenLegendHops1,
-            ),
-            _LegendItem(
-              icon: _hopDotSample(
-                '2', // lint-allow: hardcoded-string
-                AppTheme.warningYellow,
-              ),
-              label: l10n.nodesScreenLegendHops2,
-            ),
-            _LegendItem(
-              icon: _hopDotSample(
-                '3', // lint-allow: hardcoded-string
-                AccentColors.orange,
-              ),
-              label: l10n.nodesScreenLegendHops3,
-            ),
-            _LegendItem(
-              icon: _hopDotSample(
-                '4', // lint-allow: hardcoded-string
-                AppTheme.errorRed,
-              ),
-              label: l10n.nodesScreenLegendHops4Plus,
-            ),
-          ],
-        ),
-        const SizedBox(height: AppTheme.spacing16),
-
-        // Transport section
-        _LegendSection(
-          title: l10n.nodesScreenLegendSectionTransport,
-          items: [
-            _LegendItem(
-              icon: Icon(
-                Icons.cell_tower,
-                size: 16,
-                color: AccentColors.emerald,
-              ),
-              label: l10n.nodesScreenLegendTransportRf,
-            ),
-            _LegendItem(
-              icon: Icon(
-                Icons.cloud_outlined,
-                size: 16,
-                color: AccentColors.sky,
-              ),
-              label: l10n.nodesScreenLegendTransportMqtt,
-            ),
-          ],
-        ),
-        const SizedBox(height: AppTheme.spacing16),
-
-        // Battery section
-        _LegendSection(
-          title: l10n.nodesScreenLegendSectionBattery,
-          items: [
-            _LegendItem(
-              icon: Icon(
-                Icons.battery_full,
-                size: 16,
-                color: AccentColors.green,
-              ),
-              label: l10n.nodesScreenLegendBatteryGood,
-            ),
-            _LegendItem(
-              icon: Icon(
-                Icons.battery_3_bar,
-                size: 16,
-                color: AppTheme.warningYellow,
-              ),
-              label: l10n.nodesScreenLegendBatteryLow,
-            ),
-            _LegendItem(
-              icon: Icon(
-                Icons.battery_alert,
-                size: 16,
-                color: AppTheme.errorRed,
-              ),
-              label: l10n.nodesScreenLegendBatteryCritical,
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  static Widget _statusDot(Color color, {bool glow = false}) {
-    return Container(
-      width: 10,
-      height: 10,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: color,
-        boxShadow: glow
-            ? [BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 4)]
-            : null,
-      ),
-    );
-  }
-
-  static Widget _signalBars(int activeBars, Color color) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: List.generate(4, (i) {
-        final isActive = i < activeBars;
-        return Container(
-          margin: const EdgeInsets.only(right: 1),
-          width: 3,
-          height: 6.0 + (i * 2.0),
-          decoration: BoxDecoration(
-            color: isActive
-                ? color
-                : SemanticColors.disabled.withValues(alpha: 0.25),
-            borderRadius: BorderRadius.circular(AppTheme.radius1),
-          ),
-        );
-      }),
-    );
-  }
-
-  static Widget _hopDotSample(String label, Color color) {
-    return Container(
-      width: 14,
-      height: 14,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: color.withValues(alpha: 0.2),
-        border: Border.all(color: color, width: 1),
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 8,
-          fontWeight: FontWeight.w700,
-          color: color,
-          height: 1,
-        ),
-      ),
-    );
-  }
-}
-
-class _LegendSection extends StatelessWidget {
-  final String title;
-  final List<_LegendItem> items;
-
-  const _LegendSection({required this.title, required this.items});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: context.accentColor,
-            letterSpacing: 0.5,
-          ),
-        ),
-        const SizedBox(height: AppTheme.spacing8),
-        ...items,
-      ],
-    );
-  }
-}
-
-class _LegendItem extends StatelessWidget {
-  final Widget icon;
-  final String label;
-
-  const _LegendItem({required this.label, required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
-      child: Row(
-        children: [
-          SizedBox(
-            width: AppTheme.spacing24,
-            child: Center(child: icon),
-          ),
-          const SizedBox(width: AppTheme.spacing12),
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(fontSize: 14, color: context.textSecondary),
-            ),
-          ),
-        ],
       ),
     );
   }
