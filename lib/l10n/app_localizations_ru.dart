@@ -22918,6 +22918,26 @@ class AppLocalizationsRu extends AppLocalizations {
       'Shows connection status with node count and last message time';
 
   @override
+  String get bgConnSectionLiveActivity => 'LIVE ACTIVITY';
+
+  @override
+  String get bgConnLiveActivityTitle => 'Dynamic Island & Lock Screen';
+
+  @override
+  String get bgConnLiveActivitySubtitle =>
+      'Show device connection status on the Dynamic Island and Lock Screen';
+
+  @override
+  String get bgConnLiveActivityDisableTitle => 'End Live Activity?';
+
+  @override
+  String get bgConnLiveActivityDisableBody =>
+      'The current Dynamic Island activity will be ended immediately. Connection status will no longer appear on your Lock Screen.';
+
+  @override
+  String get bgConnLiveActivityDisableConfirm => 'End Activity';
+
+  @override
   String get linkedDevicesTitle => 'Linked Devices';
 
   @override

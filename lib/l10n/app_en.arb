@@ -31308,6 +31308,30 @@
     "@bgConnStyleDetailedDesc": {
         "description": "Description text"
     },
+    "bgConnSectionLiveActivity": "LIVE ACTIVITY",
+    "@bgConnSectionLiveActivity": {
+        "description": "Section header for iOS Live Activity / Dynamic Island settings"
+    },
+    "bgConnLiveActivityTitle": "Dynamic Island & Lock Screen",
+    "@bgConnLiveActivityTitle": {
+        "description": "Toggle title for the iOS Live Activity feature"
+    },
+    "bgConnLiveActivitySubtitle": "Show device connection status on the Dynamic Island and Lock Screen",
+    "@bgConnLiveActivitySubtitle": {
+        "description": "Toggle subtitle for the iOS Live Activity feature"
+    },
+    "bgConnLiveActivityDisableTitle": "End Live Activity?",
+    "@bgConnLiveActivityDisableTitle": {
+        "description": "Confirmation sheet title when user disables Live Activity"
+    },
+    "bgConnLiveActivityDisableBody": "The current Dynamic Island activity will be ended immediately. Connection status will no longer appear on your Lock Screen.",
+    "@bgConnLiveActivityDisableBody": {
+        "description": "Confirmation sheet body when user disables Live Activity"
+    },
+    "bgConnLiveActivityDisableConfirm": "End Activity",
+    "@bgConnLiveActivityDisableConfirm": {
+        "description": "Confirmation button label when disabling Live Activity"
+    },
     "linkedDevicesTitle": "Linked Devices",
     "@linkedDevicesTitle": {
         "description": "Screen or section title"

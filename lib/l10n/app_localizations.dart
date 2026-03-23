@@ -40614,6 +40614,42 @@ abstract class AppLocalizations {
   /// **'Shows connection status with node count and last message time'**
   String get bgConnStyleDetailedDesc;
 
+  /// Section header for iOS Live Activity / Dynamic Island settings
+  ///
+  /// In en, this message translates to:
+  /// **'LIVE ACTIVITY'**
+  String get bgConnSectionLiveActivity;
+
+  /// Toggle title for the iOS Live Activity feature
+  ///
+  /// In en, this message translates to:
+  /// **'Dynamic Island & Lock Screen'**
+  String get bgConnLiveActivityTitle;
+
+  /// Toggle subtitle for the iOS Live Activity feature
+  ///
+  /// In en, this message translates to:
+  /// **'Show device connection status on the Dynamic Island and Lock Screen'**
+  String get bgConnLiveActivitySubtitle;
+
+  /// Confirmation sheet title when user disables Live Activity
+  ///
+  /// In en, this message translates to:
+  /// **'End Live Activity?'**
+  String get bgConnLiveActivityDisableTitle;
+
+  /// Confirmation sheet body when user disables Live Activity
+  ///
+  /// In en, this message translates to:
+  /// **'The current Dynamic Island activity will be ended immediately. Connection status will no longer appear on your Lock Screen.'**
+  String get bgConnLiveActivityDisableBody;
+
+  /// Confirmation button label when disabling Live Activity
+  ///
+  /// In en, this message translates to:
+  /// **'End Activity'**
+  String get bgConnLiveActivityDisableConfirm;
+
   /// Screen or section title
   ///
   /// In en, this message translates to:

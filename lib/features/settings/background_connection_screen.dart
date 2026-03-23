@@ -14,9 +14,14 @@ import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/animations.dart';
+import '../../providers/app_providers.dart';
 import '../../providers/connection_providers.dart';
 import '../../services/transport/background_ble_service.dart';
 import 'battery_optimization_guide.dart';
+
+/// SharedPreferences key to enable/disable the iOS Live Activity
+/// (Dynamic Island + Lock Screen). Default: true.
+const String kLiveActivityEnabled = 'live_activity_enabled';
 
 /// SharedPreferences keys for background notification settings.
 ///
@@ -61,6 +66,7 @@ class _BackgroundConnectionScreenState
   bool _bgNotifyChannels = true;
   bool _bgNotifyNodes = false;
   NotificationStyle _notifStyle = NotificationStyle.minimal;
+  bool _liveActivityEnabled = true;
 
   bool _loaded = false;
 
@@ -81,6 +87,7 @@ class _BackgroundConnectionScreenState
       _notifStyle = NotificationStyle.fromValue(
         prefs.getInt(kBgNotifStyle) ?? 0,
       );
+      _liveActivityEnabled = prefs.getBool(kLiveActivityEnabled) ?? true;
       _loaded = true;
     });
   }
@@ -153,6 +160,28 @@ class _BackgroundConnectionScreenState
     if (!mounted) return;
     await prefs.setBool(kBgNotifyNodes, value);
     safeSetState(() => _bgNotifyNodes = value);
+  }
+
+  Future<void> _setLiveActivityEnabled(bool value) async {
+    HapticFeedback.selectionClick();
+
+    if (!value) {
+      final confirmed = await AppBottomSheet.showConfirm(
+        context: context,
+        title: context.l10n.bgConnLiveActivityDisableTitle,
+        message: context.l10n.bgConnLiveActivityDisableBody,
+        confirmLabel: context.l10n.bgConnLiveActivityDisableConfirm,
+        isDestructive: true,
+      );
+      if (confirmed != true || !mounted) return;
+      // End any running activity immediately.
+      ref.read(liveActivityManagerProvider.notifier).endLiveActivity();
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    await prefs.setBool(kLiveActivityEnabled, value);
+    safeSetState(() => _liveActivityEnabled = value);
   }
 
   Future<void> _setNotifStyle(NotificationStyle style) async {
@@ -243,6 +272,33 @@ class _BackgroundConnectionScreenState
                   onChanged: _bgBleEnabled ? _setBgNotifyNodes : null,
                 ),
               ),
+
+              // -- Live Activity (iOS only) ----------------------------------
+              if (Platform.isIOS) ...[
+                const SizedBox(height: AppTheme.spacing24),
+                _SectionHeader(title: context.l10n.bgConnSectionLiveActivity),
+                _SettingTile(
+                  icon: Icons.dynamic_feed_outlined,
+                  title: context.l10n.bgConnLiveActivityTitle,
+                  subtitle: context.l10n.bgConnLiveActivitySubtitle,
+                  trailing: _loaded
+                      ? ThemedSwitch(
+                          value: _liveActivityEnabled,
+                          onChanged: _setLiveActivityEnabled,
+                        )
+                      : const SizedBox(
+                          width: 48,
+                          height: 24,
+                          child: Center(
+                            child: SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                        ),
+                ),
+              ],
 
               // -- Notification style (Android only) ------------------------
               if (Platform.isAndroid) ...[

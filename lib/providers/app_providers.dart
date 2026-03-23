@@ -52,6 +52,8 @@ import 'age_eligibility_provider.dart';
 import 'file_transfer_providers.dart';
 import 'muted_channels_provider.dart';
 import '../services/messaging/dm_retry_coordinator.dart';
+import '../features/settings/background_connection_screen.dart'
+    show kLiveActivityEnabled;
 
 // App initialization state - purely about app lifecycle, NOT device connection
 // Device connection is handled separately by DeviceConnectionNotifier in connection_providers.dart
@@ -2445,6 +2447,16 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
   }
 
   Future<void> _startLiveActivity() async {
+    // Respect the user's in-app Live Activity preference.
+    final prefs = await SharedPreferences.getInstance();
+    final enabled = prefs.getBool(kLiveActivityEnabled) ?? true;
+    if (!enabled) {
+      AppLogging.debug(
+        '📱 Live Activity disabled by user preference — skipping',
+      );
+      return;
+    }
+
     final connectedDevice = ref.read(connectedDeviceProvider);
     final myNodeNum = ref.read(myNodeNumProvider);
     final nodes = ref.read(nodesProvider);
@@ -2664,6 +2676,11 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
     }
     return null;
   }
+
+  /// Ends the current Live Activity immediately.
+  ///
+  /// Called when the user disables the Live Activity toggle in settings.
+  Future<void> endLiveActivity() => _endLiveActivity();
 
   Future<void> _endLiveActivity() async {
     _channelUtilSubscription?.cancel();
