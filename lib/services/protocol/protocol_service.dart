@@ -3585,6 +3585,7 @@ class ProtocolService {
         isMuted: nodeInfo.hasIsMuted()
             ? nodeInfo.isMuted
             : existingNode.isMuted,
+        isFavorite: nodeInfo.isFavorite,
         viaMqtt: nodeInfo.hasViaMqtt()
             ? nodeInfo.viaMqtt
             : existingNode.viaMqtt,
@@ -3622,7 +3623,7 @@ class ProtocolService {
         firstHeard: DateTime.now(),
         role: role,
         avatarColor: avatarColor,
-        isFavorite: false,
+        isFavorite: nodeInfo.isFavorite,
         hasPublicKey: hasPublicKey,
         isMuted: nodeInfo.hasIsMuted() ? nodeInfo.isMuted : false,
         viaMqtt: nodeInfo.hasViaMqtt() ? nodeInfo.viaMqtt : false,

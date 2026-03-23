@@ -866,6 +866,14 @@ class DeviceFavoritesService {
     AppLogging.debug('Removed node $nodeNum from favorites');
   }
 
+  /// Replace the entire favorites set in one write (used for device-sync on connect).
+  Future<void> replaceAllFavorites(Set<int> newFavorites) async {
+    await _preferences.setStringList(
+      _favoritesKey,
+      newFavorites.map((n) => n.toString()).toList(),
+    );
+  }
+
   /// Get all ignored node numbers
   Set<int> get ignored {
     final list = _preferences.getStringList(_ignoredKey) ?? [];

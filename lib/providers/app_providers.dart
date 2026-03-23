@@ -3859,7 +3859,7 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
     }
 
     // Get persisted favorites/ignored from DeviceFavoritesService
-    final favoritesSet = _deviceFavorites?.favorites ?? <int>{};
+    var favoritesSet = _deviceFavorites?.favorites ?? <int>{};
     final ignoredSet = _deviceFavorites?.ignored ?? <int>{};
     final identities = ref.read(nodeIdentityProvider);
 
@@ -3897,6 +3897,22 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
     // Then merge with existing nodes from protocol service
     // Protocol nodes take precedence but preserve stored positions if new nodes don't have them
     final protocolNodes = Map<int, MeshNode>.from(protocol.nodes);
+
+    // Seed DeviceFavoritesService from device-reported is_favorite flags.
+    // The connected radio's NodeDB is the authoritative source for favorites —
+    // they directly control radio routing (e.g. zero-hop logic).
+    if (_deviceFavorites != null && protocolNodes.isNotEmpty) {
+      final deviceFavNums = protocolNodes.values
+          .where((n) => n.isFavorite)
+          .map((n) => n.nodeNum)
+          .toSet();
+      await _deviceFavorites!.replaceAllFavorites(deviceFavNums);
+      favoritesSet = deviceFavNums;
+      AppLogging.nodes(
+        'Synced ${deviceFavNums.length} favorites from device NodeDB',
+      );
+    }
+
     for (final entry in protocolNodes.entries) {
       var node = entry.value;
       final existing = state[entry.key];
