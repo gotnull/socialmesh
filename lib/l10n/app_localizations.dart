@@ -25469,6 +25469,30 @@ abstract class AppLocalizations {
   /// **'Provide phone location'**
   String get settingsTileProvideLocationTitle;
 
+  /// Snackbar message when location services are turned off on the device.
+  ///
+  /// In en, this message translates to:
+  /// **'Location services are disabled. Enable them in your device settings.'**
+  String get settingsLocationServicesDisabled;
+
+  /// Snackbar message when user denies location permission from the provide phone location switch.
+  ///
+  /// In en, this message translates to:
+  /// **'Location permission denied. Grant location access to share your position.'**
+  String get settingsLocationPermissionDenied;
+
+  /// Snackbar message when location permission is permanently denied (iOS/Android).
+  ///
+  /// In en, this message translates to:
+  /// **'Location permission permanently denied. Enable in your device settings.'**
+  String get settingsLocationPermissionPermanentlyDenied;
+
+  /// Action label for snackbar to open device settings for location permission.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settings'**
+  String get settingsLocationOpenSettings;
+
   /// Subtitle of the push notifications master toggle tile.
   ///
   /// In en, this message translates to:

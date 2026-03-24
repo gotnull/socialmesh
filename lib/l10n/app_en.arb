@@ -19793,6 +19793,22 @@
     "@settingsTileProvideLocationTitle": {
         "description": "Title of the provide phone location settings tile."
     },
+    "settingsLocationServicesDisabled": "Location services are disabled. Enable them in your device settings.",
+    "@settingsLocationServicesDisabled": {
+        "description": "Snackbar message when location services are turned off on the device."
+    },
+    "settingsLocationPermissionDenied": "Location permission denied. Grant location access to share your position.",
+    "@settingsLocationPermissionDenied": {
+        "description": "Snackbar message when user denies location permission from the provide phone location switch."
+    },
+    "settingsLocationPermissionPermanentlyDenied": "Location permission permanently denied. Enable in your device settings.",
+    "@settingsLocationPermissionPermanentlyDenied": {
+        "description": "Snackbar message when location permission is permanently denied (iOS/Android)."
+    },
+    "settingsLocationOpenSettings": "Open Settings",
+    "@settingsLocationOpenSettings": {
+        "description": "Action label for snackbar to open device settings for location permission."
+    },
     "settingsTilePushNotificationsSubtitle": "Master toggle for all notifications",
     "@settingsTilePushNotificationsSubtitle": {
         "description": "Subtitle of the push notifications master toggle tile."

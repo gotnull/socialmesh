@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/l10n/l10n_extension.dart';
@@ -406,6 +407,54 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             value: settingsService.providePhoneLocation,
             onChanged: (value) async {
               HapticFeedback.selectionClick();
+              if (value) {
+                // Check location services are enabled on the device.
+                final serviceEnabled =
+                    await Geolocator.isLocationServiceEnabled();
+                if (!serviceEnabled) {
+                  if (context.mounted) {
+                    showActionSnackBar(
+                      context,
+                      context.l10n.settingsLocationServicesDisabled,
+                      actionLabel: context.l10n.settingsLocationOpenSettings,
+                      onAction: () => Geolocator.openLocationSettings(),
+                      type: SnackBarType.warning,
+                    );
+                  }
+                  return;
+                }
+
+                // Check and request OS location permission.
+                var permission = await Geolocator.checkPermission();
+                if (permission == LocationPermission.denied) {
+                  permission = await Geolocator.requestPermission();
+                  if (permission == LocationPermission.denied) {
+                    if (context.mounted) {
+                      showActionSnackBar(
+                        context,
+                        context.l10n.settingsLocationPermissionDenied,
+                        actionLabel: context.l10n.settingsLocationOpenSettings,
+                        onAction: () => Geolocator.openAppSettings(),
+                        type: SnackBarType.warning,
+                      );
+                    }
+                    return;
+                  }
+                }
+
+                if (permission == LocationPermission.deniedForever) {
+                  if (context.mounted) {
+                    showActionSnackBar(
+                      context,
+                      context.l10n.settingsLocationPermissionPermanentlyDenied,
+                      actionLabel: context.l10n.settingsLocationOpenSettings,
+                      onAction: () => Geolocator.openAppSettings(),
+                      type: SnackBarType.warning,
+                    );
+                  }
+                  return;
+                }
+              }
               await settingsService.setProvidePhoneLocation(value);
               ref.invalidate(settingsServiceProvider);
             },

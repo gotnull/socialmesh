@@ -14461,6 +14461,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsTileProvideLocationTitle => 'Provide phone location';
 
   @override
+  String get settingsLocationServicesDisabled =>
+      'Location services are disabled. Enable them in your device settings.';
+
+  @override
+  String get settingsLocationPermissionDenied =>
+      'Location permission denied. Grant location access to share your position.';
+
+  @override
+  String get settingsLocationPermissionPermanentlyDenied =>
+      'Location permission permanently denied. Enable in your device settings.';
+
+  @override
+  String get settingsLocationOpenSettings => 'Open Settings';
+
+  @override
   String get settingsTilePushNotificationsSubtitle =>
       'Master toggle for all notifications';
 
