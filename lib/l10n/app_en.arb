@@ -39527,6 +39527,15 @@
             }
         }
     },
+    "notificationBatchedNodesTitle": "{count, plural, =1{1 new node discovered} other{{count} new nodes discovered}}",
+    "@notificationBatchedNodesTitle": {
+        "description": "Notification title for batched node discovery",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
     "notificationAetherFlightTitle": "Aether Flight Detected",
     "@notificationAetherFlightTitle": {
         "description": "Notification title for aether flight detection"

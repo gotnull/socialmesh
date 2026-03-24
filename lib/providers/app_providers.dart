@@ -4642,11 +4642,17 @@ class NodeDiscoveryCooldownNotifier
         final playSound = settings.notificationSoundEnabled;
         final vibrate = settings.notificationVibrationEnabled;
 
-        await NotificationService().showBatchedNodesNotification(
-          nodes: nodes,
-          playSound: playSound,
-          vibrate: vibrate,
-        );
+        try {
+          await NotificationService().showBatchedNodesNotification(
+            nodes: nodes,
+            playSound: playSound,
+            vibrate: vibrate,
+          );
+        } catch (e) {
+          AppLogging.notifications(
+            '🔔 Error showing batched node notification: $e',
+          );
+        }
       }
     }
 

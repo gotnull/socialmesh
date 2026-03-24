@@ -1023,7 +1023,7 @@ class NotificationService {
     }
 
     // Multiple nodes - show summary
-    title = '$nodeCount new nodes discovered';
+    title = _l10n.notificationBatchedNodesTitle(nodeCount);
     final nodeNames = nodes.take(3).map((n) => n.node.displayName).join(', ');
     body = nodeNames + (nodeCount > 3 ? '…' : '');
 
@@ -1045,21 +1045,27 @@ class NotificationService {
       presentSound: playSound,
     );
 
-    await _notifications.show(
-      id: 3000003, // Fixed ID for batched node notifications
-      title: title,
-      body: body,
-      notificationDetails: NotificationDetails(
-        android: androidDetails,
-        iOS: iosDetails,
-        macOS: iosDetails,
-      ),
-      payload: 'batched_nodes',
-    );
+    try {
+      await _notifications.show(
+        id: 3000003, // Fixed ID for batched node notifications
+        title: title,
+        body: body,
+        notificationDetails: NotificationDetails(
+          android: androidDetails,
+          iOS: iosDetails,
+          macOS: iosDetails,
+        ),
+        payload: 'batched_nodes',
+      );
 
-    AppLogging.notifications(
-      '🔔 Showed batched node notification: $nodeCount nodes',
-    );
+      AppLogging.notifications(
+        '🔔 Showed batched node notification: $nodeCount nodes',
+      );
+    } catch (e) {
+      AppLogging.notifications(
+        '🔔 Failed to show batched node notification: $e',
+      );
+    }
   }
 
   /// Fixed notification ID for admin bug report notifications

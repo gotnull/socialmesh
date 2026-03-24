@@ -52008,6 +52008,12 @@ abstract class AppLocalizations {
   /// **'{nodeName} ({shortCode}) joined the mesh'**
   String notificationNewNodeBody(String nodeName, String shortCode);
 
+  /// Notification title for batched node discovery
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 new node discovered} other{{count} new nodes discovered}}'**
+  String notificationBatchedNodesTitle(int count);
+
   /// Notification title for aether flight detection
   ///
   /// In en, this message translates to:
