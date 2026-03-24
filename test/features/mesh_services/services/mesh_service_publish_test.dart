@@ -389,6 +389,7 @@ void main() {
             return true;
           },
         );
+        advertEngine.isAdvertisingEnabled = true;
         advertEngine.start();
 
         await advertEngine.broadcastNow();
@@ -438,6 +439,7 @@ void main() {
           return true;
         },
       );
+      advertEngine.isAdvertisingEnabled = true;
       advertEngine.start();
 
       await advertEngine.broadcastNow();

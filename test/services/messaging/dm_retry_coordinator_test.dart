@@ -252,8 +252,8 @@ void main() {
     });
   });
 
-  group('DmRetryCoordinator — _resetStaleRetrying on start()', () {
-    test('retrying messages are reset to unconfirmed on start', () {
+  group('DmRetryCoordinator — start() does not reset retrying', () {
+    test('retrying messages are unchanged after start', () {
       final retrying = _makeDm(status: MessageStatus.retrying);
       final (container, coordinator) = _makeContainer([retrying]);
       addTearDown(() {
@@ -265,7 +265,7 @@ void main() {
 
       final messages = container.read(messagesProvider);
       expect(messages.length, 1);
-      expect(messages.first.status, MessageStatus.unconfirmed);
+      expect(messages.first.status, MessageStatus.retrying);
     });
 
     test('non-retrying messages are unchanged after start', () {
@@ -464,27 +464,24 @@ void main() {
     test(
       'scheduleResend is no-op when passed message is already retrying',
       () async {
-        // _resetStaleRetrying on start() transitions the stored message from
-        // retrying → unconfirmed. scheduleResend is called with the original
-        // stale message object (status == retrying) so the guard fires early.
-        // Either way the final state is unconfirmed — no double-dispatch occurred.
+        // start() no longer resets stale retrying messages (that logic moved
+        // to MessagesNotifier._loadFromStorage()). scheduleResend is called
+        // with the original message object (status == retrying) so the guard
+        // fires early — the message stays retrying because no reset happened.
         final msg = _makeDm(status: MessageStatus.retrying);
         final (container, coordinator) = _makeContainer([msg]);
         addTearDown(() {
           coordinator.dispose();
           container.dispose();
         });
-        coordinator
-            .start(); // _resetStaleRetrying transitions msg to unconfirmed
+        coordinator.start();
 
         // Pass the stale retrying message — guard fires, scheduleResend is a no-op
         await coordinator.scheduleResend(msg);
 
-        // After _resetStaleRetrying the stored status is unconfirmed; the
-        // scheduleResend early-return means it was not transitioned to retrying
-        // again (no dispatchSend was called that could have changed the status).
+        // The stored status remains retrying since start() no longer resets it.
         final stored = container.read(messagesProvider).first;
-        expect(stored.status, MessageStatus.unconfirmed);
+        expect(stored.status, MessageStatus.retrying);
       },
     );
   });

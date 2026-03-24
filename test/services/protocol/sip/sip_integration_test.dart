@@ -65,6 +65,10 @@ void main() {
         beaconJitterMs: 0,
         rollcallCooldownMs: 50,
       );
+
+      // Enable privacy gates for testing.
+      discoveryA.isDiscoverable = true;
+      discoveryB.isDiscoverable = true;
     });
 
     test('beacon exchange populates both peer caches', () {
@@ -179,6 +183,10 @@ void main() {
         localNodeId: 0x11223344,
         clock: dtClock(nowMs),
       );
+
+      // Enable privacy gates for testing.
+      hsManagerA.isDmAvailable = true;
+      hsManagerB.isDmAvailable = true;
     });
 
     test('four-step handshake completes between two peers', () async {
@@ -327,6 +335,10 @@ void main() {
         rateLimiter: sharedLimiter,
         clock: msClock(nowMs),
       );
+
+      // Enable privacy gates for testing.
+      hsManagerA.isDmAvailable = true;
+      hsManagerB.isDmAvailable = true;
     });
 
     Future<(SipHandshakeResult, SipHandshakeResult)> completeHandshake(
@@ -550,6 +562,9 @@ void main() {
         rollcallCooldownMs: 10,
       );
       dmManager = SipDmManager(rateLimiter: limiter, clock: msClock(nowMs));
+
+      // Enable privacy gates for testing.
+      discovery.isDiscoverable = true;
     });
 
     test('discovery beacons drain budget shared with DM', () {
@@ -1057,6 +1072,7 @@ void main() {
           beaconIntervalMs: 10,
           beaconJitterMs: 0,
         );
+        discoveryA.isDiscoverable = true;
         final discoveryB = SipDiscovery(
           rateLimiter: limiterB,
           localNodeId: 0x11223344,
@@ -1064,6 +1080,7 @@ void main() {
           beaconIntervalMs: 10,
           beaconJitterMs: 0,
         );
+        discoveryB.isDiscoverable = true;
 
         nowMs[0] += 20;
         final beaconA = discoveryA.buildBeacon(force: true)!;
@@ -1082,11 +1099,13 @@ void main() {
           localNodeId: 0xAABBCCDD,
           clock: dtClock(nowMs),
         );
+        hsA.isDmAvailable = true;
         final hsB = SipHandshakeManager(
           replayCache: replayCacheB,
           localNodeId: 0x11223344,
           clock: dtClock(nowMs),
         );
+        hsB.isDmAvailable = true;
 
         counters.recordHandshakeInitiated();
 

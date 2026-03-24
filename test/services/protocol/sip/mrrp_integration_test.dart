@@ -42,6 +42,10 @@ void main() {
           return true;
         },
       );
+
+      // Enable privacy gates for testing.
+      engine.isServicingEnabled = true;
+      advertEngine.isAdvertisingEnabled = true;
     });
 
     tearDown(() {

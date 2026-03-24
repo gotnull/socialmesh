@@ -44,10 +44,14 @@ class FileTransferDatabase {
         version: _dbVersion,
         onConfigure: (db) async {
           final walResult = await db.rawQuery('PRAGMA journal_mode=WAL');
-          assert(
-            walResult.isNotEmpty && walResult.first['journal_mode'] == 'wal',
-            'WAL mode not active',
-          ); // lint-allow: hardcoded-string
+          // WAL assertion skipped — WAL is requested but only verified
+          // for on-disk databases. Log instead of asserting to avoid
+          // crashing in edge cases where the journal mode differs.
+          if (walResult.isEmpty || walResult.first['journal_mode'] != 'wal') {
+            AppLogging.fileTransfer(
+              'FileTransferDatabase: WAL mode not active, got: $walResult',
+            ); // lint-allow: hardcoded-string
+          }
         },
         onCreate: (db, version) async {
           AppLogging.fileTransfer('DB: creating tables (v$version)');

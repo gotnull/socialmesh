@@ -139,6 +139,7 @@ void main() {
         clock: () => nowMs,
         beaconJitterMs: 30000, // Full jitter
       );
+      discovery.isDiscoverable = true;
 
       // Force first beacon to set _lastBeaconMs.
       final first = discovery.buildBeacon(force: true);
@@ -173,6 +174,7 @@ void main() {
         clock: () => nowMs,
         beaconJitterMs: 0, // Deterministic
       );
+      discovery.isDiscoverable = true;
 
       final first = discovery.buildBeacon(force: true);
       expect(first, isNotNull);
@@ -211,6 +213,7 @@ void main() {
         beaconJitterMs: 0,
         rollcallCooldownMs: 60000, // 60s base
       );
+      discovery.isDiscoverable = true;
 
       final first = discovery.buildRollcallReq();
       expect(first, isNotNull);
@@ -237,6 +240,7 @@ void main() {
         beaconJitterMs: 0,
         rollcallCooldownMs: 60000,
       );
+      discovery.isDiscoverable = true;
 
       // First response to peer 0xBBBB succeeds.
       final resp1 = discovery.buildRollcallResp(0xBBBB);
@@ -267,6 +271,7 @@ void main() {
         replayCache: replayCache,
         localNodeId: 0x1111,
       );
+      mgr.isDmAvailable = true;
 
       final first = mgr.initiateHandshake(0xAAAA);
       expect(first, isNotNull);
@@ -293,6 +298,7 @@ void main() {
         localNodeId: 0x1111,
         clock: () => DateTime.fromMillisecondsSinceEpoch(clockMs),
       );
+      mgr.isDmAvailable = true;
 
       // Start and cancel handshake.
       final hello = mgr.initiateHandshake(0xAAAA);
@@ -323,11 +329,13 @@ void main() {
         localNodeId: 0xAAAA,
         clock: () => DateTime.fromMillisecondsSinceEpoch(clockMs),
       );
+      initiator.isDmAvailable = true;
       final responder = SipHandshakeManager(
         replayCache: SipReplayCache(),
         localNodeId: 0xBBBB,
         clock: () => DateTime.fromMillisecondsSinceEpoch(clockMs),
       );
+      responder.isDmAvailable = true;
 
       // Complete a full handshake.
       final helloFrame = initiator.initiateHandshake(0xBBBB);
@@ -358,6 +366,7 @@ void main() {
         counters: counters,
         clock: () => DateTime.fromMillisecondsSinceEpoch(clockMs),
       );
+      mgr.isDmAvailable = true;
 
       // Initiate -> records initiated.
       mgr.initiateHandshake(0xAAAA);
@@ -403,6 +412,7 @@ void main() {
         clock: () => nowMs,
         beaconJitterMs: 0,
       );
+      discovery.isDiscoverable = true;
 
       // Send first beacon.
       final first = discovery.buildBeacon(force: true);
@@ -434,6 +444,7 @@ void main() {
         beaconJitterMs: 0,
         rollcallCooldownMs: 60000,
       );
+      discovery.isDiscoverable = true;
 
       // Send first rollcall.
       final first = discovery.buildRollcallReq();
@@ -467,6 +478,7 @@ void main() {
         clock: () => nowMs,
         beaconJitterMs: 0,
       );
+      discovery.isDiscoverable = true;
 
       // Simulate provider-layer cold-start protection.
       discovery.lastBeaconMs = nowMs;
@@ -510,6 +522,7 @@ void main() {
         clock: () => nowMs,
         beaconJitterMs: 0,
       );
+      discovery.isDiscoverable = true;
 
       // Drain budget.
       limiter.recordSend(SipConstants.sipBudgetBytesPer60s);
@@ -536,6 +549,7 @@ void main() {
         clock: () => nowMs,
         beaconJitterMs: 0,
       );
+      discovery.isDiscoverable = true;
 
       // Drain budget.
       limiter.recordSend(SipConstants.sipBudgetBytesPer60s);
@@ -561,6 +575,7 @@ void main() {
         beaconJitterMs: 0,
         rollcallCooldownMs: 1, // Very short cooldown for testing.
       );
+      discovery.isDiscoverable = true;
 
       // Send rollcall responses to many distinct peers.
       for (var i = 0; i < SipConstants.maxRollcallRespTracked + 20; i++) {
@@ -588,6 +603,7 @@ void main() {
         clock: () => nowMs,
         maxPeers: 4,
       );
+      discovery.isDiscoverable = true;
 
       // Add beacons from 6 peers with distinct nonces.
       for (var i = 0; i < 6; i++) {
@@ -611,6 +627,7 @@ void main() {
         localNodeId: 0x1111,
         clock: () => DateTime.fromMillisecondsSinceEpoch(clockMs),
       );
+      mgr.isDmAvailable = true;
 
       // We can't easily complete 17+ full handshakes in a unit test,
       // but we verify the bound exists by checking that after reset +
@@ -635,6 +652,7 @@ void main() {
         localNodeId: 0x1111,
         clock: () => DateTime.fromMillisecondsSinceEpoch(clockMs),
       );
+      mgr.isDmAvailable = true;
 
       // Initiate and cancel handshakes with many peers to fill cooldown map.
       for (var i = 0; i < SipConstants.maxTrackedPeers + 10; i++) {
@@ -668,6 +686,7 @@ void main() {
         replayCache: replayCache,
         clock: () => nowMs,
       );
+      discovery.isDiscoverable = true;
       discovery.onPeersChanged = () => peersChangedCount++;
 
       final frame = _makeBeaconFrame(nonce: 42, timestampS: 1700000);
@@ -697,6 +716,7 @@ void main() {
         replayCache: replayCache,
         clock: () => nowMs,
       );
+      discovery.isDiscoverable = true;
 
       final frame = _makeBeaconFrame(nonce: 42);
 
@@ -720,6 +740,7 @@ void main() {
         replayCache: replayCache,
         clock: () => nowMs,
       );
+      discovery.isDiscoverable = true;
       discovery.onPeersChanged = () => peersChangedCount++;
 
       final frame = _makeRollcallRespFrame(nonce: 99);
@@ -748,6 +769,7 @@ void main() {
         clock: () => nowMs,
         rollcallCooldownMs: 1, // Short cooldown for test.
       );
+      discovery.isDiscoverable = true;
 
       final frame = _makeRollcallReqFrame(nonce: 77);
 
@@ -776,6 +798,7 @@ void main() {
         localNodeId: 0xAAAA,
         clock: () => nowMs,
       );
+      discovery.isDiscoverable = true;
       discovery.onPeersChanged = () => peersChangedCount++;
 
       final frame = _makeBeaconFrame(nonce: 42);
@@ -802,6 +825,7 @@ void main() {
         replayCache: replayCache,
         localNodeId: 0x1111,
       );
+      mgr.isDmAvailable = true;
 
       // First HELLO: queues for consent. Accept to move to challengeSent.
       final hello1 = _makeHelloFrame(nonce: 500);
@@ -823,10 +847,12 @@ void main() {
         replayCache: SipReplayCache(),
         localNodeId: 0xAAAA,
       );
+      initiator.isDmAvailable = true;
       final responder = SipHandshakeManager(
         replayCache: SipReplayCache(),
         localNodeId: 0xBBBB,
       );
+      responder.isDmAvailable = true;
 
       // Complete a full handshake.
       final helloFrame = initiator.initiateHandshake(0xBBBB);
@@ -872,6 +898,7 @@ void main() {
         replayCache: replayCache,
         clock: () => nowMs,
       );
+      discovery.isDiscoverable = true;
       discovery.onPeersChanged = () => callCount++;
 
       final frame = _makeBeaconFrame(nonce: 42);
@@ -898,6 +925,7 @@ void main() {
         replayCache: replayCache,
         clock: () => nowMs,
       );
+      discovery.isDiscoverable = true;
       discovery.onPeerDiscovered = (_) => discoveredCount++;
 
       final frame = _makeBeaconFrame(nonce: 42);
@@ -924,6 +952,7 @@ void main() {
         replayCache: replayCache,
         clock: () => nowMs,
       );
+      discovery.isDiscoverable = true;
       discovery.onPeersChanged = () => peersChangedCount++;
 
       // First beacon: new peer, triggers callback.
@@ -949,10 +978,12 @@ void main() {
         replayCache: SipReplayCache(),
         localNodeId: 0xAAAA,
       );
+      initiator.isDmAvailable = true;
       final responder = SipHandshakeManager(
         replayCache: SipReplayCache(),
         localNodeId: 0xBBBB,
       );
+      responder.isDmAvailable = true;
 
       initiator.onStateChanged = () => stateChanges++;
 
@@ -987,11 +1018,13 @@ void main() {
         localNodeId: 0xAAAA,
         clock: () => DateTime.fromMillisecondsSinceEpoch(clockMs),
       );
+      initiator.isDmAvailable = true;
       final responder = SipHandshakeManager(
         replayCache: SipReplayCache(),
         localNodeId: 0xBBBB,
         clock: () => DateTime.fromMillisecondsSinceEpoch(clockMs),
       );
+      responder.isDmAvailable = true;
 
       // Complete a full handshake.
       final hello = initiator.initiateHandshake(0xBBBB);

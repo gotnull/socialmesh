@@ -202,7 +202,7 @@ void main() {
 
     test('closeSession marks session as closed and removes it', () {
       dm.createSession(sessionTag: 0x11, peerNodeId: 0x22);
-      expect(dm.closeSession(0x11), isTrue);
+      expect(dm.closeSession(0x11), isNotNull);
 
       // Closed session is still in the map but getSession
       // should return null since status != active on next access
@@ -214,7 +214,7 @@ void main() {
     });
 
     test('closeSession returns false for unknown session', () {
-      expect(dm.closeSession(0x99), isFalse);
+      expect(dm.closeSession(0x99), isNull);
     });
 
     test('cleanExpired removes expired sessions', () {
