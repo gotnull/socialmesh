@@ -56745,6 +56745,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Traceroute Map'**
   String get tracerouteMapTitle;
+
+  /// Tooltip for heading-up compass mode that rotates the map to match device orientation
+  ///
+  /// In en, this message translates to:
+  /// **'Heading up'**
+  String get mapControlsHeadingUp;
+
+  /// Snackbar message when the device does not have a compass/magnetometer sensor
+  ///
+  /// In en, this message translates to:
+  /// **'Compass sensor not available on this device'**
+  String get mapCompassUnavailable;
 }
 
 class _AppLocalizationsDelegate

@@ -43131,5 +43131,13 @@
     "tracerouteMapTitle": "Traceroute Map",
     "@tracerouteMapTitle": {
         "description": "Title of the map screen when showing a traceroute path"
+    },
+    "mapControlsHeadingUp": "Heading up",
+    "@mapControlsHeadingUp": {
+        "description": "Tooltip for heading-up compass mode that rotates the map to match device orientation"
+    },
+    "mapCompassUnavailable": "Compass sensor not available on this device",
+    "@mapCompassUnavailable": {
+        "description": "Snackbar message when the device does not have a compass/magnetometer sensor"
     }
 }

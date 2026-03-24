@@ -5,6 +5,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_compass/flutter_compass.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -164,6 +165,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
   // Compass rotation
   double _mapRotation = 0.0;
 
+  // Heading-up mode (map rotates to match device compass)
+  bool _headingUpMode = false;
+  StreamSubscription<CompassEvent>? _compassSubscription;
+
   // Track last known positions for nodes (to handle GPS loss gracefully)
   final Map<int, _CachedPosition> _positionCache = {};
 
@@ -189,6 +194,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
   @override
   void dispose() {
+    _compassSubscription?.cancel();
     _animationController?.dispose();
     _mapController.dispose();
     _searchController.dispose();
@@ -284,6 +290,47 @@ class _MapScreenState extends ConsumerState<MapScreen>
     });
 
     _animationController!.forward();
+  }
+
+  void _enableHeadingUp() {
+    _compassSubscription?.cancel();
+    _compassSubscription = FlutterCompass.events?.listen((event) {
+      final heading = event.heading;
+      if (heading == null || !mounted) return;
+      // Skip tiny changes to reduce redraws (accounts for 360°/0° wrap)
+      final diff = ((heading - _mapRotation + 540) % 360) - 180;
+      if (diff.abs() < 1.0) return;
+      _mapController.moveAndRotate(
+        _mapController.camera.center,
+        _currentZoom,
+        heading,
+      );
+      setState(() => _mapRotation = heading);
+    });
+    if (_compassSubscription != null) {
+      setState(() => _headingUpMode = true);
+    }
+  }
+
+  void _disableHeadingUp() {
+    _compassSubscription?.cancel();
+    _compassSubscription = null;
+    setState(() => _headingUpMode = false);
+  }
+
+  void _onCompassTap() {
+    if (_headingUpMode) {
+      _disableHeadingUp();
+      _animatedMove(_mapController.camera.center, _currentZoom, rotation: 0);
+    } else if (_mapRotation.abs() > 1.0) {
+      _animatedMove(_mapController.camera.center, _currentZoom, rotation: 0);
+    } else {
+      if (FlutterCompass.events == null) {
+        showWarningSnackBar(context, context.l10n.mapCompassUnavailable);
+        return;
+      }
+      _enableHeadingUp();
+    }
   }
 
   /// Update position cache and return nodes with valid (current or cached) positions
@@ -430,11 +477,18 @@ class _MapScreenState extends ConsumerState<MapScreen>
     double lat2,
     double lng2,
   ) {
-    return const Distance().as(
-      LengthUnit.Kilometer,
-      LatLng(lat1, lng1),
-      LatLng(lat2, lng2),
-    );
+    // Vincenty formula throws on identical / near-identical points
+    if (lat1 == lat2 && lng1 == lng2) return 0.0;
+    try {
+      return const Distance().as(
+        LengthUnit.Kilometer,
+        LatLng(lat1, lng1),
+        LatLng(lat2, lng2),
+      );
+    } catch (_) {
+      // Vincenty can also fail on near-antipodal points
+      return 0.0;
+    }
   }
 
   String _formatDistance(double km) {
@@ -1222,6 +1276,16 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       ),
                       onPositionChanged: (position, hasGesture) {
                         if (hasGesture) {
+                          // Disable heading-up if user manually rotates the map
+                          if (_headingUpMode) {
+                            final rotDiff =
+                                ((position.rotation - _mapRotation + 540) %
+                                    360) -
+                                180;
+                            if (rotDiff.abs() > 1.0) {
+                              _disableHeadingUp();
+                            }
+                          }
                           setState(() {
                             _currentZoom = position.zoom;
                             _mapRotation = position.rotation;
@@ -2037,6 +2101,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     minZoom: 4,
                     maxZoom: 18,
                     mapRotation: _mapRotation,
+                    isHeadingUp: _headingUpMode,
                     onZoomIn: () {
                       final newZoom = (_currentZoom + 1).clamp(4.0, 18.0);
                       _animatedMove(_mapController.camera.center, newZoom);
@@ -2050,11 +2115,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     onFitAll: () => _fitAllNodes(nodesWithPosition),
                     onCenterOnMe: () =>
                         _centerOnMyNode(nodesWithPosition, myNodeNum),
-                    onResetNorth: () => _animatedMove(
-                      _mapController.camera.center,
-                      _currentZoom,
-                      rotation: 0,
-                    ),
+                    onResetNorth: _onCompassTap,
                     hasMyLocation: nodesWithPosition.any(
                       (n) => n.node.nodeNum == myNodeNum,
                     ),

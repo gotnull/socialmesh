@@ -243,15 +243,18 @@ class MapControlLayout {
   static const double zoomControlsHeight = 136.0; // 3 buttons x 44 + 2 dividers
 }
 
-/// Compass widget showing map rotation - shared across all map screens
+/// Compass widget showing map rotation - shared across all map screens.
+/// Supports a heading-up mode where the map tracks the device compass.
 class MapCompass extends StatelessWidget {
   final double rotation;
   final VoidCallback onPressed;
+  final bool isHeadingUp;
 
   const MapCompass({
     super.key,
     required this.rotation,
     required this.onPressed,
+    this.isHeadingUp = false,
   });
 
   @override
@@ -267,11 +270,18 @@ class MapCompass extends StatelessWidget {
         decoration: BoxDecoration(
           color: context.card.withValues(alpha: 0.95),
           shape: BoxShape.circle,
-          border: Border.all(color: context.border.withValues(alpha: 0.5)),
+          border: Border.all(
+            color: isHeadingUp
+                ? AccentColors.cyan.withValues(alpha: 0.8)
+                : context.border.withValues(alpha: 0.5),
+            width: isHeadingUp ? 2 : 1,
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
-              blurRadius: 8,
+              color: isHeadingUp
+                  ? AccentColors.cyan.withValues(alpha: 0.3)
+                  : Colors.black.withValues(alpha: 0.2),
+              blurRadius: isHeadingUp ? 12 : 8,
               offset: const Offset(0, 2),
             ),
           ],
@@ -335,6 +345,8 @@ class MapControlsOverlay extends StatelessWidget {
   final VoidCallback? onCenterOnMe;
   final VoidCallback onResetNorth;
   final bool hasMyLocation;
+  final bool isHeadingUp;
+  final VoidCallback? onToggleHeadingUp;
 
   /// Called when the user taps the "Center on me" button but [hasMyLocation]
   /// is `false`. Forward this to show a snackbar guiding the user to enable
@@ -358,6 +370,8 @@ class MapControlsOverlay extends StatelessWidget {
     this.onCenterOnMe,
     required this.onResetNorth,
     this.hasMyLocation = true,
+    this.isHeadingUp = false,
+    this.onToggleHeadingUp,
     this.onLocationUnavailable,
     this.showFitAll = true,
     this.showNavigation = true,
@@ -377,7 +391,13 @@ class MapControlsOverlay extends StatelessWidget {
         children: [
           // Compass
           if (showCompass) ...[
-            MapCompass(rotation: mapRotation, onPressed: onResetNorth),
+            MapCompass(
+              rotation: mapRotation,
+              isHeadingUp: isHeadingUp,
+              onPressed: isHeadingUp
+                  ? onResetNorth
+                  : (onToggleHeadingUp ?? onResetNorth),
+            ),
             SizedBox(height: spacing),
           ],
           // Zoom controls

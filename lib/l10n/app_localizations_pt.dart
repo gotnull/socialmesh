@@ -32500,4 +32500,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get tracerouteMapTitle => 'Traceroute Map';
+
+  @override
+  String get mapControlsHeadingUp => 'Heading up';
+
+  @override
+  String get mapCompassUnavailable =>
+      'Compass sensor not available on this device';
 }
