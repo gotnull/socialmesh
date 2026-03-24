@@ -45,6 +45,7 @@ jobs:
 
       - name: Run tests
         run: |
+          set -o pipefail
           # Run tests with expanded output, retry once on failure to catch flaky tests
           if ! flutter test --reporter expanded 2>&1 | tee test_output.log; then
             echo "::warning::First test run failed, retrying to check for flaky tests..."
