@@ -452,21 +452,25 @@ class BleTransport implements DeviceTransport {
 
       // Now request MTU after connection is proven stable
       // Request MTU size 512 per Meshtastic docs with retry logic
-      for (var attempt = 1; attempt <= 3; attempt++) {
-        try {
-          await _device!.requestMtu(512);
-          AppLogging.ble('✓ MTU request successful');
-          break;
-        } catch (e) {
-          AppLogging.ble('⚠️ MTU request attempt $attempt/3 failed: $e');
-          if (attempt == 3) {
-            // After 3 attempts, continue anyway - some devices don't support MTU negotiation
-            AppLogging.ble('⚠️ Proceeding without MTU negotiation');
-          } else {
-            // Wait before retrying, check if still connected
-            await Future.delayed(const Duration(milliseconds: 300));
-            if (!_device!.isConnected) {
-              throw Exception('Device disconnected during MTU negotiation');
+      // iOS handles MTU negotiation automatically via CoreBluetooth —
+      // calling requestMtu on iOS always fails with fbp-code: 2.
+      if (defaultTargetPlatform != TargetPlatform.iOS) {
+        for (var attempt = 1; attempt <= 3; attempt++) {
+          try {
+            await _device!.requestMtu(512);
+            AppLogging.ble('✓ MTU request successful');
+            break;
+          } catch (e) {
+            AppLogging.ble('⚠️ MTU request attempt $attempt/3 failed: $e');
+            if (attempt == 3) {
+              // After 3 attempts, continue anyway - some devices don't support MTU negotiation
+              AppLogging.ble('⚠️ Proceeding without MTU negotiation');
+            } else {
+              // Wait before retrying, check if still connected
+              await Future.delayed(const Duration(milliseconds: 300));
+              if (!_device!.isConnected) {
+                throw Exception('Device disconnected during MTU negotiation');
+              }
             }
           }
         }
@@ -619,7 +623,10 @@ class BleTransport implements DeviceTransport {
       for (final char in deviceInfoService.characteristics) {
         try {
           final data = await char.read();
-          final value = String.fromCharCodes(data).trim();
+          // Strip whitespace and embedded quotes — some devices (e.g. Heltec
+          // MeshPocket) return model number as '"1.0"' with literal quote
+          // bytes in the BLE characteristic value.
+          final value = String.fromCharCodes(data).trim().replaceAll('"', '');
           AppLogging.ble('Device Info ${char.uuid}: "$value" (raw: $data)');
 
           final uuid = char.uuid.toString().toLowerCase();

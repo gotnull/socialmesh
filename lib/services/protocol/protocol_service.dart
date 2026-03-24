@@ -1136,10 +1136,6 @@ class ProtocolService {
     _pollingConfig = true;
     int pollCount = 0;
     const maxPolls = 100;
-    // Re-request config every ~3 seconds (12 polls × 250ms) if the device
-    // hasn't responded. This handles devices that are slow to wake from
-    // sleep (e.g. Heltec MeshPocket) or missed the initial request.
-    const retryInterval = 12;
 
     Future.doWhile(() async {
       if (_configurationComplete || pollCount >= maxPolls) {
@@ -1154,17 +1150,6 @@ class ProtocolService {
       try {
         await _transport.pollOnce();
         pollCount++;
-
-        // Periodically re-request configuration in case the device missed
-        // the initial wantConfigId (sleep wake-up, busy BLE stack, etc.)
-        if (pollCount > 0 &&
-            pollCount % retryInterval == 0 &&
-            !_configurationComplete) {
-          AppLogging.protocol(
-            'Config not received after ${pollCount * 250}ms, re-requesting...',
-          );
-          await _requestConfiguration();
-        }
 
         await Future.delayed(const Duration(milliseconds: 250));
       } catch (e) {
