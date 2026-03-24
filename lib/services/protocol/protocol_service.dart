@@ -1031,6 +1031,12 @@ class ProtocolService {
       // Short delay to let notifications settle
       await Future.delayed(const Duration(milliseconds: 200));
 
+      // Send heartbeat to wake the device before requesting config.
+      // Matches the official meshtastic-ios pattern (Step 2 → heartbeat,
+      // Step 3 → wantConfigId). Devices in low-power sleep (e.g. Heltec
+      // MeshPocket) may not process the first wantConfigId without this.
+      await _sendHeartbeat();
+
       // NOW request configuration - device will respond via notifications
       await _requestConfiguration();
 
@@ -1130,6 +1136,10 @@ class ProtocolService {
     _pollingConfig = true;
     int pollCount = 0;
     const maxPolls = 100;
+    // Re-request config every ~3 seconds (12 polls × 250ms) if the device
+    // hasn't responded. This handles devices that are slow to wake from
+    // sleep (e.g. Heltec MeshPocket) or missed the initial request.
+    const retryInterval = 12;
 
     Future.doWhile(() async {
       if (_configurationComplete || pollCount >= maxPolls) {
@@ -1144,6 +1154,18 @@ class ProtocolService {
       try {
         await _transport.pollOnce();
         pollCount++;
+
+        // Periodically re-request configuration in case the device missed
+        // the initial wantConfigId (sleep wake-up, busy BLE stack, etc.)
+        if (pollCount > 0 &&
+            pollCount % retryInterval == 0 &&
+            !_configurationComplete) {
+          AppLogging.protocol(
+            'Config not received after ${pollCount * 250}ms, re-requesting...',
+          );
+          await _requestConfiguration();
+        }
+
         await Future.delayed(const Duration(milliseconds: 250));
       } catch (e) {
         AppLogging.protocol('Poll error: $e');
@@ -3737,6 +3759,35 @@ class ProtocolService {
     if (channel.index == 0 ||
         channel.role != channel_pbenum.Channel_Role.DISABLED) {
       _channelController.add(channelConfig);
+    }
+  }
+
+  /// Send a heartbeat to wake the device's connection handler.
+  ///
+  /// Per Meshtastic protocol, a heartbeat with a random nonce keeps the
+  /// device's PhoneAPI connection alive and responsive. The official iOS
+  /// app sends this before every wantConfigId request to ensure devices
+  /// in low-power states are ready to respond.
+  Future<void> _sendHeartbeat() async {
+    try {
+      if (!_transport.isConnected) return;
+
+      // Nonce >= 2 to avoid any firmware special-casing of 0 or 1
+      final heartbeat = pb.Heartbeat()..nonce = _random.nextInt(0x7FFFFFFE) + 2;
+      final toRadio = pb.ToRadio()..heartbeat = heartbeat;
+      final bytes = toRadio.writeToBuffer();
+      final sendBytes = _transport.requiresFraming
+          ? PacketFramer.frame(bytes)
+          : bytes;
+
+      await _transport.send(sendBytes);
+      AppLogging.protocol('Heartbeat sent (nonce: ${heartbeat.nonce})');
+
+      // Brief pause to let device process the heartbeat before config request
+      await Future.delayed(const Duration(milliseconds: 100));
+    } catch (e) {
+      // Non-fatal — proceed with config request even if heartbeat fails
+      AppLogging.protocol('Heartbeat send failed (non-fatal): $e');
     }
   }
 
@@ -7782,6 +7833,9 @@ class ProtocolService {
       'heltec wireless tracker': 'Heltec Wireless Tracker',
       'heltec wireless paper': 'Heltec Wireless Paper',
       'heltec mesh node': 'Heltec Mesh Node T114',
+      'heltec meshpocket': 'Heltec MeshPocket',
+      'heltec mesh pocket': 'Heltec MeshPocket',
+      'meshpocket': 'Heltec MeshPocket',
       'heltec capsule': 'Heltec Capsule Sensor V3',
       'heltec vision master': 'Heltec Vision Master T190',
       'heltec': 'Heltec V3', // Generic Heltec fallback
@@ -7884,6 +7938,7 @@ class ProtocolService {
       'HELTEC_VISION_MASTER_E213': 'Heltec Vision Master E213',
       'HELTEC_VISION_MASTER_E290': 'Heltec Vision Master E290',
       'HELTEC_MESH_NODE_T114': 'Heltec Mesh Node T114',
+      'HELTEC_MESH_POCKET': 'Heltec MeshPocket',
       'HELTEC_HRU_3601': 'Heltec HRU-3601',
       'RAK4631': 'RAK4631',
       'RAK11200': 'RAK11200',

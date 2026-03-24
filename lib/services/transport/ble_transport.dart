@@ -671,7 +671,17 @@ class BleTransport implements DeviceTransport {
         return;
       }
 
-      await _fromNumCharacteristic!.setNotifyValue(true);
+      await _fromNumCharacteristic!
+          .setNotifyValue(true)
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () {
+              AppLogging.ble(
+                '⚠️ setNotifyValue timed out after 10s, continuing...',
+              );
+              return false;
+            },
+          );
       AppLogging.ble('BLE_NOTIFY_SUBSCRIBED fromNum');
 
       _fromNumSubscription = _fromNumCharacteristic!.lastValueStream.listen(
