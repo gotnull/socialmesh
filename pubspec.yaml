@@ -44,7 +44,7 @@ dependencies:
   flutter_markdown: ^0.7.6
 
   # UI/UX
-  cupertino_icons: ^1.0.8
+  cupertino_icons: ^1.0.9
   flutter_compass: ^0.8.1
   flutter_map: ^8.2.2
   latlong2: ^0.9.1
