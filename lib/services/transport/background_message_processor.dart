@@ -427,6 +427,23 @@ class BackgroundMessageProcessor {
         if (!(prefs.getBool(_kBgDmToggle) ?? true)) return;
       }
 
+      // Respect per-channel mute (same SharedPreferences key used by
+      // MutedChannelsNotifier on the foreground side).
+      if (isChannelMessage) {
+        final mutedRaw = prefs.getStringList('muted_channel_indices');
+        if (mutedRaw != null) {
+          final mutedSet =
+              mutedRaw.map((s) => int.tryParse(s)).whereType<int>().toSet();
+          if (mutedSet.contains(message.channel)) {
+            AppLogging.ble(
+              'BackgroundMessageProcessor: channel ${message.channel} is '
+              'muted, skipping notification',
+            );
+            return;
+          }
+        }
+      }
+
       final ns = NotificationService();
       final displayName =
           senderLongName ?? '!${message.from.toRadixString(16).toUpperCase()}';
