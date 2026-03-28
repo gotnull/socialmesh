@@ -435,8 +435,10 @@ class BackgroundMessageProcessor {
       if (isChannelMessage) {
         final mutedRaw = prefs.getStringList(_kMutedChannels);
         if (mutedRaw != null) {
-          final mutedSet =
-              mutedRaw.map((s) => int.tryParse(s)).whereType<int>().toSet();
+          final mutedSet = mutedRaw
+              .map((s) => int.tryParse(s))
+              .whereType<int>()
+              .toSet();
           if (mutedSet.contains(message.channel)) {
             AppLogging.ble(
               'BackgroundMessageProcessor: channel ${message.channel} is '

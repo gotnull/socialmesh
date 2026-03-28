@@ -298,13 +298,16 @@ class PushNotificationService {
 
         // Respect per-channel mute preference.
         final channelStr = message.data['channel'] as String?;
-        final channelIndex =
-            channelStr != null ? int.tryParse(channelStr) : null;
+        final channelIndex = channelStr != null
+            ? int.tryParse(channelStr)
+            : null;
         if (channelIndex != null) {
           final mutedRaw = prefs.getStringList(_kMutedChannels);
           if (mutedRaw != null) {
-            final mutedSet =
-                mutedRaw.map((s) => int.tryParse(s)).whereType<int>().toSet();
+            final mutedSet = mutedRaw
+                .map((s) => int.tryParse(s))
+                .whereType<int>()
+                .toSet();
             if (mutedSet.contains(channelIndex)) return;
           }
         }
