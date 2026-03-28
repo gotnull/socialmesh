@@ -13,6 +13,7 @@ import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/animations.dart';
+import '../../utils/validation.dart';
 import '../../core/widgets/bottom_action_bar.dart';
 import '../../core/widgets/branded_qr_code.dart';
 import '../../core/widgets/glass_scaffold.dart';
@@ -568,9 +569,9 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
           TextField(
             controller: _nameController,
             style: TextStyle(color: context.textPrimary),
-            maxLength: 12,
+            maxLength: maxChannelNameLength,
             inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
+              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9_\-]')),
             ],
             decoration: InputDecoration(
               labelText: context.l10n.channelWizardNameLabel,

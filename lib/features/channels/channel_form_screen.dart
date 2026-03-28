@@ -593,7 +593,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen>
                 counterText: '',
               ),
               inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9_]')),
+                FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9_\-]')),
                 LengthLimitingTextInputFormatter(maxChannelNameLength),
               ],
               validator: (value) => validateChannelName(value ?? ''),

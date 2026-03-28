@@ -481,9 +481,21 @@ class AutomationsNotifier extends Notifier<AsyncValue<List<Automation>>> {
 
       case 'interval':
         final intervalMinutes = config['intervalMinutes'] as int? ?? 60;
+        // Anchor the interval to the configured hour/minute so that fire
+        // times align to deterministic slots (e.g. 09:00, 10:00, 11:00…)
+        // instead of drifting relative to app-start time.
+        final now = DateTime.now();
+        var anchor = DateTime(now.year, now.month, now.day, hour, minute);
+        // If today's anchor is in the future, use yesterday's so the first
+        // interval fires at the next aligned slot.
+        if (anchor.isAfter(now)) {
+          anchor = anchor.subtract(const Duration(days: 1));
+        }
         return ScheduleSpec.interval(
           id: automation.id,
           every: Duration(minutes: intervalMinutes),
+          startAt: anchor,
+          catchUpPolicy: CatchUpPolicy.lastOnly,
         );
 
       default:
@@ -492,14 +504,35 @@ class AutomationsNotifier extends Notifier<AsyncValue<List<Automation>>> {
     }
   }
 
+  /// Clear all execution log entries and refresh provider state.
+  Future<void> clearExecutionLog() async {
+    await _repository.clearLog();
+    ref.read(_logRevisionProvider.notifier).bump();
+  }
+
   Future<void> addFromTemplate(String templateId) async {
     final automation = AutomationRepository.createTemplate(templateId);
     await addAutomation(automation);
   }
 }
 
+/// Revision counter that forces [automationLogProvider] to rebuild when bumped.
+final _logRevisionProvider = NotifierProvider<_LogRevision, int>(
+  _LogRevision.new,
+);
+
+class _LogRevision extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  void bump() => state++;
+}
+
 /// Provider for automation execution log
 final automationLogProvider = Provider<List<AutomationLogEntry>>((ref) {
+  // Watch the revision counter so that clearing the log (which bumps the
+  // counter) forces dependents to see the updated (empty) list.
+  ref.watch(_logRevisionProvider);
   final repository = ref.watch(automationRepositoryProvider);
   return repository.log;
 });

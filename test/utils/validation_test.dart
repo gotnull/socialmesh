@@ -36,9 +36,11 @@ void main() {
       expect(sanitizeChannelName('a.b.c'), 'abc');
     });
 
-    test('preserves alphanumeric and underscore', () {
+    test('preserves alphanumeric, underscore, and hyphen', () {
       expect(sanitizeChannelName('test_123'), 'test_123');
       expect(sanitizeChannelName('ABC_xyz_0'), 'ABC_xyz_0');
+      expect(sanitizeChannelName('my-channel'), 'my-channel');
+      expect(sanitizeChannelName('test-_mix'), 'test-_mix');
     });
 
     test('truncates to max length', () {
@@ -60,6 +62,8 @@ void main() {
       expect(validateChannelName('valid'), isNull);
       expect(validateChannelName('test_123'), isNull);
       expect(validateChannelName('ABC'), isNull);
+      expect(validateChannelName('my-channel'), isNull);
+      expect(validateChannelName('test-_mix'), isNull);
     });
 
     test('returns error for spaces', () {
@@ -79,11 +83,11 @@ void main() {
     test('returns error for special characters', () {
       expect(
         validateChannelName('test@'),
-        'Channel name can only contain letters, numbers, and underscores',
+        'Channel name can only contain letters, numbers, underscores, and hyphens',
       );
       expect(
         validateChannelName('a.b'),
-        'Channel name can only contain letters, numbers, and underscores',
+        'Channel name can only contain letters, numbers, underscores, and hyphens',
       );
     });
   });

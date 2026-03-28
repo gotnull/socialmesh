@@ -268,6 +268,7 @@ class InAppScheduler implements Scheduler {
 
     final events = <ScheduledFireEvent>[];
     final processedScheduleIds = <String>{};
+    final deferredEntries = <_ScheduleEntry>[];
     const maxProcessPerTick = 100; // Safety limit
 
     while (_queue.isNotEmpty &&
@@ -283,8 +284,11 @@ class InAppScheduler implements Scheduler {
       _queue.remove(entry);
       _entriesByScheduleId.remove(entry.scheduleId);
 
-      // Skip if we've already processed this schedule in this tick
+      // Skip if we've already processed this schedule in this tick.
+      // Defer the entry so it survives to the next tick (it was placed by
+      // _processScheduleWithPolicy as the NEXT fire time for this schedule).
       if (processedScheduleIds.contains(entry.scheduleId)) {
+        deferredEntries.add(entry);
         continue;
       }
 
@@ -298,6 +302,17 @@ class InAppScheduler implements Scheduler {
       final scheduleEvents = _processScheduleWithPolicy(spec, entry, now);
       events.addAll(scheduleEvents);
       processedScheduleIds.add(entry.scheduleId);
+    }
+
+    // Re-enqueue entries that were deferred because their schedule was
+    // already processed in this tick.  They represent the NEXT fire time
+    // and must survive to the next tick.
+    for (final deferred in deferredEntries) {
+      // Only re-enqueue if the schedule doesn't already have an entry
+      // (another branch of _processScheduleWithPolicy may have enqueued one).
+      if (!_entriesByScheduleId.containsKey(deferred.scheduleId)) {
+        _enqueue(deferred);
+      }
     }
 
     // Emit events
@@ -620,7 +635,12 @@ class InAppScheduler implements Scheduler {
     DateTime now, {
     _ScheduleEntry? after,
   }) {
-    if (!spec.isActive(now)) return null;
+    if (!spec.enabled) return null;
+    // Check endAt boundary but NOT startAt — for repeating schedules,
+    // startAt defines the anchor / earliest fire time, not an activation
+    // gate. The scheduler must still enqueue future entries whose
+    // computed fire time is ≥ startAt even when now < startAt.
+    if (spec.endAt != null && now.isAfter(spec.endAt!)) return null;
 
     DateTime? nextFireTime;
     String? slotKey;
@@ -657,9 +677,33 @@ class InAppScheduler implements Scheduler {
             nextFireTime = startTime.add(spec.every! * intervalCount);
           }
         } else {
-          // Fresh start
-          nextFireTime = now.add(spec.every!);
-          intervalCount = 1;
+          // Fresh start — if a startAt anchor exists, align to it so that
+          // fire times are deterministic (e.g. 09:00 + N*60min = 10:00,
+          // 11:00, …) instead of drifting relative to the registration time.
+          if (spec.startAt != null) {
+            final elapsed = now.difference(spec.startAt!);
+            if (elapsed.isNegative) {
+              // startAt is in the future — first fire is startAt + every
+              nextFireTime = spec.startAt!.add(spec.every!);
+              intervalCount = 1;
+            } else {
+              final intervalsPassed =
+                  elapsed.inMilliseconds ~/ spec.every!.inMilliseconds;
+              intervalCount = intervalsPassed;
+              nextFireTime = spec.startAt!.add(spec.every! * intervalCount);
+              // Only bump if strictly before now. At-same-moment means the
+              // slot is due right now and should be enqueued (tick() will
+              // fire it). This differs from the resume branch which skips
+              // at-or-before because those slots may already have been fired.
+              if (nextFireTime.isBefore(now)) {
+                intervalCount++;
+                nextFireTime = spec.startAt!.add(spec.every! * intervalCount);
+              }
+            }
+          } else {
+            nextFireTime = now.add(spec.every!);
+            intervalCount = 1;
+          }
         }
         slotKey = spec.generateSlotKey(
           nextFireTime,

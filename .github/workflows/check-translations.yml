@@ -28,7 +28,7 @@ jobs:
         run: cp .env.ci .env
 
       - name: Setup Flutter
-        uses: subosito/flutter-action@0ca7a949e71ae44c8e688a51c5e7e93b2c87e295 # v2
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version: "3.38.9"
           channel: "stable"

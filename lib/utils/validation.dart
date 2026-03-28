@@ -17,13 +17,13 @@ const int maxShortNameLength = 4;
 /// Validates and sanitizes a channel name according to Meshtastic specs
 /// - Max 11 characters
 /// - No spaces (replaced with underscores)
-/// - Alphanumeric and underscore only
+/// - Alphanumeric, underscore, and hyphen only
 String sanitizeChannelName(String name) {
   // Replace spaces with underscores
   var sanitized = name.replaceAll(' ', '_');
 
-  // Remove any non-alphanumeric characters except underscore
-  sanitized = sanitized.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '');
+  // Remove any non-alphanumeric characters except underscore and hyphen
+  sanitized = sanitized.replaceAll(RegExp(r'[^a-zA-Z0-9_\-]'), '');
 
   // Truncate to max length
   if (sanitized.length > maxChannelNameLength) {
@@ -48,8 +48,8 @@ String? validateChannelName(String name) {
     return 'Channel name must be $maxChannelNameLength characters or less'; // lint-allow: hardcoded-string
   }
 
-  if (!RegExp(r'^[a-zA-Z0-9_]*$').hasMatch(name)) {
-    return 'Channel name can only contain letters, numbers, and underscores'; // lint-allow: hardcoded-string
+  if (!RegExp(r'^[a-zA-Z0-9_-]*$').hasMatch(name)) {
+    return 'Channel name can only contain letters, numbers, underscores, and hyphens'; // lint-allow: hardcoded-string
   }
 
   return null;

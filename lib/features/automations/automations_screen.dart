@@ -925,8 +925,6 @@ class AutomationsScreen extends ConsumerWidget {
   }
 
   void _showExecutionLog(BuildContext context, WidgetRef ref) {
-    final log = ref.read(automationLogProvider);
-
     showModalBottomSheet(
       context: context,
       backgroundColor: context.surface,
@@ -934,87 +932,99 @@ class AutomationsScreen extends ConsumerWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.7,
-        minChildSize: 0.5,
-        maxChildSize: 0.95,
-        expand: false,
-        builder: (context, scrollController) => SafeArea(
-          top: false,
-          child: Column(
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: SemanticColors.muted,
-                  borderRadius: BorderRadius.circular(AppTheme.radius2),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      context.l10n.automationScreenExecutionLog,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+      builder: (sheetContext) => Consumer(
+        builder: (consumerContext, sheetRef, _) {
+          final log = sheetRef.watch(automationLogProvider);
+          return DraggableScrollableSheet(
+            initialChildSize: 0.7,
+            minChildSize: 0.5,
+            maxChildSize: 0.95,
+            expand: false,
+            builder: (context, scrollController) => SafeArea(
+              top: false,
+              child: Column(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: SemanticColors.muted,
+                      borderRadius: BorderRadius.circular(AppTheme.radius2),
                     ),
-                    if (log.isNotEmpty)
-                      TextButton(
-                        onPressed: () {
-                          ref.read(automationRepositoryProvider).clearLog();
-                          Navigator.pop(context);
-                        },
-                        child: Text(context.l10n.automationScreenClear),
-                      ),
-                  ],
-                ),
-              ),
-              const Divider(),
-              Expanded(
-                child: log.isEmpty
-                    ? Center(
-                        child: Text(
-                          context.l10n.automationScreenNoExecutions,
-                          style: const TextStyle(
-                            color: SemanticColors.disabled,
-                          ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          consumerContext.l10n.automationScreenExecutionLog,
+                          style: Theme.of(consumerContext).textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
-                      )
-                    : ListView.builder(
-                        controller: scrollController,
-                        itemCount: log.length,
-                        itemBuilder: (context, index) {
-                          final entry = log[index];
-                          return ListTile(
-                            leading: Icon(
-                              entry.success ? Icons.check_circle : Icons.error,
-                              color: entry.success
-                                  ? AppTheme.successGreen
-                                  : AppTheme.errorRed,
+                        if (log.isNotEmpty)
+                          TextButton(
+                            onPressed: () {
+                              sheetRef
+                                  .read(automationsProvider.notifier)
+                                  .clearExecutionLog();
+                            },
+                            child: Text(
+                              consumerContext.l10n.automationScreenClear,
                             ),
-                            title: Text(entry.automationName),
-                            subtitle: Text(
-                              _buildTriggerDetails(entry, context.l10n),
-                            ),
-                            trailing: Text(
-                              _formatTime(context, entry.timestamp),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const Divider(),
+                  Expanded(
+                    child: log.isEmpty
+                        ? Center(
+                            child: Text(
+                              consumerContext.l10n.automationScreenNoExecutions,
                               style: const TextStyle(
                                 color: SemanticColors.disabled,
-                                fontSize: 12,
                               ),
                             ),
-                          );
-                        },
-                      ),
+                          )
+                        : ListView.builder(
+                            controller: scrollController,
+                            itemCount: log.length,
+                            itemBuilder: (context, index) {
+                              final entry = log[index];
+                              return ListTile(
+                                leading: Icon(
+                                  entry.success
+                                      ? Icons.check_circle
+                                      : Icons.error,
+                                  color: entry.success
+                                      ? AppTheme.successGreen
+                                      : AppTheme.errorRed,
+                                ),
+                                title: Text(entry.automationName),
+                                subtitle: Text(
+                                  _buildTriggerDetails(
+                                    entry,
+                                    consumerContext.l10n,
+                                  ),
+                                ),
+                                trailing: Text(
+                                  _formatTime(context, entry.timestamp),
+                                  style: const TextStyle(
+                                    color: SemanticColors.disabled,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }

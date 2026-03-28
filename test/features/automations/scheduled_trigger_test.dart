@@ -315,9 +315,10 @@ void main() {
       // Should have 5 events
       expect(events.length, 5);
 
-      // Verify slot keys are sequential
+      // Verify slot keys are sequential (starting from 0 because the
+      // initial entry at the anchor time is intervalCount 0)
       for (var i = 0; i < 5; i++) {
-        expect(events[i].slotKey, 'interval:${i + 1}');
+        expect(events[i].slotKey, 'interval:$i');
       }
 
       scheduler.dispose();
@@ -1101,6 +1102,195 @@ void main() {
       expect(sentMessages.length, 1);
       expect(sentMessages.first.$1, 999);
       expect(sentMessages.first.$2, contains('Scheduled alert'));
+
+      engine.stop();
+      scheduler.dispose();
+    });
+  });
+
+  group('Interval schedule anchored to configured time', () {
+    test(
+      'interval with startAt fires at aligned slots (9:00, 10:00, 11:00)',
+      () {
+        // Start at 8:59 on Jan 30
+        final clock = FakeClock(DateTime(2026, 1, 30, 8, 59, 0));
+        final events = <ScheduledFireEvent>[];
+
+        final scheduler = InAppScheduler(clock: clock);
+        scheduler.fireEvents.listen(events.add);
+        scheduler.start();
+
+        // Interval of 60 min anchored at 9:00
+        final spec = ScheduleSpec.interval(
+          id: 'hourly-from-9am',
+          every: const Duration(minutes: 60),
+          startAt: DateTime(2026, 1, 30, 9, 0, 0),
+        );
+        scheduler.register(spec);
+
+        // At 8:59 — not yet
+        scheduler.tick(clock.now());
+        expect(events, isEmpty);
+
+        // Advance to 9:00 — should NOT fire (9:00 is the anchor, first fire
+        // is at 10:00 because interval fires after the first full period)
+        clock.setTime(DateTime(2026, 1, 30, 9, 0, 0));
+        scheduler.tick(clock.now());
+
+        // Advance to 10:00
+        clock.setTime(DateTime(2026, 1, 30, 10, 0, 0));
+        scheduler.tick(clock.now());
+        expect(events.length, 1);
+        expect(events.first.scheduledFor, DateTime(2026, 1, 30, 10, 0, 0));
+
+        // Advance to 11:00
+        clock.setTime(DateTime(2026, 1, 30, 11, 0, 0));
+        scheduler.tick(clock.now());
+        expect(events.length, 2);
+
+        // Advance to 12:00
+        clock.setTime(DateTime(2026, 1, 30, 12, 0, 0));
+        scheduler.tick(clock.now());
+        expect(events.length, 3);
+
+        scheduler.dispose();
+      },
+    );
+
+    test('interval with startAt and lastOnly catch-up fires once on resume '
+        'after 5-hour gap', () {
+      final clock = FakeClock(DateTime(2026, 1, 30, 9, 0, 0));
+      final events = <ScheduledFireEvent>[];
+
+      final scheduler = InAppScheduler(clock: clock);
+      scheduler.fireEvents.listen(events.add);
+      scheduler.start();
+
+      final spec = ScheduleSpec.interval(
+        id: 'hourly-catchup',
+        every: const Duration(minutes: 60),
+        startAt: DateTime(2026, 1, 30, 9, 0, 0),
+        catchUpPolicy: CatchUpPolicy.lastOnly,
+      );
+      scheduler.register(spec);
+
+      // Fire the first interval at 10:00
+      clock.setTime(DateTime(2026, 1, 30, 10, 0, 0));
+      scheduler.tick(clock.now());
+      expect(events.length, 1);
+
+      // Simulate 5-hour background gap: jump to 15:00
+      clock.setTime(DateTime(2026, 1, 30, 15, 0, 0));
+      scheduler.tick(clock.now());
+
+      // With lastOnly, exactly one catch-up event should fire (the most
+      // recent missed slot), not 4 separate events
+      expect(events.length, 2);
+      expect(events.last.isCatchUp, isTrue);
+
+      // Then next regular fire at 16:00
+      clock.setTime(DateTime(2026, 1, 30, 16, 0, 0));
+      scheduler.tick(clock.now());
+      expect(events.length, 3);
+
+      scheduler.dispose();
+    });
+
+    test('interval preserves anchor across scheduler restart', () {
+      final clock = FakeClock(DateTime(2026, 1, 30, 10, 0, 0));
+      final events = <ScheduledFireEvent>[];
+
+      var scheduler = InAppScheduler(clock: clock);
+      scheduler.fireEvents.listen(events.add);
+      scheduler.start();
+
+      var spec = ScheduleSpec.interval(
+        id: 'restart-test',
+        every: const Duration(minutes: 60),
+        startAt: DateTime(2026, 1, 30, 9, 0, 0),
+      );
+      scheduler.register(spec);
+
+      // Fire at 10:00
+      scheduler.tick(clock.now());
+      expect(events.length, 1);
+
+      // Save state
+      final savedSpec = scheduler.getSchedule('restart-test')!;
+      scheduler.dispose();
+
+      // Simulate restart at 10:30
+      clock.setTime(DateTime(2026, 1, 30, 10, 30, 0));
+      events.clear();
+      scheduler = InAppScheduler(clock: clock);
+      scheduler.fireEvents.listen(events.add);
+      scheduler.start();
+      scheduler.register(savedSpec);
+
+      // At 10:30, nothing should fire (next is 11:00)
+      scheduler.tick(clock.now());
+      expect(events, isEmpty);
+
+      // At 11:00, should fire
+      clock.setTime(DateTime(2026, 1, 30, 11, 0, 0));
+      scheduler.tick(clock.now());
+      expect(events.length, 1);
+
+      scheduler.dispose();
+    });
+
+    test('failed execution still produces valid log entry', () async {
+      final clock = FakeClock(DateTime(2026, 1, 30, 8, 59, 0));
+      final mockRepository = MockSchedulerRepository();
+
+      final scheduler = InAppScheduler(clock: clock);
+      scheduler.start();
+
+      final automation = Automation(
+        id: 'fail-test',
+        name: 'Fail Test',
+        trigger: const AutomationTrigger(
+          type: TriggerType.scheduled,
+          config: {'scheduleType': 'daily', 'hour': 9, 'minute': 0},
+        ),
+        actions: const [
+          AutomationAction(
+            type: ActionType.sendMessage,
+            config: {'targetNodeNum': 123, 'messageText': 'hello'},
+          ),
+        ],
+      );
+      mockRepository.addTestAutomation(automation);
+
+      final engine = AutomationEngine(
+        repository: mockRepository,
+        iftttService: MockSchedulerIftttService(),
+        scheduler: scheduler,
+        // onSendMessage is null — will cause a controlled failure
+      );
+      // Do NOT call engine.start() — it subscribes to fireEvents and would
+      // cause duplicate processing with throttling.  Instead, process events
+      // manually.
+
+      final spec = ScheduleSpec.daily(id: 'fail-test', hour: 9, minute: 0);
+      scheduler.register(spec);
+
+      clock.advance(const Duration(minutes: 1));
+      final fired = scheduler.tick(clock.now());
+      for (final event in fired) {
+        await engine.processScheduledEvent(event);
+      }
+
+      // A log entry must exist and be structurally valid even on failure
+      expect(mockRepository.log.length, 1);
+      final entry = mockRepository.log.first;
+      expect(entry.automationId, 'fail-test');
+      expect(entry.automationName, 'Fail Test');
+      expect(entry.success, isFalse);
+      expect(entry.timestamp, isNotNull);
+      // Node/battery metadata may be null — that is acceptable
+      expect(entry.triggerNodeName, isNull);
+      expect(entry.triggerBatteryLevel, isNull);
 
       engine.stop();
       scheduler.dispose();
