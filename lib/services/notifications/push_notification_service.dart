@@ -69,6 +69,10 @@ class PushNotificationService {
   /// SharedPreferences key for persisting the last-saved FCM token so we can
   /// delete the stale Firestore entry when the platform rotates it.
   static const _kPreviousFcmToken = 'previous_fcm_token';
+  static const _kMasterToggle = 'notifications_enabled';
+  static const _kChannelToggle = 'channel_notifications_enabled';
+  static const _kDmToggle = 'dm_notifications_enabled';
+  static const _kMutedChannels = 'muted_channel_indices';
 
   /// Notification channel for Android
   static const AndroidNotificationChannel
@@ -287,17 +291,17 @@ class PushNotificationService {
     final pushType = message.data['type'] as String?;
     if (pushType == 'channel_message' || pushType == 'direct_message') {
       final prefs = await SharedPreferences.getInstance();
-      final masterEnabled = prefs.getBool('notifications_enabled') ?? true;
+      final masterEnabled = prefs.getBool(_kMasterToggle) ?? true;
       if (!masterEnabled) return;
       if (pushType == 'channel_message') {
-        if (!(prefs.getBool('channel_notifications_enabled') ?? true)) return;
+        if (!(prefs.getBool(_kChannelToggle) ?? true)) return;
 
         // Respect per-channel mute preference.
         final channelStr = message.data['channel'] as String?;
         final channelIndex =
             channelStr != null ? int.tryParse(channelStr) : null;
         if (channelIndex != null) {
-          final mutedRaw = prefs.getStringList('muted_channel_indices');
+          final mutedRaw = prefs.getStringList(_kMutedChannels);
           if (mutedRaw != null) {
             final mutedSet =
                 mutedRaw.map((s) => int.tryParse(s)).whereType<int>().toSet();
@@ -305,7 +309,7 @@ class PushNotificationService {
           }
         }
       } else {
-        if (!(prefs.getBool('dm_notifications_enabled') ?? true)) return;
+        if (!(prefs.getBool(_kDmToggle) ?? true)) return;
       }
     }
 

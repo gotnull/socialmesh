@@ -391,6 +391,9 @@ class BackgroundMessageProcessor {
   static const String _kMasterToggle = 'notifications_enabled';
   static const String _kBgDmToggle = 'bg_notify_messages';
   static const String _kBgChannelToggle = 'bg_notify_channels';
+  static const String _kChannelToggle = 'channel_notifications_enabled';
+  static const String _kDmToggle = 'dm_notifications_enabled';
+  static const String _kMutedChannels = 'muted_channel_indices';
 
   /// Fire a local notification for a received text message.
   ///
@@ -415,9 +418,9 @@ class BackgroundMessageProcessor {
 
       // Per-type notification toggle from Settings → Notifications.
       if (isChannelMessage) {
-        if (!(prefs.getBool('channel_notifications_enabled') ?? true)) return;
+        if (!(prefs.getBool(_kChannelToggle) ?? true)) return;
       } else {
-        if (!(prefs.getBool('dm_notifications_enabled') ?? true)) return;
+        if (!(prefs.getBool(_kDmToggle) ?? true)) return;
       }
 
       // Background-specific toggle from Background Connection Settings.
@@ -430,7 +433,7 @@ class BackgroundMessageProcessor {
       // Respect per-channel mute (same SharedPreferences key used by
       // MutedChannelsNotifier on the foreground side).
       if (isChannelMessage) {
-        final mutedRaw = prefs.getStringList('muted_channel_indices');
+        final mutedRaw = prefs.getStringList(_kMutedChannels);
         if (mutedRaw != null) {
           final mutedSet =
               mutedRaw.map((s) => int.tryParse(s)).whereType<int>().toSet();
