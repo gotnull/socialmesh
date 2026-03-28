@@ -291,6 +291,19 @@ class PushNotificationService {
       if (!masterEnabled) return;
       if (pushType == 'channel_message') {
         if (!(prefs.getBool('channel_notifications_enabled') ?? true)) return;
+
+        // Respect per-channel mute preference.
+        final channelStr = message.data['channel'] as String?;
+        final channelIndex =
+            channelStr != null ? int.tryParse(channelStr) : null;
+        if (channelIndex != null) {
+          final mutedRaw = prefs.getStringList('muted_channel_indices');
+          if (mutedRaw != null) {
+            final mutedSet =
+                mutedRaw.map((s) => int.tryParse(s)).whereType<int>().toSet();
+            if (mutedSet.contains(channelIndex)) return;
+          }
+        }
       } else {
         if (!(prefs.getBool('dm_notifications_enabled') ?? true)) return;
       }
