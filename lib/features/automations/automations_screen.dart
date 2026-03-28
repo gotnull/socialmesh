@@ -659,6 +659,7 @@ class AutomationsScreen extends ConsumerWidget {
                 label: context.l10n.automationScreenStatExecutions,
                 value: stats.totalTriggers.toString(),
                 icon: Icons.trending_up,
+                onTap: () => _showExecutionLog(context, ref),
               ),
             ],
           ),
@@ -709,8 +710,9 @@ class AutomationsScreen extends ConsumerWidget {
     required String value,
     required IconData icon,
     Color? color,
+    VoidCallback? onTap,
   }) {
-    return Column(
+    final content = Column(
       children: [
         Icon(icon, size: 24, color: color ?? SemanticColors.disabled),
         const SizedBox(height: AppTheme.spacing4),
@@ -728,6 +730,12 @@ class AutomationsScreen extends ConsumerWidget {
           ).textTheme.bodySmall?.copyWith(color: SemanticColors.disabled),
         ),
       ],
+    );
+    if (onTap == null) return content;
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: content,
     );
   }
 

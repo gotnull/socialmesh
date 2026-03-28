@@ -337,6 +337,9 @@ class AutomationsNotifier extends Notifier<AsyncValue<List<Automation>>> {
   void _onRepositoryChanged() {
     // Update state with latest automations when repository changes
     state = AsyncValue.data(_repository.automations);
+    // Also bump the log revision so automationLogProvider rebuilds
+    // when new execution log entries are added by the engine.
+    ref.read(_logRevisionProvider.notifier).bump();
   }
 
   Future<void> _loadAutomations() async {
