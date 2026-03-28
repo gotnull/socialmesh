@@ -675,6 +675,8 @@
     "automationScreenAcceptableUse": "Acceptable Use",
     "automationScreenAddAutomation": "Add Automation",
     "automationScreenClear": "Clear",
+    "automationScreenClearLogTitle": "Очистить журнал выполнения",
+    "automationScreenClearLogMessage": "Вы уверены, что хотите очистить журнал выполнения? Это действие нельзя отменить.",
     "automationScreenCreateFromScratch": "Create from Scratch",
     "automationScreenCreateFromScratchSubtitle": "Build a custom automation with full control over triggers and actions",
     "automationScreenCreatedFromTemplate": "Automation created from template",

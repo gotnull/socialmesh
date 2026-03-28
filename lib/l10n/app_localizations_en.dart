@@ -2323,6 +2323,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get automationScreenClear => 'Clear';
 
   @override
+  String get automationScreenClearLogTitle => 'Clear Execution Log';
+
+  @override
+  String get automationScreenClearLogMessage =>
+      'Are you sure you want to clear the execution log? This action cannot be undone.';
+
+  @override
   String get automationScreenCreateFromScratch => 'Create from Scratch';
 
   @override

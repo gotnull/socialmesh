@@ -2343,6 +2343,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get automationScreenClear => 'Limpar';
 
   @override
+  String get automationScreenClearLogTitle => 'Limpar log de execução';
+
+  @override
+  String get automationScreenClearLogMessage =>
+      'Tem certeza de que deseja limpar o log de execução? Esta ação não pode ser desfeita.';
+
+  @override
   String get automationScreenCreateFromScratch => 'Criar do zero';
 
   @override

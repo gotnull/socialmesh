@@ -2323,6 +2323,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get automationScreenClear => 'Clear';
 
   @override
+  String get automationScreenClearLogTitle => 'Очистить журнал выполнения';
+
+  @override
+  String get automationScreenClearLogMessage =>
+      'Вы уверены, что хотите очистить журнал выполнения? Это действие нельзя отменить.';
+
+  @override
   String get automationScreenCreateFromScratch => 'Create from Scratch';
 
   @override

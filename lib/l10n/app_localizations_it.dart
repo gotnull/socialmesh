@@ -2352,6 +2352,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get automationScreenClear => 'Cancella';
 
   @override
+  String get automationScreenClearLogTitle => 'Cancella log di esecuzione';
+
+  @override
+  String get automationScreenClearLogMessage =>
+      'Sei sicuro di voler cancellare il log di esecuzione? Questa azione non può essere annullata.';
+
+  @override
   String get automationScreenCreateFromScratch => 'Crea da zero';
 
   @override

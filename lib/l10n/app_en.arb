@@ -3060,6 +3060,14 @@
     "@automationScreenClear": {
         "description": "Button to clear execution log history"
     },
+    "automationScreenClearLogTitle": "Clear Execution Log",
+    "@automationScreenClearLogTitle": {
+        "description": "Title of the confirmation dialog when clearing the automation execution log"
+    },
+    "automationScreenClearLogMessage": "Are you sure you want to clear the execution log? This action cannot be undone.",
+    "@automationScreenClearLogMessage": {
+        "description": "Body of the confirmation dialog when clearing the automation execution log"
+    },
     "automationScreenCreateFromScratch": "Create from Scratch",
     "@automationScreenCreateFromScratch": {
         "description": "CTA card title for creating a custom automation"

@@ -4192,6 +4192,18 @@ abstract class AppLocalizations {
   /// **'Clear'**
   String get automationScreenClear;
 
+  /// Title of the confirmation dialog when clearing the automation execution log
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Execution Log'**
+  String get automationScreenClearLogTitle;
+
+  /// Body of the confirmation dialog when clearing the automation execution log
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to clear the execution log? This action cannot be undone.'**
+  String get automationScreenClearLogMessage;
+
   /// CTA card title for creating a custom automation
   ///
   /// In en, this message translates to:

@@ -977,10 +977,26 @@ class AutomationsScreen extends ConsumerWidget {
                         ),
                         if (log.isNotEmpty)
                           TextButton(
-                            onPressed: () {
-                              sheetRef
-                                  .read(automationsProvider.notifier)
-                                  .clearExecutionLog();
+                            onPressed: () async {
+                              final confirmed =
+                                  await AppBottomSheet.showConfirm(
+                                    context: consumerContext,
+                                    title: consumerContext
+                                        .l10n
+                                        .automationScreenClearLogTitle,
+                                    message: consumerContext
+                                        .l10n
+                                        .automationScreenClearLogMessage,
+                                    confirmLabel: consumerContext
+                                        .l10n
+                                        .automationScreenClear,
+                                    isDestructive: true,
+                                  );
+                              if (confirmed == true) {
+                                sheetRef
+                                    .read(automationsProvider.notifier)
+                                    .clearExecutionLog();
+                              }
                             },
                             child: Text(
                               consumerContext.l10n.automationScreenClear,
