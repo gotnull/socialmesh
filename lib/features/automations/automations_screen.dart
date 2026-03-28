@@ -17,6 +17,7 @@ import '../../providers/app_providers.dart';
 import '../../providers/help_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../providers/subscription_providers.dart';
+import '../../services/haptic_service.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/edge_fade.dart';
@@ -659,7 +660,10 @@ class AutomationsScreen extends ConsumerWidget {
                 label: context.l10n.automationScreenStatExecutions,
                 value: stats.totalTriggers.toString(),
                 icon: Icons.trending_up,
-                onTap: () => _showExecutionLog(context, ref),
+                onTap: () {
+                  ref.haptics.trigger(HapticType.light);
+                  _showExecutionLog(context, ref);
+                },
               ),
             ],
           ),
