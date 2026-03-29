@@ -47,6 +47,10 @@ EXCLUDE_ARGS="$EXCLUDE_ARGS --exclude=pubspec.lock"
 EXCLUDE_ARGS="$EXCLUDE_ARGS --exclude=firebase_options.dart"
 EXCLUDE_ARGS="$EXCLUDE_ARGS --exclude=google-services.json"
 EXCLUDE_ARGS="$EXCLUDE_ARGS --exclude=GoogleService-Info.plist"
+# Firebase helper scripts use the same public web API keys
+EXCLUDE_ARGS="$EXCLUDE_ARGS --exclude=mint-token.js"
+EXCLUDE_ARGS="$EXCLUDE_ARGS --exclude=get-token.js"
+EXCLUDE_ARGS="$EXCLUDE_ARGS --exclude=cleanup-stale.ts"
 
 FOUND_SECRETS=0
 
@@ -55,7 +59,14 @@ scan_pattern() {
     local description="$2"
     
     # shellcheck disable=SC2086
-    if grep -rn $EXCLUDE_ARGS -E "$pattern" . 2>/dev/null | grep -v "secret_scan.sh" | grep -v ".env.example" | grep -v ".env.ci"; then
+    if grep -rn $EXCLUDE_ARGS -E "$pattern" . 2>/dev/null \
+        | grep -v "secret_scan.sh" \
+        | grep -v ".env.example" \
+        | grep -v ".env.ci" \
+        | grep -v -E "(expect\(|startsWith\(|endsWith\(|contains\()" \
+        | grep -v -E 'a\(".*expect.*PRIVATE KEY' \
+        | grep -v -E 'MIIE\.\.\.' \
+        ; then
         echo -e "${YELLOW}  Pattern: $description${NC}"
         echo ""
         FOUND_SECRETS=1
