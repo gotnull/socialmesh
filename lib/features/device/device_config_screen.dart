@@ -209,11 +209,11 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
   bool _originalDisableTripleClick = false;
   bool _ledHeartbeatDisabled = false;
   bool _originalLedHeartbeatDisabled = false;
-  String _tzdef = '';
+  late TextEditingController _tzdefController;
   String _originalTzdef = '';
-  int _buttonGpio = 0;
+  late TextEditingController _buttonGpioController;
   int _originalButtonGpio = 0;
-  int _buzzerGpio = 0;
+  late TextEditingController _buzzerGpioController;
   int _originalBuzzerGpio = 0;
   config_pbenum.Config_DeviceConfig_BuzzerMode? _buzzerMode;
   config_pbenum.Config_DeviceConfig_BuzzerMode? _originalBuzzerMode;
@@ -236,6 +236,9 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
     _longNameController = TextEditingController();
     _shortNameController = TextEditingController();
     _frequencyOverrideController = TextEditingController();
+    _tzdefController = TextEditingController();
+    _buttonGpioController = TextEditingController();
+    _buzzerGpioController = TextEditingController();
     _loadCurrentConfig();
 
     // Listen for device changes and force rebuild
@@ -253,6 +256,9 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
     _longNameController.dispose();
     _shortNameController.dispose();
     _frequencyOverrideController.dispose();
+    _tzdefController.dispose();
+    _buttonGpioController.dispose();
+    _buzzerGpioController.dispose();
     super.dispose();
   }
 
@@ -276,9 +282,13 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
         _doubleTapAsButtonPress = config.doubleTapAsButtonPress;
         _disableTripleClick = config.disableTripleClick;
         _ledHeartbeatDisabled = config.ledHeartbeatDisabled;
-        _tzdef = config.tzdef;
-        _buttonGpio = config.buttonGpio;
-        _buzzerGpio = config.buzzerGpio;
+        _tzdefController.text = config.tzdef;
+        _buttonGpioController.text = config.buttonGpio == 0
+            ? ''
+            : config.buttonGpio.toString();
+        _buzzerGpioController.text = config.buzzerGpio == 0
+            ? ''
+            : config.buzzerGpio.toString();
         _buzzerMode = config.buzzerMode;
       }
 
@@ -454,9 +464,11 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
     final tripleClickChanged =
         _disableTripleClick != _originalDisableTripleClick;
     final ledChanged = _ledHeartbeatDisabled != _originalLedHeartbeatDisabled;
-    final tzdefChanged = _tzdef != _originalTzdef;
-    final buttonGpioChanged = _buttonGpio != _originalButtonGpio;
-    final buzzerGpioChanged = _buzzerGpio != _originalBuzzerGpio;
+    final tzdefChanged = _tzdefController.text != _originalTzdef;
+    final buttonGpioChanged =
+        (int.tryParse(_buttonGpioController.text) ?? 0) != _originalButtonGpio;
+    final buzzerGpioChanged =
+        (int.tryParse(_buzzerGpioController.text) ?? 0) != _originalBuzzerGpio;
     final buzzerModeChanged = _buzzerMode != _originalBuzzerMode;
     final unmessagableChanged = _isUnmessagable != _originalIsUnmessagable;
     final licensedChanged = _isLicensed != _originalIsLicensed;
@@ -556,9 +568,11 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
           _doubleTapAsButtonPress != _originalDoubleTapAsButtonPress ||
           _disableTripleClick != _originalDisableTripleClick ||
           _ledHeartbeatDisabled != _originalLedHeartbeatDisabled ||
-          _tzdef != _originalTzdef ||
-          _buttonGpio != _originalButtonGpio ||
-          _buzzerGpio != _originalBuzzerGpio ||
+          _tzdefController.text != _originalTzdef ||
+          (int.tryParse(_buttonGpioController.text) ?? 0) !=
+              _originalButtonGpio ||
+          (int.tryParse(_buzzerGpioController.text) ?? 0) !=
+              _originalBuzzerGpio ||
           _buzzerMode != _originalBuzzerMode;
       final userFlagsChanged =
           _isUnmessagable != _originalIsUnmessagable ||
@@ -597,10 +611,10 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
           nodeInfoBroadcastSecs: _nodeInfoBroadcastSecs,
           ledHeartbeatDisabled: _ledHeartbeatDisabled,
           doubleTapAsButtonPress: _doubleTapAsButtonPress,
-          buttonGpio: _buttonGpio,
-          buzzerGpio: _buzzerGpio,
+          buttonGpio: int.tryParse(_buttonGpioController.text) ?? 0,
+          buzzerGpio: int.tryParse(_buzzerGpioController.text) ?? 0,
           disableTripleClick: _disableTripleClick,
-          tzdef: _tzdef,
+          tzdef: _tzdefController.text,
           buzzerMode: buzzerToSend,
           target: AdminTarget.fromNullable(targetNodeNum),
         );
@@ -1459,8 +1473,8 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
           ),
           const SizedBox(height: AppTheme.spacing12),
           TextFormField(
-            key: ValueKey('tzdef_${_tzdef.hashCode}'),
-            initialValue: _tzdef,
+            key: const ValueKey('tzdef'),
+            controller: _tzdefController,
             style: Theme.of(
               context,
             ).textTheme.bodyMedium?.copyWith(color: context.textPrimary),
@@ -1487,8 +1501,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                 borderSide: BorderSide(color: context.accentColor),
               ),
             ),
-            onChanged: (value) {
-              _tzdef = value;
+            onChanged: (_) {
               _checkForChanges();
             },
           ),
@@ -1520,22 +1533,18 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
               Expanded(
                 child: _buildGpioField(
                   label: context.l10n.deviceConfigButtonGpio,
-                  value: _buttonGpio,
-                  onChanged: (value) {
-                    _buttonGpio = value;
-                    _checkForChanges();
-                  },
+                  fieldKey: 'buttonGpio',
+                  controller: _buttonGpioController,
+                  onChanged: _checkForChanges,
                 ),
               ),
               const SizedBox(width: AppTheme.spacing16),
               Expanded(
                 child: _buildGpioField(
                   label: context.l10n.deviceConfigBuzzerGpio,
-                  value: _buzzerGpio,
-                  onChanged: (value) {
-                    _buzzerGpio = value;
-                    _checkForChanges();
-                  },
+                  fieldKey: 'buzzerGpio',
+                  controller: _buzzerGpioController,
+                  onChanged: _checkForChanges,
                 ),
               ),
             ],
@@ -1547,8 +1556,9 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
 
   Widget _buildGpioField({
     required String label,
-    required int value,
-    required ValueChanged<int> onChanged,
+    required String fieldKey,
+    required TextEditingController controller,
+    required VoidCallback onChanged,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1563,8 +1573,8 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
         ),
         const SizedBox(height: AppTheme.spacing6),
         TextFormField(
-          key: ValueKey('numField_$value'),
-          initialValue: value == 0 ? '' : value.toString(),
+          key: ValueKey(fieldKey),
+          controller: controller,
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           style: Theme.of(
@@ -1593,9 +1603,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
               borderSide: BorderSide(color: context.accentColor),
             ),
           ),
-          onChanged: (text) {
-            onChanged(int.tryParse(text) ?? 0);
-          },
+          onChanged: (_) => onChanged(),
         ),
       ],
     );

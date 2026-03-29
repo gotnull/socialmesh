@@ -293,24 +293,27 @@ class PushNotificationService {
       final prefs = await SharedPreferences.getInstance();
       final masterEnabled = prefs.getBool(_kMasterToggle) ?? true;
       if (!masterEnabled) return;
+
+      // Respect per-channel mute preference.
+      // This check runs before the channel/DM type split because the
+      // primary channel (index 0) may arrive as either push type
+      // depending on server classification.  Without this early gate,
+      // muting channel 0 has no effect for push notifications.
+      final channelStr = message.data['channel'] as String?;
+      final channelIndex = channelStr != null ? int.tryParse(channelStr) : null;
+      if (channelIndex != null) {
+        final mutedRaw = prefs.getStringList(_kMutedChannels);
+        if (mutedRaw != null) {
+          final mutedSet = mutedRaw
+              .map((s) => int.tryParse(s))
+              .whereType<int>()
+              .toSet();
+          if (mutedSet.contains(channelIndex)) return;
+        }
+      }
+
       if (pushType == 'channel_message') {
         if (!(prefs.getBool(_kChannelToggle) ?? true)) return;
-
-        // Respect per-channel mute preference.
-        final channelStr = message.data['channel'] as String?;
-        final channelIndex = channelStr != null
-            ? int.tryParse(channelStr)
-            : null;
-        if (channelIndex != null) {
-          final mutedRaw = prefs.getStringList(_kMutedChannels);
-          if (mutedRaw != null) {
-            final mutedSet = mutedRaw
-                .map((s) => int.tryParse(s))
-                .whereType<int>()
-                .toSet();
-            if (mutedSet.contains(channelIndex)) return;
-          }
-        }
       } else {
         if (!(prefs.getBool(_kDmToggle) ?? true)) return;
       }

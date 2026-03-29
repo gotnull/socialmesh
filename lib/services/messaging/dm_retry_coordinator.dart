@@ -42,9 +42,10 @@ import '../../providers/app_providers.dart';
 ///   next tick within the expiry window.
 ///
 /// ## Provider wiring
-/// Instantiated and started by [dmRetryCoordinatorProvider]. The provider is
-/// kept alive by [MessagesNotifier] which `watch`es it during its [build]
-/// lifecycle to ensure the coordinator is always running.
+/// Instantiated and started by [dmRetryCoordinatorProvider] (keepAlive).
+/// [MessagesNotifier] reads it once during [build] to ensure it is
+/// created — but uses `ref.read()` (not `ref.watch()`) to avoid a
+/// circular dependency.
 class DmRetryCoordinator {
   final Ref _ref;
   Timer? _tickTimer;
@@ -59,10 +60,8 @@ class DmRetryCoordinator {
     _started = true;
 
     // Note: stale-retrying reset on app start is handled by
-    // MessagesNotifier._loadFromStorage() rather than here.  Reading
-    // messagesProvider from this ref would create a circular dependency
-    // (messagesProvider watches dmRetryCoordinatorProvider which holds
-    // this ref), which Riverpod 3.x detects at the graph level.
+    // MessagesNotifier._loadFromStorage() rather than here, because at
+    // this point messagesProvider may not have loaded from storage yet.
 
     _tickTimer = Timer.periodic(
       DmRetryConstants.coordinatorTickInterval,

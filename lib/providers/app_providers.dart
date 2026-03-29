@@ -2766,10 +2766,11 @@ class MessagesNotifier extends Notifier<List<Message>> {
     // Load persisted messages asynchronously
     _loadFromStorage();
 
-    // Ensure the retry coordinator is running for the lifetime of this
-    // provider. Watching it here (rather than in a widget) guarantees it
-    // stays alive even when no conversation screen is open.
-    ref.watch(dmRetryCoordinatorProvider);
+    // Ensure the retry coordinator is running.  We use ref.read()
+    // instead of ref.watch() to avoid a circular dependency:
+    // messagesProvider → dmRetryCoordinatorProvider → messagesProvider.
+    // The coordinator stays alive via ref.keepAlive() in its own provider.
+    ref.read(dmRetryCoordinatorProvider);
 
     return [];
   }
@@ -2838,10 +2839,8 @@ class MessagesNotifier extends Notifier<List<Message>> {
       }).toList();
       // Reset any messages stuck in the retrying state from a previous
       // session (the app was killed while a retry was in flight).
-      // This is done here rather than in DmRetryCoordinator.start() to
-      // avoid a circular Riverpod dependency: messagesProvider watches
-      // dmRetryCoordinatorProvider, so the coordinator's ref cannot
-      // read messagesProvider without forming a cycle.
+      // This is done here rather than in DmRetryCoordinator.start()
+      // because at start time, messagesProvider may not have loaded yet.
       final resetMessages = regularMessages.map((m) {
         if (m.status == MessageStatus.retrying) {
           AppLogging.messages(
@@ -3030,6 +3029,22 @@ class MessagesNotifier extends Notifier<List<Message>> {
       return;
     }
 
+    // Suppress notification if the user has muted this channel.
+    // This check runs before the channel/DM classification below because
+    // the primary channel (index 0) is excluded by the `channel > 0`
+    // heuristic used for isChannelMessage.  Without this early gate,
+    // muting channel 0 has no effect — the message falls through to
+    // the DM path which has no per-channel mute check.
+    if (message.channel != null) {
+      final mutedChannels = ref.read(mutedChannelsProvider);
+      if (mutedChannels.contains(message.channel)) {
+        AppLogging.app(
+          'Channel ${message.channel} is muted, skipping notification',
+        );
+        return;
+      }
+    }
+
     // Get sender name - prefer node lookup, fallback to message's cached sender info
     final nodes = ref.read(nodesProvider);
     final senderNode = nodes[message.from];
@@ -3064,15 +3079,6 @@ class MessagesNotifier extends Notifier<List<Message>> {
       channelName =
           channel?.name ??
           'Channel ${message.channel}'; // lint-allow: hardcoded-string
-
-      // Suppress notification if the user has muted this channel.
-      final mutedChannels = ref.read(mutedChannelsProvider);
-      if (mutedChannels.contains(message.channel)) {
-        AppLogging.app(
-          'Channel ${message.channel} is muted, skipping notification',
-        );
-        return;
-      }
 
       AppLogging.debug(
         '🔔 Queueing channel notification: $senderName in $channelName',
@@ -3648,6 +3654,7 @@ final messagesProvider = NotifierProvider<MessagesNotifier, List<Message>>(
 /// [MessageStatus.unconfirmed] so that auto-retry can resume from the
 /// next tick if still within the expiry window and attempt limit.
 final dmRetryCoordinatorProvider = Provider<DmRetryCoordinator>((ref) {
+  ref.keepAlive();
   final coordinator = DmRetryCoordinator(ref);
   coordinator.start();
   ref.onDispose(coordinator.dispose);

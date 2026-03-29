@@ -414,25 +414,13 @@ class BackgroundMessageProcessor {
       // Master toggle.
       if (!(prefs.getBool(_kMasterToggle) ?? true)) return;
 
-      final isChannelMessage = message.channel != null && message.channel! > 0;
-
-      // Per-type notification toggle from Settings → Notifications.
-      if (isChannelMessage) {
-        if (!(prefs.getBool(_kChannelToggle) ?? true)) return;
-      } else {
-        if (!(prefs.getBool(_kDmToggle) ?? true)) return;
-      }
-
-      // Background-specific toggle from Background Connection Settings.
-      if (isChannelMessage) {
-        if (!(prefs.getBool(_kBgChannelToggle) ?? true)) return;
-      } else {
-        if (!(prefs.getBool(_kBgDmToggle) ?? true)) return;
-      }
-
       // Respect per-channel mute (same SharedPreferences key used by
       // MutedChannelsNotifier on the foreground side).
-      if (isChannelMessage) {
+      // This check runs before the channel/DM classification because the
+      // primary channel (index 0) is excluded by the `channel > 0`
+      // heuristic used for isChannelMessage.  Without this early gate,
+      // muting channel 0 has no effect in the background path.
+      if (message.channel != null) {
         final mutedRaw = prefs.getStringList(_kMutedChannels);
         if (mutedRaw != null) {
           final mutedSet = mutedRaw
@@ -447,6 +435,22 @@ class BackgroundMessageProcessor {
             return;
           }
         }
+      }
+
+      final isChannelMessage = message.channel != null && message.channel! > 0;
+
+      // Per-type notification toggle from Settings → Notifications.
+      if (isChannelMessage) {
+        if (!(prefs.getBool(_kChannelToggle) ?? true)) return;
+      } else {
+        if (!(prefs.getBool(_kDmToggle) ?? true)) return;
+      }
+
+      // Background-specific toggle from Background Connection Settings.
+      if (isChannelMessage) {
+        if (!(prefs.getBool(_kBgChannelToggle) ?? true)) return;
+      } else {
+        if (!(prefs.getBool(_kBgDmToggle) ?? true)) return;
       }
 
       final ns = NotificationService();

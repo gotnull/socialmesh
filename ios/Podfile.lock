@@ -1222,7 +1222,7 @@ PODS:
     - Firebase/Firestore (= 12.9.0)
     - firebase_core
     - Flutter
-  - cloud_functions (6.1.0):
+  - cloud_functions (6.0.7):
     - Firebase/Functions (= 12.9.0)
     - firebase_core
     - Flutter
@@ -1305,7 +1305,7 @@ PODS:
     - Firebase/Messaging (= 12.9.0)
     - firebase_core
     - Flutter
-  - firebase_storage (13.2.0):
+  - firebase_storage (13.1.0):
     - Firebase/Storage (= 12.9.0)
     - firebase_core
     - Flutter
@@ -1920,7 +1920,7 @@ SPEC CHECKSUMS:
   BoringSSL-GRPC: dded2a44897e45f28f08ae87a55ee4bcd19bc508
   camera_avfoundation: 968a9a5323c79a99c166ad9d7866bfd2047b5a9b
   cloud_firestore: 698d4d849c58da2ef2b3b8b9db27d2cd56614e7e
-  cloud_functions: 8cfd7ba062db83be645823b41f2b42aa234bcfe3
+  cloud_functions: 0c2b3ab8937f9b5b1521c0f1b5203bcd41b308ff
   connectivity_plus: cb623214f4e1f6ef8fe7403d580fdad517d2f7dd
   device_info_plus: 21fcca2080fbcd348be798aa36c3e5ed849eefbe
   DKImagePickerController: 946cec48c7873164274ecc4624d19e3da4c1ef3c
@@ -1933,7 +1933,7 @@ SPEC CHECKSUMS:
   firebase_core: 8e6f58412ca227827c366b92e7cee047a2148c60
   firebase_crashlytics: c399f9682c474beb06a89c11dfab04db537f3cd2
   firebase_messaging: 7cb2727feb789751fc6936bcc8e08408970e2820
-  firebase_storage: 8d16922c017c49812f7bbe64a86f756f99a44c74
+  firebase_storage: 85d65a656f88f9bdf1fb0d7f537ae7ebf4266709
   FirebaseAnalytics: cd7d01d352f3c237c9a0e31552c257cd0b0c0352
   FirebaseAppCheckInterop: 4bade10286cc977e516f75d2d8312cbdfa534789
   FirebaseAuth: 3a39f6436c21ebfd7919b698228b4f89ff94c23b
