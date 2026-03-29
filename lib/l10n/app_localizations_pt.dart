@@ -32540,4 +32540,83 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get mapCompassUnavailable =>
       'Compass sensor not available on this device';
+
+  @override
+  String get takBridgeSectionTitle => 'Mesh Bridge';
+
+  @override
+  String get takBridgeEnableToggle => 'Enable TAK Mesh Bridge';
+
+  @override
+  String get takBridgeEnableSubtitle =>
+      'Run an on-device TAK server for direct ATAK/iTAK connections over mesh';
+
+  @override
+  String get takBridgeServerPort => 'Server Port';
+
+  @override
+  String get takBridgeStatusRunning => 'Running';
+
+  @override
+  String get takBridgeStatusStopped => 'Stopped';
+
+  @override
+  String takBridgeConnectedClients(int count) {
+    return '$count connected';
+  }
+
+  @override
+  String get takBridgePacketsInbound => 'Mesh → TAK';
+
+  @override
+  String get takBridgePacketsOutbound => 'TAK → Mesh';
+
+  @override
+  String get takBridgeExportPackage => 'Export Data Package';
+
+  @override
+  String get takBridgeExportPackageSubtitle =>
+      'Generate connection package for ATAK/iTAK clients';
+
+  @override
+  String get takBridgeStatsTitle => 'Bridge Statistics';
+
+  @override
+  String get takBridgeClientsTitle => 'Connected Clients';
+
+  @override
+  String get takBridgeNoClients => 'No TAK clients connected';
+
+  @override
+  String takBridgeClientDuration(String duration) {
+    return 'Connected $duration';
+  }
+
+  @override
+  String get takIdentityRegistryTitle => 'Identity Registry';
+
+  @override
+  String get takIdentityNoEntries => 'No identity mappings recorded';
+
+  @override
+  String get takIdentityMeshNode => 'Mesh Node';
+
+  @override
+  String get takIdentityTakClient => 'TAK Client';
+
+  @override
+  String get takIdentityOverrideCallsign => 'Override Callsign';
+
+  @override
+  String get takIdentityOverrideHint => 'Enter custom callsign';
+
+  @override
+  String get takScreenBridgeOnlyTitle => 'TAK Mesh Bridge';
+
+  @override
+  String get takScreenBridgeOnlyDescription =>
+      'Use TAK Settings to configure and start the mesh bridge for ATAK/iTAK clients.';
+
+  @override
+  String get takScreenBridgeOnlyOpenSettings => 'Open TAK Settings';
 }

@@ -319,6 +319,18 @@ class AppFeatureFlags {
     }
   }
 
+  /// Whether the TAK Mesh Bridge (on-device TAK server) is enabled.
+  /// Set `TAK_MESH_BRIDGE_ENABLED=true` in `.env` to enable.
+  /// Default: false — bridge functionality is off unless explicitly enabled.
+  static bool get isTakMeshBridgeEnabled {
+    try {
+      final raw = dotenv.env['TAK_MESH_BRIDGE_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Whether the Social feature (stories, posts, profile social) is enabled.
   /// Set `SOCIAL_ENABLED=true` in `.env` to enable.
   /// Default: false — Social Hub is hidden unless explicitly enabled.

@@ -43172,5 +43172,112 @@
     "mapCompassUnavailable": "Compass sensor not available on this device",
     "@mapCompassUnavailable": {
         "description": "Snackbar message when the device does not have a compass/magnetometer sensor"
+    },
+
+    "takBridgeSectionTitle": "Mesh Bridge",
+    "@takBridgeSectionTitle": {
+        "description": "Section header for the TAK mesh bridge controls in settings"
+    },
+    "takBridgeEnableToggle": "Enable TAK Mesh Bridge",
+    "@takBridgeEnableToggle": {
+        "description": "Toggle label to enable/disable the on-device TAK server and mesh bridge"
+    },
+    "takBridgeEnableSubtitle": "Run an on-device TAK server for direct ATAK/iTAK connections over mesh",
+    "@takBridgeEnableSubtitle": {
+        "description": "Subtitle explaining what the TAK mesh bridge does"
+    },
+    "takBridgeServerPort": "Server Port",
+    "@takBridgeServerPort": {
+        "description": "Label for the TAK server port number field"
+    },
+    "takBridgeStatusRunning": "Running",
+    "@takBridgeStatusRunning": {
+        "description": "Badge text when the TAK bridge server is running"
+    },
+    "takBridgeStatusStopped": "Stopped",
+    "@takBridgeStatusStopped": {
+        "description": "Badge text when the TAK bridge server is stopped"
+    },
+    "takBridgeConnectedClients": "{count} connected",
+    "@takBridgeConnectedClients": {
+        "description": "Shows the number of connected TAK clients",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "takBridgePacketsInbound": "Mesh → TAK",
+    "@takBridgePacketsInbound": {
+        "description": "Label for the inbound packet counter (mesh to TAK)"
+    },
+    "takBridgePacketsOutbound": "TAK → Mesh",
+    "@takBridgePacketsOutbound": {
+        "description": "Label for the outbound packet counter (TAK to mesh)"
+    },
+    "takBridgeExportPackage": "Export Data Package",
+    "@takBridgeExportPackage": {
+        "description": "Button label to export a TAK data package ZIP for ATAK/iTAK import"
+    },
+    "takBridgeExportPackageSubtitle": "Generate connection package for ATAK/iTAK clients",
+    "@takBridgeExportPackageSubtitle": {
+        "description": "Subtitle for the data package export button"
+    },
+    "takBridgeStatsTitle": "Bridge Statistics",
+    "@takBridgeStatsTitle": {
+        "description": "Title for the bridge statistics card"
+    },
+    "takBridgeClientsTitle": "Connected Clients",
+    "@takBridgeClientsTitle": {
+        "description": "Title for the connected TAK clients list"
+    },
+    "takBridgeNoClients": "No TAK clients connected",
+    "@takBridgeNoClients": {
+        "description": "Empty state text when no TAK clients are connected to the bridge"
+    },
+    "takBridgeClientDuration": "Connected {duration}",
+    "@takBridgeClientDuration": {
+        "description": "Shows how long a TAK client has been connected",
+        "placeholders": {
+            "duration": {
+                "type": "String"
+            }
+        }
+    },
+    "takIdentityRegistryTitle": "Identity Registry",
+    "@takIdentityRegistryTitle": {
+        "description": "Title for the TAK identity registry viewer"
+    },
+    "takIdentityNoEntries": "No identity mappings recorded",
+    "@takIdentityNoEntries": {
+        "description": "Empty state when identity registry has no entries"
+    },
+    "takIdentityMeshNode": "Mesh Node",
+    "@takIdentityMeshNode": {
+        "description": "Label indicating an identity is a Meshtastic mesh node"
+    },
+    "takIdentityTakClient": "TAK Client",
+    "@takIdentityTakClient": {
+        "description": "Label indicating an identity is a TAK client"
+    },
+    "takIdentityOverrideCallsign": "Override Callsign",
+    "@takIdentityOverrideCallsign": {
+        "description": "Title for the callsign override bottom sheet"
+    },
+    "takIdentityOverrideHint": "Enter custom callsign",
+    "@takIdentityOverrideHint": {
+        "description": "Hint text for the callsign override text field"
+    },
+    "takScreenBridgeOnlyTitle": "TAK Mesh Bridge",
+    "@takScreenBridgeOnlyTitle": {
+        "description": "Title shown on TAK screen when only the mesh bridge feature is enabled"
+    },
+    "takScreenBridgeOnlyDescription": "Use TAK Settings to configure and start the mesh bridge for ATAK/iTAK clients.",
+    "@takScreenBridgeOnlyDescription": {
+        "description": "Description shown on TAK screen when only the mesh bridge is enabled, directing users to settings"
+    },
+    "takScreenBridgeOnlyOpenSettings": "Open TAK Settings",
+    "@takScreenBridgeOnlyOpenSettings": {
+        "description": "Button label to open TAK settings from bridge-only TAK screen"
     }
 }

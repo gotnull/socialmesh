@@ -474,7 +474,8 @@ class _MainShellState extends ConsumerState<MainShell> {
         requiresConnection: false,
         whatsNewBadgeKey: 'aether',
       ),
-    if (AppFeatureFlags.isTakGatewayEnabled)
+    if (AppFeatureFlags.isTakGatewayEnabled ||
+        AppFeatureFlags.isTakMeshBridgeEnabled)
       DrawerMenuItem(
         icon: Icons.gps_fixed,
         label: l10n.navigationTakGateway,
@@ -489,7 +490,8 @@ class _MainShellState extends ConsumerState<MainShell> {
         requiresConnection: false,
         whatsNewBadgeKey: 'tak',
       ),
-    if (AppFeatureFlags.isTakGatewayEnabled)
+    if (AppFeatureFlags.isTakGatewayEnabled ||
+        AppFeatureFlags.isTakMeshBridgeEnabled)
       DrawerMenuItem(
         icon: Icons.military_tech,
         label: l10n.navigationTakMap,
@@ -507,7 +509,8 @@ class _MainShellState extends ConsumerState<MainShell> {
         sectionHeader:
             !AppFeatureFlags.isFileTransferEnabled &&
                 !AppFeatureFlags.isAetherEnabled &&
-                !AppFeatureFlags.isTakGatewayEnabled
+                !AppFeatureFlags.isTakGatewayEnabled &&
+                !AppFeatureFlags.isTakMeshBridgeEnabled
             ? l10n.navigationSectionTools
             : null,
         iconColor: AccentColors.teal,

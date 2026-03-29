@@ -462,7 +462,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         ),
 
         // TAK Gateway (feature-gated)
-        if (AppFeatureFlags.isTakGatewayEnabled)
+        if (AppFeatureFlags.isTakGatewayEnabled ||
+            AppFeatureFlags.isTakMeshBridgeEnabled)
           _SearchableSettingItem(
             icon: Icons.military_tech,
             title: context.l10n.settingsSearchTakGatewayTitle,

@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../../../core/logging.dart';
+import '../../../services/tak/identity_registry.dart';
 import '../models/tak_event.dart';
 
 /// SQLite-backed storage for TAK/CoT events received from the gateway.
@@ -15,7 +16,8 @@ class TakDatabase {
   static const _dbName = 'tak_events.db';
   static const _tableName = 'tak_cot_events';
   static const _positionHistoryTable = 'tak_position_history';
-  static const _dbVersion = 4;
+  static const _identitiesTable = 'tak_identities';
+  static const _dbVersion = 5;
 
   /// Maximum events retained in the database.
   static const int maxEvents = 5000;
@@ -82,6 +84,10 @@ class TakDatabase {
           await _migrateV3ToV4(db);
           AppLogging.tak('Migration v3->v4: added speed, course, hae columns');
         }
+        if (oldVersion < 5) {
+          await _createIdentitiesTable(db);
+          AppLogging.tak('Migration v4->v5: created tak_identities table');
+        }
       },
     );
     AppLogging.tak('TAK database initialized successfully');
@@ -132,6 +138,9 @@ class TakDatabase {
 
     // Position history table (added in v2, also created for fresh installs)
     await _createPositionHistoryTable(db);
+
+    // Identity registry table (added in v5, also created for fresh installs)
+    await _createIdentitiesTable(db);
   }
 
   /// Migration v2 -> v3: deduplicate existing rows and add UNIQUE constraint.
@@ -201,6 +210,31 @@ class TakDatabase {
     AppLogging.tak(
       'Database migration v3 -> v4: adding speed, course, hae columns',
     );
+  }
+
+  /// Creates the tak_identities table for TAK ↔ mesh identity mapping.
+  Future<void> _createIdentitiesTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS $_identitiesTable (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        node_num INTEGER NOT NULL DEFAULT 0,
+        tak_uid TEXT NOT NULL UNIQUE,
+        callsign TEXT NOT NULL DEFAULT '',
+        override_callsign TEXT,
+        first_seen_ms INTEGER NOT NULL,
+        last_seen_ms INTEGER NOT NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_tak_id_node
+      ON $_identitiesTable (node_num)
+    ''');
+
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_tak_id_callsign
+      ON $_identitiesTable (callsign)
+    ''');
   }
 
   Future<void> _createPositionHistoryTable(Database db) async {
@@ -434,6 +468,33 @@ class TakDatabase {
       'Position history trimmed for uid=$uid: '
       'kept $maxPositionHistoryPerUid of $total points',
     );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Identity registry (v5)
+  // ---------------------------------------------------------------------------
+
+  /// Upsert a TAK identity record.
+  Future<void> upsertIdentity(TakIdentity identity) async {
+    await _database.rawInsert(
+      '''INSERT OR REPLACE INTO $_identitiesTable
+         (node_num, tak_uid, callsign, override_callsign, first_seen_ms, last_seen_ms)
+         VALUES (?, ?, ?, ?, ?, ?)''',
+      [
+        identity.nodeNum,
+        identity.takUid,
+        identity.callsign,
+        identity.overrideCallsign,
+        identity.firstSeenMs,
+        identity.lastSeenMs,
+      ],
+    );
+  }
+
+  /// Load all identities from the database.
+  Future<List<TakIdentity>> loadIdentities() async {
+    final rows = await _database.query(_identitiesTable);
+    return rows.map(TakIdentity.fromMap).toList();
   }
 
   /// Close the database connection.

@@ -6176,6 +6176,15 @@ class ProtocolService {
 
     final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+
+    // Immediately reflect the change in the protocol-layer node cache so that
+    // any subsequent stream updates emitted for this node carry isFavorite=true.
+    // Without this, telemetry or position packets arriving before the device
+    // ACKs the admin command would re-emit the node with the stale false value,
+    // causing the stream listener in NodesNotifier to override the user's choice.
+    if (_nodes.containsKey(nodeNum)) {
+      _nodes[nodeNum] = _nodes[nodeNum]!.copyWith(isFavorite: true);
+    }
   }
 
   /// Local-only: favorites are stored in the directly-connected device's
@@ -6206,6 +6215,13 @@ class ProtocolService {
 
     final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+
+    // Immediately reflect the removal in the protocol-layer node cache so that
+    // subsequent stream updates carry isFavorite=false right away and do not
+    // re-add the node to favourites before the device ACKs the admin command.
+    if (_nodes.containsKey(nodeNum)) {
+      _nodes[nodeNum] = _nodes[nodeNum]!.copyWith(isFavorite: false);
+    }
   }
 
   /// Local-only: sets a fixed GPS position on the directly-connected device.

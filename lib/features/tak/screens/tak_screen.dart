@@ -20,6 +20,7 @@ import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/ico_help_system.dart';
 import '../../../core/widgets/search_filter_header.dart';
 import '../../../core/widgets/status_filter_chip.dart';
+import '../../../services/tak/providers/tak_bridge_providers.dart';
 import '../models/tak_event.dart';
 import '../providers/tak_filter_provider.dart';
 import '../providers/tak_providers.dart';
@@ -32,9 +33,10 @@ import 'tak_dashboard_screen.dart';
 import 'tak_event_detail_screen.dart';
 import 'tak_settings_screen.dart';
 
-/// Main TAK Gateway screen showing connection status and live events.
+/// Main TAK screen showing gateway events and/or mesh bridge status.
 ///
-/// Only accessible when [AppFeatureFlags.isTakGatewayEnabled] is true.
+/// Accessible when either [AppFeatureFlags.isTakGatewayEnabled] or
+/// [AppFeatureFlags.isTakMeshBridgeEnabled] is true.
 class TakScreen extends ConsumerStatefulWidget {
   const TakScreen({super.key});
 
@@ -69,17 +71,20 @@ class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
     // Ensure persistence notifier is alive (loads DB, subscribes to streams)
     ref.read(takPersistenceNotifierProvider);
 
-    // Auto-connect on first build (only if enabled in settings AND signed in)
-    final isSignedIn = ref.read(isSignedInProvider);
-    final settings = ref.read(takSettingsProvider).value;
-    final shouldAutoConnect = settings?.autoConnect ?? true;
-    final client = ref.read(takGatewayClientProvider);
-    if (isSignedIn &&
-        shouldAutoConnect &&
-        client.state == TakConnectionState.disconnected) {
-      AppLogging.tak('TakScreen auto-connecting...');
-      client.connect();
-      _autoConnectDone = true;
+    // Auto-connect on first build (only if gateway enabled, enabled in settings
+    // AND signed in)
+    if (AppFeatureFlags.isTakGatewayEnabled) {
+      final isSignedIn = ref.read(isSignedInProvider);
+      final settings = ref.read(takSettingsProvider).value;
+      final shouldAutoConnect = settings?.autoConnect ?? true;
+      final client = ref.read(takGatewayClientProvider);
+      if (isSignedIn &&
+          shouldAutoConnect &&
+          client.state == TakConnectionState.disconnected) {
+        AppLogging.tak('TakScreen auto-connecting...');
+        client.connect();
+        _autoConnectDone = true;
+      }
     }
   }
 
@@ -183,8 +188,10 @@ class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
     final connectionState =
         connectionAsync.whenOrNull(data: (s) => s) ?? client.state;
 
-    // Auto-connect if provider was rebuilt and client is fresh (only if signed in)
-    if (isSignedIn &&
+    // Auto-connect if provider was rebuilt and client is fresh (only if
+    // gateway enabled and signed in)
+    if (AppFeatureFlags.isTakGatewayEnabled &&
+        isSignedIn &&
         !_autoConnectDone &&
         connectionState == TakConnectionState.disconnected) {
       final settings = ref.read(takSettingsProvider).value;
@@ -214,6 +221,8 @@ class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
       TakStaleMode.staleOnly => allEvents.where((e) => e.isStale).length,
     };
 
+    final bridgeStatus = ref.watch(takBridgeStatusProvider);
+
     return HelpTourController(
       topicId: 'tak_gateway_overview',
       stepKeys: const {},
@@ -222,24 +231,36 @@ class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
         resizeToAvoidBottomInset: false,
         title: context.l10n.takScreenTitle,
         actions: [
-          IconButton(
-            icon: Icon(
-              connectionState == TakConnectionState.connected
-                  ? Icons.link
-                  : Icons.link_off,
-              color: connectionState == TakConnectionState.connected
-                  ? AppTheme.successGreen
-                  : isSignedIn
-                  ? SemanticColors.disabled
-                  : SemanticColors.disabled.withValues(alpha: 0.4),
+          if (bridgeStatus.isRunning)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Icon(
+                Icons.cell_tower,
+                size: 18,
+                color: bridgeStatus.connectedClientCount > 0
+                    ? AccentColors.orange
+                    : AppTheme.successGreen,
+              ),
             ),
-            onPressed: isSignedIn ? _toggleConnection : null,
-            tooltip: !isSignedIn
-                ? context.l10n.takScreenTooltipSignInToConnect
-                : connectionState == TakConnectionState.connected
-                ? context.l10n.takScreenTooltipDisconnect
-                : context.l10n.takScreenTooltipConnect,
-          ),
+          if (AppFeatureFlags.isTakGatewayEnabled)
+            IconButton(
+              icon: Icon(
+                connectionState == TakConnectionState.connected
+                    ? Icons.link
+                    : Icons.link_off,
+                color: connectionState == TakConnectionState.connected
+                    ? AppTheme.successGreen
+                    : isSignedIn
+                    ? SemanticColors.disabled
+                    : SemanticColors.disabled.withValues(alpha: 0.4),
+              ),
+              onPressed: isSignedIn ? _toggleConnection : null,
+              tooltip: !isSignedIn
+                  ? context.l10n.takScreenTooltipSignInToConnect
+                  : connectionState == TakConnectionState.connected
+                  ? context.l10n.takScreenTooltipDisconnect
+                  : context.l10n.takScreenTooltipConnect,
+            ),
           IcoHelpAppBarButton(topicId: 'tak_gateway_overview'),
           AppBarOverflowMenu<String>(
             onSelected: (value) {
@@ -260,16 +281,17 @@ class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
               }
             },
             itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'dashboard',
-                child: Row(
-                  children: [
-                    const Icon(Icons.dashboard_outlined, size: 18),
-                    const SizedBox(width: AppTheme.spacing8),
-                    Text(context.l10n.takScreenOverflowDashboard),
-                  ],
+              if (AppFeatureFlags.isTakGatewayEnabled)
+                PopupMenuItem(
+                  value: 'dashboard',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.dashboard_outlined, size: 18),
+                      const SizedBox(width: AppTheme.spacing8),
+                      Text(context.l10n.takScreenOverflowDashboard),
+                    ],
+                  ),
                 ),
-              ),
               PopupMenuItem(
                 value: 'settings',
                 child: Row(
@@ -288,155 +310,238 @@ class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
           behavior: HitTestBehavior.translucent,
           child: Column(
             children: [
-              TakStatusCard(
-                connectionState: connectionState,
-                totalReceived: client.totalEventsReceived,
-                activeEntities: allEvents.length,
-                gatewayUrl: client.gatewayUrl,
-                connectedSince: client.connectedSince,
-                lastError: client.lastError,
-                onInfoTap: () => _showSectionHelp(context, 'status'),
-              ),
-              const SizedBox(height: AppTheme.spacing8),
-              SearchFilterHeader(
-                searchController: _searchController,
-                searchQuery: filter.searchQuery,
-                onSearchChanged: (value) {
-                  ref.read(takFilterProvider.notifier).setSearchQuery(value);
-                },
-                hintText: context.l10n.takScreenSearchHint,
-                filterChips: [
-                  StatusFilterChip(
-                    label: context.l10n.takScreenFilterAll,
-                    count: allEvents.length,
-                    isSelected: !filter.isActive,
-                    onTap: () {
-                      ref.read(takFilterProvider.notifier).clearAll();
-                      _searchController.clear();
-                    },
-                  ),
-                  for (final aff in _primaryAffiliations)
+              if (AppFeatureFlags.isTakGatewayEnabled) ...[
+                TakStatusCard(
+                  connectionState: connectionState,
+                  totalReceived: client.totalEventsReceived,
+                  activeEntities: allEvents.length,
+                  gatewayUrl: client.gatewayUrl,
+                  connectedSince: client.connectedSince,
+                  lastError: client.lastError,
+                  onInfoTap: () => _showSectionHelp(context, 'status'),
+                ),
+                const SizedBox(height: AppTheme.spacing8),
+                SearchFilterHeader(
+                  searchController: _searchController,
+                  searchQuery: filter.searchQuery,
+                  onSearchChanged: (value) {
+                    ref.read(takFilterProvider.notifier).setSearchQuery(value);
+                  },
+                  hintText: context.l10n.takScreenSearchHint,
+                  filterChips: [
                     StatusFilterChip(
-                      label: aff.displayLabel(context.l10n),
-                      count: _countByAffiliation(allEvents, aff),
-                      isSelected: filter.affiliations.contains(aff),
-                      color: aff.color,
-                      onTap: () => ref
-                          .read(takFilterProvider.notifier)
-                          .toggleAffiliation(aff),
+                      label: context.l10n.takScreenFilterAll,
+                      count: allEvents.length,
+                      isSelected: !filter.isActive,
+                      onTap: () {
+                        ref.read(takFilterProvider.notifier).clearAll();
+                        _searchController.clear();
+                      },
                     ),
-                  StatusFilterChip(
-                    label: staleModeLabel,
-                    count: staleModeCount,
-                    isSelected: filter.staleMode != TakStaleMode.all,
-                    icon: staleModeIcon,
-                    onTap: () =>
-                        ref.read(takFilterProvider.notifier).cycleStaleMode(),
-                  ),
-                ],
-              ),
-              Expanded(
-                child: filteredEvents.isEmpty
-                    ? Center(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 32),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: 72,
-                                height: 72,
-                                decoration: BoxDecoration(
-                                  color: context.card,
-                                  borderRadius: BorderRadius.circular(
-                                    AppTheme.radius16,
+                    for (final aff in _primaryAffiliations)
+                      StatusFilterChip(
+                        label: aff.displayLabel(context.l10n),
+                        count: _countByAffiliation(allEvents, aff),
+                        isSelected: filter.affiliations.contains(aff),
+                        color: aff.color,
+                        onTap: () => ref
+                            .read(takFilterProvider.notifier)
+                            .toggleAffiliation(aff),
+                      ),
+                    StatusFilterChip(
+                      label: staleModeLabel,
+                      count: staleModeCount,
+                      isSelected: filter.staleMode != TakStaleMode.all,
+                      icon: staleModeIcon,
+                      onTap: () =>
+                          ref.read(takFilterProvider.notifier).cycleStaleMode(),
+                    ),
+                  ],
+                ),
+              ], // end of gateway-only widgets
+              if (AppFeatureFlags.isTakGatewayEnabled)
+                Expanded(
+                  child: filteredEvents.isEmpty
+                      ? Center(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 32),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 72,
+                                  height: 72,
+                                  decoration: BoxDecoration(
+                                    color: context.card,
+                                    borderRadius: BorderRadius.circular(
+                                      AppTheme.radius16,
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    Icons.radar,
+                                    size: 40,
+                                    color: context.textTertiary,
                                   ),
                                 ),
-                                child: Icon(
-                                  Icons.radar,
-                                  size: 40,
-                                  color: context.textTertiary,
-                                ),
-                              ),
-                              const SizedBox(height: AppTheme.spacing24),
-                              Text(
-                                context.l10n.takScreenEmptyTitle,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                  color: context.textSecondary,
-                                ),
-                              ),
-                              const SizedBox(height: AppTheme.spacing8),
-                              Text(
-                                !isSignedIn
-                                    ? context.l10n.takScreenEmptySignIn
-                                    : connectionState ==
-                                          TakConnectionState.connected
-                                    ? context.l10n.takScreenEmptyListening
-                                    : context.l10n.takScreenEmptyDisconnected,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: context.textTertiary,
-                                  height: 1.4,
-                                ),
-                              ),
-                              const SizedBox(height: AppTheme.spacing24),
-                              if (!isSignedIn)
-                                FilledButton.icon(
-                                  onPressed: () {
-                                    HapticFeedback.selectionClick();
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute<void>(
-                                        builder: (_) =>
-                                            const AccountSubscriptionsScreen(),
-                                      ),
-                                    );
-                                  },
-                                  icon: const Icon(
-                                    Icons.person_outline,
-                                    size: 18,
-                                  ),
-                                  label: Text(
-                                    context.l10n.takScreenButtonSignIn,
-                                  ),
-                                )
-                              else if (connectionState !=
-                                  TakConnectionState.connected)
-                                FilledButton.icon(
-                                  onPressed: () {
-                                    HapticFeedback.selectionClick();
-                                    _toggleConnection();
-                                  },
-                                  icon: const Icon(Icons.link, size: 18),
-                                  label: Text(
-                                    context.l10n.takScreenButtonConnect,
+                                const SizedBox(height: AppTheme.spacing24),
+                                Text(
+                                  context.l10n.takScreenEmptyTitle,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                    color: context.textSecondary,
                                   ),
                                 ),
-                            ],
+                                const SizedBox(height: AppTheme.spacing8),
+                                Text(
+                                  !isSignedIn
+                                      ? context.l10n.takScreenEmptySignIn
+                                      : connectionState ==
+                                            TakConnectionState.connected
+                                      ? context.l10n.takScreenEmptyListening
+                                      : context.l10n.takScreenEmptyDisconnected,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: context.textTertiary,
+                                    height: 1.4,
+                                  ),
+                                ),
+                                const SizedBox(height: AppTheme.spacing24),
+                                if (!isSignedIn)
+                                  FilledButton.icon(
+                                    onPressed: () {
+                                      HapticFeedback.selectionClick();
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute<void>(
+                                          builder: (_) =>
+                                              const AccountSubscriptionsScreen(),
+                                        ),
+                                      );
+                                    },
+                                    icon: const Icon(
+                                      Icons.person_outline,
+                                      size: 18,
+                                    ),
+                                    label: Text(
+                                      context.l10n.takScreenButtonSignIn,
+                                    ),
+                                  )
+                                else if (connectionState !=
+                                    TakConnectionState.connected)
+                                  FilledButton.icon(
+                                    onPressed: () {
+                                      HapticFeedback.selectionClick();
+                                      _toggleConnection();
+                                    },
+                                    icon: const Icon(Icons.link, size: 18),
+                                    label: Text(
+                                      context.l10n.takScreenButtonConnect,
+                                    ),
+                                  ),
+                              ],
+                            ),
                           ),
+                        )
+                      : ListView.builder(
+                          itemCount: filteredEvents.length,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: UiConstants.defaultPadding,
+                          ),
+                          itemBuilder: (context, index) {
+                            final event = filteredEvents[index];
+                            return TakEventTile(
+                              event: event,
+                              onTap: () => Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) =>
+                                      TakEventDetailScreen(event: event),
+                                ),
+                              ),
+                            );
+                          },
                         ),
-                      )
-                    : ListView.builder(
-                        itemCount: filteredEvents.length,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: UiConstants.defaultPadding,
-                        ),
-                        itemBuilder: (context, index) {
-                          final event = filteredEvents[index];
-                          return TakEventTile(
-                            event: event,
-                            onTap: () => Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (_) =>
-                                    TakEventDetailScreen(event: event),
+                )
+              else
+                // Bridge-only mode: show bridge status and link to settings
+                Expanded(
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 72,
+                            height: 72,
+                            decoration: BoxDecoration(
+                              color: context.card,
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius16,
                               ),
                             ),
-                          );
-                        },
+                            child: Icon(
+                              Icons.cell_tower,
+                              size: 40,
+                              color: bridgeStatus.isRunning
+                                  ? AppTheme.successGreen
+                                  : context.textTertiary,
+                            ),
+                          ),
+                          const SizedBox(height: AppTheme.spacing24),
+                          Text(
+                            context.l10n.takScreenBridgeOnlyTitle,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: context.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: AppTheme.spacing8),
+                          Text(
+                            bridgeStatus.isRunning
+                                ? context.l10n.takBridgeStatusRunning
+                                : context.l10n.takScreenBridgeOnlyDescription,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: context.textTertiary,
+                              height: 1.4,
+                            ),
+                          ),
+                          if (bridgeStatus.isRunning &&
+                              bridgeStatus.connectedClientCount > 0) ...[
+                            const SizedBox(height: AppTheme.spacing8),
+                            Text(
+                              context.l10n.takBridgeConnectedClients(
+                                bridgeStatus.connectedClientCount,
+                              ),
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: AccentColors.orange,
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: AppTheme.spacing24),
+                          FilledButton.icon(
+                            onPressed: () {
+                              HapticFeedback.selectionClick();
+                              Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) => const TakSettingsScreen(),
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.settings, size: 18),
+                            label: Text(
+                              context.l10n.takScreenBridgeOnlyOpenSettings,
+                            ),
+                          ),
+                        ],
                       ),
-              ),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),

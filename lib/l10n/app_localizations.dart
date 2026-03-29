@@ -56799,6 +56799,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Compass sensor not available on this device'**
   String get mapCompassUnavailable;
+
+  /// Section header for the TAK mesh bridge controls in settings
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh Bridge'**
+  String get takBridgeSectionTitle;
+
+  /// Toggle label to enable/disable the on-device TAK server and mesh bridge
+  ///
+  /// In en, this message translates to:
+  /// **'Enable TAK Mesh Bridge'**
+  String get takBridgeEnableToggle;
+
+  /// Subtitle explaining what the TAK mesh bridge does
+  ///
+  /// In en, this message translates to:
+  /// **'Run an on-device TAK server for direct ATAK/iTAK connections over mesh'**
+  String get takBridgeEnableSubtitle;
+
+  /// Label for the TAK server port number field
+  ///
+  /// In en, this message translates to:
+  /// **'Server Port'**
+  String get takBridgeServerPort;
+
+  /// Badge text when the TAK bridge server is running
+  ///
+  /// In en, this message translates to:
+  /// **'Running'**
+  String get takBridgeStatusRunning;
+
+  /// Badge text when the TAK bridge server is stopped
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped'**
+  String get takBridgeStatusStopped;
+
+  /// Shows the number of connected TAK clients
+  ///
+  /// In en, this message translates to:
+  /// **'{count} connected'**
+  String takBridgeConnectedClients(int count);
+
+  /// Label for the inbound packet counter (mesh to TAK)
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh → TAK'**
+  String get takBridgePacketsInbound;
+
+  /// Label for the outbound packet counter (TAK to mesh)
+  ///
+  /// In en, this message translates to:
+  /// **'TAK → Mesh'**
+  String get takBridgePacketsOutbound;
+
+  /// Button label to export a TAK data package ZIP for ATAK/iTAK import
+  ///
+  /// In en, this message translates to:
+  /// **'Export Data Package'**
+  String get takBridgeExportPackage;
+
+  /// Subtitle for the data package export button
+  ///
+  /// In en, this message translates to:
+  /// **'Generate connection package for ATAK/iTAK clients'**
+  String get takBridgeExportPackageSubtitle;
+
+  /// Title for the bridge statistics card
+  ///
+  /// In en, this message translates to:
+  /// **'Bridge Statistics'**
+  String get takBridgeStatsTitle;
+
+  /// Title for the connected TAK clients list
+  ///
+  /// In en, this message translates to:
+  /// **'Connected Clients'**
+  String get takBridgeClientsTitle;
+
+  /// Empty state text when no TAK clients are connected to the bridge
+  ///
+  /// In en, this message translates to:
+  /// **'No TAK clients connected'**
+  String get takBridgeNoClients;
+
+  /// Shows how long a TAK client has been connected
+  ///
+  /// In en, this message translates to:
+  /// **'Connected {duration}'**
+  String takBridgeClientDuration(String duration);
+
+  /// Title for the TAK identity registry viewer
+  ///
+  /// In en, this message translates to:
+  /// **'Identity Registry'**
+  String get takIdentityRegistryTitle;
+
+  /// Empty state when identity registry has no entries
+  ///
+  /// In en, this message translates to:
+  /// **'No identity mappings recorded'**
+  String get takIdentityNoEntries;
+
+  /// Label indicating an identity is a Meshtastic mesh node
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh Node'**
+  String get takIdentityMeshNode;
+
+  /// Label indicating an identity is a TAK client
+  ///
+  /// In en, this message translates to:
+  /// **'TAK Client'**
+  String get takIdentityTakClient;
+
+  /// Title for the callsign override bottom sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Override Callsign'**
+  String get takIdentityOverrideCallsign;
+
+  /// Hint text for the callsign override text field
+  ///
+  /// In en, this message translates to:
+  /// **'Enter custom callsign'**
+  String get takIdentityOverrideHint;
+
+  /// Title shown on TAK screen when only the mesh bridge feature is enabled
+  ///
+  /// In en, this message translates to:
+  /// **'TAK Mesh Bridge'**
+  String get takScreenBridgeOnlyTitle;
+
+  /// Description shown on TAK screen when only the mesh bridge is enabled, directing users to settings
+  ///
+  /// In en, this message translates to:
+  /// **'Use TAK Settings to configure and start the mesh bridge for ATAK/iTAK clients.'**
+  String get takScreenBridgeOnlyDescription;
+
+  /// Button label to open TAK settings from bridge-only TAK screen
+  ///
+  /// In en, this message translates to:
+  /// **'Open TAK Settings'**
+  String get takScreenBridgeOnlyOpenSettings;
 }
 
 class _AppLocalizationsDelegate

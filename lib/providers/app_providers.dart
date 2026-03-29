@@ -3858,8 +3858,10 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
       }
     }
 
-    // Get persisted favorites/ignored from DeviceFavoritesService
-    var favoritesSet = _deviceFavorites?.favorites ?? <int>{};
+    // isIgnored is still managed by DeviceFavoritesService (protocol service
+    // does not read it from NodeInfo yet). isFavorite follows the iOS pattern:
+    // it lives directly on the persisted MeshNode record and is updated from
+    // NodeInfo packets — no separate cache layer.
     final ignoredSet = _deviceFavorites?.ignored ?? <int>{};
     final identities = ref.read(nodeIdentityProvider);
 
@@ -3876,11 +3878,10 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
             node = sanitized;
             _scheduleSave(node);
           }
-          // Apply persisted favorites/ignored status from DeviceFavoritesService
-          node = node.copyWith(
-            isFavorite: favoritesSet.contains(node.nodeNum),
-            isIgnored: ignoredSet.contains(node.nodeNum),
-          );
+          // isFavorite: trust the value persisted on the MeshNode itself (iOS
+          // CoreData pattern). isIgnored still comes from DeviceFavoritesService
+          // because the protocol service doesn't read it from NodeInfo yet.
+          node = node.copyWith(isIgnored: ignoredSet.contains(node.nodeNum));
           node = _mergeIdentity(node, identities[node.nodeNum]);
           nodeMap[node.nodeNum] = node;
           if (node.hasPosition) {
@@ -3898,20 +3899,11 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
     // Protocol nodes take precedence but preserve stored positions if new nodes don't have them
     final protocolNodes = Map<int, MeshNode>.from(protocol.nodes);
 
-    // Seed DeviceFavoritesService from device-reported is_favorite flags.
-    // The connected radio's NodeDB is the authoritative source for favorites —
-    // they directly control radio routing (e.g. zero-hop logic).
-    if (_deviceFavorites != null && protocolNodes.isNotEmpty) {
-      final deviceFavNums = protocolNodes.values
-          .where((n) => n.isFavorite)
-          .map((n) => n.nodeNum)
-          .toSet();
-      await _deviceFavorites!.replaceAllFavorites(deviceFavNums);
-      favoritesSet = deviceFavNums;
-      AppLogging.nodes(
-        'Synced ${deviceFavNums.length} favorites from device NodeDB',
-      );
-    }
+    // NOTE: No replaceAllFavorites / favorites-cache sync here.
+    // Following the iOS CoreData pattern, isFavorite lives directly on the
+    // MeshNode record. The stored node already carries the correct value from
+    // the previous session; incoming NodeInfo packets update it via the stream
+    // listener below. There is no separate "favorites sidecar" to reconcile.
 
     for (final entry in protocolNodes.entries) {
       var node = entry.value;
@@ -3923,8 +3915,15 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
           latitude: node.hasPosition ? node.latitude : existing.latitude,
           longitude: node.hasPosition ? node.longitude : existing.longitude,
           altitude: node.hasPosition ? node.altitude : existing.altitude,
-          // Always preserve user preferences from DeviceFavoritesService
-          isFavorite: favoritesSet.contains(node.nodeNum),
+          // isFavorite: OR the protocol value with the stored value.
+          // Protocol preserves isFavorite via copyWith for non-NodeInfo packets
+          // (position, telemetry), and sets it from nodeInfo.isFavorite for
+          // NodeInfo packets. OR-ing ensures a stored favourite is not lost
+          // when the protocol snapshot was built from a placeholder node
+          // (hardcoded false) whose NodeInfo hasn't arrived yet.
+          isFavorite: node.isFavorite || existing.isFavorite,
+          // isIgnored still comes from DeviceFavoritesService (protocol
+          // service does not read isIgnored from NodeInfo yet).
           isIgnored: ignoredSet.contains(node.nodeNum),
           // Preserve stored telemetry that protocol nodes from the
           // initial NodeDB dump don't carry. These fields arrive via
@@ -4002,11 +4001,10 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
           precisionBits: node.precisionBits ?? existing.precisionBits,
         );
       } else {
-        // New node - apply favorites/ignored from service
-        node = node.copyWith(
-          isFavorite: favoritesSet.contains(node.nodeNum),
-          isIgnored: ignoredSet.contains(node.nodeNum),
-        );
+        // New node — isFavorite comes from the protocol node directly
+        // (set by NodeInfo or hardcoded false for placeholders).
+        // isIgnored comes from DeviceFavoritesService.
+        node = node.copyWith(isIgnored: ignoredSet.contains(node.nodeNum));
       }
       node = _stripBleNamesIfNeeded(node);
       node = _mergeIdentity(node, identities[node.nodeNum]);
@@ -4029,8 +4027,8 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
       final isNewNode = !state.containsKey(node.nodeNum);
       final existing = state[node.nodeNum];
 
-      // Get latest favorites/ignored status
-      final currentFavorites = _deviceFavorites?.favorites ?? <int>{};
+      // isIgnored is still managed by DeviceFavoritesService (protocol
+      // service does not read it from NodeInfo yet).
       final currentIgnored = _deviceFavorites?.ignored ?? <int>{};
 
       if (existing != null) {
@@ -4043,18 +4041,21 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
           latitude: node.hasPosition ? node.latitude : existing.latitude,
           longitude: node.hasPosition ? node.longitude : existing.longitude,
           altitude: node.hasPosition ? node.altitude : existing.altitude,
-          // Always preserve user preferences from DeviceFavoritesService
-          isFavorite: currentFavorites.contains(node.nodeNum),
+          // iOS CoreData pattern: isFavorite lives on the node record.
+          // Protocol preserves it via copyWith for non-NodeInfo packets
+          // and sets it from nodeInfo.isFavorite for NodeInfo packets.
+          // OR with existing prevents a placeholder node (hardcoded false)
+          // from clobbering a stored favourite whose NodeInfo hasn't
+          // arrived yet. Explicit user unfavourite goes through
+          // addOrUpdateNode(isFavorite: false), bypassing this listener.
+          isFavorite: node.isFavorite || existing.isFavorite,
           isIgnored: currentIgnored.contains(node.nodeNum),
           // Preserve firstHeard — always keep the earliest value
           firstHeard: existing.firstHeard ?? node.firstHeard,
         );
       } else {
-        // New node - apply favorites/ignored from service
-        node = node.copyWith(
-          isFavorite: currentFavorites.contains(node.nodeNum),
-          isIgnored: currentIgnored.contains(node.nodeNum),
-        );
+        // New node — isFavorite comes from protocol directly.
+        node = node.copyWith(isIgnored: currentIgnored.contains(node.nodeNum));
       }
 
       node = _stripBleNamesIfNeeded(node);

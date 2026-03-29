@@ -4,13 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/constants.dart';
 import '../../../core/theme.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../services/haptic_service.dart';
+import '../../../services/tak/providers/tak_bridge_providers.dart';
 import '../providers/tak_settings_provider.dart';
 import '../utils/cot_affiliation.dart';
+import '../widgets/tak_bridge_status_card.dart';
+import '../widgets/tak_identity_list.dart';
 
 /// Dedicated TAK settings form accessible from the TakScreen overflow menu
 /// and from the main Settings screen.
@@ -72,91 +76,92 @@ class _TakSettingsScreenState extends ConsumerState<TakSettingsScreen> {
             title: context.l10n.takSettingsTitle,
             slivers: [
               // ---------------------------------------------------------------
-              // CONNECTION
+              // CONNECTION (gateway only)
               // ---------------------------------------------------------------
-              SliverToBoxAdapter(
-                child: _SectionHeader(
-                  title: context.l10n.takSettingsSectionConnection,
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: _SettingsTile(
-                  icon: Icons.link,
-                  title: context.l10n.takSettingsGatewayUrlTitle,
-                  subtitle: settings.gatewayUrl.isNotEmpty
-                      ? settings.gatewayUrl
-                      : context.l10n.takSettingsGatewayUrlDefault,
-                  onTap: () => _showGatewayUrlEditor(context, settings),
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: _SettingsTile(
-                  icon: Icons.flash_on,
-                  title: context.l10n.takSettingsAutoConnectTitle,
-                  subtitle: context.l10n.takSettingsAutoConnectSubtitle,
-                  trailing: ThemedSwitch(
-                    value: settings.autoConnect,
-                    onChanged: (value) {
-                      HapticFeedback.selectionClick();
-                      ref
-                          .read(takSettingsProvider.notifier)
-                          .setAutoConnect(value);
-                    },
+              if (AppFeatureFlags.isTakGatewayEnabled) ...[
+                SliverToBoxAdapter(
+                  child: _SectionHeader(
+                    title: context.l10n.takSettingsSectionConnection,
                   ),
                 ),
-              ),
+                SliverToBoxAdapter(
+                  child: _SettingsTile(
+                    icon: Icons.link,
+                    title: context.l10n.takSettingsGatewayUrlTitle,
+                    subtitle: settings.gatewayUrl.isNotEmpty
+                        ? settings.gatewayUrl
+                        : context.l10n.takSettingsGatewayUrlDefault,
+                    onTap: () => _showGatewayUrlEditor(context, settings),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: _SettingsTile(
+                    icon: Icons.flash_on,
+                    title: context.l10n.takSettingsAutoConnectTitle,
+                    subtitle: context.l10n.takSettingsAutoConnectSubtitle,
+                    trailing: ThemedSwitch(
+                      value: settings.autoConnect,
+                      onChanged: (value) {
+                        HapticFeedback.selectionClick();
+                        ref
+                            .read(takSettingsProvider.notifier)
+                            .setAutoConnect(value);
+                      },
+                    ),
+                  ),
+                ),
 
-              // ---------------------------------------------------------------
-              // POSITION PUBLISHING
-              // ---------------------------------------------------------------
-              SliverToBoxAdapter(
-                child: _SectionHeader(
-                  title: context.l10n.takSettingsSectionPublishing,
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: _SettingsTile(
-                  icon: Icons.my_location,
-                  title: context.l10n.takSettingsPublishTitle,
-                  subtitle: context.l10n.takSettingsPublishSubtitle,
-                  trailing: ThemedSwitch(
-                    value: settings.publishEnabled,
-                    onChanged: (value) {
-                      HapticFeedback.selectionClick();
-                      ref
-                          .read(takSettingsProvider.notifier)
-                          .setPublishEnabled(value);
-                    },
+                // ---------------------------------------------------------------
+                // POSITION PUBLISHING (gateway only)
+                // ---------------------------------------------------------------
+                SliverToBoxAdapter(
+                  child: _SectionHeader(
+                    title: context.l10n.takSettingsSectionPublishing,
                   ),
                 ),
-              ),
-              SliverToBoxAdapter(
-                child: _SettingsTile(
-                  icon: Icons.timer_outlined,
-                  title: context.l10n.takSettingsIntervalTitle,
-                  subtitle: context.l10n.takSettingsIntervalSubtitle,
-                  trailing: _IntervalSelector(
-                    value: settings.publishInterval,
-                    onChanged: (value) {
-                      ref.haptics.buttonTap();
-                      ref
-                          .read(takSettingsProvider.notifier)
-                          .setPublishInterval(value);
-                    },
+                SliverToBoxAdapter(
+                  child: _SettingsTile(
+                    icon: Icons.my_location,
+                    title: context.l10n.takSettingsPublishTitle,
+                    subtitle: context.l10n.takSettingsPublishSubtitle,
+                    trailing: ThemedSwitch(
+                      value: settings.publishEnabled,
+                      onChanged: (value) {
+                        HapticFeedback.selectionClick();
+                        ref
+                            .read(takSettingsProvider.notifier)
+                            .setPublishEnabled(value);
+                      },
+                    ),
                   ),
                 ),
-              ),
-              SliverToBoxAdapter(
-                child: _SettingsTile(
-                  icon: Icons.badge_outlined,
-                  title: context.l10n.takSettingsCallsignTitle,
-                  subtitle: settings.callsign.isNotEmpty
-                      ? settings.callsign
-                      : context.l10n.takSettingsCallsignDefault,
-                  onTap: () => _showCallsignEditor(context, settings),
+                SliverToBoxAdapter(
+                  child: _SettingsTile(
+                    icon: Icons.timer_outlined,
+                    title: context.l10n.takSettingsIntervalTitle,
+                    subtitle: context.l10n.takSettingsIntervalSubtitle,
+                    trailing: _IntervalSelector(
+                      value: settings.publishInterval,
+                      onChanged: (value) {
+                        ref.haptics.buttonTap();
+                        ref
+                            .read(takSettingsProvider.notifier)
+                            .setPublishInterval(value);
+                      },
+                    ),
+                  ),
                 ),
-              ),
-
+                SliverToBoxAdapter(
+                  child: _SettingsTile(
+                    icon: Icons.badge_outlined,
+                    title: context.l10n.takSettingsCallsignTitle,
+                    subtitle: settings.callsign.isNotEmpty
+                        ? settings.callsign
+                        : context.l10n.takSettingsCallsignDefault,
+                    onTap: () => _showCallsignEditor(context, settings),
+                  ),
+                ),
+              ], // end gateway-only sections
               // ---------------------------------------------------------------
               // MAP
               // ---------------------------------------------------------------
@@ -183,68 +188,140 @@ class _TakSettingsScreenState extends ConsumerState<TakSettingsScreen> {
               ),
 
               // ---------------------------------------------------------------
-              // PROXIMITY ALERTS
+              // PROXIMITY ALERTS (gateway only)
               // ---------------------------------------------------------------
-              SliverToBoxAdapter(
-                child: _SectionHeader(
-                  title: context.l10n.takSettingsSectionProximity,
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: _SettingsTile(
-                  icon: Icons.radar,
-                  title: context.l10n.takSettingsProximityTitle,
-                  subtitle: context.l10n.takSettingsProximitySubtitle,
-                  trailing: ThemedSwitch(
-                    value: settings.proximityAlertEnabled,
-                    onChanged: (value) {
-                      HapticFeedback.selectionClick();
-                      ref
-                          .read(takSettingsProvider.notifier)
-                          .setProximityAlertEnabled(value);
-                    },
+              if (AppFeatureFlags.isTakGatewayEnabled) ...[
+                SliverToBoxAdapter(
+                  child: _SectionHeader(
+                    title: context.l10n.takSettingsSectionProximity,
                   ),
                 ),
-              ),
-              if (settings.proximityAlertEnabled) ...[
                 SliverToBoxAdapter(
                   child: _SettingsTile(
-                    icon: Icons.adjust,
-                    title: context.l10n.takSettingsRadiusTitle,
-                    subtitle: context.l10n.takSettingsRadiusSubtitle(
-                      settings.proximityRadiusKm.roundToDouble(),
+                    icon: Icons.radar,
+                    title: context.l10n.takSettingsProximityTitle,
+                    subtitle: context.l10n.takSettingsProximitySubtitle,
+                    trailing: ThemedSwitch(
+                      value: settings.proximityAlertEnabled,
+                      onChanged: (value) {
+                        HapticFeedback.selectionClick();
+                        ref
+                            .read(takSettingsProvider.notifier)
+                            .setProximityAlertEnabled(value);
+                      },
                     ),
-                    trailing: SizedBox(
-                      width: 160,
-                      child: Slider(
-                        value: settings.proximityRadiusKm,
-                        min: 1,
-                        max: 50,
-                        divisions: 49,
-                        label: context.l10n.takSettingsRadiusSubtitle(
-                          settings.proximityRadiusKm.roundToDouble(),
+                  ),
+                ),
+                if (settings.proximityAlertEnabled) ...[
+                  SliverToBoxAdapter(
+                    child: _SettingsTile(
+                      icon: Icons.adjust,
+                      title: context.l10n.takSettingsRadiusTitle,
+                      subtitle: context.l10n.takSettingsRadiusSubtitle(
+                        settings.proximityRadiusKm.roundToDouble(),
+                      ),
+                      trailing: SizedBox(
+                        width: 160,
+                        child: Slider(
+                          value: settings.proximityRadiusKm,
+                          min: 1,
+                          max: 50,
+                          divisions: 49,
+                          label: context.l10n.takSettingsRadiusSubtitle(
+                            settings.proximityRadiusKm.roundToDouble(),
+                          ),
+                          onChanged: (value) {
+                            ref
+                                .read(takSettingsProvider.notifier)
+                                .setProximityRadiusKm(value.roundToDouble());
+                          },
                         ),
-                        onChanged: (value) {
-                          ref
-                              .read(takSettingsProvider.notifier)
-                              .setProximityRadiusKm(value.roundToDouble());
-                        },
                       ),
                     ),
                   ),
+                  SliverToBoxAdapter(
+                    child: _ProximityAffiliationCheckboxes(
+                      selected: settings.proximityAffiliations,
+                      onChanged: (value) {
+                        ref
+                            .read(takSettingsProvider.notifier)
+                            .setProximityAffiliations(value);
+                      },
+                    ),
+                  ),
+                ],
+              ], // end gateway-only proximity section
+              // ---------------------------------------------------------------
+              // MESH BRIDGE (bridge only)
+              // ---------------------------------------------------------------
+              if (AppFeatureFlags.isTakMeshBridgeEnabled) ...[
+                SliverToBoxAdapter(
+                  child: _SectionHeader(
+                    title: context.l10n.takBridgeSectionTitle,
+                  ),
                 ),
                 SliverToBoxAdapter(
-                  child: _ProximityAffiliationCheckboxes(
-                    selected: settings.proximityAffiliations,
-                    onChanged: (value) {
-                      ref
-                          .read(takSettingsProvider.notifier)
-                          .setProximityAffiliations(value);
+                  child: _SettingsTile(
+                    icon: Icons.cell_tower,
+                    title: context.l10n.takBridgeEnableToggle,
+                    subtitle: context.l10n.takBridgeEnableSubtitle,
+                    trailing: ThemedSwitch(
+                      value: ref.watch(takBridgeStatusProvider).isRunning,
+                      onChanged: (enabled) {
+                        ref.haptics.buttonTap();
+                        final bridge = ref.read(takMeshBridgeProvider);
+                        if (enabled) {
+                          bridge.start();
+                        } else {
+                          bridge.stop();
+                        }
+                        ref.read(takBridgeStatusProvider.notifier).refresh();
+                      },
+                    ),
+                  ),
+                ),
+                if (ref.watch(takBridgeStatusProvider).isRunning) ...[
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: AppTheme.spacing16,
+                      ),
+                      child: TakBridgeStatusCard(),
+                    ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: _SettingsTile(
+                      icon: Icons.devices,
+                      title: context.l10n.takBridgeClientsTitle,
+                      subtitle: context.l10n.takBridgeConnectedClients(
+                        ref.watch(takBridgeStatusProvider).connectedClientCount,
+                      ),
+                    ),
+                  ),
+                ],
+                SliverToBoxAdapter(
+                  child: _SettingsTile(
+                    icon: Icons.file_download_outlined,
+                    title: context.l10n.takBridgeExportPackage,
+                    subtitle: context.l10n.takBridgeExportPackageSubtitle,
+                    onTap: () {
+                      ref.haptics.buttonTap();
                     },
                   ),
                 ),
               ],
 
+              // ---------------------------------------------------------------
+              // IDENTITY REGISTRY (bridge only)
+              // ---------------------------------------------------------------
+              if (AppFeatureFlags.isTakMeshBridgeEnabled) ...[
+                SliverToBoxAdapter(
+                  child: _SectionHeader(
+                    title: context.l10n.takIdentityRegistryTitle,
+                  ),
+                ),
+                const TakIdentityList(),
+              ], // end bridge-only identity section
               // Bottom padding
               const SliverPadding(padding: EdgeInsets.only(bottom: 32)),
             ],
