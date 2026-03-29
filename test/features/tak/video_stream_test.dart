@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/features/tak/models/video_stream.dart';
 
 void main() {
-  final _sampleJson = <String, dynamic>{
+  final sampleJson = <String, dynamic>{
     'id': 'vs-abcd1234',
     'streamKey': 'aabbccdd' * 4,
     'name': 'My Test Stream',
@@ -27,7 +27,7 @@ void main() {
 
   group('VideoStream', () {
     test('fromJson parses all fields', () {
-      final stream = VideoStream.fromJson(_sampleJson);
+      final stream = VideoStream.fromJson(sampleJson);
 
       expect(stream.id, 'vs-abcd1234');
       expect(stream.streamKey, 'aabbccdd' * 4);
@@ -76,7 +76,7 @@ void main() {
     });
 
     test('toJson produces correct map', () {
-      final stream = VideoStream.fromJson(_sampleJson);
+      final stream = VideoStream.fromJson(sampleJson);
       final json = stream.toJson();
 
       expect(json['id'], 'vs-abcd1234');
@@ -90,7 +90,7 @@ void main() {
     });
 
     test('toJson round-trips through fromJson', () {
-      final original = VideoStream.fromJson(_sampleJson);
+      final original = VideoStream.fromJson(sampleJson);
       final roundTripped = VideoStream.fromJson(original.toJson());
 
       expect(roundTripped.id, original.id);
@@ -102,16 +102,16 @@ void main() {
     });
 
     test('equality based on id, status, lastHeartbeat', () {
-      final a = VideoStream.fromJson(_sampleJson);
-      final b = VideoStream.fromJson(_sampleJson);
+      final a = VideoStream.fromJson(sampleJson);
+      final b = VideoStream.fromJson(sampleJson);
 
       expect(a, equals(b));
       expect(a.hashCode, equals(b.hashCode));
     });
 
     test('inequality when status differs', () {
-      final a = VideoStream.fromJson(_sampleJson);
-      final modified = Map<String, dynamic>.from(_sampleJson)
+      final a = VideoStream.fromJson(sampleJson);
+      final modified = Map<String, dynamic>.from(sampleJson)
         ..['status'] = 'offline';
       final b = VideoStream.fromJson(modified);
 
@@ -119,32 +119,32 @@ void main() {
     });
 
     test('hasPosition returns true when lat and lon present', () {
-      final stream = VideoStream.fromJson(_sampleJson);
+      final stream = VideoStream.fromJson(sampleJson);
       expect(stream.hasPosition, isTrue);
     });
 
     test('hasPosition returns false when lat is null', () {
-      final noLat = Map<String, dynamic>.from(_sampleJson)..['lat'] = null;
+      final noLat = Map<String, dynamic>.from(sampleJson)..['lat'] = null;
       final stream = VideoStream.fromJson(noLat);
       expect(stream.hasPosition, isFalse);
     });
 
     test('isExpired returns true for past expiry', () {
-      final expired = Map<String, dynamic>.from(_sampleJson)..['expiresAt'] = 0;
+      final expired = Map<String, dynamic>.from(sampleJson)..['expiresAt'] = 0;
       final stream = VideoStream.fromJson(expired);
       expect(stream.isExpired, isTrue);
     });
 
     test('isExpired returns false for future expiry', () {
       final future = Map<String, dynamic>.from(
-        _sampleJson,
+        sampleJson,
       )..['expiresAt'] = DateTime.now().millisecondsSinceEpoch + 60 * 60 * 1000;
       final stream = VideoStream.fromJson(future);
       expect(stream.isExpired, isFalse);
     });
 
     test('toString contains key info', () {
-      final stream = VideoStream.fromJson(_sampleJson);
+      final stream = VideoStream.fromJson(sampleJson);
       final str = stream.toString();
 
       expect(str, contains('vs-abcd1234'));

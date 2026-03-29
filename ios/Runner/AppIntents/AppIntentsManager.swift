@@ -14,6 +14,7 @@ class AppIntentsManager {
     
     private var methodChannel: FlutterMethodChannel?
     private var pendingCallbacks: [String: (Result<Any?, Error>) -> Void] = [:]
+    private let queue = DispatchQueue(label: "com.socialmesh.app-intents-manager")
     
     private init() {}
     
@@ -36,7 +37,8 @@ class AppIntentsManager {
                 let success = args["success"] as? Bool ?? false
                 let error = args["error"] as? String
                 
-                if let callback = pendingCallbacks.removeValue(forKey: callbackId) {
+                let callback = queue.sync { pendingCallbacks.removeValue(forKey: callbackId) }
+                if let callback = callback {
                     if success {
                         callback(.success(args["data"]))
                     } else {
@@ -56,7 +58,7 @@ class AppIntentsManager {
         completion: @escaping (Result<Any?, Error>) -> Void
     ) {
         let callbackId = UUID().uuidString
-        pendingCallbacks[callbackId] = completion
+        queue.sync { pendingCallbacks[callbackId] = completion }
         
         var args = parameters
         args["intentName"] = intentName
@@ -68,7 +70,9 @@ class AppIntentsManager {
         
         // Timeout after 30 seconds
         DispatchQueue.main.asyncAfter(deadline: .now() + 30) { [weak self] in
-            if let callback = self?.pendingCallbacks.removeValue(forKey: callbackId) {
+            guard let self = self else { return }
+            let callback = self.queue.sync { self.pendingCallbacks.removeValue(forKey: callbackId) }
+            if let callback = callback {
                 callback(.failure(AppIntentError.flutterError("Intent timed out")))
             }
         }

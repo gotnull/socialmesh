@@ -92,7 +92,12 @@ class _ReportBugPromptSheetState extends State<ReportBugPromptSheet> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () => Navigator.of(context).pop(true),
+                  onPressed: () {
+                    final navigator = Navigator.of(context);
+                    if (navigator.canPop()) {
+                      navigator.pop(true);
+                    }
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: Colors.black,
@@ -160,7 +165,11 @@ class _ReportBugSheetState extends State<ReportBugSheet> {
       return;
     }
     setState(() => _isSending = true);
-    showLoadingSnackBar(context, context.l10n.feedbackSendingReport);
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    final loadingMsg = context.l10n.feedbackSendingReport;
+    if (messenger != null) {
+      showLoadingSnackBar(context, loadingMsg);
+    }
     try {
       final result = await widget.onSubmit(
         description: text,
@@ -170,7 +179,10 @@ class _ReportBugSheetState extends State<ReportBugSheet> {
 
       if (!mounted) return;
       // Close the sheet first
-      navigatorKey.currentState?.pop();
+      final nav = navigatorKey.currentState;
+      if (nav != null && nav.canPop()) {
+        nav.pop();
+      }
 
       final id = result != null ? (result['reportId'] ?? '') : '';
       showGlobalSuccessSnackBar(
@@ -189,7 +201,10 @@ class _ReportBugSheetState extends State<ReportBugSheet> {
 
       if (!mounted) return;
       // Dismiss the sheet so the user isn't stuck behind a dead modal
-      navigatorKey.currentState?.pop();
+      final nav = navigatorKey.currentState;
+      if (nav != null && nav.canPop()) {
+        nav.pop();
+      }
       showGlobalErrorSnackBar('Failed to send bug report: $msg');
     } finally {
       if (mounted) setState(() => _isSending = false);
@@ -250,7 +265,12 @@ class _ReportBugSheetState extends State<ReportBugSheet> {
                                 Icons.close,
                                 color: context.textSecondary,
                               ),
-                              onPressed: () => Navigator.of(context).pop(),
+                              onPressed: () {
+                                final navigator = Navigator.of(context);
+                                if (navigator.canPop()) {
+                                  navigator.pop();
+                                }
+                              },
                             ),
                           ],
                         ),
