@@ -43279,5 +43279,132 @@
     "takScreenBridgeOnlyOpenSettings": "Open TAK Settings",
     "@takScreenBridgeOnlyOpenSettings": {
         "description": "Button label to open TAK settings from bridge-only TAK screen"
+    },
+
+    "takVideoTitle": "Live Streams",
+    "@takVideoTitle": {
+        "description": "Title for the TAK video streams screen"
+    },
+    "takVideoGoLive": "Go Live",
+    "@takVideoGoLive": {
+        "description": "Button label to start a live video stream"
+    },
+    "takVideoStreamName": "Stream Name",
+    "@takVideoStreamName": {
+        "description": "Label for the stream name input field"
+    },
+    "takVideoCallsign": "Callsign",
+    "@takVideoCallsign": {
+        "description": "Label for the callsign input field when creating a stream"
+    },
+    "takVideoStartStream": "Start Streaming",
+    "@takVideoStartStream": {
+        "description": "Button label to begin streaming after setup"
+    },
+    "takVideoStopStream": "Stop Streaming",
+    "@takVideoStopStream": {
+        "description": "Button label to stop an active stream"
+    },
+    "takVideoEndStream": "End Stream",
+    "@takVideoEndStream": {
+        "description": "Button label to end and clean up a stream"
+    },
+    "takVideoPreparing": "Preparing camera...",
+    "@takVideoPreparing": {
+        "description": "Status message when camera is being initialized"
+    },
+    "takVideoRegistering": "Registering stream...",
+    "@takVideoRegistering": {
+        "description": "Status message when stream is being registered with backend"
+    },
+    "takVideoLive": "LIVE",
+    "@takVideoLive": {
+        "description": "Status badge text when stream is actively broadcasting"
+    },
+    "takVideoReconnecting": "Reconnecting...",
+    "@takVideoReconnecting": {
+        "description": "Status message when publisher is attempting to reconnect"
+    },
+    "takVideoFailed": "Stream failed",
+    "@takVideoFailed": {
+        "description": "Status message when streaming has failed"
+    },
+    "takVideoEnded": "Stream ended",
+    "@takVideoEnded": {
+        "description": "Status message when stream has ended normally"
+    },
+    "takVideoIdle": "Ready to stream",
+    "@takVideoIdle": {
+        "description": "Status message when publisher is idle and ready"
+    },
+    "takVideoEmptyTitle": "No Live Streams",
+    "@takVideoEmptyTitle": {
+        "description": "Title for empty state when no live streams are available"
+    },
+    "takVideoEmptyDescription": "There are no active video streams at the moment.",
+    "@takVideoEmptyDescription": {
+        "description": "Description for empty state when no streams are found"
+    },
+    "takVideoRefresh": "Refresh",
+    "@takVideoRefresh": {
+        "description": "Button label to refresh the stream list"
+    },
+    "takVideoLoading": "Loading streams...",
+    "@takVideoLoading": {
+        "description": "Status message when stream list is being loaded"
+    },
+    "takVideoStreamCount": "{count, plural, =1{1 live stream} other{{count} live streams}}",
+    "@takVideoStreamCount": {
+        "description": "Count of active live streams",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "takVideoWatchStream": "Watch Stream",
+    "@takVideoWatchStream": {
+        "description": "Button label to watch a live stream"
+    },
+    "takVideoPlayerTitle": "Live Stream",
+    "@takVideoPlayerTitle": {
+        "description": "Title for the video player screen"
+    },
+    "takVideoPlayerLoading": "Loading stream...",
+    "@takVideoPlayerLoading": {
+        "description": "Status message when video player is loading"
+    },
+    "takVideoPlayerEnded": "Stream has ended",
+    "@takVideoPlayerEnded": {
+        "description": "Message when the stream being watched has ended"
+    },
+    "takVideoPlayerError": "Playback error",
+    "@takVideoPlayerError": {
+        "description": "Message when video player encounters an error"
+    },
+    "takVideoPermissionRequired": "Camera and microphone permissions are required to stream.",
+    "@takVideoPermissionRequired": {
+        "description": "Message when camera/mic permissions are not granted"
+    },
+    "takVideoAuthRequired": "Sign in to use video streaming.",
+    "@takVideoAuthRequired": {
+        "description": "Message when user needs to sign in for video streaming"
+    },
+    "takVideoStreamBy": "by {callsign}",
+    "@takVideoStreamBy": {
+        "description": "Attribution text showing who is streaming",
+        "placeholders": {
+            "callsign": {
+                "type": "String"
+            }
+        }
+    },
+    "takVideoRetry": "Retry",
+    "@takVideoRetry": {
+        "description": "Button label to retry a failed operation"
+    },
+    "takVideoNewStream": "New Stream",
+    "@takVideoNewStream": {
+        "description": "Button label to create a new stream from empty state"
     }
 }

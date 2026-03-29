@@ -32639,4 +32639,103 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get takScreenBridgeOnlyOpenSettings => 'Open TAK Settings';
+
+  @override
+  String get takVideoTitle => 'Live Streams';
+
+  @override
+  String get takVideoGoLive => 'Go Live';
+
+  @override
+  String get takVideoStreamName => 'Stream Name';
+
+  @override
+  String get takVideoCallsign => 'Callsign';
+
+  @override
+  String get takVideoStartStream => 'Start Streaming';
+
+  @override
+  String get takVideoStopStream => 'Stop Streaming';
+
+  @override
+  String get takVideoEndStream => 'End Stream';
+
+  @override
+  String get takVideoPreparing => 'Preparing camera...';
+
+  @override
+  String get takVideoRegistering => 'Registering stream...';
+
+  @override
+  String get takVideoLive => 'LIVE';
+
+  @override
+  String get takVideoReconnecting => 'Reconnecting...';
+
+  @override
+  String get takVideoFailed => 'Stream failed';
+
+  @override
+  String get takVideoEnded => 'Stream ended';
+
+  @override
+  String get takVideoIdle => 'Ready to stream';
+
+  @override
+  String get takVideoEmptyTitle => 'No Live Streams';
+
+  @override
+  String get takVideoEmptyDescription =>
+      'There are no active video streams at the moment.';
+
+  @override
+  String get takVideoRefresh => 'Refresh';
+
+  @override
+  String get takVideoLoading => 'Loading streams...';
+
+  @override
+  String takVideoStreamCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count live streams',
+      one: '1 live stream',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get takVideoWatchStream => 'Watch Stream';
+
+  @override
+  String get takVideoPlayerTitle => 'Live Stream';
+
+  @override
+  String get takVideoPlayerLoading => 'Loading stream...';
+
+  @override
+  String get takVideoPlayerEnded => 'Stream has ended';
+
+  @override
+  String get takVideoPlayerError => 'Playback error';
+
+  @override
+  String get takVideoPermissionRequired =>
+      'Camera and microphone permissions are required to stream.';
+
+  @override
+  String get takVideoAuthRequired => 'Sign in to use video streaming.';
+
+  @override
+  String takVideoStreamBy(String callsign) {
+    return 'by $callsign';
+  }
+
+  @override
+  String get takVideoRetry => 'Retry';
+
+  @override
+  String get takVideoNewStream => 'New Stream';
 }

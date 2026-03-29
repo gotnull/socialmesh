@@ -32,6 +32,7 @@ import '../widgets/tak_status_card.dart';
 import 'tak_dashboard_screen.dart';
 import 'tak_event_detail_screen.dart';
 import 'tak_settings_screen.dart';
+import 'tak_video_streams_screen.dart';
 
 /// Main TAK screen showing gateway events and/or mesh bridge status.
 ///
@@ -272,6 +273,13 @@ class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
                       builder: (_) => const TakDashboardScreen(),
                     ),
                   );
+                case 'video':
+                  HapticFeedback.selectionClick();
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const TakVideoStreamsScreen(),
+                    ),
+                  );
                 case 'settings':
                   Navigator.of(context).push(
                     MaterialPageRoute<void>(
@@ -289,6 +297,17 @@ class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
                       const Icon(Icons.dashboard_outlined, size: 18),
                       const SizedBox(width: AppTheme.spacing8),
                       Text(context.l10n.takScreenOverflowDashboard),
+                    ],
+                  ),
+                ),
+              if (AppFeatureFlags.isTakVideoEnabled)
+                PopupMenuItem(
+                  value: 'video',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.videocam_outlined, size: 18),
+                      const SizedBox(width: AppTheme.spacing8),
+                      Text(context.l10n.takVideoTitle),
                     ],
                   ),
                 ),

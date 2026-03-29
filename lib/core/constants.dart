@@ -381,6 +381,19 @@ class AppFeatureFlags {
     }
   }
 
+  /// Whether TAK video streaming is enabled.
+  /// Set `TAK_VIDEO_ENABLED=true` in `.env` to enable.
+  /// Requires [isTakGatewayEnabled] to be true. Default: false.
+  static bool get isTakVideoEnabled {
+    if (!isTakGatewayEnabled) return false;
+    try {
+      final raw = dotenv.env['TAK_VIDEO_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Whether the MRRP (Mesh Request/Response Protocol) feature is enabled.
   /// Set `MRRP_ENABLED=true` in `.env` to enable.
   /// Requires [isSipEnabled] to be true. Default: false.

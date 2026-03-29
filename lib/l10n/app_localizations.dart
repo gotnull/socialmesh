@@ -56943,6 +56943,180 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open TAK Settings'**
   String get takScreenBridgeOnlyOpenSettings;
+
+  /// Title for the TAK video streams screen
+  ///
+  /// In en, this message translates to:
+  /// **'Live Streams'**
+  String get takVideoTitle;
+
+  /// Button label to start a live video stream
+  ///
+  /// In en, this message translates to:
+  /// **'Go Live'**
+  String get takVideoGoLive;
+
+  /// Label for the stream name input field
+  ///
+  /// In en, this message translates to:
+  /// **'Stream Name'**
+  String get takVideoStreamName;
+
+  /// Label for the callsign input field when creating a stream
+  ///
+  /// In en, this message translates to:
+  /// **'Callsign'**
+  String get takVideoCallsign;
+
+  /// Button label to begin streaming after setup
+  ///
+  /// In en, this message translates to:
+  /// **'Start Streaming'**
+  String get takVideoStartStream;
+
+  /// Button label to stop an active stream
+  ///
+  /// In en, this message translates to:
+  /// **'Stop Streaming'**
+  String get takVideoStopStream;
+
+  /// Button label to end and clean up a stream
+  ///
+  /// In en, this message translates to:
+  /// **'End Stream'**
+  String get takVideoEndStream;
+
+  /// Status message when camera is being initialized
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing camera...'**
+  String get takVideoPreparing;
+
+  /// Status message when stream is being registered with backend
+  ///
+  /// In en, this message translates to:
+  /// **'Registering stream...'**
+  String get takVideoRegistering;
+
+  /// Status badge text when stream is actively broadcasting
+  ///
+  /// In en, this message translates to:
+  /// **'LIVE'**
+  String get takVideoLive;
+
+  /// Status message when publisher is attempting to reconnect
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnecting...'**
+  String get takVideoReconnecting;
+
+  /// Status message when streaming has failed
+  ///
+  /// In en, this message translates to:
+  /// **'Stream failed'**
+  String get takVideoFailed;
+
+  /// Status message when stream has ended normally
+  ///
+  /// In en, this message translates to:
+  /// **'Stream ended'**
+  String get takVideoEnded;
+
+  /// Status message when publisher is idle and ready
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to stream'**
+  String get takVideoIdle;
+
+  /// Title for empty state when no live streams are available
+  ///
+  /// In en, this message translates to:
+  /// **'No Live Streams'**
+  String get takVideoEmptyTitle;
+
+  /// Description for empty state when no streams are found
+  ///
+  /// In en, this message translates to:
+  /// **'There are no active video streams at the moment.'**
+  String get takVideoEmptyDescription;
+
+  /// Button label to refresh the stream list
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get takVideoRefresh;
+
+  /// Status message when stream list is being loaded
+  ///
+  /// In en, this message translates to:
+  /// **'Loading streams...'**
+  String get takVideoLoading;
+
+  /// Count of active live streams
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 live stream} other{{count} live streams}}'**
+  String takVideoStreamCount(int count);
+
+  /// Button label to watch a live stream
+  ///
+  /// In en, this message translates to:
+  /// **'Watch Stream'**
+  String get takVideoWatchStream;
+
+  /// Title for the video player screen
+  ///
+  /// In en, this message translates to:
+  /// **'Live Stream'**
+  String get takVideoPlayerTitle;
+
+  /// Status message when video player is loading
+  ///
+  /// In en, this message translates to:
+  /// **'Loading stream...'**
+  String get takVideoPlayerLoading;
+
+  /// Message when the stream being watched has ended
+  ///
+  /// In en, this message translates to:
+  /// **'Stream has ended'**
+  String get takVideoPlayerEnded;
+
+  /// Message when video player encounters an error
+  ///
+  /// In en, this message translates to:
+  /// **'Playback error'**
+  String get takVideoPlayerError;
+
+  /// Message when camera/mic permissions are not granted
+  ///
+  /// In en, this message translates to:
+  /// **'Camera and microphone permissions are required to stream.'**
+  String get takVideoPermissionRequired;
+
+  /// Message when user needs to sign in for video streaming
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to use video streaming.'**
+  String get takVideoAuthRequired;
+
+  /// Attribution text showing who is streaming
+  ///
+  /// In en, this message translates to:
+  /// **'by {callsign}'**
+  String takVideoStreamBy(String callsign);
+
+  /// Button label to retry a failed operation
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get takVideoRetry;
+
+  /// Button label to create a new stream from empty state
+  ///
+  /// In en, this message translates to:
+  /// **'New Stream'**
+  String get takVideoNewStream;
 }
 
 class _AppLocalizationsDelegate
