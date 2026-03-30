@@ -9253,9 +9253,9 @@
     "@mesh3dShowConnections": {
         "description": "Menu item to show connection lines"
     },
-    "mesh3dStatActive": "Active",
-    "@mesh3dStatActive": {
-        "description": "Stats card label: active node count"
+    "mesh3dStatOnline": "Online",
+    "@mesh3dStatOnline": {
+        "description": "Stats card label: online node count"
     },
     "mesh3dStatChUtil": "Ch Util",
     "@mesh3dStatChUtil": {
@@ -11042,6 +11042,10 @@
     "@messagingFilterActive": {
         "description": "Label for the Active filter chip in the contacts list."
     },
+    "messagingFilterOnline": "Online",
+    "@messagingFilterOnline": {
+        "description": "Label for the Online filter chip in the contacts list (heard within 2 hours)."
+    },
     "messagingFilterAll": "All",
     "@messagingFilterAll": {
         "description": "Label for the All filter chip in the contacts list."
@@ -11220,17 +11224,17 @@
     "@messagingSearchMessages": {
         "description": "Tooltip for the icon button that opens the message search bar."
     },
-    "messagingSectionActive": "Active",
+    "messagingSectionActive": "Online",
     "@messagingSectionActive": {
-        "description": "Section header for recently active contacts."
+        "description": "Section header for online contacts (heard within 2 hours)."
     },
     "messagingSectionFavorites": "Favorites",
     "@messagingSectionFavorites": {
         "description": "Section header for favorite contacts in the contact list."
     },
-    "messagingSectionInactive": "Inactive",
+    "messagingSectionInactive": "Offline",
     "@messagingSectionInactive": {
-        "description": "Section header for inactive contacts."
+        "description": "Section header for offline contacts (not heard within 2 hours)."
     },
     "messagingSectionUnread": "Unread",
     "@messagingSectionUnread": {
@@ -25495,19 +25499,19 @@
             }
         }
     },
-    "widgetBuilderBindingActiveMeshNodes": "Active Mesh Nodes",
+    "widgetBuilderBindingActiveMeshNodes": "Online Mesh Nodes",
     "@widgetBuilderBindingActiveMeshNodes": {
         "description": "Data binding label"
     },
-    "widgetBuilderBindingActiveMeshNodesDesc": "Nodes heard recently",
+    "widgetBuilderBindingActiveMeshNodesDesc": "Nodes heard within 2 hours",
     "@widgetBuilderBindingActiveMeshNodesDesc": {
         "description": "Data binding description"
     },
-    "widgetBuilderBindingActiveMeshNodesLegacy": "Active Mesh Nodes (legacy)",
+    "widgetBuilderBindingActiveMeshNodesLegacy": "Online Mesh Nodes (legacy)",
     "@widgetBuilderBindingActiveMeshNodesLegacy": {
         "description": "Data binding label"
     },
-    "widgetBuilderBindingActiveMeshNodesLegacyDesc": "Alias for active node count (back-compat)",
+    "widgetBuilderBindingActiveMeshNodesLegacyDesc": "Alias for online node count (back-compat)",
     "@widgetBuilderBindingActiveMeshNodesLegacyDesc": {
         "description": "Data binding description"
     },
@@ -38354,7 +38358,7 @@
     "@helpNodesIntroBubble": {
         "description": "Help bubble text for step nodes_intro"
     },
-    "helpNodesStatusBubble": "**Green dot** means **Active** (heard very recently). **Yellow** means **Seen recently**. **Gray** means **Inactive**. LoRa has no offline signal—status is inferred.",
+    "helpNodesStatusBubble": "**Green dot** means **Online** (heard recently). **Yellow** means **Seen recently**. **Gray** means **Offline**. LoRa has no offline signal—status is inferred.",
     "@helpNodesStatusBubble": {
         "description": "Help bubble text for step nodes_status"
     },
@@ -38362,7 +38366,7 @@
     "@helpNodesInfoBubble": {
         "description": "Help bubble text for step nodes_info"
     },
-    "helpNodesFiltersBubble": "Use the **filters** at the top to find specific nodes. You can show only **Active** nodes, favorites, or nodes with GPS.",
+    "helpNodesFiltersBubble": "Use the **filters** at the top to find specific nodes. You can show only **Online** nodes, favorites, or nodes with GPS.",
     "@helpNodesFiltersBubble": {
         "description": "Help bubble text for step nodes_filters"
     },
@@ -38474,7 +38478,7 @@
     "@helpMapMeasureBubble": {
         "description": "Help bubble text for step map_measure"
     },
-    "helpMapFiltersBubble": "Use **filters** to show only **Active** nodes, or nodes with GPS. Helps when your map gets crowded!",
+    "helpMapFiltersBubble": "Use **filters** to show only **Online** nodes, or nodes with GPS. Helps when your map gets crowded!",
     "@helpMapFiltersBubble": {
         "description": "Help bubble text for step map_filters"
     },
@@ -38818,15 +38822,15 @@
     "@helpPresenceIntroBubble": {
         "description": "Help bubble text for step presence_intro"
     },
-    "helpPresenceActiveBubble": "**Active** nodes (green) sent a message in the last 2 minutes. They're definitely online!",
+    "helpPresenceActiveBubble": "**Online** nodes (green) were heard within the last 2 hours — matching the Meshtastic firmware definition of online.",
     "@helpPresenceActiveBubble": {
         "description": "Help bubble text for step presence_active"
     },
-    "helpPresenceRecentBubble": "**Recently seen** nodes (yellow) were active 2-10 minutes ago. Probably still around.",
+    "helpPresenceRecentBubble": "**Recently seen** nodes (yellow) were heard a few minutes ago. Probably still around.",
     "@helpPresenceRecentBubble": {
         "description": "Help bubble text for step presence_recent"
     },
-    "helpPresenceInactiveBubble": "**Inactive** nodes (gray) haven't been heard from in over 10 minutes. They might be out of range or powered off.",
+    "helpPresenceInactiveBubble": "**Offline** nodes (gray) haven't been heard from in over 2 hours. They might be out of range or powered off.",
     "@helpPresenceInactiveBubble": {
         "description": "Help bubble text for step presence_inactive"
     },

@@ -572,17 +572,17 @@ class BindingRegistry {
     ),
     BindingDefinition(
       path: 'network.activeCount',
-      label: 'Active Mesh Nodes', // lint-allow: hardcoded-string
-      description: 'Nodes heard recently', // lint-allow: hardcoded-string
+      label: 'Online Mesh Nodes', // lint-allow: hardcoded-string
+      description: 'Nodes heard within 2 hours', // lint-allow: hardcoded-string
       category: BindingCategory.network,
       valueType: int,
     ),
     // Back-compat alias for older widgets
     BindingDefinition(
       path: 'network.onlineNodes',
-      label: 'Active Mesh Nodes (legacy)', // lint-allow: hardcoded-string
+      label: 'Online Mesh Nodes (legacy)', // lint-allow: hardcoded-string
       description:
-          'Alias for active node count (back-compat)', // lint-allow: hardcoded-string
+          'Alias for online node count (back-compat)', // lint-allow: hardcoded-string
       category: BindingCategory.network,
       valueType: int,
     ),
@@ -1242,7 +1242,7 @@ class DataBindingEngine {
       case 'presenceConfidence':
         return node.presenceConfidence.name;
       case 'isOnline': // Back-compat for older widgets
-        return node.presenceConfidence.isActive;
+        return PresenceCalculator.isOnline(node.lastHeard, now: DateTime.now());
       case 'isFavorite':
         return node.isFavorite;
       case 'lastHeard':
@@ -1386,11 +1386,19 @@ class DataBindingEngine {
       case 'activeCount':
         final nodes = _allNodes;
         if (nodes == null) return 0;
-        return nodes.values.where((n) => n.presenceConfidence.isActive).length;
+        final now = DateTime.now();
+        return nodes.values
+            .where((n) => PresenceCalculator.isOnline(n.lastHeard, now: now))
+            .length;
       case 'onlineNodes': // Back-compat for older widgets
         final nodes = _allNodes;
         if (nodes == null) return 0;
-        return nodes.values.where((n) => n.presenceConfidence.isActive).length;
+        final nowLegacy = DateTime.now();
+        return nodes.values
+            .where(
+              (n) => PresenceCalculator.isOnline(n.lastHeard, now: nowLegacy),
+            )
+            .length;
       case 'unreadMessages':
         // This would need to be tracked elsewhere
         return 0;

@@ -6867,7 +6867,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mesh3dShowConnections => 'Show Connections';
 
   @override
-  String get mesh3dStatActive => 'Active';
+  String get mesh3dStatOnline => 'Online';
 
   @override
   String get mesh3dStatChUtil => 'Ch Util';
@@ -8195,6 +8195,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get messagingFilterActive => 'Active';
 
   @override
+  String get messagingFilterOnline => 'Online';
+
+  @override
   String get messagingFilterAll => 'All';
 
   @override
@@ -8318,13 +8321,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get messagingSearchMessages => 'Search Messages';
 
   @override
-  String get messagingSectionActive => 'Active';
+  String get messagingSectionActive => 'Online';
 
   @override
   String get messagingSectionFavorites => 'Favorites';
 
   @override
-  String get messagingSectionInactive => 'Inactive';
+  String get messagingSectionInactive => 'Offline';
 
   @override
   String get messagingSectionUnread => 'Unread';
@@ -18551,18 +18554,19 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get widgetBuilderBindingActiveMeshNodes => 'Active Mesh Nodes';
+  String get widgetBuilderBindingActiveMeshNodes => 'Online Mesh Nodes';
 
   @override
-  String get widgetBuilderBindingActiveMeshNodesDesc => 'Nodes heard recently';
+  String get widgetBuilderBindingActiveMeshNodesDesc =>
+      'Nodes heard within 2 hours';
 
   @override
   String get widgetBuilderBindingActiveMeshNodesLegacy =>
-      'Active Mesh Nodes (legacy)';
+      'Online Mesh Nodes (legacy)';
 
   @override
   String get widgetBuilderBindingActiveMeshNodesLegacyDesc =>
-      'Alias for active node count (back-compat)';
+      'Alias for online node count (back-compat)';
 
   @override
   String get widgetBuilderBindingAirtimeTx => 'Airtime TX';
@@ -28327,7 +28331,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpNodesStatusBubble =>
-      '**Green dot** means **Active** (heard very recently). **Yellow** means **Seen recently**. **Gray** means **Inactive**. LoRa has no offline signal—status is inferred.';
+      '**Green dot** means **Online** (heard recently). **Yellow** means **Seen recently**. **Gray** means **Offline**. LoRa has no offline signal—status is inferred.';
 
   @override
   String get helpNodesInfoBubble =>
@@ -28335,7 +28339,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpNodesFiltersBubble =>
-      'Use the **filters** at the top to find specific nodes. You can show only **Active** nodes, favorites, or nodes with GPS.';
+      'Use the **filters** at the top to find specific nodes. You can show only **Online** nodes, favorites, or nodes with GPS.';
 
   @override
   String get helpNodesActionsBubble =>
@@ -28447,7 +28451,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpMapFiltersBubble =>
-      'Use **filters** to show only **Active** nodes, or nodes with GPS. Helps when your map gets crowded!';
+      'Use **filters** to show only **Online** nodes, or nodes with GPS. Helps when your map gets crowded!';
 
   @override
   String get helpChannelsIntroBubble =>
@@ -28791,15 +28795,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpPresenceActiveBubble =>
-      '**Active** nodes (green) sent a message in the last 2 minutes. They\'re definitely online!';
+      '**Online** nodes (green) were heard within the last 2 hours — matching the Meshtastic firmware definition of online.';
 
   @override
   String get helpPresenceRecentBubble =>
-      '**Recently seen** nodes (yellow) were active 2-10 minutes ago. Probably still around.';
+      '**Recently seen** nodes (yellow) were heard a few minutes ago. Probably still around.';
 
   @override
   String get helpPresenceInactiveBubble =>
-      '**Inactive** nodes (gray) haven\'t been heard from in over 10 minutes. They might be out of range or powered off.';
+      '**Offline** nodes (gray) haven\'t been heard from in over 2 hours. They might be out of range or powered off.';
 
   @override
   String get helpPresenceChartBubble =>

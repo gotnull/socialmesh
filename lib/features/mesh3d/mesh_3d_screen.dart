@@ -336,7 +336,6 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
 
     final stats = Mesh3DStats.fromNodes(
       nodes: allNodes,
-      presenceMap: _presenceMap,
       channelUtil: channelUtil,
     );
 

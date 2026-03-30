@@ -152,6 +152,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
           avatarColor: node.avatarColor,
           presence: presenceConfidenceFor(presenceMap, node),
           lastHeardAge: lastHeardAgeFor(presenceMap, node),
+          lastHeard: node.lastHeard,
           isFavorite: node.isFavorite,
           lastMessage: dmInfo?.lastMessage,
           lastMessageTime: dmInfo?.lastMessageTime,
@@ -184,6 +185,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
     }
 
     // Sort: favorites first, then unread, then online, then by name
+    final now = DateTime.now();
     contacts.sort((a, b) {
       // Favorites first
       if (a.isFavorite != b.isFavorite) {
@@ -192,9 +194,11 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
       // Unread messages next
       if (a.unreadCount > 0 && b.unreadCount == 0) return -1;
       if (b.unreadCount > 0 && a.unreadCount == 0) return 1;
-      // Then active nodes
-      if (a.presence.isActive != b.presence.isActive) {
-        return a.presence.isActive ? -1 : 1;
+      // Then online nodes (heard within 2-hour window)
+      final aOnline = PresenceCalculator.isOnline(a.lastHeard, now: now);
+      final bOnline = PresenceCalculator.isOnline(b.lastHeard, now: now);
+      if (aOnline != bOnline) {
+        return aOnline ? -1 : 1;
       }
       // Then alphabetically
       return a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase());
@@ -204,7 +208,9 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
     final favoritesCount = contacts.where((c) => c.isFavorite).length;
     final messagedCount = contacts.where((c) => c.hasMessages).length;
     final unreadCount = contacts.where((c) => c.unreadCount > 0).length;
-    final activeCount = contacts.where((c) => c.presence.isActive).length;
+    final activeCount = contacts
+        .where((c) => PresenceCalculator.isOnline(c.lastHeard, now: now))
+        .length;
 
     // Apply filter
     var filteredContacts = contacts;
@@ -221,7 +227,9 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
         filteredContacts = contacts.where((c) => c.unreadCount > 0).toList();
         break;
       case ContactFilter.active:
-        filteredContacts = contacts.where((c) => c.presence.isActive).toList();
+        filteredContacts = contacts
+            .where((c) => PresenceCalculator.isOnline(c.lastHeard, now: now))
+            .toList();
         break;
     }
 
@@ -283,7 +291,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
                 onTap: () => setState(() => _currentFilter = ContactFilter.all),
               ),
               StatusFilterChip(
-                label: context.l10n.messagingFilterActive,
+                label: context.l10n.messagingFilterOnline,
                 count: activeCount,
                 isSelected: _currentFilter == ContactFilter.active,
                 color: AccentColors.green,
@@ -517,18 +525,25 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
   }
 
   List<_ContactSection> _groupContactsIntoSections(List<_Contact> contacts) {
+    final now = DateTime.now();
     final favorites = contacts.where((c) => c.isFavorite).toList();
     final unread = contacts
         .where((c) => !c.isFavorite && c.unreadCount > 0)
         .toList();
-    final active = contacts
+    final online = contacts
         .where(
-          (c) => !c.isFavorite && c.unreadCount == 0 && c.presence.isActive,
+          (c) =>
+              !c.isFavorite &&
+              c.unreadCount == 0 &&
+              PresenceCalculator.isOnline(c.lastHeard, now: now),
         )
         .toList();
-    final inactive = contacts
+    final offline = contacts
         .where(
-          (c) => !c.isFavorite && c.unreadCount == 0 && !c.presence.isActive,
+          (c) =>
+              !c.isFavorite &&
+              c.unreadCount == 0 &&
+              !PresenceCalculator.isOnline(c.lastHeard, now: now),
         )
         .toList();
 
@@ -537,10 +552,10 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
         _ContactSection(context.l10n.messagingSectionFavorites, favorites),
       if (unread.isNotEmpty)
         _ContactSection(context.l10n.messagingSectionUnread, unread),
-      if (active.isNotEmpty)
-        _ContactSection(context.l10n.messagingSectionActive, active),
-      if (inactive.isNotEmpty)
-        _ContactSection(context.l10n.messagingSectionInactive, inactive),
+      if (online.isNotEmpty)
+        _ContactSection(context.l10n.messagingSectionActive, online),
+      if (offline.isNotEmpty)
+        _ContactSection(context.l10n.messagingSectionInactive, offline),
     ];
   }
 }
@@ -589,6 +604,7 @@ class _Contact {
   final int? avatarColor;
   final PresenceConfidence presence;
   final Duration? lastHeardAge;
+  final DateTime? lastHeard;
   final bool isFavorite;
   final String? lastMessage;
   final DateTime? lastMessageTime;
@@ -601,6 +617,7 @@ class _Contact {
     this.avatarColor,
     this.presence = PresenceConfidence.unknown,
     this.lastHeardAge,
+    this.lastHeard,
     this.isFavorite = false,
     this.lastMessage,
     this.lastMessageTime,

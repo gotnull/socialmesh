@@ -226,7 +226,7 @@ class HelpContent {
       HelpStep(
         id: 'nodes_status',
         bubbleText:
-            "**Green dot** means **Active** (heard very recently). **Yellow** means **Seen recently**. **Gray** means **Inactive**. LoRa has no offline signal—status is inferred.",
+            "**Green dot** means **Online** (heard recently). **Yellow** means **Seen recently**. **Gray** means **Offline**. LoRa has no offline signal—status is inferred.",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
@@ -238,7 +238,7 @@ class HelpContent {
       HelpStep(
         id: 'nodes_filters',
         bubbleText:
-            "Use the **filters** at the top to find specific nodes. You can show only **Active** nodes, favorites, or nodes with GPS.",
+            "Use the **filters** at the top to find specific nodes. You can show only **Online** nodes, favorites, or nodes with GPS.",
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
@@ -502,7 +502,7 @@ class HelpContent {
       HelpStep(
         id: 'map_filters',
         bubbleText:
-            "Use **filters** to show only **Active** nodes, or nodes with GPS. Helps when your map gets crowded!",
+            "Use **filters** to show only **Online** nodes, or nodes with GPS. Helps when your map gets crowded!",
         icoMood: MeshBrainMood.playful,
       ),
     ],
@@ -1363,19 +1363,19 @@ class HelpContent {
       HelpStep(
         id: 'presence_active',
         bubbleText:
-            "**Active** nodes (green) sent a message in the last 2 minutes. They're definitely online!",
+            "**Online** nodes (green) were heard within the last 2 hours — matching the Meshtastic firmware definition of online.",
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
         id: 'presence_recent',
         bubbleText:
-            "**Recently seen** nodes (yellow) were active 2-10 minutes ago. Probably still around.",
+            "**Recently seen** nodes (yellow) were heard a few minutes ago. Probably still around.",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'presence_inactive',
         bubbleText:
-            "**Inactive** nodes (gray) haven't been heard from in over 10 minutes. They might be out of range or powered off.",
+            "**Offline** nodes (gray) haven't been heard from in over 2 hours. They might be out of range or powered off.",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(

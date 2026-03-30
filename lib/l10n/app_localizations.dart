@@ -12247,11 +12247,11 @@ abstract class AppLocalizations {
   /// **'Show Connections'**
   String get mesh3dShowConnections;
 
-  /// Stats card label: active node count
+  /// Stats card label: online node count
   ///
   /// In en, this message translates to:
-  /// **'Active'**
-  String get mesh3dStatActive;
+  /// **'Online'**
+  String get mesh3dStatOnline;
 
   /// Stats card label: channel utilization
   ///
@@ -14677,6 +14677,12 @@ abstract class AppLocalizations {
   /// **'Active'**
   String get messagingFilterActive;
 
+  /// Label for the Online filter chip in the contacts list (heard within 2 hours).
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get messagingFilterOnline;
+
   /// Label for the All filter chip in the contacts list.
   ///
   /// In en, this message translates to:
@@ -14893,10 +14899,10 @@ abstract class AppLocalizations {
   /// **'Search Messages'**
   String get messagingSearchMessages;
 
-  /// Section header for recently active contacts.
+  /// Section header for online contacts (heard within 2 hours).
   ///
   /// In en, this message translates to:
-  /// **'Active'**
+  /// **'Online'**
   String get messagingSectionActive;
 
   /// Section header for favorite contacts in the contact list.
@@ -14905,10 +14911,10 @@ abstract class AppLocalizations {
   /// **'Favorites'**
   String get messagingSectionFavorites;
 
-  /// Section header for inactive contacts.
+  /// Section header for offline contacts (not heard within 2 hours).
   ///
   /// In en, this message translates to:
-  /// **'Inactive'**
+  /// **'Offline'**
   String get messagingSectionInactive;
 
   /// Section header for contacts with unread messages.
@@ -32708,25 +32714,25 @@ abstract class AppLocalizations {
   /// Data binding label
   ///
   /// In en, this message translates to:
-  /// **'Active Mesh Nodes'**
+  /// **'Online Mesh Nodes'**
   String get widgetBuilderBindingActiveMeshNodes;
 
   /// Data binding description
   ///
   /// In en, this message translates to:
-  /// **'Nodes heard recently'**
+  /// **'Nodes heard within 2 hours'**
   String get widgetBuilderBindingActiveMeshNodesDesc;
 
   /// Data binding label
   ///
   /// In en, this message translates to:
-  /// **'Active Mesh Nodes (legacy)'**
+  /// **'Online Mesh Nodes (legacy)'**
   String get widgetBuilderBindingActiveMeshNodesLegacy;
 
   /// Data binding description
   ///
   /// In en, this message translates to:
-  /// **'Alias for active node count (back-compat)'**
+  /// **'Alias for online node count (back-compat)'**
   String get widgetBuilderBindingActiveMeshNodesLegacyDesc;
 
   /// Data binding label
@@ -50313,7 +50319,7 @@ abstract class AppLocalizations {
   /// Help bubble text for step nodes_status
   ///
   /// In en, this message translates to:
-  /// **'**Green dot** means **Active** (heard very recently). **Yellow** means **Seen recently**. **Gray** means **Inactive**. LoRa has no offline signal—status is inferred.'**
+  /// **'**Green dot** means **Online** (heard recently). **Yellow** means **Seen recently**. **Gray** means **Offline**. LoRa has no offline signal—status is inferred.'**
   String get helpNodesStatusBubble;
 
   /// Help bubble text for step nodes_info
@@ -50325,7 +50331,7 @@ abstract class AppLocalizations {
   /// Help bubble text for step nodes_filters
   ///
   /// In en, this message translates to:
-  /// **'Use the **filters** at the top to find specific nodes. You can show only **Active** nodes, favorites, or nodes with GPS.'**
+  /// **'Use the **filters** at the top to find specific nodes. You can show only **Online** nodes, favorites, or nodes with GPS.'**
   String get helpNodesFiltersBubble;
 
   /// Help bubble text for step nodes_actions
@@ -50493,7 +50499,7 @@ abstract class AppLocalizations {
   /// Help bubble text for step map_filters
   ///
   /// In en, this message translates to:
-  /// **'Use **filters** to show only **Active** nodes, or nodes with GPS. Helps when your map gets crowded!'**
+  /// **'Use **filters** to show only **Online** nodes, or nodes with GPS. Helps when your map gets crowded!'**
   String get helpMapFiltersBubble;
 
   /// Help bubble text for step channels_intro
@@ -51009,19 +51015,19 @@ abstract class AppLocalizations {
   /// Help bubble text for step presence_active
   ///
   /// In en, this message translates to:
-  /// **'**Active** nodes (green) sent a message in the last 2 minutes. They\'re definitely online!'**
+  /// **'**Online** nodes (green) were heard within the last 2 hours — matching the Meshtastic firmware definition of online.'**
   String get helpPresenceActiveBubble;
 
   /// Help bubble text for step presence_recent
   ///
   /// In en, this message translates to:
-  /// **'**Recently seen** nodes (yellow) were active 2-10 minutes ago. Probably still around.'**
+  /// **'**Recently seen** nodes (yellow) were heard a few minutes ago. Probably still around.'**
   String get helpPresenceRecentBubble;
 
   /// Help bubble text for step presence_inactive
   ///
   /// In en, this message translates to:
-  /// **'**Inactive** nodes (gray) haven\'t been heard from in over 10 minutes. They might be out of range or powered off.'**
+  /// **'**Offline** nodes (gray) haven\'t been heard from in over 2 hours. They might be out of range or powered off.'**
   String get helpPresenceInactiveBubble;
 
   /// Help bubble text for step presence_chart

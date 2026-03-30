@@ -6944,7 +6944,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get mesh3dShowConnections => 'Mostra connessioni';
 
   @override
-  String get mesh3dStatActive => 'Attivi';
+  String get mesh3dStatOnline => 'Online';
 
   @override
   String get mesh3dStatChUtil => 'Util. canale';
@@ -8287,6 +8287,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get messagingFilterActive => 'Attivi';
 
   @override
+  String get messagingFilterOnline => 'Online';
+
+  @override
   String get messagingFilterAll => 'Tutti';
 
   @override
@@ -8412,13 +8415,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get messagingSearchMessages => 'Cerca messaggi';
 
   @override
-  String get messagingSectionActive => 'Attivi';
+  String get messagingSectionActive => 'Online';
 
   @override
   String get messagingSectionFavorites => 'Preferiti';
 
   @override
-  String get messagingSectionInactive => 'Inattivi';
+  String get messagingSectionInactive => 'Offline';
 
   @override
   String get messagingSectionUnread => 'Non letti';
@@ -18752,19 +18755,19 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String get widgetBuilderBindingActiveMeshNodes => 'Nodi mesh attivi';
+  String get widgetBuilderBindingActiveMeshNodes => 'Nodi mesh online';
 
   @override
   String get widgetBuilderBindingActiveMeshNodesDesc =>
-      'Nodi contattati di recente';
+      'Nodi contattati nelle ultime 2 ore';
 
   @override
   String get widgetBuilderBindingActiveMeshNodesLegacy =>
-      'Nodi mesh attivi (legacy)';
+      'Nodi mesh online (legacy)';
 
   @override
   String get widgetBuilderBindingActiveMeshNodesLegacyDesc =>
-      'Alias per il conteggio nodi attivi (retrocompatibilità)';
+      'Alias per il conteggio nodi online (retrocompatibilità)';
 
   @override
   String get widgetBuilderBindingAirtimeTx => 'Airtime TX';
@@ -28659,7 +28662,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get helpNodesStatusBubble =>
-      '**Punto verde** significa **Attivo** (sentito molto di recente). **Giallo** significa **Visto di recente**. **Grigio** significa **Inattivo**. LoRa non ha un segnale offline — lo stato è dedotto.';
+      '**Punto verde** significa **Online** (sentito di recente). **Giallo** significa **Visto di recente**. **Grigio** significa **Offline**. LoRa non ha un segnale offline — lo stato è dedotto.';
 
   @override
   String get helpNodesInfoBubble =>
@@ -28667,7 +28670,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get helpNodesFiltersBubble =>
-      'Usa i **filtri** in alto per trovare nodi specifici. Puoi mostrare solo i nodi **Attivi**, preferiti o con GPS.';
+      'Usa i **filtri** in alto per trovare nodi specifici. Puoi mostrare solo i nodi **Online**, preferiti o con GPS.';
 
   @override
   String get helpNodesActionsBubble =>
@@ -28779,7 +28782,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get helpMapFiltersBubble =>
-      'Usa i **filtri** per mostrare solo i nodi **Attivi** o con GPS. Utile quando la mappa è affollata!';
+      'Usa i **filtri** per mostrare solo i nodi **Online** o con GPS. Utile quando la mappa è affollata!';
 
   @override
   String get helpChannelsIntroBubble =>
@@ -29123,15 +29126,15 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get helpPresenceActiveBubble =>
-      'I nodi **attivi** (verde) hanno inviato un messaggio negli ultimi 2 minuti. Sono sicuramente online!';
+      'I nodi **online** (verde) sono stati sentiti nelle ultime 2 ore — in linea con la definizione del firmware Meshtastic.';
 
   @override
   String get helpPresenceRecentBubble =>
-      'I nodi **visti di recente** (giallo) erano attivi 2-10 minuti fa. Probabilmente ancora presenti.';
+      'I nodi **visti di recente** (giallo) sono stati sentiti pochi minuti fa. Probabilmente ancora presenti.';
 
   @override
   String get helpPresenceInactiveBubble =>
-      'I nodi **inattivi** (grigio) non sono stati sentiti da oltre 10 minuti. Potrebbero essere fuori portata o spenti.';
+      'I nodi **offline** (grigio) non sono stati sentiti da oltre 2 ore. Potrebbero essere fuori portata o spenti.';
 
   @override
   String get helpPresenceChartBubble =>

@@ -58,6 +58,7 @@ class _Contact {
   final int? avatarColor;
   final PresenceConfidence presence;
   final Duration? lastHeardAge;
+  final DateTime? lastHeard;
   final bool isFavorite;
 
   // Transfer stats (0 when no transfers yet)
@@ -76,6 +77,7 @@ class _Contact {
     this.avatarColor,
     this.presence = PresenceConfidence.unknown,
     this.lastHeardAge,
+    this.lastHeard,
     this.isFavorite = false,
     this.transferCount = 0,
     this.sentCount = 0,
@@ -88,6 +90,8 @@ class _Contact {
 
   bool get hasTransfers => transferCount > 0;
   bool get hasActiveTransfers => activeTransferCount > 0;
+  bool get isOnline =>
+      PresenceCalculator.isOnline(lastHeard, now: DateTime.now());
 }
 
 // ---------------------------------------------------------------------------
@@ -165,6 +169,7 @@ class _FileTransferContactsScreenState
           avatarColor: node.avatarColor,
           presence: presenceConfidenceFor(presenceMap, node),
           lastHeardAge: lastHeardAgeFor(presenceMap, node),
+          lastHeard: node.lastHeard,
           isFavorite: node.isFavorite,
           transferCount: acc?.transferCount ?? 0,
           sentCount: acc?.sentCount ?? 0,
@@ -201,15 +206,15 @@ class _FileTransferContactsScreenState
     contacts.sort((a, b) {
       if (a.hasTransfers != b.hasTransfers) return a.hasTransfers ? -1 : 1;
       if (a.isFavorite != b.isFavorite) return a.isFavorite ? -1 : 1;
-      if (a.presence.isActive != b.presence.isActive) {
-        return a.presence.isActive ? -1 : 1;
+      if (a.isOnline != b.isOnline) {
+        return a.isOnline ? -1 : 1;
       }
       return a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase());
     });
 
     // Compute counts for filter chips
     final favoritesCount = contacts.where((c) => c.isFavorite).length;
-    final activeCount = contacts.where((c) => c.presence.isActive).length;
+    final activeCount = contacts.where((c) => c.isOnline).length;
     final hasFilesCount = contacts.where((c) => c.hasTransfers).length;
 
     // Apply filter chip
@@ -218,7 +223,7 @@ class _FileTransferContactsScreenState
       case _FileContactFilter.all:
         break;
       case _FileContactFilter.active:
-        filtered = contacts.where((c) => c.presence.isActive).toList();
+        filtered = contacts.where((c) => c.isOnline).toList();
       case _FileContactFilter.hasFiles:
         filtered = contacts.where((c) => c.hasTransfers).toList();
       case _FileContactFilter.favorites:
@@ -410,10 +415,10 @@ class _FileTransferContactsScreenState
         .where((c) => c.isFavorite && !c.hasTransfers)
         .toList();
     final active = contacts
-        .where((c) => !c.hasTransfers && !c.isFavorite && c.presence.isActive)
+        .where((c) => !c.hasTransfers && !c.isFavorite && c.isOnline)
         .toList();
     final inactive = contacts
-        .where((c) => !c.hasTransfers && !c.isFavorite && !c.presence.isActive)
+        .where((c) => !c.hasTransfers && !c.isFavorite && !c.isOnline)
         .toList();
 
     Widget buildSection(String title, List<_Contact> group) {

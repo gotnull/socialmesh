@@ -15240,7 +15240,7 @@
   "@helpMapFeaturesBubble": {
     "description": "Help bubble text for step map_features"
   },
-  "helpMapFiltersBubble": "Usa i **filtri** per mostrare solo i nodi **Attivi** o con GPS. Utile quando la mappa è affollata!",
+  "helpMapFiltersBubble": "Usa i **filtri** per mostrare solo i nodi **Online** o con GPS. Utile quando la mappa è affollata!",
   "@helpMapFiltersBubble": {
     "description": "Help bubble text for step map_filters"
   },
@@ -15558,7 +15558,7 @@
   "@helpNodesActionsBubble": {
     "description": "Help bubble text for step nodes_actions"
   },
-  "helpNodesFiltersBubble": "Usa i **filtri** in alto per trovare nodi specifici. Puoi mostrare solo i nodi **Attivi**, preferiti o con GPS.",
+  "helpNodesFiltersBubble": "Usa i **filtri** in alto per trovare nodi specifici. Puoi mostrare solo i nodi **Online**, preferiti o con GPS.",
   "@helpNodesFiltersBubble": {
     "description": "Help bubble text for step nodes_filters"
   },
@@ -15578,7 +15578,7 @@
   "@helpNodesOverviewTitle": {
     "description": "Title for nodes_overview help topic"
   },
-  "helpNodesStatusBubble": "**Punto verde** significa **Attivo** (sentito molto di recente). **Giallo** significa **Visto di recente**. **Grigio** significa **Inattivo**. LoRa non ha un segnale offline — lo stato è dedotto.",
+  "helpNodesStatusBubble": "**Punto verde** significa **Online** (sentito di recente). **Giallo** significa **Visto di recente**. **Grigio** significa **Offline**. LoRa non ha un segnale offline — lo stato è dedotto.",
   "@helpNodesStatusBubble": {
     "description": "Help bubble text for step nodes_status"
   },
@@ -15638,7 +15638,7 @@
   "@helpPositionSearchBubble": {
     "description": "Help bubble text for step position_search"
   },
-  "helpPresenceActiveBubble": "I nodi **attivi** (verde) hanno inviato un messaggio negli ultimi 2 minuti. Sono sicuramente online!",
+  "helpPresenceActiveBubble": "I nodi **online** (verde) sono stati sentiti nelle ultime 2 ore — in linea con la definizione del firmware Meshtastic.",
   "@helpPresenceActiveBubble": {
     "description": "Help bubble text for step presence_active"
   },
@@ -15646,7 +15646,7 @@
   "@helpPresenceChartBubble": {
     "description": "Help bubble text for step presence_chart"
   },
-  "helpPresenceInactiveBubble": "I nodi **inattivi** (grigio) non sono stati sentiti da oltre 10 minuti. Potrebbero essere fuori portata o spenti.",
+  "helpPresenceInactiveBubble": "I nodi **offline** (grigio) non sono stati sentiti da oltre 2 ore. Potrebbero essere fuori portata o spenti.",
   "@helpPresenceInactiveBubble": {
     "description": "Help bubble text for step presence_inactive"
   },
@@ -15662,7 +15662,7 @@
   "@helpPresenceOverviewTitle": {
     "description": "Title for presence_overview help topic"
   },
-  "helpPresenceRecentBubble": "I nodi **visti di recente** (giallo) erano attivi 2-10 minuti fa. Probabilmente ancora presenti.",
+  "helpPresenceRecentBubble": "I nodi **visti di recente** (giallo) sono stati sentiti pochi minuti fa. Probabilmente ancora presenti.",
   "@helpPresenceRecentBubble": {
     "description": "Help bubble text for step presence_recent"
   },
@@ -18134,9 +18134,9 @@
   "@mesh3dShowConnections": {
     "description": "Menu item to show connection lines"
   },
-  "mesh3dStatActive": "Attivi",
-  "@mesh3dStatActive": {
-    "description": "Stats card label: active node count"
+  "mesh3dStatOnline": "Online",
+  "@mesh3dStatOnline": {
+    "description": "Stats card label: online node count"
   },
   "mesh3dStatChUtil": "Util. canale",
   "@mesh3dStatChUtil": {
@@ -20075,6 +20075,10 @@
   "@messagingFilterActive": {
     "description": "Label for the Active filter chip in the contacts list."
   },
+  "messagingFilterOnline": "Online",
+  "@messagingFilterOnline": {
+    "description": "Label for the Online filter chip in the contacts list (heard within 2 hours)."
+  },
   "messagingFilterAll": "Tutti",
   "@messagingFilterAll": {
     "description": "Label for the All filter chip in the contacts list."
@@ -20207,17 +20211,17 @@
   "@messagingSearchMessages": {
     "description": "Tooltip for the icon button that opens the message search bar."
   },
-  "messagingSectionActive": "Attivi",
+  "messagingSectionActive": "Online",
   "@messagingSectionActive": {
-    "description": "Section header for recently active contacts."
+    "description": "Section header for online contacts (heard within 2 hours)."
   },
   "messagingSectionFavorites": "Preferiti",
   "@messagingSectionFavorites": {
     "description": "Section header for favorite contacts in the contact list."
   },
-  "messagingSectionInactive": "Inattivi",
+  "messagingSectionInactive": "Offline",
   "@messagingSectionInactive": {
-    "description": "Section header for inactive contacts."
+    "description": "Section header for offline contacts (not heard within 2 hours)."
   },
   "messagingSectionUnread": "Non letti",
   "@messagingSectionUnread": {
@@ -38111,19 +38115,19 @@
       }
     }
   },
-  "widgetBuilderBindingActiveMeshNodes": "Nodi mesh attivi",
+  "widgetBuilderBindingActiveMeshNodes": "Nodi mesh online",
   "@widgetBuilderBindingActiveMeshNodes": {
     "description": "Data binding label"
   },
-  "widgetBuilderBindingActiveMeshNodesDesc": "Nodi contattati di recente",
+  "widgetBuilderBindingActiveMeshNodesDesc": "Nodi contattati nelle ultime 2 ore",
   "@widgetBuilderBindingActiveMeshNodesDesc": {
     "description": "Data binding description"
   },
-  "widgetBuilderBindingActiveMeshNodesLegacy": "Nodi mesh attivi (legacy)",
+  "widgetBuilderBindingActiveMeshNodesLegacy": "Nodi mesh online (legacy)",
   "@widgetBuilderBindingActiveMeshNodesLegacy": {
     "description": "Data binding label"
   },
-  "widgetBuilderBindingActiveMeshNodesLegacyDesc": "Alias per il conteggio nodi attivi (retrocompatibilità)",
+  "widgetBuilderBindingActiveMeshNodesLegacyDesc": "Alias per il conteggio nodi online (retrocompatibilità)",
   "@widgetBuilderBindingActiveMeshNodesLegacyDesc": {
     "description": "Data binding description"
   },

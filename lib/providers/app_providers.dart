@@ -2638,12 +2638,7 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
   int _activeNodeCount(Map<int, MeshNode> nodes) {
     final now = DateTime.now();
     return nodes.values
-        .where(
-          (node) => PresenceCalculator.fromLastHeard(
-            node.lastHeard,
-            now: now,
-          ).isActive,
-        )
+        .where((node) => PresenceCalculator.isOnline(node.lastHeard, now: now))
         .length;
   }
 

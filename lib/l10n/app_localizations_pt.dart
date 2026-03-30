@@ -6931,7 +6931,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get mesh3dShowConnections => 'Mostrar conexões';
 
   @override
-  String get mesh3dStatActive => 'Ativos';
+  String get mesh3dStatOnline => 'Online';
 
   @override
   String get mesh3dStatChUtil => 'Util. canal';
@@ -8277,6 +8277,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get messagingFilterActive => 'Ativos';
 
   @override
+  String get messagingFilterOnline => 'Online';
+
+  @override
   String get messagingFilterAll => 'Todos';
 
   @override
@@ -8401,13 +8404,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get messagingSearchMessages => 'Pesquisar mensagens';
 
   @override
-  String get messagingSectionActive => 'Ativos';
+  String get messagingSectionActive => 'Online';
 
   @override
   String get messagingSectionFavorites => 'Favoritos';
 
   @override
-  String get messagingSectionInactive => 'Inativos';
+  String get messagingSectionInactive => 'Offline';
 
   @override
   String get messagingSectionUnread => 'Não lidas';
@@ -18733,19 +18736,19 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get widgetBuilderBindingActiveMeshNodes => 'Nós mesh ativos';
+  String get widgetBuilderBindingActiveMeshNodes => 'Nós mesh online';
 
   @override
   String get widgetBuilderBindingActiveMeshNodesDesc =>
-      'Nós contatados recentemente';
+      'Nós contatados nas últimas 2 horas';
 
   @override
   String get widgetBuilderBindingActiveMeshNodesLegacy =>
-      'Nós mesh ativos (legacy)';
+      'Nós mesh online (legacy)';
 
   @override
   String get widgetBuilderBindingActiveMeshNodesLegacyDesc =>
-      'Alias para contagem de nós ativos (retrocompatibilidade)';
+      'Alias para contagem de nós online (retrocompatibilidade)';
 
   @override
   String get widgetBuilderBindingAirtimeTx => 'Tempo de Antena TX';
@@ -28635,7 +28638,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpNodesStatusBubble =>
-      '**Ponto verde** significa **Ativo** (ouvido muito recentemente). **Amarelo** significa **Visto recentemente**. **Cinza** significa **Inativo**. LoRa não tem sinal offline — o status é inferido.';
+      '**Ponto verde** significa **Online** (ouvido recentemente). **Amarelo** significa **Visto recentemente**. **Cinza** significa **Offline**. LoRa não tem sinal offline — o status é inferido.';
 
   @override
   String get helpNodesInfoBubble =>
@@ -28643,7 +28646,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpNodesFiltersBubble =>
-      'Use os **filtros** no topo para encontrar nós específicos. Você pode mostrar apenas nós **Ativos**, favoritos ou com GPS.';
+      'Use os **filtros** no topo para encontrar nós específicos. Você pode mostrar apenas nós **Online**, favoritos ou com GPS.';
 
   @override
   String get helpNodesActionsBubble =>
@@ -28755,7 +28758,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpMapFiltersBubble =>
-      'Use os **filtros** para mostrar apenas nós **Ativos** ou com GPS. Ajuda quando o mapa está cheio!';
+      'Use os **filtros** para mostrar apenas nós **Online** ou com GPS. Ajuda quando o mapa está cheio!';
 
   @override
   String get helpChannelsIntroBubble =>
@@ -29099,15 +29102,15 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpPresenceActiveBubble =>
-      'Nós **ativos** (verde) enviaram uma mensagem nos últimos 2 minutos. Estão definitivamente online!';
+      'Nós **online** (verde) foram ouvidos nas últimas 2 horas — correspondendo à definição de online do firmware Meshtastic.';
 
   @override
   String get helpPresenceRecentBubble =>
-      'Nós **vistos recentemente** (amarelo) estavam ativos 2-10 minutos atrás. Provavelmente ainda presentes.';
+      'Nós **vistos recentemente** (amarelo) foram ouvidos há poucos minutos. Provavelmente ainda presentes.';
 
   @override
   String get helpPresenceInactiveBubble =>
-      'Nós **inativos** (cinza) não foram ouvidos há mais de 10 minutos. Podem estar fora de alcance ou desligados.';
+      'Nós **offline** (cinza) não foram ouvidos há mais de 2 horas. Podem estar fora de alcance ou desligados.';
 
   @override
   String get helpPresenceChartBubble =>
