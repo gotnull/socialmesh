@@ -280,7 +280,7 @@ void main() {
           firedEvents.add(event);
         });
 
-        bridge.processOnResume();
+        await bridge.processOnResume();
 
         // Clean up
         await subscription.cancel();

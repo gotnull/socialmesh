@@ -567,7 +567,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       final bridgeAsync = ref.read(schedulerBridgeInitProvider);
       if (bridgeAsync.hasValue) {
         final bridge = bridgeAsync.value!;
-        bridge.processOnResume();
+        unawaited(bridge.processOnResume());
         AppLogging.automations('Processed scheduled automations on resume');
       }
     } catch (e) {
