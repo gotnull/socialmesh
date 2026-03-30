@@ -11449,7 +11449,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nodesScreenEmptyFiltered => 'No nodes match this filter';
 
   @override
-  String get nodesScreenFilterActive => 'Active';
+  String get nodesScreenFilterActive => 'Online';
 
   @override
   String get nodesScreenFilterAll => 'All';
@@ -11458,7 +11458,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nodesScreenFilterFavorites => 'Favorites';
 
   @override
-  String get nodesScreenFilterInactive => 'Inactive';
+  String get nodesScreenFilterInactive => 'Offline';
 
   @override
   String get nodesScreenFilterMqtt => 'MQTT';

@@ -11561,7 +11561,7 @@ class AppLocalizationsIt extends AppLocalizations {
       'Nessun nodo corrisponde a questo filtro';
 
   @override
-  String get nodesScreenFilterActive => 'Attivi';
+  String get nodesScreenFilterActive => 'Online';
 
   @override
   String get nodesScreenFilterAll => 'Tutti';
@@ -11570,7 +11570,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get nodesScreenFilterFavorites => 'Preferiti';
 
   @override
-  String get nodesScreenFilterInactive => 'Inattivi';
+  String get nodesScreenFilterInactive => 'Offline';
 
   @override
   String get nodesScreenFilterMqtt => 'MQTT';

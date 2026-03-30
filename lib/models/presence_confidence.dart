@@ -217,6 +217,11 @@ class PresenceThresholds {
   /// Heard within this window is treated as stale (likely offline).
   static const Duration staleWindow = Duration(minutes: 60);
 
+  /// Nodes heard within this window are considered "online" (reachable on
+  /// the mesh). Matches the Meshtastic firmware default of `online_secs`
+  /// (7200 s = 2 h).
+  static const Duration onlineWindow = Duration(hours: 2);
+
   const PresenceThresholds();
 }
 
@@ -240,6 +245,16 @@ class PresenceCalculator {
       return PresenceConfidence.stale;
     }
     return PresenceConfidence.unknown;
+  }
+
+  /// Whether a node should be considered **online** (heard within the
+  /// Meshtastic firmware online window of 2 hours).
+  ///
+  /// This is intentionally broader than [fromLastHeard] which classifies
+  /// presence into fine-grained tiers (active/fading/stale/unknown).
+  static bool isOnline(DateTime? lastHeard, {required DateTime now}) {
+    if (lastHeard == null) return false;
+    return now.difference(lastHeard) <= PresenceThresholds.onlineWindow;
   }
 }
 

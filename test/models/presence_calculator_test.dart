@@ -53,4 +53,96 @@ void main() {
       );
     },
   );
+
+  group('PresenceCalculator.isOnline (2-hour Meshtastic online window)', () {
+    test('null lastHeard is not online', () {
+      expect(PresenceCalculator.isOnline(null, now: DateTime.now()), isFalse);
+    });
+
+    test('heard just now is online', () {
+      final now = DateTime.now();
+      expect(PresenceCalculator.isOnline(now, now: now), isTrue);
+    });
+
+    test('heard 1 minute ago is online', () {
+      final now = DateTime.now();
+      expect(
+        PresenceCalculator.isOnline(
+          now.subtract(const Duration(minutes: 1)),
+          now: now,
+        ),
+        isTrue,
+      );
+    });
+
+    test('heard 30 minutes ago is online', () {
+      final now = DateTime.now();
+      expect(
+        PresenceCalculator.isOnline(
+          now.subtract(const Duration(minutes: 30)),
+          now: now,
+        ),
+        isTrue,
+      );
+    });
+
+    test('heard 90 minutes ago is online', () {
+      final now = DateTime.now();
+      expect(
+        PresenceCalculator.isOnline(
+          now.subtract(const Duration(minutes: 90)),
+          now: now,
+        ),
+        isTrue,
+      );
+    });
+
+    test('heard exactly 2 hours ago is online (boundary)', () {
+      final now = DateTime.now();
+      expect(
+        PresenceCalculator.isOnline(
+          now.subtract(const Duration(hours: 2)),
+          now: now,
+        ),
+        isTrue,
+      );
+    });
+
+    test('heard 2 hours and 1 second ago is not online', () {
+      final now = DateTime.now();
+      expect(
+        PresenceCalculator.isOnline(
+          now.subtract(const Duration(hours: 2, seconds: 1)),
+          now: now,
+        ),
+        isFalse,
+      );
+    });
+
+    test('heard 5 hours ago is not online', () {
+      final now = DateTime.now();
+      expect(
+        PresenceCalculator.isOnline(
+          now.subtract(const Duration(hours: 5)),
+          now: now,
+        ),
+        isFalse,
+      );
+    });
+
+    test('heard 3 days ago is not online', () {
+      final now = DateTime.now();
+      expect(
+        PresenceCalculator.isOnline(
+          now.subtract(const Duration(days: 3)),
+          now: now,
+        ),
+        isFalse,
+      );
+    });
+  });
+
+  test('onlineWindow matches Meshtastic firmware default of 2 hours', () {
+    expect(PresenceThresholds.onlineWindow, const Duration(hours: 2));
+  });
 }

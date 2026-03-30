@@ -677,8 +677,11 @@ class AutomationEngine {
         break;
 
       case TriggerType.scheduled:
-        // For scheduled triggers, verify the schedule ID matches if specified
-        // The actual timing is handled by the scheduler
+        // Verify the schedule ID matches the automation ID so each
+        // scheduled event only triggers its own automation.
+        if (event.scheduleId != null && event.scheduleId != automation.id) {
+          return false;
+        }
         break;
 
       default:

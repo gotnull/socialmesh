@@ -174,7 +174,11 @@ class InAppScheduler implements Scheduler {
     // Only start timer for real clock (not fake clock)
     if (_clock is SystemClock) {
       _timer = Timer.periodic(_tickInterval, (_) {
-        tick(_clock.now());
+        final events = tick(_clock.now());
+        if (events.isNotEmpty) {
+          // Persist state so lastFiredSlotKey survives app restarts
+          unawaited(persist());
+        }
       });
     }
 

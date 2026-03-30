@@ -20123,10 +20123,10 @@ abstract class AppLocalizations {
   /// **'No nodes match this filter'**
   String get nodesScreenEmptyFiltered;
 
-  /// Filter chip label for active nodes.
+  /// Filter chip label for online nodes (heard within 2 hours).
   ///
   /// In en, this message translates to:
-  /// **'Active'**
+  /// **'Online'**
   String get nodesScreenFilterActive;
 
   /// Filter chip label showing all nodes.
@@ -20141,10 +20141,10 @@ abstract class AppLocalizations {
   /// **'Favorites'**
   String get nodesScreenFilterFavorites;
 
-  /// Filter chip label for inactive nodes.
+  /// Filter chip label for offline nodes (not heard within 2 hours).
   ///
   /// In en, this message translates to:
-  /// **'Inactive'**
+  /// **'Offline'**
   String get nodesScreenFilterInactive;
 
   /// Filter chip label for MQTT-connected nodes.

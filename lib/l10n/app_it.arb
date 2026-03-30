@@ -25292,9 +25292,9 @@
   "@nodesScreenEmptyFiltered": {
     "description": "Empty state message when filter returns no results."
   },
-  "nodesScreenFilterActive": "Attivi",
+  "nodesScreenFilterActive": "Online",
   "@nodesScreenFilterActive": {
-    "description": "Filter chip label for active nodes."
+    "description": "Filter chip label for online nodes (heard within 2 hours)."
   },
   "nodesScreenFilterAll": "Tutti",
   "@nodesScreenFilterAll": {
@@ -25304,9 +25304,9 @@
   "@nodesScreenFilterFavorites": {
     "description": "Filter chip label for favorite nodes."
   },
-  "nodesScreenFilterInactive": "Inattivi",
+  "nodesScreenFilterInactive": "Offline",
   "@nodesScreenFilterInactive": {
-    "description": "Filter chip label for inactive nodes."
+    "description": "Filter chip label for offline nodes (not heard within 2 hours)."
   },
   "nodesScreenFilterMqtt": "MQTT",
   "@nodesScreenFilterMqtt": {

@@ -94,6 +94,15 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
     return presenceMap[node.nodeNum]?.confidence ?? node.presenceConfidence;
   }
 
+  /// Whether a node is **online** — heard within the Meshtastic firmware
+  /// online window (2 h).  Much broader than [PresenceConfidence.isActive]
+  /// (2 min) and matches what the device screen reports as "online".
+  bool _isOnlineNode(Map<int, NodePresence> presenceMap, MeshNode node) {
+    final presence = presenceMap[node.nodeNum];
+    if (presence != null) return presence.isOnline;
+    return PresenceCalculator.isOnline(node.lastHeard, now: DateTime.now());
+  }
+
   Duration? _lastHeardAgeForNode(
     Map<int, NodePresence> presenceMap,
     MeshNode node,
@@ -176,10 +185,10 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
     // Count nodes by filter for badges
     final allNodes = nodes.values.toList();
     final activeCount = allNodes
-        .where((n) => _presenceForNode(presenceMap, n).isActive)
+        .where((n) => _isOnlineNode(presenceMap, n))
         .length;
     final inactiveCount = allNodes
-        .where((n) => _presenceForNode(presenceMap, n).isInactive)
+        .where((n) => !_isOnlineNode(presenceMap, n))
         .length;
     final favoritesCount = allNodes.where((n) => n.isFavorite).length;
     final withPositionCount = allNodes
@@ -898,13 +907,9 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
       case NodeFilter.all:
         return nodes;
       case NodeFilter.active:
-        return nodes
-            .where((n) => _presenceForNode(presenceMap, n).isActive)
-            .toList();
+        return nodes.where((n) => _isOnlineNode(presenceMap, n)).toList();
       case NodeFilter.inactive:
-        return nodes
-            .where((n) => _presenceForNode(presenceMap, n).isInactive)
-            .toList();
+        return nodes.where((n) => !_isOnlineNode(presenceMap, n)).toList();
       case NodeFilter.favorites:
         return nodes.where((n) => n.isFavorite).toList();
       case NodeFilter.withPosition:

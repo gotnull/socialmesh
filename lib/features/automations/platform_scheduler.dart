@@ -758,9 +758,12 @@ class SchedulerBridge {
   /// Process due schedules when returning from background
   ///
   /// Call this when app resumes to process any missed schedules.
-  void processOnResume() {
+  Future<void> processOnResume() async {
     final now = _now();
-    inAppScheduler.tick(now);
+    final events = inAppScheduler.tick(now);
+    if (events.isNotEmpty) {
+      await inAppScheduler.persist();
+    }
     AppLogging.automations(
       'SchedulerBridge: Processed due schedules on resume',
     );

@@ -133,6 +133,14 @@ class NodePresence {
   ConfidenceTier get confidenceTier =>
       ConfidenceTier.fromConfidence(confidence);
 
+  /// Whether this node is considered **online** — heard within the
+  /// Meshtastic firmware online window (2 h).  Broader than
+  /// [PresenceConfidence.isActive] (2 min).
+  bool get isOnline {
+    if (timeSinceLastHeard == null) return false;
+    return timeSinceLastHeard! <= PresenceThresholds.onlineWindow;
+  }
+
   NodePresence copyWith({
     MeshNode? node,
     PresenceConfidence? confidence,
