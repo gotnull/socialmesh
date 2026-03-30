@@ -787,6 +787,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   bool _isSearching = false;
   String _searchQuery = '';
 
+  /// Tracks the currently highlighted message (for quote-tap scroll).
+  String? _highlightedMessageId;
+  Timer? _highlightTimer;
+  final Map<String, GlobalKey> _messageKeys = {};
+
   /// The message being replied to, or null if not replying.
   Message? _replyingTo;
 
@@ -850,12 +855,35 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
 
   @override
   void dispose() {
+    _highlightTimer?.cancel();
     _searchController.removeListener(_onSearchChanged);
     _messageController.dispose();
     _searchController.dispose();
     _messageFocusNode.dispose();
     _searchFocusNode.dispose();
     super.dispose();
+  }
+
+  void _scrollToQuotedMessage(int replyId, List<Message> messages) {
+    final target = messages.where((m) => m.packetId == replyId).firstOrNull;
+    if (target == null) return;
+
+    final key = _messageKeys[target.id];
+    if (key?.currentContext != null) {
+      Scrollable.ensureVisible(
+        key!.currentContext!,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        alignment: 0.5,
+      );
+      _highlightTimer?.cancel();
+      setState(() => _highlightedMessageId = target.id);
+      _highlightTimer = Timer(const Duration(milliseconds: 1500), () {
+        if (mounted) {
+          setState(() => _highlightedMessageId = null);
+        }
+      });
+    }
   }
 
   void _setReplyTo(Message message) {
@@ -1618,51 +1646,70 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                             senderNode?.avatarColor ??
                             message.senderAvatarColor;
 
-                        return _MessageBubble(
-                          message: message,
-                          allMessages: filteredMessages,
-                          isFromMe: isFromMe,
-                          senderName: senderName,
-                          senderShortName: senderShortName,
-                          avatarColor: avatarColor,
-                          showSender:
-                              widget.type == ConversationType.channel &&
-                              !isFromMe,
-                          isEncrypted: isEncrypted,
-                          isQueued: queuedMessageIds.contains(message.id),
-                          channelIndex: widget.type == ConversationType.channel
-                              ? widget.channelIndex
-                              : null,
-                          onReply: () => _setReplyTo(message),
-                          onRetry: message.isFailed
-                              ? () => _retryMessage(message)
-                              : null,
-                          onResend: isFromMe && message.canResend
-                              ? () => ref
-                                    .read(dmRetryCoordinatorProvider)
-                                    .scheduleResend(message)
-                              : null,
-                          onAutoRetry: isFromMe && message.canEnableAutoRetry
-                              ? () => ref
-                                    .read(dmRetryCoordinatorProvider)
-                                    .enableAutoRetry(message.id)
-                              : null,
-                          onStopRetry: isFromMe && message.canStopAutoRetry
-                              ? () => ref
-                                    .read(dmRetryCoordinatorProvider)
-                                    .disableAutoRetry(message.id)
-                              : null,
-                          onPkiFix: message.routingError?.isPkiRelated == true
-                              ? () => _showPkiFixSheet(message)
-                              : null,
-                          onDelete: () => _deleteMessage(message),
-                          onSenderTap: senderNode != null && !isFromMe
-                              ? () => showNodeDetailsSheet(
-                                  context,
-                                  senderNode,
-                                  false,
-                                )
-                              : null,
+                        final messageKey = _messageKeys.putIfAbsent(
+                          message.id,
+                          () => GlobalKey(debugLabel: 'msg_${message.id}'),
+                        );
+
+                        return KeyedSubtree(
+                          key: messageKey,
+                          child: _MessageBubble(
+                            message: message,
+                            allMessages: filteredMessages,
+                            isFromMe: isFromMe,
+                            senderName: senderName,
+                            senderShortName: senderShortName,
+                            avatarColor: avatarColor,
+                            showSender:
+                                widget.type == ConversationType.channel &&
+                                !isFromMe,
+                            isEncrypted: isEncrypted,
+                            isQueued: queuedMessageIds.contains(message.id),
+                            isHighlighted: _highlightedMessageId == message.id,
+                            channelIndex:
+                                widget.type == ConversationType.channel
+                                ? widget.channelIndex
+                                : null,
+                            onReply: () => _setReplyTo(message),
+                            onRetry: message.isFailed
+                                ? () => _retryMessage(message)
+                                : null,
+                            onResend: isFromMe && message.canResend
+                                ? () => ref
+                                      .read(dmRetryCoordinatorProvider)
+                                      .scheduleResend(message)
+                                : null,
+                            onAutoRetry: isFromMe && message.canEnableAutoRetry
+                                ? () => ref
+                                      .read(dmRetryCoordinatorProvider)
+                                      .enableAutoRetry(message.id)
+                                : null,
+                            onStopRetry: isFromMe && message.canStopAutoRetry
+                                ? () => ref
+                                      .read(dmRetryCoordinatorProvider)
+                                      .disableAutoRetry(message.id)
+                                : null,
+                            onPkiFix: message.routingError?.isPkiRelated == true
+                                ? () => _showPkiFixSheet(message)
+                                : null,
+                            onDelete: () => _deleteMessage(message),
+                            onSenderTap: senderNode != null && !isFromMe
+                                ? () => showNodeDetailsSheet(
+                                    context,
+                                    senderNode,
+                                    false,
+                                  )
+                                : null,
+                            onQuoteTap: message.replyId != null
+                                ? () {
+                                    ref.haptics.trigger(HapticType.light);
+                                    _scrollToQuotedMessage(
+                                      message.replyId!,
+                                      filteredMessages,
+                                    );
+                                  }
+                                : null,
+                          ),
                         );
                       },
                     ),
@@ -1806,6 +1853,8 @@ class _MessageBubble extends StatelessWidget {
   final VoidCallback? onPkiFix;
   final VoidCallback? onDelete;
   final VoidCallback? onSenderTap;
+  final VoidCallback? onQuoteTap;
+  final bool isHighlighted;
 
   const _MessageBubble({
     required this.message,
@@ -1826,6 +1875,8 @@ class _MessageBubble extends StatelessWidget {
     this.onPkiFix,
     this.onDelete,
     this.onSenderTap,
+    this.onQuoteTap,
+    this.isHighlighted = false,
   });
 
   Color _getAvatarColor() {
@@ -1962,7 +2013,7 @@ class _MessageBubble extends StatelessWidget {
         ? '${replyText.substring(0, 60)}…'
         : replyText;
 
-    return Container(
+    final quoteWidget = Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
@@ -2007,6 +2058,11 @@ class _MessageBubble extends StatelessWidget {
         ],
       ),
     );
+
+    if (onQuoteTap != null) {
+      return GestureDetector(onTap: onQuoteTap, child: quoteWidget);
+    }
+    return quoteWidget;
   }
 
   @override
@@ -2020,8 +2076,15 @@ class _MessageBubble extends StatelessWidget {
     final sourceBadge = _buildSourceBadge(context);
 
     if (isFromMe) {
-      return Padding(
+      return AnimatedContainer(
+        duration: const Duration(milliseconds: 400),
         padding: const EdgeInsets.only(bottom: 8),
+        decoration: BoxDecoration(
+          color: isHighlighted
+              ? context.accentColor.withValues(alpha: 0.12)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
@@ -2265,8 +2328,15 @@ class _MessageBubble extends StatelessWidget {
       );
     }
 
-    return Padding(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 400),
       padding: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: isHighlighted
+            ? context.accentColor.withValues(alpha: 0.12)
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
