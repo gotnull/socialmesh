@@ -89,11 +89,11 @@ dependencies:
   firebase_core: ^4.5.0
   firebase_analytics: ^12.2.0
   firebase_auth: ^6.3.0
-  firebase_storage: 13.1.0 # Pinned: 13.2.0 triggers Swift 6.1 async optimizer SIGABRT (gotnull/socialmesh#76)
+  firebase_storage: ^13.1.0
   firebase_messaging: ^16.1.2
   characters: ^1.4.0
   cloud_firestore: ^6.2.0
-  cloud_functions: 6.0.7 # Pinned: 6.1.0 triggers Swift 6.1 async optimizer SIGABRT (gotnull/socialmesh#76)
+  cloud_functions: ^6.0.7
   google_sign_in: ^7.2.0
   sign_in_with_apple: ^7.0.1
   crypto: ^3.0.6

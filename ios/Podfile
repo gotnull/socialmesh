@@ -60,5 +60,17 @@ post_install do |installer|
         'PERMISSION_MICROPHONE=1',
       ]
     end
+
+    # Workaround: Swift 6.1 (Xcode 16.4) compiler bug generates incorrect
+    # async let teardown ordering in optimized builds, causing SIGABRT in
+    # swift_task_dealloc ("freed pointer was not the last allocation").
+    # Only these two pods use async let. Remove once Firebase 12.12 ships
+    # or Apple backports swiftlang/swift#87665 to Xcode.
+    # Tracking: swiftlang/swift#81771, firebase-ios-sdk#15974, gotnull/socialmesh#76
+    if ['FirebaseAuth', 'FirebaseFunctions'].include?(target.name)
+      target.build_configurations.each do |config|
+        config.build_settings['SWIFT_OPTIMIZATION_LEVEL'] = '-Onone'
+      end
+    end
   end
 end
