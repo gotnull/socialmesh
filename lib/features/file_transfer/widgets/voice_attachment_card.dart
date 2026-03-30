@@ -14,6 +14,8 @@ import '../../../services/haptic_service.dart';
 import '../../../services/voice/voice_constants.dart';
 import '../../../services/voice/voice_player.dart';
 import '../../../services/voice/waveform_analysis.dart';
+import 'package:timeago/timeago.dart' as timeago;
+
 import 'waveform_painter.dart';
 
 /// Premium, waveform-driven voice attachment card.
@@ -64,6 +66,9 @@ class _VoiceAttachmentCardState extends ConsumerState<VoiceAttachmentCard>
   Duration _position = Duration.zero;
   Duration _duration = Duration.zero;
   bool _failed = false;
+  // True once the audio source has been loaded at least once.  Allows
+  // _togglePlayback to call pause()/resume() instead of reloading from zero.
+  bool _loaded = false;
 
   // --- Waveform analysis ------------------------------------------------
   WaveformAnalysis? _analysis;
@@ -85,15 +90,13 @@ class _VoiceAttachmentCardState extends ConsumerState<VoiceAttachmentCard>
     super.initState();
     _player = VoicePlayer();
 
-    // Parse frame count from header — fast, no decode needed.
+    // Parse frame count and mode from header — fast, no decode needed.
     if (widget.c2Payload.length >= 4 &&
         widget.c2Payload[0] == VoiceConstants.magicByte) {
+      final quality = VoiceQuality.fromWireModeByte(widget.c2Payload[1]);
+      final spf = quality?.samplesPerFrame ?? VoiceConstants.samplesPerFrame;
       _frameCount = widget.c2Payload[2] | (widget.c2Payload[3] << 8);
-      _durationMs =
-          _frameCount *
-          VoiceConstants.samplesPerFrame *
-          1000 ~/
-          VoiceConstants.sampleRate;
+      _durationMs = _frameCount * spf * 1000 ~/ VoiceConstants.sampleRate;
       _duration = Duration(milliseconds: _durationMs);
     } else {
       _frameCount = 0;
@@ -130,15 +133,25 @@ class _VoiceAttachmentCardState extends ConsumerState<VoiceAttachmentCard>
     final haptics = ref.haptics;
     haptics.buttonTap();
     if (_player.isPlaying.value) {
-      await _player.stop();
+      // Pause — keeps the audio source and seek position intact so that
+      // drag-to-seek and resume both work correctly.
+      await _player.pause();
+      safeSetState(() {});
+    } else if (_loaded) {
+      // Source is already in memory — resume from current position (which
+      // may have been updated by a drag-to-seek while paused).
+      await _player.resume();
       safeSetState(() {});
     } else {
+      // First play: load + decode the C2 payload.
       safeSetState(() {
         _failed = false;
         _position = Duration.zero;
       });
       final ok = await _player.playC2(widget.c2Payload);
-      if (!ok) {
+      if (ok) {
+        safeSetState(() => _loaded = true);
+      } else {
         safeSetState(() => _failed = true);
       }
     }
@@ -401,18 +414,6 @@ class _CardHeader extends StatelessWidget {
   final Color textSecondary;
   final Color textTertiary;
 
-  String _formatTime(DateTime dt) {
-    final h = dt.hour.toString().padLeft(
-      2,
-      '0',
-    ); // lint-allow: hardcoded-string
-    final m = dt.minute.toString().padLeft(
-      2,
-      '0',
-    ); // lint-allow: hardcoded-string
-    return '$h:$m'; // lint-allow: hardcoded-string
-  }
-
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -439,7 +440,7 @@ class _CardHeader extends StatelessWidget {
         const Spacer(),
         if (receivedAt != null)
           Text(
-            _formatTime(receivedAt!),
+            timeago.format(receivedAt!),
             style: TextStyle(
               color: textTertiary,
               fontSize: 11,

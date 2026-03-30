@@ -92,9 +92,21 @@ final fileTransferEngineProvider = Provider<FileTransferEngine>((ref) {
       );
     },
     onStateChanged: (state) {
+      // Engine updates never include savedFilePath (it's managed by the
+      // notifier's auto-save logic). Preserve the existing savedFilePath
+      // from the notifier state so db.saveTransfer doesn't overwrite it
+      // to null with each chunk/state update.
+      final existing = ref
+          .read(fileTransferStateProvider)
+          .transfers[state.fileIdHex];
+      final toSave =
+          existing?.savedFilePath != null && state.savedFilePath == null
+          ? state.copyWith(savedFilePath: existing!.savedFilePath)
+          : state;
+
       // Persist state changes to database.
       final db = ref.read(fileTransferDatabaseProvider);
-      db.saveTransfer(state);
+      db.saveTransfer(toSave);
 
       // Notify the state notifier.
       ref.read(fileTransferStateProvider.notifier).updateTransfer(state);
@@ -190,6 +202,19 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
     final resolved = <FileTransferState>[];
     for (final t in transfers) {
       if (t.savedFilePath == null) {
+        // Recovery: for completed transfers with no savedFilePath, check
+        // if the file exists at the expected path on disk. This covers the
+        // race condition where the app was killed after the eager auto-save
+        // wrote the file but before db.updateSavedPath completed.
+        if (t.state == TransferState.complete) {
+          final rel = _relativePathFor(t);
+          final abs = p.join(docsDir.path, rel);
+          if (File(abs).existsSync()) {
+            await db.updateSavedPath(t.fileIdHex, rel);
+            resolved.add(t.copyWith(savedFilePath: abs));
+            continue;
+          }
+        }
         resolved.add(t);
       } else if (t.savedFilePath!.startsWith('/')) {
         // Legacy absolute path — validate, then either keep or clear.
@@ -230,19 +255,26 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
   /// Update a single transfer state (called by engine callback).
   void updateTransfer(FileTransferState transfer) {
     final prev = state.transfers[transfer.fileIdHex];
+
+    // Engine updates never include savedFilePath — preserve it from the
+    // previous notifier state so auto-save results aren't lost.
+    final merged = transfer.savedFilePath == null && prev?.savedFilePath != null
+        ? transfer.copyWith(savedFilePath: prev!.savedFilePath)
+        : transfer;
+
     final updated = Map<String, FileTransferState>.from(state.transfers)
-      ..[transfer.fileIdHex] = transfer;
+      ..[transfer.fileIdHex] = merged;
     state = state.copyWith(transfers: updated);
 
     // Auto-save bytes to disk when a transfer completes.
     // Covers both outbound (sender) and inbound (receiver).
     final justCompleted =
-        transfer.state == TransferState.complete &&
-        transfer.fileBytes != null &&
-        transfer.savedFilePath == null &&
+        merged.state == TransferState.complete &&
+        merged.fileBytes != null &&
+        merged.savedFilePath == null &&
         (prev == null || prev.state != TransferState.complete);
     if (justCompleted) {
-      Future.microtask(() => _autoSaveFile(transfer));
+      Future.microtask(() => _autoSaveFile(merged));
     }
   }
 
@@ -267,8 +299,12 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
       final db = ref.read(fileTransferDatabaseProvider);
       await db.updateSavedPath(transfer.fileIdHex, rel);
 
-      // Update in-memory state with absolute path.
-      final withPath = transfer.copyWith(savedFilePath: absPath);
+      // Update in-memory state with absolute path. Read the CURRENT state
+      // (not the captured transfer) so we don't revert state/chunks that
+      // the engine updated while the async save was in progress.
+      final current = state.transfers[transfer.fileIdHex];
+      if (current == null) return;
+      final withPath = current.copyWith(savedFilePath: absPath);
       final updated = Map<String, FileTransferState>.from(state.transfers)
         ..[transfer.fileIdHex] = withPath;
       state = state.copyWith(transfers: updated);

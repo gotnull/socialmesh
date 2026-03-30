@@ -26,6 +26,8 @@ import '../../../providers/file_transfer_providers.dart';
 import '../../../providers/presence_providers.dart';
 import '../../../services/file_transfer/file_transfer_engine.dart';
 import '../../../services/haptic_service.dart';
+import '../../../providers/voice_quality_provider.dart';
+import '../../../services/voice/voice_constants.dart';
 import '../../../services/voice/voice_message_service.dart';
 import '../../../services/voice/voice_permission_service.dart';
 import '../../../utils/presence_utils.dart';
@@ -540,7 +542,16 @@ class _FileTransferContactsScreenState
 
     final nav = Navigator.of(context, rootNavigator: true);
 
-    var voiceService = VoiceMessageService();
+    final quality = ref.read(voiceQualityProvider);
+    final qualityNotifier = ValueNotifier<VoiceQuality>(quality);
+
+    // Persist quality preference when the user changes it in the overlay.
+    void onQualityChanged() {
+      ref.read(voiceQualityProvider.notifier).setQuality(qualityNotifier.value);
+    }
+
+    qualityNotifier.addListener(onQualityChanged);
+    var voiceService = VoiceMessageService(quality: quality);
     final actionCompleter = Completer<_RecordingAction>();
     final autoStopNotifier = ValueNotifier<bool>(false);
     var wasAutoStopped = false;
@@ -560,16 +571,13 @@ class _FileTransferContactsScreenState
       );
     }
 
-    final started = await startFresh();
-
-    if (!started) {
+    // Check microphone permission before showing the overlay. The overlay
+    // starts in idle state — recording only begins when the user taps record.
+    final hasMic = await VoicePermissionService.requestMicrophonePermission();
+    if (!hasMic) {
       autoStopNotifier.dispose();
       await voiceService.dispose();
       if (!mounted) return;
-      // On iOS the system permission dialog only appears once; after that the
-      // only recovery path is Settings. permission_handler sometimes still
-      // reports `denied` (not `permanentlyDenied`) on iOS, so always offer
-      // the Settings shortcut there.
       final showSettings =
           Platform.isIOS ||
           await VoicePermissionService.isMicrophonePermanentlyDenied();
@@ -580,22 +588,49 @@ class _FileTransferContactsScreenState
 
     if (!mounted) {
       autoStopNotifier.dispose();
-      await voiceService.cancelSession();
       await voiceService.dispose();
       return;
     }
 
-    // Show the fullscreen recording overlay. Using showGeneralDialog ensures
-    // the overlay inherits the MaterialApp theme (prevents yellow-underline).
+    // Show the fullscreen recording overlay in idle state. Using
+    // showGeneralDialog ensures the overlay inherits the MaterialApp theme.
     showGeneralDialog(
       context: context,
       barrierDismissible: false,
       barrierColor: Colors.transparent,
       pageBuilder: (context, animation, secondaryAnimation) =>
           VoiceRecordingOverlay(
+            maxRecordingDuration: quality.maxRecordingDuration,
+            qualityNotifier: qualityNotifier,
+            // User tapped the big red record button from idle state.
+            onStartRecording: () async {
+              // Tear down any previous session (after retake).
+              if (pendingStop != null) {
+                pendingStop = null;
+              } else {
+                await voiceService.cancelSession();
+              }
+              await voiceService.dispose();
+              // Create a fresh service with the current quality.
+              pendingStop = null;
+              wasAutoStopped = false;
+              autoStopNotifier.value = false;
+              final currentQuality = qualityNotifier.value;
+              voiceService = VoiceMessageService(quality: currentQuality);
+              final started = await startFresh();
+              if (!started) return null;
+              return voiceService.amplitudeStream;
+            },
             // Circle tapped: stop the mic; overlay transitions to review mode.
             onRecordingStopped: () {
               pendingStop ??= voiceService.stopSession();
+            },
+            onPauseRecording: () => voiceService.pauseSession(),
+            onResumeRecording: () => voiceService.resumeSession(),
+            // Provide the encoded .c2 payload for in-place preview playback.
+            onGetPreviewPayload: () async {
+              final result = await (pendingStop ?? voiceService.stopSession());
+              return result.payload;
             },
             // Send confirmed in review phase.
             onSend: () {
@@ -616,11 +651,11 @@ class _FileTransferContactsScreenState
               pendingStop = null;
               wasAutoStopped = false;
               autoStopNotifier.value = false;
-              voiceService = VoiceMessageService();
+              final currentQuality = qualityNotifier.value;
+              voiceService = VoiceMessageService(quality: currentQuality);
               await startFresh();
               return voiceService.amplitudeStream;
             },
-            amplitudeStream: voiceService.amplitudeStream,
             autoStopNotifier: autoStopNotifier,
           ),
     );
@@ -628,6 +663,8 @@ class _FileTransferContactsScreenState
     final action = await actionCompleter.future;
     if (nav.canPop()) nav.pop();
     autoStopNotifier.dispose();
+    qualityNotifier.removeListener(onQualityChanged);
+    qualityNotifier.dispose();
     if (!mounted) {
       if (pendingStop == null) await voiceService.cancelSession();
       await voiceService.dispose();

@@ -56686,6 +56686,12 @@ abstract class AppLocalizations {
   /// **'Stop playback'**
   String get voiceMessageStop;
 
+  /// Label shown below the pause button in the voice recording overlay preview
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get voiceMessagePause;
+
   /// Duration label shown in the voice message player (e.g. '12s')
   ///
   /// In en, this message translates to:
@@ -56728,6 +56734,24 @@ abstract class AppLocalizations {
   /// **'Cancel'**
   String get voiceRecordingCancelButton;
 
+  /// Title for the confirmation dialog when discarding a voice recording
+  ///
+  /// In en, this message translates to:
+  /// **'Discard recording?'**
+  String get voiceRecordingDiscardTitle;
+
+  /// Message in the confirmation dialog when discarding a voice recording
+  ///
+  /// In en, this message translates to:
+  /// **'Your recording will be lost.'**
+  String get voiceRecordingDiscardMessage;
+
+  /// Confirm button label in the discard recording dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get voiceRecordingDiscardConfirm;
+
   /// Retake button in the voice recording overlay — discards and restarts the recording
   ///
   /// In en, this message translates to:
@@ -56745,6 +56769,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Ready to send'**
   String get voiceRecordingReadyToSend;
+
+  /// Hint shown below the play button in the voice recording review phase
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to preview'**
+  String get voiceRecordingTapToPreview;
+
+  /// Hint shown below the record button when the overlay is in idle state
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to record'**
+  String get voiceRecordingTapToRecord;
+
+  /// Status pill label shown when recording is paused
+  ///
+  /// In en, this message translates to:
+  /// **'PAUSED'**
+  String get voiceRecordingPaused;
+
+  /// Label for the pause button during voice recording
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get voiceRecordingPauseButton;
+
+  /// Label for the resume button when voice recording is paused
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get voiceRecordingResumeButton;
+
+  /// Label for the 1200 bps voice quality mode (longest recording)
+  ///
+  /// In en, this message translates to:
+  /// **'Extended'**
+  String get voiceQualityExtended;
+
+  /// Label for the 2400 bps voice quality mode (balanced)
+  ///
+  /// In en, this message translates to:
+  /// **'Standard'**
+  String get voiceQualityStandard;
+
+  /// Label for the 3200 bps voice quality mode (best quality, shortest recording)
+  ///
+  /// In en, this message translates to:
+  /// **'High quality'**
+  String get voiceQualityHigh;
+
+  /// Max recording duration shown next to quality label
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds}s'**
+  String voiceQualityDuration(String seconds);
+
+  /// Title of the bottom sheet that lets users pick voice quality
+  ///
+  /// In en, this message translates to:
+  /// **'Voice quality'**
+  String get voiceQualityPickerTitle;
 
   /// Label shown at the top of the voice attachment playback card
   ///

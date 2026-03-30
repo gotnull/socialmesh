@@ -8,12 +8,15 @@ import 'package:socialmesh/services/voice/waveform_analysis.dart';
 import 'package:socialmesh/services/voice/voice_constants.dart';
 
 /// Builds a minimal valid `.c2` payload with [frameCount] zero-byte frames.
-Uint8List _buildC2Payload({required int frameCount}) {
+Uint8List _buildC2Payload({
+  required int frameCount,
+  VoiceQuality quality = VoiceQuality.extended,
+}) {
   final data = Uint8List(
-    VoiceConstants.headerSize + frameCount * VoiceConstants.bytesPerFrame,
+    VoiceConstants.headerSize + frameCount * quality.bytesPerFrame,
   );
   data[0] = VoiceConstants.magicByte;
-  data[1] = VoiceConstants.wireMode1200;
+  data[1] = quality.wireModeByte;
   data[2] = frameCount & 0xFF;
   data[3] = (frameCount >> 8) & 0xFF;
   // Frame bytes remain 0 — valid (all-silence) encoded content.
@@ -99,10 +102,45 @@ void main() {
       );
       final expectedMs =
           frameCount *
-          VoiceConstants.samplesPerFrame *
+          VoiceQuality.extended.samplesPerFrame *
           1000 ~/
           VoiceConstants.sampleRate;
       expect(result!.durationMs, expectedMs);
+    });
+
+    test('accepts all known Codec2 mode bytes', () async {
+      for (final quality in VoiceQuality.values) {
+        final payload = _buildC2Payload(frameCount: 10, quality: quality);
+        final result = await WaveformAnalyser.analyse(
+          payload,
+          cacheKey: 'mode_${quality.name}',
+        );
+        expect(result, isNotNull, reason: '${quality.name} should be accepted');
+      }
+    });
+
+    test('computes correct duration for each quality mode', () async {
+      const frameCount = 50;
+      for (final quality in VoiceQuality.values) {
+        final payload = _buildC2Payload(
+          frameCount: frameCount,
+          quality: quality,
+        );
+        final result = await WaveformAnalyser.analyse(
+          payload,
+          cacheKey: 'duration_${quality.name}',
+        );
+        final expectedMs =
+            frameCount *
+            quality.samplesPerFrame *
+            1000 ~/
+            VoiceConstants.sampleRate;
+        expect(
+          result!.durationMs,
+          expectedMs,
+          reason: '${quality.name}: expected $expectedMs ms',
+        );
+      }
     });
 
     test('cache hit returns the same object instance', () async {

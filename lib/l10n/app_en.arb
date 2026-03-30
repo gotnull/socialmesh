@@ -43088,6 +43088,10 @@
     "@voiceMessageStop": {
         "description": "Accessibility label / tooltip on the stop button in the voice message player widget"
     },
+    "voiceMessagePause": "Pause",
+    "@voiceMessagePause": {
+        "description": "Label shown below the pause button in the voice recording overlay preview"
+    },
     "voiceMessageDuration": "{seconds}s",
     "@voiceMessageDuration": {
         "description": "Duration label shown in the voice message player (e.g. '12s')",
@@ -43125,6 +43129,18 @@
     "@voiceRecordingCancelButton": {
         "description": "Cancel button in the voice recording overlay — discards the recording"
     },
+    "voiceRecordingDiscardTitle": "Discard recording?",
+    "@voiceRecordingDiscardTitle": {
+        "description": "Title for the confirmation dialog when discarding a voice recording"
+    },
+    "voiceRecordingDiscardMessage": "Your recording will be lost.",
+    "@voiceRecordingDiscardMessage": {
+        "description": "Message in the confirmation dialog when discarding a voice recording"
+    },
+    "voiceRecordingDiscardConfirm": "Discard",
+    "@voiceRecordingDiscardConfirm": {
+        "description": "Confirm button label in the discard recording dialog"
+    },
     "voiceRecordingRetakeButton": "Retake",
     "@voiceRecordingRetakeButton": {
         "description": "Retake button in the voice recording overlay — discards and restarts the recording"
@@ -43136,6 +43152,52 @@
     "voiceRecordingReadyToSend": "Ready to send",
     "@voiceRecordingReadyToSend": {
         "description": "Status shown after the user stops recording and before they confirm send"
+    },
+    "voiceRecordingTapToPreview": "Tap to preview",
+    "@voiceRecordingTapToPreview": {
+        "description": "Hint shown below the play button in the voice recording review phase"
+    },
+    "voiceRecordingTapToRecord": "Tap to record",
+    "@voiceRecordingTapToRecord": {
+        "description": "Hint shown below the record button when the overlay is in idle state"
+    },
+    "voiceRecordingPaused": "PAUSED",
+    "@voiceRecordingPaused": {
+        "description": "Status pill label shown when recording is paused"
+    },
+    "voiceRecordingPauseButton": "Pause",
+    "@voiceRecordingPauseButton": {
+        "description": "Label for the pause button during voice recording"
+    },
+    "voiceRecordingResumeButton": "Resume",
+    "@voiceRecordingResumeButton": {
+        "description": "Label for the resume button when voice recording is paused"
+    },
+    "voiceQualityExtended": "Extended",
+    "@voiceQualityExtended": {
+        "description": "Label for the 1200 bps voice quality mode (longest recording)"
+    },
+    "voiceQualityStandard": "Standard",
+    "@voiceQualityStandard": {
+        "description": "Label for the 2400 bps voice quality mode (balanced)"
+    },
+    "voiceQualityHigh": "High quality",
+    "@voiceQualityHigh": {
+        "description": "Label for the 3200 bps voice quality mode (best quality, shortest recording)"
+    },
+    "voiceQualityDuration": "{seconds}s",
+    "@voiceQualityDuration": {
+        "description": "Max recording duration shown next to quality label",
+        "placeholders": {
+            "seconds": {
+                "type": "String",
+                "example": "55"
+            }
+        }
+    },
+    "voiceQualityPickerTitle": "Voice quality",
+    "@voiceQualityPickerTitle": {
+        "description": "Title of the bottom sheet that lets users pick voice quality"
     },
     "voiceAttachmentCardTitle": "Voice message",
     "@voiceAttachmentCardTitle": {

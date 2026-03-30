@@ -42,7 +42,8 @@ void main() {
         expect(result, isNull);
       });
 
-      test('returns null when mode byte is wrong', () async {
+      test('returns null when mode byte is unsupported', () async {
+        // 0xFF is not a valid wire mode byte for any VoiceQuality.
         final payload = _buildHeader(mode: 0xFF, frames: 1);
         final result = await VoiceDecoder.decode(payload);
         expect(result, isNull);
@@ -77,6 +78,19 @@ void main() {
           expect(result, isNull);
         },
       );
+
+      test('accepts all known wire mode bytes in header', () async {
+        for (final q in VoiceQuality.values) {
+          // Header-only (no frame body) → still returns null, but should NOT
+          // reject the mode byte itself.
+          final payload = _buildHeader(mode: q.wireModeByte, frames: 1);
+          // These will return null because there's no frame data (native lib
+          // not available in unit tests), but the important thing is the mode
+          // byte is not rejected with "unsupported mode byte".
+          final result = await VoiceDecoder.decode(payload);
+          expect(result, isNull, reason: '${q.name} header-only returns null');
+        }
+      });
     },
   );
 

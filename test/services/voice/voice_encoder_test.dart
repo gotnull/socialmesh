@@ -70,4 +70,27 @@ void main() {
       },
     );
   });
+
+  group('VoiceEncoder — multi-mode header spec', () {
+    test('each quality mode has a unique wire mode byte', () {
+      final bytes = VoiceQuality.values.map((q) => q.wireModeByte).toSet();
+      expect(bytes.length, VoiceQuality.values.length);
+    });
+
+    test('header byte 1 matches VoiceQuality.wireModeByte for each mode', () {
+      for (final q in VoiceQuality.values) {
+        const frameCount = 10;
+        final payload = Uint8List(
+          VoiceConstants.headerSize + frameCount * q.bytesPerFrame,
+        );
+        payload[0] = VoiceConstants.magicByte;
+        payload[1] = q.wireModeByte;
+        payload[2] = frameCount & 0xFF;
+        payload[3] = (frameCount >> 8) & 0xFF;
+
+        expect(payload[0], 0xC2, reason: '${q.name} magic');
+        expect(payload[1], q.wireModeByte, reason: '${q.name} mode');
+      }
+    });
+  });
 }

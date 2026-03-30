@@ -20,10 +20,20 @@ import 'voice_recorder.dart';
 /// Only one session may be active at a time. Calling [startSession] while
 /// [isActive] is true is a no-op.
 class VoiceMessageService {
+  VoiceMessageService({VoiceQuality? quality})
+    : _quality = quality ?? VoiceConstants.defaultQuality;
+
+  final VoiceQuality _quality;
   VoiceRecorder? _recorder;
   bool _active = false;
 
   bool get isActive => _active;
+
+  /// Whether the current session is paused.
+  bool get isPaused => _recorder?.isPaused ?? false;
+
+  /// The quality mode this service was created with.
+  VoiceQuality get quality => _quality;
 
   /// Live amplitude stream (0.0 = silence, 1.0 = peak) sourced from
   /// [VoiceRecorder.amplitudeStream]. Returns null when no session is active.
@@ -43,7 +53,7 @@ class VoiceMessageService {
       return false;
     }
 
-    _recorder = VoiceRecorder();
+    _recorder = VoiceRecorder(quality: _quality);
     _recorder!.onAutoStop = onAutoStop;
 
     try {
@@ -57,6 +67,26 @@ class VoiceMessageService {
       _recorder = null;
       return false;
     }
+  }
+
+  /// Stops the active session and encodes the captured PCM to `.c2` format.
+  ///
+  /// Returns a [VoiceMessageResult] with the encoded payload, or a result
+  /// with [VoiceMessageResult.failed] when recording was too short or
+  /// encoding failed.
+  /// Pauses the active recording session. Audio capture stops but the
+  /// session remains open for [resumeSession].
+  Future<void> pauseSession() async {
+    if (!_active || _recorder == null) return;
+    await _recorder!.pauseRecording();
+    AppLogging.voice('session paused');
+  }
+
+  /// Resumes a paused recording session.
+  Future<void> resumeSession() async {
+    if (!_active || _recorder == null) return;
+    await _recorder!.resumeRecording();
+    AppLogging.voice('session resumed');
   }
 
   /// Stops the active session and encodes the captured PCM to `.c2` format.
@@ -80,14 +110,14 @@ class VoiceMessageService {
     }
 
     // Enforce minimum 1-frame recording (40 ms) to avoid sending noise.
-    if (pcm.length < VoiceConstants.samplesPerFrame) {
+    if (pcm.length < _quality.samplesPerFrame) {
       AppLogging.voice(
         'stopSession: recording too short (${pcm.length} samples)',
       );
       return const VoiceMessageResult.tooShort();
     }
 
-    final payload = await VoiceEncoder.encode(pcm);
+    final payload = await VoiceEncoder.encode(pcm, quality: _quality);
     if (payload == null) {
       AppLogging.voice('stopSession: encoding failed');
       return const VoiceMessageResult.failed();

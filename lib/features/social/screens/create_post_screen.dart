@@ -772,18 +772,19 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
 
         AppLogging.social('[CreatePost] Uploading to: post_images/$fileName');
         await ref.putFile(imageFile, metadata);
+        final url = await ref.getDownloadURL();
+        AppLogging.social('[CreatePost] Upload complete, URL: $url');
 
-        // Small delay to allow moderation trigger to process
-        await Future.delayed(const Duration(milliseconds: 500));
-
-        // Try to get download URL - if file was moderated, it won't exist
+        // Validate image content before adding to post
         try {
-          final url = await ref.getDownloadURL();
-          AppLogging.social('[CreatePost] Upload complete, URL: $url');
-          safeSetState(() => _imageUrls.add(url));
-        } on FirebaseException catch (e) {
-          if (e.code == 'object-not-found') {
-            // Image was deleted by content moderation
+          final validation = await FirebaseFunctions.instance
+              .httpsCallable('validateImages')
+              .call({
+                'imageUrls': [url],
+              });
+
+          if (validation.data['passed'] == false) {
+            await ref.delete();
             AppLogging.social(
               '[CreatePost] Image blocked by content moderation',
             );
@@ -794,8 +795,12 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
             );
             return;
           }
+        } catch (e) {
+          await ref.delete().catchError((_) {});
           rethrow;
         }
+
+        safeSetState(() => _imageUrls.add(url));
       }
     } catch (e, stackTrace) {
       AppLogging.social('[CreatePost] Image upload error: $e');

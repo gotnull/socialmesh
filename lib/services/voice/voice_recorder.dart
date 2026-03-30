@@ -22,14 +22,21 @@ import 'voice_constants.dart';
 /// recorder.dispose();
 /// ```
 ///
-/// Auto-stops after [VoiceConstants.maxRecordingDuration] to enforce the
-/// 8192-byte payload limit of the Socialmesh `.c2` wire format.
+/// Auto-stops after [maxDuration] (defaults to the 1200 bps limit) to enforce
+/// the 8192-byte payload limit of the Socialmesh `.c2` wire format.
 class VoiceRecorder {
+  VoiceRecorder({VoiceQuality? quality})
+    : _quality = quality ?? VoiceConstants.defaultQuality;
+
+  final VoiceQuality _quality;
   final _recorder = AudioRecorder();
   StreamSubscription<Uint8List>? _sub;
   Timer? _autoStopTimer;
+  Duration _elapsedBeforePause = Duration.zero;
+  DateTime? _lastResumeTime;
   final _pcmBuffer = <int>[];
   bool _recording = false;
+  bool _paused = false;
   void Function()? onAutoStop;
 
   /// Live amplitude stream while recording is active.
@@ -39,6 +46,9 @@ class VoiceRecorder {
   Stream<double>? _amplitudeStream;
 
   bool get isRecording => _recording;
+
+  /// Whether the recording is currently paused.
+  bool get isPaused => _paused;
 
   /// Live amplitude stream (0.0 – 1.0) available while [isRecording] is true.
   Stream<double>? get amplitudeStream => _amplitudeStream;
@@ -100,10 +110,46 @@ class VoiceRecorder {
       cancelOnError: true,
     );
 
-    _autoStopTimer = Timer(VoiceConstants.maxRecordingDuration, () {
+    _autoStopTimer = Timer(_quality.maxRecordingDuration, () {
       AppLogging.voice('auto-stop at max duration');
       onAutoStop?.call();
     });
+    _lastResumeTime = DateTime.now();
+    _elapsedBeforePause = Duration.zero;
+  }
+
+  /// Pauses the active recording. Audio data stops flowing but the
+  /// session remains open. Call [resumeRecording] to continue.
+  Future<void> pauseRecording() async {
+    if (!_recording || _paused) return;
+    _paused = true;
+    _autoStopTimer?.cancel();
+    _autoStopTimer = null;
+    // Track accumulated recording time for the remaining auto-stop budget.
+    if (_lastResumeTime != null) {
+      _elapsedBeforePause += DateTime.now().difference(_lastResumeTime!);
+    }
+    await _recorder.pause();
+    AppLogging.voice('recording paused');
+  }
+
+  /// Resumes a paused recording session.
+  Future<void> resumeRecording() async {
+    if (!_recording || !_paused) return;
+    _paused = false;
+    await _recorder.resume();
+    _lastResumeTime = DateTime.now();
+    // Restart auto-stop timer with remaining budget.
+    final remaining = _quality.maxRecordingDuration - _elapsedBeforePause;
+    if (remaining > Duration.zero) {
+      _autoStopTimer = Timer(remaining, () {
+        AppLogging.voice('auto-stop at max duration');
+        onAutoStop?.call();
+      });
+    } else {
+      onAutoStop?.call();
+    }
+    AppLogging.voice('recording resumed');
   }
 
   /// Stops recording and returns the captured PCM as an [Int16List].
@@ -112,6 +158,7 @@ class VoiceRecorder {
   Future<Int16List?> stopRecording() async {
     if (!_recording) return null;
     _recording = false;
+    _paused = false;
     _autoStopTimer?.cancel();
     _autoStopTimer = null;
 
@@ -138,9 +185,8 @@ class VoiceRecorder {
       samples[i] = bd.getInt16(i * 2, Endian.little);
     }
 
-    // Clamp to maxFrames worth of samples.
-    final maxSamples =
-        VoiceConstants.maxFrames * VoiceConstants.samplesPerFrame;
+    // Clamp to maxFrames worth of samples for the selected quality.
+    final maxSamples = _quality.maxFrames * _quality.samplesPerFrame;
     final clamped = samples.length > maxSamples
         ? Int16List.fromList(samples.sublist(0, maxSamples))
         : samples;
@@ -156,6 +202,7 @@ class VoiceRecorder {
   Future<void> cancelRecording() async {
     if (!_recording) return;
     _recording = false;
+    _paused = false;
     _autoStopTimer?.cancel();
     _autoStopTimer = null;
     await _sub?.cancel();

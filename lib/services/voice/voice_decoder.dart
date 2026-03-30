@@ -16,7 +16,10 @@ abstract final class VoiceDecoder {
   /// Decodes a `.c2` payload to PCM WAV bytes.
   ///
   /// Returns null when [c2Data] is malformed, too short, has the wrong
-  /// magic/mode byte, or Codec2 decoding fails.
+  /// magic byte, or uses an unknown mode byte.
+  ///
+  /// The decoder auto-detects the Codec2 mode from the wire header, so it
+  /// plays back messages encoded at any supported bitrate.
   static Future<Uint8List?> decode(Uint8List c2Data) async {
     if (!Codec2Bindings.isAvailable) {
       AppLogging.voice('Codec2 native library not available — cannot decode');
@@ -32,7 +35,9 @@ abstract final class VoiceDecoder {
       );
       return null;
     }
-    if (c2Data[1] != VoiceConstants.wireMode1200) {
+
+    final quality = VoiceQuality.fromWireModeByte(c2Data[1]);
+    if (quality == null) {
       AppLogging.voice(
         'decode: unsupported mode byte 0x${c2Data[1].toRadixString(16).padLeft(2, '0')}',
       );
@@ -41,7 +46,7 @@ abstract final class VoiceDecoder {
 
     final declaredFrames = c2Data[2] | (c2Data[3] << 8);
     final payloadBytes = c2Data.length - VoiceConstants.headerSize;
-    final actualFrames = payloadBytes ~/ VoiceConstants.bytesPerFrame;
+    final actualFrames = payloadBytes ~/ quality.bytesPerFrame;
 
     if (actualFrames == 0) {
       AppLogging.voice('decode: no frames in payload');
@@ -51,14 +56,21 @@ abstract final class VoiceDecoder {
     final frames = actualFrames < declaredFrames
         ? actualFrames
         : declaredFrames;
-    AppLogging.voice('decode: $frames frames, declared=$declaredFrames');
+    AppLogging.voice(
+      'decode: $frames frames at ${quality.bitRate} bps, '
+      'declared=$declaredFrames',
+    );
 
     final frameBytes = c2Data.sublist(
       VoiceConstants.headerSize,
-      VoiceConstants.headerSize + frames * VoiceConstants.bytesPerFrame,
+      VoiceConstants.headerSize + frames * quality.bytesPerFrame,
     );
 
-    final pcm = await decodeCodec2Frames(frameBytes);
+    final pcm = await decodeCodec2Frames(
+      frameBytes,
+      cApiMode: quality.cApiMode,
+      bytesPerFrame: quality.bytesPerFrame,
+    );
     if (pcm == null || pcm.isEmpty) {
       AppLogging.voice('decode: Codec2 decoding returned empty PCM');
       return null;

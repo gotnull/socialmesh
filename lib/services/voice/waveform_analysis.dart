@@ -89,11 +89,9 @@ abstract final class WaveformAnalyser {
     if (cached != null) return cached;
 
     final int frames = c2Payload[2] | (c2Payload[3] << 8);
+    final quality = VoiceQuality.fromWireModeByte(c2Payload[1])!;
     final durationMs =
-        frames *
-        VoiceConstants.samplesPerFrame *
-        1000 ~/
-        VoiceConstants.sampleRate;
+        frames * quality.samplesPerFrame * 1000 ~/ VoiceConstants.sampleRate;
 
     WaveformAnalysis result;
 
@@ -163,7 +161,8 @@ abstract final class WaveformAnalyser {
   static bool _hasValidHeader(Uint8List data) {
     if (data.length < VoiceConstants.headerSize) return false;
     if (data[0] != VoiceConstants.magicByte) return false;
-    if (data[1] != VoiceConstants.wireMode1200) return false;
+    // Accept any known Codec2 mode byte (1200, 2400, 3200 bps).
+    if (VoiceQuality.fromWireModeByte(data[1]) == null) return false;
     return true;
   }
 

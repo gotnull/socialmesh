@@ -68,6 +68,7 @@ final class Codec2Bindings {
 
   static _Codec2CreateDart? _codec2Create;
   static _Codec2SamplesPerFrameDart? _codec2SamplesPerFrame;
+  static _Codec2BytesPerFrameDart? _codec2BytesPerFrame;
   static _Codec2EncodeDart? _codec2Encode;
   static _Codec2DecodeDart? _codec2Decode;
   static _Codec2DestroyDart? _codec2Destroy;
@@ -93,6 +94,15 @@ final class Codec2Bindings {
           _Codec2SamplesPerFrameDart
         >('codec2_samples_per_frame');
     return _codec2SamplesPerFrame!(c2);
+  }
+
+  /// Calls `codec2_bytes_per_frame(c2)`.
+  static int codec2BytesPerFrame(Pointer<Void> c2) {
+    _codec2BytesPerFrame ??= library
+        .lookupFunction<_Codec2BytesPerFrameNative, _Codec2BytesPerFrameDart>(
+          'codec2_bytes_per_frame',
+        );
+    return _codec2BytesPerFrame!(c2);
   }
 
   /// Calls `codec2_encode(c2, bits, speechIn)`.
@@ -135,6 +145,7 @@ final class Codec2Bindings {
     _lib = null;
     _codec2Create = null;
     _codec2SamplesPerFrame = null;
+    _codec2BytesPerFrame = null;
     _codec2Encode = null;
     _codec2Decode = null;
     _codec2Destroy = null;
@@ -150,6 +161,9 @@ typedef _Codec2CreateDart = Pointer<Void> Function(int mode);
 
 typedef _Codec2SamplesPerFrameNative = Int32 Function(Pointer<Void> c2);
 typedef _Codec2SamplesPerFrameDart = int Function(Pointer<Void> c2);
+
+typedef _Codec2BytesPerFrameNative = Int32 Function(Pointer<Void> c2);
+typedef _Codec2BytesPerFrameDart = int Function(Pointer<Void> c2);
 
 typedef _Codec2EncodeNative =
     Void Function(

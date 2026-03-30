@@ -32151,6 +32151,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get voiceMessageStop => 'Stop playback';
 
   @override
+  String get voiceMessagePause => 'Pause';
+
+  @override
   String voiceMessageDuration(int seconds) {
     return '${seconds}s';
   }
@@ -32176,6 +32179,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get voiceRecordingCancelButton => 'Cancel';
 
   @override
+  String get voiceRecordingDiscardTitle => 'Discard recording?';
+
+  @override
+  String get voiceRecordingDiscardMessage => 'Your recording will be lost.';
+
+  @override
+  String get voiceRecordingDiscardConfirm => 'Discard';
+
+  @override
   String get voiceRecordingRetakeButton => 'Retake';
 
   @override
@@ -32183,6 +32195,38 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get voiceRecordingReadyToSend => 'Ready to send';
+
+  @override
+  String get voiceRecordingTapToPreview => 'Tap to preview';
+
+  @override
+  String get voiceRecordingTapToRecord => 'Tap to record';
+
+  @override
+  String get voiceRecordingPaused => 'PAUSED';
+
+  @override
+  String get voiceRecordingPauseButton => 'Pause';
+
+  @override
+  String get voiceRecordingResumeButton => 'Resume';
+
+  @override
+  String get voiceQualityExtended => 'Extended';
+
+  @override
+  String get voiceQualityStandard => 'Standard';
+
+  @override
+  String get voiceQualityHigh => 'High quality';
+
+  @override
+  String voiceQualityDuration(String seconds) {
+    return '${seconds}s';
+  }
+
+  @override
+  String get voiceQualityPickerTitle => 'Voice quality';
 
   @override
   String get voiceAttachmentCardTitle => 'Voice message';

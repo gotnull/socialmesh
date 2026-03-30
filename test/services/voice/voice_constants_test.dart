@@ -44,9 +44,6 @@ void main() {
     });
 
     test('payload capacity is within SIP 1024-byte-per-60s budget', () {
-      // A single voice message payload must fit in the Meshtastic max fragmentable
-      // payload (8192 bytes per the file-transfer engine). The SIP airtime budget
-      // constrains the RATE, not individual message size.
       expect(VoiceConstants.maxPayloadBytes, lessThanOrEqualTo(8192));
     });
 
@@ -61,6 +58,109 @@ void main() {
 
     test('filename prefix is correct', () {
       expect(VoiceConstants.filenamePrefix, 'voice_');
+    });
+
+    test('maxTransferSize is 8192', () {
+      expect(VoiceConstants.maxTransferSize, 8192);
+    });
+  });
+
+  group('VoiceQuality', () {
+    test('extended mode matches 1200 bps spec', () {
+      const q = VoiceQuality.extended;
+      expect(q.wireModeByte, 0x04);
+      expect(q.cApiMode, 5);
+      expect(q.bytesPerFrame, 6);
+      expect(q.samplesPerFrame, 320);
+      expect(q.bitRate, 1200);
+    });
+
+    test('standard mode matches 2400 bps spec', () {
+      const q = VoiceQuality.standard;
+      expect(q.wireModeByte, 0x05);
+      expect(q.cApiMode, 1);
+      expect(q.bytesPerFrame, 6);
+      expect(q.samplesPerFrame, 160);
+      expect(q.bitRate, 2400);
+    });
+
+    test('high mode matches 3200 bps spec', () {
+      const q = VoiceQuality.high;
+      expect(q.wireModeByte, 0x06);
+      expect(q.cApiMode, 0);
+      expect(q.bytesPerFrame, 8);
+      expect(q.samplesPerFrame, 160);
+      expect(q.bitRate, 3200);
+    });
+
+    test('all modes fit within maxTransferSize', () {
+      for (final q in VoiceQuality.values) {
+        expect(
+          q.maxPayloadBytes,
+          lessThanOrEqualTo(VoiceConstants.maxTransferSize),
+          reason: '${q.name} maxPayloadBytes exceeds transfer limit',
+        );
+      }
+    });
+
+    test('maxFrames computation is correct for all modes', () {
+      for (final q in VoiceQuality.values) {
+        final expected =
+            (VoiceConstants.maxTransferSize - VoiceConstants.headerSize) ~/
+            q.bytesPerFrame;
+        expect(q.maxFrames, expected, reason: '${q.name} maxFrames');
+      }
+    });
+
+    test('maxRecordingDuration is positive for all modes', () {
+      for (final q in VoiceQuality.values) {
+        expect(
+          q.maxRecordingDuration.inSeconds,
+          greaterThan(0),
+          reason: '${q.name} duration',
+        );
+      }
+    });
+
+    test('higher bitrate means shorter max duration', () {
+      expect(
+        VoiceQuality.extended.maxRecordingDuration.inSeconds,
+        greaterThan(VoiceQuality.standard.maxRecordingDuration.inSeconds),
+      );
+      expect(
+        VoiceQuality.standard.maxRecordingDuration.inSeconds,
+        greaterThan(VoiceQuality.high.maxRecordingDuration.inSeconds),
+      );
+    });
+
+    test('fromWireModeByte resolves all known modes', () {
+      expect(VoiceQuality.fromWireModeByte(0x04), VoiceQuality.extended);
+      expect(VoiceQuality.fromWireModeByte(0x05), VoiceQuality.standard);
+      expect(VoiceQuality.fromWireModeByte(0x06), VoiceQuality.high);
+    });
+
+    test('fromWireModeByte returns null for unknown bytes', () {
+      expect(VoiceQuality.fromWireModeByte(0x00), isNull);
+      expect(VoiceQuality.fromWireModeByte(0xFF), isNull);
+    });
+
+    test('prefsValue roundtrip works for all modes', () {
+      for (final q in VoiceQuality.values) {
+        expect(VoiceQuality.fromPrefsValue(q.prefsValue), q);
+      }
+    });
+
+    test('fromPrefsValue defaults to defaultQuality for null or unknown', () {
+      expect(VoiceQuality.fromPrefsValue(null), VoiceConstants.defaultQuality);
+      expect(
+        VoiceQuality.fromPrefsValue('unknown'),
+        VoiceConstants.defaultQuality,
+      );
+    });
+
+    test('wire mode bytes are unique', () {
+      final wireBytes = VoiceQuality.values.map((q) => q.wireModeByte).toList();
+      expect(wireBytes.toSet().length, wireBytes.length);
     });
   });
 }
