@@ -831,8 +831,8 @@ class _VoiceRecordingOverlayState extends State<VoiceRecordingOverlay>
       color: _recColor,
       onTap: () {
         HapticFeedback.mediumImpact();
-        _enterReview();
         widget.onRecordingStopped();
+        _enterReview();
       },
       child: Container(
         width: _stopSquareSize,

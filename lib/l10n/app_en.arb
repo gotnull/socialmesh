@@ -6789,6 +6789,10 @@
     "@fileTransferStatusCancelled": {
         "description": "Transfer card status — transfer cancelled"
     },
+    "fileTransferStatusAwaitingAccept": "Awaiting Accept",
+    "@fileTransferStatusAwaitingAccept": {
+        "description": "Transfer card status — outbound offer sent, waiting for receiver to accept"
+    },
     "fileTransferStatusFailed": "Failed",
     "@fileTransferStatusFailed": {
         "description": "Transfer card status — generic failure"

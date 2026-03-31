@@ -34,7 +34,8 @@ abstract final class SmVersion {
   static const int current = 0;
 
   /// Maximum supported version for forward compatibility.
-  static const int maxSupported = 0;
+  /// Bumped to 1 to accept SPP v1 file-transfer packets (kinds 4–7).
+  static const int maxSupported = 1;
 }
 
 /// Packet kind values (low nibble of hdr0). Globally unique across portnums.
@@ -59,6 +60,15 @@ abstract final class SmPacketKind {
 
   /// SM_FILE_ACK.
   static const int fileAck = 7;
+
+  /// SPP_ACCEPT (SPP v1 negotiation).
+  static const int sppAccept = 8;
+
+  /// SPP_DECLINE (SPP v1 negotiation).
+  static const int sppDecline = 9;
+
+  /// SPP_ABORT (SPP v1 cancel).
+  static const int sppAbort = 0x0A;
 }
 
 /// Rate limiting intervals for each packet type.

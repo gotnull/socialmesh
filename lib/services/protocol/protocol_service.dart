@@ -225,10 +225,14 @@ class SmFileTransferEvent {
   final Object packet;
   final int senderNodeNum;
 
+  /// Protocol version from the wire header (bits 7-4). Defaults to 0.
+  final int version;
+
   const SmFileTransferEvent({
     required this.type,
     required this.packet,
     required this.senderNodeNum,
+    this.version = 0,
   });
 }
 
@@ -1693,13 +1697,23 @@ class ProtocolService {
 
     switch (decoded.type) {
       case SmPacketType.fileOffer:
-        _handleSmFileOffer(decoded.fileOffer, packet.from);
+        _handleSmFileOffer(
+          decoded.fileOffer,
+          packet.from,
+          version: decoded.version,
+        );
       case SmPacketType.fileChunk:
         _handleSmFileChunk(decoded.fileChunk, packet.from);
       case SmPacketType.fileNack:
         _handleSmFileNack(decoded.fileNack, packet.from);
       case SmPacketType.fileAck:
         _handleSmFileAck(decoded.fileAck, packet.from);
+      case SmPacketType.sppAccept:
+        _handleSppAccept(decoded.sppAccept, packet.from);
+      case SmPacketType.sppDecline:
+        _handleSppDecline(decoded.sppDecline, packet.from);
+      case SmPacketType.sppAbort:
+        _handleSppAbort(decoded.sppAbort, packet.from);
       case SmPacketType.presence:
       case SmPacketType.signal:
       case SmPacketType.identity:
@@ -1745,13 +1759,23 @@ class ProtocolService {
       case SmPacketType.identity:
         _handleSmIdentity(decoded.identity, packet.from);
       case SmPacketType.fileOffer:
-        _handleSmFileOffer(decoded.fileOffer, packet.from);
+        _handleSmFileOffer(
+          decoded.fileOffer,
+          packet.from,
+          version: decoded.version,
+        );
       case SmPacketType.fileChunk:
         _handleSmFileChunk(decoded.fileChunk, packet.from);
       case SmPacketType.fileNack:
         _handleSmFileNack(decoded.fileNack, packet.from);
       case SmPacketType.fileAck:
         _handleSmFileAck(decoded.fileAck, packet.from);
+      case SmPacketType.sppAccept:
+        _handleSppAccept(decoded.sppAccept, packet.from);
+      case SmPacketType.sppDecline:
+        _handleSppDecline(decoded.sppDecline, packet.from);
+      case SmPacketType.sppAbort:
+        _handleSppAbort(decoded.sppAbort, packet.from);
     }
   }
 
@@ -1865,17 +1889,22 @@ class ProtocolService {
   onSmIdentityUpdate;
 
   /// Handle incoming FILE_OFFER.
-  void _handleSmFileOffer(SmFileOffer offer, int senderNodeNum) {
+  void _handleSmFileOffer(
+    SmFileOffer offer,
+    int senderNodeNum, {
+    int version = 0,
+  }) {
     AppLogging.protocol(
       'SM_FILE_OFFER from ${senderNodeNum.toRadixString(16)}: '
       'file=${offer.filename}, ${offer.totalBytes} bytes, '
-      '${offer.chunkCount} chunks',
+      '${offer.chunkCount} chunks, v=$version',
     );
     _fileTransferController.add(
       SmFileTransferEvent(
         type: SmPacketType.fileOffer,
         packet: offer,
         senderNodeNum: senderNodeNum,
+        version: version,
       ),
     );
   }
@@ -1921,6 +1950,42 @@ class ProtocolService {
       SmFileTransferEvent(
         type: SmPacketType.fileAck,
         packet: ack,
+        senderNodeNum: senderNodeNum,
+      ),
+    );
+  }
+
+  /// Handle incoming SPP_ACCEPT.
+  void _handleSppAccept(Object accept, int senderNodeNum) {
+    AppLogging.spp('SPP_ACCEPT from ${senderNodeNum.toRadixString(16)}');
+    _fileTransferController.add(
+      SmFileTransferEvent(
+        type: SmPacketType.sppAccept,
+        packet: accept,
+        senderNodeNum: senderNodeNum,
+      ),
+    );
+  }
+
+  /// Handle incoming SPP_DECLINE.
+  void _handleSppDecline(Object decline, int senderNodeNum) {
+    AppLogging.spp('SPP_DECLINE from ${senderNodeNum.toRadixString(16)}');
+    _fileTransferController.add(
+      SmFileTransferEvent(
+        type: SmPacketType.sppDecline,
+        packet: decline,
+        senderNodeNum: senderNodeNum,
+      ),
+    );
+  }
+
+  /// Handle incoming SPP_ABORT.
+  void _handleSppAbort(Object abort, int senderNodeNum) {
+    AppLogging.spp('SPP_ABORT from ${senderNodeNum.toRadixString(16)}');
+    _fileTransferController.add(
+      SmFileTransferEvent(
+        type: SmPacketType.sppAbort,
+        packet: abort,
         senderNodeNum: senderNodeNum,
       ),
     );
@@ -4744,10 +4809,21 @@ class ProtocolService {
     int? destinationNode,
     int hopLimit = 3,
   }) async {
-    if (_myNodeNum == null || !_transport.isConnected) return false;
+    if (_myNodeNum == null || !_transport.isConnected) {
+      AppLogging.fileTransfer(
+        'sendSmFileTransferPacket BLOCKED: '
+        'myNodeNum=${_myNodeNum != null ? "set" : "NULL"}, '
+        'connected=${_transport.isConnected}',
+      );
+      return false;
+    }
 
     if (!_smRateLimiter.canSend(SmPortnum.fileTransfer)) {
-      AppLogging.protocol('SM_FILE_TRANSFER rate-limited');
+      AppLogging.fileTransfer(
+        'sendSmFileTransferPacket RATE-LIMITED '
+        '(${payload.length} bytes, '
+        'intended=${destinationNode?.toRadixString(16) ?? "broadcast"})',
+      );
       return false;
     }
 

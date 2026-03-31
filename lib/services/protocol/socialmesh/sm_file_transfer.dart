@@ -7,6 +7,7 @@ import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 
+import '../../payload/spp_constants.dart';
 import 'sm_constants.dart';
 
 /// File transfer packet types carried over Meshtastic private portnums.
@@ -197,9 +198,11 @@ class SmFileOffer {
     final buffer = ByteData(size);
     var offset = 0;
 
-    // Header: version=0, kind=FILE_OFFER (4)
-    buffer.setUint8(offset++, SmPacketKind.fileOffer);
-    // (version 0 means high nibble is 0, so 0x04)
+    // Header: version=SPP v1, kind=FILE_OFFER (4) → 0x14
+    buffer.setUint8(
+      offset++,
+      (SppVersion.current << 4) | SmPacketKind.fileOffer,
+    );
 
     // File ID
     final bytes = buffer.buffer.asUint8List();
@@ -387,8 +390,11 @@ class SmFileChunk {
     final buffer = ByteData(size);
     var offset = 0;
 
-    // Header: version=0, kind=FILE_CHUNK (5)
-    buffer.setUint8(offset++, SmPacketKind.fileChunk);
+    // Header: version=SPP v1, kind=FILE_CHUNK (5) → 0x15
+    buffer.setUint8(
+      offset++,
+      (SppVersion.current << 4) | SmPacketKind.fileChunk,
+    );
 
     // File ID
     final bytes = buffer.buffer.asUint8List();
@@ -488,8 +494,11 @@ class SmFileNack {
     final buffer = ByteData(size);
     var offset = 0;
 
-    // Header: version=0, kind=FILE_NACK (6)
-    buffer.setUint8(offset++, SmPacketKind.fileNack);
+    // Header: version=SPP v1, kind=FILE_NACK (6) → 0x16
+    buffer.setUint8(
+      offset++,
+      (SppVersion.current << 4) | SmPacketKind.fileNack,
+    );
 
     // File ID
     final bytes = buffer.buffer.asUint8List();
@@ -573,8 +582,8 @@ class SmFileAck {
     final buffer = ByteData(18); // header + fileId + status
     var offset = 0;
 
-    // Header: version=0, kind=FILE_ACK (7)
-    buffer.setUint8(offset++, SmPacketKind.fileAck);
+    // Header: version=SPP v1, kind=FILE_ACK (7) → 0x17
+    buffer.setUint8(offset++, (SppVersion.current << 4) | SmPacketKind.fileAck);
 
     // File ID
     final bytes = buffer.buffer.asUint8List();

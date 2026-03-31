@@ -5115,6 +5115,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fileTransferStatusCancelled => 'Cancelled';
 
   @override
+  String get fileTransferStatusAwaitingAccept => 'Awaiting Accept';
+
+  @override
   String get fileTransferStatusFailed => 'Failed';
 
   @override

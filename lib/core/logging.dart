@@ -72,6 +72,8 @@ class AppLogging {
   static bool? _meshExplorerDebugEnabled;
   static bool? _voiceLoggingEnabled;
   static bool? _codec2LoggingEnabled;
+  static bool? _sppLoggingEnabled;
+  static bool? _sppNegotiationLoggingEnabled;
   static bool? _forceEmptyStates;
   static Logger? _bleLogger;
   static Logger? _mapLogger;
@@ -624,6 +626,30 @@ class AppLogging {
     if (codec2LoggingEnabled) debugPrint('Codec2: $message');
   }
 
+  /// SPP payload transfer logging.
+  /// Enable with SPP_LOGGING_ENABLED=true in .env file.
+  static bool get sppLoggingEnabled {
+    _sppLoggingEnabled ??=
+        _safeGetEnv('SPP_LOGGING_ENABLED')?.toLowerCase() == 'true';
+    return _sppLoggingEnabled!;
+  }
+
+  static void spp(String message) {
+    if (sppLoggingEnabled) debugPrint('SPP: $message');
+  }
+
+  /// SPP negotiation logging.
+  /// Enable with SPP_NEGOTIATION_LOGGING_ENABLED=true in .env file.
+  static bool get sppNegotiationLoggingEnabled {
+    _sppNegotiationLoggingEnabled ??=
+        _safeGetEnv('SPP_NEGOTIATION_LOGGING_ENABLED')?.toLowerCase() == 'true';
+    return _sppNegotiationLoggingEnabled!;
+  }
+
+  static void sppNegotiation(String message) {
+    if (sppNegotiationLoggingEnabled) debugPrint('SPP_NEG: $message');
+  }
+
   static void reset() {
     _bleLoggingEnabled = null;
     _protocolLoggingEnabled = null;
@@ -672,6 +698,8 @@ class AppLogging {
     _meshExplorerDebugEnabled = null;
     _voiceLoggingEnabled = null;
     _codec2LoggingEnabled = null;
+    _sppLoggingEnabled = null;
+    _sppNegotiationLoggingEnabled = null;
     _bleLogger = null;
     _noOpLogger = null;
   }

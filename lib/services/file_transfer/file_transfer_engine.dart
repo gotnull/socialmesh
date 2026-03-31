@@ -38,6 +38,11 @@ enum TransferState {
 
   /// Transfer cancelled by user.
   cancelled,
+
+  /// Outbound: offer sent, waiting for receiver's ACCEPT before sending
+  /// chunks. This is a hard gate — no chunk transmission is permitted
+  /// until the negotiation layer confirms acceptance.
+  awaitingAccept,
 }
 
 /// Reason codes for transfer failure.
@@ -423,8 +428,8 @@ class FileTransferEngine {
     }
 
     AppLogging.fileTransfer(
-      'startTransfer: $fileIdHex offer sent, queueing '
-      '${transfer.chunkCount} chunks',
+      'startTransfer: $fileIdHex offer sent, '
+      'awaiting accept before chunking',
     );
 
     _updateState(fileIdHex, transfer.copyWith(state: TransferState.offerSent));
@@ -433,19 +438,12 @@ class FileTransferEngine {
     // waits for the rate-limit interval instead of failing immediately.
     _lastGlobalSend = DateTime.now();
 
-    // Queue all chunks
-    for (var i = 0; i < transfer.chunkCount; i++) {
-      _sendQueue.add((fileIdHex, i));
-    }
-
-    // Transition to chunking and start the send loop.
-    // The timer will fire after fileChunkInterval, giving the protocol
-    // rate limiter time to reset after the offer packet.
+    // Hard gate: transition to awaitingAccept. No chunks are queued
+    // until the negotiation layer confirms the receiver's ACCEPT.
     _updateState(
       fileIdHex,
-      _transfers[fileIdHex]!.copyWith(state: TransferState.chunking),
+      _transfers[fileIdHex]!.copyWith(state: TransferState.awaitingAccept),
     );
-    _scheduleSendLoop();
   }
 
   /// Cancel an active transfer.
@@ -503,6 +501,35 @@ class FileTransferEngine {
     if (transfer.completedChunks.length == transfer.chunkCount) {
       _tryCompleteInbound(fileIdHex);
     }
+  }
+
+  /// Resume an outbound transfer after the receiver's ACCEPT is received.
+  ///
+  /// Transitions from [TransferState.awaitingAccept] to
+  /// [TransferState.chunking], queues all chunks, and starts the send loop.
+  void resumeTransfer(String fileIdHex) {
+    final transfer = _transfers[fileIdHex];
+    if (transfer == null || transfer.state != TransferState.awaitingAccept) {
+      AppLogging.fileTransfer(
+        'resumeTransfer: $fileIdHex not awaiting accept '
+        '(${transfer?.state.name ?? "null"})',
+      );
+      return;
+    }
+
+    AppLogging.fileTransfer(
+      'resumeTransfer: $fileIdHex accept received, '
+      'queueing ${transfer.chunkCount} chunks',
+    );
+
+    // Queue all chunks
+    for (var i = 0; i < transfer.chunkCount; i++) {
+      _sendQueue.add((fileIdHex, i));
+    }
+
+    // Transition to chunking and start the send loop.
+    _updateState(fileIdHex, transfer.copyWith(state: TransferState.chunking));
+    _scheduleSendLoop();
   }
 
   /// Reject a pending inbound transfer.
@@ -901,6 +928,16 @@ class FileTransferEngine {
     final transfer = _transfers[fileIdHex];
     if (transfer == null || !transfer.isActive) return;
     if (transfer.fileBytes == null) return;
+
+    // Hard gate: never send chunks unless transfer is in chunking state.
+    // This prevents data leakage if a chunk was enqueued before acceptance.
+    if (transfer.state != TransferState.chunking) {
+      AppLogging.fileTransfer(
+        'BLOCKED chunk send: $fileIdHex [$chunkIndex] '
+        'state=${transfer.state.name} (expected chunking)',
+      );
+      return;
+    }
 
     // Calculate chunk boundaries
     final start = chunkIndex * transfer.chunkSize;

@@ -316,6 +316,8 @@ class FileTransferCard extends ConsumerWidget {
         return _failReasonText(context);
       case TransferState.cancelled:
         return context.l10n.fileTransferStatusCancelled;
+      case TransferState.awaitingAccept:
+        return context.l10n.fileTransferStatusAwaitingAccept;
     }
   }
 
@@ -346,6 +348,7 @@ class FileTransferCard extends ConsumerWidget {
     switch (transfer.state) {
       case TransferState.created:
       case TransferState.offerSent:
+      case TransferState.awaitingAccept:
         return Icons.schedule;
       case TransferState.offerPending:
         return Icons.inbox;
@@ -368,6 +371,7 @@ class FileTransferCard extends ConsumerWidget {
     switch (transfer.state) {
       case TransferState.created:
       case TransferState.offerSent:
+      case TransferState.awaitingAccept:
         return context.textTertiary;
       case TransferState.offerPending:
         return SemanticColors.warning;

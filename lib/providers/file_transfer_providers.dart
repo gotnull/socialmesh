@@ -14,8 +14,13 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
 import '../core/logging.dart';
+import '../features/nodedex/providers/nodedex_providers.dart';
+import '../features/nodedex/services/trust_score.dart';
 import '../services/file_transfer/file_transfer_database.dart';
 import '../services/file_transfer/file_transfer_engine.dart';
+import '../services/payload/payload_negotiation.dart';
+import '../services/payload/spp_protocol.dart';
+import '../services/payload/spp_types.dart';
 import '../services/protocol/protocol_service.dart';
 import '../services/protocol/socialmesh/sm_codec.dart';
 import '../services/protocol/socialmesh/sm_constants.dart';
@@ -37,6 +42,54 @@ final fileTransferDatabaseProvider = Provider<FileTransferDatabase>((ref) {
 });
 
 // ---------------------------------------------------------------------------
+// SPP payload negotiation provider
+// ---------------------------------------------------------------------------
+
+final payloadNegotiationProvider = Provider<PayloadNegotiation>((ref) {
+  AppLogging.spp('Provider: creating PayloadNegotiation');
+
+  final negotiation = PayloadNegotiation(
+    sendPacket: (payload, {destinationNode, hopLimit = 3}) async {
+      final protocol = ref.read(protocolServiceProvider);
+      return protocol.sendSmFileTransferPacket(
+        payload,
+        destinationNode: destinationNode,
+        hopLimit: hopLimit,
+      );
+    },
+    isTrusted: (nodeNum) {
+      final trust = ref.read(nodeDexTrustProvider(nodeNum));
+      return trust.level.index >= TrustLevel.trusted.index;
+    },
+    getStorageUsed: () {
+      final transfers = ref.read(fileTransferStateProvider).transfers;
+      var total = 0;
+      for (final t in transfers.values) {
+        if (t.direction == TransferDirection.inbound && t.isActive) {
+          total += t.totalBytes;
+        }
+      }
+      return total;
+    },
+    autoAcceptConfig: SppAutoAcceptConfig(
+      enabled: ref
+          .read(settingsServiceProvider)
+          .maybeWhen(
+            data: (s) => s.fileTransferAutoAccept,
+            orElse: () => false,
+          ),
+    ),
+  );
+
+  ref.onDispose(() {
+    AppLogging.spp('Provider: disposing PayloadNegotiation');
+    negotiation.dispose();
+  });
+
+  return negotiation;
+});
+
+// ---------------------------------------------------------------------------
 // Engine provider
 // ---------------------------------------------------------------------------
 
@@ -55,16 +108,52 @@ final fileTransferEngineProvider = Provider<FileTransferEngine>((ref) {
       );
       switch (event.type) {
         case SmPacketType.fileOffer:
-          final settingsAsync = ref.read(settingsServiceProvider);
-          final autoAccept = settingsAsync.maybeWhen(
-            data: (s) => s.fileTransferAutoAccept,
-            orElse: () => true,
-          );
-          engine.handleIncomingOffer(
-            event.packet as SmFileOffer,
-            sourceNodeNum: event.senderNodeNum,
-            autoAccept: autoAccept,
-          );
+          final offer = event.packet as SmFileOffer;
+          if (event.version >= 1) {
+            // SPP v1 offer — route through negotiation layer.
+            final negotiation = ref.read(payloadNegotiationProvider);
+            final result = negotiation.handleIncomingOffer(
+              offer,
+              sourceNodeNum: event.senderNodeNum,
+            );
+            if (result == SppNegotiationState.accepted) {
+              // Auto-accepted: pass directly to engine.
+              AppLogging.spp(
+                'offer auto-accepted, forwarding to engine '
+                '(payload=${fileIdToHex(offer.fileId)})',
+              );
+              engine.handleIncomingOffer(
+                offer,
+                sourceNodeNum: event.senderNodeNum,
+                autoAccept: true,
+              );
+            } else if (result == SppNegotiationState.offerPending) {
+              // User must decide — create a visible transfer entry
+              // in offerPending state so the UI can show accept/reject.
+              AppLogging.spp(
+                'offer surfaced to UI '
+                '(payload=${fileIdToHex(offer.fileId)})',
+              );
+              engine.handleIncomingOffer(
+                offer,
+                sourceNodeNum: event.senderNodeNum,
+                autoAccept: false,
+              );
+            }
+            // declined → negotiation already sent DECLINE
+          } else {
+            // Legacy v0 offer — existing behavior.
+            final settingsAsync = ref.read(settingsServiceProvider);
+            final autoAccept = settingsAsync.maybeWhen(
+              data: (s) => s.fileTransferAutoAccept,
+              orElse: () => true,
+            );
+            engine.handleIncomingOffer(
+              offer,
+              sourceNodeNum: event.senderNodeNum,
+              autoAccept: autoAccept,
+            );
+          }
         case SmPacketType.fileChunk:
           engine.handleIncomingChunk(
             event.packet as SmFileChunk,
@@ -74,6 +163,18 @@ final fileTransferEngineProvider = Provider<FileTransferEngine>((ref) {
           engine.handleIncomingNack(event.packet as SmFileNack);
         case SmPacketType.fileAck:
           engine.handleIncomingAck(event.packet as SmFileAck);
+        case SmPacketType.sppAccept:
+          ref
+              .read(payloadNegotiationProvider)
+              .handleIncomingAccept(event.packet as SppAccept);
+        case SmPacketType.sppDecline:
+          ref
+              .read(payloadNegotiationProvider)
+              .handleIncomingDecline(event.packet as SppDecline);
+        case SmPacketType.sppAbort:
+          ref
+              .read(payloadNegotiationProvider)
+              .handleIncomingAbort(event.packet as SppAbort);
         default:
           break;
       }
@@ -85,13 +186,26 @@ final fileTransferEngineProvider = Provider<FileTransferEngine>((ref) {
       // Always read the CURRENT protocol service for sending so that
       // reconnect-created instances are used transparently.
       final protocol = ref.read(protocolServiceProvider);
-      return protocol.sendSmFileTransferPacket(
+      final sent = await protocol.sendSmFileTransferPacket(
         payload,
         destinationNode: destinationNode,
         hopLimit: hopLimit,
       );
+      if (!sent) {
+        AppLogging.fileTransfer(
+          'Provider sendPacket FAILED: ${payload.length} bytes, '
+          'dest=${destinationNode?.toRadixString(16) ?? "broadcast"}, '
+          'hopLimit=$hopLimit',
+        );
+      }
+      return sent;
     },
     onStateChanged: (state) {
+      AppLogging.fileTransfer(
+        'Provider onStateChanged: ${state.fileIdHex} → '
+        '${state.state.name} '
+        '(${state.direction.name}, ${state.filename})',
+      );
       // Engine updates never include savedFilePath (it's managed by the
       // notifier's auto-save logic). Preserve the existing savedFilePath
       // from the notifier state so db.saveTransfer doesn't overwrite it
@@ -126,9 +240,53 @@ final fileTransferEngineProvider = Provider<FileTransferEngine>((ref) {
     subscribeToProtocol(next);
   });
 
+  // Listen to negotiation state changes to route accepted/declined offers
+  // to the engine.
+  final negotiation = ref.read(payloadNegotiationProvider);
+  final negotiationSub = negotiation.stateChanges.listen((offer) {
+    switch (offer.state) {
+      case SppNegotiationState.accepted:
+        // Determine if this is inbound (offerPending) or outbound
+        // (awaitingAccept).
+        final transfer = engine.getTransfer(offer.payloadIdHex);
+        if (transfer?.state == TransferState.offerPending) {
+          // Inbound: user accepted → transition engine to chunking.
+          AppLogging.spp(
+            'user accepted inbound offer ${offer.payloadIdHex} — '
+            'transitioning engine to chunking',
+          );
+          engine.acceptTransfer(offer.payloadIdHex);
+        } else if (transfer?.state == TransferState.awaitingAccept) {
+          // Outbound: receiver sent ACCEPT → resume chunk transmission.
+          AppLogging.spp(
+            'receiver accepted outbound offer ${offer.payloadIdHex} — '
+            'resuming transfer',
+          );
+          engine.resumeTransfer(offer.payloadIdHex);
+        }
+      case SppNegotiationState.declined:
+      case SppNegotiationState.aborted:
+        AppLogging.spp(
+          'offer ${offer.payloadIdHex} '
+          '${offer.state == SppNegotiationState.declined ? "declined" : "aborted"} — '
+          'cancelling engine transfer',
+        );
+        engine.cancelTransfer(offer.payloadIdHex);
+      case SppNegotiationState.timedOut:
+        AppLogging.spp(
+          'offer ${offer.payloadIdHex} timed out — cancelling engine transfer',
+        );
+        engine.cancelTransfer(offer.payloadIdHex);
+      case SppNegotiationState.offerSent:
+      case SppNegotiationState.offerPending:
+        break;
+    }
+  });
+
   ref.onDispose(() {
     AppLogging.fileTransfer('Provider: disposing FileTransferEngine');
     subscription?.cancel();
+    negotiationSub.cancel();
     engine.dispose();
   });
 
@@ -339,6 +497,12 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
     }
 
     final engine = ref.read(fileTransferEngineProvider);
+    AppLogging.fileTransfer(
+      'sendFile: initiating transfer '
+      '(file=$filename, mime=$mimeType, size=${fileBytes.length}, '
+      'target=${targetNodeNum?.toRadixString(16) ?? "broadcast"}, '
+      'mode=${transportMode.name})',
+    );
     final transfer = engine.initiateTransfer(
       filename: filename,
       mimeType: mimeType,
@@ -347,7 +511,13 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
       transportMode: transportMode,
     );
 
-    if (transfer == null) return null;
+    if (transfer == null) {
+      AppLogging.fileTransfer(
+        'sendFile FAILED: engine.initiateTransfer returned null '
+        '(file=$filename, size=${fileBytes.length})',
+      );
+      return null;
+    }
 
     AppLogging.protocol(
       'File transfer initiated: ${transfer.fileIdHex} '
@@ -361,8 +531,25 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
     // the auto-save microtask). Voice messages especially need this.
     unawaited(_autoSaveFile(transfer));
 
-    // Start sending.
+    // Start sending (offer only — chunks gated on ACCEPT).
     await engine.startTransfer(transfer.fileIdHex);
+
+    // Register with negotiation layer so we get ACCEPT/DECLINE/TIMEOUT
+    // callbacks via stateChanges stream.
+    final negotiation = ref.read(payloadNegotiationProvider);
+    final offer = SmFileOffer(
+      fileId: transfer.fileId,
+      filename: transfer.filename,
+      mimeType: transfer.mimeType,
+      totalBytes: transfer.totalBytes,
+      chunkCount: transfer.chunkCount,
+      chunkSize: transfer.chunkSize,
+      sha256Hash: transfer.sha256Hash,
+      createdAt: transfer.createdAt.millisecondsSinceEpoch ~/ 1000,
+      expiresAt: transfer.expiresAt.millisecondsSinceEpoch ~/ 1000,
+    );
+    negotiation.registerOutboundOffer(offer, targetNodeNum: targetNodeNum);
+
     return transfer;
   }
 
@@ -534,13 +721,27 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
       'sendVoiceMessage: ${c2Payload.length} bytes '
       '(target=${targetNodeNum != null ? "!${targetNodeNum.toRadixString(16)}" : "none"})',
     );
-    return sendFile(
+    final result = await sendFile(
       filename: 'voice_${DateTime.now().millisecondsSinceEpoch}.c2',
       mimeType: 'audio/x-codec2',
       fileBytes: c2Payload,
       targetNodeNum: targetNodeNum,
       transportMode: transportMode,
     );
+    if (result == null) {
+      AppLogging.voice(
+        'sendVoiceMessage FAILED: sendFile returned null '
+        '(${c2Payload.length} bytes, '
+        'target=${targetNodeNum?.toRadixString(16) ?? "broadcast"})',
+      );
+    } else {
+      AppLogging.voice(
+        'sendVoiceMessage OK: id=${result.fileIdHex}, '
+        '${result.totalBytes} bytes, '
+        '${result.chunkCount} chunks',
+      );
+    }
+    return result;
   }
 
   /// Compress an image using native platform encoding (WebP or JPEG).
@@ -793,17 +994,39 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
   }
 
   /// Accept a pending inbound transfer.
+  ///
+  /// For SPP v1 transfers (tracked by the negotiation layer), routes
+  /// through [PayloadNegotiation.acceptOffer] which sends the ACCEPT
+  /// wire packet and then triggers the engine transition via the
+  /// stateChanges listener. For legacy v0 transfers, calls the engine
+  /// directly.
   void acceptTransfer(String fileIdHex) {
-    AppLogging.fileTransfer('Notifier: acceptTransfer $fileIdHex');
-    final engine = ref.read(fileTransferEngineProvider);
-    engine.acceptTransfer(fileIdHex);
+    final negotiation = ref.read(payloadNegotiationProvider);
+    if (negotiation.hasSession(fileIdHex)) {
+      AppLogging.spp('user accepted offer (payload=$fileIdHex)');
+      negotiation.acceptOffer(fileIdHex);
+    } else {
+      AppLogging.fileTransfer('Notifier: acceptTransfer $fileIdHex (v0)');
+      final engine = ref.read(fileTransferEngineProvider);
+      engine.acceptTransfer(fileIdHex);
+    }
   }
 
   /// Reject a pending inbound transfer.
+  ///
+  /// For SPP v1 transfers, routes through [PayloadNegotiation.declineOffer]
+  /// which sends the DECLINE wire packet and cancels the engine transfer
+  /// via the stateChanges listener. For legacy v0, calls the engine directly.
   void rejectTransfer(String fileIdHex) {
-    AppLogging.fileTransfer('Notifier: rejectTransfer $fileIdHex');
-    final engine = ref.read(fileTransferEngineProvider);
-    engine.rejectTransfer(fileIdHex);
+    final negotiation = ref.read(payloadNegotiationProvider);
+    if (negotiation.hasSession(fileIdHex)) {
+      AppLogging.spp('user rejected offer (payload=$fileIdHex)');
+      negotiation.declineOffer(fileIdHex);
+    } else {
+      AppLogging.fileTransfer('Notifier: rejectTransfer $fileIdHex (v0)');
+      final engine = ref.read(fileTransferEngineProvider);
+      engine.rejectTransfer(fileIdHex);
+    }
   }
 
   /// Request retransmission of missing chunks.

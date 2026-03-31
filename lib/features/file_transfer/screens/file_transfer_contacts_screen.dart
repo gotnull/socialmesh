@@ -575,6 +575,7 @@ class _FileTransferContactsScreenState
     // starts in idle state — recording only begins when the user taps record.
     final hasMic = await VoicePermissionService.requestMicrophonePermission();
     if (!hasMic) {
+      AppLogging.voice('_sendVoiceToContact: microphone permission denied');
       autoStopNotifier.dispose();
       await voiceService.dispose();
       if (!mounted) return;
@@ -673,17 +674,27 @@ class _FileTransferContactsScreenState
 
     switch (action) {
       case _RecordingAction.send:
+        AppLogging.voice(
+          '_sendVoiceToContact: user confirmed send '
+          '(autoStopped=$wasAutoStopped)',
+        );
         if (wasAutoStopped) {
           showInfoSnackBar(context, context.l10n.voiceMessageAutoStopped);
         }
         // pendingStop is always set before .send can fire (the Stop circle
         // or auto-stop must have fired first in review phase).
         final result = await (pendingStop ?? voiceService.stopSession());
+        AppLogging.voice(
+          '_sendVoiceToContact: stopSession result='
+          '${result.outcome.name}'
+          '${result.payload != null ? ", ${result.payload!.length} bytes" : ""}',
+        );
         if (!mounted) return;
         await _handleVoiceResult(result, nodeNum, notifier);
         await voiceService.dispose();
 
       case _RecordingAction.cancel:
+        AppLogging.voice('_sendVoiceToContact: user cancelled');
         // If pendingStop is set, stopSession() is already running; just
         // let it finish and discard. Otherwise cancel normally.
         if (pendingStop == null) await voiceService.cancelSession();
@@ -722,15 +733,26 @@ class _FileTransferContactsScreenState
     if (!mounted) return;
     switch (result.outcome) {
       case VoiceMessageOutcome.success:
+        AppLogging.voice(
+          '_handleVoiceResult: success, '
+          '${result.payload!.length} bytes, '
+          'target=!${nodeNum.toRadixString(16)}',
+        );
         final transfer = await notifier.sendVoiceMessage(
           result.payload!,
           targetNodeNum: nodeNum,
         );
         if (!mounted) return;
+        AppLogging.voice(
+          '_handleVoiceResult: sendVoiceMessage '
+          '${transfer != null ? "OK (id=${transfer.fileIdHex})" : "FAILED"}',
+        );
         _showVoiceSendResultSnackBar(transfer != null);
       case VoiceMessageOutcome.tooShort:
+        AppLogging.voice('_handleVoiceResult: tooShort');
         showInfoSnackBar(context, context.l10n.voiceMessageTooShort);
       case VoiceMessageOutcome.failed:
+        AppLogging.voice('_handleVoiceResult: failed');
         showErrorSnackBar(context, context.l10n.voiceMessageFailed);
     }
   }
@@ -1468,7 +1490,9 @@ class _CompactTransferRow extends StatelessWidget {
   final VoidCallback? onTap;
 
   IconData get _stateIcon => switch (transfer.state) {
-    TransferState.created || TransferState.offerSent => Icons.schedule,
+    TransferState.created ||
+    TransferState.offerSent ||
+    TransferState.awaitingAccept => Icons.schedule,
     TransferState.offerPending => Icons.inbox,
     TransferState.chunking =>
       transfer.direction == TransferDirection.outbound
@@ -1483,6 +1507,7 @@ class _CompactTransferRow extends StatelessWidget {
   Color _stateColor(BuildContext context) => switch (transfer.state) {
     TransferState.created ||
     TransferState.offerSent ||
+    TransferState.awaitingAccept ||
     TransferState.cancelled => context.textTertiary,
     TransferState.offerPending ||
     TransferState.waitingMissing => SemanticColors.warning,

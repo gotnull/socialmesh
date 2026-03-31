@@ -9154,6 +9154,12 @@ abstract class AppLocalizations {
   /// **'Cancelled'**
   String get fileTransferStatusCancelled;
 
+  /// Transfer card status — outbound offer sent, waiting for receiver to accept
+  ///
+  /// In en, this message translates to:
+  /// **'Awaiting Accept'**
+  String get fileTransferStatusAwaitingAccept;
+
   /// Transfer card status — generic failure
   ///
   /// In en, this message translates to:

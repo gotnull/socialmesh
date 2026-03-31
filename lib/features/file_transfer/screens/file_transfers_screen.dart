@@ -718,11 +718,14 @@ String _transferStateLabel(TransferState state) => switch (state) {
   TransferState.complete => 'Complete',
   TransferState.failed => 'Failed',
   TransferState.cancelled => 'Cancelled',
+  TransferState.awaitingAccept => 'Awaiting Accept',
 };
 
 IconData _transferStateIcon(TransferState state, bool isOutbound) =>
     switch (state) {
-      TransferState.created || TransferState.offerSent => Icons.schedule,
+      TransferState.created ||
+      TransferState.offerSent ||
+      TransferState.awaitingAccept => Icons.schedule,
       TransferState.offerPending => Icons.inbox,
       TransferState.chunking => isOutbound ? Icons.upload : Icons.download,
       TransferState.waitingMissing => Icons.sync_problem,
@@ -735,6 +738,7 @@ Color _transferStateColor(BuildContext context, TransferState state) =>
     switch (state) {
       TransferState.created ||
       TransferState.offerSent ||
+      TransferState.awaitingAccept ||
       TransferState.cancelled => context.textTertiary,
       TransferState.offerPending ||
       TransferState.waitingMissing => SemanticColors.warning,

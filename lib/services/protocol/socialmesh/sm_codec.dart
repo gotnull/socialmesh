@@ -3,6 +3,7 @@
 
 import 'dart:typed_data';
 
+import '../../payload/spp_protocol.dart';
 import 'sm_constants.dart';
 import 'sm_file_transfer.dart';
 import 'sm_identity.dart';
@@ -18,6 +19,9 @@ enum SmPacketType {
   fileChunk,
   fileNack,
   fileAck,
+  sppAccept,
+  sppDecline,
+  sppAbort,
 }
 
 /// A decoded Socialmesh extension packet.
@@ -28,7 +32,10 @@ class SmPacket {
   final SmPacketType type;
   final Object payload;
 
-  const SmPacket._(this.type, this.payload);
+  /// Protocol version from the header byte (bits 7-4). Defaults to 0.
+  final int version;
+
+  const SmPacket._(this.type, this.payload, [this.version = 0]);
 
   /// Cast payload to [SmPresence]. Only valid when [type] == presence.
   SmPresence get presence => payload as SmPresence;
@@ -50,6 +57,15 @@ class SmPacket {
 
   /// Cast payload to [SmFileAck]. Only valid when [type] == fileAck.
   SmFileAck get fileAck => payload as SmFileAck;
+
+  /// Cast payload to [SppAccept]. Only valid when [type] == sppAccept.
+  SppAccept get sppAccept => payload as SppAccept;
+
+  /// Cast payload to [SppDecline]. Only valid when [type] == sppDecline.
+  SppDecline get sppDecline => payload as SppDecline;
+
+  /// Cast payload to [SppAbort]. Only valid when [type] == sppAbort.
+  SppAbort get sppAbort => payload as SppAbort;
 }
 
 /// Top-level codec for Socialmesh extension packets.
@@ -118,14 +134,14 @@ class SmCodec {
   static Uint8List? encodeFileAck(SmFileAck ack) => ack.encode();
 
   /// Returns true if [data] looks like a binary file-transfer payload
-  /// (header kind nibble in 4..7).
+  /// (header kind nibble in 4..0xA, covering data + negotiation packets).
   ///
   /// Useful for distinguishing binary SM packets from legacy JSON signals
   /// when both arrive on PRIVATE_APP (256).
   static bool isFileTransferPayload(Uint8List data) {
     if (data.isEmpty) return false;
     final kind = data[0] & 0x0F;
-    return kind >= SmPacketKind.fileOffer && kind <= SmPacketKind.fileAck;
+    return kind >= SmPacketKind.fileOffer && kind <= SmPacketKind.sppAbort;
   }
 
   /// Decode file transfer sub-types by inspecting the header kind nibble.
@@ -134,24 +150,37 @@ class SmCodec {
   /// PRIVATE_APP (256) without going through [decode].
   static SmPacket? decodeFileTransfer(Uint8List data) {
     if (data.isEmpty) return null;
+    final version = (data[0] >> 4) & 0x0F;
     final kind = data[0] & 0x0F;
     switch (kind) {
       case SmPacketKind.fileOffer:
         final o = SmFileOffer.decode(data);
         if (o == null) return null;
-        return SmPacket._(SmPacketType.fileOffer, o);
+        return SmPacket._(SmPacketType.fileOffer, o, version);
       case SmPacketKind.fileChunk:
         final c = SmFileChunk.decode(data);
         if (c == null) return null;
-        return SmPacket._(SmPacketType.fileChunk, c);
+        return SmPacket._(SmPacketType.fileChunk, c, version);
       case SmPacketKind.fileNack:
         final n = SmFileNack.decode(data);
         if (n == null) return null;
-        return SmPacket._(SmPacketType.fileNack, n);
+        return SmPacket._(SmPacketType.fileNack, n, version);
       case SmPacketKind.fileAck:
         final a = SmFileAck.decode(data);
         if (a == null) return null;
-        return SmPacket._(SmPacketType.fileAck, a);
+        return SmPacket._(SmPacketType.fileAck, a, version);
+      case SmPacketKind.sppAccept:
+        final accept = SppAccept.decode(data);
+        if (accept == null) return null;
+        return SmPacket._(SmPacketType.sppAccept, accept, version);
+      case SmPacketKind.sppDecline:
+        final decline = SppDecline.decode(data);
+        if (decline == null) return null;
+        return SmPacket._(SmPacketType.sppDecline, decline, version);
+      case SmPacketKind.sppAbort:
+        final abort = SppAbort.decode(data);
+        if (abort == null) return null;
+        return SmPacket._(SmPacketType.sppAbort, abort, version);
       default:
         return null;
     }
