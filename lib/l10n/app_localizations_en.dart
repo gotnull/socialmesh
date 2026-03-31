@@ -29905,6 +29905,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get countdownBroadcastingPosition => 'Broadcasting position to mesh';
 
   @override
+  String countdownAwaitingAccept(String filename) {
+    return 'Awaiting accept for $filename';
+  }
+
+  @override
+  String countdownSendingFile(String filename) {
+    return 'Sending $filename';
+  }
+
+  @override
+  String countdownReceivingFile(String filename) {
+    return 'Receiving $filename';
+  }
+
+  @override
   String get lifecycleAppNotActive => 'App is not active';
 
   @override

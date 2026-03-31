@@ -3,6 +3,7 @@
 
 import 'dart:typed_data';
 
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/services/file_transfer/file_transfer_engine.dart';
 import 'package:socialmesh/services/protocol/socialmesh/sm_constants.dart';
@@ -604,6 +605,221 @@ void main() {
       expect(updated.targetNodeNum, 42);
       expect(updated.state, TransferState.chunking);
       expect(updated.completedChunks, {0});
+    });
+  });
+
+  group('FileTransferEngine - auto-NACK on inactivity', () {
+    test('sends NACK when chunks stop arriving with gaps', () {
+      fakeAsync((async) {
+        final sentPackets = <Uint8List>[];
+        final stateChanges = <FileTransferState>[];
+        final engine = FileTransferEngine(
+          sendPacket:
+              (payload, portnum, {destinationNode, hopLimit = 3}) async {
+                sentPackets.add(payload);
+                return true;
+              },
+          onStateChanged: stateChanges.add,
+        );
+        addTearDown(engine.dispose);
+
+        final fileId = generateFileId();
+        final offer = SmFileOffer(
+          fileId: fileId,
+          filename: 'gaps.bin',
+          mimeType: 'application/octet-stream',
+          totalBytes: 600,
+          chunkSize: 200,
+          chunkCount: 3,
+          sha256Hash: Uint8List(32),
+          createdAt: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+          expiresAt:
+              DateTime.now()
+                  .add(const Duration(hours: 24))
+                  .millisecondsSinceEpoch ~/
+              1000,
+        );
+
+        engine.handleIncomingOffer(offer, sourceNodeNum: 0xABCD);
+        final idHex = fileIdToHex(fileId);
+
+        // Send chunks 0 and 2, skip chunk 1 (simulating mesh drop)
+        engine.handleIncomingChunk(
+          SmFileChunk(
+            fileId: fileId,
+            chunkIndex: 0,
+            chunkCount: 3,
+            payload: Uint8List(200),
+          ),
+          sourceNodeNum: 0xABCD,
+        );
+        engine.handleIncomingChunk(
+          SmFileChunk(
+            fileId: fileId,
+            chunkIndex: 2,
+            chunkCount: 3,
+            payload: Uint8List(200),
+          ),
+          sourceNodeNum: 0xABCD,
+        );
+
+        // Before timeout: still chunking, no NACK sent
+        final transfer = engine.getTransfer(idHex);
+        expect(transfer!.state, TransferState.chunking);
+        expect(transfer.completedChunks.length, 2);
+        final packetsBefore = sentPackets.length;
+
+        // Advance past the inactivity timeout
+        async.elapse(
+          SmRateLimit.chunkInactivityTimeout +
+              const Duration(milliseconds: 100),
+        );
+
+        // Now a NACK should have been sent and state → waitingMissing
+        final updated = engine.getTransfer(idHex);
+        expect(updated!.state, TransferState.waitingMissing);
+        expect(updated.nackRounds, 1);
+        // A NACK packet was sent
+        expect(sentPackets.length, greaterThan(packetsBefore));
+      });
+    });
+
+    test('does not NACK when all chunks received', () {
+      fakeAsync((async) {
+        final sentPackets = <Uint8List>[];
+        final engine = FileTransferEngine(
+          sendPacket:
+              (payload, portnum, {destinationNode, hopLimit = 3}) async {
+                sentPackets.add(payload);
+                return true;
+              },
+          onStateChanged: (_) {},
+        );
+        addTearDown(engine.dispose);
+
+        // Single-chunk transfer: all data arrives
+        final payload = Uint8List.fromList([0x48, 0x69]);
+        final fromFile = SmFileOffer.fromFile(
+          filename: 'complete.bin',
+          mimeType: 'application/octet-stream',
+          fileBytes: payload,
+          isDirected: true,
+        );
+        final fileId = generateFileId();
+        final offer = SmFileOffer(
+          fileId: fileId,
+          filename: 'complete.bin',
+          mimeType: 'application/octet-stream',
+          totalBytes: payload.length,
+          chunkSize: fromFile.chunkSize,
+          chunkCount: fromFile.chunkCount,
+          sha256Hash: fromFile.sha256Hash,
+          createdAt: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+          expiresAt:
+              DateTime.now()
+                  .add(const Duration(hours: 24))
+                  .millisecondsSinceEpoch ~/
+              1000,
+        );
+
+        engine.handleIncomingOffer(offer, sourceNodeNum: 0xABCD);
+        final idHex = fileIdToHex(fileId);
+
+        // Send the only chunk
+        engine.handleIncomingChunk(
+          SmFileChunk(
+            fileId: fileId,
+            chunkIndex: 0,
+            chunkCount: 1,
+            payload: payload,
+          ),
+          sourceNodeNum: 0xABCD,
+        );
+
+        // Transfer should be complete (not chunking)
+        final transfer = engine.getTransfer(idHex);
+        expect(transfer!.state, TransferState.complete);
+
+        // Advance past timeout — nothing should break
+        final packetsBefore = sentPackets.length;
+        async.elapse(SmRateLimit.chunkInactivityTimeout * 2);
+
+        // No extra NACK packets sent
+        // (only the ACK from completion was sent)
+        expect(sentPackets.length, packetsBefore);
+      });
+    });
+
+    test('inactivity timer resets on each new chunk', () {
+      fakeAsync((async) {
+        final sentPackets = <Uint8List>[];
+        final engine = FileTransferEngine(
+          sendPacket:
+              (payload, portnum, {destinationNode, hopLimit = 3}) async {
+                sentPackets.add(payload);
+                return true;
+              },
+          onStateChanged: (_) {},
+        );
+        addTearDown(engine.dispose);
+
+        final fileId = generateFileId();
+        final offer = SmFileOffer(
+          fileId: fileId,
+          filename: 'slow.bin',
+          mimeType: 'application/octet-stream',
+          totalBytes: 600,
+          chunkSize: 200,
+          chunkCount: 3,
+          sha256Hash: Uint8List(32),
+          createdAt: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+          expiresAt:
+              DateTime.now()
+                  .add(const Duration(hours: 24))
+                  .millisecondsSinceEpoch ~/
+              1000,
+        );
+
+        engine.handleIncomingOffer(offer, sourceNodeNum: 0xABCD);
+        final idHex = fileIdToHex(fileId);
+
+        // Chunk 0 arrives
+        engine.handleIncomingChunk(
+          SmFileChunk(
+            fileId: fileId,
+            chunkIndex: 0,
+            chunkCount: 3,
+            payload: Uint8List(200),
+          ),
+          sourceNodeNum: 0xABCD,
+        );
+
+        // Wait 8 seconds (< 10s timeout)
+        async.elapse(const Duration(seconds: 8));
+
+        // Chunk 2 arrives (still missing 1) — timer resets
+        engine.handleIncomingChunk(
+          SmFileChunk(
+            fileId: fileId,
+            chunkIndex: 2,
+            chunkCount: 3,
+            payload: Uint8List(200),
+          ),
+          sourceNodeNum: 0xABCD,
+        );
+
+        // 8s later — no NACK yet because timer was reset
+        async.elapse(const Duration(seconds: 8));
+        final transfer = engine.getTransfer(idHex);
+        expect(transfer!.state, TransferState.chunking);
+        expect(transfer.nackRounds, 0);
+
+        // 3 more seconds — now past timeout since last chunk
+        async.elapse(const Duration(seconds: 3));
+        final updated = engine.getTransfer(idHex);
+        expect(updated!.state, TransferState.waitingMissing);
+        expect(updated.nackRounds, 1);
+      });
     });
   });
 }

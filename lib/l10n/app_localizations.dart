@@ -52786,6 +52786,24 @@ abstract class AppLocalizations {
   /// **'Broadcasting position to mesh'**
   String get countdownBroadcastingPosition;
 
+  /// Countdown banner label while waiting for a file transfer to be accepted
+  ///
+  /// In en, this message translates to:
+  /// **'Awaiting accept for {filename}'**
+  String countdownAwaitingAccept(String filename);
+
+  /// Countdown banner label while sending a file transfer
+  ///
+  /// In en, this message translates to:
+  /// **'Sending {filename}'**
+  String countdownSendingFile(String filename);
+
+  /// Countdown banner label while receiving a file transfer
+  ///
+  /// In en, this message translates to:
+  /// **'Receiving {filename}'**
+  String countdownReceivingFile(String filename);
+
   /// Text displayed in lifecycle management
   ///
   /// In en, this message translates to:

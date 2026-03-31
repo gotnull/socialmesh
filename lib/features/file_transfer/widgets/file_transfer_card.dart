@@ -56,7 +56,9 @@ class FileTransferCard extends ConsumerWidget {
           color: context.card,
           borderRadius: BorderRadius.circular(AppTheme.radius16),
           border: Border.all(
-            color: transfer.isActive
+            color: transfer.state == TransferState.offerPending
+                ? AccentColors.orange.withValues(alpha: 0.4)
+                : transfer.isActive
                 ? statusColor.withValues(alpha: 0.35)
                 : context.border.withValues(alpha: 0.15),
             width: transfer.isActive ? 1.0 : 0.5,
@@ -161,6 +163,52 @@ class FileTransferCard extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // ── Accept / Decline banner (SIP-style, offerPending only) ──
+        if (transfer.state == TransferState.offerPending &&
+            (onAccept != null || onReject != null)) ...[
+          Row(
+            children: [
+              if (onAccept != null)
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: onAccept,
+                    icon: const Icon(Icons.check, size: 16),
+                    label: Text(context.l10n.fileTransferActionAccept),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AccentColors.green,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size.fromHeight(36),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.spacing12,
+                      ),
+                    ),
+                  ),
+                ),
+              if (onAccept != null && onReject != null)
+                const SizedBox(width: AppTheme.spacing8),
+              if (onReject != null)
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: onReject,
+                    icon: const Icon(Icons.close, size: 16),
+                    label: Text(context.l10n.fileTransferActionReject),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AccentColors.red,
+                      side: BorderSide(
+                        color: AccentColors.red.withValues(alpha: 0.6),
+                      ),
+                      minimumSize: const Size.fromHeight(36),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.spacing12,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spacing12),
+        ],
+
         // ── Header row: icon + filename + subtitle + direction badge ──
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -955,26 +1003,8 @@ class _ActionRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        // Pending offer: accept / reject
-        if (transfer.state == TransferState.offerPending) ...[
-          if (onReject != null)
-            _ActionButton(
-              label: context.l10n.fileTransferActionReject,
-              icon: Icons.close,
-              color: SemanticColors.error,
-              onTap: onReject!,
-            ),
-          if (onAccept != null) ...[
-            const SizedBox(width: AppTheme.spacing8),
-            _ActionButton(
-              label: context.l10n.fileTransferActionAccept,
-              icon: Icons.check,
-              color: SemanticColors.success,
-              onTap: onAccept!,
-            ),
-          ],
-        ],
-        // Active transfer: cancel
+        // Active transfer: cancel (but not for offerPending — those use
+        // the top-of-card Accept/Decline banner instead).
         if (transfer.isActive &&
             transfer.state != TransferState.offerPending &&
             onCancel != null)

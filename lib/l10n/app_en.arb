@@ -40130,6 +40130,33 @@
     "@countdownBroadcastingPosition": {
         "description": "UI text: countdown broadcasting position"
     },
+    "countdownAwaitingAccept": "Awaiting accept for {filename}",
+    "@countdownAwaitingAccept": {
+        "description": "Countdown banner label while waiting for a file transfer to be accepted",
+        "placeholders": {
+            "filename": {
+                "type": "String"
+            }
+        }
+    },
+    "countdownSendingFile": "Sending {filename}",
+    "@countdownSendingFile": {
+        "description": "Countdown banner label while sending a file transfer",
+        "placeholders": {
+            "filename": {
+                "type": "String"
+            }
+        }
+    },
+    "countdownReceivingFile": "Receiving {filename}",
+    "@countdownReceivingFile": {
+        "description": "Countdown banner label while receiving a file transfer",
+        "placeholders": {
+            "filename": {
+                "type": "String"
+            }
+        }
+    },
     "lifecycleAppNotActive": "App is not active",
     "@lifecycleAppNotActive": {
         "description": "Text displayed in lifecycle management"

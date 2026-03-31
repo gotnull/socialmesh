@@ -26,6 +26,9 @@ import '../services/protocol/socialmesh/sm_codec.dart';
 import '../services/protocol/socialmesh/sm_constants.dart';
 import '../services/protocol/socialmesh/sm_file_transfer.dart';
 import 'app_providers.dart';
+import 'countdown_providers.dart';
+
+import 'package:socialmesh/l10n/l10n_utils.dart';
 
 // ---------------------------------------------------------------------------
 // Database provider
@@ -224,6 +227,9 @@ final fileTransferEngineProvider = Provider<FileTransferEngine>((ref) {
 
       // Notify the state notifier.
       ref.read(fileTransferStateProvider.notifier).updateTransfer(state);
+
+      // Drive the countdown banner for active transfers.
+      _updateFileTransferCountdown(ref, state);
     },
   );
 
@@ -292,6 +298,48 @@ final fileTransferEngineProvider = Provider<FileTransferEngine>((ref) {
 
   return engine;
 });
+
+/// Starts or cancels the countdown banner for a file transfer based on its
+/// current [TransferState].
+///
+/// - **awaitingAccept**: countdown shows the negotiation timeout (60 s).
+/// - **chunking** (outbound): estimated time = remaining chunks × 2 s.
+/// - **chunking** (inbound): estimated time = remaining chunks × 2 s.
+/// - Terminal states: cancel any running countdown.
+void _updateFileTransferCountdown(Ref ref, FileTransferState transfer) {
+  final countdown = ref.read(countdownProvider.notifier);
+  final l10n = safeL10n();
+
+  switch (transfer.state) {
+    case TransferState.awaitingAccept:
+      countdown.startFileTransferCountdown(
+        fileIdHex: transfer.fileIdHex,
+        label: l10n.countdownAwaitingAccept(transfer.filename),
+        totalSeconds: CountdownNotifier.fileTransferNegotiationSeconds,
+      );
+    case TransferState.chunking:
+      final remaining = transfer.chunkCount - transfer.completedChunks.length;
+      final seconds = remaining * CountdownNotifier.fileTransferSecondsPerChunk;
+      if (seconds > 0) {
+        countdown.startFileTransferCountdown(
+          fileIdHex: transfer.fileIdHex,
+          label: transfer.direction == TransferDirection.outbound
+              ? l10n.countdownSendingFile(transfer.filename)
+              : l10n.countdownReceivingFile(transfer.filename),
+          totalSeconds: seconds,
+        );
+      }
+    case TransferState.complete:
+    case TransferState.failed:
+    case TransferState.cancelled:
+      countdown.cancelFileTransferCountdown(transfer.fileIdHex);
+    case TransferState.created:
+    case TransferState.offerSent:
+    case TransferState.offerPending:
+    case TransferState.waitingMissing:
+      break;
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Transfer state notifier

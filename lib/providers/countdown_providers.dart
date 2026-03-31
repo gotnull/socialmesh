@@ -30,6 +30,9 @@ enum CountdownType {
 
   /// Broadcasting local position to the mesh.
   positionBroadcast,
+
+  /// A file transfer in progress (sending or receiving chunks).
+  fileTransfer,
 }
 
 /// Immutable snapshot of a single active countdown.
@@ -102,6 +105,13 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
 
   /// Brief duration for local position broadcast propagation.
   static const positionBroadcastSeconds = 10;
+
+  /// File transfer: estimated seconds per chunk (matches
+  /// [SmRateLimit.fileChunkInterval]).
+  static const fileTransferSecondsPerChunk = 2;
+
+  /// File transfer: negotiation timeout (awaiting accept/decline).
+  static const fileTransferNegotiationSeconds = 60;
 
   /// Canonical countdown id for the device reboot operation.
   static const deviceRebootId = 'device_reboot';
@@ -235,6 +245,29 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
     );
   }
 
+  /// Convenience: start a file transfer countdown.
+  ///
+  /// [fileIdHex] uniquely identifies the transfer (used for dedup and
+  /// cancellation). [label] is the banner text (e.g. "Sending photo.jpg").
+  /// [totalSeconds] is the estimated completion time.
+  void startFileTransferCountdown({
+    required String fileIdHex,
+    required String label,
+    required int totalSeconds,
+  }) {
+    startCountdown(
+      id: fileTransferId(fileIdHex),
+      label: label,
+      totalSeconds: totalSeconds,
+      type: CountdownType.fileTransfer,
+    );
+  }
+
+  /// Cancel an active file transfer countdown.
+  void cancelFileTransferCountdown(String fileIdHex) {
+    cancelCountdown(fileTransferId(fileIdHex));
+  }
+
   /// Cancel and remove a countdown by [id].
   void cancelCountdown(String id) {
     if (!state.containsKey(id)) return;
@@ -272,6 +305,9 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
 
   /// Build the canonical id for a traceroute countdown.
   static String tracerouteId(int nodeNum) => 'traceroute_$nodeNum';
+
+  /// Build the canonical id for a file transfer countdown.
+  static String fileTransferId(String fileIdHex) => 'file_transfer_$fileIdHex';
 
   // -----------------------------------------------------------------------
   // Internal tick logic
@@ -322,6 +358,9 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
         _onPositionRequestComplete(task);
       case CountdownType.positionBroadcast:
         _onPositionBroadcastComplete(task);
+      case CountdownType.fileTransfer:
+        // No completion action needed — transfer state drives the UI.
+        break;
     }
   }
 

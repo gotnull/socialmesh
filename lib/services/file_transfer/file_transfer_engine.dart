@@ -252,6 +252,13 @@ class FileTransferEngine {
   /// Timer for scheduling chunk sends.
   Timer? _chunkTimer;
 
+  /// Inactivity timers for inbound transfers.
+  ///
+  /// When a chunk arrives, the timer is (re)started. If no new chunk
+  /// arrives within [SmRateLimit.chunkInactivityTimeout] and the transfer
+  /// still has missing chunks, a NACK is automatically sent.
+  final Map<String, Timer> _chunkInactivityTimers = {};
+
   /// Queue of (fileIdHex, chunkIndex) to send.
   final List<(String, int)> _sendQueue = [];
 
@@ -472,6 +479,7 @@ class FileTransferEngine {
     // Remove from send queue
     _sendQueue.removeWhere((e) => e.$1 == fileIdHex);
     _chunkBuffers.remove(fileIdHex);
+    _cancelInactivityTimer(fileIdHex);
   }
 
   /// Accept a pending inbound transfer.
@@ -700,6 +708,10 @@ class FileTransferEngine {
     if (updated.length == transfer.chunkCount &&
         _transfers[idHex]?.state != TransferState.offerPending) {
       _tryCompleteInbound(idHex);
+    } else if (_transfers[idHex]?.state == TransferState.chunking) {
+      // Restart inactivity timer — if no new chunk arrives within the
+      // timeout and we still have gaps, auto-NACK to recover.
+      _restartInactivityTimer(idHex);
     }
   }
 
@@ -895,11 +907,50 @@ class FileTransferEngine {
       '${_sendQueue.length} queued chunks',
     );
     _chunkTimer?.cancel();
+    for (final timer in _chunkInactivityTimers.values) {
+      timer.cancel();
+    }
+    _chunkInactivityTimers.clear();
     _sendQueue.clear();
     _chunkBuffers.clear();
   }
 
   // ─── Private ────────────────────────────────────────────────────────
+
+  /// (Re)start the inactivity timer for an inbound transfer.
+  ///
+  /// When a chunk arrives, this timer resets. If it fires (no new chunk
+  /// within [SmRateLimit.chunkInactivityTimeout]), and the transfer still
+  /// has missing chunks, we automatically send a NACK.
+  void _restartInactivityTimer(String fileIdHex) {
+    _chunkInactivityTimers[fileIdHex]?.cancel();
+    _chunkInactivityTimers[fileIdHex] = Timer(
+      SmRateLimit.chunkInactivityTimeout,
+      () => _onChunkInactivityTimeout(fileIdHex),
+    );
+  }
+
+  void _onChunkInactivityTimeout(String fileIdHex) {
+    _chunkInactivityTimers.remove(fileIdHex);
+    final transfer = _transfers[fileIdHex];
+    if (transfer == null || !transfer.isActive) return;
+    if (transfer.direction != TransferDirection.inbound) return;
+
+    final missing = transfer.missingChunks;
+    if (missing.isEmpty) return;
+
+    AppLogging.fileTransfer(
+      'INACTIVITY: $fileIdHex no chunk received for '
+      '${SmRateLimit.chunkInactivityTimeout.inSeconds}s, '
+      '${missing.length} chunks missing — auto-NACKing',
+    );
+
+    requestMissingChunks(fileIdHex);
+  }
+
+  void _cancelInactivityTimer(String fileIdHex) {
+    _chunkInactivityTimers.remove(fileIdHex)?.cancel();
+  }
 
   void _scheduleSendLoop() {
     if (_chunkTimer?.isActive ?? false) return;
@@ -1007,6 +1058,8 @@ class FileTransferEngine {
     final transfer = _transfers[fileIdHex];
     if (transfer == null) return;
 
+    _cancelInactivityTimer(fileIdHex);
+
     final chunks = _chunkBuffers[fileIdHex];
     if (chunks == null || chunks.length != transfer.chunkCount) return;
 
@@ -1100,6 +1153,8 @@ class FileTransferEngine {
   void _failTransfer(String fileIdHex, TransferFailReason reason) {
     final transfer = _transfers[fileIdHex];
     if (transfer == null) return;
+
+    _cancelInactivityTimer(fileIdHex);
 
     AppLogging.fileTransfer(
       'FAILED: $fileIdHex reason=${reason.name} '

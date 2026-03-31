@@ -30244,6 +30244,21 @@ class AppLocalizationsIt extends AppLocalizations {
       'Trasmissione posizione alla rete mesh';
 
   @override
+  String countdownAwaitingAccept(String filename) {
+    return 'Awaiting accept for $filename';
+  }
+
+  @override
+  String countdownSendingFile(String filename) {
+    return 'Sending $filename';
+  }
+
+  @override
+  String countdownReceivingFile(String filename) {
+    return 'Receiving $filename';
+  }
+
+  @override
   String get lifecycleAppNotActive => 'L\'app non è attiva';
 
   @override

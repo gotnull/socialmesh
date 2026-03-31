@@ -108,6 +108,14 @@ abstract final class SmRateLimit {
 
   /// Maximum NACK retransmission rounds.
   static const int maxNackRounds = 3;
+
+  /// Inactivity timeout for inbound chunk reception.
+  ///
+  /// If no new chunk arrives within this duration while the transfer
+  /// still has missing chunks, the receiver automatically sends a NACK
+  /// to request retransmission. Set to 5× the chunk interval to account
+  /// for mesh propagation delays on multi-hop paths.
+  static const Duration chunkInactivityTimeout = Duration(seconds: 10);
 }
 
 /// Transport parameters for each packet type.
