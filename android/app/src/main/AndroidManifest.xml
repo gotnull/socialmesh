@@ -74,6 +74,7 @@
         android:name=".SocialmeshApplication"
         android:icon="@mipmap/ic_launcher"
         android:allowBackup="false"
+        android:extractNativeLibs="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:networkSecurityConfig="@xml/network_security_config">
         <!-- Disable Firebase automatic screen reporting for privacy -->
