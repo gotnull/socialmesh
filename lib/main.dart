@@ -34,6 +34,7 @@ import 'core/l10n/l10n_extension.dart';
 import 'core/logging.dart';
 import 'core/safety/error_handler.dart';
 import 'core/safety/lifecycle_mixin.dart';
+import 'features/debug/app_log_screen.dart' as app_log;
 import 'core/widgets/connecting_content.dart';
 import 'core/widgets/gradient_border_container.dart';
 import 'core/routing/route_guard.dart';
@@ -132,6 +133,19 @@ Future<void> main() async {
 
   // Load environment variables
   await dotenv.load(fileName: '.env');
+
+  // Bridge category-based console logging into the in-app log viewer.
+  // Categories that call _appLogSink (currently mqttProxy) will appear
+  // in the AppLogScreen for support visibility.
+  AppLogging.setAppLogSink((level, source, message) {
+    const levels = [
+      app_log.LogLevel.debug,
+      app_log.LogLevel.info,
+      app_log.LogLevel.warning,
+      app_log.LogLevel.error,
+    ];
+    app_log.AppLogger().log(levels[level.clamp(0, 3)], source, message);
+  });
 
   FlutterBluePlus.setLogLevel(LogLevel.none);
 

@@ -50,6 +50,7 @@ import 'telemetry_providers.dart';
 import 'connection_providers.dart';
 import 'age_eligibility_provider.dart';
 import 'file_transfer_providers.dart';
+import 'mqtt_client_proxy_providers.dart';
 import 'muted_channels_provider.dart';
 import '../services/messaging/dm_retry_coordinator.dart';
 import '../features/settings/background_connection_screen.dart'
@@ -352,6 +353,16 @@ class AppInitNotifier extends Notifier<AppInitState> {
       }
     } catch (e) {
       AppLogging.debug('Background device connection init error: $e');
+    }
+
+    // MQTT client proxy: eagerly activate so it starts relaying when
+    // the device sends an MQTT config with proxyToClientEnabled=true.
+    try {
+      ref.read(mqttClientProxyForwarderProvider);
+      ref.read(mqttClientProxyAutoConnectProvider);
+      AppLogging.mqttProxy('Client proxy providers activated');
+    } catch (e) {
+      AppLogging.mqttProxy('Client proxy activation failed: $e');
     }
   }
 }

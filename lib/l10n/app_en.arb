@@ -34885,6 +34885,90 @@
         },
         "description": "Error message in MQTT config Parameters: {error} = error/status message."
     },
+    "mqttProxySectionDiagnostics": "CLIENT PROXY STATUS",
+    "@mqttProxySectionDiagnostics": {
+        "description": "Section header for the MQTT client proxy diagnostics panel"
+    },
+    "mqttProxyStatusLabel": "Status",
+    "@mqttProxyStatusLabel": {
+        "description": "Label for the connection status row in MQTT proxy diagnostics"
+    },
+    "mqttProxyStatusConnected": "Connected",
+    "@mqttProxyStatusConnected": {
+        "description": "MQTT proxy connection status: connected to broker"
+    },
+    "mqttProxyStatusDisconnected": "Disconnected",
+    "@mqttProxyStatusDisconnected": {
+        "description": "MQTT proxy connection status: not connected to broker"
+    },
+    "mqttProxyBroker": "Broker",
+    "@mqttProxyBroker": {
+        "description": "Label for the MQTT broker host:port in diagnostics"
+    },
+    "mqttProxyTls": "TLS",
+    "@mqttProxyTls": {
+        "description": "Label for TLS status in MQTT proxy diagnostics"
+    },
+    "mqttProxyAuth": "Auth",
+    "@mqttProxyAuth": {
+        "description": "Label for authentication status in MQTT proxy diagnostics"
+    },
+    "mqttProxyTopic": "Topic",
+    "@mqttProxyTopic": {
+        "description": "Label for subscribed MQTT topic in diagnostics"
+    },
+    "mqttProxyPublished": "Published",
+    "@mqttProxyPublished": {
+        "description": "Label for count of messages published to MQTT broker"
+    },
+    "mqttProxyRelayed": "Relayed",
+    "@mqttProxyRelayed": {
+        "description": "Label for count of messages relayed from broker to device"
+    },
+    "mqttProxyLastError": "Last Error",
+    "@mqttProxyLastError": {
+        "description": "Label for the last error encountered by the MQTT proxy"
+    },
+    "mqttProxyReconnects": "Reconnects",
+    "@mqttProxyReconnects": {
+        "description": "Label for number of auto-reconnect attempts"
+    },
+    "mqttProxyEnabled": "Enabled",
+    "@mqttProxyEnabled": {
+        "description": "Generic enabled status label"
+    },
+    "mqttProxyDisabled": "Disabled",
+    "@mqttProxyDisabled": {
+        "description": "Generic disabled status label"
+    },
+    "mqttProxyConfigured": "Configured",
+    "@mqttProxyConfigured": {
+        "description": "Auth status: credentials configured"
+    },
+    "mqttProxyNone": "None",
+    "@mqttProxyNone": {
+        "description": "Auth status: no credentials"
+    },
+    "mqttProxyNoneLabel": "–",
+    "@mqttProxyNoneLabel": {
+        "description": "Placeholder for empty diagnostic values"
+    },
+    "mqttProxyLastConnectAttempt": "Last Attempt",
+    "@mqttProxyLastConnectAttempt": {
+        "description": "Label for last connection attempt timestamp"
+    },
+    "mqttProxyLastConnectedAt": "Last Connected",
+    "@mqttProxyLastConnectedAt": {
+        "description": "Label for last successful connection timestamp"
+    },
+    "mqttProxyCopyDiagnostics": "Copy Diagnostics",
+    "@mqttProxyCopyDiagnostics": {
+        "description": "Button label to copy diagnostics to clipboard"
+    },
+    "mqttProxyDiagnosticsCopied": "Diagnostics copied to clipboard",
+    "@mqttProxyDiagnosticsCopied": {
+        "description": "Snackbar message after copying diagnostics"
+    },
     "securityConfigTitle": "Security",
     "@securityConfigTitle": {
         "description": "Screen or section title"

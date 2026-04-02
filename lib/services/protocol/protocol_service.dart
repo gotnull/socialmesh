@@ -375,6 +375,8 @@ class ProtocolService {
   final StreamController<DetectionSensorEvent> _detectionSensorEventController;
   final StreamController<TraceRouteLog> _traceRouteLogController;
   final StreamController<MeshTelemetry> _meshTelemetryController;
+  final StreamController<pb.MqttClientProxyMessage>
+  _mqttClientProxyMessageController;
 
   StreamSubscription<List<int>>? _dataSubscription;
   StreamSubscription<DeviceConnectionState>? _transportStateSubscription;
@@ -688,6 +690,8 @@ class ProtocolService {
            StreamController<DetectionSensorEvent>.broadcast(),
        _traceRouteLogController = StreamController<TraceRouteLog>.broadcast(),
        _meshTelemetryController = StreamController<MeshTelemetry>.broadcast(),
+       _mqttClientProxyMessageController =
+           StreamController<pb.MqttClientProxyMessage>.broadcast(),
        _dedupeStore = dedupeStore ?? MeshPacketDedupeStore(),
        _smCapabilityStore = smCapabilityStore ?? SmCapabilityStore(),
        _smFeatureFlag = smFeatureFlag ?? SmFeatureFlag(),
@@ -834,6 +838,29 @@ class ProtocolService {
   /// Current MQTT config
   module_pb.ModuleConfig_MQTTConfig? get currentMqttConfig =>
       _currentMqttConfig;
+
+  /// Stream of MQTT client proxy messages from the device.
+  ///
+  /// When the device has `proxyToClientEnabled = true`, it sends
+  /// outbound MQTT messages via this stream for the phone to publish
+  /// to the broker.
+  Stream<pb.MqttClientProxyMessage> get mqttClientProxyMessageStream =>
+      _mqttClientProxyMessageController.stream;
+
+  /// Sends an MQTT client proxy message to the device.
+  ///
+  /// This delivers an inbound MQTT message from the broker to the
+  /// device via `ToRadio.mqttClientProxyMessage`.
+  Future<void> sendMqttClientProxyMessage(
+    pb.MqttClientProxyMessage proxyMsg,
+  ) async {
+    if (_myNodeNum == null || !_transport.isConnected) return;
+    final toRadio = pb.ToRadio()..mqttClientProxyMessage = proxyMsg;
+    await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+    AppLogging.mqttProxy(
+      'Sent proxy message to device (topic: ${proxyMsg.topic})',
+    );
+  }
 
   /// Stream of telemetry config updates
   Stream<module_pb.ModuleConfig_TelemetryConfig> get telemetryConfigStream =>
@@ -1240,6 +1267,12 @@ class ProtocolService {
         _handleFromRadioConfig(fromRadio.config);
       } else if (fromRadio.hasMetadata()) {
         _handleFromRadioMetadata(fromRadio.metadata);
+      } else if (fromRadio.hasMqttClientProxyMessage()) {
+        AppLogging.mqttProxy(
+          'Received proxy message from device '
+          '(topic: ${fromRadio.mqttClientProxyMessage.topic})',
+        );
+        _mqttClientProxyMessageController.add(fromRadio.mqttClientProxyMessage);
       } else if (fromRadio.hasClientNotification()) {
         _handleClientNotification(fromRadio.clientNotification);
       } else if (fromRadio.hasConfigCompleteId()) {
@@ -8081,5 +8114,6 @@ class ProtocolService {
     await _userConfigController.close();
     await _traceRouteLogController.close();
     await _meshTelemetryController.close();
+    await _mqttClientProxyMessageController.close();
   }
 }

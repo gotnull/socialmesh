@@ -45654,6 +45654,132 @@ abstract class AppLocalizations {
   /// **'Failed to save: {error}'**
   String mqttConfigSaveFailed(String error);
 
+  /// Section header for the MQTT client proxy diagnostics panel
+  ///
+  /// In en, this message translates to:
+  /// **'CLIENT PROXY STATUS'**
+  String get mqttProxySectionDiagnostics;
+
+  /// Label for the connection status row in MQTT proxy diagnostics
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get mqttProxyStatusLabel;
+
+  /// MQTT proxy connection status: connected to broker
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get mqttProxyStatusConnected;
+
+  /// MQTT proxy connection status: not connected to broker
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnected'**
+  String get mqttProxyStatusDisconnected;
+
+  /// Label for the MQTT broker host:port in diagnostics
+  ///
+  /// In en, this message translates to:
+  /// **'Broker'**
+  String get mqttProxyBroker;
+
+  /// Label for TLS status in MQTT proxy diagnostics
+  ///
+  /// In en, this message translates to:
+  /// **'TLS'**
+  String get mqttProxyTls;
+
+  /// Label for authentication status in MQTT proxy diagnostics
+  ///
+  /// In en, this message translates to:
+  /// **'Auth'**
+  String get mqttProxyAuth;
+
+  /// Label for subscribed MQTT topic in diagnostics
+  ///
+  /// In en, this message translates to:
+  /// **'Topic'**
+  String get mqttProxyTopic;
+
+  /// Label for count of messages published to MQTT broker
+  ///
+  /// In en, this message translates to:
+  /// **'Published'**
+  String get mqttProxyPublished;
+
+  /// Label for count of messages relayed from broker to device
+  ///
+  /// In en, this message translates to:
+  /// **'Relayed'**
+  String get mqttProxyRelayed;
+
+  /// Label for the last error encountered by the MQTT proxy
+  ///
+  /// In en, this message translates to:
+  /// **'Last Error'**
+  String get mqttProxyLastError;
+
+  /// Label for number of auto-reconnect attempts
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnects'**
+  String get mqttProxyReconnects;
+
+  /// Generic enabled status label
+  ///
+  /// In en, this message translates to:
+  /// **'Enabled'**
+  String get mqttProxyEnabled;
+
+  /// Generic disabled status label
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled'**
+  String get mqttProxyDisabled;
+
+  /// Auth status: credentials configured
+  ///
+  /// In en, this message translates to:
+  /// **'Configured'**
+  String get mqttProxyConfigured;
+
+  /// Auth status: no credentials
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get mqttProxyNone;
+
+  /// Placeholder for empty diagnostic values
+  ///
+  /// In en, this message translates to:
+  /// **'–'**
+  String get mqttProxyNoneLabel;
+
+  /// Label for last connection attempt timestamp
+  ///
+  /// In en, this message translates to:
+  /// **'Last Attempt'**
+  String get mqttProxyLastConnectAttempt;
+
+  /// Label for last successful connection timestamp
+  ///
+  /// In en, this message translates to:
+  /// **'Last Connected'**
+  String get mqttProxyLastConnectedAt;
+
+  /// Button label to copy diagnostics to clipboard
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Diagnostics'**
+  String get mqttProxyCopyDiagnostics;
+
+  /// Snackbar message after copying diagnostics
+  ///
+  /// In en, this message translates to:
+  /// **'Diagnostics copied to clipboard'**
+  String get mqttProxyDiagnosticsCopied;
+
   /// Screen or section title
   ///
   /// In en, this message translates to:

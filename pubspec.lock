@@ -57,14 +57,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.1"
-  apivideo_live_stream:
-    dependency: "direct main"
-    description:
-      name: apivideo_live_stream
-      sha256: f873f8cdd3e35838d6e32ce55c1963f8889b9bfccf4a37f9ed86cfe79512b309
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.2.0"
   app_links:
     dependency: "direct main"
     description:
@@ -513,6 +505,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.8"
+  event_bus:
+    dependency: transitive
+    description:
+      name: event_bus
+      sha256: "1a55e97923769c286d295240048fc180e7b0768902c3c2e869fe059aafa15304"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.1"
   fake_async:
     dependency: "direct dev"
     description:
@@ -1637,14 +1637,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.6.3"
-  native_device_orientation:
-    dependency: transitive
+  mqtt_client:
+    dependency: "direct main"
     description:
-      name: native_device_orientation
-      sha256: "744a03030fad5a332a54833cd34f1e2ee51ae9acf477b4ef85bacc8823af9937"
+      name: mqtt_client
+      sha256: fde192a91f1d71b540574490f7f7e35302298f1342a4daf350c0ddc15e9d01f2
       url: "https://pub.dev"
     source: hosted
-    version: "1.2.1"
+    version: "10.11.10"
   native_toolchain_c:
     dependency: transitive
     description:
@@ -2403,7 +2403,7 @@ packages:
     source: hosted
     version: "0.10.1"
   typed_data:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: typed_data
       sha256: f9049c039ebfeb4cf7a7104a675823cd72dba8297f264b6637062516699fa006

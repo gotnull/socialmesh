@@ -25712,6 +25712,69 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get mqttProxySectionDiagnostics => 'CLIENT PROXY STATUS';
+
+  @override
+  String get mqttProxyStatusLabel => 'Status';
+
+  @override
+  String get mqttProxyStatusConnected => 'Connected';
+
+  @override
+  String get mqttProxyStatusDisconnected => 'Disconnected';
+
+  @override
+  String get mqttProxyBroker => 'Broker';
+
+  @override
+  String get mqttProxyTls => 'TLS';
+
+  @override
+  String get mqttProxyAuth => 'Auth';
+
+  @override
+  String get mqttProxyTopic => 'Topic';
+
+  @override
+  String get mqttProxyPublished => 'Published';
+
+  @override
+  String get mqttProxyRelayed => 'Relayed';
+
+  @override
+  String get mqttProxyLastError => 'Last Error';
+
+  @override
+  String get mqttProxyReconnects => 'Reconnects';
+
+  @override
+  String get mqttProxyEnabled => 'Enabled';
+
+  @override
+  String get mqttProxyDisabled => 'Disabled';
+
+  @override
+  String get mqttProxyConfigured => 'Configured';
+
+  @override
+  String get mqttProxyNone => 'None';
+
+  @override
+  String get mqttProxyNoneLabel => '–';
+
+  @override
+  String get mqttProxyLastConnectAttempt => 'Last Attempt';
+
+  @override
+  String get mqttProxyLastConnectedAt => 'Last Connected';
+
+  @override
+  String get mqttProxyCopyDiagnostics => 'Copy Diagnostics';
+
+  @override
+  String get mqttProxyDiagnosticsCopied => 'Diagnostics copied to clipboard';
+
+  @override
   String get securityConfigTitle => 'Security';
 
   @override

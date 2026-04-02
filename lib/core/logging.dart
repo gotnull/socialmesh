@@ -24,6 +24,21 @@ String? _safeGetEnv(String key) {
 
 /// Centralized logging configuration
 class AppLogging {
+  /// Optional callback that receives structured log events for the in-app
+  /// log viewer. Set once during app initialization to bridge console
+  /// logging into the in-memory [AppLogger] ring buffer.
+  ///
+  /// Signature: (int level, String source, String message)
+  /// Levels: 0=debug, 1=info, 2=warning, 3=error
+  static void Function(int level, String source, String message)? _appLogSink;
+
+  /// Registers the in-app log sink. Call once during app startup.
+  static void setAppLogSink(
+    void Function(int level, String source, String message) sink,
+  ) {
+    _appLogSink = sink;
+  }
+
   static bool? _bleLoggingEnabled;
   static bool? _mapLoggingEnabled;
   static bool? _protocolLoggingEnabled;
@@ -74,6 +89,7 @@ class AppLogging {
   static bool? _codec2LoggingEnabled;
   static bool? _sppLoggingEnabled;
   static bool? _sppNegotiationLoggingEnabled;
+  static bool? _mqttProxyLoggingEnabled;
   static bool? _forceEmptyStates;
   static Logger? _bleLogger;
   static Logger? _mapLogger;
@@ -650,7 +666,34 @@ class AppLogging {
     if (sppNegotiationLoggingEnabled) debugPrint('SPP_NEG: $message');
   }
 
+  /// MQTT client proxy logging.
+  /// Enable with MQTT_PROXY_LOGGING_ENABLED=true in .env file.
+  static bool get mqttProxyLoggingEnabled {
+    _mqttProxyLoggingEnabled ??=
+        _safeGetEnv('MQTT_PROXY_LOGGING_ENABLED')?.toLowerCase() == 'true';
+    return _mqttProxyLoggingEnabled!;
+  }
+
+  static void mqttProxy(String message) {
+    if (mqttProxyLoggingEnabled) debugPrint('MQTT_PROXY: $message');
+    // Always forward to in-app log viewer for support visibility
+    _appLogSink?.call(1, 'mqtt_proxy', message); // lint-allow: hardcoded-string
+  }
+
+  /// Logs an MQTT proxy error to both console and in-app log viewer.
+  static void mqttProxyError(String message) {
+    if (mqttProxyLoggingEnabled) debugPrint('MQTT_PROXY: $message');
+    _appLogSink?.call(3, 'mqtt_proxy', message); // lint-allow: hardcoded-string
+  }
+
+  /// Logs an MQTT proxy warning to both console and in-app log viewer.
+  static void mqttProxyWarning(String message) {
+    if (mqttProxyLoggingEnabled) debugPrint('MQTT_PROXY: $message');
+    _appLogSink?.call(2, 'mqtt_proxy', message); // lint-allow: hardcoded-string
+  }
+
   static void reset() {
+    _appLogSink = null;
     _bleLoggingEnabled = null;
     _protocolLoggingEnabled = null;
     _widgetsLoggingEnabled = null;
@@ -700,6 +743,7 @@ class AppLogging {
     _codec2LoggingEnabled = null;
     _sppLoggingEnabled = null;
     _sppNegotiationLoggingEnabled = null;
+    _mqttProxyLoggingEnabled = null;
     _bleLogger = null;
     _noOpLogger = null;
   }
