@@ -4,6 +4,7 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   app_links
+  bonsoir_windows
   cloud_firestore
   connectivity_plus
   emoji_picker_flutter

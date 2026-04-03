@@ -57393,6 +57393,198 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'New Stream'**
   String get takVideoNewStream;
+
+  /// Transport type label for TCP/IP network connections
+  ///
+  /// In en, this message translates to:
+  /// **'Network (TCP)'**
+  String get deviceSheetNetwork;
+
+  /// Tab title for network transport in scanner screen
+  ///
+  /// In en, this message translates to:
+  /// **'Network'**
+  String get networkSectionTitle;
+
+  /// Section header for saved network endpoints list
+  ///
+  /// In en, this message translates to:
+  /// **'Saved Endpoints'**
+  String get networkSavedEndpoints;
+
+  /// Empty state headline when no network endpoints are saved
+  ///
+  /// In en, this message translates to:
+  /// **'No saved endpoints'**
+  String get networkNoSavedEndpoints;
+
+  /// Empty state description for no saved endpoints
+  ///
+  /// In en, this message translates to:
+  /// **'Add an endpoint to connect to a Meshtastic device over the network.'**
+  String get networkNoSavedEndpointsDescription;
+
+  /// Button label to add a new network endpoint
+  ///
+  /// In en, this message translates to:
+  /// **'Add Endpoint'**
+  String get networkAddEndpoint;
+
+  /// Label for network host input field
+  ///
+  /// In en, this message translates to:
+  /// **'Host'**
+  String get networkHost;
+
+  /// Hint text for network host input field
+  ///
+  /// In en, this message translates to:
+  /// **'IP address or hostname'**
+  String get networkHostHint;
+
+  /// Label for network port input field
+  ///
+  /// In en, this message translates to:
+  /// **'Port'**
+  String get networkPort;
+
+  /// Label for optional endpoint display name
+  ///
+  /// In en, this message translates to:
+  /// **'Name (optional)'**
+  String get networkEndpointName;
+
+  /// Hint text for endpoint name input
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Living Room Node'**
+  String get networkEndpointNameHint;
+
+  /// Status text while connecting to a network endpoint
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting to {address}...'**
+  String networkConnecting(String address);
+
+  /// Error message when network connection fails
+  ///
+  /// In en, this message translates to:
+  /// **'Connection to {address} failed'**
+  String networkConnectionFailed(String address);
+
+  /// Error when DNS lookup fails for network endpoint
+  ///
+  /// In en, this message translates to:
+  /// **'Could not resolve hostname'**
+  String get networkDnsResolutionFailed;
+
+  /// Error when network connection times out
+  ///
+  /// In en, this message translates to:
+  /// **'Connection timed out'**
+  String get networkConnectionTimeout;
+
+  /// Error when target device refuses the TCP connection
+  ///
+  /// In en, this message translates to:
+  /// **'Connection refused'**
+  String get networkConnectionRefused;
+
+  /// Validation error for empty host field
+  ///
+  /// In en, this message translates to:
+  /// **'Host is required'**
+  String get networkHostRequired;
+
+  /// Validation error for invalid port number
+  ///
+  /// In en, this message translates to:
+  /// **'Port must be between 1 and 65535'**
+  String get networkPortInvalid;
+
+  /// Button label to delete a saved network endpoint
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Endpoint'**
+  String get networkDeleteEndpoint;
+
+  /// Confirmation message for deleting a saved endpoint
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {address} from saved endpoints?'**
+  String networkDeleteEndpointConfirm(String address);
+
+  /// Shows when the endpoint was last connected
+  ///
+  /// In en, this message translates to:
+  /// **'Last used {time}'**
+  String networkLastUsed(String time);
+
+  /// Tab label for Bluetooth transport in scanner
+  ///
+  /// In en, this message translates to:
+  /// **'Bluetooth'**
+  String get scannerTabBluetooth;
+
+  /// Tab label for Network transport in scanner
+  ///
+  /// In en, this message translates to:
+  /// **'Network'**
+  String get scannerTabNetwork;
+
+  /// Section header for mDNS-discovered Meshtastic devices on the local network
+  ///
+  /// In en, this message translates to:
+  /// **'Wi-Fi Radios'**
+  String get mdnsDiscoveredRadios;
+
+  /// Empty state headline when no mDNS devices are discovered
+  ///
+  /// In en, this message translates to:
+  /// **'No Wi-Fi radios found'**
+  String get mdnsNoDevicesFound;
+
+  /// Empty state description for mDNS discovery section
+  ///
+  /// In en, this message translates to:
+  /// **'Meshtastic devices with WiFi enabled will appear here automatically.'**
+  String get mdnsNoDevicesDescription;
+
+  /// Status text shown while connecting to a discovered mDNS device
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting…'**
+  String get mdnsConnecting;
+
+  /// Transport type label for TCP connections
+  ///
+  /// In en, this message translates to:
+  /// **'TCP'**
+  String get mdnsTransportTcp;
+
+  /// Status text shown while mDNS discovery is actively scanning
+  ///
+  /// In en, this message translates to:
+  /// **'Scanning…'**
+  String get mdnsScanning;
+
+  /// Title for the network endpoints settings screen
+  ///
+  /// In en, this message translates to:
+  /// **'Network Endpoints'**
+  String get settingsNetworkEndpointsTitle;
+
+  /// Settings tile title for network endpoints
+  ///
+  /// In en, this message translates to:
+  /// **'Network Endpoints'**
+  String get settingsTileNetworkEndpointsTitle;
+
+  /// Settings tile subtitle for network endpoints
+  ///
+  /// In en, this message translates to:
+  /// **'Manage saved TCP endpoints and discover Wi-Fi radios'**
+  String get settingsTileNetworkEndpointsSubtitle;
 }
 
 class _AppLocalizationsDelegate

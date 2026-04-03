@@ -8,8 +8,8 @@ assignees: ""
 
 ## Prerequisites
 
-- [ ] I have read [CONTRIBUTING.md](../CONTRIBUTING.md)
-- [ ] I have read [docs/BACKEND.md](../docs/BACKEND.md) to confirm this is not a backend feature
+- [ ] I have read [CONTRIBUTING.md](https://github.com/gotnull/socialmesh/blob/main/CONTRIBUTING.md)
+- [ ] I have read [docs/BACKEND.md](https://github.com/gotnull/socialmesh/blob/main/docs/BACKEND.md) to confirm this is not a backend feature
 - [ ] I have searched existing issues to ensure this is not a duplicate
 
 ---
@@ -40,6 +40,6 @@ Please confirm this feature request is in scope:
 - [ ] This does not require new cloud infrastructure
 - [ ] This does not involve payment processing
 
-**Out of scope**: Requests for backend features, cloud sync enhancements, or infrastructure changes will be closed. See [docs/BACKEND.md](../docs/BACKEND.md) for details on what requires backend services.
+**Out of scope**: Requests for backend features, cloud sync enhancements, or infrastructure changes will be closed. See [docs/BACKEND.md](https://github.com/gotnull/socialmesh/blob/main/docs/BACKEND.md) for details on what requires backend services.
 
 **Note**: PRs that attempt to reimplement backend services or add cloud dependencies will not be accepted.

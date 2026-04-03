@@ -32885,4 +32885,111 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get takVideoNewStream => 'New Stream';
+
+  @override
+  String get deviceSheetNetwork => 'Network (TCP)';
+
+  @override
+  String get networkSectionTitle => 'Network';
+
+  @override
+  String get networkSavedEndpoints => 'Saved Endpoints';
+
+  @override
+  String get networkNoSavedEndpoints => 'No saved endpoints';
+
+  @override
+  String get networkNoSavedEndpointsDescription =>
+      'Add an endpoint to connect to a Meshtastic device over the network.';
+
+  @override
+  String get networkAddEndpoint => 'Add Endpoint';
+
+  @override
+  String get networkHost => 'Host';
+
+  @override
+  String get networkHostHint => 'IP address or hostname';
+
+  @override
+  String get networkPort => 'Port';
+
+  @override
+  String get networkEndpointName => 'Name (optional)';
+
+  @override
+  String get networkEndpointNameHint => 'e.g. Living Room Node';
+
+  @override
+  String networkConnecting(String address) {
+    return 'Connecting to $address...';
+  }
+
+  @override
+  String networkConnectionFailed(String address) {
+    return 'Connection to $address failed';
+  }
+
+  @override
+  String get networkDnsResolutionFailed => 'Could not resolve hostname';
+
+  @override
+  String get networkConnectionTimeout => 'Connection timed out';
+
+  @override
+  String get networkConnectionRefused => 'Connection refused';
+
+  @override
+  String get networkHostRequired => 'Host is required';
+
+  @override
+  String get networkPortInvalid => 'Port must be between 1 and 65535';
+
+  @override
+  String get networkDeleteEndpoint => 'Delete Endpoint';
+
+  @override
+  String networkDeleteEndpointConfirm(String address) {
+    return 'Remove $address from saved endpoints?';
+  }
+
+  @override
+  String networkLastUsed(String time) {
+    return 'Last used $time';
+  }
+
+  @override
+  String get scannerTabBluetooth => 'Bluetooth';
+
+  @override
+  String get scannerTabNetwork => 'Network';
+
+  @override
+  String get mdnsDiscoveredRadios => 'Wi-Fi Radios';
+
+  @override
+  String get mdnsNoDevicesFound => 'No Wi-Fi radios found';
+
+  @override
+  String get mdnsNoDevicesDescription =>
+      'Meshtastic devices with WiFi enabled will appear here automatically.';
+
+  @override
+  String get mdnsConnecting => 'Connecting…';
+
+  @override
+  String get mdnsTransportTcp => 'TCP';
+
+  @override
+  String get mdnsScanning => 'Scanning…';
+
+  @override
+  String get settingsNetworkEndpointsTitle => 'Network Endpoints';
+
+  @override
+  String get settingsTileNetworkEndpointsTitle => 'Network Endpoints';
+
+  @override
+  String get settingsTileNetworkEndpointsSubtitle =>
+      'Manage saved TCP endpoints and discover Wi-Fi radios';
 }

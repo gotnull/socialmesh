@@ -43611,5 +43611,153 @@
     "takVideoNewStream": "New Stream",
     "@takVideoNewStream": {
         "description": "Button label to create a new stream from empty state"
+    },
+    "deviceSheetNetwork": "Network (TCP)",
+    "@deviceSheetNetwork": {
+        "description": "Transport type label for TCP/IP network connections"
+    },
+    "networkSectionTitle": "Network",
+    "@networkSectionTitle": {
+        "description": "Tab title for network transport in scanner screen"
+    },
+    "networkSavedEndpoints": "Saved Endpoints",
+    "@networkSavedEndpoints": {
+        "description": "Section header for saved network endpoints list"
+    },
+    "networkNoSavedEndpoints": "No saved endpoints",
+    "@networkNoSavedEndpoints": {
+        "description": "Empty state headline when no network endpoints are saved"
+    },
+    "networkNoSavedEndpointsDescription": "Add an endpoint to connect to a Meshtastic device over the network.",
+    "@networkNoSavedEndpointsDescription": {
+        "description": "Empty state description for no saved endpoints"
+    },
+    "networkAddEndpoint": "Add Endpoint",
+    "@networkAddEndpoint": {
+        "description": "Button label to add a new network endpoint"
+    },
+    "networkHost": "Host",
+    "@networkHost": {
+        "description": "Label for network host input field"
+    },
+    "networkHostHint": "IP address or hostname",
+    "@networkHostHint": {
+        "description": "Hint text for network host input field"
+    },
+    "networkPort": "Port",
+    "@networkPort": {
+        "description": "Label for network port input field"
+    },
+    "networkEndpointName": "Name (optional)",
+    "@networkEndpointName": {
+        "description": "Label for optional endpoint display name"
+    },
+    "networkEndpointNameHint": "e.g. Living Room Node",
+    "@networkEndpointNameHint": {
+        "description": "Hint text for endpoint name input"
+    },
+    "networkConnecting": "Connecting to {address}...",
+    "@networkConnecting": {
+        "description": "Status text while connecting to a network endpoint",
+        "placeholders": {
+            "address": {
+                "type": "String"
+            }
+        }
+    },
+    "networkConnectionFailed": "Connection to {address} failed",
+    "@networkConnectionFailed": {
+        "description": "Error message when network connection fails",
+        "placeholders": {
+            "address": {
+                "type": "String"
+            }
+        }
+    },
+    "networkDnsResolutionFailed": "Could not resolve hostname",
+    "@networkDnsResolutionFailed": {
+        "description": "Error when DNS lookup fails for network endpoint"
+    },
+    "networkConnectionTimeout": "Connection timed out",
+    "@networkConnectionTimeout": {
+        "description": "Error when network connection times out"
+    },
+    "networkConnectionRefused": "Connection refused",
+    "@networkConnectionRefused": {
+        "description": "Error when target device refuses the TCP connection"
+    },
+    "networkHostRequired": "Host is required",
+    "@networkHostRequired": {
+        "description": "Validation error for empty host field"
+    },
+    "networkPortInvalid": "Port must be between 1 and 65535",
+    "@networkPortInvalid": {
+        "description": "Validation error for invalid port number"
+    },
+    "networkDeleteEndpoint": "Delete Endpoint",
+    "@networkDeleteEndpoint": {
+        "description": "Button label to delete a saved network endpoint"
+    },
+    "networkDeleteEndpointConfirm": "Remove {address} from saved endpoints?",
+    "@networkDeleteEndpointConfirm": {
+        "description": "Confirmation message for deleting a saved endpoint",
+        "placeholders": {
+            "address": {
+                "type": "String"
+            }
+        }
+    },
+    "networkLastUsed": "Last used {time}",
+    "@networkLastUsed": {
+        "description": "Shows when the endpoint was last connected",
+        "placeholders": {
+            "time": {
+                "type": "String"
+            }
+        }
+    },
+    "scannerTabBluetooth": "Bluetooth",
+    "@scannerTabBluetooth": {
+        "description": "Tab label for Bluetooth transport in scanner"
+    },
+    "scannerTabNetwork": "Network",
+    "@scannerTabNetwork": {
+        "description": "Tab label for Network transport in scanner"
+    },
+    "mdnsDiscoveredRadios": "Wi-Fi Radios",
+    "@mdnsDiscoveredRadios": {
+        "description": "Section header for mDNS-discovered Meshtastic devices on the local network"
+    },
+    "mdnsNoDevicesFound": "No Wi-Fi radios found",
+    "@mdnsNoDevicesFound": {
+        "description": "Empty state headline when no mDNS devices are discovered"
+    },
+    "mdnsNoDevicesDescription": "Meshtastic devices with WiFi enabled will appear here automatically.",
+    "@mdnsNoDevicesDescription": {
+        "description": "Empty state description for mDNS discovery section"
+    },
+    "mdnsConnecting": "Connecting…",
+    "@mdnsConnecting": {
+        "description": "Status text shown while connecting to a discovered mDNS device"
+    },
+    "mdnsTransportTcp": "TCP",
+    "@mdnsTransportTcp": {
+        "description": "Transport type label for TCP connections"
+    },
+    "mdnsScanning": "Scanning…",
+    "@mdnsScanning": {
+        "description": "Status text shown while mDNS discovery is actively scanning"
+    },
+    "settingsNetworkEndpointsTitle": "Network Endpoints",
+    "@settingsNetworkEndpointsTitle": {
+        "description": "Title for the network endpoints settings screen"
+    },
+    "settingsTileNetworkEndpointsTitle": "Network Endpoints",
+    "@settingsTileNetworkEndpointsTitle": {
+        "description": "Settings tile title for network endpoints"
+    },
+    "settingsTileNetworkEndpointsSubtitle": "Manage saved TCP endpoints and discover Wi-Fi radios",
+    "@settingsTileNetworkEndpointsSubtitle": {
+        "description": "Settings tile subtitle for network endpoints"
     }
 }

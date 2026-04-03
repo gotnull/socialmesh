@@ -3,6 +3,7 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../logging.dart';
@@ -106,23 +107,35 @@ class ClaimsCache {
           );
 
   /// Write [claims] to secure storage.
+  ///
+  /// Silently fails if the keychain is unavailable (e.g. device locked).
   Future<void> write(CachedClaims claims) async {
-    final json = jsonEncode(claims.toJson());
-    await _storage.write(key: _storageKey, value: json);
-    AppLogging.claims(
-      'Claims: cached to SecureStorage (cachedAt=${claims.cachedAt})',
-    );
+    try {
+      final json = jsonEncode(claims.toJson());
+      await _storage.write(key: _storageKey, value: json);
+      AppLogging.claims(
+        'Claims: cached to SecureStorage (cachedAt=${claims.cachedAt})',
+      );
+    } on PlatformException catch (e) {
+      // iOS Keychain error -25308 (errSecInteractionNotAllowed) occurs when
+      // the app accesses the Keychain while the device is locked or in the
+      // background. Fail silently — the next foreground launch will retry.
+      AppLogging.claims(
+        'Claims: secure storage write failed (${e.code}: ${e.message})',
+      );
+    }
   }
 
   /// Read cached claims from secure storage.
   ///
-  /// Returns null if no cache exists or if the cached data is corrupt.
+  /// Returns null if no cache exists, if the cached data is corrupt, or if
+  /// the keychain is unavailable (e.g. device locked — iOS error -25308).
   /// Corrupt entries are cleared automatically.
   Future<CachedClaims?> read() async {
-    final raw = await _storage.read(key: _storageKey);
-    if (raw == null) return null;
-
     try {
+      final raw = await _storage.read(key: _storageKey);
+      if (raw == null) return null;
+
       final json = jsonDecode(raw) as Map<String, dynamic>;
       // Validate required integer fields exist
       if (json['cachedAt'] is! int || json['tokenExpiry'] is! int) {
@@ -133,6 +146,16 @@ class ClaimsCache {
         return null;
       }
       return CachedClaims.fromJson(json);
+    } on PlatformException catch (e) {
+      // iOS Keychain error -25308 (errSecInteractionNotAllowed) occurs when
+      // the app accesses the Keychain while the device is locked or in the
+      // background. Return null without attempting clear() (which would also
+      // fail against a locked keychain).
+      AppLogging.claims(
+        'Claims: secure storage read failed (${e.code}: ${e.message}), '
+        'returning null',
+      );
+      return null;
     } catch (e) {
       AppLogging.claims('Claims: corrupt cache detected ($e), clearing');
       await clear();
@@ -141,8 +164,16 @@ class ClaimsCache {
   }
 
   /// Clear the cached claims.
+  ///
+  /// Silently fails if the keychain is unavailable (e.g. device locked).
   Future<void> clear() async {
-    await _storage.delete(key: _storageKey);
+    try {
+      await _storage.delete(key: _storageKey);
+    } on PlatformException catch (e) {
+      AppLogging.claims(
+        'Claims: secure storage clear failed (${e.code}: ${e.message})',
+      );
+    }
   }
 
   /// Visible-for-testing: the storage key used.

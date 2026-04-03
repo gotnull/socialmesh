@@ -15,6 +15,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import '../../../core/logging.dart';
+import '../../../utils/text_sanitizer.dart';
 import 'sip_constants.dart';
 
 /// DM-specific constants.
@@ -84,7 +85,7 @@ abstract final class SipDmMessages {
     }
 
     try {
-      final text = utf8.decode(payload);
+      final text = sanitizeUtf16(utf8.decode(payload));
       return SipDmMessage(text: text, rawPayload: Uint8List.fromList(payload));
     } on FormatException {
       AppLogging.sip('SIP_DM: decode rejected: invalid UTF-8');

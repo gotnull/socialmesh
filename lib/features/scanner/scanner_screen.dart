@@ -33,6 +33,8 @@ import '../../providers/app_providers.dart';
 import '../../services/storage/storage_service.dart';
 import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import 'widgets/connecting_animation.dart';
+import 'widgets/mdns_discovery_section.dart';
+import 'widgets/network_connection_section.dart';
 import '../device/region_selection_screen.dart';
 
 class ScannerScreen extends ConsumerStatefulWidget {
@@ -824,6 +826,9 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     if (type == 'usb') {
       return TransportType.usb;
     }
+    if (type == 'network') {
+      return TransportType.network;
+    }
     return TransportType.ble;
   }
 
@@ -1120,7 +1125,11 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       // Save device for auto-reconnect (with protocol for future reconnect routing)
       final settingsService = settingsAsync.value;
       if (settingsService != null) {
-        final deviceType = device.type == TransportType.ble ? 'ble' : 'usb';
+        final deviceType = switch (device.type) {
+          TransportType.ble => 'ble',
+          TransportType.usb => 'usb',
+          TransportType.network => 'network',
+        };
         await settingsService.setLastDevice(
           device.id,
           deviceType,
@@ -1992,6 +2001,39 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                       );
                     },
                   ),
+
+                // mDNS auto-discovered Wi-Fi radios
+                const SizedBox(height: AppTheme.spacing24),
+                Divider(color: context.border, height: 1),
+                const SizedBox(height: AppTheme.spacing16),
+                MdnsDiscoverySection(
+                  onConnectionSuccess: () {
+                    if (!mounted) return;
+                    final appState = ref.read(appInitProvider);
+                    if (appState == AppInitState.needsScanner) {
+                      ref.read(appInitProvider.notifier).setReady();
+                    } else if (!widget.isInline) {
+                      _navigateToMain();
+                    }
+                  },
+                ),
+
+                // Network (TCP/IP) manual connection section
+                const SizedBox(height: AppTheme.spacing16),
+                Divider(color: context.border, height: 1),
+                const SizedBox(height: AppTheme.spacing16),
+                NetworkConnectionSection(
+                  compact: true,
+                  onConnectionSuccess: () {
+                    if (!mounted) return;
+                    final appState = ref.read(appInitProvider);
+                    if (appState == AppInitState.needsScanner) {
+                      ref.read(appInitProvider.notifier).setReady();
+                    } else if (!widget.isInline) {
+                      _navigateToMain();
+                    }
+                  },
+                ),
               ]),
             ),
           ),
@@ -2131,9 +2173,11 @@ class _DeviceCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
                   child: Icon(
-                    device.type == TransportType.ble
-                        ? Icons.bluetooth
-                        : Icons.usb,
+                    switch (device.type) {
+                      TransportType.ble => Icons.bluetooth,
+                      TransportType.usb => Icons.usb,
+                      TransportType.network => Icons.lan,
+                    },
                     color: isUnknown && showDebugInfo
                         ? AccentColors.orange
                         : context.accentColor,
@@ -2157,9 +2201,14 @@ class _DeviceCard extends StatelessWidget {
                       Row(
                         children: [
                           Text(
-                            device.type == TransportType.ble
-                                ? context.l10n.scannerTransportBluetooth
-                                : context.l10n.scannerTransportUsb,
+                            switch (device.type) {
+                              TransportType.ble =>
+                                context.l10n.scannerTransportBluetooth,
+                              TransportType.usb =>
+                                context.l10n.scannerTransportUsb,
+                              TransportType.network =>
+                                context.l10n.deviceSheetNetwork,
+                            },
                             style: TextStyle(
                               fontSize: 14,
                               color: context.textTertiary,
@@ -2276,9 +2325,11 @@ class _DeviceDetailsTable extends StatelessWidget {
         (context.l10n.scannerDetailAddress, device.address!),
       (
         context.l10n.scannerDetailConnectionType,
-        device.type == TransportType.ble
-            ? context.l10n.scannerDetailBluetoothLowEnergy
-            : context.l10n.scannerDetailUsbSerial,
+        switch (device.type) {
+          TransportType.ble => context.l10n.scannerDetailBluetoothLowEnergy,
+          TransportType.usb => context.l10n.scannerDetailUsbSerial,
+          TransportType.network => context.l10n.deviceSheetNetwork,
+        },
       ),
       if (device.rssi != null)
         (context.l10n.scannerDetailSignalStrength, '${device.rssi} dBm'),

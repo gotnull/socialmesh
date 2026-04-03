@@ -380,6 +380,12 @@ class ProtocolService {
   final StreamController<pb.MqttClientProxyMessage>
   _mqttClientProxyMessageController;
 
+  /// Emitted when a config or admin message is sent to the **local** node
+  /// (not a remote target) that is expected to trigger a firmware reboot.
+  /// Consumers (e.g. the reconnect flow) use this to enter reboot
+  /// recovery mode and extend patience before pairing invalidation.
+  final StreamController<void> _localConfigWriteController;
+
   StreamSubscription<List<int>>? _dataSubscription;
   StreamSubscription<DeviceConnectionState>? _transportStateSubscription;
   Completer<void>? _configCompleter;
@@ -697,6 +703,7 @@ class ProtocolService {
        _meshTelemetryController = StreamController<MeshTelemetry>.broadcast(),
        _mqttClientProxyMessageController =
            StreamController<pb.MqttClientProxyMessage>.broadcast(),
+       _localConfigWriteController = StreamController<void>.broadcast(),
        _dedupeStore = dedupeStore ?? MeshPacketDedupeStore(),
        _smCapabilityStore = smCapabilityStore ?? SmCapabilityStore(),
        _smFeatureFlag = smFeatureFlag ?? SmFeatureFlag(),
@@ -740,6 +747,10 @@ class ProtocolService {
   /// size, etc.) needed by [MeshHealthAnalyzer].
   Stream<MeshTelemetry> get meshTelemetryStream =>
       _meshTelemetryController.stream;
+
+  /// Emitted when a config write to the local node completes. The
+  /// reconnect flow listens to this to enter reboot recovery mode.
+  Stream<void> get localConfigWriteStream => _localConfigWriteController.stream;
 
   /// Stream of received messages
   Stream<Message> get messageStream => _messageController.stream;
@@ -2428,7 +2439,7 @@ class ProtocolService {
 
           final updatedNode = existingNode.copyWith(
             firmwareVersion: metadata.firmwareVersion.isNotEmpty
-                ? metadata.firmwareVersion
+                ? sanitizeUtf16(metadata.firmwareVersion)
                 : null,
             hasWifi: metadata.hasWifi,
             hasBluetooth: metadata.hasBluetooth,
@@ -2450,7 +2461,7 @@ class ProtocolService {
 
           final updatedRemote = remoteNode.copyWith(
             firmwareVersion: metadata.firmwareVersion.isNotEmpty
-                ? metadata.firmwareVersion
+                ? sanitizeUtf16(metadata.firmwareVersion)
                 : null,
             hasWifi: metadata.hasWifi,
             hasBluetooth: metadata.hasBluetooth,
@@ -2485,10 +2496,10 @@ class ProtocolService {
 
           final updatedNode = existingNode.copyWith(
             longName: user.longName.isNotEmpty
-                ? user.longName
+                ? sanitizeUtf16(user.longName)
                 : existingNode.longName,
             shortName: user.shortName.isNotEmpty
-                ? user.shortName
+                ? sanitizeUtf16(user.shortName)
                 : existingNode.shortName,
             userId: user.hasId() ? user.id : existingNode.userId,
             hardwareModel: hwModel ?? existingNode.hardwareModel,
@@ -2624,7 +2635,7 @@ class ProtocolService {
   /// These are important messages that should be displayed to the user.
   void _handleClientNotification(pb.ClientNotification notification) {
     final levelName = notification.level.name;
-    final message = notification.message;
+    final message = sanitizeUtf16(notification.message);
 
     // Log with appropriate level
     if (notification.level == pb.LogRecord_Level.ERROR ||
@@ -2634,6 +2645,12 @@ class ProtocolService {
       AppLogging.protocol('⚠️ Client Notification [WARNING]: $message');
     } else {
       AppLogging.protocol('ℹ️ Client Notification [$levelName]: $message');
+    }
+
+    // Sanitize the protobuf message before emitting so the UI never
+    // receives malformed UTF-16 that could crash text rendering.
+    if (notification.message != message) {
+      notification.message = message;
     }
 
     // Emit to stream so UI can display to user
@@ -2672,7 +2689,7 @@ class ProtocolService {
 
       final updatedNode = existingNode.copyWith(
         firmwareVersion: metadata.firmwareVersion.isNotEmpty
-            ? metadata.firmwareVersion
+            ? sanitizeUtf16(metadata.firmwareVersion)
             : null,
         hasWifi: metadata.hasWifi,
         hasBluetooth: metadata.hasBluetooth,
@@ -2721,8 +2738,12 @@ class ProtocolService {
       int? senderAvatarColor;
 
       if (senderNode != null) {
-        senderLongName = senderNode.longName;
-        senderShortName = senderNode.shortName;
+        senderLongName = senderNode.longName != null
+            ? sanitizeUtf16(senderNode.longName!)
+            : null;
+        senderShortName = senderNode.shortName != null
+            ? sanitizeUtf16(senderNode.shortName!)
+            : null;
         senderAvatarColor = senderNode.avatarColor;
       }
 
@@ -5787,6 +5808,12 @@ class ProtocolService {
             AppLogging.protocol('Updated identity store with new name');
           }
         }
+
+        // Owner config writes also trigger device reboot.
+        AppLogging.protocol(
+          'setOwnerConfig: Emitting localConfigWrite — device reboot expected',
+        );
+        _localConfigWriteController.add(null);
       }
     } catch (e) {
       AppLogging.protocol('Error setting owner config: $e');
@@ -6693,6 +6720,14 @@ class ProtocolService {
     // pollute the local cache.
     if (!isRemote) {
       _applySavedConfigToCache(config);
+
+      // Notify listeners that a config write to the local node occurred.
+      // The device will reboot to apply the change, so the reconnect flow
+      // should enter recovery mode (increased patience + logical matching).
+      AppLogging.protocol(
+        'setConfig: Emitting localConfigWrite — device reboot expected',
+      );
+      _localConfigWriteController.add(null);
     }
   }
 
@@ -7178,6 +7213,12 @@ class ProtocolService {
     // the device reboots before it can send back a config response).
     if (!isRemote) {
       _applySavedModuleConfigToCache(moduleConfig);
+
+      // Module config writes also trigger device reboot.
+      AppLogging.protocol(
+        'setModuleConfig: Emitting localConfigWrite — device reboot expected',
+      );
+      _localConfigWriteController.add(null);
     }
   }
 
@@ -8141,5 +8182,6 @@ class ProtocolService {
     await _traceRouteLogController.close();
     await _meshTelemetryController.close();
     await _mqttClientProxyMessageController.close();
+    await _localConfigWriteController.close();
   }
 }

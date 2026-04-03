@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 /// Transport types supported by the app
-enum TransportType { ble, usb }
+enum TransportType { ble, usb, network }
 
 /// Device information from scan results
 class DeviceInfo {

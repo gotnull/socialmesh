@@ -32,9 +32,9 @@ PRs that attempt to reimplement backend services or add new cloud dependencies w
 
 ### Before you open an issue
 
-1. Read [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md) to understand how the app is structured
-2. Read [docs/BACKEND.md](../docs/BACKEND.md) to understand what requires cloud services
-3. Read [CONTRIBUTING.md](../CONTRIBUTING.md) for contribution guidelines
+1. Read [docs/ARCHITECTURE.md](https://github.com/gotnull/socialmesh/blob/main/docs/ARCHITECTURE.md) to understand how the app is structured
+2. Read [docs/BACKEND.md](https://github.com/gotnull/socialmesh/blob/main/docs/BACKEND.md) to understand what requires cloud services
+3. Read [CONTRIBUTING.md](https://github.com/gotnull/socialmesh/blob/main/CONTRIBUTING.md) for contribution guidelines
 4. Search existing issues to avoid duplicates
 
 ### Where to go
@@ -45,7 +45,7 @@ PRs that attempt to reimplement backend services or add new cloud dependencies w
 | Request a feature               | Use the **Feature Request** template                          |
 | Ask a question about the code   | Open a **Discussion** (if enabled) or issue                   |
 | Ask about Meshtastic firmware   | [meshtastic/firmware](https://github.com/meshtastic/firmware) |
-| Report a security vulnerability | See [SECURITY.md](../SECURITY.md)                             |
+| Report a security vulnerability | See [SECURITY.md](https://github.com/gotnull/socialmesh/blob/main/SECURITY.md)                             |
 
 ### Not sure if your issue belongs here?
 

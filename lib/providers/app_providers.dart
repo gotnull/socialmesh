@@ -5,6 +5,7 @@ import 'dart:collection';
 import 'dart:math' as math;
 
 import 'package:collection/collection.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -16,6 +17,7 @@ import '../core/safety/error_handler.dart';
 import '../core/transport.dart';
 import '../dev/demo/demo.dart';
 import '../services/transport/ble_transport.dart';
+import '../services/transport/network_transport.dart';
 import '../services/transport/usb_transport.dart';
 import '../services/protocol/protocol_service.dart';
 import '../services/storage/storage_service.dart';
@@ -758,6 +760,25 @@ final transportTypeProvider =
       TransportTypeNotifier.new,
     );
 
+/// The active [NetworkTransport] host:port, set before switching
+/// [transportTypeProvider] to [TransportType.network].
+class _NetworkHostNotifier extends Notifier<String> {
+  @override
+  String build() => '';
+  void set(String host) => state = host;
+}
+
+class _NetworkPortNotifier extends Notifier<int> {
+  @override
+  int build() => kMeshtasticDefaultPort;
+  void set(int port) => state = port;
+}
+
+final networkTransportHostProvider =
+    NotifierProvider<_NetworkHostNotifier, String>(_NetworkHostNotifier.new);
+final networkTransportPortProvider =
+    NotifierProvider<_NetworkPortNotifier, int>(_NetworkPortNotifier.new);
+
 final transportProvider = Provider<DeviceTransport>((ref) {
   final type = ref.watch(transportTypeProvider);
 
@@ -766,6 +787,10 @@ final transportProvider = Provider<DeviceTransport>((ref) {
       return BleTransport();
     case TransportType.usb:
       return UsbTransport();
+    case TransportType.network:
+      final host = ref.watch(networkTransportHostProvider);
+      final port = ref.watch(networkTransportPortProvider);
+      return NetworkTransport(host: host, port: port);
   }
 });
 
@@ -1300,6 +1325,31 @@ final userDisconnectedProvider =
       UserDisconnectedNotifier.new,
     );
 
+/// Tracks when a config/admin write has been sent to the local node,
+/// which is expected to trigger a firmware reboot. This flag is consumed
+/// by the auto-reconnect flow to:
+///   1. Increase patience before pairing invalidation (reboot + SSL cert
+///      gen can take 30–120s on ESP32).
+///   2. Enable logical device matching (BLE UUID may change on reboot).
+///
+/// Set by the protocol service stream listener. Cleared automatically
+/// after a successful reconnect or when the reconnect flow gives up.
+class RebootExpectedNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void setRebootExpected(bool value) {
+    AppLogging.connection(
+      '🔄 RebootExpectedNotifier: setRebootExpected($value)',
+    );
+    state = value;
+  }
+}
+
+final rebootExpectedProvider = NotifierProvider<RebootExpectedNotifier, bool>(
+  RebootExpectedNotifier.new,
+);
+
 /// Helper function to clear all device-specific data before connecting to a (potentially different) device.
 /// This follows the Meshtastic iOS approach of always fetching fresh data from the device.
 /// Should be called BEFORE protocol.start() in all connection paths.
@@ -1600,6 +1650,29 @@ final bluetoothStateListenerProvider = Provider<void>((ref) {
 final autoReconnectManagerProvider = Provider<void>((ref) {
   AppLogging.connection('AUTO-RECONNECT MANAGER INITIALIZED');
 
+  // Listen for config writes to the local node. These trigger firmware
+  // reboot, so we enter recovery mode (increased patience + logical
+  // matching) before the BLE disconnect event even arrives.
+  StreamSubscription<void>? configWriteSub;
+  void setupConfigWriteListener() {
+    configWriteSub?.cancel();
+    try {
+      final protocol = ref.read(protocolServiceProvider);
+      configWriteSub = protocol.localConfigWriteStream.listen((_) {
+        AppLogging.connection(
+          '🔄 Config write to local node detected — entering reboot recovery mode',
+        );
+        ref.read(rebootExpectedProvider.notifier).setRebootExpected(true);
+      });
+    } catch (_) {
+      // Protocol service may not be initialized yet — that's fine,
+      // the listener will be set up on next connection.
+    }
+  }
+
+  setupConfigWriteListener();
+  ref.onDispose(() => configWriteSub?.cancel());
+
   // Track the last connected device ID when we connect
   ref.listen<DeviceInfo?>(connectedDeviceProvider, (previous, next) {
     AppLogging.debug(
@@ -1608,6 +1681,12 @@ final autoReconnectManagerProvider = Provider<void>((ref) {
     if (next != null) {
       AppLogging.connection('Storing device ID for reconnect: ${next.id}');
       ref.read(_lastConnectedDeviceIdProvider.notifier).setId(next.id);
+      // Clear reboot-expected flag on successful connect — the reboot
+      // cycle is complete and the new connection is established.
+      ref.read(rebootExpectedProvider.notifier).setRebootExpected(false);
+      // Re-subscribe to config writes on new connection (protocol service
+      // may have been recreated).
+      setupConfigWriteListener();
     }
   });
 
@@ -1732,9 +1811,19 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
       return;
     }
 
-    // Wait for device to reboot (Meshtastic devices take ~8-15 seconds)
-    AppLogging.connection('Waiting 10s for device to reboot...');
-    await Future.delayed(const Duration(seconds: 10));
+    // Wait for device to reboot (Meshtastic devices take ~8-15 seconds).
+    // ESP32 devices performing SSL certificate generation after WiFi/network
+    // config changes take significantly longer (60-120s), so we extend
+    // the initial delay during reboot recovery to avoid premature scans.
+    final rebootExpected = ref.read(rebootExpectedProvider);
+    final initialDelay = rebootExpected
+        ? const Duration(seconds: 20)
+        : const Duration(seconds: 10);
+    AppLogging.connection(
+      'Waiting ${initialDelay.inSeconds}s for device to reboot '
+      '(rebootExpected=$rebootExpected)...',
+    );
+    await Future.delayed(initialDelay);
 
     // CRITICAL: Check again after delay - user may have disconnected while waiting
     if (ref.read(userDisconnectedProvider)) {
@@ -1907,6 +1996,11 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
         // Meshtastic service UUID
         const serviceUuid = '6ba1b218-15a8-461f-9fa8-5dcae273eafd';
 
+        // Collect ALL Meshtastic candidates for logical matching.
+        // If the exact BLE ID is not found (e.g. ESP32 changed UUID
+        // after reboot), we attempt to match by node identity.
+        final allCandidates = <String, DeviceInfo>{};
+
         // Start scan with 15 second timeout
         await FlutterBluePlus.startScan(
           timeout: const Duration(seconds: 15),
@@ -1924,17 +2018,22 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
                 'Found device: $foundId (looking for $deviceId)',
               );
 
+              final deviceInfo = DeviceInfo(
+                id: foundId,
+                name: r.device.platformName.isNotEmpty
+                    ? r.device.platformName
+                    : 'Meshtastic Device',
+                type: TransportType.ble,
+                address: foundId,
+                rssi: r.rssi,
+              );
+
+              // Track all Meshtastic candidates by BLE ID
+              allCandidates[foundId] = deviceInfo;
+
+              // Fast path: exact BLE ID match
               if (foundId == deviceId && !completer.isCompleted) {
-                AppLogging.connection('✓ Target device found!');
-                final deviceInfo = DeviceInfo(
-                  id: foundId,
-                  name: r.device.platformName.isNotEmpty
-                      ? r.device.platformName
-                      : 'Meshtastic Device',
-                  type: TransportType.ble,
-                  address: foundId,
-                  rssi: r.rssi,
-                );
+                AppLogging.connection('✓ Target device found (exact BLE ID)!');
                 completer.complete(deviceInfo);
               }
             }
@@ -1970,6 +2069,21 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
         await FlutterBluePlus.stopScan();
         subscription.cancel();
         AppLogging.connection('Cleanup done');
+
+        // ── Logical matching fallback ──
+        // If exact BLE ID was not found but other Meshtastic devices
+        // were discovered, attempt to match by node identity. Meshtastic
+        // BLE names follow the pattern "Meshtastic_XXXX" where XXXX is
+        // the last 4 hex digits of the node number. This is stable
+        // across reboots even when the BLE peripheral UUID changes
+        // (common on ESP32 devices).
+        if (foundDevice == null && allCandidates.isNotEmpty) {
+          foundDevice = _tryLogicalDeviceMatch(
+            ref,
+            allCandidates: allCandidates,
+            previousDeviceId: deviceId,
+          );
+        }
       } catch (e, stack) {
         AppLogging.connection('Scan error: $e');
         AppLogging.connection('Stack: $stack');
@@ -2012,6 +2126,23 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
         }
 
         AppLogging.connection('Device found! Connecting...');
+
+        // If this device was matched via logical identity (not exact BLE
+        // ID), update the persisted transport identity so future fast-path
+        // reconnects use the new BLE UUID.
+        final isTransportRebind = foundDevice.id != deviceId;
+        if (isTransportRebind) {
+          AppLogging.connection(
+            '🔄 TRANSPORT REBIND: BLE ID changed $deviceId → ${foundDevice.id} '
+            '(logical match by name: ${foundDevice.name})',
+          );
+          // Update in-memory last-connected ID so subsequent loop
+          // iterations and abort-checks use the correct value.
+          ref
+              .read(_lastConnectedDeviceIdProvider.notifier)
+              .setId(foundDevice.id);
+        }
+
         ref
             .read(autoReconnectStateProvider.notifier)
             .setState(AutoReconnectState.connecting);
@@ -2103,6 +2234,21 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
 
           // Final check - if we're still connected, declare success
           if (transport.state == DeviceConnectionState.connected) {
+            // Persist updated transport identity if BLE UUID changed
+            if (isTransportRebind) {
+              AppLogging.connection(
+                '🔄 REBIND COMPLETE: Persisting new BLE ID ${foundDevice.id}',
+              );
+              final rebindSettings = await ref.read(
+                settingsServiceProvider.future,
+              );
+              await rebindSettings.setLastDevice(
+                foundDevice.id,
+                foundDevice.type.name,
+                deviceName: foundDevice.name,
+              );
+            }
+
             ref
                 .read(autoReconnectStateProvider.notifier)
                 .setState(AutoReconnectState.success);
@@ -2155,11 +2301,26 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
         AppLogging.connection(
           'Device not found in attempt $attempt, waiting 5s...',
         );
-        final invalidated = await ref
-            .read(deviceConnectionProvider.notifier)
-            .reportMissingSavedDevice();
-        if (invalidated) {
-          return;
+
+        // During reboot recovery, do NOT report missing device — the
+        // node is expected to be offline while regenerating its SSL
+        // certificate and restarting. Without this guard,
+        // reportMissingSavedDevice() fires invalidation after just 3
+        // misses, dumping the user to the scanner screen even though
+        // the scan loop has 8 retries specifically to handle slow reboots.
+        final rebootRecovery = ref.read(rebootExpectedProvider);
+        if (!rebootRecovery) {
+          final invalidated = await ref
+              .read(deviceConnectionProvider.notifier)
+              .reportMissingSavedDevice();
+          if (invalidated) {
+            return;
+          }
+        } else {
+          AppLogging.connection(
+            '🔄 Reboot recovery active — skipping invalidation check '
+            '(attempt $attempt/$maxRetries)',
+          );
         }
         if (attempt < maxRetries) {
           // Wait longer before next retry - device may still be rebooting
@@ -2170,6 +2331,8 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
 
     // All retries exhausted
     AppLogging.connection('❌ Failed to reconnect after $maxRetries attempts');
+    // Clear reboot recovery flag — we gave it our best shot.
+    ref.read(rebootExpectedProvider.notifier).setRebootExpected(false);
     ref
         .read(autoReconnectStateProvider.notifier)
         .setState(AutoReconnectState.failed);
@@ -2187,6 +2350,135 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
         .read(autoReconnectStateProvider.notifier)
         .setState(AutoReconnectState.idle);
   }
+}
+
+/// Attempts to match a Meshtastic device by logical identity when the
+/// exact BLE peripheral UUID is not found (e.g. after ESP32 reboot that
+/// changes the BLE MAC address).
+///
+/// Meshtastic BLE advertisements use the name pattern "Meshtastic_XXXX"
+/// (or custom short name variants like "WIS_XXXX") where the last 4
+/// characters are the hex representation of the lower 16 bits of the
+/// node number. This suffix is derived from the node number stored in
+/// flash and is stable across reboots.
+///
+/// Matching tiers:
+///   Strong — BLE name suffix matches the last 4 hex digits of
+///            `lastMyNodeNum` (persisted from the previous session).
+///   Medium — BLE advertised name exactly matches `lastDeviceName`.
+///   Weak   — any single Meshtastic device (never auto-matched).
+///
+/// Only strong matches are used for automatic rebind. Medium matches
+/// are logged but not auto-bound (future: could present a chooser).
+DeviceInfo? _tryLogicalDeviceMatch(
+  Ref ref, {
+  required Map<String, DeviceInfo> allCandidates,
+  required String previousDeviceId,
+}) {
+  final settings = ref.read(settingsServiceProvider).value;
+  if (settings == null) return null;
+
+  final lastNodeNum = settings.lastMyNodeNum;
+  final lastDeviceName = settings.lastDeviceName;
+
+  AppLogging.connection(
+    '🔍 LOGICAL MATCH: Trying to match ${allCandidates.length} '
+    'candidate(s) — lastNodeNum=${lastNodeNum != null ? lastNodeNum.toRadixString(16) : "null"}, '
+    'lastDeviceName=$lastDeviceName, previousBleId=$previousDeviceId',
+  );
+
+  // Log all candidates for diagnostics
+  for (final entry in allCandidates.entries) {
+    AppLogging.connection(
+      '🔍 LOGICAL MATCH: Candidate bleId=${entry.key}, '
+      'name=${entry.value.name}',
+    );
+  }
+
+  // ── Strong match: node number suffix in BLE name ──
+  if (lastNodeNum != null) {
+    final expectedSuffix = lastNodeNum
+        .toRadixString(16)
+        .padLeft(4, '0')
+        .substring(lastNodeNum.toRadixString(16).padLeft(4, '0').length - 4);
+
+    final strongMatches = allCandidates.values.where((device) {
+      return bleNameMatchesNodeNum(device.name, expectedSuffix);
+    }).toList();
+
+    if (strongMatches.length == 1) {
+      final match = strongMatches.first;
+      AppLogging.connection(
+        '🔍 LOGICAL MATCH: ✅ STRONG match found! '
+        'name=${match.name} bleId=${match.id} '
+        '(suffix=$expectedSuffix matches nodeNum=${lastNodeNum.toRadixString(16)})',
+      );
+      return match;
+    }
+
+    if (strongMatches.length > 1) {
+      AppLogging.connection(
+        '🔍 LOGICAL MATCH: ⚠️ Multiple strong matches '
+        '(${strongMatches.length}) — ambiguous, not auto-binding. '
+        'Names: ${strongMatches.map((d) => d.name).join(", ")}',
+      );
+      // Ambiguous: multiple devices with the same node number suffix.
+      // This is very unlikely but possible with cloned devices.
+      return null;
+    }
+
+    AppLogging.connection(
+      '🔍 LOGICAL MATCH: No strong match by nodeNum suffix ($expectedSuffix)',
+    );
+  }
+
+  // ── Medium match: exact advertised name ──
+  if (lastDeviceName != null && lastDeviceName.isNotEmpty) {
+    final nameMatches = allCandidates.values.where((device) {
+      return device.name == lastDeviceName;
+    }).toList();
+
+    if (nameMatches.length == 1) {
+      final match = nameMatches.first;
+      AppLogging.connection(
+        '🔍 LOGICAL MATCH: 🟡 MEDIUM match by name="${match.name}" '
+        'bleId=${match.id} — name matches lastDeviceName. '
+        'Auto-binding (single candidate with exact name).',
+      );
+      // Single device with exact same name — safe to rebind.
+      // This handles cases where lastMyNodeNum was cleared or unknown
+      // but the device name is distinctive enough.
+      return match;
+    }
+
+    if (nameMatches.isNotEmpty) {
+      AppLogging.connection(
+        '🔍 LOGICAL MATCH: 🟡 ${nameMatches.length} name matches '
+        'for "$lastDeviceName" — ambiguous, not auto-binding',
+      );
+    }
+  }
+
+  AppLogging.connection(
+    '🔍 LOGICAL MATCH: ❌ No safe logical match found among '
+    '${allCandidates.length} candidate(s)',
+  );
+  return null;
+}
+
+/// Returns `true` if [bleName] ends with the 4-hex suffix [expectedSuffix].
+///
+/// Meshtastic default names are "Meshtastic_XXXX". Custom short names
+/// follow similar patterns. We check case-insensitively whether the
+/// portion after the last underscore matches.
+@visibleForTesting
+bool bleNameMatchesNodeNum(String bleName, String expectedSuffix) {
+  final underscoreIndex = bleName.lastIndexOf('_');
+  if (underscoreIndex < 0 || underscoreIndex >= bleName.length - 1) {
+    return false;
+  }
+  final nameSuffix = bleName.substring(underscoreIndex + 1).toLowerCase();
+  return nameSuffix == expectedSuffix.toLowerCase();
 }
 
 // Current RSSI stream from protocol service

@@ -391,6 +391,18 @@ class MqttClientProxyService {
       return;
     }
 
+    // Guard against race where _isConnected is true but the MQTT client's
+    // internal state is still 'connecting' (e.g. reconnect in progress).
+    // Publishing in this state throws a ConnectionException.
+    final clientState =
+        _client!.connectionStatus?.state ?? MqttConnectionState.disconnected;
+    if (clientState != MqttConnectionState.connected) {
+      AppLogging.mqttProxyWarning(
+        'Cannot publish: client state is $clientState (topic: $topic)',
+      );
+      return;
+    }
+
     if (data == null && text == null) {
       AppLogging.mqttProxy(
         'Ignoring proxy message with no payload '

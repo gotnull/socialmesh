@@ -623,9 +623,13 @@ class _DeviceInfoCard extends ConsumerWidget {
                 ? context.l10n.deviceSheetBluetoothLe
                 : device?.type == transport.TransportType.usb
                 ? context.l10n.deviceSheetUsb
+                : device?.type == transport.TransportType.network
+                ? context.l10n.deviceSheetNetwork
                 : context.l10n.deviceSheetUnknown,
             icon: device?.type == transport.TransportType.ble
                 ? Icons.bluetooth
+                : device?.type == transport.TransportType.network
+                ? Icons.lan
                 : Icons.usb,
             iconColor: context.accentColor,
           ),

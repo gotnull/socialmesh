@@ -8,7 +8,7 @@ assignees: ""
 
 ## Prerequisites
 
-- [ ] I have read [CONTRIBUTING.md](../CONTRIBUTING.md)
+- [ ] I have read [CONTRIBUTING.md](https://github.com/gotnull/socialmesh/blob/main/CONTRIBUTING.md)
 - [ ] I have searched existing issues to ensure this is not a duplicate
 - [ ] This is a bug in the mobile app, not in Meshtastic firmware or backend services
 

@@ -96,6 +96,7 @@ import '../../core/whats_new/whats_new_sheet.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/constants.dart';
 import '../tak/screens/tak_settings_screen.dart';
+import 'network_endpoints_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   /// Optional search query to pre-fill on open, allowing callers to
@@ -458,6 +459,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               await settingsService.setProvidePhoneLocation(value);
               ref.invalidate(settingsServiceProvider);
             },
+          ),
+        ),
+
+        _SearchableSettingItem(
+          icon: Icons.lan,
+          title: context.l10n.settingsTileNetworkEndpointsTitle,
+          subtitle: context.l10n.settingsTileNetworkEndpointsSubtitle,
+          keywords: [
+            'network',
+            'tcp',
+            'ip',
+            'endpoint',
+            'wifi',
+            'mdns',
+            'connect',
+          ],
+          section: context.l10n.settingsSectionConnection,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const NetworkEndpointsScreen()),
           ),
         ),
 
