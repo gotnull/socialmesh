@@ -282,6 +282,7 @@ class FileTransferEngine {
     required String mimeType,
     required Uint8List fileBytes,
     int? targetNodeNum,
+    int? chunkSize,
     FileTransportMode transportMode = FileTransportMode.auto,
   }) {
     // Validate size
@@ -314,6 +315,7 @@ class FileTransferEngine {
       filename: filename,
       mimeType: mimeType,
       fileBytes: fileBytes,
+      chunkSize: chunkSize,
       isDirected: targetNodeNum != null,
     );
 

@@ -14,6 +14,7 @@ import '../../core/widgets/status_banner.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/mesh_models.dart';
 import '../../services/terrain/elevation_service.dart';
+import 'widgets/terrain_profile_3d_view.dart';
 import 'widgets/terrain_profile_chart.dart';
 
 /// Full-screen view for a terrain elevation profile between two map points.
@@ -74,6 +75,9 @@ class _TerrainProfileScreenState extends ConsumerState<TerrainProfileScreen>
   /// True when terrain elevation was used as a fallback altitude for one or
   /// both endpoints because no GPS altitude was available on the node.
   bool _usingTerrainFallback = false;
+
+  /// Whether the 3D terrain view is active (vs the default 2D chart).
+  bool _show3D = false;
 
   /// User-entered antenna height above ground level (meters) for each endpoint.
   /// Only used when GPS altitude is missing for that endpoint.
@@ -246,6 +250,19 @@ class _TerrainProfileScreenState extends ConsumerState<TerrainProfileScreen>
           FocusScope.of(context).unfocus(), // lint-allow: haptic-feedback
       child: GlassScaffold(
         title: l10n.mapTerrainProfileTitle,
+        actions: [
+          if (!_fetching && _samples != null)
+            IconButton(
+              icon: Icon(_show3D ? Icons.show_chart : Icons.view_in_ar),
+              tooltip: _show3D
+                  ? l10n.mapTerrainProfile2DToggle
+                  : l10n.mapTerrainProfile3DToggle,
+              onPressed: () {
+                HapticFeedback.selectionClick();
+                safeSetState(() => _show3D = !_show3D);
+              },
+            ),
+        ],
         slivers: [
           SliverPadding(
             padding: const EdgeInsets.all(AppTheme.spacing16),
@@ -321,12 +338,22 @@ class _TerrainProfileScreenState extends ConsumerState<TerrainProfileScreen>
 
                 // ── Chart + verdict ───────────────────────────────────────────
                 if (!_fetching && _samples != null) ...[
-                  TerrainProfileChart(
-                    samples: _samples!,
-                    losResult: (_losResult?.hasAltitudeData ?? false)
-                        ? _losResult
-                        : null,
-                  ),
+                  if (_show3D)
+                    TerrainProfile3DView(
+                      samples: _samples!,
+                      losResult: (_losResult?.hasAltitudeData ?? false)
+                          ? _losResult
+                          : null,
+                      labelA: widget.nodeA?.displayName ?? 'A',
+                      labelB: widget.nodeB?.displayName ?? 'B',
+                    )
+                  else
+                    TerrainProfileChart(
+                      samples: _samples!,
+                      losResult: (_losResult?.hasAltitudeData ?? false)
+                          ? _losResult
+                          : null,
+                    ),
                   const SizedBox(height: AppTheme.spacing12),
 
                   // Sample count label

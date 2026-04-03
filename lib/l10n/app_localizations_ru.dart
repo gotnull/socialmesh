@@ -31971,6 +31971,12 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get mapTerrainProfile3DToggle => '3D view';
+
+  @override
+  String get mapTerrainProfile2DToggle => '2D chart';
+
+  @override
   String mapTerrainLosVerdict(String verdict) {
     return 'Terrain LOS: $verdict';
   }
@@ -32326,6 +32332,19 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get fileTransferContactsSendVoice => 'Voice';
+
+  @override
+  String get stlSigningTitle => 'Trust Layer Signing';
+
+  @override
+  String get stlSigningSubtitle =>
+      'Sign outbound transfers with your identity key';
+
+  @override
+  String get stlSignatureValid => 'Signature verified';
+
+  @override
+  String get stlSignatureInvalid => 'Invalid signature';
 
   @override
   String get tracerouteShowOnMap => 'Show on Map';

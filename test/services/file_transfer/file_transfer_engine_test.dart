@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/services/file_transfer/file_transfer_engine.dart';
 import 'package:socialmesh/services/protocol/socialmesh/sm_constants.dart';
 import 'package:socialmesh/services/protocol/socialmesh/sm_file_transfer.dart';
+import 'package:socialmesh/services/security/stl_envelope.dart';
 
 void main() {
   group('FileTransferEngine - outbound', () {
@@ -820,6 +821,105 @@ void main() {
         expect(updated!.state, TransferState.waitingMissing);
         expect(updated.nackRounds, 1);
       });
+    });
+  });
+
+  group('FileTransferEngine - STL chunk sizing', () {
+    late FileTransferEngine engine;
+
+    setUp(() {
+      engine = FileTransferEngine(
+        sendPacket: (payload, portnum, {destinationNode, hopLimit = 3}) async {
+          return true;
+        },
+        onStateChanged: (_) {},
+      );
+    });
+
+    tearDown(() {
+      engine.dispose();
+    });
+
+    test('uses default chunk size when no chunkSize specified', () {
+      final bytes = Uint8List.fromList(List.generate(500, (i) => i % 256));
+      final result = engine.initiateTransfer(
+        filename: 'test.bin',
+        mimeType: 'application/octet-stream',
+        fileBytes: bytes,
+      );
+
+      expect(result, isNotNull);
+      expect(result!.chunkSize, SmFileTransferLimits.defaultChunkSize);
+    });
+
+    test('uses custom chunk size when specified', () {
+      final bytes = Uint8List.fromList(List.generate(500, (i) => i % 256));
+      final result = engine.initiateTransfer(
+        filename: 'test.bin',
+        mimeType: 'application/octet-stream',
+        fileBytes: bytes,
+        chunkSize: 116,
+      );
+
+      expect(result, isNotNull);
+      expect(result!.chunkSize, 116);
+      // 500 bytes / 116 = 5 chunks (ceil)
+      expect(result.chunkCount, 5);
+    });
+
+    test('STL-aware chunk size fits within LoRa MTU', () {
+      final stlAwareChunkSize = computeStlAwareChunkSize(
+        mtu: SmPayloadLimit.loraMtu,
+        sppHeaderOverhead: SmFileTransferLimits.chunkHeaderOverhead,
+        stlEnabled: true,
+      );
+      expect(stlAwareChunkSize, 116);
+
+      final bytes = Uint8List.fromList(List.generate(500, (i) => i % 256));
+      final result = engine.initiateTransfer(
+        filename: 'test.bin',
+        mimeType: 'application/octet-stream',
+        fileBytes: bytes,
+        chunkSize: stlAwareChunkSize,
+      );
+
+      expect(result, isNotNull);
+      expect(result!.chunkSize, 116);
+
+      // Each chunk wire size: chunkSize + header + STL = MTU
+      final wireSize =
+          result.chunkSize +
+          SmFileTransferLimits.chunkHeaderOverhead +
+          StlOverhead.wireOverheadSignedOnly;
+      expect(wireSize, SmPayloadLimit.loraMtu);
+    });
+
+    test('STL encrypted chunk size fits within LoRa MTU', () {
+      final encryptedChunkSize = computeStlAwareChunkSize(
+        mtu: SmPayloadLimit.loraMtu,
+        sppHeaderOverhead: SmFileTransferLimits.chunkHeaderOverhead,
+        stlEnabled: true,
+        stlEncrypted: true,
+      );
+      expect(encryptedChunkSize, 88);
+
+      final bytes = Uint8List.fromList(List.generate(500, (i) => i % 256));
+      final result = engine.initiateTransfer(
+        filename: 'test.bin',
+        mimeType: 'application/octet-stream',
+        fileBytes: bytes,
+        chunkSize: encryptedChunkSize,
+      );
+
+      expect(result, isNotNull);
+      expect(result!.chunkSize, 88);
+
+      // Wire: 88 + 23 + 126 = 237 = MTU
+      final wireSize =
+          result.chunkSize +
+          SmFileTransferLimits.chunkHeaderOverhead +
+          StlOverhead.wireOverheadEncrypted;
+      expect(wireSize, SmPayloadLimit.loraMtu);
     });
   });
 }

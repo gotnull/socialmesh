@@ -89,6 +89,7 @@ class AppLogging {
   static bool? _codec2LoggingEnabled;
   static bool? _sppLoggingEnabled;
   static bool? _sppNegotiationLoggingEnabled;
+  static bool? _stlLoggingEnabled;
   static bool? _mqttProxyLoggingEnabled;
   static bool? _forceEmptyStates;
   static Logger? _bleLogger;
@@ -666,6 +667,18 @@ class AppLogging {
     if (sppNegotiationLoggingEnabled) debugPrint('SPP_NEG: $message');
   }
 
+  /// STL (Socialmesh Trust Layer) logging.
+  /// Enable with STL_LOGGING_ENABLED=true in .env file.
+  static bool get stlLoggingEnabled {
+    _stlLoggingEnabled ??=
+        _safeGetEnv('STL_LOGGING_ENABLED')?.toLowerCase() == 'true';
+    return _stlLoggingEnabled!;
+  }
+
+  static void stl(String message) {
+    if (stlLoggingEnabled) debugPrint('STL: $message');
+  }
+
   /// MQTT client proxy logging.
   /// Enable with MQTT_PROXY_LOGGING_ENABLED=true in .env file.
   static bool get mqttProxyLoggingEnabled {
@@ -743,6 +756,7 @@ class AppLogging {
     _codec2LoggingEnabled = null;
     _sppLoggingEnabled = null;
     _sppNegotiationLoggingEnabled = null;
+    _stlLoggingEnabled = null;
     _mqttProxyLoggingEnabled = null;
     _bleLogger = null;
     _noOpLogger = null;

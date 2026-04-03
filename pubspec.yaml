@@ -184,6 +184,7 @@ flutter:
     - assets/lottie/
     - assets/models/
     - assets/globe/
+    - assets/terrain/
     - assets/meshtastic_powered_landscape.png
 
   # An image asset can refer to one or more resolution-specific "variants", see

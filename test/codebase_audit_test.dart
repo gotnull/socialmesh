@@ -522,4 +522,68 @@ void main() {
       );
     });
   });
+
+  group('Audit 9: STL Trust Layer Guardrails', () {
+    test('no production code uses deprecated stripEnvelope', () {
+      final files = getAllDartFiles(libDir);
+      final violations = <String>[];
+
+      for (final file in files) {
+        final content = readFile(file);
+        if (content.contains('stripEnvelope') &&
+            !content.contains('stripEnvelopeForTestsOnly') &&
+            !content.contains('@Deprecated')) {
+          violations.add(file.path);
+        }
+      }
+
+      expect(
+        violations,
+        isEmpty,
+        reason:
+            'Production code using deprecated stripEnvelope: '
+            '${violations.join(', ')}. '
+            'Use StlMiddleware.verifyAndUnwrap instead.',
+      );
+    });
+
+    test('protocol_service uses verified STL unwrap path', () {
+      final protocolFile = File('lib/services/protocol/protocol_service.dart');
+      final content = readFile(protocolFile);
+
+      // Must use StlMiddleware (the verified path)
+      expect(
+        content.contains('stl_middleware.dart'),
+        isTrue,
+        reason: 'protocol_service must import stl_middleware.dart',
+      );
+      expect(
+        content.contains('verifyAndUnwrap'),
+        isTrue,
+        reason: 'protocol_service must use verifyAndUnwrap for inbound STL',
+      );
+
+      // Must not use raw StlSigningService directly for inbound
+      expect(
+        content.contains('stl_signing_service.dart'),
+        isFalse,
+        reason:
+            'protocol_service must not import stl_signing_service.dart '
+            'directly — use StlMiddleware instead',
+      );
+    });
+
+    test('chunk sizing uses authoritative computeStlAwareChunkSize', () {
+      final providerFile = File('lib/providers/file_transfer_providers.dart');
+      final content = readFile(providerFile);
+
+      expect(
+        content.contains('computeStlAwareChunkSize'),
+        isTrue,
+        reason:
+            'file_transfer_providers must use computeStlAwareChunkSize '
+            'for chunk sizing — not inline arithmetic',
+      );
+    });
+  });
 }

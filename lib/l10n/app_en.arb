@@ -42838,6 +42838,14 @@
             }
         }
     },
+    "mapTerrainProfile3DToggle": "3D view",
+    "@mapTerrainProfile3DToggle": {
+        "description": "Tooltip for the icon button that switches between 2D chart and 3D terrain view."
+    },
+    "mapTerrainProfile2DToggle": "2D chart",
+    "@mapTerrainProfile2DToggle": {
+        "description": "Tooltip for the icon button that switches back to the 2D terrain chart."
+    },
     "mapTerrainLosVerdict": "Terrain LOS: {verdict}",
     "@mapTerrainLosVerdict": {
         "description": "Terrain-aware LOS verdict label.",
@@ -43337,6 +43345,22 @@
     "fileTransferContactsSendVoice": "Voice",
     "@fileTransferContactsSendVoice": {
         "description": "Label for the Voice button in the contact detail sheet action row"
+    },
+    "stlSigningTitle": "Trust Layer Signing",
+    "@stlSigningTitle": {
+        "description": "Settings tile title for enabling STL signing on file transfers"
+    },
+    "stlSigningSubtitle": "Sign outbound transfers with your identity key",
+    "@stlSigningSubtitle": {
+        "description": "Settings tile subtitle for STL signing"
+    },
+    "stlSignatureValid": "Signature verified",
+    "@stlSignatureValid": {
+        "description": "Label shown when an inbound transfer has a valid STL signature"
+    },
+    "stlSignatureInvalid": "Invalid signature",
+    "@stlSignatureInvalid": {
+        "description": "Warning label shown when an inbound transfer has an invalid STL signature"
     },
     "tracerouteShowOnMap": "Show on Map",
     "@tracerouteShowOnMap": {

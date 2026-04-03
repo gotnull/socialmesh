@@ -27,6 +27,9 @@ import '../services/protocol/socialmesh/sm_constants.dart';
 import '../services/protocol/socialmesh/sm_file_transfer.dart';
 import 'app_providers.dart';
 import 'countdown_providers.dart';
+import 'sip_providers.dart';
+import 'stl_providers.dart';
+import '../services/security/stl_envelope.dart';
 
 import 'package:socialmesh/l10n/l10n_utils.dart';
 
@@ -188,9 +191,29 @@ final fileTransferEngineProvider = Provider<FileTransferEngine>((ref) {
     sendPacket: (payload, portnum, {destinationNode, hopLimit = 3}) async {
       // Always read the CURRENT protocol service for sending so that
       // reconnect-created instances are used transparently.
+      var outboundPayload = payload;
+
+      // STL: wrap with Ed25519 signature if enabled.
+      final stlEnabled = ref.read(stlSigningEnabledProvider);
+      if (stlEnabled) {
+        final keypairAsync = ref.read(sipKeypairProvider);
+        final keypair = keypairAsync.maybeWhen(
+          data: (kp) => kp,
+          orElse: () => null,
+        );
+        if (keypair != null && keypair.isInitialized) {
+          final stl = ref.read(stlMiddlewareProvider);
+          outboundPayload = await stl.wrapOutbound(
+            payload: payload,
+            signFn: keypair.sign,
+            senderPubKey: keypair.getPublicKeyBytes(),
+          );
+        }
+      }
+
       final protocol = ref.read(protocolServiceProvider);
       final sent = await protocol.sendSmFileTransferPacket(
-        payload,
+        outboundPayload,
         destinationNode: destinationNode,
         hopLimit: hopLimit,
       );
@@ -545,17 +568,29 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
     }
 
     final engine = ref.read(fileTransferEngineProvider);
+
+    // STL: compute chunk payload size via the single authoritative API.
+    final stlEnabled = ref.read(stlSigningEnabledProvider);
+    final chunkSize = stlEnabled
+        ? computeStlAwareChunkSize(
+            mtu: SmPayloadLimit.loraMtu,
+            sppHeaderOverhead: SmFileTransferLimits.chunkHeaderOverhead,
+            stlEnabled: true,
+          )
+        : SmFileTransferLimits.defaultChunkSize;
+
     AppLogging.fileTransfer(
       'sendFile: initiating transfer '
       '(file=$filename, mime=$mimeType, size=${fileBytes.length}, '
       'target=${targetNodeNum?.toRadixString(16) ?? "broadcast"}, '
-      'mode=${transportMode.name})',
+      'mode=${transportMode.name}, chunkSize=$chunkSize)',
     );
     final transfer = engine.initiateTransfer(
       filename: filename,
       mimeType: mimeType,
       fileBytes: fileBytes,
       targetNodeNum: targetNodeNum,
+      chunkSize: chunkSize,
       transportMode: transportMode,
     );
 

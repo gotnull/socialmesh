@@ -46,6 +46,8 @@ import 'sip/sip_types.dart';
 import '../mesh_packet_dedupe_store.dart';
 import '../mesh_health/mesh_health_models.dart';
 import '../notifications/notification_service.dart';
+import '../security/stl_envelope.dart';
+import '../security/stl_middleware.dart';
 import '../../utils/text_sanitizer.dart';
 import '../../models/presence_confidence.dart';
 import '../../features/nodes/node_display_name_resolver.dart';
@@ -416,6 +418,9 @@ class ProtocolService {
   final Random _random = Random();
   bool _configurationComplete = false;
   final MeshPacketDedupeStore _dedupeStore;
+
+  /// STL middleware for verified inbound unwrapping.
+  final StlMiddleware _stlMiddleware = StlMiddleware();
 
   // --- Position rate limiter ---
   // Prevents any caller from spamming POSITION_APP packets regardless of
@@ -1539,13 +1544,19 @@ class ProtocolService {
               'firstByte=${data.payload.isNotEmpty ? '0x${data.payload[0].toRadixString(16).padLeft(2, '0')}' : 'empty'}',
             );
             // Multiplex PRIVATE_APP (256) by inspecting payload magic bytes.
-            // Order: SIP (2-byte magic), file-transfer (kind nibble),
-            // fallback to signals (legacy JSON).
+            // Order: SIP (2-byte magic), STL-wrapped file-transfer,
+            // file-transfer (kind nibble), fallback to signals (legacy JSON).
             final privatePayload = Uint8List.fromList(data.payload);
             if (SipCodec.isSipPayload(privatePayload)) {
               _handleSipPacket(packet, privatePayload);
+            } else if (StlEnvelope.isStlWrapped(privatePayload)) {
+              unawaited(
+                _handleFileTransferOnPrivateApp(packet, privatePayload),
+              );
             } else if (SmCodec.isFileTransferPayload(privatePayload)) {
-              _handleFileTransferOnPrivateApp(packet, privatePayload);
+              unawaited(
+                _handleFileTransferOnPrivateApp(packet, privatePayload),
+              );
             } else {
               _handleSignalMessage(packet, data);
             }
@@ -1705,10 +1716,10 @@ class ProtocolService {
   /// (260-263) are not reliably relayed by all firmware versions when
   /// [SmFeatureFlag.shouldSendBinary] is off. The payload is decoded the
   /// same way as portnum 263 — only the transport portnum differs.
-  void _handleFileTransferOnPrivateApp(
+  Future<void> _handleFileTransferOnPrivateApp(
     pb.MeshPacket packet,
     Uint8List payload,
-  ) {
+  ) async {
     // Ignore our own packets echoed back
     if (packet.from == _myNodeNum) return;
 
@@ -1719,7 +1730,22 @@ class ProtocolService {
       '${payload.length} bytes',
     );
 
-    final decoded = SmCodec.decodeFileTransfer(payload);
+    // STL: verify signature via fail-closed API, then strip envelope.
+    // Invalid or malformed STL packets are dropped — no fallback.
+    var innerPayload = payload;
+    if (StlEnvelope.isStlWrapped(payload)) {
+      final verified = await _stlMiddleware.verifyAndUnwrap(payload);
+      if (verified == null) {
+        AppLogging.stl(
+          'STL verification failed, dropping packet from '
+          '${packet.from.toRadixString(16)}',
+        );
+        return;
+      }
+      innerPayload = verified.payload;
+    }
+
+    final decoded = SmCodec.decodeFileTransfer(innerPayload);
     if (decoded == null) {
       AppLogging.fileTransfer(
         'Failed to decode file-transfer payload from '

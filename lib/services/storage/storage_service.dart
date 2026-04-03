@@ -802,6 +802,13 @@ class SettingsService {
   bool get fileTransferAutoAccept =>
       _preferences.getBool('file_transfer_auto_accept') ?? true;
 
+  Future<void> setStlSigningEnabled(bool enabled) async {
+    await _preferences.setBool('stl_signing_enabled', enabled);
+  }
+
+  bool get stlSigningEnabled =>
+      _preferences.getBool('stl_signing_enabled') ?? false;
+
   // Phone GPS Location Sharing
   // Whether to send the phone's GPS position to the mesh on a periodic timer.
   // Matches meshtastic-ios UserDefaults.provideLocation (default: false).

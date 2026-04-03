@@ -165,6 +165,10 @@ abstract final class SmFileTransferLimits {
   /// → ~200 bytes usable payload per chunk.
   static const int defaultChunkSize = 200;
 
+  /// Wire overhead per SPP file chunk in bytes:
+  /// 1 header + 16 fileId + 2 chunkIndex + 2 chunkCount + 2 bytesLen = 23.
+  static const int chunkHeaderOverhead = 23;
+
   /// Maximum number of missing chunk indexes in a NACK.
   static const int maxNackIndexes = 16;
 

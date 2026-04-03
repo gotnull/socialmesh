@@ -642,45 +642,73 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         ),
 
         // File Transfer
-        _SearchableSettingItem(
-          icon: Icons.swap_vert,
-          title: context.l10n.settingsSearchFileTransferTitle,
-          subtitle: context.l10n.settingsSearchFileTransferSubtitle,
-          keywords: ['file', 'transfer', 'send', 'receive', 'share'],
-          section: context.l10n.settingsSectionFileTransfer,
-          hasSwitch: true,
-          switchBuilder: (context, ref, settingsService) => ThemedSwitch(
-            value: settingsService.fileTransferEnabled,
-            onChanged: (value) async {
-              HapticFeedback.selectionClick();
-              await settingsService.setFileTransferEnabled(value);
-              safeSetState(() {});
-            },
+        if (AppFeatureFlags.isFileTransferEnabled)
+          _SearchableSettingItem(
+            icon: Icons.swap_vert,
+            title: context.l10n.settingsSearchFileTransferTitle,
+            subtitle: context.l10n.settingsSearchFileTransferSubtitle,
+            keywords: ['file', 'transfer', 'send', 'receive', 'share'],
+            section: context.l10n.settingsSectionFileTransfer,
+            hasSwitch: true,
+            switchBuilder: (context, ref, settingsService) => ThemedSwitch(
+              value: settingsService.fileTransferEnabled,
+              onChanged: (value) async {
+                HapticFeedback.selectionClick();
+                await settingsService.setFileTransferEnabled(value);
+                safeSetState(() {});
+              },
+            ),
           ),
-        ),
-        _SearchableSettingItem(
-          icon: Icons.auto_awesome,
-          title: context.l10n.settingsSearchAutoAcceptTransfersTitle,
-          subtitle: context.l10n.settingsSearchAutoAcceptTransfersSubtitle,
-          keywords: [
-            'auto',
-            'accept',
-            'file',
-            'transfer',
-            'receive',
-            'automatic',
-          ],
-          section: context.l10n.settingsSectionFileTransfer,
-          hasSwitch: true,
-          switchBuilder: (context, ref, settingsService) => ThemedSwitch(
-            value: settingsService.fileTransferAutoAccept,
-            onChanged: (value) async {
-              HapticFeedback.selectionClick();
-              await settingsService.setFileTransferAutoAccept(value);
-              safeSetState(() {});
-            },
+        if (AppFeatureFlags.isFileTransferEnabled)
+          _SearchableSettingItem(
+            icon: Icons.auto_awesome,
+            title: context.l10n.settingsSearchAutoAcceptTransfersTitle,
+            subtitle: context.l10n.settingsSearchAutoAcceptTransfersSubtitle,
+            keywords: [
+              'auto',
+              'accept',
+              'file',
+              'transfer',
+              'receive',
+              'automatic',
+            ],
+            section: context.l10n.settingsSectionFileTransfer,
+            hasSwitch: true,
+            switchBuilder: (context, ref, settingsService) => ThemedSwitch(
+              value: settingsService.fileTransferAutoAccept,
+              onChanged: (value) async {
+                HapticFeedback.selectionClick();
+                await settingsService.setFileTransferAutoAccept(value);
+                safeSetState(() {});
+              },
+            ),
           ),
-        ),
+        if (AppFeatureFlags.isSipEnabled)
+          _SearchableSettingItem(
+            icon: Icons.verified_user,
+            title: context.l10n.stlSigningTitle,
+            subtitle: context.l10n.stlSigningSubtitle,
+            keywords: [
+              'stl',
+              'signing',
+              'trust',
+              'security',
+              'signature',
+              'verify',
+              'file',
+              'transfer',
+            ],
+            section: context.l10n.settingsSectionFileTransfer,
+            hasSwitch: true,
+            switchBuilder: (context, ref, settingsService) => ThemedSwitch(
+              value: settingsService.stlSigningEnabled,
+              onChanged: (value) async {
+                HapticFeedback.selectionClick();
+                await settingsService.setStlSigningEnabled(value);
+                safeSetState(() {});
+              },
+            ),
+          ),
 
         // Data & Storage
         _SearchableSettingItem(

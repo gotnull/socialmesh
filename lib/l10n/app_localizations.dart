@@ -56374,6 +56374,18 @@ abstract class AppLocalizations {
   /// **'{count} elevation samples'**
   String mapTerrainProfileSampleCount(int count);
 
+  /// Tooltip for the icon button that switches between 2D chart and 3D terrain view.
+  ///
+  /// In en, this message translates to:
+  /// **'3D view'**
+  String get mapTerrainProfile3DToggle;
+
+  /// Tooltip for the icon button that switches back to the 2D terrain chart.
+  ///
+  /// In en, this message translates to:
+  /// **'2D chart'**
+  String get mapTerrainProfile2DToggle;
+
   /// Terrain-aware LOS verdict label.
   ///
   /// In en, this message translates to:
@@ -57015,6 +57027,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Voice'**
   String get fileTransferContactsSendVoice;
+
+  /// Settings tile title for enabling STL signing on file transfers
+  ///
+  /// In en, this message translates to:
+  /// **'Trust Layer Signing'**
+  String get stlSigningTitle;
+
+  /// Settings tile subtitle for STL signing
+  ///
+  /// In en, this message translates to:
+  /// **'Sign outbound transfers with your identity key'**
+  String get stlSigningSubtitle;
+
+  /// Label shown when an inbound transfer has a valid STL signature
+  ///
+  /// In en, this message translates to:
+  /// **'Signature verified'**
+  String get stlSignatureValid;
+
+  /// Warning label shown when an inbound transfer has an invalid STL signature
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid signature'**
+  String get stlSignatureInvalid;
 
   /// Button label in the traceroute card to open the route on the map
   ///
