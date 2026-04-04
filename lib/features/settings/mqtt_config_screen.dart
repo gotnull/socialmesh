@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../utils/time_format.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
@@ -649,7 +650,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
     final diag = ref.watch(mqttProxyDiagnosticsProvider);
     final l10n = context.l10n;
     final none = l10n.mqttProxyNoneLabel;
-    final dateFmt = DateFormat('d MMM, HH:mm');
+    final dateFmt = AppTimeFormat.withDatePrefix(context, 'd MMM,');
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -747,7 +748,8 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
 
   void _copyProxyDiagnostics(MqttProxyDiagnostics diag) {
     HapticFeedback.selectionClick();
-    final dateFmt = DateFormat('d MMM, HH:mm:ss');
+    final timePart = AppTimeFormat.timeWithSecondsPattern(context);
+    final dateFmt = DateFormat('d MMM, $timePart');
     final status = diag.isConnected
         ? context.l10n.mqttProxyStatusConnected
         : context.l10n.mqttProxyStatusDisconnected;

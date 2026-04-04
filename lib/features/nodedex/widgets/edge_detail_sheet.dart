@@ -24,6 +24,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../utils/time_format.dart';
+
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/logging.dart';
 import '../../../core/theme.dart';
@@ -505,7 +507,7 @@ class EdgeDetailSheet extends ConsumerWidget {
     CoSeenRelationship relationship,
     Color accent,
   ) {
-    final dateFormat = DateFormat('d MMM yyyy, HH:mm');
+    final dateFormat = AppTimeFormat.withDatePrefix(context, 'd MMM yyyy,');
     final isDark = context.isDarkMode;
 
     return Column(

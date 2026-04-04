@@ -9,6 +9,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:intl/intl.dart';
+import '../../utils/time_format.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/l10n/l10n_extension.dart';
@@ -1581,7 +1582,7 @@ class _PositionInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final timeFormat = DateFormat('HH:mm:ss');
+    final timeFormat = AppTimeFormat.timeWithSeconds(context);
     final dateFormat = DateFormat('MMM d, yyyy');
 
     return Container(
@@ -1761,7 +1762,7 @@ class _PositionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final timeFormat = DateFormat('HH:mm:ss');
+    final timeFormat = AppTimeFormat.timeWithSeconds(context);
     final dateFormat = DateFormat('MMM d');
 
     return Container(

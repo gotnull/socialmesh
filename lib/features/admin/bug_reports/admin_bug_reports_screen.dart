@@ -6,7 +6,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+
+import '../../../utils/time_format.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
@@ -419,7 +420,7 @@ class _ReportCard extends StatelessWidget {
     if (diff.inDays < 7) {
       return context.l10n.adminBugReportsTimeDays(diff.inDays);
     }
-    return DateFormat('d MMM y, HH:mm').format(date);
+    return AppTimeFormat.withDatePrefix(context, 'd MMM y,').format(date);
   }
 
   @override
@@ -853,7 +854,7 @@ class _ThreadBubble extends StatelessWidget {
     if (diff.inDays < 7) {
       return context.l10n.adminBugReportsTimeDays(diff.inDays);
     }
-    return DateFormat('d MMM, HH:mm').format(date);
+    return AppTimeFormat.withDatePrefix(context, 'd MMM,').format(date);
   }
 }
 

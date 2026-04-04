@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import '../../../utils/time_format.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
@@ -163,7 +163,7 @@ class _TimelineEntry extends StatelessWidget {
                       '${transition.actorRole ?? context.l10n.incidentTimelineUnknownRole} '
                       '(${transition.actorId.length > 8 ? '${transition.actorId.substring(0, 8)}…' : transition.actorId})'
                       '  •  '
-                      '${_formatTimestamp(transition.timestamp)}',
+                      '${_formatTimestamp(context, transition.timestamp)}',
                       style: context.captionMutedStyle,
                     ),
 
@@ -224,8 +224,8 @@ class _TimelineEntry extends StatelessWidget {
     };
   }
 
-  static String _formatTimestamp(DateTime ts) {
-    return DateFormat('d MMM yyyy HH:mm').format(ts);
+  static String _formatTimestamp(BuildContext context, DateTime ts) {
+    return AppTimeFormat.withDatePrefix(context, 'd MMM yyyy').format(ts);
   }
 }
 

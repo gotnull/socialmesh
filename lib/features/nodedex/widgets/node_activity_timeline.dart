@@ -18,7 +18,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+import '../../../utils/time_format.dart';
 
 import '../../../core/constants.dart';
 import '../../../core/l10n/l10n_extension.dart';
@@ -428,7 +428,7 @@ class _TimelineEventTile extends StatelessWidget {
     final diff = now.difference(ts);
 
     final relative = _relativeTime(context, diff);
-    final absolute = DateFormat('MMM d, HH:mm').format(ts);
+    final absolute = AppTimeFormat.dateAndTime(context).format(ts);
     return '$relative \u00B7 $absolute';
   }
 

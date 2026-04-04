@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/l10n/l10n_extension.dart';
+import '../../utils/time_format.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
@@ -1513,7 +1514,9 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
                   const SizedBox(width: AppTheme.spacing4),
                   Text(
                     context.l10n.nodeDetailLastHeardTimestamp(
-                      DateFormat('MMM d, yyyy HH:mm').format(node.lastHeard!),
+                      AppTimeFormat.fullDateAndTime(
+                        context,
+                      ).format(node.lastHeard!),
                     ),
                     style: TextStyle(fontSize: 11, color: context.textTertiary),
                   ),

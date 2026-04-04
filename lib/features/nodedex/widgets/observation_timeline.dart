@@ -22,6 +22,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
+import '../../../utils/time_format.dart';
 import '../../../core/theme.dart';
 import '../models/nodedex_entry.dart';
 
@@ -125,7 +126,7 @@ class ObservationTimeline extends StatelessWidget {
 
   Widget _buildDateRow(BuildContext context) {
     final dateFormat = DateFormat('d MMM yy');
-    final timeFormat = DateFormat('HH:mm');
+    final timeFormat = AppTimeFormat.timeOnly(context);
 
     final firstDate = dateFormat.format(entry.firstSeen);
     final lastDate = dateFormat.format(entry.lastSeen);

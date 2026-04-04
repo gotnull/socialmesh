@@ -5,7 +5,7 @@ import '../../core/l10n/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+import '../../utils/time_format.dart';
 
 import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
@@ -438,7 +438,7 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
   @override
   Widget build(BuildContext context) {
     final report = widget.report;
-    final dateFormat = DateFormat('d MMM yyyy, HH:mm');
+    final dateFormat = AppTimeFormat.withDatePrefix(context, 'd MMM yyyy,');
     final hasResponses = report.responses.isNotEmpty;
     final hasUnread = report.hasUnreadResponses;
     final canReply = _canReply(report);
@@ -847,7 +847,7 @@ class _ResponseBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isFounder = response.isFromFounder;
-    final timeFormat = DateFormat('d MMM, HH:mm');
+    final timeFormat = AppTimeFormat.withDatePrefix(context, 'd MMM,');
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),

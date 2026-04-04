@@ -24,6 +24,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../utils/time_format.dart';
+
 import '../../../providers/accessibility_providers.dart';
 
 import '../../../core/constants.dart';
@@ -1089,7 +1091,7 @@ class _DiscoveryStatsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('MMM d, yyyy');
-    final timeFormat = DateFormat('HH:mm');
+    final timeFormat = AppTimeFormat.timeOnly(context);
     final firstSeen = dateFormat.format(entry.firstSeen);
     final lastSeen = dateFormat.format(entry.lastSeen);
     final lastSeenTime = timeFormat.format(entry.lastSeen);
@@ -1636,7 +1638,7 @@ class _EncounterActivityCardState extends State<_EncounterActivityCard> {
   Widget build(BuildContext context) {
     final allEncounters = widget.entry.encounters.reversed.toList();
     final encounters = _filteredEncounters;
-    final dateFormat = DateFormat('MMM d, HH:mm');
+    final dateFormat = AppTimeFormat.dateAndTime(context);
     final pageSize = NodeDexConfig.encounterPageSize;
     final totalPages = (encounters.length / pageSize).ceil();
 
