@@ -5,7 +5,6 @@ import 'dart:math' as math;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
-
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../utils/time_format.dart';
 import '../../../core/theme.dart';
