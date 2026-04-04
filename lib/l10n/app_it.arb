@@ -4271,6 +4271,34 @@
   "@appearanceTextSize": {
     "description": "Text displayed in appearance settings"
   },
+  "appearanceTimeFormat": "Formato orario",
+  "@appearanceTimeFormat": {
+    "description": "Section header in appearance settings"
+  },
+  "appearanceTimeFormat12h": "12 ore",
+  "@appearanceTimeFormat12h": {
+    "description": "Time format option name"
+  },
+  "appearanceTimeFormat12hDesc": "1:30 PM",
+  "@appearanceTimeFormat12hDesc": {
+    "description": "Time format option description (example)"
+  },
+  "appearanceTimeFormat24h": "24 ore",
+  "@appearanceTimeFormat24h": {
+    "description": "Time format option name"
+  },
+  "appearanceTimeFormat24hDesc": "13:30",
+  "@appearanceTimeFormat24hDesc": {
+    "description": "Time format option description (example)"
+  },
+  "appearanceTimeFormatSystem": "Predefinito di sistema",
+  "@appearanceTimeFormatSystem": {
+    "description": "Time format option name"
+  },
+  "appearanceTimeFormatSystemDesc": "Segui le impostazioni dell\u2019orologio del dispositivo",
+  "@appearanceTimeFormatSystemDesc": {
+    "description": "Time format option description"
+  },
   "appearanceTitle": "Aspetto e accessibilità",
   "@appearanceTitle": {
     "description": "Title for the appearance settings screen"
@@ -31202,7 +31230,7 @@
   "@settingsTileAppLogTitle": {
     "description": "Title of the app log tools tile."
   },
-  "settingsTileAppearanceSubtitle": "Font, dimensione testo, densità, contrasto, animazioni",
+  "settingsTileAppearanceSubtitle": "Font, dimensione testo, formato orario, densità, contrasto, animazioni",
   "@settingsTileAppearanceSubtitle": {
     "description": "Subtitle of the appearance and accessibility settings tile."
   },

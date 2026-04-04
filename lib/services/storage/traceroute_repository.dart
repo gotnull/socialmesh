@@ -384,6 +384,10 @@ class SqliteTracerouteRepository implements TracerouteHistoryRepository {
       TracerouteTables.colViaMqtt: run.viaMqtt == null
           ? null
           : (run.viaMqtt! ? 1 : 0),
+      TracerouteTables.colOriginLatitude: run.originLatitude,
+      TracerouteTables.colOriginLongitude: run.originLongitude,
+      TracerouteTables.colTargetLatitude: run.targetLatitude,
+      TracerouteTables.colTargetLongitude: run.targetLongitude,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
@@ -480,6 +484,10 @@ class SqliteTracerouteRepository implements TracerouteHistoryRepository {
       viaMqtt: row[TracerouteTables.colViaMqtt] == null
           ? null
           : (row[TracerouteTables.colViaMqtt] as int) == 1,
+      originLatitude: row[TracerouteTables.colOriginLatitude] as double?,
+      originLongitude: row[TracerouteTables.colOriginLongitude] as double?,
+      targetLatitude: row[TracerouteTables.colTargetLatitude] as double?,
+      targetLongitude: row[TracerouteTables.colTargetLongitude] as double?,
     );
   }
 

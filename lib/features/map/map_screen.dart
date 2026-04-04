@@ -2739,8 +2739,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final polylines = <Polyline>[];
 
     // Resolve local device position as the start of the forward route
+    // Prefer stored position from traceroute time
     LatLng? localPosition;
-    if (myNodeNum != null) {
+    if (log.originLatitude != null &&
+        log.originLongitude != null &&
+        !(log.originLatitude == 0.0 && log.originLongitude == 0.0)) {
+      localPosition = LatLng(log.originLatitude!, log.originLongitude!);
+    } else if (myNodeNum != null) {
       final myNode = nodes[myNodeNum];
       if (myNode != null && myNode.hasPosition) {
         localPosition = LatLng(myNode.latitude!, myNode.longitude!);
@@ -2748,10 +2753,17 @@ class _MapScreenState extends ConsumerState<MapScreen>
     }
 
     // Resolve target node position as the end of the forward route
+    // Prefer stored position from traceroute time
     LatLng? targetPosition;
-    final targetNode = nodes[log.targetNode];
-    if (targetNode != null && targetNode.hasPosition) {
-      targetPosition = LatLng(targetNode.latitude!, targetNode.longitude!);
+    if (log.targetLatitude != null &&
+        log.targetLongitude != null &&
+        !(log.targetLatitude == 0.0 && log.targetLongitude == 0.0)) {
+      targetPosition = LatLng(log.targetLatitude!, log.targetLongitude!);
+    } else {
+      final targetNode = nodes[log.targetNode];
+      if (targetNode != null && targetNode.hasPosition) {
+        targetPosition = LatLng(targetNode.latitude!, targetNode.longitude!);
+      }
     }
 
     LatLng? positionOf(TraceRouteHop hop) {
@@ -2867,18 +2879,28 @@ class _MapScreenState extends ConsumerState<MapScreen>
   ) {
     final points = <LatLng>[];
 
-    // Local device position
-    if (myNodeNum != null) {
+    // Local device position – prefer stored position from traceroute time
+    if (log.originLatitude != null &&
+        log.originLongitude != null &&
+        !(log.originLatitude == 0.0 && log.originLongitude == 0.0)) {
+      points.add(LatLng(log.originLatitude!, log.originLongitude!));
+    } else if (myNodeNum != null) {
       final myNode = nodes[myNodeNum];
       if (myNode != null && myNode.hasPosition) {
         points.add(LatLng(myNode.latitude!, myNode.longitude!));
       }
     }
 
-    // Target node position
-    final target = nodes[log.targetNode];
-    if (target != null && target.hasPosition) {
-      points.add(LatLng(target.latitude!, target.longitude!));
+    // Target node position – prefer stored position from traceroute time
+    if (log.targetLatitude != null &&
+        log.targetLongitude != null &&
+        !(log.targetLatitude == 0.0 && log.targetLongitude == 0.0)) {
+      points.add(LatLng(log.targetLatitude!, log.targetLongitude!));
+    } else {
+      final target = nodes[log.targetNode];
+      if (target != null && target.hasPosition) {
+        points.add(LatLng(target.latitude!, target.longitude!));
+      }
     }
 
     // Hop positions

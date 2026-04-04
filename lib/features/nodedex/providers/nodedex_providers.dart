@@ -290,7 +290,11 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
         );
 
         // Add region if we can determine one.
-        final withRegion = _addRegionFromNode(newEntry, node);
+        final withRegion = _addRegionFromNode(
+          newEntry,
+          node,
+          timestamp: node.firstHeard ?? now,
+        );
         updated[nodeNum] = withRegion;
 
         // Only track encounters and co-seen for nodes that are
@@ -378,7 +382,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
           updatedEntry = _updateDeviceInfo(updatedEntry, node);
 
           // Update region data.
-          updatedEntry = _addRegionFromNode(updatedEntry, node);
+          updatedEntry = _addRegionFromNode(updatedEntry, node, timestamp: now);
 
           updated[nodeNum] = updatedEntry;
           _lastEncounterTime[nodeNum] = now;
@@ -392,6 +396,44 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
             'total encounters: ${updatedEntry.encounterCount}, '
             'SNR: ${node.snr ?? "n/a"}, RSSI: ${node.rssi ?? "n/a"}',
           );
+        } else {
+          // Node didn't qualify for a new encounter (stale or within
+          // cooldown), but we should still refresh cached metadata
+          // from the live node data. Metadata updates don't inflate
+          // any metrics — they just keep the display name, hardware
+          // model, role, firmware version, and sigil current.
+          var updatedEntry = existing;
+          var metadataChanged = false;
+
+          // Backfill sigil for entries created before sigil generation.
+          if (updatedEntry.sigil == null) {
+            updatedEntry = updatedEntry.copyWith(
+              sigil: SigilGenerator.generate(nodeNum),
+            );
+            metadataChanged = true;
+          }
+
+          // Update cached name if the live node has a better one.
+          if (liveName != null && liveName != updatedEntry.lastKnownName) {
+            updatedEntry = updatedEntry.copyWith(lastKnownName: liveName);
+            metadataChanged = true;
+          }
+
+          // Cache device info from live node data.
+          final withDeviceInfo = _updateDeviceInfo(updatedEntry, node);
+          if (withDeviceInfo != updatedEntry) {
+            updatedEntry = withDeviceInfo;
+            metadataChanged = true;
+          }
+
+          // NOTE: intentionally NO _addRegionFromNode, _sessionSeenNodes,
+          // or _lastEncounterTime here — region updates and encounter
+          // tracking are only meaningful when paired with a real encounter.
+
+          if (metadataChanged) {
+            updated[nodeNum] = updatedEntry;
+            changed = true;
+          }
         }
       }
     }
@@ -461,12 +503,15 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
   ///
   /// Uses position-derived geohash prefix when available, or falls
   /// back to the LoRa region code from device configuration.
-  NodeDexEntry _addRegionFromNode(NodeDexEntry entry, MeshNode node) {
+  NodeDexEntry _addRegionFromNode(
+    NodeDexEntry entry,
+    MeshNode node, {
+    DateTime? timestamp,
+  }) {
     if (node.hasPosition && node.latitude != null && node.longitude != null) {
-      // Use a coarse geohash (3-char precision = ~78km cells) as region ID.
       final regionId = _coarseGeohash(node.latitude!, node.longitude!);
       final label = _regionLabel(node.latitude!, node.longitude!);
-      return entry.addRegion(regionId, label);
+      return entry.addRegion(regionId, label, timestamp: timestamp);
     }
     return entry;
   }
@@ -528,6 +573,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
       source = state;
     }
 
+    final flushTimestamp = clock.now();
     final nodeList = _sessionSeenNodes.toList();
     final updated = Map<int, NodeDexEntry>.from(source);
     var changed = false;
@@ -541,11 +587,11 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
         final entryB = updated[b];
 
         if (entryA != null) {
-          updated[a] = entryA.addCoSeen(b);
+          updated[a] = entryA.addCoSeen(b, timestamp: flushTimestamp);
           changed = true;
         }
         if (entryB != null) {
-          updated[b] = entryB.addCoSeen(a);
+          updated[b] = entryB.addCoSeen(a, timestamp: flushTimestamp);
           changed = true;
         }
       }
@@ -1649,12 +1695,6 @@ class ConstellationEdge {
   Duration? get relationshipAge {
     if (firstSeen == null || lastSeen == null) return null;
     return lastSeen!.difference(firstSeen!);
-  }
-
-  /// Time since the last co-sighting.
-  Duration? get timeSinceLastSeen {
-    if (lastSeen == null) return null;
-    return DateTime.now().difference(lastSeen!);
   }
 }
 

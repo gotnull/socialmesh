@@ -9,7 +9,7 @@ import '../../core/safety/lifecycle_mixin.dart';
 import 'package:flutter/services.dart';
 import 'widgets/chat_composer.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+import '../../utils/time_format.dart';
 import 'dart:async';
 import '../../providers/app_providers.dart';
 import '../../core/constants.dart';
@@ -2084,7 +2084,7 @@ class _MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final timeFormat = DateFormat('h:mm a');
+    final timeFormat = AppTimeFormat.timeOnly(context);
     final isFailed = message.isFailed;
     final isUnconfirmed = message.isUnconfirmed;
     final isRetrying = message.isRetrying;

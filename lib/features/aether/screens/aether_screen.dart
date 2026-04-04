@@ -20,7 +20,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+import '../../../utils/time_format.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../l10n/app_localizations.dart';
@@ -1054,7 +1054,7 @@ class _AetherFlightCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final dateFormat = DateFormat('MMM d, h:mm a');
+    final dateFormat = AppTimeFormat.dateAndTime(context);
 
     return GestureDetector(
       onTap: () {
@@ -1596,7 +1596,7 @@ class _ReportCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateFormat = DateFormat('MMM d, h:mma');
+    final dateFormat = AppTimeFormat.dateAndTimeCompact(context);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 6),

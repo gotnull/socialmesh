@@ -5,7 +5,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../core/l10n/l10n_extension.dart';
@@ -29,6 +29,7 @@ import '../../providers/help_providers.dart';
 import '../../providers/presence_providers.dart';
 import '../../providers/social_providers.dart';
 import '../../utils/presence_utils.dart';
+import '../../utils/time_format.dart';
 import '../../utils/uptime_formatter.dart';
 import '../../core/constants.dart';
 import '../aether/providers/aether_flight_matcher_provider.dart';
@@ -1284,8 +1285,8 @@ class _NodeCard extends StatelessWidget {
     );
   }
 
-  String _formatLastHeard(DateTime time) {
-    final dateFormat = DateFormat('dd/MM/yyyy, h:mma');
+  String _formatLastHeard(BuildContext context, DateTime time) {
+    final dateFormat = AppTimeFormat.numericDateAndTime(context);
     return dateFormat.format(time);
   }
 
@@ -1570,7 +1571,7 @@ class _NodeCard extends StatelessWidget {
                     Icon(Icons.check, size: 14, color: context.accentColor),
                     SizedBox(width: AppTheme.spacing6),
                     Text(
-                      _formatLastHeard(node.lastHeard!),
+                      _formatLastHeard(context, node.lastHeard!),
                       style: TextStyle(
                         fontSize: 12,
                         color: context.textTertiary,

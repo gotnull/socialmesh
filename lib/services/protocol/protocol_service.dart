@@ -1671,6 +1671,24 @@ class ProtocolService {
       // Transport flag: true if this packet arrived via MQTT gateway
       final mqtt = packet.hasViaMqtt() ? packet.viaMqtt : null;
 
+      // Snapshot origin (local device) position
+      double? originLat, originLon;
+      if (_myNodeNum != null) {
+        final myNode = _nodes[_myNodeNum];
+        if (myNode != null && myNode.hasPosition) {
+          originLat = myNode.latitude;
+          originLon = myNode.longitude;
+        }
+      }
+
+      // Snapshot target node position
+      double? targetLat, targetLon;
+      final targetNodeObj = _nodes[targetNode];
+      if (targetNodeObj != null && targetNodeObj.hasPosition) {
+        targetLat = targetNodeObj.latitude;
+        targetLon = targetNodeObj.longitude;
+      }
+
       final log = TraceRouteLog(
         nodeNum: targetNode,
         targetNode: targetNode,
@@ -1681,6 +1699,10 @@ class ProtocolService {
         hops: [...forwardHops, ...backHops],
         snr: rxSnr,
         viaMqtt: mqtt,
+        originLatitude: originLat,
+        originLongitude: originLon,
+        targetLatitude: targetLat,
+        targetLongitude: targetLon,
       );
 
       AppLogging.protocol(
@@ -5582,6 +5604,24 @@ class ProtocolService {
 
     await _transport.send(_prepareForSend(bytes));
 
+    // Snapshot origin (local device) position for pending entry
+    double? originLat, originLon;
+    if (_myNodeNum != null) {
+      final myNode = _nodes[_myNodeNum];
+      if (myNode != null && myNode.hasPosition) {
+        originLat = myNode.latitude;
+        originLon = myNode.longitude;
+      }
+    }
+
+    // Snapshot target node position for pending entry
+    double? targetLat, targetLon;
+    final targetNodeObj = _nodes[nodeNum];
+    if (targetNodeObj != null && targetNodeObj.hasPosition) {
+      targetLat = targetNodeObj.latitude;
+      targetLon = targetNodeObj.longitude;
+    }
+
     // Emit a placeholder log so the UI immediately shows a pending entry
     _traceRouteLogController.add(
       TraceRouteLog(
@@ -5591,6 +5631,10 @@ class ProtocolService {
         response: false,
         hopsTowards: 0,
         hopsBack: 0,
+        originLatitude: originLat,
+        originLongitude: originLon,
+        targetLatitude: targetLat,
+        targetLongitude: targetLon,
       ),
     );
   }

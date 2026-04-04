@@ -124,6 +124,13 @@ class AccessibilityPreferencesService {
     );
   }
 
+  /// Update time format mode
+  Future<bool> updateTimeFormatMode(TimeFormatMode mode) async {
+    return await updatePreferences(
+      _cachedPreferences.copyWith(timeFormatMode: mode),
+    );
+  }
+
   /// Reset all preferences to defaults
   Future<bool> resetToDefaults() async {
     return await updatePreferences(AccessibilityPreferences.defaults);
@@ -154,6 +161,9 @@ class AccessibilityPreferencesService {
     }
     if (_cachedPreferences.reduceMotionMode != ReduceMotionMode.off) {
       active.add('Reduced motion'); // lint-allow: hardcoded-string
+    }
+    if (_cachedPreferences.timeFormatMode != TimeFormatMode.system) {
+      active.add('${_cachedPreferences.timeFormatMode.displayName} time');
     }
 
     return active.join(', ');

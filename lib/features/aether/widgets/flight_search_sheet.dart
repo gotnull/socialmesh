@@ -13,6 +13,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
+import '../../../utils/time_format.dart';
 import '../../../core/logging.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
@@ -609,7 +610,7 @@ class _FlightTile extends StatelessWidget {
       chips.add(
         InfoChip(
           icon: Icons.schedule,
-          label: DateFormat('h:mm a').format(route!.departureTime!),
+          label: AppTimeFormat.timeOnly(context).format(route!.departureTime!),
         ),
       );
     }

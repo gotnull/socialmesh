@@ -4,7 +4,7 @@
 // Traceroute Database — SQLite schema and lifecycle management.
 //
 // Database: traceroute_history.db
-// Schema version: 3
+// Schema version: 4
 //
 // Tables:
 //   - traceroute_runs: each traceroute attempt (pending or completed)
@@ -23,7 +23,7 @@ import '../../core/logging.dart';
 ///
 /// Bump this when adding tables, columns, or indices.
 /// Migration logic runs in [_onUpgrade].
-const int tracerouteSchemaVersion = 3;
+const int tracerouteSchemaVersion = 4;
 
 /// Table and column name constants for Traceroute SQLite schema.
 abstract final class TracerouteTables {
@@ -38,6 +38,10 @@ abstract final class TracerouteTables {
   static const colResponseReceived = 'response_received';
   static const colSnr = 'snr';
   static const colViaMqtt = 'via_mqtt';
+  static const colOriginLatitude = 'origin_latitude';
+  static const colOriginLongitude = 'origin_longitude';
+  static const colTargetLatitude = 'target_latitude';
+  static const colTargetLongitude = 'target_longitude';
 
   // -- traceroute_hops --
   static const hops = 'traceroute_hops';
@@ -174,7 +178,11 @@ class TracerouteDatabase {
         ${TracerouteTables.colReturnHops} INTEGER,
         ${TracerouteTables.colResponseReceived} INTEGER NOT NULL DEFAULT 0,
         ${TracerouteTables.colSnr} REAL,
-        ${TracerouteTables.colViaMqtt} INTEGER
+        ${TracerouteTables.colViaMqtt} INTEGER,
+        ${TracerouteTables.colOriginLatitude} REAL,
+        ${TracerouteTables.colOriginLongitude} REAL,
+        ${TracerouteTables.colTargetLatitude} REAL,
+        ${TracerouteTables.colTargetLongitude} REAL
       )
     ''');
 
@@ -242,6 +250,24 @@ class TracerouteDatabase {
       await db.execute(
         'ALTER TABLE ${TracerouteTables.hops} '
         'ADD COLUMN ${TracerouteTables.colLongitude} REAL', // lint-allow: hardcoded-string
+      );
+    }
+    if (oldVersion < 4) {
+      await db.execute(
+        'ALTER TABLE ${TracerouteTables.runs} '
+        'ADD COLUMN ${TracerouteTables.colOriginLatitude} REAL', // lint-allow: hardcoded-string
+      );
+      await db.execute(
+        'ALTER TABLE ${TracerouteTables.runs} '
+        'ADD COLUMN ${TracerouteTables.colOriginLongitude} REAL', // lint-allow: hardcoded-string
+      );
+      await db.execute(
+        'ALTER TABLE ${TracerouteTables.runs} '
+        'ADD COLUMN ${TracerouteTables.colTargetLatitude} REAL', // lint-allow: hardcoded-string
+      );
+      await db.execute(
+        'ALTER TABLE ${TracerouteTables.runs} '
+        'ADD COLUMN ${TracerouteTables.colTargetLongitude} REAL', // lint-allow: hardcoded-string
       );
     }
   }

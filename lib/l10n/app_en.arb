@@ -19459,7 +19459,7 @@
     "@settingsTileAppLogTitle": {
         "description": "Title of the app log tools tile."
     },
-    "settingsTileAppearanceSubtitle": "Font, text size, density, contrast, motion",
+    "settingsTileAppearanceSubtitle": "Font, text size, time format, density, contrast, motion",
     "@settingsTileAppearanceSubtitle": {
         "description": "Subtitle of the appearance and accessibility settings tile."
     },
@@ -30844,6 +30844,34 @@
     "appearanceResetDialogConfirm": "Reset",
     "@appearanceResetDialogConfirm": {
         "description": "Confirmation prompt in appearance settings"
+    },
+    "appearanceTimeFormat": "Time Format",
+    "@appearanceTimeFormat": {
+        "description": "Section header for time format in appearance settings"
+    },
+    "appearanceTimeFormatSystem": "System Default",
+    "@appearanceTimeFormatSystem": {
+        "description": "Time format option name in appearance settings"
+    },
+    "appearanceTimeFormatSystemDesc": "Follow your device\u2019s clock setting",
+    "@appearanceTimeFormatSystemDesc": {
+        "description": "Time format option description in appearance settings"
+    },
+    "appearanceTimeFormat12h": "12-hour",
+    "@appearanceTimeFormat12h": {
+        "description": "Time format option name in appearance settings"
+    },
+    "appearanceTimeFormat12hDesc": "1:30 PM",
+    "@appearanceTimeFormat12hDesc": {
+        "description": "Time format option description in appearance settings"
+    },
+    "appearanceTimeFormat24h": "24-hour",
+    "@appearanceTimeFormat24h": {
+        "description": "Time format option name in appearance settings"
+    },
+    "appearanceTimeFormat24hDesc": "13:30",
+    "@appearanceTimeFormat24hDesc": {
+        "description": "Time format option description in appearance settings"
     },
     "settingsSectionProfile": "PROFILE",
     "@settingsSectionProfile": {
@@ -43759,5 +43787,247 @@
     "settingsTileNetworkEndpointsSubtitle": "Manage saved TCP endpoints and discover Wi-Fi radios",
     "@settingsTileNetworkEndpointsSubtitle": {
         "description": "Settings tile subtitle for network endpoints"
+    },
+
+    "navigationMeshIncidents": "Mesh Incidents",
+    "@navigationMeshIncidents": {
+        "description": "Drawer menu label for the mesh incidents feature"
+    },
+    "meshIncidentListTitle": "Mesh Incidents",
+    "@meshIncidentListTitle": {
+        "description": "Title for the mesh incident list screen"
+    },
+    "meshIncidentDetailTitle": "Incident Detail",
+    "@meshIncidentDetailTitle": {
+        "description": "Title for the mesh incident detail screen"
+    },
+    "meshIncidentComposerTitle": "Report Incident",
+    "@meshIncidentComposerTitle": {
+        "description": "Title for the mesh incident composer screen"
+    },
+    "meshIncidentComposerUpdateTitle": "Update Incident",
+    "@meshIncidentComposerUpdateTitle": {
+        "description": "Title for update incident composer"
+    },
+    "meshIncidentComposerCorrectionTitle": "Correct Report",
+    "@meshIncidentComposerCorrectionTitle": {
+        "description": "Title for correction composer"
+    },
+    "meshIncidentEmptyTitle": "No Mesh Incidents",
+    "@meshIncidentEmptyTitle": {
+        "description": "Empty state title for mesh incident list"
+    },
+    "meshIncidentEmptyDescription": "Incident reports from the mesh network will appear here. Tap the button to create a new report.",
+    "@meshIncidentEmptyDescription": {
+        "description": "Empty state description for mesh incident list"
+    },
+    "meshIncidentEmptyTagline1": "Report incidents across the mesh",
+    "@meshIncidentEmptyTagline1": {
+        "description": "Empty state cycling tagline 1"
+    },
+    "meshIncidentEmptyTagline2": "Coordinate responses in real-time",
+    "@meshIncidentEmptyTagline2": {
+        "description": "Empty state cycling tagline 2"
+    },
+    "meshIncidentEmptyTagline3": "Track situation awareness off-grid",
+    "@meshIncidentEmptyTagline3": {
+        "description": "Empty state cycling tagline 3"
+    },
+    "meshIncidentCreateButton": "Create Report",
+    "@meshIncidentCreateButton": {
+        "description": "Button label to create a new mesh incident report"
+    },
+    "meshIncidentSendButton": "Send Report",
+    "@meshIncidentSendButton": {
+        "description": "Button label to send the incident report over mesh"
+    },
+    "meshIncidentSendUpdateButton": "Send Update",
+    "@meshIncidentSendUpdateButton": {
+        "description": "Button label to send an incident update"
+    },
+    "meshIncidentSendCorrectionButton": "Send Correction",
+    "@meshIncidentSendCorrectionButton": {
+        "description": "Button label to send an incident correction"
+    },
+    "meshIncidentClassificationLabel": "Classification",
+    "@meshIncidentClassificationLabel": {
+        "description": "Label for the incident classification field"
+    },
+    "meshIncidentPriorityLabel": "Priority",
+    "@meshIncidentPriorityLabel": {
+        "description": "Label for the incident priority field"
+    },
+    "meshIncidentConfidenceLabel": "Confidence",
+    "@meshIncidentConfidenceLabel": {
+        "description": "Label for the incident confidence level field"
+    },
+    "meshIncidentRoleLabel": "Your Role",
+    "@meshIncidentRoleLabel": {
+        "description": "Label for the reporter role field"
+    },
+    "meshIncidentBodyLabel": "Summary",
+    "@meshIncidentBodyLabel": {
+        "description": "Label for the incident body/summary text field"
+    },
+    "meshIncidentBodyHint": "Describe the situation concisely",
+    "@meshIncidentBodyHint": {
+        "description": "Hint text for the incident body field"
+    },
+    "meshIncidentBodyRequired": "Summary is required",
+    "@meshIncidentBodyRequired": {
+        "description": "Validation error when body is empty"
+    },
+    "meshIncidentLocationLabel": "Include Location",
+    "@meshIncidentLocationLabel": {
+        "description": "Label for the include location toggle"
+    },
+    "meshIncidentConfidenceUnconfirmed": "Unconfirmed",
+    "@meshIncidentConfidenceUnconfirmed": {
+        "description": "Label for unconfirmed confidence level"
+    },
+    "meshIncidentConfidenceProbable": "Probable",
+    "@meshIncidentConfidenceProbable": {
+        "description": "Label for probable confidence level"
+    },
+    "meshIncidentConfidenceConfirmed": "Confirmed",
+    "@meshIncidentConfidenceConfirmed": {
+        "description": "Label for confirmed confidence level"
+    },
+    "meshIncidentRoleObserver": "Observer",
+    "@meshIncidentRoleObserver": {
+        "description": "Label for observer reporter role"
+    },
+    "meshIncidentRoleOperator": "Operator",
+    "@meshIncidentRoleOperator": {
+        "description": "Label for operator reporter role"
+    },
+    "meshIncidentRoleSupervisor": "Supervisor",
+    "@meshIncidentRoleSupervisor": {
+        "description": "Label for supervisor reporter role"
+    },
+    "meshIncidentRoleAdmin": "Admin",
+    "@meshIncidentRoleAdmin": {
+        "description": "Label for admin reporter role"
+    },
+    "meshIncidentStatusReported": "Reported",
+    "@meshIncidentStatusReported": {
+        "description": "Label for reported incident status"
+    },
+    "meshIncidentStatusActive": "Active",
+    "@meshIncidentStatusActive": {
+        "description": "Label for active incident status"
+    },
+    "meshIncidentStatusContained": "Contained",
+    "@meshIncidentStatusContained": {
+        "description": "Label for contained incident status"
+    },
+    "meshIncidentStatusResolved": "Resolved",
+    "@meshIncidentStatusResolved": {
+        "description": "Label for resolved incident status"
+    },
+    "meshIncidentStatusCancelled": "Cancelled",
+    "@meshIncidentStatusCancelled": {
+        "description": "Label for cancelled incident status"
+    },
+    "meshIncidentUpdateTypeInitial": "Initial Report",
+    "@meshIncidentUpdateTypeInitial": {
+        "description": "Label for initial incident report type"
+    },
+    "meshIncidentUpdateTypeUpdate": "Update",
+    "@meshIncidentUpdateTypeUpdate": {
+        "description": "Label for incident update type"
+    },
+    "meshIncidentUpdateTypeCorrection": "Correction",
+    "@meshIncidentUpdateTypeCorrection": {
+        "description": "Label for incident correction type"
+    },
+    "meshIncidentUpdateTypeClosure": "Closure",
+    "@meshIncidentUpdateTypeClosure": {
+        "description": "Label for incident closure type"
+    },
+    "meshIncidentCaseId": "Case {caseId}",
+    "@meshIncidentCaseId": {
+        "description": "Display label for a mesh incident case ID",
+        "placeholders": {
+            "caseId": {
+                "type": "String"
+            }
+        }
+    },
+    "meshIncidentReportCount": "{count} reports",
+    "@meshIncidentReportCount": {
+        "description": "Number of reports in a case",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "meshIncidentContributors": "{count} contributors",
+    "@meshIncidentContributors": {
+        "description": "Number of contributing nodes",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "meshIncidentTimelineTitle": "Timeline",
+    "@meshIncidentTimelineTitle": {
+        "description": "Section title for incident report timeline"
+    },
+    "meshIncidentSuperseded": "Superseded",
+    "@meshIncidentSuperseded": {
+        "description": "Badge label for superseded reports"
+    },
+    "meshIncidentCorrectionBadge": "Correction",
+    "@meshIncidentCorrectionBadge": {
+        "description": "Badge label for correction reports"
+    },
+    "meshIncidentSentSuccess": "Report sent over mesh",
+    "@meshIncidentSentSuccess": {
+        "description": "Snackbar message after successfully sending a report"
+    },
+    "meshIncidentSendFailed": "Failed to send report",
+    "@meshIncidentSendFailed": {
+        "description": "Snackbar message when report fails to send"
+    },
+    "meshIncidentPayloadSize": "{bytes} bytes",
+    "@meshIncidentPayloadSize": {
+        "description": "Display label for encoded payload size",
+        "placeholders": {
+            "bytes": {
+                "type": "int"
+            }
+        }
+    },
+    "meshIncidentFromNode": "Node {nodeId}",
+    "@meshIncidentFromNode": {
+        "description": "Label showing which node sent a report",
+        "placeholders": {
+            "nodeId": {
+                "type": "String"
+            }
+        }
+    },
+    "meshIncidentCloseCase": "Close Case",
+    "@meshIncidentCloseCase": {
+        "description": "Action label for closing an incident case"
+    },
+    "meshIncidentAddUpdate": "Add Update",
+    "@meshIncidentAddUpdate": {
+        "description": "Action label for adding an incident update"
+    },
+    "meshIncidentCorrectReport": "Correct Report",
+    "@meshIncidentCorrectReport": {
+        "description": "Action label for correcting a report"
+    },
+    "meshIncidentHandoffTitle": "Handoff Summary",
+    "@meshIncidentHandoffTitle": {
+        "description": "Title for handoff/export plain-language summary"
+    },
+    "meshIncidentLocationCoarse": "Approx. location",
+    "@meshIncidentLocationCoarse": {
+        "description": "Label indicating coarse location data"
     }
 }

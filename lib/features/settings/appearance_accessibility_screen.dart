@@ -140,6 +140,30 @@ extension ReduceMotionModeL10n on ReduceMotionMode {
   }
 }
 
+extension TimeFormatModeL10n on TimeFormatMode {
+  String localizedName(BuildContext context) {
+    switch (this) {
+      case TimeFormatMode.system:
+        return context.l10n.appearanceTimeFormatSystem;
+      case TimeFormatMode.twelveHour:
+        return context.l10n.appearanceTimeFormat12h;
+      case TimeFormatMode.twentyFourHour:
+        return context.l10n.appearanceTimeFormat24h;
+    }
+  }
+
+  String localizedDescription(BuildContext context) {
+    switch (this) {
+      case TimeFormatMode.system:
+        return context.l10n.appearanceTimeFormatSystemDesc;
+      case TimeFormatMode.twelveHour:
+        return context.l10n.appearanceTimeFormat12hDesc;
+      case TimeFormatMode.twentyFourHour:
+        return context.l10n.appearanceTimeFormat24hDesc;
+    }
+  }
+}
+
 /// Appearance & Accessibility settings screen
 ///
 /// Allows users to customize font, text size, density, contrast, and motion
@@ -222,6 +246,19 @@ class _AppearanceAccessibilityScreenState
               _TextScaleSelector(
                 currentMode: prefs.textScaleMode,
                 onChanged: (mode) => _updateTextScale(mode),
+              ),
+
+              const SizedBox(height: AppTheme.spacing24),
+
+              // Time Format Section
+              _SectionHeader(
+                title: context.l10n.appearanceTimeFormat,
+                icon: Icons.schedule_rounded,
+              ),
+              const SizedBox(height: AppTheme.spacing8),
+              _TimeFormatSelector(
+                currentMode: prefs.timeFormatMode,
+                onChanged: (mode) => _updateTimeFormat(mode),
               ),
 
               const SizedBox(height: AppTheme.spacing24),
@@ -320,6 +357,13 @@ class _AppearanceAccessibilityScreenState
     await notifier.setContrastMode(
       enabled ? ContrastMode.high : ContrastMode.normal,
     );
+  }
+
+  Future<void> _updateTimeFormat(TimeFormatMode mode) async {
+    HapticFeedback.selectionClick();
+    if (!mounted) return;
+    final notifier = ref.read(accessibilityPreferencesProvider.notifier);
+    await notifier.setTimeFormatMode(mode);
   }
 
   Future<void> _updateReduceMotion(bool enabled) async {
@@ -725,6 +769,86 @@ class _DensitySelector extends StatelessWidget {
                         ),
                       ),
                       Radio<DensityMode>(
+                        value: mode,
+                        groupValue: currentMode,
+                        onChanged: (value) {
+                          if (value != null) onChanged(value);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              if (!isLast) Divider(height: 1, color: context.border),
+            ],
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
+class _TimeFormatSelector extends StatelessWidget {
+  const _TimeFormatSelector({
+    required this.currentMode,
+    required this.onChanged,
+  });
+
+  final TimeFormatMode currentMode;
+  final ValueChanged<TimeFormatMode> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+        border: Border.all(color: context.border),
+      ),
+      child: Column(
+        children: TimeFormatMode.values.map((mode) {
+          final isSelected = mode == currentMode;
+          final isLast = mode == TimeFormatMode.values.last;
+
+          return Column(
+            children: [
+              InkWell(
+                onTap: () => onChanged(mode),
+                borderRadius: BorderRadius.vertical(
+                  top: mode == TimeFormatMode.values.first
+                      ? const Radius.circular(12)
+                      : Radius.zero,
+                  bottom: isLast ? const Radius.circular(12) : Radius.zero,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              mode.localizedName(context),
+                              style: Theme.of(context).textTheme.titleSmall
+                                  ?.copyWith(
+                                    fontWeight: isSelected
+                                        ? FontWeight.w600
+                                        : FontWeight.w500,
+                                  ),
+                            ),
+                            const SizedBox(height: AppTheme.spacing2),
+                            Text(
+                              mode.localizedDescription(context),
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ),
+                      Radio<TimeFormatMode>(
                         value: mode,
                         groupValue: currentMode,
                         onChanged: (value) {

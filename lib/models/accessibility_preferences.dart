@@ -166,6 +166,22 @@ enum ReduceMotionMode {
   }
 }
 
+/// Time format preference for displaying times throughout the app
+enum TimeFormatMode {
+  /// Follow the device's system setting
+  system('System Default', 'Follow device settings'),
+
+  /// Always use 12-hour format with AM/PM
+  twelveHour('12-hour', '1:30 PM'),
+
+  /// Always use 24-hour format
+  twentyFourHour('24-hour', '13:30');
+
+  final String displayName;
+  final String description;
+  const TimeFormatMode(this.displayName, this.description);
+}
+
 /// Complete user accessibility preferences state
 class AccessibilityPreferences {
   final FontMode fontMode;
@@ -173,6 +189,7 @@ class AccessibilityPreferences {
   final DensityMode densityMode;
   final ContrastMode contrastMode;
   final ReduceMotionMode reduceMotionMode;
+  final TimeFormatMode timeFormatMode;
 
   const AccessibilityPreferences({
     this.fontMode = FontMode.branded,
@@ -180,6 +197,7 @@ class AccessibilityPreferences {
     this.densityMode = DensityMode.comfortable,
     this.contrastMode = ContrastMode.normal,
     this.reduceMotionMode = ReduceMotionMode.off,
+    this.timeFormatMode = TimeFormatMode.system,
   });
 
   /// Default preferences (safe, branded defaults)
@@ -192,6 +210,7 @@ class AccessibilityPreferences {
     DensityMode? densityMode,
     ContrastMode? contrastMode,
     ReduceMotionMode? reduceMotionMode,
+    TimeFormatMode? timeFormatMode,
   }) {
     return AccessibilityPreferences(
       fontMode: fontMode ?? this.fontMode,
@@ -199,6 +218,7 @@ class AccessibilityPreferences {
       densityMode: densityMode ?? this.densityMode,
       contrastMode: contrastMode ?? this.contrastMode,
       reduceMotionMode: reduceMotionMode ?? this.reduceMotionMode,
+      timeFormatMode: timeFormatMode ?? this.timeFormatMode,
     );
   }
 
@@ -208,7 +228,8 @@ class AccessibilityPreferences {
       textScaleMode != TextScaleMode.socialmeshDefault ||
       densityMode != DensityMode.comfortable ||
       contrastMode != ContrastMode.normal ||
-      reduceMotionMode != ReduceMotionMode.off;
+      reduceMotionMode != ReduceMotionMode.off ||
+      timeFormatMode != TimeFormatMode.system;
 
   /// Serialize to JSON for persistence
   Map<String, dynamic> toJson() {
@@ -218,7 +239,8 @@ class AccessibilityPreferences {
       'densityMode': densityMode.name,
       'contrastMode': contrastMode.name,
       'reduceMotionMode': reduceMotionMode.name,
-      'version': 1, // For future migrations
+      'timeFormatMode': timeFormatMode.name,
+      'version': 2, // For future migrations
     };
   }
 
@@ -252,6 +274,11 @@ class AccessibilityPreferences {
         json['reduceMotionMode'] as String?,
         ReduceMotionMode.values,
         ReduceMotionMode.off,
+      ),
+      timeFormatMode: _parseEnum(
+        json['timeFormatMode'] as String?,
+        TimeFormatMode.values,
+        TimeFormatMode.system,
       ),
     );
   }
@@ -294,7 +321,8 @@ class AccessibilityPreferences {
         other.textScaleMode == textScaleMode &&
         other.densityMode == densityMode &&
         other.contrastMode == contrastMode &&
-        other.reduceMotionMode == reduceMotionMode;
+        other.reduceMotionMode == reduceMotionMode &&
+        other.timeFormatMode == timeFormatMode;
   }
 
   @override
@@ -305,6 +333,7 @@ class AccessibilityPreferences {
       densityMode,
       contrastMode,
       reduceMotionMode,
+      timeFormatMode,
     );
   }
 
@@ -315,6 +344,7 @@ class AccessibilityPreferences {
         'textScaleMode: $textScaleMode, '
         'densityMode: $densityMode, '
         'contrastMode: $contrastMode, '
-        'reduceMotionMode: $reduceMotionMode)';
+        'reduceMotionMode: $reduceMotionMode, '
+        'timeFormatMode: $timeFormatMode)';
   }
 }

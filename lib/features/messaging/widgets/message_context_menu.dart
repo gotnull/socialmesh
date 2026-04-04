@@ -7,7 +7,7 @@ import 'package:flutter/foundation.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/transport_path.dart';
 import '../../../models/mesh_models.dart';
@@ -18,6 +18,7 @@ import '../../../providers/telemetry_providers.dart';
 import '../../../services/haptic_service.dart';
 import '../../../core/logging.dart';
 import '../../../utils/snackbar.dart';
+import '../../../utils/time_format.dart';
 
 /// Shows a context menu for a message with tapback, reply, copy, details, and delete options
 class MessageContextMenu extends ConsumerStatefulWidget {
@@ -319,7 +320,7 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
   }
 
   Widget _buildDetailsSection() {
-    final dateFormat = DateFormat('dd/MM/yy, h:mm:ss a');
+    final dateFormat = AppTimeFormat.numericDateAndTimeWithSeconds(context);
     final formattedDate = dateFormat.format(widget.message.timestamp);
 
     return Column(

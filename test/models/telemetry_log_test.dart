@@ -478,6 +478,71 @@ void main() {
       final restored = TraceRouteLog.fromJson(json);
       expect(restored.viaMqtt, isNull);
     });
+
+    test('origin/target position defaults to null', () {
+      final log = TraceRouteLog(nodeNum: 1, targetNode: 2);
+      expect(log.originLatitude, isNull);
+      expect(log.originLongitude, isNull);
+      expect(log.targetLatitude, isNull);
+      expect(log.targetLongitude, isNull);
+    });
+
+    test('origin/target position roundtrips through JSON', () {
+      final log = TraceRouteLog(
+        nodeNum: 1,
+        targetNode: 2,
+        originLatitude: -33.8688,
+        originLongitude: 151.2093,
+        targetLatitude: 48.8566,
+        targetLongitude: 2.3522,
+      );
+      final json = log.toJson();
+      expect(json['originLatitude'], -33.8688);
+      expect(json['originLongitude'], 151.2093);
+      expect(json['targetLatitude'], 48.8566);
+      expect(json['targetLongitude'], 2.3522);
+
+      final restored = TraceRouteLog.fromJson(json);
+      expect(restored.originLatitude, -33.8688);
+      expect(restored.originLongitude, 151.2093);
+      expect(restored.targetLatitude, 48.8566);
+      expect(restored.targetLongitude, 2.3522);
+    });
+
+    test('origin/target position null roundtrips through JSON', () {
+      final log = TraceRouteLog(nodeNum: 1, targetNode: 2);
+      final json = log.toJson();
+      expect(json['originLatitude'], isNull);
+      expect(json['originLongitude'], isNull);
+      expect(json['targetLatitude'], isNull);
+      expect(json['targetLongitude'], isNull);
+
+      final restored = TraceRouteLog.fromJson(json);
+      expect(restored.originLatitude, isNull);
+      expect(restored.originLongitude, isNull);
+      expect(restored.targetLatitude, isNull);
+      expect(restored.targetLongitude, isNull);
+    });
+
+    test('partial origin/target position roundtrips through JSON', () {
+      final log = TraceRouteLog(
+        nodeNum: 1,
+        targetNode: 2,
+        originLatitude: 40.7128,
+        originLongitude: -74.0060,
+      );
+      final json = log.toJson();
+      expect(json['originLatitude'], 40.7128);
+      expect(json['originLongitude'], -74.0060);
+      expect(json['targetLatitude'], isNull);
+      expect(json['targetLongitude'], isNull);
+
+      final restored = TraceRouteLog.fromJson(json);
+      expect(restored.originLatitude, 40.7128);
+      expect(restored.originLongitude, -74.0060);
+      expect(restored.targetLatitude, isNull);
+      expect(restored.targetLongitude, isNull);
+    });
   });
 
   group('TraceRouteHop', () {

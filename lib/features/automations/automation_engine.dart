@@ -8,6 +8,8 @@ import 'dart:io' show Platform;
 import 'dart:math' as math;
 import 'package:intl/intl.dart';
 
+import '../../utils/time_format.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -1319,7 +1321,10 @@ class AutomationEngine {
   }
 
   /// Format a human-readable timestamp for notification display
-  static final DateFormat _notificationTimeFormat = DateFormat('MMM d, h:mm a');
+  static DateFormat get _notificationTimeFormat =>
+      AppTimeFormat.is24HourFromPreferences()
+      ? DateFormat('MMM d, HH:mm')
+      : DateFormat('MMM d, h:mm a');
 
   /// Build the runtime variable map from an [AutomationEvent].
   ///

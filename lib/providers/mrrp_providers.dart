@@ -20,6 +20,7 @@ import '../services/protocol/sip/mrrp_dispatcher.dart';
 import '../services/protocol/sip/mrrp_engine.dart';
 import '../services/protocol/sip/mrrp_service_board.dart';
 import '../services/protocol/sip/mrrp_service_echo.dart';
+import '../services/protocol/sip/mrrp_service_incident.dart';
 import '../services/protocol/sip/mrrp_service_meetup.dart';
 import '../services/protocol/sip/mrrp_service_profile.dart';
 import '../services/protocol/sip/mrrp_service_registry.dart';
@@ -29,6 +30,7 @@ import '../services/protocol/sip/mrrp_types.dart';
 import '../services/protocol/sip/sip_types.dart';
 import 'app_providers.dart';
 import 'sip_providers.dart';
+import '../features/incidents/providers/mesh_incident_providers.dart';
 
 /// Whether MRRP is enabled (sourced from SmFeatureFlag).
 final mrrpEnabledProvider = NotifierProvider<MrrpEnabledNotifier, bool>(
@@ -112,6 +114,34 @@ final mrrpServiceRegistryProvider = Provider<MrrpServiceRegistry?>((ref) {
           MrrpServiceFlags.userVisible,
     ),
   );
+
+  // incident.v1 — mesh incident reporting over SPP.
+  if (AppFeatureFlags.isMeshIncidentsEnabled) {
+    final incidentService = ref.read(meshIncidentServiceProvider);
+    final incident = MrrpServiceIncident(
+      onReportReceived: (report) {
+        incidentService.ingestReport(report);
+      },
+      lookupCase: (caseId) {
+        // Synchronous lookup returns null if DB not ready.
+        // handleQuery is async-capable but the handler API
+        // returns a sync result for the lookup callback.
+        // Return the last known report for the case.
+        return null; // Queries delegated to async service layer.
+      },
+    );
+    registry.register(
+      incident,
+      MrrpServiceDescriptor(
+        serviceId: MrrpServiceId.incidentV1,
+        serviceType: MrrpServiceType.app,
+        serviceFlags:
+            MrrpServiceFlags.supportsRequest |
+            MrrpServiceFlags.supportsResponse |
+            MrrpServiceFlags.userVisible,
+      ),
+    );
+  }
 
   // echo.test — only when harness is enabled.
   if (AppFeatureFlags.isMrrpHarnessEnabled) {

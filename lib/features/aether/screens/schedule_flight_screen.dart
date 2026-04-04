@@ -7,6 +7,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../utils/time_format.dart';
+
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/legal/legal_constants.dart';
 import '../../../core/logging.dart';
@@ -730,7 +732,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
   @override
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('MMM d, yyyy');
-    final timeFormat = DateFormat('h:mm a');
+    final timeFormat = AppTimeFormat.timeOnly(context);
     final myNode = _getMyNode();
     final gradientColors = AccentColors.gradientFor(context.accentColor);
 

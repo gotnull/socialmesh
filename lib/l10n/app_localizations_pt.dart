@@ -14311,7 +14311,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get settingsTileAppearanceSubtitle =>
-      'Fonte, tamanho do texto, densidade, contraste, movimento';
+      'Fonte, tamanho do texto, formato de hora, densidade, contraste, movimento';
 
   @override
   String get settingsTileAppearanceTitle => 'Aparência e acessibilidade';
@@ -22826,6 +22826,28 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get appearanceResetDialogConfirm => 'Restaurar';
+
+  @override
+  String get appearanceTimeFormat => 'Formato de hora';
+
+  @override
+  String get appearanceTimeFormatSystem => 'Padrão do sistema';
+
+  @override
+  String get appearanceTimeFormatSystemDesc =>
+      'Seguir a configuração de relógio do dispositivo';
+
+  @override
+  String get appearanceTimeFormat12h => '12 horas';
+
+  @override
+  String get appearanceTimeFormat12hDesc => '1:30 PM';
+
+  @override
+  String get appearanceTimeFormat24h => '24 horas';
+
+  @override
+  String get appearanceTimeFormat24hDesc => '13:30';
 
   @override
   String get settingsSectionProfile => 'PERFIL';
@@ -32972,4 +32994,177 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get settingsTileNetworkEndpointsSubtitle =>
       'Manage saved TCP endpoints and discover Wi-Fi radios';
+
+  @override
+  String get navigationMeshIncidents => 'Mesh Incidents';
+
+  @override
+  String get meshIncidentListTitle => 'Mesh Incidents';
+
+  @override
+  String get meshIncidentDetailTitle => 'Incident Detail';
+
+  @override
+  String get meshIncidentComposerTitle => 'Report Incident';
+
+  @override
+  String get meshIncidentComposerUpdateTitle => 'Update Incident';
+
+  @override
+  String get meshIncidentComposerCorrectionTitle => 'Correct Report';
+
+  @override
+  String get meshIncidentEmptyTitle => 'No Mesh Incidents';
+
+  @override
+  String get meshIncidentEmptyDescription =>
+      'Incident reports from the mesh network will appear here. Tap the button to create a new report.';
+
+  @override
+  String get meshIncidentEmptyTagline1 => 'Report incidents across the mesh';
+
+  @override
+  String get meshIncidentEmptyTagline2 => 'Coordinate responses in real-time';
+
+  @override
+  String get meshIncidentEmptyTagline3 => 'Track situation awareness off-grid';
+
+  @override
+  String get meshIncidentCreateButton => 'Create Report';
+
+  @override
+  String get meshIncidentSendButton => 'Send Report';
+
+  @override
+  String get meshIncidentSendUpdateButton => 'Send Update';
+
+  @override
+  String get meshIncidentSendCorrectionButton => 'Send Correction';
+
+  @override
+  String get meshIncidentClassificationLabel => 'Classification';
+
+  @override
+  String get meshIncidentPriorityLabel => 'Priority';
+
+  @override
+  String get meshIncidentConfidenceLabel => 'Confidence';
+
+  @override
+  String get meshIncidentRoleLabel => 'Your Role';
+
+  @override
+  String get meshIncidentBodyLabel => 'Summary';
+
+  @override
+  String get meshIncidentBodyHint => 'Describe the situation concisely';
+
+  @override
+  String get meshIncidentBodyRequired => 'Summary is required';
+
+  @override
+  String get meshIncidentLocationLabel => 'Include Location';
+
+  @override
+  String get meshIncidentConfidenceUnconfirmed => 'Unconfirmed';
+
+  @override
+  String get meshIncidentConfidenceProbable => 'Probable';
+
+  @override
+  String get meshIncidentConfidenceConfirmed => 'Confirmed';
+
+  @override
+  String get meshIncidentRoleObserver => 'Observer';
+
+  @override
+  String get meshIncidentRoleOperator => 'Operator';
+
+  @override
+  String get meshIncidentRoleSupervisor => 'Supervisor';
+
+  @override
+  String get meshIncidentRoleAdmin => 'Admin';
+
+  @override
+  String get meshIncidentStatusReported => 'Reported';
+
+  @override
+  String get meshIncidentStatusActive => 'Active';
+
+  @override
+  String get meshIncidentStatusContained => 'Contained';
+
+  @override
+  String get meshIncidentStatusResolved => 'Resolved';
+
+  @override
+  String get meshIncidentStatusCancelled => 'Cancelled';
+
+  @override
+  String get meshIncidentUpdateTypeInitial => 'Initial Report';
+
+  @override
+  String get meshIncidentUpdateTypeUpdate => 'Update';
+
+  @override
+  String get meshIncidentUpdateTypeCorrection => 'Correction';
+
+  @override
+  String get meshIncidentUpdateTypeClosure => 'Closure';
+
+  @override
+  String meshIncidentCaseId(String caseId) {
+    return 'Case $caseId';
+  }
+
+  @override
+  String meshIncidentReportCount(int count) {
+    return '$count reports';
+  }
+
+  @override
+  String meshIncidentContributors(int count) {
+    return '$count contributors';
+  }
+
+  @override
+  String get meshIncidentTimelineTitle => 'Timeline';
+
+  @override
+  String get meshIncidentSuperseded => 'Superseded';
+
+  @override
+  String get meshIncidentCorrectionBadge => 'Correction';
+
+  @override
+  String get meshIncidentSentSuccess => 'Report sent over mesh';
+
+  @override
+  String get meshIncidentSendFailed => 'Failed to send report';
+
+  @override
+  String meshIncidentPayloadSize(int bytes) {
+    return '$bytes bytes';
+  }
+
+  @override
+  String meshIncidentFromNode(String nodeId) {
+    return 'Node $nodeId';
+  }
+
+  @override
+  String get meshIncidentCloseCase => 'Close Case';
+
+  @override
+  String get meshIncidentAddUpdate => 'Add Update';
+
+  @override
+  String get meshIncidentCorrectReport => 'Correct Report';
+
+  @override
+  String get meshIncidentHandoffTitle => 'Handoff Summary';
+
+  @override
+  String get meshIncidentLocationCoarse => 'Approx. location';
 }

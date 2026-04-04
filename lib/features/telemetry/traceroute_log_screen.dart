@@ -6,7 +6,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+import '../../utils/time_format.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -693,6 +693,12 @@ bool _hasMapData(TraceRouteLog log, Map<int, dynamic> allNodes) {
       return true;
     }
   }
+  // Check stored target position from traceroute time
+  if (log.targetLatitude != null &&
+      log.targetLongitude != null &&
+      !(log.targetLatitude == 0.0 && log.targetLongitude == 0.0)) {
+    return true;
+  }
   // Check target node position (covers direct connections)
   final target = allNodes[log.targetNode];
   if (target != null && target.hasPosition == true) return true;
@@ -707,7 +713,7 @@ class _TraceRouteCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final timeFormat = DateFormat('MMM d, h:mm a');
+    final timeFormat = AppTimeFormat.dateAndTime(context);
     final destNode = allNodes[log.targetNode];
     final destName =
         destNode?.displayName ??

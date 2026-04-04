@@ -66,6 +66,14 @@ class AccessibilityPreferencesNotifier
     AppLogging.settings('Accessibility: reduce motion changed to ${mode.name}');
   }
 
+  /// Update the time format mode
+  Future<void> setTimeFormatMode(TimeFormatMode mode) async {
+    final service = ref.read(accessibilityPreferencesServiceProvider);
+    state = state.copyWith(timeFormatMode: mode);
+    await service.updateTimeFormatMode(mode);
+    AppLogging.settings('Accessibility: time format changed to ${mode.name}');
+  }
+
   /// Reset all preferences to defaults
   Future<void> resetToDefaults() async {
     final service = ref.read(accessibilityPreferencesServiceProvider);
@@ -156,6 +164,12 @@ final minTapTargetSizeProvider = Provider<double>((ref) {
 final spacingMultiplierProvider = Provider<double>((ref) {
   final prefs = ref.watch(accessibilityPreferencesProvider);
   return prefs.densityMode.spacingMultiplier;
+});
+
+/// Provider for the user's time format preference
+final timeFormatModeProvider = Provider<TimeFormatMode>((ref) {
+  final prefs = ref.watch(accessibilityPreferencesProvider);
+  return prefs.timeFormatMode;
 });
 
 /// Provider that indicates if any custom accessibility settings are active

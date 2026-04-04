@@ -148,6 +148,10 @@ class TraitEngine {
     'ROUTER_LATE',
   };
 
+  // ---------------------------------------------------------------------------
+  // Public API — convenience methods (use DateTime.now() internally)
+  // ---------------------------------------------------------------------------
+
   /// Infer the trait for a node.
   ///
   /// [entry] — the NodeDex encounter history for this node.
@@ -164,21 +168,103 @@ class TraitEngine {
     double? channelUtilization,
     double? airUtilTx,
   }) {
+    return inferAt(
+      entry: entry,
+      now: DateTime.now(),
+      role: role,
+      uptimeSeconds: uptimeSeconds,
+      channelUtilization: channelUtilization,
+      airUtilTx: airUtilTx,
+    );
+  }
+
+  /// Infer ALL traits for a node, ranked by confidence with evidence.
+  ///
+  /// Returns 3 to 7 [ScoredTrait] entries, sorted by descending
+  /// confidence. Only traits scoring above [minConfidence] are
+  /// included (default: 0.1). Unknown is never included.
+  ///
+  /// Each ScoredTrait carries evidence lines explaining why the
+  /// score was assigned. This powers the "why this trait" UI in
+  /// the field journal detail view.
+  static List<ScoredTrait> inferAll({
+    required NodeDexEntry entry,
+    String? role,
+    int? uptimeSeconds,
+    double? channelUtilization,
+    double? airUtilTx,
+    double minConfidence = 0.1,
+    AppLocalizations? l10n,
+  }) {
+    return inferAllAt(
+      entry: entry,
+      now: DateTime.now(),
+      role: role,
+      uptimeSeconds: uptimeSeconds,
+      channelUtilization: channelUtilization,
+      airUtilTx: airUtilTx,
+      minConfidence: minConfidence,
+      l10n: l10n,
+    );
+  }
+
+  /// Quick trait inference that returns just the primary trait.
+  ///
+  /// Use this when you only need the trait enum without confidence
+  /// details (e.g., for list display).
+  static NodeTrait inferPrimary({
+    required NodeDexEntry entry,
+    String? role,
+    int? uptimeSeconds,
+    double? channelUtilization,
+    double? airUtilTx,
+  }) {
+    return inferPrimaryAt(
+      entry: entry,
+      now: DateTime.now(),
+      role: role,
+      uptimeSeconds: uptimeSeconds,
+      channelUtilization: channelUtilization,
+      airUtilTx: airUtilTx,
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Public API — deterministic *At variants (accept explicit DateTime)
+  // ---------------------------------------------------------------------------
+
+  /// Infer the trait at a specific reference time.
+  ///
+  /// Useful for deterministic testing. In production, use [infer].
+  static TraitResult inferAt({
+    required NodeDexEntry entry,
+    required DateTime now,
+    String? role,
+    int? uptimeSeconds,
+    double? channelUtilization,
+    double? airUtilTx,
+  }) {
     // Not enough data — return Unknown.
-    if (!_hasEnoughData(entry)) {
+    if (!_hasEnoughData(entry, now)) {
       return const TraitResult(primary: NodeTrait.unknown, confidence: 1.0);
     }
 
     // Score each trait independently.
     final scores = <NodeTrait, double>{
-      NodeTrait.relay: _scoreRelay(entry, role, channelUtilization, airUtilTx),
-      NodeTrait.wanderer: _scoreWanderer(entry),
-      NodeTrait.sentinel: _scoreSentinel(entry, uptimeSeconds),
-      NodeTrait.beacon: _scoreBeacon(entry),
-      NodeTrait.ghost: _scoreGhost(entry),
-      NodeTrait.courier: _scoreCourier(entry),
-      NodeTrait.anchor: _scoreAnchor(entry),
-      NodeTrait.drifter: _scoreDrifter(entry),
+      NodeTrait.relay: _scoreRelay(
+        entry,
+        now,
+        role,
+        channelUtilization,
+        airUtilTx,
+      ),
+      NodeTrait.wanderer: _scoreWanderer(entry, now),
+      NodeTrait.sentinel: _scoreSentinel(entry, now, uptimeSeconds),
+      NodeTrait.beacon: _scoreBeacon(entry, now),
+      NodeTrait.ghost: _scoreGhost(entry, now),
+      NodeTrait.courier: _scoreCourier(entry, now),
+      NodeTrait.anchor: _scoreAnchor(entry, now),
+      NodeTrait.drifter: _scoreDrifter(entry, now),
     };
 
     // Find the highest scoring trait.
@@ -216,17 +302,12 @@ class TraitEngine {
     );
   }
 
-  /// Infer ALL traits for a node, ranked by confidence with evidence.
+  /// Infer ALL traits at a specific reference time.
   ///
-  /// Returns 3 to 7 [ScoredTrait] entries, sorted by descending
-  /// confidence. Only traits scoring above [minConfidence] are
-  /// included (default: 0.1). Unknown is never included.
-  ///
-  /// Each ScoredTrait carries evidence lines explaining why the
-  /// score was assigned. This powers the "why this trait" UI in
-  /// the field journal detail view.
-  static List<ScoredTrait> inferAll({
+  /// Useful for deterministic testing. In production, use [inferAll].
+  static List<ScoredTrait> inferAllAt({
     required NodeDexEntry entry,
+    required DateTime now,
     String? role,
     int? uptimeSeconds,
     double? channelUtilization,
@@ -234,7 +315,7 @@ class TraitEngine {
     double minConfidence = 0.1,
     AppLocalizations? l10n,
   }) {
-    if (!_hasEnoughData(entry)) {
+    if (!_hasEnoughData(entry, now)) {
       return [
         ScoredTrait(
           trait: NodeTrait.unknown,
@@ -252,14 +333,21 @@ class TraitEngine {
     }
 
     final scored = <ScoredTrait>[
-      _scoreRelayWithEvidence(entry, role, channelUtilization, airUtilTx, l10n),
-      _scoreWandererWithEvidence(entry, l10n),
-      _scoreSentinelWithEvidence(entry, uptimeSeconds, l10n),
-      _scoreBeaconWithEvidence(entry, l10n),
-      _scoreGhostWithEvidence(entry, l10n),
-      _scoreCourierWithEvidence(entry, l10n),
-      _scoreAnchorWithEvidence(entry, l10n),
-      _scoreDrifterWithEvidence(entry, l10n),
+      _scoreRelayWithEvidence(
+        entry,
+        now,
+        role,
+        channelUtilization,
+        airUtilTx,
+        l10n,
+      ),
+      _scoreWandererWithEvidence(entry, now, l10n),
+      _scoreSentinelWithEvidence(entry, now, uptimeSeconds, l10n),
+      _scoreBeaconWithEvidence(entry, now, l10n),
+      _scoreGhostWithEvidence(entry, now, l10n),
+      _scoreCourierWithEvidence(entry, now, l10n),
+      _scoreAnchorWithEvidence(entry, now, l10n),
+      _scoreDrifterWithEvidence(entry, now, l10n),
     ];
 
     // Filter by minimum confidence and sort descending.
@@ -279,19 +367,20 @@ class TraitEngine {
     return filtered.take(7).toList();
   }
 
-  /// Quick trait inference that returns just the primary trait.
+  /// Quick trait inference at a specific reference time.
   ///
-  /// Use this when you only need the trait enum without confidence
-  /// details (e.g., for list display).
-  static NodeTrait inferPrimary({
+  /// Useful for deterministic testing. In production, use [inferPrimary].
+  static NodeTrait inferPrimaryAt({
     required NodeDexEntry entry,
+    required DateTime now,
     String? role,
     int? uptimeSeconds,
     double? channelUtilization,
     double? airUtilTx,
   }) {
-    return infer(
+    return inferAt(
       entry: entry,
+      now: now,
       role: role,
       uptimeSeconds: uptimeSeconds,
       channelUtilization: channelUtilization,
@@ -303,9 +392,10 @@ class TraitEngine {
   // Prerequisite check
   // ---------------------------------------------------------------------------
 
-  static bool _hasEnoughData(NodeDexEntry entry) {
+  static bool _hasEnoughData(NodeDexEntry entry, DateTime now) {
     if (entry.encounterCount < _minEncountersForTrait) return false;
-    if (entry.age.inHours < _minAgeHoursForTrait) return false;
+    final age = now.difference(entry.firstSeen);
+    if (age.inHours < _minAgeHoursForTrait) return false;
     return true;
   }
 
@@ -319,6 +409,7 @@ class TraitEngine {
   /// signs of active forwarding (channel utilization, airtime TX).
   static double _scoreRelay(
     NodeDexEntry entry,
+    DateTime now,
     String? role,
     double? channelUtilization,
     double? airUtilTx,
@@ -353,7 +444,7 @@ class TraitEngine {
   ///
   /// High score when the node has been seen across multiple distinct
   /// positions or regions, indicating mobility.
-  static double _scoreWanderer(NodeDexEntry entry) {
+  static double _scoreWanderer(NodeDexEntry entry, DateTime now) {
     double score = 0.0;
 
     // Multiple distinct positions is the primary Wanderer signal.
@@ -379,8 +470,13 @@ class TraitEngine {
   ///
   /// High score when the node is in a fixed position, has been around
   /// for a long time, and is seen reliably.
-  static double _scoreSentinel(NodeDexEntry entry, int? uptimeSeconds) {
+  static double _scoreSentinel(
+    NodeDexEntry entry,
+    DateTime now,
+    int? uptimeSeconds,
+  ) {
     double score = 0.0;
+    final age = now.difference(entry.firstSeen);
 
     // Low position diversity suggests fixed installation.
     final positionCount = entry.distinctPositionCount;
@@ -389,13 +485,13 @@ class TraitEngine {
     }
 
     // Long age suggests permanence.
-    if (entry.age.inDays >= _sentinelMinAgeDays) {
-      score += 0.3 * (entry.age.inDays / 30.0).clamp(0.0, 1.0);
+    if (age.inDays >= _sentinelMinAgeDays) {
+      score += 0.3 * (age.inDays / 30.0).clamp(0.0, 1.0);
     }
 
     // High encounter count relative to age suggests reliability.
     if (entry.encounterCount >= _sentinelMinEncounters) {
-      final encounterRate = _encounterRatePerDay(entry);
+      final encounterRate = _encounterRatePerDay(entry, now);
       if (encounterRate >= 1.0) {
         score += 0.2 * (encounterRate / 5.0).clamp(0.0, 1.0);
       }
@@ -416,10 +512,11 @@ class TraitEngine {
   ///
   /// High score when the node is encountered very frequently,
   /// suggesting it is always broadcasting.
-  static double _scoreBeacon(NodeDexEntry entry) {
+  static double _scoreBeacon(NodeDexEntry entry, DateTime now) {
     double score = 0.0;
 
-    final encounterRate = _encounterRatePerDay(entry);
+    final encounterRate = _encounterRatePerDay(entry, now);
+    final timeSinceLastSeen = now.difference(entry.lastSeen);
 
     // Very high encounter rate is the primary Beacon signal.
     if (encounterRate >= _beaconEncounterRateThreshold) {
@@ -430,7 +527,7 @@ class TraitEngine {
     }
 
     // Recently seen (within last hour) slightly boosts Beacon.
-    if (entry.timeSinceLastSeen.inMinutes < 60) {
+    if (timeSinceLastSeen.inMinutes < 60) {
       score += 0.15;
     }
 
@@ -446,13 +543,15 @@ class TraitEngine {
   ///
   /// High score when the node is rarely seen relative to how long
   /// it has been known, suggesting intermittent or erratic presence.
-  static double _scoreGhost(NodeDexEntry entry) {
+  static double _scoreGhost(NodeDexEntry entry, DateTime now) {
     double score = 0.0;
+    final age = now.difference(entry.firstSeen);
+    final timeSinceLastSeen = now.difference(entry.lastSeen);
 
     // Must have been known for at least a day to be ghostly.
-    if (entry.age.inDays < 1) return 0.0;
+    if (age.inDays < 1) return 0.0;
 
-    final encounterRate = _encounterRatePerDay(entry);
+    final encounterRate = _encounterRatePerDay(entry, now);
 
     // Very low encounter rate is the primary Ghost signal.
     if (encounterRate <= _ghostEncounterRateThreshold) {
@@ -465,13 +564,12 @@ class TraitEngine {
     }
 
     // Long time since last seen boosts Ghost.
-    if (entry.timeSinceLastSeen.inHours > 24) {
-      score +=
-          0.2 * (entry.timeSinceLastSeen.inHours / (7 * 24.0)).clamp(0.0, 1.0);
+    if (timeSinceLastSeen.inHours > 24) {
+      score += 0.2 * (timeSinceLastSeen.inHours / (7 * 24.0)).clamp(0.0, 1.0);
     }
 
     // Low encounter count relative to age.
-    if (entry.age.inDays > 7 && entry.encounterCount < 5) {
+    if (age.inDays > 7 && entry.encounterCount < 5) {
       score += 0.2;
     }
 
@@ -482,7 +580,7 @@ class TraitEngine {
   ///
   /// High score when the node has a high message-to-encounter ratio,
   /// suggesting it primarily carries data across the mesh.
-  static double _scoreCourier(NodeDexEntry entry) {
+  static double _scoreCourier(NodeDexEntry entry, DateTime now) {
     double score = 0.0;
 
     if (entry.encounterCount < _minEncountersForTrait) return 0.0;
@@ -512,8 +610,9 @@ class TraitEngine {
   ///
   /// High score when the node is a persistent hub with many co-seen
   /// connections, acting as a social center of the mesh graph.
-  static double _scoreAnchor(NodeDexEntry entry) {
+  static double _scoreAnchor(NodeDexEntry entry, DateTime now) {
     double score = 0.0;
+    final age = now.difference(entry.firstSeen);
 
     // High co-seen count is the primary Anchor signal.
     if (entry.coSeenCount >= 5) {
@@ -523,8 +622,8 @@ class TraitEngine {
     }
 
     // Long tenure supports Anchor — hubs are persistent.
-    if (entry.age.inDays >= 7) {
-      score += 0.2 * (entry.age.inDays / 30.0).clamp(0.0, 1.0);
+    if (age.inDays >= 7) {
+      score += 0.2 * (age.inDays / 30.0).clamp(0.0, 1.0);
     }
 
     // Low position diversity — anchors tend to stay put.
@@ -545,7 +644,7 @@ class TraitEngine {
   /// High score when the node appears irregularly — not ghostly
   /// (which implies rarity) but with unpredictable timing between
   /// encounters.
-  static double _scoreDrifter(NodeDexEntry entry) {
+  static double _scoreDrifter(NodeDexEntry entry, DateTime now) {
     double score = 0.0;
 
     if (entry.encounters.length < 4) return 0.0;
@@ -585,7 +684,7 @@ class TraitEngine {
     // A node with perfectly regular timing should never be a "drifter."
     if (score > 0) {
       // Moderate encounter rate — not a ghost, but not a beacon either.
-      final encounterRate = _encounterRatePerDay(entry);
+      final encounterRate = _encounterRatePerDay(entry, now);
       if (encounterRate > _ghostEncounterRateThreshold &&
           encounterRate < _beaconEncounterRateThreshold) {
         score += 0.3;
@@ -607,6 +706,7 @@ class TraitEngine {
 
   static ScoredTrait _scoreRelayWithEvidence(
     NodeDexEntry entry,
+    DateTime now,
     String? role,
     double? channelUtilization,
     double? airUtilTx,
@@ -677,6 +777,7 @@ class TraitEngine {
 
   static ScoredTrait _scoreWandererWithEvidence(
     NodeDexEntry entry,
+    DateTime now,
     AppLocalizations? l10n,
   ) {
     final evidence = <TraitEvidence>[];
@@ -732,11 +833,13 @@ class TraitEngine {
 
   static ScoredTrait _scoreSentinelWithEvidence(
     NodeDexEntry entry,
+    DateTime now,
     int? uptimeSeconds,
     AppLocalizations? l10n,
   ) {
     final evidence = <TraitEvidence>[];
     double score = 0.0;
+    final age = now.difference(entry.firstSeen);
 
     final positionCount = entry.distinctPositionCount;
     if (positionCount <= 1) {
@@ -751,21 +854,21 @@ class TraitEngine {
       );
     }
 
-    if (entry.age.inDays >= _sentinelMinAgeDays) {
-      final s = 0.3 * (entry.age.inDays / 30.0).clamp(0.0, 1.0);
+    if (age.inDays >= _sentinelMinAgeDays) {
+      final s = 0.3 * (age.inDays / 30.0).clamp(0.0, 1.0);
       score += s;
       evidence.add(
         TraitEvidence(
           observation:
-              l10n?.nodedexEvidenceKnownForDays(entry.age.inDays) ??
-              'Known for ${entry.age.inDays} days', // lint-allow: hardcoded-string
+              l10n?.nodedexEvidenceKnownForDays(age.inDays) ??
+              'Known for ${age.inDays} days', // lint-allow: hardcoded-string
           weight: s,
         ),
       );
     }
 
     if (entry.encounterCount >= _sentinelMinEncounters) {
-      final encounterRate = _encounterRatePerDay(entry);
+      final encounterRate = _encounterRatePerDay(entry, now);
       if (encounterRate >= 1.0) {
         final s = 0.2 * (encounterRate / 5.0).clamp(0.0, 1.0);
         score += s;
@@ -805,12 +908,14 @@ class TraitEngine {
 
   static ScoredTrait _scoreBeaconWithEvidence(
     NodeDexEntry entry,
+    DateTime now,
     AppLocalizations? l10n,
   ) {
     final evidence = <TraitEvidence>[];
     double score = 0.0;
 
-    final encounterRate = _encounterRatePerDay(entry);
+    final encounterRate = _encounterRatePerDay(entry, now);
+    final timeSinceLastSeen = now.difference(entry.lastSeen);
 
     if (encounterRate >= _beaconEncounterRateThreshold) {
       final s = 0.7 * (encounterRate / 20.0).clamp(0.0, 1.0);
@@ -839,7 +944,7 @@ class TraitEngine {
       );
     }
 
-    if (entry.timeSinceLastSeen.inMinutes < 60) {
+    if (timeSinceLastSeen.inMinutes < 60) {
       score += 0.15;
       evidence.add(
         TraitEvidence(
@@ -872,16 +977,19 @@ class TraitEngine {
 
   static ScoredTrait _scoreGhostWithEvidence(
     NodeDexEntry entry,
+    DateTime now,
     AppLocalizations? l10n,
   ) {
     final evidence = <TraitEvidence>[];
     double score = 0.0;
+    final age = now.difference(entry.firstSeen);
+    final timeSinceLastSeen = now.difference(entry.lastSeen);
 
-    if (entry.age.inDays < 1) {
+    if (age.inDays < 1) {
       return const ScoredTrait(trait: NodeTrait.ghost, confidence: 0.0);
     }
 
-    final encounterRate = _encounterRatePerDay(entry);
+    final encounterRate = _encounterRatePerDay(entry, now);
 
     if (encounterRate <= _ghostEncounterRateThreshold) {
       final s =
@@ -902,11 +1010,10 @@ class TraitEngine {
       );
     }
 
-    if (entry.timeSinceLastSeen.inHours > 24) {
-      final s =
-          0.2 * (entry.timeSinceLastSeen.inHours / (7 * 24.0)).clamp(0.0, 1.0);
+    if (timeSinceLastSeen.inHours > 24) {
+      final s = 0.2 * (timeSinceLastSeen.inHours / (7 * 24.0)).clamp(0.0, 1.0);
       score += s;
-      final days = (entry.timeSinceLastSeen.inHours / 24.0).round();
+      final days = (timeSinceLastSeen.inHours / 24.0).round();
       evidence.add(
         TraitEvidence(
           observation:
@@ -917,16 +1024,16 @@ class TraitEngine {
       );
     }
 
-    if (entry.age.inDays > 7 && entry.encounterCount < 5) {
+    if (age.inDays > 7 && entry.encounterCount < 5) {
       score += 0.2;
       evidence.add(
         TraitEvidence(
           observation:
               l10n?.nodedexEvidenceFewEncountersOverDays(
                 entry.encounterCount,
-                entry.age.inDays,
+                age.inDays,
               ) ??
-              'Only ${entry.encounterCount} encounters over ${entry.age.inDays} days', // lint-allow: hardcoded-string
+              'Only ${entry.encounterCount} encounters over ${age.inDays} days', // lint-allow: hardcoded-string
           weight: 0.2,
         ),
       );
@@ -941,6 +1048,7 @@ class TraitEngine {
 
   static ScoredTrait _scoreCourierWithEvidence(
     NodeDexEntry entry,
+    DateTime now,
     AppLocalizations? l10n,
   ) {
     final evidence = <TraitEvidence>[];
@@ -1011,10 +1119,12 @@ class TraitEngine {
 
   static ScoredTrait _scoreAnchorWithEvidence(
     NodeDexEntry entry,
+    DateTime now,
     AppLocalizations? l10n,
   ) {
     final evidence = <TraitEvidence>[];
     double score = 0.0;
+    final age = now.difference(entry.firstSeen);
 
     if (entry.coSeenCount >= 5) {
       final s = 0.5 * (entry.coSeenCount / 20.0).clamp(0.0, 1.0);
@@ -1040,14 +1150,14 @@ class TraitEngine {
       );
     }
 
-    if (entry.age.inDays >= 7) {
-      final s = 0.2 * (entry.age.inDays / 30.0).clamp(0.0, 1.0);
+    if (age.inDays >= 7) {
+      final s = 0.2 * (age.inDays / 30.0).clamp(0.0, 1.0);
       score += s;
       evidence.add(
         TraitEvidence(
           observation:
-              l10n?.nodedexEvidencePersistentPresence(entry.age.inDays) ??
-              'Persistent presence (${entry.age.inDays} days)', // lint-allow: hardcoded-string
+              l10n?.nodedexEvidencePersistentPresence(age.inDays) ??
+              'Persistent presence (${age.inDays} days)', // lint-allow: hardcoded-string
           weight: s,
         ),
       );
@@ -1087,6 +1197,7 @@ class TraitEngine {
 
   static ScoredTrait _scoreDrifterWithEvidence(
     NodeDexEntry entry,
+    DateTime now,
     AppLocalizations? l10n,
   ) {
     final evidence = <TraitEvidence>[];
@@ -1148,7 +1259,7 @@ class TraitEngine {
     // Secondary signals only amplify when irregular timing is present.
     // A node with perfectly regular timing should never be a "drifter."
     if (score > 0) {
-      final encounterRate = _encounterRatePerDay(entry);
+      final encounterRate = _encounterRatePerDay(entry, now);
       if (encounterRate > _ghostEncounterRateThreshold &&
           encounterRate < _beaconEncounterRateThreshold) {
         score += 0.3;
@@ -1192,8 +1303,9 @@ class TraitEngine {
   // ---------------------------------------------------------------------------
 
   /// Calculate the average encounter rate (encounters per day).
-  static double _encounterRatePerDay(NodeDexEntry entry) {
-    final ageDays = entry.age.inHours / 24.0;
+  static double _encounterRatePerDay(NodeDexEntry entry, DateTime now) {
+    final ageHours = now.difference(entry.firstSeen).inHours;
+    final ageDays = ageHours / 24.0;
     if (ageDays < 0.01) return entry.encounterCount.toDouble();
     return entry.encounterCount / ageDays;
   }

@@ -420,6 +420,19 @@ class AppFeatureFlags {
     }
   }
 
+  /// Whether mesh incident reporting over MRRP/SPP is enabled.
+  /// Set `MESH_INCIDENTS_ENABLED=true` in `.env` to enable.
+  /// Requires [isMrrpEnabled] to be true. Default: false.
+  static bool get isMeshIncidentsEnabled {
+    if (!isMrrpEnabled) return false;
+    try {
+      final raw = dotenv.env['MESH_INCIDENTS_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Whether the in-app language selector is shown in Appearance & Accessibility.
   /// Set `LANGUAGE_SELECTOR_ENABLED=true` in `.env` to enable.
   /// Default: false — translations are handled by the OS locale automatically.

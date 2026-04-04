@@ -24980,7 +24980,7 @@ abstract class AppLocalizations {
   /// Subtitle of the appearance and accessibility settings tile.
   ///
   /// In en, this message translates to:
-  /// **'Font, text size, density, contrast, motion'**
+  /// **'Font, text size, time format, density, contrast, motion'**
   String get settingsTileAppearanceSubtitle;
 
   /// Title of the appearance and accessibility settings tile.
@@ -40026,6 +40026,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reset'**
   String get appearanceResetDialogConfirm;
+
+  /// Section header for time format in appearance settings
+  ///
+  /// In en, this message translates to:
+  /// **'Time Format'**
+  String get appearanceTimeFormat;
+
+  /// Time format option name in appearance settings
+  ///
+  /// In en, this message translates to:
+  /// **'System Default'**
+  String get appearanceTimeFormatSystem;
+
+  /// Time format option description in appearance settings
+  ///
+  /// In en, this message translates to:
+  /// **'Follow your device’s clock setting'**
+  String get appearanceTimeFormatSystemDesc;
+
+  /// Time format option name in appearance settings
+  ///
+  /// In en, this message translates to:
+  /// **'12-hour'**
+  String get appearanceTimeFormat12h;
+
+  /// Time format option description in appearance settings
+  ///
+  /// In en, this message translates to:
+  /// **'1:30 PM'**
+  String get appearanceTimeFormat12hDesc;
+
+  /// Time format option name in appearance settings
+  ///
+  /// In en, this message translates to:
+  /// **'24-hour'**
+  String get appearanceTimeFormat24h;
+
+  /// Time format option description in appearance settings
+  ///
+  /// In en, this message translates to:
+  /// **'13:30'**
+  String get appearanceTimeFormat24hDesc;
 
   /// Text displayed in settings
   ///
@@ -57585,6 +57627,330 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Manage saved TCP endpoints and discover Wi-Fi radios'**
   String get settingsTileNetworkEndpointsSubtitle;
+
+  /// Drawer menu label for the mesh incidents feature
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh Incidents'**
+  String get navigationMeshIncidents;
+
+  /// Title for the mesh incident list screen
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh Incidents'**
+  String get meshIncidentListTitle;
+
+  /// Title for the mesh incident detail screen
+  ///
+  /// In en, this message translates to:
+  /// **'Incident Detail'**
+  String get meshIncidentDetailTitle;
+
+  /// Title for the mesh incident composer screen
+  ///
+  /// In en, this message translates to:
+  /// **'Report Incident'**
+  String get meshIncidentComposerTitle;
+
+  /// Title for update incident composer
+  ///
+  /// In en, this message translates to:
+  /// **'Update Incident'**
+  String get meshIncidentComposerUpdateTitle;
+
+  /// Title for correction composer
+  ///
+  /// In en, this message translates to:
+  /// **'Correct Report'**
+  String get meshIncidentComposerCorrectionTitle;
+
+  /// Empty state title for mesh incident list
+  ///
+  /// In en, this message translates to:
+  /// **'No Mesh Incidents'**
+  String get meshIncidentEmptyTitle;
+
+  /// Empty state description for mesh incident list
+  ///
+  /// In en, this message translates to:
+  /// **'Incident reports from the mesh network will appear here. Tap the button to create a new report.'**
+  String get meshIncidentEmptyDescription;
+
+  /// Empty state cycling tagline 1
+  ///
+  /// In en, this message translates to:
+  /// **'Report incidents across the mesh'**
+  String get meshIncidentEmptyTagline1;
+
+  /// Empty state cycling tagline 2
+  ///
+  /// In en, this message translates to:
+  /// **'Coordinate responses in real-time'**
+  String get meshIncidentEmptyTagline2;
+
+  /// Empty state cycling tagline 3
+  ///
+  /// In en, this message translates to:
+  /// **'Track situation awareness off-grid'**
+  String get meshIncidentEmptyTagline3;
+
+  /// Button label to create a new mesh incident report
+  ///
+  /// In en, this message translates to:
+  /// **'Create Report'**
+  String get meshIncidentCreateButton;
+
+  /// Button label to send the incident report over mesh
+  ///
+  /// In en, this message translates to:
+  /// **'Send Report'**
+  String get meshIncidentSendButton;
+
+  /// Button label to send an incident update
+  ///
+  /// In en, this message translates to:
+  /// **'Send Update'**
+  String get meshIncidentSendUpdateButton;
+
+  /// Button label to send an incident correction
+  ///
+  /// In en, this message translates to:
+  /// **'Send Correction'**
+  String get meshIncidentSendCorrectionButton;
+
+  /// Label for the incident classification field
+  ///
+  /// In en, this message translates to:
+  /// **'Classification'**
+  String get meshIncidentClassificationLabel;
+
+  /// Label for the incident priority field
+  ///
+  /// In en, this message translates to:
+  /// **'Priority'**
+  String get meshIncidentPriorityLabel;
+
+  /// Label for the incident confidence level field
+  ///
+  /// In en, this message translates to:
+  /// **'Confidence'**
+  String get meshIncidentConfidenceLabel;
+
+  /// Label for the reporter role field
+  ///
+  /// In en, this message translates to:
+  /// **'Your Role'**
+  String get meshIncidentRoleLabel;
+
+  /// Label for the incident body/summary text field
+  ///
+  /// In en, this message translates to:
+  /// **'Summary'**
+  String get meshIncidentBodyLabel;
+
+  /// Hint text for the incident body field
+  ///
+  /// In en, this message translates to:
+  /// **'Describe the situation concisely'**
+  String get meshIncidentBodyHint;
+
+  /// Validation error when body is empty
+  ///
+  /// In en, this message translates to:
+  /// **'Summary is required'**
+  String get meshIncidentBodyRequired;
+
+  /// Label for the include location toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Include Location'**
+  String get meshIncidentLocationLabel;
+
+  /// Label for unconfirmed confidence level
+  ///
+  /// In en, this message translates to:
+  /// **'Unconfirmed'**
+  String get meshIncidentConfidenceUnconfirmed;
+
+  /// Label for probable confidence level
+  ///
+  /// In en, this message translates to:
+  /// **'Probable'**
+  String get meshIncidentConfidenceProbable;
+
+  /// Label for confirmed confidence level
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed'**
+  String get meshIncidentConfidenceConfirmed;
+
+  /// Label for observer reporter role
+  ///
+  /// In en, this message translates to:
+  /// **'Observer'**
+  String get meshIncidentRoleObserver;
+
+  /// Label for operator reporter role
+  ///
+  /// In en, this message translates to:
+  /// **'Operator'**
+  String get meshIncidentRoleOperator;
+
+  /// Label for supervisor reporter role
+  ///
+  /// In en, this message translates to:
+  /// **'Supervisor'**
+  String get meshIncidentRoleSupervisor;
+
+  /// Label for admin reporter role
+  ///
+  /// In en, this message translates to:
+  /// **'Admin'**
+  String get meshIncidentRoleAdmin;
+
+  /// Label for reported incident status
+  ///
+  /// In en, this message translates to:
+  /// **'Reported'**
+  String get meshIncidentStatusReported;
+
+  /// Label for active incident status
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get meshIncidentStatusActive;
+
+  /// Label for contained incident status
+  ///
+  /// In en, this message translates to:
+  /// **'Contained'**
+  String get meshIncidentStatusContained;
+
+  /// Label for resolved incident status
+  ///
+  /// In en, this message translates to:
+  /// **'Resolved'**
+  String get meshIncidentStatusResolved;
+
+  /// Label for cancelled incident status
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get meshIncidentStatusCancelled;
+
+  /// Label for initial incident report type
+  ///
+  /// In en, this message translates to:
+  /// **'Initial Report'**
+  String get meshIncidentUpdateTypeInitial;
+
+  /// Label for incident update type
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get meshIncidentUpdateTypeUpdate;
+
+  /// Label for incident correction type
+  ///
+  /// In en, this message translates to:
+  /// **'Correction'**
+  String get meshIncidentUpdateTypeCorrection;
+
+  /// Label for incident closure type
+  ///
+  /// In en, this message translates to:
+  /// **'Closure'**
+  String get meshIncidentUpdateTypeClosure;
+
+  /// Display label for a mesh incident case ID
+  ///
+  /// In en, this message translates to:
+  /// **'Case {caseId}'**
+  String meshIncidentCaseId(String caseId);
+
+  /// Number of reports in a case
+  ///
+  /// In en, this message translates to:
+  /// **'{count} reports'**
+  String meshIncidentReportCount(int count);
+
+  /// Number of contributing nodes
+  ///
+  /// In en, this message translates to:
+  /// **'{count} contributors'**
+  String meshIncidentContributors(int count);
+
+  /// Section title for incident report timeline
+  ///
+  /// In en, this message translates to:
+  /// **'Timeline'**
+  String get meshIncidentTimelineTitle;
+
+  /// Badge label for superseded reports
+  ///
+  /// In en, this message translates to:
+  /// **'Superseded'**
+  String get meshIncidentSuperseded;
+
+  /// Badge label for correction reports
+  ///
+  /// In en, this message translates to:
+  /// **'Correction'**
+  String get meshIncidentCorrectionBadge;
+
+  /// Snackbar message after successfully sending a report
+  ///
+  /// In en, this message translates to:
+  /// **'Report sent over mesh'**
+  String get meshIncidentSentSuccess;
+
+  /// Snackbar message when report fails to send
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to send report'**
+  String get meshIncidentSendFailed;
+
+  /// Display label for encoded payload size
+  ///
+  /// In en, this message translates to:
+  /// **'{bytes} bytes'**
+  String meshIncidentPayloadSize(int bytes);
+
+  /// Label showing which node sent a report
+  ///
+  /// In en, this message translates to:
+  /// **'Node {nodeId}'**
+  String meshIncidentFromNode(String nodeId);
+
+  /// Action label for closing an incident case
+  ///
+  /// In en, this message translates to:
+  /// **'Close Case'**
+  String get meshIncidentCloseCase;
+
+  /// Action label for adding an incident update
+  ///
+  /// In en, this message translates to:
+  /// **'Add Update'**
+  String get meshIncidentAddUpdate;
+
+  /// Action label for correcting a report
+  ///
+  /// In en, this message translates to:
+  /// **'Correct Report'**
+  String get meshIncidentCorrectReport;
+
+  /// Title for handoff/export plain-language summary
+  ///
+  /// In en, this message translates to:
+  /// **'Handoff Summary'**
+  String get meshIncidentHandoffTitle;
+
+  /// Label indicating coarse location data
+  ///
+  /// In en, this message translates to:
+  /// **'Approx. location'**
+  String get meshIncidentLocationCoarse;
 }
 
 class _AppLocalizationsDelegate

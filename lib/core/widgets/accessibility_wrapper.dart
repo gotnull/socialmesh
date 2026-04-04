@@ -105,6 +105,22 @@ extension AccessibilityContext on BuildContext {
     return accessibilityPreferences.densityMode.minTapTargetSize;
   }
 
+  /// Whether 24-hour time format should be used based on user preference.
+  ///
+  /// Returns the user's explicit choice, or falls back to the device's
+  /// system setting when mode is [TimeFormatMode.system].
+  bool get is24HourFormat {
+    final mode = accessibilityPreferences.timeFormatMode;
+    switch (mode) {
+      case TimeFormatMode.system:
+        return MediaQuery.alwaysUse24HourFormatOf(this);
+      case TimeFormatMode.twelveHour:
+        return false;
+      case TimeFormatMode.twentyFourHour:
+        return true;
+    }
+  }
+
   /// Get spacing scaled by density preference
   double scaledSpacing(double baseSpacing) {
     return AccessibilityThemeAdapter.scaledSpacing(
