@@ -293,8 +293,11 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
         final withRegion = _addRegionFromNode(newEntry, node);
         updated[nodeNum] = withRegion;
 
-        // Only track encounters and co-seen for other nodes.
-        if (!isOwnNode) {
+        // Only track encounters and co-seen for nodes that are
+        // genuinely heard recently — stale entries from the device's
+        // node database should not inflate co-seen metrics.
+        if (!isOwnNode &&
+            PresenceCalculator.isOnline(node.lastHeard, now: now)) {
           _lastEncounterTime[nodeNum] = now;
           _sessionSeenNodes.add(nodeNum);
         }
@@ -336,10 +339,18 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
         }
       } else {
         // Existing node: check if we should record a new encounter.
+        // Gate on the node being genuinely heard recently — stale
+        // entries from the device's node database should not get
+        // new encounters or update co-seen relationship timestamps.
+        final isRecentlyHeard = PresenceCalculator.isOnline(
+          node.lastHeard,
+          now: now,
+        );
         final lastEncounter = _lastEncounterTime[nodeNum];
         final shouldRecord =
-            lastEncounter == null ||
-            now.difference(lastEncounter) >= _encounterCooldown;
+            isRecentlyHeard &&
+            (lastEncounter == null ||
+                now.difference(lastEncounter) >= _encounterCooldown);
 
         if (shouldRecord) {
           var updatedEntry = existing.recordEncounter(
