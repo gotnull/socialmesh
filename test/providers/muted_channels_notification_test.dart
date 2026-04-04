@@ -370,11 +370,10 @@ void main() {
     });
 
     test(
-      'channelIndex == 0 is NOT classified as channel message (known limitation)',
+      'channelIndex == 0 IS classified as channel message (Primary Channel)',
       () {
-        // This is the known `> 0` heuristic in PendingMessageNotification.
-        // The mute fix is at the caller level (before queuing), so this
-        // getter only affects notification TYPE selection, not mute gating.
+        // Primary Channel (index 0) is a channel message — the old `> 0`
+        // heuristic was a bug. Fixed: isChannelMessage = channelIndex != null.
         final msg = PendingMessageNotification(
           senderName: 'Test',
           message: 'hello',
@@ -382,7 +381,7 @@ void main() {
           channelIndex: 0,
           channelName: 'Primary',
         );
-        expect(msg.isChannelMessage, isFalse);
+        expect(msg.isChannelMessage, isTrue);
       },
     );
 

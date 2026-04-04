@@ -3084,9 +3084,12 @@ class MessagesNotifier extends Notifier<List<Message>> {
       return;
     }
     if (_storage == null) {
-      if (!_storageLoadCompleter.isCompleted) {
-        _storageLoadCompleter.complete();
-      }
+      // Do NOT complete the completer when storage is unavailable.
+      // Stream listeners must wait until storage has actually loaded
+      // to prevent a race where messages arrive via BLE, get added to
+      // state, and are then overwritten by _loadFromStorage setting
+      // state = savedMessages (which may not include the just-arrived
+      // messages because the DB query started before the save).
       return;
     }
 
@@ -3328,11 +3331,6 @@ class MessagesNotifier extends Notifier<List<Message>> {
     }
 
     // Suppress notification if the user has muted this channel.
-    // This check runs before the channel/DM classification below because
-    // the primary channel (index 0) is excluded by the `channel > 0`
-    // heuristic used for isChannelMessage.  Without this early gate,
-    // muting channel 0 has no effect — the message falls through to
-    // the DM path which has no per-channel mute check.
     if (message.channel != null) {
       final mutedChannels = ref.read(mutedChannelsProvider);
       if (mutedChannels.contains(message.channel)) {
@@ -3355,8 +3353,11 @@ class MessagesNotifier extends Notifier<List<Message>> {
         ? '$senderName reacted ${message.text}'
         : message.text;
 
-    // Check if it's a channel message or direct message
-    final isChannelMessage = message.channel != null && message.channel! > 0;
+    // Check if it's a channel message (broadcast) or direct message.
+    // Use isBroadcast — the `to` field — as the discriminator. The channel
+    // index alone is not sufficient because both DMs and broadcasts on the
+    // Primary Channel have channel == 0.
+    final isChannelMessage = message.isBroadcast;
     AppLogging.debug(
       '🔔 Is channel message: $isChannelMessage (channel: ${message.channel})',
     );
@@ -3400,7 +3401,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
             senderShortName: senderShortName,
             message: notificationBody,
             fromNodeNum: message.from,
-            channelIndex: isChannelMessage ? message.channel : null,
+            channelIndex: isChannelMessage ? (message.channel ?? 0) : null,
             channelName: channelName,
           ),
         );
@@ -3579,8 +3580,8 @@ class MessagesNotifier extends Notifier<List<Message>> {
     }
 
     String convKey;
-    if (message.channel != null && message.channel! > 0) {
-      convKey = 'channel:${message.channel}';
+    if (message.isBroadcast) {
+      convKey = 'channel:${message.channel ?? 0}';
     } else {
       final other = message.from == ref.read(myNodeNumProvider)
           ? message.to
@@ -3628,24 +3629,26 @@ class MessagesNotifier extends Notifier<List<Message>> {
   /// channel as an existing message in state whose timestamp is within
   /// [_contentDedupeWindow].
   ///
-  /// For channel messages, the `to` field is NOT compared because push
-  /// notifications may use the local node num as the recipient while the
-  /// actual mesh packet uses the broadcast address (0xFFFFFFFF).
+  /// For messages on non-null channels, the `to` field is NOT compared
+  /// because push notifications may use the local node num as the
+  /// recipient while the actual mesh packet uses the broadcast address
+  /// (0xFFFFFFFF). For DMs (channel is null), the `to` comparison is
+  /// applied to prevent false matches between different conversations.
   bool _isContentDuplicate(Message message) {
     for (final m in state) {
       if (m.from != message.from) continue;
       if (m.text != message.text) continue;
-      // Treat null and 0 as equivalent (primary channel)
-      final mCh = (m.channel == null || m.channel == 0) ? 0 : m.channel;
-      final msgCh = (message.channel == null || message.channel == 0)
-          ? 0
-          : message.channel;
+      // Normalize channels: treat null as -1 so that null != 0 (Primary
+      // Channel) — they are semantically different (unknown vs index 0).
+      final mCh = m.channel ?? -1;
+      final msgCh = message.channel ?? -1;
       if (mCh != msgCh) continue;
-      // For DM messages (channel 0 / null), also compare the recipient.
-      // For channel messages, skip the `to` comparison — push notifications
-      // may set `to` to the local node num while the mesh packet uses
-      // 0xFFFFFFFF (broadcast).
-      if (mCh == 0 && m.to != message.to) continue;
+      // For DM messages (channel is null / -1), also compare the recipient
+      // to prevent DMs to different nodes from being falsely deduped.
+      // For channel messages (channel >= 0), skip the `to` comparison —
+      // push notifications may set `to` to the local node num while the
+      // mesh packet uses 0xFFFFFFFF (broadcast).
+      if (mCh < 0 && m.to != message.to) continue;
       final diff = m.timestamp.difference(message.timestamp).abs();
       if (diff <= _contentDedupeWindow) {
         return true;
@@ -3750,8 +3753,8 @@ class MessagesNotifier extends Notifier<List<Message>> {
   }
 
   String _messageSignature(Message message) {
-    final target = message.channel != null && message.channel! > 0
-        ? 'channel:${message.channel}' // lint-allow: hardcoded-string
+    final target = message.isBroadcast
+        ? 'channel:${message.channel ?? 0}' // lint-allow: hardcoded-string
         : 'dm:${message.from == ref.read(myNodeNumProvider) ? message.to : message.from}';
     return '$target|${message.text}|${message.timestamp.millisecondsSinceEpoch}';
   }

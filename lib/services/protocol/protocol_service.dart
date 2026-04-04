@@ -1333,6 +1333,20 @@ class ProtocolService {
   /// Uses staggered delays and error handling to prevent crashes if the device
   /// disconnects during the process.
   void _requestPostConfigData() {
+    // Sync phone time to device immediately after config complete.
+    // This ensures correct rxTime on subsequently received packets,
+    // which affects message timestamps, ordering, and dedup windows.
+    // The official Meshtastic Android app performs this sync on connect.
+    Future.delayed(const Duration(milliseconds: 50), () async {
+      if (!_transport.isConnected) return;
+      try {
+        await syncTime();
+        AppLogging.protocol('Time synced to device on connect');
+      } catch (e) {
+        AppLogging.protocol('Failed to sync time on connect: $e');
+      }
+    });
+
     Future.delayed(const Duration(milliseconds: 100), () async {
       if (!_transport.isConnected) return;
       try {

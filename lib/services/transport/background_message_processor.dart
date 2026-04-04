@@ -347,10 +347,18 @@ class BackgroundMessageProcessor {
     }
 
     // ---- Create Message ------------------------------------------------
+    // Use rxTime from the radio firmware (same as foreground path) so
+    // timestamps are consistent regardless of which path processed the
+    // message. rxTime is when the radio actually received the packet.
+    final timestamp = packet.hasRxTime() && packet.rxTime > 0
+        ? DateTime.fromMillisecondsSinceEpoch(packet.rxTime * 1000)
+        : DateTime.now();
+
     final message = Message(
       from: packet.from,
       to: packet.to,
       text: text,
+      timestamp: timestamp,
       channel: packet.channel,
       received: true,
       source: MessageSource.unknown,
@@ -416,10 +424,6 @@ class BackgroundMessageProcessor {
 
       // Respect per-channel mute (same SharedPreferences key used by
       // MutedChannelsNotifier on the foreground side).
-      // This check runs before the channel/DM classification because the
-      // primary channel (index 0) is excluded by the `channel > 0`
-      // heuristic used for isChannelMessage.  Without this early gate,
-      // muting channel 0 has no effect in the background path.
       if (message.channel != null) {
         final mutedRaw = prefs.getStringList(_kMutedChannels);
         if (mutedRaw != null) {
@@ -437,7 +441,10 @@ class BackgroundMessageProcessor {
         }
       }
 
-      final isChannelMessage = message.channel != null && message.channel! > 0;
+      // Channel messages are broadcasts (to == 0xFFFFFFFF). This includes
+      // Primary Channel (index 0) which was previously excluded by the
+      // `channel > 0` heuristic.
+      final isChannelMessage = message.isBroadcast;
 
       // Per-type notification toggle from Settings → Notifications.
       if (isChannelMessage) {
@@ -461,13 +468,15 @@ class BackgroundMessageProcessor {
         // Channel names are not available in the background (stored in
         // ProtocolService, a provider-bound object). Use "Channel N" as
         // a best-effort label.
-        final channelName = 'Channel ${message.channel}';
+        final channelIndex = message.channel ?? 0;
+        final channelName =
+            'Channel $channelIndex'; // lint-allow: hardcoded-string
         await ns.showChannelMessageNotification(
           senderName: displayName,
           senderShortName: senderShortName,
           channelName: channelName,
           message: message.text,
-          channelIndex: message.channel!,
+          channelIndex: channelIndex,
           fromNodeNum: message.from,
         );
       } else {

@@ -30,7 +30,7 @@ class PendingMessageNotification {
     DateTime? timestamp,
   }) : timestamp = timestamp ?? DateTime.now();
 
-  bool get isChannelMessage => channelIndex != null && channelIndex! > 0;
+  bool get isChannelMessage => channelIndex != null;
 }
 
 /// Represents a pending node notification for batching

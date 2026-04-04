@@ -24,7 +24,7 @@ import '../../utils/text_sanitizer.dart';
 class MessageDatabase {
   static const _dbName = 'messages.db';
   static const _tableName = 'messages';
-  static const _dbVersion = 5;
+  static const _dbVersion = 6;
 
   /// Maximum messages retained per conversation (DM or channel).
   static const int maxMessagesPerConversation = 500;
@@ -146,6 +146,28 @@ class MessageDatabase {
             'Added sent_at, last_attempt_at, retry_count, auto_retry_enabled columns (v5)',
           );
         }
+        if (oldVersion < 6) {
+          // Fix Primary Channel messages that were misclassified as DMs.
+          //
+          // A prior bug used `channel > 0` to detect channel messages, which
+          // excluded Primary Channel (index 0). Broadcast messages on
+          // channel 0 were incorrectly stored with DM-style conversation
+          // keys like `dm:<from>:4294967295` instead of `channel:0`.
+          //
+          // Detection rule: to_node == 0xFFFFFFFF (broadcast) AND
+          // conversation_key starts with 'dm:' → misclassified.
+          // Repair: rewrite to `channel:<channel>` using the stored channel
+          // column (defaulting to 0 if null).
+          final fixed = await db.rawUpdate(
+            'UPDATE $_tableName ' // lint-allow: hardcoded-string
+            "SET conversation_key = 'channel:' || COALESCE(channel, 0) " // lint-allow: hardcoded-string
+            "WHERE to_node = 4294967295 AND conversation_key LIKE 'dm:%'", // lint-allow: hardcoded-string
+          );
+          AppLogging.storage(
+            'v6 migration: reclassified $fixed Primary Channel messages '
+            'from DM-style to channel conversation keys',
+          );
+        }
       },
     );
 
@@ -227,8 +249,12 @@ class MessageDatabase {
   /// Channel messages: `channel:<index>`
   /// DM messages: `dm:<lower_node>:<higher_node>` (order-independent)
   static String conversationKey(Message message) {
-    if (message.channel != null && message.channel! > 0) {
-      return 'channel:${message.channel}'; // lint-allow: hardcoded-string
+    // Broadcast messages (to == 0xFFFFFFFF) are channel messages.
+    // Use the channel index as the key — including Primary Channel (index 0)
+    // which was previously excluded by the `channel > 0` check, causing
+    // Primary Channel messages to be stored under DM conversation keys.
+    if (message.isBroadcast) {
+      return 'channel:${message.channel ?? 0}'; // lint-allow: hardcoded-string
     }
     // For DMs, use sorted node nums so both directions map to the same key
     final a = message.from;
@@ -244,7 +270,7 @@ class MessageDatabase {
     int? nodeA,
     int? nodeB,
   }) {
-    if (channel != null && channel > 0) {
+    if (channel != null && channel >= 0) {
       return 'channel:$channel'; // lint-allow: hardcoded-string
     }
     if (nodeA != null && nodeB != null) {
