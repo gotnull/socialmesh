@@ -68,6 +68,7 @@ MeshNode _makeNode(
   double? longitude,
   DateTime? firstHeard,
   DateTime? lastHeard,
+  bool stale = false,
 }) {
   return MeshNode(
     nodeNum: nodeNum,
@@ -77,7 +78,9 @@ MeshNode _makeNode(
     latitude: latitude,
     longitude: longitude,
     firstHeard: firstHeard,
-    lastHeard: lastHeard,
+    // Default to clock.now() so the node passes the online presence check,
+    // unless the caller explicitly requests a stale (offline) node.
+    lastHeard: stale ? lastHeard : (lastHeard ?? clock.now()),
   );
 }
 
