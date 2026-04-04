@@ -872,10 +872,16 @@ class ProtocolService {
   ) async {
     if (_myNodeNum == null || !_transport.isConnected) return;
     final toRadio = pb.ToRadio()..mqttClientProxyMessage = proxyMsg;
-    await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
-    AppLogging.mqttProxy(
-      'Sent proxy message to device (topic: ${proxyMsg.topic})',
-    );
+    try {
+      await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+      AppLogging.mqttProxy(
+        'Sent proxy message to device (topic: ${proxyMsg.topic})',
+      );
+    } catch (e) {
+      AppLogging.mqttProxy(
+        'Failed to send proxy message (device may have disconnected): $e',
+      );
+    }
   }
 
   /// Stream of telemetry config updates

@@ -1211,7 +1211,7 @@
     "deviceSheetActionDeviceConfig": "Device Config",
     "deviceSheetActionDeviceConfigSubtitle": "Configure device role and settings",
     "deviceSheetActionDeviceManagement": "Device Management",
-    "deviceSheetActionDeviceManagementSubtitle": "Radio, display, power, and position settings",
+    "deviceSheetActionDeviceManagementSubtitle": "Reboot, shutdown, factory reset",
     "deviceSheetActionResetNodeDb": "Reset Node Database",
     "deviceSheetActionResetNodeDbSubtitle": "Clear all learned nodes from device",
     "deviceSheetActionScanQr": "Scan QR Code",

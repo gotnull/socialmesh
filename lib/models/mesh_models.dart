@@ -3,6 +3,7 @@
 import 'package:uuid/uuid.dart';
 import 'presence_confidence.dart';
 import '../features/nodes/node_display_name_resolver.dart';
+import '../utils/text_sanitizer.dart';
 
 /// Message status enum
 enum MessageStatus {
@@ -269,10 +270,10 @@ class Message {
   /// Get the sender's display name from cached info or fallback to node number
   String get senderDisplayName {
     if (senderLongName != null && senderLongName!.isNotEmpty) {
-      return senderLongName!;
+      return sanitizeUtf16(senderLongName!);
     }
     if (senderShortName != null && senderShortName!.isNotEmpty) {
-      return senderShortName!;
+      return sanitizeUtf16(senderShortName!);
     }
     return NodeDisplayNameResolver.defaultName(from);
   }
@@ -280,10 +281,11 @@ class Message {
   /// Get the sender's avatar name from cached info or fallback to hex ID
   String get senderAvatarName {
     if (senderShortName != null && senderShortName!.isNotEmpty) {
-      return senderShortName!;
+      return sanitizeUtf16(senderShortName!);
     }
     if (senderLongName != null && senderLongName!.isNotEmpty) {
-      return senderLongName!.substring(0, senderLongName!.length.clamp(0, 4));
+      final sanitized = sanitizeUtf16(senderLongName!);
+      return sanitized.substring(0, sanitized.length.clamp(0, 4));
     }
     return NodeDisplayNameResolver.shortHex(from);
   }
@@ -772,9 +774,12 @@ class MeshNode {
   /// Get a short display name suitable for avatars (max 4 chars)
   /// Prefers shortName, falls back to longName prefix, then last 4 hex digits
   String get avatarName {
-    if (shortName != null && shortName!.isNotEmpty) return shortName!;
+    if (shortName != null && shortName!.isNotEmpty) {
+      return sanitizeUtf16(shortName!);
+    }
     if (longName != null && longName!.isNotEmpty) {
-      return longName!.substring(0, longName!.length.clamp(0, 4));
+      final sanitized = sanitizeUtf16(longName!);
+      return sanitized.substring(0, sanitized.length.clamp(0, 4));
     }
     return NodeDisplayNameResolver.shortHex(nodeNum);
   }

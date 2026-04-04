@@ -7501,7 +7501,7 @@ abstract class AppLocalizations {
   /// Subtitle in developer tools
   ///
   /// In en, this message translates to:
-  /// **'Radio, display, power, and position settings'**
+  /// **'Reboot, shutdown, factory reset'**
   String get deviceSheetActionDeviceManagementSubtitle;
 
   /// Text displayed in developer tools

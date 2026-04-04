@@ -507,6 +507,8 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   Future<void> _startScan({bool isRescan = false}) async {
     _rescanTimer?.cancel();
 
+    if (!mounted) return;
+
     if (_scanning) {
       AppLogging.connection(
         '📡 SCANNER: _startScan called but already scanning',
@@ -518,7 +520,18 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     // connected. The aggressive cleanup (stopScan, system device
     // disconnect) can destroy an active connection and trigger a
     // cascade of auto-reconnect cycles.
-    final currentDeviceState = ref.read(conn.deviceConnectionProvider);
+    final conn.DeviceConnectionState2 currentDeviceState;
+    final bool userJustDisconnected;
+    final Future<SettingsService> settingsFuture;
+    final DeviceTransport transport;
+    final bool showAllDevices;
+    try {
+      currentDeviceState = ref.read(conn.deviceConnectionProvider);
+    } on StateError {
+      // ProviderScope may be gone during widget tree teardown (e.g. Timer
+      // fires between mounted check and element detach). Safe to bail.
+      return;
+    }
     if (currentDeviceState.isConnected ||
         currentDeviceState.state == conn.DevicePairingState.configuring) {
       AppLogging.connection(
@@ -529,10 +542,14 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     }
 
     // Capture providers BEFORE any await
-    final userJustDisconnected = ref.read(userDisconnectedProvider);
-    final settingsFuture = ref.read(settingsServiceProvider.future);
-    final transport = ref.read(transportProvider);
-    final showAllDevices = ref.read(showAllBleDevicesProvider);
+    try {
+      userJustDisconnected = ref.read(userDisconnectedProvider);
+      settingsFuture = ref.read(settingsServiceProvider.future);
+      transport = ref.read(transportProvider);
+      showAllDevices = ref.read(showAllBleDevicesProvider);
+    } on StateError {
+      return;
+    }
     AppLogging.connection(
       '📡 SCANNER: Starting 10s scan... '
       '(isRescan=$isRescan, userJustDisconnected=$userJustDisconnected)',

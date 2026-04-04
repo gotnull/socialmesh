@@ -4243,7 +4243,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get deviceSheetActionDeviceManagementSubtitle =>
-      'Radio, display, alimentazione e posizione';
+      'Riavvio, spegnimento, ripristino di fabbrica';
 
   @override
   String get deviceSheetActionResetNodeDb => 'Reimposta Database Nodi';

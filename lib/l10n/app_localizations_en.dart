@@ -4194,7 +4194,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deviceSheetActionDeviceManagementSubtitle =>
-      'Radio, display, power, and position settings';
+      'Reboot, shutdown, factory reset';
 
   @override
   String get deviceSheetActionResetNodeDb => 'Reset Node Database';

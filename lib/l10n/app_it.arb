@@ -10433,7 +10433,7 @@
   "@deviceSheetActionDeviceManagement": {
     "description": "Text displayed in developer tools"
   },
-  "deviceSheetActionDeviceManagementSubtitle": "Radio, display, alimentazione e posizione",
+  "deviceSheetActionDeviceManagementSubtitle": "Riavvio, spegnimento, ripristino di fabbrica",
   "@deviceSheetActionDeviceManagementSubtitle": {
     "description": "Subtitle in developer tools"
   },

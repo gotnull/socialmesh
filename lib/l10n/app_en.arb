@@ -5523,7 +5523,7 @@
     "@deviceSheetActionDeviceManagement": {
         "description": "Text displayed in developer tools"
     },
-    "deviceSheetActionDeviceManagementSubtitle": "Radio, display, power, and position settings",
+    "deviceSheetActionDeviceManagementSubtitle": "Reboot, shutdown, factory reset",
     "@deviceSheetActionDeviceManagementSubtitle": {
         "description": "Subtitle in developer tools"
     },

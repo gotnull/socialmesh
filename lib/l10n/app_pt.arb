@@ -10433,7 +10433,7 @@
   "@deviceSheetActionDeviceManagement": {
     "description": "Text displayed in developer tools"
   },
-  "deviceSheetActionDeviceManagementSubtitle": "Rádio, display, energia e posição",
+  "deviceSheetActionDeviceManagementSubtitle": "Reiniciar, desligar, restaurar padrão de fábrica",
   "@deviceSheetActionDeviceManagementSubtitle": {
     "description": "Subtitle in developer tools"
   },

@@ -4232,7 +4232,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get deviceSheetActionDeviceManagementSubtitle =>
-      'Rádio, display, energia e posição';
+      'Reiniciar, desligar, restaurar padrão de fábrica';
 
   @override
   String get deviceSheetActionResetNodeDb => 'Redefinir Banco de Nós';
