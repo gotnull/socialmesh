@@ -98,6 +98,7 @@ firebase-service-account.json
 /scripts/railway-up.sh
 /scripts/security_audit_socialmesh.py
 /scripts/seed-beta-testers.js
+/scripts/store-versions.sh
 !/scripts/hooks/socialmesh-lint.sh
 /artifacts/
 

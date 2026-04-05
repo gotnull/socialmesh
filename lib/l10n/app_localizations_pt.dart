@@ -9166,6 +9166,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get nodeDetailMenuTracerouteHistory => 'Histórico de Traceroute';
 
   @override
+  String get nodeDetailMenuViewInNodeDex => 'View in NodeDex';
+
+  @override
   String get nodeDetailMessageButton => 'Mensagem';
 
   @override

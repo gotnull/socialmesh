@@ -16261,6 +16261,12 @@ abstract class AppLocalizations {
   /// **'Traceroute History'**
   String get nodeDetailMenuTracerouteHistory;
 
+  /// Overflow menu item to navigate to the NodeDex detail screen for this node.
+  ///
+  /// In en, this message translates to:
+  /// **'View in NodeDex'**
+  String get nodeDetailMenuViewInNodeDex;
+
   /// Action button label for messaging the node.
   ///
   /// In en, this message translates to:

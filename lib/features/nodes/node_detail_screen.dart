@@ -33,6 +33,7 @@ import '../map/map_screen.dart';
 import '../messaging/messaging_screen.dart';
 import '../nodedex/models/nodedex_entry.dart';
 import '../nodedex/providers/nodedex_providers.dart';
+import '../nodedex/screens/nodedex_detail_screen.dart';
 import '../nodedex/services/sigil_generator.dart';
 import '../nodedex/services/trait_engine.dart';
 import '../nodedex/widgets/sigil_card_sheet.dart';
@@ -1372,6 +1373,15 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
                   contentPadding: EdgeInsets.zero,
                 ),
               ),
+            PopupMenuItem(
+              value: 'nodedex',
+              child: ListTile(
+                leading: Icon(Icons.auto_awesome, color: context.accentColor),
+                title: Text(context.l10n.nodeDetailMenuViewInNodeDex),
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
             if (!isMyNode) ...[
               PopupMenuItem(
                 value: 'traceroute_history',
@@ -1461,6 +1471,13 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
                   context,
                   MaterialPageRoute(
                     builder: (_) => MapScreen(initialNodeNum: node.nodeNum),
+                  ),
+                );
+              case 'nodedex':
+                Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (_) => NodeDexDetailScreen(nodeNum: node.nodeNum),
                   ),
                 );
               case 'traceroute_history':

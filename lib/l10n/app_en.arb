@@ -12326,6 +12326,10 @@
     "@nodeDetailMenuTracerouteHistory": {
         "description": "Overflow menu item for traceroute history."
     },
+    "nodeDetailMenuViewInNodeDex": "View in NodeDex",
+    "@nodeDetailMenuViewInNodeDex": {
+        "description": "Overflow menu item to navigate to the NodeDex detail screen for this node."
+    },
     "nodeDetailMessageButton": "Message",
     "@nodeDetailMessageButton": {
         "description": "Action button label for messaging the node."
