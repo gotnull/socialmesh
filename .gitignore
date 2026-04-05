@@ -99,6 +99,7 @@ firebase-service-account.json
 /scripts/security_audit_socialmesh.py
 /scripts/seed-beta-testers.js
 /scripts/store-versions.sh
+/scripts/test-mdns*.sh
 !/scripts/hooks/socialmesh-lint.sh
 /artifacts/
 

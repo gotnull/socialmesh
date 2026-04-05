@@ -1587,6 +1587,16 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       reason: reason,
     );
 
+    // Reset transport type to BLE so the scanner resumes BLE scanning.
+    // Without this, transportTypeProvider stays stuck on network after
+    // a TCP disconnect and the scanner shows zero BLE devices.
+    if (ref.read(transportTypeProvider) == TransportType.network) {
+      ref.read(transportTypeProvider.notifier).setType(TransportType.ble);
+      AppLogging.connection(
+        '🔌 _handleDisconnect: Reset transport type to BLE',
+      );
+    }
+
     ref.read(connectedDeviceProvider.notifier).setState(null);
 
     // If user disconnected, don't trigger any auto-reconnect behavior
@@ -1661,6 +1671,12 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     AppLogging.connection('🔌 disconnect(): Calling transport.disconnect()...');
     await transport.disconnect();
     AppLogging.connection('🔌 disconnect(): Transport disconnected');
+
+    // Reset transport type to BLE so the scanner resumes BLE scanning.
+    if (ref.read(transportTypeProvider) == TransportType.network) {
+      ref.read(transportTypeProvider.notifier).setType(TransportType.ble);
+      AppLogging.connection('🔌 disconnect(): Reset transport type to BLE');
+    }
 
     state = state.copyWith(
       state: DevicePairingState.disconnected,
