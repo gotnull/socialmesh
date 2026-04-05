@@ -193,6 +193,44 @@ class MeshtasticMdnsDiscovery {
     final shortName = attrs['shortname'];
     final nodeId = attrs['id'];
 
+    // --- SECURITY AUDIT LOGGING ---
+    // Log raw TXT record details for injection detection
+    AppLogging.protocol('mDNS SECURITY: Raw TXT records from ${service.name}:');
+    for (final entry in attrs.entries) {
+      final keyLen = entry.key.length;
+      final valLen = entry.value.length;
+      final codeUnits = entry.value.codeUnits;
+      final hasControl = codeUnits.any((c) => c < 0x20 || c == 0x7F);
+      final hasBidi = codeUnits.any((c) => c >= 0x200E && c <= 0x2069);
+      AppLogging.protocol(
+        '  TXT[${entry.key}] len=$valLen keyLen=$keyLen '
+        'hasControlChars=$hasControl hasBidiChars=$hasBidi '
+        'value="${_truncateForLog(entry.value, 80)}"',
+      );
+      if (valLen > 100) {
+        AppLogging.protocol(
+          '  ⚠️ SECURITY: Oversized TXT value ($valLen chars) for key=${entry.key}',
+        );
+      }
+      if (hasControl) {
+        AppLogging.protocol(
+          '  ⚠️ SECURITY: Control characters detected in TXT[${entry.key}]: '
+          'codeUnits=${codeUnits.where((c) => c < 0x20 || c == 0x7F).toList()}',
+        );
+      }
+      if (hasBidi) {
+        AppLogging.protocol(
+          '  ⚠️ SECURITY: Bidi/RTL override characters detected in TXT[${entry.key}]: '
+          'codeUnits=${codeUnits.where((c) => c >= 0x200E && c <= 0x2069).map((c) => 'U+${c.toRadixString(16).padLeft(4, '0').toUpperCase()}').toList()}',
+        );
+      }
+    }
+    AppLogging.protocol(
+      'mDNS SECURITY: serviceName="${service.name}" (len=${service.name.length}) '
+      'host="$host" (len=${host.length}) port=$port',
+    );
+    // --- END SECURITY AUDIT LOGGING ---
+
     final device = MdnsDeviceInfo(
       host: host,
       port: port > 0 ? port : kMeshtasticDefaultPort,
@@ -220,6 +258,13 @@ class MeshtasticMdnsDiscovery {
     if (!_controller.isClosed) {
       _controller.add(currentDevices);
     }
+  }
+
+  /// Truncate a string for safe logging (prevents log flooding from
+  /// oversized mDNS TXT values).
+  static String _truncateForLog(String s, int maxLen) {
+    if (s.length <= maxLen) return s;
+    return '${s.substring(0, maxLen)}... [TRUNCATED ${s.length - maxLen} chars]';
   }
 
   /// Clean up resources.

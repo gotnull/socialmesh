@@ -1237,12 +1237,27 @@ class ProtocolService {
     unawaited(_handleDataAsync(data));
   }
 
+  /// Track consecutive protobuf parse failures for abuse detection.
+  int _consecutiveParseFailures = 0;
+
+  /// Total malformed packets received in this session.
+  int _totalMalformedPackets = 0;
+
   Future<void> _handleDataAsync(List<int> data) async {
     try {
       AppLogging.protocol('Received ${data.length} bytes');
 
+      // --- SECURITY AUDIT LOGGING ---
+      if (data.length > 512) {
+        AppLogging.protocol(
+          '⚠️ PROTO SECURITY: Oversized transport data: ${data.length} bytes '
+          '(max expected=512)',
+        );
+      }
+      // --- END SECURITY AUDIT LOGGING ---
+
       if (_transport.requiresFraming) {
-        // Serial/USB: Extract packets using framer
+        // Serial/USB/TCP: Extract packets using framer
         final packets = _framer.addData(data);
 
         for (final packet in packets) {
@@ -1269,6 +1284,15 @@ class ProtocolService {
   Future<void> _processPacket(List<int> packet) async {
     try {
       AppLogging.protocol('Processing packet: ${packet.length} bytes');
+
+      // --- SECURITY AUDIT LOGGING ---
+      AppLogging.protocol(
+        'PROTO SECURITY: _processPacket(${packet.length} bytes) '
+        'consecutiveFailures=$_consecutiveParseFailures '
+        'totalMalformed=$_totalMalformedPackets '
+        'first16=${packet.take(16).map((b) => b.toRadixString(16).padLeft(2, '0')).join(' ')}',
+      );
+      // --- END SECURITY AUDIT LOGGING ---
 
       final fromRadio = pb.FromRadio.fromBuffer(packet);
 
@@ -1325,6 +1349,14 @@ class ProtocolService {
         _requestPostConfigData();
       }
     } catch (e, stack) {
+      _consecutiveParseFailures++;
+      _totalMalformedPackets++;
+      AppLogging.protocol(
+        '⚠️ PROTO SECURITY: Parse failure #$_totalMalformedPackets '
+        '(consecutive=$_consecutiveParseFailures) '
+        'packetLen=${packet.length} '
+        'error=$e',
+      );
       AppLogging.protocol('Error processing packet: $e\n$stack');
     }
   }

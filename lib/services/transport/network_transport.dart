@@ -77,9 +77,31 @@ class NetworkTransport implements DeviceTransport {
         timeout: const Duration(seconds: 10),
       );
 
+      /// Total bytes received on this connection (security metric).
+      var totalBytesReceived = 0;
+      var totalChunks = 0;
+
       _socketSubscription = _socket!.listen(
         (data) {
           _lastDataReceived = DateTime.now();
+          totalBytesReceived += data.length;
+          totalChunks++;
+
+          // --- SECURITY AUDIT LOGGING ---
+          AppLogging.protocol(
+            'NET SECURITY: Recv chunk #$totalChunks '
+            'size=${data.length} '
+            'totalBytes=$totalBytesReceived '
+            'first8=${data.take(8).map((b) => b.toRadixString(16).padLeft(2, '0')).join(' ')}',
+          );
+          if (data.length > 1024) {
+            AppLogging.protocol(
+              '⚠️ NET SECURITY: Large chunk received: ${data.length} bytes '
+              '(possible flood attack)',
+            );
+          }
+          // --- END SECURITY AUDIT LOGGING ---
+
           _dataController.add(data);
         },
         onError: (Object error) {
