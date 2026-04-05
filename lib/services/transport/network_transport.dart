@@ -34,6 +34,12 @@ class NetworkTransport implements DeviceTransport {
   static const Duration _heartbeatInterval = Duration(seconds: 15);
   DateTime? _lastDataReceived;
 
+  /// Max chunk size to forward to the protocol layer. Anything larger
+  /// is split into chunks of this size. A real Meshtastic device never
+  /// sends more than ~520 bytes (512 payload + 4 header + padding) in
+  /// a single TCP segment, so large chunks indicate a flood attack.
+  static const int _maxChunkSize = 4096;
+
   NetworkTransport({required this.host, required this.port});
 
   @override
@@ -102,7 +108,21 @@ class NetworkTransport implements DeviceTransport {
           }
           // --- END SECURITY AUDIT LOGGING ---
 
-          _dataController.add(data);
+          // Split oversized chunks to limit buffer growth in PacketFramer
+          if (data.length > _maxChunkSize) {
+            for (
+              var offset = 0;
+              offset < data.length;
+              offset += _maxChunkSize
+            ) {
+              final end = (offset + _maxChunkSize < data.length)
+                  ? offset + _maxChunkSize
+                  : data.length;
+              _dataController.add(data.sublist(offset, end));
+            }
+          } else {
+            _dataController.add(data);
+          }
         },
         onError: (Object error) {
           AppLogging.protocol('NetworkTransport: Socket error: $error');

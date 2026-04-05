@@ -320,7 +320,7 @@ class _AdminSession {
 /// Protocol service for handling Meshtastic protocol
 class ProtocolService {
   final DeviceTransport _transport;
-  final PacketFramer _framer;
+  late final PacketFramer _framer;
 
   final StreamController<Message> _messageController;
   final StreamController<MeshNode> _nodeController;
@@ -622,8 +622,7 @@ class ProtocolService {
     MeshPacketDedupeStore? dedupeStore,
     SmCapabilityStore? smCapabilityStore,
     SmFeatureFlag? smFeatureFlag,
-  }) : _framer = PacketFramer(),
-       _messageController = StreamController<Message>.broadcast(),
+  }) : _messageController = StreamController<Message>.broadcast(),
        _nodeController = StreamController<MeshNode>.broadcast(),
        _channelController = StreamController<ChannelConfig>.broadcast(),
        _errorController = StreamController<DeviceError>.broadcast(),
@@ -709,7 +708,16 @@ class ProtocolService {
        _smFeatureFlag = smFeatureFlag ?? SmFeatureFlag(),
        _smMetrics = SmMetrics(),
        _smRateLimiter = SmRateLimiter(),
-       _smIdentityRateLimiter = SmIdentityRateLimiter();
+       _smIdentityRateLimiter = SmIdentityRateLimiter() {
+    _framer = PacketFramer(
+      onAbuseDetected: () {
+        AppLogging.protocol(
+          'SECURITY: Framer abuse detected - disconnecting transport',
+        );
+        _transport.disconnect();
+      },
+    );
+  }
 
   /// Set the BLE device name for hardware model inference
   void setDeviceName(String? name) {
@@ -1243,6 +1251,9 @@ class ProtocolService {
   /// Total malformed packets received in this session.
   int _totalMalformedPackets = 0;
 
+  /// Max consecutive parse failures before disconnecting.
+  static const int _maxConsecutiveParseFailures = 10;
+
   Future<void> _handleDataAsync(List<int> data) async {
     try {
       AppLogging.protocol('Received ${data.length} bytes');
@@ -1358,6 +1369,16 @@ class ProtocolService {
         'error=$e',
       );
       AppLogging.protocol('Error processing packet: $e\n$stack');
+
+      // Disconnect after sustained parse failures (abuse / garbage stream)
+      if (_consecutiveParseFailures >= _maxConsecutiveParseFailures) {
+        AppLogging.protocol(
+          'SECURITY: $_consecutiveParseFailures consecutive parse failures '
+          '- disconnecting (possible attack)',
+        );
+        _consecutiveParseFailures = 0;
+        _transport.disconnect();
+      }
     }
   }
 

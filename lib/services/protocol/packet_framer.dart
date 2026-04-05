@@ -12,9 +12,16 @@ class PacketFramer {
   static const int _headerSize = 4;
   static const int _maxPacketSize = 512;
 
+  /// Max consecutive invalid frames before triggering abuse callback.
+  static const int _maxConsecutiveInvalid = 10;
+
   final List<int> _buffer = [];
 
-  PacketFramer();
+  /// Called when sustained abuse is detected (e.g. 10+ consecutive invalid
+  /// frames). The transport layer should disconnect.
+  final void Function()? onAbuseDetected;
+
+  PacketFramer({this.onAbuseDetected});
 
   /// Frame a packet for transmission
   static List<int> frame(List<int> payload) {
@@ -61,8 +68,8 @@ class PacketFramer {
       packets.add(packet);
     }
 
-    // Prevent buffer from growing indefinitely
-    if (_buffer.length > _maxPacketSize * 2) {
+    // Prevent buffer from growing indefinitely — cap at max packet + header
+    if (_buffer.length > _maxPacketSize + _headerSize) {
       _bufferOverflowCount++;
       _totalBytesDiscarded += _buffer.length;
       AppLogging.protocol(
@@ -71,6 +78,18 @@ class PacketFramer {
         '(totalDiscarded=$_totalBytesDiscarded)',
       );
       _buffer.clear();
+      _consecutiveInvalidFrames = 0;
+    }
+
+    // Abuse detection: sustained invalid frames → disconnect
+    if (_consecutiveInvalidFrames >= _maxConsecutiveInvalid) {
+      AppLogging.protocol(
+        '🚨 FRAMER SECURITY: Abuse threshold reached — '
+        '$_consecutiveInvalidFrames consecutive invalid frames. '
+        'Requesting disconnect.',
+      );
+      _consecutiveInvalidFrames = 0;
+      onAbuseDetected?.call();
     }
 
     return packets;
