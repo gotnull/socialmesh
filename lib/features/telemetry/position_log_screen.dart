@@ -58,7 +58,10 @@ const int _kGoodFixMinSats = 6;
 // ---------------------------------------------------------------------------
 
 class PositionLogScreen extends ConsumerStatefulWidget {
-  const PositionLogScreen({super.key});
+  /// Optional node number to pre-filter the position log to a specific node.
+  final int? initialNodeNum;
+
+  const PositionLogScreen({super.key, this.initialNodeNum});
 
   @override
   ConsumerState<PositionLogScreen> createState() => _PositionLogScreenState();
@@ -78,9 +81,13 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen>
   MapTileStyle _mapStyle = MapTileStyle.dark;
   bool _isExporting = false;
 
+  /// Optional per-node filter — set from widget.initialNodeNum, clearable.
+  int? _filterNodeNum;
+
   @override
   void initState() {
     super.initState();
+    _filterNodeNum = widget.initialNodeNum;
     _loadMapStyle();
   }
 
@@ -157,6 +164,11 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen>
         }
       }
 
+      // Per-node filter (from initialNodeNum or cleared by user)
+      if (_filterNodeNum != null && log.nodeNum != _filterNodeNum) {
+        return false;
+      }
+
       return true;
     }).toList();
   }
@@ -165,7 +177,8 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen>
       _activeFilter != _PositionFilter.all ||
       _customStartDate != null ||
       _customEndDate != null ||
-      _searchQuery.isNotEmpty;
+      _searchQuery.isNotEmpty ||
+      _filterNodeNum != null;
 
   void _clearFilters() {
     HapticFeedback.selectionClick();
@@ -173,6 +186,7 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen>
       _activeFilter = _PositionFilter.all;
       _customStartDate = null;
       _customEndDate = null;
+      _filterNodeNum = null;
       _searchQuery = '';
       _searchController.clear();
     });
@@ -614,6 +628,7 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen>
                           _activeFilter,
                           _customStartDate,
                           _customEndDate,
+                          _filterNodeNum,
                           logs.length,
                           _searchQuery,
                         ]),
@@ -634,6 +649,67 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen>
                               _customEndDate = null;
                             });
                           },
+                        ),
+                      ),
+
+                    // Node filter indicator (when pre-filtered to a node)
+                    if (_filterNodeNum != null)
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 4,
+                          ),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AccentColors.purple.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius8,
+                              ),
+                              border: Border.all(
+                                color: AccentColors.purple.withValues(
+                                  alpha: 0.3,
+                                ),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.person_pin_circle,
+                                  size: 16,
+                                  color: AccentColors.purple,
+                                ),
+                                const SizedBox(width: AppTheme.spacing8),
+                                Expanded(
+                                  child: Text(
+                                    nodes[_filterNodeNum]?.displayName ??
+                                        '!${_filterNodeNum!.toRadixString(16).toUpperCase()}',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                      color: AccentColors.purple,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                GestureDetector(
+                                  onTap: () {
+                                    HapticFeedback.selectionClick();
+                                    safeSetState(() => _filterNodeNum = null);
+                                  },
+                                  child: Icon(
+                                    Icons.close,
+                                    size: 16,
+                                    color: AccentColors.purple,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
 

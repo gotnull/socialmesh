@@ -3581,6 +3581,15 @@ class AppLocalizationsPt extends AppLocalizations {
   String get nodeInfoViewHistory => 'Histórico de Traceroute';
 
   @override
+  String get nodeInfoShowTrack => 'Mostrar histórico de posições';
+
+  @override
+  String get nodeInfoHideTrack => 'Ocultar histórico de posições';
+
+  @override
+  String get nodeInfoViewPositionLog => 'Registo de posições';
+
+  @override
   String get nodeInfoShareLocation => 'Partilhar Localização';
 
   @override

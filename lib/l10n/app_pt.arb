@@ -22336,6 +22336,18 @@
   "nodeInfoTracerouteConfirmTitle": "Enviar Traceroute",
   "nodeInfoViewDetails": "Ver Detalhes",
   "nodeInfoViewHistory": "Histórico de Traceroute",
+  "nodeInfoShowTrack": "Mostrar histórico de posições",
+  "@nodeInfoShowTrack": {
+    "description": "Tooltip for the show position track button on the node info card."
+  },
+  "nodeInfoHideTrack": "Ocultar histórico de posições",
+  "@nodeInfoHideTrack": {
+    "description": "Tooltip for the hide position track button on the node info card."
+  },
+  "nodeInfoViewPositionLog": "Registo de posições",
+  "@nodeInfoViewPositionLog": {
+    "description": "Tooltip for the view position log button on the node info card."
+  },
   "nodeInfoYou": "VOCÊ",
   "@nodeInfoYou": {
     "description": "Badge text indicating the current user's own node."

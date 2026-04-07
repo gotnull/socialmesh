@@ -3594,6 +3594,15 @@ class AppLocalizationsIt extends AppLocalizations {
   String get nodeInfoViewHistory => 'Cronologia traceroute';
 
   @override
+  String get nodeInfoShowTrack => 'Mostra tracciato posizioni';
+
+  @override
+  String get nodeInfoHideTrack => 'Nascondi tracciato posizioni';
+
+  @override
+  String get nodeInfoViewPositionLog => 'Registro posizioni';
+
+  @override
   String get nodeInfoShareLocation => 'Condividi posizione';
 
   @override

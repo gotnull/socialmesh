@@ -41,6 +41,7 @@ import '../navigation/main_shell.dart';
 import '../nodes/node_detail_screen.dart';
 import '../nodes/node_display_name_resolver.dart';
 import '../telemetry/traceroute_log_screen.dart';
+import '../telemetry/position_log_screen.dart';
 import '../settings/settings_screen.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/constants.dart';
@@ -127,6 +128,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
   bool _showRangeCircles = false;
   bool _showConnectionLines = false;
   bool _showPositionHistory = false;
+
+  /// When set, shows only this node's position history trail on the map.
+  int? _trackNodeNum;
   bool _showTakLayer = true;
   double _connectionMaxDistance =
       15.0; // km - max distance for connection lines
@@ -679,10 +683,18 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final presenceMap = ref.watch(presenceMapProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
 
-    // Load persisted position history when the trail layer is enabled
-    final positionLogs = _showPositionHistory
-        ? ref.watch(positionLogsProvider).asData?.value ?? <PositionLog>[]
-        : <PositionLog>[];
+    // Load position history — per-node when tracking, all when global toggle
+    final List<PositionLog> positionLogs;
+    if (_trackNodeNum != null) {
+      positionLogs =
+          ref.watch(nodePositionLogsProvider(_trackNodeNum!)).asData?.value ??
+          <PositionLog>[];
+    } else if (_showPositionHistory) {
+      positionLogs =
+          ref.watch(positionLogsProvider).asData?.value ?? <PositionLog>[];
+    } else {
+      positionLogs = <PositionLog>[];
+    }
 
     // Get nodes with positions (current or cached)
     final allNodesWithPosition = _getNodesWithPositions(nodes, presenceMap);
@@ -1366,7 +1378,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
                           }).toList(),
                         ),
                       // Node trails (movement history) - hide in location only mode
-                      if (!widget.locationOnlyMode)
+                      if (!widget.locationOnlyMode &&
+                          (_showPositionHistory ||
+                              _trackNodeNum != null ||
+                              _nodeTrails.isNotEmpty))
                         PolylineLayer(
                           polylines: _buildNodeTrails(
                             nodesWithPosition,
@@ -1853,7 +1868,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       child: NodeInfoCard(
                         node: _selectedNode!,
                         isMyNode: _selectedNode!.nodeNum == myNodeNum,
-                        onClose: () => setState(() => _selectedNode = null),
+                        onClose: () => setState(() {
+                          _selectedNode = null;
+                          _trackNodeNum = null;
+                        }),
                         onMessage: () => _openDM(_selectedNode!),
                         distanceFromMe: _getDistanceFromMyNode(
                           _selectedNode!,
@@ -1914,6 +1932,29 @@ class _MapScreenState extends ConsumerState<MapScreen>
                             MaterialPageRoute(
                               builder: (_) =>
                                   TraceRouteLogScreen(nodeNum: node.nodeNum),
+                            ),
+                          );
+                        },
+                        onShowTrack: _selectedNode!.hasPosition
+                            ? () {
+                                setState(() {
+                                  if (_trackNodeNum == _selectedNode!.nodeNum) {
+                                    _trackNodeNum = null;
+                                  } else {
+                                    _trackNodeNum = _selectedNode!.nodeNum;
+                                  }
+                                });
+                              }
+                            : null,
+                        isTrackVisible: _trackNodeNum == _selectedNode!.nodeNum,
+                        onViewPositionLog: () {
+                          final node = _selectedNode!;
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => PositionLogScreen(
+                                initialNodeNum: node.nodeNum,
+                              ),
                             ),
                           );
                         },
@@ -2589,7 +2630,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
   ) {
     final trails = <Polyline>[];
 
-    if (_showPositionHistory && positionLogs.isNotEmpty) {
+    if ((_showPositionHistory || _trackNodeNum != null) &&
+        positionLogs.isNotEmpty) {
       // Group persisted position logs by nodeNum
       final logsByNode = <int, List<PositionLog>>{};
       for (final log in positionLogs) {

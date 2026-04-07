@@ -901,6 +901,11 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
               altitude: node.altitude,
               satsInView: node.satsInView,
             );
+            AppLogging.storage(
+              'PositionLog: Stored node !${id.toRadixString(16)} '
+              'lat=${node.latitude}, lng=${node.longitude}, '
+              'alt=${node.altitude}, sats=${node.satsInView}',
+            );
             await storage.addPositionLog(
               PositionLog(
                 nodeNum: id,
@@ -908,6 +913,9 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
                 longitude: node.longitude!,
                 altitude: node.altitude,
                 satsInView: node.satsInView,
+                speed: node.groundSpeed?.toInt(),
+                heading: node.groundTrack?.toInt(),
+                precisionBits: node.precisionBits,
               ),
             );
           }

@@ -3548,6 +3548,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get nodeInfoViewHistory => 'Traceroute History';
 
   @override
+  String get nodeInfoShowTrack => 'Show Position Track';
+
+  @override
+  String get nodeInfoHideTrack => 'Hide Position Track';
+
+  @override
+  String get nodeInfoViewPositionLog => 'Position Log';
+
+  @override
   String get nodeInfoShareLocation => 'Share Location';
 
   @override

@@ -29,6 +29,9 @@ class NodeInfoCard extends ConsumerWidget {
   final VoidCallback? onTraceroute;
   final VoidCallback? onViewDetails;
   final VoidCallback? onViewHistory;
+  final VoidCallback? onShowTrack;
+  final bool isTrackVisible;
+  final VoidCallback? onViewPositionLog;
 
   /// If true, shows a compact version without action buttons
   final bool compact;
@@ -46,6 +49,9 @@ class NodeInfoCard extends ConsumerWidget {
     this.onTraceroute,
     this.onViewDetails,
     this.onViewHistory,
+    this.onShowTrack,
+    this.isTrackVisible = false,
+    this.onViewPositionLog,
     this.compact = false,
   });
 
@@ -663,6 +669,62 @@ class NodeInfoCard extends ConsumerWidget {
                         child: Center(
                           child: Icon(
                             Icons.history,
+                            size: 18,
+                            color: context.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+              if (onShowTrack != null) ...[
+                const SizedBox(width: AppTheme.spacing8),
+                Tooltip(
+                  message: isTrackVisible
+                      ? context.l10n.nodeInfoHideTrack
+                      : context.l10n.nodeInfoShowTrack,
+                  child: SizedBox(
+                    width: 36,
+                    height: 36,
+                    child: Material(
+                      color: isTrackVisible
+                          ? context.accentColor.withValues(alpha: 0.2)
+                          : context.background,
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
+                      child: InkWell(
+                        onTap: onShowTrack,
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
+                        child: Center(
+                          child: Icon(
+                            Icons.route,
+                            size: 18,
+                            color: isTrackVisible
+                                ? context.accentColor
+                                : context.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+              if (onViewPositionLog != null) ...[
+                const SizedBox(width: AppTheme.spacing8),
+                Tooltip(
+                  message: context.l10n.nodeInfoViewPositionLog,
+                  child: SizedBox(
+                    width: 36,
+                    height: 36,
+                    child: Material(
+                      color: context.background,
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
+                      child: InkWell(
+                        onTap: onViewPositionLog,
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
+                        child: Center(
+                          child: Icon(
+                            Icons.timeline,
                             size: 18,
                             color: context.textSecondary,
                           ),

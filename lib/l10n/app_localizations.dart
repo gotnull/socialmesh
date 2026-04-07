@@ -6352,6 +6352,24 @@ abstract class AppLocalizations {
   /// **'Traceroute History'**
   String get nodeInfoViewHistory;
 
+  /// Tooltip for the show position track button on the node info card.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Position Track'**
+  String get nodeInfoShowTrack;
+
+  /// Tooltip for the hide position track button on the node info card.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide Position Track'**
+  String get nodeInfoHideTrack;
+
+  /// Tooltip for the view position log button on the node info card.
+  ///
+  /// In en, this message translates to:
+  /// **'Position Log'**
+  String get nodeInfoViewPositionLog;
+
   /// Tooltip for the share location icon button on the node info card.
   ///
   /// In en, this message translates to:

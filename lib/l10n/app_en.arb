@@ -4702,6 +4702,18 @@
     "@nodeInfoViewHistory": {
         "description": "Tooltip for the traceroute history icon button on the node info card."
     },
+    "nodeInfoShowTrack": "Show Position Track",
+    "@nodeInfoShowTrack": {
+        "description": "Tooltip for the show position track button on the node info card."
+    },
+    "nodeInfoHideTrack": "Hide Position Track",
+    "@nodeInfoHideTrack": {
+        "description": "Tooltip for the hide position track button on the node info card."
+    },
+    "nodeInfoViewPositionLog": "Position Log",
+    "@nodeInfoViewPositionLog": {
+        "description": "Tooltip for the view position log button on the node info card."
+    },
     "nodeInfoShareLocation": "Share Location",
     "@nodeInfoShareLocation": {
         "description": "Tooltip for the share location icon button on the node info card."
