@@ -251,6 +251,13 @@ class PortNum extends $pb.ProtobufEnum {
       PortNum._(77, _omitEnumNames ? '' : 'CAYENNE_APP');
 
   ///
+  ///  GroupAlarm integration
+  ///  Used for transporting GroupAlarm-related messages between Meshtastic nodes
+  ///  and companion applications/services.
+  static const PortNum GROUPALARM_APP =
+      PortNum._(112, _omitEnumNames ? '' : 'GROUPALARM_APP');
+
+  ///
   ///  Private applications should use portnums >= 256.
   ///  To simplify initial development and testing you can use "PRIVATE_APP"
   ///  in your code without needing to rebuild protobuf files (via [regen-protos.sh](https://github.com/meshtastic/firmware/blob/master/bin/regen-protos.sh))
@@ -300,6 +307,7 @@ class PortNum extends $pb.ProtobufEnum {
     LORAWAN_BRIDGE,
     RETICULUM_TUNNEL_APP,
     CAYENNE_APP,
+    GROUPALARM_APP,
     PRIVATE_APP,
     ATAK_FORWARDER,
     MAX,

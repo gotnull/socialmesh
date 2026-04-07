@@ -678,6 +678,11 @@ class HardwareModel extends $pb.ProtobufEnum {
       HardwareModel._(126, _omitEnumNames ? '' : 'TDISPLAY_S3_PRO');
 
   ///
+  ///  Heltec Mesh Node T096 board features an nRF52840 CPU and a TFT screen.
+  static const HardwareModel HELTEC_MESH_NODE_T096 =
+      HardwareModel._(127, _omitEnumNames ? '' : 'HELTEC_MESH_NODE_T096');
+
+  ///
   ///  ------------------------------------------------------------------------------------------------------------------------------------------
   ///  Reserved ID For developing private Ports. These will show up in live traffic sparsely, so we can use a high number. Keep it within 8 bits.
   ///  ------------------------------------------------------------------------------------------------------------------------------------------
@@ -812,6 +817,7 @@ class HardwareModel extends $pb.ProtobufEnum {
     TBEAM_BPF,
     MINI_EPAPER_S3,
     TDISPLAY_S3_PRO,
+    HELTEC_MESH_NODE_T096,
     PRIVATE_HW,
   ];
 

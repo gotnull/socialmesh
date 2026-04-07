@@ -1878,11 +1878,13 @@ class SensorConfig extends $pb.GeneratedMessage {
     SCD4X_config? scd4xConfig,
     SEN5X_config? sen5xConfig,
     SCD30_config? scd30Config,
+    SHTXX_config? shtxxConfig,
   }) {
     final result = create();
     if (scd4xConfig != null) result.scd4xConfig = scd4xConfig;
     if (sen5xConfig != null) result.sen5xConfig = sen5xConfig;
     if (scd30Config != null) result.scd30Config = scd30Config;
+    if (shtxxConfig != null) result.shtxxConfig = shtxxConfig;
     return result;
   }
 
@@ -1905,6 +1907,8 @@ class SensorConfig extends $pb.GeneratedMessage {
         subBuilder: SEN5X_config.create)
     ..aOM<SCD30_config>(3, _omitFieldNames ? '' : 'scd30Config',
         subBuilder: SCD30_config.create)
+    ..aOM<SHTXX_config>(4, _omitFieldNames ? '' : 'shtxxConfig',
+        subBuilder: SHTXX_config.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1964,6 +1968,19 @@ class SensorConfig extends $pb.GeneratedMessage {
   void clearScd30Config() => $_clearField(3);
   @$pb.TagNumber(3)
   SCD30_config ensureScd30Config() => $_ensure(2);
+
+  ///
+  ///  SHTXX temperature and relative humidity sensor configuration
+  @$pb.TagNumber(4)
+  SHTXX_config get shtxxConfig => $_getN(3);
+  @$pb.TagNumber(4)
+  set shtxxConfig(SHTXX_config value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasShtxxConfig() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearShtxxConfig() => $_clearField(4);
+  @$pb.TagNumber(4)
+  SHTXX_config ensureShtxxConfig() => $_ensure(3);
 }
 
 class SCD4X_config extends $pb.GeneratedMessage {
@@ -2311,6 +2328,63 @@ class SCD30_config extends $pb.GeneratedMessage {
   $core.bool hasSoftReset() => $_has(5);
   @$pb.TagNumber(6)
   void clearSoftReset() => $_clearField(6);
+}
+
+class SHTXX_config extends $pb.GeneratedMessage {
+  factory SHTXX_config({
+    $core.int? setAccuracy,
+  }) {
+    final result = create();
+    if (setAccuracy != null) result.setAccuracy = setAccuracy;
+    return result;
+  }
+
+  SHTXX_config._();
+
+  factory SHTXX_config.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory SHTXX_config.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SHTXX_config',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aI(1, _omitFieldNames ? '' : 'setAccuracy',
+        fieldType: $pb.PbFieldType.OU3)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SHTXX_config clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SHTXX_config copyWith(void Function(SHTXX_config) updates) =>
+      super.copyWith((message) => updates(message as SHTXX_config))
+          as SHTXX_config;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static SHTXX_config create() => SHTXX_config._();
+  @$core.override
+  SHTXX_config createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static SHTXX_config getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SHTXX_config>(create);
+  static SHTXX_config? _defaultInstance;
+
+  ///
+  ///  Accuracy mode (0 = low, 1 = medium, 2 = high)
+  @$pb.TagNumber(1)
+  $core.int get setAccuracy => $_getIZ(0);
+  @$pb.TagNumber(1)
+  set setAccuracy($core.int value) => $_setUnsignedInt32(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSetAccuracy() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSetAccuracy() => $_clearField(1);
 }
 
 const $core.bool _omitFieldNames =

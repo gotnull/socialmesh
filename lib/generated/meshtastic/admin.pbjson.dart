@@ -834,6 +834,14 @@ const SensorConfig$json = {
       '6': '.meshtastic.SCD30_config',
       '10': 'scd30Config'
     },
+    {
+      '1': 'shtxx_config',
+      '3': 4,
+      '4': 1,
+      '5': 11,
+      '6': '.meshtastic.SHTXX_config',
+      '10': 'shtxxConfig'
+    },
   ],
 };
 
@@ -842,7 +850,8 @@ final $typed_data.Uint8List sensorConfigDescriptor = $convert.base64Decode(
     'CgxTZW5zb3JDb25maWcSOwoMc2NkNHhfY29uZmlnGAEgASgLMhgubWVzaHRhc3RpYy5TQ0Q0WF'
     '9jb25maWdSC3NjZDR4Q29uZmlnEjsKDHNlbjV4X2NvbmZpZxgCIAEoCzIYLm1lc2h0YXN0aWMu'
     'U0VONVhfY29uZmlnUgtzZW41eENvbmZpZxI7CgxzY2QzMF9jb25maWcYAyABKAsyGC5tZXNodG'
-    'FzdGljLlNDRDMwX2NvbmZpZ1ILc2NkMzBDb25maWc=');
+    'FzdGljLlNDRDMwX2NvbmZpZ1ILc2NkMzBDb25maWcSOwoMc2h0eHhfY29uZmlnGAQgASgLMhgu'
+    'bWVzaHRhc3RpYy5TSFRYWF9jb25maWdSC3NodHh4Q29uZmln');
 
 @$core.Deprecated('Use sCD4X_configDescriptor instead')
 const SCD4X_config$json = {
@@ -1049,3 +1058,27 @@ final $typed_data.Uint8List sCD30_configDescriptor = $convert.base64Decode(
     'SIAQFCCgoIX3NldF9hc2NCFgoUX3NldF90YXJnZXRfY28yX2NvbmNCEgoQX3NldF90ZW1wZXJh'
     'dHVyZUIPCg1fc2V0X2FsdGl0dWRlQhsKGV9zZXRfbWVhc3VyZW1lbnRfaW50ZXJ2YWxCDQoLX3'
     'NvZnRfcmVzZXQ=');
+
+@$core.Deprecated('Use sHTXX_configDescriptor instead')
+const SHTXX_config$json = {
+  '1': 'SHTXX_config',
+  '2': [
+    {
+      '1': 'set_accuracy',
+      '3': 1,
+      '4': 1,
+      '5': 13,
+      '9': 0,
+      '10': 'setAccuracy',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_set_accuracy'},
+  ],
+};
+
+/// Descriptor for `SHTXX_config`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List sHTXX_configDescriptor = $convert.base64Decode(
+    'CgxTSFRYWF9jb25maWcSJgoMc2V0X2FjY3VyYWN5GAEgASgNSABSC3NldEFjY3VyYWN5iAEBQg'
+    '8KDV9zZXRfYWNjdXJhY3k=');
