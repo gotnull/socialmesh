@@ -25,6 +25,7 @@ import '../widget_builder/widget_builder_screen.dart';
 import 'ifttt_config_screen.dart';
 import 'ringtone_screen.dart';
 import 'theme_settings_screen.dart';
+import 'translation_settings_screen.dart';
 import 'widgets/restore_purchases_button.dart';
 
 class SubscriptionScreen extends ConsumerStatefulWidget {
@@ -68,132 +69,137 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
     final purchaseState = ref.watch(purchaseStateProvider);
 
     // Check if all features are unlocked
-    final ownedCount = OneTimePurchases.allIndividualPurchases
+    final ownedCount = OneTimePurchases.completePackPurchases
         .where((p) => purchaseState.hasPurchased(p.productId))
         .length;
     final allUnlocked =
-        ownedCount == OneTimePurchases.allIndividualPurchases.length ||
+        ownedCount == OneTimePurchases.completePackPurchases.length ||
         purchaseState.hasPurchased(RevenueCatConfig.completePackProductId);
 
-    return GlassScaffold.body(
+    return GlassScaffold(
       title: context.l10n.subscriptionPremiumTitle,
-      body: Padding(
-        padding: const EdgeInsets.all(AppTheme.spacing16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Header - only show if not all unlocked
-            if (!allUnlocked) ...[
-              _buildHeader(),
-              SizedBox(height: AppTheme.spacing24),
-            ],
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.all(AppTheme.spacing16),
+          sliver: SliverList(
+            delegate: SliverChildListDelegate([
+              // Header - only show if not all unlocked
+              if (!allUnlocked) ...[
+                _buildHeader(),
+                SizedBox(height: AppTheme.spacing24),
+              ],
 
-            // Complete Pack Bundle (prominent)
-            _buildBundleCard(),
-
-            // Restore Purchases button
-            const RestorePurchasesButton(),
-
-            // Show individual packs section
-            if (!allUnlocked) ...[
-              const SizedBox(height: AppTheme.spacing24),
-              // Divider with "or buy individually"
-              Row(
-                children: [
-                  Expanded(child: Divider(color: context.border)),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      context.l10n.subscriptionOrBuyIndividually,
-                      style: TextStyle(
-                        color: context.textTertiary,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                  Expanded(child: Divider(color: context.border)),
-                ],
-              ),
-              SizedBox(height: AppTheme.spacing24),
-            ] else ...[
-              const SizedBox(height: AppTheme.spacing24),
-              // Divider with "Included Features"
-              Row(
-                children: [
-                  Expanded(child: Divider(color: context.border)),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      context.l10n.subscriptionIncludedFeatures,
-                      style: TextStyle(
-                        color: context.textTertiary,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                  Expanded(child: Divider(color: context.border)),
-                ],
-              ),
-              SizedBox(height: AppTheme.spacing24),
-            ],
-            // One-time purchases (shows OWNED or price depending on state)
-            _buildOneTimePurchases(),
-
-            // Error message
-            if (error != null) ...[
+              // Featured Translation Pack (standalone add-on)
+              _buildFeaturedTranslationCard(),
               const SizedBox(height: AppTheme.spacing16),
-              Container(
-                padding: const EdgeInsets.all(AppTheme.spacing12),
-                decoration: BoxDecoration(
-                  color: AppTheme.errorRed.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(AppTheme.radius12),
-                ),
-                child: Text(
-                  error,
-                  style: const TextStyle(color: AppTheme.errorRed),
-                ),
-              ),
-            ],
 
-            // Restore Purchases button
-            const RestorePurchasesButton(),
+              // Complete Pack Bundle (prominent)
+              _buildBundleCard(),
 
-            // Terms & Privacy
-            const SizedBox(height: AppTheme.spacing16),
-            Center(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextButton(
-                    onPressed: () => LegalDocumentSheet.showTerms(context),
-                    child: Text(
-                      context.l10n.subscriptionTerms,
-                      style: TextStyle(
-                        color: context.textTertiary,
-                        fontSize: 12,
+              // Restore Purchases button
+              const RestorePurchasesButton(),
+
+              // Show individual packs section
+              if (!allUnlocked) ...[
+                const SizedBox(height: AppTheme.spacing24),
+                // Divider with "or buy individually"
+                Row(
+                  children: [
+                    Expanded(child: Divider(color: context.border)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        context.l10n.subscriptionOrBuyIndividually,
+                        style: TextStyle(
+                          color: context.textTertiary,
+                          fontSize: 12,
+                        ),
                       ),
                     ),
-                  ),
-                  Text(
-                    '•',
-                    style: TextStyle(color: context.textTertiary),
-                  ), // lint-allow: hardcoded-string
-                  TextButton(
-                    onPressed: () => LegalDocumentSheet.showPrivacy(context),
-                    child: Text(
-                      context.l10n.subscriptionPrivacy,
-                      style: TextStyle(
-                        color: context.textTertiary,
-                        fontSize: 12,
+                    Expanded(child: Divider(color: context.border)),
+                  ],
+                ),
+                SizedBox(height: AppTheme.spacing24),
+              ] else ...[
+                const SizedBox(height: AppTheme.spacing24),
+                // Divider with "Included Features"
+                Row(
+                  children: [
+                    Expanded(child: Divider(color: context.border)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        context.l10n.subscriptionIncludedFeatures,
+                        style: TextStyle(
+                          color: context.textTertiary,
+                          fontSize: 12,
+                        ),
                       ),
                     ),
+                    Expanded(child: Divider(color: context.border)),
+                  ],
+                ),
+                SizedBox(height: AppTheme.spacing24),
+              ],
+              // One-time purchases (shows OWNED or price depending on state)
+              _buildOneTimePurchases(),
+
+              // Error message
+              if (error != null) ...[
+                const SizedBox(height: AppTheme.spacing16),
+                Container(
+                  padding: const EdgeInsets.all(AppTheme.spacing12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.errorRed.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
-                ],
+                  child: Text(
+                    error,
+                    style: const TextStyle(color: AppTheme.errorRed),
+                  ),
+                ),
+              ],
+
+              // Restore Purchases button
+              const RestorePurchasesButton(),
+
+              // Terms & Privacy
+              const SizedBox(height: AppTheme.spacing16),
+              Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextButton(
+                      onPressed: () => LegalDocumentSheet.showTerms(context),
+                      child: Text(
+                        context.l10n.subscriptionTerms,
+                        style: TextStyle(
+                          color: context.textTertiary,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      '•',
+                      style: TextStyle(color: context.textTertiary),
+                    ), // lint-allow: hardcoded-string
+                    TextButton(
+                      onPressed: () => LegalDocumentSheet.showPrivacy(context),
+                      child: Text(
+                        context.l10n.subscriptionPrivacy,
+                        style: TextStyle(
+                          color: context.textTertiary,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ]),
+          ),
         ),
-      ),
+      ],
     );
   }
 
@@ -252,6 +258,209 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
     );
   }
 
+  Widget _buildFeaturedTranslationCard() {
+    final purchaseState = ref.watch(purchaseStateProvider);
+    final isLoading = ref.watch(subscriptionLoadingProvider);
+    final storeProductsAsync = ref.watch(storeProductsProvider);
+    final storeProducts = storeProductsAsync.when(
+      data: (data) => data,
+      loading: () => <String, StoreProductInfo>{},
+      error: (e, s) => <String, StoreProductInfo>{},
+    );
+
+    final translationPack = OneTimePurchases.translationPack;
+    final isPurchased = purchaseState.hasPurchased(translationPack.productId);
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AccentColors.teal.withValues(alpha: 0.25),
+            AccentColors.teal.withValues(alpha: 0.08),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
+        border: Border.all(color: AccentColors.teal.withValues(alpha: 0.6)),
+        boxShadow: [
+          BoxShadow(
+            color: AccentColors.teal.withValues(alpha: 0.15),
+            blurRadius: 20,
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppTheme.spacing20,
+              AppTheme.spacing20,
+              AppTheme.spacing20,
+              AppTheme.spacing16,
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AccentColors.teal,
+                        AccentColors.teal.withValues(alpha: 0.7),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(AppTheme.radius14),
+                  ),
+                  child: const Icon(
+                    Icons.translate,
+                    color: Colors.white,
+                    size: 30,
+                  ),
+                ),
+                const SizedBox(width: AppTheme.spacing16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              storeProducts[translationPack.productId]?.title ??
+                                  context
+                                      .l10n
+                                      .subscriptionFallbackTranslationPack,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: AppTheme.spacing8),
+                          if (!isPurchased)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    AccentColors.teal,
+                                    AccentColors.cyan,
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius6,
+                                ),
+                              ),
+                              child: Text(
+                                context.l10n.subscriptionNewAddon,
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: AppTheme.spacing2),
+                      Text(
+                        context.l10n.subscriptionFeaturedTranslationSubtitle,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.8),
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Price and CTA
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppTheme.spacing20,
+              0,
+              AppTheme.spacing16,
+              AppTheme.spacing16,
+            ),
+            child: Row(
+              children: [
+                if (isPurchased) ...[
+                  Icon(Icons.check_circle, color: AccentColors.teal, size: 22),
+                  const SizedBox(width: AppTheme.spacing8),
+                  Text(
+                    context.l10n.subscriptionOwned,
+                    style: TextStyle(
+                      color: AccentColors.teal,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                    ),
+                  ),
+                ] else ...[
+                  Text(
+                    storeProducts[translationPack.productId]?.priceString ??
+                        '\$${translationPack.price.toStringAsFixed(2)}', // lint-allow: hardcoded-string
+                    style: const TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const Spacer(),
+                  SizedBox(
+                    height: 44,
+                    child: FilledButton(
+                      onPressed: isLoading
+                          ? null
+                          : () => _purchaseItem(translationPack),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AccentColors.teal,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
+                        ),
+                      ),
+                      child: isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(
+                              context.l10n.subscriptionGetTranslation,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 16,
+                              ),
+                            ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildBundleCard() {
     final purchaseState = ref.watch(purchaseStateProvider);
     final isLoading = ref.watch(subscriptionLoadingProvider);
@@ -263,11 +472,10 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
     );
 
     // Check if user already owns all individual packs
-    final ownedCount = OneTimePurchases.allIndividualPurchases
+    final ownedCount = OneTimePurchases.completePackPurchases
         .where((p) => purchaseState.hasPurchased(p.productId))
         .length;
-    final ownsAll =
-        ownedCount == OneTimePurchases.allIndividualPurchases.length;
+    final ownsAll = ownedCount == OneTimePurchases.completePackPurchases.length;
     final ownsBundle = purchaseState.hasPurchased(
       RevenueCatConfig.completePackProductId,
     );
@@ -336,6 +544,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
       RevenueCatConfig.widgetPackProductId,
       RevenueCatConfig.automationsPackProductId,
       RevenueCatConfig.iftttPackProductId,
+      RevenueCatConfig.translationPackProductId,
     ].fold<double>(0, (sum, id) => sum + (storeProducts[id]?.price ?? 0));
 
     // Use actual store prices if available, otherwise fall back to model
@@ -493,6 +702,13 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
                   storeProducts[RevenueCatConfig.iftttPackProductId]?.title ??
                       context.l10n.subscriptionFallbackIfttt,
                   context.l10n.subscriptionAppIntegrations,
+                ),
+                _buildBundleFeature(
+                  Icons.translate,
+                  storeProducts[RevenueCatConfig.translationPackProductId]
+                          ?.title ??
+                      context.l10n.subscriptionFallbackTranslationPack,
+                  context.l10n.subscriptionTranslationWithAllowance,
                 ),
               ],
             ),
@@ -653,133 +869,141 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ...OneTimePurchases.allPurchases.map((purchase) {
-          final isPurchased = purchaseState.hasPurchased(purchase.productId);
+        ...OneTimePurchases.allPurchases
+            .where((p) => p.id != 'translation_pack')
+            .map((purchase) {
+              final isPurchased = purchaseState.hasPurchased(
+                purchase.productId,
+              );
 
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Material(
-              color: context.card,
-              borderRadius: BorderRadius.circular(AppTheme.radius12),
-              child: InkWell(
-                onTap: isPurchased ? null : () => _purchaseItem(purchase),
-                borderRadius: BorderRadius.circular(AppTheme.radius12),
-                child: Container(
-                  padding: const EdgeInsets.all(AppTheme.spacing16),
-                  decoration: BoxDecoration(
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Material(
+                  color: context.card,
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
+                  child: InkWell(
+                    onTap: isPurchased ? null : () => _purchaseItem(purchase),
                     borderRadius: BorderRadius.circular(AppTheme.radius12),
-                    border: Border.all(
-                      color: isPurchased
-                          ? context.accentColor.withValues(alpha: 0.5)
-                          : context.border,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: context.accentColor.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(
-                            AppTheme.radius10,
-                          ),
-                        ),
-                        child: Icon(
-                          _getPurchaseIcon(purchase.id),
-                          color: context.accentColor,
-                          size: 22,
+                    child: Container(
+                      padding: const EdgeInsets.all(AppTheme.spacing16),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
+                        border: Border.all(
+                          color: isPurchased
+                              ? context.accentColor.withValues(alpha: 0.5)
+                              : context.border,
                         ),
                       ),
-                      SizedBox(width: AppTheme.spacing16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    storeProducts[purchase.productId]?.title ??
-                                        purchase.name,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 16,
-                                      color: context.textPrimary,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                if (isPurchased) ...[
-                                  SizedBox(width: AppTheme.spacing8),
-                                  Icon(
-                                    Icons.check_circle,
-                                    color: context.accentColor,
-                                    size: 18,
-                                  ),
-                                ],
-                              ],
-                            ),
-                            Text(
-                              _getDescription(purchase),
-                              style: TextStyle(
-                                color: context.textTertiary,
-                                fontSize: 13,
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: context.accentColor.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius10,
                               ),
                             ),
-                          ],
-                        ),
+                            child: Icon(
+                              _getPurchaseIcon(purchase.id),
+                              color: context.accentColor,
+                              size: 22,
+                            ),
+                          ),
+                          SizedBox(width: AppTheme.spacing16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        storeProducts[purchase.productId]
+                                                ?.title ??
+                                            purchase.name,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 16,
+                                          color: context.textPrimary,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    if (isPurchased) ...[
+                                      SizedBox(width: AppTheme.spacing8),
+                                      Icon(
+                                        Icons.check_circle,
+                                        color: context.accentColor,
+                                        size: 18,
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                                Text(
+                                  _getDescription(purchase),
+                                  style: TextStyle(
+                                    color: context.textTertiary,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(width: AppTheme.spacing12),
+                          if (isPurchased)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: context.accentColor.withValues(
+                                  alpha: 0.2,
+                                ),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius8,
+                                ),
+                              ),
+                              child: Text(
+                                context.l10n.subscriptionOwned,
+                                style: TextStyle(
+                                  color: context.accentColor,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            )
+                          else
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius8,
+                                ),
+                                border: Border.all(color: context.accentColor),
+                              ),
+                              child: Text(
+                                storeProducts[purchase.productId]
+                                        ?.priceString ??
+                                    '\$${purchase.price.toStringAsFixed(2)}', // lint-allow: hardcoded-string
+                                style: TextStyle(
+                                  color: context.accentColor,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
-                      SizedBox(width: AppTheme.spacing12),
-                      if (isPurchased)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: context.accentColor.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(
-                              AppTheme.radius8,
-                            ),
-                          ),
-                          child: Text(
-                            context.l10n.subscriptionOwned,
-                            style: TextStyle(
-                              color: context.accentColor,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
-                            ),
-                          ),
-                        )
-                      else
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(
-                              AppTheme.radius8,
-                            ),
-                            border: Border.all(color: context.accentColor),
-                          ),
-                          child: Text(
-                            storeProducts[purchase.productId]?.priceString ??
-                                '\$${purchase.price.toStringAsFixed(2)}', // lint-allow: hardcoded-string
-                            style: TextStyle(
-                              color: context.accentColor,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
-            ),
-          );
-        }),
+              );
+            }),
       ],
     );
   }
@@ -804,6 +1028,8 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
         return Icons.auto_awesome;
       case 'ifttt_pack':
         return Icons.webhook;
+      case 'translation_pack':
+        return Icons.translate;
       default:
         return Icons.shopping_bag;
     }
@@ -860,6 +1086,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
       PremiumFeature.premiumThemes => const ThemeSettingsScreen(),
       PremiumFeature.customRingtones => const RingtoneScreen(),
       PremiumFeature.iftttIntegration => const IftttConfigScreen(),
+      PremiumFeature.translation => const TranslationSettingsScreen(),
     };
 
     showActionSnackBar(

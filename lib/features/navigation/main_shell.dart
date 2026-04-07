@@ -48,6 +48,7 @@ import '../presence/presence_screen.dart';
 import '../mesh3d/mesh_3d_screen.dart';
 import '../world_mesh/world_mesh_screen.dart';
 import '../settings/subscription_screen.dart';
+import '../settings/translation_settings_screen.dart';
 import '../widget_builder/widget_builder_screen.dart';
 import '../reachability/mesh_reachability_screen.dart';
 import '../device_shop/providers/admin_shop_providers.dart';
@@ -579,11 +580,19 @@ class _MainShellState extends ConsumerState<MainShell> {
 
     // Premium Features - mixed requirements
     DrawerMenuItem(
+      icon: Icons.translate_outlined,
+      label: l10n.navigationTranslationPack,
+      screen: const TranslationSettingsScreen(),
+      premiumFeature: PremiumFeature.translation,
+      sectionHeader: l10n.navigationSectionPremium,
+      iconColor: AccentColors.teal,
+      whatsNewBadgeKey: 'translation_pack',
+    ),
+    DrawerMenuItem(
       icon: Icons.palette_outlined,
       label: l10n.navigationThemePack,
       screen: const ThemeSettingsScreen(),
       premiumFeature: PremiumFeature.premiumThemes,
-      sectionHeader: l10n.navigationSectionPremium,
       iconColor: AccentColors.purple,
     ),
     DrawerMenuItem(
@@ -771,9 +780,11 @@ class _MainShellState extends ConsumerState<MainShell> {
               }
 
               // Check if this item should show a NEW chip
+              // Suppress when already purchased — the verified badge is enough
               final isNew =
                   item.whatsNewBadgeKey != null &&
-                  unseenBadgeKeys.contains(item.whatsNewBadgeKey);
+                  unseenBadgeKeys.contains(item.whatsNewBadgeKey) &&
+                  !(isPremium && hasAccess);
 
               return Column(
                 children: [

@@ -31,6 +31,7 @@ class MessageContextMenu extends ConsumerStatefulWidget {
   final VoidCallback? onResend;
   final VoidCallback? onAutoRetry;
   final VoidCallback? onStopRetry;
+  final VoidCallback? onTranslate;
 
   const MessageContextMenu({
     super.key,
@@ -43,6 +44,7 @@ class MessageContextMenu extends ConsumerStatefulWidget {
     this.onResend,
     this.onAutoRetry,
     this.onStopRetry,
+    this.onTranslate,
   });
 
   @override
@@ -119,6 +121,17 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
               }
             },
           ),
+
+          // Translate (only for non-emoji text messages with content)
+          if (widget.onTranslate != null)
+            _buildMenuItem(
+              icon: Icons.translate,
+              label: context.l10n.translateAction,
+              onTap: () {
+                Navigator.pop(context);
+                widget.onTranslate?.call();
+              },
+            ),
 
           // Message Details section
           _buildDetailsSection(),
@@ -481,6 +494,7 @@ Future<void> showMessageContextMenu(
   VoidCallback? onResend,
   VoidCallback? onAutoRetry,
   VoidCallback? onStopRetry,
+  VoidCallback? onTranslate,
 }) {
   HapticFeedback.selectionClick();
 
@@ -502,6 +516,7 @@ Future<void> showMessageContextMenu(
         onResend: onResend,
         onAutoRetry: onAutoRetry,
         onStopRetry: onStopRetry,
+        onTranslate: onTranslate,
       ),
     ),
   );

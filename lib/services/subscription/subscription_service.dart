@@ -326,12 +326,14 @@ class PurchaseService {
           );
           return PurchaseResult.error;
 
-        // Network error - retryable by user
+        // Network error - receipt validation failed but transaction may
+        // have completed. Wait briefly for iOS networking to recover
+        // (stale QUIC connections after App Store sheet), then sync.
         case PurchasesErrorCode.networkError:
           AppLogging.subscriptions(
-            '💳 Network error - retryable. User should check connection and retry.',
+            '💳 Network error - attempting recovery via syncPurchases...',
           );
-          return PurchaseResult.error;
+          return _handleNetworkErrorRecovery(productId);
 
         // Payment pending - inform user
         case PurchasesErrorCode.paymentPendingError:
@@ -461,6 +463,53 @@ class PurchaseService {
       '💳 ✅ Manually added $productId after INVALID_RECEIPT recovery',
     );
     return PurchaseResult.success;
+  }
+
+  /// Handle network errors during purchase.
+  ///
+  /// The App Store transaction typically completes before the receipt is
+  /// sent to RevenueCat. When the QUIC connection goes stale (common after
+  /// the App Store payment sheet backgrounds the app), the receipt POST
+  /// fails with `-1005 "The network connection was lost."`.
+  ///
+  /// Recovery: wait for iOS networking to settle, then sync purchases
+  /// to pick up the completed transaction.
+  Future<PurchaseResult> _handleNetworkErrorRecovery(String productId) async {
+    AppLogging.subscriptions(
+      '💳 _handleNetworkErrorRecovery($productId) — waiting for network...',
+    );
+
+    // Brief delay for iOS to tear down the stale QUIC connection and
+    // establish a fresh one.
+    await Future<void>.delayed(const Duration(seconds: 2));
+
+    try {
+      await Purchases.syncPurchases();
+      AppLogging.subscriptions(
+        '💳 syncPurchases() completed after network recovery',
+      );
+
+      final customerInfo = await Purchases.getCustomerInfo();
+      _updateStateFromCustomerInfo(customerInfo);
+    } catch (e) {
+      AppLogging.subscriptions('💳 syncPurchases() failed during recovery: $e');
+    }
+
+    if (_currentState.hasPurchased(productId)) {
+      AppLogging.subscriptions(
+        '💳 ✅ Product $productId recovered after network error',
+      );
+      return PurchaseResult.success;
+    }
+
+    // Transaction may not have completed (user cancelled at App Store
+    // before payment went through). Report error so the UI shows the
+    // failure message and the user can retry.
+    AppLogging.subscriptions(
+      '💳 ❌ Product $productId not found after network recovery — '
+      'transaction may not have completed',
+    );
+    return PurchaseResult.error;
   }
 
   /// Handle the case where a product is already owned by the store

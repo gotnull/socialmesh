@@ -155,8 +155,8 @@ final hasAllPremiumFeaturesProvider = Provider<bool>((ref) {
     return true;
   }
 
-  // Check if user owns all individual packs
-  for (final purchase in OneTimePurchases.allIndividualPurchases) {
+  // Check if user owns all bundled packs (including Translation Pack)
+  for (final purchase in OneTimePurchases.completePackPurchases) {
     if (!state.hasPurchased(purchase.productId)) {
       return false;
     }

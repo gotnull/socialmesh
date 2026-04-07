@@ -281,6 +281,29 @@ class WhatsNewRegistry {
           ),
         ],
       ),
+
+    // v1.27.0 — Translation Pack
+    WhatsNewPayload(
+      version: '1.27.0',
+      headline: "What's New in Socialmesh",
+      subtitle: 'Version 1.27.0',
+      items: [
+        WhatsNewItem(
+          id: 'translation_pack_intro',
+          title: 'Translation Pack',
+          description:
+              'Instantly translate any mesh message into your language with a '
+              'single tap. Powered by Google Translate, it works on channels '
+              'and direct messages alike.\n\n'
+              'Long-press any message and tap Translate to see the result '
+              'inline — with smart caching so repeated translations are '
+              'instant. Available as a separate add-on.',
+          icon: Icons.translate,
+          iconColor: Color(0xFF26A69A), // AccentColors.teal
+          badgeKey: 'translation_pack',
+        ),
+      ],
+    ),
   ];
 
   // ===========================================================================
@@ -428,6 +451,8 @@ class WhatsNewRegistry {
         return l10n.whatsNewVersion1150Subtitle;
       case '1.16.0':
         return l10n.whatsNewVersion1160Subtitle;
+      case '1.27.0':
+        return l10n.whatsNewVersion1270Subtitle;
       default:
         return null;
     }
@@ -469,6 +494,10 @@ class WhatsNewRegistry {
         title = l10n.whatsNewTakGatewayTitle;
         description = l10n.whatsNewTakGatewayDescription;
         ctaLabel = l10n.whatsNewCtaOpenTakGateway;
+      case 'translation_pack_intro':
+        title = l10n.whatsNewTranslationPackTitle;
+        description = l10n.whatsNewTranslationPackDescription;
+        ctaLabel = null;
       default:
         return i;
     }

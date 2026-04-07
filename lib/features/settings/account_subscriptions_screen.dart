@@ -1027,6 +1027,7 @@ class _AccountSubscriptionsScreenState
       PremiumFeature.automations => Icons.auto_awesome,
       PremiumFeature.homeWidgets => Icons.widgets,
       PremiumFeature.iftttIntegration => Icons.webhook,
+      PremiumFeature.translation => Icons.translate,
     };
   }
 

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
+import 'package:collection/collection.dart';
 import 'package:socialmesh/features/nodes/node_display_name_resolver.dart';
 import '../../core/logging.dart';
 import '../../core/l10n/l10n_extension.dart';
@@ -41,11 +42,17 @@ import '../../services/messaging/offline_queue_service.dart';
 import '../../services/haptic_service.dart';
 import '../settings/canned_responses_screen.dart';
 import '../settings/device_management_screen.dart';
+import '../settings/translation_settings_screen.dart';
 import '../nodes/nodes_screen.dart';
 import '../navigation/main_shell.dart';
 import 'widgets/message_context_menu.dart';
 import 'widgets/tapback_widget.dart';
 import '../../core/widgets/loading_indicator.dart';
+import '../../models/subscription_models.dart';
+import '../../providers/subscription_providers.dart';
+import '../../providers/translation_providers.dart';
+import '../../core/widgets/premium_feature_gate.dart';
+import '../../services/translation/translation_models.dart';
 
 /// Conversation type enum
 enum ConversationType { channel, directMessage }
@@ -1046,16 +1053,29 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       // Check mounted after await before updating state
       if (!mounted) return;
 
-      // Update status to sent with packet ID and sentAt for DM timeout tracking
-      final sentUpdate = pendingMessage.copyWith(
-        status: MessageStatus.sent,
-        packetId: packetId,
+      // Read current state — ACK may have arrived during the async send,
+      // in which case the message is already delivered.  Build the update
+      // from the *current* message, not the stale pendingMessage, so we
+      // never overwrite delivered status.
+      final currentMessages = ref.read(messagesProvider);
+      final currentMsg = currentMessages.firstWhereOrNull(
+        (m) => m.id == messageId,
       );
+      if (currentMsg == null || currentMsg.status == MessageStatus.delivered) {
+        _trackMessageSentForReview();
+        return;
+      }
+
+      // Update status to sent with packet ID and sentAt for DM timeout tracking
       messagesNotifier.updateMessage(
         messageId,
-        widget.type == ConversationType.directMessage
-            ? sentUpdate.copyWith(sentAt: DateTime.now())
-            : sentUpdate,
+        currentMsg.copyWith(
+          status: MessageStatus.sent,
+          packetId: packetId,
+          sentAt: widget.type == ConversationType.directMessage
+              ? DateTime.now()
+              : null,
+        ),
       );
 
       // Track message sent for review prompt
@@ -1681,6 +1701,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                                 widget.type == ConversationType.channel &&
                                 !isFromMe,
                             isEncrypted: isEncrypted,
+                            isDm: widget.type == ConversationType.directMessage,
                             isQueued: queuedMessageIds.contains(message.id),
                             isHighlighted: _highlightedMessageId == message.id,
                             channelIndex:
@@ -1851,7 +1872,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   }
 }
 
-class _MessageBubble extends StatelessWidget {
+class _MessageBubble extends ConsumerWidget {
   final Message message;
   final List<Message> allMessages;
   final bool isFromMe;
@@ -1872,6 +1893,7 @@ class _MessageBubble extends StatelessWidget {
   final VoidCallback? onSenderTap;
   final VoidCallback? onQuoteTap;
   final bool isHighlighted;
+  final bool isDm;
 
   const _MessageBubble({
     required this.message,
@@ -1883,6 +1905,7 @@ class _MessageBubble extends StatelessWidget {
     this.showSender = true,
     this.isEncrypted = true,
     this.isQueued = false,
+    this.isDm = false,
     this.channelIndex,
     this.onReply,
     this.onRetry,
@@ -2083,7 +2106,7 @@ class _MessageBubble extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final timeFormat = AppTimeFormat.timeOnly(context);
     final isFailed = message.isFailed;
     final isUnconfirmed = message.isUnconfirmed;
@@ -2091,6 +2114,27 @@ class _MessageBubble extends StatelessWidget {
     final isPending = message.isPending;
     final isDelivered = message.status == MessageStatus.delivered;
     final sourceBadge = _buildSourceBadge(context);
+
+    // Translation state for this message
+    final translationState = ref.watch(messageTranslationProvider(message.id));
+
+    // Restore cached translation on app restart for settled messages only.
+    // Skip pending/sending messages — they haven't been translated yet and
+    // the dedupe cache hit during build would cause state mutation that
+    // interferes with message rendering.
+    final isSettled = !isPending && !isRetrying && !isUnconfirmed;
+    if (translationState == null &&
+        message.text.trim().isNotEmpty &&
+        isSettled) {
+      ref
+          .read(messageTranslationsProvider.notifier)
+          .restoreFromCache(messageId: message.id, text: message.text);
+    }
+
+    // Determine if translate action should be available:
+    // - has meaningful text content
+    // - is not an emoji-only message (tapback)
+    final isTranslatable = message.text.trim().isNotEmpty && !message.isEmoji;
 
     if (isFromMe) {
       return AnimatedContainer(
@@ -2122,7 +2166,7 @@ class _MessageBubble extends StatelessWidget {
               children: [
                 Flexible(
                   child: GestureDetector(
-                    onLongPress: () => _showContextMenu(context),
+                    onLongPress: () => _showContextMenu(context, ref),
                     child: Container(
                       margin: const EdgeInsets.only(left: 64),
                       padding: const EdgeInsets.symmetric(
@@ -2151,6 +2195,14 @@ class _MessageBubble extends StatelessWidget {
                             style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(color: Colors.white),
                           ),
+                          // Inline translation
+                          if (isTranslatable)
+                            _buildTranslationSection(
+                              context,
+                              translationState,
+                              sentByMe: true,
+                              ref: ref,
+                            ),
                           const SizedBox(height: AppTheme.spacing2),
                           Row(
                             mainAxisSize: MainAxisSize.min,
@@ -2374,7 +2426,7 @@ class _MessageBubble extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 GestureDetector(
-                  onLongPress: () => _showContextMenu(context),
+                  onLongPress: () => _showContextMenu(context, ref),
                   child: Container(
                     margin: const EdgeInsets.only(right: 64),
                     padding: const EdgeInsets.symmetric(
@@ -2413,6 +2465,14 @@ class _MessageBubble extends StatelessWidget {
                             color: context.textPrimary,
                           ),
                         ),
+                        // Inline translation
+                        if (isTranslatable)
+                          _buildTranslationSection(
+                            context,
+                            translationState,
+                            sentByMe: false,
+                            ref: ref,
+                          ),
                         const SizedBox(height: AppTheme.spacing2),
                         Row(
                           mainAxisSize: MainAxisSize.min,
@@ -2450,7 +2510,7 @@ class _MessageBubble extends StatelessWidget {
     );
   }
 
-  void _showContextMenu(BuildContext context) {
+  void _showContextMenu(BuildContext context, WidgetRef ref) {
     showMessageContextMenu(
       context,
       message: message,
@@ -2462,7 +2522,228 @@ class _MessageBubble extends StatelessWidget {
       onResend: onResend,
       onAutoRetry: onAutoRetry,
       onStopRetry: onStopRetry,
+      onTranslate: _isTranslatable(message, ref)
+          ? () => _handleTranslate(context, ref)
+          : null,
     );
+  }
+
+  bool _isTranslatable(Message msg, WidgetRef ref) {
+    if (msg.text.trim().isEmpty || msg.isEmoji) return false;
+    // Hide "Translate" if this message already has a successful translation
+    final translationState = ref.read(messageTranslationProvider(msg.id));
+    if (translationState?.result != null) return false;
+    return true;
+  }
+
+  Future<void> _handleTranslate(BuildContext context, WidgetRef ref) async {
+    // Await the subscription service directly — it's a FutureProvider that
+    // resolves once RevenueCat initialization completes.  This is the source
+    // of truth; purchaseStateProvider is just a reactive mirror that may not
+    // have received _init()'s update yet.
+    final service = await ref.read(subscriptionServiceProvider.future);
+    if (!context.mounted) return;
+    final hasFeature = service.currentState.hasFeature(
+      PremiumFeature.translation,
+    );
+    if (!hasFeature) {
+      checkPremiumOrShowUpsell(
+        context: context,
+        ref: ref,
+        feature: PremiumFeature.translation,
+      );
+      return;
+    }
+
+    ref
+        .read(messageTranslationsProvider.notifier)
+        .translate(messageId: message.id, text: message.text, isDm: isDm);
+  }
+
+  Widget _buildTranslationSection(
+    BuildContext context,
+    MessageTranslationState? state, {
+    required bool sentByMe,
+    required WidgetRef ref,
+  }) {
+    if (state == null) return const SizedBox.shrink();
+
+    if (state.isLoading) {
+      return Padding(
+        padding: const EdgeInsets.only(top: AppTheme.spacing4),
+        child: _TranslationShimmerLoading(
+          label: context.l10n.translateLoading,
+          sentByMe: sentByMe,
+        ),
+      );
+    }
+
+    if (state.error != null) {
+      final String errorMessage;
+      // Errors fixable via settings (not retryable)
+      final bool isSettingsFixable;
+      switch (state.error!.type) {
+        case TranslationErrorType.offline:
+          errorMessage = context.l10n.translateRequiresInternet;
+          isSettingsFixable = false;
+        case TranslationErrorType.rateLimited:
+          errorMessage = context.l10n.translateRateLimited;
+          isSettingsFixable = false;
+        case TranslationErrorType.unsupportedLanguage:
+          errorMessage = context.l10n.translateUnsupportedLanguage;
+          isSettingsFixable = false;
+        case TranslationErrorType.quotaExhausted:
+          errorMessage = context.l10n.translateQuotaExhausted;
+          isSettingsFixable = true;
+        case TranslationErrorType.privacyBlocked:
+          errorMessage = context.l10n.translatePrivacyBlocked;
+          isSettingsFixable = true;
+        case TranslationErrorType.providerDisabled:
+          errorMessage = context.l10n.translateProviderDisabled;
+          isSettingsFixable = true;
+        case TranslationErrorType.byoKeyMissing:
+          errorMessage = context.l10n.translateByoKeyMissing;
+          isSettingsFixable = true;
+        case TranslationErrorType.contentIneligible:
+          errorMessage = context.l10n.translateContentIneligible;
+          isSettingsFixable = false;
+        case TranslationErrorType.authenticationRequired:
+          errorMessage = context.l10n.translateAuthRequired;
+          isSettingsFixable = true;
+        case TranslationErrorType.emptyInput:
+        case TranslationErrorType.apiError:
+        case TranslationErrorType.configurationError:
+          errorMessage = context.l10n.translateFailed;
+          isSettingsFixable = false;
+      }
+
+      return Padding(
+        padding: const EdgeInsets.only(top: AppTheme.spacing4),
+        child: GestureDetector(
+          onTap: isSettingsFixable
+              ? () async {
+                  HapticFeedback.selectionClick();
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const TranslationSettingsScreen(),
+                    ),
+                  );
+                  if (!context.mounted) return;
+                  ref
+                      .read(messageTranslationsProvider.notifier)
+                      .retry(
+                        messageId: message.id,
+                        text: message.text,
+                        isDm: isDm,
+                      );
+                }
+              : () => ref
+                    .read(messageTranslationsProvider.notifier)
+                    .retry(
+                      messageId: message.id,
+                      text: message.text,
+                      isDm: isDm,
+                    ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.error_outline,
+                size: 12,
+                color: sentByMe
+                    ? Colors.white.withValues(alpha: 0.7)
+                    : AppTheme.errorRed,
+              ),
+              const SizedBox(width: AppTheme.spacing4),
+              Flexible(
+                child: Text(
+                  errorMessage,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: sentByMe
+                        ? Colors.white.withValues(alpha: 0.7)
+                        : AppTheme.errorRed,
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing4),
+              Text(
+                isSettingsFixable
+                    ? context.l10n.translationSettingsQuotaOpenSettings
+                    : context.l10n.translateRetry,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: sentByMe
+                      ? Colors.white.withValues(alpha: 0.9)
+                      : context.accentColor,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (state.result != null) {
+      final result = state.result!;
+      final sourceLabel = result.detectedSourceLanguage != null
+          ? context.l10n.translateFromLanguage(result.detectedSourceLanguage!)
+          : context.l10n.translateLabel;
+
+      return Padding(
+        padding: const EdgeInsets.only(top: AppTheme.spacing6),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: double.infinity,
+              height: 1,
+              color: sentByMe
+                  ? Colors.white.withValues(alpha: 0.15)
+                  : context.textTertiary.withValues(alpha: 0.15),
+            ),
+            const SizedBox(height: AppTheme.spacing6),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.translate,
+                  size: 11,
+                  color: sentByMe
+                      ? Colors.white.withValues(alpha: 0.6)
+                      : context.textTertiary,
+                ),
+                const SizedBox(width: AppTheme.spacing4),
+                Text(
+                  sourceLabel,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: sentByMe
+                        ? Colors.white.withValues(alpha: 0.6)
+                        : context.textTertiary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppTheme.spacing2),
+            Text(
+              result.translatedText,
+              style: TextStyle(
+                fontSize: 14,
+                color: sentByMe
+                    ? Colors.white.withValues(alpha: 0.85)
+                    : context.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return const SizedBox.shrink();
   }
 }
 
@@ -2735,6 +3016,114 @@ class MessagingPopupMenu extends ConsumerWidget {
           ),
         ]);
         return items;
+      },
+    );
+  }
+}
+
+/// Shimmer loading indicator for inline translation, matching the screenshot
+/// skeleton aesthetic.
+class _TranslationShimmerLoading extends StatefulWidget {
+  const _TranslationShimmerLoading({
+    required this.label,
+    required this.sentByMe,
+  });
+
+  final String label;
+  final bool sentByMe;
+
+  @override
+  State<_TranslationShimmerLoading> createState() =>
+      _TranslationShimmerLoadingState();
+}
+
+class _TranslationShimmerLoadingState extends State<_TranslationShimmerLoading>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat();
+    _animation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final textColor = widget.sentByMe
+        ? Colors.white.withValues(alpha: 0.6)
+        : context.textTertiary;
+    final iconColor = widget.sentByMe
+        ? Colors.white.withValues(alpha: 0.5)
+        : context.textTertiary.withValues(alpha: 0.7);
+    final pillColor = widget.sentByMe
+        ? Colors.white.withValues(alpha: 0.08)
+        : context.textTertiary.withValues(alpha: 0.06);
+
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        final shimmerOpacity = widget.sentByMe
+            ? 0.06 + (_animation.value * 0.12)
+            : 0.03 + (_animation.value * 0.08);
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(AppTheme.radius8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppTheme.spacing8,
+              vertical: AppTheme.spacing4,
+            ),
+            decoration: BoxDecoration(
+              color: pillColor,
+              borderRadius: BorderRadius.circular(AppTheme.radius8),
+            ),
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment(-1.0 + (_animation.value * 3), -0.3),
+                        end: Alignment(-0.5 + (_animation.value * 3), 0.3),
+                        colors: [
+                          Colors.transparent,
+                          Colors.white.withValues(alpha: shimmerOpacity),
+                          Colors.transparent,
+                        ],
+                        stops: const [0.0, 0.5, 1.0],
+                      ),
+                    ),
+                  ),
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.translate, size: 13, color: iconColor),
+                    const SizedBox(width: AppTheme.spacing6),
+                    Text(
+                      widget.label,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                        color: textColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
       },
     );
   }

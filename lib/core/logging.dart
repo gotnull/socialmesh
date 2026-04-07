@@ -394,7 +394,10 @@ class AppLogging {
   }
 
   static void app(String message) {
-    if (appLoggingEnabled) debugPrint('App: $message');
+    if (appLoggingEnabled) {
+      debugPrint('App: $message');
+      _appLogSink?.call(1, 'app', message); // lint-allow: hardcoded-string
+    }
   }
 
   static void subscriptions(String message) {

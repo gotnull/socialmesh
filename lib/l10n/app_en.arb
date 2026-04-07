@@ -11358,6 +11358,10 @@
     "@navigationIftttIntegration": {
         "description": "Label for the IFTTT Integration premium drawer item."
     },
+    "navigationTranslationPack": "Translation Pack",
+    "@navigationTranslationPack": {
+        "description": "Label for the Translation Pack premium drawer item."
+    },
     "navigationMap": "Map",
     "@navigationMap": {
         "description": "Label for the Map bottom nav tab."
@@ -19205,6 +19209,14 @@
     "settingsSearchIftttPackTitle": "IFTTT Pack",
     "@settingsSearchIftttPackTitle": {
         "description": "Fallback title for the IFTTT pack search item."
+    },
+    "settingsSearchTranslationPackTitle": "Translation Pack",
+    "@settingsSearchTranslationPackTitle": {
+        "description": "Fallback title for the Translation pack search item."
+    },
+    "settingsSearchTranslationPackSubtitle": "One-tap message translation",
+    "@settingsSearchTranslationPackSubtitle": {
+        "description": "Subtitle for the Translation pack search item."
     },
     "settingsSearchLikesSubtitle": "Push notifications for post likes",
     "@settingsSearchLikesSubtitle": {
@@ -29575,6 +29587,10 @@
     "@subscriptionFallbackIfttt": {
         "description": "Fallback name for IFTTT subscription product."
     },
+    "subscriptionFallbackTranslationPack": "Translation Pack",
+    "@subscriptionFallbackTranslationPack": {
+        "description": "Fallback name for translation pack subscription product."
+    },
     "geofenceLocating": "Locating...",
     "@geofenceLocating": {
         "description": "UI text: geofence locating"
@@ -29915,6 +29931,22 @@
     "subscriptionAppIntegrations": "700+ app integrations",
     "@subscriptionAppIntegrations": {
         "description": "UI text: subscription app integrations"
+    },
+    "subscriptionTranslateMessages": "One-tap message translation",
+    "@subscriptionTranslateMessages": {
+        "description": "UI text: subscription translate messages feature description"
+    },
+    "subscriptionNewAddon": "New Add-on",
+    "@subscriptionNewAddon": {
+        "description": "Section label for new standalone add-on on subscription screen"
+    },
+    "subscriptionFeaturedTranslationSubtitle": "On-demand translation with smart caching, privacy controls, and BYO provider support",
+    "@subscriptionFeaturedTranslationSubtitle": {
+        "description": "Subtitle for the featured Translation Pack card on subscription screen"
+    },
+    "subscriptionGetTranslation": "Get",
+    "@subscriptionGetTranslation": {
+        "description": "CTA button text for purchasing the Translation Pack"
     },
     "subscriptionBestValue": "Best value - all features",
     "@subscriptionBestValue": {
@@ -39643,6 +39675,18 @@
     "@whatsNewTakGatewayDescription": {
         "description": "What's new description for TAK Gateway feature"
     },
+    "whatsNewVersion1270Subtitle": "Version 1.27.0",
+    "@whatsNewVersion1270Subtitle": {
+        "description": "What's new subtitle for version 1.27.0"
+    },
+    "whatsNewTranslationPackTitle": "Translation Pack",
+    "@whatsNewTranslationPackTitle": {
+        "description": "What's new feature title: Translation Pack"
+    },
+    "whatsNewTranslationPackDescription": "Translate any mesh message on demand with smart caching and privacy controls. Includes a managed translation allowance, or bring your own OpenAI API key for extended use.\n\nLong-press any message and tap Translate to see the result inline — with smart caching so repeated translations are instant. Now included in the Complete Pack.",
+    "@whatsNewTranslationPackDescription": {
+        "description": "What's new description for Translation Pack feature"
+    },
     "notificationNewNodeTitle": "New Node Discovered",
     "@notificationNewNodeTitle": {
         "description": "Notification title for new node discovery"
@@ -44033,5 +44077,296 @@
     "meshIncidentLocationCoarse": "Approx. location",
     "@meshIncidentLocationCoarse": {
         "description": "Label indicating coarse location data"
+    },
+
+    "translateAction": "Translate",
+    "@translateAction": {
+        "description": "Action label to translate a message"
+    },
+    "translateLabel": "Translated",
+    "@translateLabel": {
+        "description": "Label shown above translated text when source language is unknown"
+    },
+    "translateLoading": "Translating…",
+    "@translateLoading": {
+        "description": "Loading label while translation is in progress"
+    },
+    "translateAuthRequired": "Sign in or add an API key to translate",
+    "@translateAuthRequired": {
+        "description": "Error message when translation fails because the user is not signed in and has no BYO API key configured"
+    },
+    "translateFailed": "Translation failed",
+    "@translateFailed": {
+        "description": "Error message when translation fails"
+    },
+    "translateRateLimited": "Too many translations — try again shortly",
+    "@translateRateLimited": {
+        "description": "Error message when translation rate limit is exceeded"
+    },
+    "translateUnsupportedLanguage": "Language not supported for translation",
+    "@translateUnsupportedLanguage": {
+        "description": "Error message when the target or source language is not supported"
+    },
+    "translateRetry": "Retry",
+    "@translateRetry": {
+        "description": "Retry action label for failed translation"
+    },
+    "translateRequiresInternet": "Translation requires internet",
+    "@translateRequiresInternet": {
+        "description": "Message shown when translation is unavailable offline"
+    },
+    "translateFromLanguage": "Translated from {language}",
+    "@translateFromLanguage": {
+        "description": "Label showing the detected source language of the translation",
+        "placeholders": {
+            "language": {
+                "type": "String",
+                "example": "French"
+            }
+        }
+    },
+
+    "premiumPreviewTranslation": "Preview Mode — Upgrade to translate messages",
+    "@premiumPreviewTranslation": {
+        "description": "Banner text for translation premium preview mode"
+    },
+    "premiumHeadlineTranslation": "Translate Messages",
+    "@premiumHeadlineTranslation": {
+        "description": "Headline for translation pack premium sheet"
+    },
+    "premiumDescTranslation": "Unlock on-demand message translation with smart caching and privacy controls — includes managed allowance, or bring your own API key",
+    "@premiumDescTranslation": {
+        "description": "Description for translation pack premium sheet"
+    },
+    "premiumSubtitleTranslation": "Break language barriers on your mesh network",
+    "@premiumSubtitleTranslation": {
+        "description": "Subtitle for translation pack upsell sheet"
+    },
+    "premiumBenefitInstantTranslation": "One-Tap Translation",
+    "@premiumBenefitInstantTranslation": {
+        "description": "Translation pack benefit title - instant translation"
+    },
+    "premiumBenefitInstantTranslationDesc": "Translate any message in channels or DMs with a single tap",
+    "@premiumBenefitInstantTranslationDesc": {
+        "description": "Translation pack benefit description - instant translation"
+    },
+    "premiumBenefitAutoDetect": "Auto-Detect Language",
+    "@premiumBenefitAutoDetect": {
+        "description": "Translation pack benefit title - auto detect"
+    },
+    "premiumBenefitAutoDetectDesc": "Automatically detects the source language — no manual selection needed",
+    "@premiumBenefitAutoDetectDesc": {
+        "description": "Translation pack benefit description - auto detect"
+    },
+    "premiumBenefitSmartCache": "Smart Caching",
+    "@premiumBenefitSmartCache": {
+        "description": "Translation pack benefit title - smart cache"
+    },
+    "premiumBenefitSmartCacheDesc": "Translations are cached locally so you only pay for each message once",
+    "@premiumBenefitSmartCacheDesc": {
+        "description": "Translation pack benefit description - smart cache"
+    },
+
+    "translateQuotaExhausted": "Managed translation allowance used — switch to your own OpenAI API key in settings",
+    "@translateQuotaExhausted": {
+        "description": "Error message when managed translation quota is exhausted"
+    },
+    "translatePrivacyBlocked": "Strict privacy mode blocks managed OpenAI translation",
+    "@translatePrivacyBlocked": {
+        "description": "Error message when strict privacy blocks managed provider"
+    },
+    "translateProviderDisabled": "Translation provider is disabled",
+    "@translateProviderDisabled": {
+        "description": "Error message when translation provider is disabled"
+    },
+    "translateByoKeyMissing": "BYO API key required — configure in settings",
+    "@translateByoKeyMissing": {
+        "description": "Error message when BYO provider selected but no key set"
+    },
+    "translateContentIneligible": "This content cannot be translated",
+    "@translateContentIneligible": {
+        "description": "Error message when content is not eligible for translation"
+    },
+
+    "subscriptionFeaturedTranslationSubtitleRefactored": "On-demand translation with smart caching, privacy controls, and BYO provider support",
+    "@subscriptionFeaturedTranslationSubtitleRefactored": {
+        "description": "Updated subtitle for the featured Translation Pack card — no longer implies unlimited"
+    },
+    "subscriptionTranslationWithAllowance": "On-demand translation with managed allowance",
+    "@subscriptionTranslationWithAllowance": {
+        "description": "Feature line for translation in Complete Pack bundle list"
+    },
+    "subscriptionCompletePackSubtitleWithTranslation": "Every feature, one price — including translation",
+    "@subscriptionCompletePackSubtitleWithTranslation": {
+        "description": "Updated Complete Pack subtitle now that translation is included"
+    },
+
+    "translationSettingsTitle": "Translation",
+    "@translationSettingsTitle": {
+        "description": "Title for the translation settings screen"
+    },
+    "translationSettingsProviderModeLabel": "Provider Mode",
+    "@translationSettingsProviderModeLabel": {
+        "description": "Label for translation provider mode selector"
+    },
+    "translationSettingsProviderManaged": "Managed",
+    "@translationSettingsProviderManaged": {
+        "description": "Option label for Socialmesh-managed provider mode"
+    },
+    "translationSettingsProviderManagedDesc": "Managed OpenAI translation — included allowance",
+    "@translationSettingsProviderManagedDesc": {
+        "description": "Description for managed provider mode"
+    },
+    "translationSettingsProviderByo": "Bring Your Own Key",
+    "@translationSettingsProviderByo": {
+        "description": "Option label for BYO provider mode"
+    },
+    "translationSettingsProviderByoDesc": "Use your own OpenAI API key — unlimited",
+    "@translationSettingsProviderByoDesc": {
+        "description": "Description for BYO provider mode"
+    },
+    "translationSettingsProviderDisabled": "Disabled",
+    "@translationSettingsProviderDisabled": {
+        "description": "Option label for disabled provider mode"
+    },
+    "translationSettingsProviderDisabledDesc": "Translation is turned off",
+    "@translationSettingsProviderDisabledDesc": {
+        "description": "Description for disabled provider mode"
+    },
+    "translationSettingsPrivacyModeLabel": "Privacy Mode",
+    "@translationSettingsPrivacyModeLabel": {
+        "description": "Label for translation privacy mode selector"
+    },
+    "translationSettingsPrivacyStandard": "Standard",
+    "@translationSettingsPrivacyStandard": {
+        "description": "Option label for standard privacy mode"
+    },
+    "translationSettingsPrivacyStandardDesc": "Cache translations locally for fast reuse",
+    "@translationSettingsPrivacyStandardDesc": {
+        "description": "Description for standard privacy mode"
+    },
+    "translationSettingsPrivacyPrivate": "Private",
+    "@translationSettingsPrivacyPrivate": {
+        "description": "Option label for private privacy mode"
+    },
+    "translationSettingsPrivacyPrivateDesc": "Cache channels only — DM translations are not stored",
+    "@translationSettingsPrivacyPrivateDesc": {
+        "description": "Description for private privacy mode"
+    },
+    "translationSettingsPrivacyStrict": "Strict",
+    "@translationSettingsPrivacyStrict": {
+        "description": "Option label for strict privacy mode"
+    },
+    "translationSettingsPrivacyStrictDesc": "BYO provider only — no caching, no managed server",
+    "@translationSettingsPrivacyStrictDesc": {
+        "description": "Description for strict privacy mode"
+    },
+    "translationSettingsByoKeyLabel": "API Key",
+    "@translationSettingsByoKeyLabel": {
+        "description": "Label for the BYO API key entry field"
+    },
+    "translationSettingsByoKeyHint": "Enter your OpenAI API key",
+    "@translationSettingsByoKeyHint": {
+        "description": "Hint text for BYO API key text field"
+    },
+    "translationSettingsByoKeySaved": "API key saved securely",
+    "@translationSettingsByoKeySaved": {
+        "description": "Confirmation message after saving BYO key"
+    },
+    "translationSettingsByoKeyRemoved": "API key removed",
+    "@translationSettingsByoKeyRemoved": {
+        "description": "Confirmation message after removing BYO key"
+    },
+    "translationSettingsByoKeyStored": "Key stored",
+    "@translationSettingsByoKeyStored": {
+        "description": "Indicator that a BYO key is currently stored"
+    },
+    "translationSettingsByoKeyNone": "No key set",
+    "@translationSettingsByoKeyNone": {
+        "description": "Indicator that no BYO key is currently stored"
+    },
+    "translationSettingsByoKeyRemove": "Remove Key",
+    "@translationSettingsByoKeyRemove": {
+        "description": "Button label to remove stored BYO key"
+    },
+    "translationSettingsByoKeyRemoveConfirmTitle": "Remove API Key?",
+    "@translationSettingsByoKeyRemoveConfirmTitle": {
+        "description": "Confirmation sheet title when removing BYO OpenAI API key"
+    },
+    "translationSettingsByoKeyRemoveConfirmMessage": "Your OpenAI API key will be permanently deleted from this device. You can add a new key at any time.",
+    "@translationSettingsByoKeyRemoveConfirmMessage": {
+        "description": "Confirmation sheet message when removing BYO OpenAI API key"
+    },
+    "translationSettingsQuotaLabel": "Managed Allowance",
+    "@translationSettingsQuotaLabel": {
+        "description": "Label for translation quota status display"
+    },
+    "translationSettingsQuotaRemaining": "{used} of {limit} characters used",
+    "@translationSettingsQuotaRemaining": {
+        "description": "Character quota status text showing used vs limit",
+        "placeholders": {
+            "used": {
+                "type": "int",
+                "example": "12000"
+            },
+            "limit": {
+                "type": "int",
+                "example": "500000"
+            }
+        }
+    },
+    "translationSettingsQuotaResetsAt": "Resets {date}",
+    "@translationSettingsQuotaResetsAt": {
+        "description": "Shows when the quota period resets",
+        "placeholders": {
+            "date": {
+                "type": "String",
+                "example": "15 Jul 2025"
+            }
+        }
+    },
+    "translationSettingsClearCache": "Clear Translation Cache",
+    "@translationSettingsClearCache": {
+        "description": "Button to clear all cached translations"
+    },
+    "translationSettingsCacheCleared": "Translation cache cleared",
+    "@translationSettingsCacheCleared": {
+        "description": "Confirmation message after clearing cache"
+    },
+    "translationSettingsSearchTitle": "Translation Settings",
+    "@translationSettingsSearchTitle": {
+        "description": "Title for translation settings in settings search"
+    },
+    "translationSettingsSearchSubtitle": "Provider mode, privacy, API key, cache",
+    "@translationSettingsSearchSubtitle": {
+        "description": "Subtitle for translation settings in settings search"
+    },
+    "translationSettingsClearCacheConfirm": "Clear all cached translations? This cannot be undone.",
+    "@translationSettingsClearCacheConfirm": {
+        "description": "Confirm dialog message for clearing translation cache"
+    },
+    "translationSettingsClearCacheConfirmAction": "Clear Cache",
+    "@translationSettingsClearCacheConfirmAction": {
+        "description": "Confirm button text for clearing translation cache"
+    },
+    "translationSettingsByoTestConnection": "Test OpenAI Connection",
+    "@translationSettingsByoTestConnection": {
+        "description": "Button to test BYO API key by making a lightweight translation call"
+    },
+    "translationSettingsByoTestSuccess": "OpenAI API key is valid",
+    "@translationSettingsByoTestSuccess": {
+        "description": "Success message when BYO key test passes"
+    },
+    "translationSettingsByoTestFailed": "Invalid OpenAI API key",
+    "@translationSettingsByoTestFailed": {
+        "description": "Error message when BYO key test fails"
+    },
+    "translationSettingsByoTestTesting": "Testing…",
+    "@translationSettingsByoTestTesting": {
+        "description": "Loading text during BYO key validation"
+    },
+    "translationSettingsQuotaOpenSettings": "Open Settings",
+    "@translationSettingsQuotaOpenSettings": {
+        "description": "Button text to open translation settings to configure BYO key"
     }
 }

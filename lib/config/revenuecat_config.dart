@@ -60,6 +60,10 @@ class RevenueCatConfig {
   static String get iftttPackProductId =>
       dotenv.env['IFTTT_PACK_PRODUCT_ID'] ?? 'ifttt_pack';
 
+  /// Translation pack non-consumable product ID
+  static String get translationPackProductId =>
+      dotenv.env['TRANSLATION_PACK_PRODUCT_ID'] ?? 'translation_pack';
+
   /// Complete Pack bundle - all features at a discount
   static String get completePackProductId =>
       dotenv.env['COMPLETE_PACK_PRODUCT_ID'] ?? 'complete_pack';
@@ -71,6 +75,7 @@ class RevenueCatConfig {
     widgetPackProductId,
     automationsPackProductId,
     iftttPackProductId,
+    translationPackProductId,
     completePackProductId,
   ];
 

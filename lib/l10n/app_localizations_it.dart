@@ -8502,6 +8502,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get navigationIftttIntegration => 'Integrazione IFTTT';
 
   @override
+  String get navigationTranslationPack => 'Translation Pack';
+
+  @override
   String get navigationMap => 'Mappa';
 
   @override
@@ -14112,6 +14115,13 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get settingsSearchIftttPackTitle => 'Pacchetto IFTTT';
+
+  @override
+  String get settingsSearchTranslationPackTitle => 'Translation Pack';
+
+  @override
+  String get settingsSearchTranslationPackSubtitle =>
+      'One-tap message translation';
 
   @override
   String get settingsSearchLikesSubtitle => 'Notifiche push per i like ai post';
@@ -21856,6 +21866,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get subscriptionFallbackIfttt => 'IFTTT';
 
   @override
+  String get subscriptionFallbackTranslationPack => 'Translation Pack';
+
+  @override
   String get geofenceLocating => 'Localizzazione...';
 
   @override
@@ -22122,6 +22135,19 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get subscriptionAppIntegrations => 'Oltre 700 integrazioni app';
+
+  @override
+  String get subscriptionTranslateMessages => 'One-tap message translation';
+
+  @override
+  String get subscriptionNewAddon => 'New Add-on';
+
+  @override
+  String get subscriptionFeaturedTranslationSubtitle =>
+      'On-demand translation with smart caching, privacy controls, and BYO provider support';
+
+  @override
+  String get subscriptionGetTranslation => 'Get';
 
   @override
   String get subscriptionBestValue => 'Miglior valore - tutte le funzionalità';
@@ -29872,6 +29898,16 @@ class AppLocalizationsIt extends AppLocalizations {
       'Collega la tua rete mesh all\'ecosistema Team Awareness Kit (TAK). Socialmesh ora si connette a un TAK Gateway via WebSocket e trasmette in tempo reale entità Cursor-on-Target sulla tua mappa.\\n\\nOgni entità è colorata per affiliazione standard e dotata di un\'icona specifica per dimensione. Filtra per affiliazione, cerca indicativi di chiamata, traccia entità con una pressione prolungata e tocca qualsiasi marcatore per i dettagli CoT completi. Trovalo nel menu laterale sotto Mesh.';
 
   @override
+  String get whatsNewVersion1270Subtitle => 'Version 1.27.0';
+
+  @override
+  String get whatsNewTranslationPackTitle => 'Translation Pack';
+
+  @override
+  String get whatsNewTranslationPackDescription =>
+      'Translate any mesh message on demand with smart caching and privacy controls. Includes a managed translation allowance, or bring your own OpenAI API key for extended use.\n\nLong-press any message and tap Translate to see the result inline — with smart caching so repeated translations are instant. Now included in the Complete Pack.';
+
+  @override
   String get notificationNewNodeTitle => 'Nuovo nodo scoperto';
 
   @override
@@ -33190,4 +33226,231 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get meshIncidentLocationCoarse => 'Approx. location';
+
+  @override
+  String get translateAction => 'Translate';
+
+  @override
+  String get translateLabel => 'Translated';
+
+  @override
+  String get translateLoading => 'Translating…';
+
+  @override
+  String get translateAuthRequired => 'Sign in or add an API key to translate';
+
+  @override
+  String get translateFailed => 'Translation failed';
+
+  @override
+  String get translateRateLimited =>
+      'Too many translations — try again shortly';
+
+  @override
+  String get translateUnsupportedLanguage =>
+      'Language not supported for translation';
+
+  @override
+  String get translateRetry => 'Retry';
+
+  @override
+  String get translateRequiresInternet => 'Translation requires internet';
+
+  @override
+  String translateFromLanguage(String language) {
+    return 'Translated from $language';
+  }
+
+  @override
+  String get premiumPreviewTranslation =>
+      'Preview Mode — Upgrade to translate messages';
+
+  @override
+  String get premiumHeadlineTranslation => 'Translate Messages';
+
+  @override
+  String get premiumDescTranslation =>
+      'Unlock on-demand message translation with smart caching and privacy controls — includes managed allowance, or bring your own API key';
+
+  @override
+  String get premiumSubtitleTranslation =>
+      'Break language barriers on your mesh network';
+
+  @override
+  String get premiumBenefitInstantTranslation => 'One-Tap Translation';
+
+  @override
+  String get premiumBenefitInstantTranslationDesc =>
+      'Translate any message in channels or DMs with a single tap';
+
+  @override
+  String get premiumBenefitAutoDetect => 'Auto-Detect Language';
+
+  @override
+  String get premiumBenefitAutoDetectDesc =>
+      'Automatically detects the source language — no manual selection needed';
+
+  @override
+  String get premiumBenefitSmartCache => 'Smart Caching';
+
+  @override
+  String get premiumBenefitSmartCacheDesc =>
+      'Translations are cached locally so you only pay for each message once';
+
+  @override
+  String get translateQuotaExhausted =>
+      'Managed translation allowance used — switch to your own OpenAI API key in settings';
+
+  @override
+  String get translatePrivacyBlocked =>
+      'Strict privacy mode blocks managed OpenAI translation';
+
+  @override
+  String get translateProviderDisabled => 'Translation provider is disabled';
+
+  @override
+  String get translateByoKeyMissing =>
+      'BYO API key required — configure in settings';
+
+  @override
+  String get translateContentIneligible => 'This content cannot be translated';
+
+  @override
+  String get subscriptionFeaturedTranslationSubtitleRefactored =>
+      'On-demand translation with smart caching, privacy controls, and BYO provider support';
+
+  @override
+  String get subscriptionTranslationWithAllowance =>
+      'On-demand translation with managed allowance';
+
+  @override
+  String get subscriptionCompletePackSubtitleWithTranslation =>
+      'Every feature, one price — including translation';
+
+  @override
+  String get translationSettingsTitle => 'Translation';
+
+  @override
+  String get translationSettingsProviderModeLabel => 'Provider Mode';
+
+  @override
+  String get translationSettingsProviderManaged => 'Managed';
+
+  @override
+  String get translationSettingsProviderManagedDesc =>
+      'Managed OpenAI translation — included allowance';
+
+  @override
+  String get translationSettingsProviderByo => 'Bring Your Own Key';
+
+  @override
+  String get translationSettingsProviderByoDesc =>
+      'Use your own OpenAI API key — unlimited';
+
+  @override
+  String get translationSettingsProviderDisabled => 'Disabled';
+
+  @override
+  String get translationSettingsProviderDisabledDesc =>
+      'Translation is turned off';
+
+  @override
+  String get translationSettingsPrivacyModeLabel => 'Privacy Mode';
+
+  @override
+  String get translationSettingsPrivacyStandard => 'Standard';
+
+  @override
+  String get translationSettingsPrivacyStandardDesc =>
+      'Cache translations locally for fast reuse';
+
+  @override
+  String get translationSettingsPrivacyPrivate => 'Private';
+
+  @override
+  String get translationSettingsPrivacyPrivateDesc =>
+      'Cache channels only — DM translations are not stored';
+
+  @override
+  String get translationSettingsPrivacyStrict => 'Strict';
+
+  @override
+  String get translationSettingsPrivacyStrictDesc =>
+      'BYO provider only — no caching, no managed server';
+
+  @override
+  String get translationSettingsByoKeyLabel => 'API Key';
+
+  @override
+  String get translationSettingsByoKeyHint => 'Enter your OpenAI API key';
+
+  @override
+  String get translationSettingsByoKeySaved => 'API key saved securely';
+
+  @override
+  String get translationSettingsByoKeyRemoved => 'API key removed';
+
+  @override
+  String get translationSettingsByoKeyStored => 'Key stored';
+
+  @override
+  String get translationSettingsByoKeyNone => 'No key set';
+
+  @override
+  String get translationSettingsByoKeyRemove => 'Remove Key';
+
+  @override
+  String get translationSettingsByoKeyRemoveConfirmTitle => 'Remove API Key?';
+
+  @override
+  String get translationSettingsByoKeyRemoveConfirmMessage =>
+      'Your OpenAI API key will be permanently deleted from this device. You can add a new key at any time.';
+
+  @override
+  String get translationSettingsQuotaLabel => 'Managed Allowance';
+
+  @override
+  String translationSettingsQuotaRemaining(int used, int limit) {
+    return '$used of $limit characters used';
+  }
+
+  @override
+  String translationSettingsQuotaResetsAt(String date) {
+    return 'Resets $date';
+  }
+
+  @override
+  String get translationSettingsClearCache => 'Clear Translation Cache';
+
+  @override
+  String get translationSettingsCacheCleared => 'Translation cache cleared';
+
+  @override
+  String get translationSettingsSearchTitle => 'Translation Settings';
+
+  @override
+  String get translationSettingsSearchSubtitle =>
+      'Provider mode, privacy, API key, cache';
+
+  @override
+  String get translationSettingsClearCacheConfirm =>
+      'Clear all cached translations? This cannot be undone.';
+
+  @override
+  String get translationSettingsClearCacheConfirmAction => 'Clear Cache';
+
+  @override
+  String get translationSettingsByoTestConnection => 'Test OpenAI Connection';
+
+  @override
+  String get translationSettingsByoTestSuccess => 'OpenAI API key is valid';
+
+  @override
+  String get translationSettingsByoTestFailed => 'Invalid OpenAI API key';
+
+  @override
+  String get translationSettingsByoTestTesting => 'Testing…';
+
+  @override
+  String get translationSettingsQuotaOpenSettings => 'Open Settings';
 }

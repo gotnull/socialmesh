@@ -105,6 +105,10 @@ class DrawerMenuTile extends StatelessWidget {
     final lockedColor = AccentColors.slate;
     const disabledAlpha = 0.35;
 
+    // When the NEW chip is visible, override locked styling so the item
+    // looks inviting rather than dimmed/locked.
+    final effectivelyLocked = isLocked && !showNewChip;
+
     return BouncyTap(
       onTap: onTap,
       enabled: !isDisabled,
@@ -116,13 +120,13 @@ class DrawerMenuTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected
               ? accentColor.withValues(alpha: 0.15)
-              : isLocked
+              : effectivelyLocked
               ? lockedColor.withValues(alpha: 0.05)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(AppTheme.radius16),
           border: isSelected
               ? Border.all(color: accentColor.withValues(alpha: 0.3))
-              : isLocked
+              : effectivelyLocked
               ? Border.all(color: lockedColor.withValues(alpha: 0.15))
               : null,
         ),
@@ -136,7 +140,7 @@ class DrawerMenuTile extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: isSelected
                       ? accentColor.withValues(alpha: 0.2)
-                      : isLocked
+                      : effectivelyLocked
                       ? lockedColor.withValues(alpha: 0.1)
                       : theme.colorScheme.surface,
                   borderRadius: BorderRadius.circular(AppTheme.radius12),
@@ -149,7 +153,7 @@ class DrawerMenuTile extends StatelessWidget {
                       size: 22,
                       color: isSelected
                           ? accentColor
-                          : isLocked
+                          : effectivelyLocked
                           ? lockedColor
                           : iconColor ??
                                 theme.colorScheme.onSurface.withValues(
@@ -228,7 +232,7 @@ class DrawerMenuTile extends StatelessWidget {
                           fontFamily: AppTheme.fontFamily,
                           color: isSelected
                               ? accentColor
-                              : isLocked
+                              : effectivelyLocked
                               ? theme.colorScheme.onSurface.withValues(
                                   alpha: 0.5,
                                 )
@@ -277,7 +281,8 @@ class DrawerMenuTile extends StatelessWidget {
                 ),
               ),
               // Show lock icon and PRO badge for locked premium features
-              if (isLocked) ...[
+              // Suppressed when NEW chip is visible to avoid squashing the label
+              if (isLocked && !showNewChip) ...[
                 const SizedBox(width: AppTheme.spacing8),
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -321,8 +326,9 @@ class DrawerMenuTile extends StatelessWidget {
                     ],
                   ),
                 ),
-              ] else if (showTryIt) ...[
+              ] else if (showTryIt && !showNewChip) ...[
                 // Show "TRY IT" badge when upsell is enabled but not owned
+                // Suppressed when NEW chip is visible to avoid badge clutter
                 const SizedBox(width: AppTheme.spacing8),
                 Container(
                   padding: const EdgeInsets.symmetric(

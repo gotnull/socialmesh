@@ -15,6 +15,7 @@ RINGTONE_PACK_PRODUCT_ID=ringtone_pack
 WIDGET_PACK_PRODUCT_ID=widget_pack
 AUTOMATIONS_PACK_PRODUCT_ID=automations_pack
 IFTTT_PACK_PRODUCT_ID=ifttt_pack
+TRANSLATION_PACK_PRODUCT_ID=translation_pack
 COMPLETE_PACK_PRODUCT_ID=complete_pack
 ''',
     );
@@ -30,12 +31,13 @@ COMPLETE_PACK_PRODUCT_ID=complete_pack
           PremiumFeature.homeWidgets,
           PremiumFeature.automations,
           PremiumFeature.iftttIntegration,
+          PremiumFeature.translation,
         ]),
       );
     });
 
-    test('count is 5', () {
-      expect(PremiumFeature.values.length, 5);
+    test('count is 6', () {
+      expect(PremiumFeature.values.length, 6);
     });
   });
 
@@ -112,12 +114,13 @@ COMPLETE_PACK_PRODUCT_ID=complete_pack
 
     test('allPurchases contains all purchases', () {
       final allIds = OneTimePurchases.allPurchases.map((p) => p.id).toSet();
-      expect(allIds.length, 5);
+      expect(allIds.length, 6);
       expect(allIds, contains('theme_pack'));
       expect(allIds, contains('ringtone_pack'));
       expect(allIds, contains('widget_pack'));
       expect(allIds, contains('automations_pack'));
       expect(allIds, contains('ifttt_pack'));
+      expect(allIds, contains('translation_pack'));
     });
 
     test('getByProductId returns correct purchase', () {

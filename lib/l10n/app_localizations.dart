@@ -15061,6 +15061,12 @@ abstract class AppLocalizations {
   /// **'IFTTT Integration'**
   String get navigationIftttIntegration;
 
+  /// Label for the Translation Pack premium drawer item.
+  ///
+  /// In en, this message translates to:
+  /// **'Translation Pack'**
+  String get navigationTranslationPack;
+
   /// Label for the Map bottom nav tab.
   ///
   /// In en, this message translates to:
@@ -24604,6 +24610,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'IFTTT Pack'**
   String get settingsSearchIftttPackTitle;
+
+  /// Fallback title for the Translation pack search item.
+  ///
+  /// In en, this message translates to:
+  /// **'Translation Pack'**
+  String get settingsSearchTranslationPackTitle;
+
+  /// Subtitle for the Translation pack search item.
+  ///
+  /// In en, this message translates to:
+  /// **'One-tap message translation'**
+  String get settingsSearchTranslationPackSubtitle;
 
   /// Subtitle for the Likes search item.
   ///
@@ -38233,6 +38251,12 @@ abstract class AppLocalizations {
   /// **'IFTTT'**
   String get subscriptionFallbackIfttt;
 
+  /// Fallback name for translation pack subscription product.
+  ///
+  /// In en, this message translates to:
+  /// **'Translation Pack'**
+  String get subscriptionFallbackTranslationPack;
+
   /// UI text: geofence locating
   ///
   /// In en, this message translates to:
@@ -38706,6 +38730,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'700+ app integrations'**
   String get subscriptionAppIntegrations;
+
+  /// UI text: subscription translate messages feature description
+  ///
+  /// In en, this message translates to:
+  /// **'One-tap message translation'**
+  String get subscriptionTranslateMessages;
+
+  /// Section label for new standalone add-on on subscription screen
+  ///
+  /// In en, this message translates to:
+  /// **'New Add-on'**
+  String get subscriptionNewAddon;
+
+  /// Subtitle for the featured Translation Pack card on subscription screen
+  ///
+  /// In en, this message translates to:
+  /// **'On-demand translation with smart caching, privacy controls, and BYO provider support'**
+  String get subscriptionFeaturedTranslationSubtitle;
+
+  /// CTA button text for purchasing the Translation Pack
+  ///
+  /// In en, this message translates to:
+  /// **'Get'**
+  String get subscriptionGetTranslation;
 
   /// UI text: subscription best value
   ///
@@ -52194,6 +52242,24 @@ abstract class AppLocalizations {
   /// **'Bridge your mesh into the Team Awareness Kit (TAK) ecosystem. Socialmesh now connects to a TAK Gateway via WebSocket and streams live Cursor-on-Target entities onto your map.\\n\\nEvery entity is colored by standard affiliation and given a dimension-specific icon. Filter by affiliation, search callsigns, track entities with a long-press, and tap any marker for full CoT details. Find it in the drawer menu under Mesh.'**
   String get whatsNewTakGatewayDescription;
 
+  /// What's new subtitle for version 1.27.0
+  ///
+  /// In en, this message translates to:
+  /// **'Version 1.27.0'**
+  String get whatsNewVersion1270Subtitle;
+
+  /// What's new feature title: Translation Pack
+  ///
+  /// In en, this message translates to:
+  /// **'Translation Pack'**
+  String get whatsNewTranslationPackTitle;
+
+  /// What's new description for Translation Pack feature
+  ///
+  /// In en, this message translates to:
+  /// **'Translate any mesh message on demand with smart caching and privacy controls. Includes a managed translation allowance, or bring your own OpenAI API key for extended use.\n\nLong-press any message and tap Translate to see the result inline — with smart caching so repeated translations are instant. Now included in the Complete Pack.'**
+  String get whatsNewTranslationPackDescription;
+
   /// Notification title for new node discovery
   ///
   /// In en, this message translates to:
@@ -57957,6 +58023,402 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Approx. location'**
   String get meshIncidentLocationCoarse;
+
+  /// Action label to translate a message
+  ///
+  /// In en, this message translates to:
+  /// **'Translate'**
+  String get translateAction;
+
+  /// Label shown above translated text when source language is unknown
+  ///
+  /// In en, this message translates to:
+  /// **'Translated'**
+  String get translateLabel;
+
+  /// Loading label while translation is in progress
+  ///
+  /// In en, this message translates to:
+  /// **'Translating…'**
+  String get translateLoading;
+
+  /// Error message when translation fails because the user is not signed in and has no BYO API key configured
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in or add an API key to translate'**
+  String get translateAuthRequired;
+
+  /// Error message when translation fails
+  ///
+  /// In en, this message translates to:
+  /// **'Translation failed'**
+  String get translateFailed;
+
+  /// Error message when translation rate limit is exceeded
+  ///
+  /// In en, this message translates to:
+  /// **'Too many translations — try again shortly'**
+  String get translateRateLimited;
+
+  /// Error message when the target or source language is not supported
+  ///
+  /// In en, this message translates to:
+  /// **'Language not supported for translation'**
+  String get translateUnsupportedLanguage;
+
+  /// Retry action label for failed translation
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get translateRetry;
+
+  /// Message shown when translation is unavailable offline
+  ///
+  /// In en, this message translates to:
+  /// **'Translation requires internet'**
+  String get translateRequiresInternet;
+
+  /// Label showing the detected source language of the translation
+  ///
+  /// In en, this message translates to:
+  /// **'Translated from {language}'**
+  String translateFromLanguage(String language);
+
+  /// Banner text for translation premium preview mode
+  ///
+  /// In en, this message translates to:
+  /// **'Preview Mode — Upgrade to translate messages'**
+  String get premiumPreviewTranslation;
+
+  /// Headline for translation pack premium sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Translate Messages'**
+  String get premiumHeadlineTranslation;
+
+  /// Description for translation pack premium sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock on-demand message translation with smart caching and privacy controls — includes managed allowance, or bring your own API key'**
+  String get premiumDescTranslation;
+
+  /// Subtitle for translation pack upsell sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Break language barriers on your mesh network'**
+  String get premiumSubtitleTranslation;
+
+  /// Translation pack benefit title - instant translation
+  ///
+  /// In en, this message translates to:
+  /// **'One-Tap Translation'**
+  String get premiumBenefitInstantTranslation;
+
+  /// Translation pack benefit description - instant translation
+  ///
+  /// In en, this message translates to:
+  /// **'Translate any message in channels or DMs with a single tap'**
+  String get premiumBenefitInstantTranslationDesc;
+
+  /// Translation pack benefit title - auto detect
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-Detect Language'**
+  String get premiumBenefitAutoDetect;
+
+  /// Translation pack benefit description - auto detect
+  ///
+  /// In en, this message translates to:
+  /// **'Automatically detects the source language — no manual selection needed'**
+  String get premiumBenefitAutoDetectDesc;
+
+  /// Translation pack benefit title - smart cache
+  ///
+  /// In en, this message translates to:
+  /// **'Smart Caching'**
+  String get premiumBenefitSmartCache;
+
+  /// Translation pack benefit description - smart cache
+  ///
+  /// In en, this message translates to:
+  /// **'Translations are cached locally so you only pay for each message once'**
+  String get premiumBenefitSmartCacheDesc;
+
+  /// Error message when managed translation quota is exhausted
+  ///
+  /// In en, this message translates to:
+  /// **'Managed translation allowance used — switch to your own OpenAI API key in settings'**
+  String get translateQuotaExhausted;
+
+  /// Error message when strict privacy blocks managed provider
+  ///
+  /// In en, this message translates to:
+  /// **'Strict privacy mode blocks managed OpenAI translation'**
+  String get translatePrivacyBlocked;
+
+  /// Error message when translation provider is disabled
+  ///
+  /// In en, this message translates to:
+  /// **'Translation provider is disabled'**
+  String get translateProviderDisabled;
+
+  /// Error message when BYO provider selected but no key set
+  ///
+  /// In en, this message translates to:
+  /// **'BYO API key required — configure in settings'**
+  String get translateByoKeyMissing;
+
+  /// Error message when content is not eligible for translation
+  ///
+  /// In en, this message translates to:
+  /// **'This content cannot be translated'**
+  String get translateContentIneligible;
+
+  /// Updated subtitle for the featured Translation Pack card — no longer implies unlimited
+  ///
+  /// In en, this message translates to:
+  /// **'On-demand translation with smart caching, privacy controls, and BYO provider support'**
+  String get subscriptionFeaturedTranslationSubtitleRefactored;
+
+  /// Feature line for translation in Complete Pack bundle list
+  ///
+  /// In en, this message translates to:
+  /// **'On-demand translation with managed allowance'**
+  String get subscriptionTranslationWithAllowance;
+
+  /// Updated Complete Pack subtitle now that translation is included
+  ///
+  /// In en, this message translates to:
+  /// **'Every feature, one price — including translation'**
+  String get subscriptionCompletePackSubtitleWithTranslation;
+
+  /// Title for the translation settings screen
+  ///
+  /// In en, this message translates to:
+  /// **'Translation'**
+  String get translationSettingsTitle;
+
+  /// Label for translation provider mode selector
+  ///
+  /// In en, this message translates to:
+  /// **'Provider Mode'**
+  String get translationSettingsProviderModeLabel;
+
+  /// Option label for Socialmesh-managed provider mode
+  ///
+  /// In en, this message translates to:
+  /// **'Managed'**
+  String get translationSettingsProviderManaged;
+
+  /// Description for managed provider mode
+  ///
+  /// In en, this message translates to:
+  /// **'Managed OpenAI translation — included allowance'**
+  String get translationSettingsProviderManagedDesc;
+
+  /// Option label for BYO provider mode
+  ///
+  /// In en, this message translates to:
+  /// **'Bring Your Own Key'**
+  String get translationSettingsProviderByo;
+
+  /// Description for BYO provider mode
+  ///
+  /// In en, this message translates to:
+  /// **'Use your own OpenAI API key — unlimited'**
+  String get translationSettingsProviderByoDesc;
+
+  /// Option label for disabled provider mode
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled'**
+  String get translationSettingsProviderDisabled;
+
+  /// Description for disabled provider mode
+  ///
+  /// In en, this message translates to:
+  /// **'Translation is turned off'**
+  String get translationSettingsProviderDisabledDesc;
+
+  /// Label for translation privacy mode selector
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Mode'**
+  String get translationSettingsPrivacyModeLabel;
+
+  /// Option label for standard privacy mode
+  ///
+  /// In en, this message translates to:
+  /// **'Standard'**
+  String get translationSettingsPrivacyStandard;
+
+  /// Description for standard privacy mode
+  ///
+  /// In en, this message translates to:
+  /// **'Cache translations locally for fast reuse'**
+  String get translationSettingsPrivacyStandardDesc;
+
+  /// Option label for private privacy mode
+  ///
+  /// In en, this message translates to:
+  /// **'Private'**
+  String get translationSettingsPrivacyPrivate;
+
+  /// Description for private privacy mode
+  ///
+  /// In en, this message translates to:
+  /// **'Cache channels only — DM translations are not stored'**
+  String get translationSettingsPrivacyPrivateDesc;
+
+  /// Option label for strict privacy mode
+  ///
+  /// In en, this message translates to:
+  /// **'Strict'**
+  String get translationSettingsPrivacyStrict;
+
+  /// Description for strict privacy mode
+  ///
+  /// In en, this message translates to:
+  /// **'BYO provider only — no caching, no managed server'**
+  String get translationSettingsPrivacyStrictDesc;
+
+  /// Label for the BYO API key entry field
+  ///
+  /// In en, this message translates to:
+  /// **'API Key'**
+  String get translationSettingsByoKeyLabel;
+
+  /// Hint text for BYO API key text field
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your OpenAI API key'**
+  String get translationSettingsByoKeyHint;
+
+  /// Confirmation message after saving BYO key
+  ///
+  /// In en, this message translates to:
+  /// **'API key saved securely'**
+  String get translationSettingsByoKeySaved;
+
+  /// Confirmation message after removing BYO key
+  ///
+  /// In en, this message translates to:
+  /// **'API key removed'**
+  String get translationSettingsByoKeyRemoved;
+
+  /// Indicator that a BYO key is currently stored
+  ///
+  /// In en, this message translates to:
+  /// **'Key stored'**
+  String get translationSettingsByoKeyStored;
+
+  /// Indicator that no BYO key is currently stored
+  ///
+  /// In en, this message translates to:
+  /// **'No key set'**
+  String get translationSettingsByoKeyNone;
+
+  /// Button label to remove stored BYO key
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Key'**
+  String get translationSettingsByoKeyRemove;
+
+  /// Confirmation sheet title when removing BYO OpenAI API key
+  ///
+  /// In en, this message translates to:
+  /// **'Remove API Key?'**
+  String get translationSettingsByoKeyRemoveConfirmTitle;
+
+  /// Confirmation sheet message when removing BYO OpenAI API key
+  ///
+  /// In en, this message translates to:
+  /// **'Your OpenAI API key will be permanently deleted from this device. You can add a new key at any time.'**
+  String get translationSettingsByoKeyRemoveConfirmMessage;
+
+  /// Label for translation quota status display
+  ///
+  /// In en, this message translates to:
+  /// **'Managed Allowance'**
+  String get translationSettingsQuotaLabel;
+
+  /// Character quota status text showing used vs limit
+  ///
+  /// In en, this message translates to:
+  /// **'{used} of {limit} characters used'**
+  String translationSettingsQuotaRemaining(int used, int limit);
+
+  /// Shows when the quota period resets
+  ///
+  /// In en, this message translates to:
+  /// **'Resets {date}'**
+  String translationSettingsQuotaResetsAt(String date);
+
+  /// Button to clear all cached translations
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Translation Cache'**
+  String get translationSettingsClearCache;
+
+  /// Confirmation message after clearing cache
+  ///
+  /// In en, this message translates to:
+  /// **'Translation cache cleared'**
+  String get translationSettingsCacheCleared;
+
+  /// Title for translation settings in settings search
+  ///
+  /// In en, this message translates to:
+  /// **'Translation Settings'**
+  String get translationSettingsSearchTitle;
+
+  /// Subtitle for translation settings in settings search
+  ///
+  /// In en, this message translates to:
+  /// **'Provider mode, privacy, API key, cache'**
+  String get translationSettingsSearchSubtitle;
+
+  /// Confirm dialog message for clearing translation cache
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all cached translations? This cannot be undone.'**
+  String get translationSettingsClearCacheConfirm;
+
+  /// Confirm button text for clearing translation cache
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Cache'**
+  String get translationSettingsClearCacheConfirmAction;
+
+  /// Button to test BYO API key by making a lightweight translation call
+  ///
+  /// In en, this message translates to:
+  /// **'Test OpenAI Connection'**
+  String get translationSettingsByoTestConnection;
+
+  /// Success message when BYO key test passes
+  ///
+  /// In en, this message translates to:
+  /// **'OpenAI API key is valid'**
+  String get translationSettingsByoTestSuccess;
+
+  /// Error message when BYO key test fails
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid OpenAI API key'**
+  String get translationSettingsByoTestFailed;
+
+  /// Loading text during BYO key validation
+  ///
+  /// In en, this message translates to:
+  /// **'Testing…'**
+  String get translationSettingsByoTestTesting;
+
+  /// Button text to open translation settings to configure BYO key
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settings'**
+  String get translationSettingsQuotaOpenSettings;
 }
 
 class _AppLocalizationsDelegate

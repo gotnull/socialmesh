@@ -133,6 +133,24 @@ class _PremiumUpsellSheetState extends ConsumerState<PremiumUpsellSheet>
             description: context.l10n.premiumBenefitBatterySensorsDesc,
           ),
         ];
+      case PremiumFeature.translation:
+        return [
+          _FeatureBenefit(
+            icon: Icons.translate,
+            title: context.l10n.premiumBenefitInstantTranslation,
+            description: context.l10n.premiumBenefitInstantTranslationDesc,
+          ),
+          _FeatureBenefit(
+            icon: Icons.language,
+            title: context.l10n.premiumBenefitAutoDetect,
+            description: context.l10n.premiumBenefitAutoDetectDesc,
+          ),
+          _FeatureBenefit(
+            icon: Icons.cached,
+            title: context.l10n.premiumBenefitSmartCache,
+            description: context.l10n.premiumBenefitSmartCacheDesc,
+          ),
+        ];
     }
   }
 
@@ -149,6 +167,8 @@ class _PremiumUpsellSheetState extends ConsumerState<PremiumUpsellSheet>
         return context.l10n.premiumHeadlineRingtones;
       case PremiumFeature.homeWidgets:
         return context.l10n.premiumHeadlineWidgets;
+      case PremiumFeature.translation:
+        return context.l10n.premiumHeadlineTranslation;
     }
   }
 
@@ -169,6 +189,26 @@ class _PremiumUpsellSheetState extends ConsumerState<PremiumUpsellSheet>
         return context.l10n.premiumSubtitleRingtones;
       case PremiumFeature.homeWidgets:
         return context.l10n.premiumSubtitleWidgets;
+      case PremiumFeature.translation:
+        return context.l10n.premiumSubtitleTranslation;
+    }
+  }
+
+  /// Feature-specific icon for the header.
+  IconData get _featureIcon {
+    switch (widget.feature) {
+      case PremiumFeature.automations:
+        return Icons.bolt;
+      case PremiumFeature.iftttIntegration:
+        return Icons.webhook;
+      case PremiumFeature.homeWidgets:
+        return Icons.widgets;
+      case PremiumFeature.customRingtones:
+        return Icons.music_note;
+      case PremiumFeature.premiumThemes:
+        return Icons.palette;
+      case PremiumFeature.translation:
+        return Icons.translate;
     }
   }
 
@@ -290,7 +330,10 @@ class _PremiumUpsellSheetState extends ConsumerState<PremiumUpsellSheet>
           Expanded(
             child: ListView(
               controller: scrollController,
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              clipBehavior: Clip.none,
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spacing20,
+              ),
               children: [
                 // Premium icon
                 Center(
@@ -312,11 +355,7 @@ class _PremiumUpsellSheetState extends ConsumerState<PremiumUpsellSheet>
                         ),
                       ],
                     ),
-                    child: const Icon(
-                      Icons.star_rounded,
-                      size: 40,
-                      color: Colors.white,
-                    ),
+                    child: Icon(_featureIcon, size: 40, color: Colors.white),
                   ),
                 ),
 
@@ -460,10 +499,7 @@ class _PremiumUpsellSheetState extends ConsumerState<PremiumUpsellSheet>
                         : Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(
-                                Icons.star_rounded,
-                                color: Colors.white,
-                              ),
+                              Icon(_featureIcon, color: Colors.white),
                               const SizedBox(width: AppTheme.spacing8),
                               Text(
                                 context.l10n.premiumUnlockFor(displayPrice),

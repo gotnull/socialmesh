@@ -551,6 +551,10 @@ final premiumFeatureGateProvider = Provider.family<bool, String>((
   ref,
   featureKey,
 ) {
+  // Translation Pack is sold separately (not part of Complete Pack) —
+  // it uses a standard price badge, not the "Try It" upsell flow.
+  if (featureKey == 'translation') return false;
+
   // Watch refresh trigger to rebuild when Firestore syncs new values
   ref.watch(premiumGatedFeaturesRefreshProvider);
 
@@ -3615,7 +3619,9 @@ class MessagesNotifier extends Notifier<List<Message>> {
     // Catches push-to-device replays where the push-delivered message has a
     // deterministic SHA1 id and the device-delivered copy has a random UUID,
     // so layers 1-3 miss it once the signature window expires.
-    if (_isContentDuplicate(message)) {
+    // Skip for user-sent messages — the user deliberately resending the same
+    // text is intentional, not a duplicate.
+    if (!message.sent && _isContentDuplicate(message)) {
       AppLogging.messages(
         '📨 Content-dedupe caught duplicate: from=${message.from}, '
         'channel=${message.channel}, text="${message.text.substring(0, message.text.length.clamp(0, 20))}"',
@@ -3770,6 +3776,19 @@ class MessagesNotifier extends Notifier<List<Message>> {
   }
 
   void updateMessage(String messageId, Message updatedMessage) {
+    // Guard: never regress from delivered — a late status update
+    // (e.g. pending→sent arriving after ACK already set delivered)
+    // must not overwrite the terminal delivered state.
+    if (updatedMessage.status != MessageStatus.delivered) {
+      final current = state.firstWhereOrNull((m) => m.id == messageId);
+      if (current != null && current.status == MessageStatus.delivered) {
+        AppLogging.debug(
+          '📨 ⏭️ Skipping update that would downgrade delivered '
+          'message: $messageId (attempted ${updatedMessage.status.name})',
+        );
+        return;
+      }
+    }
     state = state.map((m) => m.id == messageId ? updatedMessage : m).toList();
     _storage?.saveMessage(updatedMessage);
   }

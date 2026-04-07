@@ -97,6 +97,7 @@ import '../../core/widgets/loading_indicator.dart';
 import '../../core/constants.dart';
 import '../tak/screens/tak_settings_screen.dart';
 import 'network_endpoints_screen.dart';
+import 'translation_settings_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   /// Optional search query to pre-fill on open, allowing callers to
@@ -290,6 +291,45 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const WidgetBuilderScreen()),
+              );
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+              );
+            }
+          },
+        ),
+        _SearchableSettingItem(
+          icon: Icons.translate,
+          title: purchaseState.hasFeature(PremiumFeature.translation)
+              ? context.l10n.translationSettingsSearchTitle
+              : storeProducts[RevenueCatConfig.translationPackProductId]
+                        ?.title ??
+                    context.l10n.settingsSearchTranslationPackTitle,
+          subtitle: purchaseState.hasFeature(PremiumFeature.translation)
+              ? context.l10n.translationSettingsSearchSubtitle
+              : context.l10n.settingsSearchTranslationPackSubtitle,
+          keywords: [
+            'translation',
+            'translate',
+            'language',
+            'foreign',
+            'multilingual',
+            'privacy',
+            'api',
+            'key',
+            'byo',
+            'cache',
+          ],
+          section: context.l10n.settingsSectionPremium,
+          onTap: () {
+            if (purchaseState.hasFeature(PremiumFeature.translation)) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const TranslationSettingsScreen(),
+                ),
               );
             } else {
               Navigator.push(
@@ -1564,7 +1604,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           ),
         ),
         const SizedBox(height: AppTheme.spacing8),
-        // Premium feature tiles - order matches drawer
+        // Premium feature tiles - Translation Pack first (new), then others
+        _PremiumFeatureTile(
+          icon: Icons.translate_outlined,
+          iconColor: AccentColors.teal,
+          title:
+              storeProducts[RevenueCatConfig.translationPackProductId]?.title ??
+              context.l10n.settingsSearchTranslationPackTitle,
+          feature: PremiumFeature.translation,
+          onTap: () {
+            if (purchaseState.hasFeature(PremiumFeature.translation)) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const TranslationSettingsScreen(),
+                ),
+              );
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+              );
+            }
+          },
+        ),
         _PremiumFeatureTile(
           icon: Icons.palette_outlined,
           iconColor: AccentColors.purple,

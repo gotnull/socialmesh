@@ -15,6 +15,7 @@ RINGTONE_PACK_PRODUCT_ID=ringtone_pack
 WIDGET_PACK_PRODUCT_ID=widget_pack
 AUTOMATIONS_PACK_PRODUCT_ID=automations_pack
 IFTTT_PACK_PRODUCT_ID=ifttt_pack
+TRANSLATION_PACK_PRODUCT_ID=translation_pack
 COMPLETE_PACK_PRODUCT_ID=complete_pack
 ''',
     );
@@ -42,6 +43,7 @@ COMPLETE_PACK_PRODUCT_ID=complete_pack
             'widget_pack',
             'automations_pack',
             'ifttt_pack',
+            'translation_pack',
           },
         );
 
@@ -80,12 +82,14 @@ COMPLETE_PACK_PRODUCT_ID=complete_pack
     test('complete pack unlocks all individual pack features', () {
       const state = PurchaseState(purchasedProductIds: {'complete_pack'});
 
-      // Complete pack should unlock all features
+      // Complete pack should unlock bundled features
       expect(state.hasFeature(PremiumFeature.premiumThemes), true);
       expect(state.hasFeature(PremiumFeature.customRingtones), true);
       expect(state.hasFeature(PremiumFeature.homeWidgets), true);
       expect(state.hasFeature(PremiumFeature.automations), true);
       expect(state.hasFeature(PremiumFeature.iftttIntegration), true);
+      // Translation Pack is included in Complete Pack
+      expect(state.hasFeature(PremiumFeature.translation), true);
     });
   });
 
@@ -100,10 +104,11 @@ COMPLETE_PACK_PRODUCT_ID=complete_pack
       expect(state.hasFeature(PremiumFeature.automations), false);
     });
 
-    test('returns true for all features when complete pack is owned', () {
+    test('returns true for bundled features when complete pack is owned', () {
       const state = PurchaseState(purchasedProductIds: {'complete_pack'});
 
       for (final feature in PremiumFeature.values) {
+        // All features are bundled in Complete Pack
         expect(state.hasFeature(feature), true);
       }
     });
@@ -144,8 +149,8 @@ COMPLETE_PACK_PRODUCT_ID=complete_pack
   });
 
   group('AllIndividualPurchases', () {
-    test('contains exactly 5 individual purchases', () {
-      expect(OneTimePurchases.allIndividualPurchases.length, 5);
+    test('contains exactly 6 individual purchases', () {
+      expect(OneTimePurchases.allIndividualPurchases.length, 6);
     });
 
     test('does not contain complete pack', () {
@@ -164,6 +169,25 @@ COMPLETE_PACK_PRODUCT_ID=complete_pack
       expect(ids, contains('widget_pack'));
       expect(ids, contains('automations_pack'));
       expect(ids, contains('ifttt_pack'));
+      expect(ids, contains('translation_pack'));
+    });
+  });
+
+  group('CompletePackPurchases', () {
+    test('contains exactly 6 bundled purchases', () {
+      expect(OneTimePurchases.completePackPurchases.length, 6);
+    });
+
+    test('includes translation pack', () {
+      final productIds = OneTimePurchases.completePackPurchases.map(
+        (p) => p.productId,
+      );
+      expect(productIds, contains('translation_pack'));
+    });
+
+    test('complete pack unlocks translation', () {
+      const state = PurchaseState(purchasedProductIds: {'complete_pack'});
+      expect(state.hasFeature(PremiumFeature.translation), true);
     });
   });
 }
