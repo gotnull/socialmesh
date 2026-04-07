@@ -33453,4 +33453,37 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get translationSettingsQuotaOpenSettings => 'Open Settings';
+
+  @override
+  String avatarStackCoSeenLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count co-seen nodes',
+      one: '1 co-seen node',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String avatarStackNodeTooltip(String name) {
+    return '$name';
+  }
+
+  @override
+  String get nodedexCoSeenCardTitle => 'Co-Seen Network';
+
+  @override
+  String nodedexCoSeenCardSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count nodes commonly seen with this node',
+      one: '1 node commonly seen with this node',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get nodedexCoSeenCardViewAll => 'View all';
 }

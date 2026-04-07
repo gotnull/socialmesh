@@ -52,6 +52,7 @@ import '../services/patina_score.dart';
 
 import '../services/trait_engine.dart';
 import '../services/trust_score.dart';
+import '../widgets/coseen_network_card.dart';
 import '../widgets/edge_detail_sheet.dart';
 import '../widgets/animated_sigil_container.dart';
 import '../widgets/field_note_widget.dart';
@@ -233,6 +234,26 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
               ),
             ),
           ),
+
+          // Co-seen network card — animated avatar cluster with social context
+          if (entry.coSeenNodes.isNotEmpty)
+            SliverToBoxAdapter(
+              child: _DetailEntrance(
+                index: 2,
+                reduceMotion: reduceMotion,
+                child: CoSeenNetworkCard(
+                  nodeNum: entry.nodeNum,
+                  onPeerTap: (peerNodeNum) {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) =>
+                            NodeDexDetailScreen(nodeNum: peerNodeNum),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
 
           // Trait card
           if (disclosure.showPrimaryTrait)

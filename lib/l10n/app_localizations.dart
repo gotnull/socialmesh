@@ -58419,6 +58419,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open Settings'**
   String get translationSettingsQuotaOpenSettings;
+
+  /// Accessibility label for the co-seen avatar cluster on a NodeDex card
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 co-seen node} other{{count} co-seen nodes}}'**
+  String avatarStackCoSeenLabel(int count);
+
+  /// Tooltip shown when hovering over a co-seen node avatar in the stack
+  ///
+  /// In en, this message translates to:
+  /// **'{name}'**
+  String avatarStackNodeTooltip(String name);
+
+  /// Title for the co-seen nodes card on the node detail screen
+  ///
+  /// In en, this message translates to:
+  /// **'Co-Seen Network'**
+  String get nodedexCoSeenCardTitle;
+
+  /// Subtitle for the co-seen card showing how many peers share sessions
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 node commonly seen with this node} other{{count} nodes commonly seen with this node}}'**
+  String nodedexCoSeenCardSubtitle(int count);
+
+  /// CTA text to scroll to the full co-seen links section
+  ///
+  /// In en, this message translates to:
+  /// **'View all'**
+  String get nodedexCoSeenCardViewAll;
 }
 
 class _AppLocalizationsDelegate

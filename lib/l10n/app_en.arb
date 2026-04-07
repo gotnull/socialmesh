@@ -44368,5 +44368,40 @@
     "translationSettingsQuotaOpenSettings": "Open Settings",
     "@translationSettingsQuotaOpenSettings": {
         "description": "Button text to open translation settings to configure BYO key"
+    },
+    "avatarStackCoSeenLabel": "{count, plural, =1{1 co-seen node} other{{count} co-seen nodes}}",
+    "@avatarStackCoSeenLabel": {
+        "description": "Accessibility label for the co-seen avatar cluster on a NodeDex card",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "avatarStackNodeTooltip": "{name}",
+    "@avatarStackNodeTooltip": {
+        "description": "Tooltip shown when hovering over a co-seen node avatar in the stack",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "nodedexCoSeenCardTitle": "Co-Seen Network",
+    "@nodedexCoSeenCardTitle": {
+        "description": "Title for the co-seen nodes card on the node detail screen"
+    },
+    "nodedexCoSeenCardSubtitle": "{count, plural, =1{1 node commonly seen with this node} other{{count} nodes commonly seen with this node}}",
+    "@nodedexCoSeenCardSubtitle": {
+        "description": "Subtitle for the co-seen card showing how many peers share sessions",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "nodedexCoSeenCardViewAll": "View all",
+    "@nodedexCoSeenCardViewAll": {
+        "description": "CTA text to scroll to the full co-seen links section"
     }
 }
