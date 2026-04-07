@@ -106,7 +106,7 @@ dependencies:
   ditredi: ^2.0.2
   vector_math: ^2.2.0
   cryptography: ^2.9.0
-  pointycastle: ^3.9.1
+  pointycastle: ^4.0.0
 
   # Camera for AR
   camera: ^0.12.0
