@@ -83,19 +83,19 @@ abstract final class AvatarStackDefaults {
   static const Duration cycleInterval = Duration(seconds: 5);
 
   /// Default animation duration for the transition.
-  static const Duration animationDuration = Duration(milliseconds: 450);
+  static const Duration animationDuration = Duration(milliseconds: 700);
 
   /// Scale factor for the front-most avatar.
   static const double frontScale = 1.0;
 
-  /// Scale factor for rear avatars.
-  static const double rearScale = 1.0;
+  /// Scale factor for rear avatars (subtle depth during transition).
+  static const double rearScale = 0.95;
 
   /// Opacity for the front-most avatar.
   static const double frontOpacity = 1.0;
 
-  /// Opacity for rear avatars.
-  static const double rearOpacity = 1.0;
+  /// Opacity for rear avatars (fades during transition).
+  static const double rearOpacity = 0.55;
 
   /// Border width around each avatar for visual separation.
   static const double borderWidth = 1.5;
@@ -182,9 +182,12 @@ class AnimatedAvatarStack extends StatefulWidget {
 ///
 /// Visible for testing — allows tests to verify cycling state.
 class AnimatedAvatarStackState extends State<AnimatedAvatarStack>
-    with WidgetsBindingObserver {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   /// Current rotation offset — the index that is visually "front".
   int _frontIndex = 0;
+
+  /// Previous front index — used to interpolate between states.
+  int _prevFrontIndex = 0;
 
   /// Timer for periodic cycling.
   Timer? _cycleTimer;
@@ -192,9 +195,33 @@ class AnimatedAvatarStackState extends State<AnimatedAvatarStack>
   /// Whether the app is in a background lifecycle state.
   bool _isBackgrounded = false;
 
+  /// Explicit animation controller for coordinated motion.
+  late final AnimationController _controller;
+
+  /// Position curve: slight overshoot for spring feel.
+  late final Animation<double> _positionAnim;
+
+  /// Opacity curve: smooth ease-in-out, no overshoot.
+  late final Animation<double> _opacityAnim;
+
   @override
   void initState() {
     super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: widget.animationEnabled
+          ? AvatarStackDefaults.animationDuration
+          : Duration.zero,
+    );
+    _positionAnim = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOutBack,
+    );
+    _opacityAnim = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOut,
+    );
+    _controller.value = 1.0; // Start fully settled.
     WidgetsBinding.instance.addObserver(this);
     _startCycleTimerIfNeeded();
   }
@@ -234,6 +261,7 @@ class AnimatedAvatarStackState extends State<AnimatedAvatarStack>
   @override
   void dispose() {
     _stopCycleTimer();
+    _controller.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -262,9 +290,9 @@ class AnimatedAvatarStackState extends State<AnimatedAvatarStack>
     if (!mounted || !_shouldCycle) return;
     final count = _visibleCount;
     if (count < 2) return;
-    setState(() {
-      _frontIndex = (_frontIndex - 1 + count) % count;
-    });
+    _prevFrontIndex = _frontIndex;
+    _frontIndex = (_frontIndex - 1 + count) % count;
+    _controller.forward(from: 0);
   }
 
   /// Expose the current front index for testing.
@@ -291,18 +319,23 @@ class AnimatedAvatarStackState extends State<AnimatedAvatarStack>
         ? Colors.black.withValues(alpha: 0.6)
         : Colors.white.withValues(alpha: 0.9);
 
-    Widget stack = SizedBox(
-      width: totalWidth,
-      height: totalHeight,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: _buildPositionedAvatars(
-          visibleItems,
-          step,
-          avatarSize,
-          borderColor,
-        ),
-      ),
+    Widget stack = AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        return SizedBox(
+          width: totalWidth,
+          height: totalHeight,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: _buildPositionedAvatars(
+              visibleItems,
+              step,
+              avatarSize,
+              borderColor,
+            ),
+          ),
+        );
+      },
     );
 
     // Left-edge fade: the beginning of the stack recedes into
@@ -336,33 +369,45 @@ class AnimatedAvatarStackState extends State<AnimatedAvatarStack>
     final count = items.length;
     if (count == 0) return const [];
 
-    // Build in paint order: rear items first, front item last.
-    // Visual order is a rotation of the semantic list by _frontIndex.
+    final posT = _positionAnim.value;
+    final opT = _opacityAnim.value;
+
     final widgets = <Widget>[];
 
     for (var paintOrder = 0; paintOrder < count; paintOrder++) {
-      // Determine which item index appears at this paint slot.
-      // paintOrder 0 = rear-most, paintOrder count-1 = front.
-      final rearToFrontSlot = paintOrder;
-      final itemIndex = (_frontIndex + 1 + rearToFrontSlot) % count;
+      // Current slot assignment (target).
+      final curSlot = paintOrder;
+      final curItemIndex = (_frontIndex + 1 + curSlot) % count;
 
-      final item = items[itemIndex];
+      // Find what slot this item *was* in, to interpolate from.
+      int prevSlotForItem = curSlot; // fallback if not found
+      for (var s = 0; s < count; s++) {
+        if ((_prevFrontIndex + 1 + s) % count == curItemIndex) {
+          prevSlotForItem = s;
+          break;
+        }
+      }
 
-      // Position: rear items at left, front item at right.
-      // Last (rightmost) avatar is fully visible on top.
-      final targetLeft = rearToFrontSlot * step;
+      final item = items[curItemIndex];
 
-      // Scale and opacity interpolation.
-      final t = count > 1 ? rearToFrontSlot / (count - 1) : 1.0;
-      final scale = _lerpDouble(
-        AvatarStackDefaults.rearScale,
-        AvatarStackDefaults.frontScale,
-        t,
-      );
+      // Interpolate position from previous slot to current slot.
+      final fromLeft = prevSlotForItem * step;
+      final toLeft = curSlot * step;
+      final targetLeft = fromLeft + (toLeft - fromLeft) * posT;
+
+      // Interpolate opacity based on current slot.
+      final fromT = count > 1 ? prevSlotForItem / (count - 1) : 1.0;
+      final toT = count > 1 ? curSlot / (count - 1) : 1.0;
+      final interpT = fromT + (toT - fromT) * opT;
       final opacity = _lerpDouble(
         AvatarStackDefaults.rearOpacity,
         AvatarStackDefaults.frontOpacity,
-        t,
+        interpT,
+      );
+      final scale = _lerpDouble(
+        AvatarStackDefaults.rearScale,
+        AvatarStackDefaults.frontScale,
+        interpT,
       );
 
       Widget avatar = _AvatarCircle(
@@ -371,12 +416,10 @@ class AnimatedAvatarStackState extends State<AnimatedAvatarStack>
         child: item.child,
       );
 
-      // Wrap with scale/opacity transforms.
-      if (scale != 1.0 || opacity != 1.0) {
-        avatar = Transform.scale(
-          scale: scale,
-          child: Opacity(opacity: opacity, child: avatar),
-        );
+      // Apply interpolated opacity and scale.
+      avatar = Opacity(opacity: opacity.clamp(0.0, 1.0), child: avatar);
+      if (scale != 1.0) {
+        avatar = Transform.scale(scale: scale, child: avatar);
       }
 
       // Wrap with tooltip if provided.
@@ -403,12 +446,8 @@ class AnimatedAvatarStackState extends State<AnimatedAvatarStack>
       );
 
       widgets.add(
-        AnimatedPositioned(
+        Positioned(
           key: ValueKey(item.id),
-          duration: widget.animationEnabled
-              ? AvatarStackDefaults.animationDuration
-              : Duration.zero,
-          curve: Curves.easeInOut,
           left: targetLeft,
           top: (widget.avatarSize - size * scale) / 2,
           width: size,
