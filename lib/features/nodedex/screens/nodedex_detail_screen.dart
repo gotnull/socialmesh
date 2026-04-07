@@ -243,14 +243,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
                 reduceMotion: reduceMotion,
                 child: CoSeenNetworkCard(
                   nodeNum: entry.nodeNum,
-                  onPeerTap: (peerNodeNum) {
-                    Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) =>
-                            NodeDexDetailScreen(nodeNum: peerNodeNum),
-                      ),
-                    );
-                  },
+                  onTap: () => _showCoSeenSheet(context, entry),
                 ),
               ),
             ),
@@ -418,8 +411,19 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
               ),
             ),
 
-          // Encounter activity visualization
-          if (entry.encounters.isNotEmpty)
+          // Encounter activity — pinned header + body
+          if (entry.encounters.isNotEmpty) ...[
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _NodeDexStickyHeaderDelegate(
+                title: context.l10n.nodedexEncounterActivityTitle,
+                icon: Icons.insights,
+                helpKey: 'encounters',
+                trailing: context.l10n.nodedexTotalCount(
+                  entry.encounters.length,
+                ),
+              ),
+            ),
             SliverToBoxAdapter(
               child: _DetailEntrance(
                 index: 14,
@@ -427,31 +431,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
                 child: _EncounterActivityCard(entry: entry),
               ),
             ),
-
-          // Node activity timeline — unified chronological feed
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: _NodeDexStickyHeaderDelegate(
-              title: context.l10n.nodedexActivityTimelineTitle,
-              icon: Icons.timeline,
-              helpKey: 'activity_timeline',
-              trailing: timelineEventCount != null
-                  ? context.l10n.nodedexTotalCount(timelineEventCount)
-                  : null,
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: _DetailEntrance(
-              index: 14,
-              reduceMotion: reduceMotion,
-              child: _StickyCardBody(
-                child: NodeActivityTimeline(
-                  nodeNum: widget.nodeNum,
-                  accentColor: entry.sigil?.primaryColor ?? context.accentColor,
-                ),
-              ),
-            ),
-          ),
+          ],
 
           // Co-seen nodes — pinned header + body
           if (entry.coSeenNodes.isNotEmpty) ...[
@@ -468,12 +448,37 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
             ),
             SliverToBoxAdapter(
               child: _DetailEntrance(
-                index: 16,
+                index: 15,
                 reduceMotion: reduceMotion,
                 child: _CoSeenNodesBody(entry: entry),
               ),
             ),
           ],
+
+          // Node activity timeline — unified chronological feed
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _NodeDexStickyHeaderDelegate(
+              title: context.l10n.nodedexActivityTimelineTitle,
+              icon: Icons.timeline,
+              helpKey: 'activity_timeline',
+              trailing: timelineEventCount != null
+                  ? context.l10n.nodedexTotalCount(timelineEventCount)
+                  : null,
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: _DetailEntrance(
+              index: 16,
+              reduceMotion: reduceMotion,
+              child: _StickyCardBody(
+                child: NodeActivityTimeline(
+                  nodeNum: widget.nodeNum,
+                  accentColor: entry.sigil?.primaryColor ?? context.accentColor,
+                ),
+              ),
+            ),
+          ),
 
           // Bottom padding
           SliverToBoxAdapter(
@@ -506,6 +511,170 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
           notifier.setSocialTag(nodeNum, tag);
           navigator.pop();
         },
+      ),
+    );
+  }
+
+  void _showCoSeenSheet(BuildContext context, NodeDexEntry entry) {
+    final nodes = ref.read(nodesProvider);
+    final dateFormat = DateFormat('d MMM yyyy');
+    final navigator = Navigator.of(context);
+
+    // Sort by co-seen count descending.
+    final coSeenSorted = entry.coSeenNodes.entries.toList()
+      ..sort((a, b) => b.value.count.compareTo(a.value.count));
+
+    AppBottomSheet.showScrollable<void>(
+      context: context,
+      title: context.l10n.nodedexCoSeenLinksTitle,
+      initialChildSize: 0.5,
+      minChildSize: 0.3,
+      maxChildSize: 0.7,
+      builder: (scrollController) => ListView(
+        controller: scrollController,
+        padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing24),
+        children: [
+          Text(
+            context.l10n.nodedexCoSeenDescription,
+            style: TextStyle(fontSize: 13, color: context.textTertiary),
+          ),
+          const SizedBox(height: AppTheme.spacing16),
+          ...coSeenSorted.map((coSeen) {
+            final relationship = coSeen.value;
+            final coSeenNode = nodes[coSeen.key];
+            final coSeenEntry = ref.read(nodeDexEntryProvider(coSeen.key));
+            final name =
+                coSeenEntry?.localNickname ??
+                coSeenNode?.displayName ??
+                coSeenEntry?.lastKnownName ??
+                NodeDisplayNameResolver.defaultName(coSeen.key);
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 2),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    navigator.pop();
+                    navigator.push(
+                      MaterialPageRoute<void>(
+                        builder: (_) =>
+                            NodeDexDetailScreen(nodeNum: coSeen.key),
+                      ),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(AppTheme.radius10),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 6,
+                      horizontal: 4,
+                    ),
+                    child: Row(
+                      children: [
+                        SigilAvatar(
+                          sigil: coSeenEntry?.sigil,
+                          nodeNum: coSeen.key,
+                          size: 36,
+                        ),
+                        const SizedBox(width: AppTheme.spacing10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                name,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: context.textPrimary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: AppTheme.spacing2),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.schedule,
+                                    size: 10,
+                                    color: context.textTertiary,
+                                  ),
+                                  const SizedBox(width: AppTheme.spacing3),
+                                  Text(
+                                    dateFormat.format(relationship.lastSeen),
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: context.textTertiary,
+                                    ),
+                                  ),
+                                  if (relationship.messageCount > 0) ...[
+                                    const SizedBox(width: AppTheme.spacing8),
+                                    Icon(
+                                      Icons.chat_bubble_outline,
+                                      size: 10,
+                                      color: context.textTertiary,
+                                    ),
+                                    const SizedBox(width: AppTheme.spacing3),
+                                    Text(
+                                      '${relationship.messageCount}',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: context.textTertiary,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: context.accentColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius10,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.visibility_outlined,
+                                size: 10,
+                                color: context.accentColor,
+                              ),
+                              const SizedBox(width: AppTheme.spacing3),
+                              Text(
+                                '${relationship.count}',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: context.accentColor,
+                                  fontFamily: AppTheme.fontFamily,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: AppTheme.spacing4),
+                        Icon(
+                          Icons.chevron_right,
+                          size: 16,
+                          color: context.textTertiary.withValues(alpha: 0.4),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }),
+        ],
       ),
     );
   }
@@ -1677,18 +1846,7 @@ class _EncounterActivityCardState extends State<_EncounterActivityCard> {
         ? <EncounterRecord>[]
         : encounters.sublist(startIndex, endIndex);
 
-    return _CardContainer(
-      title: context.l10n.nodedexEncounterActivityTitle,
-      icon: Icons.insights,
-      helpKey: 'encounters',
-      trailing: Text(
-        context.l10n.nodedexTotalCount(allEncounters.length),
-        style: TextStyle(
-          fontSize: 11,
-          color: context.textTertiary,
-          fontFamily: AppTheme.fontFamily,
-        ),
-      ),
+    return _StickyCardBody(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
