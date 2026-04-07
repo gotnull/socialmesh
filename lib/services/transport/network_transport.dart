@@ -176,7 +176,18 @@ class NetworkTransport implements DeviceTransport {
     if (_socket == null || _state != DeviceConnectionState.connected) {
       throw StateError('NetworkTransport: Not connected');
     }
-    _socket!.add(data);
+    try {
+      _socket!.add(data);
+    } on StateError {
+      // Socket was closed between the null-check and the add call.
+      AppLogging.protocol('NetworkTransport: Socket closed during send');
+      _handleSocketClose();
+      rethrow;
+    } on SocketException catch (e) {
+      AppLogging.protocol('NetworkTransport: Send error: $e');
+      _handleSocketClose();
+      rethrow;
+    }
   }
 
   @override
