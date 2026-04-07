@@ -100,19 +100,31 @@ void main() {
           final line = lines[i].trim();
 
           // Find _client.get( or http.get( patterns (actual HTTP calls)
-          if (!line.contains('_client.get(') &&
-              !line.contains('http.get(') &&
-              !line.contains('_client.post(') &&
-              !line.contains('http.post(')) {
-            continue;
-          }
+          // Also handles dart format splitting: _client\n.post(
+          final isHttpCall =
+              line.contains('_client.get(') ||
+              line.contains('http.get(') ||
+              line.contains('_client.post(') ||
+              line.contains('http.post(') ||
+              (line.contains('.post(') &&
+                  i > 0 &&
+                  lines[i - 1].trim().endsWith('_client')) ||
+              (line.contains('.get(') &&
+                  i > 0 &&
+                  lines[i - 1].trim().endsWith('_client'));
+
+          if (!isHttpCall) continue;
 
           // Skip comments
           if (line.startsWith('//')) continue;
 
-          // Check this line and next for .timeout(
-          final nextLine = i + 1 < lines.length ? lines[i + 1].trim() : '';
-          if (!line.contains('.timeout(') && !nextLine.contains('.timeout(')) {
+          // Check this line and next several lines for .timeout(
+          // (multi-line HTTP calls with headers/body can span 10+ lines)
+          bool hasTimeout = line.contains('.timeout(');
+          for (int j = 1; j <= 10 && !hasTimeout && i + j < lines.length; j++) {
+            hasTimeout = lines[i + j].trim().contains('.timeout(');
+          }
+          if (!hasTimeout) {
             violations.add('${file.path}:${i + 1}');
           }
         }

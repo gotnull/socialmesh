@@ -40,6 +40,11 @@ class OpenAiTranslationAdapter implements TranslationAdapter {
     http.Client? client,
   }) : _client = client ?? http.Client();
 
+  Map<String, String> _headers(String key) => {
+    'Content-Type': 'application/json', // lint-allow: hardcoded-string
+    'Authorization': 'Bearer $key', // lint-allow: hardcoded-string
+  };
+
   @override
   Future<TranslationResult> translate(TranslationRequest request) async {
     if (request.text.trim().isEmpty) {
@@ -81,14 +86,9 @@ class OpenAiTranslationAdapter implements TranslationAdapter {
         'response_format': {'type': 'json_object'},
       };
 
-      final response = await _client.post(
-        uri,
-        headers: {
-          'Content-Type': 'application/json', // lint-allow: hardcoded-string
-          'Authorization': 'Bearer $apiKey', // lint-allow: hardcoded-string
-        },
-        body: jsonEncode(body),
-      );
+      final response = await _client
+          .post(uri, headers: _headers(apiKey), body: jsonEncode(body))
+          .timeout(const Duration(seconds: 10));
 
       AppLogging.app(
         'OpenAI: response status=${response.statusCode} '
