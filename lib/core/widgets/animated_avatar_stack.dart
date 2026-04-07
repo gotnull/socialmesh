@@ -198,7 +198,8 @@ class AnimatedAvatarStackState extends State<AnimatedAvatarStack>
   /// Explicit animation controller for coordinated motion.
   late final AnimationController _controller;
 
-  /// Position curve: slight overshoot for spring feel.
+  /// Position curve: smooth deceleration, no overshoot to avoid
+  /// glitching at the ShaderMask fade edge.
   late final Animation<double> _positionAnim;
 
   /// Opacity curve: smooth ease-in-out, no overshoot.
@@ -215,7 +216,7 @@ class AnimatedAvatarStackState extends State<AnimatedAvatarStack>
     );
     _positionAnim = CurvedAnimation(
       parent: _controller,
-      curve: Curves.easeInOutBack,
+      curve: Curves.easeInOutCubic,
     );
     _opacityAnim = CurvedAnimation(
       parent: _controller,

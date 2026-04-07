@@ -79,7 +79,7 @@ void main() {
     testWidgets('renders single item statically', (tester) async {
       await tester.pumpWidget(_wrap(AnimatedAvatarStack(items: _items(1))));
       // Should render the single avatar circle.
-      expect(find.byType(AnimatedPositioned), findsOneWidget);
+      expect(find.byType(Positioned), findsOneWidget);
     });
 
     testWidgets('renders multiple items up to maxVisible', (tester) async {
@@ -87,12 +87,12 @@ void main() {
         _wrap(AnimatedAvatarStack(items: _items(6), maxVisible: 3)),
       );
       // Only 3 should be rendered.
-      expect(find.byType(AnimatedPositioned), findsNWidgets(3));
+      expect(find.byType(Positioned), findsNWidgets(3));
     });
 
     testWidgets('renders all items when count <= maxVisible', (tester) async {
       await tester.pumpWidget(_wrap(AnimatedAvatarStack(items: _items(2))));
-      expect(find.byType(AnimatedPositioned), findsNWidgets(2));
+      expect(find.byType(Positioned), findsNWidgets(2));
     });
 
     testWidgets('applies semantics label when provided', (tester) async {
@@ -273,12 +273,12 @@ void main() {
 
     testWidgets('handles items growing without error', (tester) async {
       await tester.pumpWidget(_wrap(AnimatedAvatarStack(items: _items(2))));
-      expect(find.byType(AnimatedPositioned), findsNWidgets(2));
+      expect(find.byType(Positioned), findsNWidgets(2));
 
       // Grow to 5.
       await tester.pumpWidget(_wrap(AnimatedAvatarStack(items: _items(5))));
       // Default maxVisible = 4, so 4 rendered.
-      expect(find.byType(AnimatedPositioned), findsNWidgets(4));
+      expect(find.byType(Positioned), findsNWidgets(4));
     });
   });
 
