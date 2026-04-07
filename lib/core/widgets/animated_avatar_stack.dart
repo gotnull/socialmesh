@@ -198,8 +198,7 @@ class AnimatedAvatarStackState extends State<AnimatedAvatarStack>
   /// Explicit animation controller for coordinated motion.
   late final AnimationController _controller;
 
-  /// Position curve: smooth deceleration, no overshoot to avoid
-  /// glitching at the ShaderMask fade edge.
+  /// Position curve: spring overshoot for premium feel.
   late final Animation<double> _positionAnim;
 
   /// Opacity curve: smooth ease-in-out, no overshoot.
@@ -216,7 +215,7 @@ class AnimatedAvatarStackState extends State<AnimatedAvatarStack>
     );
     _positionAnim = CurvedAnimation(
       parent: _controller,
-      curve: Curves.easeInOutCubic,
+      curve: Curves.easeInOutBack,
     );
     _opacityAnim = CurvedAnimation(
       parent: _controller,
@@ -320,11 +319,16 @@ class AnimatedAvatarStackState extends State<AnimatedAvatarStack>
         ? Colors.black.withValues(alpha: 0.6)
         : Colors.white.withValues(alpha: 0.9);
 
+    // Horizontal padding absorbs easeInOutBack overshoot so avatars
+    // don't glitch at the ShaderMask fade edges. Only needed when
+    // cycling is possible (2+ items).
+    final overshootPad = visibleCount >= 2 ? 8.0 : 0.0;
+
     Widget stack = AnimatedBuilder(
       animation: _controller,
       builder: (context, _) {
         return SizedBox(
-          width: totalWidth,
+          width: totalWidth + overshootPad * 2,
           height: totalHeight,
           child: Stack(
             clipBehavior: Clip.none,
@@ -333,6 +337,7 @@ class AnimatedAvatarStackState extends State<AnimatedAvatarStack>
               step,
               avatarSize,
               borderColor,
+              overshootPad,
             ),
           ),
         );
@@ -366,6 +371,7 @@ class AnimatedAvatarStackState extends State<AnimatedAvatarStack>
     double step,
     double size,
     Color borderColor,
+    double padLeft,
   ) {
     final count = items.length;
     if (count == 0) return const [];
@@ -392,8 +398,8 @@ class AnimatedAvatarStackState extends State<AnimatedAvatarStack>
       final item = items[curItemIndex];
 
       // Interpolate position from previous slot to current slot.
-      final fromLeft = prevSlotForItem * step;
-      final toLeft = curSlot * step;
+      final fromLeft = padLeft + prevSlotForItem * step;
+      final toLeft = padLeft + curSlot * step;
       final targetLeft = fromLeft + (toLeft - fromLeft) * posT;
 
       // Interpolate opacity based on current slot.

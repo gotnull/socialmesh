@@ -132,10 +132,10 @@ void main() {
           ),
         ),
       );
-      // Expected width: size + 2 * (size * (1 - overlap))
-      // = 40 + 2 * 24 = 88
+      // Expected width: size + 2*(size*(1-overlap)) + 2*8 (overshoot pad)
+      // = 40 + 2*24 + 16 = 104
       final sizedBox = tester.widget<SizedBox>(find.byType(SizedBox).first);
-      expect(sizedBox.width, closeTo(88, 0.1));
+      expect(sizedBox.width, closeTo(104, 0.1));
       expect(sizedBox.height, size);
     });
 
