@@ -79,7 +79,7 @@ dependencies:
   record: ^6.0.0
   live_activities: ^2.4.7
   package_info_plus: ^9.0.1
-  device_info_plus: ^11.2.0
+  device_info_plus: ^12.4.0
 
   # In-App Purchases (RevenueCat)
   purchases_flutter: ^9.15.1
