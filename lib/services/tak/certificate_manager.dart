@@ -213,10 +213,7 @@ class TakCertificateManager {
         ),
       );
     final pair = keyGen.generateKeyPair();
-    return pc.AsymmetricKeyPair(
-      pair.publicKey as pc.RSAPublicKey,
-      pair.privateKey as pc.RSAPrivateKey,
-    );
+    return pc.AsymmetricKeyPair(pair.publicKey, pair.privateKey);
   }
 
   String _buildCert({
