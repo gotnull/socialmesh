@@ -1357,7 +1357,10 @@ final rebootExpectedProvider = NotifierProvider<RebootExpectedNotifier, bool>(
 /// Helper function to clear all device-specific data before connecting to a (potentially different) device.
 /// This follows the Meshtastic iOS approach of always fetching fresh data from the device.
 /// Should be called BEFORE protocol.start() in all connection paths.
-Future<void> clearDeviceDataBeforeConnect(WidgetRef ref, {bool clearNodeData = false}) async {
+Future<void> clearDeviceDataBeforeConnect(
+  WidgetRef ref, {
+  bool clearNodeData = false,
+}) async {
   final messageCount = ref.read(messagesProvider).length;
   AppLogging.app(
     '🧹 Clearing device data before new connection '
@@ -1420,11 +1423,16 @@ Future<void> clearDeviceDataBeforeConnect(WidgetRef ref, {bool clearNodeData = f
     );
   }
 
-  AppLogging.app('✅ Device data cleared (nodes ${clearNodeData ? 'cleared' : 'preserved'}) - ready for fresh data from device');
+  AppLogging.app(
+    '✅ Device data cleared (nodes ${clearNodeData ? 'cleared' : 'preserved'}) - ready for fresh data from device',
+  );
 }
 
 /// Ref-based version for use in providers (non-widget contexts)
-Future<void> clearDeviceDataBeforeConnectRef(Ref ref, {bool clearNodeData = false}) async {
+Future<void> clearDeviceDataBeforeConnectRef(
+  Ref ref, {
+  bool clearNodeData = false,
+}) async {
   final messageCount = ref.read(messagesProvider).length;
   AppLogging.app(
     '🧹 Clearing device data before new connection '
@@ -1486,7 +1494,9 @@ Future<void> clearDeviceDataBeforeConnectRef(Ref ref, {bool clearNodeData = fals
     );
   }
 
-  AppLogging.app('✅ Device data cleared (nodes ${clearNodeData ? 'cleared' : 'preserved'}) - ready for fresh data from device');
+  AppLogging.app(
+    '✅ Device data cleared (nodes ${clearNodeData ? 'cleared' : 'preserved'}) - ready for fresh data from device',
+  );
 }
 
 // Store the last known device ID for reconnection attempts
