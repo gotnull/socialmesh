@@ -4,6 +4,7 @@
 import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:socialmesh/models/social.dart';
 import 'package:socialmesh/providers/auth_providers.dart';
@@ -41,10 +42,27 @@ class FakeSignalService extends SignalService {
       presenceInfo: presenceInfo,
     );
   }
+
+  @override
+  Future<void> init() async {}
+
+  @override
+  Future<List<Post>> getActiveSignals() async => [];
+
+  @override
+  Future<List<Post>> getAllLocalSignals() async => [];
+
+  @override
+  Future<int> cleanupExpiredSignals() async => 0;
+
+  @override
+  Future<int> retryCloudLookups() async => 0;
 }
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  SharedPreferences.setMockInitialValues({});
+
   test('countdown tick fades and removes expired signals', () {
     fakeAsync((async) {
       var now = DateTime(2024, 1, 1, 12, 0, 0);

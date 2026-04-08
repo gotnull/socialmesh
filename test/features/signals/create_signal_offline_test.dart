@@ -50,6 +50,21 @@ class FakeSignalService extends SignalService {
       presenceInfo: presenceInfo,
     );
   }
+
+  @override
+  Future<void> init() async {}
+
+  @override
+  Future<List<Post>> getActiveSignals() async => [];
+
+  @override
+  Future<List<Post>> getAllLocalSignals() async => [];
+
+  @override
+  Future<int> cleanupExpiredSignals() async => 0;
+
+  @override
+  Future<int> retryCloudLookups() async => 0;
 }
 
 void main() {
