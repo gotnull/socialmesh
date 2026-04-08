@@ -300,45 +300,46 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             }
           },
         ),
-        _SearchableSettingItem(
-          icon: Icons.translate,
-          title: purchaseState.hasFeature(PremiumFeature.translation)
-              ? context.l10n.translationSettingsSearchTitle
-              : storeProducts[RevenueCatConfig.translationPackProductId]
-                        ?.title ??
-                    context.l10n.settingsSearchTranslationPackTitle,
-          subtitle: purchaseState.hasFeature(PremiumFeature.translation)
-              ? context.l10n.translationSettingsSearchSubtitle
-              : context.l10n.settingsSearchTranslationPackSubtitle,
-          keywords: [
-            'translation',
-            'translate',
-            'language',
-            'foreign',
-            'multilingual',
-            'privacy',
-            'api',
-            'key',
-            'byo',
-            'cache',
-          ],
-          section: context.l10n.settingsSectionPremium,
-          onTap: () {
-            if (purchaseState.hasFeature(PremiumFeature.translation)) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const TranslationSettingsScreen(),
-                ),
-              );
-            } else {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
-              );
-            }
-          },
-        ),
+        if (AppFeatureFlags.isTranslationEnabled)
+          _SearchableSettingItem(
+            icon: Icons.translate,
+            title: purchaseState.hasFeature(PremiumFeature.translation)
+                ? context.l10n.translationSettingsSearchTitle
+                : storeProducts[RevenueCatConfig.translationPackProductId]
+                          ?.title ??
+                      context.l10n.settingsSearchTranslationPackTitle,
+            subtitle: purchaseState.hasFeature(PremiumFeature.translation)
+                ? context.l10n.translationSettingsSearchSubtitle
+                : context.l10n.settingsSearchTranslationPackSubtitle,
+            keywords: [
+              'translation',
+              'translate',
+              'language',
+              'foreign',
+              'multilingual',
+              'privacy',
+              'api',
+              'key',
+              'byo',
+              'cache',
+            ],
+            section: context.l10n.settingsSectionPremium,
+            onTap: () {
+              if (purchaseState.hasFeature(PremiumFeature.translation)) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const TranslationSettingsScreen(),
+                  ),
+                );
+              } else {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+                );
+              }
+            },
+          ),
 
         // Profile
         _SearchableSettingItem(
@@ -1605,29 +1606,31 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         ),
         const SizedBox(height: AppTheme.spacing8),
         // Premium feature tiles - Translation Pack first (new), then others
-        _PremiumFeatureTile(
-          icon: Icons.translate_outlined,
-          iconColor: AccentColors.teal,
-          title:
-              storeProducts[RevenueCatConfig.translationPackProductId]?.title ??
-              context.l10n.settingsSearchTranslationPackTitle,
-          feature: PremiumFeature.translation,
-          onTap: () {
-            if (purchaseState.hasFeature(PremiumFeature.translation)) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const TranslationSettingsScreen(),
-                ),
-              );
-            } else {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
-              );
-            }
-          },
-        ),
+        if (AppFeatureFlags.isTranslationEnabled)
+          _PremiumFeatureTile(
+            icon: Icons.translate_outlined,
+            iconColor: AccentColors.teal,
+            title:
+                storeProducts[RevenueCatConfig.translationPackProductId]
+                    ?.title ??
+                context.l10n.settingsSearchTranslationPackTitle,
+            feature: PremiumFeature.translation,
+            onTap: () {
+              if (purchaseState.hasFeature(PremiumFeature.translation)) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const TranslationSettingsScreen(),
+                  ),
+                );
+              } else {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+                );
+              }
+            },
+          ),
         _PremiumFeatureTile(
           icon: Icons.palette_outlined,
           iconColor: AccentColors.purple,

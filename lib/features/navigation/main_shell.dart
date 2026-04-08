@@ -579,21 +579,25 @@ class _MainShellState extends ConsumerState<MainShell> {
     ),
 
     // Premium Features - mixed requirements
-    DrawerMenuItem(
-      icon: Icons.translate_outlined,
-      label: l10n.navigationTranslationPack,
-      screen: const TranslationSettingsScreen(),
-      premiumFeature: PremiumFeature.translation,
-      sectionHeader: l10n.navigationSectionPremium,
-      iconColor: AccentColors.teal,
-      whatsNewBadgeKey: 'translation_pack',
-    ),
+    if (AppFeatureFlags.isTranslationEnabled)
+      DrawerMenuItem(
+        icon: Icons.translate_outlined,
+        label: l10n.navigationTranslationPack,
+        screen: const TranslationSettingsScreen(),
+        premiumFeature: PremiumFeature.translation,
+        sectionHeader: l10n.navigationSectionPremium,
+        iconColor: AccentColors.teal,
+        whatsNewBadgeKey: 'translation_pack',
+      ),
     DrawerMenuItem(
       icon: Icons.palette_outlined,
       label: l10n.navigationThemePack,
       screen: const ThemeSettingsScreen(),
       premiumFeature: PremiumFeature.premiumThemes,
       iconColor: AccentColors.purple,
+      sectionHeader: !AppFeatureFlags.isTranslationEnabled
+          ? l10n.navigationSectionPremium
+          : null,
     ),
     DrawerMenuItem(
       icon: Icons.music_note_outlined,

@@ -2529,6 +2529,7 @@ class _MessageBubble extends ConsumerWidget {
   }
 
   bool _isTranslatable(Message msg, WidgetRef ref) {
+    if (!AppFeatureFlags.isTranslationEnabled) return false;
     if (msg.text.trim().isEmpty || msg.isEmoji) return false;
     // Hide "Translate" if this message already has a successful translation
     final translationState = ref.read(messageTranslationProvider(msg.id));

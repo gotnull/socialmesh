@@ -433,6 +433,18 @@ class AppFeatureFlags {
     }
   }
 
+  /// Whether the Translation Pack feature UI is enabled.
+  /// Set `TRANSLATION_ENABLED=true` in `.env` to enable.
+  /// Default: false — translation features are hidden until ready for release.
+  static bool get isTranslationEnabled {
+    try {
+      final raw = dotenv.env['TRANSLATION_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Whether the in-app language selector is shown in Appearance & Accessibility.
   /// Set `LANGUAGE_SELECTOR_ENABLED=true` in `.env` to enable.
   /// Default: false — translations are handled by the OS locale automatically.
