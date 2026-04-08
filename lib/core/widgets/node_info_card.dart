@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/mesh_models.dart';
 import 'app_bottom_sheet.dart';
@@ -108,6 +109,140 @@ class NodeInfoCard extends ConsumerWidget {
     if (confirmed == true && context.mounted) {
       onTraceroute?.call();
     }
+  }
+
+  void _showLegend(BuildContext context) {
+    final l10n = context.l10n;
+    final items =
+        <({IconData icon, Color? iconColor, String label, String description})>[
+          if (!isMyNode && onMessage != null) ...[
+            (
+              icon: Icons.swap_horiz,
+              iconColor: null,
+              label: l10n.nodeInfoPosition,
+              description: l10n.nodeInfoLegendPosition,
+            ),
+            (
+              icon: Icons.message,
+              iconColor: null,
+              label: l10n.nodeInfoMessage,
+              description: l10n.nodeInfoLegendMessage,
+            ),
+          ],
+          if (onShareLocation != null)
+            (
+              icon: Icons.share,
+              iconColor: null,
+              label: l10n.nodeInfoShareLocation,
+              description: l10n.nodeInfoLegendShare,
+            ),
+          if (onCopyCoordinates != null)
+            (
+              icon: Icons.copy,
+              iconColor: null,
+              label: l10n.nodeInfoCopyCoordinates,
+              description: l10n.nodeInfoLegendCopy,
+            ),
+          if (onTraceroute != null)
+            (
+              icon: Icons.route,
+              iconColor: null,
+              label: l10n.nodeInfoTraceroute,
+              description: l10n.nodeInfoLegendTraceroute,
+            ),
+          if (onViewDetails != null)
+            (
+              icon: Icons.open_in_new,
+              iconColor: null,
+              label: l10n.nodeInfoViewDetails,
+              description: l10n.nodeInfoLegendViewDetails,
+            ),
+          if (onViewHistory != null)
+            (
+              icon: Icons.history,
+              iconColor: null,
+              label: l10n.nodeInfoViewHistory,
+              description: l10n.nodeInfoLegendHistory,
+            ),
+          if (onShowTrack != null)
+            (
+              icon: Icons.polyline,
+              iconColor: null,
+              label: l10n.nodeInfoShowTrack,
+              description: l10n.nodeInfoLegendTrack,
+            ),
+          if (onViewPositionLog != null)
+            (
+              icon: Icons.timeline,
+              iconColor: null,
+              label: l10n.nodeInfoViewPositionLog,
+              description: l10n.nodeInfoLegendPositionLog,
+            ),
+        ];
+
+    AppBottomSheet.show(
+      context: context,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.nodeInfoLegendTitle,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: context.textPrimary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing16),
+          for (final item in items)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppTheme.spacing12),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: context.background,
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
+                    ),
+                    child: Center(
+                      child: Icon(
+                        item.icon,
+                        size: 18,
+                        color: item.iconColor ?? context.textSecondary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppTheme.spacing12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item.label,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: context.textPrimary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                        const SizedBox(height: AppTheme.spacing4),
+                        Text(
+                          item.description,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: context.textSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
   }
 
   Future<void> _exchangePositions(BuildContext context, WidgetRef ref) async {
@@ -357,6 +492,24 @@ class NodeInfoCard extends ConsumerWidget {
                               color: context.textPrimary,
                             ),
                             overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: AppTheme.spacing4),
+                        GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            _showLegend(context);
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(AppTheme.spacing4),
+                            child: Icon(
+                              Icons.info_outline,
+                              size: 14,
+                              color: context.textTertiary.withValues(
+                                alpha: 0.5,
+                              ),
+                            ),
                           ),
                         ),
                         if (isMyNode) ...[
@@ -697,7 +850,7 @@ class NodeInfoCard extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(AppTheme.radius8),
                         child: Center(
                           child: Icon(
-                            Icons.route,
+                            Icons.polyline,
                             size: 18,
                             color: isTrackVisible
                                 ? context.accentColor

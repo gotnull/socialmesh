@@ -6418,6 +6418,66 @@ abstract class AppLocalizations {
   /// **'Send a traceroute packet to {name}? This uses mesh airtime.'**
   String nodeInfoTracerouteConfirmMessage(String name);
 
+  /// Title for the node info card action legend bottom sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Action Legend'**
+  String get nodeInfoLegendTitle;
+
+  /// Legend description for the position exchange action.
+  ///
+  /// In en, this message translates to:
+  /// **'Request the node\'s current GPS position over the mesh.'**
+  String get nodeInfoLegendPosition;
+
+  /// Legend description for the send message action.
+  ///
+  /// In en, this message translates to:
+  /// **'Open a direct message conversation with this node.'**
+  String get nodeInfoLegendMessage;
+
+  /// Legend description for the share location action.
+  ///
+  /// In en, this message translates to:
+  /// **'Share this node\'s coordinates as a link via the system share sheet.'**
+  String get nodeInfoLegendShare;
+
+  /// Legend description for the copy coordinates action.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy the node\'s GPS coordinates to the clipboard.'**
+  String get nodeInfoLegendCopy;
+
+  /// Legend description for the traceroute action.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a traceroute packet to discover the route to this node.'**
+  String get nodeInfoLegendTraceroute;
+
+  /// Legend description for the view details action.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the full detail screen for this node.'**
+  String get nodeInfoLegendViewDetails;
+
+  /// Legend description for the view history action.
+  ///
+  /// In en, this message translates to:
+  /// **'View the traceroute history for this node.'**
+  String get nodeInfoLegendHistory;
+
+  /// Legend description for the show/hide track action.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle the node\'s position track polyline on the map.'**
+  String get nodeInfoLegendTrack;
+
+  /// Legend description for the position log action.
+  ///
+  /// In en, this message translates to:
+  /// **'View the full position log for this node.'**
+  String get nodeInfoLegendPositionLog;
+
   /// Empty state text when no binding variables match the search.
   ///
   /// In en, this message translates to:

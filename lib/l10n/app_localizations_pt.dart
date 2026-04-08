@@ -3619,6 +3619,45 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get nodeInfoLegendTitle => 'Action Legend';
+
+  @override
+  String get nodeInfoLegendPosition =>
+      'Request the node\'s current GPS position over the mesh.';
+
+  @override
+  String get nodeInfoLegendMessage =>
+      'Open a direct message conversation with this node.';
+
+  @override
+  String get nodeInfoLegendShare =>
+      'Share this node\'s coordinates as a link via the system share sheet.';
+
+  @override
+  String get nodeInfoLegendCopy =>
+      'Copy the node\'s GPS coordinates to the clipboard.';
+
+  @override
+  String get nodeInfoLegendTraceroute =>
+      'Send a traceroute packet to discover the route to this node.';
+
+  @override
+  String get nodeInfoLegendViewDetails =>
+      'Open the full detail screen for this node.';
+
+  @override
+  String get nodeInfoLegendHistory =>
+      'View the traceroute history for this node.';
+
+  @override
+  String get nodeInfoLegendTrack =>
+      'Toggle the node\'s position track polyline on the map.';
+
+  @override
+  String get nodeInfoLegendPositionLog =>
+      'View the full position log for this node.';
+
+  @override
   String get bindingSelectorNoResults => 'Nenhuma variável encontrada';
 
   @override

@@ -4758,6 +4758,46 @@
             }
         }
     },
+    "nodeInfoLegendTitle": "Action Legend",
+    "@nodeInfoLegendTitle": {
+        "description": "Title for the node info card action legend bottom sheet."
+    },
+    "nodeInfoLegendPosition": "Request the node's current GPS position over the mesh.",
+    "@nodeInfoLegendPosition": {
+        "description": "Legend description for the position exchange action."
+    },
+    "nodeInfoLegendMessage": "Open a direct message conversation with this node.",
+    "@nodeInfoLegendMessage": {
+        "description": "Legend description for the send message action."
+    },
+    "nodeInfoLegendShare": "Share this node's coordinates as a link via the system share sheet.",
+    "@nodeInfoLegendShare": {
+        "description": "Legend description for the share location action."
+    },
+    "nodeInfoLegendCopy": "Copy the node's GPS coordinates to the clipboard.",
+    "@nodeInfoLegendCopy": {
+        "description": "Legend description for the copy coordinates action."
+    },
+    "nodeInfoLegendTraceroute": "Send a traceroute packet to discover the route to this node.",
+    "@nodeInfoLegendTraceroute": {
+        "description": "Legend description for the traceroute action."
+    },
+    "nodeInfoLegendViewDetails": "Open the full detail screen for this node.",
+    "@nodeInfoLegendViewDetails": {
+        "description": "Legend description for the view details action."
+    },
+    "nodeInfoLegendHistory": "View the traceroute history for this node.",
+    "@nodeInfoLegendHistory": {
+        "description": "Legend description for the view history action."
+    },
+    "nodeInfoLegendTrack": "Toggle the node's position track polyline on the map.",
+    "@nodeInfoLegendTrack": {
+        "description": "Legend description for the show/hide track action."
+    },
+    "nodeInfoLegendPositionLog": "View the full position log for this node.",
+    "@nodeInfoLegendPositionLog": {
+        "description": "Legend description for the position log action."
+    },
     "bindingSelectorNoResults": "No variables found",
     "@bindingSelectorNoResults": {
         "description": "Empty state text when no binding variables match the search."
