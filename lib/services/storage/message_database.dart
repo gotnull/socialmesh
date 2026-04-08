@@ -24,7 +24,7 @@ import '../../utils/text_sanitizer.dart';
 class MessageDatabase {
   static const _dbName = 'messages.db';
   static const _tableName = 'messages';
-  static const _dbVersion = 7;
+  static const _dbVersion = 8;
 
   /// Maximum messages retained per conversation (DM or channel).
   static const int maxMessagesPerConversation = 500;
@@ -188,6 +188,37 @@ class MessageDatabase {
             'messages with NULL channel',
           );
         }
+        if (oldVersion < 8) {
+          // Deduplicate messages on reconnect: both foreground and background
+          // ingest paths now produce deterministic IDs from packet identity
+          // (pkt-<fromHex>-<packetIdHex>), so the PRIMARY KEY naturally
+          // deduplicates via INSERT OR REPLACE.  This migration:
+          //
+          // 1. Removes legacy duplicate rows that accumulated before the fix
+          //    (keeps the row with the smallest rowid per packet identity).
+          // 2. Creates a unique index as a safety net for any edge case
+          //    where a non-deterministic id reaches the DB.
+          final removed = await db.rawDelete(
+            'DELETE FROM $_tableName WHERE packet_id IS NOT NULL ' // lint-allow: hardcoded-string
+            'AND rowid NOT IN (' // lint-allow: hardcoded-string
+            '  SELECT MIN(rowid) FROM $_tableName ' // lint-allow: hardcoded-string
+            '  WHERE packet_id IS NOT NULL ' // lint-allow: hardcoded-string
+            '  GROUP BY packet_id, from_node' // lint-allow: hardcoded-string
+            ')', // lint-allow: hardcoded-string
+          );
+          AppLogging.storage(
+            'v8 migration: removed $removed duplicate messages',
+          );
+          await db.execute(
+            'CREATE UNIQUE INDEX IF NOT EXISTS ' // lint-allow: hardcoded-string
+            'idx_messages_packet_identity ' // lint-allow: hardcoded-string
+            'ON $_tableName (packet_id, from_node) ' // lint-allow: hardcoded-string
+            'WHERE packet_id IS NOT NULL', // lint-allow: hardcoded-string
+          );
+          AppLogging.storage(
+            'v8 migration: created unique index on (packet_id, from_node)',
+          );
+        }
       },
     );
 
@@ -255,6 +286,14 @@ class MessageDatabase {
     await db.execute('''
       CREATE INDEX idx_messages_packet_id
       ON $_tableName (packet_id)
+    ''');
+
+    // Unique index on packet identity to prevent duplicate messages from
+    // concurrent foreground/background ingest paths on reconnect.
+    await db.execute('''
+      CREATE UNIQUE INDEX idx_messages_packet_identity
+      ON $_tableName (packet_id, from_node)
+      WHERE packet_id IS NOT NULL
     ''');
 
     AppLogging.storage('Created messages table with indexes');

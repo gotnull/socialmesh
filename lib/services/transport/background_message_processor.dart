@@ -383,6 +383,7 @@ class BackgroundMessageProcessor {
     final timestamp = _plausibleTimestamp(packet);
 
     final message = Message(
+      id: Message.deterministicId(packetId: packet.id, fromNode: packet.from),
       from: packet.from,
       to: packet.to,
       text: text,

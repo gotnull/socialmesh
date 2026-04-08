@@ -298,6 +298,25 @@ class Message {
   bool get isRetrying => status == MessageStatus.retrying;
   bool get isRetryable => routingError?.isRetryable ?? false;
 
+  /// Generate a deterministic message ID from mesh packet identity.
+  ///
+  /// Uses the firmware-assigned [packetId] and [fromNode] to produce a
+  /// stable identifier that is identical regardless of which ingest path
+  /// (foreground ProtocolService or BackgroundMessageProcessor) creates
+  /// the [Message] object.  This eliminates the TOCTOU race where both
+  /// paths generate different random UUIDs for the same physical packet.
+  ///
+  /// Format: `pkt-<fromHex>-<packetIdHex>` — human-readable, cannot
+  /// collide with UUID v4 or SHA1 IDs from push notifications.
+  static String deterministicId({
+    required int packetId,
+    required int fromNode,
+  }) {
+    final fromHex = fromNode.toRadixString(16);
+    final pktHex = packetId.toRadixString(16);
+    return 'pkt-$fromHex-$pktHex'; // lint-allow: hardcoded-string
+  }
+
   /// Returns true when a manual Resend action should be offered: the message
   /// is a DM from us, is in an unconfirmed/failed state, and is not currently
   /// being retried automatically.
