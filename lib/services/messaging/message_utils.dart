@@ -52,13 +52,19 @@ Message? parsePushMessagePayload(Map<String, dynamic> data) {
     final int fromVal = from ?? 0;
     final int toVal = to ?? 0;
 
+    // Normalise channel for broadcast messages: if the push payload omitted
+    // the channel key, default to Primary Channel (0). Without this,
+    // broadcast messages would have channel == null and be invisible in
+    // the PrimaryChannel UI (which filters on channel == 0 && isBroadcast).
+    final int? normalisedChannel = channel ?? (toVal == 0xFFFFFFFF ? 0 : null);
+
     final message = Message(
       id: id,
       from: fromVal,
       to: toVal,
       text: text,
       timestamp: timestamp,
-      channel: channel,
+      channel: normalisedChannel,
       received: true,
       source: MessageSource.unknown,
     );

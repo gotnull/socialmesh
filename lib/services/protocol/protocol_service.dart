@@ -447,6 +447,13 @@ class ProtocolService {
 
   static const Duration _messagePacketTtl = Duration(minutes: 120);
 
+  /// Minimum plausible Unix timestamp for message timestamps.
+  /// 2020-01-01 00:00:00 UTC — any rxTime before this is treated as invalid.
+  static const int _minPlausibleEpoch = 1577836800;
+
+  /// Maximum clock drift tolerance: 1 day into the future.
+  static const int _maxFutureSlack = 86400;
+
   // Track pending messages by packet ID for delivery status updates
   final Map<int, String> _pendingMessages = {}; // packetId -> messageId
 
@@ -2864,9 +2871,13 @@ class ProtocolService {
       // to the phone over BLE. It is never sent over-the-air. Use it as the
       // message timestamp so the chat shows when the radio actually received
       // the packet, not when the app processed it.
-      final timestamp = packet.hasRxTime() && packet.rxTime > 0
-          ? DateTime.fromMillisecondsSinceEpoch(packet.rxTime * 1000)
-          : DateTime.now();
+      //
+      // Validate that rxTime is plausible: devices without a time source
+      // (no GPS, no phone sync) may report rxTime as 0 or a small uptime
+      // value. Historical messages replayed on connect inherit whatever
+      // rxTime the device stored at original receipt — if the device had
+      // no clock then, rxTime will be invalid.
+      final timestamp = _plausibleTimestamp(packet);
 
       final message = Message(
         from: packet.from,
@@ -3650,6 +3661,25 @@ class ProtocolService {
       _handleFromRadioMetadata(_pendingMetadata!);
       _pendingMetadata = null;
     }
+
+    // Sync phone time to device as early as possible so that any messages
+    // received by the device from this point onward carry a valid rxTime.
+    // Historical messages already stored on the device retain whatever
+    // timestamp the device had at original receipt, but this sync ensures
+    // the device's clock is correct for the remainder of the session.
+    // The post-config sync in _requestPostConfigData provides a second
+    // reliable sync point after all config data has been exchanged.
+    unawaited(
+      Future.delayed(const Duration(milliseconds: 50), () async {
+        if (!_transport.isConnected || _myNodeNum == null) return;
+        try {
+          await syncTime();
+          AppLogging.protocol('Early time sync sent after myNodeInfo');
+        } catch (e) {
+          AppLogging.protocol('Early time sync failed (non-fatal): $e');
+        }
+      }),
+    );
 
     // Request our own position after a short delay
     Future.delayed(const Duration(milliseconds: 300), () {
@@ -6629,6 +6659,35 @@ class ProtocolService {
 
     final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+  }
+
+  /// Extract a plausible [DateTime] from a mesh packet's rxTime.
+  ///
+  /// Returns the rxTime-derived timestamp when it passes validation:
+  /// - non-zero
+  /// - after [_minPlausibleEpoch] (2020-01-01)
+  /// - not more than [_maxFutureSlack] seconds into the future
+  ///
+  /// Falls back to [DateTime.now] with a diagnostic log otherwise.
+  static DateTime _plausibleTimestamp(pb.MeshPacket packet) {
+    if (packet.hasRxTime() && packet.rxTime > 0) {
+      final rxEpoch = packet.rxTime; // seconds since 1970
+      final nowEpoch = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+      if (rxEpoch >= _minPlausibleEpoch &&
+          rxEpoch <= nowEpoch + _maxFutureSlack) {
+        return DateTime.fromMillisecondsSinceEpoch(rxEpoch * 1000);
+      }
+      AppLogging.protocol(
+        'Implausible rxTime=$rxEpoch from=${packet.from} '
+        'packetId=${packet.id} — falling back to local time',
+      );
+    } else {
+      AppLogging.protocol(
+        'Missing rxTime from=${packet.from} packetId=${packet.id} '
+        '— using local time (device may lack a time source)',
+      );
+    }
+    return DateTime.now();
   }
 
   /// Local-only: set the device time to a specific Unix timestamp.

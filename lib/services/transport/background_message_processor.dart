@@ -311,6 +311,32 @@ class BackgroundMessageProcessor {
   /// Dedup TTL matching the foreground ProtocolService (120 min).
   static const Duration _messageDeduplicateTtl = Duration(minutes: 120);
 
+  /// Minimum plausible Unix epoch (2020-01-01) — matches ProtocolService.
+  static const int _minPlausibleEpoch = 1577836800;
+
+  /// Maximum future tolerance: 1 day — matches ProtocolService.
+  static const int _maxFutureSlack = 86400;
+
+  /// Validate rxTime and return a plausible [DateTime].
+  ///
+  /// Mirrors [ProtocolService._plausibleTimestamp] so foreground and
+  /// background paths produce identical timestamps for the same packet.
+  static DateTime _plausibleTimestamp(pb.MeshPacket packet) {
+    if (packet.hasRxTime() && packet.rxTime > 0) {
+      final rxEpoch = packet.rxTime;
+      final nowEpoch = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+      if (rxEpoch >= _minPlausibleEpoch &&
+          rxEpoch <= nowEpoch + _maxFutureSlack) {
+        return DateTime.fromMillisecondsSinceEpoch(rxEpoch * 1000);
+      }
+      AppLogging.ble(
+        'BackgroundMessageProcessor: implausible rxTime=$rxEpoch '
+        'from=${packet.from} — falling back to local time',
+      );
+    }
+    return DateTime.now();
+  }
+
   Future<void> _handleTextMessage(pb.MeshPacket packet, pb.Data data) async {
     // ---- Deduplication via packet dedupe store --------------------------
     final dedupeKey = MeshPacketKey(
@@ -350,9 +376,11 @@ class BackgroundMessageProcessor {
     // Use rxTime from the radio firmware (same as foreground path) so
     // timestamps are consistent regardless of which path processed the
     // message. rxTime is when the radio actually received the packet.
-    final timestamp = packet.hasRxTime() && packet.rxTime > 0
-        ? DateTime.fromMillisecondsSinceEpoch(packet.rxTime * 1000)
-        : DateTime.now();
+    //
+    // Validate plausibility: devices without a time source may report 0
+    // or a small uptime value. Reject anything before 2020-01-01 or more
+    // than 1 day into the future.
+    final timestamp = _plausibleTimestamp(packet);
 
     final message = Message(
       from: packet.from,
