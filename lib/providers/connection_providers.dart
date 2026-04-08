@@ -1372,7 +1372,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       // Ignore disconnect errors during invalidation.
     }
 
-    await clearDeviceDataBeforeConnectRef(ref);
+    await clearDeviceDataBeforeConnectRef(ref, clearNodeData: true);
     await settings.clearLastDevice();
     clearSavedDeviceId(ref);
     ref.read(connectedDeviceProvider.notifier).setState(null);

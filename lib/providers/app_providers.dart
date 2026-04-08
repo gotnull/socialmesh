@@ -1357,11 +1357,11 @@ final rebootExpectedProvider = NotifierProvider<RebootExpectedNotifier, bool>(
 /// Helper function to clear all device-specific data before connecting to a (potentially different) device.
 /// This follows the Meshtastic iOS approach of always fetching fresh data from the device.
 /// Should be called BEFORE protocol.start() in all connection paths.
-Future<void> clearDeviceDataBeforeConnect(WidgetRef ref) async {
+Future<void> clearDeviceDataBeforeConnect(WidgetRef ref, {bool clearNodeData = false}) async {
   final messageCount = ref.read(messagesProvider).length;
   AppLogging.app(
     '🧹 Clearing device data before new connection '
-    '(preserving $messageCount messages)...',
+    '(preserving $messageCount messages${clearNodeData ? '' : ' and nodes'})...',
   );
 
   // Messages are intentionally NOT cleared here. They must survive
@@ -1371,9 +1371,16 @@ Future<void> clearDeviceDataBeforeConnect(WidgetRef ref) async {
   // signature) already prevents duplicates when the device re-sends
   // messages after reconnection.
 
-  // Clear in-memory device state (nodes, channels) — these are re-fetched
-  // from the device on every connection.
-  ref.read(nodesProvider.notifier).clearNodes();
+  // Nodes are intentionally NOT cleared here by default. Like messages,
+  // they must survive reconnections so that previously discovered mesh
+  // nodes (which may exceed the device's limited NodeDB capacity of ~80)
+  // are not lost. The merge logic in NodesNotifier handles deduplication
+  // by nodeNum when the device re-sends its NodeDB after reconnection.
+  // Pass clearNodeData: true only when switching to a new device or
+  // explicitly forgetting the current one.
+  if (clearNodeData) {
+    ref.read(nodesProvider.notifier).clearNodes();
+  }
   ref.read(channelsProvider.notifier).clearChannels();
 
   // Reset new-nodes badge counter so it doesn't accumulate across reconnections.
@@ -1385,12 +1392,14 @@ Future<void> clearDeviceDataBeforeConnect(WidgetRef ref) async {
   // (files deleted, WAL/SHM journals stale). A failure here must never
   // prevent the user from reconnecting to a device.
 
-  // Clear persistent node storage (nodes come fresh from device)
-  try {
-    final nodeStorage = await ref.read(nodeStorageProvider.future);
-    await nodeStorage.clearNodes();
-  } catch (e) {
-    AppLogging.app('⚠️ clearDeviceData: nodeStorage.clearNodes failed: $e');
+  // Clear persistent node storage only when switching devices
+  if (clearNodeData) {
+    try {
+      final nodeStorage = await ref.read(nodeStorageProvider.future);
+      await nodeStorage.clearNodes();
+    } catch (e) {
+      AppLogging.app('⚠️ clearDeviceData: nodeStorage.clearNodes failed: $e');
+    }
   }
 
   // Clear telemetry data (device metrics, environment metrics, positions, etc.)
@@ -1411,15 +1420,15 @@ Future<void> clearDeviceDataBeforeConnect(WidgetRef ref) async {
     );
   }
 
-  AppLogging.app('✅ Device data cleared - ready for fresh data from device');
+  AppLogging.app('✅ Device data cleared (nodes ${clearNodeData ? 'cleared' : 'preserved'}) - ready for fresh data from device');
 }
 
 /// Ref-based version for use in providers (non-widget contexts)
-Future<void> clearDeviceDataBeforeConnectRef(Ref ref) async {
+Future<void> clearDeviceDataBeforeConnectRef(Ref ref, {bool clearNodeData = false}) async {
   final messageCount = ref.read(messagesProvider).length;
   AppLogging.app(
     '🧹 Clearing device data before new connection '
-    '(preserving $messageCount messages)...',
+    '(preserving $messageCount messages${clearNodeData ? '' : ' and nodes'})...',
   );
 
   // Messages are intentionally NOT cleared here. They must survive
@@ -1429,9 +1438,16 @@ Future<void> clearDeviceDataBeforeConnectRef(Ref ref) async {
   // signature) already prevents duplicates when the device re-sends
   // messages after reconnection.
 
-  // Clear in-memory device state (nodes, channels) — these are re-fetched
-  // from the device on every connection.
-  ref.read(nodesProvider.notifier).clearNodes();
+  // Nodes are intentionally NOT cleared here by default. Like messages,
+  // they must survive reconnections so that previously discovered mesh
+  // nodes (which may exceed the device's limited NodeDB capacity of ~80)
+  // are not lost. The merge logic in NodesNotifier handles deduplication
+  // by nodeNum when the device re-sends its NodeDB after reconnection.
+  // Pass clearNodeData: true only when switching to a new device or
+  // explicitly forgetting the current one.
+  if (clearNodeData) {
+    ref.read(nodesProvider.notifier).clearNodes();
+  }
   ref.read(channelsProvider.notifier).clearChannels();
 
   // Reset new-nodes badge counter so it doesn't accumulate across reconnections.
@@ -1442,12 +1458,14 @@ Future<void> clearDeviceDataBeforeConnectRef(Ref ref) async {
   // (files deleted, WAL/SHM journals stale). A failure here must never
   // prevent the user from reconnecting to a device.
 
-  // Clear persistent node storage (nodes come fresh from device)
-  try {
-    final nodeStorage = await ref.read(nodeStorageProvider.future);
-    await nodeStorage.clearNodes();
-  } catch (e) {
-    AppLogging.app('⚠️ clearDeviceData: nodeStorage.clearNodes failed: $e');
+  // Clear persistent node storage only when switching devices
+  if (clearNodeData) {
+    try {
+      final nodeStorage = await ref.read(nodeStorageProvider.future);
+      await nodeStorage.clearNodes();
+    } catch (e) {
+      AppLogging.app('⚠️ clearDeviceData: nodeStorage.clearNodes failed: $e');
+    }
   }
 
   // Clear telemetry data (device metrics, environment metrics, positions, etc.)
@@ -1468,7 +1486,7 @@ Future<void> clearDeviceDataBeforeConnectRef(Ref ref) async {
     );
   }
 
-  AppLogging.app('✅ Device data cleared - ready for fresh data from device');
+  AppLogging.app('✅ Device data cleared (nodes ${clearNodeData ? 'cleared' : 'preserved'}) - ready for fresh data from device');
 }
 
 // Store the last known device ID for reconnection attempts
@@ -4272,6 +4290,7 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
           // initial NodeDB dump don't carry. These fields arrive via
           // later telemetry packets; without this the stored last-known
           // values are clobbered with null on every reconnect.
+          batteryLevel: node.batteryLevel ?? existing.batteryLevel,
           temperature: node.temperature ?? existing.temperature,
           humidity: node.humidity ?? existing.humidity,
           voltage: node.voltage ?? existing.voltage,
@@ -4379,6 +4398,14 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
         // The protocol service emits MeshNode via copyWith, so fields
         // already on the node are preserved. But position and user
         // preferences need explicit merging.
+        //
+        // Telemetry fields (battery, voltage, etc.) are also preserved
+        // from existing when the incoming node lacks them. While the
+        // protocol's _nodes map usually carries these via copyWith,
+        // timing windows during _init re-invocations or placeholder
+        // emissions can produce nodes without telemetry. Without this
+        // preservation, battery stats become stale and only recover
+        // on reconnect (which re-populates _nodes from scratch).
         node = node.copyWith(
           // Preserve position if new node doesn't have one
           latitude: node.hasPosition ? node.latitude : existing.latitude,
@@ -4395,6 +4422,18 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
           isIgnored: currentIgnored.contains(node.nodeNum),
           // Preserve firstHeard — always keep the earliest value
           firstHeard: existing.firstHeard ?? node.firstHeard,
+          // Preserve telemetry from existing state when incoming node
+          // lacks it (e.g. placeholder emissions, _updateNodeLastHeard
+          // before _handleTelemetry on the same packet, or _init race
+          // conditions during provider stabilization).
+          batteryLevel: node.batteryLevel ?? existing.batteryLevel,
+          voltage: node.voltage ?? existing.voltage,
+          channelUtilization:
+              node.channelUtilization ?? existing.channelUtilization,
+          airUtilTx: node.airUtilTx ?? existing.airUtilTx,
+          uptimeSeconds: node.uptimeSeconds ?? existing.uptimeSeconds,
+          temperature: node.temperature ?? existing.temperature,
+          humidity: node.humidity ?? existing.humidity,
         );
       } else {
         // New node — isFavorite comes from protocol directly.
