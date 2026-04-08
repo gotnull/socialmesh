@@ -57,12 +57,19 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
   late final TextEditingController _freqController;
   late final FocusNode _freqFocusNode;
 
+  // Stable controller/focus for channel number field (same pattern).
+  late final TextEditingController _channelNumController;
+  late final FocusNode _channelNumFocusNode;
+
   @override
   void initState() {
     super.initState();
     _freqController = TextEditingController();
     _freqFocusNode = FocusNode();
     _freqFocusNode.addListener(_onFreqFocusChanged);
+    _channelNumController = TextEditingController();
+    _channelNumFocusNode = FocusNode();
+    _channelNumFocusNode.addListener(_onChannelNumFocusChanged);
     _loadCurrentConfig();
   }
 
@@ -72,6 +79,9 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
     _freqFocusNode.removeListener(_onFreqFocusChanged);
     _freqFocusNode.dispose();
     _freqController.dispose();
+    _channelNumFocusNode.removeListener(_onChannelNumFocusChanged);
+    _channelNumFocusNode.dispose();
+    _channelNumController.dispose();
     super.dispose();
   }
 
@@ -85,6 +95,18 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
       setState(() => _overrideFrequency = value);
       // Normalize the displayed text on commit
       _freqController.text = value > 0 ? value.toStringAsFixed(3) : '';
+    }
+  }
+
+  /// Commit the channel number value when the field loses focus.
+  void _onChannelNumFocusChanged() {
+    if (!_channelNumFocusNode.hasFocus) {
+      final text = _channelNumController.text.trim();
+      final parsed = int.tryParse(text);
+      final value = parsed ?? 0;
+      setState(() => _channelNum = value);
+      // Normalize the displayed text on commit
+      _channelNumController.text = '$value';
     }
   }
 
@@ -112,6 +134,11 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
       _freqController.text = config.overrideFrequency > 0
           ? config.overrideFrequency.toStringAsFixed(3)
           : '';
+    }
+    // Seed the channel number controller from device config,
+    // but only when the field is not actively being edited.
+    if (!_channelNumFocusNode.hasFocus) {
+      _channelNumController.text = '${config.channelNum}';
     }
   }
 
@@ -160,6 +187,11 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
     final freqText = _freqController.text.trim();
     final freqParsed = double.tryParse(freqText);
     _overrideFrequency = freqParsed ?? 0.0;
+
+    // Commit any in-progress channel number text before saving.
+    final channelNumText = _channelNumController.text.trim();
+    final channelNumParsed = int.tryParse(channelNumText);
+    _channelNum = channelNumParsed ?? 0;
 
     // Capture providers and UI dependencies before any await
     final protocol = ref.read(protocolServiceProvider);
@@ -656,8 +688,8 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                 width: 80,
                 child: TextFormField(
                   maxLength: 10,
-                  key: ValueKey('channelNum_$_channelNum'),
-                  initialValue: '$_channelNum',
+                  controller: _channelNumController,
+                  focusNode: _channelNumFocusNode,
                   keyboardType: TextInputType.number,
                   textAlign: TextAlign.center,
                   style: TextStyle(color: context.textPrimary),
@@ -679,10 +711,6 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                     ),
                     counterText: '',
                   ),
-                  onChanged: (value) {
-                    final parsed = int.tryParse(value);
-                    if (parsed != null) setState(() => _channelNum = parsed);
-                  },
                 ),
               ),
             ],

@@ -55,17 +55,30 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
   String _adminKey3 = '';
   bool _privateKeyVisible = false;
 
+  late final TextEditingController _privateKeyController;
+  late final TextEditingController _adminKey1Controller;
+  late final TextEditingController _adminKey2Controller;
+  late final TextEditingController _adminKey3Controller;
+
   StreamSubscription<config_pb.Config_SecurityConfig>? _configSubscription;
 
   @override
   void initState() {
     super.initState();
+    _privateKeyController = TextEditingController();
+    _adminKey1Controller = TextEditingController();
+    _adminKey2Controller = TextEditingController();
+    _adminKey3Controller = TextEditingController();
     _loadCurrentConfig();
   }
 
   @override
   void dispose() {
     _configSubscription?.cancel();
+    _privateKeyController.dispose();
+    _adminKey1Controller.dispose();
+    _adminKey2Controller.dispose();
+    _adminKey3Controller.dispose();
     super.dispose();
   }
 
@@ -82,17 +95,21 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
       }
       if (config.privateKey.isNotEmpty) {
         _privateKey = base64Encode(config.privateKey);
+        _privateKeyController.text = _privateKey;
       }
       // Admin keys are stored as a list
       final adminKeys = config.adminKey;
       if (adminKeys.isNotEmpty) {
         _adminKey1 = base64Encode(adminKeys[0]);
+        _adminKey1Controller.text = _adminKey1;
       }
       if (adminKeys.length > 1) {
         _adminKey2 = base64Encode(adminKeys[1]);
+        _adminKey2Controller.text = _adminKey2;
       }
       if (adminKeys.length > 2) {
         _adminKey3 = base64Encode(adminKeys[2]);
+        _adminKey3Controller.text = _adminKey3;
       }
     });
   }
@@ -150,6 +167,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
 
       safeSetState(() {
         _privateKey = base64Encode(Uint8List.fromList(privateKeyBytes));
+        _privateKeyController.text = _privateKey;
         _publicKey = base64Encode(Uint8List.fromList(publicKey.bytes));
         _privateKeyVisible = true;
       });
@@ -469,8 +487,8 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
           TextFormField(
             onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
             maxLength: 64,
-            key: ValueKey('privateKey_${_privateKey.hashCode}'),
-            initialValue: _privateKey,
+            key: const ValueKey('privateKey'),
+            controller: _privateKeyController,
             obscureText: !_privateKeyVisible,
             style: TextStyle(
               color: context.textPrimary,
@@ -499,8 +517,9 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
               counterText: '',
             ),
             onChanged: (value) {
-              setState(() => _privateKey = value);
+              _privateKey = value;
               _recalculatePublicKey();
+              setState(() {});
             },
           ),
           SizedBox(height: AppTheme.spacing4),
@@ -682,6 +701,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
 
       safeSetState(() {
         _privateKey = storedKey;
+        _privateKeyController.text = _privateKey;
         _privateKeyVisible = true;
       });
       await _recalculatePublicKey();
@@ -764,24 +784,36 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
           // Admin Key 1
           _buildAdminKeyField(
             label: context.l10n.securityConfigPrimaryAdminKey,
-            value: _adminKey1,
-            onChanged: (v) => setState(() => _adminKey1 = v),
+            controller: _adminKey1Controller,
+            index: 1,
+            onChanged: (v) {
+              _adminKey1 = v;
+              setState(() {});
+            },
           ),
           const SizedBox(height: AppTheme.spacing12),
 
           // Admin Key 2
           _buildAdminKeyField(
             label: context.l10n.securityConfigSecondaryAdminKey,
-            value: _adminKey2,
-            onChanged: (v) => setState(() => _adminKey2 = v),
+            controller: _adminKey2Controller,
+            index: 2,
+            onChanged: (v) {
+              _adminKey2 = v;
+              setState(() {});
+            },
           ),
           const SizedBox(height: AppTheme.spacing12),
 
           // Admin Key 3
           _buildAdminKeyField(
             label: context.l10n.securityConfigTertiaryAdminKey,
-            value: _adminKey3,
-            onChanged: (v) => setState(() => _adminKey3 = v),
+            controller: _adminKey3Controller,
+            index: 3,
+            onChanged: (v) {
+              _adminKey3 = v;
+              setState(() {});
+            },
           ),
         ],
       ),
@@ -790,10 +822,11 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
 
   Widget _buildAdminKeyField({
     required String label,
-    required String value,
+    required TextEditingController controller,
+    required int index,
     required ValueChanged<String> onChanged,
   }) {
-    final isValid = _isValidBase64Key(value);
+    final isValid = _isValidBase64Key(controller.text);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -820,8 +853,8 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
         TextFormField(
           onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
           maxLength: 64,
-          key: ValueKey('adminKey_${value.hashCode}'),
-          initialValue: value,
+          key: ValueKey('adminKey_$index'),
+          controller: controller,
           style: TextStyle(
             color: context.textPrimary,
             fontFamily: AppTheme.fontFamily,

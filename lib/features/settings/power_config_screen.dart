@@ -43,6 +43,12 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
   int _shutdownAfterSecs = 0;
   bool _adcOverride = false;
   double _adcMultiplier = 0.0;
+
+  // Stable controller/focus for ADC multiplier field to avoid
+  // per-keystroke remount (matching radio_config_screen frequency pattern).
+  late final TextEditingController _adcController;
+  late final FocusNode _adcFocusNode;
+
   bool _saving = false;
   bool _loading = false;
   StreamSubscription<config_pb.Config_PowerConfig>? _configSubscription;
@@ -50,13 +56,34 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
   @override
   void initState() {
     super.initState();
+    _adcController = TextEditingController();
+    _adcFocusNode = FocusNode();
+    _adcFocusNode.addListener(_onAdcFocusChanged);
     _loadCurrentConfig();
   }
 
   @override
   void dispose() {
     _configSubscription?.cancel();
+    _adcFocusNode.removeListener(_onAdcFocusChanged);
+    _adcFocusNode.dispose();
+    _adcController.dispose();
     super.dispose();
+  }
+
+  /// Commit the ADC multiplier value when the field loses focus,
+  /// matching the frequency override pattern in radio_config_screen.
+  void _onAdcFocusChanged() {
+    if (!_adcFocusNode.hasFocus) {
+      final text = _adcController.text.trim();
+      final parsed = double.tryParse(text);
+      final value = (parsed != null && parsed >= 2.0 && parsed <= 6.0)
+          ? parsed
+          : _adcMultiplier;
+      setState(() => _adcMultiplier = value);
+      // Normalize the displayed text on commit
+      _adcController.text = value.toStringAsFixed(2);
+    }
   }
 
   void _applyConfig(config_pb.Config_PowerConfig config) {
@@ -84,6 +111,13 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
       _adcMultiplier = config.adcMultiplierOverride;
       _adcOverride = _adcMultiplier > 0;
     });
+    // Seed the ADC controller from device config,
+    // but only when the field is not actively being edited.
+    if (!_adcFocusNode.hasFocus) {
+      _adcController.text = _adcMultiplier > 0
+          ? _adcMultiplier.toStringAsFixed(2)
+          : '';
+    }
   }
 
   Future<void> _loadCurrentConfig() async {
@@ -125,6 +159,14 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
   }
 
   Future<void> _saveConfig() async {
+    // Commit any in-progress ADC multiplier text before saving,
+    // in case the user taps Save while the field still has focus.
+    final adcText = _adcController.text.trim();
+    final adcParsed = double.tryParse(adcText);
+    if (adcParsed != null && adcParsed >= 2.0 && adcParsed <= 6.0) {
+      _adcMultiplier = adcParsed;
+    }
+
     final protocol = ref.read(protocolServiceProvider);
     final target = AdminTarget.fromNullable(
       ref.read(remoteAdminTargetProvider),
@@ -332,14 +374,13 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
                                   SizedBox(
                                     width: 80,
                                     child: TextFormField(
+                                      controller: _adcController,
+                                      focusNode: _adcFocusNode,
                                       onTapOutside: (_) => FocusManager
                                           .instance
                                           .primaryFocus
                                           ?.unfocus(),
                                       maxLength: 10,
-                                      key: ValueKey(
-                                        'adc_${_adcMultiplier.toStringAsFixed(2)}',
-                                      ),
                                       keyboardType:
                                           const TextInputType.numberWithOptions(
                                             decimal: true,
@@ -375,18 +416,6 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
                                         ),
                                         counterText: '',
                                       ),
-                                      initialValue: _adcMultiplier
-                                          .toStringAsFixed(2),
-                                      onChanged: (value) {
-                                        final parsed = double.tryParse(value);
-                                        if (parsed != null &&
-                                            parsed >= 2.0 &&
-                                            parsed <= 6.0) {
-                                          setState(
-                                            () => _adcMultiplier = parsed,
-                                          );
-                                        }
-                                      },
                                     ),
                                   ),
                                 ],
