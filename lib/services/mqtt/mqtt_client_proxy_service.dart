@@ -201,6 +201,10 @@ class MqttClientProxyService {
   /// [address] is `host:port` or just `host` (defaults to mqtt.meshtastic.org).
   /// [topicPrefix] is the topic prefix to subscribe to (e.g. `msh/2/e`).
   /// [nodeUserId] is the user ID string for client identification.
+  /// [shouldSubscribe] controls whether to subscribe to inbound topics.
+  /// Per the official Meshtastic app, subscribe only when at least one
+  /// channel has downlink enabled. When false, the proxy can still publish
+  /// (uplink) but will not receive messages from the broker.
   Future<void> connect({
     required String address,
     required bool tlsEnabled,
@@ -208,6 +212,7 @@ class MqttClientProxyService {
     required String password,
     required String topicPrefix,
     String? nodeUserId,
+    bool shouldSubscribe = false,
   }) async {
     if (_disposed) return;
     if (_isConnecting) {
@@ -315,12 +320,23 @@ class MqttClientProxyService {
         _reconnectAttempts = 0;
         _lastError = null;
 
-        // Subscribe to the topic
-        // Topic format: {root}/2/e/#
-        final subscriptionTopic = '$topicPrefix/#';
-        _subscribedTopic = subscriptionTopic;
-        AppLogging.mqttProxy('Subscribing to $subscriptionTopic');
-        client.subscribe(subscriptionTopic, MqttQos.atLeastOnce);
+        // Subscribe to the topic only if downlink is enabled on at least
+        // one channel.  This matches the official Meshtastic iOS app: when no
+        // channel has downlinkEnabled, the proxy connects (allowing the device
+        // to publish / uplink) but does NOT subscribe (no inbound MQTT
+        // messages are relayed to the device).
+        if (shouldSubscribe) {
+          final subscriptionTopic = '$topicPrefix/#';
+          _subscribedTopic = subscriptionTopic;
+          AppLogging.mqttProxy('Subscribing to $subscriptionTopic');
+          client.subscribe(subscriptionTopic, MqttQos.atLeastOnce);
+        } else {
+          _subscribedTopic = null;
+          AppLogging.mqttProxy(
+            'Connected but NOT subscribing '
+            '(no channel has downlink enabled)',
+          );
+        }
 
         // Listen for inbound messages
         _subscription = client.updates?.listen(_handleInboundMessage);

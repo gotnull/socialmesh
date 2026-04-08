@@ -4243,7 +4243,6 @@ class ProtocolService {
       final data = pb.Data()
         ..portnum = pn.PortNum.TEXT_MESSAGE_APP
         ..payload = utf8.encode(text)
-        ..wantResponse = wantAck
         ..emoji = isEmoji ? 1 : 0;
 
       if (replyId != null) {
@@ -4265,10 +4264,22 @@ class ProtocolService {
         wantAck: wantAck,
       );
 
+      AppLogging.protocol(
+        '📤 Outbound message: packetId=$packetId, '
+        'to=0x${to.toRadixString(16)}, channel=$channel, '
+        'wantAck=$wantAck, transport=radio '
+        '(hopLimit/hopStart left to firmware)',
+      );
+
       final toRadio = pb.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
 
       await _transport.send(_prepareForSend(bytes));
+
+      AppLogging.protocol(
+        '📤 Sent ${bytes.length} bytes to node via '
+        '${_transport.requiresFraming ? "USB" : "BLE"}',
+      );
 
       // Track the message for delivery status
       if (messageId != null && wantAck) {
@@ -5399,7 +5410,6 @@ class ProtocolService {
       final data = pb.Data()
         ..portnum = pn.PortNum.TEXT_MESSAGE_APP
         ..payload = utf8.encode(text)
-        ..wantResponse = wantAck
         ..emoji = isEmoji ? 1 : 0;
 
       if (replyId != null) {
@@ -5415,10 +5425,22 @@ class ProtocolService {
         wantAck: wantAck,
       );
 
+      AppLogging.protocol(
+        '📤 Outbound message (pre-tracked): packetId=$packetId, '
+        'to=0x${to.toRadixString(16)}, channel=$channel, '
+        'wantAck=$wantAck, transport=radio '
+        '(hopLimit/hopStart left to firmware)',
+      );
+
       final toRadio = pb.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
 
       await _transport.send(_prepareForSend(bytes));
+
+      AppLogging.protocol(
+        '📤 Sent ${bytes.length} bytes to node via '
+        '${_transport.requiresFraming ? "USB" : "BLE"}',
+      );
 
       // Track the message for delivery status (internal tracking)
       if (messageId != null && wantAck) {

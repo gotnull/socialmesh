@@ -966,7 +966,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     final channel = widget.type == ConversationType.channel
         ? widget.channelIndex ?? 0
         : 0;
-    final wantAck = widget.type != ConversationType.channel;
+    // Match official Meshtastic behaviour: wantAck=true for ALL user messages.
+    // The firmware uses this for reliable delivery tracking. Channel broadcasts
+    // won't receive explicit ACKs, but the firmware still benefits from the
+    // consistent flag (implicit ACK via relays, unified retry logic, etc.).
+    const wantAck = true;
 
     // Capture and clear reply state before async operations
     final replyPacketId = _replyingTo?.packetId;
@@ -1026,7 +1030,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
           text: text,
           to: 0xFFFFFFFF, // Broadcast to channel
           channel: widget.channelIndex ?? 0,
-          wantAck: false,
+          wantAck: true,
           messageId: messageId,
           source: MessageSource.manual,
           replyId: replyPacketId,
@@ -1153,7 +1157,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
           text: message.text,
           to: message.to,
           channel: message.channel ?? 0,
-          wantAck: !message.isBroadcast,
+          wantAck: true,
         ),
       );
 
@@ -1172,11 +1176,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
           text: message.text,
           to: 0xFFFFFFFF,
           channel: message.channel ?? 0,
-          wantAck: false,
+          wantAck: true,
           messageId: message.id,
           source: message.source, // Preserve original source
         );
-        // Broadcast messages don't get ACKs, no tracking needed
       } else {
         // Pre-track before sending to avoid race condition
         packetId = await protocol.sendMessageWithPreTracking(

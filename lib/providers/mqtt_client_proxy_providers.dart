@@ -102,9 +102,17 @@ final mqttClientProxyForwarderProvider = Provider<void>((ref) {
 /// - Connect when config arrives with proxy enabled
 /// - Disconnect when config arrives with proxy disabled
 /// - Reconnect when config changes (different broker, etc.)
+///
+/// Per the official Meshtastic iOS app, the proxy only subscribes
+/// (receives inbound MQTT messages) when at least one channel has
+/// `downlinkEnabled = true`. Without this gate, messages are relayed
+/// from the MQTT broker to the device even when the user only intended
+/// to uplink, causing 0-hop MQTT delivery to appear as the primary
+/// transport path.
 final mqttClientProxyAutoConnectProvider = Provider<void>((ref) {
   final protocol = ref.watch(protocolServiceProvider);
   final proxyService = ref.watch(mqttClientProxyServiceProvider);
+  final channels = ref.watch(channelsProvider);
 
   StreamSubscription<dynamic>? subscription;
 
@@ -113,9 +121,14 @@ final mqttClientProxyAutoConnectProvider = Provider<void>((ref) {
     final topicPrefix = '$root/2/e'; // lint-allow: hardcoded-string
 
     if (mqttConfig.enabled && mqttConfig.proxyToClientEnabled) {
+      // Match the official Meshtastic iOS app: only subscribe (downlink)
+      // when at least one channel has downlinkEnabled == true.
+      final hasAnyDownlinkEnabled = channels.any((ch) => ch.downlink);
+
       AppLogging.mqttProxy(
         'Device MQTT config received: proxy enabled, '
-        'connecting to broker',
+        'connecting to broker '
+        '(subscribe: $hasAnyDownlinkEnabled)',
       );
 
       // Determine node user ID for client identification
@@ -131,6 +144,7 @@ final mqttClientProxyAutoConnectProvider = Provider<void>((ref) {
         password: mqttConfig.password,
         topicPrefix: topicPrefix,
         nodeUserId: nodeUserId,
+        shouldSubscribe: hasAnyDownlinkEnabled,
       );
     } else if (proxyService.isConnected) {
       AppLogging.mqttProxy(
