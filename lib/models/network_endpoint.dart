@@ -6,8 +6,8 @@ import '../services/transport/network_transport.dart';
 
 /// A saved network endpoint for TCP connections.
 ///
-/// Reference: meshtastic-ios Device struct with identifier "host:port"
-/// persisted via UserDefaults/ManualConnectionList.
+/// Modelled after the standard Meshtastic companion app pattern of
+/// persisting manual connections as "host:port" identifiers.
 class NetworkEndpoint {
   final String id;
   final String host;
@@ -65,7 +65,7 @@ class NetworkEndpoint {
     int port = kMeshtasticDefaultPort,
     String? name,
   }) {
-    // Deterministic ID based on host:port (matches meshtastic-ios pattern)
+    // Deterministic ID based on host:port for stable identity across sessions
     final idSource = '$host:$port';
     final id = idSource.hashCode.toRadixString(16);
     return NetworkEndpoint(

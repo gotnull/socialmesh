@@ -27,7 +27,7 @@ class MdnsDeviceInfo {
     this.nodeId,
   });
 
-  /// Display name matching the meshtastic-ios format:
+  /// Display name following the standard Meshtastic discovery format:
   /// `shortname_nodeIdSuffix` (e.g., "0864_0864") or fallback to
   /// `serviceName (host)`.
   String get displayName {

@@ -10,8 +10,8 @@ const String _kEndpointsKey = 'network_endpoints_v1';
 
 /// Manages saved network endpoints (host:port) for TCP connections.
 ///
-/// Persists via SharedPreferences as JSON, matching the meshtastic-ios
-/// pattern of storing manual connections in UserDefaults.
+/// Persists via SharedPreferences as JSON, following the standard
+/// Meshtastic companion app pattern of storing manual connections locally.
 class NetworkEndpointsNotifier extends Notifier<List<NetworkEndpoint>> {
   @override
   List<NetworkEndpoint> build() {

@@ -6,7 +6,7 @@ import 'dart:io';
 import '../../core/logging.dart';
 import '../../core/transport.dart';
 
-/// Default Meshtastic TCP port (matches meshtastic-ios)
+/// Default Meshtastic TCP port per the protocol specification.
 const int kMeshtasticDefaultPort = 4403;
 
 /// TCP/IP network transport for Meshtastic devices.
@@ -14,8 +14,6 @@ const int kMeshtasticDefaultPort = 4403;
 /// Connects to a Meshtastic node via TCP socket. Uses the same
 /// 0x94/0xC3 packet framing as USB serial (handled by [PacketFramer]
 /// in the protocol layer via [requiresFraming] = true).
-///
-/// Reference: meshtastic-ios/Accessory/Transports/TCP/TCPConnection.swift
 class NetworkTransport implements DeviceTransport {
   final String host;
   final int port;
@@ -29,7 +27,7 @@ class NetworkTransport implements DeviceTransport {
   StreamSubscription<List<int>>? _socketSubscription;
 
   /// Heartbeat timer — TCP connections need periodic probing to detect
-  /// silent disconnections. Matches meshtastic-ios 15-second interval.
+  /// silent disconnections (standard 15-second interval).
   Timer? _heartbeatTimer;
   static const Duration _heartbeatInterval = Duration(seconds: 15);
   DateTime? _lastDataReceived;

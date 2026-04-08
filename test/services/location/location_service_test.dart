@@ -359,27 +359,30 @@ void main() {
       );
     });
 
-    // ----- Default value matches meshtastic-ios -----
+    // ----- Default value matches standard Meshtastic behaviour -----
 
-    test('default value is false (opt-in, matching meshtastic-ios)', () async {
-      // When no callback is provided, the default is false (no emission).
-      // This matches meshtastic-ios UserDefaults.provideLocation defaultValue: false.
-      governor = PhonePositionGovernor(protocol);
-      final service = _TestableLocationService(
-        protocol,
-        governor: governor,
-        fakePosition: _fakePosition(),
-      );
+    test(
+      'default value is false (opt-in, standard Meshtastic behaviour)',
+      () async {
+        // When no callback is provided, the default is false (no emission).
+        // This matches the standard Meshtastic companion app default (opt-in, false).
+        governor = PhonePositionGovernor(protocol);
+        final service = _TestableLocationService(
+          protocol,
+          governor: governor,
+          fakePosition: _fakePosition(),
+        );
 
-      final d = await service.sendPositionOnce();
+        final d = await service.sendPositionOnce();
 
-      expect(d, PublishDecision.blockedDisabled);
-      expect(
-        protocol.sentPositions,
-        isEmpty,
-        reason: 'Default must be false — privacy by default',
-      );
-    });
+        expect(d, PublishDecision.blockedDisabled);
+        expect(
+          protocol.sentPositions,
+          isEmpty,
+          reason: 'Default must be false — privacy by default',
+        );
+      },
+    );
 
     // ----- Dispose / cleanup -----
 

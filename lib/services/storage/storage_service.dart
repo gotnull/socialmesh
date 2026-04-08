@@ -811,7 +811,7 @@ class SettingsService {
 
   // Phone GPS Location Sharing
   // Whether to send the phone's GPS position to the mesh on a periodic timer.
-  // Matches meshtastic-ios UserDefaults.provideLocation (default: false).
+  // Follows the standard Meshtastic companion app default (opt-in, false).
   // When false, the 30-second position timer is a no-op — no POSITION_APP
   // packets are emitted from the phone to the mesh.
   Future<void> setProvidePhoneLocation(bool enabled) async {

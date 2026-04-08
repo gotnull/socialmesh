@@ -24,7 +24,7 @@ import '../../utils/text_sanitizer.dart';
 class MessageDatabase {
   static const _dbName = 'messages.db';
   static const _tableName = 'messages';
-  static const _dbVersion = 6;
+  static const _dbVersion = 7;
 
   /// Maximum messages retained per conversation (DM or channel).
   static const int maxMessagesPerConversation = 500;
@@ -166,6 +166,26 @@ class MessageDatabase {
           AppLogging.storage(
             'v6 migration: reclassified $fixed Primary Channel messages '
             'from DM-style to channel conversation keys',
+          );
+        }
+        if (oldVersion < 7) {
+          // Complete the channel column fix that v6 started.
+          //
+          // v6 repaired conversation_key for misclassified broadcast
+          // messages but left the channel column as NULL.  The UI filters
+          // channel messages with `m.channel == channelIndex` — in Dart,
+          // `null != 0`, so these rows are invisible in the Primary
+          // Channel conversation even though their conversation_key is
+          // correct.  Normalise NULL → 0 for all broadcast rows so the
+          // in-memory Message.channel matches the UI filter.
+          final fixed = await db.rawUpdate(
+            'UPDATE $_tableName ' // lint-allow: hardcoded-string
+            'SET channel = COALESCE(channel, 0) ' // lint-allow: hardcoded-string
+            'WHERE to_node = 4294967295 AND channel IS NULL', // lint-allow: hardcoded-string
+          );
+          AppLogging.storage(
+            'v7 migration: normalised channel column for $fixed broadcast '
+            'messages with NULL channel',
           );
         }
       },
@@ -481,7 +501,14 @@ class MessageDatabase {
       to: row['to_node'] as int,
       text: sanitizeUtf16(row['text'] as String),
       timestamp: DateTime.fromMillisecondsSinceEpoch(row['timestamp'] as int),
-      channel: row['channel'] as int?,
+      // Normalise channel for broadcast messages: if the DB column is NULL
+      // but to_node indicates a broadcast (0xFFFFFFFF), default to Primary
+      // Channel (0).  This ensures `Message.channel == 0` so the UI filter
+      // `m.channel == channelIndex` matches correctly.  DMs keep null
+      // channel unchanged (their classification uses to/from, not channel).
+      channel:
+          (row['channel'] as int?) ??
+          ((row['to_node'] as int) == 0xFFFFFFFF ? 0 : null),
       sent: (row['sent'] as int) == 1,
       received: (row['received'] as int) == 1,
       acked: (row['acked'] as int) == 1,

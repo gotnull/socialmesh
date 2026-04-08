@@ -666,6 +666,10 @@ class _AirQualityFingerprint {
 }
 
 /// Fingerprint of the last logged position for a given node.
+///
+/// Uses distance-based deduplication following standard Meshtastic behaviour:
+/// positions within [_dedupeDistanceMeters] of the last logged position
+/// are considered duplicates and silently dropped.
 class _PositionFingerprint {
   final double latitude;
   final double longitude;
@@ -679,11 +683,44 @@ class _PositionFingerprint {
     this.satsInView,
   });
 
-  bool matches(MeshNode node) =>
-      latitude == node.latitude &&
-      longitude == node.longitude &&
-      altitude == node.altitude &&
-      satsInView == node.satsInView;
+  /// Distance threshold in meters below which two positions are considered
+  /// duplicates (9 m threshold per the standard Meshtastic implementation).
+  static const double _dedupeDistanceMeters = 9.0;
+
+  /// Returns `true` when [node] is within the dedupe distance of this
+  /// fingerprint — i.e. the new position should be **skipped**.
+  bool isNearDuplicate(MeshNode node) {
+    if (node.latitude == null || node.longitude == null) return false;
+    return _haversineMeters(
+          latitude,
+          longitude,
+          node.latitude!,
+          node.longitude!,
+        ) <
+        _dedupeDistanceMeters;
+  }
+
+  /// Haversine distance in meters between two WGS-84 coordinates.
+  static double _haversineMeters(
+    double lat1,
+    double lon1,
+    double lat2,
+    double lon2,
+  ) {
+    const earthRadius = 6371000.0; // metres
+    final dLat = _toRadians(lat2 - lat1);
+    final dLon = _toRadians(lon2 - lon1);
+    final a =
+        math.sin(dLat / 2) * math.sin(dLat / 2) +
+        math.cos(_toRadians(lat1)) *
+            math.cos(_toRadians(lat2)) *
+            math.sin(dLon / 2) *
+            math.sin(dLon / 2);
+    final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+    return earthRadius * c;
+  }
+
+  static double _toRadians(double degrees) => degrees * math.pi / 180;
 }
 
 /// Telemetry logger that automatically saves telemetry to storage when received.
@@ -891,10 +928,52 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
           }
         }
 
-        // Log position only when values actually change
+        // Log position with distance-based dedupe and precision filtering.
+        //
+        // Follows standard Meshtastic companion app behaviour:
+        //   - High precision (bits 32 or 0/null): dedupe within 9 m of last
+        //     logged position; store full trail.
+        //   - Low precision (bits 12-15 etc): clear history for this node and
+        //     store only the latest position (reduced-accuracy ring, no trail).
         if (node.hasPosition) {
-          final cached = _lastPosition[id];
-          if (cached == null || !cached.matches(node)) {
+          final bits = node.precisionBits;
+          final isHighPrecision = bits == null || bits == 0 || bits == 32;
+
+          if (isHighPrecision) {
+            // High-precision: distance-based dedupe
+            final cached = _lastPosition[id];
+            if (cached != null && cached.isNearDuplicate(node)) {
+              // Within 9 m — skip (no new row)
+            } else {
+              _lastPosition[id] = _PositionFingerprint(
+                latitude: node.latitude!,
+                longitude: node.longitude!,
+                altitude: node.altitude,
+                satsInView: node.satsInView,
+              );
+              AppLogging.storage(
+                'PositionLog: Stored node !${id.toRadixString(16)} '
+                'lat=${node.latitude}, lng=${node.longitude}, '
+                'alt=${node.altitude}, sats=${node.satsInView}, '
+                'precision=high(${bits ?? 'null'})',
+              );
+              await storage.addPositionLog(
+                PositionLog(
+                  nodeNum: id,
+                  timestamp: node.positionTimestamp,
+                  latitude: node.latitude!,
+                  longitude: node.longitude!,
+                  altitude: node.altitude,
+                  satsInView: node.satsInView,
+                  speed: node.groundSpeed?.toInt(),
+                  heading: node.groundTrack?.toInt(),
+                  precisionBits: node.precisionBits,
+                ),
+              );
+            }
+          } else {
+            // Low-precision: clear history, keep only latest.
+            // Clear history and keep only the latest reading.
             _lastPosition[id] = _PositionFingerprint(
               latitude: node.latitude!,
               longitude: node.longitude!,
@@ -902,13 +981,15 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
               satsInView: node.satsInView,
             );
             AppLogging.storage(
-              'PositionLog: Stored node !${id.toRadixString(16)} '
+              'PositionLog: Low-precision replace node !${id.toRadixString(16)} '
               'lat=${node.latitude}, lng=${node.longitude}, '
-              'alt=${node.altitude}, sats=${node.satsInView}',
+              'precision=low($bits) — clearing history',
             );
+            await storage.clearPositionLogsForNode(id);
             await storage.addPositionLog(
               PositionLog(
                 nodeNum: id,
+                timestamp: node.positionTimestamp,
                 latitude: node.latitude!,
                 longitude: node.longitude!,
                 altitude: node.altitude,

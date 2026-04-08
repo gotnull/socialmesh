@@ -2625,7 +2625,7 @@ final phonePositionGovernorProvider = Provider<PhonePositionGovernor>((ref) {
 // Like iOS Meshtastic app, sends phone GPS coordinates to mesh
 // when device doesn't have its own GPS hardware.
 // Gated by SettingsService.providePhoneLocation (default: false),
-// matching meshtastic-ios UserDefaults.provideLocation behaviour.
+// matching the standard Meshtastic companion app behaviour (opt-in, default off).
 // All publishes route through PhonePositionGovernor for rate limiting.
 final locationServiceProvider = Provider<LocationService>((ref) {
   final protocol = ref.watch(protocolServiceProvider);
@@ -2635,8 +2635,8 @@ final locationServiceProvider = Provider<LocationService>((ref) {
     isLocationSharingEnabled: () {
       // Read from cached settings synchronously. The callback is
       // evaluated on every 30-second tick inside LocationService,
-      // mirroring the meshtastic-ios pattern where
-      // `UserDefaults.provideLocation` is checked inside the loop.
+      // mirroring the standard Meshtastic companion app pattern where
+      // the location-sharing preference is checked on every tick.
       return _cachedSettingsService?.providePhoneLocation ?? false;
     },
     governor: governor,
@@ -3035,6 +3035,11 @@ class MessagesNotifier extends Notifier<List<Message>> {
   /// _loadFromStorage() has finished before adding messages.
   final Completer<void> _storageLoadCompleter = Completer<void>();
 
+  /// Track the protocol instance we are currently subscribed to so that
+  /// [build] re-runs (triggered by [messageStorageProvider] resolution)
+  /// do not cancel in-flight stream subscriptions unnecessarily.
+  ProtocolService? _subscribedProtocol;
+
   /// Await this in tests to ensure the initial storage load has completed.
   Future<void> get storageReady => _storageLoadCompleter.future;
 
@@ -3182,6 +3187,17 @@ class MessagesNotifier extends Notifier<List<Message>> {
   /// so that protocol changes (reconnect) simply re-wire streams
   /// without resetting in-memory message state.
   void _subscribeToStreams(ProtocolService protocol) {
+    // Skip re-subscription if we are already listening to this exact
+    // protocol instance.  This prevents build() re-runs (caused by
+    // messageStorageProvider async resolution) from cancelling an
+    // in-flight subscription that has messages queued while waiting
+    // for _storageLoadCompleter.
+    if (identical(protocol, _subscribedProtocol) &&
+        _messageSubscription != null) {
+      return;
+    }
+    _subscribedProtocol = protocol;
+
     // Cancel previous subscriptions
     _messageSubscription?.cancel();
     _deliverySubscription?.cancel();

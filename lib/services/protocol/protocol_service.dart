@@ -1100,8 +1100,8 @@ class ProtocolService {
       await Future.delayed(const Duration(milliseconds: 200));
 
       // Send heartbeat to wake the device before requesting config.
-      // Matches the official meshtastic-ios pattern (Step 2 → heartbeat,
-      // Step 3 → wantConfigId). Devices in low-power sleep (e.g. Heltec
+      // Follows the standard Meshtastic connection sequence (heartbeat first,
+      // then wantConfigId). Devices in low-power sleep (e.g. Heltec
       // MeshPocket) may not process the first wantConfigId without this.
       await _sendHeartbeat();
 
@@ -3388,6 +3388,38 @@ class ProtocolService {
     }
   }
 
+  /// Extract the best available timestamp from a [pb.Position] protobuf.
+  ///
+  /// Follows the standard Meshtastic timestamp fallback order:
+  ///   1. `position.timestamp` — actual GPS solution time (epoch seconds)
+  ///   2. `position.time` — phone-provided time (epoch seconds)
+  ///   3. [DateTime.now] — local processing time as final fallback
+  ///
+  /// All candidate values are validated against [_minPlausibleEpoch] and
+  /// [_maxFutureSlack] before acceptance.
+  static DateTime _positionSourceTimestamp(pb.Position position) {
+    final nowEpoch = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+
+    // Prefer GPS solution timestamp (field 7)
+    if (position.hasTimestamp() && position.timestamp > 0) {
+      final ts = position.timestamp;
+      if (ts >= _minPlausibleEpoch && ts <= nowEpoch + _maxFutureSlack) {
+        return DateTime.fromMillisecondsSinceEpoch(ts * 1000);
+      }
+    }
+
+    // Fallback to phone-provided time (field 4)
+    if (position.hasTime() && position.time > 0) {
+      final t = position.time;
+      if (t >= _minPlausibleEpoch && t <= nowEpoch + _maxFutureSlack) {
+        return DateTime.fromMillisecondsSinceEpoch(t * 1000);
+      }
+    }
+
+    // Final fallback
+    return DateTime.now();
+  }
+
   /// Handle position update
   void _handlePositionUpdate(pb.MeshPacket packet, pb.Data data) {
     try {
@@ -3401,12 +3433,28 @@ class ProtocolService {
       final hasValidPosition =
           (position.latitudeI != 0 && position.longitudeI != 0) && !isApplePark;
 
+      // Select canonical source timestamp per the standard fallback order
+      final posTime = _positionSourceTimestamp(position);
+      final String tsSource;
+      if (position.hasTimestamp() &&
+          position.timestamp > 0 &&
+          posTime.millisecondsSinceEpoch == position.timestamp * 1000) {
+        tsSource = 'gps_timestamp';
+      } else if (position.hasTime() &&
+          position.time > 0 &&
+          posTime.millisecondsSinceEpoch == position.time * 1000) {
+        tsSource = 'position_time';
+      } else {
+        tsSource = 'fallback_now';
+      }
+
       if (ProtocolDebugFlags.logPosition) {
         AppLogging.debug(
           '📍 POSITION_APP from !${packet.from.toRadixString(16)}: '
           'latI=${position.latitudeI}, lngI=${position.longitudeI}, '
           'lat=${position.latitudeI / 1e7}, lng=${position.longitudeI / 1e7}, '
-          'isApplePark=$isApplePark, valid=$hasValidPosition',
+          'isApplePark=$isApplePark, valid=$hasValidPosition, '
+          'tsSource=$tsSource, ts=$posTime',
         );
       }
 
@@ -3421,7 +3469,7 @@ class ProtocolService {
           longitude: position.longitudeI / 1e7,
           altitude: position.hasAltitude() ? position.altitude : node.altitude,
           lastHeard: DateTime.now(),
-          positionTimestamp: DateTime.now(),
+          positionTimestamp: posTime,
           // GPS extended fields
           satsInView: position.hasSatsInView()
               ? position.satsInView
@@ -3485,7 +3533,7 @@ class ProtocolService {
           viaMqtt: packet.hasViaMqtt() ? packet.viaMqtt : false,
           avatarColor: avatarColor,
           isFavorite: false,
-          positionTimestamp: DateTime.now(),
+          positionTimestamp: posTime,
           // GPS extended fields
           satsInView: position.hasSatsInView() ? position.satsInView : null,
           gpsAccuracy: position.hasGpsAccuracy()

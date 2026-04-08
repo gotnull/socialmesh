@@ -602,6 +602,15 @@ class TelemetryDatabase {
     );
   }
 
+  /// Clear position logs for a specific node.
+  Future<void> clearPositionLogsForNode(int nodeNum) async {
+    await _database.delete(
+      _tableName,
+      where: 'type = ? AND node_num = ?',
+      whereArgs: [TelemetryType.positionLog, nodeNum],
+    );
+  }
+
   /// Clear all position logs across all nodes.
   Future<void> clearPositionLogs() async {
     await _database.delete(

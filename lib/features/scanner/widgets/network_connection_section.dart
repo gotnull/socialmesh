@@ -23,8 +23,8 @@ import '../../../utils/snackbar.dart';
 /// Network connection section shown in the scanner screen.
 ///
 /// Displays saved endpoints, allows adding new ones, and initiating
-/// TCP connections. Matches the meshtastic-ios Connect.swift pattern
-/// of showing "Manual Connections" with a host:port entry.
+/// TCP connections. Shows "Manual Connections" with a host:port entry,
+/// following the standard Meshtastic companion app UX pattern.
 class NetworkConnectionSection extends ConsumerStatefulWidget {
   final VoidCallback? onConnectionSuccess;
 
