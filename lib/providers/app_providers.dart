@@ -5700,14 +5700,45 @@ class NotificationBatchNotifier extends Notifier<NotificationBatchState> {
     final settings = settingsAsync.value;
     final playSound = settings?.notificationSoundEnabled ?? true;
     final vibrate = settings?.notificationVibrationEnabled ?? true;
+    final masterEnabled = settings?.notificationsEnabled ?? true;
+    final channelEnabled = settings?.channelMessageNotificationsEnabled ?? true;
+    final dmEnabled = settings?.directMessageNotificationsEnabled ?? true;
+
+    // If master notifications toggle is off, skip everything
+    if (!masterEnabled) {
+      AppLogging.notifications(
+        '🔔 Master notifications disabled, skipping flush',
+      );
+      return;
+    }
+
+    // Re-check category settings — they may have changed since enqueue
+    final filteredMessages = messages.where((msg) {
+      if (msg.isChannelMessage) return channelEnabled;
+      return dmEnabled;
+    }).toList();
+
+    if (filteredMessages.length < messages.length) {
+      final channelFiltered = messages
+          .where((m) => m.isChannelMessage && !channelEnabled)
+          .length;
+      final dmFiltered = messages
+          .where((m) => !m.isChannelMessage && !dmEnabled)
+          .length;
+      AppLogging.notifications(
+        '🔔 Filtered $channelFiltered channel and $dmFiltered DM notifications (settings changed since queue)',
+      );
+    }
+
+    if (filteredMessages.isEmpty && nodes.isEmpty) return;
 
     final notificationService = NotificationService();
 
     // Show batched notifications
     try {
-      if (messages.length == 1) {
+      if (filteredMessages.length == 1) {
         // Single message - show regular notification
-        final msg = messages.first;
+        final msg = filteredMessages.first;
         if (msg.isChannelMessage) {
           await notificationService.showChannelMessageNotification(
             senderName: msg.senderName,
@@ -5729,10 +5760,10 @@ class NotificationBatchNotifier extends Notifier<NotificationBatchState> {
             vibrate: vibrate,
           );
         }
-      } else if (messages.isNotEmpty) {
+      } else if (filteredMessages.isNotEmpty) {
         // Multiple messages - show batched
         await notificationService.showBatchedMessagesNotification(
-          messages: messages,
+          messages: filteredMessages,
           playSound: playSound,
           vibrate: vibrate,
         );

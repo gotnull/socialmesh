@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Regression test for critical bug: node count collapsing after app restart.
-///
-/// Root cause: `clearDeviceDataBeforeConnect` was wiping both in-memory and
-/// persistent node storage before every reconnection. The device only sends
-/// back its limited NodeDB (~80 nodes), so nodes discovered via mesh traffic
-/// during the previous session were permanently lost.
-///
-/// Fix: `clearDeviceDataBeforeConnect` now preserves nodes by default
-/// (clearNodeData: false). Only explicit device-forget paths pass
-/// clearNodeData: true.
-///
-/// This test verifies that nodes survive the reconnect clear cycle and that
-/// the device's NodeDB merges on top of persisted nodes without losing any.
+// Regression test for critical bug: node count collapsing after app restart.
+//
+// Root cause: `clearDeviceDataBeforeConnect` was wiping both in-memory and
+// persistent node storage before every reconnection. The device only sends
+// back its limited NodeDB (~80 nodes), so nodes discovered via mesh traffic
+// during the previous session were permanently lost.
+//
+// Fix: `clearDeviceDataBeforeConnect` now preserves nodes by default
+// (clearNodeData: false). Only explicit device-forget paths pass
+// clearNodeData: true.
+//
+// This test verifies that nodes survive the reconnect clear cycle and that
+// the device's NodeDB merges on top of persisted nodes without losing any.
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -60,6 +60,9 @@ class _FakeTransport implements DeviceTransport {
 
   @override
   Future<void> send(List<int> data) async {}
+
+  @override
+  Future<void> refreshNotifications() async {}
 
   @override
   Future<void> pollOnce() async {}

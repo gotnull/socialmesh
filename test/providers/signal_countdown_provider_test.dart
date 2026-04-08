@@ -46,6 +46,9 @@ class FakeTransport implements DeviceTransport {
   Future<void> send(List<int> data) async {}
 
   @override
+  Future<void> refreshNotifications() async {}
+
+  @override
   Future<void> pollOnce() async {}
 
   @override
