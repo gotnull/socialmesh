@@ -392,6 +392,30 @@ class ProtocolService {
   Timer? _rssiTimer;
   bool _pollingConfig = false;
 
+  /// Timestamp of the last data received from the transport layer.
+  ///
+  /// Updated inside [_handleDataAsync] every time the transport delivers
+  /// bytes. The RSSI polling timer checks this value to detect a stalled
+  /// notification path — if connected and configured but no data has arrived
+  /// for [_dataStaleThreshold], the protocol service asks the transport to
+  /// refresh its BLE notification subscriptions. If data flow still doesn't
+  /// resume after an additional [_dataStaleDisconnectGrace], it triggers a
+  /// disconnect so the auto-reconnect path can establish a fresh session.
+  DateTime? _lastDataReceivedAt;
+
+  /// Whether a notification refresh has already been requested in the
+  /// current stale-data episode to avoid redundant refresh calls.
+  bool _notificationRefreshRequested = false;
+
+  /// Duration after which the absence of transport data is considered stale.
+  /// Meshtastic radios emit telemetry/position every 15–900 s depending on
+  /// config. 3 minutes covers the common default cadences with margin.
+  static const Duration _dataStaleThreshold = Duration(minutes: 3);
+
+  /// Additional grace period after a notification refresh before the service
+  /// decides the receive path is truly broken and forces a disconnect.
+  static const Duration _dataStaleDisconnectGrace = Duration(seconds: 30);
+
   int? _myNodeNum;
   int _lastRssi = -90;
   double _lastSnr = 0.0;
@@ -1158,13 +1182,61 @@ class ProtocolService {
   void _startRssiPolling() {
     _rssiTimer?.cancel();
     _rssiPaused = false;
+    _lastDataReceivedAt = DateTime.now();
+    _notificationRefreshRequested = false;
     _rssiTimer = Timer.periodic(const Duration(seconds: 5), (_) async {
       final rssi = await _transport.readRssi();
       if (rssi != null && rssi != _lastRssi) {
         _lastRssi = rssi;
         _rssiController.add(rssi);
       }
+
+      // --- Data-flow health check ---
+      // Detect a stalled BLE notification path: the transport reports
+      // connected but no data has arrived for longer than expected.
+      _checkDataFlowHealth();
     });
+  }
+
+  /// Evaluate whether the receive path is still alive.
+  ///
+  /// Called from the RSSI polling timer every 5 seconds.  When data has
+  /// not been received for [_dataStaleThreshold] the transport is asked
+  /// to refresh its BLE notification subscription (iOS/Android can drop
+  /// these silently).  If data still does not arrive within an
+  /// additional [_dataStaleDisconnectGrace], a disconnect is forced so
+  /// the auto-reconnect path can establish a fresh session.
+  void _checkDataFlowHealth() {
+    if (!_configurationComplete || !_transport.isConnected) return;
+    if (_rssiPaused) return; // Don't fire while app is backgrounded
+
+    final lastData = _lastDataReceivedAt;
+    if (lastData == null) return;
+
+    final staleness = DateTime.now().difference(lastData);
+
+    if (staleness > _dataStaleThreshold) {
+      if (!_notificationRefreshRequested) {
+        // First escalation: refresh BLE notification subscription.
+        _notificationRefreshRequested = true;
+        AppLogging.protocol(
+          '⚠️ DATA_HEALTH: No data received for '
+          '${staleness.inSeconds}s — refreshing BLE notifications',
+        );
+        unawaited(_transport.refreshNotifications());
+
+        // Also send a heartbeat to provoke a device response.
+        unawaited(_sendHeartbeat());
+      } else if (staleness > _dataStaleThreshold + _dataStaleDisconnectGrace) {
+        // Second escalation: refresh did not help — disconnect.
+        AppLogging.protocol(
+          '🔌 DATA_HEALTH: Still no data after notification refresh '
+          '(${staleness.inSeconds}s) — forcing disconnect',
+        );
+        _notificationRefreshRequested = false;
+        _transport.disconnect();
+      }
+    }
   }
 
   /// Whether RSSI polling is currently paused (app backgrounded).
@@ -1232,6 +1304,8 @@ class ProtocolService {
     AppLogging.protocol('Stopping protocol service');
     _rssiTimer?.cancel();
     _rssiTimer = null;
+    _lastDataReceivedAt = null;
+    _notificationRefreshRequested = false;
     _transportStateSubscription?.cancel();
     _transportStateSubscription = null;
     if (_configCompleter != null && !_configCompleter!.isCompleted) {
@@ -1263,6 +1337,8 @@ class ProtocolService {
 
   Future<void> _handleDataAsync(List<int> data) async {
     try {
+      _lastDataReceivedAt = DateTime.now();
+      _notificationRefreshRequested = false;
       AppLogging.protocol('Received ${data.length} bytes');
 
       // --- SECURITY AUDIT LOGGING ---

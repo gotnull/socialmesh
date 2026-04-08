@@ -200,6 +200,11 @@ class NetworkTransport implements DeviceTransport {
   }
 
   @override
+  Future<void> refreshNotifications() async {
+    // No-op for TCP. BLE-only concept.
+  }
+
+  @override
   Future<void> pollOnce() async {
     // No-op for TCP. Data arrives via socket stream.
   }

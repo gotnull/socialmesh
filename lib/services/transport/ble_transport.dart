@@ -41,6 +41,16 @@ class BleTransport implements DeviceTransport {
 
   DeviceConnectionState _state = DeviceConnectionState.disconnected;
 
+  /// Timestamp of the last fromNum notification received.
+  /// Used by the protocol-layer health check to detect a stalled
+  /// notification path (iOS/Android can silently drop BLE subscriptions
+  /// while the GATT connection remains alive).
+  DateTime? _lastNotificationAt;
+
+  /// When the last fromNum notification was received, or `null` if none
+  /// has been received in this session.
+  DateTime? get lastNotificationAt => _lastNotificationAt;
+
   /// Name of the currently-connected device, used for the foreground
   /// service notification and logging.
   String _connectedDeviceName = '';
@@ -695,6 +705,7 @@ class BleTransport implements DeviceTransport {
         (value) async {
           // fromNum value is just a counter - read fromRadio regardless
           if (_rxCharacteristic != null) {
+            _lastNotificationAt = DateTime.now();
             AppLogging.ble('fromNum notified, reading fromRadio');
             try {
               // Read from fromRadio until empty
@@ -727,6 +738,16 @@ class BleTransport implements DeviceTransport {
             _updateState(DeviceConnectionState.error);
           }
         },
+        onDone: () {
+          AppLogging.ble(
+            '⚠️ fromNum notification stream completed — '
+            'BLE subscription lost while connection may still be alive',
+          );
+          // Treat a closed notification stream as a disconnect so the
+          // auto-reconnect path fires. The BLE GATT connection may still
+          // be alive, but without notifications we cannot receive data.
+          _updateState(DeviceConnectionState.disconnected);
+        },
       );
       AppLogging.ble('fromNum notifications enabled');
 
@@ -741,6 +762,98 @@ class BleTransport implements DeviceTransport {
         _updateState(DeviceConnectionState.error);
         rethrow;
       }
+    }
+  }
+
+  @override
+  Future<void> refreshNotifications() async {
+    if (_fromNumCharacteristic == null) {
+      AppLogging.ble('refreshNotifications: no fromNum characteristic');
+      return;
+    }
+    if (_state != DeviceConnectionState.connected) {
+      AppLogging.ble('refreshNotifications: not connected, skipping');
+      return;
+    }
+
+    AppLogging.ble('🔄 Refreshing fromNum notification subscription');
+    try {
+      // Cancel the existing listener before re-subscribing.
+      await _fromNumSubscription?.cancel();
+      _fromNumSubscription = null;
+
+      // Re-enable BLE-level notification on the fromNum characteristic.
+      // This is the key recovery step: on iOS/Android the OS can silently
+      // drop a GATT subscription while the connection stays alive.
+      await _fromNumCharacteristic!
+          .setNotifyValue(true)
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () {
+              AppLogging.ble(
+                '⚠️ refreshNotifications: setNotifyValue timed out',
+              );
+              return false;
+            },
+          );
+
+      // Re-attach the data-read listener (same logic as enableNotifications).
+      _fromNumSubscription = _fromNumCharacteristic!.lastValueStream.listen(
+        (value) async {
+          if (_rxCharacteristic != null) {
+            _lastNotificationAt = DateTime.now();
+            AppLogging.ble('fromNum notified, reading fromRadio');
+            try {
+              while (true) {
+                final data = await _rxCharacteristic!.read();
+                if (data.isEmpty) break;
+                AppLogging.ble(
+                  'BLE_RX_RAW len=${data.length} ts=${DateTime.now().toIso8601String()}',
+                );
+                AppLogging.ble('Read ${data.length} bytes from fromRadio');
+                _dataController.add(data);
+              }
+            } catch (e) {
+              AppLogging.ble('⚠️ Error reading fromRadio: $e');
+              if (_isAuthenticationError(e)) {
+                _updateState(DeviceConnectionState.error);
+              }
+            }
+          }
+        },
+        onError: (error) {
+          AppLogging.ble('⚠️ fromNum error: $error');
+          if (_isAuthenticationError(error)) {
+            _updateState(DeviceConnectionState.error);
+          }
+        },
+        onDone: () {
+          AppLogging.ble(
+            '⚠️ fromNum notification stream completed — '
+            'BLE subscription lost while connection may still be alive',
+          );
+          _updateState(DeviceConnectionState.disconnected);
+        },
+      );
+
+      AppLogging.ble('🔄 fromNum notifications refreshed');
+
+      // After re-subscribing, do one drain of fromRadio in case data
+      // accumulated while the subscription was dead.
+      if (_rxCharacteristic != null) {
+        try {
+          while (true) {
+            final data = await _rxCharacteristic!.read();
+            if (data.isEmpty) break;
+            _lastNotificationAt = DateTime.now();
+            _dataController.add(data);
+          }
+        } catch (e) {
+          AppLogging.ble('⚠️ Error draining fromRadio after refresh: $e');
+        }
+      }
+    } catch (e) {
+      AppLogging.ble('⚠️ refreshNotifications failed: $e');
     }
   }
 
@@ -895,6 +1008,7 @@ class BleTransport implements DeviceTransport {
       _fromNumSubscription = null;
       _logRadioSubscription = null;
       _consecutiveAuthErrors = 0;
+      _lastNotificationAt = null;
 
       // Stop the Android foreground service on disconnect.
       await BackgroundBleService.instance.stop();

@@ -97,6 +97,14 @@ abstract class DeviceTransport {
   /// Returns null if not supported or not connected
   Future<int?> readRssi();
 
+  /// Re-subscribe to BLE characteristic notifications.
+  ///
+  /// On iOS/Android, BLE notification subscriptions can be silently dropped
+  /// by the OS while the GATT connection remains alive. Calling this method
+  /// reapplies `setNotifyValue(true)` on the fromNum characteristic to
+  /// restore the data-flow path. No-op for non-BLE transports.
+  Future<void> refreshNotifications() async {}
+
   /// Get the BLE device model number from Device Information Service
   /// Returns null if not available (USB transport or not read yet)
   String? get bleModelNumber => null;
