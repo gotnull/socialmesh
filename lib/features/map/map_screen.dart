@@ -129,6 +129,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
   bool _showConnectionLines = false;
   bool _showPositionHistory = false;
 
+  /// When true in traceroute mode, only nodes part of the route are shown.
+  bool _tracerouteRouteOnly = false;
+
   /// When set, shows only this node's position history trail on the map.
   int? _trackNodeNum;
   bool _showTakLayer = true;
@@ -698,11 +701,24 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
     // Get nodes with positions (current or cached)
     final allNodesWithPosition = _getNodesWithPositions(nodes, presenceMap);
-    final nodesWithPosition = _filterNodes(
+    var nodesWithPosition = _filterNodes(
       allNodesWithPosition,
       myNodeNum,
       presenceMap,
     );
+
+    // In traceroute mode, optionally show only route-related nodes
+    if (_tracerouteRouteOnly && widget.tracerouteLog != null) {
+      final log = widget.tracerouteLog!;
+      final routeNodeNums = {
+        log.nodeNum,
+        log.targetNode,
+        ...log.hops.map((h) => h.nodeNum),
+      };
+      nodesWithPosition = nodesWithPosition
+          .where((n) => routeNodeNums.contains(n.node.nodeNum))
+          .toList();
+    }
 
     // Handle initial node centering from navigation
     if (!_initialCenteringDone && widget.initialNodeNum != null) {
@@ -884,6 +900,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
           AppBarOverflowMenu<String>(
             onSelected: (value) {
               switch (value) {
+                case 'traceroute_route_only':
+                  setState(() => _tracerouteRouteOnly = !_tracerouteRouteOnly);
+                  break;
                 case 'refresh':
                   _refreshPositions();
                   break;
@@ -956,6 +975,30 @@ class _MapScreenState extends ConsumerState<MapScreen>
               }
             },
             itemBuilder: (context) => [
+              // Traceroute: show route only toggle
+              if (widget.tracerouteLog != null)
+                PopupMenuItem(
+                  value: 'traceroute_route_only',
+                  child: Row(
+                    children: [
+                      Icon(
+                        _tracerouteRouteOnly
+                            ? Icons.route
+                            : Icons.route_outlined,
+                        size: 18,
+                        color: _tracerouteRouteOnly
+                            ? context.accentColor
+                            : context.textSecondary,
+                      ),
+                      SizedBox(width: AppTheme.spacing8),
+                      Text(
+                        _tracerouteRouteOnly
+                            ? context.l10n.tracerouteShowAllNodes
+                            : context.l10n.tracerouteShowRouteOnly,
+                      ),
+                    ],
+                  ),
+                ),
               // Node-related options - hide in location only mode
               if (!widget.locationOnlyMode) ...[
                 PopupMenuItem(

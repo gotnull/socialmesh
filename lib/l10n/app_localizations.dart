@@ -57196,6 +57196,18 @@ abstract class AppLocalizations {
   /// **'Traceroute Map'**
   String get tracerouteMapTitle;
 
+  /// Overflow menu option to hide nodes not part of the traceroute and show only the route nodes
+  ///
+  /// In en, this message translates to:
+  /// **'Show route only'**
+  String get tracerouteShowRouteOnly;
+
+  /// Overflow menu option to show all nodes on the map again after hiding unrelated ones
+  ///
+  /// In en, this message translates to:
+  /// **'Show all nodes'**
+  String get tracerouteShowAllNodes;
+
   /// Tooltip for heading-up compass mode that rotates the map to match device orientation
   ///
   /// In en, this message translates to:

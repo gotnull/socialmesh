@@ -43458,6 +43458,14 @@
     "@tracerouteMapTitle": {
         "description": "Title of the map screen when showing a traceroute path"
     },
+    "tracerouteShowRouteOnly": "Show route only",
+    "@tracerouteShowRouteOnly": {
+        "description": "Overflow menu option to hide nodes not part of the traceroute and show only the route nodes"
+    },
+    "tracerouteShowAllNodes": "Show all nodes",
+    "@tracerouteShowAllNodes": {
+        "description": "Overflow menu option to show all nodes on the map again after hiding unrelated ones"
+    },
     "mapControlsHeadingUp": "Heading up",
     "@mapControlsHeadingUp": {
         "description": "Tooltip for heading-up compass mode that rotates the map to match device orientation"

@@ -32752,6 +32752,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get tracerouteMapTitle => 'Traceroute Map';
 
   @override
+  String get tracerouteShowRouteOnly => 'Show route only';
+
+  @override
+  String get tracerouteShowAllNodes => 'Show all nodes';
+
+  @override
   String get mapControlsHeadingUp => 'Heading up';
 
   @override
