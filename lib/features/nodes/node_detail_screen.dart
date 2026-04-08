@@ -828,6 +828,14 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
                   (node.distance! / 1000).toStringAsFixed(1),
                 ),
           color: context.accentColor,
+          onTap: node.hasPosition
+              ? () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => MapScreen(initialNodeNum: node.nodeNum),
+                  ),
+                )
+              : null,
         ),
       );
     }
@@ -957,6 +965,14 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
                 : context.l10n.nodeDetailDistanceKilometers(
                     (node.distance! / 1000).toStringAsFixed(1),
                   ),
+            onTap: node.hasPosition
+                ? () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => MapScreen(initialNodeNum: node.nodeNum),
+                    ),
+                  )
+                : null,
           ),
         if (node.hasPosition)
           InfoTableRow(
@@ -964,6 +980,12 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
             label: context.l10n.nodeDetailLabelPosition,
             value:
                 '${node.latitude!.toStringAsFixed(5)}, ${node.longitude!.toStringAsFixed(5)}',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => MapScreen(initialNodeNum: node.nodeNum),
+              ),
+            ),
           ),
         if (node.altitude != null)
           InfoTableRow(
@@ -1738,16 +1760,18 @@ class _QuickStatChip extends StatelessWidget {
   final IconData icon;
   final String value;
   final Color color;
+  final VoidCallback? onTap;
 
   const _QuickStatChip({
     required this.icon,
     required this.value,
     required this.color,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final chip = Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
@@ -1769,6 +1793,16 @@ class _QuickStatChip extends StatelessWidget {
           ),
         ],
       ),
+    );
+
+    if (onTap == null) return chip;
+
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap!();
+      },
+      child: chip,
     );
   }
 }
