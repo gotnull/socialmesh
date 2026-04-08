@@ -23,7 +23,7 @@ import '../models/mesh_service_template.dart';
 import '../providers/mesh_service_providers.dart';
 import '../widgets/mesh_service_instance_card.dart';
 import '../widgets/mesh_service_status_badge.dart';
-import 'create_service_screen.dart';
+import 'service_creation_wizard.dart';
 
 /// My Services screen — manage local service instances.
 class MyServicesScreen extends ConsumerStatefulWidget {
@@ -259,7 +259,7 @@ class _MyServicesScreenState extends ConsumerState<MyServicesScreen>
   void _onCreateTap(BuildContext context) {
     ref.read(hapticServiceProvider).trigger(HapticType.light);
     Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const CreateServiceScreen()),
+      MaterialPageRoute<void>(builder: (_) => const ServiceCreationWizard()),
     );
   }
 

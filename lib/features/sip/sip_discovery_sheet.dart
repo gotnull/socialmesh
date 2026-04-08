@@ -10,6 +10,7 @@ import '../../core/logging.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animated_empty_state.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
+import '../../core/widgets/nearby_person_card.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/sip_providers.dart';
 import '../../services/haptic_service.dart';
@@ -175,61 +176,33 @@ class _PeerTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final theme = Theme.of(context);
-    final nodeHex = '0x${peer.nodeId.toRadixString(16).toUpperCase()}';
-    final deviceClassName = _deviceClassName(peer.deviceClass);
+    final nodeHex =
+        '!${peer.nodeId.toRadixString(16).toUpperCase().padLeft(4, '0')}';
+    final deviceClassName = SipPeerDetailSheet.deviceClassName(
+      context,
+      peer.deviceClass,
+    );
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: AppTheme.spacing8),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: theme.colorScheme.primaryContainer,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
+      child: NearbyPersonCard(
+        avatar: CircleAvatar(
+          radius: 24,
+          backgroundColor: context.accentColor.withValues(alpha: 0.1),
           child: Icon(
             Icons.sensors,
-            color: theme.colorScheme.onPrimaryContainer,
+            color: context.accentColor.withValues(alpha: 0.7),
             size: 20,
           ),
         ),
-        title: Text(
-          '${l10n.sipDiscoveryPeerAnonymous} $nodeHex',
-          style: theme.textTheme.bodyMedium,
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n.sipDiscoveryDeviceClass(deviceClassName),
-              style: theme.textTheme.bodySmall,
-            ),
-            Text(
-              'Features: 0x${peer.features.toRadixString(16)}',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-              ),
-            ),
-          ],
-        ),
-        trailing: const Icon(Icons.chevron_right),
+        displayName: '${l10n.sipDiscoveryPeerAnonymous} $nodeHex',
+        statusLine: l10n.sipDiscoveryDeviceClass(deviceClassName),
+        statusColor: context.accentColor,
         onTap: () {
           ref.read(hapticServiceProvider).trigger(HapticType.selection);
           SipPeerDetailSheet.show(context, peer);
         },
       ),
     );
-  }
-
-  static String _deviceClassName(int code) {
-    switch (code) {
-      case 0:
-        return 'Unknown'; // lint-allow: hardcoded-string
-      case 1:
-        return 'Phone'; // lint-allow: hardcoded-string
-      case 2:
-        return 'Tablet'; // lint-allow: hardcoded-string
-      case 3:
-        return 'Desktop'; // lint-allow: hardcoded-string
-      default:
-        return 'Type $code'; // lint-allow: hardcoded-string
-    }
   }
 }

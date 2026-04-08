@@ -15,6 +15,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
+import '../../core/widgets/expert_details_expander.dart';
 import '../../features/nodedex/models/nodedex_entry.dart';
 import '../../features/nodedex/models/sigil_evolution.dart';
 import '../../features/nodedex/providers/nodedex_providers.dart';
@@ -102,21 +103,11 @@ class SipPeerDetailSheet extends ConsumerWidget {
 
         const SizedBox(height: AppTheme.spacing20),
 
-        // Info rows
+        // Info rows — user-friendly fields visible by default
         _InfoRow(
           label: l10n.sipPeerDetailDeviceClass,
-          value: _deviceClassName(peer.deviceClass),
+          value: deviceClassName(context, peer.deviceClass),
           icon: Icons.devices,
-        ),
-        _InfoRow(
-          label: l10n.sipPeerDetailFeatures,
-          value: '0x${peer.features.toRadixString(16)}',
-          icon: Icons.extension,
-        ),
-        _InfoRow(
-          label: l10n.sipPeerDetailMtu,
-          value: '${peer.mtuHint}', // lint-allow: hardcoded-string
-          icon: Icons.straighten,
         ),
         _InfoRow(
           label: l10n.sipPeerDetailLastSeen,
@@ -149,6 +140,27 @@ class SipPeerDetailSheet extends ConsumerWidget {
               supported: peer.supportsSip3,
             ),
           ],
+        ),
+
+        const SizedBox(height: AppTheme.spacing16),
+
+        // Expert details — protocol-level info behind toggle
+        ExpertDetailsExpander(
+          label: l10n.sipPeerDetailExpertToggle,
+          expandedBuilder: (context) => Column(
+            children: [
+              _InfoRow(
+                label: l10n.sipPeerDetailFeatures,
+                value: '0x${peer.features.toRadixString(16)}',
+                icon: Icons.extension,
+              ),
+              _InfoRow(
+                label: l10n.sipPeerDetailMtu,
+                value: '${peer.mtuHint}', // lint-allow: hardcoded-string
+                icon: Icons.straighten,
+              ),
+            ],
+          ),
         ),
 
         const SizedBox(height: AppTheme.spacing24),
@@ -204,18 +216,23 @@ class SipPeerDetailSheet extends ConsumerWidget {
         NodeDisplayNameResolver.defaultName(nodeId);
   }
 
-  static String _deviceClassName(int code) {
+  /// Returns a localized device class name for the given SIP device class code.
+  ///
+  /// Public so other SIP screens (e.g., discovery sheet) can reuse l10n
+  /// mappings instead of duplicating hardcoded strings.
+  static String deviceClassName(BuildContext context, int code) {
+    final l10n = context.l10n;
     switch (code) {
       case 0:
-        return 'Unknown'; // lint-allow: hardcoded-string
+        return l10n.sipPeerDetailDeviceUnknown;
       case 1:
-        return 'Phone'; // lint-allow: hardcoded-string
+        return l10n.sipPeerDetailDevicePhone;
       case 2:
-        return 'Tablet'; // lint-allow: hardcoded-string
+        return l10n.sipPeerDetailDeviceTablet;
       case 3:
-        return 'Desktop'; // lint-allow: hardcoded-string
+        return l10n.sipPeerDetailDeviceDesktop;
       default:
-        return 'Type $code'; // lint-allow: hardcoded-string
+        return l10n.sipPeerDetailDeviceType(code);
     }
   }
 

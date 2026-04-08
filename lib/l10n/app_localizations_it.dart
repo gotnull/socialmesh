@@ -31098,6 +31098,26 @@ class AppLocalizationsIt extends AppLocalizations {
   String get sipPeerDetailCapabilities => 'Capacità';
 
   @override
+  String get sipPeerDetailDeviceUnknown => 'Unknown';
+
+  @override
+  String get sipPeerDetailDevicePhone => 'Phone';
+
+  @override
+  String get sipPeerDetailDeviceTablet => 'Tablet';
+
+  @override
+  String get sipPeerDetailDeviceDesktop => 'Desktop';
+
+  @override
+  String sipPeerDetailDeviceType(int code) {
+    return 'Type $code';
+  }
+
+  @override
+  String get sipPeerDetailExpertToggle => 'Technical details';
+
+  @override
   String get sipCountersTitle => 'Contatori debug SIP';
 
   @override
@@ -32258,6 +32278,20 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get serviceDetailMeshUnavailable =>
+      'Mesh network is not available right now.';
+
+  @override
+  String serviceDetailActionSuccess(String actionName) {
+    return '$actionName completed successfully.';
+  }
+
+  @override
+  String serviceDetailActionFailed(String actionName) {
+    return '$actionName could not be completed.';
+  }
+
+  @override
   String get meshServicesFieldTitle => 'Titolo';
 
   @override
@@ -32301,6 +32335,23 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get meshServicesPublishSuccess => 'Servizio pubblicato';
+
+  @override
+  String get meshServicesCreatedHeadline => 'Your service is live!';
+
+  @override
+  String get meshServicesCreatedDescription =>
+      'Your service is now available to other mesh users nearby. They can discover it and interact with it.';
+
+  @override
+  String get meshServicesCreatedMeshHint =>
+      'Services are shared over the local mesh network. The closer people are, the more reliable the connection.';
+
+  @override
+  String get meshServicesCreatedViewServices => 'View my services';
+
+  @override
+  String get meshServicesCreatedCreateAnother => 'Create another';
 
   @override
   String get meshServicesStatusActive => 'Attivo';
@@ -33540,4 +33591,364 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get nodedexCoSeenCardViewAll => 'View all';
+
+  @override
+  String get nearbyTitle => 'Nearby';
+
+  @override
+  String get nearbySubtitle => 'People and devices on the mesh';
+
+  @override
+  String get nearbyScanButton => 'Look for people';
+
+  @override
+  String get nearbyScanningLabel => 'Looking for people nearby…';
+
+  @override
+  String nearbyScanCooldownLabel(int seconds) {
+    return 'Scan again in ${seconds}s';
+  }
+
+  @override
+  String get nearbyPersonAnonymous => 'Mesh User';
+
+  @override
+  String get nearbyStatusNow => 'Nearby now';
+
+  @override
+  String nearbyStatusMinutesAgo(int count) {
+    return 'Seen $count min ago';
+  }
+
+  @override
+  String nearbyStatusHoursAgo(int count) {
+    return 'Seen ${count}h ago';
+  }
+
+  @override
+  String get nearbyEmptyTitle => 'No one nearby yet';
+
+  @override
+  String get nearbyEmptyDescription =>
+      'Tap “Look for people” to find other Socialmesh users on the mesh';
+
+  @override
+  String get nearbyEmptyTagline1 => 'Listening for nearby users…';
+
+  @override
+  String get nearbyEmptyTagline2 => 'Tap Look for people to send a signal…';
+
+  @override
+  String get nearbyEmptyTagline3 => 'Others will appear here when found…';
+
+  @override
+  String get nearbyEmptyTagline4 => 'Keep the app open to discover more…';
+
+  @override
+  String get nearbyDevicePhone => 'Phone';
+
+  @override
+  String get nearbyDeviceTablet => 'Tablet';
+
+  @override
+  String get nearbyDeviceDesktop => 'Desktop';
+
+  @override
+  String get nearbyDeviceUnknown => 'Device';
+
+  @override
+  String get nearbySectionPeople => 'People';
+
+  @override
+  String get nearbySectionConversations => 'Conversations';
+
+  @override
+  String get nearbySectionRequests => 'Connection requests';
+
+  @override
+  String get connectionRequestConnect => 'Connect';
+
+  @override
+  String get connectionStateConnecting => 'Connecting…';
+
+  @override
+  String get connectionStateConnected => 'Connected';
+
+  @override
+  String get connectionStatePending => 'Request sent';
+
+  @override
+  String get connectionStateDeclined => 'Declined';
+
+  @override
+  String get connectionStateFailed => 'Could not connect';
+
+  @override
+  String get connectionStateTimedOut => 'No response';
+
+  @override
+  String connectionIncomingTitle(String name) {
+    return '$name wants to connect';
+  }
+
+  @override
+  String get connectionAcceptButton => 'Accept';
+
+  @override
+  String get connectionDeclineButton => 'Decline';
+
+  @override
+  String get contactExchangeTitle => 'Share contact card';
+
+  @override
+  String get contactExchangeDescription =>
+      'Exchange identity with a nearby person so you can message each other';
+
+  @override
+  String get contactExchangeShareButton => 'Share my contact';
+
+  @override
+  String get contactExchangeShared => 'Contact shared';
+
+  @override
+  String get meshConversationTitle => 'Mesh message';
+
+  @override
+  String meshConversationExpiry(String time) {
+    return 'Expires in $time';
+  }
+
+  @override
+  String get meshConversationPinned => 'Pinned';
+
+  @override
+  String get meshConversationInputHint => 'Message…';
+
+  @override
+  String get meshConversationBudgetExhausted =>
+      'Sending paused — mesh bandwidth limit reached. Try again shortly.';
+
+  @override
+  String get meshConversationClosed => 'This conversation has ended.';
+
+  @override
+  String get meshConversationReadyToChat => 'Ready to chat';
+
+  @override
+  String get deliveryPhasePreparing => 'Preparing';
+
+  @override
+  String get deliveryPhasePreparingDesc =>
+      'Getting your data ready to send over the mesh.';
+
+  @override
+  String get deliveryPhaseSending => 'Sending';
+
+  @override
+  String get deliveryPhaseSendingDesc => 'Sending to the mesh network.';
+
+  @override
+  String get deliveryPhaseSentToMesh => 'Sent to mesh';
+
+  @override
+  String get deliveryPhaseSentToMeshDesc =>
+      'Your data is on the mesh and being relayed.';
+
+  @override
+  String get deliveryPhaseWaitingForPath => 'Waiting for path';
+
+  @override
+  String get deliveryPhaseWaitingForPathDesc =>
+      'The mesh hasn’t found a route yet. Delivery will continue automatically.';
+
+  @override
+  String get deliveryPhaseDelivering => 'Delivering';
+
+  @override
+  String get deliveryPhaseDeliveringDesc =>
+      'Your data is being relayed through the mesh.';
+
+  @override
+  String get deliveryPhasePartiallyDelivered => 'Partially delivered';
+
+  @override
+  String get deliveryPhasePartiallyDeliveredDesc =>
+      'Some parts arrived. The rest will resume when the connection improves.';
+
+  @override
+  String get deliveryPhaseRetrying => 'Retrying';
+
+  @override
+  String get deliveryPhaseRetryingDesc =>
+      'Retrying automatically — no action needed.';
+
+  @override
+  String get deliveryPhaseResuming => 'Resuming';
+
+  @override
+  String get deliveryPhaseResumingDesc => 'Picking up where it left off.';
+
+  @override
+  String get deliveryPhaseDelivered => 'Delivered';
+
+  @override
+  String get deliveryPhaseDeliveredDesc =>
+      'Everything arrived at its destination.';
+
+  @override
+  String get deliveryPhaseVerified => 'Verified';
+
+  @override
+  String get deliveryPhaseVerifiedDesc =>
+      'Everything arrived correctly and has been verified.';
+
+  @override
+  String get deliveryPhaseNeedsAttention => 'Needs attention';
+
+  @override
+  String get deliveryPhaseNeedsAttentionDesc =>
+      'Something needs your attention to continue.';
+
+  @override
+  String get deliveryPhaseFailed => 'Failed';
+
+  @override
+  String get deliveryPhaseFailedDesc =>
+      'Transfer could not be completed after all attempts.';
+
+  @override
+  String get deliverySafeToClose =>
+      'Safe to close — delivery continues in the background';
+
+  @override
+  String get deliverySafeToLeave => 'You can leave — transfer will continue';
+
+  @override
+  String deliveryProgressParts(int current, int total) {
+    return '$current of $total parts';
+  }
+
+  @override
+  String get deliveryExpertToggle => 'Technical details';
+
+  @override
+  String get guidedFlowNext => 'Next';
+
+  @override
+  String get guidedFlowBack => 'Back';
+
+  @override
+  String get guidedFlowDone => 'Done';
+
+  @override
+  String get guidedFlowCreate => 'Create';
+
+  @override
+  String get guidedFlowContinue => 'Continue';
+
+  @override
+  String get guidedFlowCancel => 'Cancel';
+
+  @override
+  String get serviceWizardTitle => 'Create something';
+
+  @override
+  String get serviceWizardStepWhat => 'What';
+
+  @override
+  String get serviceWizardStepWho => 'Who';
+
+  @override
+  String get serviceWizardStepDetails => 'Details';
+
+  @override
+  String get serviceWizardStepReview => 'Review';
+
+  @override
+  String get serviceWizardWhatTitle => 'What do you want to create?';
+
+  @override
+  String get serviceWizardWhatSubtitle =>
+      'Choose a type of service to share on the mesh';
+
+  @override
+  String get serviceWizardWhoTitle => 'Who can see it?';
+
+  @override
+  String get serviceWizardWhoSubtitle =>
+      'Choose who will be able to discover and use your service';
+
+  @override
+  String get serviceWizardAudienceAnyone => 'Anyone nearby';
+
+  @override
+  String get serviceWizardAudienceAnyoneDesc =>
+      'Anyone on the mesh can discover and use this';
+
+  @override
+  String get serviceWizardAudienceContacts => 'Approved contacts only';
+
+  @override
+  String get serviceWizardAudienceContactsDesc =>
+      'Only people you’ve exchanged contacts with';
+
+  @override
+  String get serviceWizardReviewTitle => 'Review your service';
+
+  @override
+  String get serviceWizardReviewSubtitle =>
+      'Check everything looks right before publishing';
+
+  @override
+  String get serviceWizardReviewType => 'Type';
+
+  @override
+  String get serviceWizardReviewAudience => 'Audience';
+
+  @override
+  String get serviceWizardReviewMeshHint =>
+      'Works best when other users are nearby or the mesh is active';
+
+  @override
+  String get serviceWizardCompletionHeadline => 'Your service is live';
+
+  @override
+  String get serviceWizardCompletionDescription =>
+      'Other mesh users can now discover and interact with your service. You can manage it from My Services.';
+
+  @override
+  String get serviceWizardCompletionViewServices => 'View my services';
+
+  @override
+  String get serviceWizardCompletionCreateAnother => 'Create another';
+
+  @override
+  String get peerDetailLastSeenJustNow => 'Just now';
+
+  @override
+  String get peerDetailCapabilities => 'What they support';
+
+  @override
+  String get peerDetailCapIdentity => 'Identity & secure connection';
+
+  @override
+  String get peerDetailCapExchange => 'Contact exchange';
+
+  @override
+  String get peerDetailDeviceType => 'Device type';
+
+  @override
+  String get nearbyAutoScanEnabled => 'Auto-discovery on';
+
+  @override
+  String get nearbyAutoScanDisabled => 'Auto-discovery off';
+
+  @override
+  String get disclosureBasic => 'Simple view';
+
+  @override
+  String get disclosureCurious => 'More detail';
+
+  @override
+  String get disclosureExpert => 'Full diagnostics';
 }

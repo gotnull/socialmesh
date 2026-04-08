@@ -8,18 +8,27 @@
 /// and caches schemas locally.
 library;
 
+import 'dart:async';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/delivery_progress_card.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../services/haptic_service.dart';
+import '../../../services/protocol/sip/mrrp_constants.dart';
+import '../../../services/protocol/sip/mrrp_frame.dart';
+import '../../../services/protocol/sip/mrrp_types.dart';
 import '../../../utils/snackbar.dart';
 import '../models/service_schema.dart';
 import '../models/template_schemas.dart';
 import '../models/mesh_service_template.dart';
+import '../providers/mesh_service_providers.dart';
+import '../services/mrrp_delivery_tracker.dart';
 import '../widgets/generic_service_renderer.dart';
 
 /// Service detail screen.
@@ -29,6 +38,9 @@ import '../widgets/generic_service_renderer.dart';
 class ServiceDetailScreen extends ConsumerStatefulWidget {
   /// The remote peer's node ID.
   final int nodeId;
+
+  /// Numeric MRRP service ID from the remote peer's advert.
+  final int serviceId;
 
   /// Service type string (e.g., "weather.v1").
   final String serviceType;
@@ -45,6 +57,7 @@ class ServiceDetailScreen extends ConsumerStatefulWidget {
   const ServiceDetailScreen({
     super.key,
     required this.nodeId,
+    required this.serviceId,
     required this.serviceType,
     required this.serviceTitle,
     required this.icon,
@@ -63,10 +76,20 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
   bool _loading = true;
   String? _error;
 
+  /// Active delivery state (shown via DeliveryProgressCard).
+  MrrpDeliveryState? _activeDelivery;
+  StreamSubscription<MrrpDeliveryState>? _deliverySub;
+
   @override
   void initState() {
     super.initState();
     _loadSchema();
+  }
+
+  @override
+  void dispose() {
+    _deliverySub?.cancel();
+    super.dispose();
   }
 
   void _loadSchema() {
@@ -90,17 +113,50 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
     });
   }
 
-  void _onAction(SchemaAction action) {
+  Future<void> _onAction(SchemaAction action) async {
+    final localL10n = context.l10n;
     final haptics = ref.read(hapticServiceProvider);
     haptics.trigger(HapticType.light);
-    // Action handling would dispatch MRRP REQUEST to the peer.
-    // For now, show a feedback indication.
-    if (!mounted) return;
-    showInfoSnackBar(
-      context,
-      '${action.name} → ${widget.serviceType}', // lint-allow: hardcoded-string
-      duration: const Duration(seconds: 2),
+
+    final tracker = ref.read(mrrpDeliveryTrackerProvider);
+    if (tracker == null) {
+      if (!mounted) return;
+      showErrorSnackBar(context, localL10n.serviceDetailMeshUnavailable);
+      return;
+    }
+
+    // Subscribe to delivery state changes if not already subscribed.
+    _deliverySub?.cancel();
+    _deliverySub = tracker.stateChanges.listen((state) {
+      if (mounted) setState(() => _activeDelivery = state);
+    });
+
+    // Build MRRP request frame for this action.
+    final request = MrrpFrame(
+      versionMajor: MrrpConstants.mrrpVersionMajor,
+      versionMinor: MrrpConstants.mrrpVersionMinor,
+      msgType: MrrpMessageType.request,
+      flags: MrrpFlags.ackRequired,
+      headerLen: MrrpConstants.mrrpHeaderMin,
+      requestId: 0, // Dispatcher allocates the real ID
+      serviceId: widget.serviceId,
+      actionId: action.id,
+      payloadLen: 0,
+      payload: Uint8List(0),
     );
+
+    // Pre-capture l10n strings before async gap.
+    final successMsg = localL10n.serviceDetailActionSuccess(action.name);
+    final failureMsg = localL10n.serviceDetailActionFailed(action.name);
+
+    // Dispatch and track.
+    final result = await tracker.trackRequest(request);
+    if (!mounted) return;
+    if (result.phase == DeliveryPhase.delivered && result.response != null) {
+      showSuccessSnackBar(context, successMsg);
+    } else if (result.phase == DeliveryPhase.failed) {
+      showErrorSnackBar(context, failureMsg);
+    }
   }
 
   @override
@@ -116,9 +172,93 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
             child: _buildContent(context, l10n),
           ),
         ),
+        // Delivery progress card — shown during active MRRP request.
+        if (_activeDelivery != null)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spacing16,
+              ),
+              child: _buildDeliveryCard(context, l10n),
+            ),
+          ),
         const SliverToBoxAdapter(child: SizedBox(height: AppTheme.spacing48)),
       ],
     );
+  }
+
+  Widget _buildDeliveryCard(BuildContext context, dynamic l10n) {
+    final delivery = _activeDelivery!;
+    final (label, desc) = _deliveryPhaseStrings(l10n, delivery.phase);
+    return DeliveryProgressCard(
+      phase: delivery.phase,
+      label: label,
+      description: desc,
+      safeToLeaveHint: delivery.phase.isSafeToLeave
+          ? l10n.deliverySafeToLeave as String
+          : null,
+      showExpertDetails: delivery.statusCode != null,
+      expertToggleLabel: l10n.deliveryExpertToggle as String,
+      expertDetails: [
+        if (delivery.statusCode != null)
+          'Status: ${delivery.statusCode!.name}', // lint-allow: hardcoded-string
+        if (delivery.latency != null)
+          'Latency: ${delivery.latency!.inMilliseconds}ms', // lint-allow: hardcoded-string
+      ],
+    );
+  }
+
+  (String, String) _deliveryPhaseStrings(dynamic l10n, DeliveryPhase phase) {
+    return switch (phase) {
+      DeliveryPhase.preparing => (
+        l10n.deliveryPhasePreparing as String,
+        l10n.deliveryPhasePreparingDesc as String,
+      ),
+      DeliveryPhase.sending => (
+        l10n.deliveryPhaseSending as String,
+        l10n.deliveryPhaseSendingDesc as String,
+      ),
+      DeliveryPhase.sentToMesh => (
+        l10n.deliveryPhaseSentToMesh as String,
+        l10n.deliveryPhaseSentToMeshDesc as String,
+      ),
+      DeliveryPhase.waitingForPath => (
+        l10n.deliveryPhaseWaitingForPath as String,
+        l10n.deliveryPhaseWaitingForPathDesc as String,
+      ),
+      DeliveryPhase.delivering => (
+        l10n.deliveryPhaseDelivering as String,
+        l10n.deliveryPhaseDeliveringDesc as String,
+      ),
+      DeliveryPhase.partiallyDelivered => (
+        l10n.deliveryPhasePartiallyDelivered as String,
+        l10n.deliveryPhasePartiallyDeliveredDesc as String,
+      ),
+      DeliveryPhase.retrying => (
+        l10n.deliveryPhaseRetrying as String,
+        l10n.deliveryPhaseRetryingDesc as String,
+      ),
+      DeliveryPhase.resuming => (
+        l10n.deliveryPhaseResuming as String,
+        l10n.deliveryPhaseResumingDesc as String,
+      ),
+      DeliveryPhase.delivered => (
+        l10n.deliveryPhaseDelivered as String,
+        l10n.deliveryPhaseDeliveredDesc as String,
+      ),
+      DeliveryPhase.verified => (
+        l10n.deliveryPhaseVerified as String,
+        l10n.deliveryPhaseVerifiedDesc as String,
+      ),
+      DeliveryPhase.needsAttention => (
+        l10n.deliveryPhaseNeedsAttention as String,
+        l10n.deliveryPhaseNeedsAttentionDesc as String,
+      ),
+      DeliveryPhase.failed => (
+        l10n.deliveryPhaseFailed as String,
+        l10n.deliveryPhaseFailedDesc as String,
+      ),
+    };
   }
 
   Widget _buildContent(BuildContext context, dynamic l10n) {

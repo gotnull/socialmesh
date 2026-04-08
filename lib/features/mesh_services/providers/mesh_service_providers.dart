@@ -14,6 +14,7 @@ import '../../../core/logging.dart';
 import '../models/mesh_service_instance.dart';
 import '../services/mesh_service_engine.dart';
 import '../services/mesh_service_store.dart';
+import '../services/mrrp_delivery_tracker.dart';
 import '../../../services/protocol/sip/mrrp_service_registry.dart';
 import '../../../services/protocol/sip/mrrp_types.dart';
 import '../../../providers/mrrp_providers.dart';
@@ -153,4 +154,16 @@ final meshServiceActiveCountProvider = Provider<AsyncValue<int>>((ref) {
   return ref
       .watch(meshServiceActiveInstancesProvider)
       .whenData((list) => list.length);
+});
+
+/// MRRP delivery tracker — maps engine request lifecycle to [DeliveryPhase].
+///
+/// Null when the MRRP engine is not available (feature flags, SIP disabled).
+final mrrpDeliveryTrackerProvider = Provider<MrrpDeliveryTracker?>((ref) {
+  final engine = ref.watch(mrrpEngineProvider);
+  if (engine == null) return null;
+
+  final tracker = MrrpDeliveryTracker(engine);
+  ref.onDispose(tracker.dispose);
+  return tracker;
 });

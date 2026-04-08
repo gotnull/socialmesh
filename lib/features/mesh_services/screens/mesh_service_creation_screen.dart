@@ -20,6 +20,7 @@ import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/bottom_action_bar.dart';
+import '../../../core/widgets/completion_state_panel.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 
 import '../../../services/haptic_service.dart';
@@ -37,10 +38,21 @@ const _maxListItems = 10;
 const _minPollOptions = 2;
 
 /// Service creation screen for a specific template.
+///
+/// When [embedded] is `true` the screen strips its own scaffold and publish
+/// button, rendering only the form content — designed to live inside a
+/// parent wizard's [PageView].
 class MeshServiceCreationScreen extends ConsumerStatefulWidget {
   final MeshServiceTemplate template;
 
-  const MeshServiceCreationScreen({super.key, required this.template});
+  /// If `true`, renders only the scrollable form (no scaffold/publish bar).
+  final bool embedded;
+
+  const MeshServiceCreationScreen({
+    super.key,
+    required this.template,
+    this.embedded = false,
+  });
 
   @override
   ConsumerState<MeshServiceCreationScreen> createState() =>
@@ -63,6 +75,7 @@ class _MeshServiceCreationScreenState
 
   late int _ttlMinutes;
   bool _publishing = false;
+  bool _publishedSuccessfully = false;
 
   late final AnimationController _entryAnimationController;
   late final Animation<double> _fadeAnimation;
@@ -140,6 +153,16 @@ class _MeshServiceCreationScreenState
     final l10n = context.l10n;
     final (title, _) = _templateStrings(l10n);
     final accent = widget.template.accentColor;
+
+    // Embedded mode: just the scrollable form content, no scaffold/publish.
+    if (widget.embedded) {
+      return _buildFormContent(context, l10n, title, accent);
+    }
+
+    // Post-publish success: show completion panel.
+    if (_publishedSuccessfully) {
+      return _buildCompletionScreen(context, l10n, accent);
+    }
 
     return GestureDetector(
       onTap: _dismissKeyboard,
@@ -272,6 +295,126 @@ class _MeshServiceCreationScreenState
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // ─────────────────── completion screen ───────────────────
+
+  Widget _buildCompletionScreen(
+    BuildContext context,
+    dynamic l10n,
+    Color accent,
+  ) {
+    return GlassScaffold(
+      leading: IconButton(
+        icon: Icon(Icons.close, color: context.textPrimary),
+        onPressed: () => Navigator.of(context).pop(),
+      ),
+      slivers: [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: CompletionStatePanel(
+            icon: Icons.check_circle_outline,
+            color: AppTheme.successGreen,
+            headline: l10n.meshServicesCreatedHeadline as String,
+            description: l10n.meshServicesCreatedDescription as String,
+            meshHint: l10n.meshServicesCreatedMeshHint as String,
+            primaryActionLabel: l10n.meshServicesCreatedViewServices as String,
+            onPrimaryAction: () {
+              // Pop creation screen — returns to My Services list.
+              // The wizard used pushReplacement, so only one pop is needed.
+              Navigator.of(context).pop();
+            },
+            secondaryActionLabel:
+                l10n.meshServicesCreatedCreateAnother as String,
+            onSecondaryAction: () {
+              // Reset form for another creation.
+              setState(() {
+                _publishedSuccessfully = false;
+                _titleController.clear();
+                _descriptionController.clear();
+                for (final c in _optionControllers) {
+                  c.clear();
+                }
+                for (final c in _itemControllers) {
+                  c.clear();
+                }
+                _ttlMinutes = widget.template.defaultTtlMinutes;
+              });
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ─────────────────── embedded form content ───────────────────
+
+  Widget _buildFormContent(
+    BuildContext context,
+    dynamic l10n,
+    String title,
+    Color accent,
+  ) {
+    return GestureDetector(
+      onTap: _dismissKeyboard,
+      behavior: HitTestBehavior.opaque,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
+        ),
+        padding: const EdgeInsets.fromLTRB(
+          AppTheme.spacing20,
+          AppTheme.spacing8,
+          AppTheme.spacing20,
+          AppTheme.spacing20,
+        ),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _TemplateBadge(template: widget.template, title: title),
+              const SizedBox(height: AppTheme.spacing20),
+              _buildTitleInput(l10n, accent),
+              const SizedBox(height: AppTheme.spacing16),
+              _buildDescriptionField(l10n),
+              if (_isPoll) ...[
+                const SizedBox(height: AppTheme.spacing16),
+                ..._buildPollFields(l10n, accent),
+              ],
+              if (_hasList) ...[
+                const SizedBox(height: AppTheme.spacing16),
+                ..._buildListFields(l10n, accent),
+              ],
+              const SizedBox(height: AppTheme.spacing16),
+              _buildDurationSelector(l10n, accent),
+              const SizedBox(height: AppTheme.spacing16),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.shield_outlined,
+                    size: 14,
+                    color: context.textTertiary,
+                  ),
+                  const SizedBox(width: AppTheme.spacing6),
+                  Expanded(
+                    child: Text(
+                      l10n.meshServicesPreviewSubtitle as String,
+                      style: TextStyle(
+                        color: context.textTertiary,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppTheme.spacing48),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -823,10 +966,9 @@ class _MeshServiceCreationScreenState
     setState(() => _publishing = false);
 
     if (instance != null) {
-      showSuccessSnackBar(context, l10n.meshServicesPublishSuccess);
-      Navigator.of(context)
-        ..pop() // Pop creation screen.
-        ..pop(); // Pop template picker (return to My Services).
+      await ref.read(hapticServiceProvider).trigger(HapticType.success);
+      if (!mounted) return;
+      setState(() => _publishedSuccessfully = true);
     }
   }
 

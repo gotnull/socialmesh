@@ -6484,22 +6484,30 @@
     "@fileTransferCardChunksProgress": {
         "description": "Chip label showing chunk transfer progress",
         "placeholders": {
-            "completed": { "type": "String" },
-            "total": { "type": "String" }
+            "completed": {
+                "type": "String"
+            },
+            "total": {
+                "type": "String"
+            }
         }
     },
     "fileTransferCardChunksTotal": "{count} chunks",
     "@fileTransferCardChunksTotal": {
         "description": "Chip label showing total chunk count",
         "placeholders": {
-            "count": { "type": "String" }
+            "count": {
+                "type": "String"
+            }
         }
     },
     "fileTransferCardChunkSize": "{size} ea.",
     "@fileTransferCardChunkSize": {
         "description": "Chip label showing individual chunk size",
         "placeholders": {
-            "size": { "type": "String" }
+            "size": {
+                "type": "String"
+            }
         }
     },
     "fileTransferBinaryFileHint": "Binary file — save to open with an external app",
@@ -6803,15 +6811,15 @@
     "@fileTransferDirectionSent": {
         "description": "Direction badge label for outbound"
     },
-    "fileTransferStatusPreparing": "Preparing\u2026",
+    "fileTransferStatusPreparing": "Preparing…",
     "@fileTransferStatusPreparing": {
         "description": "Transfer card status — created, not yet sent"
     },
-    "fileTransferStatusOfferSent": "Offer sent, waiting\u2026",
+    "fileTransferStatusOfferSent": "Offer sent, waiting…",
     "@fileTransferStatusOfferSent": {
         "description": "Transfer card status — offer sent to remote node"
     },
-    "fileTransferStatusOfferPending": "Incoming file \u2014 tap to review",
+    "fileTransferStatusOfferPending": "Incoming file — tap to review",
     "@fileTransferStatusOfferPending": {
         "description": "Transfer card status — inbound offer waiting for user acceptance"
     },
@@ -6819,17 +6827,21 @@
     "@fileTransferStatusSending": {
         "description": "Transfer card status — outbound transfer in progress",
         "placeholders": {
-            "pct": {"type": "String"}
+            "pct": {
+                "type": "String"
+            }
         }
     },
     "fileTransferStatusReceiving": "Receiving {pct}%",
     "@fileTransferStatusReceiving": {
         "description": "Transfer card status — inbound transfer in progress",
         "placeholders": {
-            "pct": {"type": "String"}
+            "pct": {
+                "type": "String"
+            }
         }
     },
-    "fileTransferStatusRecovering": "Recovering missing chunks\u2026",
+    "fileTransferStatusRecovering": "Recovering missing chunks…",
     "@fileTransferStatusRecovering": {
         "description": "Transfer card status — NACK recovery phase"
     },
@@ -6861,7 +6873,7 @@
     "@fileTransferFailReasonInvalid": {
         "description": "Transfer fail reason — malformed chunk data"
     },
-    "fileTransferFailReasonRateLimited": "Rate limited \u2014 try again later",
+    "fileTransferFailReasonRateLimited": "Rate limited — try again later",
     "@fileTransferFailReasonRateLimited": {
         "description": "Transfer fail reason — airtime rate limiter fired"
     },
@@ -6881,14 +6893,18 @@
     "@fileTransferMetaNodeTo": {
         "description": "Transfer card metadata — destination node display name or short hex",
         "placeholders": {
-            "nodeName": {"type": "String"}
+            "nodeName": {
+                "type": "String"
+            }
         }
     },
     "fileTransferMetaNodeFrom": "from {nodeName}",
     "@fileTransferMetaNodeFrom": {
         "description": "Transfer card metadata — source node display name or short hex",
         "placeholders": {
-            "nodeName": {"type": "String"}
+            "nodeName": {
+                "type": "String"
+            }
         }
     },
     "fileTransferTimeJustNow": "just now",
@@ -6899,29 +6915,39 @@
     "@fileTransferTimeMinutesAgo": {
         "description": "Transfer card relative time — N minutes ago",
         "placeholders": {
-            "count": {"type": "int"}
+            "count": {
+                "type": "int"
+            }
         }
     },
     "fileTransferTimeHoursAgo": "{count}h ago",
     "@fileTransferTimeHoursAgo": {
         "description": "Transfer card relative time — N hours ago",
         "placeholders": {
-            "count": {"type": "int"}
+            "count": {
+                "type": "int"
+            }
         }
     },
     "fileTransferTimeDaysAgo": "{count}d ago",
     "@fileTransferTimeDaysAgo": {
         "description": "Transfer card relative time — N days ago",
         "placeholders": {
-            "count": {"type": "int"}
+            "count": {
+                "type": "int"
+            }
         }
     },
     "fileTransferTimeDate": "{month}/{day}",
     "@fileTransferTimeDate": {
         "description": "Transfer card date for transfers older than one week",
         "placeholders": {
-            "month": {"type": "String"},
-            "day": {"type": "String"}
+            "month": {
+                "type": "String"
+            },
+            "day": {
+                "type": "String"
+            }
         }
     },
     "fileTransferVoiceBadge": "Voice",
@@ -7137,14 +7163,18 @@
     "@fileTransferGalleryToNode": {
         "description": "Subtitle in gallery overlay showing outbound target node",
         "placeholders": {
-            "name": { "type": "String" }
+            "name": {
+                "type": "String"
+            }
         }
     },
     "fileTransferGalleryFromNode": "from {name}",
     "@fileTransferGalleryFromNode": {
         "description": "Subtitle in gallery overlay showing inbound source node",
         "placeholders": {
-            "name": { "type": "String" }
+            "name": {
+                "type": "String"
+            }
         }
     },
     "fileTransferGallerySentBadge": "Sent",
@@ -7159,29 +7189,39 @@
     "@fileTransferGallerySizeBadge": {
         "description": "File size badge in gallery overlay",
         "placeholders": {
-            "size": { "type": "String" }
+            "size": {
+                "type": "String"
+            }
         }
     },
     "fileTransferGalleryChunksBadge": "{completed}/{total} chunks",
     "@fileTransferGalleryChunksBadge": {
         "description": "Chunk progress badge in gallery overlay",
         "placeholders": {
-            "completed": { "type": "String" },
-            "total": { "type": "String" }
+            "completed": {
+                "type": "String"
+            },
+            "total": {
+                "type": "String"
+            }
         }
     },
     "fileTransferGalleryDurationBadge": "{duration}",
     "@fileTransferGalleryDurationBadge": {
         "description": "Transfer duration badge in gallery overlay",
         "placeholders": {
-            "duration": { "type": "String" }
+            "duration": {
+                "type": "String"
+            }
         }
     },
     "fileTransferGalleryHashBadge": "SHA-256 {hash}",
     "@fileTransferGalleryHashBadge": {
         "description": "Truncated SHA-256 hash badge in gallery overlay",
         "placeholders": {
-            "hash": { "type": "String" }
+            "hash": {
+                "type": "String"
+            }
         }
     },
     "fileTransferGalleryViewDetails": "Details",
@@ -7196,22 +7236,30 @@
     "@fileTransferGalleryDurationSeconds": {
         "description": "Transfer duration formatted in seconds",
         "placeholders": {
-            "count": { "type": "int" }
+            "count": {
+                "type": "int"
+            }
         }
     },
     "fileTransferGalleryDurationMinutes": "{count}m",
     "@fileTransferGalleryDurationMinutes": {
         "description": "Transfer duration formatted in minutes",
         "placeholders": {
-            "count": { "type": "int" }
+            "count": {
+                "type": "int"
+            }
         }
     },
     "fileTransferGalleryDurationHours": "{hours}h {minutes}m",
     "@fileTransferGalleryDurationHours": {
         "description": "Transfer duration formatted in hours and minutes",
         "placeholders": {
-            "hours": { "type": "int" },
-            "minutes": { "type": "int" }
+            "hours": {
+                "type": "int"
+            },
+            "minutes": {
+                "type": "int"
+            }
         }
     },
     "fileTransferPurgeExpired": "Purge Expired",
@@ -11264,8 +11312,12 @@
     "@messagingRetryProgress": {
         "description": "Shows current retry attempt count vs maximum.",
         "placeholders": {
-            "count": {"type": "int"},
-            "max": {"type": "int"}
+            "count": {
+                "type": "int"
+            },
+            "max": {
+                "type": "int"
+            }
         }
     },
     "messagingScanQrCode": "Scan QR code",
@@ -30672,22 +30724,38 @@
     "flowCompilerWhen": "When: {trigger}",
     "@flowCompilerWhen": {
         "description": "Visual flow / help l10n",
-        "placeholders": {"trigger": {"type": "String"}}
+        "placeholders": {
+            "trigger": {
+                "type": "String"
+            }
+        }
     },
     "flowCompilerIf": "If: {conditions}",
     "@flowCompilerIf": {
         "description": "Visual flow / help l10n",
-        "placeholders": {"conditions": {"type": "String"}}
+        "placeholders": {
+            "conditions": {
+                "type": "String"
+            }
+        }
     },
     "flowCompilerAfterDelay": "After: {delay} delay",
     "@flowCompilerAfterDelay": {
         "description": "Visual flow / help l10n",
-        "placeholders": {"delay": {"type": "String"}}
+        "placeholders": {
+            "delay": {
+                "type": "String"
+            }
+        }
     },
     "flowCompilerThen": "Then: {actions}",
     "@flowCompilerThen": {
         "description": "Visual flow / help l10n",
-        "placeholders": {"actions": {"type": "String"}}
+        "placeholders": {
+            "actions": {
+                "type": "String"
+            }
+        }
     },
     "glyphZoneA": "Zone A",
     "@glyphZoneA": {
@@ -30741,7 +30809,7 @@
     "@appearanceFontSystem": {
         "description": "Text displayed in appearance settings"
     },
-    "appearanceFontSystemDesc": "Your device\u2019s default font",
+    "appearanceFontSystemDesc": "Your device’s default font",
     "@appearanceFontSystemDesc": {
         "description": "Text displayed in appearance settings"
     },
@@ -30941,7 +31009,7 @@
     "@appearanceTimeFormatSystem": {
         "description": "Time format option name in appearance settings"
     },
-    "appearanceTimeFormatSystemDesc": "Follow your device\u2019s clock setting",
+    "appearanceTimeFormatSystemDesc": "Follow your device’s clock setting",
     "@appearanceTimeFormatSystemDesc": {
         "description": "Time format option description in appearance settings"
     },
@@ -35666,9 +35734,15 @@
     "@adminStorageHealthSummary": {
         "description": "Summary line showing pass/fail/total counts",
         "placeholders": {
-            "pass": { "type": "int" },
-            "fail": { "type": "int" },
-            "total": { "type": "int" }
+            "pass": {
+                "type": "int"
+            },
+            "fail": {
+                "type": "int"
+            },
+            "total": {
+                "type": "int"
+            }
         }
     },
     "adminStorageStatusWal": "WAL",
@@ -40966,7 +41040,6 @@
         "description": "Error message when a command requires a connected mesh device."
     },
     "commandErrorConnectDevice": "Connect your device to use this feature",
-
     "sipBadgeLabel": "Socialmesh",
     "@sipBadgeLabel": {
         "description": "Badge label shown on NodeDex entries for SIP-capable peers."
@@ -41003,11 +41076,11 @@
     "@sipPersonaIdLabel": {
         "description": "Label for the persona ID field in NodeDex detail for SIP peers."
     },
-    "sipDiscoveryTitle": "Socialmesh Discovery",
+    "sipDiscoveryTitle": "Find people nearby",
     "@sipDiscoveryTitle": {
         "description": "Title for the SIP discovery bottom sheet."
     },
-    "sipDiscoveryPeersNearby": "{count} Socialmesh {count, plural, =1{peer} other{peers}} nearby",
+    "sipDiscoveryPeersNearby": "{count} {count, plural, =1{person} other{people}} nearby",
     "@sipDiscoveryPeersNearby": {
         "description": "Label showing how many SIP peers are nearby.",
         "placeholders": {
@@ -41016,15 +41089,15 @@
             }
         }
     },
-    "sipDiscoveryNoPeers": "No Socialmesh peers detected",
+    "sipDiscoveryNoPeers": "No one nearby yet",
     "@sipDiscoveryNoPeers": {
         "description": "Empty state text when no Socialmesh peers are found."
     },
-    "sipDiscoveryNoPeersDescription": "Socialmesh peers will appear here when detected via beacon or rollcall.",
+    "sipDiscoveryNoPeersDescription": "People using Socialmesh will appear here when they’re in range.",
     "@sipDiscoveryNoPeersDescription": {
         "description": "Description for the empty state in Socialmesh discovery."
     },
-    "sipDiscoveryScanButton": "Scan for Socialmesh",
+    "sipDiscoveryScanButton": "Look for people",
     "@sipDiscoveryScanButton": {
         "description": "Button to trigger a Socialmesh rollcall scan."
     },
@@ -41037,11 +41110,11 @@
             }
         }
     },
-    "sipDiscoveryPeerAnonymous": "SIP Peer",
+    "sipDiscoveryPeerAnonymous": "Mesh User",
     "@sipDiscoveryPeerAnonymous": {
         "description": "Fallback label for a SIP peer before identity exchange."
     },
-    "sipDiscoveryDeviceClass": "Device class: {deviceClass}",
+    "sipDiscoveryDeviceClass": "{deviceClass}",
     "@sipDiscoveryDeviceClass": {
         "description": "Device class label in peer detail.",
         "placeholders": {
@@ -41050,23 +41123,23 @@
             }
         }
     },
-    "sipHandshakeAction": "Handshake",
+    "sipHandshakeAction": "Connect",
     "@sipHandshakeAction": {
         "description": "Button label to initiate a SIP handshake with a peer."
     },
-    "sipHandshakeInProgress": "Handshake in progress…",
+    "sipHandshakeInProgress": "Connecting…",
     "@sipHandshakeInProgress": {
         "description": "Status text while handshake is ongoing."
     },
-    "sipHandshakeComplete": "Handshake complete",
+    "sipHandshakeComplete": "Connected",
     "@sipHandshakeComplete": {
         "description": "Status text when handshake completes successfully."
     },
-    "sipHandshakeFailed": "Handshake failed",
+    "sipHandshakeFailed": "Could not connect",
     "@sipHandshakeFailed": {
         "description": "Status text when handshake fails."
     },
-    "sipHandshakePendingLabel": "Request Pending",
+    "sipHandshakePendingLabel": "Request sent",
     "@sipHandshakePendingLabel": {
         "description": "Chip label shown on a peer tile when they have sent an incoming handshake request awaiting user action."
     },
@@ -41078,7 +41151,7 @@
     "@sipShareIdentity": {
         "description": "Button label to share identity with a SIP peer."
     },
-    "sipDmTitle": "Ephemeral DM",
+    "sipDmTitle": "Mesh message",
     "@sipDmTitle": {
         "description": "Title for the SIP ephemeral DM screen."
     },
@@ -41111,11 +41184,11 @@
     "@sipDmEmptyDescription": {
         "description": "Description for the DM empty state."
     },
-    "sipDmBudgetExhausted": "Airtime budget exhausted. Try again later.",
+    "sipDmBudgetExhausted": "Sending paused — mesh bandwidth limit reached. Try again shortly.",
     "@sipDmBudgetExhausted": {
         "description": "Error when DM send fails due to rate limiting."
     },
-    "sipDmSessionClosed": "This session has been closed.",
+    "sipDmSessionClosed": "This conversation has ended.",
     "@sipDmSessionClosed": {
         "description": "Message when trying to send on a closed session."
     },
@@ -41135,7 +41208,7 @@
     "@sipDmOpenAction": {
         "description": "Button label to open an ephemeral DM with a peer."
     },
-    "sipPeerDetailTitle": "Peer Details",
+    "sipPeerDetailTitle": "About this person",
     "@sipPeerDetailTitle": {
         "description": "Title for the SIP peer detail bottom sheet."
     },
@@ -41143,15 +41216,15 @@
     "@sipPeerDetailNodeId": {
         "description": "Label for the peer's mesh node identifier."
     },
-    "sipPeerDetailDeviceClass": "Device Class",
+    "sipPeerDetailDeviceClass": "Device type",
     "@sipPeerDetailDeviceClass": {
         "description": "Label for the peer's device class."
     },
-    "sipPeerDetailFeatures": "Features",
+    "sipPeerDetailFeatures": "Capabilities",
     "@sipPeerDetailFeatures": {
         "description": "Label for the peer's SIP feature bitmap."
     },
-    "sipPeerDetailMtu": "MTU Hint",
+    "sipPeerDetailMtu": "Signal strength hint",
     "@sipPeerDetailMtu": {
         "description": "Label for the peer's advertised MTU hint."
     },
@@ -41181,17 +41254,46 @@
             }
         }
     },
-    "sipPeerDetailSupportsSip1": "Identity & Handshake",
+    "sipPeerDetailSupportsSip1": "Identity & secure connection",
     "@sipPeerDetailSupportsSip1": {
         "description": "Label indicating the peer supports SIP-1."
     },
-    "sipPeerDetailSupportsSip3": "Micro-Exchange",
+    "sipPeerDetailSupportsSip3": "Contact exchange",
     "@sipPeerDetailSupportsSip3": {
         "description": "Label indicating the peer supports SIP-3."
     },
-    "sipPeerDetailCapabilities": "Capabilities",
+    "sipPeerDetailCapabilities": "What they support",
     "@sipPeerDetailCapabilities": {
         "description": "Section header for peer capabilities."
+    },
+    "sipPeerDetailDeviceUnknown": "Unknown",
+    "@sipPeerDetailDeviceUnknown": {
+        "description": "Device class label for unknown device type."
+    },
+    "sipPeerDetailDevicePhone": "Phone",
+    "@sipPeerDetailDevicePhone": {
+        "description": "Device class label for phone."
+    },
+    "sipPeerDetailDeviceTablet": "Tablet",
+    "@sipPeerDetailDeviceTablet": {
+        "description": "Device class label for tablet."
+    },
+    "sipPeerDetailDeviceDesktop": "Desktop",
+    "@sipPeerDetailDeviceDesktop": {
+        "description": "Device class label for desktop."
+    },
+    "sipPeerDetailDeviceType": "Type {code}",
+    "@sipPeerDetailDeviceType": {
+        "description": "Device class label for an unrecognised device code.",
+        "placeholders": {
+            "code": {
+                "type": "int"
+            }
+        }
+    },
+    "sipPeerDetailExpertToggle": "Technical details",
+    "@sipPeerDetailExpertToggle": {
+        "description": "Toggle label for expert/diagnostic fields in peer detail sheet."
     },
     "sipCountersTitle": "SIP Debug Counters",
     "@sipCountersTitle": {
@@ -41201,7 +41303,7 @@
     "@sipHubTitle": {
         "description": "Title for the SIP Hub screen."
     },
-    "sipHubSectionPeers": "Nearby Peers",
+    "sipHubSectionPeers": "People",
     "@sipHubSectionPeers": {
         "description": "Section header for discovered SIP peers."
     },
@@ -41209,7 +41311,7 @@
     "@sipHubSectionConversations": {
         "description": "Section header for active DM sessions."
     },
-    "sipHubSectionIncomingRequests": "Incoming Requests",
+    "sipHubSectionIncomingRequests": "Connection requests",
     "@sipHubSectionIncomingRequests": {
         "description": "Section header for pending handshake consent requests."
     },
@@ -41251,19 +41353,19 @@
     "@sipHubScanningTitleSuffix": {
         "description": "Suffix for the animated SIP Hub scanning empty state title."
     },
-    "sipHubScanningTagline1": "Listens for Socialmesh beacons over the radio mesh",
+    "sipHubScanningTagline1": "Listening for nearby users…",
     "@sipHubScanningTagline1": {
         "description": "SIP Hub animated scanning state tagline 1."
     },
-    "sipHubScanningTagline2": "Tap Scan to send a rollcall — wakes up nearby peers",
+    "sipHubScanningTagline2": "Tap Look for people to send a signal…",
     "@sipHubScanningTagline2": {
         "description": "SIP Hub animated scanning state tagline 2."
     },
-    "sipHubScanningTagline3": "Peers respond anonymously — no account needed",
+    "sipHubScanningTagline3": "Others will appear when found…",
     "@sipHubScanningTagline3": {
         "description": "SIP Hub animated scanning state tagline 3."
     },
-    "sipHubScanningTagline4": "Found one? Initiate a handshake to start chatting",
+    "sipHubScanningTagline4": "Keep the app open to discover more…",
     "@sipHubScanningTagline4": {
         "description": "SIP Hub animated scanning state tagline 4."
     },
@@ -41304,7 +41406,7 @@
             }
         }
     },
-    "sipHubHandshaking": "Handshaking…",
+    "sipHubHandshaking": "Connecting…",
     "@sipHubHandshaking": {
         "description": "Status badge shown during a handshake."
     },
@@ -41354,11 +41456,11 @@
             }
         }
     },
-    "sipAutoScanEnabled": "Auto-scan enabled",
+    "sipAutoScanEnabled": "Auto-discovery on",
     "@sipAutoScanEnabled": {
         "description": "Snackbar confirmation when auto-scan is turned on."
     },
-    "sipAutoScanDisabled": "Auto-scan disabled",
+    "sipAutoScanDisabled": "Auto-discovery off",
     "@sipAutoScanDisabled": {
         "description": "Snackbar confirmation when auto-scan is turned off."
     },
@@ -41466,7 +41568,6 @@
             }
         }
     },
-
     "mrrpHarnessTitle": "Protocol Harness",
     "@mrrpHarnessTitle": {
         "description": "Title for the MRRP protocol harness home screen."
@@ -42184,7 +42285,6 @@
     "@mrrpHarnessCountersSimFaults": {
         "description": "Counter label: simulated faults injected."
     },
-
     "meshExplorerTitle": "Mesh Explorer",
     "@meshExplorerTitle": {
         "description": "Title for the Mesh Explorer screen."
@@ -42550,7 +42650,7 @@
     "@meshExplorerChangedKey": {
         "description": "Badge label for peer with changed identity key."
     },
-    "meshExplorerScanSent": "Scanning for nearby peers\u2026",
+    "meshExplorerScanSent": "Scanning for nearby peers…",
     "@meshExplorerScanSent": {
         "description": "Snackbar message after rollcall request sent."
     },
@@ -42566,11 +42666,10 @@
     "@meshExplorerHandshakeCooldown": {
         "description": "Snackbar when handshake is rate-limited or already in progress."
     },
-    "meshExplorerHandshakeInProgress": "In progress\u2026",
+    "meshExplorerHandshakeInProgress": "In progress…",
     "@meshExplorerHandshakeInProgress": {
         "description": "Label shown on peer tile while handshake is in-flight."
     },
-
     "meshServicesDrawerLabel": "My Services",
     "@meshServicesDrawerLabel": {
         "description": "Drawer menu label for the Mesh Services screen."
@@ -42740,6 +42839,28 @@
             }
         }
     },
+    "serviceDetailMeshUnavailable": "Mesh network is not available right now.",
+    "@serviceDetailMeshUnavailable": {
+        "description": "Error shown when MRRP engine is unavailable and an action cannot be dispatched."
+    },
+    "serviceDetailActionSuccess": "{actionName} completed successfully.",
+    "@serviceDetailActionSuccess": {
+        "description": "Snackbar shown when an MRRP action completes.",
+        "placeholders": {
+            "actionName": {
+                "type": "String"
+            }
+        }
+    },
+    "serviceDetailActionFailed": "{actionName} could not be completed.",
+    "@serviceDetailActionFailed": {
+        "description": "Snackbar shown when an MRRP action fails.",
+        "placeholders": {
+            "actionName": {
+                "type": "String"
+            }
+        }
+    },
     "meshServicesFieldTitle": "Title",
     "@meshServicesFieldTitle": {
         "description": "Label for the service title input field."
@@ -42801,6 +42922,26 @@
     "meshServicesPublishSuccess": "Service published",
     "@meshServicesPublishSuccess": {
         "description": "Snackbar message after successfully creating a service."
+    },
+    "meshServicesCreatedHeadline": "Your service is live!",
+    "@meshServicesCreatedHeadline": {
+        "description": "Completion panel headline after a service has been published."
+    },
+    "meshServicesCreatedDescription": "Your service is now available to other mesh users nearby. They can discover it and interact with it.",
+    "@meshServicesCreatedDescription": {
+        "description": "Completion panel description after publishing a service."
+    },
+    "meshServicesCreatedMeshHint": "Services are shared over the local mesh network. The closer people are, the more reliable the connection.",
+    "@meshServicesCreatedMeshHint": {
+        "description": "Mesh hint shown in the completion panel after publishing."
+    },
+    "meshServicesCreatedViewServices": "View my services",
+    "@meshServicesCreatedViewServices": {
+        "description": "Primary action button in the completion panel to navigate to My Services list."
+    },
+    "meshServicesCreatedCreateAnother": "Create another",
+    "@meshServicesCreatedCreateAnother": {
+        "description": "Secondary action button in the completion panel to start a new service creation."
     },
     "meshServicesStatusActive": "Active",
     "@meshServicesStatusActive": {
@@ -42921,7 +43062,7 @@
     "@mapTerrainProfileTitle": {
         "description": "Title for the terrain profile screen app bar."
     },
-    "mapTerrainProfileLoading": "Fetching elevation data\u2026",
+    "mapTerrainProfileLoading": "Fetching elevation data…",
     "@mapTerrainProfileLoading": {
         "description": "Loading message shown while the elevation API request is in progress."
     },
@@ -43063,17 +43204,27 @@
     "@mapTerrainEndpointLabel": {
         "description": "Endpoint label in the terrain profile screen, e.g. 'A: Node Name'.",
         "placeholders": {
-            "prefix": { "type": "String" },
-            "name": { "type": "String" }
+            "prefix": {
+                "type": "String"
+            },
+            "name": {
+                "type": "String"
+            }
         }
     },
     "mapTerrainEndpointCoords": "{prefix}: {lat}, {lon}",
     "@mapTerrainEndpointCoords": {
         "description": "Endpoint label when no node name is available, showing coordinates.",
         "placeholders": {
-            "prefix": { "type": "String" },
-            "lat": { "type": "String" },
-            "lon": { "type": "String" }
+            "prefix": {
+                "type": "String"
+            },
+            "lat": {
+                "type": "String"
+            },
+            "lon": {
+                "type": "String"
+            }
         }
     },
     "losVerdictClear": "Clear",
@@ -43100,25 +43251,32 @@
     "@losExplanationObstructed": {
         "description": "LOS result explanation when earth curvature blocks the path.",
         "placeholders": {
-            "depth": { "type": "String" }
+            "depth": {
+                "type": "String"
+            }
         }
     },
     "losExplanationClear": "Clear line of sight with {clearance}m clearance above earth bulge. Terrain/obstacles not considered.",
     "@losExplanationClear": {
         "description": "LOS result explanation when line of sight is clear.",
         "placeholders": {
-            "clearance": { "type": "String" }
+            "clearance": {
+                "type": "String"
+            }
         }
     },
     "losExplanationMarginal": "Marginal clearance ({clearance}m) — below the recommended {required}m Fresnel clearance. Terrain/obstacles not considered.",
     "@losExplanationMarginal": {
         "description": "LOS result explanation when clearance is below the Fresnel threshold.",
         "placeholders": {
-            "clearance": { "type": "String" },
-            "required": { "type": "String" }
+            "clearance": {
+                "type": "String"
+            },
+            "required": {
+                "type": "String"
+            }
         }
     },
-
     "nodesScreenViewModeCards": "Card View",
     "@nodesScreenViewModeCards": {
         "description": "Tooltip for card view mode toggle"
@@ -43131,7 +43289,9 @@
     "@nodesScreenUptimeLabel": {
         "description": "Compact uptime display on node card",
         "placeholders": {
-            "uptime": { "type": "String" }
+            "uptime": {
+                "type": "String"
+            }
         }
     },
     "nodesScreenLegendTitle": "Icon Legend",
@@ -43298,7 +43458,6 @@
     "@servicePresentationFallbackAction": {
         "description": "Action label for unknown MRRP service cards"
     },
-
     "voiceMessageSendButton": "Voice",
     "@voiceMessageSendButton": {
         "description": "Label for the hold-to-record voice message button in the contacts detail sheet"
@@ -43373,7 +43532,9 @@
     "@voiceRecordingMaxSeconds": {
         "description": "Recording overlay subtitle showing the maximum recording duration",
         "placeholders": {
-            "seconds": {"type": "String"}
+            "seconds": {
+                "type": "String"
+            }
         }
     },
     "voiceRecordingCancelButton": "Cancel",
@@ -43514,7 +43675,6 @@
     "@mapCompassUnavailable": {
         "description": "Snackbar message when the device does not have a compass/magnetometer sensor"
     },
-
     "takBridgeSectionTitle": "Mesh Bridge",
     "@takBridgeSectionTitle": {
         "description": "Section header for the TAK mesh bridge controls in settings"
@@ -43621,7 +43781,6 @@
     "@takScreenBridgeOnlyOpenSettings": {
         "description": "Button label to open TAK settings from bridge-only TAK screen"
     },
-
     "takVideoTitle": "Live Streams",
     "@takVideoTitle": {
         "description": "Title for the TAK video streams screen"
@@ -43896,7 +44055,6 @@
     "@settingsTileNetworkEndpointsSubtitle": {
         "description": "Settings tile subtitle for network endpoints"
     },
-
     "navigationMeshIncidents": "Mesh Incidents",
     "@navigationMeshIncidents": {
         "description": "Drawer menu label for the mesh incidents feature"
@@ -44138,7 +44296,6 @@
     "@meshIncidentLocationCoarse": {
         "description": "Label indicating coarse location data"
     },
-
     "translateAction": "Translate",
     "@translateAction": {
         "description": "Action label to translate a message"
@@ -44185,7 +44342,6 @@
             }
         }
     },
-
     "premiumPreviewTranslation": "Preview Mode — Upgrade to translate messages",
     "@premiumPreviewTranslation": {
         "description": "Banner text for translation premium preview mode"
@@ -44226,7 +44382,6 @@
     "@premiumBenefitSmartCacheDesc": {
         "description": "Translation pack benefit description - smart cache"
     },
-
     "translateQuotaExhausted": "Managed translation allowance used — switch to your own OpenAI API key in settings",
     "@translateQuotaExhausted": {
         "description": "Error message when managed translation quota is exhausted"
@@ -44247,7 +44402,6 @@
     "@translateContentIneligible": {
         "description": "Error message when content is not eligible for translation"
     },
-
     "subscriptionFeaturedTranslationSubtitleRefactored": "On-demand translation with smart caching, privacy controls, and BYO provider support",
     "@subscriptionFeaturedTranslationSubtitleRefactored": {
         "description": "Updated subtitle for the featured Translation Pack card — no longer implies unlimited"
@@ -44260,7 +44414,6 @@
     "@subscriptionCompletePackSubtitleWithTranslation": {
         "description": "Updated Complete Pack subtitle now that translation is included"
     },
-
     "translationSettingsTitle": "Translation",
     "@translationSettingsTitle": {
         "description": "Title for the translation settings screen"
@@ -44463,5 +44616,474 @@
     "nodedexCoSeenCardViewAll": "View all",
     "@nodedexCoSeenCardViewAll": {
         "description": "CTA text to scroll to the full co-seen links section"
+    },
+    "nearbyTitle": "Nearby",
+    "@nearbyTitle": {
+        "description": "Title for the nearby people/discovery screen"
+    },
+    "nearbySubtitle": "People and devices on the mesh",
+    "@nearbySubtitle": {
+        "description": "Subtitle explaining what the nearby screen shows"
+    },
+    "nearbyScanButton": "Look for people",
+    "@nearbyScanButton": {
+        "description": "Button to start scanning for nearby mesh users"
+    },
+    "nearbyScanningLabel": "Looking for people nearby…",
+    "@nearbyScanningLabel": {
+        "description": "Status text while scanning for nearby peers"
+    },
+    "nearbyScanCooldownLabel": "Scan again in {seconds}s",
+    "@nearbyScanCooldownLabel": {
+        "description": "Scan cooldown timer",
+        "placeholders": {
+            "seconds": {
+                "type": "int"
+            }
+        }
+    },
+    "nearbyPersonAnonymous": "Mesh User",
+    "@nearbyPersonAnonymous": {
+        "description": "Fallback name for an unidentified nearby peer"
+    },
+    "nearbyStatusNow": "Nearby now",
+    "@nearbyStatusNow": {
+        "description": "Status when a peer was just seen"
+    },
+    "nearbyStatusMinutesAgo": "Seen {count} min ago",
+    "@nearbyStatusMinutesAgo": {
+        "description": "Status when peer was seen minutes ago",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "nearbyStatusHoursAgo": "Seen {count}h ago",
+    "@nearbyStatusHoursAgo": {
+        "description": "Status when peer was seen hours ago",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "nearbyEmptyTitle": "No one nearby yet",
+    "@nearbyEmptyTitle": {
+        "description": "Empty state title when no nearby people found"
+    },
+    "nearbyEmptyDescription": "Tap “Look for people” to find other Socialmesh users on the mesh",
+    "@nearbyEmptyDescription": {
+        "description": "Empty state description guiding the user to scan"
+    },
+    "nearbyEmptyTagline1": "Listening for nearby users…",
+    "@nearbyEmptyTagline1": {
+        "description": "Animated tagline during empty scan state"
+    },
+    "nearbyEmptyTagline2": "Tap Look for people to send a signal…",
+    "@nearbyEmptyTagline2": {
+        "description": "Animated tagline during empty scan state"
+    },
+    "nearbyEmptyTagline3": "Others will appear here when found…",
+    "@nearbyEmptyTagline3": {
+        "description": "Animated tagline during empty scan state"
+    },
+    "nearbyEmptyTagline4": "Keep the app open to discover more…",
+    "@nearbyEmptyTagline4": {
+        "description": "Animated tagline during empty scan state"
+    },
+    "nearbyDevicePhone": "Phone",
+    "@nearbyDevicePhone": {
+        "description": "Device type label for a phone"
+    },
+    "nearbyDeviceTablet": "Tablet",
+    "@nearbyDeviceTablet": {
+        "description": "Device type label for a tablet"
+    },
+    "nearbyDeviceDesktop": "Desktop",
+    "@nearbyDeviceDesktop": {
+        "description": "Device type label for a desktop"
+    },
+    "nearbyDeviceUnknown": "Device",
+    "@nearbyDeviceUnknown": {
+        "description": "Fallback device type label"
+    },
+    "nearbySectionPeople": "People",
+    "@nearbySectionPeople": {
+        "description": "Section header for discovered people"
+    },
+    "nearbySectionConversations": "Conversations",
+    "@nearbySectionConversations": {
+        "description": "Section header for active mesh conversations"
+    },
+    "nearbySectionRequests": "Connection requests",
+    "@nearbySectionRequests": {
+        "description": "Section header for pending incoming connection requests"
+    },
+    "connectionRequestConnect": "Connect",
+    "@connectionRequestConnect": {
+        "description": "Button label to request a connection with a nearby person"
+    },
+    "connectionStateConnecting": "Connecting…",
+    "@connectionStateConnecting": {
+        "description": "Ongoing connection request state"
+    },
+    "connectionStateConnected": "Connected",
+    "@connectionStateConnected": {
+        "description": "Established secure connection state"
+    },
+    "connectionStatePending": "Request sent",
+    "@connectionStatePending": {
+        "description": "Connection request was sent and awaits response"
+    },
+    "connectionStateDeclined": "Declined",
+    "@connectionStateDeclined": {
+        "description": "The other person declined the connection"
+    },
+    "connectionStateFailed": "Could not connect",
+    "@connectionStateFailed": {
+        "description": "Connection attempt failed"
+    },
+    "connectionStateTimedOut": "No response",
+    "@connectionStateTimedOut": {
+        "description": "Connection request timed out"
+    },
+    "connectionIncomingTitle": "{name} wants to connect",
+    "@connectionIncomingTitle": {
+        "description": "Incoming connection request notification",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "connectionAcceptButton": "Accept",
+    "@connectionAcceptButton": {
+        "description": "Accept an incoming connection request"
+    },
+    "connectionDeclineButton": "Decline",
+    "@connectionDeclineButton": {
+        "description": "Decline an incoming connection request"
+    },
+    "contactExchangeTitle": "Share contact card",
+    "@contactExchangeTitle": {
+        "description": "Title for the contact/profile exchange flow"
+    },
+    "contactExchangeDescription": "Exchange identity with a nearby person so you can message each other",
+    "@contactExchangeDescription": {
+        "description": "Description for contact exchange flow"
+    },
+    "contactExchangeShareButton": "Share my contact",
+    "@contactExchangeShareButton": {
+        "description": "Button to share your contact card"
+    },
+    "contactExchangeShared": "Contact shared",
+    "@contactExchangeShared": {
+        "description": "Confirmation when contact was shared"
+    },
+    "meshConversationTitle": "Mesh message",
+    "@meshConversationTitle": {
+        "description": "Title for an ephemeral mesh DM screen"
+    },
+    "meshConversationExpiry": "Expires in {time}",
+    "@meshConversationExpiry": {
+        "description": "Time until the conversation expires",
+        "placeholders": {
+            "time": {
+                "type": "String"
+            }
+        }
+    },
+    "meshConversationPinned": "Pinned",
+    "@meshConversationPinned": {
+        "description": "Badge for a pinned conversation"
+    },
+    "meshConversationInputHint": "Message…",
+    "@meshConversationInputHint": {
+        "description": "Placeholder text in the message input"
+    },
+    "meshConversationBudgetExhausted": "Sending paused — mesh bandwidth limit reached. Try again shortly.",
+    "@meshConversationBudgetExhausted": {
+        "description": "Error when airtime budget is exhausted"
+    },
+    "meshConversationClosed": "This conversation has ended.",
+    "@meshConversationClosed": {
+        "description": "Message when a DM session is closed"
+    },
+    "meshConversationReadyToChat": "Ready to chat",
+    "@meshConversationReadyToChat": {
+        "description": "Status when DM session is established"
+    },
+    "deliveryPhasePreparing": "Preparing",
+    "@deliveryPhasePreparing": {
+        "description": "Delivery phase: getting data ready to send"
+    },
+    "deliveryPhasePreparingDesc": "Getting your data ready to send over the mesh.",
+    "@deliveryPhasePreparingDesc": {
+        "description": "Description for preparing phase"
+    },
+    "deliveryPhaseSending": "Sending",
+    "@deliveryPhaseSending": {
+        "description": "Delivery phase: actively sending"
+    },
+    "deliveryPhaseSendingDesc": "Sending to the mesh network.",
+    "@deliveryPhaseSendingDesc": {
+        "description": "Description for sending phase"
+    },
+    "deliveryPhaseSentToMesh": "Sent to mesh",
+    "@deliveryPhaseSentToMesh": {
+        "description": "Delivery phase: data committed to mesh"
+    },
+    "deliveryPhaseSentToMeshDesc": "Your data is on the mesh and being relayed.",
+    "@deliveryPhaseSentToMeshDesc": {
+        "description": "Description for sent-to-mesh phase"
+    },
+    "deliveryPhaseWaitingForPath": "Waiting for path",
+    "@deliveryPhaseWaitingForPath": {
+        "description": "Delivery phase: no route available yet"
+    },
+    "deliveryPhaseWaitingForPathDesc": "The mesh hasn’t found a route yet. Delivery will continue automatically.",
+    "@deliveryPhaseWaitingForPathDesc": {
+        "description": "Description for waiting-for-path phase"
+    },
+    "deliveryPhaseDelivering": "Delivering",
+    "@deliveryPhaseDelivering": {
+        "description": "Delivery phase: data being relayed"
+    },
+    "deliveryPhaseDeliveringDesc": "Your data is being relayed through the mesh.",
+    "@deliveryPhaseDeliveringDesc": {
+        "description": "Description for delivering phase"
+    },
+    "deliveryPhasePartiallyDelivered": "Partially delivered",
+    "@deliveryPhasePartiallyDelivered": {
+        "description": "Delivery phase: some parts arrived"
+    },
+    "deliveryPhasePartiallyDeliveredDesc": "Some parts arrived. The rest will resume when the connection improves.",
+    "@deliveryPhasePartiallyDeliveredDesc": {
+        "description": "Description for partially-delivered phase"
+    },
+    "deliveryPhaseRetrying": "Retrying",
+    "@deliveryPhaseRetrying": {
+        "description": "Delivery phase: automatic retry"
+    },
+    "deliveryPhaseRetryingDesc": "Retrying automatically — no action needed.",
+    "@deliveryPhaseRetryingDesc": {
+        "description": "Description for retrying phase"
+    },
+    "deliveryPhaseResuming": "Resuming",
+    "@deliveryPhaseResuming": {
+        "description": "Delivery phase: resuming previous transfer"
+    },
+    "deliveryPhaseResumingDesc": "Picking up where it left off.",
+    "@deliveryPhaseResumingDesc": {
+        "description": "Description for resuming phase"
+    },
+    "deliveryPhaseDelivered": "Delivered",
+    "@deliveryPhaseDelivered": {
+        "description": "Delivery phase: all data arrived"
+    },
+    "deliveryPhaseDeliveredDesc": "Everything arrived at its destination.",
+    "@deliveryPhaseDeliveredDesc": {
+        "description": "Description for delivered phase"
+    },
+    "deliveryPhaseVerified": "Verified",
+    "@deliveryPhaseVerified": {
+        "description": "Delivery phase: integrity verified"
+    },
+    "deliveryPhaseVerifiedDesc": "Everything arrived correctly and has been verified.",
+    "@deliveryPhaseVerifiedDesc": {
+        "description": "Description for verified phase"
+    },
+    "deliveryPhaseNeedsAttention": "Needs attention",
+    "@deliveryPhaseNeedsAttention": {
+        "description": "Delivery phase: user action needed"
+    },
+    "deliveryPhaseNeedsAttentionDesc": "Something needs your attention to continue.",
+    "@deliveryPhaseNeedsAttentionDesc": {
+        "description": "Description for needs-attention phase"
+    },
+    "deliveryPhaseFailed": "Failed",
+    "@deliveryPhaseFailed": {
+        "description": "Delivery phase: transfer failed"
+    },
+    "deliveryPhaseFailedDesc": "Transfer could not be completed after all attempts.",
+    "@deliveryPhaseFailedDesc": {
+        "description": "Description for failed phase"
+    },
+    "deliverySafeToClose": "Safe to close — delivery continues in the background",
+    "@deliverySafeToClose": {
+        "description": "Hint that the user can leave and delivery continues"
+    },
+    "deliverySafeToLeave": "You can leave — transfer will continue",
+    "@deliverySafeToLeave": {
+        "description": "Hint that user can navigate away"
+    },
+    "deliveryProgressParts": "{current} of {total} parts",
+    "@deliveryProgressParts": {
+        "description": "Multi-part transfer progress",
+        "placeholders": {
+            "current": {
+                "type": "int"
+            },
+            "total": {
+                "type": "int"
+            }
+        }
+    },
+    "deliveryExpertToggle": "Technical details",
+    "@deliveryExpertToggle": {
+        "description": "Toggle label for expert diagnostic section"
+    },
+    "guidedFlowNext": "Next",
+    "@guidedFlowNext": {
+        "description": "Next step button in wizard"
+    },
+    "guidedFlowBack": "Back",
+    "@guidedFlowBack": {
+        "description": "Previous step button in wizard"
+    },
+    "guidedFlowDone": "Done",
+    "@guidedFlowDone": {
+        "description": "Finish button in wizard"
+    },
+    "guidedFlowCreate": "Create",
+    "@guidedFlowCreate": {
+        "description": "Create/commit button in wizard"
+    },
+    "guidedFlowContinue": "Continue",
+    "@guidedFlowContinue": {
+        "description": "Continue to next screen button in wizard"
+    },
+    "guidedFlowCancel": "Cancel",
+    "@guidedFlowCancel": {
+        "description": "Cancel button in wizard"
+    },
+    "serviceWizardTitle": "Create something",
+    "@serviceWizardTitle": {
+        "description": "Title for the service creation wizard"
+    },
+    "serviceWizardStepWhat": "What",
+    "@serviceWizardStepWhat": {
+        "description": "Step indicator label: choose what to create"
+    },
+    "serviceWizardStepWho": "Who",
+    "@serviceWizardStepWho": {
+        "description": "Step indicator label: choose audience"
+    },
+    "serviceWizardStepDetails": "Details",
+    "@serviceWizardStepDetails": {
+        "description": "Step indicator label: fill in details"
+    },
+    "serviceWizardStepReview": "Review",
+    "@serviceWizardStepReview": {
+        "description": "Step indicator label: review before creating"
+    },
+    "serviceWizardWhatTitle": "What do you want to create?",
+    "@serviceWizardWhatTitle": {
+        "description": "Step 1 title"
+    },
+    "serviceWizardWhatSubtitle": "Choose a type of service to share on the mesh",
+    "@serviceWizardWhatSubtitle": {
+        "description": "Step 1 subtitle"
+    },
+    "serviceWizardWhoTitle": "Who can see it?",
+    "@serviceWizardWhoTitle": {
+        "description": "Step 2 title: audience selection"
+    },
+    "serviceWizardWhoSubtitle": "Choose who will be able to discover and use your service",
+    "@serviceWizardWhoSubtitle": {
+        "description": "Step 2 subtitle"
+    },
+    "serviceWizardAudienceAnyone": "Anyone nearby",
+    "@serviceWizardAudienceAnyone": {
+        "description": "Audience option: open to all"
+    },
+    "serviceWizardAudienceAnyoneDesc": "Anyone on the mesh can discover and use this",
+    "@serviceWizardAudienceAnyoneDesc": {
+        "description": "Expanded description for the anyone-nearby audience"
+    },
+    "serviceWizardAudienceContacts": "Approved contacts only",
+    "@serviceWizardAudienceContacts": {
+        "description": "Audience option: contacts"
+    },
+    "serviceWizardAudienceContactsDesc": "Only people you’ve exchanged contacts with",
+    "@serviceWizardAudienceContactsDesc": {
+        "description": "Description for contacts audience"
+    },
+    "serviceWizardReviewTitle": "Review your service",
+    "@serviceWizardReviewTitle": {
+        "description": "Review step title"
+    },
+    "serviceWizardReviewSubtitle": "Check everything looks right before publishing",
+    "@serviceWizardReviewSubtitle": {
+        "description": "Review step subtitle"
+    },
+    "serviceWizardReviewType": "Type",
+    "@serviceWizardReviewType": {
+        "description": "Summary row label: service type"
+    },
+    "serviceWizardReviewAudience": "Audience",
+    "@serviceWizardReviewAudience": {
+        "description": "Summary row label: audience"
+    },
+    "serviceWizardReviewMeshHint": "Works best when other users are nearby or the mesh is active",
+    "@serviceWizardReviewMeshHint": {
+        "description": "Mesh behavior hint on review step"
+    },
+    "serviceWizardCompletionHeadline": "Your service is live",
+    "@serviceWizardCompletionHeadline": {
+        "description": "Headline after service creation"
+    },
+    "serviceWizardCompletionDescription": "Other mesh users can now discover and interact with your service. You can manage it from My Services.",
+    "@serviceWizardCompletionDescription": {
+        "description": "Description after service creation"
+    },
+    "serviceWizardCompletionViewServices": "View my services",
+    "@serviceWizardCompletionViewServices": {
+        "description": "Primary action after creation"
+    },
+    "serviceWizardCompletionCreateAnother": "Create another",
+    "@serviceWizardCompletionCreateAnother": {
+        "description": "Secondary action after creation"
+    },
+    "peerDetailLastSeenJustNow": "Just now",
+    "@peerDetailLastSeenJustNow": {
+        "description": "Peer seen within the last minute"
+    },
+    "peerDetailCapabilities": "What they support",
+    "@peerDetailCapabilities": {
+        "description": "Section header for peer capabilities (replacing technical 'Capabilities')"
+    },
+    "peerDetailCapIdentity": "Identity & secure connection",
+    "@peerDetailCapIdentity": {
+        "description": "Capability: supports identity exchange and secure handshake"
+    },
+    "peerDetailCapExchange": "Contact exchange",
+    "@peerDetailCapExchange": {
+        "description": "Capability: supports micro-exchange / contact sharing"
+    },
+    "peerDetailDeviceType": "Device type",
+    "@peerDetailDeviceType": {
+        "description": "Label for device type row (replacing 'Device Class')"
+    },
+    "nearbyAutoScanEnabled": "Auto-discovery on",
+    "@nearbyAutoScanEnabled": {
+        "description": "Status when auto-scan is enabled"
+    },
+    "nearbyAutoScanDisabled": "Auto-discovery off",
+    "@nearbyAutoScanDisabled": {
+        "description": "Status when auto-scan is disabled"
+    },
+    "disclosureBasic": "Simple view",
+    "@disclosureBasic": {
+        "description": "Label for basic disclosure level"
+    },
+    "disclosureCurious": "More detail",
+    "@disclosureCurious": {
+        "description": "Label for curious/intermediate disclosure level"
+    },
+    "disclosureExpert": "Full diagnostics",
+    "@disclosureExpert": {
+        "description": "Label for expert disclosure level"
     }
 }
