@@ -26518,6 +26518,22 @@ class AppLocalizationsRu extends AppLocalizations {
       'This will send a push notification to every Socialmesh user. Use sparingly for important announcements only.';
 
   @override
+  String get adminBroadcastPlatformLabel => 'Целевая платформа';
+
+  @override
+  String get adminBroadcastPlatformHelper =>
+      'Выберите, какая платформа получит это уведомление.';
+
+  @override
+  String get adminBroadcastPlatformAll => 'Все';
+
+  @override
+  String get adminBroadcastPlatformAndroid => 'Android';
+
+  @override
+  String get adminBroadcastPlatformIos => 'iOS';
+
+  @override
   String get adminBroadcastIconLabel => 'Icon';
 
   @override

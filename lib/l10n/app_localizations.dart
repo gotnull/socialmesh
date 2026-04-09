@@ -47076,6 +47076,36 @@ abstract class AppLocalizations {
   /// **'This will send a push notification to every Socialmesh user. Use sparingly for important announcements only.'**
   String get adminBroadcastWarning;
 
+  /// Label for platform target selector in admin broadcast panel
+  ///
+  /// In en, this message translates to:
+  /// **'Target Platform'**
+  String get adminBroadcastPlatformLabel;
+
+  /// Helper text for platform target selector in admin broadcast panel
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which platform receives this notification.'**
+  String get adminBroadcastPlatformHelper;
+
+  /// Option to send to all platforms in admin broadcast panel
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get adminBroadcastPlatformAll;
+
+  /// Option to send to Android only in admin broadcast panel
+  ///
+  /// In en, this message translates to:
+  /// **'Android'**
+  String get adminBroadcastPlatformAndroid;
+
+  /// Option to send to iOS only in admin broadcast panel
+  ///
+  /// In en, this message translates to:
+  /// **'iOS'**
+  String get adminBroadcastPlatformIos;
+
   /// Label in admin panel
   ///
   /// In en, this message translates to:

@@ -166,11 +166,23 @@ class PushNotificationService {
     }
   }
 
-  /// Subscribe to the announcements FCM topic for admin broadcasts
+  /// Subscribe to the announcements FCM topic for admin broadcasts.
+  ///
+  /// Subscribes to both the general `announcements` topic (for broadcasts
+  /// targeting all platforms) and the platform-specific topic
+  /// (`announcements_android` or `announcements_ios`) so admins can send
+  /// platform-targeted push notifications.
   Future<void> _subscribeToAnnouncementsTopic() async {
     try {
       await _messaging.subscribeToTopic('announcements');
       AppLogging.notifications('🔔 Subscribed to announcements topic');
+
+      // Subscribe to platform-specific topic for targeted broadcasts
+      final platformTopic = Platform.isAndroid
+          ? 'announcements_android'
+          : 'announcements_ios';
+      await _messaging.subscribeToTopic(platformTopic);
+      AppLogging.notifications('🔔 Subscribed to $platformTopic topic');
     } catch (e) {
       AppLogging.notifications(
         '🔔 Error subscribing to announcements topic: $e',

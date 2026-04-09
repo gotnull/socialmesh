@@ -3066,6 +3066,21 @@ class MessagesNotifier extends Notifier<List<Message>> {
   /// Track the protocol instance we are currently subscribed to so that
   /// [build] re-runs (triggered by [messageStorageProvider] resolution)
   /// do not cancel in-flight stream subscriptions unnecessarily.
+  ///
+  /// ## Invariant (CRITICAL — do not break)
+  ///
+  /// This field and all `StreamSubscription` fields (`_messageSubscription`,
+  /// `_deliverySubscription`, `_pushSubscription`) MUST be set to `null` in
+  /// [ref.onDispose]. The skip-guard in [_subscribeToStreams] checks
+  /// `_messageSubscription != null` to decide whether to re-subscribe.
+  /// A cancelled-but-non-null subscription fools the guard into thinking
+  /// we are still listening, permanently killing incoming message
+  /// processing on broadcast streams (which do not buffer).
+  ///
+  /// Bug history: commit `78b6a52b` (8 Apr 2026) added the skip-guard
+  /// without nulling in dispose → all incoming messages silently dropped
+  /// after the first `build()` re-run. Fixed in `7bc1dc8e` (9 Apr 2026).
+  /// See `/memories/repo/messages-stream-subscription-bug.md`.
   ProtocolService? _subscribedProtocol;
 
   /// Await this in tests to ensure the initial storage load has completed.
@@ -3099,10 +3114,23 @@ class MessagesNotifier extends Notifier<List<Message>> {
     });
 
     // Set up disposal for stream subscriptions.
-    // CRITICAL: null out references so _subscribeToStreams re-subscribes
-    // on the next build() cycle.  Without this, the identical() guard
-    // sees a non-null (but cancelled) subscription and skips, leaving
-    // incoming messages undelivered on the dead broadcast listener.
+    //
+    // CRITICAL — MUST null every reference after cancelling.
+    //
+    // Riverpod calls ref.onDispose() between build() cycles (e.g. when
+    // messageStorageProvider transitions AsyncLoading → AsyncData).  The
+    // next build() calls _subscribeToStreams(), whose skip-guard checks
+    // `_messageSubscription != null`.  If we cancel without nulling, the
+    // guard sees a non-null *cancelled* subscription and skips, leaving
+    // the broadcast stream listener permanently dead.  Broadcast streams
+    // do NOT buffer — missed events are lost forever.
+    //
+    // This exact bug shipped in 78b6a52b (8 Apr 2026) and silently broke
+    // ALL incoming message processing (no UI, no notifications, no DB
+    // persistence) until fixed in 7bc1dc8e (9 Apr 2026).
+    //
+    // Rule: if you add a skip-guard that checks `!= null`, the matching
+    // dispose/cancel MUST set the reference to null.  Always.
     ref.onDispose(() {
       AppLogging.messages('📨 ref.onDispose: cancelling stream subscriptions');
       _messageSubscription?.cancel();
@@ -3243,15 +3271,32 @@ class MessagesNotifier extends Notifier<List<Message>> {
   }
 
   /// Subscribe to protocol message and delivery streams.
-  /// Cancels any previous subscriptions before creating new ones
-  /// so that protocol changes (reconnect) simply re-wire streams
-  /// without resetting in-memory message state.
+  ///
+  /// Cancels any previous subscriptions before creating new ones so that
+  /// protocol changes (reconnect) simply re-wire streams without resetting
+  /// in-memory message state.
+  ///
+  /// ## Skip-guard contract
+  ///
+  /// The guard below skips re-subscription when the protocol instance has
+  /// not changed AND the subscription reference is non-null (meaning it
+  /// was not disposed).  This relies on [ref.onDispose] nulling
+  /// `_messageSubscription` and `_subscribedProtocol` — see the dispose
+  /// block in [build] and the doc comment on [_subscribedProtocol] for
+  /// why this invariant matters.
+  ///
+  /// **If you modify the guard condition, verify that the dispose block
+  /// still nulls every field the guard reads.**
   void _subscribeToStreams(ProtocolService protocol) {
     // Skip re-subscription if we are already listening to this exact
     // protocol instance.  This prevents build() re-runs (caused by
     // messageStorageProvider async resolution) from cancelling an
     // in-flight subscription that has messages queued while waiting
     // for _storageLoadCompleter.
+    //
+    // SAFETY: this guard works ONLY because ref.onDispose nulls
+    // _messageSubscription.  A cancelled-but-non-null subscription
+    // would fool this check and permanently kill message processing.
     if (identical(protocol, _subscribedProtocol) &&
         _messageSubscription != null) {
       AppLogging.messages(

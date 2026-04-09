@@ -36024,6 +36024,26 @@
     "@adminBroadcastWarning": {
         "description": "Text displayed in admin panel"
     },
+    "adminBroadcastPlatformLabel": "Target Platform",
+    "@adminBroadcastPlatformLabel": {
+        "description": "Label for platform target selector in admin broadcast panel"
+    },
+    "adminBroadcastPlatformHelper": "Choose which platform receives this notification.",
+    "@adminBroadcastPlatformHelper": {
+        "description": "Helper text for platform target selector in admin broadcast panel"
+    },
+    "adminBroadcastPlatformAll": "All",
+    "@adminBroadcastPlatformAll": {
+        "description": "Option to send to all platforms in admin broadcast panel"
+    },
+    "adminBroadcastPlatformAndroid": "Android",
+    "@adminBroadcastPlatformAndroid": {
+        "description": "Option to send to Android only in admin broadcast panel"
+    },
+    "adminBroadcastPlatformIos": "iOS",
+    "@adminBroadcastPlatformIos": {
+        "description": "Option to send to iOS only in admin broadcast panel"
+    },
     "adminBroadcastIconLabel": "Icon",
     "@adminBroadcastIconLabel": {
         "description": "Label in admin panel"

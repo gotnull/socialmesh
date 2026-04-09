@@ -26814,6 +26814,22 @@ class AppLocalizationsPt extends AppLocalizations {
       'Isso enviará uma notificação push para todos os usuários Socialmesh. Use com moderação apenas para anúncios importantes.';
 
   @override
+  String get adminBroadcastPlatformLabel => 'Plataforma alvo';
+
+  @override
+  String get adminBroadcastPlatformHelper =>
+      'Escolha qual plataforma recebe esta notificação.';
+
+  @override
+  String get adminBroadcastPlatformAll => 'Todas';
+
+  @override
+  String get adminBroadcastPlatformAndroid => 'Android';
+
+  @override
+  String get adminBroadcastPlatformIos => 'iOS';
+
+  @override
   String get adminBroadcastIconLabel => 'Ícone';
 
   @override
