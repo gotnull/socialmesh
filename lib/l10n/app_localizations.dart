@@ -25106,7 +25106,7 @@ abstract class AppLocalizations {
   /// Subtitle of the background connection settings tile.
   ///
   /// In en, this message translates to:
-  /// **'Background BLE, notifications, and power settings'**
+  /// **'Background BLE connection and power settings'**
   String get settingsTileBackgroundConnectionSubtitle;
 
   /// Title of the background connection settings tile.
@@ -25622,7 +25622,7 @@ abstract class AppLocalizations {
   /// Subtitle of the push notifications master toggle tile.
   ///
   /// In en, this message translates to:
-  /// **'Master toggle for all notifications'**
+  /// **'Controls all notifications, including background'**
   String get settingsTilePushNotificationsSubtitle;
 
   /// Title of the push notifications master toggle tile.

@@ -14258,7 +14258,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsTileBackgroundConnectionSubtitle =>
-      'Background BLE, notifications, and power settings';
+      'Background BLE connection and power settings';
 
   @override
   String get settingsTileBackgroundConnectionTitle => 'Background connection';
@@ -14551,7 +14551,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsTilePushNotificationsSubtitle =>
-      'Master toggle for all notifications';
+      'Controls all notifications, including background';
 
   @override
   String get settingsTilePushNotificationsTitle => 'Push notifications';
