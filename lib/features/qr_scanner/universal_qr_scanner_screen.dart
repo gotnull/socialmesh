@@ -621,6 +621,55 @@ class _UniversalQrScannerScreenState
             context.l10n.qrScannerChannelInfoEncryption,
             '${channel.psk.length * 8}-bit AES',
           ),
+          // Warning for default (insecure) 1-byte key
+          if (channel.isDefaultKey) ...[
+            const SizedBox(height: AppTheme.spacing12),
+            Container(
+              padding: const EdgeInsets.all(AppTheme.spacing12),
+              decoration: BoxDecoration(
+                color: AppTheme.warningYellow.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
+                border: Border.all(
+                  color: AppTheme.warningYellow.withValues(alpha: 0.4),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.warning_amber_rounded,
+                        color: AppTheme.warningYellow,
+                        size: 18,
+                      ),
+                      const SizedBox(width: AppTheme.spacing8),
+                      Expanded(
+                        child: Text(
+                          context.l10n.qrScannerChannelDefaultKeyWarning,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: context.textPrimary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppTheme.spacing6),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 26),
+                    child: Text(
+                      context.l10n.qrScannerChannelDefaultKeyRecommendation,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: AppTheme.spacing16),
           Container(
             padding: const EdgeInsets.all(AppTheme.spacing12),

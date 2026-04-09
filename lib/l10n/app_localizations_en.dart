@@ -8482,6 +8482,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String get messagingSourceTapback => 'Tapback';
 
   @override
+  String get messagingTechInfoDirectHop => 'Direct';
+
+  @override
+  String messagingTechInfoHops(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'hops',
+      one: 'hop',
+    );
+    return '$count $_temp0';
+  }
+
+  @override
+  String get messagingTechInfoMqtt => 'MQTT';
+
+  @override
+  String get messagingTechInfoRadio => 'Radio';
+
+  @override
+  String messagingTechInfoRssi(int value) {
+    return 'RSSI $value dBm';
+  }
+
+  @override
+  String messagingTechInfoSnr(String value) {
+    return 'SNR $value dB';
+  }
+
+  @override
   String get messagingStartConversation => 'Start the conversation';
 
   @override
@@ -12760,6 +12790,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get qrScannerChannelInfoName => 'Name';
+
+  @override
+  String get qrScannerChannelDefaultKeyRecommendation =>
+      'Tap \"Edit First\" to generate a secure encryption key before importing.';
+
+  @override
+  String get qrScannerChannelDefaultKeyWarning =>
+      'This channel uses the default encryption key, which is publicly known and provides no real security.';
 
   @override
   String get qrScannerChannelSyncNotice =>

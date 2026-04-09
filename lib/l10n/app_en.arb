@@ -11488,6 +11488,45 @@
     "@messagingSourceTapback": {
         "description": "Source label for tapback reaction messages."
     },
+    "messagingTechInfoDirectHop": "Direct",
+    "@messagingTechInfoDirectHop": {
+        "description": "Label shown when a message was received directly (0 hops)."
+    },
+    "messagingTechInfoHops": "{count} {count, plural, =1{hop} other{hops}}",
+    "@messagingTechInfoHops": {
+        "description": "Hop count label shown in inline technical info on message bubbles.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "messagingTechInfoMqtt": "MQTT",
+    "@messagingTechInfoMqtt": {
+        "description": "Transport label when message arrived via MQTT."
+    },
+    "messagingTechInfoRadio": "Radio",
+    "@messagingTechInfoRadio": {
+        "description": "Transport label when message arrived via radio (RF)."
+    },
+    "messagingTechInfoRssi": "RSSI {value} dBm",
+    "@messagingTechInfoRssi": {
+        "description": "RSSI value label shown in inline technical info.",
+        "placeholders": {
+            "value": {
+                "type": "int"
+            }
+        }
+    },
+    "messagingTechInfoSnr": "SNR {value} dB",
+    "@messagingTechInfoSnr": {
+        "description": "SNR value label shown in inline technical info.",
+        "placeholders": {
+            "value": {
+                "type": "String"
+            }
+        }
+    },
     "messagingStartConversation": "Start the conversation",
     "@messagingStartConversation": {
         "description": "Empty state text in a new DM conversation."
@@ -17576,6 +17615,14 @@
     "qrScannerChannelInfoName": "Name",
     "@qrScannerChannelInfoName": {
         "description": "Channel info row label"
+    },
+    "qrScannerChannelDefaultKeyRecommendation": "Tap \"Edit First\" to generate a secure encryption key before importing.",
+    "@qrScannerChannelDefaultKeyRecommendation": {
+        "description": "Recommendation text in default key warning when importing a channel."
+    },
+    "qrScannerChannelDefaultKeyWarning": "This channel uses the default encryption key, which is publicly known and provides no real security.",
+    "@qrScannerChannelDefaultKeyWarning": {
+        "description": "Warning shown when importing a channel with the default 1-byte key."
     },
     "qrScannerChannelSyncNotice": "The channel will be synced to your connected device.",
     "@qrScannerChannelSyncNotice": {

@@ -816,6 +816,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   Timer? _highlightTimer;
   final Map<String, GlobalKey> _messageKeys = {};
 
+  /// Tracks which message IDs have inline technical info expanded.
+  final Set<String> _expandedTechInfoIds = {};
+
   /// The message being replied to, or null if not replying.
   Message? _replyingTo;
 
@@ -1707,6 +1710,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                             isDm: widget.type == ConversationType.directMessage,
                             isQueued: queuedMessageIds.contains(message.id),
                             isHighlighted: _highlightedMessageId == message.id,
+                            showTechInfo: _expandedTechInfoIds.contains(
+                              message.id,
+                            ),
+                            onToggleTechInfo: () {
+                              setState(() {
+                                if (_expandedTechInfoIds.contains(message.id)) {
+                                  _expandedTechInfoIds.remove(message.id);
+                                } else {
+                                  _expandedTechInfoIds.add(message.id);
+                                }
+                              });
+                            },
                             channelIndex:
                                 widget.type == ConversationType.channel
                                 ? widget.channelIndex
@@ -1897,6 +1912,8 @@ class _MessageBubble extends ConsumerWidget {
   final VoidCallback? onQuoteTap;
   final bool isHighlighted;
   final bool isDm;
+  final bool showTechInfo;
+  final VoidCallback? onToggleTechInfo;
 
   const _MessageBubble({
     required this.message,
@@ -1920,6 +1937,8 @@ class _MessageBubble extends ConsumerWidget {
     this.onSenderTap,
     this.onQuoteTap,
     this.isHighlighted = false,
+    this.showTechInfo = false,
+    this.onToggleTechInfo,
   });
 
   Color _getAvatarColor() {
@@ -2429,6 +2448,7 @@ class _MessageBubble extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 GestureDetector(
+                  onTap: onToggleTechInfo,
                   onLongPress: () => _showContextMenu(context, ref),
                   child: Container(
                     margin: const EdgeInsets.only(right: 64),
@@ -2497,6 +2517,8 @@ class _MessageBubble extends ConsumerWidget {
                             ),
                           ],
                         ),
+                        if (showTechInfo && !isFromMe)
+                          _buildInlineTechInfo(context, sentByMe: false),
                       ],
                     ),
                   ),
@@ -2508,6 +2530,90 @@ class _MessageBubble extends ConsumerWidget {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  /// Builds a compact row of technical details (hops, SNR, RSSI, transport)
+  /// shown inline below the message timestamp when the setting is enabled.
+  Widget _buildInlineTechInfo(BuildContext context, {required bool sentByMe}) {
+    final l10n = context.l10n;
+    final hasAnyInfo =
+        message.hopCount != null ||
+        message.rxSnr != null ||
+        message.rxRssi != null ||
+        message.viaMqtt != null;
+    if (!hasAnyInfo) return const SizedBox.shrink();
+
+    final color = sentByMe
+        ? Colors.white.withValues(alpha: 0.6)
+        : context.textTertiary;
+    final iconSize = AppTheme.spacing10;
+    final textStyle = TextStyle(fontSize: AppTheme.spacing10, color: color);
+
+    return Padding(
+      padding: const EdgeInsets.only(top: AppTheme.spacing2),
+      child: Wrap(
+        spacing: AppTheme.spacing8,
+        runSpacing: AppTheme.spacing2,
+        children: [
+          if (message.hopCount != null)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.route, size: iconSize, color: color),
+                const SizedBox(width: AppTheme.spacing2),
+                Text(
+                  message.hopCount == 0
+                      ? l10n.messagingTechInfoDirectHop
+                      : l10n.messagingTechInfoHops(message.hopCount!),
+                  style: textStyle,
+                ),
+              ],
+            ),
+          if (message.rxSnr != null)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.signal_cellular_alt, size: iconSize, color: color),
+                const SizedBox(width: AppTheme.spacing2),
+                Text(
+                  l10n.messagingTechInfoSnr(message.rxSnr!.toStringAsFixed(1)),
+                  style: textStyle,
+                ),
+              ],
+            ),
+          if (message.rxRssi != null)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.cell_tower, size: iconSize, color: color),
+                const SizedBox(width: AppTheme.spacing2),
+                Text(
+                  l10n.messagingTechInfoRssi(message.rxRssi!),
+                  style: textStyle,
+                ),
+              ],
+            ),
+          if (message.viaMqtt != null)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  message.viaMqtt == true ? Icons.cloud : Icons.cell_tower,
+                  size: iconSize,
+                  color: color,
+                ),
+                const SizedBox(width: AppTheme.spacing2),
+                Text(
+                  message.viaMqtt == true
+                      ? l10n.messagingTechInfoMqtt
+                      : l10n.messagingTechInfoRadio,
+                  style: textStyle,
+                ),
+              ],
+            ),
         ],
       ),
     );

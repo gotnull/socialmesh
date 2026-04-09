@@ -15181,6 +15181,42 @@ abstract class AppLocalizations {
   /// **'Tapback'**
   String get messagingSourceTapback;
 
+  /// Label shown when a message was received directly (0 hops).
+  ///
+  /// In en, this message translates to:
+  /// **'Direct'**
+  String get messagingTechInfoDirectHop;
+
+  /// Hop count label shown in inline technical info on message bubbles.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} {count, plural, =1{hop} other{hops}}'**
+  String messagingTechInfoHops(int count);
+
+  /// Transport label when message arrived via MQTT.
+  ///
+  /// In en, this message translates to:
+  /// **'MQTT'**
+  String get messagingTechInfoMqtt;
+
+  /// Transport label when message arrived via radio (RF).
+  ///
+  /// In en, this message translates to:
+  /// **'Radio'**
+  String get messagingTechInfoRadio;
+
+  /// RSSI value label shown in inline technical info.
+  ///
+  /// In en, this message translates to:
+  /// **'RSSI {value} dBm'**
+  String messagingTechInfoRssi(int value);
+
+  /// SNR value label shown in inline technical info.
+  ///
+  /// In en, this message translates to:
+  /// **'SNR {value} dB'**
+  String messagingTechInfoSnr(String value);
+
   /// Empty state text in a new DM conversation.
   ///
   /// In en, this message translates to:
@@ -22474,6 +22510,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Name'**
   String get qrScannerChannelInfoName;
+
+  /// Recommendation text in default key warning when importing a channel.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap \"Edit First\" to generate a secure encryption key before importing.'**
+  String get qrScannerChannelDefaultKeyRecommendation;
+
+  /// Warning shown when importing a channel with the default 1-byte key.
+  ///
+  /// In en, this message translates to:
+  /// **'This channel uses the default encryption key, which is publicly known and provides no real security.'**
+  String get qrScannerChannelDefaultKeyWarning;
 
   /// Info notice in channel import dialog
   ///
