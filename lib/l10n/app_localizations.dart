@@ -5656,6 +5656,30 @@ abstract class AppLocalizations {
   /// **'Uses the default Meshtastic key. Other users with default settings may intercept messages.'**
   String get channelWizardCompatShared;
 
+  /// Title of the warning bottom sheet shown when creating a channel with the shared default key
+  ///
+  /// In en, this message translates to:
+  /// **'Default Key Warning'**
+  String get channelWizardDefaultKeyWarningTitle;
+
+  /// Body text of the warning bottom sheet for default key channels
+  ///
+  /// In en, this message translates to:
+  /// **'The shared default key is publicly known. Anyone with a Meshtastic device using default settings can read messages on this channel.\n\nThis is fine for public community channels, but not recommended for private conversations.'**
+  String get channelWizardDefaultKeyWarningBody;
+
+  /// Button label to continue with the publicly known default key
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Default Key'**
+  String get channelWizardDefaultKeyKeep;
+
+  /// Button label to upgrade from default key to AES-128 private key
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade to Private Key'**
+  String get channelWizardDefaultKeyUpgrade;
+
   /// Button label in channel configuration
   ///
   /// In en, this message translates to:

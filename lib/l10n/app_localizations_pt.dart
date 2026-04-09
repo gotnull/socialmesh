@@ -3179,6 +3179,19 @@ class AppLocalizationsPt extends AppLocalizations {
       'Usa a chave Meshtastic padrão. Outros usuários com configurações padrão podem interceptar mensagens.';
 
   @override
+  String get channelWizardDefaultKeyWarningTitle => 'Default Key Warning';
+
+  @override
+  String get channelWizardDefaultKeyWarningBody =>
+      'The shared default key is publicly known. Anyone with a Meshtastic device using default settings can read messages on this channel.\n\nThis is fine for public community channels, but not recommended for private conversations.';
+
+  @override
+  String get channelWizardDefaultKeyKeep => 'Keep Default Key';
+
+  @override
+  String get channelWizardDefaultKeyUpgrade => 'Upgrade to Private Key';
+
+  @override
   String get channelWizardContinueButton => 'Continuar';
 
   @override

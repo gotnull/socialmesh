@@ -4173,6 +4173,22 @@
     "@channelWizardCompatShared": {
         "description": "Text displayed in channel configuration"
     },
+    "channelWizardDefaultKeyWarningTitle": "Default Key Warning",
+    "@channelWizardDefaultKeyWarningTitle": {
+        "description": "Title of the warning bottom sheet shown when creating a channel with the shared default key"
+    },
+    "channelWizardDefaultKeyWarningBody": "The shared default key is publicly known. Anyone with a Meshtastic device using default settings can read messages on this channel.\n\nThis is fine for public community channels, but not recommended for private conversations.",
+    "@channelWizardDefaultKeyWarningBody": {
+        "description": "Body text of the warning bottom sheet for default key channels"
+    },
+    "channelWizardDefaultKeyKeep": "Keep Default Key",
+    "@channelWizardDefaultKeyKeep": {
+        "description": "Button label to continue with the publicly known default key"
+    },
+    "channelWizardDefaultKeyUpgrade": "Upgrade to Private Key",
+    "@channelWizardDefaultKeyUpgrade": {
+        "description": "Button label to upgrade from default key to AES-128 private key"
+    },
     "channelWizardContinueButton": "Continue",
     "@channelWizardContinueButton": {
         "description": "Button label in channel configuration"
