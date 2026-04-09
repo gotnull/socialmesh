@@ -1644,6 +1644,14 @@ class ProtocolService {
       final data = packet.decoded;
 
       if (data.portnum == pn.PortNum.TEXT_MESSAGE_APP) {
+        AppLogging.messages(
+          '📨 TEXT_MESSAGE_APP received: packetId=${packet.id}, '
+          'from=${packet.from.toRadixString(16)}, '
+          'to=${packet.to.toRadixString(16)}, '
+          'channel=${packet.channel}, '
+          'payloadLen=${data.payload.length}',
+        );
+
         final key = MeshPacketKey(
           packetType: 'channel_message',
           senderNodeId: packet.from,
@@ -1654,12 +1662,16 @@ class ProtocolService {
         final seen = await _dedupeStore.hasSeen(key, ttl: _messagePacketTtl);
         if (seen) {
           AppLogging.messages(
-            '📨 Duplicate message packet ignored: packetId=${packet.id}, '
+            '📨 Packet-level dedup BLOCKED: packetId=${packet.id}, '
             'from=${packet.from.toRadixString(16)}, channel=${packet.channel}',
           );
           return;
         }
 
+        AppLogging.messages(
+          '📨 Packet-level dedup PASSED: packetId=${packet.id}, '
+          'from=${packet.from.toRadixString(16)}',
+        );
         await _dedupeStore.markSeen(key, ttl: _messagePacketTtl);
       }
 

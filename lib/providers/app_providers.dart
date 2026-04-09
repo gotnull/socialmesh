@@ -3076,6 +3076,17 @@ class MessagesNotifier extends Notifier<List<Message>> {
     final storageAsync = ref.watch(messageStorageProvider);
     _storage = storageAsync.value;
 
+    // If storage failed to initialize, log the error and ensure the
+    // completer is unblocked so messages can still flow (in-memory only).
+    if (storageAsync.hasError) {
+      AppLogging.messages(
+        '❌ messageStorageProvider failed: ${storageAsync.error}',
+      );
+      if (!_storageLoadCompleter.isCompleted) {
+        _storageLoadCompleter.complete();
+      }
+    }
+
     // Use ref.listen for protocol changes instead of ref.watch.
     // ref.watch would cause build() to re-run on every reconnect,
     // resetting state to [] and wiping all in-memory messages.
@@ -3087,19 +3098,36 @@ class MessagesNotifier extends Notifier<List<Message>> {
       _subscribeToStreams(next);
     });
 
-    // Set up disposal for stream subscriptions
+    // Set up disposal for stream subscriptions.
+    // CRITICAL: null out references so _subscribeToStreams re-subscribes
+    // on the next build() cycle.  Without this, the identical() guard
+    // sees a non-null (but cancelled) subscription and skips, leaving
+    // incoming messages undelivered on the dead broadcast listener.
     ref.onDispose(() {
+      AppLogging.messages('📨 ref.onDispose: cancelling stream subscriptions');
       _messageSubscription?.cancel();
+      _messageSubscription = null;
       _deliverySubscription?.cancel();
+      _deliverySubscription = null;
       _pushSubscription?.cancel();
+      _pushSubscription = null;
+      _subscribedProtocol = null;
     });
 
     // Subscribe to current protocol streams
     final protocol = ref.read(protocolServiceProvider);
     _subscribeToStreams(protocol);
 
-    // Load persisted messages asynchronously
-    _loadFromStorage();
+    // Load persisted messages asynchronously.
+    // Wrapped in error handler to ensure _storageLoadCompleter always
+    // completes — an unhandled exception here would permanently block
+    // every incoming message that awaits the completer.
+    _loadFromStorage().catchError((Object e, StackTrace s) {
+      AppLogging.messages('❌ _loadFromStorage failed: $e\n$s');
+      if (!_storageLoadCompleter.isCompleted) {
+        _storageLoadCompleter.complete();
+      }
+    });
 
     // Ensure the retry coordinator is running.  We use ref.read()
     // instead of ref.watch() to avoid a circular dependency:
@@ -3121,6 +3149,10 @@ class MessagesNotifier extends Notifier<List<Message>> {
       return;
     }
     if (_storage == null) {
+      AppLogging.messages(
+        '📨 _loadFromStorage: storage is null — completer NOT completed '
+        '(waiting for messageStorageProvider to resolve)',
+      );
       // Do NOT complete the completer when storage is unavailable.
       // Stream listeners must wait until storage has actually loaded
       // to prevent a race where messages arrive via BLE, get added to
@@ -3222,8 +3254,17 @@ class MessagesNotifier extends Notifier<List<Message>> {
     // for _storageLoadCompleter.
     if (identical(protocol, _subscribedProtocol) &&
         _messageSubscription != null) {
+      AppLogging.messages(
+        '📨 _subscribeToStreams: skipping — same protocol instance '
+        '(hash=${protocol.hashCode}), subscription active',
+      );
       return;
     }
+    AppLogging.messages(
+      '📨 _subscribeToStreams: subscribing to protocol hash=${protocol.hashCode}, '
+      'previousHash=${_subscribedProtocol?.hashCode}, '
+      'hadSubscription=${_messageSubscription != null}',
+    );
     _subscribedProtocol = protocol;
 
     // Cancel previous subscriptions
@@ -3234,6 +3275,11 @@ class MessagesNotifier extends Notifier<List<Message>> {
     // Listen for new messages
     _messageSubscription = protocol.messageStream.listen((message) async {
       if (!ref.mounted) return;
+
+      AppLogging.messages(
+        '📨 Stream received message id=${message.id}, '
+        'storageCompleterDone=${_storageLoadCompleter.isCompleted}',
+      );
 
       // Wait for persisted messages to load before processing incoming
       // messages. Without this, early BLE packets could arrive while
@@ -3647,16 +3693,23 @@ class MessagesNotifier extends Notifier<List<Message>> {
   bool _isDuplicateMessage(Message message) {
     // Layer 1: Exact message ID match
     if (message.id.isNotEmpty && state.any((m) => m.id == message.id)) {
+      AppLogging.messages('📨 Dedup Layer 1 (ID match): id=${message.id}');
       return true;
     }
     // Layer 2: Packet ID match
     if (message.packetId != null &&
         state.any((m) => m.packetId == message.packetId)) {
+      AppLogging.messages(
+        '📨 Dedup Layer 2 (packetId match): packetId=${message.packetId}',
+      );
       return true;
     }
     // Layer 3: Recent signature (short sliding window for rapid-fire)
     final signature = _messageSignature(message);
     if (_recentMessageSignatures.containsKey(signature)) {
+      AppLogging.messages(
+        '📨 Dedup Layer 3 (signature match): from=${message.from}',
+      );
       return true;
     }
     // Layer 4: Content-fingerprint match against full state.
@@ -3667,11 +3720,15 @@ class MessagesNotifier extends Notifier<List<Message>> {
     // text is intentional, not a duplicate.
     if (!message.sent && _isContentDuplicate(message)) {
       AppLogging.messages(
-        '📨 Content-dedupe caught duplicate: from=${message.from}, '
+        '📨 Dedup Layer 4 (content match): from=${message.from}, '
         'channel=${message.channel}, text="${message.text.substring(0, message.text.length.clamp(0, 20))}"',
       );
       return true;
     }
+    AppLogging.messages(
+      '📨 Dedup passed all layers: id=${message.id}, '
+      'packetId=${message.packetId}, stateSize=${state.length}',
+    );
     return false;
   }
 
