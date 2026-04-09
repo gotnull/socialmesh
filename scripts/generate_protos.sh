@@ -180,20 +180,6 @@ generate_dart() {
     local current_version=$(get_current_version)
     print_success "Protobuf generation complete! (version: $current_version)"
     echo "Generated files in lib/generated/"
-
-    # Verify hardware architecture mapping is in sync with HardwareModel enum
-    print_status "Running hardware architecture sync test..."
-    if command -v flutter &> /dev/null; then
-        if flutter test test/services/firmware/hardware_architecture_test.dart 2>&1 | grep -q 'All tests passed'; then
-            print_success "Hardware architecture mapping is in sync"
-        else
-            print_warning "Hardware architecture mapping may need updating!"
-            print_warning "Run: flutter test test/services/firmware/hardware_architecture_test.dart"
-            print_warning "Then update lib/services/firmware/hardware_architecture.dart"
-        fi
-    else
-        print_warning "flutter not found — run hardware_architecture_test.dart manually"
-    fi
 }
 
 # Main script logic
