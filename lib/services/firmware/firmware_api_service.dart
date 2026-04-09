@@ -37,12 +37,12 @@ class FirmwareApiService {
       final data = json.decode(response.body) as Map<String, dynamic>;
 
       final tagName = data['tag_name'] as String? ?? '';
-      final version =
-          tagName.startsWith('v') ? tagName.substring(1) : tagName;
+      final version = tagName.startsWith('v') ? tagName.substring(1) : tagName;
 
       final publishedAt = data['published_at'] as String?;
-      final releaseDate =
-          publishedAt != null ? DateTime.parse(publishedAt) : DateTime.now();
+      final releaseDate = publishedAt != null
+          ? DateTime.parse(publishedAt)
+          : DateTime.now();
 
       // lint-allow: hardcoded-string
       final body = data['body'] as String? ?? '';
@@ -105,9 +105,7 @@ class FirmwareApiService {
   }) async {
     final firmwareTarget = firmwareTargetFromHwModel(hwModelId);
     if (firmwareTarget == null) {
-      AppLogging.firmware(
-        'No firmware target mapping for hwModel=$hwModelId',
-      );
+      AppLogging.firmware('No firmware target mapping for hwModel=$hwModelId');
       return null;
     }
 
@@ -122,8 +120,9 @@ class FirmwareApiService {
       );
 
       final request = http.Request('GET', Uri.parse(archAsset.downloadUrl));
-      final streamedResponse =
-          await request.send().timeout(const Duration(minutes: 5));
+      final streamedResponse = await request.send().timeout(
+        const Duration(minutes: 5),
+      );
 
       if (streamedResponse.statusCode != 200) {
         AppLogging.firmware(
@@ -145,9 +144,7 @@ class FirmwareApiService {
       }
       await sink.close();
 
-      AppLogging.firmware(
-        'Downloaded $receivedBytes bytes to $archZipPath',
-      );
+      AppLogging.firmware('Downloaded $receivedBytes bytes to $archZipPath');
 
       // Extract the device-specific DFU zip from the architecture zip
       final archBytes = await File(archZipPath).readAsBytes();
