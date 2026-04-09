@@ -1646,6 +1646,12 @@ PODS:
     - nanopb/encode (= 3.30910.0)
   - nanopb/decode (3.30910.0)
   - nanopb/encode (3.30910.0)
+  - nordic_dfu (7.1.1):
+    - Flutter
+    - FlutterMacOS
+    - NordicDFU (~> 4.16.0)
+  - NordicDFU (4.16.0):
+    - ZIPFoundation (= 0.9.19)
   - OrderedSet (6.0.3)
   - package_info_plus (0.4.5):
     - Flutter
@@ -1695,6 +1701,7 @@ PODS:
     - FlutterMacOS
   - workmanager_apple (0.0.1):
     - Flutter
+  - ZIPFoundation (0.9.19)
 
 DEPENDENCIES:
   - app_links (from `.symlinks/plugins/app_links/ios`)
@@ -1731,6 +1738,7 @@ DEPENDENCIES:
   - just_audio (from `.symlinks/plugins/just_audio/darwin`)
   - live_activities (from `.symlinks/plugins/live_activities/ios`)
   - mobile_scanner (from `.symlinks/plugins/mobile_scanner/darwin`)
+  - nordic_dfu (from `.symlinks/plugins/nordic_dfu/darwin`)
   - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
   - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
   - photo_manager (from `.symlinks/plugins/photo_manager/darwin`)
@@ -1786,6 +1794,7 @@ SPEC REPOS:
     - libwebp
     - Mantle
     - nanopb
+    - NordicDFU
     - OrderedSet
     - PromisesObjC
     - PromisesSwift
@@ -1796,6 +1805,7 @@ SPEC REPOS:
     - SDWebImageWebPCoder
     - SwiftyGif
     - TSBackgroundFetch
+    - ZIPFoundation
 
 EXTERNAL SOURCES:
   app_links:
@@ -1866,6 +1876,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/live_activities/ios"
   mobile_scanner:
     :path: ".symlinks/plugins/mobile_scanner/darwin"
+  nordic_dfu:
+    :path: ".symlinks/plugins/nordic_dfu/darwin"
   package_info_plus:
     :path: ".symlinks/plugins/package_info_plus/ios"
   permission_handler_apple:
@@ -1968,6 +1980,8 @@ SPEC CHECKSUMS:
   Mantle: c5aa8794a29a022dfbbfc9799af95f477a69b62d
   mobile_scanner: 9157936403f5a0644ca3779a38ff8404c5434a93
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
+  nordic_dfu: 05681503e4969f1dfe11903be2bf8840bf5691c9
+  NordicDFU: 116a4ec458945889f8e0e71759e03b23c39c3482
   OrderedSet: e539b66b644ff081c73a262d24ad552a69be3a94
   package_info_plus: af8e2ca6888548050f16fa2f1938db7b5a5df499
   permission_handler_apple: 4ed2196e43d0651e8ff7ca3483a069d469701f2d
@@ -1992,6 +2006,7 @@ SPEC CHECKSUMS:
   url_launcher_ios: 7a95fa5b60cc718a708b8f2966718e93db0cef1b
   video_player_avfoundation: dd410b52df6d2466a42d28550e33e4146928280a
   workmanager_apple: 904529ae31e97fc5be632cf628507652294a0778
+  ZIPFoundation: b8c29ea7ae353b309bc810586181fd073cb3312c
 
 PODFILE CHECKSUM: a9362de3a9646c3d3ae2b4d785ea80cd75235059
 

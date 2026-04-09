@@ -1599,12 +1599,12 @@ class ProtocolService {
     );
 
     // Diagnostic: trace unicast packets through the receive pipeline.
-    // This fires for any packet where `to` is not broadcast, which
-    // includes file-transfer unicast packets. Tagged fileTransfer so
-    // it appears when filtering by FILE_TRANSFER_ENABLED.
+    // This fires for any packet where `to` is not broadcast.  Tagged
+    // protocol (not fileTransfer) because it covers ALL portnums —
+    // routing, admin, text, etc. — not just file-transfer traffic.
     final isBroadcast = packet.to == 0xFFFFFFFF || packet.to == 0;
     if (!isBroadcast) {
-      AppLogging.fileTransfer(
+      AppLogging.protocol(
         'RX_PIPELINE: unicast from=${packet.from.toRadixString(16)} '
         'to=${packet.to.toRadixString(16)} id=${packet.id} '
         'hasDecoded=${packet.hasDecoded()} '
@@ -2622,6 +2622,9 @@ class ProtocolService {
             hasWifi: metadata.hasWifi,
             hasBluetooth: metadata.hasBluetooth,
             hardwareModel: hwModelName ?? existingNode.hardwareModel,
+            hwModelId: metadata.hwModel != pb.HardwareModel.UNSET
+                ? metadata.hwModel.value
+                : existingNode.hwModelId,
           );
           _nodes[_myNodeNum!] = updatedNode;
           _nodeController.add(updatedNode);
@@ -2644,6 +2647,9 @@ class ProtocolService {
             hasWifi: metadata.hasWifi,
             hasBluetooth: metadata.hasBluetooth,
             hardwareModel: hwModelName ?? remoteNode.hardwareModel,
+            hwModelId: metadata.hwModel != pb.HardwareModel.UNSET
+                ? metadata.hwModel.value
+                : remoteNode.hwModelId,
           );
           _nodes[packet.from] = updatedRemote;
           _nodeController.add(updatedRemote);
@@ -2681,6 +2687,10 @@ class ProtocolService {
                 : existingNode.shortName,
             userId: user.hasId() ? user.id : existingNode.userId,
             hardwareModel: hwModel ?? existingNode.hardwareModel,
+            hwModelId:
+                user.hasHwModel() && user.hwModel != pb.HardwareModel.UNSET
+                ? user.hwModel.value
+                : existingNode.hwModelId,
             role: user.hasRole() ? user.role.name : existingNode.role,
             hasPublicKey: user.publicKey.isNotEmpty,
             lastHeard: DateTime.now(),
@@ -2872,6 +2882,9 @@ class ProtocolService {
         hasWifi: metadata.hasWifi,
         hasBluetooth: metadata.hasBluetooth,
         hardwareModel: hwModelName ?? existingNode.hardwareModel,
+        hwModelId: metadata.hwModel != pb.HardwareModel.UNSET
+            ? metadata.hwModel.value
+            : existingNode.hwModelId,
       );
       _nodes[_myNodeNum!] = updatedNode;
       _nodeController.add(updatedNode);
@@ -3704,6 +3717,10 @@ class ProtocolService {
             clearShortName: resolvedShortName == null,
             userId: user.hasId() ? user.id : existingNode.userId,
             hardwareModel: hwModel ?? existingNode.hardwareModel,
+            hwModelId:
+                user.hasHwModel() && user.hwModel != pb.HardwareModel.UNSET
+                ? user.hwModel.value
+                : existingNode.hwModelId,
             role: role,
             snr: packet.hasRxSnr() ? packet.rxSnr.toInt() : existingNode.snr,
             lastHeard: DateTime.now(),
@@ -3714,6 +3731,10 @@ class ProtocolService {
             shortName: shortName.isNotEmpty ? shortName : null,
             userId: user.hasId() ? user.id : null,
             hardwareModel: hwModel,
+            hwModelId:
+                user.hasHwModel() && user.hwModel != pb.HardwareModel.UNSET
+                ? user.hwModel.value
+                : null,
             role: role,
             rssi: packet.hasRxRssi() ? packet.rxRssi : null,
             snr: packet.hasRxSnr() ? packet.rxSnr.toInt() : null,
@@ -3967,6 +3988,12 @@ class ProtocolService {
         shortName: newShortName,
         userId: userId ?? existingNode.userId,
         hardwareModel: hwModel ?? existingNode.hardwareModel,
+        hwModelId:
+            nodeInfo.hasUser() &&
+                nodeInfo.user.hasHwModel() &&
+                nodeInfo.user.hwModel != pb.HardwareModel.UNSET
+            ? nodeInfo.user.hwModel.value
+            : existingNode.hwModelId,
         latitude: hasValidPosition
             ? nodeInfo.position.latitudeI / 1e7
             : existingNode.latitude,
@@ -4012,6 +4039,12 @@ class ProtocolService {
         shortName: userShortName,
         userId: userId,
         hardwareModel: hwModel,
+        hwModelId:
+            nodeInfo.hasUser() &&
+                nodeInfo.user.hasHwModel() &&
+                nodeInfo.user.hwModel != pb.HardwareModel.UNSET
+            ? nodeInfo.user.hwModel.value
+            : null,
         latitude: hasValidPosition ? nodeInfo.position.latitudeI / 1e7 : null,
         longitude: hasValidPosition ? nodeInfo.position.longitudeI / 1e7 : null,
         altitude: hasValidPosition && nodeInfo.position.hasAltitude()

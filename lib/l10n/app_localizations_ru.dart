@@ -5568,6 +5568,89 @@ class AppLocalizationsRu extends AppLocalizations {
   String get firmwareUpdateWifi => 'WiFi';
 
   @override
+  String get firmwareDfuDownloading => 'Downloading firmware…';
+
+  @override
+  String firmwareDfuDownloadProgress(String percent) {
+    return 'Downloading: $percent%';
+  }
+
+  @override
+  String get firmwareDfuEnteringBootloader => 'Entering DFU mode…';
+
+  @override
+  String get firmwareDfuTransferring => 'Updating firmware…';
+
+  @override
+  String firmwareDfuProgress(int percent) {
+    return '$percent% complete';
+  }
+
+  @override
+  String get firmwareDfuComplete => 'Firmware updated successfully!';
+
+  @override
+  String get firmwareDfuFailed => 'Firmware update failed';
+
+  @override
+  String get firmwareDfuDeviceWillRestart =>
+      'Your device will restart to apply the update.';
+
+  @override
+  String get firmwareDfuDoNotDisconnect =>
+      'Do not disconnect your device during the update.';
+
+  @override
+  String get firmwareDfuStartUpdate => 'Start Update';
+
+  @override
+  String get firmwareDfuRetry => 'Retry';
+
+  @override
+  String get firmwareDfuInAppSupported => 'In-App Update Available';
+
+  @override
+  String firmwareDfuSpeed(String speed) {
+    return '$speed KB/s';
+  }
+
+  @override
+  String get firmwareDfuNoFirmwareFound =>
+      'No firmware file found for this device model.';
+
+  @override
+  String get firmwareArchitectureNrf52 => 'nRF52840';
+
+  @override
+  String get firmwareArchitectureEsp32 => 'ESP32';
+
+  @override
+  String get firmwareArchitectureUnknown => 'Unknown';
+
+  @override
+  String get firmwareUpdateMethodInApp => 'In-App Update';
+
+  @override
+  String get firmwareUpdateMethodWebFlasher => 'Web Flasher';
+
+  @override
+  String get firmwareArchitecture => 'Architecture';
+
+  @override
+  String get firmwareUpdateMethod => 'Update Method';
+
+  @override
+  String get firmwareDfuConfirmTitle => 'Start Firmware Update?';
+
+  @override
+  String firmwareDfuConfirmBody(String version) {
+    return 'This will update your device to version $version. The device will restart during the update.\n\nDo not disconnect or turn off your device until the update completes.';
+  }
+
+  @override
+  String get firmwareDfuConfirmStart => 'Start Update';
+
+  @override
   String get globeEmptyDescription =>
       'Nodes with position data will appear here';
 

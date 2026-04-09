@@ -9926,6 +9926,150 @@ abstract class AppLocalizations {
   /// **'WiFi'**
   String get firmwareUpdateWifi;
 
+  /// DFU status: downloading firmware archive
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading firmware…'**
+  String get firmwareDfuDownloading;
+
+  /// DFU download progress with percentage
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading: {percent}%'**
+  String firmwareDfuDownloadProgress(String percent);
+
+  /// DFU status: sending enter-DFU-mode command
+  ///
+  /// In en, this message translates to:
+  /// **'Entering DFU mode…'**
+  String get firmwareDfuEnteringBootloader;
+
+  /// DFU status: transferring firmware via BLE
+  ///
+  /// In en, this message translates to:
+  /// **'Updating firmware…'**
+  String get firmwareDfuTransferring;
+
+  /// DFU transfer progress
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% complete'**
+  String firmwareDfuProgress(int percent);
+
+  /// DFU status: completed successfully
+  ///
+  /// In en, this message translates to:
+  /// **'Firmware updated successfully!'**
+  String get firmwareDfuComplete;
+
+  /// DFU status: update failed
+  ///
+  /// In en, this message translates to:
+  /// **'Firmware update failed'**
+  String get firmwareDfuFailed;
+
+  /// Info text after DFU completes
+  ///
+  /// In en, this message translates to:
+  /// **'Your device will restart to apply the update.'**
+  String get firmwareDfuDeviceWillRestart;
+
+  /// Warning shown during DFU transfer
+  ///
+  /// In en, this message translates to:
+  /// **'Do not disconnect your device during the update.'**
+  String get firmwareDfuDoNotDisconnect;
+
+  /// Button label to start the in-app DFU process
+  ///
+  /// In en, this message translates to:
+  /// **'Start Update'**
+  String get firmwareDfuStartUpdate;
+
+  /// Button label to retry a failed DFU
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get firmwareDfuRetry;
+
+  /// Badge or label indicating in-app DFU is available for this device
+  ///
+  /// In en, this message translates to:
+  /// **'In-App Update Available'**
+  String get firmwareDfuInAppSupported;
+
+  /// DFU transfer speed
+  ///
+  /// In en, this message translates to:
+  /// **'{speed} KB/s'**
+  String firmwareDfuSpeed(String speed);
+
+  /// Error when firmware zip doesnt contain a file for the device
+  ///
+  /// In en, this message translates to:
+  /// **'No firmware file found for this device model.'**
+  String get firmwareDfuNoFirmwareFound;
+
+  /// Chipset name for Nordic nRF52840 devices
+  ///
+  /// In en, this message translates to:
+  /// **'nRF52840'**
+  String get firmwareArchitectureNrf52;
+
+  /// Chipset name for Espressif ESP32 devices
+  ///
+  /// In en, this message translates to:
+  /// **'ESP32'**
+  String get firmwareArchitectureEsp32;
+
+  /// Chipset name when architecture cannot be determined
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get firmwareArchitectureUnknown;
+
+  /// Label for the in-app DFU update method
+  ///
+  /// In en, this message translates to:
+  /// **'In-App Update'**
+  String get firmwareUpdateMethodInApp;
+
+  /// Label for the web flasher update method
+  ///
+  /// In en, this message translates to:
+  /// **'Web Flasher'**
+  String get firmwareUpdateMethodWebFlasher;
+
+  /// Label for the device chipset architecture row
+  ///
+  /// In en, this message translates to:
+  /// **'Architecture'**
+  String get firmwareArchitecture;
+
+  /// Label for which firmware update method is available
+  ///
+  /// In en, this message translates to:
+  /// **'Update Method'**
+  String get firmwareUpdateMethod;
+
+  /// Bottom sheet title confirming DFU start
+  ///
+  /// In en, this message translates to:
+  /// **'Start Firmware Update?'**
+  String get firmwareDfuConfirmTitle;
+
+  /// Bottom sheet body confirming DFU start
+  ///
+  /// In en, this message translates to:
+  /// **'This will update your device to version {version}. The device will restart during the update.\n\nDo not disconnect or turn off your device until the update completes.'**
+  String firmwareDfuConfirmBody(String version);
+
+  /// Button in confirmation sheet to begin DFU
+  ///
+  /// In en, this message translates to:
+  /// **'Start Update'**
+  String get firmwareDfuConfirmStart;
+
   /// Empty state message
   ///
   /// In en, this message translates to:

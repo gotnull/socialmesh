@@ -7454,6 +7454,126 @@
     "@firmwareUpdateWifi": {
         "description": "UI text: firmware update wifi"
     },
+    "firmwareDfuDownloading": "Downloading firmware…",
+    "@firmwareDfuDownloading": {
+        "description": "DFU status: downloading firmware archive"
+    },
+    "firmwareDfuDownloadProgress": "Downloading: {percent}%",
+    "@firmwareDfuDownloadProgress": {
+        "description": "DFU download progress with percentage",
+        "placeholders": {
+            "percent": {
+                "type": "String",
+                "description": "Download percentage"
+            }
+        }
+    },
+    "firmwareDfuEnteringBootloader": "Entering DFU mode…",
+    "@firmwareDfuEnteringBootloader": {
+        "description": "DFU status: sending enter-DFU-mode command"
+    },
+    "firmwareDfuTransferring": "Updating firmware…",
+    "@firmwareDfuTransferring": {
+        "description": "DFU status: transferring firmware via BLE"
+    },
+    "firmwareDfuProgress": "{percent}% complete",
+    "@firmwareDfuProgress": {
+        "description": "DFU transfer progress",
+        "placeholders": {
+            "percent": {
+                "type": "int",
+                "description": "Transfer percentage 0-100"
+            }
+        }
+    },
+    "firmwareDfuComplete": "Firmware updated successfully!",
+    "@firmwareDfuComplete": {
+        "description": "DFU status: completed successfully"
+    },
+    "firmwareDfuFailed": "Firmware update failed",
+    "@firmwareDfuFailed": {
+        "description": "DFU status: update failed"
+    },
+    "firmwareDfuDeviceWillRestart": "Your device will restart to apply the update.",
+    "@firmwareDfuDeviceWillRestart": {
+        "description": "Info text after DFU completes"
+    },
+    "firmwareDfuDoNotDisconnect": "Do not disconnect your device during the update.",
+    "@firmwareDfuDoNotDisconnect": {
+        "description": "Warning shown during DFU transfer"
+    },
+    "firmwareDfuStartUpdate": "Start Update",
+    "@firmwareDfuStartUpdate": {
+        "description": "Button label to start the in-app DFU process"
+    },
+    "firmwareDfuRetry": "Retry",
+    "@firmwareDfuRetry": {
+        "description": "Button label to retry a failed DFU"
+    },
+    "firmwareDfuInAppSupported": "In-App Update Available",
+    "@firmwareDfuInAppSupported": {
+        "description": "Badge or label indicating in-app DFU is available for this device"
+    },
+    "firmwareDfuSpeed": "{speed} KB/s",
+    "@firmwareDfuSpeed": {
+        "description": "DFU transfer speed",
+        "placeholders": {
+            "speed": {
+                "type": "String",
+                "description": "Transfer speed in KB/s"
+            }
+        }
+    },
+    "firmwareDfuNoFirmwareFound": "No firmware file found for this device model.",
+    "@firmwareDfuNoFirmwareFound": {
+        "description": "Error when firmware zip doesnt contain a file for the device"
+    },
+    "firmwareArchitectureNrf52": "nRF52840",
+    "@firmwareArchitectureNrf52": {
+        "description": "Chipset name for Nordic nRF52840 devices"
+    },
+    "firmwareArchitectureEsp32": "ESP32",
+    "@firmwareArchitectureEsp32": {
+        "description": "Chipset name for Espressif ESP32 devices"
+    },
+    "firmwareArchitectureUnknown": "Unknown",
+    "@firmwareArchitectureUnknown": {
+        "description": "Chipset name when architecture cannot be determined"
+    },
+    "firmwareUpdateMethodInApp": "In-App Update",
+    "@firmwareUpdateMethodInApp": {
+        "description": "Label for the in-app DFU update method"
+    },
+    "firmwareUpdateMethodWebFlasher": "Web Flasher",
+    "@firmwareUpdateMethodWebFlasher": {
+        "description": "Label for the web flasher update method"
+    },
+    "firmwareArchitecture": "Architecture",
+    "@firmwareArchitecture": {
+        "description": "Label for the device chipset architecture row"
+    },
+    "firmwareUpdateMethod": "Update Method",
+    "@firmwareUpdateMethod": {
+        "description": "Label for which firmware update method is available"
+    },
+    "firmwareDfuConfirmTitle": "Start Firmware Update?",
+    "@firmwareDfuConfirmTitle": {
+        "description": "Bottom sheet title confirming DFU start"
+    },
+    "firmwareDfuConfirmBody": "This will update your device to version {version}. The device will restart during the update.\n\nDo not disconnect or turn off your device until the update completes.",
+    "@firmwareDfuConfirmBody": {
+        "description": "Bottom sheet body confirming DFU start",
+        "placeholders": {
+            "version": {
+                "type": "String",
+                "description": "Firmware version being installed"
+            }
+        }
+    },
+    "firmwareDfuConfirmStart": "Start Update",
+    "@firmwareDfuConfirmStart": {
+        "description": "Button in confirmation sheet to begin DFU"
+    },
     "globeEmptyDescription": "Nodes with position data will appear here",
     "@globeEmptyDescription": {
         "description": "Empty state message"

@@ -369,6 +369,7 @@ class MeshNode {
   final double? humidity; // Relative humidity percentage
   final String? firmwareVersion;
   final String? hardwareModel;
+  final int? hwModelId; // Raw HardwareModel protobuf enum value
   final String? role; // 'CLIENT', 'ROUTER', etc.
   final double? distance; // distance in meters
   final bool isFavorite;
@@ -483,6 +484,7 @@ class MeshNode {
     this.humidity,
     this.firmwareVersion,
     this.hardwareModel,
+    this.hwModelId,
     this.role,
     this.distance,
     this.isFavorite = false,
@@ -589,6 +591,7 @@ class MeshNode {
     double? humidity,
     String? firmwareVersion,
     String? hardwareModel,
+    int? hwModelId,
     String? role,
     double? distance,
     bool? isFavorite,
@@ -692,6 +695,7 @@ class MeshNode {
       humidity: humidity ?? this.humidity,
       firmwareVersion: firmwareVersion ?? this.firmwareVersion,
       hardwareModel: hardwareModel ?? this.hardwareModel,
+      hwModelId: hwModelId ?? this.hwModelId,
       role: role ?? this.role,
       distance: distance ?? this.distance,
       isFavorite: isFavorite ?? this.isFavorite,

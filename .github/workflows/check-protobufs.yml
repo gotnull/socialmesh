@@ -114,6 +114,7 @@ jobs:
           - [ ] Review generated Dart code changes
           - [ ] Test with a physical Meshtastic device
           - [ ] Update any app code affected by protobuf changes
+          - [ ] Run `flutter test test/services/firmware/hardware_architecture_test.dart` — if new HardwareModel values were added, update `_hwModelToArchitecture` in `lib/services/firmware/hardware_architecture.dart`
           - [ ] Commit and push changes
 
           ---

@@ -74,9 +74,22 @@ class GuidedFlowScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Use NeverScrollableScrollPhysics on the outer GlassScaffold so it routes
+    // through _buildNonScrollableBody, which hands the Column directly to
+    // Scaffold.body rather than wrapping it in SliverFillRemaining.
+    //
+    // The SliverFillRemaining(hasScrollBody: false) + PageView combination
+    // triggers a null-check crash in RenderViewportBase.layoutChildSequence on
+    // Android, producing a completely blank screen. Bypassing the sliver path
+    // here fixes the issue on Android while keeping the glass app-bar styling.
+    //
+    // The bottom action bar is passed as bottomNavigationBar so the Scaffold
+    // correctly reserves space for it and pins it above the system navigation.
     return GlassScaffold.body(
       title: title,
       leading: leading,
+      physics: const NeverScrollableScrollPhysics(),
+      bottomNavigationBar: bottomBar,
       body: Column(
         children: [
           _StepProgressIndicator(steps: steps, currentStep: currentStep),
@@ -91,7 +104,6 @@ class GuidedFlowScaffold extends StatelessWidget {
               itemBuilder: pageBuilder,
             ),
           ),
-          if (bottomBar != null) bottomBar!,
         ],
       ),
     );

@@ -76,6 +76,15 @@ final meshServiceEngineProvider = Provider<MeshServiceEngine?>((ref) {
   final registry = ref.watch(mrrpServiceRegistryProvider);
   if (registry == null) return null;
 
+  // Force mrrpEngineProvider to build so that:
+  //   1. advertEngine.onSend is wired (sendViaSip callback)
+  //   2. advertEngine.start() is called (_started = true)
+  // Without this, broadcastNow() called from onInstancePublished is a
+  // silent no-op — _started is false and onSend is null — which is
+  // exactly why no SERVICE_ADVERT log appears after service creation.
+  // This mirrors the identical guard in mrrpCachedServicesProvider.
+  ref.watch(mrrpEngineProvider);
+
   // Advert engine for forced immediate broadcast on instance publish.
   final advertEngine = ref.watch(mrrpAdvertEngineProvider);
 
