@@ -680,5 +680,81 @@ void main() {
         );
       }
     });
+
+    test('no item description references Google Translate', () {
+      // Translation is powered by OpenAI, not Google Translate.
+      // This guards against accidentally re-introducing the wrong attribution.
+      for (final payload in WhatsNewRegistry.allPayloads) {
+        for (final item in payload.items) {
+          expect(
+            item.description.toLowerCase(),
+            isNot(contains('google translate')),
+            reason:
+                'Item ${item.id} description must not reference Google Translate '
+                '— translation is powered by OpenAI',
+          );
+        }
+      }
+    });
+  });
+
+  // ===========================================================================
+  // Feature-gated What's New entries
+  // ===========================================================================
+
+  group('WhatsNewRegistry feature flags', () {
+    test(
+      'Translation Pack payload (1.27.0) is absent when TRANSLATION_ENABLED is not set',
+      () {
+        // In the test environment dotenv is not initialised, so
+        // AppFeatureFlags.isTranslationEnabled returns false.
+        // The v1.27.0 payload must therefore be excluded from the registry.
+        final payload = WhatsNewRegistry.getPayload('1.27.0');
+        expect(
+          payload,
+          isNull,
+          reason:
+              'Translation Pack What\'s New entry must be gated behind '
+              'TRANSLATION_ENABLED — it should not appear when the flag is off',
+        );
+      },
+    );
+
+    test(
+      'Translation Pack badge key is absent from allPayloads when flag is off',
+      () {
+        final allBadgeKeys = WhatsNewRegistry.allPayloads
+            .expand((p) => p.items)
+            .map((i) => i.badgeKey)
+            .whereType<String>()
+            .toSet();
+
+        expect(
+          allBadgeKeys,
+          isNot(contains('translation_pack')),
+          reason:
+              'translation_pack badge key must not appear in the registry '
+              'when TRANSLATION_ENABLED is not set',
+        );
+      },
+    );
+
+    test(
+      'Translation Pack item is absent from getUnseenBadgeKeys when flag is off',
+      () {
+        final keys = WhatsNewRegistry.getUnseenBadgeKeys(
+          currentVersion: '1.27.0',
+          lastSeenVersion: null,
+        );
+
+        expect(
+          keys,
+          isNot(contains('translation_pack')),
+          reason:
+              'translation_pack badge key must not be returned when '
+              'TRANSLATION_ENABLED is not set',
+        );
+      },
+    );
   });
 }

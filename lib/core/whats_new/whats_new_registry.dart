@@ -282,28 +282,29 @@ class WhatsNewRegistry {
         ],
       ),
 
-    // v1.27.0 — Translation Pack
-    WhatsNewPayload(
-      version: '1.27.0',
-      headline: "What's New in Socialmesh",
-      subtitle: 'Version 1.27.0',
-      items: [
-        WhatsNewItem(
-          id: 'translation_pack_intro',
-          title: 'Translation Pack',
-          description:
-              'Instantly translate any mesh message into your language with a '
-              'single tap. Powered by Google Translate, it works on channels '
-              'and direct messages alike.\n\n'
-              'Long-press any message and tap Translate to see the result '
-              'inline — with smart caching so repeated translations are '
-              'instant. Available as a separate add-on.',
-          icon: Icons.translate,
-          iconColor: Color(0xFF26A69A), // AccentColors.teal
-          badgeKey: 'translation_pack',
-        ),
-      ],
-    ),
+    // v1.27.0 — Translation Pack (gated behind TRANSLATION_ENABLED)
+    if (AppFeatureFlags.isTranslationEnabled)
+      WhatsNewPayload(
+        version: '1.27.0',
+        headline: "What's New in Socialmesh",
+        subtitle: 'Version 1.27.0',
+        items: [
+          WhatsNewItem(
+            id: 'translation_pack_intro',
+            title: 'Translation Pack',
+            description:
+                'Instantly translate any mesh message into your language with a '
+                'single tap. Powered by OpenAI, it works on channels '
+                'and direct messages alike.\n\n'
+                'Long-press any message and tap Translate to see the result '
+                'inline — with smart caching so repeated translations are '
+                'instant. Available as a separate add-on.',
+            icon: Icons.translate,
+            iconColor: Color(0xFF26A69A), // AccentColors.teal
+            badgeKey: 'translation_pack',
+          ),
+        ],
+      ),
   ];
 
   // ===========================================================================
