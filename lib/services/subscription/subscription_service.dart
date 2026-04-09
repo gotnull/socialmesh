@@ -118,12 +118,11 @@ class PurchaseService {
         return;
       }
 
-      // Enable verbose debug logging in debug mode for sandbox testing
+      // Enable debug logging in debug mode (not verbose — verbose dumps
+      // full product JSON on every BillingClient query, flooding logcat).
       if (kDebugMode) {
-        AppLogging.subscriptions(
-          '💰 Setting LogLevel.verbose for debug mode...',
-        );
-        await Purchases.setLogLevel(LogLevel.verbose);
+        AppLogging.subscriptions('💰 Setting LogLevel.debug for debug mode...');
+        await Purchases.setLogLevel(LogLevel.debug);
         AppLogging.subscriptions(
           '💰 RevenueCat debug logging enabled for sandbox testing',
         );
