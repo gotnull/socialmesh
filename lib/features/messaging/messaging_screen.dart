@@ -1386,9 +1386,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     final myNodeNum = ref.watch(myNodeNumProvider);
     final channels = ref.watch(channelsProvider);
 
-    // Debug: Log myNodeNum to help diagnose message direction issues
+    // Debug: Log rebuild + state to help diagnose message display issues
     AppLogging.messages(
-      '📨 ConversationScreen: myNodeNum=$myNodeNum, type=${widget.type}, nodeNum=${widget.nodeNum}',
+      '📨 ConversationScreen.build: totalMessages=${messages.length}, '
+      'myNodeNum=$myNodeNum, type=${widget.type}, '
+      'channelIndex=${widget.channelIndex}, nodeNum=${widget.nodeNum}',
     );
 
     // Determine if messages are encrypted
@@ -1410,22 +1412,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     // Filter messages for this conversation
     List<Message> filteredMessages;
     if (widget.type == ConversationType.channel) {
-      // Debug: Log all messages and their channel/broadcast status
-      AppLogging.messages(
-        '📨 Channel ${widget.channelIndex}: Total messages=${messages.length}, '
-        'filtering for channel=${widget.channelIndex}',
-      );
-      for (final m in messages.where((m) => m.channel == widget.channelIndex)) {
-        AppLogging.messages(
-          '📨   Message: from=${m.from}, to=${m.to.toRadixString(16)}, '
-          'channel=${m.channel}, isBroadcast=${m.isBroadcast}, sent=${m.sent}',
-        );
-      }
       filteredMessages = messages
           .where((m) => m.channel == widget.channelIndex && m.isBroadcast)
           .toList();
       AppLogging.messages(
-        '📨 After filter: ${filteredMessages.length} messages',
+        '📨 Channel filter: channel=${widget.channelIndex}, '
+        'matched=${filteredMessages.length}/${messages.length} '
+        '(sent=${filteredMessages.where((m) => m.sent).length}, '
+        'received=${filteredMessages.where((m) => !m.sent).length})',
       );
     } else {
       filteredMessages = messages
@@ -1435,6 +1429,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                 (m.from == widget.nodeNum || m.to == widget.nodeNum),
           )
           .toList();
+      AppLogging.messages(
+        '📨 DM filter: nodeNum=${widget.nodeNum}, '
+        'matched=${filteredMessages.length}/${messages.length} '
+        '(sent=${filteredMessages.where((m) => m.sent).length}, '
+        'received=${filteredMessages.where((m) => !m.sent).length})',
+      );
     }
 
     // Exclude tapback emoji reactions from the visible message list.

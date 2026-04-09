@@ -3367,6 +3367,11 @@ class MessagesNotifier extends Notifier<List<Message>> {
       }
 
       _addMessageToState(message);
+      AppLogging.messages(
+        '📨 _addMessageToState DONE: id=${message.id}, '
+        'channel=${message.channel}, isBroadcast=${message.isBroadcast}, '
+        'stateSize=${state.length}',
+      );
       _notifyNewMessage(message);
     });
 
