@@ -18427,6 +18427,42 @@ abstract class AppLocalizations {
   /// **'Tagged'**
   String get nodedexFilterTagged;
 
+  /// Label showing the radio preset a node was observed on
+  ///
+  /// In en, this message translates to:
+  /// **'Observed on: {preset}'**
+  String nodedexObservedOnPreset(String preset);
+
+  /// Label showing the last radio preset a node was observed on
+  ///
+  /// In en, this message translates to:
+  /// **'Last observed on {preset}'**
+  String nodedexLastObservedOnPreset(String preset);
+
+  /// Filter chip label for filtering nodes by radio preset
+  ///
+  /// In en, this message translates to:
+  /// **'Radio Preset'**
+  String get nodedexFilterRadioPreset;
+
+  /// Label shown when the radio preset is not known
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get nodedexRadioPresetUnknown;
+
+  /// Option to show nodes from all radio presets (no filter)
+  ///
+  /// In en, this message translates to:
+  /// **'All Presets'**
+  String get nodedexFilterRadioPresetAll;
+
+  /// Title for the radio preset filter bottom sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Filter by Radio Preset'**
+  String get nodedexRadioPresetSheetTitle;
+
   /// Label in node management
   ///
   /// In en, this message translates to:
@@ -41669,6 +41705,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Short range, reliable'**
   String get radioConfigPresetShortSlowDesc;
+
+  /// Modem preset label: short range, turbo data rate
+  ///
+  /// In en, this message translates to:
+  /// **'Short Turbo'**
+  String get radioConfigPresetShortTurbo;
+
+  /// Description for short turbo modem preset
+  ///
+  /// In en, this message translates to:
+  /// **'Short range with turbo speed'**
+  String get radioConfigPresetShortTurboDesc;
+
+  /// Modem preset label: long range, turbo data rate
+  ///
+  /// In en, this message translates to:
+  /// **'Long Turbo'**
+  String get radioConfigPresetLongTurbo;
+
+  /// Description for long turbo modem preset
+  ///
+  /// In en, this message translates to:
+  /// **'Long range with turbo speed'**
+  String get radioConfigPresetLongTurboDesc;
 
   /// UI text: radio config preset must match
   ///

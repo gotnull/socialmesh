@@ -14356,6 +14356,40 @@
     "@nodedexFilterTagged": {
         "description": "Text displayed in node management"
     },
+    "nodedexObservedOnPreset": "Observed on: {preset}",
+    "@nodedexObservedOnPreset": {
+        "description": "Label showing the radio preset a node was observed on",
+        "placeholders": {
+            "preset": {
+                "type": "String"
+            }
+        }
+    },
+    "nodedexLastObservedOnPreset": "Last observed on {preset}",
+    "@nodedexLastObservedOnPreset": {
+        "description": "Label showing the last radio preset a node was observed on",
+        "placeholders": {
+            "preset": {
+                "type": "String"
+            }
+        }
+    },
+    "nodedexFilterRadioPreset": "Radio Preset",
+    "@nodedexFilterRadioPreset": {
+        "description": "Filter chip label for filtering nodes by radio preset"
+    },
+    "nodedexRadioPresetUnknown": "Unknown",
+    "@nodedexRadioPresetUnknown": {
+        "description": "Label shown when the radio preset is not known"
+    },
+    "nodedexFilterRadioPresetAll": "All Presets",
+    "@nodedexFilterRadioPresetAll": {
+        "description": "Option to show nodes from all radio presets (no filter)"
+    },
+    "nodedexRadioPresetSheetTitle": "Filter by Radio Preset",
+    "@nodedexRadioPresetSheetTitle": {
+        "description": "Title for the radio preset filter bottom sheet"
+    },
     "nodedexFirmwareLabel": "Firmware",
     "@nodedexFirmwareLabel": {
         "description": "Label in node management"
@@ -32099,6 +32133,22 @@
     "radioConfigPresetShortSlowDesc": "Short range, reliable",
     "@radioConfigPresetShortSlowDesc": {
         "description": "Description text"
+    },
+    "radioConfigPresetShortTurbo": "Short Turbo",
+    "@radioConfigPresetShortTurbo": {
+        "description": "Modem preset label: short range, turbo data rate"
+    },
+    "radioConfigPresetShortTurboDesc": "Short range with turbo speed",
+    "@radioConfigPresetShortTurboDesc": {
+        "description": "Description for short turbo modem preset"
+    },
+    "radioConfigPresetLongTurbo": "Long Turbo",
+    "@radioConfigPresetLongTurbo": {
+        "description": "Modem preset label: long range, turbo data rate"
+    },
+    "radioConfigPresetLongTurboDesc": "Long range with turbo speed",
+    "@radioConfigPresetLongTurboDesc": {
+        "description": "Description for long turbo modem preset"
     },
     "radioConfigPresetMustMatch": "All devices in the mesh must use the same preset",
     "@radioConfigPresetMustMatch": {

@@ -10451,6 +10451,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nodedexFilterTagged => 'Tagged';
 
   @override
+  String nodedexObservedOnPreset(String preset) {
+    return 'Observed on: $preset';
+  }
+
+  @override
+  String nodedexLastObservedOnPreset(String preset) {
+    return 'Last observed on $preset';
+  }
+
+  @override
+  String get nodedexFilterRadioPreset => 'Radio Preset';
+
+  @override
+  String get nodedexRadioPresetUnknown => 'Unknown';
+
+  @override
+  String get nodedexFilterRadioPresetAll => 'All Presets';
+
+  @override
+  String get nodedexRadioPresetSheetTitle => 'Filter by Radio Preset';
+
+  @override
   String get nodedexFirmwareLabel => 'Firmware';
 
   @override
@@ -23500,6 +23522,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get radioConfigPresetShortSlowDesc => 'Short range, reliable';
+
+  @override
+  String get radioConfigPresetShortTurbo => 'Short Turbo';
+
+  @override
+  String get radioConfigPresetShortTurboDesc => 'Short range with turbo speed';
+
+  @override
+  String get radioConfigPresetLongTurbo => 'Long Turbo';
+
+  @override
+  String get radioConfigPresetLongTurboDesc => 'Long range with turbo speed';
 
   @override
   String get radioConfigPresetMustMatch =>

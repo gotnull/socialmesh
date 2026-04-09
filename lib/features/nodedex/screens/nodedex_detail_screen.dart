@@ -46,6 +46,7 @@ import '../../nodes/node_display_name_resolver.dart';
 import '../../../services/protocol/sip/mrrp_types.dart';
 
 import '../models/nodedex_entry.dart';
+import '../models/observed_radio_preset.dart';
 import '../models/sigil_evolution.dart';
 import '../providers/nodedex_providers.dart';
 import '../services/patina_score.dart';
@@ -1339,6 +1340,16 @@ class _DiscoveryStatsCard extends StatelessWidget {
             value: entry.distinctPositionCount.toString(),
             icon: Icons.pin_drop_outlined,
           ),
+          if (entry.lastObservedOnPreset != null)
+            _InfoRow(
+              label: context.l10n.nodedexFilterRadioPreset,
+              value:
+                  ObservedRadioPreset.fromProtobufValue(
+                    entry.lastObservedOnPreset!,
+                  )?.label(context.l10n) ??
+                  context.l10n.nodedexRadioPresetUnknown,
+              icon: Icons.radio_outlined,
+            ),
         ],
       ),
     );

@@ -36,6 +36,7 @@ import '../../../providers/signal_providers.dart';
 import '../models/import_preview.dart';
 import '../models/node_activity_event.dart';
 import '../models/nodedex_entry.dart';
+
 import '../services/nodedex_database.dart';
 import '../services/nodedex_sqlite_store.dart';
 import '../services/nodedex_sync_service.dart';
@@ -156,6 +157,21 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
   @visibleForTesting
   void flushCoSeenForTest() => _flushCoSeenRelationships();
 
+  /// Resolve the current modem preset value from the connected radio.
+  ///
+  /// Returns the protobuf int value (0–9) of the local radio's active
+  /// modem preset, or null if no radio is connected or config is unknown.
+  /// This is observation metadata — it tells us what *our* radio was set
+  /// to when we detected a node, not the remote node's own preset.
+  int? _resolveCurrentPreset() {
+    try {
+      final protocol = ref.read(protocolServiceProvider);
+      return protocol.currentLoraConfig?.modemPreset.value;
+    } catch (_) {
+      return null;
+    }
+  }
+
   @override
   Map<int, NodeDexEntry> build() {
     final storeAsync = ref.watch(nodeDexStoreProvider);
@@ -274,6 +290,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
       if (existing == null) {
         // New discovery: create a fresh NodeDex entry.
         final sigil = SigilGenerator.generate(nodeNum);
+        final currentPreset = _resolveCurrentPreset();
         final newEntry = NodeDexEntry.discovered(
           nodeNum: nodeNum,
           timestamp: node.firstHeard ?? now,
@@ -282,6 +299,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
           rssi: isOwnNode ? null : node.rssi,
           latitude: node.hasPosition ? node.latitude : null,
           longitude: node.hasPosition ? node.longitude : null,
+          observedOnPreset: currentPreset,
           sigil: sigil,
           lastKnownName: liveName,
           lastKnownHardware: node.hardwareModel,
@@ -357,6 +375,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
                 now.difference(lastEncounter) >= _encounterCooldown);
 
         if (shouldRecord) {
+          final currentPreset = _resolveCurrentPreset();
           var updatedEntry = existing.recordEncounter(
             timestamp: now,
             distance: node.distance,
@@ -364,6 +383,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
             rssi: node.rssi,
             latitude: node.hasPosition ? node.latitude : null,
             longitude: node.hasPosition ? node.longitude : null,
+            observedOnPreset: currentPreset,
           );
 
           // Ensure sigil is generated if missing (e.g., from older data).
@@ -1505,6 +1525,54 @@ final nodeDexSearchProvider = NotifierProvider<NodeDexSearchNotifier, String>(
   NodeDexSearchNotifier.new,
 );
 
+/// Notifier for filtering NodeDex entries by observed radio preset.
+///
+/// State is a [Set<int>] of protobuf modem preset values. When empty,
+/// no filtering is applied (all presets shown). When non-empty, only
+/// nodes whose [lastObservedOnPreset] is in the set are shown.
+///
+/// This is an additional filter dimension that coexists with
+/// [NodeDexFilter] and search, similar to how search coexists with
+/// the main filter.
+class NodeDexRadioPresetFilterNotifier extends Notifier<Set<int>> {
+  @override
+  Set<int> build() => const {};
+
+  /// Toggle a preset value in/out of the filter set.
+  void toggle(int presetValue) {
+    if (state.contains(presetValue)) {
+      state = Set<int>.from(state)..remove(presetValue);
+    } else {
+      state = Set<int>.from(state)..add(presetValue);
+    }
+  }
+
+  /// Clear all preset filters (show all).
+  void clear() => state = const {};
+
+  /// Replace the entire filter set.
+  void setPresets(Set<int> presets) => state = Set<int>.unmodifiable(presets);
+}
+
+final nodeDexRadioPresetFilterProvider =
+    NotifierProvider<NodeDexRadioPresetFilterNotifier, Set<int>>(
+      NodeDexRadioPresetFilterNotifier.new,
+    );
+
+/// Derives the set of distinct observed radio presets across all NodeDex
+/// entries. Used to populate the radio preset filter UI with only presets
+/// that have actually been observed.
+final nodeDexObservedPresetsProvider = Provider<Set<int>>((ref) {
+  final entries = ref.watch(nodeDexProvider);
+  final presets = <int>{};
+  for (final entry in entries.values) {
+    if (entry.lastObservedOnPreset != null) {
+      presets.add(entry.lastObservedOnPreset!);
+    }
+  }
+  return presets;
+});
+
 /// Sorted and filtered list of NodeDex entries for the main screen.
 ///
 /// Combines the entries from nodeDexProvider with the current sort order,
@@ -1518,6 +1586,7 @@ final nodeDexSortedEntriesProvider = Provider<List<(NodeDexEntry, MeshNode?)>>((
   final sort = ref.watch(nodeDexSortProvider);
   final filter = ref.watch(nodeDexFilterProvider);
   final search = ref.watch(nodeDexSearchProvider).toLowerCase();
+  final radioPresetFilter = ref.watch(nodeDexRadioPresetFilterProvider);
 
   if (entries.isEmpty) return [];
 
@@ -1529,6 +1598,15 @@ final nodeDexSortedEntriesProvider = Provider<List<(NodeDexEntry, MeshNode?)>>((
 
   // Apply filter.
   paired = _applyFilter(paired, filter, ref);
+
+  // Apply radio preset filter (additional dimension).
+  if (radioPresetFilter.isNotEmpty) {
+    paired = paired.where((pair) {
+      final (entry, _) = pair;
+      return entry.lastObservedOnPreset != null &&
+          radioPresetFilter.contains(entry.lastObservedOnPreset);
+    }).toList();
+  }
 
   // Apply search.
   if (search.isNotEmpty) {

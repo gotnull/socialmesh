@@ -153,6 +153,11 @@ class EncounterRecord {
   /// Longitude at time of encounter, if position was available.
   final double? longitude;
 
+  /// The modem preset (protobuf int value) of the local radio when this
+  /// encounter was recorded. Null if the preset was unknown at the time.
+  /// This is the *local* radio's preset, not the remote node's.
+  final int? observedOnPreset;
+
   const EncounterRecord({
     required this.timestamp,
     this.distanceMeters,
@@ -160,6 +165,7 @@ class EncounterRecord {
     this.rssi,
     this.latitude,
     this.longitude,
+    this.observedOnPreset,
   });
 
   Map<String, dynamic> toJson() {
@@ -170,6 +176,7 @@ class EncounterRecord {
       if (rssi != null) 'r': rssi,
       if (latitude != null) 'lat': latitude,
       if (longitude != null) 'lon': longitude,
+      if (observedOnPreset != null) 'op': observedOnPreset,
     };
   }
 
@@ -181,6 +188,7 @@ class EncounterRecord {
       rssi: json['r'] as int?,
       latitude: (json['lat'] as num?)?.toDouble(),
       longitude: (json['lon'] as num?)?.toDouble(),
+      observedOnPreset: json['op'] as int?,
     );
   }
 
@@ -191,6 +199,8 @@ class EncounterRecord {
     int? rssi,
     double? latitude,
     double? longitude,
+    int? observedOnPreset,
+    bool clearObservedOnPreset = false,
   }) {
     return EncounterRecord(
       timestamp: timestamp ?? this.timestamp,
@@ -199,6 +209,9 @@ class EncounterRecord {
       rssi: rssi ?? this.rssi,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
+      observedOnPreset: clearObservedOnPreset
+          ? null
+          : (observedOnPreset ?? this.observedOnPreset),
     );
   }
 }
@@ -701,6 +714,16 @@ class NodeDexEntry {
   /// Null for non-MRRP or pre-MRRP peers.
   final String? mrrpServiceIds;
 
+  /// The modem preset (protobuf int value) of the local radio when this
+  /// node was last observed. Updated on each encounter where the preset
+  /// is known. Null for legacy entries or when preset was unavailable.
+  ///
+  /// **Semantic note**: This is the preset of *our* radio, not the remote
+  /// node's own preset. We cannot determine a remote node's modem preset
+  /// from received packets. Named `lastObservedOnPreset` to be explicit
+  /// about this provenance.
+  final int? lastObservedOnPreset;
+
   /// Maximum number of encounter records to retain.
   static const int maxEncounterRecords = 50;
 
@@ -743,6 +766,7 @@ class NodeDexEntry {
     this.sipIdentityState,
     this.sipDisplayName,
     this.mrrpServiceIds,
+    this.lastObservedOnPreset,
   });
 
   /// Create a new entry for a freshly discovered node.
@@ -754,6 +778,7 @@ class NodeDexEntry {
     int? rssi,
     double? latitude,
     double? longitude,
+    int? observedOnPreset,
     SigilData? sigil,
     String? lastKnownName,
     String? lastKnownHardware,
@@ -768,6 +793,7 @@ class NodeDexEntry {
       rssi: rssi,
       latitude: latitude,
       longitude: longitude,
+      observedOnPreset: observedOnPreset,
     );
 
     return NodeDexEntry(
@@ -784,6 +810,7 @@ class NodeDexEntry {
       lastKnownHardware: lastKnownHardware,
       lastKnownRole: lastKnownRole,
       lastKnownFirmware: lastKnownFirmware,
+      lastObservedOnPreset: observedOnPreset,
     );
   }
 
@@ -871,6 +898,8 @@ class NodeDexEntry {
     bool clearSipDisplayName = false,
     String? mrrpServiceIds,
     bool clearMrrpServiceIds = false,
+    int? lastObservedOnPreset,
+    bool clearLastObservedOnPreset = false,
   }) {
     // Auto-stamp when socialTag changes via copyWith.
     final effectiveStMs = clearSocialTag || socialTag != null
@@ -926,6 +955,9 @@ class NodeDexEntry {
       mrrpServiceIds: clearMrrpServiceIds
           ? null
           : (mrrpServiceIds ?? this.mrrpServiceIds),
+      lastObservedOnPreset: clearLastObservedOnPreset
+          ? null
+          : (lastObservedOnPreset ?? this.lastObservedOnPreset),
     );
   }
 
@@ -941,6 +973,7 @@ class NodeDexEntry {
     int? rssi,
     double? latitude,
     double? longitude,
+    int? observedOnPreset,
   }) {
     final now = timestamp ?? DateTime.now();
     final encounter = EncounterRecord(
@@ -950,6 +983,7 @@ class NodeDexEntry {
       rssi: rssi,
       latitude: latitude,
       longitude: longitude,
+      observedOnPreset: observedOnPreset,
     );
 
     // Determine if this counts as a new encounter
@@ -995,6 +1029,7 @@ class NodeDexEntry {
       bestSnr: newBestSnr,
       bestRssi: newBestRssi,
       encounters: updatedEncounters,
+      lastObservedOnPreset: observedOnPreset ?? lastObservedOnPreset,
     );
   }
 
@@ -1239,6 +1274,11 @@ class NodeDexEntry {
         ? (mrrpServiceIds ?? other.mrrpServiceIds)
         : (other.mrrpServiceIds ?? mrrpServiceIds);
 
+    // Radio preset: prefer the most recently seen value, fall back to either.
+    final int? mergedLastObservedOnPreset = lastSeen.isAfter(other.lastSeen)
+        ? (lastObservedOnPreset ?? other.lastObservedOnPreset)
+        : (other.lastObservedOnPreset ?? lastObservedOnPreset);
+
     return NodeDexEntry(
       nodeNum: nodeNum,
       firstSeen: mergedFirstSeen,
@@ -1268,6 +1308,7 @@ class NodeDexEntry {
       sipIdentityState: mergedSipIdentityState,
       sipDisplayName: mergedSipDisplayName,
       mrrpServiceIds: mergedMrrpServiceIds,
+      lastObservedOnPreset: mergedLastObservedOnPreset,
     );
   }
 
@@ -1367,6 +1408,7 @@ class NodeDexEntry {
       if (sipIdentityState != null) 'sip_st': sipIdentityState!.name,
       if (sipDisplayName != null) 'sip_dn': sipDisplayName,
       if (mrrpServiceIds != null) 'mrrp_svc': mrrpServiceIds,
+      if (lastObservedOnPreset != null) 'lorp': lastObservedOnPreset,
     };
   }
 
@@ -1442,6 +1484,7 @@ class NodeDexEntry {
           : null,
       sipDisplayName: json['sip_dn'] as String?,
       mrrpServiceIds: json['mrrp_svc'] as String?,
+      lastObservedOnPreset: json['lorp'] as int?,
     );
   }
 
@@ -1479,7 +1522,8 @@ class NodeDexEntry {
           sipCapable == other.sipCapable &&
           sipIdentityState == other.sipIdentityState &&
           sipDisplayName == other.sipDisplayName &&
-          mrrpServiceIds == other.mrrpServiceIds;
+          mrrpServiceIds == other.mrrpServiceIds &&
+          lastObservedOnPreset == other.lastObservedOnPreset;
 
   @override
   int get hashCode => Object.hash(
@@ -1492,6 +1536,7 @@ class NodeDexEntry {
     sipCapable,
     sipIdentityState,
     mrrpServiceIds,
+    lastObservedOnPreset,
   );
 
   @override

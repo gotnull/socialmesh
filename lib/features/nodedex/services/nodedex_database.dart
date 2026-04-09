@@ -22,7 +22,7 @@ import '../../../core/logging.dart';
 ///
 /// Bump this when adding tables, columns, or indices.
 /// Migration logic runs in [_onUpgrade].
-const int nodedexSchemaVersion = 8;
+const int nodedexSchemaVersion = 9;
 
 /// Table and column name constants for NodeDex SQLite schema.
 abstract final class NodeDexTables {
@@ -60,6 +60,10 @@ abstract final class NodeDexTables {
 
   // -- MRRP service columns (v8) --
   static const colMrrpServiceIds = 'mrrp_service_ids';
+
+  // -- Radio preset observation columns (v9) --
+  static const colLastObservedOnPreset = 'last_observed_on_preset';
+  static const colEncObservedOnPreset = 'observed_on_preset';
 
   // -- nodedex_encounters --
   static const encounters = 'nodedex_encounters';
@@ -242,7 +246,8 @@ class NodeDexDatabase {
         ${NodeDexTables.colSipPersonaId} BLOB,
         ${NodeDexTables.colSipIdentityState} TEXT,
         ${NodeDexTables.colSipDisplayName} TEXT,
-        ${NodeDexTables.colMrrpServiceIds} TEXT
+        ${NodeDexTables.colMrrpServiceIds} TEXT,
+        ${NodeDexTables.colLastObservedOnPreset} INTEGER              -- v9
       )
     ''');
     batch.execute(
@@ -268,7 +273,8 @@ class NodeDexDatabase {
         ${NodeDexTables.colEncLat} REAL,
         ${NodeDexTables.colEncLon} REAL,
         ${NodeDexTables.colEncSessionId} TEXT,
-        ${NodeDexTables.colEncCreatedAtMs} INTEGER NOT NULL
+        ${NodeDexTables.colEncCreatedAtMs} INTEGER NOT NULL,
+        ${NodeDexTables.colEncObservedOnPreset} INTEGER               -- v9
       )
     ''');
     batch.execute(
@@ -486,6 +492,23 @@ class NodeDexDatabase {
       );
       AppLogging.storage(
         'NodeDexDatabase: v8 migration — added mrrp_service_ids column',
+      );
+    }
+    if (oldVersion < 9) {
+      // v9: Track the modem preset of the local radio when a node was
+      // observed. Stored as the protobuf Config_LoRaConfig_ModemPreset
+      // integer value (0–9). Nullable for legacy entries where the
+      // preset was not recorded.
+      await db.execute(
+        'ALTER TABLE ${NodeDexTables.entries} ' // lint-allow: hardcoded-string
+        'ADD COLUMN ${NodeDexTables.colLastObservedOnPreset} INTEGER', // lint-allow: hardcoded-string
+      );
+      await db.execute(
+        'ALTER TABLE ${NodeDexTables.encounters} ' // lint-allow: hardcoded-string
+        'ADD COLUMN ${NodeDexTables.colEncObservedOnPreset} INTEGER', // lint-allow: hardcoded-string
+      );
+      AppLogging.storage(
+        'NodeDexDatabase: v9 migration — added radio preset observation columns',
       );
     }
   }
