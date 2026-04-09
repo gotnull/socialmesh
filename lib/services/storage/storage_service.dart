@@ -97,6 +97,42 @@ class SettingsService {
   /// Initialize the service
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
+    await _migrateNotificationSettingsV2();
+  }
+
+  /// One-time migration: consolidate background-specific notification toggles
+  /// into the global toggles. Prior to this migration, the Background
+  /// Connection screen had separate `bg_notify_messages` and
+  /// `bg_notify_channels` keys that acted as extra gates on background
+  /// notifications. These have been removed; the global keys now control
+  /// both foreground and background notification delivery.
+  ///
+  /// If a user had explicitly disabled a background toggle while the global
+  /// toggle was still on, we disable the global toggle to preserve intent.
+  Future<void> _migrateNotificationSettingsV2() async {
+    const migrationKey = 'notification_settings_v2_migrated';
+    if (_prefs!.getBool(migrationKey) == true) return;
+
+    // bg_notify_messages (background DM toggle) → dm_notifications_enabled
+    final bgDm = _prefs!.getBool('bg_notify_messages');
+    if (bgDm == false) {
+      final globalDm = _prefs!.getBool('dm_notifications_enabled') ?? true;
+      if (globalDm) {
+        await _prefs!.setBool('dm_notifications_enabled', false);
+      }
+    }
+
+    // bg_notify_channels (background channel toggle) → channel_notifications_enabled
+    final bgChannel = _prefs!.getBool('bg_notify_channels');
+    if (bgChannel == false) {
+      final globalChannel =
+          _prefs!.getBool('channel_notifications_enabled') ?? true;
+      if (globalChannel) {
+        await _prefs!.setBool('channel_notifications_enabled', false);
+      }
+    }
+
+    await _prefs!.setBool(migrationKey, true);
   }
 
   SharedPreferences get _preferences {

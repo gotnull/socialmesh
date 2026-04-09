@@ -23,14 +23,7 @@ import 'battery_optimization_guide.dart';
 /// (Dynamic Island + Lock Screen). Default: true.
 const String kLiveActivityEnabled = 'live_activity_enabled';
 
-/// SharedPreferences keys for background notification settings.
-///
-/// These are separate from the global notification keys so users can
-/// independently control which notifications fire while the app is
-/// backgrounded.
-const String kBgNotifyMessages = 'bg_notify_messages';
-const String kBgNotifyChannels = 'bg_notify_channels';
-const String kBgNotifyNodes = 'bg_notify_nodes';
+/// SharedPreferences key for the Android persistent notification style.
 const String kBgNotifStyle = 'bg_notif_style';
 
 /// Notification style for the persistent Android foreground notification.
@@ -62,9 +55,6 @@ class _BackgroundConnectionScreenState
     extends ConsumerState<BackgroundConnectionScreen>
     with LifecycleSafeMixin {
   bool _bgBleEnabled = true;
-  bool _bgNotifyMessages = true;
-  bool _bgNotifyChannels = true;
-  bool _bgNotifyNodes = false;
   NotificationStyle _notifStyle = NotificationStyle.minimal;
   bool _liveActivityEnabled = true;
 
@@ -81,9 +71,6 @@ class _BackgroundConnectionScreenState
     if (!mounted) return;
     safeSetState(() {
       _bgBleEnabled = prefs.getBool(kBgBleEnabled) ?? true;
-      _bgNotifyMessages = prefs.getBool(kBgNotifyMessages) ?? true;
-      _bgNotifyChannels = prefs.getBool(kBgNotifyChannels) ?? true;
-      _bgNotifyNodes = prefs.getBool(kBgNotifyNodes) ?? false;
       _notifStyle = NotificationStyle.fromValue(
         prefs.getInt(kBgNotifStyle) ?? 0,
       );
@@ -136,30 +123,6 @@ class _BackgroundConnectionScreenState
         );
       }
     }
-  }
-
-  Future<void> _setBgNotifyMessages(bool value) async {
-    HapticFeedback.selectionClick();
-    final prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
-    await prefs.setBool(kBgNotifyMessages, value);
-    safeSetState(() => _bgNotifyMessages = value);
-  }
-
-  Future<void> _setBgNotifyChannels(bool value) async {
-    HapticFeedback.selectionClick();
-    final prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
-    await prefs.setBool(kBgNotifyChannels, value);
-    safeSetState(() => _bgNotifyChannels = value);
-  }
-
-  Future<void> _setBgNotifyNodes(bool value) async {
-    HapticFeedback.selectionClick();
-    final prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
-    await prefs.setBool(kBgNotifyNodes, value);
-    safeSetState(() => _bgNotifyNodes = value);
   }
 
   Future<void> _setLiveActivityEnabled(bool value) async {
@@ -239,38 +202,6 @@ class _BackgroundConnectionScreenState
                           ),
                         ),
                       ),
-              ),
-
-              const SizedBox(height: AppTheme.spacing24),
-
-              // -- Notification toggles -------------------------------------
-              _SectionHeader(title: context.l10n.bgConnSectionNotifications),
-              _SettingTile(
-                icon: Icons.chat_bubble_outline,
-                title: context.l10n.bgConnDirectMessages,
-                subtitle: context.l10n.bgConnDirectMessagesSubtitle,
-                trailing: ThemedSwitch(
-                  value: _bgNotifyMessages && _bgBleEnabled,
-                  onChanged: _bgBleEnabled ? _setBgNotifyMessages : null,
-                ),
-              ),
-              _SettingTile(
-                icon: Icons.forum_outlined,
-                title: context.l10n.bgConnChannelMessages,
-                subtitle: context.l10n.bgConnChannelMessagesSubtitle,
-                trailing: ThemedSwitch(
-                  value: _bgNotifyChannels && _bgBleEnabled,
-                  onChanged: _bgBleEnabled ? _setBgNotifyChannels : null,
-                ),
-              ),
-              _SettingTile(
-                icon: Icons.cell_tower,
-                title: context.l10n.bgConnNodeDiscovery,
-                subtitle: context.l10n.bgConnNodeDiscoverySubtitle,
-                trailing: ThemedSwitch(
-                  value: _bgNotifyNodes && _bgBleEnabled,
-                  onChanged: _bgBleEnabled ? _setBgNotifyNodes : null,
-                ),
               ),
 
               // -- Live Activity (iOS only) ----------------------------------

@@ -19595,7 +19595,7 @@
     "@settingsTileAutoReconnectTitle": {
         "description": "Title of the auto-reconnect settings tile."
     },
-    "settingsTileBackgroundConnectionSubtitle": "Background BLE, notifications, and power settings",
+    "settingsTileBackgroundConnectionSubtitle": "Background BLE connection and power settings",
     "@settingsTileBackgroundConnectionSubtitle": {
         "description": "Subtitle of the background connection settings tile."
     },
@@ -19945,7 +19945,7 @@
     "@settingsLocationOpenSettings": {
         "description": "Action label for snackbar to open device settings for location permission."
     },
-    "settingsTilePushNotificationsSubtitle": "Master toggle for all notifications",
+    "settingsTilePushNotificationsSubtitle": "Controls all notifications, including background",
     "@settingsTilePushNotificationsSubtitle": {
         "description": "Subtitle of the push notifications master toggle tile."
     },

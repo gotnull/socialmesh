@@ -422,12 +422,9 @@ class BackgroundMessageProcessor {
 
   /// SharedPreferences keys for notification toggles.
   ///
-  /// The processor checks the global (foreground) master toggle first, then
-  /// the background-specific toggle from the Background Connection Settings
-  /// screen (W3.1). Both must be true for a notification to fire.
+  /// The processor checks the same notification preferences as the foreground
+  /// path: master toggle, per-type toggle, and per-channel mute.
   static const String _kMasterToggle = 'notifications_enabled';
-  static const String _kBgDmToggle = 'bg_notify_messages';
-  static const String _kBgChannelToggle = 'bg_notify_channels';
   static const String _kChannelToggle = 'channel_notifications_enabled';
   static const String _kDmToggle = 'dm_notifications_enabled';
   static const String _kMutedChannels = 'muted_channel_indices';
@@ -480,13 +477,6 @@ class BackgroundMessageProcessor {
         if (!(prefs.getBool(_kChannelToggle) ?? true)) return;
       } else {
         if (!(prefs.getBool(_kDmToggle) ?? true)) return;
-      }
-
-      // Background-specific toggle from Background Connection Settings.
-      if (isChannelMessage) {
-        if (!(prefs.getBool(_kBgChannelToggle) ?? true)) return;
-      } else {
-        if (!(prefs.getBool(_kBgDmToggle) ?? true)) return;
       }
 
       final ns = NotificationService();
