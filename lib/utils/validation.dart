@@ -171,30 +171,37 @@ const Set<String> _reservedExactNames = {
 };
 
 /// Blocked patterns - names matching these regexes are never allowed (except by owner)
+/// Note: Brand patterns (socialmesh, gotnull, meshtastic) use optional separators
+/// because the brand name itself should be blocked. Impersonation patterns (real,
+/// official, admin, etc.) require a separator to avoid false positives on legitimate
+/// names like "Play2BReal", "Modern", "Helpful", "Badminton", etc.
 final List<RegExp> _blockedPatterns = [
-  // socialmesh variations
+  // socialmesh variations (brand name - no separator needed)
   RegExp(r'^social[-_.]?mesh', caseSensitive: false),
   RegExp(r'^socialmesh', caseSensitive: false),
-  // gotnull variations
+  // gotnull variations (brand name - no separator needed)
   RegExp(r'^got[-_.]?null', caseSensitive: false),
-  // Official/verified impersonation
-  RegExp(r'[-_.]?official$', caseSensitive: false),
-  RegExp(r'[-_.]?verified$', caseSensitive: false),
-  RegExp(r'[-_.]?real$', caseSensitive: false),
-  RegExp(r'^real[-_.]?', caseSensitive: false),
-  RegExp(r'^the[-_.]?real[-_.]?', caseSensitive: false),
-  RegExp(r'^official[-_.]?', caseSensitive: false),
-  // Admin/mod impersonation
-  RegExp(r'[-_.]?admin', caseSensitive: false),
-  RegExp(r'[-_.]?mod(?:erator)?$', caseSensitive: false),
-  RegExp(r'^admin[-_.]?', caseSensitive: false),
-  RegExp(r'^mod[-_.]?', caseSensitive: false),
-  // Support impersonation
-  RegExp(r'[-_.]?support$', caseSensitive: false),
-  RegExp(r'^support[-_.]?', caseSensitive: false),
-  RegExp(r'[-_.]?help$', caseSensitive: false),
-  RegExp(r'^help[-_.]?', caseSensitive: false),
-  // Meshtastic brand
+  // Official/verified impersonation (require separator)
+  RegExp(r'[-_.]official$', caseSensitive: false),
+  RegExp(r'[-_.]verified$', caseSensitive: false),
+  RegExp(r'[-_.]real$', caseSensitive: false),
+  RegExp(r'^real[-_.]', caseSensitive: false),
+  RegExp(
+    r'^the[-_.]?real[-_.]?',
+    caseSensitive: false,
+  ), // "thereal" is specifically impersonation
+  RegExp(r'^official[-_.]', caseSensitive: false),
+  // Admin/mod impersonation (require separator + anchor)
+  RegExp(r'[-_.]admin$', caseSensitive: false),
+  RegExp(r'[-_.]mod(?:erator)?$', caseSensitive: false),
+  RegExp(r'^admin[-_.]', caseSensitive: false),
+  RegExp(r'^mod[-_.]', caseSensitive: false),
+  // Support impersonation (require separator)
+  RegExp(r'[-_.]support$', caseSensitive: false),
+  RegExp(r'^support[-_.]', caseSensitive: false),
+  RegExp(r'[-_.]help$', caseSensitive: false),
+  RegExp(r'^help[-_.]', caseSensitive: false),
+  // Meshtastic brand (brand name - no separator needed)
   RegExp(r'^meshtastic', caseSensitive: false),
 ];
 

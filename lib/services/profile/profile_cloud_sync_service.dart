@@ -88,30 +88,85 @@ class ProfileCloudSyncService {
   /// Re-encode an image file as JPEG.
   ///
   /// iOS devices may produce HEIC files even when the app names them .jpg.
-  /// Browsers cannot render HEIC, so we decode whatever format the file is
-  /// in and re-encode as actual JPEG before uploading.
-  static Future<Uint8List> _ensureJpeg(File imageFile) async {
-    AppLogging.auth('ProfileSync: _ensureJpeg path: ${imageFile.path}');
+  /// Maximum dimension for avatar images (longest side)
+  static const int _avatarMaxDimension = 1024;
+
+  /// Maximum dimension for banner images (longest side)
+  static const int _bannerMaxDimension = 2048;
+
+  /// JPEG quality for profile image uploads (0-100)
+  static const int _jpegQuality = 85;
+
+  /// Decodes an image file (including HEIC), resizes to fit within
+  /// [maxDimension] on the longest side, and re-encodes as JPEG at
+  /// [_jpegQuality]. This keeps uploads well under the 10 MB Storage
+  /// rule limit.
+  static Future<Uint8List> _prepareImageForUpload(
+    File imageFile, {
+    required int maxDimension,
+  }) async {
+    AppLogging.auth(
+      'ProfileSync: _prepareImageForUpload path: ${imageFile.path}, '
+      'maxDimension: $maxDimension',
+    );
     final fileSize = await imageFile.length();
     AppLogging.auth(
-      'ProfileSync: _ensureJpeg source file size: $fileSize bytes',
+      'ProfileSync: _prepareImageForUpload source file size: $fileSize bytes',
     );
     final bytes = await imageFile.readAsBytes();
-    AppLogging.auth('ProfileSync: _ensureJpeg read ${bytes.length} bytes');
-    final decoded = img.decodeImage(bytes);
+    AppLogging.auth(
+      'ProfileSync: _prepareImageForUpload read ${bytes.length} bytes',
+    );
+    var decoded = img.decodeImage(bytes);
     if (decoded == null) {
-      AppLogging.auth('ProfileSync: _ensureJpeg image decode failed');
+      AppLogging.auth(
+        'ProfileSync: _prepareImageForUpload image decode failed',
+      );
       throw const FormatException(
         'Unable to decode image', // lint-allow: hardcoded-string
       );
     }
     AppLogging.auth(
-      'ProfileSync: _ensureJpeg decoded: ${decoded.width}x${decoded.height}',
+      'ProfileSync: _prepareImageForUpload decoded: '
+      '${decoded.width}x${decoded.height}',
     );
-    final result = Uint8List.fromList(img.encodeJpg(decoded));
+
+    // Resize if the image exceeds the max dimension on either side
+    final longestSide = decoded.width > decoded.height
+        ? decoded.width
+        : decoded.height;
+    if (longestSide > maxDimension) {
+      AppLogging.auth(
+        'ProfileSync: _prepareImageForUpload resizing from '
+        '${decoded.width}x${decoded.height} '
+        '(longest side $longestSide > $maxDimension)',
+      );
+      if (decoded.width >= decoded.height) {
+        decoded = img.copyResize(decoded, width: maxDimension);
+      } else {
+        decoded = img.copyResize(decoded, height: maxDimension);
+      }
+      AppLogging.auth(
+        'ProfileSync: _prepareImageForUpload resized to '
+        '${decoded.width}x${decoded.height}',
+      );
+    }
+
+    final result = Uint8List.fromList(
+      img.encodeJpg(decoded, quality: _jpegQuality),
+    );
     AppLogging.auth(
-      'ProfileSync: _ensureJpeg JPEG encoded: ${result.length} bytes',
+      'ProfileSync: _prepareImageForUpload JPEG encoded: '
+      '${result.length} bytes (quality: $_jpegQuality)',
     );
+
+    if (result.length > 5 * 1024 * 1024) {
+      AppLogging.auth(
+        'ProfileSync: _prepareImageForUpload WARNING — result is '
+        '${result.length} bytes (>5 MB), may be close to storage limit',
+      );
+    }
+
     return result;
   }
 
@@ -572,9 +627,14 @@ class ProfileCloudSyncService {
       final ref = _avatarRef(uid);
       AppLogging.auth('ProfileSync: uploadAvatar storageRef: ${ref.fullPath}');
 
-      // Re-encode as JPEG — iOS may provide HEIC data
-      AppLogging.auth('ProfileSync: uploadAvatar starting JPEG conversion...');
-      final jpegBytes = await _ensureJpeg(imageFile);
+      // Re-encode as JPEG, resize to max 1024px — iOS may provide HEIC data
+      AppLogging.auth(
+        'ProfileSync: uploadAvatar starting image preparation...',
+      );
+      final jpegBytes = await _prepareImageForUpload(
+        imageFile,
+        maxDimension: _avatarMaxDimension,
+      );
       AppLogging.auth(
         'ProfileSync: uploadAvatar JPEG ready: ${jpegBytes.length} bytes',
       );
@@ -757,9 +817,14 @@ class ProfileCloudSyncService {
       final ref = _bannerRef(uid);
       AppLogging.auth('ProfileSync: uploadBanner storageRef: ${ref.fullPath}');
 
-      // Re-encode as JPEG — iOS may provide HEIC data
-      AppLogging.auth('ProfileSync: uploadBanner starting JPEG conversion...');
-      final jpegBytes = await _ensureJpeg(imageFile);
+      // Re-encode as JPEG, resize to max 2048px — iOS may provide HEIC data
+      AppLogging.auth(
+        'ProfileSync: uploadBanner starting image preparation...',
+      );
+      final jpegBytes = await _prepareImageForUpload(
+        imageFile,
+        maxDimension: _bannerMaxDimension,
+      );
       AppLogging.auth(
         'ProfileSync: uploadBanner JPEG ready: ${jpegBytes.length} bytes',
       );
