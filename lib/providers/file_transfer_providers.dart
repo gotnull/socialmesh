@@ -641,7 +641,7 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
     int? targetNodeNum,
     FileTransportMode transportMode = FileTransportMode.auto,
   }) async {
-    final result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFiles(
       type: FileType.any,
       withData: true,
     );

@@ -116,6 +116,17 @@ abstract final class SmRateLimit {
   /// to request retransmission. Set to 5× the chunk interval to account
   /// for mesh propagation delays on multi-hop paths.
   static const Duration chunkInactivityTimeout = Duration(seconds: 10);
+
+  /// How long the sender waits for receiver ACK after sending all chunks.
+  ///
+  /// After the sender finishes transmitting every chunk, the transfer
+  /// remains active to service late NACKs. If neither an ACK nor a NACK
+  /// arrives within this window, the sender marks the transfer complete
+  /// as a safety valve (receiver may have completed with lost ACK, or
+  /// may be unreachable). Must be long enough for the receiver to detect
+  /// missing chunks and exhaust its NACK rounds:
+  /// [chunkInactivityTimeout] × [maxNackRounds] + margin.
+  static const Duration senderCompletionTimeout = Duration(seconds: 60);
 }
 
 /// Transport parameters for each packet type.

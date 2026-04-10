@@ -734,7 +734,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
 
       // Only allow multiple selection if more than 1 slot remains
       // This prevents selecting more than available slots
-      final result = await FilePicker.platform.pickFiles(
+      final result = await FilePicker.pickFiles(
         type: FileType.image,
         allowMultiple: remainingSlots > 1,
       );

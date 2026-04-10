@@ -9776,6 +9776,126 @@ abstract class AppLocalizations {
   /// **'{count} lines'**
   String fileTransferLineCount(int count);
 
+  /// Section header for archive entry list
+  ///
+  /// In en, this message translates to:
+  /// **'Contents'**
+  String get archiveContentsHeader;
+
+  /// Number of files in an archive
+  ///
+  /// In en, this message translates to:
+  /// **'{count} files'**
+  String archiveEntryCount(int count);
+
+  /// Summary count of image entries in archive
+  ///
+  /// In en, this message translates to:
+  /// **'{count} images'**
+  String archiveSummaryImages(int count);
+
+  /// Summary count of voice/audio entries in archive
+  ///
+  /// In en, this message translates to:
+  /// **'{count} voice'**
+  String archiveSummaryVoice(int count);
+
+  /// Summary count of text/config entries in archive
+  ///
+  /// In en, this message translates to:
+  /// **'{count} text'**
+  String archiveSummaryText(int count);
+
+  /// Summary count of other supported entries in archive
+  ///
+  /// In en, this message translates to:
+  /// **'{count} other'**
+  String archiveSummaryOther(int count);
+
+  /// Summary count of unsupported entries in archive
+  ///
+  /// In en, this message translates to:
+  /// **'{count} unsupported'**
+  String archiveSummaryUnsupported(int count);
+
+  /// Button label to preview an archive entry
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get archiveActionPreview;
+
+  /// Button label to play an audio archive entry
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get archiveActionPlay;
+
+  /// Button label to save an archive entry
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get archiveActionSave;
+
+  /// Badge label for supported archive entries
+  ///
+  /// In en, this message translates to:
+  /// **'Supported'**
+  String get archiveStatusSupported;
+
+  /// Badge label for unsupported archive entries
+  ///
+  /// In en, this message translates to:
+  /// **'Unsupported'**
+  String get archiveStatusUnsupported;
+
+  /// Badge label for oversized archive entries
+  ///
+  /// In en, this message translates to:
+  /// **'Too large'**
+  String get archiveStatusTooLarge;
+
+  /// Badge label for unsafe/blocked archive entries
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked'**
+  String get archiveStatusBlocked;
+
+  /// Badge label for nested archive entries
+  ///
+  /// In en, this message translates to:
+  /// **'Nested archive'**
+  String get archiveStatusNested;
+
+  /// Message shown when a ZIP is encrypted
+  ///
+  /// In en, this message translates to:
+  /// **'This archive is encrypted or password-protected and cannot be inspected.'**
+  String get archiveRejectEncrypted;
+
+  /// Message shown when a ZIP is corrupt
+  ///
+  /// In en, this message translates to:
+  /// **'This archive is corrupt or unreadable.'**
+  String get archiveRejectCorrupt;
+
+  /// Message shown when a ZIP has too many entries
+  ///
+  /// In en, this message translates to:
+  /// **'This archive contains too many files and cannot be inspected.'**
+  String get archiveRejectTooManyEntries;
+
+  /// Message shown when total uncompressed size exceeds limit
+  ///
+  /// In en, this message translates to:
+  /// **'The total uncompressed size of this archive exceeds the safety limit.'**
+  String get archiveRejectTotalSizeTooLarge;
+
+  /// Hint that the original ZIP can be saved even if inspection fails
+  ///
+  /// In en, this message translates to:
+  /// **'You can still save the archive file as-is.'**
+  String get archiveRejectSaveHint;
+
   /// Firmware = the software running on the Meshtastic radio device (not the phone app).
   ///
   /// In en, this message translates to:

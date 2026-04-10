@@ -232,7 +232,7 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen>
     final routesNotifier = ref.read(routesProvider.notifier);
 
     try {
-      final result = await FilePicker.platform.pickFiles(
+      final result = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['gpx'],
         withData: true,

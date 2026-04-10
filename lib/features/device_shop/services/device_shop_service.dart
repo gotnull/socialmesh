@@ -49,7 +49,7 @@ class DeviceShopService {
 
   /// Pick an image from gallery
   Future<File?> pickImage() async {
-    final result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFiles(
       type: FileType.image,
       allowMultiple: false,
     );
@@ -63,7 +63,7 @@ class DeviceShopService {
 
   /// Pick multiple images from gallery
   Future<List<File>> pickMultipleImages({int maxImages = 10}) async {
-    final result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFiles(
       type: FileType.image,
       allowMultiple: true,
     );

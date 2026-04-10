@@ -5541,6 +5541,82 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get archiveContentsHeader => 'Contents';
+
+  @override
+  String archiveEntryCount(int count) {
+    return '$count files';
+  }
+
+  @override
+  String archiveSummaryImages(int count) {
+    return '$count images';
+  }
+
+  @override
+  String archiveSummaryVoice(int count) {
+    return '$count voice';
+  }
+
+  @override
+  String archiveSummaryText(int count) {
+    return '$count text';
+  }
+
+  @override
+  String archiveSummaryOther(int count) {
+    return '$count other';
+  }
+
+  @override
+  String archiveSummaryUnsupported(int count) {
+    return '$count unsupported';
+  }
+
+  @override
+  String get archiveActionPreview => 'Preview';
+
+  @override
+  String get archiveActionPlay => 'Play';
+
+  @override
+  String get archiveActionSave => 'Save';
+
+  @override
+  String get archiveStatusSupported => 'Supported';
+
+  @override
+  String get archiveStatusUnsupported => 'Unsupported';
+
+  @override
+  String get archiveStatusTooLarge => 'Too large';
+
+  @override
+  String get archiveStatusBlocked => 'Blocked';
+
+  @override
+  String get archiveStatusNested => 'Nested archive';
+
+  @override
+  String get archiveRejectEncrypted =>
+      'This archive is encrypted or password-protected and cannot be inspected.';
+
+  @override
+  String get archiveRejectCorrupt => 'This archive is corrupt or unreadable.';
+
+  @override
+  String get archiveRejectTooManyEntries =>
+      'This archive contains too many files and cannot be inspected.';
+
+  @override
+  String get archiveRejectTotalSizeTooLarge =>
+      'The total uncompressed size of this archive exceeds the safety limit.';
+
+  @override
+  String get archiveRejectSaveHint =>
+      'You can still save the archive file as-is.';
+
+  @override
   String get firmwareUpdateAvailable => 'Atualização disponível';
 
   @override

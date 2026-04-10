@@ -1949,7 +1949,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
 
     FilePickerResult? result;
     try {
-      result = await FilePicker.platform.pickFiles(
+      result = await FilePicker.pickFiles(
         type: FileType.image,
         allowMultiple: false,
       );
@@ -2050,7 +2050,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
 
     FilePickerResult? result;
     try {
-      result = await FilePicker.platform.pickFiles(
+      result = await FilePicker.pickFiles(
         type: FileType.image,
         allowMultiple: false,
       );

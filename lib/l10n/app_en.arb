@@ -7349,6 +7349,116 @@
             }
         }
     },
+    "archiveContentsHeader": "Contents",
+    "@archiveContentsHeader": {
+        "description": "Section header for archive entry list"
+    },
+    "archiveEntryCount": "{count} files",
+    "@archiveEntryCount": {
+        "description": "Number of files in an archive",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "archiveSummaryImages": "{count} images",
+    "@archiveSummaryImages": {
+        "description": "Summary count of image entries in archive",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "archiveSummaryVoice": "{count} voice",
+    "@archiveSummaryVoice": {
+        "description": "Summary count of voice/audio entries in archive",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "archiveSummaryText": "{count} text",
+    "@archiveSummaryText": {
+        "description": "Summary count of text/config entries in archive",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "archiveSummaryOther": "{count} other",
+    "@archiveSummaryOther": {
+        "description": "Summary count of other supported entries in archive",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "archiveSummaryUnsupported": "{count} unsupported",
+    "@archiveSummaryUnsupported": {
+        "description": "Summary count of unsupported entries in archive",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "archiveActionPreview": "Preview",
+    "@archiveActionPreview": {
+        "description": "Button label to preview an archive entry"
+    },
+    "archiveActionPlay": "Play",
+    "@archiveActionPlay": {
+        "description": "Button label to play an audio archive entry"
+    },
+    "archiveActionSave": "Save",
+    "@archiveActionSave": {
+        "description": "Button label to save an archive entry"
+    },
+    "archiveStatusSupported": "Supported",
+    "@archiveStatusSupported": {
+        "description": "Badge label for supported archive entries"
+    },
+    "archiveStatusUnsupported": "Unsupported",
+    "@archiveStatusUnsupported": {
+        "description": "Badge label for unsupported archive entries"
+    },
+    "archiveStatusTooLarge": "Too large",
+    "@archiveStatusTooLarge": {
+        "description": "Badge label for oversized archive entries"
+    },
+    "archiveStatusBlocked": "Blocked",
+    "@archiveStatusBlocked": {
+        "description": "Badge label for unsafe/blocked archive entries"
+    },
+    "archiveStatusNested": "Nested archive",
+    "@archiveStatusNested": {
+        "description": "Badge label for nested archive entries"
+    },
+    "archiveRejectEncrypted": "This archive is encrypted or password-protected and cannot be inspected.",
+    "@archiveRejectEncrypted": {
+        "description": "Message shown when a ZIP is encrypted"
+    },
+    "archiveRejectCorrupt": "This archive is corrupt or unreadable.",
+    "@archiveRejectCorrupt": {
+        "description": "Message shown when a ZIP is corrupt"
+    },
+    "archiveRejectTooManyEntries": "This archive contains too many files and cannot be inspected.",
+    "@archiveRejectTooManyEntries": {
+        "description": "Message shown when a ZIP has too many entries"
+    },
+    "archiveRejectTotalSizeTooLarge": "The total uncompressed size of this archive exceeds the safety limit.",
+    "@archiveRejectTotalSizeTooLarge": {
+        "description": "Message shown when total uncompressed size exceeds limit"
+    },
+    "archiveRejectSaveHint": "You can still save the archive file as-is.",
+    "@archiveRejectSaveHint": {
+        "description": "Hint that the original ZIP can be saved even if inspection fails"
+    },
     "firmwareUpdateAvailable": "Update Available",
     "@firmwareUpdateAvailable": {
         "description": "Firmware = the software running on the Meshtastic radio device (not the phone app)."

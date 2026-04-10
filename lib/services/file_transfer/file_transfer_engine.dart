@@ -259,6 +259,14 @@ class FileTransferEngine {
   /// still has missing chunks, a NACK is automatically sent.
   final Map<String, Timer> _chunkInactivityTimers = {};
 
+  /// Completion timeout timers for outbound transfers.
+  ///
+  /// After the sender finishes transmitting all chunks, the transfer
+  /// stays active to service late NACKs. If no ACK arrives within
+  /// [SmRateLimit.senderCompletionTimeout], the transfer completes
+  /// as a safety valve.
+  final Map<String, Timer> _completionTimeoutTimers = {};
+
   /// Queue of (fileIdHex, chunkIndex) to send.
   final List<(String, int)> _sendQueue = [];
 
@@ -482,6 +490,7 @@ class FileTransferEngine {
     _sendQueue.removeWhere((e) => e.$1 == fileIdHex);
     _chunkBuffers.remove(fileIdHex);
     _cancelInactivityTimer(fileIdHex);
+    _cancelCompletionTimeout(fileIdHex);
   }
 
   /// Accept a pending inbound transfer.
@@ -710,9 +719,12 @@ class FileTransferEngine {
     if (updated.length == transfer.chunkCount &&
         _transfers[idHex]?.state != TransferState.offerPending) {
       _tryCompleteInbound(idHex);
-    } else if (_transfers[idHex]?.state == TransferState.chunking) {
+    } else if (_transfers[idHex]?.state == TransferState.chunking ||
+        _transfers[idHex]?.state == TransferState.waitingMissing) {
       // Restart inactivity timer — if no new chunk arrives within the
       // timeout and we still have gaps, auto-NACK to recover.
+      // Also restart during recovery (waitingMissing) so that
+      // retransmitted chunks reset the countdown for the next round.
       _restartInactivityTimer(idHex);
     }
   }
@@ -740,6 +752,10 @@ class FileTransferEngine {
       'RX_NACK: $idHex requesting ${nack.missingIndexes.length} missing '
       'chunks (round ${transfer.nackRounds + 1}/${SmRateLimit.maxNackRounds})',
     );
+
+    // Cancel completion timeout — retransmission in progress moves the
+    // deadline. A new timeout starts after the retransmitted chunks are sent.
+    _cancelCompletionTimeout(idHex);
 
     // Respect max NACK rounds
     if (transfer.nackRounds >= SmRateLimit.maxNackRounds) {
@@ -786,6 +802,8 @@ class FileTransferEngine {
     }
 
     AppLogging.fileTransfer('RX_ACK: $idHex status=${ack.status.name}');
+
+    _cancelCompletionTimeout(idHex);
 
     switch (ack.status) {
       case FileAckStatus.complete:
@@ -864,6 +882,12 @@ class FileTransferEngine {
         nackRounds: transfer.nackRounds + 1,
       ),
     );
+
+    // Restart the inactivity timer so subsequent NACK rounds fire
+    // automatically if no retransmitted chunk arrives. Without this,
+    // a single lost retransmission would strand the receiver in
+    // waitingMissing permanently.
+    _restartInactivityTimer(fileIdHex);
   }
 
   /// Purge expired transfers and free resources.
@@ -1034,18 +1058,15 @@ class FileTransferEngine {
         transfer.copyWith(completedChunks: updatedChunks),
       );
 
-      // Check if all chunks sent
+      // Check if all chunks sent — defer completion to receiver ACK.
+      // The transfer stays active to service late NACKs for lost chunks.
       if (updatedChunks.length == transfer.chunkCount) {
         AppLogging.fileTransfer(
-          'TX COMPLETE: $fileIdHex all ${transfer.chunkCount} chunks sent',
+          'TX ALL SENT: $fileIdHex all ${transfer.chunkCount} chunks sent, '
+          'awaiting receiver ACK '
+          '(timeout ${SmRateLimit.senderCompletionTimeout.inSeconds}s)',
         );
-        _updateState(
-          fileIdHex,
-          _transfers[fileIdHex]!.copyWith(
-            state: TransferState.complete,
-            completedAt: DateTime.now(),
-          ),
-        );
+        _startCompletionTimeout(fileIdHex);
       }
     } else {
       AppLogging.fileTransfer(
