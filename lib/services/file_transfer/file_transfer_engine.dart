@@ -4,6 +4,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:clock/clock.dart';
 import 'package:crypto/crypto.dart';
 
 import '../../core/logging.dart';
@@ -166,7 +167,7 @@ class FileTransferState {
       state != TransferState.cancelled;
 
   /// Whether the transfer has expired.
-  bool get isExpired => DateTime.now().isAfter(expiresAt);
+  bool get isExpired => clock.now().isAfter(expiresAt);
 
   /// Missing chunk indexes for inbound transfers.
   List<int> get missingChunks {
@@ -342,7 +343,7 @@ class FileTransferEngine {
       sha256Hash: offer.sha256Hash,
       completedChunks: const {},
       nackRounds: 0,
-      createdAt: DateTime.now(),
+      createdAt: clock.now(),
       expiresAt: DateTime.fromMillisecondsSinceEpoch(offer.expiresAt * 1000),
       targetNodeNum: targetNodeNum,
       transportMode: transportMode,
@@ -453,7 +454,7 @@ class FileTransferEngine {
 
     // Record the offer as the last global send so the first chunk send
     // waits for the rate-limit interval instead of failing immediately.
-    _lastGlobalSend = DateTime.now();
+    _lastGlobalSend = clock.now();
 
     // Hard gate: transition to awaitingAccept. No chunks are queued
     // until the negotiation layer confirms the receiver's ACCEPT.
@@ -811,7 +812,7 @@ class FileTransferEngine {
           idHex,
           transfer.copyWith(
             state: TransferState.complete,
-            completedAt: DateTime.now(),
+            completedAt: clock.now(),
           ),
         );
       case FileAckStatus.rejected:
@@ -937,6 +938,10 @@ class FileTransferEngine {
       timer.cancel();
     }
     _chunkInactivityTimers.clear();
+    for (final timer in _completionTimeoutTimers.values) {
+      timer.cancel();
+    }
+    _completionTimeoutTimers.clear();
     _sendQueue.clear();
     _chunkBuffers.clear();
   }
@@ -978,6 +983,46 @@ class FileTransferEngine {
     _chunkInactivityTimers.remove(fileIdHex)?.cancel();
   }
 
+  /// Start (or restart) the sender completion timeout for [fileIdHex].
+  ///
+  /// After the sender has transmitted all chunks, it waits for the
+  /// receiver's ACK before marking complete. If no ACK arrives within
+  /// [SmRateLimit.senderCompletionTimeout], the transfer is completed
+  /// as a safety valve (the receiver may have completed with a lost ACK,
+  /// or may be unreachable).
+  void _startCompletionTimeout(String fileIdHex) {
+    _completionTimeoutTimers[fileIdHex]?.cancel();
+    _completionTimeoutTimers[fileIdHex] = Timer(
+      SmRateLimit.senderCompletionTimeout,
+      () => _onCompletionTimeout(fileIdHex),
+    );
+  }
+
+  void _onCompletionTimeout(String fileIdHex) {
+    _completionTimeoutTimers.remove(fileIdHex);
+    final transfer = _transfers[fileIdHex];
+    if (transfer == null || !transfer.isActive) return;
+    if (transfer.direction != TransferDirection.outbound) return;
+
+    AppLogging.fileTransfer(
+      'TX COMPLETION TIMEOUT: $fileIdHex no ACK received within '
+      '${SmRateLimit.senderCompletionTimeout.inSeconds}s, '
+      'marking complete (all ${transfer.chunkCount} chunks were sent)',
+    );
+
+    _updateState(
+      fileIdHex,
+      transfer.copyWith(
+        state: TransferState.complete,
+        completedAt: clock.now(),
+      ),
+    );
+  }
+
+  void _cancelCompletionTimeout(String fileIdHex) {
+    _completionTimeoutTimers.remove(fileIdHex)?.cancel();
+  }
+
   void _scheduleSendLoop() {
     if (_chunkTimer?.isActive ?? false) return;
     _chunkTimer = Timer.periodic(
@@ -997,7 +1042,7 @@ class FileTransferEngine {
 
     // Global rate limit
     if (_lastGlobalSend != null) {
-      final elapsed = DateTime.now().difference(_lastGlobalSend!);
+      final elapsed = clock.now().difference(_lastGlobalSend!);
       if (elapsed < SmRateLimit.fileChunkInterval) return;
     }
 
@@ -1041,8 +1086,8 @@ class FileTransferEngine {
     );
 
     if (sent) {
-      _lastGlobalSend = DateTime.now();
-      _lastChunkSent[fileIdHex] = DateTime.now();
+      _lastGlobalSend = clock.now();
+      _lastChunkSent[fileIdHex] = clock.now();
 
       final updatedChunks = Set<int>.from(transfer.completedChunks)
         ..add(chunkIndex);
@@ -1159,7 +1204,7 @@ class FileTransferEngine {
       fileIdHex,
       transfer.copyWith(
         state: TransferState.complete,
-        completedAt: DateTime.now(),
+        completedAt: clock.now(),
         fileBytes: Uint8List.fromList(fileBytes),
       ),
     );
@@ -1178,6 +1223,7 @@ class FileTransferEngine {
     if (transfer == null) return;
 
     _cancelInactivityTimer(fileIdHex);
+    _cancelCompletionTimeout(fileIdHex);
 
     AppLogging.fileTransfer(
       'FAILED: $fileIdHex reason=${reason.name} '
