@@ -151,7 +151,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
           mainAxisSize: MainAxisSize.min,
           children: [
             if (widget.showHeader) _buildHeader(displayName, displayIcon),
-            widget.child,
+            Flexible(child: widget.child),
           ],
         ),
       ),

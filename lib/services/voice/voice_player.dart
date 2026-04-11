@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../../core/logging.dart';
+import '../audio/wav_temp_file.dart';
 import 'voice_decoder.dart';
 
 /// Plays a decoded voice message WAV buffer through [just_audio].
@@ -27,6 +28,7 @@ class VoicePlayer {
   final isPlaying = ValueNotifier<bool>(false);
 
   StreamSubscription<PlayerState>? _stateSub;
+  WavTempFile? _tempFile;
 
   VoicePlayer() {
     // Listen to just_audio state changes so we can flip isPlaying when
@@ -78,7 +80,9 @@ class VoicePlayer {
         await _player.pause();
         isPlaying.value = false;
       }
-      await _player.setAudioSource(_VoiceAudioSource(wavBytes));
+      await _tempFile?.cleanup();
+      _tempFile = await WavTempFile.write(wavBytes, tag: 'voice');
+      await _player.setFilePath(_tempFile!.filePath);
       await _player.seek(Duration.zero);
       isPlaying.value = true;
       AppLogging.voice('playback started (${wavBytes.length} bytes)');
@@ -143,6 +147,8 @@ class VoicePlayer {
   Future<void> stop() async {
     isPlaying.value = false;
     await _player.stop();
+    await _tempFile?.cleanup();
+    _tempFile = null;
     AppLogging.voice('playback stopped');
   }
 
@@ -157,27 +163,9 @@ class VoicePlayer {
   Future<void> dispose() async {
     await _stateSub?.cancel();
     _stateSub = null;
+    await _tempFile?.cleanup();
+    _tempFile = null;
     isPlaying.dispose();
     await _player.dispose();
-  }
-}
-
-/// In-memory audio source that streams WAV bytes to just_audio.
-class _VoiceAudioSource extends StreamAudioSource {
-  _VoiceAudioSource(this._wavData);
-
-  final Uint8List _wavData;
-
-  @override
-  Future<StreamAudioResponse> request([int? start, int? end]) async {
-    final s = start ?? 0;
-    final e = end ?? _wavData.length;
-    return StreamAudioResponse(
-      sourceLength: _wavData.length,
-      contentLength: e - s,
-      offset: s,
-      stream: Stream.value(_wavData.sublist(s, e)),
-      contentType: 'audio/wav',
-    );
   }
 }

@@ -4,6 +4,8 @@ import 'dart:math';
 import 'dart:typed_data';
 import 'package:just_audio/just_audio.dart';
 
+import 'wav_temp_file.dart';
+
 /// RTTTL (Ring Tone Text Transfer Language) Parser and Player
 ///
 /// RTTTL Format: name:d=duration,o=octave,b=bpm:notes
@@ -11,6 +13,7 @@ import 'package:just_audio/just_audio.dart';
 class RtttlPlayer {
   final AudioPlayer _player = AudioPlayer();
   bool _isPlaying = false;
+  WavTempFile? _tempFile;
 
   bool get isPlaying => _isPlaying;
 
@@ -28,9 +31,11 @@ class RtttlPlayer {
 
       _isPlaying = true;
 
-      // Generate and play WAV audio
+      // Generate WAV audio, write to temp file, and play via stable API
       final wavData = _generateWav(parsed);
-      await _player.setAudioSource(RtttlAudioSource(wavData));
+      await _tempFile?.cleanup();
+      _tempFile = await WavTempFile.write(wavData, tag: 'rtttl');
+      await _player.setFilePath(_tempFile!.filePath);
       await _player.play();
 
       // Wait for completion
@@ -49,6 +54,8 @@ class RtttlPlayer {
   Future<void> stop() async {
     _isPlaying = false;
     await _player.stop();
+    await _tempFile?.cleanup();
+    _tempFile = null;
   }
 
   /// Dispose resources
@@ -331,25 +338,4 @@ class _Note {
     required this.duration,
     this.isDotted = false,
   });
-}
-
-/// Custom AudioSource for playing raw WAV data
-class RtttlAudioSource extends StreamAudioSource {
-  final Uint8List _wavData;
-
-  RtttlAudioSource(this._wavData);
-
-  @override
-  Future<StreamAudioResponse> request([int? start, int? end]) async {
-    start ??= 0;
-    end ??= _wavData.length;
-
-    return StreamAudioResponse(
-      sourceLength: _wavData.length,
-      contentLength: end - start,
-      offset: start,
-      stream: Stream.value(_wavData.sublist(start, end)),
-      contentType: 'audio/wav',
-    );
-  }
 }

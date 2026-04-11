@@ -1501,99 +1501,102 @@ class _ChartRendererState extends State<ChartRenderer> {
     final chartColor =
         widget.element.style.textColorValue ?? widget.accentColor;
 
-    // Use a Column so the widget takes its natural height and
-    // participates in the parent's scroll (dashboard/preview).
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing4),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (var index = 0; index < entries.length; index++) ...[
-            if (index > 0) const SizedBox(height: AppTheme.spacing6),
-            Builder(
-              builder: (context) {
-                final entry = entries[index];
-                final fraction = maxValue > 0 ? entry.value / maxValue : 0.0;
-                final barColor = ChartColors.forIndex(index);
-                final displayLabel = _distributionLabel(entry.key);
-                final isSpecial =
-                    entry.key == DistributionKeys.unknown ||
-                    entry.key == DistributionKeys.other;
+    // Each row ≈ 26dp (20 bar + 6 spacing). Show up to 6 rows without
+    // scrolling; if more, constrain height and allow internal scroll.
+    const rowHeight = AppTheme.spacing20 + AppTheme.spacing6;
+    const maxVisibleRows = 6;
+    final needsScroll = entries.length > maxVisibleRows;
+    final chartHeight = needsScroll
+        ? maxVisibleRows * rowHeight + AppTheme.spacing8
+        : null;
 
-                return Row(
-                  children: [
-                    SizedBox(
-                      width: 110,
-                      child: AutoScrollText(
-                        displayLabel,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: isSpecial
-                              ? context.textSecondary.withValues(alpha: 0.6)
-                              : context.textSecondary,
-                          fontWeight: FontWeight.w500,
-                          fontStyle: isSpecial
-                              ? FontStyle.italic
-                              : FontStyle.normal,
+    Widget list = ListView.separated(
+      shrinkWrap: !needsScroll,
+      physics: needsScroll
+          ? const ClampingScrollPhysics()
+          : const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing4),
+      itemCount: entries.length,
+      separatorBuilder: (_, _) => const SizedBox(height: AppTheme.spacing6),
+      itemBuilder: (context, index) {
+        final entry = entries[index];
+        final fraction = maxValue > 0 ? entry.value / maxValue : 0.0;
+        final barColor = ChartColors.forIndex(index);
+        final displayLabel = _distributionLabel(entry.key);
+        final isSpecial =
+            entry.key == DistributionKeys.unknown ||
+            entry.key == DistributionKeys.other;
+
+        return Row(
+          children: [
+            SizedBox(
+              width: 110,
+              child: AutoScrollText(
+                displayLabel,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: isSpecial
+                      ? context.textSecondary.withValues(alpha: 0.6)
+                      : context.textSecondary,
+                  fontWeight: FontWeight.w500,
+                  fontStyle: isSpecial ? FontStyle.italic : FontStyle.normal,
+                ),
+                maxLines: 1,
+                velocity: 20.0,
+                delayBefore: const Duration(seconds: 2),
+              ),
+            ),
+            const SizedBox(width: AppTheme.spacing6),
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return Stack(
+                    children: [
+                      Container(
+                        height: AppTheme.spacing20,
+                        decoration: BoxDecoration(
+                          color: chartColor.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(AppTheme.radius4),
                         ),
-                        maxLines: 1,
-                        velocity: 20.0,
-                        delayBefore: const Duration(seconds: 2),
                       ),
-                    ),
-                    const SizedBox(width: AppTheme.spacing6),
-                    Expanded(
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          return Stack(
-                            children: [
-                              Container(
-                                height: AppTheme.spacing20,
-                                decoration: BoxDecoration(
-                                  color: chartColor.withValues(alpha: 0.08),
-                                  borderRadius: BorderRadius.circular(
-                                    AppTheme.radius4,
-                                  ),
-                                ),
-                              ),
-                              AnimatedContainer(
-                                duration: const Duration(milliseconds: 400),
-                                curve: Curves.easeOut,
-                                height: AppTheme.spacing20,
-                                width: constraints.maxWidth * fraction,
-                                decoration: BoxDecoration(
-                                  color: barColor,
-                                  borderRadius: BorderRadius.circular(
-                                    AppTheme.radius4,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: AppTheme.spacing6),
-                    SizedBox(
-                      width: AppTheme.spacing32,
-                      child: Text(
-                        entry.value.toString(),
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: context.textPrimary,
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 400),
+                        curve: Curves.easeOut,
+                        height: AppTheme.spacing20,
+                        width: constraints.maxWidth * fraction,
+                        decoration: BoxDecoration(
+                          color: barColor,
+                          borderRadius: BorderRadius.circular(AppTheme.radius4),
                         ),
-                        textAlign: TextAlign.right,
                       ),
-                    ),
-                  ],
-                );
-              },
+                    ],
+                  );
+                },
+              ),
+            ),
+            const SizedBox(width: AppTheme.spacing6),
+            SizedBox(
+              width: AppTheme.spacing32,
+              child: Text(
+                entry.value.toString(),
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: context.textPrimary,
+                ),
+                textAlign: TextAlign.right,
+              ),
             ),
           ],
-        ],
-      ),
+        );
+      },
     );
+
+    if (chartHeight != null) {
+      list = SizedBox(height: chartHeight, child: list);
+    }
+
+    return list;
   }
 
   /// Localize distribution sentinel keys; pass through real category labels.
