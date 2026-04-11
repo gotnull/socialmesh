@@ -1647,6 +1647,18 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
         title: 'Socialmesh', // lint-allow: hardcoded-string
         debugShowCheckedModeBanner: false,
         navigatorKey: navigatorKey,
+        builder: (context, child) {
+          // Clamp Dynamic Type / text scale to prevent layout overflow
+          // on devices with large accessibility text settings.
+          final mediaQuery = MediaQuery.of(context);
+          final clampedTextScaler = mediaQuery.textScaler.clamp(
+            maxScaleFactor: 1.3,
+          );
+          return MediaQuery(
+            data: mediaQuery.copyWith(textScaler: clampedTextScaler),
+            child: child!,
+          );
+        },
         theme: lightTheme,
         darkTheme: darkTheme,
         themeMode: themeMode,
