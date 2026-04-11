@@ -233,7 +233,6 @@ class MeshServicesHandler implements MrrpServiceHandler {
   }
 
   /// Encode an instance ID string to exactly 16 bytes.
-  @visibleForTesting
   static Uint8List encodeInstanceId(String id) {
     final bytes = Uint8List(16);
     final src = id.codeUnits;
@@ -244,7 +243,6 @@ class MeshServicesHandler implements MrrpServiceHandler {
   }
 
   /// Decode an instance ID from the first 16 bytes of payload.
-  @visibleForTesting
   static String decodeInstanceId(Uint8List payload) {
     final end = payload.length < 16 ? payload.length : 16;
     final chars = <int>[];

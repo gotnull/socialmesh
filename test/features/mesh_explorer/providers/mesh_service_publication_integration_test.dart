@@ -44,20 +44,32 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 ///   [8..9]    service_flags (uint16 LE)
 ///   [10]      metadata_len (uint8)  0 = no metadata
 Uint8List _advertPayload(int serviceId) {
+  return _multiAdvertPayload([serviceId]);
+}
+
+/// Build a raw SERVICE_ADVERT payload containing multiple descriptors.
+Uint8List _multiAdvertPayload(List<int> serviceIds) {
   final flags =
       MrrpServiceFlags.supportsRequest |
       MrrpServiceFlags.supportsResponse |
       MrrpServiceFlags.ephemeralOnly |
       MrrpServiceFlags.userVisible;
-  // count(1) + descriptor(10) = 11 bytes minimum; allocate 12 for alignment.
-  final buf = Uint8List(12);
-  buf[0] = 1; // service count
-  ByteData.sublistView(buf, 1).setUint32(0, serviceId, Endian.little);
-  buf[5] = 0x00; // service_type = app
-  buf[6] = 0x00; // version_major
-  buf[7] = 0x01; // version_minor
-  ByteData.sublistView(buf, 8).setUint16(0, flags, Endian.little);
-  buf[10] = 0; // metadata_len
+  // count(1) + N × descriptor_min(10 bytes: 4+1+1+1+2+1 with metaLen=0).
+  const descriptorSize = MrrpConstants.mrrpServiceDescriptorMin; // 10
+  final buf = Uint8List(1 + serviceIds.length * descriptorSize);
+  buf[0] = serviceIds.length;
+  for (var i = 0; i < serviceIds.length; i++) {
+    final offset = 1 + i * descriptorSize;
+    ByteData.sublistView(
+      buf,
+      offset,
+    ).setUint32(0, serviceIds[i], Endian.little);
+    buf[offset + 4] = 0x00; // service_type = app
+    buf[offset + 5] = 0x00; // version_major
+    buf[offset + 6] = 0x01; // version_minor
+    ByteData.sublistView(buf, offset + 7).setUint16(0, flags, Endian.little);
+    buf[offset + 9] = 0; // metadata_len
+  }
   return buf;
 }
 
@@ -235,8 +247,11 @@ void main() {
       );
 
       final services = container.read(meshExplorerServicesProvider);
-      expect(services.containsKey(kMeshServicesInstanceServiceId), isTrue);
-      expect(services[kMeshServicesInstanceServiceId]?.peerCount, 1);
+      expect(
+        services.any((s) => s.serviceId == kMeshServicesInstanceServiceId),
+        isTrue,
+      );
+      expect(services.length, 1);
     });
 
     test('counts multiple peers advertising the same service', () {
@@ -257,7 +272,13 @@ void main() {
       );
 
       final services = container.read(meshExplorerServicesProvider);
-      expect(services[kMeshServicesInstanceServiceId]?.peerCount, 2);
+      // Two peers × one instance each = 2 entries.
+      expect(
+        services
+            .where((s) => s.serviceId == kMeshServicesInstanceServiceId)
+            .length,
+        2,
+      );
     });
 
     test('excludes test-only services from count', () {
@@ -298,7 +319,10 @@ void main() {
       advertEngine.handleServiceAdvert(testFrame, 0x9999);
 
       final services = container.read(meshExplorerServicesProvider);
-      expect(services.containsKey(MrrpServiceId.echoTest), isFalse);
+      expect(
+        services.any((s) => s.serviceId == MrrpServiceId.echoTest),
+        isFalse,
+      );
     });
   });
 
@@ -340,22 +364,34 @@ void main() {
         advertEngine.dispose();
       });
 
-      // Two separate single-service adverts from the same peer.
-      // Each has a different payload hash so neither is deduped.
-      // The cache stores per (nodeId, serviceId) key, so both survive.
-      advertEngine.handleServiceAdvert(
-        _advertFrame(kMeshServicesInstanceServiceId),
-        0x5555,
+      // A single SERVICE_ADVERT payload with two descriptors from one peer.
+      // Each advert replaces the full set for that peer, so both descriptors
+      // must arrive in the same payload.
+      final payload = _multiAdvertPayload([
+        kMeshServicesInstanceServiceId,
+        MrrpServiceId.boardV1,
+      ]);
+      final frame = MrrpFrame(
+        versionMajor: 0,
+        versionMinor: 1,
+        msgType: MrrpMessageType.serviceAdvert,
+        flags: 0,
+        headerLen: MrrpConstants.mrrpHeaderMin,
+        requestId: 0,
+        serviceId: 0,
+        actionId: 0,
+        payloadLen: payload.length,
+        payload: payload,
       );
-      advertEngine.handleServiceAdvert(
-        _advertFrame(MrrpServiceId.boardV1),
-        0x5555,
-      );
+      advertEngine.handleServiceAdvert(frame, 0x5555);
 
       final services = container.read(meshExplorerServicesProvider);
       expect(services.length, 2);
-      expect(services[kMeshServicesInstanceServiceId]?.peerCount, 1);
-      expect(services[MrrpServiceId.boardV1]?.peerCount, 1);
+      expect(
+        services.any((s) => s.serviceId == kMeshServicesInstanceServiceId),
+        isTrue,
+      );
+      expect(services.any((s) => s.serviceId == MrrpServiceId.boardV1), isTrue);
 
       final summary = container.read(meshExplorerSummaryProvider);
       expect(summary.activeServices, 2);

@@ -9,6 +9,7 @@
 library;
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -24,12 +25,43 @@ import '../../../services/protocol/sip/mrrp_constants.dart';
 import '../../../services/protocol/sip/mrrp_frame.dart';
 import '../../../services/protocol/sip/mrrp_types.dart';
 import '../../../utils/snackbar.dart';
+import '../models/mesh_service_template.dart';
 import '../models/service_schema.dart';
 import '../models/template_schemas.dart';
-import '../models/mesh_service_template.dart';
 import '../providers/mesh_service_providers.dart';
+import '../services/mesh_service_engine.dart';
 import '../services/mrrp_delivery_tracker.dart';
 import '../widgets/generic_service_renderer.dart';
+
+/// A remote service instance parsed from a LIST_INSTANCES response.
+class _RemoteInstance {
+  final String instanceId;
+  final MeshServiceTemplateId? templateId;
+  final String title;
+
+  const _RemoteInstance({
+    required this.instanceId,
+    required this.templateId,
+    required this.title,
+  });
+}
+
+/// A remote instance with its full detail from GET_INSTANCE response.
+class _RemoteInstanceDetail {
+  final String instanceId;
+  final MeshServiceTemplateId? templateId;
+  final String title;
+  final String description;
+  final DateTime? expiresAt;
+
+  const _RemoteInstanceDetail({
+    required this.instanceId,
+    required this.templateId,
+    required this.title,
+    required this.description,
+    this.expiresAt,
+  });
+}
 
 /// Service detail screen.
 ///
@@ -76,6 +108,9 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
   bool _loading = true;
   String? _error;
 
+  /// Remote instances fetched via MRRP LIST_INSTANCES.
+  List<_RemoteInstanceDetail> _remoteInstances = const [];
+
   /// Active delivery state (shown via DeliveryProgressCard).
   MrrpDeliveryState? _activeDelivery;
   StreamSubscription<MrrpDeliveryState>? _deliverySub;
@@ -83,13 +118,23 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
   @override
   void initState() {
     super.initState();
-    _loadSchema();
+    _loadServiceData();
   }
 
   @override
   void dispose() {
     _deliverySub?.cancel();
     super.dispose();
+  }
+
+  void _loadServiceData() {
+    if (widget.serviceId == kMeshServicesInstanceServiceId) {
+      // User-created service — fetch instance list from remote peer.
+      _fetchRemoteInstances();
+    } else {
+      // Built-in service — try local template schema match.
+      _loadSchema();
+    }
   }
 
   void _loadSchema() {
@@ -106,11 +151,226 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
       }
     }
 
-    // Unknown service type — show empty schema state (would request
-    // via MRRP get_schema in production).
+    // Unknown service type — show empty schema state.
     setState(() {
       _loading = false;
     });
+  }
+
+  /// Fetch the remote peer's active instances via MRRP LIST_INSTANCES,
+  /// then fetch detail for each.
+  Future<void> _fetchRemoteInstances() async {
+    final tracker = ref.read(mrrpDeliveryTrackerProvider);
+    if (tracker == null) {
+      if (!mounted) return;
+      setState(() {
+        _error = context.l10n.serviceDetailMeshUnavailable;
+        _loading = false;
+      });
+      return;
+    }
+
+    // Subscribe to delivery state for UI feedback.
+    _deliverySub?.cancel();
+    _deliverySub = tracker.stateChanges.listen((state) {
+      if (mounted) setState(() => _activeDelivery = state);
+    });
+
+    // Send LIST_INSTANCES request.
+    final listRequest = MrrpFrame(
+      versionMajor: MrrpConstants.mrrpVersionMajor,
+      versionMinor: MrrpConstants.mrrpVersionMinor,
+      msgType: MrrpMessageType.request,
+      flags: MrrpFlags.ackRequired,
+      headerLen: MrrpConstants.mrrpHeaderMin,
+      requestId: 0,
+      serviceId: widget.serviceId,
+      actionId: MeshServicesAction.listInstances,
+      payloadLen: 0,
+      payload: Uint8List(0),
+    );
+
+    final result = await tracker.trackRequest(listRequest);
+    if (!mounted) return;
+
+    if (result.phase != DeliveryPhase.delivered || result.response == null) {
+      setState(() {
+        _error = context.l10n.serviceDetailFetchFailed;
+        _loading = false;
+        _activeDelivery = null;
+      });
+      return;
+    }
+
+    // Parse LIST_INSTANCES response:
+    // [0]      count
+    // For each: instanceId(16) + templateId(1) + titleLen(1) + title(N)
+    final payload = result.response!.payload;
+    final instances = _parseListInstancesResponse(payload);
+    if (instances.isEmpty) {
+      setState(() {
+        _remoteInstances = const [];
+        _loading = false;
+        _activeDelivery = null;
+      });
+      return;
+    }
+
+    // Fetch detail for each instance.
+    final details = <_RemoteInstanceDetail>[];
+    for (final inst in instances) {
+      if (!mounted) return;
+      final detail = await _fetchInstanceDetail(tracker, inst);
+      if (detail != null) {
+        details.add(detail);
+      } else {
+        // Fall back to basic info from the list response.
+        details.add(
+          _RemoteInstanceDetail(
+            instanceId: inst.instanceId,
+            templateId: inst.templateId,
+            title: inst.title,
+            description: '',
+          ),
+        );
+      }
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _remoteInstances = details;
+      _loading = false;
+      _activeDelivery = null;
+    });
+  }
+
+  List<_RemoteInstance> _parseListInstancesResponse(Uint8List payload) {
+    if (payload.isEmpty) return const [];
+    final count = payload[0];
+    if (count == 0) return const [];
+
+    final instances = <_RemoteInstance>[];
+    var offset = 1;
+
+    for (var i = 0; i < count; i++) {
+      if (offset + 18 > payload.length) break; // 16 id + 1 template + 1 len
+
+      final instanceId = MeshServicesHandler.decodeInstanceId(
+        Uint8List.sublistView(payload, offset, offset + 16),
+      );
+      offset += 16;
+
+      final templateIdx = payload[offset++];
+      final templateId = templateIdx < MeshServiceTemplateId.values.length
+          ? MeshServiceTemplateId.values[templateIdx]
+          : null;
+
+      final titleLen = payload[offset++];
+      if (offset + titleLen > payload.length) break;
+
+      final title = titleLen > 0
+          ? utf8.decode(
+              payload.sublist(offset, offset + titleLen),
+              allowMalformed: true,
+            )
+          : '';
+      offset += titleLen;
+
+      instances.add(
+        _RemoteInstance(
+          instanceId: instanceId,
+          templateId: templateId,
+          title: title,
+        ),
+      );
+    }
+
+    return instances;
+  }
+
+  Future<_RemoteInstanceDetail?> _fetchInstanceDetail(
+    MrrpDeliveryTracker tracker,
+    _RemoteInstance instance,
+  ) async {
+    final idBytes = MeshServicesHandler.encodeInstanceId(instance.instanceId);
+    final getRequest = MrrpFrame(
+      versionMajor: MrrpConstants.mrrpVersionMajor,
+      versionMinor: MrrpConstants.mrrpVersionMinor,
+      msgType: MrrpMessageType.request,
+      flags: MrrpFlags.ackRequired,
+      headerLen: MrrpConstants.mrrpHeaderMin,
+      requestId: 0,
+      serviceId: widget.serviceId,
+      actionId: MeshServicesAction.getInstance,
+      payloadLen: idBytes.length,
+      payload: idBytes,
+    );
+
+    final result = await tracker.trackRequest(getRequest);
+    if (result.phase != DeliveryPhase.delivered || result.response == null) {
+      return null;
+    }
+
+    // Parse GET_INSTANCE response:
+    // templateId(1) + status(1) + titleLen(1) + title(N) +
+    // descLen(1) + desc(N) + expiresAt(4)
+    final payload = result.response!.payload;
+    return _parseGetInstanceResponse(payload, instance.instanceId);
+  }
+
+  _RemoteInstanceDetail? _parseGetInstanceResponse(
+    Uint8List payload,
+    String instanceId,
+  ) {
+    if (payload.length < 7) return null; // min: 1+1+1+0+1+0+4
+
+    var offset = 0;
+    final templateIdx = payload[offset++];
+    final templateId = templateIdx < MeshServiceTemplateId.values.length
+        ? MeshServiceTemplateId.values[templateIdx]
+        : null;
+
+    offset++; // status — skip for display purposes
+
+    final titleLen = payload[offset++];
+    if (offset + titleLen > payload.length) return null;
+    final title = titleLen > 0
+        ? utf8.decode(
+            payload.sublist(offset, offset + titleLen),
+            allowMalformed: true,
+          )
+        : '';
+    offset += titleLen;
+
+    if (offset >= payload.length) return null;
+    final descLen = payload[offset++];
+    if (offset + descLen > payload.length) return null;
+    final description = descLen > 0
+        ? utf8.decode(
+            payload.sublist(offset, offset + descLen),
+            allowMalformed: true,
+          )
+        : '';
+    offset += descLen;
+
+    DateTime? expiresAt;
+    if (offset + 4 <= payload.length) {
+      final ts = ByteData.sublistView(
+        payload,
+        offset,
+      ).getUint32(0, Endian.little);
+      if (ts > 0) {
+        expiresAt = DateTime.fromMillisecondsSinceEpoch(ts * 1000);
+      }
+    }
+
+    return _RemoteInstanceDetail(
+      instanceId: instanceId,
+      templateId: templateId,
+      title: title,
+      description: description,
+      expiresAt: expiresAt,
+    );
   }
 
   Future<void> _onAction(SchemaAction action) async {
@@ -263,23 +523,68 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
 
   Widget _buildContent(BuildContext context, dynamic l10n) {
     if (_loading) {
-      return const Center(
+      return Center(
         child: Padding(
-          padding: EdgeInsets.all(AppTheme.spacing32),
-          child: CircularProgressIndicator.adaptive(),
+          padding: const EdgeInsets.all(AppTheme.spacing32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator.adaptive(),
+              const SizedBox(height: AppTheme.spacing16),
+              Text(
+                l10n.serviceDetailFetchingInstances,
+                style: context.bodySecondaryStyle?.copyWith(
+                  color: context.textSecondary,
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
 
     if (_error != null) {
-      return _ErrorState(message: _error!, onRetry: _loadSchema);
+      return _ErrorState(message: _error!, onRetry: _loadServiceData);
+    }
+
+    // Remote instances from MRRP fetch.
+    if (_remoteInstances.isNotEmpty) {
+      return _buildRemoteInstancesContent(context, l10n);
     }
 
     if (_schema != null) {
       return _buildSchemaContent(context);
     }
 
+    // No instances and no schema — show empty state.
+    if (widget.serviceId == kMeshServicesInstanceServiceId) {
+      return _NoInstancesState(l10n: l10n);
+    }
+
     return _UnknownServiceState(serviceType: widget.serviceType, l10n: l10n);
+  }
+
+  Widget _buildRemoteInstancesContent(BuildContext context, dynamic l10n) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Service header card.
+        _ServiceHeaderCard(
+          icon: widget.icon,
+          title: widget.serviceTitle,
+          serviceType: widget.serviceType,
+          accentColor: widget.accentColor,
+          nodeId: widget.nodeId,
+        ),
+        const SizedBox(height: AppTheme.spacing16),
+
+        // Remote instance cards.
+        for (final inst in _remoteInstances) ...[
+          _RemoteInstanceCard(instance: inst),
+          const SizedBox(height: AppTheme.spacing8),
+        ],
+      ],
+    );
   }
 
   Widget _buildSchemaContent(BuildContext context) {
@@ -443,6 +748,148 @@ class _ErrorState extends StatelessWidget {
             ),
             const SizedBox(height: AppTheme.spacing16),
             FilledButton(onPressed: onRetry, child: Text(l10n.commonRetry)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Card displaying a remote service instance fetched via MRRP.
+class _RemoteInstanceCard extends StatelessWidget {
+  final _RemoteInstanceDetail instance;
+
+  const _RemoteInstanceCard({required this.instance});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final template = instance.templateId != null
+        ? MeshServiceTemplateCatalog.byId(instance.templateId!)
+        : null;
+    final icon = template?.icon ?? Icons.miscellaneous_services_outlined;
+    final accentColor = template?.accentColor ?? context.accentColor;
+
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spacing16),
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+        border: Border.all(color: context.border.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
+                ),
+                child: Icon(icon, size: 22, color: accentColor),
+              ),
+              const SizedBox(width: AppTheme.spacing12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      instance.title,
+                      style: context.bodyStyle?.copyWith(
+                        color: context.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (instance.templateId != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: AppTheme.spacing2),
+                        child: Text(
+                          instance.templateId!.name,
+                          style: context.captionStyle?.copyWith(
+                            color: context.textTertiary,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (instance.description.isNotEmpty) ...[
+            const SizedBox(height: AppTheme.spacing12),
+            Text(
+              instance.description,
+              style: context.bodySmallStyle?.copyWith(
+                color: context.textSecondary,
+              ),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+          const SizedBox(height: AppTheme.spacing8),
+          // Expiry info
+          Text(
+            _expiryText(l10n, instance.expiresAt),
+            style: context.captionStyle?.copyWith(color: context.textTertiary),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _expiryText(dynamic l10n, DateTime? expiresAt) {
+    if (expiresAt == null) {
+      return l10n.serviceDetailInstanceNoExpiry as String;
+    }
+    final remaining = expiresAt.difference(DateTime.now());
+    if (remaining.isNegative) {
+      return l10n.serviceDetailInstanceExpired as String;
+    }
+    final formatted = remaining.inHours > 0
+        ? '${remaining.inHours}h ${remaining.inMinutes.remainder(60)}m' // lint-allow: hardcoded-string
+        : '${remaining.inMinutes}m'; // lint-allow: hardcoded-string
+    return l10n.serviceDetailInstanceExpires(formatted) as String;
+  }
+}
+
+/// Empty state when no active instances.
+class _NoInstancesState extends StatelessWidget {
+  final dynamic l10n;
+
+  const _NoInstancesState({required this.l10n});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppTheme.spacing32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.inbox_outlined,
+              size: 48,
+              color: context.textTertiary.withValues(alpha: 0.5),
+            ),
+            const SizedBox(height: AppTheme.spacing16),
+            Text(
+              l10n.serviceDetailNoInstances,
+              style: context.titleStyle?.copyWith(color: context.textPrimary),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppTheme.spacing8),
+            Text(
+              l10n.serviceDetailNoInstancesBody,
+              style: context.bodySecondaryStyle?.copyWith(
+                color: context.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
           ],
         ),
       ),

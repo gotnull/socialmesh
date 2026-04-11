@@ -96,9 +96,9 @@ final meshServiceEngineProvider = Provider<MeshServiceEngine?>((ref) {
   final engine = MeshServiceEngine(store: store);
   engine.onChanged = () {
     ref.read(meshServicesEpochProvider.notifier).bump();
-    // Update SERVICE_ADVERT metadata with current active instance titles
-    // so remote peers see meaningful service names in Mesh Explorer.
-    _updateServiceMetadata(store, registry, advertEngine);
+    // Update SERVICE_ADVERT descriptors with current active instance titles
+    // so remote peers see individual service entries in Mesh Explorer.
+    _updateServiceDescriptors(store, registry, advertEngine);
   };
 
   // Wire immediate advert so remote peers discover newly-published
@@ -133,9 +133,9 @@ final meshServiceEngineProvider = Provider<MeshServiceEngine?>((ref) {
 
   engine.start();
 
-  // Populate initial SERVICE_ADVERT metadata with any existing active
+  // Populate initial SERVICE_ADVERT descriptors with any existing active
   // instance titles. Runs async — doesn't block provider build.
-  _updateServiceMetadata(store, registry, advertEngine);
+  _updateServiceDescriptors(store, registry, advertEngine);
 
   ref.onDispose(() {
     engine.dispose();
@@ -189,14 +189,13 @@ final mrrpDeliveryTrackerProvider = Provider<MrrpDeliveryTracker?>((ref) {
   return tracker;
 });
 
-/// Update the SERVICE_ADVERT descriptor metadata for user-created mesh
-/// services with the titles of active instances.
+/// Update the SERVICE_ADVERT instance descriptors for user-created mesh
+/// services so each active instance is advertised as a separate entry.
 ///
-/// Metadata format: UTF-8 encoded, truncated to 32 bytes. Contains up to
-/// the first active instance title that fits. Remote peers decode this to
-/// show the actual service name (e.g. "Android bbs title") instead of the
-/// generic "Mesh Services" category label.
-void _updateServiceMetadata(
+/// Each descriptor carries the instance title as UTF-8 metadata (truncated
+/// to 32 bytes). Remote peers decode individual entries and display them
+/// as separate cards instead of a squashed "title +N" string.
+void _updateServiceDescriptors(
   MeshServiceStore store,
   MrrpServiceRegistry registry,
   MrrpAdvertEngine? advertEngine,
@@ -207,80 +206,61 @@ void _updateServiceMetadata(
       await store.open();
       final active = await store.getActive();
 
-      // Build metadata: first active title, UTF-8, truncated to max.
-      final metadata = _buildInstanceMetadata(active);
+      const flags =
+          MrrpServiceFlags.supportsRequest |
+          MrrpServiceFlags.supportsResponse |
+          MrrpServiceFlags.ephemeralOnly |
+          MrrpServiceFlags.userVisible;
 
-      final updated = registry.updateDescriptor(
-        MrrpServiceDescriptor(
-          serviceId: kMeshServicesInstanceServiceId,
-          serviceType: MrrpServiceType.app,
-          serviceFlags:
-              MrrpServiceFlags.supportsRequest |
-              MrrpServiceFlags.supportsResponse |
-              MrrpServiceFlags.ephemeralOnly |
-              MrrpServiceFlags.userVisible,
-          metadata: metadata,
-        ),
+      // Build one descriptor per active instance, each with its own title.
+      final descriptors = <MrrpServiceDescriptor>[
+        for (final instance in active)
+          MrrpServiceDescriptor(
+            serviceId: kMeshServicesInstanceServiceId,
+            serviceType: MrrpServiceType.app,
+            serviceFlags: flags,
+            metadata: _truncateUtf8(instance.title),
+          ),
+      ];
+
+      registry.setInstanceDescriptors(
+        kMeshServicesInstanceServiceId,
+        descriptors,
       );
 
-      if (updated) {
-        // Re-broadcast so remote peers see the updated metadata.
-        await advertEngine?.broadcastNow();
-      }
+      // Re-broadcast so remote peers see the updated descriptors.
+      await advertEngine?.broadcastNow();
     } catch (e) {
       AppLogging.mrrp(
-        'MESH_SERVICE_ENGINE: metadata update failed: $e', // lint-allow: hardcoded-string
+        'MESH_SERVICE_ENGINE: descriptor update failed: $e', // lint-allow: hardcoded-string
       );
     }
   });
 }
 
-/// Build SERVICE_ADVERT metadata bytes from active instances.
-///
-/// Format: UTF-8 string of the first active instance title, truncated to
-/// [MrrpConstants.mrrpServiceMetadataMaxLen] bytes. If multiple instances
-/// are active, appends " +N" count suffix when it fits.
-Uint8List _buildInstanceMetadata(List<MeshServiceInstance> active) {
-  if (active.isEmpty) return Uint8List(0);
-
+/// UTF-8 encode and truncate [text] to [MrrpConstants.mrrpServiceMetadataMaxLen]
+/// bytes, respecting multi-byte character boundaries.
+Uint8List _truncateUtf8(String text) {
   const maxLen = MrrpConstants.mrrpServiceMetadataMaxLen;
-  final first = active.first;
-  var text = first.title;
-
-  // Append count suffix for multiple instances.
-  if (active.length > 1) {
-    final suffix = ' +${active.length - 1}'; // lint-allow: hardcoded-string
-    // Only add suffix if the title + suffix fits. Otherwise, just truncate
-    // the title to fill the space.
-    final fullText = '$text$suffix';
-    final fullBytes = utf8.encode(fullText);
-    if (fullBytes.length <= maxLen) {
-      text = fullText;
-    }
-  }
-
-  // UTF-8 encode and truncate to maxLen bytes (not chars — wire limit).
   var bytes = utf8.encode(text);
-  if (bytes.length > maxLen) {
-    // Truncate at a valid UTF-8 boundary.
-    bytes = bytes.sublist(0, maxLen);
-    // Walk backwards to find a valid UTF-8 start byte.
-    while (bytes.isNotEmpty && (bytes.last & 0xC0) == 0x80) {
+  if (bytes.length <= maxLen) return Uint8List.fromList(bytes);
+
+  bytes = bytes.sublist(0, maxLen);
+  // Walk backwards past continuation bytes (10xxxxxx).
+  while (bytes.isNotEmpty && (bytes.last & 0xC0) == 0x80) {
+    bytes = bytes.sublist(0, bytes.length - 1);
+  }
+  // If the last byte is a multi-byte start but incomplete, remove it.
+  if (bytes.isNotEmpty && bytes.last >= 0xC0) {
+    final startByte = bytes.last;
+    final expectedLen = startByte >= 0xF0
+        ? 4
+        : startByte >= 0xE0
+        ? 3
+        : 2;
+    if (bytes.length < expectedLen) {
       bytes = bytes.sublist(0, bytes.length - 1);
     }
-    // If the last byte is a multi-byte start but incomplete, remove it.
-    if (bytes.isNotEmpty && bytes.last >= 0xC0) {
-      final startByte = bytes.last;
-      final expectedLen = startByte >= 0xF0
-          ? 4
-          : startByte >= 0xE0
-          ? 3
-          : 2;
-      if (bytes.length < expectedLen) {
-        bytes = bytes.sublist(0, bytes.length - 1);
-      }
-    }
   }
-
   return Uint8List.fromList(bytes);
 }

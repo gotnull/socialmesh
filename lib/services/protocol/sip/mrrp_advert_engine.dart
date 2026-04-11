@@ -26,8 +26,11 @@ import 'mrrp_messages_advert.dart';
 import 'mrrp_service_registry.dart';
 import 'mrrp_types.dart';
 
-/// Key for the advert cache: (nodeId, serviceId).
-typedef _AdvertCacheKey = ({int nodeId, int serviceId});
+/// Key for the advert cache: (nodeId, serviceId, instanceIdx).
+///
+/// The [instanceIdx] disambiguates multiple descriptors with the same
+/// service ID from one peer (e.g. multiple Mesh Services instances).
+typedef _AdvertCacheKey = ({int nodeId, int serviceId, int instanceIdx});
 
 /// Cached service entry from a remote peer.
 class MrrpCachedService {
@@ -245,7 +248,7 @@ class MrrpAdvertEngine {
       'node=0x${senderNodeId.toRadixString(16)}', // lint-allow: hardcoded-string
     );
 
-    final allDescriptors = _registry.getAll();
+    final allDescriptors = _registry.getAdvertDescriptors();
     final advertDescriptors = allDescriptors.map((d) {
       return MrrpAdvertDescriptor(
         serviceId: d.serviceId,
@@ -317,8 +320,20 @@ class MrrpAdvertEngine {
       _evictOldestPeer();
     }
 
+    // Remove all existing entries for this peer — a fresh advert replaces
+    // the entire set. This is essential when multiple descriptors share the
+    // same serviceId (e.g. user-created Mesh Services instances).
+    _advertCache.removeWhere((k, _) => k.nodeId == nodeId);
+
+    // Track instance index per serviceId so multiple descriptors with the
+    // same serviceId get unique cache keys.
+    final instanceCounters = <int, int>{};
+
     for (final d in descriptors) {
-      final key = (nodeId: nodeId, serviceId: d.serviceId);
+      final idx = instanceCounters[d.serviceId] ?? 0;
+      instanceCounters[d.serviceId] = idx + 1;
+
+      final key = (nodeId: nodeId, serviceId: d.serviceId, instanceIdx: idx);
       _advertCache[key] = MrrpCachedService(
         nodeId: nodeId,
         descriptor: d,

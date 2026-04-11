@@ -56518,6 +56518,90 @@ abstract class AppLocalizations {
   /// **'Handshake request received'**
   String get meshExplorerHandshakeReceived;
 
+  /// Compact status strip text when radio is connected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected to mesh'**
+  String get meshExplorerStatusConnected;
+
+  /// Compact status showing peer and service counts.
+  ///
+  /// In en, this message translates to:
+  /// **'{peers} nearby · {services} live'**
+  String meshExplorerStatusPeersAndServices(int peers, int services);
+
+  /// Section header for currently active services.
+  ///
+  /// In en, this message translates to:
+  /// **'Live now'**
+  String get meshExplorerSectionLiveNow;
+
+  /// Section header for compact nearby peers strip.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby'**
+  String get meshExplorerSectionNearbyPeers;
+
+  /// Audience badge for open/public services.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get meshExplorerCardOpen;
+
+  /// Badge indicating a service is currently live.
+  ///
+  /// In en, this message translates to:
+  /// **'LIVE'**
+  String get meshExplorerCardLive;
+
+  /// Freshness label for services seen in the last minute.
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get meshExplorerFreshnessJustNow;
+
+  /// Freshness label in minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}m ago'**
+  String meshExplorerFreshnessMinutes(int count);
+
+  /// Freshness label in hours.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}h ago'**
+  String meshExplorerFreshnessHours(int count);
+
+  /// Empty state headline when no services are available.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover the mesh'**
+  String get meshExplorerEmptyTitle;
+
+  /// Empty state description encouraging service discovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Services shared by nearby mesh users will appear here. Bulletin boards, signals, polls, checklists, and more — all over LoRa radio.'**
+  String get meshExplorerEmptyBody;
+
+  /// Action button on empty state to create a service.
+  ///
+  /// In en, this message translates to:
+  /// **'Create something'**
+  String get meshExplorerEmptyAction;
+
+  /// Compact label for the create service action.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get meshExplorerCreateLabel;
+
+  /// Action button in not-connected empty state.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect a radio'**
+  String get meshExplorerNotConnectedAction;
+
   /// Drawer menu label for the Mesh Services screen.
   ///
   /// In en, this message translates to:
@@ -56751,6 +56835,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{actionName} could not be completed.'**
   String serviceDetailActionFailed(String actionName);
+
+  /// Loading text shown while fetching remote service instances via MRRP.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetching service data…'**
+  String get serviceDetailFetchingInstances;
+
+  /// Error text shown when MRRP request to fetch remote instances fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach this service. The peer may be out of range.'**
+  String get serviceDetailFetchFailed;
+
+  /// Empty state when remote peer has no active service instances.
+  ///
+  /// In en, this message translates to:
+  /// **'No active instances'**
+  String get serviceDetailNoInstances;
+
+  /// Empty state description when remote peer has no active service instances.
+  ///
+  /// In en, this message translates to:
+  /// **'This peer is not hosting any active services right now.'**
+  String get serviceDetailNoInstancesBody;
+
+  /// Label for the instance description field in the remote instance detail.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get serviceDetailInstanceDescription;
+
+  /// Expiry information for a remote service instance.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires {time}'**
+  String serviceDetailInstanceExpires(String time);
+
+  /// Shown when a remote service instance has no expiry time set.
+  ///
+  /// In en, this message translates to:
+  /// **'No expiry'**
+  String get serviceDetailInstanceNoExpiry;
+
+  /// Shown when a remote service instance has expired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get serviceDetailInstanceExpired;
 
   /// Label for the service title input field.
   ///

@@ -32407,6 +32407,55 @@ class AppLocalizationsIt extends AppLocalizations {
   String get meshExplorerHandshakeReceived => 'Handshake request received';
 
   @override
+  String get meshExplorerStatusConnected => 'Connected to mesh';
+
+  @override
+  String meshExplorerStatusPeersAndServices(int peers, int services) {
+    return '$peers nearby · $services live';
+  }
+
+  @override
+  String get meshExplorerSectionLiveNow => 'Live now';
+
+  @override
+  String get meshExplorerSectionNearbyPeers => 'Nearby';
+
+  @override
+  String get meshExplorerCardOpen => 'Open';
+
+  @override
+  String get meshExplorerCardLive => 'LIVE';
+
+  @override
+  String get meshExplorerFreshnessJustNow => 'Just now';
+
+  @override
+  String meshExplorerFreshnessMinutes(int count) {
+    return '${count}m ago';
+  }
+
+  @override
+  String meshExplorerFreshnessHours(int count) {
+    return '${count}h ago';
+  }
+
+  @override
+  String get meshExplorerEmptyTitle => 'Discover the mesh';
+
+  @override
+  String get meshExplorerEmptyBody =>
+      'Services shared by nearby mesh users will appear here. Bulletin boards, signals, polls, checklists, and more — all over LoRa radio.';
+
+  @override
+  String get meshExplorerEmptyAction => 'Create something';
+
+  @override
+  String get meshExplorerCreateLabel => 'Create';
+
+  @override
+  String get meshExplorerNotConnectedAction => 'Connect a radio';
+
+  @override
   String get meshServicesDrawerLabel => 'I miei servizi';
 
   @override
@@ -32549,6 +32598,34 @@ class AppLocalizationsIt extends AppLocalizations {
   String serviceDetailActionFailed(String actionName) {
     return '$actionName could not be completed.';
   }
+
+  @override
+  String get serviceDetailFetchingInstances => 'Fetching service data…';
+
+  @override
+  String get serviceDetailFetchFailed =>
+      'Could not reach this service. The peer may be out of range.';
+
+  @override
+  String get serviceDetailNoInstances => 'No active instances';
+
+  @override
+  String get serviceDetailNoInstancesBody =>
+      'This peer is not hosting any active services right now.';
+
+  @override
+  String get serviceDetailInstanceDescription => 'Description';
+
+  @override
+  String serviceDetailInstanceExpires(String time) {
+    return 'Expires $time';
+  }
+
+  @override
+  String get serviceDetailInstanceNoExpiry => 'No expiry';
+
+  @override
+  String get serviceDetailInstanceExpired => 'Expired';
 
   @override
   String get meshServicesFieldTitle => 'Titolo';

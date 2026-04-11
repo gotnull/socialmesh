@@ -97,6 +97,42 @@ class MrrpServiceRegistry {
     return true;
   }
 
+  /// Instance-level descriptors that expand a single base service ID into
+  /// multiple advert entries (one per active instance).
+  ///
+  /// When set, [getAdvertDescriptors] replaces the base descriptor for
+  /// [_instanceBaseServiceId] with these. Handler dispatch is unaffected —
+  /// all instances still route to the same [MrrpServiceHandler].
+  final List<MrrpServiceDescriptor> _instanceDescriptors = [];
+  int? _instanceBaseServiceId;
+
+  /// Set instance-level descriptors for a service ID.
+  ///
+  /// The base descriptor for [baseServiceId] is replaced in advert payloads
+  /// with one descriptor per instance (different metadata per instance).
+  /// Pass an empty list to revert to the single base descriptor.
+  void setInstanceDescriptors(
+    int baseServiceId,
+    List<MrrpServiceDescriptor> descriptors,
+  ) {
+    _instanceBaseServiceId = descriptors.isEmpty ? null : baseServiceId;
+    _instanceDescriptors
+      ..clear()
+      ..addAll(descriptors);
+  }
+
+  /// Get all descriptors for advertisement, expanding instance descriptors.
+  List<MrrpServiceDescriptor> getAdvertDescriptors() {
+    final base = _descriptors.values.toList();
+    if (_instanceBaseServiceId == null || _instanceDescriptors.isEmpty) {
+      return base;
+    }
+    // Replace the base entry with the per-instance entries.
+    base.removeWhere((d) => d.serviceId == _instanceBaseServiceId);
+    base.addAll(_instanceDescriptors);
+    return base;
+  }
+
   /// Get all registered descriptors.
   List<MrrpServiceDescriptor> getAll() =>
       _descriptors.values.toList(growable: false);
@@ -114,7 +150,7 @@ class MrrpServiceRegistry {
   ///
   /// Returns null if no services registered or payload would exceed max.
   Uint8List? buildAdvertPayload() {
-    final descriptors = getAll();
+    final descriptors = getAdvertDescriptors();
     if (descriptors.isEmpty) return null;
 
     // Calculate total payload size: 1 (count) + sum of descriptor sizes.

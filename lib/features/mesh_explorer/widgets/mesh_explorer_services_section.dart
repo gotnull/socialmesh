@@ -3,9 +3,9 @@
 
 /// Services section for Mesh Explorer.
 ///
-/// Renders nearby MRRP services as elegant cards using the
-/// service presentation catalog to map raw service IDs into
-/// public-facing titles, icons, and actions.
+/// Renders nearby MRRP services as rich destination cards suitable for
+/// a service-first discovery hub. Each card shows service type, title,
+/// creator identity, freshness, and audience badge.
 library;
 
 import 'package:flutter/material.dart';
@@ -13,88 +13,239 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../features/nodedex/widgets/sigil_painter.dart';
 import '../../../providers/mesh_explorer_providers.dart';
 import '../../../services/haptic_service.dart';
-import '../../../services/protocol/sip/mrrp_types.dart';
+import '../../mesh_services/screens/service_detail_screen.dart';
 import '../models/service_presentation.dart';
 
-/// Display section for nearby MRRP services.
+/// Display section for nearby MRRP services as rich discovery cards.
 class MeshExplorerServicesSection extends StatelessWidget {
-  /// Map of serviceId → service info (peer count + metadata).
-  final Map<int, MeshExplorerServiceInfo> services;
+  /// List of individual service entries.
+  final List<MeshExplorerServiceInfo> services;
 
   const MeshExplorerServicesSection({super.key, required this.services});
 
   @override
   Widget build(BuildContext context) {
-    if (services.isEmpty) {
-      return _EmptyServices();
-    }
-
-    // Sort services: known services first, then by peer count descending
-    final sorted = services.entries.toList()
-      ..sort((a, b) {
-        final aKnown = _isKnownService(a.key) ? 0 : 1;
-        final bKnown = _isKnownService(b.key) ? 0 : 1;
-        final knownCmp = aKnown.compareTo(bKnown);
-        if (knownCmp != 0) return knownCmp;
-        return b.value.peerCount.compareTo(a.value.peerCount);
-      });
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
       child: Column(
         children: [
-          for (int i = 0; i < sorted.length; i++) ...[
-            _ServiceCard(
-              serviceId: sorted[i].key,
-              peerCount: sorted[i].value.peerCount,
-              metadata: sorted[i].value.metadata,
-            ),
-            if (i < sorted.length - 1)
-              const SizedBox(height: AppTheme.spacing8),
+          for (int i = 0; i < services.length; i++) ...[
+            _ServiceDiscoveryCard(service: services[i]),
+            if (i < services.length - 1)
+              const SizedBox(height: AppTheme.spacing12),
           ],
         ],
       ),
     );
   }
+}
 
-  bool _isKnownService(int serviceId) {
-    return serviceId == MrrpServiceId.boardV1 ||
-        serviceId == MrrpServiceId.profileV1 ||
-        serviceId == MrrpServiceId.meetupV1;
+/// A rich service discovery card — the primary UI element of Mesh Explorer.
+class _ServiceDiscoveryCard extends ConsumerWidget {
+  final MeshExplorerServiceInfo service;
+
+  const _ServiceDiscoveryCard({required this.service});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final presentation = ServicePresentationCatalog.forServiceId(
+      service.serviceId,
+      l10n,
+    );
+    final accent = presentation.privacyClass == ServicePrivacyClass.open
+        ? context.accentColor
+        : SemanticColors.warning;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
+        onTap: () async {
+          final haptics = ref.read(hapticServiceProvider);
+          await haptics.trigger(HapticType.selection);
+
+          if (!context.mounted) return;
+
+          await Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => ServiceDetailScreen(
+                nodeId: service.nodeId,
+                serviceId: service.serviceId,
+                serviceType: presentation.title,
+                serviceTitle: service.metadata ?? presentation.title,
+                icon: presentation.icon,
+                accentColor: accent,
+              ),
+            ),
+          );
+        },
+        child: Container(
+          padding: const EdgeInsets.all(AppTheme.spacing16),
+          decoration: BoxDecoration(
+            color: context.card,
+            borderRadius: BorderRadius.circular(AppTheme.radius16),
+            border: Border.all(color: context.border.withValues(alpha: 0.2)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Top row: icon + title + badges
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Service type icon
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: accent.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
+                    ),
+                    child: Icon(presentation.icon, size: 24, color: accent),
+                  ),
+                  const SizedBox(width: AppTheme.spacing12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Title
+                        Text(
+                          service.metadata ?? presentation.title,
+                          style: context.bodyStyle?.copyWith(
+                            color: context.textPrimary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: AppTheme.spacing4),
+                        // Service type subtitle (when metadata provides the title)
+                        if (service.metadata != null)
+                          Text(
+                            presentation.title,
+                            style: context.captionStyle?.copyWith(
+                              color: context.textTertiary,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  // Badges
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      _LiveBadge(l10n: l10n),
+                      const SizedBox(height: AppTheme.spacing4),
+                      _AudienceBadge(presentation: presentation, l10n: l10n),
+                    ],
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: AppTheme.spacing12),
+
+              // Bottom row: creator + freshness + CTA
+              Row(
+                children: [
+                  // Creator identity
+                  SigilAvatar(nodeNum: service.creatorSigilSeed, size: 22),
+                  const SizedBox(width: AppTheme.spacing6),
+                  Expanded(
+                    child: Text(
+                      service.creatorName ?? l10n.meshExplorerPeerAnonymous,
+                      style: context.captionStyle?.copyWith(
+                        color: service.isCreatorIdentified
+                            ? context.textSecondary
+                            : context.textTertiary,
+                        fontWeight: service.isCreatorIdentified
+                            ? FontWeight.w500
+                            : FontWeight.normal,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+
+                  // Freshness
+                  Text(
+                    _freshness(l10n, service.cachedAt),
+                    style: context.captionStyle?.copyWith(
+                      color: context.textTertiary,
+                    ),
+                  ),
+
+                  const SizedBox(width: AppTheme.spacing8),
+
+                  // CTA arrow
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    size: 12,
+                    color: context.textTertiary.withValues(alpha: 0.5),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _freshness(AppLocalizations l10n, DateTime cachedAt) {
+    final elapsed = DateTime.now().difference(cachedAt);
+    if (elapsed.inMinutes < 1) {
+      return l10n.meshExplorerFreshnessJustNow;
+    }
+    if (elapsed.inHours < 1) {
+      return l10n.meshExplorerFreshnessMinutes(elapsed.inMinutes);
+    }
+    return l10n.meshExplorerFreshnessHours(elapsed.inHours);
   }
 }
 
-/// Empty state for no nearby services.
-class _EmptyServices extends StatelessWidget {
+/// Small "LIVE" badge.
+class _LiveBadge extends StatelessWidget {
+  final AppLocalizations l10n;
+
+  const _LiveBadge({required this.l10n});
+
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    return Padding(
+    return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppTheme.spacing16,
-        vertical: AppTheme.spacing24,
+        horizontal: AppTheme.spacing6,
+        vertical: AppTheme.spacing2,
       ),
-      child: Column(
+      decoration: BoxDecoration(
+        color: SemanticColors.success.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.extension_outlined,
-            size: 40,
-            color: context.textTertiary.withValues(alpha: 0.4),
-          ),
-          const SizedBox(height: AppTheme.spacing8),
-          Text(
-            l10n.meshExplorerEmptyServicesTitle,
-            style: context.bodyStyle?.copyWith(color: context.textSecondary),
-          ),
-          const SizedBox(height: AppTheme.spacing4),
-          Text(
-            l10n.meshExplorerEmptyServicesBody,
-            style: context.bodySmallStyle?.copyWith(
-              color: context.textTertiary,
+          Container(
+            width: 5,
+            height: 5,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: SemanticColors.success,
             ),
-            textAlign: TextAlign.center,
+          ),
+          const SizedBox(width: AppTheme.spacing4),
+          Text(
+            l10n.meshExplorerCardLive,
+            style: const TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: SemanticColors.success,
+              letterSpacing: 0.5,
+            ),
           ),
         ],
       ),
@@ -102,122 +253,45 @@ class _EmptyServices extends StatelessWidget {
   }
 }
 
-/// A single service card.
-class _ServiceCard extends ConsumerWidget {
-  final int serviceId;
-  final int peerCount;
-  final String? metadata;
+/// Audience badge (Open / Consent / Identity).
+class _AudienceBadge extends StatelessWidget {
+  final ServicePresentation presentation;
+  final AppLocalizations l10n;
 
-  const _ServiceCard({
-    required this.serviceId,
-    required this.peerCount,
-    this.metadata,
-  });
+  const _AudienceBadge({required this.presentation, required this.l10n});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
-    final presentation = ServicePresentationCatalog.forServiceId(
-      serviceId,
-      l10n,
-    );
+  Widget build(BuildContext context) {
+    final (label, color) = switch (presentation.privacyClass) {
+      ServicePrivacyClass.open => (
+        l10n.meshExplorerCardOpen,
+        SemanticColors.success,
+      ),
+      ServicePrivacyClass.consentGated => (
+        l10n.meshExplorerPeerHandshaked,
+        SemanticColors.warning,
+      ),
+      ServicePrivacyClass.identityGated => (
+        l10n.meshExplorerPeerVerified,
+        SemanticColors.info,
+      ),
+    };
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-        onTap: () async {
-          final haptics = ref.read(hapticServiceProvider);
-          await haptics.trigger(HapticType.selection);
-        },
-        child: Container(
-          padding: const EdgeInsets.all(AppTheme.spacing12),
-          decoration: BoxDecoration(
-            color: context.card,
-            borderRadius: BorderRadius.circular(AppTheme.radius12),
-            border: Border.all(color: context.border.withValues(alpha: 0.2)),
-          ),
-          child: Row(
-            children: [
-              // Service icon
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: context.accentColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(AppTheme.radius8),
-                ),
-                child: Icon(
-                  presentation.icon,
-                  size: 22,
-                  color: context.accentColor,
-                ),
-              ),
-
-              const SizedBox(width: AppTheme.spacing12),
-
-              // Title + subtitle + peer count
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      metadata ?? presentation.title,
-                      style: context.bodyStyle?.copyWith(
-                        color: context.textPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: AppTheme.spacing2),
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            metadata != null
-                                ? presentation.title
-                                : presentation.subtitle,
-                            style: context.bodySmallStyle?.copyWith(
-                              color: context.textTertiary,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(width: AppTheme.spacing8),
-                        Text(
-                          '·',
-                          style: context.bodySmallStyle?.copyWith(
-                            color: context.textTertiary,
-                          ),
-                        ),
-                        const SizedBox(width: AppTheme.spacing8),
-                        Text(
-                          l10n.meshExplorerServicePeerCount(peerCount),
-                          style: context.bodySmallStyle?.copyWith(
-                            color: context.textTertiary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              // Privacy indicator
-              if (presentation.requiresHandshake ||
-                  presentation.requiresIdentity)
-                Padding(
-                  padding: const EdgeInsets.only(left: AppTheme.spacing8),
-                  child: Icon(
-                    Icons.lock_outline,
-                    size: 16,
-                    color: context.textTertiary.withValues(alpha: 0.6),
-                  ),
-                ),
-            ],
-          ),
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing6,
+        vertical: AppTheme.spacing2,
+      ),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          color: color,
         ),
       ),
     );

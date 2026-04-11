@@ -45,14 +45,25 @@ class MeshExplorerNearbySection extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
-      child: Column(
-        children: [
-          for (int i = 0; i < peers.length; i++) ...[
-            _PeerTile(peer: peers[i]),
-            if (i < peers.length - 1)
-              Divider(height: 1, color: context.border.withValues(alpha: 0.15)),
+      child: Container(
+        decoration: BoxDecoration(
+          color: context.card,
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
+          border: Border.all(color: context.border.withValues(alpha: 0.15)),
+        ),
+        child: Column(
+          children: [
+            for (int i = 0; i < peers.length; i++) ...[
+              _PeerTile(peer: peers[i]),
+              if (i < peers.length - 1)
+                Divider(
+                  height: 1,
+                  indent: AppTheme.spacing48,
+                  color: context.border.withValues(alpha: 0.1),
+                ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -96,52 +107,41 @@ class _PeerTile extends ConsumerWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(AppTheme.radius12),
         onTap: () => _showPeerDetail(context, ref),
-        child: Container(
+        child: Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: AppTheme.spacing12,
-            vertical: AppTheme.spacing12,
-          ),
-          decoration: BoxDecoration(
-            color: context.card,
-            borderRadius: BorderRadius.circular(AppTheme.radius12),
+            vertical: AppTheme.spacing8,
           ),
           child: Row(
             children: [
-              // Sigil avatar
-              SigilAvatar(nodeNum: sigilSeed, size: 44),
+              // Compact sigil avatar
+              SigilAvatar(nodeNum: sigilSeed, size: 32),
 
-              const SizedBox(width: AppTheme.spacing12),
+              const SizedBox(width: AppTheme.spacing8),
 
               // Info column
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    // Name + badge row
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            displayName,
-                            style: context.bodyStyle?.copyWith(
-                              color: context.textPrimary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                    Flexible(
+                      child: Text(
+                        displayName,
+                        style: context.bodySmallStyle?.copyWith(
+                          color: context.textPrimary,
+                          fontWeight: FontWeight.w500,
                         ),
-                        if (badgeLabel != null) ...[
-                          const SizedBox(width: AppTheme.spacing8),
-                          _TierBadge(label: badgeLabel, color: badgeColor!),
-                        ],
-                      ],
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                    const SizedBox(height: AppTheme.spacing2),
-                    // Hop + service count row
+                    if (badgeLabel != null) ...[
+                      const SizedBox(width: AppTheme.spacing6),
+                      _TierBadge(label: badgeLabel, color: badgeColor!),
+                    ],
+                    const SizedBox(width: AppTheme.spacing6),
                     Text(
-                      '$hopLabel · ${l10n.meshExplorerServiceCount(peer.serviceCount)}',
-                      style: context.bodySmallStyle?.copyWith(
+                      hopLabel,
+                      style: context.captionStyle?.copyWith(
                         color: context.textTertiary,
                       ),
                     ),

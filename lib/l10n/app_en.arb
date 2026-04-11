@@ -43033,6 +43033,80 @@
     "@meshExplorerHandshakeReceived": {
         "description": "Subtitle shown on peer detail when a pending handshake request exists from this peer."
     },
+    "meshExplorerStatusConnected": "Connected to mesh",
+    "@meshExplorerStatusConnected": {
+        "description": "Compact status strip text when radio is connected."
+    },
+    "meshExplorerStatusPeersAndServices": "{peers} nearby · {services} live",
+    "@meshExplorerStatusPeersAndServices": {
+        "description": "Compact status showing peer and service counts.",
+        "placeholders": {
+            "peers": {
+                "type": "int"
+            },
+            "services": {
+                "type": "int"
+            }
+        }
+    },
+    "meshExplorerSectionLiveNow": "Live now",
+    "@meshExplorerSectionLiveNow": {
+        "description": "Section header for currently active services."
+    },
+    "meshExplorerSectionNearbyPeers": "Nearby",
+    "@meshExplorerSectionNearbyPeers": {
+        "description": "Section header for compact nearby peers strip."
+    },
+    "meshExplorerCardOpen": "Open",
+    "@meshExplorerCardOpen": {
+        "description": "Audience badge for open/public services."
+    },
+    "meshExplorerCardLive": "LIVE",
+    "@meshExplorerCardLive": {
+        "description": "Badge indicating a service is currently live."
+    },
+    "meshExplorerFreshnessJustNow": "Just now",
+    "@meshExplorerFreshnessJustNow": {
+        "description": "Freshness label for services seen in the last minute."
+    },
+    "meshExplorerFreshnessMinutes": "{count}m ago",
+    "@meshExplorerFreshnessMinutes": {
+        "description": "Freshness label in minutes.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "meshExplorerFreshnessHours": "{count}h ago",
+    "@meshExplorerFreshnessHours": {
+        "description": "Freshness label in hours.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "meshExplorerEmptyTitle": "Discover the mesh",
+    "@meshExplorerEmptyTitle": {
+        "description": "Empty state headline when no services are available."
+    },
+    "meshExplorerEmptyBody": "Services shared by nearby mesh users will appear here. Bulletin boards, signals, polls, checklists, and more — all over LoRa radio.",
+    "@meshExplorerEmptyBody": {
+        "description": "Empty state description encouraging service discovery."
+    },
+    "meshExplorerEmptyAction": "Create something",
+    "@meshExplorerEmptyAction": {
+        "description": "Action button on empty state to create a service."
+    },
+    "meshExplorerCreateLabel": "Create",
+    "@meshExplorerCreateLabel": {
+        "description": "Compact label for the create service action."
+    },
+    "meshExplorerNotConnectedAction": "Connect a radio",
+    "@meshExplorerNotConnectedAction": {
+        "description": "Action button in not-connected empty state."
+    },
     "meshServicesDrawerLabel": "My Services",
     "@meshServicesDrawerLabel": {
         "description": "Drawer menu label for the Mesh Services screen."
@@ -43223,6 +43297,43 @@
                 "type": "String"
             }
         }
+    },
+    "serviceDetailFetchingInstances": "Fetching service data…",
+    "@serviceDetailFetchingInstances": {
+        "description": "Loading text shown while fetching remote service instances via MRRP."
+    },
+    "serviceDetailFetchFailed": "Could not reach this service. The peer may be out of range.",
+    "@serviceDetailFetchFailed": {
+        "description": "Error text shown when MRRP request to fetch remote instances fails."
+    },
+    "serviceDetailNoInstances": "No active instances",
+    "@serviceDetailNoInstances": {
+        "description": "Empty state when remote peer has no active service instances."
+    },
+    "serviceDetailNoInstancesBody": "This peer is not hosting any active services right now.",
+    "@serviceDetailNoInstancesBody": {
+        "description": "Empty state description when remote peer has no active service instances."
+    },
+    "serviceDetailInstanceDescription": "Description",
+    "@serviceDetailInstanceDescription": {
+        "description": "Label for the instance description field in the remote instance detail."
+    },
+    "serviceDetailInstanceExpires": "Expires {time}",
+    "@serviceDetailInstanceExpires": {
+        "description": "Expiry information for a remote service instance.",
+        "placeholders": {
+            "time": {
+                "type": "String"
+            }
+        }
+    },
+    "serviceDetailInstanceNoExpiry": "No expiry",
+    "@serviceDetailInstanceNoExpiry": {
+        "description": "Shown when a remote service instance has no expiry time set."
+    },
+    "serviceDetailInstanceExpired": "Expired",
+    "@serviceDetailInstanceExpired": {
+        "description": "Shown when a remote service instance has expired."
     },
     "meshServicesFieldTitle": "Title",
     "@meshServicesFieldTitle": {

@@ -463,36 +463,39 @@ void main() {
     });
 
     // B1 — SERVICE_ADVERT before MrrpEngine attached is not permanently dropped.
-    test('B1: SERVICE_ADVERT before MrrpEngine attachment is buffered', () async {
-      // Attach SipDiscovery so the SIP gate is open.
-      final discovery = _buildDiscovery();
-      protocol.attachSipDiscovery(discovery);
-      await Future.microtask(() {});
+    test(
+      'B1: SERVICE_ADVERT before MrrpEngine attachment is buffered',
+      () async {
+        // Attach SipDiscovery so the SIP gate is open.
+        final discovery = _buildDiscovery();
+        protocol.attachSipDiscovery(discovery);
+        await Future.microtask(() {});
 
-      // MrrpEngine is NOT attached yet.
-      final advertPayload = _buildMrrpServiceAdvertPayload(remoteRegistry);
-      protocol.injectSipPacketForTest(_makePacket(remotePeer), advertPayload);
+        // MrrpEngine is NOT attached yet.
+        final advertPayload = _buildMrrpServiceAdvertPayload(remoteRegistry);
+        protocol.injectSipPacketForTest(_makePacket(remotePeer), advertPayload);
 
-      // Build and attach the MRRP engine AFTER the advert arrived.
-      final built = _buildMrrpEngine();
-      built.engine.start();
-      protocol.attachMrrpEngine(built.engine);
+        // Build and attach the MRRP engine AFTER the advert arrived.
+        final built = _buildMrrpEngine();
+        built.engine.start();
+        protocol.attachMrrpEngine(built.engine);
 
-      // The buffered SERVICE_ADVERT must be drained into the engine.
-      final cached = built.advertEngine.getAllCachedServices();
-      expect(
-        cached,
-        isNotEmpty,
-        reason:
-            'SERVICE_ADVERT buffered before engine attachment must be '
-            'drained and cached on engine attach',
-      );
-      expect(
-        cached[remotePeer],
-        isNotNull,
-        reason: 'cached services must be keyed to the remote peer node ID',
-      );
-    });
+        // The buffered SERVICE_ADVERT must be drained into the engine.
+        final cached = built.advertEngine.getAllCachedServices();
+        expect(
+          cached,
+          isNotEmpty,
+          reason:
+              'SERVICE_ADVERT buffered before engine attachment must be '
+              'drained and cached on engine attach',
+        );
+        expect(
+          cached[remotePeer],
+          isNotNull,
+          reason: 'cached services must be keyed to the remote peer node ID',
+        );
+      },
+    );
 
     // B2 — SERVICE_ADVERT arriving after MrrpEngine attachment works normally.
     test(

@@ -187,64 +187,130 @@ final meshExplorerPeersProvider = Provider<List<MeshExplorerPeer>>((ref) {
   return result;
 });
 
-/// Aggregated service info for a single service type in Mesh Explorer.
+/// A single service entry visible in the Mesh Explorer.
+///
+/// Each entry represents one distinct service instance from one peer.
+/// For user-created services (all sharing [kMeshServicesInstanceServiceId]),
+/// each active instance with unique metadata appears as a separate entry.
 class MeshExplorerServiceInfo {
-  /// Number of peers offering this service.
+  /// Number of peers advertising this exact service instance.
   final int peerCount;
 
   /// User-provided metadata decoded from SERVICE_ADVERT (UTF-8 title).
   /// Null when no metadata is present (built-in services typically have none).
   final String? metadata;
 
-  const MeshExplorerServiceInfo({required this.peerCount, this.metadata});
+  /// The MRRP service ID.
+  final int serviceId;
+
+  /// Node ID of the first peer advertising this service (for tap routing).
+  final int nodeId;
+
+  /// When this service was last advertised (for freshness display).
+  final DateTime cachedAt;
+
+  /// Display name of the creator peer (null if anonymous).
+  final String? creatorName;
+
+  /// Whether the creator has a verified identity.
+  final bool isCreatorIdentified;
+
+  /// Sigil seed for the creator (for avatar rendering).
+  final int creatorSigilSeed;
+
+  const MeshExplorerServiceInfo({
+    required this.peerCount,
+    required this.serviceId,
+    required this.nodeId,
+    required this.cachedAt,
+    this.metadata,
+    this.creatorName,
+    this.isCreatorIdentified = false,
+    this.creatorSigilSeed = 0,
+  });
 }
 
-/// Aggregated service availability across all nearby peers.
+/// Service instances across all nearby peers.
 ///
-/// Returns a map of service ID to info including peer count and any
-/// user-provided metadata from the SERVICE_ADVERT descriptor.
-final meshExplorerServicesProvider =
-    Provider<Map<int, MeshExplorerServiceInfo>>((ref) {
-      final enabled = ref.watch(meshExplorerEnabledProvider);
-      if (!enabled) return const {};
+/// Returns a list of service entries. User-created services (which share
+/// a single MRRP service ID) are expanded into separate entries per
+/// instance based on their metadata (title).
+final meshExplorerServicesProvider = Provider<List<MeshExplorerServiceInfo>>((
+  ref,
+) {
+  final enabled = ref.watch(meshExplorerEnabledProvider);
+  if (!enabled) return const [];
 
-      ref.watch(mrrpAdvertEpochProvider);
-      final cachedServices = ref.watch(mrrpCachedServicesProvider);
+  ref.watch(mrrpAdvertEpochProvider);
+  final cachedServices = ref.watch(mrrpCachedServicesProvider);
+  final peers = ref.watch(meshExplorerPeersProvider);
 
-      final serviceCounts = <int, int>{};
-      final serviceMetadata = <int, String?>{};
+  // Build a lookup for peer identity by nodeId.
+  final peerLookup = <int, MeshExplorerPeer>{};
+  for (final peer in peers) {
+    peerLookup[peer.nodeId] = peer;
+  }
 
-      for (final entry in cachedServices.entries) {
-        for (final service in entry.value) {
-          if (!_isPublicService(
-            service.descriptor.serviceId,
-            service.descriptor.serviceFlags,
-          )) {
-            continue;
-          }
-          final sid = service.descriptor.serviceId;
-          serviceCounts[sid] = (serviceCounts[sid] ?? 0) + 1;
+  final entries = <MeshExplorerServiceInfo>[];
 
-          // Capture the first non-empty metadata for this service type.
-          if (!serviceMetadata.containsKey(sid) &&
-              service.descriptor.metadata.isNotEmpty) {
-            try {
-              serviceMetadata[sid] = utf8.decode(service.descriptor.metadata);
-            } catch (_) {
-              // Not valid UTF-8 — ignore.
-            }
-          }
+  for (final entry in cachedServices.entries) {
+    final nodeId = entry.key;
+    for (final service in entry.value) {
+      if (!_isPublicService(
+        service.descriptor.serviceId,
+        service.descriptor.serviceFlags,
+      )) {
+        continue;
+      }
+
+      String? metadata;
+      if (service.descriptor.metadata.isNotEmpty) {
+        try {
+          metadata = utf8.decode(service.descriptor.metadata);
+        } catch (_) {
+          // Not valid UTF-8 — ignore.
         }
       }
 
-      return {
-        for (final sid in serviceCounts.keys)
-          sid: MeshExplorerServiceInfo(
-            peerCount: serviceCounts[sid]!,
-            metadata: serviceMetadata[sid],
-          ),
-      };
-    });
+      // Resolve creator identity from the peer list.
+      final peer = peerLookup[nodeId];
+      final String? creatorName;
+      final bool isCreatorIdentified;
+      final int creatorSigilSeed;
+      if (peer is IdentifiedPeer) {
+        creatorName = peer.displayName;
+        isCreatorIdentified = true;
+        creatorSigilSeed = peer.sigilSeed;
+      } else if (peer is AnonymousPeer) {
+        creatorName = null;
+        isCreatorIdentified = false;
+        creatorSigilSeed = peer.ambientId;
+      } else {
+        creatorName = null;
+        isCreatorIdentified = false;
+        creatorSigilSeed = nodeId;
+      }
+
+      entries.add(
+        MeshExplorerServiceInfo(
+          peerCount: 1,
+          serviceId: service.descriptor.serviceId,
+          nodeId: nodeId,
+          cachedAt: service.cachedAt,
+          metadata: metadata,
+          creatorName: creatorName,
+          isCreatorIdentified: isCreatorIdentified,
+          creatorSigilSeed: creatorSigilSeed,
+        ),
+      );
+    }
+  }
+
+  // Sort by freshness (most recent first).
+  entries.sort((a, b) => b.cachedAt.compareTo(a.cachedAt));
+
+  return entries;
+});
 
 /// Summary counts for the Mesh Explorer hero section.
 class MeshExplorerSummary {
