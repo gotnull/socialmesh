@@ -9,16 +9,19 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
+import '../../../providers/mesh_explorer_providers.dart';
+import '../../../services/haptic_service.dart';
 import '../../../services/protocol/sip/mrrp_types.dart';
 import '../models/service_presentation.dart';
 
 /// Display section for nearby MRRP services.
 class MeshExplorerServicesSection extends StatelessWidget {
-  /// Map of serviceId → peer count offering that service.
-  final Map<int, int> services;
+  /// Map of serviceId → service info (peer count + metadata).
+  final Map<int, MeshExplorerServiceInfo> services;
 
   const MeshExplorerServicesSection({super.key, required this.services});
 
@@ -35,7 +38,7 @@ class MeshExplorerServicesSection extends StatelessWidget {
         final bKnown = _isKnownService(b.key) ? 0 : 1;
         final knownCmp = aKnown.compareTo(bKnown);
         if (knownCmp != 0) return knownCmp;
-        return b.value.compareTo(a.value);
+        return b.value.peerCount.compareTo(a.value.peerCount);
       });
 
     return Padding(
@@ -43,7 +46,11 @@ class MeshExplorerServicesSection extends StatelessWidget {
       child: Column(
         children: [
           for (int i = 0; i < sorted.length; i++) ...[
-            _ServiceCard(serviceId: sorted[i].key, peerCount: sorted[i].value),
+            _ServiceCard(
+              serviceId: sorted[i].key,
+              peerCount: sorted[i].value.peerCount,
+              metadata: sorted[i].value.metadata,
+            ),
             if (i < sorted.length - 1)
               const SizedBox(height: AppTheme.spacing8),
           ],
@@ -96,98 +103,122 @@ class _EmptyServices extends StatelessWidget {
 }
 
 /// A single service card.
-class _ServiceCard extends StatelessWidget {
+class _ServiceCard extends ConsumerWidget {
   final int serviceId;
   final int peerCount;
+  final String? metadata;
 
-  const _ServiceCard({required this.serviceId, required this.peerCount});
+  const _ServiceCard({
+    required this.serviceId,
+    required this.peerCount,
+    this.metadata,
+  });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final presentation = ServicePresentationCatalog.forServiceId(
       serviceId,
       l10n,
     );
 
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spacing12),
-      decoration: BoxDecoration(
-        color: context.card,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
         borderRadius: BorderRadius.circular(AppTheme.radius12),
-        border: Border.all(color: context.border.withValues(alpha: 0.2)),
-      ),
-      child: Row(
-        children: [
-          // Service icon
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: context.accentColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(AppTheme.radius8),
-            ),
-            child: Icon(
-              presentation.icon,
-              size: 22,
-              color: context.accentColor,
-            ),
+        onTap: () async {
+          final haptics = ref.read(hapticServiceProvider);
+          await haptics.trigger(HapticType.selection);
+        },
+        child: Container(
+          padding: const EdgeInsets.all(AppTheme.spacing12),
+          decoration: BoxDecoration(
+            color: context.card,
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
+            border: Border.all(color: context.border.withValues(alpha: 0.2)),
           ),
-
-          const SizedBox(width: AppTheme.spacing12),
-
-          // Title + subtitle + peer count
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  presentation.title,
-                  style: context.bodyStyle?.copyWith(
-                    color: context.textPrimary,
-                    fontWeight: FontWeight.w600,
-                  ),
+          child: Row(
+            children: [
+              // Service icon
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: context.accentColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
                 ),
-                const SizedBox(height: AppTheme.spacing2),
-                Row(
+                child: Icon(
+                  presentation.icon,
+                  size: 22,
+                  color: context.accentColor,
+                ),
+              ),
+
+              const SizedBox(width: AppTheme.spacing12),
+
+              // Title + subtitle + peer count
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      presentation.subtitle,
-                      style: context.bodySmallStyle?.copyWith(
-                        color: context.textTertiary,
+                      metadata ?? presentation.title,
+                      style: context.bodyStyle?.copyWith(
+                        color: context.textPrimary,
+                        fontWeight: FontWeight.w600,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(width: AppTheme.spacing8),
-                    Text(
-                      '·',
-                      style: context.bodySmallStyle?.copyWith(
-                        color: context.textTertiary,
-                      ),
-                    ),
-                    const SizedBox(width: AppTheme.spacing8),
-                    Text(
-                      l10n.meshExplorerServicePeerCount(peerCount),
-                      style: context.bodySmallStyle?.copyWith(
-                        color: context.textTertiary,
-                      ),
+                    const SizedBox(height: AppTheme.spacing2),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            metadata != null
+                                ? presentation.title
+                                : presentation.subtitle,
+                            style: context.bodySmallStyle?.copyWith(
+                              color: context.textTertiary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: AppTheme.spacing8),
+                        Text(
+                          '·',
+                          style: context.bodySmallStyle?.copyWith(
+                            color: context.textTertiary,
+                          ),
+                        ),
+                        const SizedBox(width: AppTheme.spacing8),
+                        Text(
+                          l10n.meshExplorerServicePeerCount(peerCount),
+                          style: context.bodySmallStyle?.copyWith(
+                            color: context.textTertiary,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
-
-          // Privacy indicator
-          if (presentation.requiresHandshake || presentation.requiresIdentity)
-            Padding(
-              padding: const EdgeInsets.only(left: AppTheme.spacing8),
-              child: Icon(
-                Icons.lock_outline,
-                size: 16,
-                color: context.textTertiary.withValues(alpha: 0.6),
               ),
-            ),
-        ],
+
+              // Privacy indicator
+              if (presentation.requiresHandshake ||
+                  presentation.requiresIdentity)
+                Padding(
+                  padding: const EdgeInsets.only(left: AppTheme.spacing8),
+                  child: Icon(
+                    Icons.lock_outline,
+                    size: 16,
+                    color: context.textTertiary.withValues(alpha: 0.6),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }

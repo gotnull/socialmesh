@@ -8,9 +8,7 @@
 ///    rebuild (My Services data source).
 /// 2. [mrrpCachedServicesProvider] changes propagate to
 ///    [meshExplorerServicesProvider] and [meshExplorerSummaryProvider].
-/// 3. [nearbyActivityProvider] emits an activity event when a new service
-///    appears in the advert cache.
-/// 4. [meshExplorerSummaryProvider] correctly reflects service counts from
+/// 3. [meshExplorerSummaryProvider] correctly reflects service counts from
 ///    the advert cache.
 library;
 
@@ -18,14 +16,12 @@ import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:socialmesh/features/mesh_explorer/models/nearby_activity.dart';
 import 'package:socialmesh/features/mesh_services/providers/mesh_service_providers.dart';
 import 'package:socialmesh/features/mesh_services/models/mesh_service_template.dart';
 import 'package:socialmesh/features/mesh_services/services/mesh_service_engine.dart';
 import 'package:socialmesh/features/mesh_services/services/mesh_service_store.dart';
 import 'package:socialmesh/providers/mesh_explorer_providers.dart';
 import 'package:socialmesh/providers/mrrp_providers.dart';
-import 'package:socialmesh/providers/nearby_activity_provider.dart';
 import 'package:socialmesh/services/protocol/sip/mrrp_advert_engine.dart';
 import 'package:socialmesh/services/protocol/sip/mrrp_frame.dart';
 import 'package:socialmesh/services/protocol/sip/mrrp_constants.dart';
@@ -240,7 +236,7 @@ void main() {
 
       final services = container.read(meshExplorerServicesProvider);
       expect(services.containsKey(kMeshServicesInstanceServiceId), isTrue);
-      expect(services[kMeshServicesInstanceServiceId], 1);
+      expect(services[kMeshServicesInstanceServiceId]?.peerCount, 1);
     });
 
     test('counts multiple peers advertising the same service', () {
@@ -261,7 +257,7 @@ void main() {
       );
 
       final services = container.read(meshExplorerServicesProvider);
-      expect(services[kMeshServicesInstanceServiceId], 2);
+      expect(services[kMeshServicesInstanceServiceId]?.peerCount, 2);
     });
 
     test('excludes test-only services from count', () {
@@ -358,63 +354,15 @@ void main() {
 
       final services = container.read(meshExplorerServicesProvider);
       expect(services.length, 2);
-      expect(services[kMeshServicesInstanceServiceId], 1);
-      expect(services[MrrpServiceId.boardV1], 1);
+      expect(services[kMeshServicesInstanceServiceId]?.peerCount, 1);
+      expect(services[MrrpServiceId.boardV1]?.peerCount, 1);
 
       final summary = container.read(meshExplorerSummaryProvider);
       expect(summary.activeServices, 2);
     });
   });
 
-  // ── 4. nearbyActivityProvider reacts to new service in advert cache ───────
-
-  group('nearbyActivityProvider', () {
-    test('emits activity event when new service appears in cache', () async {
-      final (:container, :registry, :advertEngine) = _createContainer();
-      addTearDown(() {
-        container.dispose();
-        advertEngine.dispose();
-      });
-
-      // Prime the notifier so the first-build flood suppressor fires with an
-      // empty cache. After this, _isFirstBuild = false in the notifier.
-      container.read(nearbyActivityProvider);
-
-      // Inject an advert into the test engine's cache.
-      advertEngine.handleServiceAdvert(
-        _advertFrame(kMeshServicesInstanceServiceId),
-        0xDEAD,
-      );
-
-      // Bump the epoch so mrrpCachedServicesProvider (which watches the epoch
-      // in our override) and nearbyActivityProvider (which also watches it
-      // directly) both rebuild on next read.
-      container.read(mrrpAdvertEpochProvider.notifier).bump();
-
-      final activity = container.read(nearbyActivityProvider);
-      expect(
-        activity.any((a) => a.type == NearbyActivityType.serviceAppeared),
-        isTrue,
-      );
-    });
-
-    test('clearAll removes all activity items', () {
-      final (:container, :registry, :advertEngine) = _createContainer();
-      addTearDown(() {
-        container.dispose();
-        advertEngine.dispose();
-      });
-
-      // Prime the notifier.
-      container.read(nearbyActivityProvider);
-      container.read(nearbyActivityProvider.notifier).clearAll();
-
-      final activity = container.read(nearbyActivityProvider);
-      expect(activity, isEmpty);
-    });
-  });
-
-  // ── 5. meshServiceInstancesProvider is empty when store is disabled ────────
+  // ── 4. meshServiceInstancesProvider is empty when store is disabled ────────
 
   group('meshServiceInstancesProvider feature gate', () {
     test('returns empty list when mesh services disabled', () async {

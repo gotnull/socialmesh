@@ -41903,11 +41903,11 @@
     "@notificationChannelSipHandshake": {
         "description": "Android notification channel name for secure chat connection events."
     },
-    "notificationSipHandshakeRequestTitle": "Chat Request",
+    "notificationSipHandshakeRequestTitle": "Connection Request",
     "@notificationSipHandshakeRequestTitle": {
-        "description": "Notification title when another peer sends a secure chat request."
+        "description": "Notification title when another peer sends a secure connection request."
     },
-    "notificationSipHandshakeRequestBody": "{peerName} wants to start a private chat.",
+    "notificationSipHandshakeRequestBody": "{peerName} wants to establish a secure connection.",
     "@notificationSipHandshakeRequestBody": {
         "description": "Notification body when an incoming SIP handshake request (HS_HELLO) is received.",
         "placeholders": {
@@ -42790,18 +42790,6 @@
     "@meshExplorerEmptyBoardBody": {
         "description": "Empty state body when no board posts exist."
     },
-    "nearbyActivitySectionTitle": "Activity",
-    "@nearbyActivitySectionTitle": {
-        "description": "Section header title for nearby activity in Mesh Explorer."
-    },
-    "nearbyActivityEmptyTitle": "No recent activity",
-    "@nearbyActivityEmptyTitle": {
-        "description": "Empty state title when no nearby activity exists."
-    },
-    "nearbyActivityEmptyBody": "Nearby services and signals will appear here",
-    "@nearbyActivityEmptyBody": {
-        "description": "Empty state body when no nearby activity exists."
-    },
     "meshExplorerNotConnectedTitle": "Radio not connected",
     "@meshExplorerNotConnectedTitle": {
         "description": "Empty state title when no radio is connected."
@@ -43032,6 +43020,18 @@
     "meshExplorerHandshakeInProgress": "In progress…",
     "@meshExplorerHandshakeInProgress": {
         "description": "Label shown on peer tile while handshake is in-flight."
+    },
+    "meshExplorerHandshakeAccept": "Accept",
+    "@meshExplorerHandshakeAccept": {
+        "description": "Button label to accept an incoming handshake request from a nearby peer."
+    },
+    "meshExplorerHandshakeDecline": "Decline",
+    "@meshExplorerHandshakeDecline": {
+        "description": "Button label to decline an incoming handshake request from a nearby peer."
+    },
+    "meshExplorerHandshakeReceived": "Handshake request received",
+    "@meshExplorerHandshakeReceived": {
+        "description": "Subtitle shown on peer detail when a pending handshake request exists from this peer."
     },
     "meshServicesDrawerLabel": "My Services",
     "@meshServicesDrawerLabel": {

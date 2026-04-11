@@ -32203,16 +32203,6 @@ class AppLocalizationsIt extends AppLocalizations {
       'I post dalla bacheca dei peer vicini appariranno qui';
 
   @override
-  String get nearbyActivitySectionTitle => 'Attività';
-
-  @override
-  String get nearbyActivityEmptyTitle => 'Nessuna attività recente';
-
-  @override
-  String get nearbyActivityEmptyBody =>
-      'I servizi e i segnali vicini appariranno qui';
-
-  @override
   String get meshExplorerNotConnectedTitle => 'Radio non connessa';
 
   @override
@@ -32406,6 +32396,15 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get meshExplorerHandshakeInProgress => 'In corso…';
+
+  @override
+  String get meshExplorerHandshakeAccept => 'Accept';
+
+  @override
+  String get meshExplorerHandshakeDecline => 'Decline';
+
+  @override
+  String get meshExplorerHandshakeReceived => 'Handshake request received';
 
   @override
   String get meshServicesDrawerLabel => 'I miei servizi';

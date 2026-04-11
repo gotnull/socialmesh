@@ -20,7 +20,6 @@ import '../../../providers/sip_providers.dart';
 import '../../../services/haptic_service.dart';
 import '../../../services/protocol/sip/sip_codec.dart';
 import '../../../services/protocol/sip/sip_handshake.dart';
-import '../../../services/protocol/sip/sip_types.dart';
 import '../../../utils/snackbar.dart';
 import '../models/interaction_tier.dart';
 import '../models/mesh_explorer_peer.dart';
@@ -323,11 +322,27 @@ class _PeerAction extends ConsumerWidget {
 
     switch (peer.tier) {
       case InteractionTier.anonymous:
+        // If the peer already sent us a handshake request, accept it
+        // instead of creating a conflicting outbound session.
+        final currentState = hs?.getState(peer.nodeId);
+        if (currentState == SipHandshakeState.pendingApproval) {
+          protocol.acceptSipHandshake(peer.nodeId);
+          return;
+        }
+        // Already in progress — don't interrupt.
+        if (currentState != null &&
+            currentState != SipHandshakeState.idle &&
+            currentState != SipHandshakeState.declined &&
+            currentState != SipHandshakeState.failed &&
+            currentState != SipHandshakeState.timedOut) {
+          return;
+        }
         final frame = hs?.initiateHandshake(peer.nodeId);
         if (frame != null) {
           final encoded = SipCodec.encode(frame);
           if (encoded != null) {
-            await protocol.sendSipPayload(encoded, SipMessageType.hsHello);
+            protocol.sendSipPacket(encoded);
+            ref.read(sipCountersProvider).recordHandshakeInitiated();
             AppLogging.sip(
               'MESH_EXPLORER: HS_HELLO sent to '
               'node=0x${peer.nodeId.toRadixString(16)}',
@@ -342,7 +357,7 @@ class _PeerAction extends ConsumerWidget {
       case InteractionTier.handshaked:
         final outbound = identity?.buildIdReq();
         if (outbound != null) {
-          await protocol.sendSipPayload(outbound.encoded, SipMessageType.idReq);
+          protocol.sendSipPacket(outbound.encoded);
           AppLogging.sip(
             'MESH_EXPLORER: ID_REQ sent to '
             'node=0x${peer.nodeId.toRadixString(16)}',

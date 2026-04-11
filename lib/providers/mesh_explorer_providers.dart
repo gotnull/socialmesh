@@ -8,6 +8,7 @@
 /// Mesh Explorer screen.
 library;
 
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -39,16 +40,24 @@ final meshExplorerEnabledProvider = Provider<bool>((ref) {
 
 /// Combined peer list for Mesh Explorer.
 ///
-/// Merges SIP discovered peers with identity store records to produce
+/// Merges SIP discovered peers with MRRP service advertisers to produce
 /// a list of [MeshExplorerPeer] objects sorted by tier then proximity.
+///
+/// Peers can appear via two paths:
+/// 1. **SIP CAP_BEACON** — discovered via periodic beacon exchange (300s+jitter).
+/// 2. **MRRP SERVICE_ADVERT** — nodes that advertised services but haven't
+///    exchanged a beacon yet. These are added as [AnonymousPeer] entries so
+///    that service advertisers are immediately visible in the NEARBY section.
 final meshExplorerPeersProvider = Provider<List<MeshExplorerPeer>>((ref) {
   final enabled = ref.watch(meshExplorerEnabledProvider);
   if (!enabled) return const [];
 
-  // Watch epoch providers to rebuild on discovery/handshake/identity/DM changes
+  // Watch epoch providers to rebuild on discovery/handshake/identity/DM/advert
+  // changes.
   ref.watch(sipPeerCacheEpochProvider);
   ref.watch(sipHandshakeEpochProvider);
   ref.watch(sipDmEpochProvider);
+  ref.watch(mrrpAdvertEpochProvider);
 
   final peers = ref.watch(sipDiscoveredPeersProvider);
   final cachedServices = ref.watch(mrrpCachedServicesProvider);
@@ -125,6 +134,44 @@ final meshExplorerPeersProvider = Provider<List<MeshExplorerPeer>>((ref) {
     }
   }
 
+  // Synthesize peers from MRRP SERVICE_ADVERT cache for nodes that were NOT
+  // already discovered via SIP CAP_BEACON. A SERVICE_ADVERT proves the node
+  // is nearby and advertising services — it should appear in the peer list
+  // even without a beacon exchange.
+  final sipNodeIds = peers.map((p) => p.nodeId).toSet();
+  for (final entry in cachedServices.entries) {
+    final nodeId = entry.key;
+    if (sipNodeIds.contains(nodeId)) continue; // already in result
+
+    final peerServices = entry.value;
+    final serviceIds = peerServices
+        .where(
+          (s) => _isPublicService(
+            s.descriptor.serviceId,
+            s.descriptor.serviceFlags,
+          ),
+        )
+        .map((s) => s.descriptor.serviceId)
+        .toList();
+
+    if (serviceIds.isEmpty) continue; // no public services, skip
+
+    // Use the most recent cachedAt timestamp as lastSeenMs.
+    final latestCachedAt = peerServices
+        .map((s) => s.cachedAt.millisecondsSinceEpoch)
+        .reduce((a, b) => a > b ? a : b);
+
+    result.add(
+      AnonymousPeer(
+        nodeId: nodeId,
+        ambientId: nodeId, // use nodeId as sigil seed (no beacon caps hash)
+        lastSeenMs: latestCachedAt,
+        features: 0, // unknown — no beacon received
+        mrrpServiceIds: serviceIds,
+      ),
+    );
+  }
+
   // Sort: pinned first, then identified, handshaked, anonymous.
   // Within same tier, sort by most recently seen.
   result.sort((a, b) {
@@ -140,32 +187,64 @@ final meshExplorerPeersProvider = Provider<List<MeshExplorerPeer>>((ref) {
   return result;
 });
 
+/// Aggregated service info for a single service type in Mesh Explorer.
+class MeshExplorerServiceInfo {
+  /// Number of peers offering this service.
+  final int peerCount;
+
+  /// User-provided metadata decoded from SERVICE_ADVERT (UTF-8 title).
+  /// Null when no metadata is present (built-in services typically have none).
+  final String? metadata;
+
+  const MeshExplorerServiceInfo({required this.peerCount, this.metadata});
+}
+
 /// Aggregated service availability across all nearby peers.
 ///
-/// Returns a map of service ID to the count of peers offering that service.
-final meshExplorerServicesProvider = Provider<Map<int, int>>((ref) {
-  final enabled = ref.watch(meshExplorerEnabledProvider);
-  if (!enabled) return const {};
+/// Returns a map of service ID to info including peer count and any
+/// user-provided metadata from the SERVICE_ADVERT descriptor.
+final meshExplorerServicesProvider =
+    Provider<Map<int, MeshExplorerServiceInfo>>((ref) {
+      final enabled = ref.watch(meshExplorerEnabledProvider);
+      if (!enabled) return const {};
 
-  ref.watch(mrrpAdvertEpochProvider);
-  final cachedServices = ref.watch(mrrpCachedServicesProvider);
+      ref.watch(mrrpAdvertEpochProvider);
+      final cachedServices = ref.watch(mrrpCachedServicesProvider);
 
-  final serviceCounts = <int, int>{};
-  for (final entry in cachedServices.entries) {
-    for (final service in entry.value) {
-      if (!_isPublicService(
-        service.descriptor.serviceId,
-        service.descriptor.serviceFlags,
-      )) {
-        continue;
+      final serviceCounts = <int, int>{};
+      final serviceMetadata = <int, String?>{};
+
+      for (final entry in cachedServices.entries) {
+        for (final service in entry.value) {
+          if (!_isPublicService(
+            service.descriptor.serviceId,
+            service.descriptor.serviceFlags,
+          )) {
+            continue;
+          }
+          final sid = service.descriptor.serviceId;
+          serviceCounts[sid] = (serviceCounts[sid] ?? 0) + 1;
+
+          // Capture the first non-empty metadata for this service type.
+          if (!serviceMetadata.containsKey(sid) &&
+              service.descriptor.metadata.isNotEmpty) {
+            try {
+              serviceMetadata[sid] = utf8.decode(service.descriptor.metadata);
+            } catch (_) {
+              // Not valid UTF-8 — ignore.
+            }
+          }
+        }
       }
-      serviceCounts[service.descriptor.serviceId] =
-          (serviceCounts[service.descriptor.serviceId] ?? 0) + 1;
-    }
-  }
 
-  return serviceCounts;
-});
+      return {
+        for (final sid in serviceCounts.keys)
+          sid: MeshExplorerServiceInfo(
+            peerCount: serviceCounts[sid]!,
+            metadata: serviceMetadata[sid],
+          ),
+      };
+    });
 
 /// Summary counts for the Mesh Explorer hero section.
 class MeshExplorerSummary {
@@ -198,8 +277,14 @@ final meshExplorerSummaryProvider = Provider<MeshExplorerSummary>((ref) {
 // ---------------------------------------------------------------------------
 
 /// Check if a service should appear in public UI.
+///
+/// Only services with the [MrrpServiceFlags.userVisible] flag AND without
+/// the [MrrpServiceFlags.testOnly] flag are shown. Built-in protocol
+/// services (meetup, profile, board, incident) are infrastructure and
+/// should NOT be marked userVisible.
 bool _isPublicService(int serviceId, int serviceFlags) {
   if (serviceFlags & MrrpServiceFlags.testOnly != 0) return false;
+  if (serviceFlags & MrrpServiceFlags.userVisible == 0) return false;
   return true;
 }
 

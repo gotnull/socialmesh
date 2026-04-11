@@ -55030,16 +55030,16 @@ abstract class AppLocalizations {
   /// **'Connection Requests'**
   String get notificationChannelSipHandshake;
 
-  /// Notification title when another peer sends a secure chat request.
+  /// Notification title when another peer sends a secure connection request.
   ///
   /// In en, this message translates to:
-  /// **'Chat Request'**
+  /// **'Connection Request'**
   String get notificationSipHandshakeRequestTitle;
 
   /// Notification body when an incoming SIP handshake request (HS_HELLO) is received.
   ///
   /// In en, this message translates to:
-  /// **'{peerName} wants to start a private chat.'**
+  /// **'{peerName} wants to establish a secure connection.'**
   String notificationSipHandshakeRequestBody(String peerName);
 
   /// Notification title when a SIP handshake request is declined by the remote peer.
@@ -56176,24 +56176,6 @@ abstract class AppLocalizations {
   /// **'Board posts from nearby peers will appear here'**
   String get meshExplorerEmptyBoardBody;
 
-  /// Section header title for nearby activity in Mesh Explorer.
-  ///
-  /// In en, this message translates to:
-  /// **'Activity'**
-  String get nearbyActivitySectionTitle;
-
-  /// Empty state title when no nearby activity exists.
-  ///
-  /// In en, this message translates to:
-  /// **'No recent activity'**
-  String get nearbyActivityEmptyTitle;
-
-  /// Empty state body when no nearby activity exists.
-  ///
-  /// In en, this message translates to:
-  /// **'Nearby services and signals will appear here'**
-  String get nearbyActivityEmptyBody;
-
   /// Empty state title when no radio is connected.
   ///
   /// In en, this message translates to:
@@ -56517,6 +56499,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'In progress…'**
   String get meshExplorerHandshakeInProgress;
+
+  /// Button label to accept an incoming handshake request from a nearby peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get meshExplorerHandshakeAccept;
+
+  /// Button label to decline an incoming handshake request from a nearby peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get meshExplorerHandshakeDecline;
+
+  /// Subtitle shown on peer detail when a pending handshake request exists from this peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Handshake request received'**
+  String get meshExplorerHandshakeReceived;
 
   /// Drawer menu label for the Mesh Services screen.
   ///

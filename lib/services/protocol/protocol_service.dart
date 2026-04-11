@@ -36,6 +36,7 @@ import 'socialmesh/sm_presence.dart';
 import 'socialmesh/sm_signal.dart';
 import 'sip/mrrp_engine.dart';
 import 'sip/sip_codec.dart';
+import 'sip/sip_constants.dart';
 import 'sip/sip_counters.dart';
 import 'sip/sip_discovery.dart';
 import 'sip/sip_dm.dart';
@@ -526,12 +527,15 @@ class ProtocolService {
   ///
   /// Called from the provider layer once the discovery engine is created.
   /// Any frames buffered during the pre-attachment startup window are
-  /// drained synchronously before this method returns.
+  /// drained in a microtask after this method returns. The drain is
+  /// deferred because it may trigger MRRP callbacks that mutate other
+  /// Riverpod providers — Riverpod forbids cross-provider state changes
+  /// during a provider's synchronous initialization.
   void attachSipDiscovery(SipDiscovery? discovery) {
     _sipDiscovery = discovery;
     if (discovery != null) {
       AppLogging.sip('ProtocolService: SipDiscovery attached');
-      _drainSipStartupBuffer();
+      Future.microtask(_drainSipStartupBuffer);
     }
   }
 
@@ -599,7 +603,12 @@ class ProtocolService {
   /// Attach an MrrpEngine for inbound MRRP frames.
   ///
   /// Any MRRP frames buffered during the pre-attachment startup window are
-  /// drained synchronously before this method returns.
+  /// drained synchronously before this method returns. Unlike the SIP drain
+  /// (which is deferred to avoid cross-provider Riverpod mutations during
+  /// init), the MRRP drain stays synchronous to preserve the critical
+  /// engine start/attach ordering contract: [engine.start()] must be called
+  /// before this method, otherwise the drain feeds frames into a stopped
+  /// engine which drops them all.
   void attachMrrpEngine(MrrpEngine? engine) {
     _mrrpEngine = engine;
     if (engine != null) {
@@ -4839,11 +4848,28 @@ class ProtocolService {
     return ok;
   }
 
-  /// Send a raw SIP payload with the given message type, recording counters.
+  /// Wrap a raw payload in a SIP frame envelope and send it on-air.
   ///
-  /// Public wrapper of [_sendSipAndCount] for use by MRRP providers.
+  /// Creates a [SipFrame] with the given [type], SIP-encodes it via
+  /// [SipCodec.encode], then transmits the wire bytes. Used by MRRP
+  /// providers to send MRRP data wrapped in the SIP framing that the
+  /// receive side ([_handleSipPacket] → [SipCodec.decode]) expects.
   Future<bool> sendSipPayload(Uint8List payload, SipMessageType type) {
-    return _sendSipAndCount(payload, type);
+    final frame = SipFrame(
+      versionMajor: SipConstants.sipVersionMajor,
+      versionMinor: SipConstants.sipVersionMinor,
+      msgType: type,
+      flags: 0,
+      headerLen: SipConstants.sipWrapperMin,
+      sessionId: 0,
+      nonce: SipCodec.generateNonce(),
+      timestampS: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      payloadLen: payload.length,
+      payload: payload,
+    );
+    final encoded = SipCodec.encode(frame);
+    if (encoded == null) return Future.value(false);
+    return _sendSipAndCount(encoded, type);
   }
 
   /// Accept an incoming SIP handshake request from [peerNodeId].

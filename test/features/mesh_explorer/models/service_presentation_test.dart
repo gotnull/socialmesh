@@ -17,9 +17,9 @@ void main() {
         l10n,
       );
       expect(p.title, l10n.servicePresentationBoardTitle);
-      expect(p.requiresHandshake, isTrue);
+      expect(p.requiresHandshake, isFalse);
       expect(p.requiresIdentity, isFalse);
-      expect(p.privacyClass, ServicePrivacyClass.consentGated);
+      expect(p.privacyClass, ServicePrivacyClass.open);
       expect(p.icon, Icons.dashboard_outlined);
     });
 
@@ -29,9 +29,9 @@ void main() {
         l10n,
       );
       expect(p.title, l10n.servicePresentationProfileTitle);
-      expect(p.requiresHandshake, isTrue);
-      expect(p.requiresIdentity, isTrue);
-      expect(p.privacyClass, ServicePrivacyClass.identityGated);
+      expect(p.requiresHandshake, isFalse);
+      expect(p.requiresIdentity, isFalse);
+      expect(p.privacyClass, ServicePrivacyClass.open);
     });
 
     test('meetupV1 returns known presentation', () {
@@ -40,8 +40,8 @@ void main() {
         l10n,
       );
       expect(p.title, l10n.servicePresentationMeetupTitle);
-      expect(p.requiresHandshake, isTrue);
-      expect(p.requiresIdentity, isTrue);
+      expect(p.requiresHandshake, isFalse);
+      expect(p.requiresIdentity, isFalse);
     });
 
     test('unknown service returns generic fallback', () {

@@ -27,7 +27,7 @@ enum InteractionTier {
   bool get canViewProfile => index >= identified.index;
 
   /// Whether board posts from this peer can be seen.
-  bool get canViewBoard => index >= handshaked.index;
+  bool get canViewBoard => true;
 
   /// Whether DM is possible (also requires dmAvailable setting).
   bool get canDm => index >= identified.index;

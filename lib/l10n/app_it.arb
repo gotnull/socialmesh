@@ -20927,9 +20927,6 @@
   "@navigationWorldMap": {
     "description": "Label for the World Map drawer item."
   },
-  "nearbyActivityEmptyBody": "I servizi e i segnali vicini appariranno qui",
-  "nearbyActivityEmptyTitle": "Nessuna attività recente",
-  "nearbyActivitySectionTitle": "Attività",
   "networkConfigEthernetEnabled": "Ethernet abilitato",
   "@networkConfigEthernetEnabled": {
     "description": "UI text: network config ethernet enabled"

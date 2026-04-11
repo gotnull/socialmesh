@@ -31207,11 +31207,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get notificationChannelSipHandshake => 'Connection Requests';
 
   @override
-  String get notificationSipHandshakeRequestTitle => 'Chat Request';
+  String get notificationSipHandshakeRequestTitle => 'Connection Request';
 
   @override
   String notificationSipHandshakeRequestBody(String peerName) {
-    return '$peerName wants to start a private chat.';
+    return '$peerName wants to establish a secure connection.';
   }
 
   @override
@@ -31854,16 +31854,6 @@ class AppLocalizationsRu extends AppLocalizations {
       'Board posts from nearby peers will appear here';
 
   @override
-  String get nearbyActivitySectionTitle => 'Activity';
-
-  @override
-  String get nearbyActivityEmptyTitle => 'No recent activity';
-
-  @override
-  String get nearbyActivityEmptyBody =>
-      'Nearby services and signals will appear here';
-
-  @override
   String get meshExplorerNotConnectedTitle => 'Radio not connected';
 
   @override
@@ -32055,6 +32045,15 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get meshExplorerHandshakeInProgress => 'In progress…';
+
+  @override
+  String get meshExplorerHandshakeAccept => 'Accept';
+
+  @override
+  String get meshExplorerHandshakeDecline => 'Decline';
+
+  @override
+  String get meshExplorerHandshakeReceived => 'Handshake request received';
 
   @override
   String get meshServicesDrawerLabel => 'My Services';

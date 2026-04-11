@@ -85,21 +85,21 @@ abstract final class ServicePresentationCatalog {
   static const _meta = <int, _ServiceMeta>{
     MrrpServiceId.boardV1: _ServiceMeta(
       icon: Icons.dashboard_outlined,
-      requiresHandshake: true,
+      requiresHandshake: false,
       requiresIdentity: false,
-      privacyClass: ServicePrivacyClass.consentGated,
+      privacyClass: ServicePrivacyClass.open,
     ),
     MrrpServiceId.profileV1: _ServiceMeta(
       icon: Icons.person_outline,
-      requiresHandshake: true,
-      requiresIdentity: true,
-      privacyClass: ServicePrivacyClass.identityGated,
+      requiresHandshake: false,
+      requiresIdentity: false,
+      privacyClass: ServicePrivacyClass.open,
     ),
     MrrpServiceId.meetupV1: _ServiceMeta(
       icon: Icons.handshake_outlined,
-      requiresHandshake: true,
-      requiresIdentity: true,
-      privacyClass: ServicePrivacyClass.identityGated,
+      requiresHandshake: false,
+      requiresIdentity: false,
+      privacyClass: ServicePrivacyClass.open,
     ),
     _signalV1ServiceId: _ServiceMeta(
       icon: Icons.cell_tower_outlined,

@@ -19,7 +19,6 @@ import '../../../providers/sip_providers.dart';
 import '../../../services/haptic_service.dart';
 import '../../../services/protocol/sip/sip_codec.dart';
 import '../../../services/protocol/sip/sip_handshake.dart';
-import '../../../services/protocol/sip/sip_types.dart';
 import '../../../utils/snackbar.dart';
 import '../models/interaction_tier.dart';
 import '../models/mesh_explorer_peer.dart';
@@ -284,12 +283,45 @@ class _ActionButtons extends ConsumerWidget {
         : SipHandshakeState.idle;
 
     final handshakeInProgress = _isHandshakeInProgress(hsState);
+    final pendingApproval = hsState == SipHandshakeState.pendingApproval;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Primary action based on tier
-        if (peer.tier == InteractionTier.anonymous && dmAvailable)
+        // Incoming handshake: accept / decline
+        if (peer.tier == InteractionTier.anonymous &&
+            dmAvailable &&
+            pendingApproval) ...[
+          Text(
+            l10n.meshExplorerHandshakeReceived,
+            style: context.bodySmallStyle?.copyWith(
+              color: context.textTertiary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppTheme.spacing8),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => _onDecline(context, ref),
+                  icon: const Icon(Icons.close, size: 18),
+                  label: Text(l10n.meshExplorerHandshakeDecline),
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing8),
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: () => _onAccept(context, ref),
+                  icon: const Icon(Icons.check, size: 18),
+                  label: Text(l10n.meshExplorerHandshakeAccept),
+                ),
+              ),
+            ],
+          ),
+        ]
+        // Outbound handshake / initiate
+        else if (peer.tier == InteractionTier.anonymous && dmAvailable)
           FilledButton.icon(
             onPressed: handshakeInProgress
                 ? null
@@ -361,52 +393,78 @@ class _ActionButtons extends ConsumerWidget {
       SipHandshakeState.helloSent ||
       SipHandshakeState.challengeReceived ||
       SipHandshakeState.responseSent ||
-      SipHandshakeState.pendingApproval ||
       SipHandshakeState.challengeSent ||
       SipHandshakeState.responseReceived => true,
       _ => false,
     };
   }
 
-  Future<void> _onHandshake(BuildContext context, WidgetRef ref) async {
-    final haptics = ref.read(hapticServiceProvider);
-    final hs = ref.read(sipHandshakeProvider);
+  void _onAccept(BuildContext context, WidgetRef ref) {
+    ref.read(hapticServiceProvider).trigger(HapticType.medium);
     final protocol = ref.read(protocolServiceProvider);
-    await haptics.trigger(HapticType.medium);
-
-    final frame = hs?.initiateHandshake(peer.nodeId);
-    if (frame != null) {
-      final encoded = SipCodec.encode(frame);
-      if (encoded != null) {
-        await protocol.sendSipPayload(encoded, SipMessageType.hsHello);
-        AppLogging.sip(
-          'MESH_EXPLORER: HS_HELLO sent to '
-          'node=0x${peer.nodeId.toRadixString(16)}',
-        );
-        if (context.mounted) {
-          showInfoSnackBar(context, context.l10n.meshExplorerHandshakeSent);
-          Navigator.of(context).pop();
-        }
-      }
-    } else if (context.mounted) {
-      showWarningSnackBar(context, context.l10n.meshExplorerHandshakeCooldown);
-    }
+    protocol.acceptSipHandshake(peer.nodeId);
+    Navigator.of(context).pop();
   }
 
-  Future<void> _onRequestIdentity(BuildContext context, WidgetRef ref) async {
-    final haptics = ref.read(hapticServiceProvider);
+  void _onDecline(BuildContext context, WidgetRef ref) {
+    ref.read(hapticServiceProvider).trigger(HapticType.light);
+    final protocol = ref.read(protocolServiceProvider);
+    protocol.declineSipHandshake(peer.nodeId);
+    Navigator.of(context).pop();
+  }
+
+  void _onHandshake(BuildContext context, WidgetRef ref) {
+    ref.read(hapticServiceProvider).trigger(HapticType.medium);
+    final l10n = context.l10n;
+
+    final handshake = ref.read(sipHandshakeProvider);
+    if (handshake == null) {
+      showErrorSnackBar(context, l10n.sipHandshakeFailed);
+      return;
+    }
+
+    // Already in progress — don't interrupt.
+    final currentState = handshake.getState(peer.nodeId);
+    if (currentState != SipHandshakeState.idle &&
+        currentState != SipHandshakeState.declined &&
+        currentState != SipHandshakeState.failed &&
+        currentState != SipHandshakeState.timedOut) {
+      return;
+    }
+
+    final frame = handshake.initiateHandshake(peer.nodeId);
+    if (frame == null) {
+      showWarningSnackBar(context, l10n.meshExplorerHandshakeCooldown);
+      return;
+    }
+
+    final encoded = SipCodec.encode(frame);
+    if (encoded == null) {
+      showErrorSnackBar(context, l10n.sipHandshakeFailed);
+      return;
+    }
+
+    final protocol = ref.read(protocolServiceProvider);
+    protocol.sendSipPacket(encoded);
+    ref.read(sipCountersProvider).recordHandshakeInitiated();
+
+    showInfoSnackBar(context, l10n.meshExplorerHandshakeSent);
+    Navigator.of(context).pop();
+  }
+
+  void _onRequestIdentity(BuildContext context, WidgetRef ref) {
+    ref.read(hapticServiceProvider).trigger(HapticType.medium);
     final identity = ref.read(sipIdentityHandlerProvider);
     final protocol = ref.read(protocolServiceProvider);
-    await haptics.trigger(HapticType.medium);
     final outbound = identity?.buildIdReq();
     if (outbound != null) {
-      await protocol.sendSipPayload(outbound.encoded, SipMessageType.idReq);
+      protocol.sendSipPacket(outbound.encoded);
       AppLogging.sip(
         'MESH_EXPLORER: ID_REQ sent to '
         'node=0x${peer.nodeId.toRadixString(16)}',
       );
     }
-    if (context.mounted) Navigator.of(context).pop();
+    Navigator.of(context).pop();
   }
 
   Future<void> _onPin(BuildContext context, WidgetRef ref) async {

@@ -7,6 +7,9 @@
 /// Gated behind [AppFeatureFlags.isMeshServicesEnabled].
 library;
 
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants.dart';
@@ -15,6 +18,8 @@ import '../models/mesh_service_instance.dart';
 import '../services/mesh_service_engine.dart';
 import '../services/mesh_service_store.dart';
 import '../services/mrrp_delivery_tracker.dart';
+import '../../../services/protocol/sip/mrrp_advert_engine.dart';
+import '../../../services/protocol/sip/mrrp_constants.dart';
 import '../../../services/protocol/sip/mrrp_service_registry.dart';
 import '../../../services/protocol/sip/mrrp_types.dart';
 import '../../../providers/mrrp_providers.dart';
@@ -91,6 +96,9 @@ final meshServiceEngineProvider = Provider<MeshServiceEngine?>((ref) {
   final engine = MeshServiceEngine(store: store);
   engine.onChanged = () {
     ref.read(meshServicesEpochProvider.notifier).bump();
+    // Update SERVICE_ADVERT metadata with current active instance titles
+    // so remote peers see meaningful service names in Mesh Explorer.
+    _updateServiceMetadata(store, registry, advertEngine);
   };
 
   // Wire immediate advert so remote peers discover newly-published
@@ -124,6 +132,10 @@ final meshServiceEngineProvider = Provider<MeshServiceEngine?>((ref) {
   }
 
   engine.start();
+
+  // Populate initial SERVICE_ADVERT metadata with any existing active
+  // instance titles. Runs async — doesn't block provider build.
+  _updateServiceMetadata(store, registry, advertEngine);
 
   ref.onDispose(() {
     engine.dispose();
@@ -176,3 +188,99 @@ final mrrpDeliveryTrackerProvider = Provider<MrrpDeliveryTracker?>((ref) {
   ref.onDispose(tracker.dispose);
   return tracker;
 });
+
+/// Update the SERVICE_ADVERT descriptor metadata for user-created mesh
+/// services with the titles of active instances.
+///
+/// Metadata format: UTF-8 encoded, truncated to 32 bytes. Contains up to
+/// the first active instance title that fits. Remote peers decode this to
+/// show the actual service name (e.g. "Android bbs title") instead of the
+/// generic "Mesh Services" category label.
+void _updateServiceMetadata(
+  MeshServiceStore store,
+  MrrpServiceRegistry registry,
+  MrrpAdvertEngine? advertEngine,
+) {
+  // Fire-and-forget: async but doesn't block the provider build.
+  Future<void>.microtask(() async {
+    try {
+      await store.open();
+      final active = await store.getActive();
+
+      // Build metadata: first active title, UTF-8, truncated to max.
+      final metadata = _buildInstanceMetadata(active);
+
+      final updated = registry.updateDescriptor(
+        MrrpServiceDescriptor(
+          serviceId: kMeshServicesInstanceServiceId,
+          serviceType: MrrpServiceType.app,
+          serviceFlags:
+              MrrpServiceFlags.supportsRequest |
+              MrrpServiceFlags.supportsResponse |
+              MrrpServiceFlags.ephemeralOnly |
+              MrrpServiceFlags.userVisible,
+          metadata: metadata,
+        ),
+      );
+
+      if (updated) {
+        // Re-broadcast so remote peers see the updated metadata.
+        await advertEngine?.broadcastNow();
+      }
+    } catch (e) {
+      AppLogging.mrrp(
+        'MESH_SERVICE_ENGINE: metadata update failed: $e', // lint-allow: hardcoded-string
+      );
+    }
+  });
+}
+
+/// Build SERVICE_ADVERT metadata bytes from active instances.
+///
+/// Format: UTF-8 string of the first active instance title, truncated to
+/// [MrrpConstants.mrrpServiceMetadataMaxLen] bytes. If multiple instances
+/// are active, appends " +N" count suffix when it fits.
+Uint8List _buildInstanceMetadata(List<MeshServiceInstance> active) {
+  if (active.isEmpty) return Uint8List(0);
+
+  const maxLen = MrrpConstants.mrrpServiceMetadataMaxLen;
+  final first = active.first;
+  var text = first.title;
+
+  // Append count suffix for multiple instances.
+  if (active.length > 1) {
+    final suffix = ' +${active.length - 1}'; // lint-allow: hardcoded-string
+    // Only add suffix if the title + suffix fits. Otherwise, just truncate
+    // the title to fill the space.
+    final fullText = '$text$suffix';
+    final fullBytes = utf8.encode(fullText);
+    if (fullBytes.length <= maxLen) {
+      text = fullText;
+    }
+  }
+
+  // UTF-8 encode and truncate to maxLen bytes (not chars — wire limit).
+  var bytes = utf8.encode(text);
+  if (bytes.length > maxLen) {
+    // Truncate at a valid UTF-8 boundary.
+    bytes = bytes.sublist(0, maxLen);
+    // Walk backwards to find a valid UTF-8 start byte.
+    while (bytes.isNotEmpty && (bytes.last & 0xC0) == 0x80) {
+      bytes = bytes.sublist(0, bytes.length - 1);
+    }
+    // If the last byte is a multi-byte start but incomplete, remove it.
+    if (bytes.isNotEmpty && bytes.last >= 0xC0) {
+      final startByte = bytes.last;
+      final expectedLen = startByte >= 0xF0
+          ? 4
+          : startByte >= 0xE0
+          ? 3
+          : 2;
+      if (bytes.length < expectedLen) {
+        bytes = bytes.sublist(0, bytes.length - 1);
+      }
+    }
+  }
+
+  return Uint8List.fromList(bytes);
+}

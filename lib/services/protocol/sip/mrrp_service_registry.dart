@@ -88,6 +88,15 @@ class MrrpServiceRegistry {
     );
   }
 
+  /// Update the descriptor for an already-registered service.
+  ///
+  /// Returns false if the service ID is not registered.
+  bool updateDescriptor(MrrpServiceDescriptor descriptor) {
+    if (!_descriptors.containsKey(descriptor.serviceId)) return false;
+    _descriptors[descriptor.serviceId] = descriptor;
+    return true;
+  }
+
   /// Get all registered descriptors.
   List<MrrpServiceDescriptor> getAll() =>
       _descriptors.values.toList(growable: false);

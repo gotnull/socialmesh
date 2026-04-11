@@ -187,7 +187,10 @@ final fileTransferEngineProvider = Provider<FileTransferEngine>((ref) {
     });
   }
 
+  final db = ref.read(fileTransferDatabaseProvider);
+
   engine = FileTransferEngine(
+    database: db,
     sendPacket: (payload, portnum, {destinationNode, hopLimit = 3}) async {
       // Always read the CURRENT protocol service for sending so that
       // reconnect-created instances are used transparently.
@@ -431,11 +434,13 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
     final resolved = <FileTransferState>[];
     for (final t in transfers) {
       if (t.savedFilePath == null) {
-        // Recovery: for completed transfers with no savedFilePath, check
-        // if the file exists at the expected path on disk. This covers the
-        // race condition where the app was killed after the eager auto-save
-        // wrote the file but before db.updateSavedPath completed.
-        if (t.state == TransferState.complete) {
+        // Recovery: for completed transfers or active outbound transfers
+        // with no savedFilePath, check if the file exists at the expected
+        // path on disk. This covers the race condition where the app was
+        // killed after the eager auto-save wrote the file but before
+        // db.updateSavedPath completed.
+        if (t.state == TransferState.complete ||
+            (t.isActive && t.direction == TransferDirection.outbound)) {
           final rel = _relativePathFor(t);
           final abs = p.join(docsDir.path, rel);
           if (File(abs).existsSync()) {
@@ -479,6 +484,165 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
       'Notifier: loaded ${transfers.length} transfers from database',
     );
     state = state.copyWith(transfers: map, isLoading: false);
+
+    // Recover active inbound transfers — rehydrate engine with persisted
+    // chunks so transfers survive app restart.
+    await _recoverActiveTransfers(db, resolved);
+  }
+
+  /// Rehydrate engine state for active transfers from the database.
+  ///
+  /// For each active transfer:
+  /// 1. Expire stale transfers (past expiresAt).
+  /// 2. Inbound: load persisted chunks, inject via
+  ///    [FileTransferEngine.restoreInboundTransfer].
+  /// 3. Outbound: load source file bytes from disk, inject via
+  ///    [FileTransferEngine.restoreOutboundTransfer]. If the source file
+  ///    is missing, the transfer is failed cleanly.
+  /// 4. Engine handles completion, NACK timers, or completion timeouts.
+  Future<void> _recoverActiveTransfers(
+    FileTransferDatabase db,
+    List<FileTransferState> transfers,
+  ) async {
+    final engine = ref.read(fileTransferEngineProvider);
+    final now = DateTime.now();
+    var recovered = 0;
+    var expired = 0;
+
+    for (final t in transfers) {
+      if (!t.isActive) continue;
+
+      // Expire stale transfers instead of recovering them.
+      if (t.expiresAt.isBefore(now)) {
+        AppLogging.fileTransfer(
+          'Recovery: ${t.fileIdHex} expired — marking failed',
+        );
+        final failed = t.copyWith(
+          state: TransferState.failed,
+          failReason: TransferFailReason.expired,
+        );
+        await db.saveTransfer(failed);
+        if (t.direction == TransferDirection.inbound) {
+          await db.deleteChunks(t.fileIdHex);
+        }
+        final updated = Map<String, FileTransferState>.from(state.transfers)
+          ..[t.fileIdHex] = failed;
+        state = state.copyWith(transfers: updated);
+        expired++;
+        continue;
+      }
+
+      if (t.direction == TransferDirection.inbound) {
+        // Inbound: only post-accept transfers (chunking / waitingMissing)
+        // are eligible for active chunk recovery. Transfers in offerPending
+        // were never accepted by the user — restoring them to chunking
+        // would silently bypass consent. Negotiation state is not persisted,
+        // so the offer cannot be re-presented. Fail them cleanly.
+        if (t.state != TransferState.chunking &&
+            t.state != TransferState.waitingMissing) {
+          AppLogging.fileTransfer(
+            'Recovery: ${t.fileIdHex} inbound — '
+            'pre-accept state ${t.state.name}, marking failed',
+          );
+          final failed = t.copyWith(
+            state: TransferState.failed,
+            failReason: TransferFailReason.invalid,
+          );
+          await db.saveTransfer(failed);
+          await db.deleteChunks(t.fileIdHex);
+          final updated = Map<String, FileTransferState>.from(state.transfers)
+            ..[t.fileIdHex] = failed;
+          state = state.copyWith(transfers: updated);
+          expired++;
+          continue;
+        }
+
+        // Load persisted chunks for this transfer.
+        final chunks = await db.loadChunks(t.fileIdHex);
+
+        AppLogging.fileTransfer(
+          'Recovery: ${t.fileIdHex} inbound — '
+          '${chunks.length}/${t.chunkCount} chunks found in DB',
+        );
+
+        final ok = engine.restoreInboundTransfer(t, chunks);
+        if (ok) recovered++;
+      } else {
+        // Outbound: only post-accept transfers (chunking / waitingMissing)
+        // are eligible for chunk-level resumability. Pre-accept transfers
+        // (created, offerSent, awaitingAccept) cannot be restored because
+        // the negotiation state is not persisted and the receiver may never
+        // have accepted. Fail them cleanly instead of pretending the
+        // handshake already happened.
+        if (t.state != TransferState.chunking &&
+            t.state != TransferState.waitingMissing) {
+          AppLogging.fileTransfer(
+            'Recovery: ${t.fileIdHex} outbound — '
+            'pre-accept state ${t.state.name}, marking failed',
+          );
+          final failed = t.copyWith(
+            state: TransferState.failed,
+            failReason: TransferFailReason.invalid,
+          );
+          await db.saveTransfer(failed);
+          final updated = Map<String, FileTransferState>.from(state.transfers)
+            ..[t.fileIdHex] = failed;
+          state = state.copyWith(transfers: updated);
+          expired++;
+          continue;
+        }
+
+        // Outbound post-accept: reload source file bytes from disk so
+        // the engine can reconstruct chunks for NACK retransmission.
+        Uint8List? fileBytes;
+        if (t.savedFilePath != null) {
+          try {
+            final file = File(t.savedFilePath!);
+            if (file.existsSync()) {
+              fileBytes = await file.readAsBytes();
+            }
+          } catch (e) {
+            AppLogging.fileTransfer(
+              'Recovery: ${t.fileIdHex} outbound — '
+              'failed to read source file: $e',
+            );
+          }
+        }
+
+        if (fileBytes == null) {
+          // Source file is gone — transfer cannot be resumed.
+          AppLogging.fileTransfer(
+            'Recovery: ${t.fileIdHex} outbound — '
+            'source file missing, marking failed',
+          );
+          final failed = t.copyWith(
+            state: TransferState.failed,
+            failReason: TransferFailReason.invalid,
+          );
+          await db.saveTransfer(failed);
+          final updated = Map<String, FileTransferState>.from(state.transfers)
+            ..[t.fileIdHex] = failed;
+          state = state.copyWith(transfers: updated);
+          expired++;
+          continue;
+        }
+
+        AppLogging.fileTransfer(
+          'Recovery: ${t.fileIdHex} outbound — '
+          '${fileBytes.length} bytes loaded from disk',
+        );
+
+        final withBytes = t.copyWith(fileBytes: fileBytes);
+        final ok = engine.restoreOutboundTransfer(withBytes);
+        if (ok) recovered++;
+      }
+    }
+
+    if (recovered > 0 || expired > 0) {
+      AppLogging.fileTransfer(
+        'Recovery complete: $recovered restored, $expired expired',
+      );
+    }
   }
 
   /// Update a single transfer state (called by engine callback).

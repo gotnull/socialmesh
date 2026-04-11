@@ -6,10 +6,10 @@ import 'package:socialmesh/features/mesh_explorer/models/interaction_tier.dart';
 
 void main() {
   group('InteractionTier', () {
-    test('anonymous tier has no capabilities', () {
+    test('anonymous tier can view board but not profile or DM', () {
       const tier = InteractionTier.anonymous;
       expect(tier.canViewProfile, isFalse);
-      expect(tier.canViewBoard, isFalse);
+      expect(tier.canViewBoard, isTrue);
       expect(tier.canDm, isFalse);
       expect(tier.canPin, isFalse);
       expect(tier.hasPersistentRecord, isFalse);

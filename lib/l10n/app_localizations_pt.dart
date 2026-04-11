@@ -32184,16 +32184,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'Publicações de pares próximos aparecerão aqui';
 
   @override
-  String get nearbyActivitySectionTitle => 'Atividade';
-
-  @override
-  String get nearbyActivityEmptyTitle => 'Sem atividade recente';
-
-  @override
-  String get nearbyActivityEmptyBody =>
-      'Serviços e sinais próximos aparecerão aqui';
-
-  @override
   String get meshExplorerNotConnectedTitle => 'Rádio não ligado';
 
   @override
@@ -32386,6 +32376,15 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get meshExplorerHandshakeInProgress => 'Em progresso…';
+
+  @override
+  String get meshExplorerHandshakeAccept => 'Accept';
+
+  @override
+  String get meshExplorerHandshakeDecline => 'Decline';
+
+  @override
+  String get meshExplorerHandshakeReceived => 'Handshake request received';
 
   @override
   String get meshServicesDrawerLabel => 'Os Meus Serviços';

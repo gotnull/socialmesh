@@ -14,6 +14,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/constants.dart';
 import '../services/protocol/sip/mrrp_advert_engine.dart';
+import '../services/protocol/sip/sip_constants.dart';
 import '../services/protocol/sip/mrrp_counters.dart';
 import '../services/protocol/sip/mrrp_dedup_cache.dart';
 import '../services/protocol/sip/mrrp_dispatcher.dart';
@@ -64,8 +65,7 @@ final mrrpServiceRegistryProvider = Provider<MrrpServiceRegistry?>((ref) {
       serviceFlags:
           MrrpServiceFlags.supportsRequest |
           MrrpServiceFlags.supportsResponse |
-          MrrpServiceFlags.ephemeralOnly |
-          MrrpServiceFlags.userVisible,
+          MrrpServiceFlags.ephemeralOnly,
     ),
   );
 
@@ -96,8 +96,7 @@ final mrrpServiceRegistryProvider = Provider<MrrpServiceRegistry?>((ref) {
       serviceFlags:
           MrrpServiceFlags.supportsRequest |
           MrrpServiceFlags.supportsResponse |
-          MrrpServiceFlags.requiresIdentity |
-          MrrpServiceFlags.userVisible,
+          MrrpServiceFlags.requiresIdentity,
     ),
   );
 
@@ -110,8 +109,7 @@ final mrrpServiceRegistryProvider = Provider<MrrpServiceRegistry?>((ref) {
       serviceFlags:
           MrrpServiceFlags.supportsRequest |
           MrrpServiceFlags.supportsResponse |
-          MrrpServiceFlags.ephemeralOnly |
-          MrrpServiceFlags.userVisible,
+          MrrpServiceFlags.ephemeralOnly,
     ),
   );
 
@@ -137,8 +135,7 @@ final mrrpServiceRegistryProvider = Provider<MrrpServiceRegistry?>((ref) {
         serviceType: MrrpServiceType.app,
         serviceFlags:
             MrrpServiceFlags.supportsRequest |
-            MrrpServiceFlags.supportsResponse |
-            MrrpServiceFlags.userVisible,
+            MrrpServiceFlags.supportsResponse,
       ),
     );
   }
@@ -333,19 +330,21 @@ final mrrpEngineProvider = Provider<MrrpEngine?>((ref) {
   // SIP transport send callback — shared by engine, dispatcher, and advert.
   // Rate-limited via SipRateLimiter to enforce the 1024 bytes/60s airtime
   // budget shared with SIP discovery frames.
-  Future<bool> sendViaSip(Uint8List sipPayload) async {
+  Future<bool> sendViaSip(Uint8List mrrpPayload) async {
+    // Account for the SIP frame header that sendSipPayload will add.
+    final wireSize = mrrpPayload.length + SipConstants.sipWrapperMin;
     final limiter = ref.read(sipRateLimiterProvider);
-    if (!limiter.canSend(sipPayload.length)) {
+    if (!limiter.canSend(wireSize)) {
       ref.read(mrrpCountersProvider).recordBudgetThrottle();
       return false;
     }
     final protocol = ref.read(protocolServiceProvider);
     final sent = await protocol.sendSipPayload(
-      sipPayload,
+      mrrpPayload,
       SipMessageType.mrrpData,
     );
     if (sent) {
-      limiter.recordSend(sipPayload.length);
+      limiter.recordSend(wireSize);
     }
     return sent;
   }
@@ -401,9 +400,8 @@ final mrrpEngineProvider = Provider<MrrpEngine?>((ref) {
   // buffer (_drainMrrpStartupBuffer). Each drained frame calls
   // engine.handleInboundFrame(), which checks `if (!_running)` first and
   // silently drops the frame if the engine is not yet running. Calling
-  // start() after attach means every frame in the startup buffer (e.g.,
-  // SERVICE_ADVERTs received before MrrpEngine was first built) is permanently
-  // dropped — the entire MRRP buffering fix is rendered ineffective.
+  // start() after attach means every frame in the startup buffer is
+  // permanently dropped.
   engine.start();
 
   // Attach to protocol service — drain of any buffered startup frames fires

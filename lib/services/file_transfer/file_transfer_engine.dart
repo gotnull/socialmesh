@@ -10,6 +10,7 @@ import 'package:crypto/crypto.dart';
 import '../../core/logging.dart';
 import '../protocol/socialmesh/sm_constants.dart';
 import '../protocol/socialmesh/sm_file_transfer.dart';
+import 'file_transfer_database.dart';
 
 /// Transfer direction.
 enum TransferDirection { outbound, inbound }
@@ -238,6 +239,9 @@ class FileTransferEngine {
   final SendPacketCallback _sendPacket;
   final void Function(FileTransferState) _onStateChanged;
 
+  /// Optional database for persisting inbound chunks across app restarts.
+  final FileTransferDatabase? _database;
+
   /// Active transfers keyed by file ID hex.
   final Map<String, FileTransferState> _transfers = {};
 
@@ -274,8 +278,10 @@ class FileTransferEngine {
   FileTransferEngine({
     required SendPacketCallback sendPacket,
     required void Function(FileTransferState) onStateChanged,
+    FileTransferDatabase? database,
   }) : _sendPacket = sendPacket,
-       _onStateChanged = onStateChanged;
+       _onStateChanged = onStateChanged,
+       _database = database;
 
   /// All active transfers.
   Map<String, FileTransferState> get transfers => Map.unmodifiable(_transfers);
@@ -490,6 +496,7 @@ class FileTransferEngine {
     // Remove from send queue
     _sendQueue.removeWhere((e) => e.$1 == fileIdHex);
     _chunkBuffers.remove(fileIdHex);
+    _database?.deleteChunks(fileIdHex);
     _cancelInactivityTimer(fileIdHex);
     _cancelCompletionTimeout(fileIdHex);
   }
@@ -592,6 +599,7 @@ class FileTransferEngine {
 
     // Clean up buffers
     _chunkBuffers.remove(fileIdHex);
+    _database?.deleteChunks(fileIdHex);
   }
 
   /// Handle an incoming file offer packet.
@@ -703,6 +711,11 @@ class FileTransferEngine {
     // Store chunk
     _chunkBuffers[idHex] ??= {};
     _chunkBuffers[idHex]![chunk.chunkIndex] = chunk.payload;
+
+    // Persist chunk to database for restart survivability.
+    // Uses REPLACE so duplicate writes are safe. Fire-and-forget — DB
+    // write must not block the receive path or slow chunk pacing.
+    _database?.saveChunk(idHex, chunk.chunkIndex, chunk.payload);
 
     // Update completed set
     final updated = Set<int>.from(transfer.completedChunks)
@@ -925,6 +938,198 @@ class FileTransferEngine {
     _transfers.remove(fileIdHex);
     _chunkBuffers.remove(fileIdHex);
     AppLogging.fileTransfer('removeTransfer: $fileIdHex removed from engine');
+  }
+
+  /// Restore an active inbound transfer from persisted state.
+  ///
+  /// Called during startup recovery to rehydrate the engine with transfers
+  /// that were active when the app was previously killed. Populates the
+  /// engine's transfer map and chunk buffers, then restarts the inactivity
+  /// timer for NACK recovery if chunks are still missing.
+  ///
+  /// **Only transfers that have durably crossed into the accepted / data
+  /// phase may be restored.** Resumable inbound states:
+  /// - `chunking` — user accepted, actively receiving chunks.
+  /// - `waitingMissing` — NACK recovery phase, user already accepted.
+  ///
+  /// Non-resumable inbound states (rejected on restore):
+  /// - `offerPending` — user never accepted; restoring to `chunking`
+  ///   would bypass user consent.
+  /// - `created`, `offerSent`, `awaitingAccept` — should not exist for
+  ///   inbound transfers, but defensively rejected.
+  ///
+  /// If all chunks are already present, triggers the completion path
+  /// immediately (reassembly + SHA-256 verify + ACK).
+  ///
+  /// Returns `true` if the transfer was successfully restored.
+  bool restoreInboundTransfer(
+    FileTransferState transfer,
+    Map<int, Uint8List> chunks,
+  ) {
+    if (transfer.direction != TransferDirection.inbound) {
+      AppLogging.fileTransfer(
+        'restoreInboundTransfer: ${transfer.fileIdHex} is not inbound',
+      );
+      return false;
+    }
+    if (_transfers.containsKey(transfer.fileIdHex)) {
+      AppLogging.fileTransfer(
+        'restoreInboundTransfer: ${transfer.fileIdHex} already tracked',
+      );
+      return false;
+    }
+
+    // Only post-accept inbound states are eligible for restoration.
+    // An inbound transfer persisted as offerPending was never accepted
+    // by the user — restoring it to chunking would silently bypass
+    // user consent. Negotiation state is not persisted, so the offer
+    // cannot be re-presented. Fail cleanly.
+    if (transfer.state != TransferState.chunking &&
+        transfer.state != TransferState.waitingMissing) {
+      AppLogging.fileTransfer(
+        'restoreInboundTransfer: ${transfer.fileIdHex} rejected — '
+        'pre-accept state ${transfer.state.name} is not resumable',
+      );
+      return false;
+    }
+
+    // Rebuild completedChunks from actual persisted chunk data.
+    final completedChunks = chunks.keys.toSet();
+
+    // Re-register transfer in engine state.
+    final restored = transfer.copyWith(
+      state: TransferState.chunking,
+      completedChunks: completedChunks,
+    );
+    _transfers[transfer.fileIdHex] = restored;
+
+    if (chunks.isNotEmpty) {
+      _chunkBuffers[transfer.fileIdHex] = Map<int, Uint8List>.from(chunks);
+    } else {
+      _chunkBuffers[transfer.fileIdHex] = {};
+    }
+
+    AppLogging.fileTransfer(
+      'restoreInboundTransfer: ${transfer.fileIdHex} restored '
+      '(${completedChunks.length}/${transfer.chunkCount} chunks)',
+    );
+
+    _onStateChanged(restored);
+
+    // If all chunks present, complete immediately.
+    if (completedChunks.length == transfer.chunkCount) {
+      _tryCompleteInbound(transfer.fileIdHex);
+    } else {
+      // Start inactivity timer so NACK fires for missing chunks.
+      _restartInactivityTimer(transfer.fileIdHex);
+    }
+
+    return true;
+  }
+
+  /// Restore an active outbound transfer from persisted state.
+  ///
+  /// Called during startup recovery to rehydrate the engine with outbound
+  /// transfers that were active when the app was previously killed. The
+  /// caller must populate [transfer.fileBytes] from the saved file on disk
+  /// so the engine can reconstruct chunks for NACK retransmission.
+  ///
+  /// **Only transfers that have durably crossed into the accepted / data
+  /// phase may be restored.** Pre-accept states (`created`, `offerSent`,
+  /// `awaitingAccept`) are rejected because:
+  /// - The receiver may never have received or accepted the offer.
+  /// - Negotiation state is not persisted, so re-sending OFFER would
+  ///   require protocol-level changes.
+  /// - Resuming chunk transmission without a confirmed ACCEPT violates
+  ///   the SPP v1 negotiation contract.
+  ///
+  /// The transfer is placed in [TransferState.chunking] and a completion
+  /// timeout is started. No chunks are proactively queued — the engine
+  /// passively waits for the receiver's NACK (requesting missing indexes)
+  /// or ACK (transfer complete). This is protocol-compatible: the
+  /// receiver's inactivity timer will fire and drive retransmission.
+  ///
+  /// Returns `true` if the transfer was successfully restored.
+  bool restoreOutboundTransfer(FileTransferState transfer) {
+    if (transfer.direction != TransferDirection.outbound) {
+      AppLogging.fileTransfer(
+        'restoreOutboundTransfer: ${transfer.fileIdHex} is not outbound',
+      );
+      return false;
+    }
+    if (_transfers.containsKey(transfer.fileIdHex)) {
+      AppLogging.fileTransfer(
+        'restoreOutboundTransfer: ${transfer.fileIdHex} already tracked',
+      );
+      return false;
+    }
+    if (transfer.fileBytes == null) {
+      AppLogging.fileTransfer(
+        'restoreOutboundTransfer: ${transfer.fileIdHex} has no file bytes',
+      );
+      return false;
+    }
+
+    // Only post-accept states are eligible for restoration. Transfers
+    // interrupted before the receiver's ACCEPT cannot safely resume
+    // because negotiation state is not persisted.
+    if (transfer.state != TransferState.chunking &&
+        transfer.state != TransferState.waitingMissing) {
+      AppLogging.fileTransfer(
+        'restoreOutboundTransfer: ${transfer.fileIdHex} rejected — '
+        'pre-accept state ${transfer.state.name} is not resumable',
+      );
+      return false;
+    }
+
+    // Validate source file integrity before restoration. A partially
+    // written file (crash during writeAsBytes) or a modified file would
+    // produce corrupted chunks that only fail at the receiver's SHA-256
+    // check, leaving the sender with an opaque timeout failure.
+    final fileBytes = transfer.fileBytes!;
+    if (fileBytes.length != transfer.totalBytes) {
+      AppLogging.fileTransfer(
+        'restoreOutboundTransfer: ${transfer.fileIdHex} rejected — '
+        'file size mismatch (disk=${fileBytes.length}, '
+        'expected=${transfer.totalBytes})',
+      );
+      return false;
+    }
+    final diskHash = sha256.convert(fileBytes);
+    var hashMatch = diskHash.bytes.length == transfer.sha256Hash.length;
+    if (hashMatch) {
+      for (var i = 0; i < diskHash.bytes.length; i++) {
+        if (diskHash.bytes[i] != transfer.sha256Hash[i]) {
+          hashMatch = false;
+          break;
+        }
+      }
+    }
+    if (!hashMatch) {
+      AppLogging.fileTransfer(
+        'restoreOutboundTransfer: ${transfer.fileIdHex} rejected — '
+        'SHA-256 mismatch (file corrupted or modified since original send)',
+      );
+      return false;
+    }
+
+    final restored = transfer.copyWith(state: TransferState.chunking);
+    _transfers[transfer.fileIdHex] = restored;
+
+    AppLogging.fileTransfer(
+      'restoreOutboundTransfer: ${transfer.fileIdHex} restored '
+      '(${transfer.totalBytes} bytes, ${transfer.chunkCount} chunks, '
+      'target=${transfer.targetNodeNum?.toRadixString(16) ?? "broadcast"})',
+    );
+
+    _onStateChanged(restored);
+
+    // Start completion timeout. The receiver's inactivity timer (10s) will
+    // fire and send a NACK well within this window (60s). If nothing
+    // arrives, the transfer completes as unreachable.
+    _startCompletionTimeout(transfer.fileIdHex);
+
+    return true;
   }
 
   /// Clean up resources.
@@ -1209,8 +1414,9 @@ class FileTransferEngine {
       ),
     );
 
-    // Free chunk buffer
+    // Free chunk buffer and persisted chunks.
     _chunkBuffers.remove(fileIdHex);
+    _database?.deleteChunks(fileIdHex);
 
     AppLogging.fileTransfer(
       'RX COMPLETE: $fileIdHex (${transfer.filename}, '
@@ -1237,6 +1443,7 @@ class FileTransferEngine {
 
     _sendQueue.removeWhere((e) => e.$1 == fileIdHex);
     _chunkBuffers.remove(fileIdHex);
+    _database?.deleteChunks(fileIdHex);
   }
 
   void _updateState(String fileIdHex, FileTransferState state) {
