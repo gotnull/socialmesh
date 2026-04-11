@@ -19430,6 +19430,35 @@ class AppLocalizationsPt extends AppLocalizations {
       'Número de mensagens não lidas';
 
   @override
+  String get widgetBuilderBindingHardwareModelDistribution =>
+      'Hardware Model Distribution';
+
+  @override
+  String get widgetBuilderBindingHardwareModelDistributionDesc =>
+      'Node count grouped by hardware model';
+
+  @override
+  String get widgetBuilderBindingRoleDistribution => 'Role Distribution';
+
+  @override
+  String get widgetBuilderBindingRoleDistributionDesc =>
+      'Node count grouped by device role';
+
+  @override
+  String get widgetBuilderDistributionTemplate => 'Distribution';
+
+  @override
+  String get widgetBuilderDistributionTemplateDesc =>
+      'Hardware model or role breakdown across your mesh';
+
+  @override
+  String get widgetBuilderDistributionEmpty => 'No hardware data available';
+
+  @override
+  String get widgetBuilderDistributionEmptyHint =>
+      'Connect to the mesh to see device distribution';
+
+  @override
   String get widgetBuilderBindingUptime => 'Tempo ativo';
 
   @override

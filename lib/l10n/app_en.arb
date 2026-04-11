@@ -26430,6 +26430,38 @@
     "@widgetBuilderBindingUnreadMessagesDesc": {
         "description": "Data binding description"
     },
+    "widgetBuilderBindingHardwareModelDistribution": "Hardware Model Distribution",
+    "@widgetBuilderBindingHardwareModelDistribution": {
+        "description": "Data binding label for hardware model distribution"
+    },
+    "widgetBuilderBindingHardwareModelDistributionDesc": "Node count grouped by hardware model",
+    "@widgetBuilderBindingHardwareModelDistributionDesc": {
+        "description": "Data binding description for hardware model distribution"
+    },
+    "widgetBuilderBindingRoleDistribution": "Role Distribution",
+    "@widgetBuilderBindingRoleDistribution": {
+        "description": "Data binding label for role distribution"
+    },
+    "widgetBuilderBindingRoleDistributionDesc": "Node count grouped by device role",
+    "@widgetBuilderBindingRoleDistributionDesc": {
+        "description": "Data binding description for role distribution"
+    },
+    "widgetBuilderDistributionTemplate": "Distribution",
+    "@widgetBuilderDistributionTemplate": {
+        "description": "Widget builder template name for distribution charts"
+    },
+    "widgetBuilderDistributionTemplateDesc": "Hardware model or role breakdown across your mesh",
+    "@widgetBuilderDistributionTemplateDesc": {
+        "description": "Widget builder template description for distribution charts"
+    },
+    "widgetBuilderDistributionEmpty": "No hardware data available",
+    "@widgetBuilderDistributionEmpty": {
+        "description": "Empty state message when no nodes have hardware model info"
+    },
+    "widgetBuilderDistributionEmptyHint": "Connect to the mesh to see device distribution",
+    "@widgetBuilderDistributionEmptyHint": {
+        "description": "Empty state hint for distribution widget"
+    },
     "widgetBuilderBindingUptime": "Uptime",
     "@widgetBuilderBindingUptime": {
         "description": "Data binding label"

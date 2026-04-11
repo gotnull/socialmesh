@@ -563,6 +563,155 @@ void main() {
         expect(value, isNotNull);
         expect(value, isA<num>());
       });
+
+      test(
+        'network.hardwareModelDistribution returns placeholder in preview mode',
+        () {
+          final binding = BindingSchema(
+            path: 'network.hardwareModelDistribution',
+          );
+          final value = engine.resolveBinding(binding);
+          expect(value, isNotNull);
+          expect(value, isA<Map<String, int>>());
+          final data = value as Map<String, int>;
+          expect(data.isNotEmpty, true);
+          expect(data.containsKey('T-Echo'), true);
+        },
+      );
+
+      test('network.roleDistribution returns placeholder in preview mode', () {
+        final binding = BindingSchema(path: 'network.roleDistribution');
+        final value = engine.resolveBinding(binding);
+        expect(value, isNotNull);
+        expect(value, isA<Map<String, int>>());
+        final data = value as Map<String, int>;
+        expect(data.isNotEmpty, true);
+        expect(data.containsKey('CLIENT'), true);
+      });
+    });
+
+    group('distribution bindings', () {
+      late DataBindingEngine engine;
+
+      setUp(() {
+        engine = DataBindingEngine();
+      });
+
+      test('hardwareModelDistribution groups nodes by hardware model', () {
+        final nodes = <int, MeshNode>{
+          1: MeshNode(
+            nodeNum: 1,
+            hardwareModel: 'Heltec V3',
+            lastHeard: DateTime.now(),
+          ),
+          2: MeshNode(
+            nodeNum: 2,
+            hardwareModel: 'Heltec V3',
+            lastHeard: DateTime.now(),
+          ),
+          3: MeshNode(
+            nodeNum: 3,
+            hardwareModel: 'T-Echo',
+            lastHeard: DateTime.now(),
+          ),
+          4: MeshNode(
+            nodeNum: 4,
+            hardwareModel: 'RAK4631',
+            lastHeard: DateTime.now(),
+          ),
+          5: MeshNode(
+            nodeNum: 5,
+            hardwareModel: 'RAK4631',
+            lastHeard: DateTime.now(),
+          ),
+          6: MeshNode(
+            nodeNum: 6,
+            hardwareModel: 'RAK4631',
+            lastHeard: DateTime.now(),
+          ),
+        };
+        engine.setAllNodes(nodes);
+
+        final binding = BindingSchema(
+          path: 'network.hardwareModelDistribution',
+        );
+        final value = engine.resolveBinding(binding);
+        expect(value, isA<Map<String, int>>());
+        final data = value as Map<String, int>;
+        expect(data['Heltec V3'], 2);
+        expect(data['T-Echo'], 1);
+        expect(data['RAK4631'], 3);
+      });
+
+      test('hardwareModelDistribution returns empty map when no nodes', () {
+        engine.setAllNodes({});
+
+        final binding = BindingSchema(
+          path: 'network.hardwareModelDistribution',
+        );
+        final value = engine.resolveBinding(binding);
+        expect(value, isA<Map<String, int>>());
+        final data = value as Map<String, int>;
+        expect(data.isEmpty, true);
+      });
+
+      test(
+        'hardwareModelDistribution skips nodes with null hardware model',
+        () {
+          final nodes = <int, MeshNode>{
+            1: MeshNode(
+              nodeNum: 1,
+              hardwareModel: 'T-Echo',
+              lastHeard: DateTime.now(),
+            ),
+            2: MeshNode(
+              nodeNum: 2,
+              hardwareModel: null,
+              lastHeard: DateTime.now(),
+            ),
+            3: MeshNode(
+              nodeNum: 3,
+              hardwareModel: '',
+              lastHeard: DateTime.now(),
+            ),
+          };
+          engine.setAllNodes(nodes);
+
+          final binding = BindingSchema(
+            path: 'network.hardwareModelDistribution',
+          );
+          final value = engine.resolveBinding(binding);
+          final data = value as Map<String, int>;
+          expect(data.length, 1);
+          expect(data['T-Echo'], 1);
+        },
+      );
+
+      test('roleDistribution groups nodes by role', () {
+        final nodes = <int, MeshNode>{
+          1: MeshNode(nodeNum: 1, role: 'CLIENT', lastHeard: DateTime.now()),
+          2: MeshNode(nodeNum: 2, role: 'CLIENT', lastHeard: DateTime.now()),
+          3: MeshNode(nodeNum: 3, role: 'ROUTER', lastHeard: DateTime.now()),
+          4: MeshNode(nodeNum: 4, role: null, lastHeard: DateTime.now()),
+        };
+        engine.setAllNodes(nodes);
+
+        final binding = BindingSchema(path: 'network.roleDistribution');
+        final value = engine.resolveBinding(binding);
+        final data = value as Map<String, int>;
+        expect(data['CLIENT'], 2);
+        expect(data['ROUTER'], 1);
+        expect(data['UNKNOWN'], 1);
+      });
+
+      test('roleDistribution returns empty map when no nodes', () {
+        engine.setAllNodes({});
+
+        final binding = BindingSchema(path: 'network.roleDistribution');
+        final value = engine.resolveBinding(binding);
+        final data = value as Map<String, int>;
+        expect(data.isEmpty, true);
+      });
     });
   });
 }

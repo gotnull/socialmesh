@@ -33911,6 +33911,54 @@ abstract class AppLocalizations {
   /// **'Number of unread messages'**
   String get widgetBuilderBindingUnreadMessagesDesc;
 
+  /// Data binding label for hardware model distribution
+  ///
+  /// In en, this message translates to:
+  /// **'Hardware Model Distribution'**
+  String get widgetBuilderBindingHardwareModelDistribution;
+
+  /// Data binding description for hardware model distribution
+  ///
+  /// In en, this message translates to:
+  /// **'Node count grouped by hardware model'**
+  String get widgetBuilderBindingHardwareModelDistributionDesc;
+
+  /// Data binding label for role distribution
+  ///
+  /// In en, this message translates to:
+  /// **'Role Distribution'**
+  String get widgetBuilderBindingRoleDistribution;
+
+  /// Data binding description for role distribution
+  ///
+  /// In en, this message translates to:
+  /// **'Node count grouped by device role'**
+  String get widgetBuilderBindingRoleDistributionDesc;
+
+  /// Widget builder template name for distribution charts
+  ///
+  /// In en, this message translates to:
+  /// **'Distribution'**
+  String get widgetBuilderDistributionTemplate;
+
+  /// Widget builder template description for distribution charts
+  ///
+  /// In en, this message translates to:
+  /// **'Hardware model or role breakdown across your mesh'**
+  String get widgetBuilderDistributionTemplateDesc;
+
+  /// Empty state message when no nodes have hardware model info
+  ///
+  /// In en, this message translates to:
+  /// **'No hardware data available'**
+  String get widgetBuilderDistributionEmpty;
+
+  /// Empty state hint for distribution widget
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to the mesh to see device distribution'**
+  String get widgetBuilderDistributionEmptyHint;
+
   /// Data binding label
   ///
   /// In en, this message translates to:

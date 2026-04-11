@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../models/widget_schema.dart';
 import '../models/data_binding.dart';
+import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/logging.dart';
 import '../../../core/theme.dart';
 
@@ -862,6 +863,11 @@ class _ChartRendererState extends State<ChartRenderer> {
     );
     AppLogging.widgets('[RENDERER] style.width=${widget.element.style.width}');
 
+    // Handle distribution chart separately (categorical data, not time-series)
+    if (widget.element.chartType == ChartType.distribution) {
+      return _buildDistributionChart();
+    }
+
     // Handle multi-line chart separately
     if (_isMultiLine) {
       AppLogging.widgets('[RENDERER] Taking multiLine path');
@@ -914,6 +920,9 @@ class _ChartRendererState extends State<ChartRenderer> {
       case ChartType.stackedBar:
         // These are handled by _buildMultiLineChart above
         chartWidget = _buildLineChart(data, chartColor);
+      case ChartType.distribution:
+        // Handled above before this switch; fallback to empty
+        chartWidget = const SizedBox.shrink();
     }
 
     // Wrap in SizedBox to ensure chart has bounded constraints
@@ -1423,6 +1432,153 @@ class _ChartRendererState extends State<ChartRenderer> {
             ],
           );
         }).toList(),
+      ),
+    );
+  }
+
+  /// Build a distribution chart from a `Map<String, int>` binding.
+  /// Shows horizontal bars with category labels and counts.
+  Widget _buildDistributionChart() {
+    final binding =
+        widget.element.binding ??
+        BindingSchema(path: 'network.hardwareModelDistribution');
+    final rawValue = widget.bindingEngine.resolveBinding(binding);
+
+    Map<String, int> data;
+    if (rawValue is Map<String, int>) {
+      data = rawValue;
+    } else if (rawValue is Map) {
+      data = rawValue.map((k, v) => MapEntry(k.toString(), v is int ? v : 0));
+    } else {
+      data = {};
+    }
+
+    if (data.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(AppTheme.spacing16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.bar_chart,
+                size: AppTheme.spacing32,
+                color: context.textSecondary.withValues(alpha: 0.5),
+              ),
+              const SizedBox(height: AppTheme.spacing8),
+              Text(
+                context.l10n.widgetBuilderDistributionEmpty,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: context.textSecondary,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppTheme.spacing4),
+              Text(
+                context.l10n.widgetBuilderDistributionEmptyHint,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: context.textSecondary.withValues(alpha: 0.7),
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Sort by count descending, then alphabetically
+    final sorted = data.entries.toList()
+      ..sort((a, b) {
+        final cmp = b.value.compareTo(a.value);
+        return cmp != 0 ? cmp : a.key.compareTo(b.key);
+      });
+
+    final maxValue = sorted.first.value;
+    final chartColor =
+        widget.element.style.textColorValue ?? widget.accentColor;
+    final chartHeight =
+        widget.element.style.height ??
+        (sorted.length * AppTheme.spacing32 + AppTheme.spacing8);
+
+    return SizedBox(
+      height: chartHeight,
+      child: ListView.separated(
+        physics: const NeverScrollableScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing4),
+        itemCount: sorted.length,
+        separatorBuilder: (_, _) => const SizedBox(height: AppTheme.spacing6),
+        itemBuilder: (context, index) {
+          final entry = sorted[index];
+          final fraction = maxValue > 0 ? entry.value / maxValue : 0.0;
+          final barColor = ChartColors.forIndex(index);
+
+          return Row(
+            children: [
+              SizedBox(
+                width: AppTheme.spacing60 + AppTheme.spacing20,
+                child: Text(
+                  entry.key,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: context.textSecondary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing8),
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return Stack(
+                      children: [
+                        Container(
+                          height: AppTheme.spacing20,
+                          decoration: BoxDecoration(
+                            color: chartColor.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius4,
+                            ),
+                          ),
+                        ),
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 400),
+                          curve: Curves.easeOut,
+                          height: AppTheme.spacing20,
+                          width: constraints.maxWidth * fraction,
+                          decoration: BoxDecoration(
+                            color: barColor,
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius4,
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing8),
+              SizedBox(
+                width: AppTheme.spacing32,
+                child: Text(
+                  entry.value.toString(),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: context.textPrimary,
+                  ),
+                  textAlign: TextAlign.right,
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

@@ -594,6 +594,22 @@ class BindingRegistry {
       valueType: int,
     ),
     BindingDefinition(
+      path: 'network.hardwareModelDistribution',
+      label: 'Hardware Model Distribution', // lint-allow: hardcoded-string
+      description:
+          'Node count grouped by hardware model', // lint-allow: hardcoded-string
+      category: BindingCategory.network,
+      valueType: Map<String, int>,
+    ),
+    BindingDefinition(
+      path: 'network.roleDistribution',
+      label: 'Role Distribution', // lint-allow: hardcoded-string
+      description:
+          'Node count grouped by device role', // lint-allow: hardcoded-string
+      category: BindingCategory.network,
+      valueType: Map<String, int>,
+    ),
+    BindingDefinition(
       path: 'messaging.recentCount',
       label: 'Recent Messages', // lint-allow: hardcoded-string
       description: 'Number of recent messages', // lint-allow: hardcoded-string
@@ -783,6 +799,9 @@ class BindingRegistry {
       'network.activeCount' => l10n.widgetBuilderBindingActiveMeshNodes,
       'network.onlineNodes' => l10n.widgetBuilderBindingActiveMeshNodesLegacy,
       'network.unreadMessages' => l10n.widgetBuilderBindingUnreadMessages,
+      'network.hardwareModelDistribution' =>
+        l10n.widgetBuilderBindingHardwareModelDistribution,
+      'network.roleDistribution' => l10n.widgetBuilderBindingRoleDistribution,
       'messaging.recentCount' => l10n.widgetBuilderBindingRecentMessages,
       'node.displayName' => l10n.widgetBuilderBindingDisplayName,
       'node.hopCount' => l10n.widgetBuilderBindingHopCount,
@@ -858,6 +877,10 @@ class BindingRegistry {
       'network.onlineNodes' =>
         l10n.widgetBuilderBindingActiveMeshNodesLegacyDesc,
       'network.unreadMessages' => l10n.widgetBuilderBindingUnreadMessagesDesc,
+      'network.hardwareModelDistribution' =>
+        l10n.widgetBuilderBindingHardwareModelDistributionDesc,
+      'network.roleDistribution' =>
+        l10n.widgetBuilderBindingRoleDistributionDesc,
       'messaging.recentCount' => l10n.widgetBuilderBindingRecentMessagesDesc,
       'node.displayName' => l10n.widgetBuilderBindingDisplayNameDesc,
       'node.hopCount' => l10n.widgetBuilderBindingHopCountDesc,
@@ -1158,6 +1181,22 @@ class DataBindingEngine {
         return 5;
       case 'network.activeCount':
         return 3;
+      case 'network.hardwareModelDistribution':
+        return <String, int>{
+          'T-Echo': 5,
+          'Heltec V3': 10,
+          'T1000-E': 8,
+          'RAK4631': 4,
+          'T-Beam': 3,
+        };
+      case 'network.roleDistribution':
+        return <String, int>{
+          'CLIENT': 15,
+          'CLIENT_MUTE': 6,
+          'ROUTER': 4,
+          'ROUTER_CLIENT': 3,
+          'REPEATER': 2,
+        };
 
       // Messages
       case 'messages.count':
@@ -1402,6 +1441,26 @@ class DataBindingEngine {
       case 'unreadMessages':
         // This would need to be tracked elsewhere
         return 0;
+      case 'hardwareModelDistribution':
+        final nodes = _allNodes;
+        if (nodes == null || nodes.isEmpty) return <String, int>{};
+        final counts = <String, int>{};
+        for (final node in nodes.values) {
+          final model = node.hardwareModel;
+          if (model != null && model.isNotEmpty) {
+            counts[model] = (counts[model] ?? 0) + 1;
+          }
+        }
+        return counts;
+      case 'roleDistribution':
+        final nodes = _allNodes;
+        if (nodes == null || nodes.isEmpty) return <String, int>{};
+        final counts = <String, int>{};
+        for (final node in nodes.values) {
+          final role = node.role ?? 'UNKNOWN';
+          counts[role] = (counts[role] ?? 0) + 1;
+        }
+        return counts;
       default:
         return null;
     }

@@ -35,6 +35,7 @@ enum ChartType {
   multiLine, // Multiple data series on one chart with legend
   stackedArea, // Stacked area chart for merged data
   stackedBar, // Stacked bar chart for merged data
+  distribution, // Categorical bar chart from Map<String, int> binding
 }
 
 /// Merge mode for combined charts

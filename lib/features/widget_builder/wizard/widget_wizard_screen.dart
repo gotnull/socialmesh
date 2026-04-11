@@ -221,6 +221,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
       );
     } else if (tags.contains('graph')) {
       templateFromTags = _getTemplates().firstWhere((t) => t.id == 'graph');
+    } else if (tags.contains('distribution')) {
+      templateFromTags = _getTemplates().firstWhere(
+        (t) => t.id == 'distribution',
+      );
     }
 
     if (templateFromTags != null) {
@@ -293,6 +297,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
   _WidgetTemplate? _detectTemplateFromStructure(ElementSchema root) {
     final templates = _getTemplates();
     bool hasChart = false;
+    bool hasDistributionChart = false;
     bool hasRadialGauge =
         false; // Radial/arc/battery/signal gauges = gauge template
     bool hasLinearGauge = false; // Linear gauges = status template
@@ -301,8 +306,13 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
 
     void scanElement(ElementSchema element) {
       if (element.type == ElementType.chart) {
-        hasChart = true;
-        AppLogging.widgets('Wizard: Found chart element');
+        if (element.chartType == ChartType.distribution) {
+          hasDistributionChart = true;
+          AppLogging.widgets('Wizard: Found distribution chart element');
+        } else {
+          hasChart = true;
+          AppLogging.widgets('Wizard: Found chart element');
+        }
       }
       if (element.type == ElementType.gauge) {
         // CRITICAL: Distinguish between gauge types
@@ -332,14 +342,19 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
     scanElement(root);
 
     AppLogging.widgets(
-      'Wizard: Structure detection - chart=$hasChart, radialGauge=$hasRadialGauge, '
-      'linearGauge=$hasLinearGauge, map=$hasMap, action=$hasAction, '
-      'bindings=${_selectedBindings.length}',
+      'Wizard: Structure detection - chart=$hasChart, distributionChart=$hasDistributionChart, '
+      'radialGauge=$hasRadialGauge, linearGauge=$hasLinearGauge, map=$hasMap, '
+      'action=$hasAction, bindings=${_selectedBindings.length}',
     );
 
     // Determine template based on detected elements
     // Order matters - more specific detections first
-    if (hasChart) {
+    if (hasDistributionChart) {
+      AppLogging.widgets(
+        'Wizard: Detected as DISTRIBUTION template (has distribution chart)',
+      );
+      return templates.firstWhere((t) => t.id == 'distribution');
+    } else if (hasChart) {
       AppLogging.widgets('Wizard: Detected as GRAPH template (has chart)');
       return templates.firstWhere((t) => t.id == 'graph');
     } else if (hasRadialGauge) {
@@ -1274,6 +1289,17 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
         suggestedBindings: ['node.rssi', 'node.snr'],
       ),
       _WidgetTemplate(
+        id: 'distribution',
+        name: context.l10n.widgetBuilderDistributionTemplate,
+        description: context.l10n.widgetBuilderDistributionTemplateDesc,
+        icon: Icons.bar_chart,
+        color: ChartColors.cyan,
+        suggestedBindings: [
+          'network.hardwareModelDistribution',
+          'network.roleDistribution',
+        ],
+      ),
+      _WidgetTemplate(
         id: 'blank',
         name: 'Start from Scratch',
         description:
@@ -1636,6 +1662,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
     // For gauge and graph widgets, only show numeric types
     final isGaugeWidget = _selectedTemplate?.id == 'gauge';
     final isGraphWidget = _selectedTemplate?.id == 'graph';
+    final isDistributionWidget = _selectedTemplate?.id == 'distribution';
     final numericOnly = isGaugeWidget || isGraphWidget;
 
     // Track labels to filter out aliases (device.* that duplicate node.* bindings)
@@ -1646,6 +1673,12 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
         // Filter by value type for gauge/graph widgets - only numeric
         if (numericOnly) {
           if (binding.valueType != int && binding.valueType != double) {
+            continue;
+          }
+        }
+        // Distribution widgets only show Map<String, int> bindings
+        if (isDistributionWidget) {
+          if (binding.valueType != Map<String, int>) {
             continue;
           }
         }
@@ -4750,6 +4783,14 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
         style: const StyleSchema(padding: 12, spacing: 4),
         children: children,
       );
+    } else if (_selectedTemplate?.id == 'distribution') {
+      // Distribution template: column layout for the distribution chart
+      AppLogging.widgets('[SCHEMA_BUILD] Using DISTRIBUTION layout (column)');
+      root = ElementSchema(
+        type: ElementType.column,
+        style: const StyleSchema(padding: 12, spacing: 8),
+        children: children,
+      );
     } else if (_layoutStyle == _LayoutStyle.horizontal) {
       AppLogging.widgets(
         '[SCHEMA_BUILD] Using HORIZONTAL layout, children: ${children.length}',
@@ -4911,6 +4952,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
     return switch (_selectedTemplate?.id) {
       'gauge' => _buildGaugeElements(name),
       'graph' => _buildGraphElements(name),
+      'distribution' => _buildDistributionElements(name),
       'info' => _buildInfoCardElements(name),
       'location' => _buildLocationElements(name),
       'environment' => _buildEnvironmentElements(name),
@@ -5095,6 +5137,38 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
           crossAxisAlignment: CrossAxisAlignmentOption.center,
         ),
         children: gaugeColumns,
+      ),
+    ];
+  }
+
+  /// Distribution: Horizontal bar chart from `Map<String, int>` binding
+  List<ElementSchema> _buildDistributionElements(String name) {
+    AppLogging.widgets('[DISTRIBUTION] === _buildDistributionElements ===');
+    AppLogging.widgets('[DISTRIBUTION] _selectedBindings=$_selectedBindings');
+
+    if (_selectedBindings.isEmpty) {
+      return [
+        ElementSchema(
+          type: ElementType.text,
+          text: 'Select a distribution binding', // lint-allow: hardcoded-string
+          style: StyleSchema(
+            textColor: _colorToHex(context.textSecondary),
+            fontSize: 13,
+          ),
+        ),
+      ];
+    }
+
+    // Distribution uses a single binding (the first one)
+    final bindingPath = _selectedBindings.first;
+    AppLogging.widgets('[DISTRIBUTION] Using binding: $bindingPath');
+
+    return [
+      ElementSchema(
+        type: ElementType.chart,
+        chartType: ChartType.distribution,
+        binding: BindingSchema(path: bindingPath),
+        style: const StyleSchema(height: 200),
       ),
     ];
   }
