@@ -33959,6 +33959,18 @@ abstract class AppLocalizations {
   /// **'Connect to the mesh to see device distribution'**
   String get widgetBuilderDistributionEmptyHint;
 
+  /// Label for nodes with missing or unrecognized hardware model in distribution chart
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get widgetBuilderDistributionUnknown;
+
+  /// Label for overflow categories merged due to display limit in distribution chart
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get widgetBuilderDistributionOther;
+
   /// Data binding label
   ///
   /// In en, this message translates to:

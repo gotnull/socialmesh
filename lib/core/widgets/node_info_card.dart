@@ -12,6 +12,7 @@ import '../../models/presence_confidence.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/presence_providers.dart';
 import '../../utils/snackbar.dart';
+import '../../utils/timestamp_validation.dart';
 import '../../utils/presence_utils.dart';
 import '../l10n/l10n_extension.dart';
 import '../theme.dart';
@@ -272,9 +273,10 @@ class NodeInfoCard extends ConsumerWidget {
 
   String _formatLastHeard(BuildContext context, DateTime? lastHeard) {
     final l10n = context.l10n;
-    if (lastHeard == null) return l10n.commonNever;
-    final diff = DateTime.now().difference(lastHeard);
-    if (diff.inMinutes < 1) return l10n.commonJustNow;
+    final validated = TimestampValidation.validated(lastHeard);
+    if (validated == null) return l10n.commonNever;
+    final diff = DateTime.now().difference(validated);
+    if (diff.isNegative || diff.inMinutes < 1) return l10n.commonJustNow;
     if (diff.inMinutes < 60) {
       return l10n.commonMinutesAgo(diff.inMinutes);
     }

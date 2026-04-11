@@ -1543,6 +1543,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
       'gauge' => 3, // Gauge shows up to 3 values horizontally
       'graph' => 2, // Graph can show up to 2 data series stacked vertically
       'info' => 4, // Info cards are text-focused
+      'distribution' => 1, // One distribution at a time (hardware OR role)
       _ => 6, // Default
     };
   }
@@ -1885,6 +1886,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
     final isActionsTemplate = _selectedTemplate?.id == 'actions';
     final isGraphTemplate = _selectedTemplate?.id == 'graph';
     final isGaugeTemplate = _selectedTemplate?.id == 'gauge';
+    final isDistributionTemplate = _selectedTemplate?.id == 'distribution';
     final isEnvironmentTemplate = _selectedTemplate?.id == 'environment';
     final isLocationTemplate = _selectedTemplate?.id == 'location';
     // Hide accent color for:
@@ -1929,7 +1931,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
         ],
         // Layout style (only for data widgets, not actions, graphs, or gauges)
         // Gauge widgets don't need layout options as they have a fixed layout
-        if (!isActionsTemplate && !isGraphTemplate && !isGaugeTemplate) ...[
+        if (!isActionsTemplate &&
+            !isGraphTemplate &&
+            !isGaugeTemplate &&
+            !isDistributionTemplate) ...[
           Text(
             'Layout',
             style: TextStyle(
@@ -4272,11 +4277,19 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
             _selectedTemplate?.name ??
             'My Widget'; // lint-allow: hardcoded-string
       }
-      // Pre-select suggested bindings (only for new widgets)
-      if (_currentStep == 1 &&
+      // Pre-select suggested bindings when leaving template step
+      // (so the Name step already has live preview data)
+      if (_currentStep == 0 &&
           _selectedTemplate != null &&
-          widget.initialSchema == null) {
-        _selectedBindings.addAll(_selectedTemplate!.suggestedBindings);
+          widget.initialSchema == null &&
+          _selectedBindings.isEmpty) {
+        // For distribution, only add the first suggested binding
+        final suggested = _selectedTemplate!.suggestedBindings;
+        if (_selectedTemplate!.id == 'distribution' && suggested.isNotEmpty) {
+          _selectedBindings.add(suggested.first);
+        } else {
+          _selectedBindings.addAll(suggested);
+        }
       }
 
       _pageController.nextPage(
@@ -5168,7 +5181,6 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
         type: ElementType.chart,
         chartType: ChartType.distribution,
         binding: BindingSchema(path: bindingPath),
-        style: const StyleSchema(height: 200),
       ),
     ];
   }

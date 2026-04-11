@@ -30,6 +30,7 @@ import '../../providers/presence_providers.dart';
 import '../../providers/social_providers.dart';
 import '../../utils/presence_utils.dart';
 import '../../utils/time_format.dart';
+import '../../utils/timestamp_validation.dart';
 import '../../utils/uptime_formatter.dart';
 import '../../core/constants.dart';
 import '../aether/providers/aether_flight_matcher_provider.dart';
@@ -1565,7 +1566,7 @@ class _NodeCard extends StatelessWidget {
                 ),
               SizedBox(height: AppTheme.spacing4),
               // Last heard
-              if (node.lastHeard != null) ...[
+              if (TimestampValidation.isPlausible(node.lastHeard)) ...[
                 Row(
                   children: [
                     Icon(Icons.check, size: 14, color: context.accentColor),

@@ -4,6 +4,8 @@ import 'dart:convert';
 
 import 'package:flutter/widgets.dart';
 
+import '../utils/timestamp_validation.dart';
+
 enum PresenceConfidence { active, fading, stale, unknown }
 
 /// Fuzzy last-seen buckets for human-friendly time display.
@@ -233,8 +235,12 @@ class PresenceCalculator {
     if (lastHeard == null) {
       return PresenceConfidence.unknown;
     }
+    if (!TimestampValidation.isPlausible(lastHeard, referenceTime: now)) {
+      return PresenceConfidence.unknown;
+    }
 
     final age = now.difference(lastHeard);
+    if (age.isNegative) return PresenceConfidence.unknown;
     if (age <= PresenceThresholds.activeWindow) {
       return PresenceConfidence.active;
     }
@@ -254,7 +260,12 @@ class PresenceCalculator {
   /// presence into fine-grained tiers (active/fading/stale/unknown).
   static bool isOnline(DateTime? lastHeard, {required DateTime now}) {
     if (lastHeard == null) return false;
-    return now.difference(lastHeard) <= PresenceThresholds.onlineWindow;
+    if (!TimestampValidation.isPlausible(lastHeard, referenceTime: now)) {
+      return false;
+    }
+    final age = now.difference(lastHeard);
+    if (age.isNegative) return false;
+    return age <= PresenceThresholds.onlineWindow;
   }
 }
 

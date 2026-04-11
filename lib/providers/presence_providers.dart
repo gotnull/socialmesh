@@ -15,6 +15,7 @@ import '../providers/app_providers.dart';
 import '../providers/app_lifecycle_provider.dart';
 import '../features/automations/automation_providers.dart';
 import '../services/extended_presence_service.dart';
+import '../utils/timestamp_validation.dart';
 
 final presenceClockProvider = Provider<DateTime Function()>(
   (_) => DateTime.now,
@@ -221,9 +222,11 @@ PresenceConfidence presenceConfidenceFor(
 Duration? lastHeardAgeFor(Map<int, NodePresence> presenceMap, MeshNode node) {
   final presence = presenceMap[node.nodeNum];
   if (presence != null) return presence.timeSinceLastHeard;
-  final heard = node.lastHeard;
+  final heard = TimestampValidation.validated(node.lastHeard);
   if (heard == null) return null;
-  return DateTime.now().difference(heard);
+  final age = DateTime.now().difference(heard);
+  if (age.isNegative) return null;
+  return age;
 }
 
 class PresenceNotifier extends Notifier<Map<int, NodePresence>> {

@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/l10n/l10n_extension.dart';
 import '../../utils/time_format.dart';
+import '../../utils/timestamp_validation.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
@@ -616,16 +617,21 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
 
   /// Whether a node was heard recently enough to be considered online.
   bool _isNodeOnline(MeshNode node) {
-    final lastHeard = node.lastHeard;
+    final lastHeard = TimestampValidation.validated(node.lastHeard);
     if (lastHeard == null) return false;
-    return DateTime.now().difference(lastHeard).inMinutes < 30;
+    final age = DateTime.now().difference(lastHeard);
+    if (age.isNegative) return false;
+    return age.inMinutes < 30;
   }
 
   /// Human-friendly relative time string for last heard.
   String _relativeLastHeard(BuildContext context, DateTime? lastHeard) {
-    if (lastHeard == null) return context.l10n.nodeDetailLastHeardNever;
-    final diff = DateTime.now().difference(lastHeard);
-    if (diff.inSeconds < 60) return context.l10n.nodeDetailLastHeardJustNow;
+    final validated = TimestampValidation.validated(lastHeard);
+    if (validated == null) return context.l10n.nodeDetailLastHeardNever;
+    final diff = DateTime.now().difference(validated);
+    if (diff.isNegative || diff.inSeconds < 60) {
+      return context.l10n.nodeDetailLastHeardJustNow;
+    }
     if (diff.inMinutes < 60) {
       return context.l10n.nodeDetailLastHeardMinutesAgo(diff.inMinutes);
     }
@@ -635,7 +641,7 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
     if (diff.inDays < 7) {
       return context.l10n.nodeDetailLastHeardDaysAgo(diff.inDays);
     }
-    return DateFormat('MMM d').format(lastHeard);
+    return DateFormat('MMM d').format(validated);
   }
 
   /// Signal quality label from SNR value.
@@ -1538,7 +1544,7 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
         SliverToBoxAdapter(child: _buildTrafficCard(context, node)),
 
         // Last heard timestamp at the bottom
-        if (node.lastHeard != null)
+        if (TimestampValidation.isPlausible(node.lastHeard))
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 12, 16, 4),

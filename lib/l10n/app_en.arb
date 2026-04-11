@@ -26462,6 +26462,14 @@
     "@widgetBuilderDistributionEmptyHint": {
         "description": "Empty state hint for distribution widget"
     },
+    "widgetBuilderDistributionUnknown": "Unknown",
+    "@widgetBuilderDistributionUnknown": {
+        "description": "Label for nodes with missing or unrecognized hardware model in distribution chart"
+    },
+    "widgetBuilderDistributionOther": "Other",
+    "@widgetBuilderDistributionOther": {
+        "description": "Label for overflow categories merged due to display limit in distribution chart"
+    },
     "widgetBuilderBindingUptime": "Uptime",
     "@widgetBuilderBindingUptime": {
         "description": "Data binding label"

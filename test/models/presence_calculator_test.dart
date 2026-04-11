@@ -145,4 +145,65 @@ void main() {
   test('onlineWindow matches Meshtastic firmware default of 2 hours', () {
     expect(PresenceThresholds.onlineWindow, const Duration(hours: 2));
   });
+
+  group('PresenceCalculator rejects implausible timestamps', () {
+    test('epoch zero lastHeard returns unknown', () {
+      final now = DateTime.now();
+      final epoch0 = DateTime.fromMillisecondsSinceEpoch(0);
+      expect(
+        PresenceCalculator.fromLastHeard(epoch0, now: now),
+        PresenceConfidence.unknown,
+      );
+    });
+
+    test('pre-2020 lastHeard returns unknown', () {
+      final now = DateTime.now();
+      final old = DateTime.utc(2019, 6, 15);
+      expect(
+        PresenceCalculator.fromLastHeard(old, now: now),
+        PresenceConfidence.unknown,
+      );
+    });
+
+    test('absurd future lastHeard returns unknown', () {
+      final now = DateTime.now();
+      final farFuture = now.add(const Duration(days: 365));
+      expect(
+        PresenceCalculator.fromLastHeard(farFuture, now: now),
+        PresenceConfidence.unknown,
+      );
+    });
+
+    test('slightly future lastHeard within 24h skew but ahead of now '
+        'returns unknown (negative age)', () {
+      final now = DateTime.now();
+      final slightlyAhead = now.add(const Duration(hours: 1));
+      expect(
+        PresenceCalculator.fromLastHeard(slightlyAhead, now: now),
+        PresenceConfidence.unknown,
+      );
+    });
+
+    test('epoch zero is not online', () {
+      final now = DateTime.now();
+      final epoch0 = DateTime.fromMillisecondsSinceEpoch(0);
+      expect(PresenceCalculator.isOnline(epoch0, now: now), isFalse);
+    });
+
+    test('absurd future is not online', () {
+      final now = DateTime.now();
+      final farFuture = now.add(const Duration(days: 365));
+      expect(PresenceCalculator.isOnline(farFuture, now: now), isFalse);
+    });
+
+    test('no correction applied — valid historical timestamp unchanged', () {
+      final now = DateTime.now();
+      final heard = now.subtract(const Duration(minutes: 5));
+      // Should be fading, not corrected to something else.
+      expect(
+        PresenceCalculator.fromLastHeard(heard, now: now),
+        PresenceConfidence.fading,
+      );
+    });
+  });
 }

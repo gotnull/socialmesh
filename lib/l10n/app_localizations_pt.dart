@@ -19459,6 +19459,12 @@ class AppLocalizationsPt extends AppLocalizations {
       'Connect to the mesh to see device distribution';
 
   @override
+  String get widgetBuilderDistributionUnknown => 'Unknown';
+
+  @override
+  String get widgetBuilderDistributionOther => 'Other';
+
+  @override
   String get widgetBuilderBindingUptime => 'Tempo ativo';
 
   @override

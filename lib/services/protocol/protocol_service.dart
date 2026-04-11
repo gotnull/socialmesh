@@ -3899,13 +3899,25 @@ class ProtocolService {
     // reconnection time, which is misleading.
     final DateTime deviceLastHeard;
     if (nodeInfo.hasLastHeard() && nodeInfo.lastHeard > 0) {
-      deviceLastHeard = DateTime.fromMillisecondsSinceEpoch(
-        nodeInfo.lastHeard * 1000,
-      );
-      AppLogging.protocol(
-        'NodeInfo ${nodeInfo.num}: using device lastHeard=${nodeInfo.lastHeard} '
-        '(${deviceLastHeard.toIso8601String()})',
-      );
+      final lastHeardEpoch = nodeInfo.lastHeard;
+      final nowEpoch = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+      if (lastHeardEpoch >= _minPlausibleEpoch &&
+          lastHeardEpoch <= nowEpoch + _maxFutureSlack) {
+        deviceLastHeard = DateTime.fromMillisecondsSinceEpoch(
+          lastHeardEpoch * 1000,
+        );
+        AppLogging.protocol(
+          'NodeInfo ${nodeInfo.num}: using device lastHeard=$lastHeardEpoch '
+          '(${deviceLastHeard.toIso8601String()})',
+        );
+      } else {
+        deviceLastHeard = DateTime.now();
+        final driftSeconds = lastHeardEpoch - nowEpoch;
+        AppLogging.protocol(
+          'NodeInfo ${nodeInfo.num}: implausible lastHeard=$lastHeardEpoch '
+          '(drift=${driftSeconds}s vs phone) — using phone time',
+        );
+      }
     } else {
       deviceLastHeard = DateTime.now();
       AppLogging.protocol(

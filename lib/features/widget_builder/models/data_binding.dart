@@ -5,6 +5,17 @@ import '../../../models/mesh_models.dart';
 import '../../../models/presence_confidence.dart';
 import '../models/widget_schema.dart';
 
+/// Sentinel keys for distribution chart special categories.
+/// These are canonical English keys used in the data layer; the renderer
+/// localizes them via l10n before display.
+class DistributionKeys {
+  static const String unknown = 'Unknown';
+  static const String other = 'Other';
+
+  /// Default maximum visible rows before overflow is merged into "Other".
+  static const int defaultMaxItems = 8;
+}
+
 /// Available data binding categories
 enum BindingCategory {
   node, // Node-specific data
@@ -1447,23 +1458,99 @@ class DataBindingEngine {
         final counts = <String, int>{};
         for (final node in nodes.values) {
           final model = node.hardwareModel;
-          if (model != null && model.isNotEmpty) {
-            counts[model] = (counts[model] ?? 0) + 1;
-          }
+          final key = (model == null || model.isEmpty)
+              ? DistributionKeys.unknown
+              : model;
+          counts[key] = (counts[key] ?? 0) + 1;
         }
-        return counts;
+        return _sortAndTruncateDistribution(counts);
       case 'roleDistribution':
         final nodes = _allNodes;
         if (nodes == null || nodes.isEmpty) return <String, int>{};
         final counts = <String, int>{};
         for (final node in nodes.values) {
-          final role = node.role ?? 'UNKNOWN';
-          counts[role] = (counts[role] ?? 0) + 1;
+          final role = node.role;
+          final key = (role == null || role.isEmpty)
+              ? DistributionKeys.unknown
+              : role;
+          counts[key] = (counts[key] ?? 0) + 1;
         }
-        return counts;
+        return _sortAndTruncateDistribution(counts);
       default:
         return null;
     }
+  }
+
+  /// Sort distribution data deterministically and truncate to max items.
+  ///
+  /// Sorting: count descending → label ascending (case-insensitive).
+  /// "Unknown" and "Other" always sort after real categories.
+  /// If more than [DistributionKeys.defaultMaxItems] categories exist,
+  /// the lowest-ranked are merged into an "Other" bucket.
+  Map<String, int> _sortAndTruncateDistribution(
+    Map<String, int> counts, {
+    int maxItems = DistributionKeys.defaultMaxItems,
+  }) {
+    if (counts.isEmpty) return counts;
+
+    // Sort entries: count desc, then label asc (case-insensitive),
+    // with Unknown/Other pinned to the end.
+    final sorted = counts.entries.toList()..sort(_compareDistributionEntries);
+
+    // No truncation needed if within limit.
+    if (maxItems <= 0 || sorted.length <= maxItems) {
+      return Map.fromEntries(sorted);
+    }
+
+    // Keep top (maxItems - 1) entries + merge the rest into "Other".
+    // If "Unknown" is in the overflow, preserve it separately.
+    final visible = sorted.sublist(0, maxItems - 1);
+    final overflow = sorted.sublist(maxItems - 1);
+
+    // Pull Unknown out of overflow if present — it should stay visible.
+    MapEntry<String, int>? unknownEntry;
+    var otherTotal = 0;
+    for (final entry in overflow) {
+      if (entry.key == DistributionKeys.unknown) {
+        unknownEntry = entry;
+      } else {
+        otherTotal += entry.value;
+      }
+    }
+
+    final result = Map.fromEntries(visible);
+    if (otherTotal > 0) {
+      result[DistributionKeys.other] = otherTotal;
+    }
+    if (unknownEntry != null) {
+      result[unknownEntry.key] = unknownEntry.value;
+    }
+    return result;
+  }
+
+  /// Distribution entry comparator: count desc → label asc (case-insensitive).
+  /// "Unknown" and "Other" sort after everything else.
+  static int _compareDistributionEntries(
+    MapEntry<String, int> a,
+    MapEntry<String, int> b,
+  ) {
+    // Pin Unknown and Other to the bottom.
+    final aSpecial = _distributionSortWeight(a.key);
+    final bSpecial = _distributionSortWeight(b.key);
+    if (aSpecial != bSpecial) return aSpecial.compareTo(bSpecial);
+
+    // Primary: count descending.
+    final cmp = b.value.compareTo(a.value);
+    if (cmp != 0) return cmp;
+
+    // Secondary: label ascending, case-insensitive.
+    return a.key.toLowerCase().compareTo(b.key.toLowerCase());
+  }
+
+  static int _distributionSortWeight(String key) {
+    if (key == DistributionKeys.other) return 1;
+    if (key == DistributionKeys.unknown) return 2;
+    return 0;
   }
 
   /// Apply transformation to a value
