@@ -522,6 +522,28 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
   }
 
   Widget _buildContent(BuildContext context, dynamic l10n) {
+    // Always show the header card immediately — we already have
+    // title, icon, service type, and node ID from the SERVICE_ADVERT.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _ServiceHeaderCard(
+          icon: widget.icon,
+          title: widget.serviceTitle,
+          serviceType: widget.serviceType,
+          accentColor: widget.accentColor,
+          nodeId: widget.nodeId,
+        ),
+        const SizedBox(height: AppTheme.spacing16),
+        _buildInstancesSection(context, l10n),
+      ],
+    );
+  }
+
+  /// Builds the instances / schema section below the header card.
+  ///
+  /// Shows a loading indicator while fetching, then the actual content.
+  Widget _buildInstancesSection(BuildContext context, dynamic l10n) {
     if (_loading) {
       return Center(
         child: Padding(
@@ -549,11 +571,23 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
 
     // Remote instances from MRRP fetch.
     if (_remoteInstances.isNotEmpty) {
-      return _buildRemoteInstancesContent(context, l10n);
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final inst in _remoteInstances) ...[
+            _RemoteInstanceCard(instance: inst),
+            const SizedBox(height: AppTheme.spacing8),
+          ],
+        ],
+      );
     }
 
     if (_schema != null) {
-      return _buildSchemaContent(context);
+      return GenericServiceRenderer(
+        schema: _schema!,
+        data: _data,
+        onAction: _onAction,
+      );
     }
 
     // No instances and no schema — show empty state.
@@ -562,53 +596,6 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
     }
 
     return _UnknownServiceState(serviceType: widget.serviceType, l10n: l10n);
-  }
-
-  Widget _buildRemoteInstancesContent(BuildContext context, dynamic l10n) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Service header card.
-        _ServiceHeaderCard(
-          icon: widget.icon,
-          title: widget.serviceTitle,
-          serviceType: widget.serviceType,
-          accentColor: widget.accentColor,
-          nodeId: widget.nodeId,
-        ),
-        const SizedBox(height: AppTheme.spacing16),
-
-        // Remote instance cards.
-        for (final inst in _remoteInstances) ...[
-          _RemoteInstanceCard(instance: inst),
-          const SizedBox(height: AppTheme.spacing8),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildSchemaContent(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Service header card.
-        _ServiceHeaderCard(
-          icon: widget.icon,
-          title: widget.serviceTitle,
-          serviceType: widget.serviceType,
-          accentColor: widget.accentColor,
-          nodeId: widget.nodeId,
-        ),
-        const SizedBox(height: AppTheme.spacing16),
-
-        // Schema-driven content.
-        GenericServiceRenderer(
-          schema: _schema!,
-          data: _data,
-          onAction: _onAction,
-        ),
-      ],
-    );
   }
 }
 
