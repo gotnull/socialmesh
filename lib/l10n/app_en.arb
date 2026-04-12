@@ -43184,6 +43184,50 @@
     "@meshServicesCreateSubtitle": {
         "description": "Subtitle on the template picker screen."
     },
+    "meshServicesTypeFeed": "Feed",
+    "@meshServicesTypeFeed": {
+        "description": "Canonical mesh service type name for feed-style services."
+    },
+    "meshServicesTypeFeedDescription": "Share posts, updates, or bulletin-style notices with nearby peers",
+    "@meshServicesTypeFeedDescription": {
+        "description": "Canonical mesh service type description for feed-style services."
+    },
+    "meshServicesTypeList": "List",
+    "@meshServicesTypeList": {
+        "description": "Canonical mesh service type name for list-style services."
+    },
+    "meshServicesTypeListDescription": "Coordinate checklists, supplies, or other shared collections",
+    "@meshServicesTypeListDescription": {
+        "description": "Canonical mesh service type description for list-style services."
+    },
+    "meshServicesTypePoll": "Poll",
+    "@meshServicesTypePoll": {
+        "description": "Canonical mesh service type name for poll services."
+    },
+    "meshServicesTypePollDescription": "Ask a multiple-choice question and collect nearby responses",
+    "@meshServicesTypePollDescription": {
+        "description": "Canonical mesh service type description for poll services."
+    },
+    "meshServicesTypeSignal": "Signal",
+    "@meshServicesTypeSignal": {
+        "description": "Canonical mesh service type name for signal services."
+    },
+    "meshServicesTypeSignalDescription": "Broadcast a short-lived beacon or alert across the mesh",
+    "@meshServicesTypeSignalDescription": {
+        "description": "Canonical mesh service type description for signal services."
+    },
+    "meshServicesTypeSensor": "Sensor",
+    "@meshServicesTypeSensor": {
+        "description": "Canonical mesh service type name for sensor services."
+    },
+    "meshServicesTypeSensorDescription": "Publish telemetry or measured readings from a local sensor source",
+    "@meshServicesTypeSensorDescription": {
+        "description": "Canonical mesh service type description for sensor services."
+    },
+    "meshServicesVisibilityOpen": "Open",
+    "@meshServicesVisibilityOpen": {
+        "description": "Badge label indicating a mesh service is discoverable by nearby peers."
+    },
     "meshServicesTemplateBoard": "Bulletin Board",
     "@meshServicesTemplateBoard": {
         "description": "Template display name for mesh bulletin board."
@@ -45509,6 +45553,10 @@
     "@serviceWizardStepWhat": {
         "description": "Step indicator label: choose what to create"
     },
+    "serviceWizardStepPreset": "Preset",
+    "@serviceWizardStepPreset": {
+        "description": "Step indicator label: optionally choose a preset for the selected canonical service type"
+    },
     "serviceWizardStepWho": "Who",
     "@serviceWizardStepWho": {
         "description": "Step indicator label: choose audience"
@@ -45528,6 +45576,22 @@
     "serviceWizardWhatSubtitle": "Choose a type of service to share on the mesh",
     "@serviceWizardWhatSubtitle": {
         "description": "Step 1 subtitle"
+    },
+    "serviceWizardPresetTitle": "Choose a preset",
+    "@serviceWizardPresetTitle": {
+        "description": "Step title for optionally choosing a preset for the selected canonical service type"
+    },
+    "serviceWizardPresetSubtitle": "Optional: pick a preset for this capability, or keep it generic",
+    "@serviceWizardPresetSubtitle": {
+        "description": "Step subtitle for the optional preset selection step"
+    },
+    "serviceWizardPresetGeneric": "No preset",
+    "@serviceWizardPresetGeneric": {
+        "description": "Label for using a canonical service type without a preset"
+    },
+    "serviceWizardPresetGenericDescription": "Start with a clean service and shape the details yourself",
+    "@serviceWizardPresetGenericDescription": {
+        "description": "Description for choosing no preset in the service creation wizard"
     },
     "serviceWizardWhoTitle": "Who can see it?",
     "@serviceWizardWhoTitle": {
@@ -45564,6 +45628,10 @@
     "serviceWizardReviewType": "Type",
     "@serviceWizardReviewType": {
         "description": "Summary row label: service type"
+    },
+    "serviceWizardReviewPreset": "Preset",
+    "@serviceWizardReviewPreset": {
+        "description": "Summary row label: selected preset"
     },
     "serviceWizardReviewAudience": "Audience",
     "@serviceWizardReviewAudience": {

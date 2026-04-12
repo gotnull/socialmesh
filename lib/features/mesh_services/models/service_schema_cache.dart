@@ -4,13 +4,13 @@
 /// In-memory cache for discovered service schemas.
 ///
 /// Peers cache schemas received via MRRP get_schema requests.
-/// Built-in templates also register their schemas here for
-/// consistent lookup. Entries expire after [ttl].
+/// Built-in canonical service schemas also register here for consistent lookup.
+/// Entries expire after [ttl].
 library;
 
 import 'service_schema.dart';
-import 'mesh_service_template.dart';
 import 'template_schemas.dart';
+import 'mesh_service_template.dart';
 
 /// Cache key: (nodeId, serviceType string).
 typedef _SchemaCacheKey = ({int nodeId, String serviceType});
@@ -57,7 +57,7 @@ class ServiceSchemaCache {
     final entry = _cache[key];
     if (entry != null) return entry.schema;
 
-    // Fall back to built-in template schema.
+    // Fall back to built-in canonical schema.
     return _builtInSchema(serviceType);
   }
 
@@ -95,10 +95,10 @@ class ServiceSchemaCache {
     if (oldestKey != null) _cache.remove(oldestKey);
   }
 
-  /// Look up a built-in template schema by service type string.
+  /// Look up a built-in canonical schema by service type string.
   static ServiceSchema? _builtInSchema(String serviceType) {
-    for (final id in MeshServiceTemplateId.values) {
-      final schema = TemplateSchemas.forTemplate(id);
+    for (final type in MeshServiceType.values) {
+      final schema = MeshServiceSchemas.forType(type);
       if (schema != null && schema.serviceType == serviceType) return schema;
     }
     return null;

@@ -171,7 +171,8 @@ void main() {
       addTearDown(engine.dispose);
 
       await engine.createInstance(
-        templateId: MeshServiceTemplateId.board,
+        canonicalType: MeshServiceType.feed,
+        presetId: MeshServicePresetId.bulletinBoard,
         title: 'Provider Test Board',
         ttlMinutes: 60,
       );
@@ -205,7 +206,8 @@ void main() {
 
       for (var i = 1; i <= 3; i++) {
         await engine.createInstance(
-          templateId: MeshServiceTemplateId.board,
+          canonicalType: MeshServiceType.feed,
+          presetId: MeshServicePresetId.bulletinBoard,
           title: 'Board $i',
           ttlMinutes: 30,
         );

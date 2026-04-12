@@ -281,8 +281,11 @@ class _InstanceDetailSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final template = MeshServiceTemplateCatalog.byId(instance.templateId);
-    final accent = template?.accentColor ?? context.accentColor;
+    final resolved = MeshServiceCatalog.resolve(
+      canonicalType: instance.canonicalType,
+      presetId: instance.presetId,
+    );
+    final accent = resolved.accentColor;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -298,11 +301,7 @@ class _InstanceDetailSheet extends ConsumerWidget {
                 color: accent.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(AppTheme.radius12),
               ),
-              child: Icon(
-                template?.icon ?? Icons.miscellaneous_services_outlined,
-                size: 24,
-                color: accent,
-              ),
+              child: Icon(resolved.icon, size: 24, color: accent),
             ),
             const SizedBox(width: AppTheme.spacing16),
             Expanded(

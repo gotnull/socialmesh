@@ -8,7 +8,6 @@
 /// Mesh Explorer screen.
 library;
 
-import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,6 +16,7 @@ import '../core/constants.dart';
 import '../core/logging.dart';
 import '../features/mesh_explorer/models/interaction_tier.dart';
 import '../features/mesh_explorer/models/mesh_explorer_peer.dart';
+import '../features/mesh_services/models/mesh_service_template.dart';
 import '../services/protocol/sip/mrrp_advert_engine.dart';
 import '../services/protocol/sip/mrrp_types.dart';
 import '../services/protocol/sip/sip_handshake.dart';
@@ -196,9 +196,15 @@ class MeshExplorerServiceInfo {
   /// Number of peers advertising this exact service instance.
   final int peerCount;
 
-  /// User-provided metadata decoded from SERVICE_ADVERT (UTF-8 title).
+  /// User-provided display title decoded from SERVICE_ADVERT.
   /// Null when no metadata is present (built-in services typically have none).
   final String? metadata;
+
+  /// Canonical capability for user-created mesh services, if available.
+  final MeshServiceType? canonicalType;
+
+  /// Optional preset flavor for user-created mesh services.
+  final MeshServicePresetId? presetId;
 
   /// The MRRP service ID.
   final int serviceId;
@@ -224,6 +230,8 @@ class MeshExplorerServiceInfo {
     required this.nodeId,
     required this.cachedAt,
     this.metadata,
+    this.canonicalType,
+    this.presetId,
     this.creatorName,
     this.isCreatorIdentified = false,
     this.creatorSigilSeed = 0,
@@ -264,12 +272,15 @@ final meshExplorerServicesProvider = Provider<List<MeshExplorerServiceInfo>>((
       }
 
       String? metadata;
+      MeshServiceType? canonicalType;
+      MeshServicePresetId? presetId;
       if (service.descriptor.metadata.isNotEmpty) {
-        try {
-          metadata = utf8.decode(service.descriptor.metadata);
-        } catch (_) {
-          // Not valid UTF-8 — ignore.
-        }
+        final decoded = MeshServiceAdvertMetadata.decode(
+          service.descriptor.metadata,
+        );
+        metadata = decoded.title.isEmpty ? null : decoded.title;
+        canonicalType = decoded.canonicalType;
+        presetId = decoded.presetId;
       }
 
       // Resolve creator identity from the peer list.
@@ -298,6 +309,8 @@ final meshExplorerServicesProvider = Provider<List<MeshExplorerServiceInfo>>((
           nodeId: nodeId,
           cachedAt: service.cachedAt,
           metadata: metadata,
+          canonicalType: canonicalType,
+          presetId: presetId,
           creatorName: creatorName,
           isCreatorIdentified: isCreatorIdentified,
           creatorSigilSeed: creatorSigilSeed,

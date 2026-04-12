@@ -12,17 +12,12 @@ import '../../../core/widgets/step_choice_card.dart';
 import '../../../core/widgets/summary_card.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../services/haptic_service.dart';
+import '../models/mesh_service_localization.dart';
 import '../models/mesh_service_template.dart';
 import 'mesh_service_creation_screen.dart';
 
-/// Audience scope for a new service.
 enum _AudienceScope { anyone, contactsOnly }
 
-/// Guided wizard for creating a new mesh service.
-///
-/// Steps: What → Who → Review.
-/// On confirmation, navigates to the full [MeshServiceCreationScreen]
-/// with the selected template, keeping the existing form + publish flow.
 class ServiceCreationWizard extends ConsumerStatefulWidget {
   const ServiceCreationWizard({super.key});
 
@@ -36,10 +31,11 @@ class _ServiceCreationWizardState extends ConsumerState<ServiceCreationWizard>
   final PageController _pageController = PageController();
   int _currentStep = 0;
 
-  MeshServiceTemplateId? _selectedTemplate;
+  MeshServiceType? _selectedType;
+  MeshServicePresetId? _selectedPreset;
   _AudienceScope _audience = _AudienceScope.anyone;
 
-  static const int _totalSteps = 3;
+  static const int _totalSteps = 4;
 
   List<GuidedFlowStep> _buildSteps(AppLocalizations l10n) => [
     GuidedFlowStep(
@@ -48,9 +44,14 @@ class _ServiceCreationWizardState extends ConsumerState<ServiceCreationWizard>
       color: AccentColors.cyan,
     ),
     GuidedFlowStep(
+      title: l10n.serviceWizardStepPreset,
+      icon: Icons.auto_awesome_outlined,
+      color: AccentColors.purple,
+    ),
+    GuidedFlowStep(
       title: l10n.serviceWizardStepWho,
       icon: Icons.people_outline,
-      color: AccentColors.purple,
+      color: AccentColors.emerald,
     ),
     GuidedFlowStep(
       title: l10n.serviceWizardStepReview,
@@ -82,27 +83,36 @@ class _ServiceCreationWizardState extends ConsumerState<ServiceCreationWizard>
   }
 
   bool get _canAdvance {
-    switch (_currentStep) {
-      case 0:
-        return _selectedTemplate != null;
-      case 1:
-        return true;
-      case 2:
-        return _selectedTemplate != null;
-      default:
-        return false;
-    }
+    return switch (_currentStep) {
+      0 => _selectedType != null,
+      _ => true,
+    };
   }
 
-  void _onConfirm() {
-    final template = MeshServiceTemplateCatalog.byId(_selectedTemplate!);
-    if (template == null) return;
+  void _selectType(MeshServiceType type) {
+    ref.haptics.trigger(HapticType.light);
+    setState(() {
+      _selectedType = type;
+      _selectedPreset = null;
+    });
+  }
+
+  void _selectPreset(MeshServicePresetId? presetId) {
+    ref.haptics.trigger(HapticType.light);
+    setState(() => _selectedPreset = presetId);
+  }
+
+  void _confirm() {
+    final selectedType = _selectedType;
+    if (selectedType == null) return;
 
     ref.haptics.trigger(HapticType.medium);
-
     Navigator.of(context).pushReplacement(
       MaterialPageRoute<void>(
-        builder: (_) => MeshServiceCreationScreen(template: template),
+        builder: (_) => MeshServiceCreationScreen(
+          canonicalType: selectedType,
+          presetId: _selectedPreset,
+        ),
       ),
     );
   }
@@ -123,16 +133,13 @@ class _ServiceCreationWizardState extends ConsumerState<ServiceCreationWizard>
       currentStep: _currentStep,
       pageController: _pageController,
       pageBuilder: (context, index) {
-        switch (index) {
-          case 0:
-            return _buildWhatStep(context, l10n);
-          case 1:
-            return _buildWhoStep(context, l10n);
-          case 2:
-            return _buildReviewStep(context, l10n);
-          default:
-            return const SizedBox.shrink();
-        }
+        return switch (index) {
+          0 => _buildTypeStep(context, l10n),
+          1 => _buildPresetStep(context, l10n),
+          2 => _buildAudienceStep(context, l10n),
+          3 => _buildReviewStep(context, l10n),
+          _ => const SizedBox.shrink(),
+        };
       },
       bottomBar: BottomActionBar(
         child: Row(
@@ -148,7 +155,7 @@ class _ServiceCreationWizardState extends ConsumerState<ServiceCreationWizard>
             Expanded(
               child: FilledButton(
                 onPressed: _canAdvance
-                    ? (_currentStep == _totalSteps - 1 ? _onConfirm : _nextStep)
+                    ? (_currentStep == _totalSteps - 1 ? _confirm : _nextStep)
                     : null,
                 child: Text(
                   _currentStep == _totalSteps - 1
@@ -163,10 +170,7 @@ class _ServiceCreationWizardState extends ConsumerState<ServiceCreationWizard>
     );
   }
 
-  // ─── Step 1: What ───
-
-  Widget _buildWhatStep(BuildContext context, AppLocalizations l10n) {
-    final templates = MeshServiceTemplateCatalog.all;
+  Widget _buildTypeStep(BuildContext context, AppLocalizations l10n) {
     return ListView(
       padding: const EdgeInsets.all(AppTheme.spacing16),
       children: [
@@ -179,29 +183,70 @@ class _ServiceCreationWizardState extends ConsumerState<ServiceCreationWizard>
           ),
         ),
         const SizedBox(height: AppTheme.spacing16),
-        ...templates.map((t) {
-          return Padding(
+        for (final typeDefinition in MeshServiceCatalog.allTypes)
+          Padding(
             padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
             child: StepChoiceCard(
-              icon: t.icon,
-              title: _templateName(l10n, t.id),
-              description: _templateDescription(l10n, t.id),
-              accentColor: t.accentColor,
-              isSelected: _selectedTemplate == t.id,
-              onTap: () {
-                ref.haptics.trigger(HapticType.light);
-                setState(() => _selectedTemplate = t.id);
-              },
+              icon: typeDefinition.icon,
+              title: meshServiceTypeName(l10n, typeDefinition.type),
+              description: meshServiceTypeDescription(
+                l10n,
+                typeDefinition.type,
+              ),
+              accentColor: typeDefinition.accentColor,
+              isSelected: _selectedType == typeDefinition.type,
+              onTap: () => _selectType(typeDefinition.type),
             ),
-          );
-        }),
+          ),
       ],
     );
   }
 
-  // ─── Step 2: Who ───
+  Widget _buildPresetStep(BuildContext context, AppLocalizations l10n) {
+    final selectedType = _selectedType;
+    if (selectedType == null) {
+      return const SizedBox.shrink();
+    }
 
-  Widget _buildWhoStep(BuildContext context, AppLocalizations l10n) {
+    final presets = MeshServiceCatalog.presetsForType(selectedType);
+    final base = MeshServiceCatalog.resolve(canonicalType: selectedType);
+
+    return ListView(
+      padding: const EdgeInsets.all(AppTheme.spacing16),
+      children: [
+        Text(l10n.serviceWizardPresetTitle, style: context.headingStyle),
+        const SizedBox(height: AppTheme.spacing4),
+        Text(
+          l10n.serviceWizardPresetSubtitle,
+          style: context.bodySecondaryStyle?.copyWith(
+            color: context.textSecondary,
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacing16),
+        StepChoiceCard(
+          icon: base.icon,
+          title: l10n.serviceWizardPresetGeneric,
+          description: l10n.serviceWizardPresetGenericDescription,
+          accentColor: base.accentColor,
+          isSelected: _selectedPreset == null,
+          onTap: () => _selectPreset(null),
+        ),
+        for (final preset in presets) ...[
+          const SizedBox(height: AppTheme.spacing8),
+          StepChoiceCard(
+            icon: preset.icon,
+            title: meshServicePresetName(l10n, preset.id),
+            description: meshServicePresetDescription(l10n, preset.id),
+            accentColor: preset.accentColor,
+            isSelected: _selectedPreset == preset.id,
+            onTap: () => _selectPreset(preset.id),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildAudienceStep(BuildContext context, AppLocalizations l10n) {
     return ListView(
       padding: const EdgeInsets.all(AppTheme.spacing16),
       children: [
@@ -241,12 +286,14 @@ class _ServiceCreationWizardState extends ConsumerState<ServiceCreationWizard>
     );
   }
 
-  // ─── Step 3: Review ───
-
   Widget _buildReviewStep(BuildContext context, AppLocalizations l10n) {
-    final template = _selectedTemplate != null
-        ? MeshServiceTemplateCatalog.byId(_selectedTemplate!)
-        : null;
+    final selectedType = _selectedType;
+    final resolved = selectedType == null
+        ? null
+        : MeshServiceCatalog.resolve(
+            canonicalType: selectedType,
+            presetId: _selectedPreset,
+          );
 
     return ListView(
       padding: const EdgeInsets.all(AppTheme.spacing16),
@@ -267,11 +314,21 @@ class _ServiceCreationWizardState extends ConsumerState<ServiceCreationWizard>
           rows: [
             SummaryRow(
               label: l10n.serviceWizardReviewType,
-              value: template != null
-                  ? _templateName(l10n, template.id)
-                  : '—', // lint-allow: hardcoded-string
-              icon: template?.icon,
-              iconColor: template?.accentColor,
+              value: selectedType == null
+                  ? '—' // lint-allow: hardcoded-string
+                  : meshServiceTypeName(l10n, selectedType),
+              icon: resolved?.icon,
+              iconColor: resolved?.accentColor,
+            ),
+            SummaryRow(
+              label: l10n.serviceWizardReviewPreset,
+              value: _selectedPreset == null
+                  ? l10n.serviceWizardPresetGeneric
+                  : meshServicePresetName(l10n, _selectedPreset!),
+              icon: _selectedPreset == null
+                  ? Icons.auto_fix_high
+                  : resolved?.icon,
+              iconColor: resolved?.accentColor,
             ),
             SummaryRow(
               label: l10n.serviceWizardReviewAudience,
@@ -315,57 +372,5 @@ class _ServiceCreationWizardState extends ConsumerState<ServiceCreationWizard>
         ),
       ],
     );
-  }
-
-  // ─── Template display name helpers ───
-
-  String _templateName(AppLocalizations l10n, MeshServiceTemplateId id) {
-    switch (id) {
-      case MeshServiceTemplateId.board:
-        return l10n.meshServicesTemplateBoard;
-      case MeshServiceTemplateId.signal:
-        return l10n.meshServicesTemplateSignal;
-      case MeshServiceTemplateId.poll:
-        return l10n.meshServicesTemplatePoll;
-      case MeshServiceTemplateId.checklist:
-        return l10n.meshServicesTemplateChecklist;
-      case MeshServiceTemplateId.resourceList:
-        return l10n.meshServicesTemplateResourceList;
-      case MeshServiceTemplateId.weatherStation:
-        return l10n.meshServicesTemplateWeatherStation;
-      case MeshServiceTemplateId.sensorNode:
-        return l10n.meshServicesTemplateSensorNode;
-      case MeshServiceTemplateId.taskBoard:
-        return l10n.meshServicesTemplateTaskBoard;
-      case MeshServiceTemplateId.trailConditions:
-        return l10n.meshServicesTemplateTrailConditions;
-      case MeshServiceTemplateId.lostAndFound:
-        return l10n.meshServicesTemplateLostAndFound;
-    }
-  }
-
-  String _templateDescription(AppLocalizations l10n, MeshServiceTemplateId id) {
-    switch (id) {
-      case MeshServiceTemplateId.board:
-        return l10n.meshServicesTemplateBoardDescription;
-      case MeshServiceTemplateId.signal:
-        return l10n.meshServicesTemplateSignalDescription;
-      case MeshServiceTemplateId.poll:
-        return l10n.meshServicesTemplatePollDescription;
-      case MeshServiceTemplateId.checklist:
-        return l10n.meshServicesTemplateChecklistDescription;
-      case MeshServiceTemplateId.resourceList:
-        return l10n.meshServicesTemplateResourceListDescription;
-      case MeshServiceTemplateId.weatherStation:
-        return l10n.meshServicesTemplateWeatherStationDescription;
-      case MeshServiceTemplateId.sensorNode:
-        return l10n.meshServicesTemplateSensorNodeDescription;
-      case MeshServiceTemplateId.taskBoard:
-        return l10n.meshServicesTemplateTaskBoardDescription;
-      case MeshServiceTemplateId.trailConditions:
-        return l10n.meshServicesTemplateTrailConditionsDescription;
-      case MeshServiceTemplateId.lostAndFound:
-        return l10n.meshServicesTemplateLostAndFoundDescription;
-    }
   }
 }

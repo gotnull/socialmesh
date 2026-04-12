@@ -3,7 +3,7 @@
 
 /// Service creation flow screen.
 ///
-/// Collects title, description, TTL, and template-specific fields.
+/// Collects title, description, TTL, and capability-specific fields.
 /// Shows a preview before publishing. Publishes via the engine.
 ///
 /// Design language mirrors [CreateSignalScreen]: GradientBorderContainer
@@ -22,9 +22,11 @@ import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/bottom_action_bar.dart';
 import '../../../core/widgets/completion_state_panel.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../l10n/app_localizations.dart';
 
 import '../../../services/haptic_service.dart';
 import '../../../utils/snackbar.dart';
+import '../models/mesh_service_localization.dart';
 import '../models/mesh_service_template.dart';
 import '../providers/mesh_service_providers.dart';
 
@@ -37,20 +39,22 @@ const _maxListItems = 10;
 /// Minimum poll options.
 const _minPollOptions = 2;
 
-/// Service creation screen for a specific template.
+/// Service creation screen for a canonical service capability.
 ///
 /// When [embedded] is `true` the screen strips its own scaffold and publish
 /// button, rendering only the form content — designed to live inside a
 /// parent wizard's [PageView].
 class MeshServiceCreationScreen extends ConsumerStatefulWidget {
-  final MeshServiceTemplate template;
+  final MeshServiceType canonicalType;
+  final MeshServicePresetId? presetId;
 
   /// If `true`, renders only the scrollable form (no scaffold/publish bar).
   final bool embedded;
 
   const MeshServiceCreationScreen({
     super.key,
-    required this.template,
+    required this.canonicalType,
+    this.presetId,
     this.embedded = false,
   });
 
@@ -81,13 +85,18 @@ class _MeshServiceCreationScreenState
   late final Animation<double> _fadeAnimation;
   late final Animation<Offset> _slideAnimation;
 
+  MeshServiceResolvedDefinition get _resolved => MeshServiceCatalog.resolve(
+    canonicalType: widget.canonicalType,
+    presetId: widget.presetId,
+  );
+
   @override
   void initState() {
     super.initState();
-    _ttlMinutes = widget.template.defaultTtlMinutes;
+    _ttlMinutes = _resolved.defaultTtlMinutes;
 
     // Initialize poll options.
-    if (widget.template.id == MeshServiceTemplateId.poll) {
+    if (_isPoll) {
       _optionControllers.addAll([
         TextEditingController(),
         TextEditingController(),
@@ -95,8 +104,7 @@ class _MeshServiceCreationScreenState
     }
 
     // Initialize list items.
-    if (widget.template.id == MeshServiceTemplateId.checklist ||
-        widget.template.id == MeshServiceTemplateId.resourceList) {
+    if (_hasList) {
       _itemControllers.add(TextEditingController());
     }
 
@@ -140,19 +148,33 @@ class _MeshServiceCreationScreenState
 
   void _dismissKeyboard() => FocusScope.of(context).unfocus();
 
-  bool get _isPoll => widget.template.id == MeshServiceTemplateId.poll;
+  bool get _isPoll => widget.canonicalType == MeshServiceType.poll;
 
-  bool get _hasList =>
-      widget.template.id == MeshServiceTemplateId.checklist ||
-      widget.template.id == MeshServiceTemplateId.resourceList;
+  bool get _hasList => widget.canonicalType == MeshServiceType.list;
+
+  String _displayName(AppLocalizations l10n) {
+    return meshServiceDisplayName(
+      l10n,
+      canonicalType: widget.canonicalType,
+      presetId: _resolved.presetId,
+    );
+  }
+
+  IconData get _listSectionIcon {
+    return switch (_resolved.presetId) {
+      MeshServicePresetId.sharedChecklist => Icons.checklist_outlined,
+      MeshServicePresetId.taskBoard => Icons.view_kanban_outlined,
+      _ => Icons.list_alt_outlined,
+    };
+  }
 
   // ─────────────────────── build ───────────────────────
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final (title, _) = _templateStrings(l10n);
-    final accent = widget.template.accentColor;
+    final title = _displayName(l10n);
+    final accent = _resolved.accentColor;
 
     // Embedded mode: just the scrollable form content, no scaffold/publish.
     if (widget.embedded) {
@@ -161,7 +183,7 @@ class _MeshServiceCreationScreenState
 
     // Post-publish success: show completion panel.
     if (_publishedSuccessfully) {
-      return _buildCompletionScreen(context, l10n, accent);
+      return _buildCompletionScreen(context, l10n);
     }
 
     return GestureDetector(
@@ -224,10 +246,12 @@ class _MeshServiceCreationScreenState
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // ── Template badge ──
-                                _TemplateBadge(
-                                  template: widget.template,
+                                // ── Service badge ──
+                                _ServiceBadge(
+                                  resolved: _resolved,
                                   title: title,
+                                  visibilityLabel:
+                                      l10n.meshServicesVisibilityOpen,
                                 ),
 
                                 const SizedBox(height: AppTheme.spacing20),
@@ -240,7 +264,7 @@ class _MeshServiceCreationScreenState
                                 // ── Description field ──
                                 _buildDescriptionField(l10n),
 
-                                // ── Template-specific fields ──
+                                // ── Capability-specific fields ──
                                 if (_isPoll) ...[
                                   const SizedBox(height: AppTheme.spacing16),
                                   ..._buildPollFields(l10n, accent),
@@ -301,11 +325,7 @@ class _MeshServiceCreationScreenState
 
   // ─────────────────── completion screen ───────────────────
 
-  Widget _buildCompletionScreen(
-    BuildContext context,
-    dynamic l10n,
-    Color accent,
-  ) {
+  Widget _buildCompletionScreen(BuildContext context, dynamic l10n) {
     return GlassScaffold(
       leading: IconButton(
         icon: Icon(Icons.close, color: context.textPrimary),
@@ -340,7 +360,7 @@ class _MeshServiceCreationScreenState
                 for (final c in _itemControllers) {
                   c.clear();
                 }
-                _ttlMinutes = widget.template.defaultTtlMinutes;
+                _ttlMinutes = _resolved.defaultTtlMinutes;
               });
             },
           ),
@@ -375,7 +395,11 @@ class _MeshServiceCreationScreenState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _TemplateBadge(template: widget.template, title: title),
+              _ServiceBadge(
+                resolved: _resolved,
+                title: title,
+                visibilityLabel: l10n.meshServicesVisibilityOpen,
+              ),
               const SizedBox(height: AppTheme.spacing20),
               _buildTitleInput(l10n, accent),
               const SizedBox(height: AppTheme.spacing16),
@@ -428,11 +452,11 @@ class _MeshServiceCreationScreenState
       enabled: !_publishing,
       maxLines: 2,
       minLines: 1,
-      maxLength: widget.template.maxTitleLength,
+      maxLength: _resolved.maxTitleLength,
       maxLengthEnforcement: MaxLengthEnforcement.enforced,
       textCapitalization: TextCapitalization.sentences,
       inputFormatters: [
-        LengthLimitingTextInputFormatter(widget.template.maxTitleLength),
+        LengthLimitingTextInputFormatter(_resolved.maxTitleLength),
       ],
       style: TextStyle(color: context.textPrimary),
       decoration: InputDecoration(
@@ -488,14 +512,14 @@ class _MeshServiceCreationScreenState
   // ─────────────────── description field ───────────────────
 
   Widget _buildDescriptionField(dynamic l10n) {
-    final accent = widget.template.accentColor;
+    final accent = _resolved.accentColor;
 
     return TextFormField(
       controller: _descriptionController,
       enabled: !_publishing,
       maxLines: 5,
       minLines: 3,
-      maxLength: widget.template.maxDescriptionLength,
+      maxLength: _resolved.maxDescriptionLength,
       textCapitalization: TextCapitalization.sentences,
       style: TextStyle(color: context.textPrimary),
       decoration: InputDecoration(
@@ -535,7 +559,7 @@ class _MeshServiceCreationScreenState
       // Section label
       _SectionLabel(
         icon: Icons.poll_outlined,
-        label: l10n.meshServicesTemplatePoll as String,
+        label: _displayName(l10n),
         color: accent,
       ),
       const SizedBox(height: AppTheme.spacing10),
@@ -644,15 +668,14 @@ class _MeshServiceCreationScreenState
   // ─────────────────── list fields ───────────────────
 
   List<Widget> _buildListFields(dynamic l10n, Color accent) {
-    final isChecklist = widget.template.id == MeshServiceTemplateId.checklist;
+    final isChecklist =
+        _resolved.presetId == MeshServicePresetId.sharedChecklist;
 
     return [
       // Section label
       _SectionLabel(
-        icon: isChecklist ? Icons.checklist_outlined : Icons.list_alt_outlined,
-        label: isChecklist
-            ? l10n.meshServicesTemplateChecklist as String
-            : l10n.meshServicesTemplateResourceList as String,
+        icon: _listSectionIcon,
+        label: _displayName(l10n),
         color: accent,
       ),
       const SizedBox(height: AppTheme.spacing10),
@@ -751,7 +774,7 @@ class _MeshServiceCreationScreenState
   // ─────────────────── duration selector ───────────────────
 
   Widget _buildDurationSelector(dynamic l10n, Color accent) {
-    final max = widget.template.maxTtlMinutes;
+    final max = _resolved.maxTtlMinutes;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -923,7 +946,7 @@ class _MeshServiceCreationScreenState
   Future<void> _onPublish() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // Validate template-specific fields.
+    // Validate capability-specific fields.
     final l10n = context.l10n;
     if (_isPoll) {
       final filledOptions = _optionControllers
@@ -954,7 +977,8 @@ class _MeshServiceCreationScreenState
 
     final config = _buildConfig();
     final instance = await engine.createInstance(
-      templateId: widget.template.id,
+      canonicalType: widget.canonicalType,
+      presetId: _resolved.presetId,
       title: _titleController.text.trim(),
       description: _descriptionController.text.trim(),
       ttlMinutes: _ttlMinutes,
@@ -973,14 +997,14 @@ class _MeshServiceCreationScreenState
   }
 
   Map<String, dynamic> _buildConfig() {
-    return switch (widget.template.id) {
-      MeshServiceTemplateId.poll => {
+    return switch (widget.canonicalType) {
+      MeshServiceType.poll => {
         'options': _optionControllers
             .map((c) => c.text.trim())
             .where((s) => s.isNotEmpty)
             .toList(),
       },
-      MeshServiceTemplateId.checklist || MeshServiceTemplateId.resourceList => {
+      MeshServiceType.list => {
         'items': _itemControllers
             .map((c) => c.text.trim())
             .where((s) => s.isNotEmpty)
@@ -989,67 +1013,27 @@ class _MeshServiceCreationScreenState
       _ => const {},
     };
   }
-
-  (String, String) _templateStrings(dynamic l10n) {
-    return switch (widget.template.id) {
-      MeshServiceTemplateId.board => (
-        l10n.meshServicesTemplateBoard as String,
-        l10n.meshServicesTemplateBoardDescription as String,
-      ),
-      MeshServiceTemplateId.signal => (
-        l10n.meshServicesTemplateSignal as String,
-        l10n.meshServicesTemplateSignalDescription as String,
-      ),
-      MeshServiceTemplateId.poll => (
-        l10n.meshServicesTemplatePoll as String,
-        l10n.meshServicesTemplatePollDescription as String,
-      ),
-      MeshServiceTemplateId.checklist => (
-        l10n.meshServicesTemplateChecklist as String,
-        l10n.meshServicesTemplateChecklistDescription as String,
-      ),
-      MeshServiceTemplateId.resourceList => (
-        l10n.meshServicesTemplateResourceList as String,
-        l10n.meshServicesTemplateResourceListDescription as String,
-      ),
-      MeshServiceTemplateId.weatherStation => (
-        l10n.meshServicesTemplateWeatherStation as String,
-        l10n.meshServicesTemplateWeatherStationDescription as String,
-      ),
-      MeshServiceTemplateId.sensorNode => (
-        l10n.meshServicesTemplateSensorNode as String,
-        l10n.meshServicesTemplateSensorNodeDescription as String,
-      ),
-      MeshServiceTemplateId.taskBoard => (
-        l10n.meshServicesTemplateTaskBoard as String,
-        l10n.meshServicesTemplateTaskBoardDescription as String,
-      ),
-      MeshServiceTemplateId.trailConditions => (
-        l10n.meshServicesTemplateTrailConditions as String,
-        l10n.meshServicesTemplateTrailConditionsDescription as String,
-      ),
-      MeshServiceTemplateId.lostAndFound => (
-        l10n.meshServicesTemplateLostAndFound as String,
-        l10n.meshServicesTemplateLostAndFoundDescription as String,
-      ),
-    };
-  }
 }
 
 // ═══════════════════════════════════════════════════════════════
 // Private widgets
 // ═══════════════════════════════════════════════════════════════
 
-/// Template badge shown above the main input.
-class _TemplateBadge extends StatelessWidget {
-  const _TemplateBadge({required this.template, required this.title});
+/// Service badge shown above the main input.
+class _ServiceBadge extends StatelessWidget {
+  const _ServiceBadge({
+    required this.resolved,
+    required this.title,
+    required this.visibilityLabel,
+  });
 
-  final MeshServiceTemplate template;
+  final MeshServiceResolvedDefinition resolved;
   final String title;
+  final String visibilityLabel;
 
   @override
   Widget build(BuildContext context) {
-    final accent = template.accentColor;
+    final accent = resolved.accentColor;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -1061,7 +1045,7 @@ class _TemplateBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(template.icon, size: 16, color: accent),
+          Icon(resolved.icon, size: 16, color: accent),
           const SizedBox(width: AppTheme.spacing8),
           Text(
             title,
@@ -1071,7 +1055,7 @@ class _TemplateBadge extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          if (template.isPublic) ...[
+          if (resolved.isPublic) ...[
             const SizedBox(width: AppTheme.spacing8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -1079,8 +1063,8 @@ class _TemplateBadge extends StatelessWidget {
                 color: SemanticColors.success.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(AppTheme.radius6),
               ),
-              child: const Text(
-                'Open', // lint-allow: hardcoded-string
+              child: Text(
+                visibilityLabel,
                 style: TextStyle(
                   fontSize: 9,
                   fontWeight: FontWeight.w700,
@@ -1095,7 +1079,7 @@ class _TemplateBadge extends StatelessWidget {
   }
 }
 
-/// Section label row for template-specific field groups.
+/// Section label row for capability-specific field groups.
 class _SectionLabel extends StatelessWidget {
   const _SectionLabel({
     required this.icon,

@@ -3,8 +3,9 @@
 
 /// Mesh service instance model.
 ///
-/// A user-created instance of a built-in template. Instances hold
-/// configuration/data; the template type defines the behavior.
+/// A user-created instance of a canonical mesh service type.
+/// Instances hold configuration/data; an optional preset captures the
+/// creation-time flavor without changing the core capability.
 /// Instances are locally persisted and advertised via MRRP.
 library;
 
@@ -29,8 +30,11 @@ class MeshServiceInstance {
   /// Unique local identifier (UUID v4 string).
   final String instanceId;
 
-  /// Which template this instance was created from.
-  final MeshServiceTemplateId templateId;
+  /// The canonical capability this instance provides.
+  final MeshServiceType canonicalType;
+
+  /// Optional creation preset.
+  final MeshServicePresetId? presetId;
 
   /// User-provided title.
   final String title;
@@ -47,13 +51,11 @@ class MeshServiceInstance {
   /// Current lifecycle status.
   final MeshServiceStatus status;
 
-  /// Template-specific configuration payload (JSON-encodable map).
+  /// Type-specific configuration payload (JSON-encodable map).
   /// Examples:
-  ///  - board: {} (uses title/description only)
+  ///  - feed: {} (uses title/description only)
   ///  - poll: {"question": "...", "options": ["A", "B", "C"]}
-  ///  - checklist: {"items": ["item1", "item2"]}
-  ///  - resourceList: {"items": ["resource1", "resource2"]}
-  ///  - signal: {"signalType": 1}
+  ///  - list: {"items": ["item1", "item2"]}
   final Map<String, dynamic> config;
 
   /// Whether this instance was created by the local user.
@@ -61,7 +63,8 @@ class MeshServiceInstance {
 
   const MeshServiceInstance({
     required this.instanceId,
-    required this.templateId,
+    required this.canonicalType,
+    this.presetId,
     required this.title,
     this.description = '',
     required this.createdAt,
@@ -97,6 +100,8 @@ class MeshServiceInstance {
 
   /// Create a copy with updated fields.
   MeshServiceInstance copyWith({
+    MeshServiceType? canonicalType,
+    MeshServicePresetId? presetId,
     String? title,
     String? description,
     DateTime? expiresAt,
@@ -105,7 +110,8 @@ class MeshServiceInstance {
   }) {
     return MeshServiceInstance(
       instanceId: instanceId,
-      templateId: templateId,
+      canonicalType: canonicalType ?? this.canonicalType,
+      presetId: presetId ?? this.presetId,
       title: title ?? this.title,
       description: description ?? this.description,
       createdAt: createdAt,
@@ -120,7 +126,8 @@ class MeshServiceInstance {
   Map<String, dynamic> toMap() {
     return {
       'instance_id': instanceId,
-      'template_id': templateId.name,
+      'canonical_type': canonicalType.name,
+      'preset_id': presetId?.name,
       'title': title,
       'description': description,
       'created_at': createdAt.millisecondsSinceEpoch,
@@ -133,12 +140,13 @@ class MeshServiceInstance {
 
   /// Deserialize from a SQLite row map.
   factory MeshServiceInstance.fromMap(Map<String, dynamic> map) {
+    final canonicalType = _canonicalTypeFromMap(map);
+    final presetId = _presetIdFromMap(map, canonicalType);
+
     return MeshServiceInstance(
       instanceId: map['instance_id'] as String,
-      templateId: MeshServiceTemplateId.values.firstWhere(
-        (e) => e.name == map['template_id'],
-        orElse: () => MeshServiceTemplateId.board,
-      ),
+      canonicalType: canonicalType,
+      presetId: presetId,
       title: map['title'] as String,
       description: (map['description'] as String?) ?? '',
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['created_at'] as int),
@@ -154,5 +162,43 @@ class MeshServiceInstance {
           : const {},
       isLocal: (map['is_local'] as int?) == 1,
     );
+  }
+
+  static MeshServiceType _canonicalTypeFromMap(Map<String, dynamic> map) {
+    final canonicalTypeName = map['canonical_type'] as String?;
+    if (canonicalTypeName != null) {
+      for (final value in MeshServiceType.values) {
+        if (value.name == canonicalTypeName) return value;
+      }
+    }
+
+    return MeshServiceCatalog.normalizeLegacyTemplateId(
+      map['template_id'] as String?,
+    ).canonicalType;
+  }
+
+  static MeshServicePresetId? _presetIdFromMap(
+    Map<String, dynamic> map,
+    MeshServiceType canonicalType,
+  ) {
+    final presetIdName = map['preset_id'] as String?;
+    if (presetIdName != null) {
+      for (final value in MeshServicePresetId.values) {
+        if (value.name == presetIdName) {
+          final preset = MeshServiceCatalog.presetById(value);
+          if (preset?.canonicalType == canonicalType) {
+            return value;
+          }
+        }
+      }
+    }
+
+    if (map['canonical_type'] != null) {
+      return null;
+    }
+
+    return MeshServiceCatalog.normalizeLegacyTemplateId(
+      map['template_id'] as String?,
+    ).presetId;
   }
 }

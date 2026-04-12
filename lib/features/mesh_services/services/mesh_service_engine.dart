@@ -91,8 +91,8 @@ class MeshServicesHandler implements MrrpServiceHandler {
     }
   }
 
-  /// list_instances response: count(1) + [instanceId(16) + templateId(1) +
-  /// titleLen(1) + title(N)]...
+  /// list_instances response: count(1) + [instanceId(16) +
+  /// canonicalType(1) + presetId(1) + titleLen(1) + title(N)]...
   Future<MrrpFrame> _handleListInstances(MrrpFrame request) async {
     final instances = await _store.getActive();
     final builder = BytesBuilder(copy: false);
@@ -103,8 +103,10 @@ class MeshServicesHandler implements MrrpServiceHandler {
       // Instance ID as first 16 bytes of the string (truncated/padded).
       final idBytes = encodeInstanceId(inst.instanceId);
       builder.add(idBytes);
-      // Template type as 1 byte.
-      builder.addByte(inst.templateId.index);
+      builder.addByte(inst.canonicalType.code);
+      builder.addByte(
+        inst.presetId?.code ?? MeshServiceAdvertMetadata.noPresetCode,
+      );
       // Title (length-prefixed, max 40 bytes).
       final titleBytes = truncateUtf8(inst.title, 40);
       builder.addByte(titleBytes.length);
@@ -125,10 +127,13 @@ class MeshServicesHandler implements MrrpServiceHandler {
       return _buildError(request, MrrpStatusCode.notFound);
     }
 
-    // Response: templateId(1) + status(1) + titleLen(1) + title(N) +
-    //           descLen(1) + desc(N) + expiresAt(4) + configLen(1) + config(N)
+    // Response: canonicalType(1) + presetId(1) + status(1) +
+    //           titleLen(1) + title(N) + descLen(1) + desc(N) + expiresAt(4)
     final builder = BytesBuilder(copy: false);
-    builder.addByte(inst.templateId.index);
+    builder.addByte(inst.canonicalType.code);
+    builder.addByte(
+      inst.presetId?.code ?? MeshServiceAdvertMetadata.noPresetCode,
+    );
     builder.addByte(inst.effectiveStatus.index);
 
     final titleBytes = truncateUtf8(inst.title, 40);
@@ -187,7 +192,7 @@ class MeshServicesHandler implements MrrpServiceHandler {
       return _buildError(request, MrrpStatusCode.notFound);
     }
 
-    final schema = TemplateSchemas.forTemplate(inst.templateId);
+    final schema = MeshServiceSchemas.forInstance(inst);
     if (schema == null) {
       return _buildError(request, MrrpStatusCode.notFound);
     }
@@ -314,14 +319,17 @@ class MeshServiceEngine {
 
   /// Create a new service instance and persist it.
   Future<MeshServiceInstance?> createInstance({
-    required MeshServiceTemplateId templateId,
+    required MeshServiceType canonicalType,
+    MeshServicePresetId? presetId,
     required String title,
     String description = '',
     required int ttlMinutes,
     Map<String, dynamic> config = const {},
   }) async {
-    final template = MeshServiceTemplateCatalog.byId(templateId);
-    if (template == null) return null;
+    final resolved = MeshServiceCatalog.resolve(
+      canonicalType: canonicalType,
+      presetId: presetId,
+    );
 
     final now = DateTime.now();
     // Generate a short unique ID (first 16 chars of timestamp + hash).
@@ -329,7 +337,8 @@ class MeshServiceEngine {
 
     final instance = MeshServiceInstance(
       instanceId: instanceId,
-      templateId: templateId,
+      canonicalType: canonicalType,
+      presetId: resolved.presetId,
       title: title,
       description: description,
       createdAt: now,
@@ -342,7 +351,7 @@ class MeshServiceEngine {
     if (!ok) return null;
 
     AppLogging.mrrp(
-      'MESH_SERVICE_ENGINE: created ${templateId.name} '
+      'MESH_SERVICE_ENGINE: created ${canonicalType.name} '
       'instance=$instanceId, ttl=${ttlMinutes}m', // lint-allow: hardcoded-string
     );
 
@@ -386,17 +395,19 @@ class MeshServiceEngine {
     int senderNodeId,
     Uint8List interactionPayload,
   ) async {
-    switch (instance.templateId) {
-      case MeshServiceTemplateId.poll:
+    switch (instance.canonicalType) {
+      case MeshServiceType.poll:
         return _handlePollVote(instance, senderNodeId, interactionPayload);
-      case MeshServiceTemplateId.checklist:
+      case MeshServiceType.list:
         return _handleChecklistToggle(
           instance,
           senderNodeId,
           interactionPayload,
         );
-      default:
-        // Board, signal, resourceList have no interaction beyond viewing.
+      case MeshServiceType.feed:
+      case MeshServiceType.signal:
+      case MeshServiceType.sensor:
+        // Feed, signal, and sensor services currently expose read-only views.
         return null;
     }
   }

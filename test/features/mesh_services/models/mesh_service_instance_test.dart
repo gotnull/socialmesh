@@ -15,7 +15,8 @@ void main() {
       final now = DateTime.now();
       active = MeshServiceInstance(
         instanceId: 'test-active-001',
-        templateId: MeshServiceTemplateId.board,
+        canonicalType: MeshServiceType.feed,
+        presetId: MeshServicePresetId.bulletinBoard,
         title: 'Test Board',
         description: 'A test bulletin board',
         createdAt: now,
@@ -25,7 +26,7 @@ void main() {
 
       stopped = MeshServiceInstance(
         instanceId: 'test-stopped-001',
-        templateId: MeshServiceTemplateId.poll,
+        canonicalType: MeshServiceType.poll,
         title: 'Stopped Poll',
         createdAt: now,
         expiresAt: now.add(const Duration(hours: 1)),
@@ -34,7 +35,7 @@ void main() {
 
       expired = MeshServiceInstance(
         instanceId: 'test-expired-001',
-        templateId: MeshServiceTemplateId.signal,
+        canonicalType: MeshServiceType.signal,
         title: 'Expired Signal',
         createdAt: now.subtract(const Duration(hours: 2)),
         expiresAt: now.subtract(const Duration(hours: 1)),
@@ -86,7 +87,8 @@ void main() {
     test('no expiry returns null for isExpired-related props', () {
       final noExpiry = MeshServiceInstance(
         instanceId: 'test-no-expiry',
-        templateId: MeshServiceTemplateId.board,
+        canonicalType: MeshServiceType.feed,
+        presetId: MeshServicePresetId.bulletinBoard,
         title: 'No Expiry',
         createdAt: DateTime.now(),
       );
@@ -98,7 +100,8 @@ void main() {
       final updated = active.copyWith(title: 'Updated Title');
       expect(updated.title, 'Updated Title');
       expect(updated.instanceId, active.instanceId);
-      expect(updated.templateId, active.templateId);
+      expect(updated.canonicalType, active.canonicalType);
+      expect(updated.presetId, active.presetId);
       expect(active.title, 'Test Board'); // Original unchanged.
     });
 
@@ -112,7 +115,7 @@ void main() {
       test('roundtrip preserves all fields', () {
         final instance = MeshServiceInstance(
           instanceId: 'ser-roundtrip',
-          templateId: MeshServiceTemplateId.poll,
+          canonicalType: MeshServiceType.poll,
           title: 'Poll Test',
           description: 'A poll',
           createdAt: DateTime(2025, 6, 1, 12, 0),
@@ -127,7 +130,8 @@ void main() {
         final restored = MeshServiceInstance.fromMap(map);
 
         expect(restored.instanceId, instance.instanceId);
-        expect(restored.templateId, instance.templateId);
+        expect(restored.canonicalType, instance.canonicalType);
+        expect(restored.presetId, instance.presetId);
         expect(restored.title, instance.title);
         expect(restored.description, instance.description);
         expect(
@@ -146,7 +150,8 @@ void main() {
       test('toMap encodes config as JSON string', () {
         final instance = MeshServiceInstance(
           instanceId: 'json-test',
-          templateId: MeshServiceTemplateId.checklist,
+          canonicalType: MeshServiceType.list,
+          presetId: MeshServicePresetId.sharedChecklist,
           title: 'Checklist',
           createdAt: DateTime(2025),
           config: {
@@ -161,7 +166,8 @@ void main() {
       test('fromMap handles null expires_at', () {
         final map = {
           'instance_id': 'null-exp',
-          'template_id': 'board',
+          'canonical_type': 'feed',
+          'preset_id': 'bulletinBoard',
           'title': 'No Expiry',
           'description': '',
           'created_at': DateTime.now().millisecondsSinceEpoch,
@@ -174,6 +180,24 @@ void main() {
         final instance = MeshServiceInstance.fromMap(map);
         expect(instance.expiresAt, isNull);
         expect(instance.isExpired, isFalse);
+      });
+
+      test('fromMap normalizes legacy template_id values', () {
+        final map = {
+          'instance_id': 'legacy-checklist',
+          'template_id': 'checklist',
+          'title': 'Checklist',
+          'description': '',
+          'created_at': DateTime.now().millisecondsSinceEpoch,
+          'expires_at': null,
+          'status': 'active',
+          'config': '{}',
+          'is_local': 1,
+        };
+
+        final instance = MeshServiceInstance.fromMap(map);
+        expect(instance.canonicalType, MeshServiceType.list);
+        expect(instance.presetId, MeshServicePresetId.sharedChecklist);
       });
 
       test('fromMap handles unknown template_id with fallback', () {
@@ -190,7 +214,8 @@ void main() {
         };
 
         final instance = MeshServiceInstance.fromMap(map);
-        expect(instance.templateId, MeshServiceTemplateId.board); // Fallback.
+        expect(instance.canonicalType, MeshServiceType.feed);
+        expect(instance.presetId, MeshServicePresetId.bulletinBoard);
       });
     });
   });

@@ -44,7 +44,7 @@ class MeshServiceStore {
 
     _db = await openDatabase(
       dbPath,
-      version: 1,
+      version: 2,
       onConfigure: (db) async {
         final walResult = await db.rawQuery('PRAGMA journal_mode=WAL');
         // Only enforce WAL for on-disk databases. In-memory databases
@@ -57,27 +57,12 @@ class MeshServiceStore {
         }
       },
       onCreate: (db, version) async {
-        await db.execute('''
-          CREATE TABLE IF NOT EXISTS service_instances (
-            instance_id TEXT PRIMARY KEY,
-            template_id TEXT NOT NULL,
-            title TEXT NOT NULL,
-            description TEXT NOT NULL DEFAULT '',
-            created_at INTEGER NOT NULL,
-            expires_at INTEGER,
-            status TEXT NOT NULL DEFAULT 'active',
-            config TEXT NOT NULL DEFAULT '{}',
-            is_local INTEGER NOT NULL DEFAULT 1
-          )
-        ''');
-        await db.execute('''
-          CREATE INDEX IF NOT EXISTS idx_instances_status
-          ON service_instances (status)
-        ''');
-        await db.execute('''
-          CREATE INDEX IF NOT EXISTS idx_instances_expires
-          ON service_instances (expires_at)
-        ''');
+        await _createTables(db);
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await _migrateFromV1(db);
+        }
       },
     );
 
@@ -113,7 +98,7 @@ class MeshServiceStore {
 
     AppLogging.mrrp(
       'MESH_SERVICE_STORE: inserted ${instance.instanceId} '
-      '(${instance.templateId.name})', // lint-allow: hardcoded-string
+      '(${instance.canonicalType.name})', // lint-allow: hardcoded-string
     );
     return true;
   }
@@ -230,5 +215,72 @@ class MeshServiceStore {
           "WHEN 'stopped' THEN 1 "
           'ELSE 2 END, created_at ASC LIMIT 1)',
     );
+  }
+
+  Future<void> _createTables(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS service_instances (
+        instance_id TEXT PRIMARY KEY,
+        canonical_type TEXT NOT NULL,
+        preset_id TEXT,
+        title TEXT NOT NULL,
+        description TEXT NOT NULL DEFAULT '',
+        created_at INTEGER NOT NULL,
+        expires_at INTEGER,
+        status TEXT NOT NULL DEFAULT 'active',
+        config TEXT NOT NULL DEFAULT '{}',
+        is_local INTEGER NOT NULL DEFAULT 1
+      )
+    ''');
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_instances_status
+      ON service_instances (status)
+    ''');
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_instances_expires
+      ON service_instances (expires_at)
+    ''');
+  }
+
+  Future<void> _migrateFromV1(Database db) async {
+    await db.transaction((txn) async {
+      await txn.execute('''
+        CREATE TABLE service_instances_v2 (
+          instance_id TEXT PRIMARY KEY,
+          canonical_type TEXT NOT NULL,
+          preset_id TEXT,
+          title TEXT NOT NULL,
+          description TEXT NOT NULL DEFAULT '',
+          created_at INTEGER NOT NULL,
+          expires_at INTEGER,
+          status TEXT NOT NULL DEFAULT 'active',
+          config TEXT NOT NULL DEFAULT '{}',
+          is_local INTEGER NOT NULL DEFAULT 1
+        )
+      ''');
+
+      final legacyRows = await txn.query('service_instances');
+      for (final row in legacyRows) {
+        final migrated = MeshServiceInstance.fromMap(row).toMap();
+        await txn.insert(
+          'service_instances_v2',
+          migrated,
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+
+      await txn.execute('DROP TABLE service_instances');
+      await txn.execute(
+        'ALTER TABLE service_instances_v2 RENAME TO service_instances',
+      );
+      await txn.execute('''
+        CREATE INDEX IF NOT EXISTS idx_instances_status
+        ON service_instances (status)
+      ''');
+      await txn.execute('''
+        CREATE INDEX IF NOT EXISTS idx_instances_expires
+        ON service_instances (expires_at)
+      ''');
+    });
   }
 }

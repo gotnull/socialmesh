@@ -25,6 +25,7 @@ import '../../../services/protocol/sip/mrrp_constants.dart';
 import '../../../services/protocol/sip/mrrp_frame.dart';
 import '../../../services/protocol/sip/mrrp_types.dart';
 import '../../../utils/snackbar.dart';
+import '../models/mesh_service_localization.dart';
 import '../models/mesh_service_template.dart';
 import '../models/service_schema.dart';
 import '../models/template_schemas.dart';
@@ -36,12 +37,14 @@ import '../widgets/generic_service_renderer.dart';
 /// A remote service instance parsed from a LIST_INSTANCES response.
 class _RemoteInstance {
   final String instanceId;
-  final MeshServiceTemplateId? templateId;
+  final MeshServiceType? canonicalType;
+  final MeshServicePresetId? presetId;
   final String title;
 
   const _RemoteInstance({
     required this.instanceId,
-    required this.templateId,
+    required this.canonicalType,
+    required this.presetId,
     required this.title,
   });
 }
@@ -49,14 +52,16 @@ class _RemoteInstance {
 /// A remote instance with its full detail from GET_INSTANCE response.
 class _RemoteInstanceDetail {
   final String instanceId;
-  final MeshServiceTemplateId? templateId;
+  final MeshServiceType? canonicalType;
+  final MeshServicePresetId? presetId;
   final String title;
   final String description;
   final DateTime? expiresAt;
 
   const _RemoteInstanceDetail({
     required this.instanceId,
-    required this.templateId,
+    required this.canonicalType,
+    required this.presetId,
     required this.title,
     required this.description,
     this.expiresAt,
@@ -182,9 +187,9 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
   }
 
   void _loadSchema() {
-    // Try to resolve schema from built-in templates first.
-    for (final id in MeshServiceTemplateId.values) {
-      final templateSchema = TemplateSchemas.forTemplate(id);
+    // Try to resolve schema from built-in canonical types first.
+    for (final type in MeshServiceType.values) {
+      final templateSchema = MeshServiceSchemas.forType(type);
       if (templateSchema != null &&
           templateSchema.serviceType == widget.serviceType) {
         setState(() {
@@ -269,7 +274,8 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
 
     // Parse LIST_INSTANCES response:
     // [0]      count
-    // For each: instanceId(16) + templateId(1) + titleLen(1) + title(N)
+    // For each: instanceId(16) + canonicalType(1) + presetId(1) +
+    // titleLen(1) + title(N)
     final payload = result.response!.payload;
     final instances = _parseListInstancesResponse(payload);
     if (instances.isEmpty) {
@@ -293,7 +299,8 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
       for (final inst in instances)
         _RemoteInstanceDetail(
           instanceId: inst.instanceId,
-          templateId: inst.templateId,
+          canonicalType: inst.canonicalType,
+          presetId: inst.presetId,
           title: inst.title,
           description: '',
         ),
@@ -340,17 +347,18 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
     var offset = 1;
 
     for (var i = 0; i < count; i++) {
-      if (offset + 18 > payload.length) break; // 16 id + 1 template + 1 len
+      if (offset + 19 > payload.length) break;
 
       final instanceId = MeshServicesHandler.decodeInstanceId(
         Uint8List.sublistView(payload, offset, offset + 16),
       );
       offset += 16;
 
-      final templateIdx = payload[offset++];
-      final templateId = templateIdx < MeshServiceTemplateId.values.length
-          ? MeshServiceTemplateId.values[templateIdx]
-          : null;
+      final canonicalType = MeshServiceType.fromCode(payload[offset++]);
+      final presetCode = payload[offset++];
+      final presetId = presetCode == MeshServiceAdvertMetadata.noPresetCode
+          ? null
+          : MeshServicePresetId.fromCode(presetCode);
 
       final titleLen = payload[offset++];
       if (offset + titleLen > payload.length) break;
@@ -366,7 +374,8 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
       instances.add(
         _RemoteInstance(
           instanceId: instanceId,
-          templateId: templateId,
+          canonicalType: canonicalType,
+          presetId: presetId,
           title: title,
         ),
       );
@@ -402,7 +411,7 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
     }
 
     // Parse GET_INSTANCE response:
-    // templateId(1) + status(1) + titleLen(1) + title(N) +
+    // canonicalType(1) + presetId(1) + status(1) + titleLen(1) + title(N) +
     // descLen(1) + desc(N) + expiresAt(4)
     final payload = result.response!.payload;
     return _parseGetInstanceResponse(payload, instance.instanceId);
@@ -412,13 +421,14 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
     Uint8List payload,
     String instanceId,
   ) {
-    if (payload.length < 7) return null; // min: 1+1+1+0+1+0+4
+    if (payload.length < 8) return null;
 
     var offset = 0;
-    final templateIdx = payload[offset++];
-    final templateId = templateIdx < MeshServiceTemplateId.values.length
-        ? MeshServiceTemplateId.values[templateIdx]
-        : null;
+    final canonicalType = MeshServiceType.fromCode(payload[offset++]);
+    final presetCode = payload[offset++];
+    final presetId = presetCode == MeshServiceAdvertMetadata.noPresetCode
+        ? null
+        : MeshServicePresetId.fromCode(presetCode);
 
     offset++; // status — skip for display purposes
 
@@ -456,7 +466,8 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
 
     return _RemoteInstanceDetail(
       instanceId: instanceId,
-      templateId: templateId,
+      canonicalType: canonicalType,
+      presetId: presetId,
       title: title,
       description: description,
       expiresAt: expiresAt,
@@ -475,31 +486,27 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
       return;
     }
 
-    // Subscribe to delivery state changes if not already subscribed.
     _deliverySub?.cancel();
     _deliverySub = tracker.stateChanges.listen((state) {
       if (mounted) setState(() => _activeDelivery = state);
     });
 
-    // Build MRRP request frame for this action.
     final request = MrrpFrame(
       versionMajor: MrrpConstants.mrrpVersionMajor,
       versionMinor: MrrpConstants.mrrpVersionMinor,
       msgType: MrrpMessageType.request,
       flags: MrrpFlags.ackRequired,
       headerLen: MrrpConstants.mrrpHeaderMin,
-      requestId: 0, // Dispatcher allocates the real ID
+      requestId: 0,
       serviceId: widget.serviceId,
       actionId: action.id,
       payloadLen: 0,
       payload: Uint8List(0),
     );
 
-    // Pre-capture l10n strings before async gap.
     final successMsg = localL10n.serviceDetailActionSuccess(action.name);
     final failureMsg = localL10n.serviceDetailActionFailed(action.name);
 
-    // Dispatch and track.
     final result = await tracker.trackRequest(request);
     if (!mounted) return;
     if (result.phase == DeliveryPhase.delivered && result.response != null) {
@@ -844,11 +851,20 @@ class _RemoteInstanceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final template = instance.templateId != null
-        ? MeshServiceTemplateCatalog.byId(instance.templateId!)
-        : null;
-    final icon = template?.icon ?? Icons.miscellaneous_services_outlined;
-    final accentColor = template?.accentColor ?? context.accentColor;
+    final resolved = instance.canonicalType == null
+        ? null
+        : MeshServiceCatalog.resolve(
+            canonicalType: instance.canonicalType!,
+            presetId: instance.presetId,
+          );
+    final icon = resolved?.icon ?? Icons.miscellaneous_services_outlined;
+    final accentColor = resolved?.accentColor ?? context.accentColor;
+    final typeLabel = instance.canonicalType == null
+        ? null
+        : meshServiceTypeName(l10n, instance.canonicalType!);
+    final presetLabel = instance.presetId == null
+        ? null
+        : meshServicePresetName(l10n, instance.presetId!);
 
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing16),
@@ -885,14 +901,41 @@ class _RemoteInstanceCard extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    if (instance.templateId != null)
+                    if (typeLabel != null)
                       Padding(
                         padding: const EdgeInsets.only(top: AppTheme.spacing2),
-                        child: Text(
-                          instance.templateId!.name,
-                          style: context.captionStyle?.copyWith(
-                            color: context.textTertiary,
-                          ),
+                        child: Row(
+                          children: [
+                            Text(
+                              typeLabel,
+                              style: context.captionStyle?.copyWith(
+                                color: context.textTertiary,
+                              ),
+                            ),
+                            if (presetLabel != null) ...[
+                              const SizedBox(width: AppTheme.spacing6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: AppTheme.spacing6,
+                                  vertical: AppTheme.spacing2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: accentColor.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radius8,
+                                  ),
+                                ),
+                                child: Text(
+                                  presetLabel,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: accentColor,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
                   ],
@@ -912,7 +955,6 @@ class _RemoteInstanceCard extends StatelessWidget {
             ),
           ],
           const SizedBox(height: AppTheme.spacing8),
-          // Expiry info
           Text(
             _expiryText(l10n, instance.expiresAt),
             style: context.captionStyle?.copyWith(color: context.textTertiary),

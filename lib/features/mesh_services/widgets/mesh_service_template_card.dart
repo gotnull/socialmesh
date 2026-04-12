@@ -1,31 +1,47 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Template card widget for the service template picker.
+/// Service option card widget for capability or preset selection.
 library;
 
 import 'package:flutter/material.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
+import '../models/mesh_service_localization.dart';
 import '../models/mesh_service_template.dart';
 
-/// Displays a single service template as a tappable card in the picker.
+/// Displays a canonical service type with an optional preset flavor.
 class MeshServiceTemplateCard extends StatelessWidget {
-  final MeshServiceTemplate template;
+  final MeshServiceType canonicalType;
+  final MeshServicePresetId? presetId;
   final VoidCallback onTap;
 
   const MeshServiceTemplateCard({
     super.key,
-    required this.template,
+    required this.canonicalType,
+    this.presetId,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final (title, description) = _templateStrings(l10n);
-    final accent = template.accentColor;
+    final resolved = MeshServiceCatalog.resolve(
+      canonicalType: canonicalType,
+      presetId: presetId,
+    );
+    final title = meshServiceDisplayName(
+      l10n,
+      canonicalType: canonicalType,
+      presetId: resolved.presetId,
+    );
+    final description = meshServiceDisplayDescription(
+      l10n,
+      canonicalType: canonicalType,
+      presetId: resolved.presetId,
+    );
+    final accent = resolved.accentColor;
 
     return Material(
       color: Colors.transparent,
@@ -49,7 +65,7 @@ class MeshServiceTemplateCard extends StatelessWidget {
                   color: accent.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(AppTheme.radius10),
                 ),
-                child: Icon(template.icon, size: 22, color: accent),
+                child: Icon(resolved.icon, size: 22, color: accent),
               ),
 
               const SizedBox(width: AppTheme.spacing12),
@@ -82,7 +98,7 @@ class MeshServiceTemplateCard extends StatelessWidget {
               const SizedBox(width: AppTheme.spacing8),
 
               // Public badge + chevron
-              if (template.isPublic)
+              if (resolved.isPublic)
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppTheme.spacing6,
@@ -92,8 +108,8 @@ class MeshServiceTemplateCard extends StatelessWidget {
                     color: SemanticColors.success.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(AppTheme.radius8),
                   ),
-                  child: const Text(
-                    'Open', // lint-allow: hardcoded-string
+                  child: Text(
+                    l10n.meshServicesVisibilityOpen,
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
@@ -113,50 +129,5 @@ class MeshServiceTemplateCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  (String, String) _templateStrings(dynamic l10n) {
-    return switch (template.id) {
-      MeshServiceTemplateId.board => (
-        l10n.meshServicesTemplateBoard as String,
-        l10n.meshServicesTemplateBoardDescription as String,
-      ),
-      MeshServiceTemplateId.signal => (
-        l10n.meshServicesTemplateSignal as String,
-        l10n.meshServicesTemplateSignalDescription as String,
-      ),
-      MeshServiceTemplateId.poll => (
-        l10n.meshServicesTemplatePoll as String,
-        l10n.meshServicesTemplatePollDescription as String,
-      ),
-      MeshServiceTemplateId.checklist => (
-        l10n.meshServicesTemplateChecklist as String,
-        l10n.meshServicesTemplateChecklistDescription as String,
-      ),
-      MeshServiceTemplateId.resourceList => (
-        l10n.meshServicesTemplateResourceList as String,
-        l10n.meshServicesTemplateResourceListDescription as String,
-      ),
-      MeshServiceTemplateId.weatherStation => (
-        l10n.meshServicesTemplateWeatherStation as String,
-        l10n.meshServicesTemplateWeatherStationDescription as String,
-      ),
-      MeshServiceTemplateId.sensorNode => (
-        l10n.meshServicesTemplateSensorNode as String,
-        l10n.meshServicesTemplateSensorNodeDescription as String,
-      ),
-      MeshServiceTemplateId.taskBoard => (
-        l10n.meshServicesTemplateTaskBoard as String,
-        l10n.meshServicesTemplateTaskBoardDescription as String,
-      ),
-      MeshServiceTemplateId.trailConditions => (
-        l10n.meshServicesTemplateTrailConditions as String,
-        l10n.meshServicesTemplateTrailConditionsDescription as String,
-      ),
-      MeshServiceTemplateId.lostAndFound => (
-        l10n.meshServicesTemplateLostAndFound as String,
-        l10n.meshServicesTemplateLostAndFoundDescription as String,
-      ),
-    };
   }
 }

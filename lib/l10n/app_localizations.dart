@@ -56716,6 +56716,72 @@ abstract class AppLocalizations {
   /// **'Choose what you want to share on the mesh'**
   String get meshServicesCreateSubtitle;
 
+  /// Canonical mesh service type name for feed-style services.
+  ///
+  /// In en, this message translates to:
+  /// **'Feed'**
+  String get meshServicesTypeFeed;
+
+  /// Canonical mesh service type description for feed-style services.
+  ///
+  /// In en, this message translates to:
+  /// **'Share posts, updates, or bulletin-style notices with nearby peers'**
+  String get meshServicesTypeFeedDescription;
+
+  /// Canonical mesh service type name for list-style services.
+  ///
+  /// In en, this message translates to:
+  /// **'List'**
+  String get meshServicesTypeList;
+
+  /// Canonical mesh service type description for list-style services.
+  ///
+  /// In en, this message translates to:
+  /// **'Coordinate checklists, supplies, or other shared collections'**
+  String get meshServicesTypeListDescription;
+
+  /// Canonical mesh service type name for poll services.
+  ///
+  /// In en, this message translates to:
+  /// **'Poll'**
+  String get meshServicesTypePoll;
+
+  /// Canonical mesh service type description for poll services.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask a multiple-choice question and collect nearby responses'**
+  String get meshServicesTypePollDescription;
+
+  /// Canonical mesh service type name for signal services.
+  ///
+  /// In en, this message translates to:
+  /// **'Signal'**
+  String get meshServicesTypeSignal;
+
+  /// Canonical mesh service type description for signal services.
+  ///
+  /// In en, this message translates to:
+  /// **'Broadcast a short-lived beacon or alert across the mesh'**
+  String get meshServicesTypeSignalDescription;
+
+  /// Canonical mesh service type name for sensor services.
+  ///
+  /// In en, this message translates to:
+  /// **'Sensor'**
+  String get meshServicesTypeSensor;
+
+  /// Canonical mesh service type description for sensor services.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish telemetry or measured readings from a local sensor source'**
+  String get meshServicesTypeSensorDescription;
+
+  /// Badge label indicating a mesh service is discoverable by nearby peers.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get meshServicesVisibilityOpen;
+
   /// Template display name for mesh bulletin board.
   ///
   /// In en, this message translates to:
@@ -59740,6 +59806,12 @@ abstract class AppLocalizations {
   /// **'What'**
   String get serviceWizardStepWhat;
 
+  /// Step indicator label: optionally choose a preset for the selected canonical service type
+  ///
+  /// In en, this message translates to:
+  /// **'Preset'**
+  String get serviceWizardStepPreset;
+
   /// Step indicator label: choose audience
   ///
   /// In en, this message translates to:
@@ -59769,6 +59841,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Choose a type of service to share on the mesh'**
   String get serviceWizardWhatSubtitle;
+
+  /// Step title for optionally choosing a preset for the selected canonical service type
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a preset'**
+  String get serviceWizardPresetTitle;
+
+  /// Step subtitle for the optional preset selection step
+  ///
+  /// In en, this message translates to:
+  /// **'Optional: pick a preset for this capability, or keep it generic'**
+  String get serviceWizardPresetSubtitle;
+
+  /// Label for using a canonical service type without a preset
+  ///
+  /// In en, this message translates to:
+  /// **'No preset'**
+  String get serviceWizardPresetGeneric;
+
+  /// Description for choosing no preset in the service creation wizard
+  ///
+  /// In en, this message translates to:
+  /// **'Start with a clean service and shape the details yourself'**
+  String get serviceWizardPresetGenericDescription;
 
   /// Step 2 title: audience selection
   ///
@@ -59823,6 +59919,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Type'**
   String get serviceWizardReviewType;
+
+  /// Summary row label: selected preset
+  ///
+  /// In en, this message translates to:
+  /// **'Preset'**
+  String get serviceWizardReviewPreset;
 
   /// Summary row label: audience
   ///

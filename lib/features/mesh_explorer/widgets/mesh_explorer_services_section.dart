@@ -15,6 +15,8 @@ import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../features/nodedex/widgets/sigil_painter.dart';
+import '../../mesh_services/models/mesh_service_localization.dart';
+import '../../mesh_services/models/mesh_service_template.dart';
 import '../../../providers/mesh_explorer_providers.dart';
 import '../../../services/haptic_service.dart';
 import '../../mesh_services/screens/service_detail_screen.dart';
@@ -53,13 +55,35 @@ class _ServiceDiscoveryCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final canonicalType = service.canonicalType;
+    final presetId = service.presetId;
+    final resolved = canonicalType == null
+        ? null
+        : MeshServiceCatalog.resolve(
+            canonicalType: canonicalType,
+            presetId: presetId,
+          );
     final presentation = ServicePresentationCatalog.forServiceId(
       service.serviceId,
       l10n,
     );
-    final accent = presentation.privacyClass == ServicePrivacyClass.open
-        ? context.accentColor
-        : SemanticColors.warning;
+    final capabilityLabel = canonicalType == null
+        ? presentation.title
+        : meshServiceTypeName(l10n, canonicalType);
+    final serviceTitle =
+        service.metadata ??
+        (presetId != null
+            ? meshServicePresetName(l10n, presetId)
+            : capabilityLabel);
+    final accent =
+        resolved?.accentColor ??
+        (presentation.privacyClass == ServicePrivacyClass.open
+            ? context.accentColor
+            : SemanticColors.warning);
+    final icon = resolved?.icon ?? presentation.icon;
+    final presetLabel = presetId == null
+        ? null
+        : meshServicePresetName(l10n, presetId);
 
     return Material(
       color: Colors.transparent,
@@ -76,9 +100,9 @@ class _ServiceDiscoveryCard extends ConsumerWidget {
               builder: (_) => ServiceDetailScreen(
                 nodeId: service.nodeId,
                 serviceId: service.serviceId,
-                serviceType: presentation.title,
-                serviceTitle: service.metadata ?? presentation.title,
-                icon: presentation.icon,
+                serviceType: capabilityLabel,
+                serviceTitle: serviceTitle,
+                icon: icon,
                 accentColor: accent,
               ),
             ),
@@ -106,7 +130,7 @@ class _ServiceDiscoveryCard extends ConsumerWidget {
                       color: accent.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
-                    child: Icon(presentation.icon, size: 24, color: accent),
+                    child: Icon(icon, size: 24, color: accent),
                   ),
                   const SizedBox(width: AppTheme.spacing12),
                   Expanded(
@@ -115,7 +139,7 @@ class _ServiceDiscoveryCard extends ConsumerWidget {
                       children: [
                         // Title
                         Text(
-                          service.metadata ?? presentation.title,
+                          serviceTitle,
                           style: context.bodyStyle?.copyWith(
                             color: context.textPrimary,
                             fontWeight: FontWeight.w600,
@@ -125,14 +149,17 @@ class _ServiceDiscoveryCard extends ConsumerWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: AppTheme.spacing4),
-                        // Service type subtitle (when metadata provides the title)
-                        if (service.metadata != null)
+                        if (serviceTitle != capabilityLabel)
                           Text(
-                            presentation.title,
+                            capabilityLabel,
                             style: context.captionStyle?.copyWith(
                               color: context.textTertiary,
                             ),
                           ),
+                        if (presetLabel != null) ...[
+                          const SizedBox(height: AppTheme.spacing6),
+                          _PresetBadge(label: presetLabel, accent: accent),
+                        ],
                       ],
                     ),
                   ),
@@ -206,6 +233,35 @@ class _ServiceDiscoveryCard extends ConsumerWidget {
       return l10n.meshExplorerFreshnessMinutes(elapsed.inMinutes);
     }
     return l10n.meshExplorerFreshnessHours(elapsed.inHours);
+  }
+}
+
+class _PresetBadge extends StatelessWidget {
+  final String label;
+  final Color accent;
+
+  const _PresetBadge({required this.label, required this.accent});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing6,
+        vertical: AppTheme.spacing2,
+      ),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          color: accent,
+        ),
+      ),
+    );
   }
 }
 

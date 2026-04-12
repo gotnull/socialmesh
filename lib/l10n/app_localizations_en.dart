@@ -32174,6 +32174,44 @@ class AppLocalizationsEn extends AppLocalizations {
       'Choose what you want to share on the mesh';
 
   @override
+  String get meshServicesTypeFeed => 'Feed';
+
+  @override
+  String get meshServicesTypeFeedDescription =>
+      'Share posts, updates, or bulletin-style notices with nearby peers';
+
+  @override
+  String get meshServicesTypeList => 'List';
+
+  @override
+  String get meshServicesTypeListDescription =>
+      'Coordinate checklists, supplies, or other shared collections';
+
+  @override
+  String get meshServicesTypePoll => 'Poll';
+
+  @override
+  String get meshServicesTypePollDescription =>
+      'Ask a multiple-choice question and collect nearby responses';
+
+  @override
+  String get meshServicesTypeSignal => 'Signal';
+
+  @override
+  String get meshServicesTypeSignalDescription =>
+      'Broadcast a short-lived beacon or alert across the mesh';
+
+  @override
+  String get meshServicesTypeSensor => 'Sensor';
+
+  @override
+  String get meshServicesTypeSensorDescription =>
+      'Publish telemetry or measured readings from a local sensor source';
+
+  @override
+  String get meshServicesVisibilityOpen => 'Open';
+
+  @override
   String get meshServicesTemplateBoard => 'Bulletin Board';
 
   @override
@@ -33895,6 +33933,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serviceWizardStepWhat => 'What';
 
   @override
+  String get serviceWizardStepPreset => 'Preset';
+
+  @override
   String get serviceWizardStepWho => 'Who';
 
   @override
@@ -33909,6 +33950,20 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get serviceWizardWhatSubtitle =>
       'Choose a type of service to share on the mesh';
+
+  @override
+  String get serviceWizardPresetTitle => 'Choose a preset';
+
+  @override
+  String get serviceWizardPresetSubtitle =>
+      'Optional: pick a preset for this capability, or keep it generic';
+
+  @override
+  String get serviceWizardPresetGeneric => 'No preset';
+
+  @override
+  String get serviceWizardPresetGenericDescription =>
+      'Start with a clean service and shape the details yourself';
 
   @override
   String get serviceWizardWhoTitle => 'Who can see it?';
@@ -33940,6 +33995,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serviceWizardReviewType => 'Type';
+
+  @override
+  String get serviceWizardReviewPreset => 'Preset';
 
   @override
   String get serviceWizardReviewAudience => 'Audience';

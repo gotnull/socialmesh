@@ -26,8 +26,11 @@ class MeshServiceInstanceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final template = MeshServiceTemplateCatalog.byId(instance.templateId);
-    final accent = template?.accentColor ?? context.accentColor;
+    final resolved = MeshServiceCatalog.resolve(
+      canonicalType: instance.canonicalType,
+      presetId: instance.presetId,
+    );
+    final accent = resolved.accentColor;
     final isActive = instance.isActive;
 
     return Material(
@@ -57,7 +60,7 @@ class MeshServiceInstanceCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AppTheme.radius10),
                 ),
                 child: Icon(
-                  template?.icon ?? Icons.miscellaneous_services_outlined,
+                  resolved.icon,
                   size: 22,
                   color: isActive ? accent : accent.withValues(alpha: 0.4),
                 ),

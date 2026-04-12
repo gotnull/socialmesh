@@ -136,7 +136,8 @@ void main() {
 
     test('createInstance persists to store and is retrievable', () async {
       final instance = await engine.createInstance(
-        templateId: MeshServiceTemplateId.board,
+        canonicalType: MeshServiceType.feed,
+        presetId: MeshServicePresetId.bulletinBoard,
         title: 'Test Board',
         ttlMinutes: 60,
       );
@@ -155,7 +156,7 @@ void main() {
       engine.onChanged = () => changedCount++;
 
       await engine.createInstance(
-        templateId: MeshServiceTemplateId.poll,
+        canonicalType: MeshServiceType.poll,
         title: 'Vote',
         ttlMinutes: 30,
         config: {
@@ -171,7 +172,8 @@ void main() {
       engine.onInstancePublished = () async => publishedCount++;
 
       await engine.createInstance(
-        templateId: MeshServiceTemplateId.checklist,
+        canonicalType: MeshServiceType.list,
+        presetId: MeshServicePresetId.sharedChecklist,
         title: 'Gear Check',
         ttlMinutes: 60,
         config: {
@@ -190,7 +192,8 @@ void main() {
           eventOrder.add('published'); // lint-allow: hardcoded-string
 
       await engine.createInstance(
-        templateId: MeshServiceTemplateId.board,
+        canonicalType: MeshServiceType.feed,
+        presetId: MeshServicePresetId.bulletinBoard,
         title: 'Board',
         ttlMinutes: 60,
       );
@@ -203,7 +206,8 @@ void main() {
 
     test('stopInstance marks instance stopped and fires onChanged', () async {
       final instance = await engine.createInstance(
-        templateId: MeshServiceTemplateId.board,
+        canonicalType: MeshServiceType.feed,
+        presetId: MeshServicePresetId.bulletinBoard,
         title: 'Board',
         ttlMinutes: 60,
       );
@@ -221,12 +225,14 @@ void main() {
 
     test('getActiveInstances returns only active instances', () async {
       await engine.createInstance(
-        templateId: MeshServiceTemplateId.board,
+        canonicalType: MeshServiceType.feed,
+        presetId: MeshServicePresetId.bulletinBoard,
         title: 'Active Board',
         ttlMinutes: 60,
       );
       final toStop = await engine.createInstance(
-        templateId: MeshServiceTemplateId.board,
+        canonicalType: MeshServiceType.feed,
+        presetId: MeshServicePresetId.bulletinBoard,
         title: 'To Stop',
         ttlMinutes: 60,
       );
@@ -285,7 +291,8 @@ void main() {
 
     test('listInstances returns published active instances', () async {
       await engine.createInstance(
-        templateId: MeshServiceTemplateId.board,
+        canonicalType: MeshServiceType.feed,
+        presetId: MeshServicePresetId.bulletinBoard,
         title: 'My Board',
         ttlMinutes: 60,
       );
@@ -296,13 +303,15 @@ void main() {
       expect(resp.msgType, MrrpMessageType.response);
       // count byte should be 1
       expect(resp.payload[0], 1);
-      // templateId byte (offset 17) should match board
-      expect(resp.payload[17], MeshServiceTemplateId.board.index);
+      // canonicalType byte (offset 17) and preset byte (offset 18)
+      expect(resp.payload[17], MeshServiceType.feed.code);
+      expect(resp.payload[18], MeshServicePresetId.bulletinBoard.code);
     });
 
     test('getInstance returns details for active instance', () async {
       final inst = await engine.createInstance(
-        templateId: MeshServiceTemplateId.board,
+        canonicalType: MeshServiceType.feed,
+        presetId: MeshServicePresetId.bulletinBoard,
         title: 'Detail Board',
         description: 'A test board',
         ttlMinutes: 60,
@@ -314,7 +323,8 @@ void main() {
       final resp = await handler.handleRequest(req, 0x1234);
 
       expect(resp.msgType, MrrpMessageType.response);
-      expect(resp.payload[0], MeshServiceTemplateId.board.index);
+      expect(resp.payload[0], MeshServiceType.feed.code);
+      expect(resp.payload[1], MeshServicePresetId.bulletinBoard.code);
     });
 
     test('getInstance returns notFound for unknown instance', () async {

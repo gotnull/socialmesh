@@ -15,6 +15,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants.dart';
 import '../../../core/logging.dart';
 import '../models/mesh_service_instance.dart';
+import '../models/mesh_service_template.dart';
 import '../services/mesh_service_engine.dart';
 import '../services/mesh_service_store.dart';
 import '../services/mrrp_delivery_tracker.dart';
@@ -192,9 +193,9 @@ final mrrpDeliveryTrackerProvider = Provider<MrrpDeliveryTracker?>((ref) {
 /// Update the SERVICE_ADVERT instance descriptors for user-created mesh
 /// services so each active instance is advertised as a separate entry.
 ///
-/// Each descriptor carries the instance title as UTF-8 metadata (truncated
-/// to 32 bytes). Remote peers decode individual entries and display them
-/// as separate cards instead of a squashed "title +N" string.
+/// Each descriptor carries structured metadata: canonical type, optional
+/// preset, and title. Remote peers use this to render truthful capability
+/// labels instead of guessing from cosmetic names.
 void _updateServiceDescriptors(
   MeshServiceStore store,
   MrrpServiceRegistry registry,
@@ -239,7 +240,7 @@ void _updateServiceDescriptors(
             serviceId: kMeshServicesInstanceServiceId,
             serviceType: MrrpServiceType.app,
             serviceFlags: flags,
-            metadata: _truncateUtf8(instance.title),
+            metadata: _encodeAdvertMetadata(instance),
           ),
       ];
 
@@ -268,10 +269,22 @@ void _updateServiceDescriptors(
   });
 }
 
-/// UTF-8 encode and truncate [text] to [MrrpConstants.mrrpServiceMetadataMaxLen]
-/// bytes, respecting multi-byte character boundaries.
-Uint8List _truncateUtf8(String text) {
+/// Encode structured advert metadata and truncate the title payload to fit the
+/// SERVICE_ADVERT metadata budget.
+Uint8List _encodeAdvertMetadata(MeshServiceInstance instance) {
   const maxLen = MrrpConstants.mrrpServiceMetadataMaxLen;
+  final availableTitleBytes = maxLen - 5;
+  final title = _truncateUtf8(instance.title, availableTitleBytes);
+  return MeshServiceAdvertMetadata.encode(
+    canonicalType: instance.canonicalType,
+    presetId: instance.presetId,
+    title: utf8.decode(title, allowMalformed: true),
+  );
+}
+
+/// UTF-8 encode and truncate [text] to [maxLen] bytes, respecting multi-byte
+/// character boundaries.
+Uint8List _truncateUtf8(String text, int maxLen) {
   var bytes = utf8.encode(text);
   if (bytes.length <= maxLen) return Uint8List.fromList(bytes);
 
