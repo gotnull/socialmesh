@@ -180,7 +180,11 @@ final mrrpDispatcherProvider = Provider<MrrpDispatcher?>((ref) {
 final mrrpCountersProvider = Provider<MrrpCounters>((ref) {
   final counters = MrrpCounters();
   counters.onChange = () {
-    ref.read(mrrpCountersEpochProvider.notifier).bump();
+    // Deferred: onChange fires synchronously during frame processing which
+    // can overlap with a widget build phase. Mutating provider state during
+    // build throws "Tried to modify a provider while the widget tree was
+    // building". A microtask defers the bump to after the current frame.
+    Future.microtask(() => ref.read(mrrpCountersEpochProvider.notifier).bump());
   };
   return counters;
 });
@@ -290,7 +294,9 @@ final mrrpAdvertEngineProvider = Provider<MrrpAdvertEngine?>((ref) {
   engine.isAdvertisingEnabled = ref.watch(meshPrivacyDiscoverableProvider);
 
   engine.onCacheChanged = () {
-    ref.read(mrrpAdvertEpochProvider.notifier).bump();
+    // Deferred: onCacheChanged fires synchronously during frame processing
+    // which can overlap with a widget build. See mrrpCountersProvider.
+    Future.microtask(() => ref.read(mrrpAdvertEpochProvider.notifier).bump());
   };
 
   ref.onDispose(() {
@@ -315,6 +321,11 @@ class _MrrpCountersEpoch extends Notifier<int> {
 
 /// MRRP engine — main entry point for the protocol stack.
 final mrrpEngineProvider = Provider<MrrpEngine?>((ref) {
+  // MRRP rides inside SIP frames, so inbound MRRP requests cannot be routed
+  // unless the SIP ingress path is attached. Do this eagerly here rather than
+  // relying on a SIP UI screen to watch sipDiscoveryProvider.
+  ref.watch(sipDiscoveryProvider);
+
   final registry = ref.watch(mrrpServiceRegistryProvider);
   if (registry == null) return null;
 
@@ -396,16 +407,17 @@ final mrrpEngineProvider = Provider<MrrpEngine?>((ref) {
   // Start the engine BEFORE attaching to the protocol service.
   //
   // CRITICAL ORDER: engine.start() must precede protocol.attachMrrpEngine().
-  // Attachment triggers an immediate synchronous drain of the MRRP startup
-  // buffer (_drainMrrpStartupBuffer). Each drained frame calls
-  // engine.handleInboundFrame(), which checks `if (!_running)` first and
-  // silently drops the frame if the engine is not yet running. Calling
-  // start() after attach means every frame in the startup buffer is
-  // permanently dropped.
+  // Attachment sets _mrrpEngine synchronously, then defers the startup
+  // buffer drain to a microtask. Drained frames call
+  // engine.handleInboundFrame(), which checks `if (!_running)` and drops
+  // the frame if the engine has not started. The drain is deferred (not
+  // synchronous) to avoid mutating other Riverpod providers (counters
+  // epoch, advert epoch, traffic events) during this provider's build.
   engine.start();
 
-  // Attach to protocol service — drain of any buffered startup frames fires
-  // here. The engine is already running, so handleInboundFrame processes them.
+  // Attach to protocol service — drain of buffered startup frames is
+  // scheduled as a microtask. The engine is already running, so
+  // handleInboundFrame processes them when the microtask executes.
   final protocol = ref.read(protocolServiceProvider);
   protocol.attachMrrpEngine(engine);
 

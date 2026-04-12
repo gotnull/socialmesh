@@ -34,6 +34,7 @@ import 'socialmesh/sm_metrics.dart';
 import 'socialmesh/sm_packet_router.dart';
 import 'socialmesh/sm_presence.dart';
 import 'socialmesh/sm_signal.dart';
+import 'sip/mrrp_codec.dart';
 import 'sip/mrrp_engine.dart';
 import 'sip/sip_codec.dart';
 import 'sip/sip_constants.dart';
@@ -602,18 +603,23 @@ class ProtocolService {
 
   /// Attach an MrrpEngine for inbound MRRP frames.
   ///
-  /// Any MRRP frames buffered during the pre-attachment startup window are
-  /// drained synchronously before this method returns. Unlike the SIP drain
-  /// (which is deferred to avoid cross-provider Riverpod mutations during
-  /// init), the MRRP drain stays synchronous to preserve the critical
-  /// engine start/attach ordering contract: [engine.start()] must be called
-  /// before this method, otherwise the drain feeds frames into a stopped
-  /// engine which drops them all.
+  /// [_mrrpEngine] is assigned synchronously so any frames arriving after
+  /// this call are handled directly. Buffered frames from the pre-attachment
+  /// window are drained in a microtask — same pattern as [attachSipDiscovery]
+  /// — because the drain triggers counter / advert-cache updates that mutate
+  /// other Riverpod providers. Riverpod forbids cross-provider state changes
+  /// during a provider's synchronous initialization.
+  ///
+  /// The critical start/attach ordering contract is preserved: [engine.start()]
+  /// must still be called before this method. The engine reference is set
+  /// synchronously, so the microtask-deferred drain processes frames on an
+  /// already-running engine. Any new frames arriving between assignment and
+  /// drain execute through [_handleMrrpPacket] directly (no buffer).
   void attachMrrpEngine(MrrpEngine? engine) {
     _mrrpEngine = engine;
     if (engine != null) {
       AppLogging.mrrp('ProtocolService: MrrpEngine attached');
-      _drainMrrpStartupBuffer();
+      Future.microtask(_drainMrrpStartupBuffer);
     }
   }
 
@@ -1736,6 +1742,7 @@ class ProtocolService {
             // file-transfer (kind nibble), fallback to signals (legacy JSON).
             final privatePayload = Uint8List.fromList(data.payload);
             if (SipCodec.isSipPayload(privatePayload)) {
+              _logIncomingMrrpCandidatePacket(packet, privatePayload);
               _handleSipPacket(packet, privatePayload);
             } else if (StlEnvelope.isStlWrapped(privatePayload)) {
               unawaited(
@@ -4662,6 +4669,8 @@ class ProtocolService {
     );
     packet.hopLimit = 3;
 
+    _logOutgoingMrrpPacket(packet, payload);
+
     final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
 
@@ -4820,6 +4829,83 @@ class ProtocolService {
       return;
     }
     engine.handleInboundFrame(senderNodeId, frame.payload);
+  }
+
+  void _logIncomingMrrpCandidatePacket(
+    pb.MeshPacket packet,
+    Uint8List payload,
+  ) {
+    final sipFrame = SipCodec.decode(payload);
+    if (sipFrame == null || sipFrame.msgType != SipMessageType.mrrpData) {
+      return;
+    }
+
+    final mrrpFrame = MrrpCodec.decode(sipFrame.payload);
+    if (mrrpFrame == null) {
+      AppLogging.mrrp(
+        'MRRP_TRACE_RX_PACKET '
+        'from=0x${packet.from.toRadixString(16)} '
+        'to=0x${packet.to.toRadixString(16)} '
+        'packetId=${packet.id} '
+        'channel=${packet.channel} '
+        'port=PRIVATE_APP '
+        'decode=failed',
+      );
+      return;
+    }
+
+    AppLogging.mrrp(
+      'MRRP_TRACE_RX_PACKET '
+      'from=0x${packet.from.toRadixString(16)} '
+      'to=0x${packet.to.toRadixString(16)} '
+      'packetId=${packet.id} '
+      'channel=${packet.channel} '
+      'port=PRIVATE_APP '
+      'msgType=${mrrpFrame.msgType.name} '
+      'req_id=0x${mrrpFrame.requestId.toRadixString(16)} '
+      'service=0x${mrrpFrame.serviceId.toRadixString(16).padLeft(8, '0')} '
+      'action=0x${mrrpFrame.actionId.toRadixString(16).padLeft(4, '0')}',
+    );
+  }
+
+  void _logOutgoingMrrpPacket(pb.MeshPacket packet, Uint8List payload) {
+    final sipFrame = SipCodec.decode(payload);
+    if (sipFrame == null || sipFrame.msgType != SipMessageType.mrrpData) {
+      return;
+    }
+
+    final mrrpFrame = MrrpCodec.decode(sipFrame.payload);
+    if (mrrpFrame == null) {
+      AppLogging.mrrp(
+        'MRRP_TRACE_TX_PACKET '
+        'from=0x${packet.from.toRadixString(16)} '
+        'to=0x${packet.to.toRadixString(16)} '
+        'packetId=${packet.id} '
+        'channel=${packet.channel} '
+        'port=PRIVATE_APP '
+        'wantAck=${packet.wantAck} '
+        'hopLimit=${packet.hopLimit} '
+        'transport=${_transport.type.name} '
+        'decode=failed',
+      );
+      return;
+    }
+
+    AppLogging.mrrp(
+      'MRRP_TRACE_TX_PACKET '
+      'from=0x${packet.from.toRadixString(16)} '
+      'to=0x${packet.to.toRadixString(16)} '
+      'packetId=${packet.id} '
+      'channel=${packet.channel} '
+      'port=PRIVATE_APP '
+      'wantAck=${packet.wantAck} '
+      'hopLimit=${packet.hopLimit} '
+      'transport=${_transport.type.name} '
+      'msgType=${mrrpFrame.msgType.name} '
+      'req_id=0x${mrrpFrame.requestId.toRadixString(16)} '
+      'service=0x${mrrpFrame.serviceId.toRadixString(16).padLeft(8, '0')} '
+      'action=0x${mrrpFrame.actionId.toRadixString(16).padLeft(4, '0')}',
+    );
   }
 
   /// Inject a raw SIP PRIVATE_APP payload directly into the receive path.

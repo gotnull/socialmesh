@@ -479,6 +479,7 @@ void main() {
         final built = _buildMrrpEngine();
         built.engine.start();
         protocol.attachMrrpEngine(built.engine);
+        await Future.microtask(() {}); // drain is now deferred
 
         // The buffered SERVICE_ADVERT must be drained into the engine.
         final cached = built.advertEngine.getAllCachedServices();
@@ -522,27 +523,34 @@ void main() {
     );
 
     // B3 — MRRP buffer is bounded; frames beyond cap are discarded.
-    test('B3: MRRP startup buffer cap prevents unbounded memory growth', () {
-      final discovery = _buildDiscovery();
-      protocol.attachSipDiscovery(discovery);
+    test(
+      'B3: MRRP startup buffer cap prevents unbounded memory growth',
+      () async {
+        final discovery = _buildDiscovery();
+        protocol.attachSipDiscovery(discovery);
 
-      final advertPayload = _buildMrrpServiceAdvertPayload(remoteRegistry);
-      // Inject 20 SERVICE_ADVERTs from the same peer.
-      for (var i = 0; i < 20; i++) {
-        protocol.injectSipPacketForTest(_makePacket(remotePeer), advertPayload);
-      }
+        final advertPayload = _buildMrrpServiceAdvertPayload(remoteRegistry);
+        // Inject 20 SERVICE_ADVERTs from the same peer.
+        for (var i = 0; i < 20; i++) {
+          protocol.injectSipPacketForTest(
+            _makePacket(remotePeer),
+            advertPayload,
+          );
+        }
 
-      final built = _buildMrrpEngine();
-      built.engine.start();
-      protocol.attachMrrpEngine(built.engine);
+        final built = _buildMrrpEngine();
+        built.engine.start();
+        protocol.attachMrrpEngine(built.engine);
+        await Future.microtask(() {}); // drain is now deferred
 
-      // Engine should have processed (up to cap) adverts without crashing.
-      expect(
-        built.advertEngine.getAllCachedServices(),
-        isNotEmpty,
-        reason: 'at least one buffered SERVICE_ADVERT must have been cached',
-      );
-    });
+        // Engine should have processed (up to cap) adverts without crashing.
+        expect(
+          built.advertEngine.getAllCachedServices(),
+          isNotEmpty,
+          reason: 'at least one buffered SERVICE_ADVERT must have been cached',
+        );
+      },
+    );
   });
 
   // ==========================================================================
@@ -1050,7 +1058,7 @@ void main() {
     // always pass.  A regression in the provider layer that reverts to
     // "attach before start" will be caught by G1 changing sense AND by B1.
     test('G2: starting engine before attach() delivers all buffered MRRP frames '
-        '(required contract)', () {
+        '(required contract)', () async {
       final protocol = ProtocolService(_FakeTransport());
       final discovery = _buildDiscovery();
       protocol.attachSipDiscovery(discovery);
@@ -1069,7 +1077,8 @@ void main() {
       // CORRECT ORDER: start before attach.
       // Engine._running == true when drain fires → handleInboundFrame processes.
       built.engine.start(); // running = true BEFORE drain
-      protocol.attachMrrpEngine(built.engine); // drain fires, frame delivered
+      protocol.attachMrrpEngine(built.engine); // drain scheduled as microtask
+      await Future.microtask(() {}); // let the deferred drain run
 
       expect(
         built.advertEngine.getAllCachedServices(),
@@ -1087,7 +1096,7 @@ void main() {
 
     // G3 — multiple peers' buffered adverts all delivered with correct ordering.
     test('G3: buffered SERVICE_ADVERTs from multiple peers all delivered when '
-        'start() precedes attach()', () {
+        'start() precedes attach()', () async {
       final protocol = ProtocolService(_FakeTransport());
       final discovery = _buildDiscovery();
       protocol.attachSipDiscovery(discovery);
@@ -1108,6 +1117,7 @@ void main() {
 
       built.engine.start();
       protocol.attachMrrpEngine(built.engine);
+      await Future.microtask(() {}); // let the deferred drain run
 
       final cached = built.advertEngine.getAllCachedServices();
       expect(
@@ -1171,7 +1181,7 @@ void main() {
     // H2 — duplicate SERVICE_ADVERT hashes in MRRP startup buffer: only the
     // first is cached (MrrpAdvertEngine._lastAdvertHash payload-hash dedup).
     test('H2: duplicate SERVICE_ADVERT payloads in MRRP startup buffer — only '
-        'first copy cached', () {
+        'first copy cached', () async {
       final protocol = ProtocolService(_FakeTransport());
       final discovery = _buildDiscovery();
       protocol.attachSipDiscovery(discovery);
@@ -1193,6 +1203,7 @@ void main() {
 
       built.engine.start();
       protocol.attachMrrpEngine(built.engine);
+      await Future.microtask(() {}); // let the deferred drain run
 
       // Only the first advert is processed; the other two share the same
       // payload hash and are skipped by handleServiceAdvert._lastAdvertHash.

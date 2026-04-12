@@ -40,13 +40,14 @@ class AppErrorHandler {
   /// Handle Flutter framework errors.
   static void _handleFlutterError(FlutterErrorDetails details) {
     final isFatal = _isErrorFatal(details);
+    final log = _loggerForError(details.exception, details.stack);
 
-    // Log locally
-    AppLogging.debug(
+    // Log locally via the appropriate category channel
+    log(
       'FlutterError [${isFatal ? "FATAL" : "NON-FATAL"}]: ${details.exception}',
     );
     if (details.stack != null) {
-      AppLogging.debug('Stack: ${details.stack}');
+      log('Stack: ${details.stack}');
     }
 
     // Report to Crashlytics
@@ -66,25 +67,26 @@ class AppErrorHandler {
       // In debug, log full details so layout overflows are diagnosable.
       // FlutterErrorDetails.context contains the widget path (e.g.
       // "The relevant error-causing widget was: Row file:///…:123").
-      AppLogging.debug('Recovered from error: ${details.exception}');
+      log('Recovered from error: ${details.exception}');
       if (details.context != null) {
-        AppLogging.debug('  Context: ${details.context}');
+        log('  Context: ${details.context}');
       }
       if (details.informationCollector != null) {
         final info = details.informationCollector!()
             .map((d) => d.toString())
             .join('\n  ');
-        AppLogging.debug('  Info:\n  $info');
+        log('  Info:\n  $info');
       }
       if (details.stack != null) {
-        AppLogging.debug('  Stack: ${details.stack}');
+        log('  Stack: ${details.stack}');
       }
     }
   }
 
   /// Handle platform/isolate errors.
   static bool _handlePlatformError(Object error, StackTrace stack) {
-    AppLogging.debug('PlatformError [HANDLED]: $error');
+    final log = _loggerForError(error, stack);
+    log('PlatformError [HANDLED]: $error');
 
     // Platform errors are always reported as non-fatal to Crashlytics.
     // We return true below which means we've handled the error and
@@ -102,6 +104,25 @@ class AppErrorHandler {
     // Return true to indicate the error was handled
     // This prevents the error from propagating and crashing the app
     return true;
+  }
+
+  /// Select the logging function based on error/stack content.
+  ///
+  /// Routes MRRP-related errors through [AppLogging.mrrp] and SIP-related
+  /// errors through [AppLogging.sip] so they are visible when the
+  /// corresponding debug flags are enabled (MRRP_DEBUG, SIP_LOGGING_ENABLED).
+  /// Falls back to [AppLogging.debug] for everything else.
+  static void Function(String) _loggerForError(
+    Object error,
+    StackTrace? stack,
+  ) {
+    final combined = '${error.toString()}\n${stack?.toString() ?? ''}'
+        .toLowerCase();
+    if (combined.contains('mrrp')) return AppLogging.mrrp;
+    if (combined.contains('/sip/') || combined.contains('sip_')) {
+      return AppLogging.sip;
+    }
+    return AppLogging.debug;
   }
 
   /// Determine if a Flutter error should be treated as fatal.
@@ -137,6 +158,12 @@ class AppErrorHandler {
 
     // Gesture errors are usually recoverable
     if (library == 'gesture library') {
+      return false;
+    }
+
+    // Riverpod provider errors are recoverable — the provider enters an
+    // error state and watchers receive the error. The app continues.
+    if (library == 'riverpod') {
       return false;
     }
 

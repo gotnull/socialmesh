@@ -63,6 +63,32 @@ class _RemoteInstanceDetail {
   });
 }
 
+// ---------------------------------------------------------------------------
+// Instance cache — survives screen navigation, avoids redundant MRRP fetches.
+//
+// LoRa round-trips for LIST_INSTANCES + GET_INSTANCE take 13–21 seconds.
+// Without caching, every tap on the same service card forces the user to
+// wait through this again. The cache stores fetched instance details keyed
+// by (nodeId, serviceId) so repeat visits render instantly.
+//
+// Stale-while-revalidate: cached data is shown immediately; a background
+// refresh fires if the data is older than [_cacheStaleDuration].
+// ---------------------------------------------------------------------------
+
+class _CachedInstances {
+  final List<_RemoteInstanceDetail> instances;
+  final DateTime fetchedAt;
+  const _CachedInstances({required this.instances, required this.fetchedAt});
+}
+
+/// Module-level cache for fetched instance details.
+final _instanceCache = <String, _CachedInstances>{};
+
+/// Cache entries older than this are refreshed in the background.
+const _cacheStaleDuration = Duration(seconds: 120);
+
+String _cacheKey(int nodeId, int serviceId) => '$nodeId:$serviceId';
+
 /// Service detail screen.
 ///
 /// Displays either a template-specific UI for known services or the
@@ -129,7 +155,25 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
 
   void _loadServiceData() {
     if (widget.serviceId == kMeshServicesInstanceServiceId) {
-      // User-created service — fetch instance list from remote peer.
+      // User-created service — check cache before hitting the mesh.
+      final key = _cacheKey(widget.nodeId, widget.serviceId);
+      final cached = _instanceCache[key];
+      if (cached != null && cached.instances.isNotEmpty) {
+        // Show cached data instantly — no loading spinner.
+        setState(() {
+          _remoteInstances = cached.instances;
+          _loading = false;
+        });
+
+        // Refresh in background if stale.
+        final age = DateTime.now().difference(cached.fetchedAt);
+        if (age > _cacheStaleDuration) {
+          _fetchRemoteInstances(silent: true);
+        }
+        return;
+      }
+
+      // No cache — fetch with loading indicator.
       _fetchRemoteInstances();
     } else {
       // Built-in service — try local template schema match.
@@ -158,23 +202,35 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
   }
 
   /// Fetch the remote peer's active instances via MRRP LIST_INSTANCES,
-  /// then fetch detail for each.
-  Future<void> _fetchRemoteInstances() async {
+  /// then progressively fetch detail for each.
+  ///
+  /// **Progressive rendering**: Instance cards appear as soon as
+  /// LIST_INSTANCES returns (with titles). Descriptions and expiry
+  /// are backfilled as each GET_INSTANCE response arrives, avoiding
+  /// a 15-20s blank screen on slow meshes.
+  ///
+  /// When [silent] is true, the fetch runs in the background without
+  /// showing a loading indicator — used for stale-while-revalidate.
+  Future<void> _fetchRemoteInstances({bool silent = false}) async {
     final tracker = ref.read(mrrpDeliveryTrackerProvider);
     if (tracker == null) {
       if (!mounted) return;
-      setState(() {
-        _error = context.l10n.serviceDetailMeshUnavailable;
-        _loading = false;
-      });
+      if (!silent) {
+        setState(() {
+          _error = context.l10n.serviceDetailMeshUnavailable;
+          _loading = false;
+        });
+      }
       return;
     }
 
-    // Subscribe to delivery state for UI feedback.
-    _deliverySub?.cancel();
-    _deliverySub = tracker.stateChanges.listen((state) {
-      if (mounted) setState(() => _activeDelivery = state);
-    });
+    // Subscribe to delivery state for UI feedback (skip in silent mode).
+    if (!silent) {
+      _deliverySub?.cancel();
+      _deliverySub = tracker.stateChanges.listen((state) {
+        if (mounted) setState(() => _activeDelivery = state);
+      });
+    }
 
     // Send LIST_INSTANCES request.
     final listRequest = MrrpFrame(
@@ -190,15 +246,24 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
       payload: Uint8List(0),
     );
 
-    final result = await tracker.trackRequest(listRequest);
+    final result = await tracker.trackRequest(
+      listRequest,
+      retryPolicy: MrrpRetryPolicy.idempotent,
+    );
     if (!mounted) return;
 
     if (result.phase != DeliveryPhase.delivered || result.response == null) {
-      setState(() {
-        _error = context.l10n.serviceDetailFetchFailed;
-        _loading = false;
-        _activeDelivery = null;
-      });
+      if (!silent) {
+        setState(() {
+          _error = result.attemptsMade > 1
+              ? context.l10n.serviceDetailFetchFailedRetried(
+                  result.attemptsMade,
+                )
+              : context.l10n.serviceDetailFetchFailed;
+          _loading = false;
+          _activeDelivery = null;
+        });
+      }
       return;
     }
 
@@ -208,40 +273,62 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
     final payload = result.response!.payload;
     final instances = _parseListInstancesResponse(payload);
     if (instances.isEmpty) {
-      setState(() {
-        _remoteInstances = const [];
-        _loading = false;
-        _activeDelivery = null;
-      });
+      final key = _cacheKey(widget.nodeId, widget.serviceId);
+      _instanceCache[key] = _CachedInstances(
+        instances: const [],
+        fetchedAt: DateTime.now(),
+      );
+      if (!silent) {
+        setState(() {
+          _remoteInstances = const [];
+          _loading = false;
+          _activeDelivery = null;
+        });
+      }
       return;
     }
 
-    // Fetch detail for each instance.
-    final details = <_RemoteInstanceDetail>[];
-    for (final inst in instances) {
+    // --- Progressive rendering: show cards immediately with titles ---
+    final details = <_RemoteInstanceDetail>[
+      for (final inst in instances)
+        _RemoteInstanceDetail(
+          instanceId: inst.instanceId,
+          templateId: inst.templateId,
+          title: inst.title,
+          description: '',
+        ),
+    ];
+
+    if (mounted) {
+      setState(() {
+        _remoteInstances = List.of(details);
+        _loading = false;
+        _activeDelivery = null;
+      });
+    }
+
+    // --- Backfill descriptions from GET_INSTANCE (fire-and-forget per instance) ---
+    for (var i = 0; i < instances.length; i++) {
       if (!mounted) return;
-      final detail = await _fetchInstanceDetail(tracker, inst);
+      final detail = await _fetchInstanceDetail(tracker, instances[i]);
       if (detail != null) {
-        details.add(detail);
-      } else {
-        // Fall back to basic info from the list response.
-        details.add(
-          _RemoteInstanceDetail(
-            instanceId: inst.instanceId,
-            templateId: inst.templateId,
-            title: inst.title,
-            description: '',
-          ),
-        );
+        details[i] = detail;
+      }
+      // Update UI after each successful GET_INSTANCE response.
+      if (mounted) {
+        setState(() {
+          _remoteInstances = List.of(details);
+        });
       }
     }
 
+    // Cache the final set with full details.
     if (!mounted) return;
-    setState(() {
-      _remoteInstances = details;
-      _loading = false;
-      _activeDelivery = null;
-    });
+    final key = _cacheKey(widget.nodeId, widget.serviceId);
+    _instanceCache[key] = _CachedInstances(
+      instances: List.of(details),
+      fetchedAt: DateTime.now(),
+    );
   }
 
   List<_RemoteInstance> _parseListInstancesResponse(Uint8List payload) {
@@ -306,7 +393,10 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
       payload: idBytes,
     );
 
-    final result = await tracker.trackRequest(getRequest);
+    final result = await tracker.trackRequest(
+      getRequest,
+      retryPolicy: MrrpRetryPolicy.idempotent,
+    );
     if (result.phase != DeliveryPhase.delivered || result.response == null) {
       return null;
     }
@@ -516,7 +606,10 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
       ),
       DeliveryPhase.failed => (
         l10n.deliveryPhaseFailed as String,
-        l10n.deliveryPhaseFailedDesc as String,
+        (_activeDelivery?.attemptsMade ?? 1) > 1
+            ? l10n.deliveryPhaseFailedDescRetried(_activeDelivery!.attemptsMade)
+                  as String
+            : l10n.deliveryPhaseFailedDesc as String,
       ),
     };
   }

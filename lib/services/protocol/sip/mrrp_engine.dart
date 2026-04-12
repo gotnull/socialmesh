@@ -147,6 +147,20 @@ class MrrpEngine {
       'service=${frame.serviceName}', // lint-allow: hardcoded-string
     );
 
+    if (frame.msgType == MrrpMessageType.response ||
+        frame.msgType == MrrpMessageType.error) {
+      AppLogging.mrrp(
+        'MRRP_TRACE_RESP_DECODED '
+        'sender=0x${senderNodeId.toRadixString(16)} '
+        'req_id=0x${frame.requestId.toRadixString(16)} '
+        'service=0x${frame.serviceId.toRadixString(16).padLeft(8, '0')} '
+        'action=0x${frame.actionId.toRadixString(16).padLeft(4, '0')} '
+        'msgType=${frame.msgType.name} '
+        'flags=0x${frame.flags.toRadixString(16)} '
+        'payload=${frame.payload.length}B',
+      );
+    }
+
     _routeFrame(frame, senderNodeId, sipPayload.length);
   }
 
@@ -314,6 +328,13 @@ class MrrpEngine {
   void _handleInboundResponse(MrrpFrame frame) {
     if (!dedupCache.checkAndRecordResponse(frame.requestId)) {
       // Duplicate response — suppress.
+      AppLogging.mrrp(
+        'MRRP_TRACE_RESP_REJECT '
+        'req_id=0x${frame.requestId.toRadixString(16)} '
+        'reason=duplicate_response '
+        'service=0x${frame.serviceId.toRadixString(16).padLeft(8, '0')} '
+        'action=0x${frame.actionId.toRadixString(16).padLeft(4, '0')}',
+      );
       counters?.recordDuplicateResponseIgnored();
       return;
     }
@@ -355,7 +376,19 @@ class MrrpEngine {
       return false;
     }
 
-    return send(encoded);
+    final sent = await send(encoded);
+
+    AppLogging.mrrp(
+      'MRRP_TRACE_TX_SUBMITTED '
+      'msgType=${frame.msgType.name} '
+      'req_id=0x${frame.requestId.toRadixString(16)} '
+      'service=0x${frame.serviceId.toRadixString(16).padLeft(8, '0')} '
+      'action=0x${frame.actionId.toRadixString(16).padLeft(4, '0')} '
+      'via=sip/private_app '
+      'result=$sent',
+    );
+
+    return sent;
   }
 
   /// Send an outbound REQUEST frame. Returns the result future.

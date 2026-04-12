@@ -473,7 +473,9 @@ class IOSBGTaskScheduler implements PlatformScheduler {
     }
 
     // Stop background fetch if no periodic schedules remain
-    await bgf.BackgroundFetch.stop();
+    if (_initialized) {
+      await bgf.BackgroundFetch.stop();
+    }
 
     AppLogging.automations('IOSBGTaskScheduler: Cancelled all tasks');
   }

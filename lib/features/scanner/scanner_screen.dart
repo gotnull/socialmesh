@@ -1956,13 +1956,27 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                             color: context.textSecondary,
                           ),
                         ),
-                        SizedBox(height: AppTheme.spacing8),
-                        Text(
-                          context.l10n.scannerEnableBluetoothHint,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: context.textTertiary,
+                        SizedBox(height: AppTheme.spacing16),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _ScannerTip(
+                                icon: Icons.bluetooth,
+                                text: context.l10n.scannerEnableBluetoothHint,
+                              ),
+                              SizedBox(height: AppTheme.spacing10),
+                              _ScannerTip(
+                                icon: Icons.app_blocking_outlined,
+                                text: context.l10n.scannerTipNoOtherApps,
+                              ),
+                              SizedBox(height: AppTheme.spacing10),
+                              _ScannerTip(
+                                icon: Icons.devices_other,
+                                text: context.l10n.scannerTipNoOtherDevices,
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -2138,6 +2152,34 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ScannerTip extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const _ScannerTip({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 16, color: context.textTertiary),
+        SizedBox(width: AppTheme.spacing8),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(
+              fontSize: 13,
+              color: context.textTertiary,
+              height: 1.3,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

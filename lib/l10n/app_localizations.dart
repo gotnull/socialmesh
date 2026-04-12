@@ -24083,6 +24083,18 @@ abstract class AppLocalizations {
   /// **'Scanning for nearby devices'**
   String get scannerScanningTitle;
 
+  /// Troubleshooting tip: check no other apps are using the BLE connection.
+  ///
+  /// In en, this message translates to:
+  /// **'Ensure no other app (e.g. official Meshtastic app) is connected to this device'**
+  String get scannerTipNoOtherApps;
+
+  /// Troubleshooting tip: check no other phones/tablets are paired.
+  ///
+  /// In en, this message translates to:
+  /// **'Ensure no other phone or tablet is already connected to the device via Bluetooth'**
+  String get scannerTipNoOtherDevices;
+
   /// Transport type label for BLE devices in the device card.
   ///
   /// In en, this message translates to:
@@ -56902,11 +56914,17 @@ abstract class AppLocalizations {
   /// **'Fetching service data…'**
   String get serviceDetailFetchingInstances;
 
-  /// Error text shown when MRRP request to fetch remote instances fails.
+  /// Error text shown when a single MRRP request attempt to fetch remote instances fails.
   ///
   /// In en, this message translates to:
   /// **'Could not reach this service. The peer may be out of range.'**
   String get serviceDetailFetchFailed;
+
+  /// Error text shown when MRRP request fails after multiple retry attempts.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach this service after {attempts} attempts. The peer may be out of range.'**
+  String serviceDetailFetchFailedRetried(int attempts);
 
   /// Empty state when remote peer has no active service instances.
   ///
@@ -59638,11 +59656,17 @@ abstract class AppLocalizations {
   /// **'Failed'**
   String get deliveryPhaseFailed;
 
-  /// Description for failed phase
+  /// Description for failed phase when only a single attempt was made.
   ///
   /// In en, this message translates to:
-  /// **'Transfer could not be completed after all attempts.'**
+  /// **'The request timed out before a response was received.'**
   String get deliveryPhaseFailedDesc;
+
+  /// Description for failed phase when multiple retry attempts were made.
+  ///
+  /// In en, this message translates to:
+  /// **'The request timed out after {attempts} attempts.'**
+  String deliveryPhaseFailedDescRetried(int attempts);
 
   /// Hint that the user can leave and delivery continues
   ///

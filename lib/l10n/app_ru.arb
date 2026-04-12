@@ -3804,6 +3804,8 @@
     "scannerRetryScan": "Retry Scan",
     "scannerScanningSubtitle": "Looking for Meshtastic devices...",
     "scannerScanningTitle": "Scanning for nearby devices",
+    "scannerTipNoOtherApps": "Убедитесь, что к устройству не подключено другое приложение (напр. официальное приложение Meshtastic)",
+    "scannerTipNoOtherDevices": "Убедитесь, что к устройству не подключён другой телефон или планшет через Bluetooth",
     "scannerTransportBluetooth": "Bluetooth",
     "scannerTransportUsb": "USB",
     "scannerUnknownDeviceDescription": "This device was not detected as Meshtastic or MeshCore.",

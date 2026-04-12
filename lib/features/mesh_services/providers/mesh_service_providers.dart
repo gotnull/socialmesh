@@ -212,6 +212,26 @@ void _updateServiceDescriptors(
           MrrpServiceFlags.ephemeralOnly |
           MrrpServiceFlags.userVisible;
 
+      if (active.isEmpty) {
+        // No active instances — clear instance descriptors and suppress
+        // userVisible on the base descriptor so the service disappears
+        // from Mesh Explorer on remote peers. The handler remains
+        // registered for inbound requests (e.g. LIST_INSTANCES returns 0).
+        registry.setInstanceDescriptors(
+          kMeshServicesInstanceServiceId,
+          const [],
+        );
+        registry.updateDescriptor(
+          MrrpServiceDescriptor(
+            serviceId: kMeshServicesInstanceServiceId,
+            serviceType: MrrpServiceType.app,
+            serviceFlags: flags & ~MrrpServiceFlags.userVisible,
+          ),
+        );
+        await advertEngine?.broadcastNow();
+        return;
+      }
+
       // Build one descriptor per active instance, each with its own title.
       final descriptors = <MrrpServiceDescriptor>[
         for (final instance in active)
@@ -222,6 +242,16 @@ void _updateServiceDescriptors(
             metadata: _truncateUtf8(instance.title),
           ),
       ];
+
+      // Restore userVisible on the base descriptor (in case it was
+      // previously suppressed when instances went to zero).
+      registry.updateDescriptor(
+        MrrpServiceDescriptor(
+          serviceId: kMeshServicesInstanceServiceId,
+          serviceType: MrrpServiceType.app,
+          serviceFlags: flags,
+        ),
+      );
 
       registry.setInstanceDescriptors(
         kMeshServicesInstanceServiceId,

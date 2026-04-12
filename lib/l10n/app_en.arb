@@ -18894,6 +18894,15 @@
     "@scannerScanningTitle": {
         "description": "Banner title shown while actively scanning for BLE devices."
     },
+    "scannerTipNoOtherApps": "Ensure no other app (e.g. official Meshtastic app) is connected to this device",
+    "@scannerTipNoOtherApps": {
+        "description": "Troubleshooting tip: check no other apps are using the BLE connection."
+    },
+    "scannerTipNoOtherDevices": "Ensure no other phone or tablet is already connected to the device via Bluetooth",
+    "@scannerTipNoOtherDevices": {
+        "description": "Troubleshooting tip: check no other phones/tablets are paired."
+    },
+
     "scannerTransportBluetooth": "Bluetooth",
     "@scannerTransportBluetooth": {
         "description": "Transport type label for BLE devices in the device card."
@@ -43344,7 +43353,17 @@
     },
     "serviceDetailFetchFailed": "Could not reach this service. The peer may be out of range.",
     "@serviceDetailFetchFailed": {
-        "description": "Error text shown when MRRP request to fetch remote instances fails."
+        "description": "Error text shown when a single MRRP request attempt to fetch remote instances fails."
+    },
+    "serviceDetailFetchFailedRetried": "Could not reach this service after {attempts} attempts. The peer may be out of range.",
+    "@serviceDetailFetchFailedRetried": {
+        "description": "Error text shown when MRRP request fails after multiple retry attempts.",
+        "placeholders": {
+            "attempts": {
+                "type": "int",
+                "example": "3"
+            }
+        }
     },
     "serviceDetailNoInstances": "No active instances",
     "@serviceDetailNoInstances": {
@@ -45420,9 +45439,19 @@
     "@deliveryPhaseFailed": {
         "description": "Delivery phase: transfer failed"
     },
-    "deliveryPhaseFailedDesc": "Transfer could not be completed after all attempts.",
+    "deliveryPhaseFailedDesc": "The request timed out before a response was received.",
     "@deliveryPhaseFailedDesc": {
-        "description": "Description for failed phase"
+        "description": "Description for failed phase when only a single attempt was made."
+    },
+    "deliveryPhaseFailedDescRetried": "The request timed out after {attempts} attempts.",
+    "@deliveryPhaseFailedDescRetried": {
+        "description": "Description for failed phase when multiple retry attempts were made.",
+        "placeholders": {
+            "attempts": {
+                "type": "int",
+                "example": "3"
+            }
+        }
     },
     "deliverySafeToClose": "Safe to close — delivery continues in the background",
     "@deliverySafeToClose": {

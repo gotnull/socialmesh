@@ -13830,6 +13830,14 @@ class AppLocalizationsIt extends AppLocalizations {
   String get scannerScanningTitle => 'Ricerca dispositivi nelle vicinanze';
 
   @override
+  String get scannerTipNoOtherApps =>
+      'Assicurati che nessun\'altra app (es. l\'app ufficiale Meshtastic) sia connessa al dispositivo';
+
+  @override
+  String get scannerTipNoOtherDevices =>
+      'Assicurati che nessun altro telefono o tablet sia già connesso al dispositivo tramite Bluetooth';
+
+  @override
   String get scannerTransportBluetooth => 'Bluetooth';
 
   @override
@@ -32642,6 +32650,11 @@ class AppLocalizationsIt extends AppLocalizations {
       'Could not reach this service. The peer may be out of range.';
 
   @override
+  String serviceDetailFetchFailedRetried(int attempts) {
+    return 'Could not reach this service after $attempts attempts. The peer may be out of range.';
+  }
+
+  @override
   String get serviceDetailNoInstances => 'No active instances';
 
   @override
@@ -34185,7 +34198,12 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get deliveryPhaseFailedDesc =>
-      'Transfer could not be completed after all attempts.';
+      'The request timed out before a response was received.';
+
+  @override
+  String deliveryPhaseFailedDescRetried(int attempts) {
+    return 'The request timed out after $attempts attempts.';
+  }
 
   @override
   String get deliverySafeToClose =>

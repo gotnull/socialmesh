@@ -29944,6 +29944,15 @@
   "@scannerScanningTitle": {
     "description": "Banner title shown while actively scanning for BLE devices."
   },
+  "scannerTipNoOtherApps": "Verifique se nenhum outro app (ex. app oficial Meshtastic) está conectado ao dispositivo",
+  "@scannerTipNoOtherApps": {
+    "description": "Troubleshooting tip: check no other apps are using the BLE connection."
+  },
+  "scannerTipNoOtherDevices": "Verifique se nenhum outro telefone ou tablet já está conectado ao dispositivo via Bluetooth",
+  "@scannerTipNoOtherDevices": {
+    "description": "Troubleshooting tip: check no other phones/tablets are paired."
+  },
+
   "scannerShowAllBleDevices": "Mostrar todos os dispositivos BLE",
   "@scannerShowAllBleDevices": {
     "description": "Text displayed in BLE scanner"
