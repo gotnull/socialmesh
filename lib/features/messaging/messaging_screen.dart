@@ -18,6 +18,7 @@ import '../../providers/help_providers.dart';
 import '../../providers/review_providers.dart';
 import '../../models/mesh_models.dart';
 import '../../models/presence_confidence.dart';
+import '../../models/tapback.dart';
 import '../../models/canned_response.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
@@ -45,6 +46,7 @@ import '../settings/device_management_screen.dart';
 import '../settings/translation_settings_screen.dart';
 import '../nodes/nodes_screen.dart';
 import '../navigation/main_shell.dart';
+import 'conversation_timeline.dart';
 import 'widgets/message_context_menu.dart';
 import 'widgets/tapback_widget.dart';
 import '../../core/widgets/loading_indicator.dart';
@@ -100,10 +102,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
     final dmInfoByNode = <int, _DmInfo>{};
     for (final message in messages) {
       // Skip tapback emoji reactions — they are metadata, not messages
-      if (message.isEmoji) continue;
-      if (message.replyId != null && _looksLikeEmojiContent(message.text)) {
-        continue;
-      }
+      if (message.isCanonicalTapback) continue;
       if (message.isDirect) {
         final otherNode = message.from == myNodeNum ? message.to : message.from;
         final existing = dmInfoByNode[otherNode];
@@ -573,15 +572,6 @@ class _ContactSection {
   final List<_Contact> contacts;
 
   _ContactSection(this.title, this.contacts);
-}
-
-/// Returns true if [text] looks like a single emoji (no ASCII, short string).
-/// Used as a content-based fallback to identify tapback messages that lack
-/// the is_emoji database flag.
-bool _looksLikeEmojiContent(String text) {
-  if (text.isEmpty) return false;
-  if (text.length > 8) return false;
-  return text.runes.every((r) => r > 127);
 }
 
 /// Helper class to track DM info for a node
@@ -1412,20 +1402,22 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     final offlineQueue = ref.watch(offlineQueueProvider);
     final queuedMessageIds = offlineQueue.queue.map((m) => m.id).toSet();
 
-    // Filter messages for this conversation
-    List<Message> filteredMessages;
+    // Filter visible messages for this conversation. These act as the fallback
+    // while the DB-backed shaped timeline loads, and remain the source for
+    // conversation-level debug logging.
+    List<Message> fallbackMessages;
     if (widget.type == ConversationType.channel) {
-      filteredMessages = messages
+      fallbackMessages = messages
           .where((m) => m.channel == widget.channelIndex && m.isBroadcast)
           .toList();
       AppLogging.messages(
         '📨 Channel filter: channel=${widget.channelIndex}, '
-        'matched=${filteredMessages.length}/${messages.length} '
-        '(sent=${filteredMessages.where((m) => m.sent).length}, '
-        'received=${filteredMessages.where((m) => !m.sent).length})',
+        'matched=${fallbackMessages.length}/${messages.length} '
+        '(sent=${fallbackMessages.where((m) => m.sent).length}, '
+        'received=${fallbackMessages.where((m) => !m.sent).length})',
       );
     } else {
-      filteredMessages = messages
+      fallbackMessages = messages
           .where(
             (m) =>
                 m.isDirect &&
@@ -1434,28 +1426,41 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
           .toList();
       AppLogging.messages(
         '📨 DM filter: nodeNum=${widget.nodeNum}, '
-        'matched=${filteredMessages.length}/${messages.length} '
-        '(sent=${filteredMessages.where((m) => m.sent).length}, '
-        'received=${filteredMessages.where((m) => !m.sent).length})',
+        'matched=${fallbackMessages.length}/${messages.length} '
+        '(sent=${fallbackMessages.where((m) => m.sent).length}, '
+        'received=${fallbackMessages.where((m) => !m.sent).length})',
       );
     }
 
-    // Exclude tapback emoji reactions from the visible message list.
-    // They are displayed as badges on the original message via TapbackDisplay.
-    // Check both the is_emoji flag AND content-based heuristic for legacy
-    // messages that were stored before the flag was properly set.
-    filteredMessages = filteredMessages.where((m) {
-      if (m.isEmoji) return false;
-      if (m.replyId != null && _looksLikeEmojiContent(m.text)) return false;
-      return true;
-    }).toList();
+    fallbackMessages = fallbackMessages
+        .where((message) => !message.isCanonicalTapback)
+        .toList();
+
+    final timelineQuery = widget.type == ConversationType.channel
+        ? ConversationTimelineQuery.channel(
+            channelIndex: widget.channelIndex ?? 0,
+          )
+        : ConversationTimelineQuery.direct(
+            peerNodeNum: widget.nodeNum,
+            myNodeNum: myNodeNum,
+          );
+    final timelineRowsAsync = ref.watch(
+      conversationTimelineProvider(timelineQuery),
+    );
+
+    var filteredRows =
+        timelineRowsAsync.asData?.value ??
+        fallbackMessages
+            .map((message) => ConversationTimelineRow.message(message: message))
+            .toList();
 
     // Mark any new unread messages as read while this chat is open.
     // _markAsRead() is only called once in initState, so messages arriving
     // after that are never marked — causing a persistent badge.
-    final hasUnreadInView = filteredMessages.any(
-      (m) => m.received && m.from != myNodeNum && !m.read,
-    );
+    final hasUnreadInView = filteredRows
+        .map((row) => row.message)
+        .whereType<Message>()
+        .any((m) => m.received && m.from != myNodeNum && !m.read);
     if (hasUnreadInView) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _markAsRead();
@@ -1464,10 +1469,19 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
 
     // Apply search filter if searching
     if (_isSearching && _searchQuery.isNotEmpty) {
-      filteredMessages = filteredMessages
-          .where((m) => m.text.toLowerCase().contains(_searchQuery))
+      filteredRows = filteredRows
+          .where(
+            (row) =>
+                row.message != null &&
+                row.message!.text.toLowerCase().contains(_searchQuery),
+          )
           .toList();
     }
+
+    final visibleMessages = filteredRows
+        .map((row) => row.message)
+        .whereType<Message>()
+        .toList();
 
     return GestureDetector(
       onTap: _dismissKeyboard,
@@ -1619,7 +1633,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                     ),
                     SizedBox(width: AppTheme.spacing8),
                     Text(
-                      '${filteredMessages.length} message${filteredMessages.length == 1 ? '' : 's'} found',
+                      '${visibleMessages.length} message${visibleMessages.length == 1 ? '' : 's'} found',
                       style: TextStyle(
                         fontSize: 13,
                         color: context.textSecondary.withValues(alpha: 0.8),
@@ -1630,7 +1644,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
               ),
             // Messages
             Expanded(
-              child: filteredMessages.isEmpty
+              child: filteredRows.isEmpty
                   ? Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -1663,12 +1677,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                         horizontal: 16,
                         vertical: 8,
                       ),
-                      itemCount: filteredMessages.length,
+                      itemCount: filteredRows.length,
                       itemBuilder: (context, index) {
-                        final message =
-                            filteredMessages[filteredMessages.length -
-                                1 -
-                                index];
+                        final row =
+                            filteredRows[filteredRows.length - 1 - index];
+
+                        if (row.isOrphanPlaceholder) {
+                          return _OrphanTapbackPlaceholder(row: row);
+                        }
+
+                        final message = row.message!;
                         final isFromMe = message.from == myNodeNum;
 
                         // Debug: Log message direction calculation
@@ -1698,7 +1716,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                           key: messageKey,
                           child: _MessageBubble(
                             message: message,
-                            allMessages: filteredMessages,
+                            allMessages: visibleMessages,
+                            tapbacks: row.tapbacks,
                             isFromMe: isFromMe,
                             senderName: senderName,
                             senderShortName: senderShortName,
@@ -1761,7 +1780,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                                     ref.haptics.trigger(HapticType.light);
                                     _scrollToQuotedMessage(
                                       message.replyId!,
-                                      filteredMessages,
+                                      visibleMessages,
                                     );
                                   }
                                 : null,
@@ -1890,9 +1909,58 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   }
 }
 
+class _OrphanTapbackPlaceholder extends StatelessWidget {
+  final ConversationTimelineRow row;
+
+  const _OrphanTapbackPlaceholder({required this.row});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            margin: const EdgeInsets.only(right: 64),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: context.card.withValues(alpha: 0.7),
+              borderRadius: BorderRadius.circular(AppTheme.radius18),
+              border: Border.all(color: context.border.withValues(alpha: 0.35)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.reply, size: 14, color: context.textTertiary),
+                const SizedBox(width: AppTheme.spacing6),
+                Flexible(
+                  child: Text(
+                    context.l10n.messagingOriginalMessage,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                      color: context.textTertiary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 2, left: 4),
+            child: TapbackDisplay(tapbacks: row.tapbacks),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _MessageBubble extends ConsumerWidget {
   final Message message;
   final List<Message> allMessages;
+  final List<MessageTapback> tapbacks;
   final bool isFromMe;
   final String senderName;
   final String senderShortName;
@@ -1918,6 +1986,7 @@ class _MessageBubble extends ConsumerWidget {
   const _MessageBubble({
     required this.message,
     required this.allMessages,
+    required this.tapbacks,
     required this.isFromMe,
     required this.senderName,
     required this.senderShortName,
@@ -2276,7 +2345,7 @@ class _MessageBubble extends ConsumerWidget {
             ),
             Padding(
               padding: const EdgeInsets.only(top: 2, right: 8),
-              child: TapbackDisplay(messageId: message.id),
+              child: TapbackDisplay(tapbacks: tapbacks),
             ),
             if (isFailed) ...[
               const SizedBox(height: AppTheme.spacing4),
@@ -2525,7 +2594,7 @@ class _MessageBubble extends ConsumerWidget {
                 ),
                 Padding(
                   padding: const EdgeInsets.only(top: 2, left: 4),
-                  child: TapbackDisplay(messageId: message.id),
+                  child: TapbackDisplay(tapbacks: tapbacks),
                 ),
               ],
             ),

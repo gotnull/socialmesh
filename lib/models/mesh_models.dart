@@ -292,6 +292,7 @@ class Message {
 
   bool get isBroadcast => to == 0xFFFFFFFF;
   bool get isDirect => !isBroadcast;
+  bool get isCanonicalTapback => isEmoji && replyId != null;
   bool get isFailed => status == MessageStatus.failed;
   bool get isPending => status == MessageStatus.pending;
   bool get isUnconfirmed => status == MessageStatus.unconfirmed;

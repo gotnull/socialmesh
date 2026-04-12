@@ -98,7 +98,7 @@ final timelineEventsProvider = Provider<List<TimelineEvent>>((ref) {
   // Add message events
   for (final message in messages) {
     // Skip tapback emoji reactions — they are metadata, not messages
-    if (message.isEmoji) continue;
+    if (message.isCanonicalTapback) continue;
     final fromNode = nodes[message.from];
     final toNode = nodes[message.to];
 

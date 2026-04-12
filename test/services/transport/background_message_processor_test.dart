@@ -11,6 +11,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:socialmesh/core/transport.dart';
 import 'package:socialmesh/generated/meshtastic/mesh.pb.dart' as pb;
 import 'package:socialmesh/generated/meshtastic/portnums.pbenum.dart' as pn;
+import 'package:socialmesh/models/mesh_models.dart';
 import 'package:socialmesh/services/mesh_packet_dedupe_store.dart';
 import 'package:socialmesh/services/storage/message_database.dart';
 import 'package:socialmesh/services/transport/background_message_processor.dart';
@@ -77,6 +78,8 @@ List<int> buildTextMessagePacket({
   required String text,
   int packetId = 1,
   int channel = 0,
+  int replyId = 0,
+  bool isEmoji = false,
 }) {
   final fromRadio = pb.FromRadio(
     id: 1,
@@ -88,6 +91,8 @@ List<int> buildTextMessagePacket({
       decoded: pb.Data(
         portnum: pn.PortNum.TEXT_MESSAGE_APP,
         payload: utf8.encode(text),
+        replyId: replyId,
+        emoji: isEmoji ? 1 : 0,
       ),
     ),
   );
@@ -213,6 +218,39 @@ void main() {
       // Only one message should have been persisted.
       expect(processor.persistedMessageIds.length, 1);
     });
+
+    test(
+      'preserves tapback reply metadata when persisting text messages',
+      () async {
+        final processor = BackgroundMessageProcessor.instance;
+        processor.initForTest(messageDb: msgDb, dedupeStore: dedupeStore);
+        processor.start(transport);
+        processor.processingEnabled = true;
+
+        transport.emitData(
+          buildTextMessagePacket(
+            from: 0x12345678,
+            to: 0xFFFFFFFF,
+            text: '👍',
+            packetId: 77,
+            channel: 0,
+            replyId: 42,
+            isEmoji: true,
+          ),
+        );
+
+        await Future<void>.delayed(const Duration(milliseconds: 200));
+
+        final allMessages = await msgDb.loadConversation('channel:0');
+        expect(allMessages, isNotEmpty);
+        final saved = allMessages.singleWhere(
+          (message) => message.packetId == 77,
+        );
+        expect(saved.replyId, 42);
+        expect(saved.isEmoji, isTrue);
+        expect(saved.source, MessageSource.tapback);
+      },
+    );
 
     test('non-text packets are buffered for foreground processing', () async {
       final processor = BackgroundMessageProcessor.instance;

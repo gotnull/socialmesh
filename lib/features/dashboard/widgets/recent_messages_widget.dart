@@ -20,7 +20,7 @@ class RecentMessagesContent extends ConsumerWidget {
 
     // Get last 5 messages, sorted by time (excluding tapback reactions)
     final recentMessages = messages
-        .where((m) => !m.isEmoji)
+        .where((m) => !m.isCanonicalTapback)
         .toList()
         .reversed
         .take(5)

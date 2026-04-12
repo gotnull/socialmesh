@@ -33,7 +33,7 @@ class NetworkOverviewContent extends ConsumerWidget {
         .length;
     final totalNodes = nodes.length;
     final recentMessages = messages.where((m) {
-      if (m.isEmoji) return false;
+      if (m.isCanonicalTapback) return false;
       final age = DateTime.now().difference(m.timestamp);
       return age.inHours < 1;
     }).length;

@@ -390,10 +390,12 @@ class BackgroundMessageProcessor {
       timestamp: timestamp,
       channel: packet.channel,
       received: true,
-      source: MessageSource.unknown,
+      source: data.emoji != 0 ? MessageSource.tapback : MessageSource.unknown,
       packetId: packet.id,
       senderLongName: senderLongName,
       senderShortName: senderShortName,
+      replyId: data.replyId != 0 ? data.replyId : null,
+      isEmoji: data.emoji != 0,
     );
 
     // ---- Persist to MessageDatabase ------------------------------------
@@ -497,6 +499,7 @@ class BackgroundMessageProcessor {
           message: message.text,
           channelIndex: channelIndex,
           fromNodeNum: message.from,
+          replyPacketId: message.packetId,
         );
       } else {
         await ns.showNewMessageNotification(
@@ -504,6 +507,7 @@ class BackgroundMessageProcessor {
           senderShortName: senderShortName,
           message: message.text,
           fromNodeNum: message.from,
+          replyPacketId: message.packetId,
         );
       }
 

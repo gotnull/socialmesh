@@ -16,6 +16,7 @@ class PendingMessageNotification {
   final String? senderShortName;
   final String message;
   final int fromNodeNum;
+  final int? replyPacketId;
   final int? channelIndex;
   final String? channelName;
   final DateTime timestamp;
@@ -25,12 +26,76 @@ class PendingMessageNotification {
     this.senderShortName,
     required this.message,
     required this.fromNodeNum,
+    this.replyPacketId,
     this.channelIndex,
     this.channelName,
     DateTime? timestamp,
   }) : timestamp = timestamp ?? DateTime.now();
 
   bool get isChannelMessage => channelIndex != null;
+
+  MessageReactionTarget? get reactionTarget {
+    final replyPacketId = this.replyPacketId;
+    if (replyPacketId == null) return null;
+    return MessageReactionTarget(
+      toNodeNum: fromNodeNum,
+      channelIndex: channelIndex,
+      replyPacketId: replyPacketId,
+    );
+  }
+}
+
+class MessageReactionTarget {
+  final int toNodeNum;
+  final int? channelIndex;
+  final int replyPacketId;
+
+  const MessageReactionTarget({
+    required this.toNodeNum,
+    required this.replyPacketId,
+    this.channelIndex,
+  });
+
+  bool get isChannelMessage => channelIndex != null;
+
+  String toPayload() {
+    if (channelIndex != null) {
+      return 'channel:$channelIndex:$toNodeNum:$replyPacketId';
+    }
+    return 'dm:$toNodeNum:$replyPacketId';
+  }
+
+  static MessageReactionTarget? fromPayload(String payload) {
+    if (payload.startsWith('dm:')) {
+      final parts = payload.split(':');
+      if (parts.length < 3) return null;
+      final toNodeNum = int.tryParse(parts[1]);
+      final replyPacketId = int.tryParse(parts[2]);
+      if (toNodeNum == null || replyPacketId == null) return null;
+      return MessageReactionTarget(
+        toNodeNum: toNodeNum,
+        replyPacketId: replyPacketId,
+      );
+    }
+
+    if (payload.startsWith('channel:')) {
+      final parts = payload.split(':');
+      if (parts.length < 4) return null;
+      final channelIndex = int.tryParse(parts[1]);
+      final toNodeNum = int.tryParse(parts[2]);
+      final replyPacketId = int.tryParse(parts[3]);
+      if (channelIndex == null || toNodeNum == null || replyPacketId == null) {
+        return null;
+      }
+      return MessageReactionTarget(
+        toNodeNum: toNodeNum,
+        channelIndex: channelIndex,
+        replyPacketId: replyPacketId,
+      );
+    }
+
+    return null;
+  }
 }
 
 /// Represents a pending node notification for batching
@@ -50,7 +115,8 @@ class NotificationActions {
 }
 
 /// Callback type for sending reaction messages
-typedef ReactionCallback = Future<void> Function(int toNodeNum, String emoji);
+typedef ReactionCallback =
+    Future<void> Function(MessageReactionTarget target, String emoji);
 
 /// Service for handling local push notifications
 /// Local notifications do NOT require APNs (Apple Push Notification service)
@@ -215,32 +281,22 @@ class NotificationService {
       return;
     }
 
-    // Parse payload to get node number
-    // Payload format: "dm:nodeNum" or "channel:channelIndex:nodeNum"
-    int? nodeNum;
-
-    if (payload.startsWith('dm:')) {
-      nodeNum = int.tryParse(payload.substring(3));
-    } else if (payload.startsWith('channel:')) {
-      // For channel messages, payload is "channel:index:nodeNum"
-      final parts = payload.split(':');
-      if (parts.length >= 3) {
-        nodeNum = int.tryParse(parts[2]);
-      }
-    }
-
-    if (nodeNum == null) {
+    final target = MessageReactionTarget.fromPayload(payload);
+    if (target == null) {
       AppLogging.notifications(
-        '🔔 Could not parse node number from payload: $payload',
+        '🔔 Could not parse reaction target from payload: $payload',
       );
       return;
     }
 
-    AppLogging.notifications('🔔 Sending $emoji reaction to node $nodeNum');
+    AppLogging.notifications(
+      '🔔 Sending $emoji reaction to node ${target.toNodeNum} '
+      '(channel=${target.channelIndex}, replyPacketId=${target.replyPacketId})',
+    );
 
     // Call the reaction callback if set
     if (onReactionSelected != null) {
-      onReactionSelected!(nodeNum, emoji);
+      onReactionSelected!(target, emoji);
     } else {
       AppLogging.notifications(
         '🔔 No reaction callback set, cannot send reaction',
@@ -622,6 +678,7 @@ class NotificationService {
     required String? senderShortName,
     required String message,
     required int fromNodeNum,
+    int? replyPacketId,
     bool playSound = true,
     bool vibrate = true,
   }) async {
@@ -635,6 +692,13 @@ class NotificationService {
       return;
     }
 
+    final reactionTarget = replyPacketId != null
+        ? MessageReactionTarget(
+            toNodeNum: fromNodeNum,
+            replyPacketId: replyPacketId,
+          )
+        : null;
+
     final androidDetails = AndroidNotificationDetails(
       'direct_messages',
       'Direct Messages', // lint-allow: hardcoded-string
@@ -645,25 +709,29 @@ class NotificationService {
       groupKey: 'mesh_direct_messages',
       playSound: playSound,
       enableVibration: vibrate,
-      actions: <AndroidNotificationAction>[
-        const AndroidNotificationAction(
-          NotificationActions.thumbsUp,
-          '👍',
-          showsUserInterface: true,
-        ),
-        const AndroidNotificationAction(
-          NotificationActions.thumbsDown,
-          '👎',
-          showsUserInterface: true,
-        ),
-      ],
+      actions: reactionTarget == null
+          ? const <AndroidNotificationAction>[]
+          : <AndroidNotificationAction>[
+              const AndroidNotificationAction(
+                NotificationActions.thumbsUp,
+                '👍',
+                showsUserInterface: true,
+              ),
+              const AndroidNotificationAction(
+                NotificationActions.thumbsDown,
+                '👎',
+                showsUserInterface: true,
+              ),
+            ],
     );
 
     final iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
       presentSound: playSound,
-      categoryIdentifier: NotificationActions.messageCategory,
+      categoryIdentifier: reactionTarget == null
+          ? null
+          : NotificationActions.messageCategory,
     );
 
     final notificationDetails = NotificationDetails(
@@ -698,7 +766,7 @@ class NotificationService {
         title: _l10n.notificationDirectMessageTitle(senderName, shortCode),
         body: truncatedMessage,
         notificationDetails: notificationDetails,
-        payload: 'dm:$fromNodeNum',
+        payload: reactionTarget?.toPayload() ?? 'dm:$fromNodeNum',
       );
       AppLogging.notifications(
         '🔔 Successfully showed DM notification from: $senderName',
@@ -717,10 +785,19 @@ class NotificationService {
     required String message,
     required int channelIndex,
     required int fromNodeNum,
+    int? replyPacketId,
     bool playSound = true,
     bool vibrate = true,
   }) async {
     if (!_initialized) return;
+
+    final reactionTarget = replyPacketId != null
+        ? MessageReactionTarget(
+            toNodeNum: fromNodeNum,
+            channelIndex: channelIndex,
+            replyPacketId: replyPacketId,
+          )
+        : null;
 
     final androidDetails = AndroidNotificationDetails(
       'channel_messages',
@@ -732,25 +809,29 @@ class NotificationService {
       groupKey: 'mesh_channel_messages',
       playSound: playSound,
       enableVibration: vibrate,
-      actions: <AndroidNotificationAction>[
-        const AndroidNotificationAction(
-          NotificationActions.thumbsUp,
-          '👍',
-          showsUserInterface: true,
-        ),
-        const AndroidNotificationAction(
-          NotificationActions.thumbsDown,
-          '👎',
-          showsUserInterface: true,
-        ),
-      ],
+      actions: reactionTarget == null
+          ? const <AndroidNotificationAction>[]
+          : <AndroidNotificationAction>[
+              const AndroidNotificationAction(
+                NotificationActions.thumbsUp,
+                '👍',
+                showsUserInterface: true,
+              ),
+              const AndroidNotificationAction(
+                NotificationActions.thumbsDown,
+                '👎',
+                showsUserInterface: true,
+              ),
+            ],
     );
 
     final iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
       presentSound: playSound,
-      categoryIdentifier: NotificationActions.messageCategory,
+      categoryIdentifier: reactionTarget == null
+          ? null
+          : NotificationActions.messageCategory,
     );
 
     final notificationDetails = NotificationDetails(
@@ -781,7 +862,8 @@ class NotificationService {
       ),
       body: truncatedMessage,
       notificationDetails: notificationDetails,
-      payload: 'channel:$channelIndex:$fromNodeNum',
+      payload:
+          reactionTarget?.toPayload() ?? 'channel:$channelIndex:$fromNodeNum',
     );
 
     AppLogging.notifications(

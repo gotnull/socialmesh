@@ -19,6 +19,25 @@ Message? parsePushMessagePayload(Map<String, dynamic> data) {
     final int? channel = data['channel'] != null
         ? int.tryParse('${data['channel']}')
         : null;
+    final int? packetId = data['packetId'] != null
+        ? int.tryParse('${data['packetId']}')
+        : data['packet_id'] != null
+        ? int.tryParse('${data['packet_id']}')
+        : null;
+    final int? replyId = data['replyId'] != null
+        ? int.tryParse('${data['replyId']}')
+        : data['reply_id'] != null
+        ? int.tryParse('${data['reply_id']}')
+        : null;
+    final dynamic isEmojiRaw = data['isEmoji'] ?? data['is_emoji'];
+    final bool isEmoji = switch (isEmojiRaw) {
+      true => true,
+      1 => true,
+      '1' => true,
+      'true' => true,
+      'True' => true,
+      _ => false,
+    };
     final String text = sanitizeUtf16(
       (data['text'] ?? data['message'] ?? '') as String,
     );
@@ -67,6 +86,9 @@ Message? parsePushMessagePayload(Map<String, dynamic> data) {
       channel: normalisedChannel,
       received: true,
       source: MessageSource.unknown,
+      packetId: packetId,
+      replyId: replyId,
+      isEmoji: isEmoji,
     );
 
     return message;

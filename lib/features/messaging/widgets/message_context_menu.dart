@@ -11,10 +11,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/transport_path.dart';
 import '../../../models/mesh_models.dart';
-import '../../../models/tapback.dart';
 import '../../../core/theme.dart';
 import '../../../providers/app_providers.dart';
-import '../../../providers/telemetry_providers.dart';
 import '../../../services/haptic_service.dart';
 import '../../../core/logging.dart';
 import '../../../utils/snackbar.dart';
@@ -264,7 +262,6 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
     // Capture all provider references BEFORE any async operations
     final protocol = ref.read(protocolServiceProvider);
     final myNodeNum = ref.read(myNodeNumProvider);
-    final storage = ref.read(tapbackStorageProvider).value;
     final haptics = ref.read(hapticServiceProvider);
     final navigator = Navigator.of(context);
 
@@ -275,35 +272,34 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
 
     AppLogging.messages(
       '🏷️ _sendTapback: myNodeNum=$myNodeNum, '
-      'storage=${storage != null ? "available" : "NULL"}',
+      'replyPacketId=${widget.message.packetId}',
     );
 
-    // Create local tapback record
-    final tapback = MessageTapback(
-      messageId: widget.message.id,
-      fromNodeNum: myNodeNum,
-      emoji: emoji,
-    );
-
-    // Save locally
-    await storage?.addTapback(tapback);
-    AppLogging.messages(
-      '🏷️ _sendTapback: local tapback stored for message ${widget.message.id}',
-    );
-
-    // Invalidate tapbacks so UI updates for own tapback
-    ref.invalidate(messageTapbacksProvider(widget.message.id));
+    final replyPacketId = widget.message.packetId;
+    if (replyPacketId == null) {
+      AppLogging.messages(
+        '🏷️ _sendTapback ABORT: parent message has no packetId',
+      );
+      navigator.pop();
+      showErrorSnackBar(context, context.l10n.messageContextMenuTapbackFailed);
+      return;
+    }
 
     // Send tapback emoji over the mesh
     try {
-      final toNode = widget.isFromMe ? widget.message.to : widget.message.from;
+      final isChannelTapback = widget.channelIndex != null;
+      final toNode = isChannelTapback
+          ? 0xFFFFFFFF
+          : widget.isFromMe
+          ? widget.message.to
+          : widget.message.from;
       // Broadcast messages (0xFFFFFFFF) never receive ACKs, so wantAck must
       // be false to avoid the message being stuck in pending status forever.
       final isBroadcast = toNode == 0xFFFFFFFF;
       AppLogging.messages(
         '🏷️ _sendTapback: sending over mesh — to=$toNode, '
         'channel=${widget.channelIndex ?? 0}, isBroadcast=$isBroadcast, '
-        'replyId=${widget.message.packetId}',
+        'replyId=$replyPacketId',
       );
       await protocol.sendMessage(
         text: emoji,
@@ -311,7 +307,7 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
         channel: widget.channelIndex ?? 0,
         wantAck: !isBroadcast,
         isEmoji: true,
-        replyId: widget.message.packetId,
+        replyId: replyPacketId,
         source: MessageSource.tapback,
       );
 

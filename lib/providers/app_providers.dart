@@ -43,7 +43,6 @@ import '../features/widget_builder/widget_sync_providers.dart';
 import 'cloud_sync_entitlement_providers.dart';
 import '../core/auth/claims_provider.dart';
 import '../models/mesh_models.dart';
-import '../models/tapback.dart';
 import '../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import '../generated/meshtastic/mesh.pb.dart' as mesh_pb;
 import 'meshcore_providers.dart';
@@ -2581,22 +2580,29 @@ final protocolServiceProvider = Provider<ProtocolService>((ref) {
     '🟢 ProtocolService provider created - instance: ${service.hashCode}',
   );
 
-  // Set up notification reaction callback to send emoji DMs
-  NotificationService().onReactionSelected =
-      (int toNodeNum, String emoji) async {
-        try {
-          AppLogging.app('Sending reaction "$emoji" to node $toNodeNum');
-          await service.sendMessage(
-            text: emoji,
-            to: toNodeNum,
-            wantAck: true,
-            source: MessageSource.reaction,
-          );
-          AppLogging.app('Reaction sent successfully');
-        } catch (e) {
-          AppLogging.app('Failed to send reaction: $e');
-        }
-      };
+  // Set up notification reaction callback to send true tapbacks.
+  NotificationService()
+      .onReactionSelected = (MessageReactionTarget target, String emoji) async {
+    try {
+      final toNodeNum = target.isChannelMessage ? 0xFFFFFFFF : target.toNodeNum;
+      AppLogging.app(
+        'Sending reaction "$emoji" to node $toNodeNum '
+        '(channel=${target.channelIndex}, replyPacketId=${target.replyPacketId})',
+      );
+      await service.sendMessage(
+        text: emoji,
+        to: toNodeNum,
+        channel: target.channelIndex ?? 0,
+        wantAck: !target.isChannelMessage,
+        source: MessageSource.reaction,
+        replyId: target.replyPacketId,
+        isEmoji: true,
+      );
+      AppLogging.app('Reaction sent successfully');
+    } catch (e) {
+      AppLogging.app('Failed to send reaction: $e');
+    }
+  };
 
   // Keep the service alive for the lifetime of the app
   ref.onDispose(() {
@@ -3220,19 +3226,11 @@ class MessagesNotifier extends Notifier<List<Message>> {
     _storageLoaded = true;
 
     if (savedMessages.isNotEmpty) {
-      // Exclude tapback emoji reactions from the message state.
-      // They are tracked separately via TapbackStorageService and would
-      // otherwise pollute the message list even though the UI filters
-      // them.  This matches the Meshtastic Android architecture where
-      // reactions live in a separate `reactions` table.
+      // Keep canonical tapbacks in SQLite as raw messages, but exclude them
+      // from the visible message state. The timeline/domain layer groups
+      // them back under their parent by replyId.
       final regularMessages = savedMessages.where((m) {
-        // Filter messages with the is_emoji flag set in the database.
-        if (m.isEmoji) return false;
-        // Content-based fallback: a single-emoji text with a replyId is
-        // almost certainly a tapback that wasn't flagged (e.g. stored
-        // before the v3 migration ran).  This matches the Meshtastic
-        // Android approach of never putting reactions in the message list.
-        if (m.replyId != null && _looksLikeEmoji(m.text)) return false;
+        if (m.isCanonicalTapback) return false;
         return true;
       }).toList();
       // Reset any messages stuck in the retrying state from a previous
@@ -3343,14 +3341,12 @@ class MessagesNotifier extends Notifier<List<Message>> {
         // add them to the main message list (matches Meshtastic Android
         // which stores reactions in a separate table).
         // Sent tapback reactions: route to tapback storage only.
-        final sentIsTapback =
-            (message.isEmoji && message.replyId != null) ||
-            (message.replyId != null && _looksLikeEmoji(message.text));
+        final sentIsTapback = message.isCanonicalTapback;
         if (sentIsTapback) {
           AppLogging.messages(
-            '🏷️ Sent tapback — skipping message state, storing as reaction only',
+            '🏷️ Sent tapback — persisting hidden reaction row only',
           );
-          _recordMessageSignature(message);
+          await _persistHiddenTapback(message);
           return;
         }
 
@@ -3390,24 +3386,16 @@ class MessagesNotifier extends Notifier<List<Message>> {
         return;
       }
 
-      // Incoming tapback reactions: route to tapback storage only, never
-      // add them to the main message list. This matches the official
-      // Meshtastic Android app which stores reactions in a separate
-      // `reactions` table and never inserts them into the `packet` table.
-      // Also catch messages where the protobuf emoji flag was not set
-      // but the content is clearly a single emoji with a replyId.
-      final isTapback =
-          (message.isEmoji && message.replyId != null) ||
-          (message.replyId != null && _looksLikeEmoji(message.text));
+      // Canonical tapbacks stay in SQLite but never become standalone chat
+      // bubbles. Only trust explicit protobuf tapbacks: isEmoji + replyId.
+      final isTapback = message.isCanonicalTapback;
       if (isTapback) {
         AppLogging.messages(
-          '🏷️ Incoming tapback detected — routing to _storeIncomingTapback '
+          '🏷️ Incoming tapback detected — persisting hidden reaction row '
           '(not adding to message state, isEmoji=${message.isEmoji}, '
-          'contentMatch=${_looksLikeEmoji(message.text)})',
+          'replyId=${message.replyId})',
         );
-        _recordMessageSignature(message);
-        _notifyNewMessage(message);
-        _storeIncomingTapback(message);
+        await _persistHiddenTapback(message);
         return;
       }
 
@@ -3462,6 +3450,11 @@ class MessagesNotifier extends Notifier<List<Message>> {
       return;
     }
 
+    if (message.isCanonicalTapback) {
+      AppLogging.app('Skipping notification for canonical tapback');
+      return;
+    }
+
     // Check master notification toggle
     final settingsAsync = ref.read(settingsServiceProvider);
     final settings = settingsAsync.value;
@@ -3492,10 +3485,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
     final senderShortName = senderNode?.shortName ?? message.senderShortName;
     AppLogging.app('Sender: $senderName');
 
-    // For tapback reactions, show a friendlier notification body
-    final notificationBody = message.isEmoji
-        ? '$senderName reacted ${message.text}'
-        : message.text;
+    final notificationBody = message.text;
 
     // Check if it's a channel message (broadcast) or direct message.
     // Use isBroadcast — the `to` field — as the discriminator. The channel
@@ -3545,13 +3535,14 @@ class MessagesNotifier extends Notifier<List<Message>> {
             senderShortName: senderShortName,
             message: notificationBody,
             fromNodeNum: message.from,
+            replyPacketId: message.packetId,
             channelIndex: isChannelMessage ? (message.channel ?? 0) : null,
             channelName: channelName,
           ),
         );
 
-    // Tapback reactions should not trigger automations or IFTTT webhooks
-    if (message.isEmoji) return;
+    // Canonical tapbacks are metadata, not standalone message events.
+    if (message.isCanonicalTapback) return;
 
     // Trigger IFTTT webhook for message received
     _triggerIftttForMessage(message, senderName, isChannelMessage);
@@ -3723,6 +3714,14 @@ class MessagesNotifier extends Notifier<List<Message>> {
       return;
     }
 
+    if (message.isCanonicalTapback) {
+      AppLogging.messages(
+        '🏷️ addMessage: persisting canonical tapback id=${message.id}',
+      );
+      unawaited(_persistHiddenTapback(message));
+      return;
+    }
+
     String convKey;
     if (message.isBroadcast) {
       convKey = 'channel:${message.channel ?? 0}';
@@ -3820,93 +3819,10 @@ class MessagesNotifier extends Notifier<List<Message>> {
     _recordMessageSignature(message);
   }
 
-  /// Store an incoming tapback reaction linked to the original message.
-  ///
-  /// Maps the incoming emoji text to a [TapbackType] and finds the original
-  /// message by packet ID (replyId). The [MessageTapback] record is stored
-  /// via [TapbackStorageService] so that [TapbackDisplay] can render it.
-  void _storeIncomingTapback(Message message) {
-    final emoji = message.text.trim();
-    AppLogging.messages(
-      '🏷️ _storeIncomingTapback: emoji="$emoji", '
-      'from=${message.from}, replyId=${message.replyId}, '
-      'isEmoji=${message.isEmoji}',
-    );
-
-    if (emoji.isEmpty) {
-      AppLogging.messages('🏷️ _storeIncomingTapback ABORT: empty emoji text');
-      return;
-    }
-
-    // Find the original message by packetId matching the replyId
-    final allPacketIds = state
-        .where((m) => m.packetId != null)
-        .map((m) => m.packetId)
-        .toList();
-    AppLogging.messages(
-      '🏷️ _storeIncomingTapback: looking for packetId=${message.replyId} '
-      'in ${allPacketIds.length} messages with packetIds',
-    );
-
-    final originalMessage = state.firstWhereOrNull(
-      (m) => m.packetId == message.replyId,
-    );
-
-    if (originalMessage == null) {
-      AppLogging.messages(
-        '🏷️ _storeIncomingTapback ABORT: no message found with '
-        'packetId=${message.replyId}. '
-        'Available packetIds: ${allPacketIds.take(20).toList()}',
-      );
-      return;
-    }
-
-    AppLogging.messages(
-      '🏷️ _storeIncomingTapback: found original message '
-      'id=${originalMessage.id}, text="${originalMessage.text.length > 30 ? originalMessage.text.substring(0, 30) : originalMessage.text}"',
-    );
-
-    final tapback = MessageTapback(
-      messageId: originalMessage.id,
-      fromNodeNum: message.from,
-      emoji: emoji,
-    );
-
-    // Store asynchronously — fire and forget
-    final storage = ref.read(tapbackStorageProvider).value;
-    AppLogging.messages(
-      '🏷️ _storeIncomingTapback: storage=${storage != null ? "available" : "NULL"}',
-    );
-    if (storage != null) {
-      storage.addTapback(tapback).then((_) {
-        AppLogging.messages(
-          '🏷️ _storeIncomingTapback SUCCESS: stored $emoji from '
-          '${message.from} on message ${originalMessage.id}',
-        );
-        // Invalidate the tapbacks provider so widgets rebuild
-        ref.invalidate(messageTapbacksProvider(originalMessage.id));
-        AppLogging.messages(
-          '🏷️ _storeIncomingTapback: invalidated messageTapbacksProvider '
-          'for ${originalMessage.id}',
-        );
-      });
-    } else {
-      AppLogging.messages(
-        '🏷️ _storeIncomingTapback ABORT: TapbackStorageService not available',
-      );
-    }
-  }
-
-  /// Returns true if [text] looks like a single emoji (no ASCII letters
-  /// or digits, at most a few code points).  Used as a content-based
-  /// fallback to identify tapback messages that lack the is_emoji flag.
-  static bool _looksLikeEmoji(String text) {
-    if (text.isEmpty) return false;
-    // Tapback emojis are short: a single emoji grapheme is at most ~8
-    // UTF-16 code units (flag sequences, family ZWJ, etc.).
-    if (text.length > 8) return false;
-    // Every rune must be non-ASCII (emoji characters are > 127).
-    return text.runes.every((r) => r > 127);
+  Future<void> _persistHiddenTapback(Message message) async {
+    await _storage?.saveMessage(message);
+    _recordMessageSignature(message);
+    ref.read(messageTimelineEpochProvider.notifier).bump();
   }
 
   String _messageSignature(Message message) {
@@ -4033,6 +3949,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
       );
       var added = 0;
       for (final m in messages) {
+        if (m.isCanonicalTapback) continue;
         if (!state.any((s) => s.id == m.id)) {
           state = [...state, m];
           added++;
@@ -4060,6 +3977,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
     final total = all.length;
     var inserted = 0;
     for (final m in all) {
+      if (m.isCanonicalTapback) continue;
       if (!state.any((s) => s.id == m.id)) {
         state = [...state, m];
         inserted++;
@@ -4086,6 +4004,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
     var inserted = 0;
     for (final m in all) {
       if (!backgroundIds.contains(m.id)) continue;
+      if (m.isCanonicalTapback) continue;
       // ID-based dedup
       if (state.any((s) => s.id == m.id)) continue;
       // Content-based dedup (same sender, text, channel within 60 s)
@@ -4112,6 +4031,20 @@ class MessagesNotifier extends Notifier<List<Message>> {
 final messagesProvider = NotifierProvider<MessagesNotifier, List<Message>>(
   MessagesNotifier.new,
 );
+
+class MessageTimelineEpochNotifier extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  void bump() {
+    state++;
+  }
+}
+
+final messageTimelineEpochProvider =
+    NotifierProvider<MessageTimelineEpochNotifier, int>(
+      MessageTimelineEpochNotifier.new,
+    );
 
 /// Bounded DM resend and auto-retry coordinator.
 ///
@@ -4891,7 +4824,13 @@ final unreadMessagesCountProvider = Provider<int>((ref) {
   if (myNodeNum == null) return 0;
 
   return messages
-      .where((m) => !m.isEmoji && m.received && m.from != myNodeNum && !m.read)
+      .where(
+        (m) =>
+            !m.isCanonicalTapback &&
+            m.received &&
+            m.from != myNodeNum &&
+            !m.read,
+      )
       .length;
 });
 
@@ -4911,7 +4850,7 @@ final unreadDmCountProvider = Provider<int>((ref) {
   return messages
       .where(
         (m) =>
-            !m.isEmoji &&
+            !m.isCanonicalTapback &&
             m.received &&
             m.from != myNodeNum &&
             !m.read &&
@@ -4956,7 +4895,7 @@ final channelUnreadCountsProvider = Provider<Map<int, int>>((ref) {
   final counts = <int, int>{};
   for (final m in messages) {
     // Skip tapback emoji reactions — they are metadata, not messages
-    if (m.isEmoji) continue;
+    if (m.isCanonicalTapback) continue;
     if (m.received && m.from != myNodeNum && !m.read && m.isBroadcast) {
       final ch = m.channel ?? 0;
       counts[ch] = (counts[ch] ?? 0) + 1;
@@ -5854,6 +5793,7 @@ class NotificationBatchNotifier extends Notifier<NotificationBatchState> {
             message: msg.message,
             channelIndex: msg.channelIndex!,
             fromNodeNum: msg.fromNodeNum,
+            replyPacketId: msg.replyPacketId,
             playSound: playSound,
             vibrate: vibrate,
           );
@@ -5863,6 +5803,7 @@ class NotificationBatchNotifier extends Notifier<NotificationBatchState> {
             senderShortName: msg.senderShortName,
             message: msg.message,
             fromNodeNum: msg.fromNodeNum,
+            replyPacketId: msg.replyPacketId,
             playSound: playSound,
             vibrate: vibrate,
           );

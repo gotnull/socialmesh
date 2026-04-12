@@ -8,12 +8,10 @@ import '../core/logging.dart';
 import '../models/mesh_models.dart';
 import '../models/telemetry_log.dart';
 import '../models/route.dart';
-import '../models/tapback.dart';
 import '../services/storage/telemetry_database.dart';
 import '../services/storage/traceroute_database.dart';
 import '../services/storage/traceroute_repository.dart';
 import '../services/storage/route_storage_service.dart';
-import '../services/storage/tapback_storage_service.dart';
 import '../services/protocol/protocol_service.dart';
 import 'app_providers.dart';
 
@@ -38,17 +36,6 @@ final routeStorageProvider = FutureProvider<RouteStorageService>((ref) async {
   await service.init();
   // Auto-prune routes older than 365 days on startup
   await service.pruneExpiredRoutes();
-  return service;
-});
-
-// Tapback storage service
-final tapbackStorageProvider = FutureProvider<TapbackStorageService>((
-  ref,
-) async {
-  final prefs = await ref.watch(sharedPreferencesProvider.future);
-  final service = TapbackStorageService(prefs);
-  // One-time cleanup of duplicates that accumulated before the write guard
-  await service.purgeExistingDuplicates();
   return service;
 });
 
@@ -439,73 +426,6 @@ class ActiveRouteNotifier extends Notifier<Route?> {
 
 final activeRouteProvider = NotifierProvider<ActiveRouteNotifier, Route?>(
   ActiveRouteNotifier.new,
-);
-
-// ============ Tapback Providers ============
-
-/// Get tapbacks for a specific message
-final messageTapbacksProvider =
-    FutureProvider.family<List<MessageTapback>, String>((ref, messageId) async {
-      final storage = await ref.watch(tapbackStorageProvider.future);
-      return storage.getTapbacksForMessage(messageId);
-    });
-
-/// Tapback actions notifier
-class TapbackActionsNotifier extends Notifier<void> {
-  @override
-  void build() {
-    return;
-  }
-
-  TapbackStorageService? get _storage => ref.read(tapbackStorageProvider).value;
-  ProtocolService get _protocol => ref.read(protocolServiceProvider);
-
-  /// Add a tapback reaction to a message
-  Future<void> addTapback({
-    required String messageId,
-    required int fromNodeNum,
-    required TapbackType type,
-    int? toNodeNum,
-  }) async {
-    if (_storage == null) return;
-
-    final tapback = MessageTapback(
-      messageId: messageId,
-      fromNodeNum: fromNodeNum,
-      emoji: type.emoji,
-    );
-    await _storage!.addTapback(tapback);
-
-    // Send tapback as emoji message to the original sender
-    if (toNodeNum != null) {
-      try {
-        await _protocol.sendMessage(
-          text: type.emoji,
-          to: toNodeNum,
-          wantAck: true,
-          source: MessageSource.tapback,
-        );
-        AppLogging.liveActivity(
-          'Sent tapback ${type.emoji} to node $toNodeNum',
-        );
-      } catch (e) {
-        AppLogging.liveActivity('Failed to send tapback: $e');
-      }
-    }
-  }
-
-  /// Remove a tapback reaction
-  Future<void> removeTapback({
-    required String messageId,
-    required int fromNodeNum,
-  }) async {
-    if (_storage == null) return;
-    await _storage!.removeTapback(messageId, fromNodeNum);
-  }
-}
-
-final tapbackActionsProvider = NotifierProvider<TapbackActionsNotifier, void>(
-  TapbackActionsNotifier.new,
 );
 
 // ============ Telemetry Auto-Logging ============
