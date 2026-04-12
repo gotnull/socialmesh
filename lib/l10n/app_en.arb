@@ -45573,15 +45573,15 @@
     "@serviceWizardWhatTitle": {
         "description": "Step 1 title"
     },
-    "serviceWizardWhatSubtitle": "Choose a type of service to share on the mesh",
+    "serviceWizardWhatSubtitle": "Choose the core capability you'll share on the mesh",
     "@serviceWizardWhatSubtitle": {
         "description": "Step 1 subtitle"
     },
-    "serviceWizardPresetTitle": "Choose a preset",
+    "serviceWizardPresetTitle": "Choose an optional preset",
     "@serviceWizardPresetTitle": {
         "description": "Step title for optionally choosing a preset for the selected canonical service type"
     },
-    "serviceWizardPresetSubtitle": "Optional: pick a preset for this capability, or keep it generic",
+    "serviceWizardPresetSubtitle": "Optional: presets shape the presentation, but the capability stays the same",
     "@serviceWizardPresetSubtitle": {
         "description": "Step subtitle for the optional preset selection step"
     },
@@ -45589,7 +45589,7 @@
     "@serviceWizardPresetGeneric": {
         "description": "Label for using a canonical service type without a preset"
     },
-    "serviceWizardPresetGenericDescription": "Start with a clean service and shape the details yourself",
+    "serviceWizardPresetGenericDescription": "Start with the base capability and shape the details yourself",
     "@serviceWizardPresetGenericDescription": {
         "description": "Description for choosing no preset in the service creation wizard"
     },
@@ -45625,7 +45625,7 @@
     "@serviceWizardReviewSubtitle": {
         "description": "Review step subtitle"
     },
-    "serviceWizardReviewType": "Type",
+    "serviceWizardReviewType": "Capability",
     "@serviceWizardReviewType": {
         "description": "Summary row label: service type"
     },

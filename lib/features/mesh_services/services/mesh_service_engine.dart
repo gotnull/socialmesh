@@ -43,7 +43,7 @@ abstract final class MeshServicesAction {
   /// Get details of a specific instance.
   static const int getInstance = 0x0002;
 
-  /// Interact with an instance (template-specific: vote, check item, etc).
+  /// Interact with an instance (service-specific: vote, check item, etc).
   static const int interact = 0x0003;
 
   /// Get the schema descriptor for a specific instance.
@@ -169,7 +169,7 @@ class MeshServicesHandler implements MrrpServiceHandler {
       return _buildError(request, MrrpStatusCode.notFound);
     }
 
-    // Delegate to engine for template-specific interaction.
+    // Delegate to engine for service-specific interaction.
     final result = await _engine.handleInteraction(
       inst,
       senderNodeId,
@@ -389,7 +389,7 @@ class MeshServiceEngine {
   /// Get active local instances.
   Future<List<MeshServiceInstance>> getActiveInstances() => _store.getActive();
 
-  /// Handle a template-specific interaction from a remote peer.
+  /// Handle a service-specific interaction from a remote peer.
   Future<Uint8List?> handleInteraction(
     MeshServiceInstance instance,
     int senderNodeId,

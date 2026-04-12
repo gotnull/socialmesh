@@ -96,7 +96,7 @@ String _cacheKey(int nodeId, int serviceId) => '$nodeId:$serviceId';
 
 /// Service detail screen.
 ///
-/// Displays either a template-specific UI for known services or the
+/// Displays either a capability-aware UI for known services or the
 /// generic schema-driven renderer for unknown services.
 class ServiceDetailScreen extends ConsumerStatefulWidget {
   /// The remote peer's node ID.

@@ -4,8 +4,8 @@
 /// Services section for Mesh Explorer.
 ///
 /// Renders nearby MRRP services as rich destination cards suitable for
-/// a service-first discovery hub. Each card shows service type, title,
-/// creator identity, freshness, and audience badge.
+/// a service-first discovery hub. Each card shows capability, title,
+/// creator identity, freshness, and an access badge.
 library;
 
 import 'package:flutter/material.dart';
@@ -169,7 +169,7 @@ class _ServiceDiscoveryCard extends ConsumerWidget {
                     children: [
                       _LiveBadge(l10n: l10n),
                       const SizedBox(height: AppTheme.spacing4),
-                      _AudienceBadge(presentation: presentation, l10n: l10n),
+                      _AccessBadge(presentation: presentation, l10n: l10n),
                     ],
                   ),
                 ],
@@ -309,12 +309,12 @@ class _LiveBadge extends StatelessWidget {
   }
 }
 
-/// Audience badge (Open / Consent / Identity).
-class _AudienceBadge extends StatelessWidget {
+/// Access badge (Open / Consent / Identity).
+class _AccessBadge extends StatelessWidget {
   final ServicePresentation presentation;
   final AppLocalizations l10n;
 
-  const _AudienceBadge({required this.presentation, required this.l10n});
+  const _AccessBadge({required this.presentation, required this.l10n});
 
   @override
   Widget build(BuildContext context) {

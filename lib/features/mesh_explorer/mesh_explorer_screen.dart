@@ -24,7 +24,7 @@ import '../../providers/help_providers.dart';
 import '../../providers/sip_providers.dart';
 import '../../services/haptic_service.dart';
 import '../../utils/snackbar.dart';
-import '../mesh_services/screens/create_service_screen.dart';
+import '../mesh_services/screens/service_creation_wizard.dart';
 import 'widgets/mesh_explorer_hero.dart';
 import 'widgets/mesh_explorer_nearby_section.dart';
 import 'widgets/mesh_explorer_services_section.dart';
@@ -361,7 +361,7 @@ class _EmptyDiscoveryState extends StatelessWidget {
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute<void>(
-                  builder: (_) => const CreateServiceScreen(),
+                  builder: (_) => const ServiceCreationWizard(),
                 ),
               );
             },

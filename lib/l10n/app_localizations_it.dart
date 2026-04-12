@@ -34299,21 +34299,21 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get serviceWizardWhatSubtitle =>
-      'Choose a type of service to share on the mesh';
+      'Choose the core capability you\'ll share on the mesh';
 
   @override
-  String get serviceWizardPresetTitle => 'Choose a preset';
+  String get serviceWizardPresetTitle => 'Choose an optional preset';
 
   @override
   String get serviceWizardPresetSubtitle =>
-      'Optional: pick a preset for this capability, or keep it generic';
+      'Optional: presets shape the presentation, but the capability stays the same';
 
   @override
   String get serviceWizardPresetGeneric => 'No preset';
 
   @override
   String get serviceWizardPresetGenericDescription =>
-      'Start with a clean service and shape the details yourself';
+      'Start with the base capability and shape the details yourself';
 
   @override
   String get serviceWizardWhoTitle => 'Who can see it?';
@@ -34344,7 +34344,7 @@ class AppLocalizationsIt extends AppLocalizations {
       'Check everything looks right before publishing';
 
   @override
-  String get serviceWizardReviewType => 'Type';
+  String get serviceWizardReviewType => 'Capability';
 
   @override
   String get serviceWizardReviewPreset => 'Preset';

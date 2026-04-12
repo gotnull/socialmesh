@@ -59839,19 +59839,19 @@ abstract class AppLocalizations {
   /// Step 1 subtitle
   ///
   /// In en, this message translates to:
-  /// **'Choose a type of service to share on the mesh'**
+  /// **'Choose the core capability you\'ll share on the mesh'**
   String get serviceWizardWhatSubtitle;
 
   /// Step title for optionally choosing a preset for the selected canonical service type
   ///
   /// In en, this message translates to:
-  /// **'Choose a preset'**
+  /// **'Choose an optional preset'**
   String get serviceWizardPresetTitle;
 
   /// Step subtitle for the optional preset selection step
   ///
   /// In en, this message translates to:
-  /// **'Optional: pick a preset for this capability, or keep it generic'**
+  /// **'Optional: presets shape the presentation, but the capability stays the same'**
   String get serviceWizardPresetSubtitle;
 
   /// Label for using a canonical service type without a preset
@@ -59863,7 +59863,7 @@ abstract class AppLocalizations {
   /// Description for choosing no preset in the service creation wizard
   ///
   /// In en, this message translates to:
-  /// **'Start with a clean service and shape the details yourself'**
+  /// **'Start with the base capability and shape the details yourself'**
   String get serviceWizardPresetGenericDescription;
 
   /// Step 2 title: audience selection
@@ -59917,7 +59917,7 @@ abstract class AppLocalizations {
   /// Summary row label: service type
   ///
   /// In en, this message translates to:
-  /// **'Type'**
+  /// **'Capability'**
   String get serviceWizardReviewType;
 
   /// Summary row label: selected preset

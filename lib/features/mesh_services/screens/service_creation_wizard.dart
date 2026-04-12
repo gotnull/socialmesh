@@ -16,8 +16,6 @@ import '../models/mesh_service_localization.dart';
 import '../models/mesh_service_template.dart';
 import 'mesh_service_creation_screen.dart';
 
-enum _AudienceScope { anyone, contactsOnly }
-
 class ServiceCreationWizard extends ConsumerStatefulWidget {
   const ServiceCreationWizard({super.key});
 
@@ -33,9 +31,8 @@ class _ServiceCreationWizardState extends ConsumerState<ServiceCreationWizard>
 
   MeshServiceType? _selectedType;
   MeshServicePresetId? _selectedPreset;
-  _AudienceScope _audience = _AudienceScope.anyone;
 
-  static const int _totalSteps = 4;
+  static const int _totalSteps = 3;
 
   List<GuidedFlowStep> _buildSteps(AppLocalizations l10n) => [
     GuidedFlowStep(
@@ -47,11 +44,6 @@ class _ServiceCreationWizardState extends ConsumerState<ServiceCreationWizard>
       title: l10n.serviceWizardStepPreset,
       icon: Icons.auto_awesome_outlined,
       color: AccentColors.purple,
-    ),
-    GuidedFlowStep(
-      title: l10n.serviceWizardStepWho,
-      icon: Icons.people_outline,
-      color: AccentColors.emerald,
     ),
     GuidedFlowStep(
       title: l10n.serviceWizardStepReview,
@@ -136,8 +128,7 @@ class _ServiceCreationWizardState extends ConsumerState<ServiceCreationWizard>
         return switch (index) {
           0 => _buildTypeStep(context, l10n),
           1 => _buildPresetStep(context, l10n),
-          2 => _buildAudienceStep(context, l10n),
-          3 => _buildReviewStep(context, l10n),
+          2 => _buildReviewStep(context, l10n),
           _ => const SizedBox.shrink(),
         };
       },
@@ -246,46 +237,6 @@ class _ServiceCreationWizardState extends ConsumerState<ServiceCreationWizard>
     );
   }
 
-  Widget _buildAudienceStep(BuildContext context, AppLocalizations l10n) {
-    return ListView(
-      padding: const EdgeInsets.all(AppTheme.spacing16),
-      children: [
-        Text(l10n.serviceWizardWhoTitle, style: context.headingStyle),
-        const SizedBox(height: AppTheme.spacing4),
-        Text(
-          l10n.serviceWizardWhoSubtitle,
-          style: context.bodySecondaryStyle?.copyWith(
-            color: context.textSecondary,
-          ),
-        ),
-        const SizedBox(height: AppTheme.spacing16),
-        StepChoiceCard(
-          icon: Icons.public,
-          title: l10n.serviceWizardAudienceAnyone,
-          description: l10n.serviceWizardAudienceAnyoneDesc,
-          accentColor: AccentColors.emerald,
-          isSelected: _audience == _AudienceScope.anyone,
-          onTap: () {
-            ref.haptics.trigger(HapticType.light);
-            setState(() => _audience = _AudienceScope.anyone);
-          },
-        ),
-        const SizedBox(height: AppTheme.spacing8),
-        StepChoiceCard(
-          icon: Icons.group,
-          title: l10n.serviceWizardAudienceContacts,
-          description: l10n.serviceWizardAudienceContactsDesc,
-          accentColor: AccentColors.purple,
-          isSelected: _audience == _AudienceScope.contactsOnly,
-          onTap: () {
-            ref.haptics.trigger(HapticType.light);
-            setState(() => _audience = _AudienceScope.contactsOnly);
-          },
-        ),
-      ],
-    );
-  }
-
   Widget _buildReviewStep(BuildContext context, AppLocalizations l10n) {
     final selectedType = _selectedType;
     final resolved = selectedType == null
@@ -329,15 +280,6 @@ class _ServiceCreationWizardState extends ConsumerState<ServiceCreationWizard>
                   ? Icons.auto_fix_high
                   : resolved?.icon,
               iconColor: resolved?.accentColor,
-            ),
-            SummaryRow(
-              label: l10n.serviceWizardReviewAudience,
-              value: _audience == _AudienceScope.anyone
-                  ? l10n.serviceWizardAudienceAnyone
-                  : l10n.serviceWizardAudienceContacts,
-              icon: _audience == _AudienceScope.anyone
-                  ? Icons.public
-                  : Icons.group,
             ),
           ],
         ),
