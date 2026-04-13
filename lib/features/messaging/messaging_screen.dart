@@ -4085,7 +4085,10 @@ class _TechInfoChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => _showExplanation(context),
+      onTap: () {
+        HapticFeedback.selectionClick();
+        _showExplanation(context);
+      },
       behavior: HitTestBehavior.opaque,
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -4099,46 +4102,45 @@ class _TechInfoChip extends StatelessWidget {
   }
 
   void _showExplanation(BuildContext context) {
-    AppBottomSheet.show(
+    AppBottomSheet.show<void>(
       context: context,
-      maxHeightFraction: 0.35,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, size: 24, color: context.accentColor),
-              SizedBox(width: AppTheme.spacing12),
+              Icon(icon, size: 18, color: context.accentColor),
+              const SizedBox(width: AppTheme.spacing8),
               Expanded(
                 child: Text(
                   explainTitle,
                   style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
                     color: context.textPrimary,
                   ),
                 ),
               ),
             ],
           ),
-          SizedBox(height: AppTheme.spacing16),
+          const SizedBox(height: AppTheme.spacing12),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(AppTheme.spacing16),
+            padding: const EdgeInsets.all(AppTheme.spacing12),
             decoration: BoxDecoration(
-              color: context.card,
-              borderRadius: BorderRadius.circular(AppTheme.radius12),
+              color: context.border.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(AppTheme.radius8),
             ),
             child: Row(
               children: [
-                Icon(icon, size: 20, color: context.accentColor),
-                SizedBox(width: AppTheme.spacing12),
+                Icon(icon, size: 16, color: context.accentColor),
+                const SizedBox(width: AppTheme.spacing8),
                 Expanded(
                   child: Text(
                     label,
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 14,
                       fontWeight: FontWeight.w500,
                       color: context.textPrimary,
                     ),
@@ -4147,7 +4149,7 @@ class _TechInfoChip extends StatelessWidget {
               ],
             ),
           ),
-          SizedBox(height: AppTheme.spacing16),
+          const SizedBox(height: AppTheme.spacing12),
           Text(
             explainBody,
             style: TextStyle(
