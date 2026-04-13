@@ -513,4 +513,62 @@ void main() {
       container.dispose();
     }
   });
+
+  testWidgets(
+    'sending a new message while scrolled up jumps back to the latest row',
+    (tester) async {
+      final storage = _InMemoryMessageDatabase();
+      await storage.init();
+      await _seedDmConversation(storage, startIndex: 0, count: 60);
+
+      final container = await _createContainer(storage);
+
+      try {
+        await _pumpChat(tester, container);
+        await _pumpFor(tester, const Duration(milliseconds: 600));
+
+        final listFinder = find.byType(ScrollablePositionedList);
+        expect(listFinder, findsOneWidget);
+
+        await tester.drag(listFinder, const Offset(0, 900));
+        await _pumpFor(tester, const Duration(milliseconds: 600));
+        await _pumpUntilFound(tester, find.text('Jump to latest'));
+
+        final visibleJump = tester.widget<AnimatedOpacity>(
+          find.ancestor(
+            of: find.text('Jump to latest'),
+            matching: find.byType(AnimatedOpacity),
+          ),
+        );
+        expect(visibleJump.opacity, 1);
+
+        const sentText = 'fresh outbound message';
+        final composerField = find.descendant(
+          of: find.byType(ChatComposer),
+          matching: find.byType(TextField),
+        );
+        await tester.enterText(composerField, sentText);
+        await tester.pump();
+        await tester.tap(find.byIcon(Icons.send));
+        await _pumpFor(tester, const Duration(milliseconds: 700));
+        await _pumpUntilFound(tester, find.text(sentText));
+
+        final hiddenJump = tester.widget<AnimatedOpacity>(
+          find.ancestor(
+            of: find.text('Jump to latest'),
+            matching: find.byType(AnimatedOpacity),
+          ),
+        );
+        expect(hiddenJump.opacity, 0);
+
+        final sentTextRect = tester.getRect(find.text(sentText));
+        final composerRect = tester.getRect(find.byType(ChatComposer));
+        expect(sentTextRect.bottom, lessThanOrEqualTo(composerRect.top + 0.5));
+      } finally {
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump();
+        container.dispose();
+      }
+    },
+  );
 }

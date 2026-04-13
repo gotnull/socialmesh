@@ -1502,6 +1502,19 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
 
     // Add to messages immediately for optimistic UI
     messagesNotifier.addMessage(pendingMessage);
+    final activeQuery = _activeTimelineQuery;
+    final hasActiveSearchFilter = _isSearching && _searchQuery.isNotEmpty;
+    if (activeQuery != null && !hasActiveSearchFilter) {
+      if (mounted && _showJumpToLatest) {
+        setState(() => _showJumpToLatest = false);
+      }
+      _scheduleScrollToMessage(
+        activeQuery,
+        messageId: messageId,
+        alignment: _latestJumpAlignment,
+        animate: true,
+      );
+    }
     _messageController.clear();
     _clearReply();
 
