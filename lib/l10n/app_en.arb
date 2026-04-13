@@ -45895,5 +45895,105 @@
     "disclosureExpert": "Full diagnostics",
     "@disclosureExpert": {
         "description": "Label for expert disclosure level"
+    },
+    "messagingWeekView": "Week View",
+    "@messagingWeekView": {
+        "description": "Overflow menu label to open the weekly timeline view from messages"
+    },
+    "messageTimelineTitle": "Message Activity",
+    "@messageTimelineTitle": {
+        "description": "Title for the message weekly timeline screen"
+    },
+    "messageTimelineEmpty": "No message activity this week",
+    "@messageTimelineEmpty": {
+        "description": "Empty state headline when no messages appear on the weekly timeline"
+    },
+    "messageTimelineEmptyDescription": "Messages and channel activity will appear here as they happen",
+    "@messageTimelineEmptyDescription": {
+        "description": "Empty state description for the weekly message timeline"
+    },
+    "messageTimelineShowAll": "Show all activity",
+    "@messageTimelineShowAll": {
+        "description": "Button label to clear timeline filters and show all message activity"
+    },
+    "messageTimelineFilterDm": "Direct",
+    "@messageTimelineFilterDm": {
+        "description": "Filter chip label for direct messages on the message timeline"
+    },
+    "messageTimelineFilterChannel": "Channels",
+    "@messageTimelineFilterChannel": {
+        "description": "Filter chip label for channel messages on the message timeline"
+    },
+    "messageTimelineFilterAll": "All",
+    "@messageTimelineFilterAll": {
+        "description": "Filter chip label showing all messages on the message timeline"
+    },
+    "messageTimelineSessionMessages": "{count, plural, =1{1 message} other{{count} messages}}",
+    "@messageTimelineSessionMessages": {
+        "description": "Subtitle showing message count in a timeline session card",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "messageTimelineChannelPrefix": "Ch: {name}",
+    "@messageTimelineChannelPrefix": {
+        "description": "Subtitle prefix showing channel name on a timeline card",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "messageTimelineDmWith": "DM with {name}",
+    "@messageTimelineDmWith": {
+        "description": "Title for a direct message session on the timeline",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "messageTimelineDetailType": "Type",
+    "@messageTimelineDetailType": {
+        "description": "Label for the type row in the timeline detail sheet"
+    },
+    "messageTimelineDetailTypeDm": "Direct message",
+    "@messageTimelineDetailTypeDm": {
+        "description": "DM type value in the timeline detail sheet"
+    },
+    "messageTimelineDetailTypeChannel": "Channel",
+    "@messageTimelineDetailTypeChannel": {
+        "description": "Channel type value in the timeline detail sheet"
+    },
+    "messageTimelineDetailTime": "Time",
+    "@messageTimelineDetailTime": {
+        "description": "Label for the time row in the timeline detail sheet"
+    },
+    "messageTimelineDetailDuration": "Duration",
+    "@messageTimelineDetailDuration": {
+        "description": "Label for the duration row in the timeline detail sheet"
+    },
+    "messageTimelineDetailDurationMinutes": "{count} min",
+    "@messageTimelineDetailDurationMinutes": {
+        "description": "Duration value in minutes",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "messageTimelineDetailMessages": "Messages",
+    "@messageTimelineDetailMessages": {
+        "description": "Label for the messages row in the timeline detail sheet"
+    },
+    "messageTimelineDetailParticipants": "Participants",
+    "@messageTimelineDetailParticipants": {
+        "description": "Label for the participants section in the timeline detail sheet"
+    },
+    "messageTimelineDetailOpenChat": "Open conversation",
+    "@messageTimelineDetailOpenChat": {
+        "description": "Button label to navigate to the chat from the detail sheet"
     }
 }

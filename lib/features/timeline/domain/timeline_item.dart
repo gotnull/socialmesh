@@ -23,6 +23,7 @@ class TimelineItem {
   final String? subtitle;
   final TimelinePriority priority;
   final List<String> participantIds;
+  final List<String> messageIds;
   final int messageCount;
   final Duration? trackedDuration;
   final bool isCompleted;
@@ -36,6 +37,7 @@ class TimelineItem {
     this.subtitle,
     this.priority = TimelinePriority.low,
     this.participantIds = const [],
+    this.messageIds = const [],
     this.messageCount = 0,
     this.trackedDuration,
     this.isCompleted = false,
@@ -62,6 +64,7 @@ class TimelineItem {
     String? subtitle,
     TimelinePriority? priority,
     List<String>? participantIds,
+    List<String>? messageIds,
     int? messageCount,
     Duration? trackedDuration,
     bool? isCompleted,
@@ -75,6 +78,7 @@ class TimelineItem {
       subtitle: subtitle ?? this.subtitle,
       priority: priority ?? this.priority,
       participantIds: participantIds ?? this.participantIds,
+      messageIds: messageIds ?? this.messageIds,
       messageCount: messageCount ?? this.messageCount,
       trackedDuration: trackedDuration ?? this.trackedDuration,
       isCompleted: isCompleted ?? this.isCompleted,

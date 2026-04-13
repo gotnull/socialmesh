@@ -34189,4 +34189,79 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get disclosureExpert => 'Full diagnostics';
+
+  @override
+  String get messagingWeekView => 'Week View';
+
+  @override
+  String get messageTimelineTitle => 'Message Activity';
+
+  @override
+  String get messageTimelineEmpty => 'No message activity this week';
+
+  @override
+  String get messageTimelineEmptyDescription =>
+      'Messages and channel activity will appear here as they happen';
+
+  @override
+  String get messageTimelineShowAll => 'Show all activity';
+
+  @override
+  String get messageTimelineFilterDm => 'Direct';
+
+  @override
+  String get messageTimelineFilterChannel => 'Channels';
+
+  @override
+  String get messageTimelineFilterAll => 'All';
+
+  @override
+  String messageTimelineSessionMessages(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count messages',
+      one: '1 message',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String messageTimelineChannelPrefix(String name) {
+    return 'Ch: $name';
+  }
+
+  @override
+  String messageTimelineDmWith(String name) {
+    return 'DM with $name';
+  }
+
+  @override
+  String get messageTimelineDetailType => 'Type';
+
+  @override
+  String get messageTimelineDetailTypeDm => 'Direct message';
+
+  @override
+  String get messageTimelineDetailTypeChannel => 'Channel';
+
+  @override
+  String get messageTimelineDetailTime => 'Time';
+
+  @override
+  String get messageTimelineDetailDuration => 'Duration';
+
+  @override
+  String messageTimelineDetailDurationMinutes(int count) {
+    return '$count min';
+  }
+
+  @override
+  String get messageTimelineDetailMessages => 'Messages';
+
+  @override
+  String get messageTimelineDetailParticipants => 'Participants';
+
+  @override
+  String get messageTimelineDetailOpenChat => 'Open conversation';
 }

@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socialmesh/core/transport.dart';
+import 'package:socialmesh/features/messaging/conversation_timeline.dart';
 import 'package:socialmesh/features/messaging/messaging_screen.dart';
 import 'package:socialmesh/features/messaging/widgets/chat_composer.dart';
 import 'package:socialmesh/l10n/app_localizations.dart';
@@ -90,6 +91,35 @@ class _StaticNodesNotifier extends NodesNotifier {
 
   @override
   Map<int, MeshNode> build() => _nodes;
+}
+
+class _FixedConversationTimelineController
+    extends ConversationTimelineController {
+  _FixedConversationTimelineController(this._timelines);
+
+  final Map<ConversationTimelineQuery, AsyncValue<ConversationTimelineState>>
+  _timelines;
+
+  @override
+  Map<ConversationTimelineQuery, AsyncValue<ConversationTimelineState>>
+  build() => _timelines;
+
+  @override
+  Future<void> ensureInitialized(ConversationTimelineQuery query) async {}
+
+  @override
+  Future<int> loadOlder(ConversationTimelineQuery query) async => 0;
+
+  @override
+  Future<void> saveReadPosition(
+    ConversationTimelineQuery query,
+    ConversationReadPosition position,
+  ) async {}
+
+  @override
+  Future<ConversationRestoreTarget> resolveInitialRestoreTarget(
+    ConversationTimelineQuery query,
+  ) async => const ConversationRestoreTarget.latest();
 }
 
 class _InMemoryMessageDatabase extends MessageDatabase {
@@ -296,7 +326,10 @@ Future<void> _seedDmConversation(
   await storage.saveMessages(messages);
 }
 
-Future<ProviderContainer> _createContainer(MessageDatabase storage) async {
+Future<ProviderContainer> _createContainer(
+  MessageDatabase storage, {
+  List<dynamic> overrides = const [],
+}) async {
   final container = ProviderContainer(
     overrides: [
       messageStorageProvider.overrideWithValue(AsyncValue.data(storage)),
@@ -314,6 +347,7 @@ Future<ProviderContainer> _createContainer(MessageDatabase storage) async {
           ),
         }),
       ),
+      ...overrides,
     ],
   );
 
@@ -513,6 +547,51 @@ void main() {
       container.dispose();
     }
   });
+
+  testWidgets(
+    'chat falls back to in-memory messages when timeline state is empty',
+    (tester) async {
+      final storage = _InMemoryMessageDatabase();
+      await storage.init();
+      await _seedDmConversation(storage, startIndex: 0, count: 3);
+
+      const query = ConversationTimelineQuery.direct(
+        peerNodeNum: 20,
+        myNodeNum: 10,
+      );
+      final container = await _createContainer(
+        storage,
+        overrides: [
+          conversationTimelineControllerProvider.overrideWith(
+            () => _FixedConversationTimelineController({
+              query: const AsyncValue.data(
+                ConversationTimelineState(
+                  rawMessages: [],
+                  rows: [],
+                  totalMessageCount: 0,
+                  hasMoreOlder: false,
+                  isLoadingOlder: false,
+                ),
+              ),
+            }),
+          ),
+        ],
+      );
+
+      try {
+        await _pumpChat(tester, container);
+        await _pumpFor(tester, const Duration(milliseconds: 400));
+
+        expect(find.text('message-000'), findsOneWidget);
+        expect(find.text('message-001'), findsOneWidget);
+        expect(find.text('message-002'), findsOneWidget);
+      } finally {
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump();
+        container.dispose();
+      }
+    },
+  );
 
   testWidgets(
     'sending a new message while scrolled up jumps back to the latest row',

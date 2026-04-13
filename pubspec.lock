@@ -1469,6 +1469,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.5"
+  infinite_calendar_view:
+    dependency: "direct main"
+    description:
+      name: infinite_calendar_view
+      sha256: a3edbf1cc2f0eca20df8debdce9cf2a391749e009f36ef1f00b5fec3b2c0f5c9
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.11.3"
   intl:
     dependency: "direct main"
     description:

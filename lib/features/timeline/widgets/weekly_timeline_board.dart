@@ -63,6 +63,14 @@ class WeeklyTimelineBoard extends ConsumerStatefulWidget {
   /// Pixels per minute — controls vertical density.
   final double pixelsPerMinute;
 
+  /// Reference date used to compute which day columns to show.
+  ///
+  /// When non-null, `_daysForSegment` anchors the week/month view to this
+  /// date instead of `DateTime.now()`. This allows parent screens that manage
+  /// their own week-navigation state to keep columns in sync with queried
+  /// data.
+  final DateTime? referenceDate;
+
   const WeeklyTimelineBoard({
     super.key,
     required this.title,
@@ -73,6 +81,7 @@ class WeeklyTimelineBoard extends ConsumerStatefulWidget {
     this.interactionDelegate,
     this.avatarResolver,
     this.pixelsPerMinute = kTimelinePixelsPerMinute,
+    this.referenceDate,
   });
 
   @override
@@ -125,7 +134,9 @@ class _WeeklyTimelineBoardState extends ConsumerState<WeeklyTimelineBoard> {
     final totalHeight = 24 * 60 * widget.pixelsPerMinute;
 
     // Determine the days to show based on segment.
-    final days = _daysForSegment(widget.segment, now);
+    // Use referenceDate when provided so week navigation stays in sync.
+    final anchor = widget.referenceDate ?? now;
+    final days = _daysForSegment(widget.segment, now, anchor);
 
     // Group items by day and compute layouts.
     final grouped = groupItemsByDay(widget.items);
@@ -212,21 +223,26 @@ class _WeeklyTimelineBoardState extends ConsumerState<WeeklyTimelineBoard> {
     );
   }
 
-  List<DateTime> _daysForSegment(TimelineSegment segment, DateTime now) {
+  List<DateTime> _daysForSegment(
+    TimelineSegment segment,
+    DateTime now,
+    DateTime anchor,
+  ) {
     final today = DateTime(now.year, now.month, now.day);
+    final anchorDay = DateTime(anchor.year, anchor.month, anchor.day);
     return switch (segment) {
       TimelineSegment.today => [today],
       TimelineSegment.week => List.generate(
         7,
-        (i) => weekStartFor(today).add(Duration(days: i)),
+        (i) => weekStartFor(anchorDay).add(Duration(days: i)),
       ),
       TimelineSegment.month => List.generate(
-        DateTime(today.year, today.month + 1, 0).day,
-        (i) => DateTime(today.year, today.month, i + 1),
+        DateTime(anchorDay.year, anchorDay.month + 1, 0).day,
+        (i) => DateTime(anchorDay.year, anchorDay.month, i + 1),
       ),
       TimelineSegment.year => List.generate(
         12,
-        (i) => DateTime(today.year, i + 1, 1),
+        (i) => DateTime(anchorDay.year, i + 1, 1),
       ),
     };
   }

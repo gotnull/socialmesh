@@ -60225,6 +60225,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Full diagnostics'**
   String get disclosureExpert;
+
+  /// Overflow menu label to open the weekly timeline view from messages
+  ///
+  /// In en, this message translates to:
+  /// **'Week View'**
+  String get messagingWeekView;
+
+  /// Title for the message weekly timeline screen
+  ///
+  /// In en, this message translates to:
+  /// **'Message Activity'**
+  String get messageTimelineTitle;
+
+  /// Empty state headline when no messages appear on the weekly timeline
+  ///
+  /// In en, this message translates to:
+  /// **'No message activity this week'**
+  String get messageTimelineEmpty;
+
+  /// Empty state description for the weekly message timeline
+  ///
+  /// In en, this message translates to:
+  /// **'Messages and channel activity will appear here as they happen'**
+  String get messageTimelineEmptyDescription;
+
+  /// Button label to clear timeline filters and show all message activity
+  ///
+  /// In en, this message translates to:
+  /// **'Show all activity'**
+  String get messageTimelineShowAll;
+
+  /// Filter chip label for direct messages on the message timeline
+  ///
+  /// In en, this message translates to:
+  /// **'Direct'**
+  String get messageTimelineFilterDm;
+
+  /// Filter chip label for channel messages on the message timeline
+  ///
+  /// In en, this message translates to:
+  /// **'Channels'**
+  String get messageTimelineFilterChannel;
+
+  /// Filter chip label showing all messages on the message timeline
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get messageTimelineFilterAll;
+
+  /// Subtitle showing message count in a timeline session card
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 message} other{{count} messages}}'**
+  String messageTimelineSessionMessages(int count);
+
+  /// Subtitle prefix showing channel name on a timeline card
+  ///
+  /// In en, this message translates to:
+  /// **'Ch: {name}'**
+  String messageTimelineChannelPrefix(String name);
+
+  /// Title for a direct message session on the timeline
+  ///
+  /// In en, this message translates to:
+  /// **'DM with {name}'**
+  String messageTimelineDmWith(String name);
+
+  /// Label for the type row in the timeline detail sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get messageTimelineDetailType;
+
+  /// DM type value in the timeline detail sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Direct message'**
+  String get messageTimelineDetailTypeDm;
+
+  /// Channel type value in the timeline detail sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Channel'**
+  String get messageTimelineDetailTypeChannel;
+
+  /// Label for the time row in the timeline detail sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get messageTimelineDetailTime;
+
+  /// Label for the duration row in the timeline detail sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get messageTimelineDetailDuration;
+
+  /// Duration value in minutes
+  ///
+  /// In en, this message translates to:
+  /// **'{count} min'**
+  String messageTimelineDetailDurationMinutes(int count);
+
+  /// Label for the messages row in the timeline detail sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Messages'**
+  String get messageTimelineDetailMessages;
+
+  /// Label for the participants section in the timeline detail sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Participants'**
+  String get messageTimelineDetailParticipants;
+
+  /// Button label to navigate to the chat from the detail sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Open conversation'**
+  String get messageTimelineDetailOpenChat;
 }
 
 class _AppLocalizationsDelegate

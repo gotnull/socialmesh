@@ -58,6 +58,7 @@ import '../../core/widgets/premium_feature_gate.dart';
 import '../../services/translation/translation_models.dart';
 import '../../services/storage/conversation_read_position.dart';
 import '../../services/protocol/text_message_payload_budget.dart';
+import '../timeline/message_timeline_screen.dart';
 
 /// Conversation type enum
 enum ConversationType { channel, directMessage }
@@ -2013,11 +2014,30 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     final timelineState = timelineAsync?.asData?.value;
     final isTimelineLoading = timelineAsync == null || timelineAsync.isLoading;
 
-    final unfilteredRows =
-        timelineState?.rows ??
-        fallbackMessages
-            .map((message) => ConversationTimelineRow.message(message: message))
-            .toList();
+    final fallbackRows = fallbackMessages
+        .map((message) => ConversationTimelineRow.message(message: message))
+        .toList();
+    final visibleTimelineMessageCount =
+        timelineState?.rawMessages
+            .where((message) => !message.isCanonicalTapback)
+            .length ??
+        0;
+    final shouldUseFallbackRows =
+        fallbackRows.isNotEmpty &&
+        (timelineState == null ||
+            timelineState.rows.isEmpty ||
+            visibleTimelineMessageCount < fallbackMessages.length);
+    if (shouldUseFallbackRows && timelineState != null) {
+      AppLogging.messages(
+        '📨 Using fallback rows: timelineRows=${timelineState.rows.length}, '
+        'timelineMessages=$visibleTimelineMessageCount, '
+        'fallbackMessages=${fallbackMessages.length}',
+      );
+    }
+
+    final unfilteredRows = shouldUseFallbackRows
+        ? fallbackRows
+        : (timelineState?.rows ?? fallbackRows);
 
     var filteredRows = [...unfilteredRows];
 
@@ -3863,6 +3883,12 @@ class MessagingPopupMenu extends ConsumerWidget {
           case 'scan_channel':
             if (onScanChannel != null) onScanChannel!();
             break;
+          case 'week_view':
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const MessageTimelineScreen()),
+            );
+            break;
           case 'settings':
             Navigator.pushNamed(context, '/settings');
             break;
@@ -3912,6 +3938,23 @@ class MessagingPopupMenu extends ConsumerWidget {
           );
         }
         items.addAll([
+          PopupMenuItem(
+            value: 'week_view',
+            child: Row(
+              children: [
+                Icon(
+                  Icons.calendar_view_week,
+                  color: context.textSecondary,
+                  size: 20,
+                ),
+                const SizedBox(width: AppTheme.spacing12),
+                Text(
+                  context.l10n.messagingWeekView,
+                  style: TextStyle(color: context.textPrimary),
+                ),
+              ],
+            ),
+          ),
           PopupMenuItem(
             value: 'help',
             child: Row(
