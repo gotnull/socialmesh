@@ -3884,6 +3884,9 @@ class MessagingPopupMenu extends ConsumerWidget {
             if (onScanChannel != null) onScanChannel!();
             break;
           case 'week_view':
+            if (!AppFeatureFlags.isMessageTimelineEnabled) {
+              break;
+            }
             Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const MessageTimelineScreen()),
@@ -3937,24 +3940,28 @@ class MessagingPopupMenu extends ConsumerWidget {
             ),
           );
         }
-        items.addAll([
-          PopupMenuItem(
-            value: 'week_view',
-            child: Row(
-              children: [
-                Icon(
-                  Icons.calendar_view_week,
-                  color: context.textSecondary,
-                  size: 20,
-                ),
-                const SizedBox(width: AppTheme.spacing12),
-                Text(
-                  context.l10n.messagingWeekView,
-                  style: TextStyle(color: context.textPrimary),
-                ),
-              ],
+        if (AppFeatureFlags.isMessageTimelineEnabled) {
+          items.add(
+            PopupMenuItem(
+              value: 'week_view',
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.calendar_view_week,
+                    color: context.textSecondary,
+                    size: 20,
+                  ),
+                  const SizedBox(width: AppTheme.spacing12),
+                  Text(
+                    context.l10n.messagingWeekView,
+                    style: TextStyle(color: context.textPrimary),
+                  ),
+                ],
+              ),
             ),
-          ),
+          );
+        }
+        items.addAll([
           PopupMenuItem(
             value: 'help',
             child: Row(

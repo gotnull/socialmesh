@@ -284,6 +284,18 @@ class AppFeatureFlags {
     }
   }
 
+  /// Whether the message timeline / week view is enabled.
+  /// Set `MESSAGE_TIMELINE_ENABLED=true` in `.env` to enable.
+  /// Default: false — the experimental message timeline is hidden.
+  static bool get isMessageTimelineEnabled {
+    try {
+      final raw = dotenv.env['MESSAGE_TIMELINE_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Whether the File Transfer feature is enabled.
   /// Set `FILE_TRANSFER_ENABLED=true` in `.env` to enable.
   /// Default: false — experimental mesh file transfer is hidden.
