@@ -4272,23 +4272,18 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
   }
 
   Future<void> _init(ProtocolService protocol) async {
-    // Demo mode: seed sample nodes if enabled and storage is empty
-    if (DemoConfig.isEnabled && _storage != null) {
-      final existing = await _storage!.loadNodes();
-      if (!ref.mounted) return;
-      if (existing.isEmpty) {
-        AppLogging.debug('${DemoConfig.modeLabel} Seeding demo nodes');
-        state = {for (final node in DemoData.sampleNodes) node.nodeNum: node};
-        return;
-      }
-    }
-
     // isIgnored is still managed by DeviceFavoritesService (protocol service
     // does not read it from NodeInfo yet). isFavorite follows the iOS pattern:
     // it lives directly on the persisted MeshNode record and is updated from
     // NodeInfo packets — no separate cache layer.
     final ignoredSet = _deviceFavorites?.ignored ?? <int>{};
     final identities = ref.read(nodeIdentityProvider);
+
+    // When _storage is null the entire method body runs synchronously
+    // (no awaits) before build() returns, so `state` is not yet
+    // initialised.  Track whether we hit an await so the protocol-merge
+    // below can safely read `state` only when it is readable.
+    var stateReadable = false;
 
     // Load persisted nodes (with their positions) first
     if (_storage != null) {
@@ -4319,6 +4314,9 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
         }
         state = nodeMap;
       }
+      // We hit at least one await (_storage!.loadNodes()), so build()
+      // has returned and `state` is now safe to read.
+      stateReadable = true;
     }
 
     // Then merge with existing nodes from protocol service
@@ -4331,10 +4329,15 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
     // the previous session; incoming NodeInfo packets update it via the stream
     // listener below. There is no separate "favorites sidecar" to reconcile.
 
-    final updatedState = Map<int, MeshNode>.from(state);
+    // After a storage await, state may contain nodes added by
+    // addOrUpdateNode() during the async gap — use it.  On the
+    // synchronous path (_storage == null) state is uninitialised,
+    // so start from an empty map.
+    final baseNodes = stateReadable ? state : <int, MeshNode>{};
+    final updatedState = Map<int, MeshNode>.from(baseNodes);
     for (final entry in protocolNodes.entries) {
       var node = entry.value;
-      final existing = state[entry.key];
+      final existing = baseNodes[entry.key];
       if (existing != null) {
         // Preserve stored properties that don't come from protocol
         node = node.copyWith(

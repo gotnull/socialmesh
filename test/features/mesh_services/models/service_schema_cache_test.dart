@@ -32,10 +32,10 @@ void main() {
     });
 
     test('get falls back to built-in schemas', () {
-      // "board.v1" is a built-in template — should resolve without put().
-      final result = cache.get(99, 'board.v1');
+      // "feed.v1" is a built-in template — should resolve without put().
+      final result = cache.get(99, 'feed.v1');
       expect(result, isNotNull);
-      expect(result!.serviceType, 'board.v1');
+      expect(result!.serviceType, 'feed.v1');
     });
 
     test('contains returns true for cached entry', () {
@@ -44,7 +44,7 @@ void main() {
     });
 
     test('contains returns true for built-in type', () {
-      expect(cache.contains(99, 'weather.v1'), isTrue);
+      expect(cache.contains(99, 'sensor.v1'), isTrue);
     });
 
     test('contains returns false for unknown type', () {
