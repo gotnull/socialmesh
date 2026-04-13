@@ -15265,11 +15265,23 @@ abstract class AppLocalizations {
   /// **'Search contacts'**
   String get messagingSearchContactsHint;
 
+  /// Search results count shown above the conversation timeline while filtering messages.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} {count, plural, =1{message} other{messages}} found'**
+  String messagingSearchResultsCount(int count);
+
   /// Tooltip for the icon button that opens the message search bar.
   ///
   /// In en, this message translates to:
   /// **'Search Messages'**
   String get messagingSearchMessages;
+
+  /// Affordance shown when the user is reading older chat history and can jump back to the newest messages.
+  ///
+  /// In en, this message translates to:
+  /// **'Jump to latest'**
+  String get messagingJumpToLatest;
 
   /// Section header for online contacts (heard within 2 hours).
   ///

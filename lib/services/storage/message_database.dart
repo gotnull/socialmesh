@@ -9,6 +9,7 @@ import 'package:sqflite/sqflite.dart';
 
 import '../../models/mesh_models.dart';
 import '../../core/logging.dart';
+import 'conversation_read_position.dart';
 import '../../utils/text_sanitizer.dart';
 
 /// SQLite-backed message storage service.
@@ -24,7 +25,8 @@ import '../../utils/text_sanitizer.dart';
 class MessageDatabase {
   static const _dbName = 'messages.db';
   static const _tableName = 'messages';
-  static const _dbVersion = 8;
+  static const _readPositionsTableName = 'conversation_read_positions';
+  static const _dbVersion = 9;
 
   /// Maximum messages retained per conversation (DM or channel).
   static const int maxMessagesPerConversation = 500;
@@ -219,6 +221,12 @@ class MessageDatabase {
             'v8 migration: created unique index on (packet_id, from_node)',
           );
         }
+        if (oldVersion < 9) {
+          await _createConversationReadPositionsTable(db);
+          AppLogging.storage(
+            'v9 migration: created conversation read positions table',
+          );
+        }
       },
     );
 
@@ -296,7 +304,22 @@ class MessageDatabase {
       WHERE packet_id IS NOT NULL
     ''');
 
+    await _createConversationReadPositionsTable(db);
+
     AppLogging.storage('Created messages table with indexes');
+  }
+
+  Future<void> _createConversationReadPositionsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS $_readPositionsTableName (
+        conversation_key TEXT PRIMARY KEY,
+        anchor_message_id TEXT NOT NULL,
+        anchor_timestamp INTEGER NOT NULL,
+        anchor_alignment REAL,
+        was_near_latest INTEGER NOT NULL DEFAULT 0,
+        updated_at INTEGER NOT NULL
+      )
+    ''');
   }
 
   // ---------------------------------------------------------------------------
@@ -398,6 +421,129 @@ class MessageDatabase {
       limit: limit,
     );
     return rows.map(_messageFromRow).toList();
+  }
+
+  /// Count stored messages for a specific conversation.
+  Future<int> countConversationMessages(String convKey) async {
+    final result = await _database.rawQuery(
+      'SELECT COUNT(*) AS cnt FROM $_tableName WHERE conversation_key = ?', // lint-allow: hardcoded-string
+      [convKey],
+    );
+    return Sqflite.firstIntValue(result) ?? 0;
+  }
+
+  /// Load the newest [limit] messages for a conversation in ascending order.
+  Future<List<Message>> loadConversationNewestWindow(
+    String convKey, {
+    required int limit,
+  }) async {
+    if (limit <= 0) return const [];
+
+    final rows = await _database.rawQuery(
+      '''
+      SELECT * FROM (
+        SELECT * FROM $_tableName
+        WHERE conversation_key = ?
+        ORDER BY timestamp DESC, id DESC
+        LIMIT ?
+      )
+      ORDER BY timestamp ASC, id ASC
+      ''',
+      [convKey, limit],
+    );
+    return rows.map(_messageFromRow).toList();
+  }
+
+  /// Load an older page of messages before the current oldest loaded message.
+  Future<List<Message>> loadConversationOlderPage(
+    String convKey, {
+    required DateTime beforeTimestamp,
+    required String beforeMessageId,
+    required int limit,
+  }) async {
+    if (limit <= 0) return const [];
+
+    final rows = await _database.rawQuery(
+      '''
+      SELECT * FROM (
+        SELECT * FROM $_tableName
+        WHERE conversation_key = ?
+          AND (
+            timestamp < ?
+            OR (timestamp = ? AND id < ?)
+          )
+        ORDER BY timestamp DESC, id DESC
+        LIMIT ?
+      )
+      ORDER BY timestamp ASC, id ASC
+      ''',
+      [
+        convKey,
+        beforeTimestamp.millisecondsSinceEpoch,
+        beforeTimestamp.millisecondsSinceEpoch,
+        beforeMessageId,
+        limit,
+      ],
+    );
+    return rows.map(_messageFromRow).toList();
+  }
+
+  /// Reload the currently loaded window from its oldest message boundary.
+  Future<List<Message>> loadConversationFromBoundary(
+    String convKey, {
+    required DateTime fromTimestamp,
+    required String fromMessageId,
+  }) async {
+    final rows = await _database.query(
+      _tableName,
+      where:
+          'conversation_key = ? AND (timestamp > ? OR (timestamp = ? AND id >= ?))',
+      whereArgs: [
+        convKey,
+        fromTimestamp.millisecondsSinceEpoch,
+        fromTimestamp.millisecondsSinceEpoch,
+        fromMessageId,
+      ],
+      orderBy: 'timestamp ASC, id ASC',
+    );
+    return rows.map(_messageFromRow).toList();
+  }
+
+  Future<void> saveConversationReadPosition(
+    ConversationReadPosition position,
+  ) async {
+    await _database.insert(_readPositionsTableName, {
+      'conversation_key': position.conversationKey,
+      'anchor_message_id': position.anchorMessageId,
+      'anchor_timestamp': position.anchorTimestamp.millisecondsSinceEpoch,
+      'anchor_alignment': position.anchorAlignment,
+      'was_near_latest': position.wasNearLatest ? 1 : 0,
+      'updated_at': position.updatedAt.millisecondsSinceEpoch,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<ConversationReadPosition?> loadConversationReadPosition(
+    String convKey,
+  ) async {
+    final rows = await _database.query(
+      _readPositionsTableName,
+      where: 'conversation_key = ?',
+      whereArgs: [convKey],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+
+    final row = rows.first;
+    return ConversationReadPosition(
+      conversationKey: row['conversation_key'] as String,
+      anchorMessageId: row['anchor_message_id'] as String,
+      anchorTimestamp: DateTime.fromMillisecondsSinceEpoch(
+        row['anchor_timestamp'] as int,
+      ),
+      anchorAlignment: (row['anchor_alignment'] as num?)?.toDouble(),
+      wasNearLatest: (row['was_near_latest'] as int) == 1,
+      updatedAt: DateTime.fromMillisecondsSinceEpoch(row['updated_at'] as int),
+    );
   }
 
   /// Count messages for a given node since a timestamp.

@@ -11574,9 +11574,23 @@
     "@messagingSearchContactsHint": {
         "description": "Hint text in the contact search field."
     },
+    "messagingSearchResultsCount": "{count} {count, plural, =1{message} other{messages}} found",
+    "@messagingSearchResultsCount": {
+        "description": "Search results count shown above the conversation timeline while filtering messages.",
+        "placeholders": {
+            "count": {
+                "type": "int",
+                "description": "The number of messages that match the current search query."
+            }
+        }
+    },
     "messagingSearchMessages": "Search Messages",
     "@messagingSearchMessages": {
         "description": "Tooltip for the icon button that opens the message search bar."
+    },
+    "messagingJumpToLatest": "Jump to latest",
+    "@messagingJumpToLatest": {
+        "description": "Affordance shown when the user is reading older chat history and can jump back to the newest messages."
     },
     "messagingSectionActive": "Online",
     "@messagingSectionActive": {

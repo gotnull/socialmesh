@@ -8541,7 +8541,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get messagingSearchContactsHint => 'Search contacts';
 
   @override
+  String messagingSearchResultsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'messages',
+      one: 'message',
+    );
+    return '$count $_temp0 found';
+  }
+
+  @override
   String get messagingSearchMessages => 'Search Messages';
+
+  @override
+  String get messagingJumpToLatest => 'Jump to latest';
 
   @override
   String get messagingSectionActive => 'Online';

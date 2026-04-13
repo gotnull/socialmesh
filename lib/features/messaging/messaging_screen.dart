@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 import 'package:collection/collection.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:socialmesh/features/nodes/node_display_name_resolver.dart';
 import '../../core/logging.dart';
 import '../../core/l10n/l10n_extension.dart';
@@ -55,6 +56,7 @@ import '../../providers/subscription_providers.dart';
 import '../../providers/translation_providers.dart';
 import '../../core/widgets/premium_feature_gate.dart';
 import '../../services/translation/translation_models.dart';
+import '../../services/storage/conversation_read_position.dart';
 
 /// Conversation type enum
 enum ConversationType { channel, directMessage }
@@ -793,18 +795,37 @@ class ChatScreen extends ConsumerStatefulWidget {
 }
 
 class _ChatScreenState extends ConsumerState<ChatScreen>
-    with LifecycleSafeMixin {
+    with LifecycleSafeMixin, WidgetsBindingObserver {
+  static const double _defaultRestoreAlignment = 0.88;
+  static const double _latestJumpAlignment = 0.88;
+  static const double _fullyVisibleTrailingEdge = 1.0;
+  static const double _trailingEdgeVisibilityTolerance = 0.001;
+  static const double _leadingEdgeVisibilityTolerance = 0.001;
+  static const double _nearLatestTrailingEdgeThreshold = 1.12;
+  static const int _olderLoadPrefetchIndexThreshold = 4;
+
   final TextEditingController _messageController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _messageFocusNode = FocusNode();
   final FocusNode _searchFocusNode = FocusNode();
+  final ItemScrollController _timelineScrollController = ItemScrollController();
+  final ItemPositionsListener _itemPositionsListener =
+      ItemPositionsListener.create();
   bool _isSearching = false;
   String _searchQuery = '';
+  bool _hasAppliedInitialRestore = false;
+  bool _isApplyingInitialRestore = false;
+  bool _showJumpToLatest = false;
+  bool _olderLoadInFlight = false;
 
   /// Tracks the currently highlighted message (for quote-tap scroll).
   String? _highlightedMessageId;
   Timer? _highlightTimer;
-  final Map<String, GlobalKey> _messageKeys = {};
+  Timer? _saveReadPositionTimer;
+  ConversationTimelineQuery? _activeTimelineQuery;
+  ConversationTimelineController? _timelineController;
+  ConversationReadPosition? _lastPersistedReadPosition;
+  List<ConversationTimelineRow> _currentDisplayRows = const [];
 
   /// Tracks which message IDs have inline technical info expanded.
   final Set<String> _expandedTechInfoIds = {};
@@ -815,6 +836,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _itemPositionsListener.itemPositions.addListener(
+      _onTimelineViewportChanged,
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _messageFocusNode.requestFocus();
@@ -872,7 +897,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
 
   @override
   void dispose() {
+    unawaited(_persistReadingPositionNow());
+    WidgetsBinding.instance.removeObserver(this);
+    _itemPositionsListener.itemPositions.removeListener(
+      _onTimelineViewportChanged,
+    );
     _highlightTimer?.cancel();
+    _saveReadPositionTimer?.cancel();
     _searchController.removeListener(_onSearchChanged);
     _messageController.dispose();
     _searchController.dispose();
@@ -881,25 +912,497 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     super.dispose();
   }
 
-  void _scrollToQuotedMessage(int replyId, List<Message> messages) {
-    final target = messages.where((m) => m.packetId == replyId).firstOrNull;
-    if (target == null) return;
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached ||
+        state == AppLifecycleState.hidden) {
+      unawaited(_persistReadingPositionNow());
+    }
+  }
 
-    final key = _messageKeys[target.id];
-    if (key?.currentContext != null) {
-      Scrollable.ensureVisible(
-        key!.currentContext!,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-        alignment: 0.5,
+  void _resetTimelineState(ConversationTimelineQuery query) {
+    _activeTimelineQuery = query;
+    _hasAppliedInitialRestore = false;
+    _isApplyingInitialRestore = false;
+    _showJumpToLatest = false;
+    _olderLoadInFlight = false;
+    _lastPersistedReadPosition = null;
+    _currentDisplayRows = const [];
+  }
+
+  void _onTimelineViewportChanged() {
+    if (!mounted || _currentDisplayRows.isEmpty) {
+      return;
+    }
+
+    if (_hasAppliedInitialRestore && !_isApplyingInitialRestore) {
+      final shouldShowJump =
+          !_isSearching &&
+          _currentDisplayRows.length > 1 &&
+          !_isNearLatest(_currentDisplayRows);
+      if (shouldShowJump != _showJumpToLatest && mounted) {
+        setState(() => _showJumpToLatest = shouldShowJump);
+      }
+    }
+
+    if (_hasAppliedInitialRestore &&
+        !_isApplyingInitialRestore &&
+        (!_isSearching || _searchQuery.isEmpty)) {
+      _scheduleReadPositionSave();
+      unawaited(_maybeLoadOlderHistory());
+    }
+  }
+
+  void _scheduleReadPositionSave() {
+    _saveReadPositionTimer?.cancel();
+    _saveReadPositionTimer = Timer(
+      const Duration(milliseconds: 450),
+      () => unawaited(_persistReadingPositionNow()),
+    );
+  }
+
+  Future<void> _persistReadingPositionNow() async {
+    final query = _activeTimelineQuery;
+    final timelineController = _timelineController;
+    if (query == null ||
+        timelineController == null ||
+        !query.hasStableConversationKey) {
+      return;
+    }
+    if (_currentDisplayRows.isEmpty) return;
+    if (_isSearching && _searchQuery.isNotEmpty) return;
+
+    final captured = _captureReadPosition(query);
+    if (captured == null ||
+        _isSameReadPosition(_lastPersistedReadPosition, captured)) {
+      return;
+    }
+
+    await timelineController.saveReadPosition(query, captured);
+    _lastPersistedReadPosition = captured;
+  }
+
+  ConversationReadPosition? _captureReadPosition(
+    ConversationTimelineQuery query,
+  ) {
+    final visiblePositions = _sortedVisiblePositions();
+    if (visiblePositions.isEmpty) return null;
+
+    ItemPosition? candidate;
+    for (final position in visiblePositions) {
+      final row = _currentDisplayRows[position.index];
+      if (row.message == null) continue;
+      final fullyVisible =
+          position.itemLeadingEdge >= 0 && position.itemTrailingEdge <= 1;
+      if (!fullyVisible) continue;
+      candidate = position;
+    }
+
+    candidate ??= visiblePositions.lastWhereOrNull((position) {
+      final row = _currentDisplayRows[position.index];
+      return row.message != null;
+    });
+    if (candidate == null) return null;
+
+    final message = _currentDisplayRows[candidate.index].message;
+    if (message == null) return null;
+
+    return ConversationReadPosition(
+      conversationKey: query.stableConversationKey!,
+      anchorMessageId: message.id,
+      anchorTimestamp: message.timestamp,
+      anchorAlignment: candidate.itemLeadingEdge.clamp(0.0, 1.0),
+      wasNearLatest: _isNearLatest(_currentDisplayRows),
+      updatedAt: DateTime.now(),
+    );
+  }
+
+  bool _isSameReadPosition(
+    ConversationReadPosition? previous,
+    ConversationReadPosition current,
+  ) {
+    if (previous == null) return false;
+    final previousAlignment =
+        previous.anchorAlignment ?? _defaultRestoreAlignment;
+    final currentAlignment =
+        current.anchorAlignment ?? _defaultRestoreAlignment;
+    return previous.conversationKey == current.conversationKey &&
+        previous.anchorMessageId == current.anchorMessageId &&
+        previous.anchorTimestamp == current.anchorTimestamp &&
+        previous.wasNearLatest == current.wasNearLatest &&
+        (previousAlignment - currentAlignment).abs() < 0.01;
+  }
+
+  List<ItemPosition> _sortedVisiblePositions() {
+    final positions =
+        _itemPositionsListener.itemPositions.value
+            .where(
+              (position) =>
+                  position.index >= 0 &&
+                  position.index < _currentDisplayRows.length,
+            )
+            .toList()
+          ..sort((a, b) => a.index.compareTo(b.index));
+    return positions;
+  }
+
+  bool _isNearLatest(List<ConversationTimelineRow> displayRows) {
+    if (displayRows.isEmpty) return true;
+    final latestIndex = displayRows.length - 1;
+    for (final position in _sortedVisiblePositions()) {
+      if (position.index == latestIndex) {
+        return position.itemTrailingEdge <= _nearLatestTrailingEdgeThreshold;
+      }
+    }
+    return false;
+  }
+
+  ItemPosition? _visiblePositionForIndex(int index) {
+    for (final position in _sortedVisiblePositions()) {
+      if (position.index == index) {
+        return position;
+      }
+    }
+    return null;
+  }
+
+  bool _isTrailingEdgeFullyVisible(ItemPosition position) {
+    return position.itemTrailingEdge <=
+        _fullyVisibleTrailingEdge + _trailingEdgeVisibilityTolerance;
+  }
+
+  bool _isLeadingEdgeFullyVisible(ItemPosition position) {
+    return position.itemLeadingEdge >= -_leadingEdgeVisibilityTolerance;
+  }
+
+  bool _isItemFullyVisible(ItemPosition position) {
+    return _isLeadingEdgeFullyVisible(position) &&
+        _isTrailingEdgeFullyVisible(position);
+  }
+
+  double _alignmentForFullVisibility(ItemPosition position) {
+    final itemExtent = position.itemTrailingEdge - position.itemLeadingEdge;
+    return (_fullyVisibleTrailingEdge - itemExtent).clamp(0.0, 1.0);
+  }
+
+  double _correctedAlignmentForVisibility(ItemPosition position) {
+    if (!_isLeadingEdgeFullyVisible(position)) {
+      return 0.0;
+    }
+    return _alignmentForFullVisibility(position);
+  }
+
+  Future<void> _maybeLoadOlderHistory() async {
+    if (!mounted || _olderLoadInFlight || _isApplyingInitialRestore) {
+      return;
+    }
+    final query = _activeTimelineQuery;
+    final timelineController = _timelineController;
+    if (query == null ||
+        timelineController == null ||
+        !query.hasStableConversationKey) {
+      return;
+    }
+
+    final timelineState = ref
+        .read(conversationTimelineStateProvider(query))
+        ?.asData
+        ?.value;
+    if (timelineState == null ||
+        timelineState.isLoadingOlder ||
+        !timelineState.hasMoreOlder) {
+      return;
+    }
+
+    final visiblePositions = _sortedVisiblePositions();
+    if (visiblePositions.isEmpty ||
+        visiblePositions.first.index > _olderLoadPrefetchIndexThreshold) {
+      return;
+    }
+
+    final anchor = visiblePositions.firstWhereOrNull(
+      (position) => _currentDisplayRows[position.index].message != null,
+    );
+    _olderLoadInFlight = true;
+    try {
+      final added = await timelineController.loadOlder(query);
+      if (!mounted || added <= 0 || anchor == null) {
+        return;
+      }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !_timelineScrollController.isAttached) {
+          return;
+        }
+        _timelineScrollController.jumpTo(
+          index: anchor.index + added,
+          alignment: anchor.itemLeadingEdge.clamp(0.0, 1.0),
+        );
+      });
+    } finally {
+      _olderLoadInFlight = false;
+    }
+  }
+
+  void _scheduleTimelineInitialization(ConversationTimelineQuery query) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _activeTimelineQuery != query) {
+        return;
+      }
+      final timelineController = _timelineController;
+      if (timelineController == null) {
+        return;
+      }
+      unawaited(timelineController.ensureInitialized(query));
+    });
+  }
+
+  void _scheduleInitialRestore(ConversationTimelineQuery query) {
+    if (_hasAppliedInitialRestore || _isApplyingInitialRestore) {
+      return;
+    }
+    _isApplyingInitialRestore = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_applyInitialRestore(query));
+    });
+  }
+
+  Future<void> _applyInitialRestore(ConversationTimelineQuery query) async {
+    ConversationRestoreTarget target = const ConversationRestoreTarget.latest();
+    try {
+      final timelineController = _timelineController;
+      if (timelineController == null) {
+        return;
+      }
+      target = await timelineController.resolveInitialRestoreTarget(query);
+      if (!mounted || _activeTimelineQuery != query) {
+        return;
+      }
+
+      if (target.scrollsToMessage) {
+        await _scrollToMessage(
+          query,
+          messageId: target.messageId!,
+          alignment: target.alignment,
+          animate: false,
+        );
+      } else {
+        await _scrollToLatest(query, animate: false);
+      }
+    } finally {
+      if (mounted && _activeTimelineQuery == query) {
+        setState(() {
+          _hasAppliedInitialRestore = true;
+          _isApplyingInitialRestore = false;
+          _showJumpToLatest = target.hasNewerMessages;
+        });
+      }
+    }
+  }
+
+  Future<void> _scrollToLatest(
+    ConversationTimelineQuery query, {
+    required bool animate,
+    int attempt = 0,
+  }) async {
+    if (!mounted || _activeTimelineQuery != query) {
+      return;
+    }
+
+    final latestIndex = _currentDisplayRows.length - 1;
+    if (!_timelineScrollController.isAttached || latestIndex < 0) {
+      if (attempt < 6) {
+        await WidgetsBinding.instance.endOfFrame;
+        if (!mounted || _activeTimelineQuery != query) {
+          return;
+        }
+        await _scrollToLatest(query, animate: animate, attempt: attempt + 1);
+      }
+      return;
+    }
+
+    final latestPosition = _visiblePositionForIndex(latestIndex);
+    final targetAlignment = latestPosition == null
+        ? _latestJumpAlignment
+        : _alignmentForFullVisibility(latestPosition);
+
+    if (animate) {
+      await _timelineScrollController.scrollTo(
+        index: latestIndex,
+        alignment: targetAlignment,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
       );
+    } else {
+      _timelineScrollController.jumpTo(
+        index: latestIndex,
+        alignment: targetAlignment,
+      );
+    }
+
+    if (!mounted || _activeTimelineQuery != query) {
+      return;
+    }
+
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted || _activeTimelineQuery != query) {
+      return;
+    }
+
+    final refreshedPosition = _visiblePositionForIndex(latestIndex);
+    if (refreshedPosition == null ||
+        _isTrailingEdgeFullyVisible(refreshedPosition)) {
+      return;
+    }
+
+    if (attempt < 6) {
+      await _scrollToLatest(query, animate: false, attempt: attempt + 1);
+    }
+  }
+
+  void _scheduleScrollToMessage(
+    ConversationTimelineQuery query, {
+    required String messageId,
+    required double alignment,
+    required bool animate,
+    bool highlight = false,
+    int attempt = 0,
+  }) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(
+        _scrollToMessage(
+          query,
+          messageId: messageId,
+          alignment: alignment,
+          animate: animate,
+          highlight: highlight,
+          attempt: attempt,
+        ),
+      );
+    });
+  }
+
+  Future<void> _scrollToMessage(
+    ConversationTimelineQuery query, {
+    required String messageId,
+    required double alignment,
+    required bool animate,
+    bool highlight = false,
+    int attempt = 0,
+  }) async {
+    if (!mounted || _activeTimelineQuery != query) {
+      return;
+    }
+
+    final targetIndex = _displayIndexForMessageId(messageId);
+    if (!_timelineScrollController.isAttached || targetIndex == null) {
+      if (attempt < 6) {
+        await WidgetsBinding.instance.endOfFrame;
+        if (!mounted || _activeTimelineQuery != query) {
+          return;
+        }
+        await _scrollToMessage(
+          query,
+          messageId: messageId,
+          alignment: alignment,
+          animate: animate,
+          highlight: highlight,
+          attempt: attempt + 1,
+        );
+      }
+      return;
+    }
+
+    final clampedAlignment = alignment.clamp(0.0, 1.0);
+    if (animate) {
+      await _timelineScrollController.scrollTo(
+        index: targetIndex,
+        alignment: clampedAlignment,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+      );
+    } else {
+      _timelineScrollController.jumpTo(
+        index: targetIndex,
+        alignment: clampedAlignment,
+      );
+    }
+
+    if (!mounted || _activeTimelineQuery != query) {
+      return;
+    }
+
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted || _activeTimelineQuery != query) {
+      return;
+    }
+
+    final refreshedPosition = _visiblePositionForIndex(targetIndex);
+    if (refreshedPosition != null &&
+        !_isItemFullyVisible(refreshedPosition) &&
+        attempt < 6) {
+      await _scrollToMessage(
+        query,
+        messageId: messageId,
+        alignment: _correctedAlignmentForVisibility(refreshedPosition),
+        animate: false,
+        highlight: highlight,
+        attempt: attempt + 1,
+      );
+      return;
+    }
+
+    if (highlight && mounted) {
       _highlightTimer?.cancel();
-      setState(() => _highlightedMessageId = target.id);
+      setState(() => _highlightedMessageId = messageId);
       _highlightTimer = Timer(const Duration(milliseconds: 1500), () {
         if (mounted) {
           setState(() => _highlightedMessageId = null);
         }
       });
+    }
+  }
+
+  int? _displayIndexForMessageId(String messageId) {
+    for (var index = 0; index < _currentDisplayRows.length; index++) {
+      final message = _currentDisplayRows[index].message;
+      if (message?.id == messageId) {
+        return index;
+      }
+    }
+    return null;
+  }
+
+  Future<void> _scrollToQuotedMessage(int replyId) async {
+    final query = _activeTimelineQuery;
+    final timelineController = _timelineController;
+    if (query == null || timelineController == null) return;
+
+    final messageId = await timelineController.ensureMessageWithPacketIdLoaded(
+      query,
+      replyId,
+    );
+    if (!mounted || _activeTimelineQuery != query || messageId == null) {
+      return;
+    }
+
+    _scheduleScrollToMessage(
+      query,
+      messageId: messageId,
+      alignment: 0.4,
+      animate: true,
+      highlight: true,
+    );
+  }
+
+  Future<void> _jumpToLatest() async {
+    final query = _activeTimelineQuery;
+    if (query == null) return;
+
+    await _scrollToLatest(query, animate: true);
+    if (mounted) {
+      setState(() => _showJumpToLatest = false);
     }
   }
 
@@ -1444,20 +1947,36 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
             peerNodeNum: widget.nodeNum,
             myNodeNum: myNodeNum,
           );
-    final timelineRowsAsync = ref.watch(
-      conversationTimelineProvider(timelineQuery),
+    _timelineController = ref.read(
+      conversationTimelineControllerProvider.notifier,
     );
+    if (_activeTimelineQuery != timelineQuery) {
+      _resetTimelineState(timelineQuery);
+      _scheduleTimelineInitialization(timelineQuery);
+    }
 
-    var filteredRows =
-        timelineRowsAsync.asData?.value ??
+    final timelineAsync = ref.watch(
+      conversationTimelineStateProvider(timelineQuery),
+    );
+    if (timelineAsync == null) {
+      _scheduleTimelineInitialization(timelineQuery);
+    }
+
+    final timelineState = timelineAsync?.asData?.value;
+    final isTimelineLoading = timelineAsync == null || timelineAsync.isLoading;
+
+    final unfilteredRows =
+        timelineState?.rows ??
         fallbackMessages
             .map((message) => ConversationTimelineRow.message(message: message))
             .toList();
 
+    var filteredRows = [...unfilteredRows];
+
     // Mark any new unread messages as read while this chat is open.
     // _markAsRead() is only called once in initState, so messages arriving
     // after that are never marked — causing a persistent badge.
-    final hasUnreadInView = filteredRows
+    final hasUnreadInView = unfilteredRows
         .map((row) => row.message)
         .whereType<Message>()
         .any((m) => m.received && m.from != myNodeNum && !m.read);
@@ -1478,6 +1997,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
           .toList();
     }
 
+    _currentDisplayRows = filteredRows;
+
+    if (timelineState != null &&
+        !_isSearching &&
+        !_hasAppliedInitialRestore &&
+        !_isApplyingInitialRestore) {
+      _scheduleInitialRestore(timelineQuery);
+    }
+
     final visibleMessages = filteredRows
         .map((row) => row.message)
         .whereType<Message>()
@@ -1485,424 +2013,548 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
 
     return GestureDetector(
       onTap: _dismissKeyboard,
-      child: GlassScaffold.body(
-        hasScrollBody: true,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: context.textPrimary),
-          onPressed: () {
-            _dismissKeyboard();
-            if (_isSearching) {
-              _toggleSearch();
-            } else {
-              Navigator.pop(context);
-            }
-          },
-        ),
-        titleWidget: GestureDetector(
-          onTap: widget.type == ConversationType.directMessage
-              ? _showNodeDetails
-              : null,
-          behavior: HitTestBehavior.opaque,
-          child: Row(
-            children: [
-              if (widget.type == ConversationType.channel)
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: context.accentColor.withValues(alpha: 0.2),
-                    shape: BoxShape.circle,
+      child: PopScope(
+        onPopInvokedWithResult: (didPop, _) async {
+          if (didPop) {
+            await _persistReadingPositionNow();
+          }
+        },
+        child: GlassScaffold.body(
+          hasScrollBody: true,
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: context.textPrimary),
+            onPressed: () async {
+              _dismissKeyboard();
+              if (_isSearching) {
+                _toggleSearch();
+              } else {
+                final navigator = Navigator.of(context);
+                await _persistReadingPositionNow();
+                if (mounted) {
+                  navigator.pop();
+                }
+              }
+            },
+          ),
+          titleWidget: GestureDetector(
+            onTap: widget.type == ConversationType.directMessage
+                ? _showNodeDetails
+                : null,
+            behavior: HitTestBehavior.opaque,
+            child: Row(
+              children: [
+                if (widget.type == ConversationType.channel)
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: context.accentColor.withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.tag,
+                      color: context.accentColor,
+                      size: 18,
+                    ),
+                  )
+                else
+                  NodeAvatar(
+                    text: widget.title.length >= 2
+                        ? widget.title.substring(0, 2)
+                        : widget.title,
+                    color: widget.avatarColor != null
+                        ? Color(widget.avatarColor!)
+                        : AppTheme.graphPurple,
+                    size: 36,
                   ),
-                  child: Icon(Icons.tag, color: context.accentColor, size: 18),
-                )
-              else
-                NodeAvatar(
-                  text: widget.title.length >= 2
-                      ? widget.title.substring(0, 2)
-                      : widget.title,
-                  color: widget.avatarColor != null
-                      ? Color(widget.avatarColor!)
-                      : AppTheme.graphPurple,
-                  size: 36,
+                SizedBox(width: AppTheme.spacing12),
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      AutoScrollText(
+                        widget.title,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: context.textPrimary,
+                        ),
+                      ),
+                      Text(
+                        widget.type == ConversationType.channel
+                            ? context.l10n.messagingChannelSubtitle
+                            : context.l10n.messagingDirectMessageSubtitle,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: context.textTertiary,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              SizedBox(width: AppTheme.spacing12),
-              Flexible(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    AutoScrollText(
-                      widget.title,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: context.textPrimary,
+              ],
+            ),
+          ),
+          actions: [
+            IconButton(
+              icon: Icon(
+                _isSearching ? Icons.close : Icons.search,
+                color: _isSearching ? context.accentColor : context.textPrimary,
+              ),
+              tooltip: _isSearching
+                  ? context.l10n.messagingCloseSearch
+                  : context.l10n.messagingSearchMessages,
+              onPressed: _toggleSearch,
+            ),
+            if (widget.type == ConversationType.channel)
+              IconButton(
+                icon: Icon(Icons.settings, color: context.textPrimary),
+                tooltip: context.l10n.messagingChannelSettings,
+                onPressed: () => _showChannelSettings(context, ref),
+              ),
+          ],
+          body: Column(
+            children: [
+              // Search bar (same design as Nodes screen)
+              if (_isSearching)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppTheme.spacing16,
+                    8,
+                    16,
+                    16,
+                  ),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: context.card,
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
+                    ),
+                    child: TextField(
+                      maxLength: 100,
+                      controller: _searchController,
+                      focusNode: _searchFocusNode,
+                      style: TextStyle(color: context.textPrimary),
+                      decoration: InputDecoration(
+                        hintText: context.l10n.messagingFindMessageHint,
+                        hintStyle: TextStyle(color: context.textTertiary),
+                        prefixIcon: Icon(
+                          Icons.search,
+                          color: context.textTertiary,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 14,
+                        ),
+                        counterText: '',
                       ),
                     ),
-                    Text(
-                      widget.type == ConversationType.channel
-                          ? context.l10n.messagingChannelSubtitle
-                          : context.l10n.messagingDirectMessageSubtitle,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: context.textTertiary,
+                  ),
+                ),
+              // Divider when searching
+              if (_isSearching)
+                Container(
+                  height: 1,
+                  color: context.border.withValues(alpha: 0.3),
+                ),
+              // Search results count
+              if (_isSearching && _searchQuery.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  color: context.card,
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        size: 16,
+                        color: context.textSecondary.withValues(alpha: 0.8),
+                      ),
+                      SizedBox(width: AppTheme.spacing8),
+                      Text(
+                        context.l10n.messagingSearchResultsCount(
+                          visibleMessages.length,
+                        ),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: context.textSecondary.withValues(alpha: 0.8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              // Messages
+              Expanded(
+                child: filteredRows.isEmpty
+                    ? isTimelineLoading && fallbackMessages.isEmpty
+                          ? const Center(child: LoadingIndicator())
+                          : Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    _isSearching
+                                        ? Icons.search_off
+                                        : Icons.chat_bubble_outline,
+                                    size: 48,
+                                    color: context.textTertiary,
+                                  ),
+                                  SizedBox(height: AppTheme.spacing16),
+                                  Text(
+                                    _isSearching
+                                        ? context
+                                              .l10n
+                                              .messagingNoMessagesMatchSearch
+                                        : widget.type ==
+                                              ConversationType.channel
+                                        ? context
+                                              .l10n
+                                              .messagingNoMessagesInChannel
+                                        : context
+                                              .l10n
+                                              .messagingStartConversation,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: context.textTertiary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                    : Stack(
+                        children: [
+                          ScrollablePositionedList.builder(
+                            itemScrollController: _timelineScrollController,
+                            itemPositionsListener: _itemPositionsListener,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            physics: const ClampingScrollPhysics(),
+                            itemCount: filteredRows.length,
+                            itemBuilder: (context, index) {
+                              final row = filteredRows[index];
+
+                              if (row.isOrphanPlaceholder) {
+                                return KeyedSubtree(
+                                  key: ValueKey(row.key),
+                                  child: _OrphanTapbackPlaceholder(row: row),
+                                );
+                              }
+
+                              final message = row.message!;
+                              final isFromMe = message.from == myNodeNum;
+
+                              if (index == filteredRows.length - 1) {
+                                AppLogging.messages(
+                                  '📨 Latest visible message: from=${message.from}, myNodeNum=$myNodeNum, isFromMe=$isFromMe, text="${message.text.substring(0, message.text.length.clamp(0, 20))}"',
+                                );
+                              }
+
+                              final senderNode = nodes[message.from];
+                              final senderName =
+                                  senderNode?.displayName ??
+                                  message.senderDisplayName;
+                              final senderShortName =
+                                  senderNode?.shortName ??
+                                  message.senderAvatarName;
+                              final avatarColor =
+                                  senderNode?.avatarColor ??
+                                  message.senderAvatarColor;
+
+                              return KeyedSubtree(
+                                key: ValueKey(row.key),
+                                child: _MessageBubble(
+                                  message: message,
+                                  allMessages: visibleMessages,
+                                  tapbacks: row.tapbacks,
+                                  isFromMe: isFromMe,
+                                  senderName: senderName,
+                                  senderShortName: senderShortName,
+                                  avatarColor: avatarColor,
+                                  showSender:
+                                      widget.type == ConversationType.channel &&
+                                      !isFromMe,
+                                  isEncrypted: isEncrypted,
+                                  isDm:
+                                      widget.type ==
+                                      ConversationType.directMessage,
+                                  isQueued: queuedMessageIds.contains(
+                                    message.id,
+                                  ),
+                                  isHighlighted:
+                                      _highlightedMessageId == message.id,
+                                  showTechInfo: _expandedTechInfoIds.contains(
+                                    message.id,
+                                  ),
+                                  onToggleTechInfo: () {
+                                    setState(() {
+                                      if (_expandedTechInfoIds.contains(
+                                        message.id,
+                                      )) {
+                                        _expandedTechInfoIds.remove(message.id);
+                                      } else {
+                                        _expandedTechInfoIds.add(message.id);
+                                      }
+                                    });
+                                  },
+                                  channelIndex:
+                                      widget.type == ConversationType.channel
+                                      ? widget.channelIndex
+                                      : null,
+                                  onReply: () => _setReplyTo(message),
+                                  onRetry: message.isFailed
+                                      ? () => _retryMessage(message)
+                                      : null,
+                                  onResend: isFromMe && message.canResend
+                                      ? () => ref
+                                            .read(dmRetryCoordinatorProvider)
+                                            .scheduleResend(message)
+                                      : null,
+                                  onAutoRetry:
+                                      isFromMe && message.canEnableAutoRetry
+                                      ? () => ref
+                                            .read(dmRetryCoordinatorProvider)
+                                            .enableAutoRetry(message.id)
+                                      : null,
+                                  onStopRetry:
+                                      isFromMe && message.canStopAutoRetry
+                                      ? () => ref
+                                            .read(dmRetryCoordinatorProvider)
+                                            .disableAutoRetry(message.id)
+                                      : null,
+                                  onPkiFix:
+                                      message.routingError?.isPkiRelated == true
+                                      ? () => _showPkiFixSheet(message)
+                                      : null,
+                                  onDelete: () => _deleteMessage(message),
+                                  onSenderTap: senderNode != null && !isFromMe
+                                      ? () => showNodeDetailsSheet(
+                                          context,
+                                          senderNode,
+                                          false,
+                                        )
+                                      : null,
+                                  onQuoteTap: message.replyId != null
+                                      ? () {
+                                          ref.haptics.trigger(HapticType.light);
+                                          unawaited(
+                                            _scrollToQuotedMessage(
+                                              message.replyId!,
+                                            ),
+                                          );
+                                        }
+                                      : null,
+                                ),
+                              );
+                            },
+                          ),
+                          if (timelineState?.isLoadingOlder == true)
+                            Positioned(
+                              top: AppTheme.spacing8,
+                              left: 0,
+                              right: 0,
+                              child: Center(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: AppTheme.spacing12,
+                                    vertical: AppTheme.spacing6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: context.card.withValues(alpha: 0.92),
+                                    borderRadius: BorderRadius.circular(
+                                      AppTheme.radius12,
+                                    ),
+                                    border: Border.all(color: context.border),
+                                  ),
+                                  child: const LoadingIndicator(size: 14),
+                                ),
+                              ),
+                            ),
+                          Positioned(
+                            left: 0,
+                            right: 0,
+                            bottom: AppTheme.spacing12,
+                            child: IgnorePointer(
+                              ignoring: !_showJumpToLatest,
+                              child: AnimatedOpacity(
+                                duration: const Duration(milliseconds: 180),
+                                opacity: _showJumpToLatest ? 1 : 0,
+                                child: Center(
+                                  child: BouncyTap(
+                                    onTap: _jumpToLatest,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: AppTheme.spacing14,
+                                        vertical: AppTheme.spacing10,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: context.card.withValues(
+                                          alpha: 0.96,
+                                        ),
+                                        borderRadius: BorderRadius.circular(
+                                          AppTheme.radius16,
+                                        ),
+                                        border: Border.all(
+                                          color: context.border,
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withValues(
+                                              alpha: 0.18,
+                                            ),
+                                            blurRadius: 18,
+                                            offset: const Offset(0, 8),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.arrow_downward_rounded,
+                                            size: 18,
+                                            color: context.accentColor,
+                                          ),
+                                          const SizedBox(
+                                            width: AppTheme.spacing8,
+                                          ),
+                                          Text(
+                                            context.l10n.messagingJumpToLatest,
+                                            style: TextStyle(
+                                              color: context.textPrimary,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
+
+              // Reply banner
+              if (_replyingTo != null)
+                Container(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppTheme.spacing16,
+                    10,
+                    8,
+                    10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: context.card,
+                    border: Border(
+                      top: BorderSide(
+                        color: context.border.withValues(alpha: 0.3),
+                      ),
+                      bottom: BorderSide(
+                        color: context.border.withValues(alpha: 0.15),
                       ),
                     ),
-                  ],
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.reply, size: 18, color: context.accentColor),
+                      const SizedBox(width: AppTheme.spacing8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              context.l10n.messagingReplyingTo(
+                                _replyingTo!.senderDisplayName,
+                              ),
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: context.accentColor,
+                              ),
+                            ),
+                            const SizedBox(height: AppTheme.spacing2),
+                            Text(
+                              _replyingTo!.text.length > 80
+                                  ? '${_replyingTo!.text.substring(0, 80)}…'
+                                  : _replyingTo!.text,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: context.textSecondary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          Icons.close,
+                          size: 18,
+                          color: context.textTertiary,
+                        ),
+                        onPressed: _clearReply,
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 32,
+                          minHeight: 32,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+              // Input
+              Container(
+                padding: const EdgeInsets.all(AppTheme.spacing16),
+                decoration: BoxDecoration(
+                  color: context.card,
+                  border: Border(
+                    top: _replyingTo != null
+                        ? BorderSide.none
+                        : BorderSide(
+                            color: context.border.withValues(alpha: 0.3),
+                          ),
+                  ),
+                ),
+                child: SafeArea(
+                  top: false,
+                  child: ChatComposer(
+                    controller: _messageController,
+                    focusNode: _messageFocusNode,
+                    onSend: _sendMessage,
+                    hintText: context.l10n.messagingMessageHint,
+                    sendTooltip: context.l10n.messagingSendTooltip,
+                    leading: GestureDetector(
+                      onTap: () => _showQuickResponses(),
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: context.background,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.bolt,
+                          color: context.textSecondary,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(
-              _isSearching ? Icons.close : Icons.search,
-              color: _isSearching ? context.accentColor : context.textPrimary,
-            ),
-            tooltip: _isSearching
-                ? context.l10n.messagingCloseSearch
-                : context.l10n.messagingSearchMessages,
-            onPressed: _toggleSearch,
-          ),
-          if (widget.type == ConversationType.channel)
-            IconButton(
-              icon: Icon(Icons.settings, color: context.textPrimary),
-              tooltip: context.l10n.messagingChannelSettings,
-              onPressed: () => _showChannelSettings(context, ref),
-            ),
-        ],
-        body: Column(
-          children: [
-            // Search bar (same design as Nodes screen)
-            if (_isSearching)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppTheme.spacing16,
-                  8,
-                  16,
-                  16,
-                ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: context.card,
-                    borderRadius: BorderRadius.circular(AppTheme.radius12),
-                  ),
-                  child: TextField(
-                    maxLength: 100,
-                    controller: _searchController,
-                    focusNode: _searchFocusNode,
-                    style: TextStyle(color: context.textPrimary),
-                    decoration: InputDecoration(
-                      hintText: context.l10n.messagingFindMessageHint,
-                      hintStyle: TextStyle(color: context.textTertiary),
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: context.textTertiary,
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 14,
-                      ),
-                      counterText: '',
-                    ),
-                  ),
-                ),
-              ),
-            // Divider when searching
-            if (_isSearching)
-              Container(
-                height: 1,
-                color: context.border.withValues(alpha: 0.3),
-              ),
-            // Search results count
-            if (_isSearching && _searchQuery.isNotEmpty)
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                color: context.card,
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.info_outline,
-                      size: 16,
-                      color: context.textSecondary.withValues(alpha: 0.8),
-                    ),
-                    SizedBox(width: AppTheme.spacing8),
-                    Text(
-                      '${visibleMessages.length} message${visibleMessages.length == 1 ? '' : 's'} found',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: context.textSecondary.withValues(alpha: 0.8),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            // Messages
-            Expanded(
-              child: filteredRows.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            _isSearching
-                                ? Icons.search_off
-                                : Icons.chat_bubble_outline,
-                            size: 48,
-                            color: context.textTertiary,
-                          ),
-                          SizedBox(height: AppTheme.spacing16),
-                          Text(
-                            _isSearching
-                                ? context.l10n.messagingNoMessagesMatchSearch
-                                : widget.type == ConversationType.channel
-                                ? context.l10n.messagingNoMessagesInChannel
-                                : context.l10n.messagingStartConversation,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: context.textTertiary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : ListView.builder(
-                      reverse: true,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      itemCount: filteredRows.length,
-                      itemBuilder: (context, index) {
-                        final row =
-                            filteredRows[filteredRows.length - 1 - index];
-
-                        if (row.isOrphanPlaceholder) {
-                          return _OrphanTapbackPlaceholder(row: row);
-                        }
-
-                        final message = row.message!;
-                        final isFromMe = message.from == myNodeNum;
-
-                        // Debug: Log message direction calculation
-                        if (index == 0) {
-                          AppLogging.messages(
-                            '📨 Message[0]: from=${message.from}, myNodeNum=$myNodeNum, isFromMe=$isFromMe, text="${message.text.substring(0, message.text.length.clamp(0, 20))}"',
-                          );
-                        }
-
-                        // Get sender info - prefer fresh node lookup, fallback to message's cached info
-                        final senderNode = nodes[message.from];
-                        final senderName =
-                            senderNode?.displayName ??
-                            message.senderDisplayName;
-                        final senderShortName =
-                            senderNode?.shortName ?? message.senderAvatarName;
-                        final avatarColor =
-                            senderNode?.avatarColor ??
-                            message.senderAvatarColor;
-
-                        final messageKey = _messageKeys.putIfAbsent(
-                          message.id,
-                          () => GlobalKey(debugLabel: 'msg_${message.id}'),
-                        );
-
-                        return KeyedSubtree(
-                          key: messageKey,
-                          child: _MessageBubble(
-                            message: message,
-                            allMessages: visibleMessages,
-                            tapbacks: row.tapbacks,
-                            isFromMe: isFromMe,
-                            senderName: senderName,
-                            senderShortName: senderShortName,
-                            avatarColor: avatarColor,
-                            showSender:
-                                widget.type == ConversationType.channel &&
-                                !isFromMe,
-                            isEncrypted: isEncrypted,
-                            isDm: widget.type == ConversationType.directMessage,
-                            isQueued: queuedMessageIds.contains(message.id),
-                            isHighlighted: _highlightedMessageId == message.id,
-                            showTechInfo: _expandedTechInfoIds.contains(
-                              message.id,
-                            ),
-                            onToggleTechInfo: () {
-                              setState(() {
-                                if (_expandedTechInfoIds.contains(message.id)) {
-                                  _expandedTechInfoIds.remove(message.id);
-                                } else {
-                                  _expandedTechInfoIds.add(message.id);
-                                }
-                              });
-                            },
-                            channelIndex:
-                                widget.type == ConversationType.channel
-                                ? widget.channelIndex
-                                : null,
-                            onReply: () => _setReplyTo(message),
-                            onRetry: message.isFailed
-                                ? () => _retryMessage(message)
-                                : null,
-                            onResend: isFromMe && message.canResend
-                                ? () => ref
-                                      .read(dmRetryCoordinatorProvider)
-                                      .scheduleResend(message)
-                                : null,
-                            onAutoRetry: isFromMe && message.canEnableAutoRetry
-                                ? () => ref
-                                      .read(dmRetryCoordinatorProvider)
-                                      .enableAutoRetry(message.id)
-                                : null,
-                            onStopRetry: isFromMe && message.canStopAutoRetry
-                                ? () => ref
-                                      .read(dmRetryCoordinatorProvider)
-                                      .disableAutoRetry(message.id)
-                                : null,
-                            onPkiFix: message.routingError?.isPkiRelated == true
-                                ? () => _showPkiFixSheet(message)
-                                : null,
-                            onDelete: () => _deleteMessage(message),
-                            onSenderTap: senderNode != null && !isFromMe
-                                ? () => showNodeDetailsSheet(
-                                    context,
-                                    senderNode,
-                                    false,
-                                  )
-                                : null,
-                            onQuoteTap: message.replyId != null
-                                ? () {
-                                    ref.haptics.trigger(HapticType.light);
-                                    _scrollToQuotedMessage(
-                                      message.replyId!,
-                                      visibleMessages,
-                                    );
-                                  }
-                                : null,
-                          ),
-                        );
-                      },
-                    ),
-            ),
-
-            // Reply banner
-            if (_replyingTo != null)
-              Container(
-                padding: const EdgeInsets.fromLTRB(
-                  AppTheme.spacing16,
-                  10,
-                  8,
-                  10,
-                ),
-                decoration: BoxDecoration(
-                  color: context.card,
-                  border: Border(
-                    top: BorderSide(
-                      color: context.border.withValues(alpha: 0.3),
-                    ),
-                    bottom: BorderSide(
-                      color: context.border.withValues(alpha: 0.15),
-                    ),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.reply, size: 18, color: context.accentColor),
-                    const SizedBox(width: AppTheme.spacing8),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            context.l10n.messagingReplyingTo(
-                              _replyingTo!.senderDisplayName,
-                            ),
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: context.accentColor,
-                            ),
-                          ),
-                          const SizedBox(height: AppTheme.spacing2),
-                          Text(
-                            _replyingTo!.text.length > 80
-                                ? '${_replyingTo!.text.substring(0, 80)}…'
-                                : _replyingTo!.text,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: context.textSecondary,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        Icons.close,
-                        size: 18,
-                        color: context.textTertiary,
-                      ),
-                      onPressed: _clearReply,
-                      visualDensity: VisualDensity.compact,
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(
-                        minWidth: 32,
-                        minHeight: 32,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-            // Input
-            Container(
-              padding: const EdgeInsets.all(AppTheme.spacing16),
-              decoration: BoxDecoration(
-                color: context.card,
-                border: Border(
-                  top: _replyingTo != null
-                      ? BorderSide.none
-                      : BorderSide(
-                          color: context.border.withValues(alpha: 0.3),
-                        ),
-                ),
-              ),
-              child: SafeArea(
-                top: false,
-                child: ChatComposer(
-                  controller: _messageController,
-                  focusNode: _messageFocusNode,
-                  onSend: _sendMessage,
-                  hintText: context.l10n.messagingMessageHint,
-                  sendTooltip: context.l10n.messagingSendTooltip,
-                  leading: GestureDetector(
-                    onTap: () => _showQuickResponses(),
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: context.background,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.bolt,
-                        color: context.textSecondary,
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
         ),
       ),
     );
