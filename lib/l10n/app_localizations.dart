@@ -15385,6 +15385,24 @@ abstract class AppLocalizations {
   /// **'SNR {value} dB'**
   String messagingTechInfoSnr(String value);
 
+  /// Node ID in hex shown in inline technical info.
+  ///
+  /// In en, this message translates to:
+  /// **'Node !{nodeHex}'**
+  String messagingTechInfoNodeId(String nodeHex);
+
+  /// Packet ID shown in inline technical info.
+  ///
+  /// In en, this message translates to:
+  /// **'Packet #{packetId}'**
+  String messagingTechInfoPacketId(int packetId);
+
+  /// Shown when a message has no radio metadata (SNR, RSSI, hops).
+  ///
+  /// In en, this message translates to:
+  /// **'No radio data'**
+  String get messagingTechInfoNoRadioData;
+
   /// Empty state text in a new DM conversation.
   ///
   /// In en, this message translates to:

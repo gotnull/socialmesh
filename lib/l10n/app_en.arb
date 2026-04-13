@@ -11695,6 +11695,28 @@
             }
         }
     },
+    "messagingTechInfoNodeId": "Node !{nodeHex}",
+    "@messagingTechInfoNodeId": {
+        "description": "Node ID in hex shown in inline technical info.",
+        "placeholders": {
+            "nodeHex": {
+                "type": "String"
+            }
+        }
+    },
+    "messagingTechInfoPacketId": "Packet #{packetId}",
+    "@messagingTechInfoPacketId": {
+        "description": "Packet ID shown in inline technical info.",
+        "placeholders": {
+            "packetId": {
+                "type": "int"
+            }
+        }
+    },
+    "messagingTechInfoNoRadioData": "No radio data",
+    "@messagingTechInfoNoRadioData": {
+        "description": "Shown when a message has no radio metadata (SNR, RSSI, hops)."
+    },
     "messagingStartConversation": "Start the conversation",
     "@messagingStartConversation": {
         "description": "Empty state text in a new DM conversation."

@@ -2317,6 +2317,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                                     message.id,
                                   ),
                                   onToggleTechInfo: () {
+                                    ref.haptics.trigger(HapticType.light);
                                     setState(() {
                                       if (_expandedTechInfoIds.contains(
                                         message.id,
@@ -3302,12 +3303,11 @@ class _MessageBubble extends ConsumerWidget {
   /// shown inline below the message timestamp when the setting is enabled.
   Widget _buildInlineTechInfo(BuildContext context, {required bool sentByMe}) {
     final l10n = context.l10n;
-    final hasAnyInfo =
+    final hasRadioInfo =
         message.hopCount != null ||
         message.rxSnr != null ||
         message.rxRssi != null ||
         message.viaMqtt != null;
-    if (!hasAnyInfo) return const SizedBox.shrink();
 
     final color = sentByMe
         ? Colors.white.withValues(alpha: 0.6)
@@ -3315,12 +3315,36 @@ class _MessageBubble extends ConsumerWidget {
     final iconSize = AppTheme.spacing10;
     final textStyle = TextStyle(fontSize: AppTheme.spacing10, color: color);
 
+    final nodeHex = message.from.toRadixString(16).padLeft(4, '0');
+
     return Padding(
       padding: const EdgeInsets.only(top: AppTheme.spacing2),
       child: Wrap(
         spacing: AppTheme.spacing8,
         runSpacing: AppTheme.spacing2,
         children: [
+          // Always show: from node ID
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.person_outline, size: iconSize, color: color),
+              const SizedBox(width: AppTheme.spacing2),
+              Text(l10n.messagingTechInfoNodeId(nodeHex), style: textStyle),
+            ],
+          ),
+          // Always show: packet ID when available
+          if (message.packetId != null)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.tag, size: iconSize, color: color),
+                const SizedBox(width: AppTheme.spacing2),
+                Text(
+                  l10n.messagingTechInfoPacketId(message.packetId!),
+                  style: textStyle,
+                ),
+              ],
+            ),
           if (message.hopCount != null)
             Row(
               mainAxisSize: MainAxisSize.min,
@@ -3375,6 +3399,16 @@ class _MessageBubble extends ConsumerWidget {
                       : l10n.messagingTechInfoRadio,
                   style: textStyle,
                 ),
+              ],
+            ),
+          // No radio metadata — show explicit indicator
+          if (!hasRadioInfo)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.info_outline, size: iconSize, color: color),
+                const SizedBox(width: AppTheme.spacing2),
+                Text(l10n.messagingTechInfoNoRadioData, style: textStyle),
               ],
             ),
         ],

@@ -8625,6 +8625,19 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String messagingTechInfoNodeId(String nodeHex) {
+    return 'Node !$nodeHex';
+  }
+
+  @override
+  String messagingTechInfoPacketId(int packetId) {
+    return 'Packet #$packetId';
+  }
+
+  @override
+  String get messagingTechInfoNoRadioData => 'No radio data';
+
+  @override
   String get messagingStartConversation => 'Start the conversation';
 
   @override
