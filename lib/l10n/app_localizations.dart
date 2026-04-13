@@ -15403,6 +15403,84 @@ abstract class AppLocalizations {
   /// **'No radio data'**
   String get messagingTechInfoNoRadioData;
 
+  /// Tooltip for the toggle button that shows/hides inline radio metadata on messages.
+  ///
+  /// In en, this message translates to:
+  /// **'Radio details'**
+  String get messagingTechInfoToggleTooltip;
+
+  /// Title for the bottom sheet explaining hop count.
+  ///
+  /// In en, this message translates to:
+  /// **'Hop Count'**
+  String get messagingTechInfoExplainHopsTitle;
+
+  /// Explanation of hop count shown in a bottom sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'The number of times this message was relayed by other nodes before reaching you. \'Direct\' means no relay — the sender was in direct radio range.'**
+  String get messagingTechInfoExplainHopsBody;
+
+  /// Title for the bottom sheet explaining SNR.
+  ///
+  /// In en, this message translates to:
+  /// **'Signal-to-Noise Ratio (SNR)'**
+  String get messagingTechInfoExplainSnrTitle;
+
+  /// Explanation of SNR shown in a bottom sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Measures how clearly the radio signal was received compared to background noise. Higher is better. Typical range: -20 dB (very weak) to +15 dB (excellent).'**
+  String get messagingTechInfoExplainSnrBody;
+
+  /// Title for the bottom sheet explaining RSSI.
+  ///
+  /// In en, this message translates to:
+  /// **'Signal Strength (RSSI)'**
+  String get messagingTechInfoExplainRssiTitle;
+
+  /// Explanation of RSSI shown in a bottom sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Received Signal Strength Indicator — how strong the radio signal was when it arrived. Closer to 0 is stronger. Typical range: -120 dBm (very weak) to -40 dBm (very strong).'**
+  String get messagingTechInfoExplainRssiBody;
+
+  /// Title for the bottom sheet explaining transport type.
+  ///
+  /// In en, this message translates to:
+  /// **'Transport'**
+  String get messagingTechInfoExplainTransportTitle;
+
+  /// Explanation of transport type shown in a bottom sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'How this message reached you. \'Radio\' means it travelled entirely over the mesh radio network. \'MQTT\' means it passed through an internet gateway at some point.'**
+  String get messagingTechInfoExplainTransportBody;
+
+  /// Title for the bottom sheet explaining sender node ID.
+  ///
+  /// In en, this message translates to:
+  /// **'Sender Node ID'**
+  String get messagingTechInfoExplainNodeIdTitle;
+
+  /// Explanation of node ID shown in a bottom sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'The unique hardware identifier of the node that sent this message, shown in hexadecimal.'**
+  String get messagingTechInfoExplainNodeIdBody;
+
+  /// Title for the bottom sheet explaining packet ID.
+  ///
+  /// In en, this message translates to:
+  /// **'Packet ID'**
+  String get messagingTechInfoExplainPacketIdTitle;
+
+  /// Explanation of packet ID shown in a bottom sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'The unique identifier for this radio packet, assigned by the sending node. Useful for debugging delivery issues.'**
+  String get messagingTechInfoExplainPacketIdBody;
+
   /// Empty state text in a new DM conversation.
   ///
   /// In en, this message translates to:
@@ -15414,6 +15492,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unknown Node'**
   String get messagingUnknownNode;
+
+  /// Label for the timeline filter button.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter'**
+  String get timelineFilterLabel;
+
+  /// Date group header for today
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get timelineToday;
+
+  /// Segment label for the Week view in the timeline board.
+  ///
+  /// In en, this message translates to:
+  /// **'Week'**
+  String get timelineWeek;
+
+  /// Segment label for the Month view in the timeline board.
+  ///
+  /// In en, this message translates to:
+  /// **'Month'**
+  String get timelineMonth;
+
+  /// Segment label for the Year view in the timeline board.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get timelineYear;
+
+  /// Priority label for low-priority timeline items.
+  ///
+  /// In en, this message translates to:
+  /// **'Low'**
+  String get timelinePriorityLow;
+
+  /// Priority label for medium-priority timeline items.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get timelinePriorityMedium;
+
+  /// Priority label for high-priority timeline items.
+  ///
+  /// In en, this message translates to:
+  /// **'High'**
+  String get timelinePriorityHigh;
+
+  /// Priority label for completed timeline items.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get timelinePriorityDone;
+
+  /// Label shown on break-time slots in the timeline board.
+  ///
+  /// In en, this message translates to:
+  /// **'Break time'**
+  String get timelineBreakTime;
+
+  /// Duration format for timeline item footer (e.g. 01h 53m).
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h {minutes}m'**
+  String timelineDuration(String hours, String minutes);
+
+  /// Duration format when less than one hour.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes}m'**
+  String timelineDurationMinutesOnly(String minutes);
+
+  /// Overflow label for participant avatar stack.
+  ///
+  /// In en, this message translates to:
+  /// **'+{count}'**
+  String timelineOverflowParticipants(int count);
 
   /// Label for the Activity drawer item.
   ///
@@ -32980,12 +33136,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Timeline'**
   String get timelineTitle;
-
-  /// Date group header for today
-  ///
-  /// In en, this message translates to:
-  /// **'Today'**
-  String get timelineToday;
 
   /// Empty state subtitle for search/filter miss
   ///
@@ -59355,6 +59505,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{name}'**
   String avatarStackNodeTooltip(String name);
+
+  /// Accessibility label for the overflow indicator circle in an avatar stack, e.g. '+3 more'
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{+1 more} other{+{count} more}}'**
+  String avatarStackOverflowLabel(int count);
 
   /// Title for the co-seen nodes card on the node detail screen
   ///

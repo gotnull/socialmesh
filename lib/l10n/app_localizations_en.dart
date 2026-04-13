@@ -8638,10 +8638,100 @@ class AppLocalizationsEn extends AppLocalizations {
   String get messagingTechInfoNoRadioData => 'No radio data';
 
   @override
+  String get messagingTechInfoToggleTooltip => 'Radio details';
+
+  @override
+  String get messagingTechInfoExplainHopsTitle => 'Hop Count';
+
+  @override
+  String get messagingTechInfoExplainHopsBody =>
+      'The number of times this message was relayed by other nodes before reaching you. \'Direct\' means no relay — the sender was in direct radio range.';
+
+  @override
+  String get messagingTechInfoExplainSnrTitle => 'Signal-to-Noise Ratio (SNR)';
+
+  @override
+  String get messagingTechInfoExplainSnrBody =>
+      'Measures how clearly the radio signal was received compared to background noise. Higher is better. Typical range: -20 dB (very weak) to +15 dB (excellent).';
+
+  @override
+  String get messagingTechInfoExplainRssiTitle => 'Signal Strength (RSSI)';
+
+  @override
+  String get messagingTechInfoExplainRssiBody =>
+      'Received Signal Strength Indicator — how strong the radio signal was when it arrived. Closer to 0 is stronger. Typical range: -120 dBm (very weak) to -40 dBm (very strong).';
+
+  @override
+  String get messagingTechInfoExplainTransportTitle => 'Transport';
+
+  @override
+  String get messagingTechInfoExplainTransportBody =>
+      'How this message reached you. \'Radio\' means it travelled entirely over the mesh radio network. \'MQTT\' means it passed through an internet gateway at some point.';
+
+  @override
+  String get messagingTechInfoExplainNodeIdTitle => 'Sender Node ID';
+
+  @override
+  String get messagingTechInfoExplainNodeIdBody =>
+      'The unique hardware identifier of the node that sent this message, shown in hexadecimal.';
+
+  @override
+  String get messagingTechInfoExplainPacketIdTitle => 'Packet ID';
+
+  @override
+  String get messagingTechInfoExplainPacketIdBody =>
+      'The unique identifier for this radio packet, assigned by the sending node. Useful for debugging delivery issues.';
+
+  @override
   String get messagingStartConversation => 'Start the conversation';
 
   @override
   String get messagingUnknownNode => 'Unknown Node';
+
+  @override
+  String get timelineFilterLabel => 'Filter';
+
+  @override
+  String get timelineToday => 'Today';
+
+  @override
+  String get timelineWeek => 'Week';
+
+  @override
+  String get timelineMonth => 'Month';
+
+  @override
+  String get timelineYear => 'Year';
+
+  @override
+  String get timelinePriorityLow => 'Low';
+
+  @override
+  String get timelinePriorityMedium => 'Medium';
+
+  @override
+  String get timelinePriorityHigh => 'High';
+
+  @override
+  String get timelinePriorityDone => 'Done';
+
+  @override
+  String get timelineBreakTime => 'Break time';
+
+  @override
+  String timelineDuration(String hours, String minutes) {
+    return '${hours}h ${minutes}m';
+  }
+
+  @override
+  String timelineDurationMinutesOnly(String minutes) {
+    return '${minutes}m';
+  }
+
+  @override
+  String timelineOverflowParticipants(int count) {
+    return '+$count';
+  }
 
   @override
   String get navigationActivity => 'Activity';
@@ -18750,9 +18840,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get timelineTitle => 'Timeline';
-
-  @override
-  String get timelineToday => 'Today';
 
   @override
   String get timelineTryDifferent => 'Try a different search or filter';
@@ -33688,6 +33775,17 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String avatarStackNodeTooltip(String name) {
     return '$name';
+  }
+
+  @override
+  String avatarStackOverflowLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '+$count more',
+      one: '+1 more',
+    );
+    return '$_temp0';
   }
 
   @override

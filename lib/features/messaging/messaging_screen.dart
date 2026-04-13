@@ -831,6 +831,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   /// Tracks which message IDs have inline technical info expanded.
   final Set<String> _expandedTechInfoIds = {};
 
+  /// Whether the global tech info bar is toggled on for all received messages.
+  bool _showAllTechInfo = false;
+
   /// The message being replied to, or null if not replying.
   Message? _replyingTo;
 
@@ -845,9 +848,28 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       if (mounted) {
         _messageFocusNode.requestFocus();
         _markAsRead();
+        _loadTechInfoPreference();
       }
     });
     _searchController.addListener(_onSearchChanged);
+  }
+
+  Future<void> _loadTechInfoPreference() async {
+    final settings = await ref.read(settingsServiceProvider.future);
+    if (mounted) {
+      setState(() => _showAllTechInfo = settings.messageTechInfoEnabled);
+    }
+  }
+
+  Future<void> _toggleTechInfo() async {
+    ref.haptics.trigger(HapticType.light);
+    final newValue = !_showAllTechInfo;
+    setState(() {
+      _showAllTechInfo = newValue;
+      if (!newValue) _expandedTechInfoIds.clear();
+    });
+    final settings = await ref.read(settingsServiceProvider.future);
+    await settings.setMessageTechInfoEnabled(newValue);
   }
 
   /// Mark all messages in this conversation as read.
@@ -2125,6 +2147,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
           actions: [
             IconButton(
               icon: Icon(
+                _showAllTechInfo ? Icons.cell_tower : Icons.cell_tower_outlined,
+                color: _showAllTechInfo
+                    ? context.accentColor
+                    : context.textPrimary,
+                size: 20,
+              ),
+              tooltip: context.l10n.messagingTechInfoToggleTooltip,
+              onPressed: _toggleTechInfo,
+            ),
+            IconButton(
+              icon: Icon(
                 _isSearching ? Icons.close : Icons.search,
                 color: _isSearching ? context.accentColor : context.textPrimary,
               ),
@@ -2313,9 +2346,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                                   ),
                                   isHighlighted:
                                       _highlightedMessageId == message.id,
-                                  showTechInfo: _expandedTechInfoIds.contains(
-                                    message.id,
-                                  ),
+                                  showTechInfo:
+                                      _showAllTechInfo ||
+                                      _expandedTechInfoIds.contains(message.id),
                                   onToggleTechInfo: () {
                                     ref.haptics.trigger(HapticType.light);
                                     setState(() {
@@ -2952,6 +2985,7 @@ class _MessageBubble extends ConsumerWidget {
               children: [
                 Flexible(
                   child: GestureDetector(
+                    onTap: onToggleTechInfo,
                     onLongPress: () => _showContextMenu(context, ref),
                     child: Container(
                       margin: const EdgeInsets.only(left: 64),
@@ -3031,6 +3065,8 @@ class _MessageBubble extends ConsumerWidget {
                               ],
                             ],
                           ),
+                          if (showTechInfo && isFromMe)
+                            _buildInlineTechInfo(context, sentByMe: true),
                         ],
                       ),
                     ),
@@ -3281,7 +3317,7 @@ class _MessageBubble extends ConsumerWidget {
                             ),
                           ],
                         ),
-                        if (showTechInfo && !isFromMe)
+                        if (showTechInfo)
                           _buildInlineTechInfo(context, sentByMe: false),
                       ],
                     ),
@@ -3324,82 +3360,71 @@ class _MessageBubble extends ConsumerWidget {
         runSpacing: AppTheme.spacing2,
         children: [
           // Always show: from node ID
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.person_outline, size: iconSize, color: color),
-              const SizedBox(width: AppTheme.spacing2),
-              Text(l10n.messagingTechInfoNodeId(nodeHex), style: textStyle),
-            ],
+          _TechInfoChip(
+            icon: Icons.person_outline,
+            label: l10n.messagingTechInfoNodeId(nodeHex),
+            iconSize: iconSize,
+            color: color,
+            textStyle: textStyle,
+            explainTitle: l10n.messagingTechInfoExplainNodeIdTitle,
+            explainBody: l10n.messagingTechInfoExplainNodeIdBody,
           ),
           // Always show: packet ID when available
           if (message.packetId != null)
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.tag, size: iconSize, color: color),
-                const SizedBox(width: AppTheme.spacing2),
-                Text(
-                  l10n.messagingTechInfoPacketId(message.packetId!),
-                  style: textStyle,
-                ),
-              ],
+            _TechInfoChip(
+              icon: Icons.tag,
+              label: l10n.messagingTechInfoPacketId(message.packetId!),
+              iconSize: iconSize,
+              color: color,
+              textStyle: textStyle,
+              explainTitle: l10n.messagingTechInfoExplainPacketIdTitle,
+              explainBody: l10n.messagingTechInfoExplainPacketIdBody,
             ),
           if (message.hopCount != null)
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.route, size: iconSize, color: color),
-                const SizedBox(width: AppTheme.spacing2),
-                Text(
-                  message.hopCount == 0
-                      ? l10n.messagingTechInfoDirectHop
-                      : l10n.messagingTechInfoHops(message.hopCount!),
-                  style: textStyle,
-                ),
-              ],
+            _TechInfoChip(
+              icon: Icons.route,
+              label: message.hopCount == 0
+                  ? l10n.messagingTechInfoDirectHop
+                  : l10n.messagingTechInfoHops(message.hopCount!),
+              iconSize: iconSize,
+              color: color,
+              textStyle: textStyle,
+              explainTitle: l10n.messagingTechInfoExplainHopsTitle,
+              explainBody: l10n.messagingTechInfoExplainHopsBody,
             ),
           if (message.rxSnr != null)
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.signal_cellular_alt, size: iconSize, color: color),
-                const SizedBox(width: AppTheme.spacing2),
-                Text(
-                  l10n.messagingTechInfoSnr(message.rxSnr!.toStringAsFixed(1)),
-                  style: textStyle,
-                ),
-              ],
+            _TechInfoChip(
+              icon: Icons.signal_cellular_alt,
+              label: l10n.messagingTechInfoSnr(
+                message.rxSnr!.toStringAsFixed(1),
+              ),
+              iconSize: iconSize,
+              color: color,
+              textStyle: textStyle,
+              explainTitle: l10n.messagingTechInfoExplainSnrTitle,
+              explainBody: l10n.messagingTechInfoExplainSnrBody,
             ),
           if (message.rxRssi != null)
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.cell_tower, size: iconSize, color: color),
-                const SizedBox(width: AppTheme.spacing2),
-                Text(
-                  l10n.messagingTechInfoRssi(message.rxRssi!),
-                  style: textStyle,
-                ),
-              ],
+            _TechInfoChip(
+              icon: Icons.cell_tower,
+              label: l10n.messagingTechInfoRssi(message.rxRssi!),
+              iconSize: iconSize,
+              color: color,
+              textStyle: textStyle,
+              explainTitle: l10n.messagingTechInfoExplainRssiTitle,
+              explainBody: l10n.messagingTechInfoExplainRssiBody,
             ),
           if (message.viaMqtt != null)
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  message.viaMqtt == true ? Icons.cloud : Icons.cell_tower,
-                  size: iconSize,
-                  color: color,
-                ),
-                const SizedBox(width: AppTheme.spacing2),
-                Text(
-                  message.viaMqtt == true
-                      ? l10n.messagingTechInfoMqtt
-                      : l10n.messagingTechInfoRadio,
-                  style: textStyle,
-                ),
-              ],
+            _TechInfoChip(
+              icon: message.viaMqtt == true ? Icons.cloud : Icons.cell_tower,
+              label: message.viaMqtt == true
+                  ? l10n.messagingTechInfoMqtt
+                  : l10n.messagingTechInfoRadio,
+              iconSize: iconSize,
+              color: color,
+              textStyle: textStyle,
+              explainTitle: l10n.messagingTechInfoExplainTransportTitle,
+              explainBody: l10n.messagingTechInfoExplainTransportBody,
             ),
           // No radio metadata — show explicit indicator
           if (!hasRadioInfo)
@@ -4032,6 +4057,107 @@ class _TranslationShimmerLoadingState extends State<_TranslationShimmerLoading>
           ),
         );
       },
+    );
+  }
+}
+
+/// A tappable inline chip displaying one technical detail about a message.
+/// Tapping shows an explanation bottom sheet.
+class _TechInfoChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final double iconSize;
+  final Color color;
+  final TextStyle textStyle;
+  final String explainTitle;
+  final String explainBody;
+
+  const _TechInfoChip({
+    required this.icon,
+    required this.label,
+    required this.iconSize,
+    required this.color,
+    required this.textStyle,
+    required this.explainTitle,
+    required this.explainBody,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => _showExplanation(context),
+      behavior: HitTestBehavior.opaque,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: iconSize, color: color),
+          const SizedBox(width: AppTheme.spacing2),
+          Text(label, style: textStyle),
+        ],
+      ),
+    );
+  }
+
+  void _showExplanation(BuildContext context) {
+    AppBottomSheet.show(
+      context: context,
+      maxHeightFraction: 0.35,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 24, color: context.accentColor),
+              SizedBox(width: AppTheme.spacing12),
+              Expanded(
+                child: Text(
+                  explainTitle,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: context.textPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: AppTheme.spacing16),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(AppTheme.spacing16),
+            decoration: BoxDecoration(
+              color: context.card,
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
+            ),
+            child: Row(
+              children: [
+                Icon(icon, size: 20, color: context.accentColor),
+                SizedBox(width: AppTheme.spacing12),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: context.textPrimary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: AppTheme.spacing16),
+          Text(
+            explainBody,
+            style: TextStyle(
+              fontSize: 14,
+              color: context.textSecondary,
+              height: 1.5,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -145,6 +145,19 @@ class CoSeenNetworkCard extends ConsumerWidget {
                   maxVisible: AvatarStackDefaults.maxVisible,
                   avatarSize: AvatarStackDefaults.avatarSize,
                   animationEnabled: !reduceMotion,
+                  showOverflowCount: true,
+                  onOverflowTap: onTap != null
+                      ? () {
+                          HapticFeedback.selectionClick();
+                          onTap!();
+                        }
+                      : null,
+                  overflowSemanticLabel:
+                      items.length > AvatarStackDefaults.maxVisible
+                      ? context.l10n.avatarStackOverflowLabel(
+                          items.length - AvatarStackDefaults.maxVisible,
+                        )
+                      : null,
                   semanticLabel: context.l10n.avatarStackCoSeenLabel(
                     viewModel.totalCount,
                   ),

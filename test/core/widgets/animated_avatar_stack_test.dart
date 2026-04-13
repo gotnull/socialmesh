@@ -288,4 +288,175 @@ void main() {
       expect(find.byType(Semantics), findsWidgets);
     });
   });
+
+  group('AnimatedAvatarStack overflow indicator', () {
+    testWidgets('does not show overflow when showOverflowCount is false', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(AnimatedAvatarStack(items: _items(6), maxVisible: 3)),
+      );
+      // Default showOverflowCount is false — no "+N" text.
+      expect(find.text('+3'), findsNothing);
+    });
+
+    testWidgets('shows +N circle when items exceed maxVisible', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          AnimatedAvatarStack(
+            items: _items(6),
+            maxVisible: 3,
+            showOverflowCount: true,
+          ),
+        ),
+      );
+      // 6 items, 3 visible → "+3" overflow indicator.
+      expect(find.text('+3'), findsOneWidget);
+      // 3 avatar Positioned + 1 overflow Positioned = 4.
+      expect(find.byType(Positioned), findsNWidgets(4));
+    });
+
+    testWidgets('does not show overflow when items fit in maxVisible', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(
+          AnimatedAvatarStack(
+            items: _items(3),
+            maxVisible: 4,
+            showOverflowCount: true,
+          ),
+        ),
+      );
+      expect(find.text('+'), findsNothing);
+      expect(find.byType(Positioned), findsNWidgets(3));
+    });
+
+    testWidgets('does not show overflow when items equal maxVisible', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(
+          AnimatedAvatarStack(
+            items: _items(4),
+            maxVisible: 4,
+            showOverflowCount: true,
+          ),
+        ),
+      );
+      // Exactly at capacity — no overflow.
+      expect(find.text('+0'), findsNothing);
+      expect(find.byType(Positioned), findsNWidgets(4));
+    });
+
+    testWidgets('overflow count is correct for various sizes', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          AnimatedAvatarStack(
+            items: _items(10),
+            maxVisible: 4,
+            showOverflowCount: true,
+          ),
+        ),
+      );
+      expect(find.text('+6'), findsOneWidget);
+    });
+
+    testWidgets('overflow circle fires onOverflowTap callback', (tester) async {
+      var tapped = false;
+      await tester.pumpWidget(
+        _wrap(
+          AnimatedAvatarStack(
+            items: _items(6),
+            maxVisible: 3,
+            showOverflowCount: true,
+            onOverflowTap: () => tapped = true,
+          ),
+        ),
+      );
+      // Tap the "+3" overflow circle.
+      await tester.tap(find.text('+3'));
+      expect(tapped, isTrue);
+    });
+
+    testWidgets('overflow circle has default semantics label', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          AnimatedAvatarStack(
+            items: _items(7),
+            maxVisible: 4,
+            showOverflowCount: true,
+          ),
+        ),
+      );
+      final semantics = tester.widgetList<Semantics>(find.byType(Semantics));
+      final overflowSemantics = semantics.where(
+        (s) => s.properties.label == '+3 more',
+      );
+      expect(overflowSemantics, isNotEmpty);
+    });
+
+    testWidgets('overflow circle uses custom overflowSemanticLabel', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(
+          AnimatedAvatarStack(
+            items: _items(7),
+            maxVisible: 4,
+            showOverflowCount: true,
+            overflowSemanticLabel:
+                '3 additional nodes', // lint-allow: hardcoded-string
+          ),
+        ),
+      );
+      final semantics = tester.widgetList<Semantics>(find.byType(Semantics));
+      final customSemantics = semantics.where(
+        (s) =>
+            s.properties.label ==
+            '3 additional nodes', // lint-allow: hardcoded-string
+      );
+      expect(customSemantics, isNotEmpty);
+      // Default label should NOT be present.
+      final defaultSemantics = semantics.where(
+        (s) => s.properties.label == '+3 more',
+      );
+      expect(defaultSemantics, isEmpty);
+    });
+
+    testWidgets('total width includes overflow circle step', (tester) async {
+      const size = 40.0;
+      const overlap = 0.4;
+      await tester.pumpWidget(
+        _wrap(
+          AnimatedAvatarStack(
+            items: _items(5),
+            maxVisible: 3,
+            avatarSize: size,
+            overlapFraction: overlap,
+            showOverflowCount: true,
+          ),
+        ),
+      );
+      // step = size * (1 - overlap) = 40 * 0.6 = 24
+      // width = size + (3-1+1)*step + 2*8 overshoot = 40 + 3*24 + 16 = 128
+      final sizedBox = tester.widget<SizedBox>(find.byType(SizedBox).first);
+      expect(sizedBox.width, closeTo(128, 0.1));
+    });
+
+    testWidgets('overflow not shown with single item even if enabled', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(
+          AnimatedAvatarStack(
+            items: _items(1),
+            maxVisible: 4,
+            showOverflowCount: true,
+          ),
+        ),
+      );
+      expect(find.byType(Positioned), findsOneWidget);
+    });
+  });
 }

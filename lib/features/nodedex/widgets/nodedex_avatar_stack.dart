@@ -127,12 +127,21 @@ class NodeDexAvatarStack extends ConsumerWidget {
   /// Receives the node number of the tapped peer.
   final void Function(int peerNodeNum)? onPeerTap;
 
+  /// When true, shows a "+N" overflow circle after the last visible
+  /// avatar if there are more items than [maxVisible].
+  final bool showOverflowCount;
+
+  /// Optional callback when the "+N" overflow circle is tapped.
+  final VoidCallback? onOverflowTap;
+
   const NodeDexAvatarStack({
     super.key,
     required this.nodeNum,
     this.maxVisible = AvatarStackDefaults.maxVisible,
     this.avatarSize = AvatarStackDefaults.avatarSize,
     this.onPeerTap,
+    this.showOverflowCount = true,
+    this.onOverflowTap,
   });
 
   @override
@@ -156,11 +165,18 @@ class NodeDexAvatarStack extends ConsumerWidget {
           }).toList()
         : items;
 
+    final overflowCount = items.length - maxVisible;
+
     return AnimatedAvatarStack(
       items: itemsWithTap,
       maxVisible: maxVisible,
       avatarSize: avatarSize,
       animationEnabled: !reduceMotion,
+      showOverflowCount: showOverflowCount,
+      onOverflowTap: onOverflowTap,
+      overflowSemanticLabel: overflowCount > 0
+          ? context.l10n.avatarStackOverflowLabel(overflowCount)
+          : null,
       semanticLabel: context.l10n.avatarStackCoSeenLabel(items.length),
     );
   }

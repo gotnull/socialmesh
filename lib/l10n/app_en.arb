@@ -11717,6 +11717,58 @@
     "@messagingTechInfoNoRadioData": {
         "description": "Shown when a message has no radio metadata (SNR, RSSI, hops)."
     },
+    "messagingTechInfoToggleTooltip": "Radio details",
+    "@messagingTechInfoToggleTooltip": {
+        "description": "Tooltip for the toggle button that shows/hides inline radio metadata on messages."
+    },
+    "messagingTechInfoExplainHopsTitle": "Hop Count",
+    "@messagingTechInfoExplainHopsTitle": {
+        "description": "Title for the bottom sheet explaining hop count."
+    },
+    "messagingTechInfoExplainHopsBody": "The number of times this message was relayed by other nodes before reaching you. 'Direct' means no relay — the sender was in direct radio range.",
+    "@messagingTechInfoExplainHopsBody": {
+        "description": "Explanation of hop count shown in a bottom sheet."
+    },
+    "messagingTechInfoExplainSnrTitle": "Signal-to-Noise Ratio (SNR)",
+    "@messagingTechInfoExplainSnrTitle": {
+        "description": "Title for the bottom sheet explaining SNR."
+    },
+    "messagingTechInfoExplainSnrBody": "Measures how clearly the radio signal was received compared to background noise. Higher is better. Typical range: -20 dB (very weak) to +15 dB (excellent).",
+    "@messagingTechInfoExplainSnrBody": {
+        "description": "Explanation of SNR shown in a bottom sheet."
+    },
+    "messagingTechInfoExplainRssiTitle": "Signal Strength (RSSI)",
+    "@messagingTechInfoExplainRssiTitle": {
+        "description": "Title for the bottom sheet explaining RSSI."
+    },
+    "messagingTechInfoExplainRssiBody": "Received Signal Strength Indicator — how strong the radio signal was when it arrived. Closer to 0 is stronger. Typical range: -120 dBm (very weak) to -40 dBm (very strong).",
+    "@messagingTechInfoExplainRssiBody": {
+        "description": "Explanation of RSSI shown in a bottom sheet."
+    },
+    "messagingTechInfoExplainTransportTitle": "Transport",
+    "@messagingTechInfoExplainTransportTitle": {
+        "description": "Title for the bottom sheet explaining transport type."
+    },
+    "messagingTechInfoExplainTransportBody": "How this message reached you. 'Radio' means it travelled entirely over the mesh radio network. 'MQTT' means it passed through an internet gateway at some point.",
+    "@messagingTechInfoExplainTransportBody": {
+        "description": "Explanation of transport type shown in a bottom sheet."
+    },
+    "messagingTechInfoExplainNodeIdTitle": "Sender Node ID",
+    "@messagingTechInfoExplainNodeIdTitle": {
+        "description": "Title for the bottom sheet explaining sender node ID."
+    },
+    "messagingTechInfoExplainNodeIdBody": "The unique hardware identifier of the node that sent this message, shown in hexadecimal.",
+    "@messagingTechInfoExplainNodeIdBody": {
+        "description": "Explanation of node ID shown in a bottom sheet."
+    },
+    "messagingTechInfoExplainPacketIdTitle": "Packet ID",
+    "@messagingTechInfoExplainPacketIdTitle": {
+        "description": "Title for the bottom sheet explaining packet ID."
+    },
+    "messagingTechInfoExplainPacketIdBody": "The unique identifier for this radio packet, assigned by the sending node. Useful for debugging delivery issues.",
+    "@messagingTechInfoExplainPacketIdBody": {
+        "description": "Explanation of packet ID shown in a bottom sheet."
+    },
     "messagingStartConversation": "Start the conversation",
     "@messagingStartConversation": {
         "description": "Empty state text in a new DM conversation."
@@ -11724,6 +11776,76 @@
     "messagingUnknownNode": "Unknown Node",
     "@messagingUnknownNode": {
         "description": "Fallback display name for a node with no stored name."
+    },
+    "timelineFilterLabel": "Filter",
+    "@timelineFilterLabel": {
+        "description": "Label for the timeline filter button."
+    },
+    "timelineToday": "Today",
+    "@timelineToday": {
+        "description": "Segment label for the Today view in the timeline board."
+    },
+    "timelineWeek": "Week",
+    "@timelineWeek": {
+        "description": "Segment label for the Week view in the timeline board."
+    },
+    "timelineMonth": "Month",
+    "@timelineMonth": {
+        "description": "Segment label for the Month view in the timeline board."
+    },
+    "timelineYear": "Year",
+    "@timelineYear": {
+        "description": "Segment label for the Year view in the timeline board."
+    },
+    "timelinePriorityLow": "Low",
+    "@timelinePriorityLow": {
+        "description": "Priority label for low-priority timeline items."
+    },
+    "timelinePriorityMedium": "Medium",
+    "@timelinePriorityMedium": {
+        "description": "Priority label for medium-priority timeline items."
+    },
+    "timelinePriorityHigh": "High",
+    "@timelinePriorityHigh": {
+        "description": "Priority label for high-priority timeline items."
+    },
+    "timelinePriorityDone": "Done",
+    "@timelinePriorityDone": {
+        "description": "Priority label for completed timeline items."
+    },
+    "timelineBreakTime": "Break time",
+    "@timelineBreakTime": {
+        "description": "Label shown on break-time slots in the timeline board."
+    },
+    "timelineDuration": "{hours}h {minutes}m",
+    "@timelineDuration": {
+        "description": "Duration format for timeline item footer (e.g. 01h 53m).",
+        "placeholders": {
+            "hours": {
+                "type": "String"
+            },
+            "minutes": {
+                "type": "String"
+            }
+        }
+    },
+    "timelineDurationMinutesOnly": "{minutes}m",
+    "@timelineDurationMinutesOnly": {
+        "description": "Duration format when less than one hour.",
+        "placeholders": {
+            "minutes": {
+                "type": "String"
+            }
+        }
+    },
+    "timelineOverflowParticipants": "+{count}",
+    "@timelineOverflowParticipants": {
+        "description": "Overflow label for participant avatar stack.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
     },
     "navigationActivity": "Activity",
     "@navigationActivity": {
@@ -45242,6 +45364,15 @@
         "placeholders": {
             "name": {
                 "type": "String"
+            }
+        }
+    },
+    "avatarStackOverflowLabel": "{count, plural, =1{+1 more} other{+{count} more}}",
+    "@avatarStackOverflowLabel": {
+        "description": "Accessibility label for the overflow indicator circle in an avatar stack, e.g. '+3 more'",
+        "placeholders": {
+            "count": {
+                "type": "int"
             }
         }
     },

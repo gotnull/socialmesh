@@ -464,6 +464,14 @@ class SettingsService {
 
   int get nodeViewModeIndex => _preferences.getInt('node_view_mode_index') ?? 0;
 
+  // Message tech info bar (inline radio metadata below messages)
+  Future<void> setMessageTechInfoEnabled(bool enabled) async {
+    await _preferences.setBool('message_tech_info_enabled', enabled);
+  }
+
+  bool get messageTechInfoEnabled =>
+      _preferences.getBool('message_tech_info_enabled') ?? false;
+
   // 3D Animations Enabled
   Future<void> setAnimations3DEnabled(bool enabled) async {
     await _preferences.setBool('animations_3d_enabled', enabled);
