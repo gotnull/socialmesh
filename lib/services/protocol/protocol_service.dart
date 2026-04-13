@@ -24,6 +24,7 @@ import 'admin_ack_tracker.dart';
 import 'admin_target.dart';
 import 'mesh_packet_builder.dart';
 import 'packet_framer.dart';
+import 'text_message_payload_budget.dart';
 import 'socialmesh/sm_capability_store.dart';
 import 'socialmesh/sm_codec.dart';
 import 'socialmesh/sm_constants.dart';
@@ -4311,19 +4312,30 @@ class ProtocolService {
         );
       }
 
+      final payloadBudget = TextMessagePayloadSizer.standard(
+        replyId: replyId,
+        isEmoji: isEmoji,
+      ).measure(text);
+      if (!payloadBudget.fitsInPacket) {
+        throw TextMessagePayloadTooLargeException(payloadBudget);
+      }
+
       final packetId = _generatePacketId();
 
       final data = pb.Data()
         ..portnum = pn.PortNum.TEXT_MESSAGE_APP
-        ..payload = utf8.encode(text)
-        ..emoji = isEmoji ? 1 : 0;
+        ..payload = utf8.encode(text);
 
       if (replyId != null) {
         data.replyId = replyId;
       }
+      if (isEmoji) {
+        data.emoji = 1;
+      }
 
       AppLogging.protocol(
-        '🏷️ Data fields: portnum=${data.portnum}, emoji=${data.emoji}, '
+        '🏷️ Data fields: portnum=${data.portnum}, '
+        'emoji=${data.hasEmoji() ? data.emoji : "unset"}, '
         'replyId=${data.hasReplyId() ? data.replyId : "unset"}, '
         'payloadLen=${data.payload.length}',
       );
@@ -5568,6 +5580,14 @@ class ProtocolService {
     try {
       AppLogging.protocol('Sending message to $to: $text');
 
+      final payloadBudget = TextMessagePayloadSizer.standard(
+        replyId: replyId,
+        isEmoji: isEmoji,
+      ).measure(text);
+      if (!payloadBudget.fitsInPacket) {
+        throw TextMessagePayloadTooLargeException(payloadBudget);
+      }
+
       final packetId = _generatePacketId();
 
       // Call the pre-tracking callback BEFORE sending
@@ -5578,11 +5598,13 @@ class ProtocolService {
 
       final data = pb.Data()
         ..portnum = pn.PortNum.TEXT_MESSAGE_APP
-        ..payload = utf8.encode(text)
-        ..emoji = isEmoji ? 1 : 0;
+        ..payload = utf8.encode(text);
 
       if (replyId != null) {
         data.replyId = replyId;
+      }
+      if (isEmoji) {
+        data.emoji = 1;
       }
 
       final packet = MeshPacketBuilder.userPayload(

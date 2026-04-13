@@ -5,13 +5,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/theme.dart';
+import '../../../services/protocol/text_message_payload_budget.dart';
+
+typedef ChatComposerBudgetResolver =
+    TextMessagePayloadBudget Function(String text);
+typedef ChatComposerBudgetLabelBuilder =
+    String Function(BuildContext context, TextMessagePayloadBudget budget);
 
 /// A chat message composer with multiline input, an explicit Send button,
 /// and keyboard shortcuts (Ctrl/Cmd+Enter to send).
 ///
 /// Matches the Meshtastic iOS pattern:
 /// - Enter inserts a newline and the field grows vertically.
-/// - The Send button only appears when there is text to send.
+/// - The Send button stays visible but only enables for sendable drafts.
 /// - Ctrl/Cmd+Enter sends on desktop / hardware keyboards.
 /// - The input grows from 1 line up to [maxLines] (default 6) before scrolling.
 class ChatComposer extends StatelessWidget {
@@ -27,7 +33,12 @@ class ChatComposer extends StatelessWidget {
     this.leading,
     this.sendTooltip,
     this.enabled = true,
-  });
+    this.budgetResolver,
+    this.budgetLabelBuilder,
+  }) : assert(
+         budgetResolver == null || budgetLabelBuilder != null,
+         'budgetLabelBuilder is required when budgetResolver is set',
+       );
 
   /// Controller for the text input.
   final TextEditingController controller;
@@ -62,6 +73,23 @@ class ChatComposer extends StatelessWidget {
   /// and the send button is hidden.
   final bool enabled;
 
+  /// Optional budget resolver used to show a live counter and disable send
+  /// when the draft does not fit the outgoing packet envelope.
+  final ChatComposerBudgetResolver? budgetResolver;
+
+  /// Localized label builder for the live message budget counter.
+  final ChatComposerBudgetLabelBuilder? budgetLabelBuilder;
+
+  bool _canSend(String text) {
+    if (!enabled) return false;
+
+    final trimmedText = text.trim();
+    if (trimmedText.isEmpty) return false;
+
+    final budget = budgetResolver?.call(trimmedText);
+    return budget?.fitsInPacket ?? true;
+  }
+
   /// Handles the Ctrl/Cmd+Enter keyboard shortcut to send.
   KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
     if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
@@ -79,7 +107,9 @@ class ChatComposer extends StatelessWidget {
         HardwareKeyboard.instance.isMetaPressed;
 
     if (isModifierPressed) {
-      onSend();
+      if (_canSend(controller.text)) {
+        onSend();
+      }
       return KeyEventResult.handled;
     }
 
@@ -90,16 +120,26 @@ class ChatComposer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final composerListenable = Listenable.merge([controller, focusNode]);
 
     return ListenableBuilder(
-      listenable: controller,
+      listenable: composerListenable,
       builder: (context, _) {
-        final hasText = controller.text.trim().isNotEmpty;
+        final trimmedText = controller.text.trim();
+        final hasText = trimmedText.isNotEmpty;
+        final budget = budgetResolver?.call(trimmedText);
+        final canSend = _canSend(controller.text);
+        final counterText = budget != null && budgetLabelBuilder != null
+            ? budgetLabelBuilder!(context, budget)
+            : null;
+        final showCounter =
+            enabled &&
+            counterText != null &&
+            (focusNode.hasFocus || hasText || !(budget?.fitsInPacket ?? true));
 
         return Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Leading widget (e.g. quick-responses ⚡ button), bottom-aligned.
             if (leading != null) ...[
               Padding(
                 padding: const EdgeInsets.only(bottom: AppTheme.spacing4),
@@ -107,60 +147,80 @@ class ChatComposer extends StatelessWidget {
               ),
               const SizedBox(width: AppTheme.spacing8),
             ],
-
-            // Text field with rounded background — grows vertically like
-            // Meshtastic iOS `TextField(..., axis: .vertical)`.
             Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? AppTheme.darkBackground
-                      : AppTheme.lightBackground,
-                  borderRadius: BorderRadius.circular(AppTheme.radius24),
-                ),
-                child: Focus(
-                  onKeyEvent: _handleKeyEvent,
-                  child: TextField(
-                    maxLength: maxLength,
-                    controller: controller,
-                    focusNode: focusNode,
-                    enabled: enabled,
-                    style: TextStyle(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
                       color: isDark
-                          ? AppTheme.textPrimary
-                          : AppTheme.textPrimaryLight,
+                          ? AppTheme.darkBackground
+                          : AppTheme.lightBackground,
+                      borderRadius: BorderRadius.circular(AppTheme.radius24),
                     ),
-                    textCapitalization: TextCapitalization.sentences,
-                    keyboardType: TextInputType.multiline,
-                    textInputAction: TextInputAction.newline,
-                    minLines: minLines,
-                    maxLines: maxLines,
-                    decoration: InputDecoration(
-                      hintText: hintText,
-                      hintStyle: TextStyle(
-                        color: isDark
-                            ? AppTheme.textTertiary
-                            : AppTheme.textTertiaryLight,
+                    child: Focus(
+                      onKeyEvent: _handleKeyEvent,
+                      child: TextField(
+                        maxLength: maxLength,
+                        controller: controller,
+                        focusNode: focusNode,
+                        enabled: enabled,
+                        style: TextStyle(
+                          color: isDark
+                              ? AppTheme.textPrimary
+                              : AppTheme.textPrimaryLight,
+                        ),
+                        textCapitalization: TextCapitalization.sentences,
+                        keyboardType: TextInputType.multiline,
+                        textInputAction: TextInputAction.newline,
+                        minLines: minLines,
+                        maxLines: maxLines,
+                        decoration: InputDecoration(
+                          hintText: hintText,
+                          hintStyle: TextStyle(
+                            color: isDark
+                                ? AppTheme.textTertiary
+                                : AppTheme.textTertiaryLight,
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
+                          counterText: '',
+                        ),
                       ),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 12,
-                      ),
-                      counterText: '',
                     ),
                   ),
-                ),
+                  if (showCounter)
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        top: AppTheme.spacing4,
+                        right: AppTheme.spacing8,
+                      ),
+                      child: Text(
+                        counterText,
+                        key: const Key('chat-composer-byte-counter'),
+                        textAlign: TextAlign.end,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: budget?.fitsInPacket ?? true
+                              ? (isDark
+                                    ? AppTheme.textTertiary
+                                    : AppTheme.textTertiaryLight)
+                              : Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
-
-            // Send button — always visible when enabled; disabled when empty.
             if (enabled) ...[
               const SizedBox(width: AppTheme.spacing12),
               Padding(
                 padding: const EdgeInsets.only(bottom: AppTheme.spacing0),
                 child: _SendButton(
-                  onTap: hasText ? onSend : null,
+                  onTap: canSend ? onSend : null,
                   tooltip: sendTooltip,
                 ),
               ),

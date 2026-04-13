@@ -8530,6 +8530,16 @@ class AppLocalizationsPt extends AppLocalizations {
   String get messagingSendTooltip => 'Enviar (Ctrl/Cmd+Enter)';
 
   @override
+  String messagingComposerByteCounter(int used, int max) {
+    return '$used/$max bytes';
+  }
+
+  @override
+  String messagingComposerTooLong(int used, int max) {
+    return 'Message is too long for the mesh ($used/$max bytes).';
+  }
+
+  @override
   String get messagingMessageQueuedOffline =>
       'Mensagem na fila - será enviada ao conectar';
 

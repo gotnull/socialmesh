@@ -11432,6 +11432,34 @@
     "@messagingSendTooltip": {
         "description": "Tooltip on the send button in the chat composer."
     },
+    "messagingComposerByteCounter": "{used}/{max} bytes",
+    "@messagingComposerByteCounter": {
+        "description": "Live UTF-8 byte counter in the chat composer.",
+        "placeholders": {
+            "used": {
+                "type": "int",
+                "description": "Current UTF-8 byte usage for the trimmed draft text."
+            },
+            "max": {
+                "type": "int",
+                "description": "Maximum UTF-8 bytes available for the current message envelope."
+            }
+        }
+    },
+    "messagingComposerTooLong": "Message is too long for the mesh ({used}/{max} bytes).",
+    "@messagingComposerTooLong": {
+        "description": "Error shown when a composed message exceeds the Meshtastic wire budget.",
+        "placeholders": {
+            "used": {
+                "type": "int",
+                "description": "Current UTF-8 byte usage for the trimmed draft text."
+            },
+            "max": {
+                "type": "int",
+                "description": "Maximum UTF-8 bytes available for the current message envelope."
+            }
+        }
+    },
     "messagingMessageQueuedOffline": "Message queued - will send when connected",
     "@messagingMessageQueuedOffline": {
         "description": "Info snackbar shown when a message is queued because the device is offline."

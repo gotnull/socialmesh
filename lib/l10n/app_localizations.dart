@@ -15109,6 +15109,18 @@ abstract class AppLocalizations {
   /// **'Send (Ctrl/Cmd+Enter)'**
   String get messagingSendTooltip;
 
+  /// Live UTF-8 byte counter in the chat composer.
+  ///
+  /// In en, this message translates to:
+  /// **'{used}/{max} bytes'**
+  String messagingComposerByteCounter(int used, int max);
+
+  /// Error shown when a composed message exceeds the Meshtastic wire budget.
+  ///
+  /// In en, this message translates to:
+  /// **'Message is too long for the mesh ({used}/{max} bytes).'**
+  String messagingComposerTooLong(int used, int max);
+
   /// Info snackbar shown when a message is queued because the device is offline.
   ///
   /// In en, this message translates to:

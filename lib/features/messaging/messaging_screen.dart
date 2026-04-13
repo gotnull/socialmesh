@@ -57,6 +57,7 @@ import '../../providers/translation_providers.dart';
 import '../../core/widgets/premium_feature_gate.dart';
 import '../../services/translation/translation_models.dart';
 import '../../services/storage/conversation_read_position.dart';
+import '../../services/protocol/text_message_payload_budget.dart';
 
 /// Conversation type enum
 enum ConversationType { channel, directMessage }
@@ -1445,6 +1446,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
 
+    final replyPacketId = _replyingTo?.packetId;
+    final textPayloadBudget = TextMessagePayloadSizer.standard(
+      replyId: replyPacketId,
+    ).measure(text);
+    if (!textPayloadBudget.fitsInPacket) {
+      showErrorSnackBar(
+        context,
+        context.l10n.messagingComposerTooLong(
+          textPayloadBudget.utf8Bytes,
+          textPayloadBudget.maxUtf8Bytes,
+        ),
+      );
+      return;
+    }
+
     // Capture all provider references BEFORE any async operations
     final myNodeNum = ref.read(myNodeNumProvider);
     final nodes = ref.read(nodesProvider);
@@ -1467,9 +1483,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     // won't receive explicit ACKs, but the firmware still benefits from the
     // consistent flag (implicit ACK via relays, unified retry logic, etc.).
     const wantAck = true;
-
-    // Capture and clear reply state before async operations
-    final replyPacketId = _replyingTo?.packetId;
 
     // Create pending message with sender info cached
     final pendingMessage = Message(
@@ -2528,28 +2541,44 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                 ),
                 child: SafeArea(
                   top: false,
-                  child: ChatComposer(
-                    controller: _messageController,
-                    focusNode: _messageFocusNode,
-                    onSend: _sendMessage,
-                    hintText: context.l10n.messagingMessageHint,
-                    sendTooltip: context.l10n.messagingSendTooltip,
-                    leading: GestureDetector(
-                      onTap: () => _showQuickResponses(),
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: context.background,
-                          shape: BoxShape.circle,
+                  child: Builder(
+                    builder: (context) {
+                      final composerPayloadSizer =
+                          TextMessagePayloadSizer.standard(
+                            replyId: _replyingTo?.packetId,
+                          );
+
+                      return ChatComposer(
+                        controller: _messageController,
+                        focusNode: _messageFocusNode,
+                        onSend: _sendMessage,
+                        hintText: context.l10n.messagingMessageHint,
+                        sendTooltip: context.l10n.messagingSendTooltip,
+                        maxLength: composerPayloadSizer.maxUtf8Bytes,
+                        budgetResolver: composerPayloadSizer.measure,
+                        budgetLabelBuilder: (context, budget) =>
+                            context.l10n.messagingComposerByteCounter(
+                              budget.utf8Bytes,
+                              budget.maxUtf8Bytes,
+                            ),
+                        leading: GestureDetector(
+                          onTap: () => _showQuickResponses(),
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: context.background,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.bolt,
+                              color: context.textSecondary,
+                              size: 20,
+                            ),
+                          ),
                         ),
-                        child: Icon(
-                          Icons.bolt,
-                          color: context.textSecondary,
-                          size: 20,
-                        ),
-                      ),
-                    ),
+                      );
+                    },
                   ),
                 ),
               ),

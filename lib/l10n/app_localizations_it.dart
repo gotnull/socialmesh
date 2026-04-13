@@ -8540,6 +8540,16 @@ class AppLocalizationsIt extends AppLocalizations {
   String get messagingSendTooltip => 'Invia (Ctrl/Cmd+Invio)';
 
   @override
+  String messagingComposerByteCounter(int used, int max) {
+    return '$used/$max bytes';
+  }
+
+  @override
+  String messagingComposerTooLong(int used, int max) {
+    return 'Message is too long for the mesh ($used/$max bytes).';
+  }
+
+  @override
   String get messagingMessageQueuedOffline =>
       'Messaggio in coda - verrà inviato alla connessione';
 
