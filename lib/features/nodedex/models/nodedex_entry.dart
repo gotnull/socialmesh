@@ -828,8 +828,11 @@ class NodeDexEntry {
   /// Number of distinct regions where this node has been observed.
   int get regionCount => seenRegions.length;
 
-  /// Number of nodes that have been co-seen with this one.
-  int get coSeenCount => coSeenNodes.length;
+  /// Number of nodes historically co-seen with this one.
+  int get historicalCoSeenCount => coSeenNodes.length;
+
+  /// Legacy alias for the historical co-seen count.
+  int get coSeenCount => historicalCoSeenCount;
 
   /// The highest co-seen weight (count) among all relationships.
   ///

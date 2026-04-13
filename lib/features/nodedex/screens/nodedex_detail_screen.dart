@@ -111,6 +111,9 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
     final entry = ref.watch(nodeDexEntryProvider(widget.nodeNum));
     final nodes = ref.watch(nodesProvider);
     final node = nodes[widget.nodeNum];
+    final recentCoSeenLinks = ref.watch(
+      nodeDexRecentCoSeenLinksProvider(widget.nodeNum),
+    );
     final traitResult = ref.watch(nodeDexTraitProvider(widget.nodeNum));
     final disclosure = ref.watch(nodeDexDisclosureProvider(widget.nodeNum));
     final patinaResult = ref.watch(nodeDexPatinaProvider(widget.nodeNum));
@@ -237,7 +240,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
           ),
 
           // Co-seen network card — animated avatar cluster with social context
-          if (entry.coSeenNodes.isNotEmpty)
+          if (recentCoSeenLinks.isNotEmpty)
             SliverToBoxAdapter(
               child: _DetailEntrance(
                 index: 2,
@@ -435,7 +438,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
           ],
 
           // Co-seen nodes — pinned header + body
-          if (entry.coSeenNodes.isNotEmpty) ...[
+          if (recentCoSeenLinks.isNotEmpty) ...[
             SliverPersistentHeader(
               pinned: true,
               delegate: _NodeDexStickyHeaderDelegate(
@@ -443,7 +446,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
                 icon: Icons.auto_awesome,
                 helpKey: 'coseen',
                 trailing: context.l10n.nodedexTotalCount(
-                  entry.coSeenNodes.length,
+                  recentCoSeenLinks.length,
                 ),
               ),
             ),
@@ -518,12 +521,11 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
 
   void _showCoSeenSheet(BuildContext context, NodeDexEntry entry) {
     final nodes = ref.read(nodesProvider);
+    final recentCoSeenLinks = ref.read(
+      nodeDexRecentCoSeenLinksProvider(entry.nodeNum),
+    );
     final dateFormat = DateFormat('d MMM yyyy');
     final navigator = Navigator.of(context);
-
-    // Sort by co-seen count descending.
-    final coSeenSorted = entry.coSeenNodes.entries.toList()
-      ..sort((a, b) => b.value.count.compareTo(a.value.count));
 
     AppBottomSheet.showScrollable<void>(
       context: context,
@@ -540,15 +542,17 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
             style: TextStyle(fontSize: 13, color: context.textTertiary),
           ),
           const SizedBox(height: AppTheme.spacing16),
-          ...coSeenSorted.map((coSeen) {
-            final relationship = coSeen.value;
-            final coSeenNode = nodes[coSeen.key];
-            final coSeenEntry = ref.read(nodeDexEntryProvider(coSeen.key));
+          ...recentCoSeenLinks.map((coSeen) {
+            final relationship = coSeen.relationship;
+            final coSeenNode = nodes[coSeen.otherNodeNum];
+            final coSeenEntry = ref.read(
+              nodeDexEntryProvider(coSeen.otherNodeNum),
+            );
             final name =
                 coSeenEntry?.localNickname ??
                 coSeenNode?.displayName ??
                 coSeenEntry?.lastKnownName ??
-                NodeDisplayNameResolver.defaultName(coSeen.key);
+                NodeDisplayNameResolver.defaultName(coSeen.otherNodeNum);
 
             return Padding(
               padding: const EdgeInsets.only(bottom: 2),
@@ -561,7 +565,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
                     navigator.push(
                       MaterialPageRoute<void>(
                         builder: (_) =>
-                            NodeDexDetailScreen(nodeNum: coSeen.key),
+                            NodeDexDetailScreen(nodeNum: coSeen.otherNodeNum),
                       ),
                     );
                   },
@@ -575,7 +579,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
                       children: [
                         SigilAvatar(
                           sigil: coSeenEntry?.sigil,
-                          nodeNum: coSeen.key,
+                          nodeNum: coSeen.otherNodeNum,
                           size: 36,
                         ),
                         const SizedBox(width: AppTheme.spacing10),
@@ -2745,7 +2749,14 @@ class _CoSeenNodesBodyState extends ConsumerState<_CoSeenNodesBody> {
     super.didUpdateWidget(oldWidget);
     // Reset page if data changed and current page is out of range.
     final pageSize = NodeDexConfig.coSeenPageSize;
-    final totalPages = (widget.entry.coSeenNodes.length / pageSize).ceil();
+    final totalPages =
+        (ref
+                    .read(
+                      nodeDexRecentCoSeenLinksProvider(widget.entry.nodeNum),
+                    )
+                    .length /
+                pageSize)
+            .ceil();
     if (_currentPage >= totalPages && totalPages > 0) {
       _currentPage = totalPages - 1;
     }
@@ -2756,10 +2767,9 @@ class _CoSeenNodesBodyState extends ConsumerState<_CoSeenNodesBody> {
     final nodes = ref.watch(nodesProvider);
     final pageSize = NodeDexConfig.coSeenPageSize;
     final dateFormat = DateFormat('d MMM yyyy');
-
-    // Sort by co-seen count descending.
-    final coSeenSorted = widget.entry.coSeenNodes.entries.toList()
-      ..sort((a, b) => b.value.count.compareTo(a.value.count));
+    final coSeenSorted = ref.watch(
+      nodeDexRecentCoSeenLinksProvider(widget.entry.nodeNum),
+    );
 
     final totalCount = coSeenSorted.length;
     final totalPages = (totalCount / pageSize).ceil();
@@ -2783,13 +2793,15 @@ class _CoSeenNodesBodyState extends ConsumerState<_CoSeenNodesBody> {
           ),
           const SizedBox(height: AppTheme.spacing8),
           ...pageItems.map((coSeen) {
-            final relationship = coSeen.value;
-            final coSeenNode = nodes[coSeen.key];
-            final coSeenEntry = ref.watch(nodeDexEntryProvider(coSeen.key));
+            final relationship = coSeen.relationship;
+            final coSeenNode = nodes[coSeen.otherNodeNum];
+            final coSeenEntry = ref.watch(
+              nodeDexEntryProvider(coSeen.otherNodeNum),
+            );
             final name =
                 coSeenNode?.displayName ??
                 coSeenEntry?.lastKnownName ??
-                NodeDisplayNameResolver.defaultName(coSeen.key);
+                NodeDisplayNameResolver.defaultName(coSeen.otherNodeNum);
 
             return Padding(
               padding: const EdgeInsets.only(top: 6),
@@ -2799,14 +2811,15 @@ class _CoSeenNodesBodyState extends ConsumerState<_CoSeenNodesBody> {
                   onTap: () {
                     AppLogging.nodeDex(
                       'Constellation link tapped: '
-                      '${widget.entry.nodeNum} → ${coSeen.key} '
+                      '${widget.entry.nodeNum} → ${coSeen.otherNodeNum} '
                       '(co-seen ${relationship.count} times)',
                     );
                     HapticFeedback.selectionClick();
                     EdgeDetailSheet.show(
                       context: context,
                       fromNodeNum: widget.entry.nodeNum,
-                      toNodeNum: coSeen.key,
+                      toNodeNum: coSeen.otherNodeNum,
+                      relationship: relationship,
                       onOpenNodeDetail: (nodeNum) {
                         Navigator.of(context).push(
                           MaterialPageRoute<void>(
@@ -2824,7 +2837,7 @@ class _CoSeenNodesBodyState extends ConsumerState<_CoSeenNodesBody> {
                       children: [
                         SigilAvatar(
                           sigil: coSeenEntry?.sigil,
-                          nodeNum: coSeen.key,
+                          nodeNum: coSeen.otherNodeNum,
                           size: 32,
                         ),
                         const SizedBox(width: AppTheme.spacing10),

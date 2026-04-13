@@ -193,14 +193,10 @@ class _DefaultContent extends StatelessWidget {
         ),
 
         const SizedBox(width: AppTheme.spacing12),
-
-        // Edge count
         Icon(Icons.link, size: 14, color: tertiaryColor),
         const SizedBox(width: AppTheme.spacing6),
         Text(
-          edgeCount == 1
-              ? context.l10n.nodedexLinkCountSingular(edgeCount)
-              : context.l10n.nodedexLinkCountPlural(edgeCount),
+          context.l10n.nodedexConstellationLinkCount(edgeCount),
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w500,
@@ -321,7 +317,9 @@ class _SelectedContent extends ConsumerWidget {
                   ),
                   const SizedBox(width: AppTheme.spacing8),
                   Text(
-                    context.l10n.nodedexSelectedLinksCount(entry.coSeenCount),
+                    context.l10n.nodedexSelectedLinksCount(
+                      entry.historicalCoSeenCount,
+                    ),
                     style: TextStyle(
                       fontSize: 11,
                       color: tertiaryText,

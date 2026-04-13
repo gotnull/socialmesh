@@ -1228,7 +1228,9 @@ class NodeStorageService {
       batteryLevel: json['batteryLevel'] as int?,
       snr: json['snr'] as int?,
       rssi: json['rssi'] as int?,
-      firmwareVersion: json['firmwareVersion'] as String?,
+      firmwareVersion: json['firmwareVersion'] != null
+          ? sanitizeUtf16(json['firmwareVersion'] as String)
+          : null,
       lastHeard: json['lastHeard'] != null
           ? DateTime.fromMillisecondsSinceEpoch(json['lastHeard'] as int)
           : null,
@@ -1302,7 +1304,9 @@ class NodeStorageService {
       numTxDropped: json['numTxDropped'] as int?,
       noiseFloor: json['noiseFloor'] as int?,
       // Node Status
-      nodeStatus: json['nodeStatus'] as String?,
+      nodeStatus: json['nodeStatus'] != null
+          ? sanitizeUtf16(json['nodeStatus'] as String)
+          : null,
       // Traffic Management Stats
       tmPacketsInspected: json['tmPacketsInspected'] as int?,
       tmPositionDedupDrops: json['tmPositionDedupDrops'] as int?,

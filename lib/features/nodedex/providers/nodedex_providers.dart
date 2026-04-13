@@ -12,7 +12,7 @@ import '../../../features/nodes/node_display_name_resolver.dart';
 //         ├── nodeDexStatsProvider — aggregate statistics
 //         ├── nodeDexTraitProvider(int) — computed trait for a node
 //         ├── nodeDexSortedEntriesProvider — sorted list for UI
-//         └── nodeDexConstellationProvider — graph data for constellation view
+//         └── nodeDexConstellationProvider — historical graph data for constellation view
 //
 // The nodeDexProvider listens to nodesProvider for automatic discovery
 // tracking. When a new node appears or an existing node updates, the
@@ -22,6 +22,7 @@ import '../../../features/nodes/node_display_name_resolver.dart';
 // Cloud Sync: optional outbox-based sync via NodeDexSyncService.
 
 import 'dart:async' show Timer, unawaited;
+import 'dart:math' as math;
 
 import 'package:clock/clock.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -47,6 +48,9 @@ import '../services/sigil_generator.dart';
 import '../services/trait_engine.dart';
 import '../services/trust_score.dart';
 import 'package:socialmesh/l10n/l10n_utils.dart';
+
+const Duration _kCoSeenRecentActivityWindow = Duration(minutes: 30);
+const double _kCoSeenMaxPlausibleDistanceMeters = 100000.0;
 
 // =============================================================================
 // Storage Provider
@@ -172,6 +176,14 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
     }
   }
 
+  bool _isRecentCoSeenActivity(MeshNode node, DateTime now) {
+    final lastHeard = node.lastHeard;
+    if (lastHeard == null) return false;
+    final age = now.difference(lastHeard);
+    if (age.isNegative) return false;
+    return age <= _kCoSeenRecentActivityWindow;
+  }
+
   @override
   Map<int, NodeDexEntry> build() {
     final storeAsync = ref.watch(nodeDexStoreProvider);
@@ -228,7 +240,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
       // while NodeDex was not loaded.
       final currentNodes = ref.read(nodesProvider);
       if (currentNodes.isNotEmpty) {
-        _handleNodesUpdate({}, currentNodes);
+        _handleNodesUpdate({}, currentNodes, seedOnly: true);
       }
 
       // Start periodic co-seen relationship flush.
@@ -255,8 +267,9 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
   /// encounter records for re-seen nodes.
   void _handleNodesUpdate(
     Map<int, MeshNode> previous,
-    Map<int, MeshNode> current,
-  ) {
+    Map<int, MeshNode> current, {
+    bool seedOnly = false,
+  }) {
     if (_store == null) return;
 
     final myNodeNum = ref.read(myNodeNumProvider);
@@ -318,8 +331,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
         // Only track encounters and co-seen for nodes that are
         // genuinely heard recently — stale entries from the device's
         // node database should not inflate co-seen metrics.
-        if (!isOwnNode &&
-            PresenceCalculator.isOnline(node.lastHeard, now: now)) {
+        if (!seedOnly && !isOwnNode && _isRecentCoSeenActivity(node, now)) {
           _lastEncounterTime[nodeNum] = now;
           _sessionSeenNodes.add(nodeNum);
         }
@@ -370,6 +382,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
         );
         final lastEncounter = _lastEncounterTime[nodeNum];
         final shouldRecord =
+            !seedOnly &&
             isRecentlyHeard &&
             (lastEncounter == null ||
                 now.difference(lastEncounter) >= _encounterCooldown);
@@ -406,7 +419,9 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
 
           updated[nodeNum] = updatedEntry;
           _lastEncounterTime[nodeNum] = now;
-          _sessionSeenNodes.add(nodeNum);
+          if (_isRecentCoSeenActivity(node, now)) {
+            _sessionSeenNodes.add(nodeNum);
+          }
           changed = true;
 
           final hexId =
@@ -992,6 +1007,191 @@ final nodeDexEntryProvider = Provider.family<NodeDexEntry?, int>((
   final entries = ref.watch(nodeDexProvider);
   return entries[nodeNum];
 });
+
+@immutable
+class NodeDexCoSeenLink {
+  final int otherNodeNum;
+  final CoSeenRelationship relationship;
+
+  const NodeDexCoSeenLink({
+    required this.otherNodeNum,
+    required this.relationship,
+  });
+}
+
+final nodeDexHistoricalCoSeenLinksProvider =
+    Provider.family<List<NodeDexCoSeenLink>, int>((ref, nodeNum) {
+      final entry = ref.watch(nodeDexEntryProvider(nodeNum));
+      if (entry == null || entry.coSeenNodes.isEmpty) return const [];
+
+      final links = <NodeDexCoSeenLink>[];
+      for (final link in entry.coSeenNodes.entries) {
+        links.add(
+          NodeDexCoSeenLink(otherNodeNum: link.key, relationship: link.value),
+        );
+      }
+
+      links.sort(_compareNodeDexCoSeenLinks);
+      return List<NodeDexCoSeenLink>.unmodifiable(links);
+    });
+
+final nodeDexRecentCoSeenLinksProvider =
+    Provider.family<List<NodeDexCoSeenLink>, int>((ref, nodeNum) {
+      final entry = ref.watch(nodeDexEntryProvider(nodeNum));
+      if (entry == null) return const [];
+
+      final historicalLinks = ref.watch(
+        nodeDexHistoricalCoSeenLinksProvider(nodeNum),
+      );
+      if (historicalLinks.isEmpty) return const [];
+
+      final entries = ref.watch(nodeDexProvider);
+      final liveNodes = ref.watch(nodesProvider);
+      final now = clock.now();
+      final selfNode = liveNodes[nodeNum];
+
+      if (!_isCoSeenNodeRecentlyActive(entry, selfNode, now)) {
+        return const [];
+      }
+
+      final links = <NodeDexCoSeenLink>[];
+      for (final link in historicalLinks) {
+        final otherNodeNum = link.otherNodeNum;
+        final relationship = link.relationship;
+        final otherEntry = entries[otherNodeNum];
+        if (otherEntry == null) continue;
+
+        final otherNode = liveNodes[otherNodeNum];
+        if (!_isCoSeenRelationshipRecent(relationship, now)) continue;
+        if (!_isCoSeenNodeRecentlyActive(otherEntry, otherNode, now)) {
+          continue;
+        }
+        if (!_isCoSeenLocallyPlausible(
+          entry,
+          selfNode,
+          otherEntry,
+          otherNode,
+          now,
+        )) {
+          continue;
+        }
+
+        links.add(
+          NodeDexCoSeenLink(
+            otherNodeNum: otherNodeNum,
+            relationship: relationship,
+          ),
+        );
+      }
+
+      links.sort(_compareNodeDexCoSeenLinks);
+      return List<NodeDexCoSeenLink>.unmodifiable(links);
+    });
+
+int _compareNodeDexCoSeenLinks(NodeDexCoSeenLink a, NodeDexCoSeenLink b) {
+  final countCompare = b.relationship.count.compareTo(a.relationship.count);
+  if (countCompare != 0) return countCompare;
+
+  final lastSeenCompare = b.relationship.lastSeen.compareTo(
+    a.relationship.lastSeen,
+  );
+  if (lastSeenCompare != 0) return lastSeenCompare;
+
+  return a.otherNodeNum.compareTo(b.otherNodeNum);
+}
+
+bool _isCoSeenRelationshipRecent(
+  CoSeenRelationship relationship,
+  DateTime now,
+) {
+  final age = now.difference(relationship.lastSeen);
+  if (age.isNegative) return false;
+  return age <= _kCoSeenRecentActivityWindow;
+}
+
+bool _isCoSeenNodeRecentlyActive(
+  NodeDexEntry entry,
+  MeshNode? liveNode,
+  DateTime now,
+) {
+  if (liveNode != null) {
+    final liveLastHeard = liveNode.lastHeard;
+    if (liveLastHeard == null) return false;
+    final age = now.difference(liveLastHeard);
+    if (age.isNegative) return false;
+    return age <= _kCoSeenRecentActivityWindow;
+  }
+
+  final entryAge = now.difference(entry.lastSeen);
+  if (entryAge.isNegative) return false;
+  return entryAge <= _kCoSeenRecentActivityWindow;
+}
+
+bool _isCoSeenLocallyPlausible(
+  NodeDexEntry entry,
+  MeshNode? liveNode,
+  NodeDexEntry otherEntry,
+  MeshNode? otherNode,
+  DateTime now,
+) {
+  final a = _resolveRecentCoSeenPosition(entry, liveNode, now);
+  final b = _resolveRecentCoSeenPosition(otherEntry, otherNode, now);
+  if (a == null || b == null) return true;
+
+  final distance = _coSeenHaversineMeters(a.$1, a.$2, b.$1, b.$2);
+  return distance <= _kCoSeenMaxPlausibleDistanceMeters;
+}
+
+(double, double)? _resolveRecentCoSeenPosition(
+  NodeDexEntry entry,
+  MeshNode? liveNode,
+  DateTime now,
+) {
+  if (liveNode != null &&
+      liveNode.hasPosition &&
+      _isMeshNodeLastHeardRecent(liveNode, now)) {
+    return (liveNode.latitude!, liveNode.longitude!);
+  }
+
+  for (final encounter in entry.encounters.reversed) {
+    if (encounter.latitude == null || encounter.longitude == null) {
+      continue;
+    }
+    final age = now.difference(encounter.timestamp);
+    if (!age.isNegative && age <= _kCoSeenRecentActivityWindow) {
+      return (encounter.latitude!, encounter.longitude!);
+    }
+  }
+
+  return null;
+}
+
+bool _isMeshNodeLastHeardRecent(MeshNode node, DateTime now) {
+  final lastHeard = node.lastHeard;
+  if (lastHeard == null) return false;
+  final age = now.difference(lastHeard);
+  if (age.isNegative) return false;
+  return age <= _kCoSeenRecentActivityWindow;
+}
+
+double _coSeenHaversineMeters(
+  double lat1,
+  double lon1,
+  double lat2,
+  double lon2,
+) {
+  const earthRadius = 6371000.0;
+  final dLat = (lat2 - lat1) * (math.pi / 180.0);
+  final dLon = (lon2 - lon1) * (math.pi / 180.0);
+  final a =
+      math.sin(dLat / 2.0) * math.sin(dLat / 2.0) +
+      math.cos(lat1 * (math.pi / 180.0)) *
+          math.cos(lat2 * (math.pi / 180.0)) *
+          math.sin(dLon / 2.0) *
+          math.sin(dLon / 2.0);
+  final c = 2.0 * math.atan2(math.sqrt(a), math.sqrt(1.0 - a));
+  return earthRadius * c;
+}
 
 /// Provider for the computed trait of a specific node.
 ///
@@ -1835,9 +2035,12 @@ final nodeDexConstellationProvider = Provider<ConstellationData>((ref) {
   int maxWeight = 1;
 
   for (final entry in allEntries) {
-    for (final coSeen in entry.coSeenNodes.entries) {
-      final other = coSeen.key;
-      final relationship = coSeen.value;
+    final historicalLinks = ref.read(
+      nodeDexHistoricalCoSeenLinksProvider(entry.nodeNum),
+    );
+    for (final coSeen in historicalLinks) {
+      final other = coSeen.otherNodeNum;
+      final relationship = coSeen.relationship;
       final weight = relationship.count;
 
       // Only include edges where both nodes exist in the dex.
@@ -2074,7 +2277,7 @@ final nodeDexConstellationProvider = Provider<ConstellationData>((ref) {
             NodeDisplayNameResolver.defaultName(entry.nodeNum),
         sigil: entry.sigil,
         trait: trait.primary,
-        connectionCount: entry.coSeenCount,
+        connectionCount: entry.historicalCoSeenCount,
         x: posX[i],
         y: posY[i],
       ),

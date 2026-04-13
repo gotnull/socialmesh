@@ -615,10 +615,10 @@ class TraitEngine {
     final age = now.difference(entry.firstSeen);
 
     // High co-seen count is the primary Anchor signal.
-    if (entry.coSeenCount >= 5) {
-      score += 0.5 * (entry.coSeenCount / 20.0).clamp(0.0, 1.0);
-    } else if (entry.coSeenCount >= 2) {
-      score += 0.2 * (entry.coSeenCount / 5.0).clamp(0.0, 1.0);
+    if (entry.historicalCoSeenCount >= 5) {
+      score += 0.5 * (entry.historicalCoSeenCount / 20.0).clamp(0.0, 1.0);
+    } else if (entry.historicalCoSeenCount >= 2) {
+      score += 0.2 * (entry.historicalCoSeenCount / 5.0).clamp(0.0, 1.0);
     }
 
     // Long tenure supports Anchor — hubs are persistent.
@@ -1126,25 +1126,25 @@ class TraitEngine {
     double score = 0.0;
     final age = now.difference(entry.firstSeen);
 
-    if (entry.coSeenCount >= 5) {
-      final s = 0.5 * (entry.coSeenCount / 20.0).clamp(0.0, 1.0);
+    if (entry.historicalCoSeenCount >= 5) {
+      final s = 0.5 * (entry.historicalCoSeenCount / 20.0).clamp(0.0, 1.0);
       score += s;
       evidence.add(
         TraitEvidence(
           observation:
-              l10n?.nodedexEvidenceCoSeenWith(entry.coSeenCount) ??
-              'Co-seen with ${entry.coSeenCount} nodes', // lint-allow: hardcoded-string
+              l10n?.nodedexEvidenceCoSeenWith(entry.historicalCoSeenCount) ??
+              'Historically co-seen with ${entry.historicalCoSeenCount} nodes', // lint-allow: hardcoded-string
           weight: s,
         ),
       );
-    } else if (entry.coSeenCount >= 2) {
-      final s = 0.2 * (entry.coSeenCount / 5.0).clamp(0.0, 1.0);
+    } else if (entry.historicalCoSeenCount >= 2) {
+      final s = 0.2 * (entry.historicalCoSeenCount / 5.0).clamp(0.0, 1.0);
       score += s;
       evidence.add(
         TraitEvidence(
           observation:
-              l10n?.nodedexEvidenceCoSeenWith(entry.coSeenCount) ??
-              'Co-seen with ${entry.coSeenCount} nodes', // lint-allow: hardcoded-string
+              l10n?.nodedexEvidenceCoSeenWith(entry.historicalCoSeenCount) ??
+              'Historically co-seen with ${entry.historicalCoSeenCount} nodes', // lint-allow: hardcoded-string
           weight: s,
         ),
       );

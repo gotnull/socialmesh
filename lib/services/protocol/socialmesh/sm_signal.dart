@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
+import '../../../../utils/text_sanitizer.dart';
 import 'sm_constants.dart';
 
 /// TTL class for signal expiry (3-bit wire encoding).
@@ -224,9 +225,11 @@ class SmSignal {
     var content = '';
     if (contentLen > 0) {
       if (offset + contentLen > data.length) return null;
-      content = utf8.decode(
-        data.sublist(offset, offset + contentLen),
-        allowMalformed: true,
+      content = sanitizeUtf16(
+        utf8.decode(
+          data.sublist(offset, offset + contentLen),
+          allowMalformed: true,
+        ),
       );
     }
 

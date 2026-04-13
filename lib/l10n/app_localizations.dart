@@ -17530,25 +17530,25 @@ abstract class AppLocalizations {
   /// Label in node management
   ///
   /// In en, this message translates to:
-  /// **'Co-seen'**
+  /// **'Historical links'**
   String get nodedexCoSeenCompactLabel;
 
   /// Description text in node management
   ///
   /// In en, this message translates to:
-  /// **'Nodes frequently seen in the same session'**
+  /// **'Nodes heard with this node in the recent session window'**
   String get nodedexCoSeenDescription;
 
   /// Title for the node management screen
   ///
   /// In en, this message translates to:
-  /// **'Co-Seen Links'**
+  /// **'Recent Co-Seen Links'**
   String get nodedexCoSeenLinksTitle;
 
   /// Text displayed in node management
   ///
   /// In en, this message translates to:
-  /// **'Co-seen relationship details'**
+  /// **'Recent co-seen relationship details'**
   String get nodedexCoSeenRelationshipDetails;
 
   /// Text in node management Parameters: {count} = numeric count.
@@ -17578,25 +17578,25 @@ abstract class AppLocalizations {
   /// Subtitle in node management
   ///
   /// In en, this message translates to:
-  /// **'Discover more nodes to see how they connect.\nNodes seen together form constellation links.'**
+  /// **'Discover more nodes to build the historical graph.\nHistorically co-seen nodes form constellation links.'**
   String get nodedexConstellationEmptySubtitle;
 
   /// Title for the node management screen
   ///
   /// In en, this message translates to:
-  /// **'No Constellation Yet'**
+  /// **'No Historical Constellation Yet'**
   String get nodedexConstellationEmptyTitle;
 
   /// Text in node management Parameters: {count} = numeric count.
   ///
   /// In en, this message translates to:
-  /// **'{count} links'**
+  /// **'{count} historical links'**
   String nodedexConstellationLinkCount(int count);
 
   /// Title for the node management screen
   ///
   /// In en, this message translates to:
-  /// **'Constellation Link'**
+  /// **'Recent Co-Seen Link'**
   String get nodedexConstellationLinkTitle;
 
   /// Text in node management Parameters: {count} = numeric count.
@@ -17626,7 +17626,7 @@ abstract class AppLocalizations {
   /// Title for the node management screen
   ///
   /// In en, this message translates to:
-  /// **'Constellation'**
+  /// **'Historical Constellation'**
   String get nodedexConstellationTitle;
 
   /// Text displayed in node management
@@ -18148,7 +18148,7 @@ abstract class AppLocalizations {
   /// Text in node management Parameters: {count} = numeric count.
   ///
   /// In en, this message translates to:
-  /// **'Co-seen with {count} nodes'**
+  /// **'Historically co-seen with {count} nodes'**
   String nodedexEvidenceCoSeenWith(int count);
 
   /// Text in node management Parameters: {count} = numeric count.
@@ -18316,7 +18316,7 @@ abstract class AppLocalizations {
   /// Text in node management Parameters: {coSeen}.
   ///
   /// In en, this message translates to:
-  /// **'Hub node. Co-seen with {coSeen} other nodes.'**
+  /// **'Hub node. Historically co-seen with {coSeen} other nodes.'**
   String nodedexFieldNoteAnchor0(int coSeen);
 
   /// Text displayed in node management
@@ -18328,7 +18328,7 @@ abstract class AppLocalizations {
   /// Text in node management Parameters: {coSeen}.
   ///
   /// In en, this message translates to:
-  /// **'Persistent hub. {coSeen} nodes observed in proximity.'**
+  /// **'Persistent hub. {coSeen} nodes historically observed nearby.'**
   String nodedexFieldNoteAnchor2(int coSeen);
 
   /// Text displayed in node management
@@ -18352,7 +18352,7 @@ abstract class AppLocalizations {
   /// Text in node management Parameters: {coSeen}.
   ///
   /// In en, this message translates to:
-  /// **'Infrastructure anchor. {coSeen} peers linked.'**
+  /// **'Infrastructure anchor. Historically linked with {coSeen} peers.'**
   String nodedexFieldNoteAnchor6(int coSeen);
 
   /// Text displayed in node management
@@ -19840,7 +19840,7 @@ abstract class AppLocalizations {
   /// Text in node management Parameters: {count} = numeric count.
   ///
   /// In en, this message translates to:
-  /// **'{count} links'**
+  /// **'{count} historical links'**
   String nodedexSelectedLinksCount(int count);
 
   /// Text displayed in node management
@@ -50943,13 +50943,13 @@ abstract class AppLocalizations {
   /// Title for nodedex_constellation help topic
   ///
   /// In en, this message translates to:
-  /// **'Constellation View'**
+  /// **'Historical Constellation'**
   String get helpNodedexConstellationTitle;
 
   /// Description for nodedex_constellation help topic
   ///
   /// In en, this message translates to:
-  /// **'A star-map visualization of co-seen node relationships'**
+  /// **'A star-map visualization of historical co-seen node relationships'**
   String get helpNodedexConstellationDescription;
 
   /// Title for the help center screen
@@ -59323,7 +59323,7 @@ abstract class AppLocalizations {
   /// Accessibility label for the co-seen avatar cluster on a NodeDex card
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =1{1 co-seen node} other{{count} co-seen nodes}}'**
+  /// **'{count, plural, =1{1 recent co-seen node} other{{count} recent co-seen nodes}}'**
   String avatarStackCoSeenLabel(int count);
 
   /// Tooltip shown when hovering over a co-seen node avatar in the stack
@@ -59335,19 +59335,19 @@ abstract class AppLocalizations {
   /// Title for the co-seen nodes card on the node detail screen
   ///
   /// In en, this message translates to:
-  /// **'Co-Seen Network'**
+  /// **'Recent Co-Seen'**
   String get nodedexCoSeenCardTitle;
 
   /// Subtitle for the co-seen card showing how many peers share sessions
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =1{1 node commonly seen with this node} other{{count} nodes commonly seen with this node}}'**
+  /// **'{count, plural, =1{1 node heard with this node recently} other{{count} nodes heard with this node recently}}'**
   String nodedexCoSeenCardSubtitle(int count);
 
   /// CTA text to scroll to the full co-seen links section
   ///
   /// In en, this message translates to:
-  /// **'View all'**
+  /// **'View recent links'**
   String get nodedexCoSeenCardViewAll;
 
   /// Title for the nearby people/discovery screen

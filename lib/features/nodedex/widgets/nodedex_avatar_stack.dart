@@ -30,9 +30,9 @@ import 'sigil_painter.dart';
 /// co-seen peers.
 ///
 /// Selection logic:
-/// 1. Read the entry's [CoSeenRelationship] map.
+/// 1. Read the recent eligible co-seen links provider.
 /// 2. Filter to peers that also exist in the NodeDex.
-/// 3. Sort by freshest last-seen first, then by co-seen count descending.
+/// 3. Preserve the provider's deterministic ordering.
 /// 4. Map to [AvatarStackItem] with sigil rendering and display name.
 ///
 /// This is a family provider keyed by nodeNum.
@@ -40,35 +40,28 @@ final nodeDexAvatarStackProvider = Provider.family<List<AvatarStackItem>, int>((
   ref,
   nodeNum,
 ) {
-  final entry = ref.watch(nodeDexEntryProvider(nodeNum));
-  if (entry == null) return const [];
-
-  final coSeen = entry.coSeenNodes;
-  if (coSeen.isEmpty) return const [];
+  final coSeenLinks = ref.watch(nodeDexRecentCoSeenLinksProvider(nodeNum));
+  if (coSeenLinks.isEmpty) return const [];
 
   final allEntries = ref.watch(nodeDexProvider);
   final liveNodes = ref.watch(nodesProvider);
 
   // Build sortable list of co-seen peers that exist in the NodeDex.
   final peers = <_CoSeenPeer>[];
-  for (final MapEntry(key: peerNum, value: rel) in coSeen.entries) {
+  for (final link in coSeenLinks) {
+    final peerNum = link.otherNodeNum;
     final peerEntry = allEntries[peerNum];
     if (peerEntry == null) continue;
     peers.add(
-      _CoSeenPeer(nodeNum: peerNum, entry: peerEntry, relationship: rel),
+      _CoSeenPeer(
+        nodeNum: peerNum,
+        entry: peerEntry,
+        relationship: link.relationship,
+      ),
     );
   }
 
   if (peers.isEmpty) return const [];
-
-  // Sort: freshest last-seen first, then highest encounter count.
-  peers.sort((a, b) {
-    final lastSeenCmp = b.relationship.lastSeen.compareTo(
-      a.relationship.lastSeen,
-    );
-    if (lastSeenCmp != 0) return lastSeenCmp;
-    return b.relationship.count.compareTo(a.relationship.count);
-  });
 
   // Build view models.
   return peers.map((peer) {

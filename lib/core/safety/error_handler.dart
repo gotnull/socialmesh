@@ -86,7 +86,16 @@ class AppErrorHandler {
   /// Handle platform/isolate errors.
   static bool _handlePlatformError(Object error, StackTrace stack) {
     final log = _loggerForError(error, stack);
-    log('PlatformError [HANDLED]: $error');
+
+    // Capture the ACTUAL error type before any sanitization —
+    // this is critical for diagnosing what's generating platform errors.
+    final errorType = error.runtimeType.toString();
+    final errorCategory = _categorizePlatformError(error, stack);
+
+    log(
+      'PlatformError [HANDLED] type=$errorType '
+      'category=$errorCategory: $error',
+    );
 
     // Platform errors are always reported as non-fatal to Crashlytics.
     // We return true below which means we've handled the error and
@@ -94,16 +103,132 @@ class AppErrorHandler {
     // the Crashlytics native SDK to invoke its crash recording path
     // (FIRCLSExceptionRecordOnDemand) which can itself crash — creating
     // a crash-in-crash loop.
+
+    // Set discriminating custom keys BEFORE recordError so Crashlytics
+    // can group/filter by actual error type instead of lumping everything
+    // under the generic "_handlePlatformError" title.
+    try {
+      FirebaseCrashlytics.instance.setCustomKey(
+        'platform_error_type',
+        errorType,
+      );
+      FirebaseCrashlytics.instance.setCustomKey(
+        'platform_error_category',
+        errorCategory,
+      );
+      // Preserve the first 256 chars of the raw error message (unsanitized)
+      // so we can read it in the Crashlytics dashboard. Error messages from
+      // Flutter/Dart framework classes do not contain PII.
+      final rawMessage = error.toString();
+      FirebaseCrashlytics.instance.setCustomKey(
+        'platform_error_message',
+        rawMessage.length > 256 ? rawMessage.substring(0, 256) : rawMessage,
+      );
+    } catch (_) {
+      // Crashlytics not initialized — continue to recordError below.
+    }
+
     _reportToCrashlytics(
       error,
       stack,
-      reason: 'Platform error',
+      reason: 'Platform error [$errorCategory]: $errorType',
       isFatal: false,
     );
 
     // Return true to indicate the error was handled
     // This prevents the error from propagating and crashing the app
     return true;
+  }
+
+  /// Categorize a platform error by inspecting its type and stack trace.
+  ///
+  /// Returns a short tag like "ble", "firebase", "codec", "stream", etc.
+  /// so Crashlytics custom key filtering can separate error families
+  /// without needing to parse sanitized messages.
+  static String _categorizePlatformError(Object error, StackTrace stack) {
+    final errorStr = error.toString().toLowerCase();
+    final stackStr = stack.toString().toLowerCase();
+    final combined = '$errorStr\n$stackStr';
+
+    // BLE / FlutterBluePlus errors
+    if (combined.contains('flutterbluplus') ||
+        combined.contains('ble_transport') ||
+        combined.contains('bluetooth') ||
+        combined.contains('characteristic') ||
+        combined.contains('gatt')) {
+      return 'ble';
+    }
+
+    // Firebase / Firestore errors
+    if (combined.contains('firebase') ||
+        combined.contains('firestore') ||
+        combined.contains('leveldb') ||
+        combined.contains('cloud_firestore')) {
+      return 'firebase';
+    }
+
+    // Protobuf / codec errors
+    if (combined.contains('protobuf') ||
+        combined.contains('invalidprotocolbuffer') ||
+        combined.contains('protocol_service') ||
+        combined.contains('fromBuffer') ||
+        combined.contains('codec')) {
+      return 'protobuf';
+    }
+
+    // Stream / async lifecycle errors — match specific messages, NOT the
+    // generic "bad state" prefix which every StateError carries.
+    if (combined.contains('stream has already been listened') ||
+        combined.contains('cannot add event after closing') ||
+        combined.contains('cannot add new events after calling close') ||
+        combined.contains('future already completed') ||
+        combined.contains('subscription has been canceled') ||
+        combined.contains('cannot fire new event')) {
+      return 'stream_lifecycle';
+    }
+
+    // File transfer / STL errors
+    if (combined.contains('file_transfer') ||
+        combined.contains('stl_middleware') ||
+        combined.contains('stlenvelope') ||
+        combined.contains('smcodec')) {
+      return 'file_transfer';
+    }
+
+    // SIP / MRRP protocol errors
+    if (combined.contains('sip') || combined.contains('mrrp')) {
+      return 'sip_mrrp';
+    }
+
+    // Network / connectivity errors
+    if (combined.contains('socketexception') ||
+        combined.contains('handshakeexception') ||
+        combined.contains('connection refused') ||
+        combined.contains('network')) {
+      return 'network';
+    }
+
+    // Timeout errors
+    if (error is TimeoutException || combined.contains('timeout')) {
+      return 'timeout';
+    }
+
+    // State errors (disposed controllers, etc.)
+    if (error is StateError) {
+      return 'state_error';
+    }
+
+    // Type / cast errors (Dart 3 unified TypeError covers both)
+    if (error is TypeError) {
+      return 'type_error';
+    }
+
+    // Range / index errors
+    if (error is RangeError) {
+      return 'range_error';
+    }
+
+    return 'unknown';
   }
 
   /// Select the logging function based on error/stack content.
@@ -253,14 +378,14 @@ class AppErrorHandler {
   }
 
   /// Remove sensitive data from strings before logging/reporting.
+  ///
+  /// **Important**: This must NOT destroy error-diagnostic information.
+  /// The previous regex `[A-Za-z0-9_-]{32,}` was matching Dart class names,
+  /// method names, and stack trace identifiers — making Crashlytics reports
+  /// unreadable. The updated patterns target actual secrets (API keys, JWTs,
+  /// Firebase tokens) while preserving error messages and stack traces.
   static String _sanitizeString(String input) {
     var result = input;
-
-    // Remove potential tokens/keys (anything that looks like a long alphanumeric string)
-    result = result.replaceAll(
-      RegExp(r'[A-Za-z0-9_-]{32,}'),
-      '[REDACTED_TOKEN]', // lint-allow: hardcoded-string
-    );
 
     // Remove email addresses
     result = result.replaceAll(
@@ -277,10 +402,34 @@ class AppErrorHandler {
       '[REDACTED_URL]', // lint-allow: hardcoded-string
     );
 
-    // Remove base64-like strings (potential encoded data)
+    // Remove JWT-like tokens (three dot-separated base64 segments)
+    result = result.replaceAll(
+      RegExp(r'eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+'),
+      '[REDACTED_JWT]', // lint-allow: hardcoded-string
+    );
+
+    // Remove Firebase/API key patterns (key= or token= or apiKey= followed by long value)
     result = result.replaceAll(
       RegExp(
-        r'(?:[A-Za-z0-9+/]{4}){10,}(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?',
+        r'(?:key|token|apiKey|api_key|secret|password|auth)[\s]*[=:]\s*[A-Za-z0-9_\-/.+]{20,}',
+        caseSensitive: false,
+      ),
+      '[REDACTED_CREDENTIAL]', // lint-allow: hardcoded-string
+    );
+
+    // Remove hex strings that look like cryptographic material (64+ hex chars,
+    // which covers SHA-256 hashes and longer keys). This is more targeted than
+    // the old [A-Za-z0-9_-]{32,} which matched Dart class names.
+    result = result.replaceAll(
+      RegExp(r'\b[0-9a-fA-F]{64,}\b'),
+      '[REDACTED_HEX]', // lint-allow: hardcoded-string
+    );
+
+    // Remove base64-encoded blobs (40+ chars of pure base64 with padding).
+    // Must end with = padding to distinguish from normal text/identifiers.
+    result = result.replaceAll(
+      RegExp(
+        r'(?:[A-Za-z0-9+/]{4}){10,}(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)',
       ),
       '[REDACTED_BASE64]', // lint-allow: hardcoded-string
     );

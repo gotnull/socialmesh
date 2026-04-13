@@ -9856,17 +9856,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nodedexCloseGallerySemanticLabel => 'Close gallery';
 
   @override
-  String get nodedexCoSeenCompactLabel => 'Co-seen';
+  String get nodedexCoSeenCompactLabel => 'Historical links';
 
   @override
   String get nodedexCoSeenDescription =>
-      'Nodes frequently seen in the same session';
+      'Nodes heard with this node in the recent session window';
 
   @override
-  String get nodedexCoSeenLinksTitle => 'Co-Seen Links';
+  String get nodedexCoSeenLinksTitle => 'Recent Co-Seen Links';
 
   @override
-  String get nodedexCoSeenRelationshipDetails => 'Co-seen relationship details';
+  String get nodedexCoSeenRelationshipDetails =>
+      'Recent co-seen relationship details';
 
   @override
   String nodedexCollectedCount(int count) {
@@ -9886,18 +9887,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nodedexConstellationEmptySubtitle =>
-      'Discover more nodes to see how they connect.\nNodes seen together form constellation links.';
+      'Discover more nodes to build the historical graph.\nHistorically co-seen nodes form constellation links.';
 
   @override
-  String get nodedexConstellationEmptyTitle => 'No Constellation Yet';
+  String get nodedexConstellationEmptyTitle =>
+      'No Historical Constellation Yet';
 
   @override
   String nodedexConstellationLinkCount(int count) {
-    return '$count links';
+    return '$count historical links';
   }
 
   @override
-  String get nodedexConstellationLinkTitle => 'Constellation Link';
+  String get nodedexConstellationLinkTitle => 'Recent Co-Seen Link';
 
   @override
   String nodedexConstellationNodeCount(int count) {
@@ -9914,7 +9916,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nodedexConstellationSearchNodes => 'Search nodes';
 
   @override
-  String get nodedexConstellationTitle => 'Constellation';
+  String get nodedexConstellationTitle => 'Historical Constellation';
 
   @override
   String get nodedexDayFri => 'Fri';
@@ -10223,7 +10225,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String nodedexEvidenceCoSeenWith(int count) {
-    return 'Co-seen with $count nodes';
+    return 'Historically co-seen with $count nodes';
   }
 
   @override
@@ -10351,7 +10353,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String nodedexFieldNoteAnchor0(int coSeen) {
-    return 'Hub node. Co-seen with $coSeen other nodes.';
+    return 'Hub node. Historically co-seen with $coSeen other nodes.';
   }
 
   @override
@@ -10360,7 +10362,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String nodedexFieldNoteAnchor2(int coSeen) {
-    return 'Persistent hub. $coSeen nodes observed in proximity.';
+    return 'Persistent hub. $coSeen nodes historically observed nearby.';
   }
 
   @override
@@ -10377,7 +10379,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String nodedexFieldNoteAnchor6(int coSeen) {
-    return 'Infrastructure anchor. $coSeen peers linked.';
+    return 'Infrastructure anchor. Historically linked with $coSeen peers.';
   }
 
   @override
@@ -11303,7 +11305,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String nodedexSelectedLinksCount(int count) {
-    return '$count links';
+    return '$count historical links';
   }
 
   @override
@@ -28696,11 +28698,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'A collectible card view of your discovered nodes';
 
   @override
-  String get helpNodedexConstellationTitle => 'Constellation View';
+  String get helpNodedexConstellationTitle => 'Historical Constellation';
 
   @override
   String get helpNodedexConstellationDescription =>
-      'A star-map visualization of co-seen node relationships';
+      'A star-map visualization of historical co-seen node relationships';
 
   @override
   String get helpNodedexDetailTitle => 'Node Profile';
@@ -33660,8 +33662,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count co-seen nodes',
-      one: '1 co-seen node',
+      other: '$count recent co-seen nodes',
+      one: '1 recent co-seen node',
     );
     return '$_temp0';
   }
@@ -33672,21 +33674,21 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get nodedexCoSeenCardTitle => 'Co-Seen Network';
+  String get nodedexCoSeenCardTitle => 'Recent Co-Seen';
 
   @override
   String nodedexCoSeenCardSubtitle(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count nodes commonly seen with this node',
-      one: '1 node commonly seen with this node',
+      other: '$count nodes heard with this node recently',
+      one: '1 node heard with this node recently',
     );
     return '$_temp0';
   }
 
   @override
-  String get nodedexCoSeenCardViewAll => 'View all';
+  String get nodedexCoSeenCardViewAll => 'View recent links';
 
   @override
   String get nearbyTitle => 'Nearby';

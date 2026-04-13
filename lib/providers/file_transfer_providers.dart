@@ -235,6 +235,7 @@ final fileTransferEngineProvider = Provider<FileTransferEngine>((ref) {
         '${state.state.name} '
         '(${state.direction.name}, ${state.filename})',
       );
+      if (!ref.mounted) return;
       // Engine updates never include savedFilePath (it's managed by the
       // notifier's auto-save logic). Preserve the existing savedFilePath
       // from the notifier state so db.saveTransfer doesn't overwrite it

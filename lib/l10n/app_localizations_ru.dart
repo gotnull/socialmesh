@@ -33657,8 +33657,8 @@ class AppLocalizationsRu extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count co-seen nodes',
-      one: '1 co-seen node',
+      other: '$count recent co-seen nodes',
+      one: '1 recent co-seen node',
     );
     return '$_temp0';
   }
@@ -33669,21 +33669,21 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get nodedexCoSeenCardTitle => 'Co-Seen Network';
+  String get nodedexCoSeenCardTitle => 'Recent Co-Seen';
 
   @override
   String nodedexCoSeenCardSubtitle(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count nodes commonly seen with this node',
-      one: '1 node commonly seen with this node',
+      other: '$count nodes heard with this node recently',
+      one: '1 node heard with this node recently',
     );
     return '$_temp0';
   }
 
   @override
-  String get nodedexCoSeenCardViewAll => 'View all';
+  String get nodedexCoSeenCardViewAll => 'View recent links';
 
   @override
   String get nearbyTitle => 'Nearby';

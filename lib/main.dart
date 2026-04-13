@@ -187,7 +187,13 @@ Future<void> main() async {
 
   // Ancillary services (Firestore settings, Analytics, Push, etc.)
   // run in background — they must never block app startup or sign-in.
-  _initializeFirebaseServices();
+  // The catchError guard prevents any escaping async error from surfacing
+  // as a PlatformDispatcher error (the "_handlePlatformError" spike).
+  unawaited(
+    _initializeFirebaseServices().catchError((Object e, StackTrace st) {
+      AppLogging.debug('⚠️ _initializeFirebaseServices failed (non-fatal): $e');
+    }),
+  );
 
   runApp(const ProviderScope(child: SocialmeshApp()));
 }

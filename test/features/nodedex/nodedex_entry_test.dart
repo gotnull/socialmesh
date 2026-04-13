@@ -523,7 +523,7 @@ void main() {
         expect(entry.regionCount, equals(2));
       });
 
-      test('coSeenCount returns number of co-seen relationships', () {
+      test('historical co-seen getters return relationship count', () {
         final now = DateTime.now();
         final entry = NodeDexEntry(
           nodeNum: 1,
@@ -536,6 +536,7 @@ void main() {
           },
         );
 
+        expect(entry.historicalCoSeenCount, equals(3));
         expect(entry.coSeenCount, equals(3));
       });
 

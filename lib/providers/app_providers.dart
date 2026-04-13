@@ -2545,7 +2545,11 @@ final pushNotificationServiceProvider = Provider<PushNotificationService>((
 
 final meshPacketDedupeStoreProvider = Provider<MeshPacketDedupeStore>((ref) {
   final store = MeshPacketDedupeStore();
-  unawaited(store.init());
+  unawaited(
+    store.init().catchError((Object e) {
+      AppLogging.protocol('MeshPacketDedupeStore init failed (non-fatal): $e');
+    }),
+  );
   ref.onDispose(() {
     store.dispose();
   });
@@ -2760,17 +2764,26 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
       current,
     ) {
       current.whenData((connectionState) async {
-        // Skip for MeshCore devices - they use ConnectionCoordinator state
-        final settings = await ref.read(settingsServiceProvider.future);
-        if (settings.lastDeviceProtocol == 'meshcore') {
-          return;
-        }
+        try {
+          // Skip for MeshCore devices - they use ConnectionCoordinator state
+          final settings = await ref.read(settingsServiceProvider.future);
+          if (!ref.mounted) return;
+          if (settings.lastDeviceProtocol == 'meshcore') {
+            return;
+          }
 
-        if (connectionState == DeviceConnectionState.connected && !state) {
-          _startLiveActivity();
-        } else if (connectionState == DeviceConnectionState.disconnected &&
-            state) {
-          _endLiveActivity();
+          if (connectionState == DeviceConnectionState.connected && !state) {
+            _startLiveActivity();
+          } else if (connectionState == DeviceConnectionState.disconnected &&
+              state) {
+            _endLiveActivity();
+          }
+        } catch (e) {
+          // Provider may have been disposed during the async gap —
+          // swallow the error to prevent ProviderElement._notifyListeners crash.
+          AppLogging.debug(
+            'LiveActivityManager: ignoring error in listener: $e',
+          );
         }
       });
     }, fireImmediately: true);
@@ -4262,6 +4275,7 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
     // Demo mode: seed sample nodes if enabled and storage is empty
     if (DemoConfig.isEnabled && _storage != null) {
       final existing = await _storage!.loadNodes();
+      if (!ref.mounted) return;
       if (existing.isEmpty) {
         AppLogging.debug('${DemoConfig.modeLabel} Seeding demo nodes');
         state = {for (final node in DemoData.sampleNodes) node.nodeNum: node};
@@ -4279,6 +4293,7 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
     // Load persisted nodes (with their positions) first
     if (_storage != null) {
       final savedNodes = await _storage!.loadNodes();
+      if (!ref.mounted) return;
       if (savedNodes.isNotEmpty) {
         AppLogging.nodes('Loaded ${savedNodes.length} nodes from storage');
         final nodeMap = <int, MeshNode>{};
@@ -4316,6 +4331,7 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
     // the previous session; incoming NodeInfo packets update it via the stream
     // listener below. There is no separate "favorites sidecar" to reconcile.
 
+    final updatedState = Map<int, MeshNode>.from(state);
     for (final entry in protocolNodes.entries) {
       var node = entry.value;
       final existing = state[entry.key];
@@ -4420,9 +4436,10 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
       }
       node = _stripBleNamesIfNeeded(node);
       node = _mergeIdentity(node, identities[node.nodeNum]);
-      state = {...state, entry.key: node};
+      updatedState[entry.key] = node;
       _logFallbackIfNeeded(node);
     }
+    state = updatedState;
 
     // Compute distances now that all nodes (including myNode) are loaded.
     final myNodeNum = ref.read(myNodeNumProvider);
@@ -5522,6 +5539,10 @@ final needsRegionSetupProvider = Provider<bool>((ref) {
 final offlineQueueProvider = Provider<OfflineQueueService>((ref) {
   final service = OfflineQueueService();
   final protocol = ref.watch(protocolServiceProvider);
+
+  ref.onDispose(() {
+    service.dispose();
+  });
 
   // Initialize with send callback that uses pre-tracking
   service.initialize(

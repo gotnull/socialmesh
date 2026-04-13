@@ -809,7 +809,9 @@ class _BottomInfoBar extends ConsumerWidget {
                   ),
                   const SizedBox(width: AppTheme.spacing8),
                   Text(
-                    context.l10n.nodedexSelectedLinksCount(entry.coSeenCount),
+                    context.l10n.nodedexSelectedLinksCount(
+                      entry.historicalCoSeenCount,
+                    ),
                     style: TextStyle(
                       fontSize: 11,
                       color: context.textTertiary,

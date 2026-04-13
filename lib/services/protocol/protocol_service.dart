@@ -109,7 +109,9 @@ class MeshSignalPacket {
     final json = jsonDecode(jsonStr) as Map<String, dynamic>;
 
     // Support both compressed and full keys
-    final content = json['c'] as String? ?? json['content'] as String? ?? '';
+    final content = sanitizeUtf16(
+      json['c'] as String? ?? json['content'] as String? ?? '',
+    );
     final ttl = json['t'] as int? ?? json['ttl'] as int? ?? 60;
     final lat =
         (json['la'] as num?)?.toDouble() ?? (json['lat'] as num?)?.toDouble();
@@ -199,7 +201,7 @@ class DetectionSensorEvent {
     int senderNodeId,
     List<int> payload,
   ) {
-    final text = utf8.decode(payload);
+    final text = sanitizeUtf16(utf8.decode(payload));
     // Detection sensor format is typically "SensorName: Detected" or "SensorName: Clear"
     final parts = text.split(':');
     final sensorName = parts.isNotEmpty ? parts[0].trim() : 'Unknown Sensor';
@@ -1239,10 +1241,20 @@ class ProtocolService {
           '⚠️ DATA_HEALTH: No data received for '
           '${staleness.inSeconds}s — refreshing BLE notifications',
         );
-        unawaited(_transport.refreshNotifications());
+        unawaited(
+          _transport.refreshNotifications().catchError((Object e) {
+            AppLogging.protocol(
+              '⚠️ DATA_HEALTH: refreshNotifications failed: $e',
+            );
+          }),
+        );
 
         // Also send a heartbeat to provoke a device response.
-        unawaited(_sendHeartbeat());
+        unawaited(
+          _sendHeartbeat().catchError((Object e) {
+            AppLogging.protocol('⚠️ DATA_HEALTH: sendHeartbeat failed: $e');
+          }),
+        );
       } else if (staleness > _dataStaleThreshold + _dataStaleDisconnectGrace) {
         // Second escalation: refresh did not help — disconnect.
         AppLogging.protocol(
@@ -1250,7 +1262,11 @@ class ProtocolService {
           '(${staleness.inSeconds}s) — forcing disconnect',
         );
         _notificationRefreshRequested = false;
-        _transport.disconnect();
+        unawaited(
+          _transport.disconnect().catchError((Object e) {
+            AppLogging.protocol('⚠️ DATA_HEALTH: disconnect failed: $e');
+          }),
+        );
       }
     }
   }
@@ -1941,60 +1957,71 @@ class ProtocolService {
     // Ignore our own packets echoed back
     if (packet.from == _myNodeNum) return;
 
-    AppLogging.fileTransfer(
-      'RX file-transfer on PRIVATE_APP from='
-      '${packet.from.toRadixString(16)} '
-      'to=${packet.to.toRadixString(16)} '
-      '${payload.length} bytes',
-    );
+    // CRITICAL: This method is called via unawaited() from _handleMeshPacket,
+    // so any uncaught exception here escapes ALL try-catch blocks in the
+    // packet processing pipeline and surfaces as a PlatformDispatcher error.
+    // The top-level try-catch prevents that.
+    try {
+      AppLogging.fileTransfer(
+        'RX file-transfer on PRIVATE_APP from='
+        '${packet.from.toRadixString(16)} '
+        'to=${packet.to.toRadixString(16)} '
+        '${payload.length} bytes',
+      );
 
-    // STL: verify signature via fail-closed API, then strip envelope.
-    // Invalid or malformed STL packets are dropped — no fallback.
-    var innerPayload = payload;
-    if (StlEnvelope.isStlWrapped(payload)) {
-      final verified = await _stlMiddleware.verifyAndUnwrap(payload);
-      if (verified == null) {
-        AppLogging.stl(
-          'STL verification failed, dropping packet from '
+      // STL: verify signature via fail-closed API, then strip envelope.
+      // Invalid or malformed STL packets are dropped — no fallback.
+      var innerPayload = payload;
+      if (StlEnvelope.isStlWrapped(payload)) {
+        final verified = await _stlMiddleware.verifyAndUnwrap(payload);
+        if (verified == null) {
+          AppLogging.stl(
+            'STL verification failed, dropping packet from '
+            '${packet.from.toRadixString(16)}',
+          );
+          return;
+        }
+        innerPayload = verified.payload;
+      }
+
+      final decoded = SmCodec.decodeFileTransfer(innerPayload);
+      if (decoded == null) {
+        AppLogging.fileTransfer(
+          'Failed to decode file-transfer payload from '
           '${packet.from.toRadixString(16)}',
         );
         return;
       }
-      innerPayload = verified.payload;
-    }
 
-    final decoded = SmCodec.decodeFileTransfer(innerPayload);
-    if (decoded == null) {
+      switch (decoded.type) {
+        case SmPacketType.fileOffer:
+          _handleSmFileOffer(
+            decoded.fileOffer,
+            packet.from,
+            version: decoded.version,
+          );
+        case SmPacketType.fileChunk:
+          _handleSmFileChunk(decoded.fileChunk, packet.from);
+        case SmPacketType.fileNack:
+          _handleSmFileNack(decoded.fileNack, packet.from);
+        case SmPacketType.fileAck:
+          _handleSmFileAck(decoded.fileAck, packet.from);
+        case SmPacketType.sppAccept:
+          _handleSppAccept(decoded.sppAccept, packet.from);
+        case SmPacketType.sppDecline:
+          _handleSppDecline(decoded.sppDecline, packet.from);
+        case SmPacketType.sppAbort:
+          _handleSppAbort(decoded.sppAbort, packet.from);
+        case SmPacketType.presence:
+        case SmPacketType.signal:
+        case SmPacketType.identity:
+          break;
+      }
+    } catch (e, stack) {
       AppLogging.fileTransfer(
-        'Failed to decode file-transfer payload from '
-        '${packet.from.toRadixString(16)}',
+        '⚠️ Error handling file-transfer packet from '
+        '${packet.from.toRadixString(16)}: $e\n$stack',
       );
-      return;
-    }
-
-    switch (decoded.type) {
-      case SmPacketType.fileOffer:
-        _handleSmFileOffer(
-          decoded.fileOffer,
-          packet.from,
-          version: decoded.version,
-        );
-      case SmPacketType.fileChunk:
-        _handleSmFileChunk(decoded.fileChunk, packet.from);
-      case SmPacketType.fileNack:
-        _handleSmFileNack(decoded.fileNack, packet.from);
-      case SmPacketType.fileAck:
-        _handleSmFileAck(decoded.fileAck, packet.from);
-      case SmPacketType.sppAccept:
-        _handleSppAccept(decoded.sppAccept, packet.from);
-      case SmPacketType.sppDecline:
-        _handleSppDecline(decoded.sppDecline, packet.from);
-      case SmPacketType.sppAbort:
-        _handleSppAbort(decoded.sppAbort, packet.from);
-      case SmPacketType.presence:
-      case SmPacketType.signal:
-      case SmPacketType.identity:
-        break;
     }
   }
 
@@ -2010,49 +2037,60 @@ class ProtocolService {
     // Ignore our own packets echoed back
     if (packet.from == _myNodeNum) return;
 
-    _smMetrics.recordBinaryPacketReceived();
+    // Top-level try-catch: _handleSmPacket is called synchronously from
+    // _handleMeshPacket (inside _processPacket's try-catch), but if any
+    // handler below throws, the error could escape as an uncaught platform
+    // error depending on async scheduling. Belt-and-suspenders protection.
+    try {
+      _smMetrics.recordBinaryPacketReceived();
 
-    final portnum = _extractRawPortnum(data);
-    final payload = Uint8List.fromList(data.payload);
-    final decoded = SmCodec.decode(portnum, payload);
+      final portnum = _extractRawPortnum(data);
+      final payload = Uint8List.fromList(data.payload);
+      final decoded = SmCodec.decode(portnum, payload);
 
-    if (decoded == null) {
-      _smMetrics.recordDecodeNull(portnum);
-      AppLogging.protocol(
-        'SM: decode returned null for portnum=$portnum, '
-        '${payload.length} bytes from ${packet.from.toRadixString(16)}',
-      );
-      return;
-    }
-
-    // Mark sender as binary-capable
-    _smCapabilityStore.markNodeSupported(packet.from);
-
-    switch (decoded.type) {
-      case SmPacketType.presence:
-        _handleSmPresence(decoded.presence, packet.from);
-      case SmPacketType.signal:
-        _handleSmSignal(decoded.signal, packet.from, packet.id);
-      case SmPacketType.identity:
-        _handleSmIdentity(decoded.identity, packet.from);
-      case SmPacketType.fileOffer:
-        _handleSmFileOffer(
-          decoded.fileOffer,
-          packet.from,
-          version: decoded.version,
+      if (decoded == null) {
+        _smMetrics.recordDecodeNull(portnum);
+        AppLogging.protocol(
+          'SM: decode returned null for portnum=$portnum, '
+          '${payload.length} bytes from ${packet.from.toRadixString(16)}',
         );
-      case SmPacketType.fileChunk:
-        _handleSmFileChunk(decoded.fileChunk, packet.from);
-      case SmPacketType.fileNack:
-        _handleSmFileNack(decoded.fileNack, packet.from);
-      case SmPacketType.fileAck:
-        _handleSmFileAck(decoded.fileAck, packet.from);
-      case SmPacketType.sppAccept:
-        _handleSppAccept(decoded.sppAccept, packet.from);
-      case SmPacketType.sppDecline:
-        _handleSppDecline(decoded.sppDecline, packet.from);
-      case SmPacketType.sppAbort:
-        _handleSppAbort(decoded.sppAbort, packet.from);
+        return;
+      }
+
+      // Mark sender as binary-capable
+      _smCapabilityStore.markNodeSupported(packet.from);
+
+      switch (decoded.type) {
+        case SmPacketType.presence:
+          _handleSmPresence(decoded.presence, packet.from);
+        case SmPacketType.signal:
+          _handleSmSignal(decoded.signal, packet.from, packet.id);
+        case SmPacketType.identity:
+          _handleSmIdentity(decoded.identity, packet.from);
+        case SmPacketType.fileOffer:
+          _handleSmFileOffer(
+            decoded.fileOffer,
+            packet.from,
+            version: decoded.version,
+          );
+        case SmPacketType.fileChunk:
+          _handleSmFileChunk(decoded.fileChunk, packet.from);
+        case SmPacketType.fileNack:
+          _handleSmFileNack(decoded.fileNack, packet.from);
+        case SmPacketType.fileAck:
+          _handleSmFileAck(decoded.fileAck, packet.from);
+        case SmPacketType.sppAccept:
+          _handleSppAccept(decoded.sppAccept, packet.from);
+        case SmPacketType.sppDecline:
+          _handleSppDecline(decoded.sppDecline, packet.from);
+        case SmPacketType.sppAbort:
+          _handleSppAbort(decoded.sppAbort, packet.from);
+      }
+    } catch (e, stack) {
+      AppLogging.protocol(
+        '⚠️ Error handling SM packet from '
+        '${packet.from.toRadixString(16)}: $e\n$stack',
+      );
     }
   }
 
@@ -2293,7 +2331,9 @@ class ProtocolService {
   void _handleNodeStatusMessage(pb.MeshPacket packet, pb.Data data) {
     try {
       final statusMsg = pb.StatusMessage.fromBuffer(data.payload);
-      final status = statusMsg.hasStatus() ? statusMsg.status : null;
+      final status = statusMsg.hasStatus()
+          ? sanitizeUtf16(statusMsg.status)
+          : null;
 
       AppLogging.protocol(
         'RX_NODE_STATUS from=${packet.from.toRadixString(16)} '
@@ -2598,14 +2638,14 @@ class ProtocolService {
         AppLogging.protocol(
           'Received canned messages text (${messages.length} chars)',
         );
-        _cannedMessageTextController.add(messages);
+        _cannedMessageTextController.add(sanitizeUtf16(messages));
       } else if (adminMsg.hasGetRingtoneResponse()) {
         // Handle ringtone text response (RTTTL format)
         final ringtone = adminMsg.getRingtoneResponse;
         AppLogging.protocol(
           'Received ringtone text (${ringtone.length} chars)',
         );
-        _ringtoneTextController.add(ringtone);
+        _ringtoneTextController.add(sanitizeUtf16(ringtone));
       } else if (adminMsg.hasGetDeviceMetadataResponse()) {
         // Handle device metadata response - update node with firmware version
         final metadata = adminMsg.getDeviceMetadataResponse;
@@ -3857,11 +3897,17 @@ class ProtocolService {
     );
 
     // Request our own position after a short delay
-    Future.delayed(const Duration(milliseconds: 300), () {
-      if (_myNodeNum != null) {
-        requestPosition(_myNodeNum!);
-      }
-    });
+    unawaited(
+      Future.delayed(const Duration(milliseconds: 300), () async {
+        if (_myNodeNum != null) {
+          try {
+            await requestPosition(_myNodeNum!);
+          } catch (e) {
+            AppLogging.protocol('Position request after myNodeInfo failed: $e');
+          }
+        }
+      }),
+    );
   }
 
   /// Handle node info
@@ -4193,7 +4239,7 @@ class ProtocolService {
 
     final channelConfig = ChannelConfig(
       index: channel.index,
-      name: channel.hasSettings() ? channel.settings.name : '',
+      name: channel.hasSettings() ? sanitizeUtf16(channel.settings.name) : '',
       psk: channel.hasSettings() ? channel.settings.psk : [],
       uplink: channel.hasSettings() ? channel.settings.uplinkEnabled : false,
       downlink: channel.hasSettings()

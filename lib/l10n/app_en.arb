@@ -13516,19 +13516,19 @@
     "@nodedexCloseGallerySemanticLabel": {
         "description": "Label in node management"
     },
-    "nodedexCoSeenCompactLabel": "Co-seen",
+    "nodedexCoSeenCompactLabel": "Historical links",
     "@nodedexCoSeenCompactLabel": {
         "description": "Label in node management"
     },
-    "nodedexCoSeenDescription": "Nodes frequently seen in the same session",
+    "nodedexCoSeenDescription": "Nodes heard with this node in the recent session window",
     "@nodedexCoSeenDescription": {
         "description": "Description text in node management"
     },
-    "nodedexCoSeenLinksTitle": "Co-Seen Links",
+    "nodedexCoSeenLinksTitle": "Recent Co-Seen Links",
     "@nodedexCoSeenLinksTitle": {
         "description": "Title for the node management screen"
     },
-    "nodedexCoSeenRelationshipDetails": "Co-seen relationship details",
+    "nodedexCoSeenRelationshipDetails": "Recent co-seen relationship details",
     "@nodedexCoSeenRelationshipDetails": {
         "description": "Text displayed in node management"
     },
@@ -13558,15 +13558,15 @@
     "@nodedexConstellationCloseSearch": {
         "description": "Text displayed in node management"
     },
-    "nodedexConstellationEmptySubtitle": "Discover more nodes to see how they connect.\nNodes seen together form constellation links.",
+    "nodedexConstellationEmptySubtitle": "Discover more nodes to build the historical graph.\nHistorically co-seen nodes form constellation links.",
     "@nodedexConstellationEmptySubtitle": {
         "description": "Subtitle in node management"
     },
-    "nodedexConstellationEmptyTitle": "No Constellation Yet",
+    "nodedexConstellationEmptyTitle": "No Historical Constellation Yet",
     "@nodedexConstellationEmptyTitle": {
         "description": "Title for the node management screen"
     },
-    "nodedexConstellationLinkCount": "{count} links",
+    "nodedexConstellationLinkCount": "{count} historical links",
     "@nodedexConstellationLinkCount": {
         "placeholders": {
             "count": {
@@ -13575,7 +13575,7 @@
         },
         "description": "Text in node management Parameters: {count} = numeric count."
     },
-    "nodedexConstellationLinkTitle": "Constellation Link",
+    "nodedexConstellationLinkTitle": "Recent Co-Seen Link",
     "@nodedexConstellationLinkTitle": {
         "description": "Title for the node management screen"
     },
@@ -13600,7 +13600,7 @@
     "@nodedexConstellationSearchNodes": {
         "description": "Text displayed in node management"
     },
-    "nodedexConstellationTitle": "Constellation",
+    "nodedexConstellationTitle": "Historical Constellation",
     "@nodedexConstellationTitle": {
         "description": "Title for the node management screen"
     },
@@ -14024,7 +14024,7 @@
         },
         "description": "Text in node management Parameters: {percent}."
     },
-    "nodedexEvidenceCoSeenWith": "Co-seen with {count} nodes",
+    "nodedexEvidenceCoSeenWith": "Historically co-seen with {count} nodes",
     "@nodedexEvidenceCoSeenWith": {
         "placeholders": {
             "count": {
@@ -14244,7 +14244,7 @@
     "@nodedexExportShareSubject": {
         "description": "Text displayed in node management"
     },
-    "nodedexFieldNoteAnchor0": "Hub node. Co-seen with {coSeen} other nodes.",
+    "nodedexFieldNoteAnchor0": "Hub node. Historically co-seen with {coSeen} other nodes.",
     "@nodedexFieldNoteAnchor0": {
         "placeholders": {
             "coSeen": {
@@ -14257,7 +14257,7 @@
     "@nodedexFieldNoteAnchor1": {
         "description": "Text displayed in node management"
     },
-    "nodedexFieldNoteAnchor2": "Persistent hub. {coSeen} nodes observed in proximity.",
+    "nodedexFieldNoteAnchor2": "Persistent hub. {coSeen} nodes historically observed nearby.",
     "@nodedexFieldNoteAnchor2": {
         "placeholders": {
             "coSeen": {
@@ -14278,7 +14278,7 @@
     "@nodedexFieldNoteAnchor5": {
         "description": "Text displayed in node management"
     },
-    "nodedexFieldNoteAnchor6": "Infrastructure anchor. {coSeen} peers linked.",
+    "nodedexFieldNoteAnchor6": "Infrastructure anchor. Historically linked with {coSeen} peers.",
     "@nodedexFieldNoteAnchor6": {
         "placeholders": {
             "coSeen": {
@@ -15592,7 +15592,7 @@
         },
         "description": "Text in node management Parameters: {count} = numeric count."
     },
-    "nodedexSelectedLinksCount": "{count} links",
+    "nodedexSelectedLinksCount": "{count} historical links",
     "@nodedexSelectedLinksCount": {
         "placeholders": {
             "count": {
@@ -38954,11 +38954,11 @@
     "@helpNodedexAlbumDescription": {
         "description": "Description for nodedex_album help topic"
     },
-    "helpNodedexConstellationTitle": "Constellation View",
+    "helpNodedexConstellationTitle": "Historical Constellation",
     "@helpNodedexConstellationTitle": {
         "description": "Title for nodedex_constellation help topic"
     },
-    "helpNodedexConstellationDescription": "A star-map visualization of co-seen node relationships",
+    "helpNodedexConstellationDescription": "A star-map visualization of historical co-seen node relationships",
     "helpNodedexDetailTitle": "Node Profile",
     "@helpNodedexDetailTitle": {
         "description": "Title for the help center screen"
@@ -45201,7 +45201,7 @@
     "@translationSettingsQuotaOpenSettings": {
         "description": "Button text to open translation settings to configure BYO key"
     },
-    "avatarStackCoSeenLabel": "{count, plural, =1{1 co-seen node} other{{count} co-seen nodes}}",
+    "avatarStackCoSeenLabel": "{count, plural, =1{1 recent co-seen node} other{{count} recent co-seen nodes}}",
     "@avatarStackCoSeenLabel": {
         "description": "Accessibility label for the co-seen avatar cluster on a NodeDex card",
         "placeholders": {
@@ -45219,11 +45219,11 @@
             }
         }
     },
-    "nodedexCoSeenCardTitle": "Co-Seen Network",
+    "nodedexCoSeenCardTitle": "Recent Co-Seen",
     "@nodedexCoSeenCardTitle": {
         "description": "Title for the co-seen nodes card on the node detail screen"
     },
-    "nodedexCoSeenCardSubtitle": "{count, plural, =1{1 node commonly seen with this node} other{{count} nodes commonly seen with this node}}",
+    "nodedexCoSeenCardSubtitle": "{count, plural, =1{1 node heard with this node recently} other{{count} nodes heard with this node recently}}",
     "@nodedexCoSeenCardSubtitle": {
         "description": "Subtitle for the co-seen card showing how many peers share sessions",
         "placeholders": {
@@ -45232,7 +45232,7 @@
             }
         }
     },
-    "nodedexCoSeenCardViewAll": "View all",
+    "nodedexCoSeenCardViewAll": "View recent links",
     "@nodedexCoSeenCardViewAll": {
         "description": "CTA text to scroll to the full co-seen links section"
     },

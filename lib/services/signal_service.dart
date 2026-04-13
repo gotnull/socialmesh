@@ -18,6 +18,7 @@ import 'package:uuid/uuid.dart';
 
 import '../core/logging.dart';
 import '../models/social.dart';
+import '../utils/text_sanitizer.dart';
 import 'mesh_packet_dedupe_store.dart';
 import 'protocol/socialmesh/sm_packet_router.dart';
 import 'social_activity_service.dart';
@@ -3535,7 +3536,7 @@ class SignalService {
       return SignalResponse(
         id: row['id'] as String,
         signalId: row['signalId'] as String,
-        content: row['content'] as String,
+        content: sanitizeUtf16(row['content'] as String),
         authorId: row['authorId'] as String,
         authorName: row['authorName'] as String?,
         parentId: row['parentId'] as String?,
@@ -3589,7 +3590,7 @@ class SignalService {
       return SignalResponse(
         id: id,
         signalId: row['signalId'] as String,
-        content: row['content'] as String,
+        content: sanitizeUtf16(row['content'] as String),
         authorId: row['authorId'] as String,
         authorName: row['authorName'] as String?,
         parentId: row['parentId'] as String?,

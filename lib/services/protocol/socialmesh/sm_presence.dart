@@ -4,6 +4,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import '../../../../utils/text_sanitizer.dart';
 import 'sm_constants.dart';
 
 /// Presence intent enum matching the 3-bit wire encoding.
@@ -161,9 +162,11 @@ class SmPresence {
     String? status;
     if (statusLen > 0) {
       if (offset + statusLen > data.length) return null;
-      status = utf8.decode(
-        data.sublist(offset, offset + statusLen),
-        allowMalformed: true,
+      status = sanitizeUtf16(
+        utf8.decode(
+          data.sublist(offset, offset + statusLen),
+          allowMalformed: true,
+        ),
       );
     }
 
