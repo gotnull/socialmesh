@@ -274,7 +274,12 @@ class _AdminBugReportsScreenState extends ConsumerState<AdminBugReportsScreen>
         if (report.hasUnreadUserReplies) {
           ref
               .read(adminBugReportRepositoryProvider)
-              .markUserResponsesAsRead(report.id);
+              .markUserResponsesAsRead(report.id)
+              .whenComplete(() {
+                if (mounted) {
+                  ref.invalidate(adminBugReportsProvider);
+                }
+              });
         }
       }
     });
@@ -495,7 +500,8 @@ class _ReportCard extends StatelessWidget {
                                   text:
                                       'v${report.appVersion}${report.buildNumber != null ? ' (${report.buildNumber})' : ''}',
                                 ),
-                              if (report.responses.isNotEmpty)
+                              if (report.responsesLoaded &&
+                                  report.responses.isNotEmpty)
                                 _MetaChip(
                                   icon: Icons.chat_bubble_outline,
                                   text: '${report.responses.length}',
@@ -647,7 +653,21 @@ class _ReportCard extends StatelessWidget {
               ),
 
               // Conversation thread
-              if (report.responses.isNotEmpty)
+              if (!report.responsesLoaded)
+                _Section(
+                  label: context.l10n.adminBugReportsSectionConversation,
+                  child: Center(
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: context.accentColor,
+                      ),
+                    ),
+                  ),
+                )
+              else if (report.responses.isNotEmpty)
                 _Section(
                   label: context.l10n.adminBugReportsSectionConversation,
                   child: Column(

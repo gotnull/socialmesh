@@ -85,6 +85,7 @@ class BugReport {
   final DateTime createdAt;
   final DateTime? lastResponseAt;
   final List<BugReportResponse> responses;
+  final bool responsesLoaded;
 
   const BugReport({
     required this.id,
@@ -96,7 +97,26 @@ class BugReport {
     required this.createdAt,
     this.lastResponseAt,
     this.responses = const [],
+    this.responsesLoaded = true,
   });
+
+  BugReport copyWith({
+    List<BugReportResponse>? responses,
+    bool? responsesLoaded,
+  }) {
+    return BugReport(
+      id: id,
+      description: description,
+      screenshotUrl: screenshotUrl,
+      appVersion: appVersion,
+      platform: platform,
+      status: status,
+      createdAt: createdAt,
+      lastResponseAt: lastResponseAt,
+      responses: responses ?? this.responses,
+      responsesLoaded: responsesLoaded ?? this.responsesLoaded,
+    );
+  }
 
   /// Whether this report has unread founder responses.
   bool get hasUnreadResponses =>
@@ -109,6 +129,7 @@ class BugReport {
   factory BugReport.fromFirestore(
     DocumentSnapshot<Map<String, dynamic>> doc, {
     List<BugReportResponse> responses = const [],
+    bool responsesLoaded = true,
   }) {
     final data = doc.data()!;
     return BugReport(
@@ -121,17 +142,82 @@ class BugReport {
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       lastResponseAt: (data['lastResponseAt'] as Timestamp?)?.toDate(),
       responses: responses,
+      responsesLoaded: responsesLoaded,
     );
   }
 }
 
+List<BugReport> hydrateBugReports({
+  required List<BugReport> reports,
+  required Map<String, List<BugReportResponse>> responsesByReportId,
+}) {
+  return reports
+      .map(
+        (report) => report.copyWith(
+          responses: responsesByReportId[report.id] ?? const [],
+          responsesLoaded: true,
+        ),
+      )
+      .toList();
+}
+
 /// Repository for accessing bug reports and their responses from Firestore.
 class BugReportRepository {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  BugReportRepository({FirebaseFirestore? firestore, FirebaseAuth? auth})
+    : _firestore = firestore ?? FirebaseFirestore.instance,
+      _auth = auth ?? FirebaseAuth.instance;
+
+  final FirebaseFirestore _firestore;
+  final FirebaseAuth _auth;
+
+  Future<List<BugReportResponse>> _fetchResponsesForReport(
+    DocumentReference<Map<String, dynamic>> reportRef,
+  ) async {
+    try {
+      final responsesSnapshot = await reportRef
+          .collection('responses')
+          .orderBy('createdAt', descending: false)
+          .get();
+
+      return responsesSnapshot.docs
+          .map(BugReportResponse.fromFirestore)
+          .toList();
+    } catch (e) {
+      AppLogging.bugReport('Failed to fetch responses for ${reportRef.id}: $e');
+      return const [];
+    }
+  }
+
+  List<BugReport> _buildReportShells(
+    Iterable<DocumentSnapshot<Map<String, dynamic>>> docs,
+  ) {
+    return docs
+        .map((doc) => BugReport.fromFirestore(doc, responsesLoaded: false))
+        .toList();
+  }
+
+  Future<List<BugReport>> _hydrateReports(
+    Iterable<DocumentSnapshot<Map<String, dynamic>>> docs,
+  ) async {
+    final shellReports = _buildReportShells(docs);
+    final responseEntries = await Future.wait(
+      docs.map((doc) async {
+        final responses = await _fetchResponsesForReport(doc.reference);
+        return MapEntry(doc.id, responses);
+      }),
+    );
+
+    return hydrateBugReports(
+      reports: shellReports,
+      responsesByReportId: Map<String, List<BugReportResponse>>.fromEntries(
+        responseEntries,
+      ),
+    );
+  }
 
   /// Fetch all bug reports for the current user, including responses.
   Future<List<BugReport>> fetchMyReports() async {
-    final user = FirebaseAuth.instance.currentUser;
+    final user = _auth.currentUser;
     if (user == null) {
       AppLogging.bugReport('Cannot fetch reports: no user signed in');
       return [];
@@ -144,21 +230,7 @@ class BugReportRepository {
           .orderBy('createdAt', descending: true)
           .get();
 
-      final reports = <BugReport>[];
-
-      for (final doc in snapshot.docs) {
-        // Fetch responses subcollection for each report
-        final responsesSnapshot = await doc.reference
-            .collection('responses')
-            .orderBy('createdAt', descending: false)
-            .get();
-
-        final responses = responsesSnapshot.docs
-            .map(BugReportResponse.fromFirestore)
-            .toList();
-
-        reports.add(BugReport.fromFirestore(doc, responses: responses));
-      }
+      final reports = await _hydrateReports(snapshot.docs);
 
       AppLogging.bugReport(
         'Fetched ${reports.length} bug reports for user ${user.uid}',
@@ -176,7 +248,7 @@ class BugReportRepository {
   /// Admin responses update the parent doc (status/lastResponseAt), which
   /// triggers the stream and pulls fresh response subcollections.
   Stream<List<BugReport>> watchMyReports() {
-    final user = FirebaseAuth.instance.currentUser;
+    final user = _auth.currentUser;
     if (user == null) {
       AppLogging.bugReport('Cannot watch reports: no user signed in');
       return Stream.value([]);
@@ -187,26 +259,22 @@ class BugReportRepository {
         .where('uid', isEqualTo: user.uid)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .asyncMap((snapshot) async {
-          final reports = <BugReport>[];
+        .asyncExpand((snapshot) async* {
+          final shellReports = _buildReportShells(snapshot.docs);
+          AppLogging.bugReport(
+            'Streamed ${shellReports.length} bug report shells for user ${user.uid}',
+          );
+          yield shellReports;
 
-          for (final doc in snapshot.docs) {
-            final responsesSnapshot = await doc.reference
-                .collection('responses')
-                .orderBy('createdAt', descending: false)
-                .get();
-
-            final responses = responsesSnapshot.docs
-                .map(BugReportResponse.fromFirestore)
-                .toList();
-
-            reports.add(BugReport.fromFirestore(doc, responses: responses));
+          if (snapshot.docs.isEmpty) {
+            return;
           }
 
+          final hydratedReports = await _hydrateReports(snapshot.docs);
           AppLogging.bugReport(
-            'Streamed ${reports.length} bug reports for user ${user.uid}',
+            'Hydrated ${hydratedReports.length} bug reports for user ${user.uid}',
           );
-          return reports;
+          yield hydratedReports;
         })
         .handleError((Object e) {
           AppLogging.bugReport('Bug reports stream error: $e');
@@ -220,16 +288,13 @@ class BugReportRepository {
 
       if (!doc.exists) return null;
 
-      final responsesSnapshot = await doc.reference
-          .collection('responses')
-          .orderBy('createdAt', descending: false)
-          .get();
+      final responses = await _fetchResponsesForReport(doc.reference);
 
-      final responses = responsesSnapshot.docs
-          .map(BugReportResponse.fromFirestore)
-          .toList();
-
-      return BugReport.fromFirestore(doc, responses: responses);
+      return BugReport.fromFirestore(
+        doc,
+        responses: responses,
+        responsesLoaded: true,
+      );
     } catch (e) {
       AppLogging.bugReport('Failed to fetch report $reportId: $e');
       return null;
