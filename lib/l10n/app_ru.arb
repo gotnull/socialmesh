@@ -8163,6 +8163,7 @@
     "helpConnectionUsbBubble": "**USB**: Plug in with a cable. More reliable, charges your device, slightly faster. Great for configuration!",
     "helpConnectionPairingBubble": "First time? Your device needs to be in **pairing mode**. Check for a Bluetooth icon on the screen or press the button!",
     "helpConnectionTroubleshootBubble": "Can't find your device? Check:\\n- **Bluetooth is on**\\n- Device has power\\n- Device isn't connected elsewhere\\n- You're close enough (under 10m)",
+    "helpConnectionDisconnectBubble": "Keep getting **disconnected**? Common causes:\\n- **Another app** (e.g. Meshtastic app) is already connected to this node\\n- On **TCP/IP (ESP devices)**, only one client can connect at a time\\n- Try closing other apps or disconnecting other devices first",
     "helpGpsIntroBubble": "**GPS** lets others see where you are on the map! Let me explain how it works.",
     "helpGpsBroadcastBubble": "Your device broadcasts **position updates** every few minutes. Other nodes see you appear on their map!",
     "helpGpsPrivacyBubble": "Privacy matters! You can **disable GPS** or set update intervals. Turn it off when you want to stay hidden!",

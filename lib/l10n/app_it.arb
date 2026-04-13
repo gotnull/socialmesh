@@ -15004,6 +15004,10 @@
   "@helpConnectionTroubleshootBubble": {
     "description": "Help bubble text for step connection_troubleshoot"
   },
+  "helpConnectionDisconnectBubble": "Ti disconnetti spesso? Cause comuni:\\n- **Un'altra app** (es. app Meshtastic) è già connessa a questo nodo\\n- Su **TCP/IP (dispositivi ESP)**, solo un client può connettersi alla volta\\n- Prova a chiudere le altre app o disconnettere gli altri dispositivi",
+  "@helpConnectionDisconnectBubble": {
+    "description": "Help bubble text for step connection_disconnect"
+  },
   "helpConnectionUsbBubble": "**USB**: Collega con un cavo. Più affidabile, carica il dispositivo, leggermente più veloce. Ottimo per la configurazione!",
   "@helpConnectionUsbBubble": {
     "description": "Help bubble text for step connection_usb"

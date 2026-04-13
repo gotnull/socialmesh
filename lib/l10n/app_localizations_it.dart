@@ -29225,6 +29225,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Non trovi il dispositivo? Controlla:\\n- **Il Bluetooth è acceso**\\n- Il dispositivo è alimentato\\n- Il dispositivo non è connesso altrove\\n- Sei abbastanza vicino (entro 10m)';
 
   @override
+  String get helpConnectionDisconnectBubble =>
+      'Ti disconnetti spesso? Cause comuni:\\n- **Un\'altra app** (es. app Meshtastic) è già connessa a questo nodo\\n- Su **TCP/IP (dispositivi ESP)**, solo un client può connettersi alla volta\\n- Prova a chiudere le altre app o disconnettere gli altri dispositivi';
+
+  @override
   String get helpGpsIntroBubble =>
       'Il **GPS** permette agli altri di vederti sulla mappa! Lascia che ti spieghi come funziona.';
 

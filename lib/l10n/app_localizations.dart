@@ -51252,6 +51252,12 @@ abstract class AppLocalizations {
   /// **'Can\'t find your device? Check:\\n- **Bluetooth is on**\\n- Device has power\\n- Device isn\'t connected elsewhere\\n- You\'re close enough (under 10m)'**
   String get helpConnectionTroubleshootBubble;
 
+  /// Help bubble text for step connection_disconnect
+  ///
+  /// In en, this message translates to:
+  /// **'Keep getting **disconnected**? Common causes:\\n- **Another app** (e.g. Meshtastic app) is already connected to this node\\n- On **TCP/IP (ESP devices)**, only one client can connect at a time\\n- Try closing other apps or disconnecting other devices first'**
+  String get helpConnectionDisconnectBubble;
+
   /// Help bubble text for step gps_intro
   ///
   /// In en, this message translates to:

@@ -379,6 +379,12 @@ class HelpContent {
             "Can't find your device? Check:\n- **Bluetooth is on**\n- Device has power\n- Device isn't connected elsewhere\n- You're close enough (under 10m)",
         icoMood: MeshBrainMood.thinking,
       ),
+      HelpStep(
+        id: 'connection_disconnect',
+        bubbleText:
+            "Keep getting **disconnected**? Common causes:\n- **Another app** (e.g. Meshtastic app) is already connected to this node\n- On **TCP/IP (ESP devices)**, only one client can connect at a time\n- Try closing other apps or disconnecting other devices first",
+        icoMood: MeshBrainMood.thinking,
+      ),
     ],
   );
 
@@ -2716,6 +2722,7 @@ class HelpContent {
     'connection_usb' => l10n.helpConnectionUsbBubble,
     'connection_pairing' => l10n.helpConnectionPairingBubble,
     'connection_troubleshoot' => l10n.helpConnectionTroubleshootBubble,
+    'connection_disconnect' => l10n.helpConnectionDisconnectBubble,
     'gps_intro' => l10n.helpGpsIntroBubble,
     'gps_broadcast' => l10n.helpGpsBroadcastBubble,
     'gps_privacy' => l10n.helpGpsPrivacyBubble,
