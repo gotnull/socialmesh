@@ -160,6 +160,18 @@ class AnimatedAvatarStack extends StatefulWidget {
   /// readers to describe the cluster.
   final String? semanticLabel;
 
+  /// When true and [items.length] > [maxVisible], show a "+N" circle
+  /// after the last visible avatar indicating how many items are hidden.
+  final bool showOverflowCount;
+
+  /// Optional callback when the overflow "+N" circle is tapped.
+  final VoidCallback? onOverflowTap;
+
+  /// Semantic label for the overflow "+N" circle, used by screen readers.
+  /// If null, defaults to '+N more' (not localized). Callers should
+  /// provide a localized string via `context.l10n.avatarStackOverflowLabel`.
+  final String? overflowSemanticLabel;
+
   const AnimatedAvatarStack({
     super.key,
     required this.items,
@@ -169,6 +181,9 @@ class AnimatedAvatarStack extends StatefulWidget {
     this.animationEnabled = true,
     this.cycleInterval = AvatarStackDefaults.cycleInterval,
     this.semanticLabel,
+    this.showOverflowCount = false,
+    this.onOverflowTap,
+    this.overflowSemanticLabel,
   }) : assert(
          overlapFraction >= 0 && overlapFraction < 1,
          'overlapFraction must be in [0, 1)',
@@ -310,8 +325,13 @@ class AnimatedAvatarStackState extends State<AnimatedAvatarStack>
     final overlapPx = avatarSize * widget.overlapFraction;
     final step = avatarSize - overlapPx;
 
-    // Total width: first avatar + (n-1) * step
-    final totalWidth = avatarSize + (visibleCount - 1) * step;
+    // Overflow indicator calculation.
+    final overflowCount = items.length - widget.maxVisible;
+    final showOverflow = widget.showOverflowCount && overflowCount > 0;
+
+    // Total width: first avatar + (n-1) * step + optional overflow step.
+    final totalWidth =
+        avatarSize + (visibleCount - 1 + (showOverflow ? 1 : 0)) * step;
     final totalHeight = avatarSize;
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -321,8 +341,8 @@ class AnimatedAvatarStackState extends State<AnimatedAvatarStack>
 
     // Horizontal padding absorbs easeInOutBack overshoot so avatars
     // don't glitch at the ShaderMask fade edges. Only needed when
-    // cycling is possible (2+ items).
-    final overshootPad = visibleCount >= 2 ? 8.0 : 0.0;
+    // cycling is possible (2+ items) or overflow is shown.
+    final overshootPad = (visibleCount >= 2 || showOverflow) ? 8.0 : 0.0;
 
     Widget stack = AnimatedBuilder(
       animation: _controller,
@@ -338,6 +358,8 @@ class AnimatedAvatarStackState extends State<AnimatedAvatarStack>
               avatarSize,
               borderColor,
               overshootPad,
+              showOverflow: showOverflow,
+              overflowCount: overflowCount,
             ),
           ),
         );
@@ -371,8 +393,10 @@ class AnimatedAvatarStackState extends State<AnimatedAvatarStack>
     double step,
     double size,
     Color borderColor,
-    double padLeft,
-  ) {
+    double padLeft, {
+    required bool showOverflow,
+    required int overflowCount,
+  }) {
     final count = items.length;
     if (count == 0) return const [];
 
@@ -464,10 +488,98 @@ class AnimatedAvatarStackState extends State<AnimatedAvatarStack>
       );
     }
 
+    // Overflow "+N" circle — static, not part of cycling animation.
+    if (showOverflow) {
+      final overflowLeft = padLeft + count * step;
+
+      Widget overflowCircle = _OverflowCircle(
+        size: size,
+        borderColor: borderColor,
+        overflowCount: overflowCount,
+      );
+
+      overflowCircle = Opacity(
+        opacity: AvatarStackDefaults.frontOpacity,
+        child: overflowCircle,
+      );
+
+      if (widget.onOverflowTap != null) {
+        overflowCircle = GestureDetector(
+          onTap: () {
+            HapticFeedback.lightImpact();
+            widget.onOverflowTap!();
+          },
+          child: overflowCircle,
+        );
+      }
+
+      overflowCircle = Semantics(
+        label: widget.overflowSemanticLabel ?? '+$overflowCount more',
+        child: overflowCircle,
+      );
+
+      widgets.add(
+        Positioned(
+          key: const ValueKey('overflow'),
+          left: overflowLeft,
+          top: 0,
+          width: size,
+          height: size,
+          child: overflowCircle,
+        ),
+      );
+    }
+
     return widgets;
   }
 
   static double _lerpDouble(double a, double b, double t) => a + (b - a) * t;
+}
+
+/// A "+N" overflow indicator circle matching the style of [_AvatarCircle].
+class _OverflowCircle extends StatelessWidget {
+  final double size;
+  final Color borderColor;
+  final int overflowCount;
+
+  const _OverflowCircle({
+    required this.size,
+    required this.borderColor,
+    required this.overflowCount,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fillColor = isDark
+        ? const Color(0xFF2A2A3E)
+        : const Color(0xFFE0E0EA);
+    final textColor = isDark ? Colors.white70 : Colors.black54;
+    final fontSize = (size * 0.32).clamp(10.0, double.infinity);
+
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: fillColor,
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: borderColor,
+          width: AvatarStackDefaults.borderWidth,
+        ),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        '+$overflowCount',
+        style: TextStyle(
+          color: textColor,
+          fontSize: fontSize,
+          fontWeight: FontWeight.bold,
+          height: 1,
+        ),
+      ),
+    );
+  }
 }
 
 /// A single circular avatar cell with a border for visual separation
