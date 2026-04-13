@@ -291,7 +291,9 @@ void main() {
       expect(sendCalled, isFalse);
     });
 
-    testWidgets('shows a live byte counter while editing', (tester) async {
+    testWidgets('shows a live byte counter for raw draft bytes', (
+      tester,
+    ) async {
       final sizer = TextMessagePayloadSizer.standard();
 
       await tester.pumpWidget(
@@ -307,10 +309,10 @@ void main() {
 
       await tester.tap(find.byType(TextField));
       await tester.pump();
-      await tester.enterText(find.byType(TextField), 'hello');
+      await tester.enterText(find.byType(TextField), 'hello ');
       await tester.pump();
 
-      expect(find.text('5/228 bytes'), findsOneWidget);
+      expect(find.text('6/228 bytes'), findsOneWidget);
     });
 
     testWidgets('send stays disabled when the draft exceeds the byte budget', (

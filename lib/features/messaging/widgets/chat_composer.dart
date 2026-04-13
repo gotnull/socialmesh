@@ -83,10 +83,9 @@ class ChatComposer extends StatelessWidget {
   bool _canSend(String text) {
     if (!enabled) return false;
 
-    final trimmedText = text.trim();
-    if (trimmedText.isEmpty) return false;
+    if (!TextMessagePayloadSizer.hasSendableContent(text)) return false;
 
-    final budget = budgetResolver?.call(trimmedText);
+    final budget = budgetResolver?.call(text);
     return budget?.fitsInPacket ?? true;
   }
 
@@ -125,9 +124,9 @@ class ChatComposer extends StatelessWidget {
     return ListenableBuilder(
       listenable: composerListenable,
       builder: (context, _) {
-        final trimmedText = controller.text.trim();
-        final hasText = trimmedText.isNotEmpty;
-        final budget = budgetResolver?.call(trimmedText);
+        final rawText = controller.text;
+        final hasText = rawText.isNotEmpty;
+        final budget = budgetResolver?.call(rawText);
         final canSend = _canSend(controller.text);
         final counterText = budget != null && budgetLabelBuilder != null
             ? budgetLabelBuilder!(context, budget)

@@ -1443,8 +1443,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   }
 
   Future<void> _sendMessage() async {
-    final text = _messageController.text.trim();
-    if (text.isEmpty) return;
+    final text = _messageController.text;
+    if (!TextMessagePayloadSizer.hasSendableContent(text)) return;
 
     final replyPacketId = _replyingTo?.packetId;
     final textPayloadBudget = TextMessagePayloadSizer.standard(

@@ -48,5 +48,14 @@ void main() {
       expect(budget.utf8Bytes, 9);
       expect(budget.fitsInPacket, isTrue);
     });
+
+    test('counts spaces in the raw draft byte length', () {
+      final sizer = TextMessagePayloadSizer.standard();
+      final budget = sizer.measure('Hello ');
+
+      expect(TextMessagePayloadSizer.utf8ByteLength('Hello '), 6);
+      expect(budget.utf8Bytes, 6);
+      expect(budget.fitsInPacket, isTrue);
+    });
   });
 }

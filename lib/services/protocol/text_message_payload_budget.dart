@@ -75,6 +75,8 @@ class TextMessagePayloadSizer {
   final bool isEmoji;
   final int maxUtf8Bytes;
 
+  static bool hasSendableContent(String text) => text.trim().isNotEmpty;
+
   TextMessagePayloadBudget measure(String text) {
     final encodedText = utf8.encode(text);
     final encodedDataBytes = _encodedDataSize(
