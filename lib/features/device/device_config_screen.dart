@@ -6,6 +6,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/transport.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
@@ -14,6 +15,7 @@ import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/info_table.dart';
+import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
@@ -171,6 +173,78 @@ List<BuzzerModeOption> _buzzerModeOptions(BuildContext context) => [
     context.l10n.deviceConfigBuzzerDisabledDesc,
   ),
 ];
+
+class _DeviceInfoDisplayData {
+  const _DeviceInfoDisplayData({
+    required this.bleName,
+    required this.hardware,
+    required this.userId,
+    required this.nodeNumber,
+  });
+
+  final String bleName;
+  final String hardware;
+  final String userId;
+  final String nodeNumber;
+
+  factory _DeviceInfoDisplayData.fromContext({
+    required BuildContext context,
+    required bool isRemote,
+    required DeviceInfo? connectedDevice,
+    required MeshNode? localNode,
+    required MeshNode? remoteNode,
+    required int? remoteTargetNodeNum,
+  }) {
+    final unknown = context.l10n.deviceConfigUnknown;
+    final displayNode = isRemote ? remoteNode : localNode;
+
+    // Remote config is bound to the selected mesh node, never the local
+    // connected peripheral. If the remote cache lacks a field, keep it
+    // explicitly missing instead of borrowing unrelated local identity.
+    return _DeviceInfoDisplayData(
+      bleName: isRemote ? unknown : connectedDevice?.name ?? unknown,
+      hardware: displayNode?.hardwareModel ?? unknown,
+      userId: displayNode?.userId ?? unknown,
+      nodeNumber:
+          displayNode?.nodeNum.toString() ??
+          (isRemote ? remoteTargetNodeNum?.toString() ?? unknown : unknown),
+    );
+  }
+}
+
+class _DeviceInfoSection extends StatelessWidget {
+  const _DeviceInfoSection({required this.deviceInfo});
+
+  final _DeviceInfoDisplayData deviceInfo;
+
+  @override
+  Widget build(BuildContext context) {
+    return InfoTable(
+      rows: [
+        InfoTableRow(
+          label: context.l10n.deviceConfigBleName,
+          value: deviceInfo.bleName,
+          icon: Icons.bluetooth,
+        ),
+        InfoTableRow(
+          label: context.l10n.deviceConfigHardware,
+          value: deviceInfo.hardware,
+          icon: Icons.memory_outlined,
+        ),
+        InfoTableRow(
+          label: context.l10n.deviceConfigUserId,
+          value: deviceInfo.userId,
+          icon: Icons.fingerprint,
+        ),
+        InfoTableRow(
+          label: context.l10n.deviceConfigNodeNumber,
+          value: deviceInfo.nodeNumber,
+          icon: Icons.tag,
+        ),
+      ],
+    );
+  }
+}
 
 class DeviceConfigScreen extends ConsumerStatefulWidget {
   const DeviceConfigScreen({super.key});
@@ -697,6 +771,16 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
     final connectedDevice = ref.watch(connectedDeviceProvider);
     final remoteState = ref.watch(remoteAdminProvider);
     final isRemote = remoteState.isRemote;
+    final targetNodeNum = remoteState.targetNodeNum;
+    final remoteNode = targetNodeNum != null ? nodes[targetNodeNum] : null;
+    final deviceInfo = _DeviceInfoDisplayData.fromContext(
+      context: context,
+      isRemote: isRemote,
+      connectedDevice: connectedDevice,
+      localNode: myNode,
+      remoteNode: remoteNode,
+      remoteTargetNodeNum: targetNodeNum,
+    );
     final deviceRolesList = _deviceRoleOptions(context);
 
     final title = isRemote
@@ -793,34 +877,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
 
               // Device Info Section
               _buildSectionHeader(context.l10n.deviceConfigSectionDeviceInfo),
-              InfoTable(
-                rows: [
-                  InfoTableRow(
-                    label: context.l10n.deviceConfigBleName,
-                    value:
-                        connectedDevice?.name ??
-                        context.l10n.deviceConfigUnknown,
-                    icon: Icons.bluetooth,
-                  ),
-                  InfoTableRow(
-                    label: context.l10n.deviceConfigHardware,
-                    value:
-                        myNode?.hardwareModel ??
-                        context.l10n.deviceConfigUnknown,
-                    icon: Icons.memory_outlined,
-                  ),
-                  InfoTableRow(
-                    label: context.l10n.deviceConfigUserId,
-                    value: myNode?.userId ?? context.l10n.deviceConfigUnknown,
-                    icon: Icons.fingerprint,
-                  ),
-                  InfoTableRow(
-                    label: context.l10n.deviceConfigNodeNumber,
-                    value: '${myNode?.nodeNum ?? 0}',
-                    icon: Icons.tag,
-                  ),
-                ],
-              ),
+              _DeviceInfoSection(deviceInfo: deviceInfo),
 
               const SizedBox(height: AppTheme.spacing24),
 
