@@ -652,14 +652,13 @@ class NodeInfoCard extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: AppTheme.spacing12),
-          // Action buttons — all uniform 36×36 icon buttons.
-          // Message navigates directly (no confirmation needed).
-          // Position and Traceroute send mesh packets and confirm first.
-          // Share confirms before opening the system share sheet.
-          // Copy, View Details, and View History execute immediately.
-          Row(
+          // Action buttons wrap onto additional lines on narrow screens so
+          // trailing actions remain visible and tappable.
+          Wrap(
+            spacing: AppTheme.spacing8,
+            runSpacing: AppTheme.spacing8,
             children: [
-              if (!isMyNode && onMessage != null) ...[
+              if (!isMyNode && onMessage != null)
                 Tooltip(
                   message: context.l10n.nodeInfoPosition,
                   child: SizedBox(
@@ -682,7 +681,7 @@ class NodeInfoCard extends ConsumerWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: AppTheme.spacing8),
+              if (!isMyNode && onMessage != null)
                 Tooltip(
                   message: context.l10n.nodeInfoMessage,
                   child: SizedBox(
@@ -705,10 +704,7 @@ class NodeInfoCard extends ConsumerWidget {
                     ),
                   ),
                 ),
-              ],
-              if (onShareLocation != null) ...[
-                if (!isMyNode && onMessage != null)
-                  const SizedBox(width: AppTheme.spacing8),
+              if (onShareLocation != null)
                 Tooltip(
                   message: context.l10n.nodeInfoShareLocation,
                   child: SizedBox(
@@ -731,10 +727,7 @@ class NodeInfoCard extends ConsumerWidget {
                     ),
                   ),
                 ),
-              ],
-              if (onCopyCoordinates != null) ...[
-                if (onShareLocation != null || (!isMyNode && onMessage != null))
-                  const SizedBox(width: AppTheme.spacing8),
+              if (onCopyCoordinates != null)
                 Tooltip(
                   message: context.l10n.nodeInfoCopyCoordinates,
                   child: SizedBox(
@@ -757,9 +750,7 @@ class NodeInfoCard extends ConsumerWidget {
                     ),
                   ),
                 ),
-              ],
-              if (onTraceroute != null) ...[
-                const SizedBox(width: AppTheme.spacing8),
+              if (onTraceroute != null)
                 Tooltip(
                   message: context.l10n.nodeInfoTraceroute,
                   child: SizedBox(
@@ -782,9 +773,7 @@ class NodeInfoCard extends ConsumerWidget {
                     ),
                   ),
                 ),
-              ],
-              if (onViewDetails != null) ...[
-                const SizedBox(width: AppTheme.spacing8),
+              if (onViewDetails != null)
                 Tooltip(
                   message: context.l10n.nodeInfoViewDetails,
                   child: SizedBox(
@@ -807,9 +796,7 @@ class NodeInfoCard extends ConsumerWidget {
                     ),
                   ),
                 ),
-              ],
-              if (onViewHistory != null) ...[
-                const SizedBox(width: AppTheme.spacing8),
+              if (onViewHistory != null)
                 Tooltip(
                   message: context.l10n.nodeInfoViewHistory,
                   child: SizedBox(
@@ -832,9 +819,7 @@ class NodeInfoCard extends ConsumerWidget {
                     ),
                   ),
                 ),
-              ],
-              if (onShowTrack != null) ...[
-                const SizedBox(width: AppTheme.spacing8),
+              if (onShowTrack != null)
                 Tooltip(
                   message: isTrackVisible
                       ? context.l10n.nodeInfoHideTrack
@@ -863,9 +848,7 @@ class NodeInfoCard extends ConsumerWidget {
                     ),
                   ),
                 ),
-              ],
-              if (onViewPositionLog != null) ...[
-                const SizedBox(width: AppTheme.spacing8),
+              if (onViewPositionLog != null)
                 Tooltip(
                   message: context.l10n.nodeInfoViewPositionLog,
                   child: SizedBox(
@@ -888,7 +871,6 @@ class NodeInfoCard extends ConsumerWidget {
                     ),
                   ),
                 ),
-              ],
             ],
           ),
         ],
