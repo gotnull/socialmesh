@@ -382,6 +382,7 @@ class NodeDexSqliteStore {
         NodeDexTables.colEncLon: enc.longitude,
         NodeDexTables.colEncCreatedAtMs: now,
         NodeDexTables.colEncObservedOnPreset: enc.observedOnPreset,
+        NodeDexTables.colEncFreqOffset: enc.frequencyOffset,
       });
     }
 
@@ -468,6 +469,8 @@ class NodeDexSqliteStore {
       NodeDexTables.colSipDisplayName: entry.sipDisplayName,
       NodeDexTables.colMrrpServiceIds: entry.mrrpServiceIds,
       NodeDexTables.colLastObservedOnPreset: entry.lastObservedOnPreset,
+      NodeDexTables.colLastObservedFreqOffset:
+          entry.lastObservedFrequencyOffset,
     };
   }
 
@@ -589,6 +592,8 @@ class NodeDexSqliteStore {
       sipDisplayName: row[NodeDexTables.colSipDisplayName] as String?,
       mrrpServiceIds: row[NodeDexTables.colMrrpServiceIds] as String?,
       lastObservedOnPreset: row[NodeDexTables.colLastObservedOnPreset] as int?,
+      lastObservedFrequencyOffset:
+          (row[NodeDexTables.colLastObservedFreqOffset] as num?)?.toDouble(),
     );
   }
 
@@ -603,6 +608,8 @@ class NodeDexSqliteStore {
       latitude: (row[NodeDexTables.colEncLat] as num?)?.toDouble(),
       longitude: (row[NodeDexTables.colEncLon] as num?)?.toDouble(),
       observedOnPreset: row[NodeDexTables.colEncObservedOnPreset] as int?,
+      frequencyOffset: (row[NodeDexTables.colEncFreqOffset] as num?)
+          ?.toDouble(),
     );
   }
 

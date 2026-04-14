@@ -158,6 +158,10 @@ class EncounterRecord {
   /// This is the *local* radio's preset, not the remote node's.
   final int? observedOnPreset;
 
+  /// The frequency offset (Hz) of the local radio when this encounter
+  /// was recorded. Null if unknown. Only stored when non-zero.
+  final double? frequencyOffset;
+
   const EncounterRecord({
     required this.timestamp,
     this.distanceMeters,
@@ -166,6 +170,7 @@ class EncounterRecord {
     this.latitude,
     this.longitude,
     this.observedOnPreset,
+    this.frequencyOffset,
   });
 
   Map<String, dynamic> toJson() {
@@ -177,6 +182,7 @@ class EncounterRecord {
       if (latitude != null) 'lat': latitude,
       if (longitude != null) 'lon': longitude,
       if (observedOnPreset != null) 'op': observedOnPreset,
+      if (frequencyOffset != null) 'fo': frequencyOffset,
     };
   }
 
@@ -189,6 +195,7 @@ class EncounterRecord {
       latitude: (json['lat'] as num?)?.toDouble(),
       longitude: (json['lon'] as num?)?.toDouble(),
       observedOnPreset: json['op'] as int?,
+      frequencyOffset: (json['fo'] as num?)?.toDouble(),
     );
   }
 
@@ -201,6 +208,8 @@ class EncounterRecord {
     double? longitude,
     int? observedOnPreset,
     bool clearObservedOnPreset = false,
+    double? frequencyOffset,
+    bool clearFrequencyOffset = false,
   }) {
     return EncounterRecord(
       timestamp: timestamp ?? this.timestamp,
@@ -212,6 +221,9 @@ class EncounterRecord {
       observedOnPreset: clearObservedOnPreset
           ? null
           : (observedOnPreset ?? this.observedOnPreset),
+      frequencyOffset: clearFrequencyOffset
+          ? null
+          : (frequencyOffset ?? this.frequencyOffset),
     );
   }
 }
@@ -724,6 +736,14 @@ class NodeDexEntry {
   /// about this provenance.
   final int? lastObservedOnPreset;
 
+  /// The frequency offset (Hz) of the local radio when this node was
+  /// last observed. Updated on each encounter where the offset is
+  /// known and non-zero. Null for legacy entries or zero offset.
+  ///
+  /// **Semantic note**: Like lastObservedOnPreset, this is *our* radio's
+  /// setting, not the remote node's.
+  final double? lastObservedFrequencyOffset;
+
   /// Maximum number of encounter records to retain.
   static const int maxEncounterRecords = 50;
 
@@ -767,6 +787,7 @@ class NodeDexEntry {
     this.sipDisplayName,
     this.mrrpServiceIds,
     this.lastObservedOnPreset,
+    this.lastObservedFrequencyOffset,
   });
 
   /// Create a new entry for a freshly discovered node.
@@ -779,6 +800,7 @@ class NodeDexEntry {
     double? latitude,
     double? longitude,
     int? observedOnPreset,
+    double? frequencyOffset,
     SigilData? sigil,
     String? lastKnownName,
     String? lastKnownHardware,
@@ -794,6 +816,7 @@ class NodeDexEntry {
       latitude: latitude,
       longitude: longitude,
       observedOnPreset: observedOnPreset,
+      frequencyOffset: frequencyOffset,
     );
 
     return NodeDexEntry(
@@ -811,6 +834,7 @@ class NodeDexEntry {
       lastKnownRole: lastKnownRole,
       lastKnownFirmware: lastKnownFirmware,
       lastObservedOnPreset: observedOnPreset,
+      lastObservedFrequencyOffset: frequencyOffset,
     );
   }
 
@@ -903,6 +927,8 @@ class NodeDexEntry {
     bool clearMrrpServiceIds = false,
     int? lastObservedOnPreset,
     bool clearLastObservedOnPreset = false,
+    double? lastObservedFrequencyOffset,
+    bool clearLastObservedFrequencyOffset = false,
   }) {
     // Auto-stamp when socialTag changes via copyWith.
     final effectiveStMs = clearSocialTag || socialTag != null
@@ -961,6 +987,9 @@ class NodeDexEntry {
       lastObservedOnPreset: clearLastObservedOnPreset
           ? null
           : (lastObservedOnPreset ?? this.lastObservedOnPreset),
+      lastObservedFrequencyOffset: clearLastObservedFrequencyOffset
+          ? null
+          : (lastObservedFrequencyOffset ?? this.lastObservedFrequencyOffset),
     );
   }
 
@@ -977,6 +1006,7 @@ class NodeDexEntry {
     double? latitude,
     double? longitude,
     int? observedOnPreset,
+    double? frequencyOffset,
   }) {
     final now = timestamp ?? DateTime.now();
     final encounter = EncounterRecord(
@@ -987,6 +1017,7 @@ class NodeDexEntry {
       latitude: latitude,
       longitude: longitude,
       observedOnPreset: observedOnPreset,
+      frequencyOffset: frequencyOffset,
     );
 
     // Determine if this counts as a new encounter
@@ -1033,6 +1064,8 @@ class NodeDexEntry {
       bestRssi: newBestRssi,
       encounters: updatedEncounters,
       lastObservedOnPreset: observedOnPreset ?? lastObservedOnPreset,
+      lastObservedFrequencyOffset:
+          frequencyOffset ?? lastObservedFrequencyOffset,
     );
   }
 
@@ -1282,6 +1315,12 @@ class NodeDexEntry {
         ? (lastObservedOnPreset ?? other.lastObservedOnPreset)
         : (other.lastObservedOnPreset ?? lastObservedOnPreset);
 
+    // Frequency offset: same strategy as radio preset.
+    final double? mergedLastObservedFreqOffset =
+        lastSeen.isAfter(other.lastSeen)
+        ? (lastObservedFrequencyOffset ?? other.lastObservedFrequencyOffset)
+        : (other.lastObservedFrequencyOffset ?? lastObservedFrequencyOffset);
+
     return NodeDexEntry(
       nodeNum: nodeNum,
       firstSeen: mergedFirstSeen,
@@ -1312,6 +1351,7 @@ class NodeDexEntry {
       sipDisplayName: mergedSipDisplayName,
       mrrpServiceIds: mergedMrrpServiceIds,
       lastObservedOnPreset: mergedLastObservedOnPreset,
+      lastObservedFrequencyOffset: mergedLastObservedFreqOffset,
     );
   }
 
@@ -1412,6 +1452,8 @@ class NodeDexEntry {
       if (sipDisplayName != null) 'sip_dn': sipDisplayName,
       if (mrrpServiceIds != null) 'mrrp_svc': mrrpServiceIds,
       if (lastObservedOnPreset != null) 'lorp': lastObservedOnPreset,
+      if (lastObservedFrequencyOffset != null)
+        'lofo': lastObservedFrequencyOffset,
     };
   }
 
@@ -1488,6 +1530,7 @@ class NodeDexEntry {
       sipDisplayName: json['sip_dn'] as String?,
       mrrpServiceIds: json['mrrp_svc'] as String?,
       lastObservedOnPreset: json['lorp'] as int?,
+      lastObservedFrequencyOffset: (json['lofo'] as num?)?.toDouble(),
     );
   }
 

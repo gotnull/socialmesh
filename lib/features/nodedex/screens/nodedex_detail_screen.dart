@@ -1354,6 +1354,15 @@ class _DiscoveryStatsCard extends StatelessWidget {
                   context.l10n.nodedexRadioPresetUnknown,
               icon: Icons.radio_outlined,
             ),
+          if (entry.lastObservedFrequencyOffset != null &&
+              entry.lastObservedFrequencyOffset != 0.0)
+            _InfoRow(
+              label: context.l10n.nodedexFrequencyOffset,
+              value: context.l10n.nodedexFrequencyOffsetValue(
+                entry.lastObservedFrequencyOffset!.toStringAsFixed(1),
+              ),
+              icon: Icons.tune_outlined,
+            ),
         ],
       ),
     );

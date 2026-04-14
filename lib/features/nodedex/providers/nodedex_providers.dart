@@ -176,6 +176,22 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
     }
   }
 
+  /// Resolve the current frequency offset from the connected device's LoRa config.
+  ///
+  /// Returns the offset in Hz, or null if not available. Returns null for
+  /// zero offset (no point storing the default).
+  double? _resolveCurrentFrequencyOffset() {
+    try {
+      final protocol = ref.read(protocolServiceProvider);
+      final offset = protocol.currentLoraConfig?.frequencyOffset;
+      // Only store non-zero offsets — zero is the default and not interesting.
+      if (offset == null || offset == 0.0) return null;
+      return offset;
+    } catch (_) {
+      return null;
+    }
+  }
+
   bool _isRecentCoSeenActivity(MeshNode node, DateTime now) {
     final lastHeard = node.lastHeard;
     if (lastHeard == null) return false;
@@ -304,6 +320,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
         // New discovery: create a fresh NodeDex entry.
         final sigil = SigilGenerator.generate(nodeNum);
         final currentPreset = _resolveCurrentPreset();
+        final currentFreqOffset = _resolveCurrentFrequencyOffset();
         final newEntry = NodeDexEntry.discovered(
           nodeNum: nodeNum,
           timestamp: node.firstHeard ?? now,
@@ -313,6 +330,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
           latitude: node.hasPosition ? node.latitude : null,
           longitude: node.hasPosition ? node.longitude : null,
           observedOnPreset: currentPreset,
+          frequencyOffset: currentFreqOffset,
           sigil: sigil,
           lastKnownName: liveName,
           lastKnownHardware: node.hardwareModel,
@@ -389,6 +407,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
 
         if (shouldRecord) {
           final currentPreset = _resolveCurrentPreset();
+          final currentFreqOffset = _resolveCurrentFrequencyOffset();
           var updatedEntry = existing.recordEncounter(
             timestamp: now,
             distance: node.distance,
@@ -397,6 +416,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
             latitude: node.hasPosition ? node.latitude : null,
             longitude: node.hasPosition ? node.longitude : null,
             observedOnPreset: currentPreset,
+            frequencyOffset: currentFreqOffset,
           );
 
           // Ensure sigil is generated if missing (e.g., from older data).
