@@ -16,6 +16,7 @@ import '../../providers/glyph_provider.dart';
 import '../../services/notifications/notification_service.dart';
 import 'automation_debug_service.dart';
 import 'automation_engine.dart';
+import 'automation_history_presenter.dart';
 import 'automation_repository.dart';
 import 'models/automation.dart';
 import 'models/schedule_spec.dart';
@@ -115,6 +116,7 @@ final automationEngineProvider = Provider<AutomationEngine>((ref) {
     iftttService: iftttService,
     notifications: notifications,
     glyphService: glyphService,
+    debugService: ref.watch(automationDebugServiceProvider),
     onGetMyNodeNum: () => ref.read(myNodeNumProvider),
     onGetPhonePosition: () async {
       try {
@@ -593,3 +595,27 @@ final automationDebugEvaluationsProvider = Provider<List<AutomationEvaluation>>(
     return debugService.evaluations;
   },
 );
+
+/// Provider for merged automation history (persisted logs + in-memory skips).
+final automationHistoryProvider = Provider<List<AutomationHistoryEntry>>((ref) {
+  ref.watch(_logRevisionProvider);
+  final log = ref.watch(automationLogProvider);
+  final evaluations = ref.watch(automationDebugEvaluationsProvider);
+  return AutomationHistoryMerger.merge(
+    logEntries: log,
+    evaluations: evaluations,
+  );
+});
+
+/// Provider for a single automation's history.
+final automationHistoryByIdProvider =
+    Provider.family<List<AutomationHistoryEntry>, String>((ref, automationId) {
+      ref.watch(_logRevisionProvider);
+      final log = ref.watch(automationLogProvider);
+      final evaluations = ref.watch(automationDebugEvaluationsProvider);
+      return AutomationHistoryMerger.merge(
+        logEntries: log,
+        evaluations: evaluations,
+        automationId: automationId,
+      );
+    });

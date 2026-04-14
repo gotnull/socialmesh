@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
+import '../automation_history_presenter.dart';
 import '../models/automation.dart';
 
 /// Card displaying an automation with toggle and actions
@@ -17,6 +18,7 @@ class AutomationCard extends StatelessWidget {
   final VoidCallback onDelete;
   final VoidCallback? onShare;
   final VoidCallback? onRun;
+  final AutomationHistoryEntry? lastRun;
 
   const AutomationCard({
     super.key,
@@ -26,6 +28,7 @@ class AutomationCard extends StatelessWidget {
     required this.onDelete,
     this.onShare,
     this.onRun,
+    this.lastRun,
   });
 
   @override
@@ -139,14 +142,41 @@ class AutomationCard extends StatelessWidget {
                     context,
                     icon: Icons.play_arrow,
                     label: context.l10n.automationCardActionCount(
-                      automation.actions.length,
-                      automation.actions.length == 1 ? '' : 's',
+                      automation.effectiveThenActions.length,
+                      automation.effectiveThenActions.length == 1 ? '' : 's',
                     ),
                     color: AppTheme.successGreen,
                   ),
                 ),
               ],
             ),
+
+            // Conditions and branch indicators
+            if (automation.conditions != null &&
+                automation.conditions!.isNotEmpty) ...[
+              const SizedBox(height: AppTheme.spacing8),
+              Row(
+                children: [
+                  _buildInfoChip(
+                    context,
+                    icon: Icons.filter_alt,
+                    label: context.l10n.automationCardConditionCount(
+                      automation.conditions!.length,
+                    ),
+                    color: AccentColors.cyan,
+                  ),
+                  if (automation.effectiveElseActions != null) ...[
+                    const SizedBox(width: AppTheme.spacing8),
+                    _buildInfoChip(
+                      context,
+                      icon: Icons.alt_route,
+                      label: context.l10n.automationCardBranchElse,
+                      color: AppTheme.errorRed,
+                    ),
+                  ],
+                ],
+              ),
+            ],
 
             // Stats row
             const SizedBox(height: AppTheme.spacing12),
@@ -179,6 +209,13 @@ class AutomationCard extends StatelessWidget {
                     _formatLastTriggered(context, automation.lastTriggered!),
                     style: TextStyle(color: SemanticColors.muted, fontSize: 12),
                   ),
+                ],
+                // Last run outcome trust signal
+                if (lastRun != null) ...[
+                  if (automation.triggerCount > 0 ||
+                      automation.lastTriggered != null)
+                    const SizedBox(width: AppTheme.spacing8),
+                  _buildLastRunSignal(context, lastRun!),
                 ],
                 const Spacer(),
                 // Run button — visible for manual-trigger automations
@@ -230,6 +267,44 @@ class AutomationCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildLastRunSignal(
+    BuildContext context,
+    AutomationHistoryEntry entry,
+  ) {
+    final isSuccess = RunOutcomePresenter.isSuccess(entry.outcome);
+    final isFailed = entry.outcome == RunOutcome.failed;
+    final color = isSuccess
+        ? AppTheme.successGreen
+        : isFailed
+        ? AppTheme.errorRed
+        : SemanticColors.muted;
+    final label = context.l10n.automationCardLastRun(
+      RunOutcomePresenter.label(entry.outcome, context.l10n),
+    );
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: AppTheme.spacing6,
+          height: AppTheme.spacing6,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: AppTheme.spacing4),
+        Flexible(
+          child: Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: AppTheme.spacing10 + AppTheme.spacing1,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
     );
   }
 

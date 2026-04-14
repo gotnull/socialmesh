@@ -2721,6 +2721,133 @@
     "@automationConditionWithinGeofence": {
         "description": "Display name for the withinGeofence condition type"
     },
+    "automationEditorAddCondition": "Add Condition",
+    "@automationEditorAddCondition": {
+        "description": "Button label for adding a new condition"
+    },
+    "automationEditorAddElseActions": "Add ELSE actions",
+    "@automationEditorAddElseActions": {
+        "description": "Button label for adding an optional ELSE branch"
+    },
+    "automationEditorConditionsAll": "All conditions must be true",
+    "@automationEditorConditionsAll": {
+        "description": "Description for the ALL (AND) condition grouping"
+    },
+    "automationEditorElse": "ELSE",
+    "@automationEditorElse": {
+        "description": "Section title for the ELSE branch"
+    },
+    "automationEditorElseDescription": "otherwise do...",
+    "@automationEditorElseDescription": {
+        "description": "Flow connector text before ELSE actions"
+    },
+    "automationEditorIf": "IF",
+    "@automationEditorIf": {
+        "description": "Section title for the conditions section"
+    },
+    "automationEditorIfDescription": "only if...",
+    "@automationEditorIfDescription": {
+        "description": "Flow connector text before conditions"
+    },
+    "automationEditorNoConditions": "No conditions — always runs",
+    "@automationEditorNoConditions": {
+        "description": "Hint text when no conditions are set"
+    },
+    "automationEditorRemoveElse": "Remove ELSE",
+    "@automationEditorRemoveElse": {
+        "description": "Button label for removing the ELSE branch"
+    },
+    "automationEditorSelectConditionType": "Select Condition Type",
+    "@automationEditorSelectConditionType": {
+        "description": "Title for the condition type selection bottom sheet"
+    },
+    "automationEditorValidateElseActions": "ELSE branch must have at least one action, or remove the ELSE section",
+    "@automationEditorValidateElseActions": {
+        "description": "Validation error when ELSE exists but has no actions"
+    },
+    "automationEditorValidateThenActions": "Please add at least one THEN action",
+    "@automationEditorValidateThenActions": {
+        "description": "Validation error when THEN actions list is empty"
+    },
+    "automationImportElseActions": "ELSE Actions ({count})",
+    "@automationImportElseActions": {
+        "description": "Label for ELSE actions in import preview",
+        "placeholders": {
+            "count": { "type": "int" }
+        }
+    },
+    "automationImportThenActions": "THEN Actions ({count})",
+    "@automationImportThenActions": {
+        "description": "Label for THEN actions in import preview",
+        "placeholders": {
+            "count": { "type": "int" }
+        }
+    },
+    "automationSummaryElse": "else {actions}",
+    "@automationSummaryElse": {
+        "description": "Human-readable ELSE clause in automation summary",
+        "placeholders": {
+            "actions": { "type": "String" }
+        }
+    },
+    "automationSummaryIf": "if {conditions}",
+    "@automationSummaryIf": {
+        "description": "Human-readable IF clause in automation summary",
+        "placeholders": {
+            "conditions": { "type": "String" }
+        }
+    },
+    "automationSummaryThen": "then {actions}",
+    "@automationSummaryThen": {
+        "description": "Human-readable THEN clause in automation summary",
+        "placeholders": {
+            "actions": { "type": "String" }
+        }
+    },
+    "automationSummaryWhen": "When {trigger}",
+    "@automationSummaryWhen": {
+        "description": "Human-readable WHEN clause in automation summary",
+        "placeholders": {
+            "trigger": { "type": "String" }
+        }
+    },
+    "automationCardBranchThen": "THEN",
+    "@automationCardBranchThen": {
+        "description": "Branch indicator label for THEN in automation card"
+    },
+    "automationCardBranchElse": "ELSE",
+    "@automationCardBranchElse": {
+        "description": "Branch indicator label for ELSE in automation card"
+    },
+    "automationCardConditionCount": "{count, plural, =1{1 condition} other{{count} conditions}}",
+    "@automationCardConditionCount": {
+        "description": "Condition count display in automation card",
+        "placeholders": {
+            "count": { "type": "int" }
+        }
+    },
+    "automationConditionConfigBatteryThreshold": "Battery threshold: {threshold}%",
+    "@automationConditionConfigBatteryThreshold": {
+        "description": "Battery threshold display in condition editor",
+        "placeholders": {
+            "threshold": { "type": "int" }
+        }
+    },
+    "automationConditionConfigDays": "Days: {days}",
+    "@automationConditionConfigDays": {
+        "description": "Days of week display in condition editor",
+        "placeholders": {
+            "days": { "type": "String" }
+        }
+    },
+    "automationConditionConfigTimeRange": "{start} – {end}",
+    "@automationConditionConfigTimeRange": {
+        "description": "Time range display in condition editor",
+        "placeholders": {
+            "start": { "type": "String" },
+            "end": { "type": "String" }
+        }
+    },
     "automationEditorAddAction": "Add Action",
     "@automationEditorAddAction": {
         "description": "Button label and sheet title for adding a new action"
@@ -41025,6 +41152,203 @@
         "description": "Label for message text in automation log entry details",
         "placeholders": {
             "text": {
+                "type": "String"
+            }
+        }
+    },
+    "automationHistoryOutcomeThen": "Ran THEN branch",
+    "@automationHistoryOutcomeThen": {
+        "description": "History label when THEN branch was executed"
+    },
+    "automationHistoryOutcomeElse": "Ran ELSE branch",
+    "@automationHistoryOutcomeElse": {
+        "description": "History label when ELSE branch was executed"
+    },
+    "automationHistoryOutcomeExecuted": "Executed",
+    "@automationHistoryOutcomeExecuted": {
+        "description": "History label when automation executed without branching"
+    },
+    "automationHistoryOutcomeManual": "Manual run",
+    "@automationHistoryOutcomeManual": {
+        "description": "History label when automation was manually triggered"
+    },
+    "automationHistoryOutcomeFailed": "Failed",
+    "@automationHistoryOutcomeFailed": {
+        "description": "History label when automation execution failed"
+    },
+    "automationHistoryOutcomeSkippedNoElse": "Did not run",
+    "@automationHistoryOutcomeSkippedNoElse": {
+        "description": "History label when condition failed and no ELSE branch exists"
+    },
+    "automationHistoryOutcomeSkippedThrottled": "Skipped (cooldown)",
+    "@automationHistoryOutcomeSkippedThrottled": {
+        "description": "History label when automation was throttled"
+    },
+    "automationHistoryOutcomeSkippedDisabled": "Skipped (disabled)",
+    "@automationHistoryOutcomeSkippedDisabled": {
+        "description": "History label when automation was disabled"
+    },
+    "automationHistoryOutcomeSkippedFiltered": "Skipped (not eligible)",
+    "@automationHistoryOutcomeSkippedFiltered": {
+        "description": "History label when automation was filtered out"
+    },
+    "automationHistoryDetailTrigger": "Trigger",
+    "@automationHistoryDetailTrigger": {
+        "description": "Label for trigger type in history detail view"
+    },
+    "automationHistoryDetailBranch": "Branch",
+    "@automationHistoryDetailBranch": {
+        "description": "Label for branch selection in history detail view"
+    },
+    "automationHistoryDetailConditions": "Conditions",
+    "@automationHistoryDetailConditions": {
+        "description": "Label for condition summary in history detail view"
+    },
+    "automationHistoryDetailActions": "Actions",
+    "@automationHistoryDetailActions": {
+        "description": "Label for action results in history detail view"
+    },
+    "automationHistoryDetailError": "Error",
+    "@automationHistoryDetailError": {
+        "description": "Label for error message in history detail view"
+    },
+    "automationHistoryDetailManualBypass": "Conditions were bypassed",
+    "@automationHistoryDetailManualBypass": {
+        "description": "Label indicating manual execution bypassed conditions"
+    },
+    "automationHistoryEmpty": "No automation activity yet",
+    "@automationHistoryEmpty": {
+        "description": "Shown when automation history is empty"
+    },
+    "automationHistoryActionSuccess": "Succeeded",
+    "@automationHistoryActionSuccess": {
+        "description": "Label for a successful action in history details"
+    },
+    "automationHistoryActionFailed": "Failed: {error}",
+    "@automationHistoryActionFailed": {
+        "description": "Label for a failed action in history details",
+        "placeholders": {
+            "error": {
+                "type": "String"
+            }
+        }
+    },
+    "automationHistoryActionCount": "{success} of {total} actions succeeded",
+    "@automationHistoryActionCount": {
+        "description": "Summary of action results in history",
+        "placeholders": {
+            "success": {
+                "type": "int"
+            },
+            "total": {
+                "type": "int"
+            }
+        }
+    },
+    "automationConditionPassed": "Passed: {condition}",
+    "@automationConditionPassed": {
+        "description": "Label for a condition that passed evaluation",
+        "placeholders": {
+            "condition": {
+                "type": "String"
+            }
+        }
+    },
+    "automationConditionFailed": "Failed: {condition}",
+    "@automationConditionFailed": {
+        "description": "Label for a condition that failed evaluation",
+        "placeholders": {
+            "condition": {
+                "type": "String"
+            }
+        }
+    },
+    "automationConditionAllPassed": "All {count} conditions passed",
+    "@automationConditionAllPassed": {
+        "description": "Summary when all conditions in a group passed",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "automationConditionSomeFailed": "{failed} of {total} conditions failed",
+    "@automationConditionSomeFailed": {
+        "description": "Summary when some conditions in a group failed",
+        "placeholders": {
+            "failed": {
+                "type": "int"
+            },
+            "total": {
+                "type": "int"
+            }
+        }
+    },
+    "automationConditionSomeMatched": "{matched} of {total} conditions matched",
+    "@automationConditionSomeMatched": {
+        "description": "Summary for ANY group when some conditions matched",
+        "placeholders": {
+            "matched": {
+                "type": "int"
+            },
+            "total": {
+                "type": "int"
+            }
+        }
+    },
+    "automationConditionNoneMatched": "No conditions matched",
+    "@automationConditionNoneMatched": {
+        "description": "Summary for ANY group when no conditions matched"
+    },
+    "automationConditionNotPassed": "NOT condition passed",
+    "@automationConditionNotPassed": {
+        "description": "Summary for NOT group when inverted result is true"
+    },
+    "automationConditionNotFailed": "NOT condition failed",
+    "@automationConditionNotFailed": {
+        "description": "Summary for NOT group when inverted result is false"
+    },
+    "automationSkipDisabled": "Automation is disabled",
+    "@automationSkipDisabled": {
+        "description": "Readable skip reason: automation disabled"
+    },
+    "automationSkipTriggerMismatch": "Trigger event did not match",
+    "@automationSkipTriggerMismatch": {
+        "description": "Readable skip reason: trigger type mismatch"
+    },
+    "automationSkipThrottled": "Skipped due to cooldown",
+    "@automationSkipThrottled": {
+        "description": "Readable skip reason: throttled/cooldown"
+    },
+    "automationSkipNodeFilter": "Node did not match filter",
+    "@automationSkipNodeFilter": {
+        "description": "Readable skip reason: node filter mismatch"
+    },
+    "automationSkipBatteryThreshold": "Battery level did not reach threshold",
+    "@automationSkipBatteryThreshold": {
+        "description": "Readable skip reason: battery threshold not met"
+    },
+    "automationSkipKeywordNotMatched": "Message did not contain keyword",
+    "@automationSkipKeywordNotMatched": {
+        "description": "Readable skip reason: keyword not matched"
+    },
+    "automationSkipSignalThreshold": "Signal level did not reach threshold",
+    "@automationSkipSignalThreshold": {
+        "description": "Readable skip reason: signal threshold not met"
+    },
+    "automationSkipChannelFilter": "Channel did not match filter",
+    "@automationSkipChannelFilter": {
+        "description": "Readable skip reason: channel filter mismatch"
+    },
+    "automationSkipConditionFailed": "Condition failed and no ELSE actions set",
+    "@automationSkipConditionFailed": {
+        "description": "Readable skip reason: condition failed without ELSE branch"
+    },
+    "automationCardLastRun": "Last: {outcome}",
+    "@automationCardLastRun": {
+        "description": "Brief last run outcome shown on automation card",
+        "placeholders": {
+            "outcome": {
                 "type": "String"
             }
         }

@@ -47,6 +47,7 @@ import '../providers/nodedex_providers.dart';
 import '../services/trust_score.dart';
 
 import '../../settings/settings_screen.dart';
+import '../atmosphere/atmosphere_overlay.dart';
 import '../widgets/identity_overlay_painter.dart';
 import '../widgets/patina_stamp.dart';
 import '../widgets/sigil_painter.dart';
@@ -119,6 +120,7 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
       child: GestureDetector(
         onTap: _dismissKeyboard,
         child: GlassScaffold(
+          backgroundLayer: const NodeDexListAtmosphere(),
           resizeToAvoidBottomInset: false,
           title: context.l10n.nodedexTitle,
           actions: [

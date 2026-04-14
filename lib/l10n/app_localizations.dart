@@ -3766,6 +3766,150 @@ abstract class AppLocalizations {
   /// **'Within geofence'**
   String get automationConditionWithinGeofence;
 
+  /// Button label for adding a new condition
+  ///
+  /// In en, this message translates to:
+  /// **'Add Condition'**
+  String get automationEditorAddCondition;
+
+  /// Button label for adding an optional ELSE branch
+  ///
+  /// In en, this message translates to:
+  /// **'Add ELSE actions'**
+  String get automationEditorAddElseActions;
+
+  /// Description for the ALL (AND) condition grouping
+  ///
+  /// In en, this message translates to:
+  /// **'All conditions must be true'**
+  String get automationEditorConditionsAll;
+
+  /// Section title for the ELSE branch
+  ///
+  /// In en, this message translates to:
+  /// **'ELSE'**
+  String get automationEditorElse;
+
+  /// Flow connector text before ELSE actions
+  ///
+  /// In en, this message translates to:
+  /// **'otherwise do...'**
+  String get automationEditorElseDescription;
+
+  /// Section title for the conditions section
+  ///
+  /// In en, this message translates to:
+  /// **'IF'**
+  String get automationEditorIf;
+
+  /// Flow connector text before conditions
+  ///
+  /// In en, this message translates to:
+  /// **'only if...'**
+  String get automationEditorIfDescription;
+
+  /// Hint text when no conditions are set
+  ///
+  /// In en, this message translates to:
+  /// **'No conditions — always runs'**
+  String get automationEditorNoConditions;
+
+  /// Button label for removing the ELSE branch
+  ///
+  /// In en, this message translates to:
+  /// **'Remove ELSE'**
+  String get automationEditorRemoveElse;
+
+  /// Title for the condition type selection bottom sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Select Condition Type'**
+  String get automationEditorSelectConditionType;
+
+  /// Validation error when ELSE exists but has no actions
+  ///
+  /// In en, this message translates to:
+  /// **'ELSE branch must have at least one action, or remove the ELSE section'**
+  String get automationEditorValidateElseActions;
+
+  /// Validation error when THEN actions list is empty
+  ///
+  /// In en, this message translates to:
+  /// **'Please add at least one THEN action'**
+  String get automationEditorValidateThenActions;
+
+  /// Label for ELSE actions in import preview
+  ///
+  /// In en, this message translates to:
+  /// **'ELSE Actions ({count})'**
+  String automationImportElseActions(int count);
+
+  /// Label for THEN actions in import preview
+  ///
+  /// In en, this message translates to:
+  /// **'THEN Actions ({count})'**
+  String automationImportThenActions(int count);
+
+  /// Human-readable ELSE clause in automation summary
+  ///
+  /// In en, this message translates to:
+  /// **'else {actions}'**
+  String automationSummaryElse(String actions);
+
+  /// Human-readable IF clause in automation summary
+  ///
+  /// In en, this message translates to:
+  /// **'if {conditions}'**
+  String automationSummaryIf(String conditions);
+
+  /// Human-readable THEN clause in automation summary
+  ///
+  /// In en, this message translates to:
+  /// **'then {actions}'**
+  String automationSummaryThen(String actions);
+
+  /// Human-readable WHEN clause in automation summary
+  ///
+  /// In en, this message translates to:
+  /// **'When {trigger}'**
+  String automationSummaryWhen(String trigger);
+
+  /// Branch indicator label for THEN in automation card
+  ///
+  /// In en, this message translates to:
+  /// **'THEN'**
+  String get automationCardBranchThen;
+
+  /// Branch indicator label for ELSE in automation card
+  ///
+  /// In en, this message translates to:
+  /// **'ELSE'**
+  String get automationCardBranchElse;
+
+  /// Condition count display in automation card
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 condition} other{{count} conditions}}'**
+  String automationCardConditionCount(int count);
+
+  /// Battery threshold display in condition editor
+  ///
+  /// In en, this message translates to:
+  /// **'Battery threshold: {threshold}%'**
+  String automationConditionConfigBatteryThreshold(int threshold);
+
+  /// Days of week display in condition editor
+  ///
+  /// In en, this message translates to:
+  /// **'Days: {days}'**
+  String automationConditionConfigDays(String days);
+
+  /// Time range display in condition editor
+  ///
+  /// In en, this message translates to:
+  /// **'{start} – {end}'**
+  String automationConditionConfigTimeRange(String start, String end);
+
   /// Button label and sheet title for adding a new action
   ///
   /// In en, this message translates to:
@@ -53805,6 +53949,228 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Message: {text}'**
   String automationLogMessage(String text);
+
+  /// History label when THEN branch was executed
+  ///
+  /// In en, this message translates to:
+  /// **'Ran THEN branch'**
+  String get automationHistoryOutcomeThen;
+
+  /// History label when ELSE branch was executed
+  ///
+  /// In en, this message translates to:
+  /// **'Ran ELSE branch'**
+  String get automationHistoryOutcomeElse;
+
+  /// History label when automation executed without branching
+  ///
+  /// In en, this message translates to:
+  /// **'Executed'**
+  String get automationHistoryOutcomeExecuted;
+
+  /// History label when automation was manually triggered
+  ///
+  /// In en, this message translates to:
+  /// **'Manual run'**
+  String get automationHistoryOutcomeManual;
+
+  /// History label when automation execution failed
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get automationHistoryOutcomeFailed;
+
+  /// History label when condition failed and no ELSE branch exists
+  ///
+  /// In en, this message translates to:
+  /// **'Did not run'**
+  String get automationHistoryOutcomeSkippedNoElse;
+
+  /// History label when automation was throttled
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped (cooldown)'**
+  String get automationHistoryOutcomeSkippedThrottled;
+
+  /// History label when automation was disabled
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped (disabled)'**
+  String get automationHistoryOutcomeSkippedDisabled;
+
+  /// History label when automation was filtered out
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped (not eligible)'**
+  String get automationHistoryOutcomeSkippedFiltered;
+
+  /// Label for trigger type in history detail view
+  ///
+  /// In en, this message translates to:
+  /// **'Trigger'**
+  String get automationHistoryDetailTrigger;
+
+  /// Label for branch selection in history detail view
+  ///
+  /// In en, this message translates to:
+  /// **'Branch'**
+  String get automationHistoryDetailBranch;
+
+  /// Label for condition summary in history detail view
+  ///
+  /// In en, this message translates to:
+  /// **'Conditions'**
+  String get automationHistoryDetailConditions;
+
+  /// Label for action results in history detail view
+  ///
+  /// In en, this message translates to:
+  /// **'Actions'**
+  String get automationHistoryDetailActions;
+
+  /// Label for error message in history detail view
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get automationHistoryDetailError;
+
+  /// Label indicating manual execution bypassed conditions
+  ///
+  /// In en, this message translates to:
+  /// **'Conditions were bypassed'**
+  String get automationHistoryDetailManualBypass;
+
+  /// Shown when automation history is empty
+  ///
+  /// In en, this message translates to:
+  /// **'No automation activity yet'**
+  String get automationHistoryEmpty;
+
+  /// Label for a successful action in history details
+  ///
+  /// In en, this message translates to:
+  /// **'Succeeded'**
+  String get automationHistoryActionSuccess;
+
+  /// Label for a failed action in history details
+  ///
+  /// In en, this message translates to:
+  /// **'Failed: {error}'**
+  String automationHistoryActionFailed(String error);
+
+  /// Summary of action results in history
+  ///
+  /// In en, this message translates to:
+  /// **'{success} of {total} actions succeeded'**
+  String automationHistoryActionCount(int success, int total);
+
+  /// Label for a condition that passed evaluation
+  ///
+  /// In en, this message translates to:
+  /// **'Passed: {condition}'**
+  String automationConditionPassed(String condition);
+
+  /// Label for a condition that failed evaluation
+  ///
+  /// In en, this message translates to:
+  /// **'Failed: {condition}'**
+  String automationConditionFailed(String condition);
+
+  /// Summary when all conditions in a group passed
+  ///
+  /// In en, this message translates to:
+  /// **'All {count} conditions passed'**
+  String automationConditionAllPassed(int count);
+
+  /// Summary when some conditions in a group failed
+  ///
+  /// In en, this message translates to:
+  /// **'{failed} of {total} conditions failed'**
+  String automationConditionSomeFailed(int failed, int total);
+
+  /// Summary for ANY group when some conditions matched
+  ///
+  /// In en, this message translates to:
+  /// **'{matched} of {total} conditions matched'**
+  String automationConditionSomeMatched(int matched, int total);
+
+  /// Summary for ANY group when no conditions matched
+  ///
+  /// In en, this message translates to:
+  /// **'No conditions matched'**
+  String get automationConditionNoneMatched;
+
+  /// Summary for NOT group when inverted result is true
+  ///
+  /// In en, this message translates to:
+  /// **'NOT condition passed'**
+  String get automationConditionNotPassed;
+
+  /// Summary for NOT group when inverted result is false
+  ///
+  /// In en, this message translates to:
+  /// **'NOT condition failed'**
+  String get automationConditionNotFailed;
+
+  /// Readable skip reason: automation disabled
+  ///
+  /// In en, this message translates to:
+  /// **'Automation is disabled'**
+  String get automationSkipDisabled;
+
+  /// Readable skip reason: trigger type mismatch
+  ///
+  /// In en, this message translates to:
+  /// **'Trigger event did not match'**
+  String get automationSkipTriggerMismatch;
+
+  /// Readable skip reason: throttled/cooldown
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped due to cooldown'**
+  String get automationSkipThrottled;
+
+  /// Readable skip reason: node filter mismatch
+  ///
+  /// In en, this message translates to:
+  /// **'Node did not match filter'**
+  String get automationSkipNodeFilter;
+
+  /// Readable skip reason: battery threshold not met
+  ///
+  /// In en, this message translates to:
+  /// **'Battery level did not reach threshold'**
+  String get automationSkipBatteryThreshold;
+
+  /// Readable skip reason: keyword not matched
+  ///
+  /// In en, this message translates to:
+  /// **'Message did not contain keyword'**
+  String get automationSkipKeywordNotMatched;
+
+  /// Readable skip reason: signal threshold not met
+  ///
+  /// In en, this message translates to:
+  /// **'Signal level did not reach threshold'**
+  String get automationSkipSignalThreshold;
+
+  /// Readable skip reason: channel filter mismatch
+  ///
+  /// In en, this message translates to:
+  /// **'Channel did not match filter'**
+  String get automationSkipChannelFilter;
+
+  /// Readable skip reason: condition failed without ELSE branch
+  ///
+  /// In en, this message translates to:
+  /// **'Condition failed and no ELSE actions set'**
+  String get automationSkipConditionFailed;
+
+  /// Brief last run outcome shown on automation card
+  ///
+  /// In en, this message translates to:
+  /// **'Last: {outcome}'**
+  String automationCardLastRun(String outcome);
 
   /// Error message shown to the user
   ///

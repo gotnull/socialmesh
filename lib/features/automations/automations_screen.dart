@@ -22,11 +22,11 @@ import '../../utils/snackbar.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/edge_fade.dart';
 import 'automation_providers.dart';
-import '../../l10n/app_localizations.dart';
 import 'automation_repository.dart';
 import 'automation_share_utils.dart';
 import 'models/automation.dart';
 import 'widgets/automation_card.dart';
+import 'widgets/automation_history_sheet.dart';
 import 'automation_editor_screen.dart';
 
 /// Screen showing all configured automations
@@ -677,6 +677,9 @@ class AutomationsScreen extends ConsumerWidget {
           delegate: SliverChildBuilderDelegate((context, index) {
             final automation = automations[index];
             final animationsEnabled = ref.watch(animationsEnabledProvider);
+            final history = ref.watch(
+              automationHistoryByIdProvider(automation.id),
+            );
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: Perspective3DSlide(
@@ -685,6 +688,7 @@ class AutomationsScreen extends ConsumerWidget {
                 enabled: animationsEnabled,
                 child: AutomationCard(
                   automation: automation,
+                  lastRun: history.isNotEmpty ? history.first : null,
                   onToggle: (enabled) {
                     ref
                         .read(automationsProvider.notifier)
@@ -944,154 +948,12 @@ class AutomationsScreen extends ConsumerWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (sheetContext) => Consumer(
-        builder: (consumerContext, sheetRef, _) {
-          final log = sheetRef.watch(automationLogProvider);
-          return DraggableScrollableSheet(
-            initialChildSize: 0.7,
-            minChildSize: 0.5,
-            maxChildSize: 0.95,
-            expand: false,
-            builder: (context, scrollController) => SafeArea(
-              top: false,
-              child: Column(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 4,
-                    margin: const EdgeInsets.symmetric(vertical: 12),
-                    decoration: BoxDecoration(
-                      color: SemanticColors.muted,
-                      borderRadius: BorderRadius.circular(AppTheme.radius2),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          consumerContext.l10n.automationScreenExecutionLog,
-                          style: Theme.of(consumerContext).textTheme.titleLarge
-                              ?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                        if (log.isNotEmpty)
-                          TextButton(
-                            onPressed: () async {
-                              final confirmed =
-                                  await AppBottomSheet.showConfirm(
-                                    context: consumerContext,
-                                    title: consumerContext
-                                        .l10n
-                                        .automationScreenClearLogTitle,
-                                    message: consumerContext
-                                        .l10n
-                                        .automationScreenClearLogMessage,
-                                    confirmLabel: consumerContext
-                                        .l10n
-                                        .automationScreenClear,
-                                    isDestructive: true,
-                                  );
-                              if (confirmed == true) {
-                                sheetRef
-                                    .read(automationsProvider.notifier)
-                                    .clearExecutionLog();
-                              }
-                            },
-                            child: Text(
-                              consumerContext.l10n.automationScreenClear,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                  const Divider(),
-                  Expanded(
-                    child: log.isEmpty
-                        ? Center(
-                            child: Text(
-                              consumerContext.l10n.automationScreenNoExecutions,
-                              style: const TextStyle(
-                                color: SemanticColors.disabled,
-                              ),
-                            ),
-                          )
-                        : ListView.builder(
-                            controller: scrollController,
-                            itemCount: log.length,
-                            itemBuilder: (context, index) {
-                              final entry = log[index];
-                              return ListTile(
-                                leading: Icon(
-                                  entry.success
-                                      ? Icons.check_circle
-                                      : Icons.error,
-                                  color: entry.success
-                                      ? AppTheme.successGreen
-                                      : AppTheme.errorRed,
-                                ),
-                                title: Text(entry.automationName),
-                                subtitle: Text(
-                                  _buildTriggerDetails(
-                                    entry,
-                                    consumerContext.l10n,
-                                  ),
-                                ),
-                                trailing: Text(
-                                  _formatTime(context, entry.timestamp),
-                                  style: const TextStyle(
-                                    color: SemanticColors.disabled,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                  ),
-                ],
-              ),
-            ),
-          );
+      builder: (_) => AutomationHistorySheet(
+        onClear: () {
+          ref.read(automationsProvider.notifier).clearExecutionLog();
         },
       ),
     );
-  }
-
-  String _buildTriggerDetails(AutomationLogEntry entry, AppLocalizations l10n) {
-    final typeName = entry.triggerEventType;
-    if (typeName == null) return entry.triggerDetails ?? '';
-
-    TriggerType? triggerType;
-    try {
-      triggerType = TriggerType.values.byName(typeName);
-    } catch (_) {}
-
-    final parts = <String>[
-      triggerType != null ? triggerType.localizedName(l10n) : typeName,
-    ];
-    final nodeName = entry.triggerNodeName;
-    if (nodeName != null) parts.add(l10n.automationLogNode(nodeName));
-    final batteryLevel = entry.triggerBatteryLevel;
-    if (batteryLevel != null) {
-      parts.add(l10n.automationLogBattery(batteryLevel));
-    }
-    final messageText = entry.triggerMessageText;
-    if (messageText != null) parts.add(l10n.automationLogMessage(messageText));
-    return parts.join(', ');
-  }
-
-  String _formatTime(BuildContext context, DateTime time) {
-    final now = DateTime.now();
-    final diff = now.difference(time);
-
-    if (diff.inMinutes < 1) return context.l10n.automationScreenJustNow;
-    if (diff.inMinutes < 60) {
-      return context.l10n.automationScreenMinutesAgo(diff.inMinutes);
-    }
-    if (diff.inHours < 24) {
-      return context.l10n.automationScreenHoursAgo(diff.inHours);
-    }
-    return context.l10n.automationScreenDaysAgo(diff.inDays);
   }
 }
 

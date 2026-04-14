@@ -2081,6 +2081,106 @@ class AppLocalizationsRu extends AppLocalizations {
   String get automationConditionWithinGeofence => 'Within geofence';
 
   @override
+  String get automationEditorAddCondition => 'Add Condition';
+
+  @override
+  String get automationEditorAddElseActions => 'Add ELSE actions';
+
+  @override
+  String get automationEditorConditionsAll => 'All conditions must be true';
+
+  @override
+  String get automationEditorElse => 'ELSE';
+
+  @override
+  String get automationEditorElseDescription => 'otherwise do...';
+
+  @override
+  String get automationEditorIf => 'IF';
+
+  @override
+  String get automationEditorIfDescription => 'only if...';
+
+  @override
+  String get automationEditorNoConditions => 'No conditions — always runs';
+
+  @override
+  String get automationEditorRemoveElse => 'Remove ELSE';
+
+  @override
+  String get automationEditorSelectConditionType => 'Select Condition Type';
+
+  @override
+  String get automationEditorValidateElseActions =>
+      'ELSE branch must have at least one action, or remove the ELSE section';
+
+  @override
+  String get automationEditorValidateThenActions =>
+      'Please add at least one THEN action';
+
+  @override
+  String automationImportElseActions(int count) {
+    return 'ELSE Actions ($count)';
+  }
+
+  @override
+  String automationImportThenActions(int count) {
+    return 'THEN Actions ($count)';
+  }
+
+  @override
+  String automationSummaryElse(String actions) {
+    return 'else $actions';
+  }
+
+  @override
+  String automationSummaryIf(String conditions) {
+    return 'if $conditions';
+  }
+
+  @override
+  String automationSummaryThen(String actions) {
+    return 'then $actions';
+  }
+
+  @override
+  String automationSummaryWhen(String trigger) {
+    return 'When $trigger';
+  }
+
+  @override
+  String get automationCardBranchThen => 'THEN';
+
+  @override
+  String get automationCardBranchElse => 'ELSE';
+
+  @override
+  String automationCardConditionCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count conditions',
+      one: '1 condition',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String automationConditionConfigBatteryThreshold(int threshold) {
+    return 'Battery threshold: $threshold%';
+  }
+
+  @override
+  String automationConditionConfigDays(String days) {
+    return 'Days: $days';
+  }
+
+  @override
+  String automationConditionConfigTimeRange(String start, String end) {
+    return '$start – $end';
+  }
+
+  @override
   String get automationEditorAddAction => 'Add Action';
 
   @override
@@ -30503,6 +30603,138 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String automationLogMessage(String text) {
     return 'Message: $text';
+  }
+
+  @override
+  String get automationHistoryOutcomeThen => 'Ran THEN branch';
+
+  @override
+  String get automationHistoryOutcomeElse => 'Ran ELSE branch';
+
+  @override
+  String get automationHistoryOutcomeExecuted => 'Executed';
+
+  @override
+  String get automationHistoryOutcomeManual => 'Manual run';
+
+  @override
+  String get automationHistoryOutcomeFailed => 'Failed';
+
+  @override
+  String get automationHistoryOutcomeSkippedNoElse => 'Did not run';
+
+  @override
+  String get automationHistoryOutcomeSkippedThrottled => 'Skipped (cooldown)';
+
+  @override
+  String get automationHistoryOutcomeSkippedDisabled => 'Skipped (disabled)';
+
+  @override
+  String get automationHistoryOutcomeSkippedFiltered =>
+      'Skipped (not eligible)';
+
+  @override
+  String get automationHistoryDetailTrigger => 'Trigger';
+
+  @override
+  String get automationHistoryDetailBranch => 'Branch';
+
+  @override
+  String get automationHistoryDetailConditions => 'Conditions';
+
+  @override
+  String get automationHistoryDetailActions => 'Actions';
+
+  @override
+  String get automationHistoryDetailError => 'Error';
+
+  @override
+  String get automationHistoryDetailManualBypass => 'Conditions were bypassed';
+
+  @override
+  String get automationHistoryEmpty => 'No automation activity yet';
+
+  @override
+  String get automationHistoryActionSuccess => 'Succeeded';
+
+  @override
+  String automationHistoryActionFailed(String error) {
+    return 'Failed: $error';
+  }
+
+  @override
+  String automationHistoryActionCount(int success, int total) {
+    return '$success of $total actions succeeded';
+  }
+
+  @override
+  String automationConditionPassed(String condition) {
+    return 'Passed: $condition';
+  }
+
+  @override
+  String automationConditionFailed(String condition) {
+    return 'Failed: $condition';
+  }
+
+  @override
+  String automationConditionAllPassed(int count) {
+    return 'All $count conditions passed';
+  }
+
+  @override
+  String automationConditionSomeFailed(int failed, int total) {
+    return '$failed of $total conditions failed';
+  }
+
+  @override
+  String automationConditionSomeMatched(int matched, int total) {
+    return '$matched of $total conditions matched';
+  }
+
+  @override
+  String get automationConditionNoneMatched => 'No conditions matched';
+
+  @override
+  String get automationConditionNotPassed => 'NOT condition passed';
+
+  @override
+  String get automationConditionNotFailed => 'NOT condition failed';
+
+  @override
+  String get automationSkipDisabled => 'Automation is disabled';
+
+  @override
+  String get automationSkipTriggerMismatch => 'Trigger event did not match';
+
+  @override
+  String get automationSkipThrottled => 'Skipped due to cooldown';
+
+  @override
+  String get automationSkipNodeFilter => 'Node did not match filter';
+
+  @override
+  String get automationSkipBatteryThreshold =>
+      'Battery level did not reach threshold';
+
+  @override
+  String get automationSkipKeywordNotMatched =>
+      'Message did not contain keyword';
+
+  @override
+  String get automationSkipSignalThreshold =>
+      'Signal level did not reach threshold';
+
+  @override
+  String get automationSkipChannelFilter => 'Channel did not match filter';
+
+  @override
+  String get automationSkipConditionFailed =>
+      'Condition failed and no ELSE actions set';
+
+  @override
+  String automationCardLastRun(String outcome) {
+    return 'Last: $outcome';
   }
 
   @override

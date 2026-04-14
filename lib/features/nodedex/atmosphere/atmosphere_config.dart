@@ -27,11 +27,11 @@ class AtmosphereLimits {
   AtmosphereLimits._();
 
   /// Maximum particles per individual effect layer.
-  static const int maxParticlesPerEffect = 80;
+  static const int maxParticlesPerEffect = 120;
 
   /// Absolute ceiling across all active effects combined.
   /// If the total exceeds this, the least-visible effect is throttled.
-  static const int maxParticlesGlobal = 200;
+  static const int maxParticlesGlobal = 350;
 
   /// Target frame time in milliseconds. If a paint cycle exceeds
   /// this, the system reduces particle counts on the next frame.
@@ -46,7 +46,7 @@ class AtmosphereLimits {
 
   /// Particle pool pre-allocation size. Particles are recycled
   /// from this pool to avoid GC pressure during animation.
-  static const int particlePoolSize = 250;
+  static const int particlePoolSize = 400;
 }
 
 /// Timing constants for particle lifecycle and animation.
@@ -148,21 +148,21 @@ class AtmosphereColors {
 
   /// Rain particle colors for dark theme.
   static const List<Color> rainDark = [
-    Color(0x0D6B8FA3), // very faint blue-grey
-    Color(0x0A7BA4B8), // pale steel blue
-    Color(0x08809BB0), // muted cyan-grey
+    Color(0x286B8FA3), // very faint blue-grey
+    Color(0x207BA4B8), // pale steel blue
+    Color(0x18809BB0), // muted cyan-grey
   ];
 
   /// Rain particle colors for light theme.
   static const List<Color> rainLight = [
-    Color(0x0A4A6A7A), // dark blue-grey, very low alpha
-    Color(0x085A7A8A), // steel blue
-    Color(0x06506878), // muted teal-grey
+    Color(0x1C4A6A7A), // dark blue-grey, very low alpha
+    Color(0x185A7A8A), // steel blue
+    Color(0x14506878), // muted teal-grey
   ];
 
   /// Maximum alpha for rain streaks. Kept very low so rain
   /// reads as atmospheric texture, not UI noise.
-  static const double rainMaxAlpha = 0.08;
+  static const double rainMaxAlpha = 0.25;
 
   // ---------------------------------------------------------------------------
   // Embers — warm amber-orange tones
@@ -170,25 +170,25 @@ class AtmosphereColors {
 
   /// Ember particle colors for dark theme.
   static const List<Color> emberDark = [
-    Color(0x1AE8913A), // warm amber
-    Color(0x18D4782E), // burnt orange
-    Color(0x14C06030), // deep copper
-    Color(0x10F0A050), // soft gold
+    Color(0x40E8913A), // warm amber
+    Color(0x38D4782E), // burnt orange
+    Color(0x30C06030), // deep copper
+    Color(0x28F0A050), // soft gold
   ];
 
   /// Ember particle colors for light theme.
   static const List<Color> emberLight = [
-    Color(0x12C07030), // muted amber
-    Color(0x10B06028), // terracotta
-    Color(0x0EA05020), // brick red
-    Color(0x0CD09040), // golden
+    Color(0x30C07030), // muted amber
+    Color(0x28B06028), // terracotta
+    Color(0x22A05020), // brick red
+    Color(0x1CD09040), // golden
   ];
 
   /// Maximum alpha for ember glow halo.
-  static const double emberGlowMaxAlpha = 0.12;
+  static const double emberGlowMaxAlpha = 0.30;
 
   /// Ember core brightness multiplier relative to base color.
-  static const double emberCoreBrightness = 1.4;
+  static const double emberCoreBrightness = 1.6;
 
   // ---------------------------------------------------------------------------
   // Mist — translucent grey-white
@@ -196,20 +196,20 @@ class AtmosphereColors {
 
   /// Mist particle colors for dark theme.
   static const List<Color> mistDark = [
-    Color(0x06A0B0C0), // pale blue-grey fog
-    Color(0x05909CA8), // steel mist
-    Color(0x04B0BCC8), // light haze
+    Color(0x14A0B0C0), // pale blue-grey fog
+    Color(0x10909CA8), // steel mist
+    Color(0x0CB0BCC8), // light haze
   ];
 
   /// Mist particle colors for light theme.
   static const List<Color> mistLight = [
-    Color(0x06607080), // medium grey fog
-    Color(0x05506070), // darker haze
-    Color(0x04708090), // blue-grey mist
+    Color(0x14607080), // medium grey fog
+    Color(0x10506070), // darker haze
+    Color(0x0C708090), // blue-grey mist
   ];
 
   /// Maximum alpha for mist blobs.
-  static const double mistMaxAlpha = 0.05;
+  static const double mistMaxAlpha = 0.18;
 
   // ---------------------------------------------------------------------------
   // Starlight — pale white-blue points
@@ -217,22 +217,22 @@ class AtmosphereColors {
 
   /// Starlight particle colors for dark theme.
   static const List<Color> starlightDark = [
-    Color(0x14D0D8E8), // pale blue-white
-    Color(0x10C8D0E0), // cool white
-    Color(0x0CE0E8F0), // warm white
-    Color(0x08B0C0D8), // faint blue
+    Color(0x38D0D8E8), // pale blue-white
+    Color(0x30C8D0E0), // cool white
+    Color(0x24E0E8F0), // warm white
+    Color(0x18B0C0D8), // faint blue
   ];
 
   /// Starlight particle colors for light theme.
   /// Much more subtle on light backgrounds.
   static const List<Color> starlightLight = [
-    Color(0x08606878), // dark grey point
-    Color(0x06505868), // muted blue-grey
-    Color(0x04707880), // subtle grey
+    Color(0x18606878), // dark grey point
+    Color(0x14505868), // muted blue-grey
+    Color(0x0C707880), // subtle grey
   ];
 
   /// Maximum alpha for starlight twinkle peak.
-  static const double starlightMaxAlpha = 0.10;
+  static const double starlightMaxAlpha = 0.30;
 }
 
 /// Intensity mapping constants.
@@ -248,26 +248,26 @@ class AtmosphereIntensity {
   // ---------------------------------------------------------------------------
 
   /// Minimum rain intensity when the effect is active (0.0-1.0).
-  static const double rainFloor = 0.1;
+  static const double rainFloor = 0.2;
 
   /// Maximum rain intensity even at peak activity.
-  static const double rainCeiling = 0.7;
+  static const double rainCeiling = 0.9;
 
   /// Node count at which rain reaches full intensity.
-  static const int rainNodeCountSaturation = 50;
+  static const int rainNodeCountSaturation = 30;
 
   // ---------------------------------------------------------------------------
   // Ember intensity (driven by patina scores / relay contribution)
   // ---------------------------------------------------------------------------
 
   /// Minimum ember intensity when the effect is active.
-  static const double emberFloor = 0.05;
+  static const double emberFloor = 0.15;
 
   /// Maximum ember intensity.
-  static const double emberCeiling = 0.6;
+  static const double emberCeiling = 0.85;
 
   /// Average patina score at which embers reach full intensity.
-  static const double emberPatinaSaturation = 70.0;
+  static const double emberPatinaSaturation = 50.0;
 
   /// Relay node fraction (0.0-1.0) at which embers reach full intensity.
   static const double emberRelayFractionSaturation = 0.3;
@@ -277,10 +277,10 @@ class AtmosphereIntensity {
   // ---------------------------------------------------------------------------
 
   /// Minimum mist intensity when the effect is active.
-  static const double mistFloor = 0.1;
+  static const double mistFloor = 0.2;
 
   /// Maximum mist intensity.
-  static const double mistCeiling = 0.5;
+  static const double mistCeiling = 0.75;
 
   /// Fraction of nodes with trait "ghost" or "unknown" at which
   /// mist reaches full intensity.
@@ -292,10 +292,10 @@ class AtmosphereIntensity {
 
   /// Minimum starlight intensity. Starlight is always at least this
   /// visible when the atmosphere system is enabled.
-  static const double starlightFloor = 0.15;
+  static const double starlightFloor = 0.3;
 
   /// Maximum starlight intensity.
-  static const double starlightCeiling = 0.4;
+  static const double starlightCeiling = 0.7;
 
   // ---------------------------------------------------------------------------
   // Context-specific multipliers
@@ -305,7 +305,7 @@ class AtmosphereIntensity {
   static const double constellationMultiplier = 1.0;
 
   /// Intensity multiplier for node detail screen (very subtle).
-  static const double detailScreenMultiplier = 0.25;
+  static const double detailScreenMultiplier = 0.5;
 
   /// Intensity multiplier for map overlays (subtle, must not
   /// interfere with map readability).

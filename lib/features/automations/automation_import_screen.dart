@@ -79,6 +79,16 @@ class _AutomationImportScreenState extends ConsumerState<AutomationImportScreen>
                       AutomationCondition.fromJson(c as Map<String, dynamic>),
                 )
                 .toList(),
+            thenActions: (json['thenActions'] as List?)
+                ?.map(
+                  (a) => AutomationAction.fromJson(a as Map<String, dynamic>),
+                )
+                .toList(),
+            elseActions: (json['elseActions'] as List?)
+                ?.map(
+                  (a) => AutomationAction.fromJson(a as Map<String, dynamic>),
+                )
+                .toList(),
           );
           _isLoading = false;
         });
@@ -118,6 +128,16 @@ class _AutomationImportScreenState extends ConsumerState<AutomationImportScreen>
                 ?.map(
                   (c) =>
                       AutomationCondition.fromJson(c as Map<String, dynamic>),
+                )
+                .toList(),
+            thenActions: (data['thenActions'] as List?)
+                ?.map(
+                  (a) => AutomationAction.fromJson(a as Map<String, dynamic>),
+                )
+                .toList(),
+            elseActions: (data['elseActions'] as List?)
+                ?.map(
+                  (a) => AutomationAction.fromJson(a as Map<String, dynamic>),
                 )
                 .toList(),
           );
@@ -210,7 +230,8 @@ class _AutomationImportScreenState extends ConsumerState<AutomationImportScreen>
 
     final result = await Navigator.of(context).push<Automation>(
       MaterialPageRoute(
-        builder: (context) => AutomationEditorScreen(automation: _automation),
+        builder: (context) =>
+            AutomationEditorScreen(automation: _automation, draftMode: true),
       ),
     );
 
@@ -335,16 +356,18 @@ class _AutomationImportScreenState extends ConsumerState<AutomationImportScreen>
                   const SizedBox(height: AppTheme.spacing4),
                   Text(automation.trigger.type.displayName),
                   const SizedBox(height: AppTheme.spacing16),
+
+                  // THEN actions
                   Text(
-                    context.l10n.automationImportActionsCount(
-                      automation.actions.length,
+                    context.l10n.automationImportThenActions(
+                      automation.effectiveThenActions.length,
                     ),
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: context.accentColor,
+                      color: AppTheme.successGreen,
                     ),
                   ),
                   const SizedBox(height: AppTheme.spacing4),
-                  ...automation.actions.map(
+                  ...automation.effectiveThenActions.map(
                     (action) => Padding(
                       padding: const EdgeInsets.only(bottom: 4),
                       child: Row(
@@ -365,6 +388,42 @@ class _AutomationImportScreenState extends ConsumerState<AutomationImportScreen>
                       ),
                     ),
                   ),
+
+                  // ELSE actions (if present)
+                  if (automation.effectiveElseActions != null &&
+                      automation.effectiveElseActions!.isNotEmpty) ...[
+                    const SizedBox(height: AppTheme.spacing16),
+                    Text(
+                      context.l10n.automationImportElseActions(
+                        automation.effectiveElseActions!.length,
+                      ),
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: AppTheme.errorRed,
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spacing4),
+                    ...automation.effectiveElseActions!.map(
+                      (action) => Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: Row(
+                          children: [
+                            Icon(
+                              action.type.icon,
+                              size: 16,
+                              color: SemanticColors.disabled,
+                            ),
+                            const SizedBox(width: AppTheme.spacing8),
+                            Expanded(
+                              child: Text(
+                                action.type.displayName,
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                   if (automation.conditions != null &&
                       automation.conditions!.isNotEmpty) ...[
                     const SizedBox(height: AppTheme.spacing16),
