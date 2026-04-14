@@ -4486,10 +4486,10 @@ abstract class AppLocalizations {
   /// **'Failed to run: {error}'**
   String automationScreenRunFailed(String error);
 
-  /// Success snackbar after running an automation
+  /// Success snackbar after manual run — clarifies conditions were bypassed
   ///
   /// In en, this message translates to:
-  /// **'Ran \"{name}\" successfully'**
+  /// **'Ran \"{name}\" — conditions bypassed, THEN executed'**
   String automationScreenRunSuccess(String name);
 
   /// Loading snackbar while running an automation
@@ -53968,10 +53968,10 @@ abstract class AppLocalizations {
   /// **'Executed'**
   String get automationHistoryOutcomeExecuted;
 
-  /// History label when automation was manually triggered
+  /// History label when automation was manually triggered — clarifies THEN was forced
   ///
   /// In en, this message translates to:
-  /// **'Manual run'**
+  /// **'Ran THEN manually'**
   String get automationHistoryOutcomeManual;
 
   /// History label when automation execution failed
@@ -54034,11 +54034,17 @@ abstract class AppLocalizations {
   /// **'Error'**
   String get automationHistoryDetailError;
 
-  /// Label indicating manual execution bypassed conditions
+  /// Label indicating manual execution bypassed conditions and forced THEN
   ///
   /// In en, this message translates to:
-  /// **'Conditions were bypassed'**
+  /// **'THEN branch forced — conditions not evaluated'**
   String get automationHistoryDetailManualBypass;
+
+  /// Expanded detail note explaining manual run differs from automatic
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic execution may select a different branch based on conditions.'**
+  String get automationHistoryDetailManualNote;
 
   /// Shown when automation history is empty
   ///
@@ -54171,6 +54177,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Last: {outcome}'**
   String automationCardLastRun(String outcome);
+
+  /// Brief last run outcome on card when run was manual — distinct from auto success
+  ///
+  /// In en, this message translates to:
+  /// **'Last: Manual test'**
+  String get automationCardLastRunManual;
 
   /// Error message shown to the user
   ///

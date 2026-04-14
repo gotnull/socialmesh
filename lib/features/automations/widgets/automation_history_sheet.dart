@@ -201,7 +201,10 @@ class _HistoryRowState extends State<_HistoryRow> {
     final IconData icon;
     final Color color;
 
-    if (isSuccess) {
+    if (outcome == RunOutcome.manualRun) {
+      icon = Icons.play_circle;
+      color = AccentColors.cyan;
+    } else if (isSuccess) {
       icon = Icons.check_circle;
       color = AppTheme.successGreen;
     } else if (outcome == RunOutcome.failed) {
@@ -217,9 +220,8 @@ class _HistoryRowState extends State<_HistoryRow> {
 
   Color _outcomeColor(RunOutcome outcome) {
     return switch (outcome) {
-      RunOutcome.executedThen ||
-      RunOutcome.executed ||
-      RunOutcome.manualRun => AppTheme.successGreen,
+      RunOutcome.executedThen || RunOutcome.executed => AppTheme.successGreen,
+      RunOutcome.manualRun => AccentColors.cyan,
       RunOutcome.executedElse => AppTheme.warningYellow,
       RunOutcome.failed => AppTheme.errorRed,
       RunOutcome.skippedNoElse ||
@@ -255,11 +257,17 @@ class _HistoryRowState extends State<_HistoryRow> {
               _triggerLabel(entry.triggerEventType!, l10n),
             ),
           // Manual bypass
-          if (entry.manualBypass)
+          if (entry.manualBypass) ...[
             _detailRow(
               l10n.automationHistoryDetailBranch,
               l10n.automationHistoryDetailManualBypass,
             ),
+            _detailRow(
+              '',
+              l10n.automationHistoryDetailManualNote,
+              valueColor: SemanticColors.muted,
+            ),
+          ],
           // Branch selection
           if (!entry.manualBypass &&
               (entry.outcome == RunOutcome.executedThen ||

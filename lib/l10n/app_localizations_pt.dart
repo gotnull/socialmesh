@@ -30932,7 +30932,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get automationHistoryOutcomeExecuted => 'Executed';
 
   @override
-  String get automationHistoryOutcomeManual => 'Manual run';
+  String get automationHistoryOutcomeManual => 'Ran THEN manually';
 
   @override
   String get automationHistoryOutcomeFailed => 'Failed';
@@ -30966,7 +30966,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get automationHistoryDetailError => 'Error';
 
   @override
-  String get automationHistoryDetailManualBypass => 'Conditions were bypassed';
+  String get automationHistoryDetailManualBypass =>
+      'THEN branch forced — conditions not evaluated';
+
+  @override
+  String get automationHistoryDetailManualNote =>
+      'Automatic execution may select a different branch based on conditions.';
 
   @override
   String get automationHistoryEmpty => 'No automation activity yet';
@@ -31053,6 +31058,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String automationCardLastRun(String outcome) {
     return 'Last: $outcome';
   }
+
+  @override
+  String get automationCardLastRunManual => 'Last: Manual test';
 
   @override
   String get authErrorGoogleSignInCancelled => 'Login do Google cancelado';

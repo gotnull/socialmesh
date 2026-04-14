@@ -43,11 +43,12 @@ import '../album/card_gallery_screen.dart';
 import '../models/nodedex_entry.dart';
 import '../models/observed_radio_preset.dart';
 import '../models/sigil_evolution.dart';
+import '../atmosphere/atmosphere_provider.dart';
+import '../atmosphere/tile_atmosphere.dart';
 import '../providers/nodedex_providers.dart';
 import '../services/trust_score.dart';
 
 import '../../settings/settings_screen.dart';
-import '../atmosphere/atmosphere_overlay.dart';
 import '../widgets/identity_overlay_painter.dart';
 import '../widgets/patina_stamp.dart';
 import '../widgets/sigil_painter.dart';
@@ -68,12 +69,27 @@ class NodeDexScreen extends ConsumerStatefulWidget {
   ConsumerState<NodeDexScreen> createState() => _NodeDexScreenState();
 }
 
-class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
+class _NodeDexScreenState extends ConsumerState<NodeDexScreen>
+    with TickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
+  /// Shared animation controller for tile atmosphere effects.
+  /// Single ticker drives all visible tile painters — no per-tile tickers.
+  late final AnimationController _atmosphereController;
+
+  @override
+  void initState() {
+    super.initState();
+    _atmosphereController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 20),
+    )..repeat();
+  }
+
   @override
   void dispose() {
+    _atmosphereController.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -95,6 +111,7 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
     final observedPresets = ref.watch(nodeDexObservedPresetsProvider);
     final viewMode = ref.watch(albumViewModeProvider);
     final reduceMotion = ref.watch(reduceMotionEnabledProvider);
+    final atmosphereEnabled = ref.watch(atmosphereEffectivelyEnabledProvider);
 
     // Separate own device from other entries.
     final myEntry = myNodeNum != null
@@ -120,7 +137,6 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
       child: GestureDetector(
         onTap: _dismissKeyboard,
         child: GlassScaffold(
-          backgroundLayer: const NodeDexListAtmosphere(),
           resizeToAvoidBottomInset: false,
           title: context.l10n.nodedexTitle,
           actions: [
@@ -164,6 +180,7 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
                   radioPresetFilter: radioPresetFilter,
                   observedPresets: observedPresets,
                   reduceMotion: reduceMotion,
+                  atmosphereEnabled: atmosphereEnabled,
                 ),
         ),
       ),
@@ -228,6 +245,7 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
     required Set<int> radioPresetFilter,
     required Set<int> observedPresets,
     required bool reduceMotion,
+    required bool atmosphereEnabled,
   }) {
     return [
       // Top padding below glass app bar
@@ -426,8 +444,13 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
               node: node,
               onTap: () => _openDetail(entry, node),
             );
-            if (reduceMotion) return tile;
-            return _StaggeredListTile(index: index, child: tile);
+            final atmosphereTile = _buildAtmosphereTile(
+              tile,
+              entry,
+              atmosphereEnabled,
+            );
+            if (reduceMotion) return atmosphereTile;
+            return _StaggeredListTile(index: index, child: atmosphereTile);
           }, childCount: myEntry.length),
         ),
       ],
@@ -449,11 +472,16 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
               node: node,
               onTap: () => _openDetail(entry, node),
             );
-            if (reduceMotion) return tile;
+            final atmosphereTile = _buildAtmosphereTile(
+              tile,
+              entry,
+              atmosphereEnabled,
+            );
+            if (reduceMotion) return atmosphereTile;
             // Offset by myEntry count so the stagger cascade is continuous.
             return _StaggeredListTile(
               index: myEntry.length + index,
-              child: tile,
+              child: atmosphereTile,
             );
           }, childCount: otherEntries.length),
         ),
@@ -473,6 +501,27 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
   // ---------------------------------------------------------------------------
   // Navigation helpers
   // ---------------------------------------------------------------------------
+
+  /// Wrap a list tile with per-tile atmosphere effects when enabled.
+  Widget _buildAtmosphereTile(
+    Widget tile,
+    NodeDexEntry entry,
+    bool atmosphereEnabled,
+  ) {
+    if (!atmosphereEnabled) return tile;
+
+    final traitResult = ref.read(nodeDexTraitProvider(entry.nodeNum));
+    final patinaResult = ref.read(nodeDexPatinaProvider(entry.nodeNum));
+
+    return TileAtmosphere(
+      nodeNum: entry.nodeNum,
+      trait: traitResult.primary,
+      patinaScore: patinaResult.score.toDouble(),
+      animation: _atmosphereController,
+      enabled: true,
+      child: tile,
+    );
+  }
 
   void _openDetail(NodeDexEntry entry, MeshNode? node) {
     final hexId =

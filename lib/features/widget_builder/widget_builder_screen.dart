@@ -577,7 +577,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
         ),
         const SizedBox(height: AppTheme.spacing12),
         SizedBox(
-          height: 120,
+          height: 140,
           child: EdgeFade.horizontal(
             fadeSize: 24,
             fadeColor: context.background,
@@ -592,7 +592,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
                 return BouncyTap(
                   onTap: () => _useBuiltInTemplate(template),
                   child: Container(
-                    width: 140,
+                    width: 160,
                     padding: const EdgeInsets.all(AppTheme.spacing12),
                     decoration: BoxDecoration(
                       color: context.card,
@@ -624,8 +624,6 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
                             fontWeight: FontWeight.w600,
                             fontSize: 13,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: AppTheme.spacing2),
                         Text(
@@ -634,8 +632,6 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
                             color: context.textTertiary,
                             fontSize: 11,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),

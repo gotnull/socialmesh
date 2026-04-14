@@ -357,13 +357,13 @@ class AutomationsScreen extends ConsumerWidget {
         ),
         const SizedBox(height: AppTheme.spacing12),
         SizedBox(
-          height: 110,
+          height: 130,
           child: EdgeFade.horizontal(
             fadeSize: 24,
             fadeColor: context.background,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 4),
               itemCount: templates.length,
               separatorBuilder: (context, index) =>
                   const SizedBox(width: AppTheme.spacing12),
@@ -372,7 +372,7 @@ class AutomationsScreen extends ConsumerWidget {
                 return BouncyTap(
                   onTap: () => _addFromTemplate(context, ref, template.id),
                   child: Container(
-                    width: 140,
+                    width: 160,
                     padding: const EdgeInsets.all(AppTheme.spacing12),
                     decoration: BoxDecoration(
                       color: context.card,
@@ -409,8 +409,6 @@ class AutomationsScreen extends ConsumerWidget {
                             fontWeight: FontWeight.w600,
                             fontSize: 13,
                           ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
@@ -1162,7 +1160,7 @@ class _AddAutomationSheet extends ConsumerWidget {
         ),
         const SizedBox(height: AppTheme.spacing12),
         SizedBox(
-          height: 110,
+          height: 130,
           child: EdgeFade.horizontal(
             fadeSize: 24,
             fadeColor: context.surface,
@@ -1177,7 +1175,7 @@ class _AddAutomationSheet extends ConsumerWidget {
                 return BouncyTap(
                   onTap: () => onSelectTemplate(template.id),
                   child: Container(
-                    width: 140,
+                    width: 160,
                     padding: const EdgeInsets.all(AppTheme.spacing12),
                     decoration: BoxDecoration(
                       color: context.card,
@@ -1214,8 +1212,6 @@ class _AddAutomationSheet extends ConsumerWidget {
                             fontWeight: FontWeight.w600,
                             fontSize: 13,
                           ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),

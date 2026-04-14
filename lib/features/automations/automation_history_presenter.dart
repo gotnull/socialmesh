@@ -165,6 +165,11 @@ class RunOutcomePresenter {
         outcome == RunOutcome.skippedDisabled ||
         outcome == RunOutcome.skippedFiltered;
   }
+
+  /// Whether this outcome was a manual test run (conditions bypassed).
+  static bool isManualRun(RunOutcome outcome) {
+    return outcome == RunOutcome.manualRun;
+  }
 }
 
 /// Produces user-readable summaries from [ConditionNodeResult] trees.

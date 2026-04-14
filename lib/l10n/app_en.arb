@@ -3322,9 +3322,9 @@
             }
         }
     },
-    "automationScreenRunSuccess": "Ran \"{name}\" successfully",
+    "automationScreenRunSuccess": "Ran \"{name}\" — conditions bypassed, THEN executed",
     "@automationScreenRunSuccess": {
-        "description": "Success snackbar after running an automation",
+        "description": "Success snackbar after manual run — clarifies conditions were bypassed",
         "placeholders": {
             "name": {
                 "type": "String"
@@ -41168,9 +41168,9 @@
     "@automationHistoryOutcomeExecuted": {
         "description": "History label when automation executed without branching"
     },
-    "automationHistoryOutcomeManual": "Manual run",
+    "automationHistoryOutcomeManual": "Ran THEN manually",
     "@automationHistoryOutcomeManual": {
-        "description": "History label when automation was manually triggered"
+        "description": "History label when automation was manually triggered — clarifies THEN was forced"
     },
     "automationHistoryOutcomeFailed": "Failed",
     "@automationHistoryOutcomeFailed": {
@@ -41212,9 +41212,13 @@
     "@automationHistoryDetailError": {
         "description": "Label for error message in history detail view"
     },
-    "automationHistoryDetailManualBypass": "Conditions were bypassed",
+    "automationHistoryDetailManualBypass": "THEN branch forced — conditions not evaluated",
     "@automationHistoryDetailManualBypass": {
-        "description": "Label indicating manual execution bypassed conditions"
+        "description": "Label indicating manual execution bypassed conditions and forced THEN"
+    },
+    "automationHistoryDetailManualNote": "Automatic execution may select a different branch based on conditions.",
+    "@automationHistoryDetailManualNote": {
+        "description": "Expanded detail note explaining manual run differs from automatic"
     },
     "automationHistoryEmpty": "No automation activity yet",
     "@automationHistoryEmpty": {
@@ -41352,6 +41356,10 @@
                 "type": "String"
             }
         }
+    },
+    "automationCardLastRunManual": "Last: Manual test",
+    "@automationCardLastRunManual": {
+        "description": "Brief last run outcome on card when run was manual — distinct from auto success"
     },
     "authErrorGoogleSignInCancelled": "Google sign in was cancelled",
     "@authErrorGoogleSignInCancelled": {

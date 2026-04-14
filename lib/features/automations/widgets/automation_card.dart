@@ -215,7 +215,7 @@ class AutomationCard extends StatelessWidget {
                   if (automation.triggerCount > 0 ||
                       automation.lastTriggered != null)
                     const SizedBox(width: AppTheme.spacing8),
-                  _buildLastRunSignal(context, lastRun!),
+                  Flexible(child: _buildLastRunSignal(context, lastRun!)),
                 ],
                 const Spacer(),
                 // Run button — visible for manual-trigger automations
@@ -274,16 +274,21 @@ class AutomationCard extends StatelessWidget {
     BuildContext context,
     AutomationHistoryEntry entry,
   ) {
+    final isManual = entry.outcome == RunOutcome.manualRun;
     final isSuccess = RunOutcomePresenter.isSuccess(entry.outcome);
     final isFailed = entry.outcome == RunOutcome.failed;
-    final color = isSuccess
+    final color = isManual
+        ? AccentColors.cyan
+        : isSuccess
         ? AppTheme.successGreen
         : isFailed
         ? AppTheme.errorRed
         : SemanticColors.muted;
-    final label = context.l10n.automationCardLastRun(
-      RunOutcomePresenter.label(entry.outcome, context.l10n),
-    );
+    final label = isManual
+        ? context.l10n.automationCardLastRunManual
+        : context.l10n.automationCardLastRun(
+            RunOutcomePresenter.label(entry.outcome, context.l10n),
+          );
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [

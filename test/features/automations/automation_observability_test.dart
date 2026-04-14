@@ -490,5 +490,94 @@ void main() {
         expect(entry.hasFailedActions, true);
       });
     });
+
+    group('Phase 5.1 — Manual Run Clarity', () {
+      test('manual run outcome is distinct from automatic THEN execution', () {
+        final manualEntry = _logEntry(
+          branchSelection: 'then',
+          manualBypass: true,
+        );
+        final autoEntry = _logEntry(
+          branchSelection: 'then',
+          manualBypass: false,
+        );
+
+        final manualHistory = AutomationHistoryEntry.fromLogEntry(manualEntry);
+        final autoHistory = AutomationHistoryEntry.fromLogEntry(autoEntry);
+
+        expect(manualHistory.outcome, RunOutcome.manualRun);
+        expect(autoHistory.outcome, RunOutcome.executedThen);
+        expect(manualHistory.outcome, isNot(autoHistory.outcome));
+      });
+
+      test('manual run label does not imply condition pass', () {
+        final label = RunOutcomePresenter.label(RunOutcome.manualRun, _l10n);
+        final thenLabel = RunOutcomePresenter.label(
+          RunOutcome.executedThen,
+          _l10n,
+        );
+
+        // Manual label should contain 'manually' to clarify forced execution
+        expect(label.toLowerCase(), contains('manually'));
+        // Must differ from the automatic THEN label
+        expect(label, isNot(thenLabel));
+      });
+
+      test('isManualRun returns true only for manualRun outcome', () {
+        expect(RunOutcomePresenter.isManualRun(RunOutcome.manualRun), true);
+        expect(RunOutcomePresenter.isManualRun(RunOutcome.executedThen), false);
+        expect(RunOutcomePresenter.isManualRun(RunOutcome.executed), false);
+        expect(RunOutcomePresenter.isManualRun(RunOutcome.failed), false);
+      });
+
+      test('manual run is still classified as success', () {
+        expect(RunOutcomePresenter.isSuccess(RunOutcome.manualRun), true);
+        expect(RunOutcomePresenter.isSkip(RunOutcome.manualRun), false);
+      });
+
+      test('automatic THEN execution still renders correctly', () {
+        final label = RunOutcomePresenter.label(RunOutcome.executedThen, _l10n);
+        expect(label, isNotEmpty);
+        expect(RunOutcomePresenter.isSuccess(RunOutcome.executedThen), true);
+        expect(RunOutcomePresenter.isManualRun(RunOutcome.executedThen), false);
+      });
+
+      test('skipped and ELSE outcomes remain unchanged', () {
+        expect(RunOutcomePresenter.isSkip(RunOutcome.skippedNoElse), true);
+        expect(RunOutcomePresenter.isSkip(RunOutcome.skippedThrottled), true);
+        expect(RunOutcomePresenter.isSuccess(RunOutcome.executedElse), true);
+        expect(RunOutcomePresenter.isManualRun(RunOutcome.executedElse), false);
+      });
+
+      test('manual run from evaluation maps to manualRun outcome', () {
+        final eval = _evaluation(
+          triggered: true,
+          branchSelection: BranchSelection.thenBranch,
+          manualBypass: true,
+        );
+        final entry = AutomationHistoryEntry.fromEvaluation(eval);
+        expect(entry.outcome, RunOutcome.manualRun);
+        expect(entry.manualBypass, true);
+      });
+
+      test('manual bypass detail wording explains forced execution', () {
+        // Verify the localized string contains key concepts
+        final bypassText = _l10n.automationHistoryDetailManualBypass;
+        expect(bypassText.toLowerCase(), contains('not evaluated'));
+
+        final noteText = _l10n.automationHistoryDetailManualNote;
+        expect(noteText.toLowerCase(), contains('automatic'));
+      });
+
+      test('card trust signal text for manual runs is distinct', () {
+        final manualLabel = _l10n.automationCardLastRunManual;
+        final autoLabel = _l10n.automationCardLastRun(
+          RunOutcomePresenter.label(RunOutcome.executedThen, _l10n),
+        );
+
+        expect(manualLabel, isNot(autoLabel));
+        expect(manualLabel.toLowerCase(), contains('manual'));
+      });
+    });
   });
 }
