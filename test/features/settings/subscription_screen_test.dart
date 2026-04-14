@@ -292,23 +292,24 @@ TRANSLATION_ENABLED=false
       );
     });
 
-    testWidgets('Starter Pack anchor card is visible when not all owned', (
+    testWidgets('individual purchase divider is visible when not all owned', (
       tester,
     ) async {
       await tester.pumpWidget(_buildTestWidget());
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
-      // Scroll to find the starter card if below the fold
+      // Scroll to find the divider if below the fold.
       await tester.scrollUntilVisible(
-        find.text(_l10n.subscriptionStarterPack),
+        find.text(_l10n.subscriptionOrBuyIndividually),
         200,
       );
-      expect(find.text(_l10n.subscriptionStarterPack), findsOneWidget);
-      expect(find.text(_l10n.subscriptionStarterPackSubtitle), findsOneWidget);
+
+      expect(find.text(_l10n.subscriptionOrBuyIndividually), findsOneWidget);
+      expect(find.text(_l10n.subscriptionIncludedFeatures), findsNothing);
     });
 
-    testWidgets('Starter Pack anchor card is hidden when all owned', (
+    testWidgets('included features divider is visible when all owned', (
       tester,
     ) async {
       final allOwned = PurchaseState(
@@ -319,7 +320,13 @@ TRANSLATION_ENABLED=false
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
-      expect(find.text(_l10n.subscriptionStarterPack), findsNothing);
+      await tester.scrollUntilVisible(
+        find.text(_l10n.subscriptionIncludedFeatures),
+        200,
+      );
+
+      expect(find.text(_l10n.subscriptionIncludedFeatures), findsOneWidget);
+      expect(find.text(_l10n.subscriptionOrBuyIndividually), findsNothing);
     });
   });
 }

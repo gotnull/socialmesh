@@ -509,6 +509,13 @@ void main() {
     test(
       'co-seen relationships created after manual flush for co-present nodes',
       () async {
+        NodeDexNotifier.coSeenFlushIntervalOverride = const Duration(days: 1);
+        addTearDown(() {
+          NodeDexNotifier.coSeenFlushIntervalOverride = const Duration(
+            milliseconds: 50,
+          );
+        });
+
         final ctx = _createTestContainer(preInitStore: preInitStore);
         addTearDown(ctx.container.dispose);
 
