@@ -29233,7 +29233,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpPrivacyLevelBubble =>
-      'Quão secreto deve ser seu canal?\\n\\n**OPEN**: Qualquer um pode ouvir.\\n**SHARED**: Como uma senha que todos conhecem.\\n**PRIVATE**: Apenas amigos que você convidar.\\n**MAXIMUM**: Super ultra secreto!';
+      'Quão secreto deve ser seu canal?\n\n**OPEN**: Qualquer um pode ouvir.\n**SHARED**: Como uma senha que todos conhecem.\n**PRIVATE**: Apenas amigos que você convidar.\n**MAXIMUM**: Super ultra secreto!';
 
   @override
   String get helpEncryptionKeyBubble =>
@@ -29349,11 +29349,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpConnectionTroubleshootBubble =>
-      'Não encontra seu dispositivo? Verifique:\\n- **O Bluetooth está ligado**\\n- O dispositivo tem energia\\n- O dispositivo não está conectado em outro lugar\\n- Você está perto o suficiente (menos de 10m)';
+      'Não encontra seu dispositivo? Verifique:\n- **O Bluetooth está ligado**\n- O dispositivo tem energia\n- O dispositivo não está conectado em outro lugar\n- Você está perto o suficiente (menos de 10m)';
 
   @override
   String get helpConnectionDisconnectBubble =>
-      'Desconectando com frequência? Causas comuns:\\n- **Outro app** (ex. app Meshtastic) já está conectado a este nó\\n- No **TCP/IP (dispositivos ESP)**, apenas um cliente pode conectar por vez\\n- Tente fechar outros apps ou desconectar outros dispositivos primeiro';
+      'Desconectando com frequência? Causas comuns:\n- **Outro app** (ex. app Meshtastic) já está conectado a este nó\n- No **TCP/IP (dispositivos ESP)**, apenas um cliente pode conectar por vez\n- Tente fechar outros apps ou desconectar outros dispositivos primeiro';
 
   @override
   String get helpGpsIntroBubble =>
@@ -30341,7 +30341,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get whatsNewReachabilityDescription =>
-      'Estime a probabilidade de alcançar cada nó na mesh — sem enviar um único pacote de teste.\\n\\nA alcançabilidade observa passivamente o tráfego na rede e atribui confiança Alta, Média ou Baixa a cada nó. Encontre no menu sob Mesh.';
+      'Estime a probabilidade de alcançar cada nó na mesh — sem enviar um único pacote de teste.\n\nA alcançabilidade observa passivamente o tráfego na rede e atribui confiança Alta, Média ou Baixa a cada nó. Encontre no menu sob Mesh.';
 
   @override
   String get whatsNewVersion1100Subtitle => 'Versão 1.10.0';
@@ -30351,7 +30351,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get whatsNewWorldMapDescription =>
-      'Veja toda a rede Meshtastic global em um único mapa. Cada ponto é um nó compartilhando sua localização — amplie, navegue e toque para explorar detalhes do nó, info de hardware e último contato.\\n\\nSem necessidade de conexão. O Mapa Mundial usa dados em tempo real do backend Socialmesh para explorar a mesh em qualquer lugar.';
+      'Veja toda a rede Meshtastic global em um único mapa. Cada ponto é um nó compartilhando sua localização — amplie, navegue e toque para explorar detalhes do nó, info de hardware e último contato.\n\nSem necessidade de conexão. O Mapa Mundial usa dados em tempo real do backend Socialmesh para explorar a mesh em qualquer lugar.';
 
   @override
   String get whatsNewVersion1101Subtitle => 'Versão 1.10.1';
@@ -30361,7 +30361,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get whatsNewPresenceDescription =>
-      'Veja quem está ativo na mesh de relance. Presença mostra atividade de nós em tempo real com indicadores de intenção — se alguém está monitorando, em movimento ou em uma estação base fixa.\\n\\nFiltre por nível de atividade, pesquise por nome e toque em qualquer nó para ver o perfil completo. Encontre no menu sob Social.';
+      'Veja quem está ativo na mesh de relance. Presença mostra atividade de nós em tempo real com indicadores de intenção — se alguém está monitorando, em movimento ou em uma estação base fixa.\n\nFiltre por nível de atividade, pesquise por nome e toque em qualquer nó para ver o perfil completo. Encontre no menu sob Social.';
 
   @override
   String get whatsNewVersion1110Subtitle => 'Versão 1.11.0';
@@ -30371,7 +30371,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get whatsNewSignalsDescription =>
-      'Transmita momentos efêmeros para sua rede mesh. Sinais são posts de curta duração — compartilhe texto, uma foto ou sua localização com um TTL de 15 minutos até 24 horas.\\n\\nSinais próximos aparecem primeiro com badges de proximidade mostrando a contagem de hops. Quando desaparecem, se foram. Conteúdo efêmero, verdadeiramente off-grid.';
+      'Transmita momentos efêmeros para sua rede mesh. Sinais são posts de curta duração — compartilhe texto, uma foto ou sua localização com um TTL de 15 minutos até 24 horas.\n\nSinais próximos aparecem primeiro com badges de proximidade mostrando a contagem de hops. Quando desaparecem, se foram. Conteúdo efêmero, verdadeiramente off-grid.';
 
   @override
   String get whatsNewVersion1130Subtitle => 'Versão 1.13.0';
@@ -30381,7 +30381,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get whatsNewNodeDexDescription =>
-      'Um diário de campo vivo do mundo mesh. Cada nó que você descobre é registrado automaticamente com um Sigil procedural único e um Traço de personalidade derivado do comportamento real.\\n\\nEncontre no menu lateral em Social. Filtre por traço, pesquise por nome ou ID hexadecimal e toque em qualquer entrada para explorar o perfil completo — histórico de sinal, cronologia de descoberta e mais.';
+      'Um diário de campo vivo do mundo mesh. Cada nó que você descobre é registrado automaticamente com um Sigil procedural único e um Traço de personalidade derivado do comportamento real.\n\nEncontre no menu lateral em Social. Filtre por traço, pesquise por nome ou ID hexadecimal e toque em qualquer entrada para explorar o perfil completo — histórico de sinal, cronologia de descoberta e mais.';
 
   @override
   String get whatsNewVersion1150Subtitle => 'Versão 1.15.0';
@@ -30391,7 +30391,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get whatsNewAetherDescription =>
-      'Rastreie nós Meshtastic em altitude! Agende seu voo com seu nó mesh e deixe que estações terrestres ao redor do mundo captem seu sinal.\\n\\nA 35.000 pés, LoRa pode alcançar mais de 400 km. Reporte recepções, compita no ranking de distância e estabeleça novos recordes de alcance. Encontre no menu lateral em Social.';
+      'Rastreie nós Meshtastic em altitude! Agende seu voo com seu nó mesh e deixe que estações terrestres ao redor do mundo captem seu sinal.\n\nA 35.000 pés, LoRa pode alcançar mais de 400 km. Reporte recepções, compita no ranking de distância e estabeleça novos recordes de alcance. Encontre no menu lateral em Social.';
 
   @override
   String get whatsNewVersion1160Subtitle => 'Versão 1.16.0';
@@ -30401,7 +30401,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get whatsNewTakGatewayDescription =>
-      'Conecte sua rede mesh ao ecossistema Team Awareness Kit (TAK). O Socialmesh agora se conecta a um TAK Gateway via WebSocket e transmite entidades Cursor-on-Target ao vivo no seu mapa.\\n\\nCada entidade é colorida por afiliação padrão e recebe um ícone específico por dimensão. Filtre por afiliação, pesquise indicativos, rastreie entidades com toque longo e toque em qualquer marcador para detalhes CoT completos. Encontre no menu lateral em Mesh.';
+      'Conecte sua rede mesh ao ecossistema Team Awareness Kit (TAK). O Socialmesh agora se conecta a um TAK Gateway via WebSocket e transmite entidades Cursor-on-Target ao vivo no seu mapa.\n\nCada entidade é colorida por afiliação padrão e recebe um ícone específico por dimensão. Filtre por afiliação, pesquise indicativos, rastreie entidades com toque longo e toque em qualquer marcador para detalhes CoT completos. Encontre no menu lateral em Mesh.';
 
   @override
   String get whatsNewVersion1270Subtitle => 'Version 1.27.0';

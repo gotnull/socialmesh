@@ -15499,7 +15499,7 @@ abstract class AppLocalizations {
   /// **'Filter'**
   String get timelineFilterLabel;
 
-  /// Date group header for today
+  /// Segment label for the Today view in the timeline board.
   ///
   /// In en, this message translates to:
   /// **'Today'**
@@ -51333,7 +51333,7 @@ abstract class AppLocalizations {
   /// Help bubble text for step privacy_level
   ///
   /// In en, this message translates to:
-  /// **'How secret should your channel be?\\n\\n**OPEN**: Anyone can listen in.\\n**SHARED**: Like a password everyone knows.\\n**PRIVATE**: Only friends you invite.\\n**MAXIMUM**: Super duper secret!'**
+  /// **'How secret should your channel be?\n\n**OPEN**: Anyone can listen in.\n**SHARED**: Like a password everyone knows.\n**PRIVATE**: Only friends you invite.\n**MAXIMUM**: Super duper secret!'**
   String get helpPrivacyLevelBubble;
 
   /// Help bubble text for step encryption_key
@@ -51507,13 +51507,13 @@ abstract class AppLocalizations {
   /// Help bubble text for step connection_troubleshoot
   ///
   /// In en, this message translates to:
-  /// **'Can\'t find your device? Check:\\n- **Bluetooth is on**\\n- Device has power\\n- Device isn\'t connected elsewhere\\n- You\'re close enough (under 10m)'**
+  /// **'Can\'t find your device? Check:\n- **Bluetooth is on**\n- Device has power\n- Device isn\'t connected elsewhere\n- You\'re close enough (under 10m)'**
   String get helpConnectionTroubleshootBubble;
 
   /// Help bubble text for step connection_disconnect
   ///
   /// In en, this message translates to:
-  /// **'Keep getting **disconnected**? Common causes:\\n- **Another app** (e.g. Meshtastic app) is already connected to this node\\n- On **TCP/IP (ESP devices)**, only one client can connect at a time\\n- Try closing other apps or disconnecting other devices first'**
+  /// **'Keep getting **disconnected**? Common causes:\n- **Another app** (e.g. Meshtastic app) is already connected to this node\n- On **TCP/IP (ESP devices)**, only one client can connect at a time\n- Try closing other apps or disconnecting other devices first'**
   String get helpConnectionDisconnectBubble;
 
   /// Help bubble text for step gps_intro
@@ -52995,7 +52995,7 @@ abstract class AppLocalizations {
   /// What's new description for Reachability feature
   ///
   /// In en, this message translates to:
-  /// **'Estimate how likely you are to reach each node on your mesh — without sending a single test packet.\\n\\nReachability passively observes traffic flowing through the network and assigns High, Medium, or Low confidence to every node. Find it in the drawer menu under Mesh.'**
+  /// **'Estimate how likely you are to reach each node on your mesh — without sending a single test packet.\n\nReachability passively observes traffic flowing through the network and assigns High, Medium, or Low confidence to every node. Find it in the drawer menu under Mesh.'**
   String get whatsNewReachabilityDescription;
 
   /// What's new subtitle for version 1.10.0
@@ -53013,7 +53013,7 @@ abstract class AppLocalizations {
   /// What's new description for World Map feature
   ///
   /// In en, this message translates to:
-  /// **'See the entire global Meshtastic network on a single map. Every dot is a node sharing its location — zoom, pan, and tap to explore node details, hardware info, and last-seen times.\\n\\nNo connection required. The World Map pulls live data from the Socialmesh backend so you can explore the mesh anywhere.'**
+  /// **'See the entire global Meshtastic network on a single map. Every dot is a node sharing its location — zoom, pan, and tap to explore node details, hardware info, and last-seen times.\n\nNo connection required. The World Map pulls live data from the Socialmesh backend so you can explore the mesh anywhere.'**
   String get whatsNewWorldMapDescription;
 
   /// What's new subtitle for version 1.10.1
@@ -53031,7 +53031,7 @@ abstract class AppLocalizations {
   /// What's new description for Presence feature
   ///
   /// In en, this message translates to:
-  /// **'See who is active on your mesh at a glance. Presence shows real-time node activity with intent indicators — whether someone is monitoring, mobile, or at a fixed base station.\\n\\nFilter by activity level, search by name, and tap any node to see their full profile. Find it in the drawer under Social.'**
+  /// **'See who is active on your mesh at a glance. Presence shows real-time node activity with intent indicators — whether someone is monitoring, mobile, or at a fixed base station.\n\nFilter by activity level, search by name, and tap any node to see their full profile. Find it in the drawer under Social.'**
   String get whatsNewPresenceDescription;
 
   /// What's new subtitle for version 1.11.0
@@ -53049,7 +53049,7 @@ abstract class AppLocalizations {
   /// What's new description for Signals feature
   ///
   /// In en, this message translates to:
-  /// **'Broadcast ephemeral moments to your mesh. Signals are short-lived posts — share text, a photo, or your location with a TTL from 15 minutes up to 24 hours.\\n\\nNearby signals appear first with proximity badges showing hop count. When they fade, they are gone. True off-grid, ephemeral content.'**
+  /// **'Broadcast ephemeral moments to your mesh. Signals are short-lived posts — share text, a photo, or your location with a TTL from 15 minutes up to 24 hours.\n\nNearby signals appear first with proximity badges showing hop count. When they fade, they are gone. True off-grid, ephemeral content.'**
   String get whatsNewSignalsDescription;
 
   /// What's new subtitle for version 1.13.0
@@ -53067,7 +53067,7 @@ abstract class AppLocalizations {
   /// What's new description for NodeDex feature
   ///
   /// In en, this message translates to:
-  /// **'A living field journal of the mesh world. Every node you discover is automatically recorded with a unique procedural Sigil and a personality Trait derived from real behavior.\\n\\nFind it in the drawer menu under Social. Filter by trait, search by name or hex ID, and tap any entry to explore its full profile — signal history, discovery timeline, and more.'**
+  /// **'A living field journal of the mesh world. Every node you discover is automatically recorded with a unique procedural Sigil and a personality Trait derived from real behavior.\n\nFind it in the drawer menu under Social. Filter by trait, search by name or hex ID, and tap any entry to explore its full profile — signal history, discovery timeline, and more.'**
   String get whatsNewNodeDexDescription;
 
   /// What's new subtitle for version 1.15.0
@@ -53085,7 +53085,7 @@ abstract class AppLocalizations {
   /// What's new description for Aether feature
   ///
   /// In en, this message translates to:
-  /// **'Track Meshtastic nodes at altitude! Schedule your flight with your mesh node and let ground stations around the world listen for your signal.\\n\\nAt 35,000 ft, LoRa can reach 400+ km. Report receptions, compete on the distance leaderboard, and set new range records. Find it in the drawer menu under Social.'**
+  /// **'Track Meshtastic nodes at altitude! Schedule your flight with your mesh node and let ground stations around the world listen for your signal.\n\nAt 35,000 ft, LoRa can reach 400+ km. Report receptions, compete on the distance leaderboard, and set new range records. Find it in the drawer menu under Social.'**
   String get whatsNewAetherDescription;
 
   /// What's new subtitle for version 1.16.0
@@ -53103,7 +53103,7 @@ abstract class AppLocalizations {
   /// What's new description for TAK Gateway feature
   ///
   /// In en, this message translates to:
-  /// **'Bridge your mesh into the Team Awareness Kit (TAK) ecosystem. Socialmesh now connects to a TAK Gateway via WebSocket and streams live Cursor-on-Target entities onto your map.\\n\\nEvery entity is colored by standard affiliation and given a dimension-specific icon. Filter by affiliation, search callsigns, track entities with a long-press, and tap any marker for full CoT details. Find it in the drawer menu under Mesh.'**
+  /// **'Bridge your mesh into the Team Awareness Kit (TAK) ecosystem. Socialmesh now connects to a TAK Gateway via WebSocket and streams live Cursor-on-Target entities onto your map.\n\nEvery entity is colored by standard affiliation and given a dimension-specific icon. Filter by affiliation, search callsigns, track entities with a long-press, and tap any marker for full CoT details. Find it in the drawer menu under Mesh.'**
   String get whatsNewTakGatewayDescription;
 
   /// What's new subtitle for version 1.27.0

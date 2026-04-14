@@ -25963,10 +25963,6 @@
     "@timelineTitle": {
         "description": "Screen title"
     },
-    "timelineToday": "Today",
-    "@timelineToday": {
-        "description": "Date group header for today"
-    },
     "timelineTryDifferent": "Try a different search or filter",
     "@timelineTryDifferent": {
         "description": "Empty state subtitle for search/filter miss"
@@ -39262,7 +39258,7 @@
     "@helpChannelNameBubble": {
         "description": "Help bubble text for step channel_name"
     },
-    "helpPrivacyLevelBubble": "How secret should your channel be?\\n\\n**OPEN**: Anyone can listen in.\\n**SHARED**: Like a password everyone knows.\\n**PRIVATE**: Only friends you invite.\\n**MAXIMUM**: Super duper secret!",
+    "helpPrivacyLevelBubble": "How secret should your channel be?\n\n**OPEN**: Anyone can listen in.\n**SHARED**: Like a password everyone knows.\n**PRIVATE**: Only friends you invite.\n**MAXIMUM**: Super duper secret!",
     "@helpPrivacyLevelBubble": {
         "description": "Help bubble text for step privacy_level"
     },
@@ -39378,11 +39374,11 @@
     "@helpConnectionPairingBubble": {
         "description": "Help bubble text for step connection_pairing"
     },
-    "helpConnectionTroubleshootBubble": "Can't find your device? Check:\\n- **Bluetooth is on**\\n- Device has power\\n- Device isn't connected elsewhere\\n- You're close enough (under 10m)",
+    "helpConnectionTroubleshootBubble": "Can't find your device? Check:\n- **Bluetooth is on**\n- Device has power\n- Device isn't connected elsewhere\n- You're close enough (under 10m)",
     "@helpConnectionTroubleshootBubble": {
         "description": "Help bubble text for step connection_troubleshoot"
     },
-    "helpConnectionDisconnectBubble": "Keep getting **disconnected**? Common causes:\\n- **Another app** (e.g. Meshtastic app) is already connected to this node\\n- On **TCP/IP (ESP devices)**, only one client can connect at a time\\n- Try closing other apps or disconnecting other devices first",
+    "helpConnectionDisconnectBubble": "Keep getting **disconnected**? Common causes:\n- **Another app** (e.g. Meshtastic app) is already connected to this node\n- On **TCP/IP (ESP devices)**, only one client can connect at a time\n- Try closing other apps or disconnecting other devices first",
     "@helpConnectionDisconnectBubble": {
         "description": "Help bubble text for step connection_disconnect"
     },
@@ -40403,7 +40399,7 @@
     "@whatsNewReachabilityTitle": {
         "description": "What's new feature title: Reachability"
     },
-    "whatsNewReachabilityDescription": "Estimate how likely you are to reach each node on your mesh — without sending a single test packet.\\n\\nReachability passively observes traffic flowing through the network and assigns High, Medium, or Low confidence to every node. Find it in the drawer menu under Mesh.",
+    "whatsNewReachabilityDescription": "Estimate how likely you are to reach each node on your mesh — without sending a single test packet.\n\nReachability passively observes traffic flowing through the network and assigns High, Medium, or Low confidence to every node. Find it in the drawer menu under Mesh.",
     "@whatsNewReachabilityDescription": {
         "description": "What's new description for Reachability feature"
     },
@@ -40415,7 +40411,7 @@
     "@whatsNewWorldMapTitle": {
         "description": "What's new feature title: World Map"
     },
-    "whatsNewWorldMapDescription": "See the entire global Meshtastic network on a single map. Every dot is a node sharing its location — zoom, pan, and tap to explore node details, hardware info, and last-seen times.\\n\\nNo connection required. The World Map pulls live data from the Socialmesh backend so you can explore the mesh anywhere.",
+    "whatsNewWorldMapDescription": "See the entire global Meshtastic network on a single map. Every dot is a node sharing its location — zoom, pan, and tap to explore node details, hardware info, and last-seen times.\n\nNo connection required. The World Map pulls live data from the Socialmesh backend so you can explore the mesh anywhere.",
     "@whatsNewWorldMapDescription": {
         "description": "What's new description for World Map feature"
     },
@@ -40427,7 +40423,7 @@
     "@whatsNewPresenceTitle": {
         "description": "What's new feature title: Presence"
     },
-    "whatsNewPresenceDescription": "See who is active on your mesh at a glance. Presence shows real-time node activity with intent indicators — whether someone is monitoring, mobile, or at a fixed base station.\\n\\nFilter by activity level, search by name, and tap any node to see their full profile. Find it in the drawer under Social.",
+    "whatsNewPresenceDescription": "See who is active on your mesh at a glance. Presence shows real-time node activity with intent indicators — whether someone is monitoring, mobile, or at a fixed base station.\n\nFilter by activity level, search by name, and tap any node to see their full profile. Find it in the drawer under Social.",
     "@whatsNewPresenceDescription": {
         "description": "What's new description for Presence feature"
     },
@@ -40439,7 +40435,7 @@
     "@whatsNewSignalsTitle": {
         "description": "What's new feature title: Signals"
     },
-    "whatsNewSignalsDescription": "Broadcast ephemeral moments to your mesh. Signals are short-lived posts — share text, a photo, or your location with a TTL from 15 minutes up to 24 hours.\\n\\nNearby signals appear first with proximity badges showing hop count. When they fade, they are gone. True off-grid, ephemeral content.",
+    "whatsNewSignalsDescription": "Broadcast ephemeral moments to your mesh. Signals are short-lived posts — share text, a photo, or your location with a TTL from 15 minutes up to 24 hours.\n\nNearby signals appear first with proximity badges showing hop count. When they fade, they are gone. True off-grid, ephemeral content.",
     "@whatsNewSignalsDescription": {
         "description": "What's new description for Signals feature"
     },
@@ -40451,7 +40447,7 @@
     "@whatsNewNodeDexTitle": {
         "description": "What's new feature title: NodeDex"
     },
-    "whatsNewNodeDexDescription": "A living field journal of the mesh world. Every node you discover is automatically recorded with a unique procedural Sigil and a personality Trait derived from real behavior.\\n\\nFind it in the drawer menu under Social. Filter by trait, search by name or hex ID, and tap any entry to explore its full profile — signal history, discovery timeline, and more.",
+    "whatsNewNodeDexDescription": "A living field journal of the mesh world. Every node you discover is automatically recorded with a unique procedural Sigil and a personality Trait derived from real behavior.\n\nFind it in the drawer menu under Social. Filter by trait, search by name or hex ID, and tap any entry to explore its full profile — signal history, discovery timeline, and more.",
     "@whatsNewNodeDexDescription": {
         "description": "What's new description for NodeDex feature"
     },
@@ -40463,7 +40459,7 @@
     "@whatsNewAetherTitle": {
         "description": "What's new feature title: Aether"
     },
-    "whatsNewAetherDescription": "Track Meshtastic nodes at altitude! Schedule your flight with your mesh node and let ground stations around the world listen for your signal.\\n\\nAt 35,000 ft, LoRa can reach 400+ km. Report receptions, compete on the distance leaderboard, and set new range records. Find it in the drawer menu under Social.",
+    "whatsNewAetherDescription": "Track Meshtastic nodes at altitude! Schedule your flight with your mesh node and let ground stations around the world listen for your signal.\n\nAt 35,000 ft, LoRa can reach 400+ km. Report receptions, compete on the distance leaderboard, and set new range records. Find it in the drawer menu under Social.",
     "@whatsNewAetherDescription": {
         "description": "What's new description for Aether feature"
     },
@@ -40475,7 +40471,7 @@
     "@whatsNewTakGatewayTitle": {
         "description": "What's new feature title: TAK Gateway"
     },
-    "whatsNewTakGatewayDescription": "Bridge your mesh into the Team Awareness Kit (TAK) ecosystem. Socialmesh now connects to a TAK Gateway via WebSocket and streams live Cursor-on-Target entities onto your map.\\n\\nEvery entity is colored by standard affiliation and given a dimension-specific icon. Filter by affiliation, search callsigns, track entities with a long-press, and tap any marker for full CoT details. Find it in the drawer menu under Mesh.",
+    "whatsNewTakGatewayDescription": "Bridge your mesh into the Team Awareness Kit (TAK) ecosystem. Socialmesh now connects to a TAK Gateway via WebSocket and streams live Cursor-on-Target entities onto your map.\n\nEvery entity is colored by standard affiliation and given a dimension-specific icon. Filter by affiliation, search callsigns, track entities with a long-press, and tap any marker for full CoT details. Find it in the drawer menu under Mesh.",
     "@whatsNewTakGatewayDescription": {
         "description": "What's new description for TAK Gateway feature"
     },

@@ -15000,11 +15000,11 @@
   "@helpConnectionPairingBubble": {
     "description": "Help bubble text for step connection_pairing"
   },
-  "helpConnectionTroubleshootBubble": "Non trovi il dispositivo? Controlla:\\n- **Il Bluetooth è acceso**\\n- Il dispositivo è alimentato\\n- Il dispositivo non è connesso altrove\\n- Sei abbastanza vicino (entro 10m)",
+  "helpConnectionTroubleshootBubble": "Non trovi il dispositivo? Controlla:\n- **Il Bluetooth è acceso**\n- Il dispositivo è alimentato\n- Il dispositivo non è connesso altrove\n- Sei abbastanza vicino (entro 10m)",
   "@helpConnectionTroubleshootBubble": {
     "description": "Help bubble text for step connection_troubleshoot"
   },
-  "helpConnectionDisconnectBubble": "Ti disconnetti spesso? Cause comuni:\\n- **Un'altra app** (es. app Meshtastic) è già connessa a questo nodo\\n- Su **TCP/IP (dispositivi ESP)**, solo un client può connettersi alla volta\\n- Prova a chiudere le altre app o disconnettere gli altri dispositivi",
+  "helpConnectionDisconnectBubble": "Ti disconnetti spesso? Cause comuni:\n- **Un'altra app** (es. app Meshtastic) è già connessa a questo nodo\n- Su **TCP/IP (dispositivi ESP)**, solo un client può connettersi alla volta\n- Prova a chiudere le altre app o disconnettere gli altri dispositivi",
   "@helpConnectionDisconnectBubble": {
     "description": "Help bubble text for step connection_disconnect"
   },
@@ -15718,7 +15718,7 @@
   "@helpPresenceRecentBubble": {
     "description": "Help bubble text for step presence_recent"
   },
-  "helpPrivacyLevelBubble": "Quanto deve essere segreto il tuo canale?\\n\\n**OPEN**: Chiunque può ascoltare.\\n**SHARED**: Come una password che tutti conoscono.\\n**PRIVATE**: Solo gli amici che inviti.\\n**MAXIMUM**: Super segretissimo!",
+  "helpPrivacyLevelBubble": "Quanto deve essere segreto il tuo canale?\n\n**OPEN**: Chiunque può ascoltare.\n**SHARED**: Come una password che tutti conoscono.\n**PRIVATE**: Solo gli amici che inviti.\n**MAXIMUM**: Super segretissimo!",
   "@helpPrivacyLevelBubble": {
     "description": "Help bubble text for step privacy_level"
   },
@@ -37902,7 +37902,7 @@
   "webhookConfigEnterUrlToEnable": "Inserisci un URL webhook per abilitare",
   "webhookModeCustomUrl": "URL personalizzato",
   "webhookModeIfttt": "Chiave IFTTT",
-  "whatsNewAetherDescription": "Traccia i nodi Meshtastic in quota! Programma il tuo volo con il nodo mesh e lascia che le stazioni a terra di tutto il mondo ascoltino il tuo segnale.\\n\\nA 35.000 piedi, LoRa può raggiungere oltre 400 km. Segnala le ricezioni, competi nella classifica distanze e stabilisci nuovi record di portata. Trovalo nel menu laterale sotto Social.",
+  "whatsNewAetherDescription": "Traccia i nodi Meshtastic in quota! Programma il tuo volo con il nodo mesh e lascia che le stazioni a terra di tutto il mondo ascoltino il tuo segnale.\n\nA 35.000 piedi, LoRa può raggiungere oltre 400 km. Segnala le ricezioni, competi nella classifica distanze e stabilisci nuovi record di portata. Trovalo nel menu laterale sotto Social.",
   "@whatsNewAetherDescription": {
     "description": "What's new description for Aether feature"
   },
@@ -37942,7 +37942,7 @@
   "@whatsNewHeadline": {
     "description": "Headline for What's New popup"
   },
-  "whatsNewNodeDexDescription": "Un diario di campo vivente del mondo mesh. Ogni nodo che scopri viene registrato automaticamente con un Sigil procedurale unico e un Tratto di personalità derivato dal comportamento reale.\\n\\nTrovalo nel menu laterale sotto Social. Filtra per tratto, cerca per nome o ID esadecimale e tocca qualsiasi voce per esplorare il profilo completo — storico segnale, cronologia scoperta e altro.",
+  "whatsNewNodeDexDescription": "Un diario di campo vivente del mondo mesh. Ogni nodo che scopri viene registrato automaticamente con un Sigil procedurale unico e un Tratto di personalità derivato dal comportamento reale.\n\nTrovalo nel menu laterale sotto Social. Filtra per tratto, cerca per nome o ID esadecimale e tocca qualsiasi voce per esplorare il profilo completo — storico segnale, cronologia scoperta e altro.",
   "@whatsNewNodeDexDescription": {
     "description": "What's new description for NodeDex feature"
   },
@@ -37950,7 +37950,7 @@
   "@whatsNewNodeDexTitle": {
     "description": "What's new feature title: NodeDex"
   },
-  "whatsNewPresenceDescription": "Vedi chi è attivo sulla mesh a colpo d'occhio. Presenza mostra l'attività dei nodi in tempo reale con indicatori di intento — se qualcuno sta monitorando, è in movimento o in una stazione base fissa.\\n\\nFiltra per livello di attività, cerca per nome e tocca qualsiasi nodo per vedere il profilo completo. La trovi nel menu sotto Social.",
+  "whatsNewPresenceDescription": "Vedi chi è attivo sulla mesh a colpo d'occhio. Presenza mostra l'attività dei nodi in tempo reale con indicatori di intento — se qualcuno sta monitorando, è in movimento o in una stazione base fissa.\n\nFiltra per livello di attività, cerca per nome e tocca qualsiasi nodo per vedere il profilo completo. La trovi nel menu sotto Social.",
   "@whatsNewPresenceDescription": {
     "description": "What's new description for Presence feature"
   },
@@ -37958,7 +37958,7 @@
   "@whatsNewPresenceTitle": {
     "description": "What's new feature title: Presence"
   },
-  "whatsNewReachabilityDescription": "Stima la probabilità di raggiungere ogni nodo sulla mesh — senza inviare un singolo pacchetto di test.\\n\\nLa raggiungibilità osserva passivamente il traffico nella rete e assegna confidenza Alta, Media o Bassa a ogni nodo. La trovi nel menu sotto Mesh.",
+  "whatsNewReachabilityDescription": "Stima la probabilità di raggiungere ogni nodo sulla mesh — senza inviare un singolo pacchetto di test.\n\nLa raggiungibilità osserva passivamente il traffico nella rete e assegna confidenza Alta, Media o Bassa a ogni nodo. La trovi nel menu sotto Mesh.",
   "@whatsNewReachabilityDescription": {
     "description": "What's new description for Reachability feature"
   },
@@ -37966,7 +37966,7 @@
   "@whatsNewReachabilityTitle": {
     "description": "What's new feature title: Reachability"
   },
-  "whatsNewSignalsDescription": "Trasmetti momenti effimeri sulla tua rete mesh. I Segnali sono post a breve durata — condividi testo, una foto o la tua posizione con un TTL da 15 minuti fino a 24 ore.\\n\\nI segnali vicini appaiono per primi con badge di prossimità che mostrano il conteggio degli hop. Quando svaniscono, sono spariti. Contenuto effimero, veramente off-grid.",
+  "whatsNewSignalsDescription": "Trasmetti momenti effimeri sulla tua rete mesh. I Segnali sono post a breve durata — condividi testo, una foto o la tua posizione con un TTL da 15 minuti fino a 24 ore.\n\nI segnali vicini appaiono per primi con badge di prossimità che mostrano il conteggio degli hop. Quando svaniscono, sono spariti. Contenuto effimero, veramente off-grid.",
   "@whatsNewSignalsDescription": {
     "description": "What's new description for Signals feature"
   },
@@ -37974,7 +37974,7 @@
   "@whatsNewSignalsTitle": {
     "description": "What's new feature title: Signals"
   },
-  "whatsNewTakGatewayDescription": "Collega la tua rete mesh all'ecosistema Team Awareness Kit (TAK). Socialmesh ora si connette a un TAK Gateway via WebSocket e trasmette in tempo reale entità Cursor-on-Target sulla tua mappa.\\n\\nOgni entità è colorata per affiliazione standard e dotata di un'icona specifica per dimensione. Filtra per affiliazione, cerca indicativi di chiamata, traccia entità con una pressione prolungata e tocca qualsiasi marcatore per i dettagli CoT completi. Trovalo nel menu laterale sotto Mesh.",
+  "whatsNewTakGatewayDescription": "Collega la tua rete mesh all'ecosistema Team Awareness Kit (TAK). Socialmesh ora si connette a un TAK Gateway via WebSocket e trasmette in tempo reale entità Cursor-on-Target sulla tua mappa.\n\nOgni entità è colorata per affiliazione standard e dotata di un'icona specifica per dimensione. Filtra per affiliazione, cerca indicativi di chiamata, traccia entità con una pressione prolungata e tocca qualsiasi marcatore per i dettagli CoT completi. Trovalo nel menu laterale sotto Mesh.",
   "@whatsNewTakGatewayDescription": {
     "description": "What's new description for TAK Gateway feature"
   },
@@ -38010,7 +38010,7 @@
   "@whatsNewVersion190Subtitle": {
     "description": "What's new subtitle for version 1.9.0"
   },
-  "whatsNewWorldMapDescription": "Visualizza l'intera rete Meshtastic globale su una singola mappa. Ogni punto è un nodo che condivide la sua posizione — ingrandisci, scorri e tocca per esplorare i dettagli del nodo, info hardware e ultimo contatto.\\n\\nNessuna connessione necessaria. La mappa mondiale usa dati in tempo reale dal backend Socialmesh per esplorare la mesh ovunque.",
+  "whatsNewWorldMapDescription": "Visualizza l'intera rete Meshtastic globale su una singola mappa. Ogni punto è un nodo che condivide la sua posizione — ingrandisci, scorri e tocca per esplorare i dettagli del nodo, info hardware e ultimo contatto.\n\nNessuna connessione necessaria. La mappa mondiale usa dati in tempo reale dal backend Socialmesh per esplorare la mesh ovunque.",
   "@whatsNewWorldMapDescription": {
     "description": "What's new description for World Map feature"
   },

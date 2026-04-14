@@ -28931,7 +28931,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpPrivacyLevelBubble =>
-      'How secret should your channel be?\\n\\n**OPEN**: Anyone can listen in.\\n**SHARED**: Like a password everyone knows.\\n**PRIVATE**: Only friends you invite.\\n**MAXIMUM**: Super duper secret!';
+      'How secret should your channel be?\n\n**OPEN**: Anyone can listen in.\n**SHARED**: Like a password everyone knows.\n**PRIVATE**: Only friends you invite.\n**MAXIMUM**: Super duper secret!';
 
   @override
   String get helpEncryptionKeyBubble =>
@@ -29047,11 +29047,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpConnectionTroubleshootBubble =>
-      'Can\'t find your device? Check:\\n- **Bluetooth is on**\\n- Device has power\\n- Device isn\'t connected elsewhere\\n- You\'re close enough (under 10m)';
+      'Can\'t find your device? Check:\n- **Bluetooth is on**\n- Device has power\n- Device isn\'t connected elsewhere\n- You\'re close enough (under 10m)';
 
   @override
   String get helpConnectionDisconnectBubble =>
-      'Keep getting **disconnected**? Common causes:\\n- **Another app** (e.g. Meshtastic app) is already connected to this node\\n- On **TCP/IP (ESP devices)**, only one client can connect at a time\\n- Try closing other apps or disconnecting other devices first';
+      'Keep getting **disconnected**? Common causes:\n- **Another app** (e.g. Meshtastic app) is already connected to this node\n- On **TCP/IP (ESP devices)**, only one client can connect at a time\n- Try closing other apps or disconnecting other devices first';
 
   @override
   String get helpGpsIntroBubble =>
@@ -30038,7 +30038,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get whatsNewReachabilityDescription =>
-      'Estimate how likely you are to reach each node on your mesh — without sending a single test packet.\\n\\nReachability passively observes traffic flowing through the network and assigns High, Medium, or Low confidence to every node. Find it in the drawer menu under Mesh.';
+      'Estimate how likely you are to reach each node on your mesh — without sending a single test packet.\n\nReachability passively observes traffic flowing through the network and assigns High, Medium, or Low confidence to every node. Find it in the drawer menu under Mesh.';
 
   @override
   String get whatsNewVersion1100Subtitle => 'Version 1.10.0';
@@ -30048,7 +30048,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get whatsNewWorldMapDescription =>
-      'See the entire global Meshtastic network on a single map. Every dot is a node sharing its location — zoom, pan, and tap to explore node details, hardware info, and last-seen times.\\n\\nNo connection required. The World Map pulls live data from the Socialmesh backend so you can explore the mesh anywhere.';
+      'See the entire global Meshtastic network on a single map. Every dot is a node sharing its location — zoom, pan, and tap to explore node details, hardware info, and last-seen times.\n\nNo connection required. The World Map pulls live data from the Socialmesh backend so you can explore the mesh anywhere.';
 
   @override
   String get whatsNewVersion1101Subtitle => 'Version 1.10.1';
@@ -30058,7 +30058,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get whatsNewPresenceDescription =>
-      'See who is active on your mesh at a glance. Presence shows real-time node activity with intent indicators — whether someone is monitoring, mobile, or at a fixed base station.\\n\\nFilter by activity level, search by name, and tap any node to see their full profile. Find it in the drawer under Social.';
+      'See who is active on your mesh at a glance. Presence shows real-time node activity with intent indicators — whether someone is monitoring, mobile, or at a fixed base station.\n\nFilter by activity level, search by name, and tap any node to see their full profile. Find it in the drawer under Social.';
 
   @override
   String get whatsNewVersion1110Subtitle => 'Version 1.11.0';
@@ -30068,7 +30068,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get whatsNewSignalsDescription =>
-      'Broadcast ephemeral moments to your mesh. Signals are short-lived posts — share text, a photo, or your location with a TTL from 15 minutes up to 24 hours.\\n\\nNearby signals appear first with proximity badges showing hop count. When they fade, they are gone. True off-grid, ephemeral content.';
+      'Broadcast ephemeral moments to your mesh. Signals are short-lived posts — share text, a photo, or your location with a TTL from 15 minutes up to 24 hours.\n\nNearby signals appear first with proximity badges showing hop count. When they fade, they are gone. True off-grid, ephemeral content.';
 
   @override
   String get whatsNewVersion1130Subtitle => 'Version 1.13.0';
@@ -30078,7 +30078,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get whatsNewNodeDexDescription =>
-      'A living field journal of the mesh world. Every node you discover is automatically recorded with a unique procedural Sigil and a personality Trait derived from real behavior.\\n\\nFind it in the drawer menu under Social. Filter by trait, search by name or hex ID, and tap any entry to explore its full profile — signal history, discovery timeline, and more.';
+      'A living field journal of the mesh world. Every node you discover is automatically recorded with a unique procedural Sigil and a personality Trait derived from real behavior.\n\nFind it in the drawer menu under Social. Filter by trait, search by name or hex ID, and tap any entry to explore its full profile — signal history, discovery timeline, and more.';
 
   @override
   String get whatsNewVersion1150Subtitle => 'Version 1.15.0';
@@ -30088,7 +30088,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get whatsNewAetherDescription =>
-      'Track Meshtastic nodes at altitude! Schedule your flight with your mesh node and let ground stations around the world listen for your signal.\\n\\nAt 35,000 ft, LoRa can reach 400+ km. Report receptions, compete on the distance leaderboard, and set new range records. Find it in the drawer menu under Social.';
+      'Track Meshtastic nodes at altitude! Schedule your flight with your mesh node and let ground stations around the world listen for your signal.\n\nAt 35,000 ft, LoRa can reach 400+ km. Report receptions, compete on the distance leaderboard, and set new range records. Find it in the drawer menu under Social.';
 
   @override
   String get whatsNewVersion1160Subtitle => 'Version 1.16.0';
@@ -30098,7 +30098,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get whatsNewTakGatewayDescription =>
-      'Bridge your mesh into the Team Awareness Kit (TAK) ecosystem. Socialmesh now connects to a TAK Gateway via WebSocket and streams live Cursor-on-Target entities onto your map.\\n\\nEvery entity is colored by standard affiliation and given a dimension-specific icon. Filter by affiliation, search callsigns, track entities with a long-press, and tap any marker for full CoT details. Find it in the drawer menu under Mesh.';
+      'Bridge your mesh into the Team Awareness Kit (TAK) ecosystem. Socialmesh now connects to a TAK Gateway via WebSocket and streams live Cursor-on-Target entities onto your map.\n\nEvery entity is colored by standard affiliation and given a dimension-specific icon. Filter by affiliation, search callsigns, track entities with a long-press, and tap any marker for full CoT details. Find it in the drawer menu under Mesh.';
 
   @override
   String get whatsNewVersion1270Subtitle => 'Version 1.27.0';

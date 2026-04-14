@@ -15000,11 +15000,11 @@
   "@helpConnectionPairingBubble": {
     "description": "Help bubble text for step connection_pairing"
   },
-  "helpConnectionTroubleshootBubble": "Não encontra seu dispositivo? Verifique:\\n- **O Bluetooth está ligado**\\n- O dispositivo tem energia\\n- O dispositivo não está conectado em outro lugar\\n- Você está perto o suficiente (menos de 10m)",
+  "helpConnectionTroubleshootBubble": "Não encontra seu dispositivo? Verifique:\n- **O Bluetooth está ligado**\n- O dispositivo tem energia\n- O dispositivo não está conectado em outro lugar\n- Você está perto o suficiente (menos de 10m)",
   "@helpConnectionTroubleshootBubble": {
     "description": "Help bubble text for step connection_troubleshoot"
   },
-  "helpConnectionDisconnectBubble": "Desconectando com frequência? Causas comuns:\\n- **Outro app** (ex. app Meshtastic) já está conectado a este nó\\n- No **TCP/IP (dispositivos ESP)**, apenas um cliente pode conectar por vez\\n- Tente fechar outros apps ou desconectar outros dispositivos primeiro",
+  "helpConnectionDisconnectBubble": "Desconectando com frequência? Causas comuns:\n- **Outro app** (ex. app Meshtastic) já está conectado a este nó\n- No **TCP/IP (dispositivos ESP)**, apenas um cliente pode conectar por vez\n- Tente fechar outros apps ou desconectar outros dispositivos primeiro",
   "@helpConnectionDisconnectBubble": {
     "description": "Help bubble text for step connection_disconnect"
   },
@@ -15718,7 +15718,7 @@
   "@helpPresenceRecentBubble": {
     "description": "Help bubble text for step presence_recent"
   },
-  "helpPrivacyLevelBubble": "Quão secreto deve ser seu canal?\\n\\n**OPEN**: Qualquer um pode ouvir.\\n**SHARED**: Como uma senha que todos conhecem.\\n**PRIVATE**: Apenas amigos que você convidar.\\n**MAXIMUM**: Super ultra secreto!",
+  "helpPrivacyLevelBubble": "Quão secreto deve ser seu canal?\n\n**OPEN**: Qualquer um pode ouvir.\n**SHARED**: Como uma senha que todos conhecem.\n**PRIVATE**: Apenas amigos que você convidar.\n**MAXIMUM**: Super ultra secreto!",
   "@helpPrivacyLevelBubble": {
     "description": "Help bubble text for step privacy_level"
   },
@@ -37902,7 +37902,7 @@
   "webhookConfigEnterUrlToEnable": "Introduza um URL de webhook para ativar",
   "webhookModeCustomUrl": "URL Personalizado",
   "webhookModeIfttt": "Chave IFTTT",
-  "whatsNewAetherDescription": "Rastreie nós Meshtastic em altitude! Agende seu voo com seu nó mesh e deixe que estações terrestres ao redor do mundo captem seu sinal.\\n\\nA 35.000 pés, LoRa pode alcançar mais de 400 km. Reporte recepções, compita no ranking de distância e estabeleça novos recordes de alcance. Encontre no menu lateral em Social.",
+  "whatsNewAetherDescription": "Rastreie nós Meshtastic em altitude! Agende seu voo com seu nó mesh e deixe que estações terrestres ao redor do mundo captem seu sinal.\n\nA 35.000 pés, LoRa pode alcançar mais de 400 km. Reporte recepções, compita no ranking de distância e estabeleça novos recordes de alcance. Encontre no menu lateral em Social.",
   "@whatsNewAetherDescription": {
     "description": "What's new description for Aether feature"
   },
@@ -37942,7 +37942,7 @@
   "@whatsNewHeadline": {
     "description": "Headline for What's New popup"
   },
-  "whatsNewNodeDexDescription": "Um diário de campo vivo do mundo mesh. Cada nó que você descobre é registrado automaticamente com um Sigil procedural único e um Traço de personalidade derivado do comportamento real.\\n\\nEncontre no menu lateral em Social. Filtre por traço, pesquise por nome ou ID hexadecimal e toque em qualquer entrada para explorar o perfil completo — histórico de sinal, cronologia de descoberta e mais.",
+  "whatsNewNodeDexDescription": "Um diário de campo vivo do mundo mesh. Cada nó que você descobre é registrado automaticamente com um Sigil procedural único e um Traço de personalidade derivado do comportamento real.\n\nEncontre no menu lateral em Social. Filtre por traço, pesquise por nome ou ID hexadecimal e toque em qualquer entrada para explorar o perfil completo — histórico de sinal, cronologia de descoberta e mais.",
   "@whatsNewNodeDexDescription": {
     "description": "What's new description for NodeDex feature"
   },
@@ -37950,7 +37950,7 @@
   "@whatsNewNodeDexTitle": {
     "description": "What's new feature title: NodeDex"
   },
-  "whatsNewPresenceDescription": "Veja quem está ativo na mesh de relance. Presença mostra atividade de nós em tempo real com indicadores de intenção — se alguém está monitorando, em movimento ou em uma estação base fixa.\\n\\nFiltre por nível de atividade, pesquise por nome e toque em qualquer nó para ver o perfil completo. Encontre no menu sob Social.",
+  "whatsNewPresenceDescription": "Veja quem está ativo na mesh de relance. Presença mostra atividade de nós em tempo real com indicadores de intenção — se alguém está monitorando, em movimento ou em uma estação base fixa.\n\nFiltre por nível de atividade, pesquise por nome e toque em qualquer nó para ver o perfil completo. Encontre no menu sob Social.",
   "@whatsNewPresenceDescription": {
     "description": "What's new description for Presence feature"
   },
@@ -37958,7 +37958,7 @@
   "@whatsNewPresenceTitle": {
     "description": "What's new feature title: Presence"
   },
-  "whatsNewReachabilityDescription": "Estime a probabilidade de alcançar cada nó na mesh — sem enviar um único pacote de teste.\\n\\nA alcançabilidade observa passivamente o tráfego na rede e atribui confiança Alta, Média ou Baixa a cada nó. Encontre no menu sob Mesh.",
+  "whatsNewReachabilityDescription": "Estime a probabilidade de alcançar cada nó na mesh — sem enviar um único pacote de teste.\n\nA alcançabilidade observa passivamente o tráfego na rede e atribui confiança Alta, Média ou Baixa a cada nó. Encontre no menu sob Mesh.",
   "@whatsNewReachabilityDescription": {
     "description": "What's new description for Reachability feature"
   },
@@ -37966,7 +37966,7 @@
   "@whatsNewReachabilityTitle": {
     "description": "What's new feature title: Reachability"
   },
-  "whatsNewSignalsDescription": "Transmita momentos efêmeros para sua rede mesh. Sinais são posts de curta duração — compartilhe texto, uma foto ou sua localização com um TTL de 15 minutos até 24 horas.\\n\\nSinais próximos aparecem primeiro com badges de proximidade mostrando a contagem de hops. Quando desaparecem, se foram. Conteúdo efêmero, verdadeiramente off-grid.",
+  "whatsNewSignalsDescription": "Transmita momentos efêmeros para sua rede mesh. Sinais são posts de curta duração — compartilhe texto, uma foto ou sua localização com um TTL de 15 minutos até 24 horas.\n\nSinais próximos aparecem primeiro com badges de proximidade mostrando a contagem de hops. Quando desaparecem, se foram. Conteúdo efêmero, verdadeiramente off-grid.",
   "@whatsNewSignalsDescription": {
     "description": "What's new description for Signals feature"
   },
@@ -37974,7 +37974,7 @@
   "@whatsNewSignalsTitle": {
     "description": "What's new feature title: Signals"
   },
-  "whatsNewTakGatewayDescription": "Conecte sua rede mesh ao ecossistema Team Awareness Kit (TAK). O Socialmesh agora se conecta a um TAK Gateway via WebSocket e transmite entidades Cursor-on-Target ao vivo no seu mapa.\\n\\nCada entidade é colorida por afiliação padrão e recebe um ícone específico por dimensão. Filtre por afiliação, pesquise indicativos, rastreie entidades com toque longo e toque em qualquer marcador para detalhes CoT completos. Encontre no menu lateral em Mesh.",
+  "whatsNewTakGatewayDescription": "Conecte sua rede mesh ao ecossistema Team Awareness Kit (TAK). O Socialmesh agora se conecta a um TAK Gateway via WebSocket e transmite entidades Cursor-on-Target ao vivo no seu mapa.\n\nCada entidade é colorida por afiliação padrão e recebe um ícone específico por dimensão. Filtre por afiliação, pesquise indicativos, rastreie entidades com toque longo e toque em qualquer marcador para detalhes CoT completos. Encontre no menu lateral em Mesh.",
   "@whatsNewTakGatewayDescription": {
     "description": "What's new description for TAK Gateway feature"
   },
@@ -38010,7 +38010,7 @@
   "@whatsNewVersion190Subtitle": {
     "description": "What's new subtitle for version 1.9.0"
   },
-  "whatsNewWorldMapDescription": "Veja toda a rede Meshtastic global em um único mapa. Cada ponto é um nó compartilhando sua localização — amplie, navegue e toque para explorar detalhes do nó, info de hardware e último contato.\\n\\nSem necessidade de conexão. O Mapa Mundial usa dados em tempo real do backend Socialmesh para explorar a mesh em qualquer lugar.",
+  "whatsNewWorldMapDescription": "Veja toda a rede Meshtastic global em um único mapa. Cada ponto é um nó compartilhando sua localização — amplie, navegue e toque para explorar detalhes do nó, info de hardware e último contato.\n\nSem necessidade de conexão. O Mapa Mundial usa dados em tempo real do backend Socialmesh para explorar a mesh em qualquer lugar.",
   "@whatsNewWorldMapDescription": {
     "description": "What's new description for World Map feature"
   },

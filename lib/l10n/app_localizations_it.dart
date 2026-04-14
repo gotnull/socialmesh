@@ -29257,7 +29257,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get helpPrivacyLevelBubble =>
-      'Quanto deve essere segreto il tuo canale?\\n\\n**OPEN**: Chiunque può ascoltare.\\n**SHARED**: Come una password che tutti conoscono.\\n**PRIVATE**: Solo gli amici che inviti.\\n**MAXIMUM**: Super segretissimo!';
+      'Quanto deve essere segreto il tuo canale?\n\n**OPEN**: Chiunque può ascoltare.\n**SHARED**: Come una password che tutti conoscono.\n**PRIVATE**: Solo gli amici che inviti.\n**MAXIMUM**: Super segretissimo!';
 
   @override
   String get helpEncryptionKeyBubble =>
@@ -29373,11 +29373,11 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get helpConnectionTroubleshootBubble =>
-      'Non trovi il dispositivo? Controlla:\\n- **Il Bluetooth è acceso**\\n- Il dispositivo è alimentato\\n- Il dispositivo non è connesso altrove\\n- Sei abbastanza vicino (entro 10m)';
+      'Non trovi il dispositivo? Controlla:\n- **Il Bluetooth è acceso**\n- Il dispositivo è alimentato\n- Il dispositivo non è connesso altrove\n- Sei abbastanza vicino (entro 10m)';
 
   @override
   String get helpConnectionDisconnectBubble =>
-      'Ti disconnetti spesso? Cause comuni:\\n- **Un\'altra app** (es. app Meshtastic) è già connessa a questo nodo\\n- Su **TCP/IP (dispositivi ESP)**, solo un client può connettersi alla volta\\n- Prova a chiudere le altre app o disconnettere gli altri dispositivi';
+      'Ti disconnetti spesso? Cause comuni:\n- **Un\'altra app** (es. app Meshtastic) è già connessa a questo nodo\n- Su **TCP/IP (dispositivi ESP)**, solo un client può connettersi alla volta\n- Prova a chiudere le altre app o disconnettere gli altri dispositivi';
 
   @override
   String get helpGpsIntroBubble =>
@@ -30365,7 +30365,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get whatsNewReachabilityDescription =>
-      'Stima la probabilità di raggiungere ogni nodo sulla mesh — senza inviare un singolo pacchetto di test.\\n\\nLa raggiungibilità osserva passivamente il traffico nella rete e assegna confidenza Alta, Media o Bassa a ogni nodo. La trovi nel menu sotto Mesh.';
+      'Stima la probabilità di raggiungere ogni nodo sulla mesh — senza inviare un singolo pacchetto di test.\n\nLa raggiungibilità osserva passivamente il traffico nella rete e assegna confidenza Alta, Media o Bassa a ogni nodo. La trovi nel menu sotto Mesh.';
 
   @override
   String get whatsNewVersion1100Subtitle => 'Versione 1.10.0';
@@ -30375,7 +30375,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get whatsNewWorldMapDescription =>
-      'Visualizza l\'intera rete Meshtastic globale su una singola mappa. Ogni punto è un nodo che condivide la sua posizione — ingrandisci, scorri e tocca per esplorare i dettagli del nodo, info hardware e ultimo contatto.\\n\\nNessuna connessione necessaria. La mappa mondiale usa dati in tempo reale dal backend Socialmesh per esplorare la mesh ovunque.';
+      'Visualizza l\'intera rete Meshtastic globale su una singola mappa. Ogni punto è un nodo che condivide la sua posizione — ingrandisci, scorri e tocca per esplorare i dettagli del nodo, info hardware e ultimo contatto.\n\nNessuna connessione necessaria. La mappa mondiale usa dati in tempo reale dal backend Socialmesh per esplorare la mesh ovunque.';
 
   @override
   String get whatsNewVersion1101Subtitle => 'Versione 1.10.1';
@@ -30385,7 +30385,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get whatsNewPresenceDescription =>
-      'Vedi chi è attivo sulla mesh a colpo d\'occhio. Presenza mostra l\'attività dei nodi in tempo reale con indicatori di intento — se qualcuno sta monitorando, è in movimento o in una stazione base fissa.\\n\\nFiltra per livello di attività, cerca per nome e tocca qualsiasi nodo per vedere il profilo completo. La trovi nel menu sotto Social.';
+      'Vedi chi è attivo sulla mesh a colpo d\'occhio. Presenza mostra l\'attività dei nodi in tempo reale con indicatori di intento — se qualcuno sta monitorando, è in movimento o in una stazione base fissa.\n\nFiltra per livello di attività, cerca per nome e tocca qualsiasi nodo per vedere il profilo completo. La trovi nel menu sotto Social.';
 
   @override
   String get whatsNewVersion1110Subtitle => 'Versione 1.11.0';
@@ -30395,7 +30395,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get whatsNewSignalsDescription =>
-      'Trasmetti momenti effimeri sulla tua rete mesh. I Segnali sono post a breve durata — condividi testo, una foto o la tua posizione con un TTL da 15 minuti fino a 24 ore.\\n\\nI segnali vicini appaiono per primi con badge di prossimità che mostrano il conteggio degli hop. Quando svaniscono, sono spariti. Contenuto effimero, veramente off-grid.';
+      'Trasmetti momenti effimeri sulla tua rete mesh. I Segnali sono post a breve durata — condividi testo, una foto o la tua posizione con un TTL da 15 minuti fino a 24 ore.\n\nI segnali vicini appaiono per primi con badge di prossimità che mostrano il conteggio degli hop. Quando svaniscono, sono spariti. Contenuto effimero, veramente off-grid.';
 
   @override
   String get whatsNewVersion1130Subtitle => 'Versione 1.13.0';
@@ -30405,7 +30405,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get whatsNewNodeDexDescription =>
-      'Un diario di campo vivente del mondo mesh. Ogni nodo che scopri viene registrato automaticamente con un Sigil procedurale unico e un Tratto di personalità derivato dal comportamento reale.\\n\\nTrovalo nel menu laterale sotto Social. Filtra per tratto, cerca per nome o ID esadecimale e tocca qualsiasi voce per esplorare il profilo completo — storico segnale, cronologia scoperta e altro.';
+      'Un diario di campo vivente del mondo mesh. Ogni nodo che scopri viene registrato automaticamente con un Sigil procedurale unico e un Tratto di personalità derivato dal comportamento reale.\n\nTrovalo nel menu laterale sotto Social. Filtra per tratto, cerca per nome o ID esadecimale e tocca qualsiasi voce per esplorare il profilo completo — storico segnale, cronologia scoperta e altro.';
 
   @override
   String get whatsNewVersion1150Subtitle => 'Versione 1.15.0';
@@ -30415,7 +30415,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get whatsNewAetherDescription =>
-      'Traccia i nodi Meshtastic in quota! Programma il tuo volo con il nodo mesh e lascia che le stazioni a terra di tutto il mondo ascoltino il tuo segnale.\\n\\nA 35.000 piedi, LoRa può raggiungere oltre 400 km. Segnala le ricezioni, competi nella classifica distanze e stabilisci nuovi record di portata. Trovalo nel menu laterale sotto Social.';
+      'Traccia i nodi Meshtastic in quota! Programma il tuo volo con il nodo mesh e lascia che le stazioni a terra di tutto il mondo ascoltino il tuo segnale.\n\nA 35.000 piedi, LoRa può raggiungere oltre 400 km. Segnala le ricezioni, competi nella classifica distanze e stabilisci nuovi record di portata. Trovalo nel menu laterale sotto Social.';
 
   @override
   String get whatsNewVersion1160Subtitle => 'Versione 1.16.0';
@@ -30425,7 +30425,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get whatsNewTakGatewayDescription =>
-      'Collega la tua rete mesh all\'ecosistema Team Awareness Kit (TAK). Socialmesh ora si connette a un TAK Gateway via WebSocket e trasmette in tempo reale entità Cursor-on-Target sulla tua mappa.\\n\\nOgni entità è colorata per affiliazione standard e dotata di un\'icona specifica per dimensione. Filtra per affiliazione, cerca indicativi di chiamata, traccia entità con una pressione prolungata e tocca qualsiasi marcatore per i dettagli CoT completi. Trovalo nel menu laterale sotto Mesh.';
+      'Collega la tua rete mesh all\'ecosistema Team Awareness Kit (TAK). Socialmesh ora si connette a un TAK Gateway via WebSocket e trasmette in tempo reale entità Cursor-on-Target sulla tua mappa.\n\nOgni entità è colorata per affiliazione standard e dotata di un\'icona specifica per dimensione. Filtra per affiliazione, cerca indicativi di chiamata, traccia entità con una pressione prolungata e tocca qualsiasi marcatore per i dettagli CoT completi. Trovalo nel menu laterale sotto Mesh.';
 
   @override
   String get whatsNewVersion1270Subtitle => 'Version 1.27.0';
