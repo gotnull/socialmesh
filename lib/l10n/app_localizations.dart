@@ -18973,6 +18973,18 @@ abstract class AppLocalizations {
   /// **'Unknown'**
   String get nodedexRadioPresetUnknown;
 
+  /// Label for the frequency offset row in NodeDex discovery stats
+  ///
+  /// In en, this message translates to:
+  /// **'Freq Offset'**
+  String get nodedexFrequencyOffset;
+
+  /// Formatted frequency offset value with Hz unit
+  ///
+  /// In en, this message translates to:
+  /// **'{offset} Hz'**
+  String nodedexFrequencyOffsetValue(String offset);
+
   /// Option to show nodes from all radio presets (no filter)
   ///
   /// In en, this message translates to:
@@ -56851,13 +56863,13 @@ abstract class AppLocalizations {
   /// Empty state description encouraging service discovery.
   ///
   /// In en, this message translates to:
-  /// **'Services shared by nearby mesh users will appear here. Bulletin boards, signals, polls, checklists, and more — all over LoRa radio.'**
+  /// **'Things shared by nearby people will show up here. Updates, questions, checklists, alerts, and readings all travel over the local mesh.'**
   String get meshExplorerEmptyBody;
 
   /// Action button on empty state to create a service.
   ///
   /// In en, this message translates to:
-  /// **'Create something'**
+  /// **'Share something'**
   String get meshExplorerEmptyAction;
 
   /// Compact label for the create service action.
@@ -56875,109 +56887,169 @@ abstract class AppLocalizations {
   /// Drawer menu label for the Mesh Services screen.
   ///
   /// In en, this message translates to:
-  /// **'My Services'**
+  /// **'My shares'**
   String get meshServicesDrawerLabel;
 
   /// App bar title for the My Services management screen.
   ///
   /// In en, this message translates to:
-  /// **'My Services'**
+  /// **'My shares'**
   String get meshServicesTitle;
 
   /// Empty state headline when user has no service instances.
   ///
   /// In en, this message translates to:
-  /// **'No services yet'**
+  /// **'Nothing shared yet'**
   String get meshServicesEmpty;
 
   /// Empty state description on My Services screen.
   ///
   /// In en, this message translates to:
-  /// **'Create a service to share something useful on the mesh'**
+  /// **'Share an update, question, checklist, alert, or reading with people nearby on the mesh.'**
   String get meshServicesEmptyDescription;
 
   /// Button label to create a new service instance.
   ///
   /// In en, this message translates to:
-  /// **'Create Service'**
+  /// **'Share something'**
   String get meshServicesCreateAction;
 
   /// App bar title for the template picker / create service screen.
   ///
   /// In en, this message translates to:
-  /// **'Create a Service'**
+  /// **'Share on the mesh'**
   String get meshServicesCreateTitle;
 
   /// Subtitle on the template picker screen.
   ///
   /// In en, this message translates to:
-  /// **'Choose what you want to share on the mesh'**
+  /// **'Choose what you want to share nearby'**
   String get meshServicesCreateSubtitle;
 
   /// Canonical mesh service type name for feed-style services.
   ///
   /// In en, this message translates to:
-  /// **'Feed'**
+  /// **'Updates'**
   String get meshServicesTypeFeed;
 
   /// Canonical mesh service type description for feed-style services.
   ///
   /// In en, this message translates to:
-  /// **'Share posts, updates, or bulletin-style notices with nearby peers'**
+  /// **'Posts and updates people nearby can open and read'**
   String get meshServicesTypeFeedDescription;
 
   /// Canonical mesh service type name for list-style services.
   ///
   /// In en, this message translates to:
-  /// **'List'**
+  /// **'Checklists'**
   String get meshServicesTypeList;
 
   /// Canonical mesh service type description for list-style services.
   ///
   /// In en, this message translates to:
-  /// **'Coordinate checklists, supplies, or other shared collections'**
+  /// **'Lists, checklists, or supplies people nearby can work through together'**
   String get meshServicesTypeListDescription;
 
   /// Canonical mesh service type name for poll services.
   ///
   /// In en, this message translates to:
-  /// **'Poll'**
+  /// **'Questions'**
   String get meshServicesTypePoll;
 
   /// Canonical mesh service type description for poll services.
   ///
   /// In en, this message translates to:
-  /// **'Ask a multiple-choice question and collect nearby responses'**
+  /// **'Ask nearby people to pick an answer'**
   String get meshServicesTypePollDescription;
 
   /// Canonical mesh service type name for signal services.
   ///
   /// In en, this message translates to:
-  /// **'Signal'**
+  /// **'Alerts'**
   String get meshServicesTypeSignal;
 
   /// Canonical mesh service type description for signal services.
   ///
   /// In en, this message translates to:
-  /// **'Broadcast a short-lived beacon or alert across the mesh'**
+  /// **'Short-lived alerts or beacons that stand out nearby'**
   String get meshServicesTypeSignalDescription;
 
   /// Canonical mesh service type name for sensor services.
   ///
   /// In en, this message translates to:
-  /// **'Sensor'**
+  /// **'Readings'**
   String get meshServicesTypeSensor;
 
   /// Canonical mesh service type description for sensor services.
   ///
   /// In en, this message translates to:
-  /// **'Publish telemetry or measured readings from a local sensor source'**
+  /// **'Live measurements or telemetry people nearby can check'**
   String get meshServicesTypeSensorDescription;
+
+  /// Intent-first label for the feed capability in the creation flow.
+  ///
+  /// In en, this message translates to:
+  /// **'Post an update'**
+  String get meshServicesIntentFeed;
+
+  /// Intent-first description for the feed capability in the creation flow.
+  ///
+  /// In en, this message translates to:
+  /// **'Share news, status, or a notice people nearby can open.'**
+  String get meshServicesIntentFeedDescription;
+
+  /// Intent-first label for the list capability in the creation flow.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a checklist'**
+  String get meshServicesIntentList;
+
+  /// Intent-first description for the list capability in the creation flow.
+  ///
+  /// In en, this message translates to:
+  /// **'Organize items, jobs, or supplies people nearby can work through together.'**
+  String get meshServicesIntentListDescription;
+
+  /// Intent-first label for the poll capability in the creation flow.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask a question'**
+  String get meshServicesIntentPoll;
+
+  /// Intent-first description for the poll capability in the creation flow.
+  ///
+  /// In en, this message translates to:
+  /// **'Put a multiple-choice question out to nearby people.'**
+  String get meshServicesIntentPollDescription;
+
+  /// Intent-first label for the signal capability in the creation flow.
+  ///
+  /// In en, this message translates to:
+  /// **'Send an alert'**
+  String get meshServicesIntentSignal;
+
+  /// Intent-first description for the signal capability in the creation flow.
+  ///
+  /// In en, this message translates to:
+  /// **'Broadcast a short-lived alert, check-in, or beacon nearby.'**
+  String get meshServicesIntentSignalDescription;
+
+  /// Intent-first label for the sensor capability in the creation flow.
+  ///
+  /// In en, this message translates to:
+  /// **'Share a reading'**
+  String get meshServicesIntentSensor;
+
+  /// Intent-first description for the sensor capability in the creation flow.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish a live reading, measurement, or status from a device.'**
+  String get meshServicesIntentSensorDescription;
 
   /// Badge label indicating a mesh service is discoverable by nearby peers.
   ///
   /// In en, this message translates to:
-  /// **'Open'**
+  /// **'Nearby'**
   String get meshServicesVisibilityOpen;
 
   /// Template display name for mesh bulletin board.
@@ -57172,10 +57244,16 @@ abstract class AppLocalizations {
   /// **'{actionName} could not be completed.'**
   String serviceDetailActionFailed(String actionName);
 
+  /// Snackbar shown when an interactive mesh share action fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not update this share right now.'**
+  String get meshServicesInteractionFailed;
+
   /// Loading text shown while fetching remote service instances via MRRP.
   ///
   /// In en, this message translates to:
-  /// **'Fetching service data…'**
+  /// **'Loading what’s being shared…'**
   String get serviceDetailFetchingInstances;
 
   /// Error text shown when a single MRRP request attempt to fetch remote instances fails.
@@ -57211,13 +57289,13 @@ abstract class AppLocalizations {
   /// Expiry information for a remote service instance.
   ///
   /// In en, this message translates to:
-  /// **'Expires {time}'**
+  /// **'Ends in {time}'**
   String serviceDetailInstanceExpires(String time);
 
   /// Shown when a remote service instance has no expiry time set.
   ///
   /// In en, this message translates to:
-  /// **'No expiry'**
+  /// **'Stays live until removed'**
   String get serviceDetailInstanceNoExpiry;
 
   /// Shown when a remote service instance has expired.
@@ -57229,25 +57307,25 @@ abstract class AppLocalizations {
   /// Label for the service title input field.
   ///
   /// In en, this message translates to:
-  /// **'Title'**
+  /// **'Headline'**
   String get meshServicesFieldTitle;
 
   /// Label for the service description input field.
   ///
   /// In en, this message translates to:
-  /// **'Description'**
+  /// **'Details'**
   String get meshServicesFieldDescription;
 
   /// Hint text for the service description text field.
   ///
   /// In en, this message translates to:
-  /// **'Describe your service for other mesh users...'**
+  /// **'Add the context nearby people need'**
   String get meshServicesDescriptionHint;
 
   /// Label for the service duration/TTL selector.
   ///
   /// In en, this message translates to:
-  /// **'Duration'**
+  /// **'Visible for'**
   String get meshServicesFieldDuration;
 
   /// Label for poll question input field.
@@ -57289,13 +57367,13 @@ abstract class AppLocalizations {
   /// Subtitle on the preview screen.
   ///
   /// In en, this message translates to:
-  /// **'This is what nearby peers will see'**
+  /// **'People nearby will see the headline first, then open the full details.'**
   String get meshServicesPreviewSubtitle;
 
   /// Button label to publish/create the service instance.
   ///
   /// In en, this message translates to:
-  /// **'Publish'**
+  /// **'Share now'**
   String get meshServicesPublishAction;
 
   /// Snackbar message after successfully creating a service.
@@ -57307,31 +57385,31 @@ abstract class AppLocalizations {
   /// Completion panel headline after a service has been published.
   ///
   /// In en, this message translates to:
-  /// **'Your service is live!'**
+  /// **'Your share is live'**
   String get meshServicesCreatedHeadline;
 
   /// Completion panel description after publishing a service.
   ///
   /// In en, this message translates to:
-  /// **'Your service is now available to other mesh users nearby. They can discover it and interact with it.'**
+  /// **'People nearby can now discover it and open the full details.'**
   String get meshServicesCreatedDescription;
 
   /// Mesh hint shown in the completion panel after publishing.
   ///
   /// In en, this message translates to:
-  /// **'Services are shared over the local mesh network. The closer people are, the more reliable the connection.'**
+  /// **'Sharing works best when other radios are active nearby.'**
   String get meshServicesCreatedMeshHint;
 
   /// Primary action button in the completion panel to navigate to My Services list.
   ///
   /// In en, this message translates to:
-  /// **'View my services'**
+  /// **'See my shares'**
   String get meshServicesCreatedViewServices;
 
   /// Secondary action button in the completion panel to start a new service creation.
   ///
   /// In en, this message translates to:
-  /// **'Create another'**
+  /// **'Share another'**
   String get meshServicesCreatedCreateAnother;
 
   /// Status badge label for active instances.
@@ -57367,7 +57445,7 @@ abstract class AppLocalizations {
   /// Section label for instance detail sheet actions.
   ///
   /// In en, this message translates to:
-  /// **'Actions'**
+  /// **'Manage this share'**
   String get meshServicesActionsLabel;
 
   /// Confirmation message when stopping a service.
@@ -57439,7 +57517,7 @@ abstract class AppLocalizations {
   /// Hint text for the search field on the My Services screen.
   ///
   /// In en, this message translates to:
-  /// **'Search services'**
+  /// **'Search my shares'**
   String get meshServicesSearchHint;
 
   /// Filter chip label for all service instances.
@@ -57469,7 +57547,7 @@ abstract class AppLocalizations {
   /// Empty state text when search or filter yields no results.
   ///
   /// In en, this message translates to:
-  /// **'No matching services'**
+  /// **'No matching shares'**
   String get meshServicesNoResults;
 
   /// Label for the terrain profile action in the measurement card actions sheet.
@@ -59959,7 +60037,7 @@ abstract class AppLocalizations {
   /// Toggle label for expert diagnostic section
   ///
   /// In en, this message translates to:
-  /// **'Technical details'**
+  /// **'Show delivery details'**
   String get deliveryExpertToggle;
 
   /// Next step button in wizard
@@ -59989,7 +60067,7 @@ abstract class AppLocalizations {
   /// Continue to next screen button in wizard
   ///
   /// In en, this message translates to:
-  /// **'Continue'**
+  /// **'Write it'**
   String get guidedFlowContinue;
 
   /// Cancel button in wizard
@@ -60001,19 +60079,19 @@ abstract class AppLocalizations {
   /// Title for the service creation wizard
   ///
   /// In en, this message translates to:
-  /// **'Create something'**
+  /// **'Share on the mesh'**
   String get serviceWizardTitle;
 
   /// Step indicator label: choose what to create
   ///
   /// In en, this message translates to:
-  /// **'What'**
+  /// **'Intent'**
   String get serviceWizardStepWhat;
 
   /// Step indicator label: optionally choose a preset for the selected canonical service type
   ///
   /// In en, this message translates to:
-  /// **'Preset'**
+  /// **'Template'**
   String get serviceWizardStepPreset;
 
   /// Step indicator label: choose audience
@@ -60031,43 +60109,43 @@ abstract class AppLocalizations {
   /// Step indicator label: review before creating
   ///
   /// In en, this message translates to:
-  /// **'Review'**
+  /// **'Preview'**
   String get serviceWizardStepReview;
 
   /// Step 1 title
   ///
   /// In en, this message translates to:
-  /// **'What do you want to create?'**
+  /// **'What are you sharing?'**
   String get serviceWizardWhatTitle;
 
   /// Step 1 subtitle
   ///
   /// In en, this message translates to:
-  /// **'Choose the core capability you\'ll share on the mesh'**
+  /// **'Start with the kind of thing you want to put out nearby.'**
   String get serviceWizardWhatSubtitle;
 
   /// Step title for optionally choosing a preset for the selected canonical service type
   ///
   /// In en, this message translates to:
-  /// **'Choose an optional preset'**
+  /// **'Choose a starting point'**
   String get serviceWizardPresetTitle;
 
   /// Step subtitle for the optional preset selection step
   ///
   /// In en, this message translates to:
-  /// **'Optional: presets shape the presentation, but the capability stays the same'**
+  /// **'Templates give you a head start without changing what the share can do.'**
   String get serviceWizardPresetSubtitle;
 
   /// Label for using a canonical service type without a preset
   ///
   /// In en, this message translates to:
-  /// **'No preset'**
+  /// **'Start from scratch'**
   String get serviceWizardPresetGeneric;
 
   /// Description for choosing no preset in the service creation wizard
   ///
   /// In en, this message translates to:
-  /// **'Start with the base capability and shape the details yourself'**
+  /// **'Use the basic layout and shape it yourself.'**
   String get serviceWizardPresetGenericDescription;
 
   /// Step 2 title: audience selection
@@ -60109,25 +60187,25 @@ abstract class AppLocalizations {
   /// Review step title
   ///
   /// In en, this message translates to:
-  /// **'Review your service'**
+  /// **'Before you write'**
   String get serviceWizardReviewTitle;
 
   /// Review step subtitle
   ///
   /// In en, this message translates to:
-  /// **'Check everything looks right before publishing'**
+  /// **'This is the shape of the share you’re about to compose.'**
   String get serviceWizardReviewSubtitle;
 
   /// Summary row label: service type
   ///
   /// In en, this message translates to:
-  /// **'Capability'**
+  /// **'You’re sharing'**
   String get serviceWizardReviewType;
 
   /// Summary row label: selected preset
   ///
   /// In en, this message translates to:
-  /// **'Preset'**
+  /// **'Starting point'**
   String get serviceWizardReviewPreset;
 
   /// Summary row label: audience
@@ -60139,8 +60217,296 @@ abstract class AppLocalizations {
   /// Mesh behavior hint on review step
   ///
   /// In en, this message translates to:
-  /// **'Works best when other users are nearby or the mesh is active'**
+  /// **'People nearby will discover the headline first, then open the full details.'**
   String get serviceWizardReviewMeshHint;
+
+  /// Section title for the live preview card in the mesh share composer.
+  ///
+  /// In en, this message translates to:
+  /// **'Live preview'**
+  String get meshServicesPreviewCardTitle;
+
+  /// Section subtitle for the live preview card in the mesh share composer.
+  ///
+  /// In en, this message translates to:
+  /// **'This is the kind of card nearby people will open.'**
+  String get meshServicesPreviewCardDescription;
+
+  /// Placeholder headline in the live preview card before the user types a title.
+  ///
+  /// In en, this message translates to:
+  /// **'Your headline will show here'**
+  String get meshServicesPreviewPlaceholder;
+
+  /// Placeholder body text in the live preview card before the user types a description.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a few details so people nearby know what this is.'**
+  String get meshServicesPreviewNoDetails;
+
+  /// Disclosure label for secondary sharing controls such as duration.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing details'**
+  String get meshServicesAdvancedDetails;
+
+  /// Helper text under the duration control in the secondary details section.
+  ///
+  /// In en, this message translates to:
+  /// **'You can change how long this stays visible on the mesh.'**
+  String get meshServicesAdvancedDurationHint;
+
+  /// Eyebrow label shown above the remote share header on the detail screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared nearby'**
+  String get serviceDetailHeaderEyebrow;
+
+  /// Supporting text under the remote share header on the detail screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the items this nearby radio is sharing right now.'**
+  String get serviceDetailHeaderBody;
+
+  /// Section title for the list of currently shared remote items on the detail screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared right now'**
+  String get serviceDetailSectionLiveNow;
+
+  /// Disclosure label for secondary technical details about a remote mesh share.
+  ///
+  /// In en, this message translates to:
+  /// **'Network details'**
+  String get meshServicesNetworkDetails;
+
+  /// Technical detail row showing the originating node for a remote share.
+  ///
+  /// In en, this message translates to:
+  /// **'From node {nodeId}'**
+  String meshServicesNetworkNode(String nodeId);
+
+  /// Technical detail row showing the share type on the detail screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Share type: {serviceType}'**
+  String meshServicesNetworkServiceType(String serviceType);
+
+  /// Technical detail row showing the numeric MRRP service ID on the detail screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Service ID: {serviceId}'**
+  String meshServicesNetworkServiceId(String serviceId);
+
+  /// Byline for a nearby shared item when the creator is anonymous.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared by someone nearby'**
+  String get meshServicesSharedByAnonymous;
+
+  /// Byline for a nearby shared item when the creator identity is known.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared by {name}'**
+  String meshServicesSharedByPerson(String name);
+
+  /// Label describing how long a share remains visible.
+  ///
+  /// In en, this message translates to:
+  /// **'Visible for {time}'**
+  String meshServicesVisibleFor(String time);
+
+  /// Eyebrow shown on feed cards and detail surfaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby update'**
+  String get meshServicesEyebrowFeed;
+
+  /// Eyebrow shown on list cards and detail surfaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared checklist'**
+  String get meshServicesEyebrowList;
+
+  /// Eyebrow shown on poll cards and detail surfaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby question'**
+  String get meshServicesEyebrowPoll;
+
+  /// Eyebrow shown on signal cards and detail surfaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Active alert'**
+  String get meshServicesEyebrowSignal;
+
+  /// Eyebrow shown on sensor cards and detail surfaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Live reading'**
+  String get meshServicesEyebrowSensor;
+
+  /// CTA label for opening a feed-style mesh share.
+  ///
+  /// In en, this message translates to:
+  /// **'Read update'**
+  String get meshServicesOpenFeedAction;
+
+  /// CTA label for opening a list-style mesh share.
+  ///
+  /// In en, this message translates to:
+  /// **'Open checklist'**
+  String get meshServicesOpenListAction;
+
+  /// CTA label for opening a poll-style mesh share.
+  ///
+  /// In en, this message translates to:
+  /// **'Answer question'**
+  String get meshServicesOpenPollAction;
+
+  /// CTA label for opening a signal-style mesh share.
+  ///
+  /// In en, this message translates to:
+  /// **'View alert'**
+  String get meshServicesOpenSignalAction;
+
+  /// CTA label for opening a sensor-style mesh share.
+  ///
+  /// In en, this message translates to:
+  /// **'Check reading'**
+  String get meshServicesOpenSensorAction;
+
+  /// Compact count label for checklist or list items.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} items'**
+  String meshServicesItemsCount(int count);
+
+  /// Compact count label for poll options.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} choices'**
+  String meshServicesChoicesCount(int count);
+
+  /// Progress label for checklist completion state.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} done'**
+  String meshServicesListProgress(int done, int total);
+
+  /// Label indicating that a remote checklist has additional hidden items.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} more items'**
+  String meshServicesMoreItemsCount(int count);
+
+  /// State label for a poll with no recorded votes.
+  ///
+  /// In en, this message translates to:
+  /// **'No votes yet'**
+  String get meshServicesPollNoVotes;
+
+  /// Compact vote count label for poll detail surfaces.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} votes'**
+  String meshServicesPollVotesCount(int count);
+
+  /// Signal kind label for a routine check-in beacon.
+  ///
+  /// In en, this message translates to:
+  /// **'Check-in'**
+  String get meshServicesSignalKindCheckIn;
+
+  /// Signal kind label for a help request beacon.
+  ///
+  /// In en, this message translates to:
+  /// **'Need help'**
+  String get meshServicesSignalKindNeedHelp;
+
+  /// Signal kind label for a hazard or warning beacon.
+  ///
+  /// In en, this message translates to:
+  /// **'Hazard'**
+  String get meshServicesSignalKindHazard;
+
+  /// Signal kind label for a meetup or regroup beacon.
+  ///
+  /// In en, this message translates to:
+  /// **'Meet here'**
+  String get meshServicesSignalKindMeetHere;
+
+  /// Signal kind label for an active relay or repeater beacon.
+  ///
+  /// In en, this message translates to:
+  /// **'Relay active'**
+  String get meshServicesSignalKindRelayActive;
+
+  /// Status label for a currently active signal.
+  ///
+  /// In en, this message translates to:
+  /// **'Active now'**
+  String get meshServicesSignalActiveLabel;
+
+  /// Title field label for a sensor-style mesh share.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading name'**
+  String get meshServicesFieldSensorName;
+
+  /// Field label for a sensor value input.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading'**
+  String get meshServicesFieldSensorValue;
+
+  /// Hint text for a sensor value input.
+  ///
+  /// In en, this message translates to:
+  /// **'23.4'**
+  String get meshServicesSensorValueHint;
+
+  /// Validation error shown when a sensor share has no reading value.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a reading before sharing.'**
+  String get meshServicesMinSensorValue;
+
+  /// Field label for a sensor unit input.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit'**
+  String get meshServicesFieldSensorUnit;
+
+  /// Hint text for a sensor unit input.
+  ///
+  /// In en, this message translates to:
+  /// **'°C, %, m'**
+  String get meshServicesSensorUnitHint;
+
+  /// Field label for a sensor source input.
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get meshServicesFieldSensorSource;
+
+  /// Hint text for a sensor source input.
+  ///
+  /// In en, this message translates to:
+  /// **'Trail marker, station, or node'**
+  String get meshServicesSensorSourceHint;
+
+  /// Fallback label when a sensor share has no current reading value.
+  ///
+  /// In en, this message translates to:
+  /// **'No reading yet'**
+  String get meshServicesSensorUnknownValue;
+
+  /// Freshness label for a sensor reading.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {time}'**
+  String meshServicesSensorUpdatedLabel(String time);
 
   /// Headline after service creation
   ///

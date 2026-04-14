@@ -17,6 +17,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../features/nodedex/widgets/sigil_painter.dart';
 import '../../mesh_services/models/mesh_service_localization.dart';
 import '../../mesh_services/models/mesh_service_template.dart';
+import '../../mesh_services/presentation/mesh_service_presentation.dart';
 import '../../../providers/mesh_explorer_providers.dart';
 import '../../../services/haptic_service.dart';
 import '../../mesh_services/screens/service_detail_screen.dart';
@@ -63,18 +64,28 @@ class _ServiceDiscoveryCard extends ConsumerWidget {
             canonicalType: canonicalType,
             presetId: presetId,
           );
+    final spec = canonicalType == null
+        ? null
+        : MeshServicePresentationRegistry.forType(canonicalType);
     final presentation = ServicePresentationCatalog.forServiceId(
       service.serviceId,
       l10n,
     );
-    final capabilityLabel = canonicalType == null
+    final typeLabel = canonicalType == null
         ? presentation.title
         : meshServiceTypeName(l10n, canonicalType);
     final serviceTitle =
         service.metadata ??
-        (presetId != null
-            ? meshServicePresetName(l10n, presetId)
-            : capabilityLabel);
+        (presetId != null ? meshServicePresetName(l10n, presetId) : typeLabel);
+    final serviceBlurb = resolved == null
+        ? presentation.subtitle
+        : meshServiceDisplayDescription(
+            l10n,
+            canonicalType: canonicalType!,
+            presetId: presetId,
+          );
+    final eyebrow = spec?.discoveryEyebrow(l10n) ?? typeLabel;
+    final ctaLabel = spec?.discoveryCta(l10n) ?? presentation.actionLabel;
     final accent =
         resolved?.accentColor ??
         (presentation.privacyClass == ServicePrivacyClass.open
@@ -84,6 +95,9 @@ class _ServiceDiscoveryCard extends ConsumerWidget {
     final presetLabel = presetId == null
         ? null
         : meshServicePresetName(l10n, presetId);
+    final byline = service.creatorName == null
+        ? l10n.meshServicesSharedByAnonymous
+        : l10n.meshServicesSharedByPerson(service.creatorName!);
 
     return Material(
       color: Colors.transparent,
@@ -100,7 +114,7 @@ class _ServiceDiscoveryCard extends ConsumerWidget {
               builder: (_) => ServiceDetailScreen(
                 nodeId: service.nodeId,
                 serviceId: service.serviceId,
-                serviceType: capabilityLabel,
+                serviceType: typeLabel,
                 serviceTitle: serviceTitle,
                 icon: icon,
                 accentColor: accent,
@@ -137,6 +151,14 @@ class _ServiceDiscoveryCard extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Text(
+                          eyebrow,
+                          style: context.bodySmallStyle?.copyWith(
+                            color: accent,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: AppTheme.spacing2),
                         // Title
                         Text(
                           serviceTitle,
@@ -149,13 +171,15 @@ class _ServiceDiscoveryCard extends ConsumerWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: AppTheme.spacing4),
-                        if (serviceTitle != capabilityLabel)
-                          Text(
-                            capabilityLabel,
-                            style: context.captionStyle?.copyWith(
-                              color: context.textTertiary,
-                            ),
+                        Text(
+                          serviceBlurb,
+                          style: context.captionStyle?.copyWith(
+                            color: context.textSecondary,
+                            height: 1.3,
                           ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                         if (presetLabel != null) ...[
                           const SizedBox(height: AppTheme.spacing6),
                           _PresetBadge(label: presetLabel, accent: accent),
@@ -185,7 +209,7 @@ class _ServiceDiscoveryCard extends ConsumerWidget {
                   const SizedBox(width: AppTheme.spacing6),
                   Expanded(
                     child: Text(
-                      service.creatorName ?? l10n.meshExplorerPeerAnonymous,
+                      byline,
                       style: context.captionStyle?.copyWith(
                         color: service.isCreatorIdentified
                             ? context.textSecondary
@@ -209,11 +233,22 @@ class _ServiceDiscoveryCard extends ConsumerWidget {
 
                   const SizedBox(width: AppTheme.spacing8),
 
-                  // CTA arrow
-                  Icon(
-                    Icons.arrow_forward_ios,
-                    size: 12,
-                    color: context.textTertiary.withValues(alpha: 0.5),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spacing8,
+                      vertical: AppTheme.spacing4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: accent.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
+                    ),
+                    child: Text(
+                      ctaLabel,
+                      style: context.bodySmallStyle?.copyWith(
+                        color: accent,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
                 ],
               ),

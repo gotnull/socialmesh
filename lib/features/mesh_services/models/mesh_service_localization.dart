@@ -4,6 +4,7 @@
 library;
 
 import '../../../l10n/app_localizations.dart';
+import 'mesh_service_signal_kind.dart';
 import 'mesh_service_template.dart';
 
 String meshServiceTypeName(AppLocalizations l10n, MeshServiceType type) {
@@ -13,6 +14,29 @@ String meshServiceTypeName(AppLocalizations l10n, MeshServiceType type) {
     MeshServiceType.poll => l10n.meshServicesTypePoll,
     MeshServiceType.signal => l10n.meshServicesTypeSignal,
     MeshServiceType.sensor => l10n.meshServicesTypeSensor,
+  };
+}
+
+String meshServiceIntentName(AppLocalizations l10n, MeshServiceType type) {
+  return switch (type) {
+    MeshServiceType.feed => l10n.meshServicesIntentFeed,
+    MeshServiceType.list => l10n.meshServicesIntentList,
+    MeshServiceType.poll => l10n.meshServicesIntentPoll,
+    MeshServiceType.signal => l10n.meshServicesIntentSignal,
+    MeshServiceType.sensor => l10n.meshServicesIntentSensor,
+  };
+}
+
+String meshServiceIntentDescription(
+  AppLocalizations l10n,
+  MeshServiceType type,
+) {
+  return switch (type) {
+    MeshServiceType.feed => l10n.meshServicesIntentFeedDescription,
+    MeshServiceType.list => l10n.meshServicesIntentListDescription,
+    MeshServiceType.poll => l10n.meshServicesIntentPollDescription,
+    MeshServiceType.signal => l10n.meshServicesIntentSignalDescription,
+    MeshServiceType.sensor => l10n.meshServicesIntentSensorDescription,
   };
 }
 
@@ -86,4 +110,17 @@ String meshServiceDisplayDescription(
   return presetId == null
       ? meshServiceTypeDescription(l10n, canonicalType)
       : meshServicePresetDescription(l10n, presetId);
+}
+
+String meshServiceSignalKindName(
+  AppLocalizations l10n,
+  MeshServiceSignalKind kind,
+) {
+  return switch (kind) {
+    MeshServiceSignalKind.checkIn => l10n.meshServicesSignalKindCheckIn,
+    MeshServiceSignalKind.needHelp => l10n.meshServicesSignalKindNeedHelp,
+    MeshServiceSignalKind.hazard => l10n.meshServicesSignalKindHazard,
+    MeshServiceSignalKind.meetHere => l10n.meshServicesSignalKindMeetHere,
+    MeshServiceSignalKind.relayActive => l10n.meshServicesSignalKindRelayActive,
+  };
 }

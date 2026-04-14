@@ -14853,6 +14853,20 @@
     "@nodedexRadioPresetUnknown": {
         "description": "Label shown when the radio preset is not known"
     },
+    "nodedexFrequencyOffset": "Freq Offset",
+    "@nodedexFrequencyOffset": {
+        "description": "Label for the frequency offset row in NodeDex discovery stats"
+    },
+    "nodedexFrequencyOffsetValue": "{offset} Hz",
+    "@nodedexFrequencyOffsetValue": {
+        "description": "Formatted frequency offset value with Hz unit",
+        "placeholders": {
+            "offset": {
+                "type": "String",
+                "example": "75.0"
+            }
+        }
+    },
     "nodedexFilterRadioPresetAll": "All Presets",
     "@nodedexFilterRadioPresetAll": {
         "description": "Option to show nodes from all radio presets (no filter)"
@@ -43330,11 +43344,11 @@
     "@meshExplorerEmptyTitle": {
         "description": "Empty state headline when no services are available."
     },
-    "meshExplorerEmptyBody": "Services shared by nearby mesh users will appear here. Bulletin boards, signals, polls, checklists, and more — all over LoRa radio.",
+    "meshExplorerEmptyBody": "Things shared by nearby people will show up here. Updates, questions, checklists, alerts, and readings all travel over the local mesh.",
     "@meshExplorerEmptyBody": {
         "description": "Empty state description encouraging service discovery."
     },
-    "meshExplorerEmptyAction": "Create something",
+    "meshExplorerEmptyAction": "Share something",
     "@meshExplorerEmptyAction": {
         "description": "Action button on empty state to create a service."
     },
@@ -43346,75 +43360,116 @@
     "@meshExplorerNotConnectedAction": {
         "description": "Action button in not-connected empty state."
     },
-    "meshServicesDrawerLabel": "My Services",
+    "meshServicesDrawerLabel": "My shares",
     "@meshServicesDrawerLabel": {
         "description": "Drawer menu label for the Mesh Services screen."
     },
-    "meshServicesTitle": "My Services",
+    "meshServicesTitle": "My shares",
     "@meshServicesTitle": {
         "description": "App bar title for the My Services management screen."
     },
-    "meshServicesEmpty": "No services yet",
+    "meshServicesEmpty": "Nothing shared yet",
     "@meshServicesEmpty": {
         "description": "Empty state headline when user has no service instances."
     },
-    "meshServicesEmptyDescription": "Create a service to share something useful on the mesh",
+    "meshServicesEmptyDescription": "Share an update, question, checklist, alert, or reading with people nearby on the mesh.",
     "@meshServicesEmptyDescription": {
         "description": "Empty state description on My Services screen."
     },
-    "meshServicesCreateAction": "Create Service",
+    "meshServicesCreateAction": "Share something",
     "@meshServicesCreateAction": {
         "description": "Button label to create a new service instance."
     },
-    "meshServicesCreateTitle": "Create a Service",
+    "meshServicesCreateTitle": "Share on the mesh",
     "@meshServicesCreateTitle": {
         "description": "App bar title for the template picker / create service screen."
     },
-    "meshServicesCreateSubtitle": "Choose what you want to share on the mesh",
+    "meshServicesCreateSubtitle": "Choose what you want to share nearby",
     "@meshServicesCreateSubtitle": {
         "description": "Subtitle on the template picker screen."
     },
-    "meshServicesTypeFeed": "Feed",
+    "meshServicesTypeFeed": "Updates",
     "@meshServicesTypeFeed": {
         "description": "Canonical mesh service type name for feed-style services."
     },
-    "meshServicesTypeFeedDescription": "Share posts, updates, or bulletin-style notices with nearby peers",
+    "meshServicesTypeFeedDescription": "Posts and updates people nearby can open and read",
     "@meshServicesTypeFeedDescription": {
         "description": "Canonical mesh service type description for feed-style services."
     },
-    "meshServicesTypeList": "List",
+    "meshServicesTypeList": "Checklists",
     "@meshServicesTypeList": {
         "description": "Canonical mesh service type name for list-style services."
     },
-    "meshServicesTypeListDescription": "Coordinate checklists, supplies, or other shared collections",
+    "meshServicesTypeListDescription": "Lists, checklists, or supplies people nearby can work through together",
     "@meshServicesTypeListDescription": {
         "description": "Canonical mesh service type description for list-style services."
     },
-    "meshServicesTypePoll": "Poll",
+    "meshServicesTypePoll": "Questions",
     "@meshServicesTypePoll": {
         "description": "Canonical mesh service type name for poll services."
     },
-    "meshServicesTypePollDescription": "Ask a multiple-choice question and collect nearby responses",
+    "meshServicesTypePollDescription": "Ask nearby people to pick an answer",
     "@meshServicesTypePollDescription": {
         "description": "Canonical mesh service type description for poll services."
     },
-    "meshServicesTypeSignal": "Signal",
+    "meshServicesTypeSignal": "Alerts",
     "@meshServicesTypeSignal": {
         "description": "Canonical mesh service type name for signal services."
     },
-    "meshServicesTypeSignalDescription": "Broadcast a short-lived beacon or alert across the mesh",
+    "meshServicesTypeSignalDescription": "Short-lived alerts or beacons that stand out nearby",
     "@meshServicesTypeSignalDescription": {
         "description": "Canonical mesh service type description for signal services."
     },
-    "meshServicesTypeSensor": "Sensor",
+    "meshServicesTypeSensor": "Readings",
     "@meshServicesTypeSensor": {
         "description": "Canonical mesh service type name for sensor services."
     },
-    "meshServicesTypeSensorDescription": "Publish telemetry or measured readings from a local sensor source",
+    "meshServicesTypeSensorDescription": "Live measurements or telemetry people nearby can check",
+
+    "meshServicesIntentFeed": "Post an update",
+    "@meshServicesIntentFeed": {
+        "description": "Intent-first label for the feed capability in the creation flow."
+    },
+    "meshServicesIntentFeedDescription": "Share news, status, or a notice people nearby can open.",
+    "@meshServicesIntentFeedDescription": {
+        "description": "Intent-first description for the feed capability in the creation flow."
+    },
+    "meshServicesIntentList": "Create a checklist",
+    "@meshServicesIntentList": {
+        "description": "Intent-first label for the list capability in the creation flow."
+    },
+    "meshServicesIntentListDescription": "Organize items, jobs, or supplies people nearby can work through together.",
+    "@meshServicesIntentListDescription": {
+        "description": "Intent-first description for the list capability in the creation flow."
+    },
+    "meshServicesIntentPoll": "Ask a question",
+    "@meshServicesIntentPoll": {
+        "description": "Intent-first label for the poll capability in the creation flow."
+    },
+    "meshServicesIntentPollDescription": "Put a multiple-choice question out to nearby people.",
+    "@meshServicesIntentPollDescription": {
+        "description": "Intent-first description for the poll capability in the creation flow."
+    },
+    "meshServicesIntentSignal": "Send an alert",
+    "@meshServicesIntentSignal": {
+        "description": "Intent-first label for the signal capability in the creation flow."
+    },
+    "meshServicesIntentSignalDescription": "Broadcast a short-lived alert, check-in, or beacon nearby.",
+    "@meshServicesIntentSignalDescription": {
+        "description": "Intent-first description for the signal capability in the creation flow."
+    },
+    "meshServicesIntentSensor": "Share a reading",
+    "@meshServicesIntentSensor": {
+        "description": "Intent-first label for the sensor capability in the creation flow."
+    },
+    "meshServicesIntentSensorDescription": "Publish a live reading, measurement, or status from a device.",
+    "@meshServicesIntentSensorDescription": {
+        "description": "Intent-first description for the sensor capability in the creation flow."
+    },
     "@meshServicesTypeSensorDescription": {
         "description": "Canonical mesh service type description for sensor services."
     },
-    "meshServicesVisibilityOpen": "Open",
+    "meshServicesVisibilityOpen": "Nearby",
     "@meshServicesVisibilityOpen": {
         "description": "Badge label indicating a mesh service is discoverable by nearby peers."
     },
@@ -43581,7 +43636,11 @@
             }
         }
     },
-    "serviceDetailFetchingInstances": "Fetching service data…",
+    "meshServicesInteractionFailed": "Could not update this share right now.",
+    "@meshServicesInteractionFailed": {
+        "description": "Snackbar shown when an interactive mesh share action fails."
+    },
+    "serviceDetailFetchingInstances": "Loading what’s being shared…",
     "@serviceDetailFetchingInstances": {
         "description": "Loading text shown while fetching remote service instances via MRRP."
     },
@@ -43611,7 +43670,7 @@
     "@serviceDetailInstanceDescription": {
         "description": "Label for the instance description field in the remote instance detail."
     },
-    "serviceDetailInstanceExpires": "Expires {time}",
+    "serviceDetailInstanceExpires": "Ends in {time}",
     "@serviceDetailInstanceExpires": {
         "description": "Expiry information for a remote service instance.",
         "placeholders": {
@@ -43620,7 +43679,7 @@
             }
         }
     },
-    "serviceDetailInstanceNoExpiry": "No expiry",
+    "serviceDetailInstanceNoExpiry": "Stays live until removed",
     "@serviceDetailInstanceNoExpiry": {
         "description": "Shown when a remote service instance has no expiry time set."
     },
@@ -43628,19 +43687,19 @@
     "@serviceDetailInstanceExpired": {
         "description": "Shown when a remote service instance has expired."
     },
-    "meshServicesFieldTitle": "Title",
+    "meshServicesFieldTitle": "Headline",
     "@meshServicesFieldTitle": {
         "description": "Label for the service title input field."
     },
-    "meshServicesFieldDescription": "Description",
+    "meshServicesFieldDescription": "Details",
     "@meshServicesFieldDescription": {
         "description": "Label for the service description input field."
     },
-    "meshServicesDescriptionHint": "Describe your service for other mesh users...",
+    "meshServicesDescriptionHint": "Add the context nearby people need",
     "@meshServicesDescriptionHint": {
         "description": "Hint text for the service description text field."
     },
-    "meshServicesFieldDuration": "Duration",
+    "meshServicesFieldDuration": "Visible for",
     "@meshServicesFieldDuration": {
         "description": "Label for the service duration/TTL selector."
     },
@@ -43678,11 +43737,11 @@
     "@meshServicesPreviewTitle": {
         "description": "App bar title for the service preview screen."
     },
-    "meshServicesPreviewSubtitle": "This is what nearby peers will see",
+    "meshServicesPreviewSubtitle": "People nearby will see the headline first, then open the full details.",
     "@meshServicesPreviewSubtitle": {
         "description": "Subtitle on the preview screen."
     },
-    "meshServicesPublishAction": "Publish",
+    "meshServicesPublishAction": "Share now",
     "@meshServicesPublishAction": {
         "description": "Button label to publish/create the service instance."
     },
@@ -43690,23 +43749,23 @@
     "@meshServicesPublishSuccess": {
         "description": "Snackbar message after successfully creating a service."
     },
-    "meshServicesCreatedHeadline": "Your service is live!",
+    "meshServicesCreatedHeadline": "Your share is live",
     "@meshServicesCreatedHeadline": {
         "description": "Completion panel headline after a service has been published."
     },
-    "meshServicesCreatedDescription": "Your service is now available to other mesh users nearby. They can discover it and interact with it.",
+    "meshServicesCreatedDescription": "People nearby can now discover it and open the full details.",
     "@meshServicesCreatedDescription": {
         "description": "Completion panel description after publishing a service."
     },
-    "meshServicesCreatedMeshHint": "Services are shared over the local mesh network. The closer people are, the more reliable the connection.",
+    "meshServicesCreatedMeshHint": "Sharing works best when other radios are active nearby.",
     "@meshServicesCreatedMeshHint": {
         "description": "Mesh hint shown in the completion panel after publishing."
     },
-    "meshServicesCreatedViewServices": "View my services",
+    "meshServicesCreatedViewServices": "See my shares",
     "@meshServicesCreatedViewServices": {
         "description": "Primary action button in the completion panel to navigate to My Services list."
     },
-    "meshServicesCreatedCreateAnother": "Create another",
+    "meshServicesCreatedCreateAnother": "Share another",
     "@meshServicesCreatedCreateAnother": {
         "description": "Secondary action button in the completion panel to start a new service creation."
     },
@@ -43730,7 +43789,7 @@
     "@meshServicesDeleteAction": {
         "description": "Action label to delete a service instance."
     },
-    "meshServicesActionsLabel": "Actions",
+    "meshServicesActionsLabel": "Manage this share",
     "@meshServicesActionsLabel": {
         "description": "Section label for instance detail sheet actions."
     },
@@ -43793,7 +43852,7 @@
     "@meshServicesCancelAction": {
         "description": "Generic cancel button label."
     },
-    "meshServicesSearchHint": "Search services",
+    "meshServicesSearchHint": "Search my shares",
     "@meshServicesSearchHint": {
         "description": "Hint text for the search field on the My Services screen."
     },
@@ -43813,7 +43872,7 @@
     "@meshServicesFilterStopped": {
         "description": "Filter chip label for stopped service instances."
     },
-    "meshServicesNoResults": "No matching services",
+    "meshServicesNoResults": "No matching shares",
     "@meshServicesNoResults": {
         "description": "Empty state text when search or filter yields no results."
     },
@@ -45716,7 +45775,7 @@
             }
         }
     },
-    "deliveryExpertToggle": "Technical details",
+    "deliveryExpertToggle": "Show delivery details",
     "@deliveryExpertToggle": {
         "description": "Toggle label for expert diagnostic section"
     },
@@ -45736,7 +45795,7 @@
     "@guidedFlowCreate": {
         "description": "Create/commit button in wizard"
     },
-    "guidedFlowContinue": "Continue",
+    "guidedFlowContinue": "Write it",
     "@guidedFlowContinue": {
         "description": "Continue to next screen button in wizard"
     },
@@ -45744,15 +45803,15 @@
     "@guidedFlowCancel": {
         "description": "Cancel button in wizard"
     },
-    "serviceWizardTitle": "Create something",
+    "serviceWizardTitle": "Share on the mesh",
     "@serviceWizardTitle": {
         "description": "Title for the service creation wizard"
     },
-    "serviceWizardStepWhat": "What",
+    "serviceWizardStepWhat": "Intent",
     "@serviceWizardStepWhat": {
         "description": "Step indicator label: choose what to create"
     },
-    "serviceWizardStepPreset": "Preset",
+    "serviceWizardStepPreset": "Template",
     "@serviceWizardStepPreset": {
         "description": "Step indicator label: optionally choose a preset for the selected canonical service type"
     },
@@ -45764,31 +45823,31 @@
     "@serviceWizardStepDetails": {
         "description": "Step indicator label: fill in details"
     },
-    "serviceWizardStepReview": "Review",
+    "serviceWizardStepReview": "Preview",
     "@serviceWizardStepReview": {
         "description": "Step indicator label: review before creating"
     },
-    "serviceWizardWhatTitle": "What do you want to create?",
+    "serviceWizardWhatTitle": "What are you sharing?",
     "@serviceWizardWhatTitle": {
         "description": "Step 1 title"
     },
-    "serviceWizardWhatSubtitle": "Choose the core capability you'll share on the mesh",
+    "serviceWizardWhatSubtitle": "Start with the kind of thing you want to put out nearby.",
     "@serviceWizardWhatSubtitle": {
         "description": "Step 1 subtitle"
     },
-    "serviceWizardPresetTitle": "Choose an optional preset",
+    "serviceWizardPresetTitle": "Choose a starting point",
     "@serviceWizardPresetTitle": {
         "description": "Step title for optionally choosing a preset for the selected canonical service type"
     },
-    "serviceWizardPresetSubtitle": "Optional: presets shape the presentation, but the capability stays the same",
+    "serviceWizardPresetSubtitle": "Templates give you a head start without changing what the share can do.",
     "@serviceWizardPresetSubtitle": {
         "description": "Step subtitle for the optional preset selection step"
     },
-    "serviceWizardPresetGeneric": "No preset",
+    "serviceWizardPresetGeneric": "Start from scratch",
     "@serviceWizardPresetGeneric": {
         "description": "Label for using a canonical service type without a preset"
     },
-    "serviceWizardPresetGenericDescription": "Start with the base capability and shape the details yourself",
+    "serviceWizardPresetGenericDescription": "Use the basic layout and shape it yourself.",
     "@serviceWizardPresetGenericDescription": {
         "description": "Description for choosing no preset in the service creation wizard"
     },
@@ -45816,19 +45875,19 @@
     "@serviceWizardAudienceContactsDesc": {
         "description": "Description for contacts audience"
     },
-    "serviceWizardReviewTitle": "Review your service",
+    "serviceWizardReviewTitle": "Before you write",
     "@serviceWizardReviewTitle": {
         "description": "Review step title"
     },
-    "serviceWizardReviewSubtitle": "Check everything looks right before publishing",
+    "serviceWizardReviewSubtitle": "This is the shape of the share you’re about to compose.",
     "@serviceWizardReviewSubtitle": {
         "description": "Review step subtitle"
     },
-    "serviceWizardReviewType": "Capability",
+    "serviceWizardReviewType": "You’re sharing",
     "@serviceWizardReviewType": {
         "description": "Summary row label: service type"
     },
-    "serviceWizardReviewPreset": "Preset",
+    "serviceWizardReviewPreset": "Starting point",
     "@serviceWizardReviewPreset": {
         "description": "Summary row label: selected preset"
     },
@@ -45836,7 +45895,258 @@
     "@serviceWizardReviewAudience": {
         "description": "Summary row label: audience"
     },
-    "serviceWizardReviewMeshHint": "Works best when other users are nearby or the mesh is active",
+    "serviceWizardReviewMeshHint": "People nearby will discover the headline first, then open the full details.",
+
+    "meshServicesPreviewCardTitle": "Live preview",
+    "@meshServicesPreviewCardTitle": {
+        "description": "Section title for the live preview card in the mesh share composer."
+    },
+    "meshServicesPreviewCardDescription": "This is the kind of card nearby people will open.",
+    "@meshServicesPreviewCardDescription": {
+        "description": "Section subtitle for the live preview card in the mesh share composer."
+    },
+    "meshServicesPreviewPlaceholder": "Your headline will show here",
+    "@meshServicesPreviewPlaceholder": {
+        "description": "Placeholder headline in the live preview card before the user types a title."
+    },
+    "meshServicesPreviewNoDetails": "Add a few details so people nearby know what this is.",
+    "@meshServicesPreviewNoDetails": {
+        "description": "Placeholder body text in the live preview card before the user types a description."
+    },
+    "meshServicesAdvancedDetails": "Sharing details",
+    "@meshServicesAdvancedDetails": {
+        "description": "Disclosure label for secondary sharing controls such as duration."
+    },
+    "meshServicesAdvancedDurationHint": "You can change how long this stays visible on the mesh.",
+    "@meshServicesAdvancedDurationHint": {
+        "description": "Helper text under the duration control in the secondary details section."
+    },
+    "serviceDetailHeaderEyebrow": "Shared nearby",
+    "@serviceDetailHeaderEyebrow": {
+        "description": "Eyebrow label shown above the remote share header on the detail screen."
+    },
+    "serviceDetailHeaderBody": "Open the items this nearby radio is sharing right now.",
+    "@serviceDetailHeaderBody": {
+        "description": "Supporting text under the remote share header on the detail screen."
+    },
+    "serviceDetailSectionLiveNow": "Shared right now",
+    "@serviceDetailSectionLiveNow": {
+        "description": "Section title for the list of currently shared remote items on the detail screen."
+    },
+    "meshServicesNetworkDetails": "Network details",
+    "@meshServicesNetworkDetails": {
+        "description": "Disclosure label for secondary technical details about a remote mesh share."
+    },
+    "meshServicesNetworkNode": "From node {nodeId}",
+    "@meshServicesNetworkNode": {
+        "description": "Technical detail row showing the originating node for a remote share.",
+        "placeholders": {
+            "nodeId": {
+                "type": "String"
+            }
+        }
+    },
+    "meshServicesNetworkServiceType": "Share type: {serviceType}",
+    "@meshServicesNetworkServiceType": {
+        "description": "Technical detail row showing the share type on the detail screen.",
+        "placeholders": {
+            "serviceType": {
+                "type": "String"
+            }
+        }
+    },
+    "meshServicesNetworkServiceId": "Service ID: {serviceId}",
+    "@meshServicesNetworkServiceId": {
+        "description": "Technical detail row showing the numeric MRRP service ID on the detail screen.",
+        "placeholders": {
+            "serviceId": {
+                "type": "String"
+            }
+        }
+    },
+    "meshServicesSharedByAnonymous": "Shared by someone nearby",
+    "@meshServicesSharedByAnonymous": {
+        "description": "Byline for a nearby shared item when the creator is anonymous."
+    },
+    "meshServicesSharedByPerson": "Shared by {name}",
+    "@meshServicesSharedByPerson": {
+        "description": "Byline for a nearby shared item when the creator identity is known.",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "meshServicesVisibleFor": "Visible for {time}",
+    "@meshServicesVisibleFor": {
+        "description": "Label describing how long a share remains visible.",
+        "placeholders": {
+            "time": {
+                "type": "String"
+            }
+        }
+    },
+    "meshServicesEyebrowFeed": "Nearby update",
+    "@meshServicesEyebrowFeed": {
+        "description": "Eyebrow shown on feed cards and detail surfaces."
+    },
+    "meshServicesEyebrowList": "Shared checklist",
+    "@meshServicesEyebrowList": {
+        "description": "Eyebrow shown on list cards and detail surfaces."
+    },
+    "meshServicesEyebrowPoll": "Nearby question",
+    "@meshServicesEyebrowPoll": {
+        "description": "Eyebrow shown on poll cards and detail surfaces."
+    },
+    "meshServicesEyebrowSignal": "Active alert",
+    "@meshServicesEyebrowSignal": {
+        "description": "Eyebrow shown on signal cards and detail surfaces."
+    },
+    "meshServicesEyebrowSensor": "Live reading",
+    "@meshServicesEyebrowSensor": {
+        "description": "Eyebrow shown on sensor cards and detail surfaces."
+    },
+    "meshServicesOpenFeedAction": "Read update",
+    "@meshServicesOpenFeedAction": {
+        "description": "CTA label for opening a feed-style mesh share."
+    },
+    "meshServicesOpenListAction": "Open checklist",
+    "@meshServicesOpenListAction": {
+        "description": "CTA label for opening a list-style mesh share."
+    },
+    "meshServicesOpenPollAction": "Answer question",
+    "@meshServicesOpenPollAction": {
+        "description": "CTA label for opening a poll-style mesh share."
+    },
+    "meshServicesOpenSignalAction": "View alert",
+    "@meshServicesOpenSignalAction": {
+        "description": "CTA label for opening a signal-style mesh share."
+    },
+    "meshServicesOpenSensorAction": "Check reading",
+    "@meshServicesOpenSensorAction": {
+        "description": "CTA label for opening a sensor-style mesh share."
+    },
+    "meshServicesItemsCount": "{count} items",
+    "@meshServicesItemsCount": {
+        "description": "Compact count label for checklist or list items.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "meshServicesChoicesCount": "{count} choices",
+    "@meshServicesChoicesCount": {
+        "description": "Compact count label for poll options.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "meshServicesListProgress": "{done} of {total} done",
+    "@meshServicesListProgress": {
+        "description": "Progress label for checklist completion state.",
+        "placeholders": {
+            "done": {
+                "type": "int"
+            },
+            "total": {
+                "type": "int"
+            }
+        }
+    },
+    "meshServicesMoreItemsCount": "{count} more items",
+    "@meshServicesMoreItemsCount": {
+        "description": "Label indicating that a remote checklist has additional hidden items.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "meshServicesPollNoVotes": "No votes yet",
+    "@meshServicesPollNoVotes": {
+        "description": "State label for a poll with no recorded votes."
+    },
+    "meshServicesPollVotesCount": "{count} votes",
+    "@meshServicesPollVotesCount": {
+        "description": "Compact vote count label for poll detail surfaces.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "meshServicesSignalKindCheckIn": "Check-in",
+    "@meshServicesSignalKindCheckIn": {
+        "description": "Signal kind label for a routine check-in beacon."
+    },
+    "meshServicesSignalKindNeedHelp": "Need help",
+    "@meshServicesSignalKindNeedHelp": {
+        "description": "Signal kind label for a help request beacon."
+    },
+    "meshServicesSignalKindHazard": "Hazard",
+    "@meshServicesSignalKindHazard": {
+        "description": "Signal kind label for a hazard or warning beacon."
+    },
+    "meshServicesSignalKindMeetHere": "Meet here",
+    "@meshServicesSignalKindMeetHere": {
+        "description": "Signal kind label for a meetup or regroup beacon."
+    },
+    "meshServicesSignalKindRelayActive": "Relay active",
+    "@meshServicesSignalKindRelayActive": {
+        "description": "Signal kind label for an active relay or repeater beacon."
+    },
+    "meshServicesSignalActiveLabel": "Active now",
+    "@meshServicesSignalActiveLabel": {
+        "description": "Status label for a currently active signal."
+    },
+    "meshServicesFieldSensorName": "Reading name",
+    "@meshServicesFieldSensorName": {
+        "description": "Title field label for a sensor-style mesh share."
+    },
+    "meshServicesFieldSensorValue": "Reading",
+    "@meshServicesFieldSensorValue": {
+        "description": "Field label for a sensor value input."
+    },
+    "meshServicesSensorValueHint": "23.4",
+    "@meshServicesSensorValueHint": {
+        "description": "Hint text for a sensor value input."
+    },
+    "meshServicesMinSensorValue": "Add a reading before sharing.",
+    "@meshServicesMinSensorValue": {
+        "description": "Validation error shown when a sensor share has no reading value."
+    },
+    "meshServicesFieldSensorUnit": "Unit",
+    "@meshServicesFieldSensorUnit": {
+        "description": "Field label for a sensor unit input."
+    },
+    "meshServicesSensorUnitHint": "°C, %, m",
+    "@meshServicesSensorUnitHint": {
+        "description": "Hint text for a sensor unit input."
+    },
+    "meshServicesFieldSensorSource": "Source",
+    "@meshServicesFieldSensorSource": {
+        "description": "Field label for a sensor source input."
+    },
+    "meshServicesSensorSourceHint": "Trail marker, station, or node",
+    "@meshServicesSensorSourceHint": {
+        "description": "Hint text for a sensor source input."
+    },
+    "meshServicesSensorUnknownValue": "No reading yet",
+    "@meshServicesSensorUnknownValue": {
+        "description": "Fallback label when a sensor share has no current reading value."
+    },
+    "meshServicesSensorUpdatedLabel": "Updated {time}",
+    "@meshServicesSensorUpdatedLabel": {
+        "description": "Freshness label for a sensor reading.",
+        "placeholders": {
+            "time": {
+                "type": "String"
+            }
+        }
+    },
     "@serviceWizardReviewMeshHint": {
         "description": "Mesh behavior hint on review step"
     },

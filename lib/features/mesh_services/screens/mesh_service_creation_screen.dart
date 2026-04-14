@@ -21,13 +21,16 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/bottom_action_bar.dart';
 import '../../../core/widgets/completion_state_panel.dart';
+import '../../../core/widgets/expert_details_expander.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../l10n/app_localizations.dart';
 
 import '../../../services/haptic_service.dart';
 import '../../../utils/snackbar.dart';
+import '../models/mesh_service_signal_kind.dart';
 import '../models/mesh_service_localization.dart';
 import '../models/mesh_service_template.dart';
+import '../presentation/mesh_service_presentation.dart';
 import '../providers/mesh_service_providers.dart';
 
 /// Maximum poll options.
@@ -77,7 +80,12 @@ class _MeshServiceCreationScreenState
   /// Checklist / resource list item controllers.
   final _itemControllers = <TextEditingController>[];
 
+  final _sensorValueController = TextEditingController();
+  final _sensorUnitController = TextEditingController();
+  final _sensorSourceController = TextEditingController();
+
   late int _ttlMinutes;
+  MeshServiceSignalKind _signalKind = MeshServiceSignalKind.checkIn;
   bool _publishing = false;
   bool _publishedSuccessfully = false;
 
@@ -89,6 +97,9 @@ class _MeshServiceCreationScreenState
     canonicalType: widget.canonicalType,
     presetId: widget.presetId,
   );
+
+  MeshServicePresentationSpec get _presentation =>
+      MeshServicePresentationRegistry.forType(widget.canonicalType);
 
   @override
   void initState() {
@@ -133,6 +144,9 @@ class _MeshServiceCreationScreenState
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
+    _sensorValueController.dispose();
+    _sensorUnitController.dispose();
+    _sensorSourceController.dispose();
     _titleFocusNode.dispose();
     _entryAnimationController.dispose();
     for (final c in _optionControllers) {
@@ -152,6 +166,8 @@ class _MeshServiceCreationScreenState
 
   bool get _hasList => widget.canonicalType == MeshServiceType.list;
 
+  bool get _isSensor => widget.canonicalType == MeshServiceType.sensor;
+
   String _displayName(AppLocalizations l10n) {
     return meshServiceDisplayName(
       l10n,
@@ -160,12 +176,63 @@ class _MeshServiceCreationScreenState
     );
   }
 
-  IconData get _listSectionIcon {
-    return switch (_resolved.presetId) {
-      MeshServicePresetId.sharedChecklist => Icons.checklist_outlined,
-      MeshServicePresetId.taskBoard => Icons.view_kanban_outlined,
-      _ => Icons.list_alt_outlined,
-    };
+  String _previewTitle(AppLocalizations l10n) {
+    final title = _titleController.text.trim();
+    if (title.isNotEmpty) return title;
+    return l10n.meshServicesPreviewPlaceholder;
+  }
+
+  String _previewDescription(AppLocalizations l10n) {
+    final description = _descriptionController.text.trim();
+    if (description.isNotEmpty) return description;
+    return l10n.meshServicesPreviewNoDetails;
+  }
+
+  String _formattedVisibleFor(dynamic l10n) {
+    final formatted = _ttlMinutes >= 60
+        ? l10n.meshServicesDurationHours(_ttlMinutes ~/ 60) as String
+        : l10n.meshServicesDurationMinutes(_ttlMinutes) as String;
+    return l10n.meshServicesVisibleFor(formatted) as String;
+  }
+
+  MeshServiceComposeDraft _buildDraft() {
+    return MeshServiceComposeDraft(
+      title: _previewTitle(context.l10n),
+      description: _previewDescription(context.l10n),
+      ttlMinutes: _ttlMinutes,
+      options: _optionControllers
+          .map((controller) => controller.text.trim())
+          .where((value) => value.isNotEmpty)
+          .toList(growable: false),
+      items: _itemControllers
+          .map((controller) => controller.text.trim())
+          .where((value) => value.isNotEmpty)
+          .toList(growable: false),
+      signalKind: _signalKind,
+      sensorValue: _sensorValueController.text.trim(),
+      sensorUnit: _sensorUnitController.text.trim(),
+      sensorSource: _sensorSourceController.text.trim(),
+    );
+  }
+
+  MeshServiceComposeController _buildComposeController() {
+    return MeshServiceComposeController(
+      isPublishing: _publishing,
+      optionControllers: _optionControllers,
+      onAddOption: _addOption,
+      onRemoveOption: _removeOption,
+      itemControllers: _itemControllers,
+      onAddItem: _addItem,
+      onRemoveItem: _removeItem,
+      signalKind: _signalKind,
+      onSignalKindChanged: (kind) => setState(() => _signalKind = kind),
+      sensorValueController: _sensorValueController,
+      sensorUnitController: _sensorUnitController,
+      sensorSourceController: _sensorSourceController,
+      onChanged: () => setState(() {}),
+      maxPollOptions: _maxPollOptions,
+      maxListItems: _maxListItems,
+    );
   }
 
   // ─────────────────────── build ───────────────────────
@@ -201,7 +268,7 @@ class _MeshServiceCreationScreenState
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              title,
+              l10n.meshServicesCreateTitle,
               style: TextStyle(
                 color: context.textPrimary,
                 fontWeight: FontWeight.w700,
@@ -209,7 +276,7 @@ class _MeshServiceCreationScreenState
               ),
             ),
             Text(
-              l10n.meshServicesCreateTitle,
+              title,
               style: TextStyle(
                 color: accent,
                 fontSize: 11,
@@ -245,66 +312,12 @@ class _MeshServiceCreationScreenState
                             position: _slideAnimation,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // ── Service badge ──
-                                _ServiceBadge(
-                                  resolved: _resolved,
-                                  title: title,
-                                  visibilityLabel:
-                                      l10n.meshServicesVisibilityOpen,
-                                ),
-
-                                const SizedBox(height: AppTheme.spacing20),
-
-                                // ── Title input (primary) ──
-                                _buildTitleInput(l10n, accent),
-
-                                const SizedBox(height: AppTheme.spacing16),
-
-                                // ── Description field ──
-                                _buildDescriptionField(l10n),
-
-                                // ── Capability-specific fields ──
-                                if (_isPoll) ...[
-                                  const SizedBox(height: AppTheme.spacing16),
-                                  ..._buildPollFields(l10n, accent),
-                                ],
-                                if (_hasList) ...[
-                                  const SizedBox(height: AppTheme.spacing16),
-                                  ..._buildListFields(l10n, accent),
-                                ],
-
-                                const SizedBox(height: AppTheme.spacing16),
-
-                                // ── Duration selector ──
-                                _buildDurationSelector(l10n, accent),
-
-                                const SizedBox(height: AppTheme.spacing16),
-
-                                // ── Privacy note ──
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Icon(
-                                      Icons.shield_outlined,
-                                      size: 14,
-                                      color: context.textTertiary,
-                                    ),
-                                    const SizedBox(width: AppTheme.spacing6),
-                                    Expanded(
-                                      child: Text(
-                                        l10n.meshServicesPreviewSubtitle,
-                                        style: TextStyle(
-                                          color: context.textTertiary,
-                                          fontSize: 11,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-
-                                const SizedBox(height: AppTheme.spacing48),
-                              ],
+                              children: _buildComposerSections(
+                                context,
+                                l10n,
+                                title,
+                                accent,
+                              ),
                             ),
                           ),
                         ),
@@ -342,23 +355,20 @@ class _MeshServiceCreationScreenState
             meshHint: l10n.meshServicesCreatedMeshHint as String,
             primaryActionLabel: l10n.meshServicesCreatedViewServices as String,
             onPrimaryAction: () {
-              // Pop creation screen — returns to My Services list.
-              // The wizard used pushReplacement, so only one pop is needed.
               Navigator.of(context).pop();
             },
             secondaryActionLabel:
                 l10n.meshServicesCreatedCreateAnother as String,
             onSecondaryAction: () {
-              // Reset form for another creation.
               setState(() {
                 _publishedSuccessfully = false;
                 _titleController.clear();
                 _descriptionController.clear();
-                for (final c in _optionControllers) {
-                  c.clear();
+                for (final controller in _optionControllers) {
+                  controller.clear();
                 }
-                for (final c in _itemControllers) {
-                  c.clear();
+                for (final controller in _itemControllers) {
+                  controller.clear();
                 }
                 _ttlMinutes = _resolved.defaultTtlMinutes;
               });
@@ -394,51 +404,183 @@ class _MeshServiceCreationScreenState
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _ServiceBadge(
-                resolved: _resolved,
-                title: title,
-                visibilityLabel: l10n.meshServicesVisibilityOpen,
-              ),
-              const SizedBox(height: AppTheme.spacing20),
-              _buildTitleInput(l10n, accent),
-              const SizedBox(height: AppTheme.spacing16),
-              _buildDescriptionField(l10n),
-              if (_isPoll) ...[
-                const SizedBox(height: AppTheme.spacing16),
-                ..._buildPollFields(l10n, accent),
-              ],
-              if (_hasList) ...[
-                const SizedBox(height: AppTheme.spacing16),
-                ..._buildListFields(l10n, accent),
-              ],
-              const SizedBox(height: AppTheme.spacing16),
-              _buildDurationSelector(l10n, accent),
-              const SizedBox(height: AppTheme.spacing16),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    Icons.shield_outlined,
-                    size: 14,
-                    color: context.textTertiary,
-                  ),
-                  const SizedBox(width: AppTheme.spacing6),
-                  Expanded(
-                    child: Text(
-                      l10n.meshServicesPreviewSubtitle as String,
-                      style: TextStyle(
-                        color: context.textTertiary,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppTheme.spacing48),
-            ],
+            children: _buildComposerSections(context, l10n, title, accent),
           ),
         ),
+      ),
+    );
+  }
+
+  List<Widget> _buildComposerSections(
+    BuildContext context,
+    dynamic l10n,
+    String title,
+    Color accent,
+  ) {
+    return [
+      _ServiceBadge(
+        resolved: _resolved,
+        title: title,
+        visibilityLabel: l10n.meshServicesVisibilityOpen as String,
+      ),
+      const SizedBox(height: AppTheme.spacing16),
+      Text(
+        _presentation.composeLead(l10n),
+        style: context.bodySecondaryStyle?.copyWith(
+          color: context.textSecondary,
+          height: 1.35,
+        ),
+      ),
+      const SizedBox(height: AppTheme.spacing20),
+      _buildTitleInput(l10n, accent),
+      const SizedBox(height: AppTheme.spacing16),
+      _buildDescriptionField(l10n),
+      Builder(
+        builder: (context) => _presentation.buildComposeFields(
+          context,
+          l10n,
+          _buildComposeController(),
+          accent,
+        ),
+      ),
+      if (_isPoll || _hasList || _isSensor) ...[
+        const SizedBox(height: AppTheme.spacing16),
+      ],
+      const SizedBox(height: AppTheme.spacing20),
+      _buildPreviewCard(context, l10n, title),
+      const SizedBox(height: AppTheme.spacing16),
+      Container(
+        decoration: BoxDecoration(
+          color: context.card,
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
+          border: Border.all(color: context.border.withValues(alpha: 0.12)),
+        ),
+        child: ExpertDetailsExpander(
+          label: l10n.meshServicesAdvancedDetails as String,
+          icon: Icons.tune_outlined,
+          expandedBuilder: (context) => Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppTheme.spacing16,
+              0,
+              AppTheme.spacing16,
+              AppTheme.spacing16,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildDurationSelector(l10n, accent),
+                const SizedBox(height: AppTheme.spacing10),
+                Text(
+                  l10n.meshServicesAdvancedDurationHint as String,
+                  style: context.bodySmallStyle?.copyWith(
+                    color: context.textTertiary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      const SizedBox(height: AppTheme.spacing48),
+    ];
+  }
+
+  Widget _buildPreviewCard(BuildContext context, dynamic l10n, String title) {
+    final draft = _buildDraft();
+
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spacing16),
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
+        border: Border.all(
+          color: _resolved.accentColor.withValues(alpha: 0.16),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.meshServicesPreviewCardTitle as String,
+            style: context.titleSmallStyle?.copyWith(
+              color: context.textPrimary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing4),
+          Text(
+            l10n.meshServicesPreviewCardDescription as String,
+            style: context.bodySmallStyle?.copyWith(
+              color: context.textSecondary,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing16),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: _resolved.accentColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
+                ),
+                child: Icon(
+                  _resolved.icon,
+                  size: 22,
+                  color: _resolved.accentColor,
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _previewTitle(context.l10n),
+                      style: context.bodyStyle?.copyWith(
+                        color: context.textPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spacing4),
+                    Text(
+                      title,
+                      style: context.bodySmallStyle?.copyWith(
+                        color: _resolved.accentColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spacing12),
+          Wrap(
+            spacing: AppTheme.spacing8,
+            runSpacing: AppTheme.spacing8,
+            children: [
+              _PreviewPill(
+                label: l10n.meshServicesVisibilityOpen as String,
+                color: SemanticColors.success,
+              ),
+              _PreviewPill(
+                label: _formattedVisibleFor(l10n),
+                color: _resolved.accentColor,
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spacing12),
+          _presentation.buildComposePreviewContent(context, l10n, draft),
+          const SizedBox(height: AppTheme.spacing12),
+          Text(
+            l10n.meshServicesPreviewSubtitle as String,
+            style: context.bodySmallStyle?.copyWith(
+              color: context.textTertiary,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -460,15 +602,9 @@ class _MeshServiceCreationScreenState
       ],
       style: TextStyle(color: context.textPrimary),
       decoration: InputDecoration(
-        labelText:
-            (_isPoll
-                    ? l10n.meshServicesFieldQuestion
-                    : l10n.meshServicesFieldTitle)
-                as String,
+        labelText: _presentation.composeTitleLabel(l10n),
         labelStyle: TextStyle(color: context.textSecondary),
-        hintText: _isPoll
-            ? l10n.meshServicesFieldQuestion as String
-            : l10n.meshServicesFieldTitle as String,
+        hintText: _presentation.composeTitleLabel(l10n),
         hintStyle: TextStyle(color: context.textSecondary.withAlpha(128)),
         filled: true,
         fillColor: context.surface,
@@ -523,9 +659,9 @@ class _MeshServiceCreationScreenState
       textCapitalization: TextCapitalization.sentences,
       style: TextStyle(color: context.textPrimary),
       decoration: InputDecoration(
-        labelText: l10n.meshServicesFieldDescription as String,
+        labelText: _presentation.composeDescriptionLabel(l10n),
         labelStyle: TextStyle(color: context.textSecondary),
-        hintText: l10n.meshServicesDescriptionHint as String,
+        hintText: _presentation.composeDescriptionHint(l10n),
         hintStyle: TextStyle(
           color: context.textSecondary.withValues(alpha: 0.5),
         ),
@@ -550,225 +686,6 @@ class _MeshServiceCreationScreenState
       ),
       onChanged: (_) => setState(() {}),
     );
-  }
-
-  // ─────────────────── poll fields ───────────────────
-
-  List<Widget> _buildPollFields(dynamic l10n, Color accent) {
-    return [
-      // Section label
-      _SectionLabel(
-        icon: Icons.poll_outlined,
-        label: _displayName(l10n),
-        color: accent,
-      ),
-      const SizedBox(height: AppTheme.spacing10),
-
-      // Options
-      for (var i = 0; i < _optionControllers.length; i++) ...[
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-          decoration: BoxDecoration(
-            color: context.card,
-            borderRadius: BorderRadius.circular(AppTheme.radius12),
-            border: Border.all(color: context.border.withValues(alpha: 0.3)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(AppTheme.radius6),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  '${i + 1}',
-                  style: TextStyle(
-                    color: accent,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppTheme.spacing10),
-              Expanded(
-                child: TextField(
-                  controller: _optionControllers[i],
-                  enabled: !_publishing,
-                  maxLength: 40,
-                  textCapitalization: TextCapitalization.sentences,
-                  style: TextStyle(color: context.textPrimary, fontSize: 14),
-                  decoration: InputDecoration(
-                    hintText: l10n.meshServicesFieldOption(i + 1) as String,
-                    hintStyle: TextStyle(
-                      color: context.textTertiary,
-                      fontSize: 14,
-                    ),
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    disabledBorder: InputBorder.none,
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                    counterText: '',
-                  ),
-                ),
-              ),
-              if (_optionControllers.length > _minPollOptions)
-                BouncyTap(
-                  onTap: _publishing ? null : () => _removeOption(i),
-                  child: Icon(
-                    Icons.remove_circle_outline,
-                    size: 20,
-                    color: SemanticColors.error.withValues(alpha: 0.7),
-                  ),
-                ),
-            ],
-          ),
-        ),
-        if (i < _optionControllers.length - 1)
-          const SizedBox(height: AppTheme.spacing8),
-      ],
-
-      // Add option button
-      if (_optionControllers.length < _maxPollOptions) ...[
-        const SizedBox(height: AppTheme.spacing10),
-        BouncyTap(
-          onTap: _publishing ? null : _addOption,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              color: accent.withValues(alpha: 0.06),
-              borderRadius: BorderRadius.circular(AppTheme.radius12),
-              border: Border.all(color: accent.withValues(alpha: 0.2)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.add, size: 18, color: accent),
-                const SizedBox(width: AppTheme.spacing8),
-                Text(
-                  l10n.meshServicesFieldAddOption as String,
-                  style: TextStyle(
-                    color: accent,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    ];
-  }
-
-  // ─────────────────── list fields ───────────────────
-
-  List<Widget> _buildListFields(dynamic l10n, Color accent) {
-    final isChecklist =
-        _resolved.presetId == MeshServicePresetId.sharedChecklist;
-
-    return [
-      // Section label
-      _SectionLabel(
-        icon: _listSectionIcon,
-        label: _displayName(l10n),
-        color: accent,
-      ),
-      const SizedBox(height: AppTheme.spacing10),
-
-      // Items
-      for (var i = 0; i < _itemControllers.length; i++) ...[
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-          decoration: BoxDecoration(
-            color: context.card,
-            borderRadius: BorderRadius.circular(AppTheme.radius12),
-            border: Border.all(color: context.border.withValues(alpha: 0.3)),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                isChecklist
-                    ? Icons.check_box_outline_blank
-                    : Icons.circle_outlined,
-                size: 18,
-                color: accent.withValues(alpha: 0.5),
-              ),
-              const SizedBox(width: AppTheme.spacing10),
-              Expanded(
-                child: TextField(
-                  controller: _itemControllers[i],
-                  enabled: !_publishing,
-                  maxLength: 60,
-                  textCapitalization: TextCapitalization.sentences,
-                  style: TextStyle(color: context.textPrimary, fontSize: 14),
-                  decoration: InputDecoration(
-                    hintText: l10n.meshServicesFieldItem(i + 1) as String,
-                    hintStyle: TextStyle(
-                      color: context.textTertiary,
-                      fontSize: 14,
-                    ),
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    disabledBorder: InputBorder.none,
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                    counterText: '',
-                  ),
-                ),
-              ),
-              if (_itemControllers.length > 1)
-                BouncyTap(
-                  onTap: _publishing ? null : () => _removeItem(i),
-                  child: Icon(
-                    Icons.remove_circle_outline,
-                    size: 20,
-                    color: SemanticColors.error.withValues(alpha: 0.7),
-                  ),
-                ),
-            ],
-          ),
-        ),
-        if (i < _itemControllers.length - 1)
-          const SizedBox(height: AppTheme.spacing8),
-      ],
-
-      // Add item button
-      if (_itemControllers.length < _maxListItems) ...[
-        const SizedBox(height: AppTheme.spacing10),
-        BouncyTap(
-          onTap: _publishing ? null : _addItem,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              color: accent.withValues(alpha: 0.06),
-              borderRadius: BorderRadius.circular(AppTheme.radius12),
-              border: Border.all(color: accent.withValues(alpha: 0.2)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.add, size: 18, color: accent),
-                const SizedBox(width: AppTheme.spacing8),
-                Text(
-                  l10n.meshServicesFieldAddItem as String,
-                  style: TextStyle(
-                    color: accent,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    ];
   }
 
   // ─────────────────── duration selector ───────────────────
@@ -893,7 +810,7 @@ class _MeshServiceCreationScreenState
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Icon(
-                          Icons.publish_rounded,
+                          Icons.send_rounded,
                           size: 22,
                           color: Colors.white,
                         ),
@@ -966,6 +883,10 @@ class _MeshServiceCreationScreenState
         return;
       }
     }
+    if (_isSensor && _sensorValueController.text.trim().isEmpty) {
+      showErrorSnackBar(context, l10n.meshServicesMinSensorValue);
+      return;
+    }
 
     final engine = ref.read(meshServiceEngineProvider);
     final haptics = ref.read(hapticServiceProvider);
@@ -1009,6 +930,13 @@ class _MeshServiceCreationScreenState
             .map((c) => c.text.trim())
             .where((s) => s.isNotEmpty)
             .toList(),
+      },
+      MeshServiceType.signal => {'signalKind': _signalKind.name},
+      MeshServiceType.sensor => {
+        'sensorValue': _sensorValueController.text.trim(),
+        'sensorUnit': _sensorUnitController.text.trim(),
+        'sensorSource': _sensorSourceController.text.trim(),
+        'sensorCapturedAtMs': DateTime.now().millisecondsSinceEpoch,
       },
       _ => const {},
     };
@@ -1079,34 +1007,30 @@ class _ServiceBadge extends StatelessWidget {
   }
 }
 
-/// Section label row for capability-specific field groups.
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel({
-    required this.icon,
-    required this.label,
-    required this.color,
-  });
-
-  final IconData icon;
+class _PreviewPill extends StatelessWidget {
   final String label;
   final Color color;
 
+  const _PreviewPill({required this.label, required this.color});
+
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, size: 14, color: color),
-        const SizedBox(width: AppTheme.spacing6),
-        Text(
-          label.toUpperCase(),
-          style: TextStyle(
-            color: context.textTertiary,
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 1.0,
-          ),
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing10,
+        vertical: AppTheme.spacing6,
+      ),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(AppTheme.radius10),
+      ),
+      child: Text(
+        label,
+        style: context.bodySmallStyle?.copyWith(
+          color: color,
+          fontWeight: FontWeight.w700,
         ),
-      ],
+      ),
     );
   }
 }

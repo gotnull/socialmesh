@@ -10887,6 +10887,14 @@ class AppLocalizationsPt extends AppLocalizations {
   String get nodedexRadioPresetUnknown => 'Unknown';
 
   @override
+  String get nodedexFrequencyOffset => 'Freq Offset';
+
+  @override
+  String nodedexFrequencyOffsetValue(String offset) {
+    return '$offset Hz';
+  }
+
+  @override
   String get nodedexFilterRadioPresetAll => 'All Presets';
 
   @override
@@ -32595,10 +32603,10 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get meshExplorerEmptyBody =>
-      'Services shared by nearby mesh users will appear here. Bulletin boards, signals, polls, checklists, and more — all over LoRa radio.';
+      'Things shared by nearby people will show up here. Updates, questions, checklists, alerts, and readings all travel over the local mesh.';
 
   @override
-  String get meshExplorerEmptyAction => 'Create something';
+  String get meshExplorerEmptyAction => 'Share something';
 
   @override
   String get meshExplorerCreateLabel => 'Create';
@@ -32630,42 +32638,77 @@ class AppLocalizationsPt extends AppLocalizations {
       'Escolha o que pretende partilhar na mesh';
 
   @override
-  String get meshServicesTypeFeed => 'Feed';
+  String get meshServicesTypeFeed => 'Updates';
 
   @override
   String get meshServicesTypeFeedDescription =>
-      'Share posts, updates, or bulletin-style notices with nearby peers';
+      'Posts and updates people nearby can open and read';
 
   @override
-  String get meshServicesTypeList => 'List';
+  String get meshServicesTypeList => 'Checklists';
 
   @override
   String get meshServicesTypeListDescription =>
-      'Coordinate checklists, supplies, or other shared collections';
+      'Lists, checklists, or supplies people nearby can work through together';
 
   @override
-  String get meshServicesTypePoll => 'Poll';
+  String get meshServicesTypePoll => 'Questions';
 
   @override
   String get meshServicesTypePollDescription =>
-      'Ask a multiple-choice question and collect nearby responses';
+      'Ask nearby people to pick an answer';
 
   @override
-  String get meshServicesTypeSignal => 'Signal';
+  String get meshServicesTypeSignal => 'Alerts';
 
   @override
   String get meshServicesTypeSignalDescription =>
-      'Broadcast a short-lived beacon or alert across the mesh';
+      'Short-lived alerts or beacons that stand out nearby';
 
   @override
-  String get meshServicesTypeSensor => 'Sensor';
+  String get meshServicesTypeSensor => 'Readings';
 
   @override
   String get meshServicesTypeSensorDescription =>
-      'Publish telemetry or measured readings from a local sensor source';
+      'Live measurements or telemetry people nearby can check';
 
   @override
-  String get meshServicesVisibilityOpen => 'Open';
+  String get meshServicesIntentFeed => 'Post an update';
+
+  @override
+  String get meshServicesIntentFeedDescription =>
+      'Share news, status, or a notice people nearby can open.';
+
+  @override
+  String get meshServicesIntentList => 'Create a checklist';
+
+  @override
+  String get meshServicesIntentListDescription =>
+      'Organize items, jobs, or supplies people nearby can work through together.';
+
+  @override
+  String get meshServicesIntentPoll => 'Ask a question';
+
+  @override
+  String get meshServicesIntentPollDescription =>
+      'Put a multiple-choice question out to nearby people.';
+
+  @override
+  String get meshServicesIntentSignal => 'Send an alert';
+
+  @override
+  String get meshServicesIntentSignalDescription =>
+      'Broadcast a short-lived alert, check-in, or beacon nearby.';
+
+  @override
+  String get meshServicesIntentSensor => 'Share a reading';
+
+  @override
+  String get meshServicesIntentSensorDescription =>
+      'Publish a live reading, measurement, or status from a device.';
+
+  @override
+  String get meshServicesVisibilityOpen => 'Nearby';
 
   @override
   String get meshServicesTemplateBoard => 'Quadro de Avisos';
@@ -32789,7 +32832,11 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get serviceDetailFetchingInstances => 'Fetching service data…';
+  String get meshServicesInteractionFailed =>
+      'Could not update this share right now.';
+
+  @override
+  String get serviceDetailFetchingInstances => 'Loading what’s being shared…';
 
   @override
   String get serviceDetailFetchFailed =>
@@ -32812,11 +32859,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String serviceDetailInstanceExpires(String time) {
-    return 'Expires $time';
+    return 'Ends in $time';
   }
 
   @override
-  String get serviceDetailInstanceNoExpiry => 'No expiry';
+  String get serviceDetailInstanceNoExpiry => 'Stays live until removed';
 
   @override
   String get serviceDetailInstanceExpired => 'Expired';
@@ -32867,21 +32914,21 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshServicesPublishSuccess => 'Serviço publicado';
 
   @override
-  String get meshServicesCreatedHeadline => 'Your service is live!';
+  String get meshServicesCreatedHeadline => 'Your share is live';
 
   @override
   String get meshServicesCreatedDescription =>
-      'Your service is now available to other mesh users nearby. They can discover it and interact with it.';
+      'People nearby can now discover it and open the full details.';
 
   @override
   String get meshServicesCreatedMeshHint =>
-      'Services are shared over the local mesh network. The closer people are, the more reliable the connection.';
+      'Sharing works best when other radios are active nearby.';
 
   @override
-  String get meshServicesCreatedViewServices => 'View my services';
+  String get meshServicesCreatedViewServices => 'See my shares';
 
   @override
-  String get meshServicesCreatedCreateAnother => 'Create another';
+  String get meshServicesCreatedCreateAnother => 'Share another';
 
   @override
   String get meshServicesStatusActive => 'Ativo';
@@ -34375,7 +34422,7 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get deliveryExpertToggle => 'Technical details';
+  String get deliveryExpertToggle => 'Show delivery details';
 
   @override
   String get guidedFlowNext => 'Next';
@@ -34390,19 +34437,19 @@ class AppLocalizationsPt extends AppLocalizations {
   String get guidedFlowCreate => 'Create';
 
   @override
-  String get guidedFlowContinue => 'Continue';
+  String get guidedFlowContinue => 'Write it';
 
   @override
   String get guidedFlowCancel => 'Cancel';
 
   @override
-  String get serviceWizardTitle => 'Create something';
+  String get serviceWizardTitle => 'Share on the mesh';
 
   @override
-  String get serviceWizardStepWhat => 'What';
+  String get serviceWizardStepWhat => 'Intent';
 
   @override
-  String get serviceWizardStepPreset => 'Preset';
+  String get serviceWizardStepPreset => 'Template';
 
   @override
   String get serviceWizardStepWho => 'Who';
@@ -34411,28 +34458,28 @@ class AppLocalizationsPt extends AppLocalizations {
   String get serviceWizardStepDetails => 'Details';
 
   @override
-  String get serviceWizardStepReview => 'Review';
+  String get serviceWizardStepReview => 'Preview';
 
   @override
-  String get serviceWizardWhatTitle => 'What do you want to create?';
+  String get serviceWizardWhatTitle => 'What are you sharing?';
 
   @override
   String get serviceWizardWhatSubtitle =>
-      'Choose the core capability you\'ll share on the mesh';
+      'Start with the kind of thing you want to put out nearby.';
 
   @override
-  String get serviceWizardPresetTitle => 'Choose an optional preset';
+  String get serviceWizardPresetTitle => 'Choose a starting point';
 
   @override
   String get serviceWizardPresetSubtitle =>
-      'Optional: presets shape the presentation, but the capability stays the same';
+      'Templates give you a head start without changing what the share can do.';
 
   @override
-  String get serviceWizardPresetGeneric => 'No preset';
+  String get serviceWizardPresetGeneric => 'Start from scratch';
 
   @override
   String get serviceWizardPresetGenericDescription =>
-      'Start with the base capability and shape the details yourself';
+      'Use the basic layout and shape it yourself.';
 
   @override
   String get serviceWizardWhoTitle => 'Who can see it?';
@@ -34456,24 +34503,194 @@ class AppLocalizationsPt extends AppLocalizations {
       'Only people you’ve exchanged contacts with';
 
   @override
-  String get serviceWizardReviewTitle => 'Review your service';
+  String get serviceWizardReviewTitle => 'Before you write';
 
   @override
   String get serviceWizardReviewSubtitle =>
-      'Check everything looks right before publishing';
+      'This is the shape of the share you’re about to compose.';
 
   @override
-  String get serviceWizardReviewType => 'Capability';
+  String get serviceWizardReviewType => 'You’re sharing';
 
   @override
-  String get serviceWizardReviewPreset => 'Preset';
+  String get serviceWizardReviewPreset => 'Starting point';
 
   @override
   String get serviceWizardReviewAudience => 'Audience';
 
   @override
   String get serviceWizardReviewMeshHint =>
-      'Works best when other users are nearby or the mesh is active';
+      'People nearby will discover the headline first, then open the full details.';
+
+  @override
+  String get meshServicesPreviewCardTitle => 'Live preview';
+
+  @override
+  String get meshServicesPreviewCardDescription =>
+      'This is the kind of card nearby people will open.';
+
+  @override
+  String get meshServicesPreviewPlaceholder => 'Your headline will show here';
+
+  @override
+  String get meshServicesPreviewNoDetails =>
+      'Add a few details so people nearby know what this is.';
+
+  @override
+  String get meshServicesAdvancedDetails => 'Sharing details';
+
+  @override
+  String get meshServicesAdvancedDurationHint =>
+      'You can change how long this stays visible on the mesh.';
+
+  @override
+  String get serviceDetailHeaderEyebrow => 'Shared nearby';
+
+  @override
+  String get serviceDetailHeaderBody =>
+      'Open the items this nearby radio is sharing right now.';
+
+  @override
+  String get serviceDetailSectionLiveNow => 'Shared right now';
+
+  @override
+  String get meshServicesNetworkDetails => 'Network details';
+
+  @override
+  String meshServicesNetworkNode(String nodeId) {
+    return 'From node $nodeId';
+  }
+
+  @override
+  String meshServicesNetworkServiceType(String serviceType) {
+    return 'Share type: $serviceType';
+  }
+
+  @override
+  String meshServicesNetworkServiceId(String serviceId) {
+    return 'Service ID: $serviceId';
+  }
+
+  @override
+  String get meshServicesSharedByAnonymous => 'Shared by someone nearby';
+
+  @override
+  String meshServicesSharedByPerson(String name) {
+    return 'Shared by $name';
+  }
+
+  @override
+  String meshServicesVisibleFor(String time) {
+    return 'Visible for $time';
+  }
+
+  @override
+  String get meshServicesEyebrowFeed => 'Nearby update';
+
+  @override
+  String get meshServicesEyebrowList => 'Shared checklist';
+
+  @override
+  String get meshServicesEyebrowPoll => 'Nearby question';
+
+  @override
+  String get meshServicesEyebrowSignal => 'Active alert';
+
+  @override
+  String get meshServicesEyebrowSensor => 'Live reading';
+
+  @override
+  String get meshServicesOpenFeedAction => 'Read update';
+
+  @override
+  String get meshServicesOpenListAction => 'Open checklist';
+
+  @override
+  String get meshServicesOpenPollAction => 'Answer question';
+
+  @override
+  String get meshServicesOpenSignalAction => 'View alert';
+
+  @override
+  String get meshServicesOpenSensorAction => 'Check reading';
+
+  @override
+  String meshServicesItemsCount(int count) {
+    return '$count items';
+  }
+
+  @override
+  String meshServicesChoicesCount(int count) {
+    return '$count choices';
+  }
+
+  @override
+  String meshServicesListProgress(int done, int total) {
+    return '$done of $total done';
+  }
+
+  @override
+  String meshServicesMoreItemsCount(int count) {
+    return '$count more items';
+  }
+
+  @override
+  String get meshServicesPollNoVotes => 'No votes yet';
+
+  @override
+  String meshServicesPollVotesCount(int count) {
+    return '$count votes';
+  }
+
+  @override
+  String get meshServicesSignalKindCheckIn => 'Check-in';
+
+  @override
+  String get meshServicesSignalKindNeedHelp => 'Need help';
+
+  @override
+  String get meshServicesSignalKindHazard => 'Hazard';
+
+  @override
+  String get meshServicesSignalKindMeetHere => 'Meet here';
+
+  @override
+  String get meshServicesSignalKindRelayActive => 'Relay active';
+
+  @override
+  String get meshServicesSignalActiveLabel => 'Active now';
+
+  @override
+  String get meshServicesFieldSensorName => 'Reading name';
+
+  @override
+  String get meshServicesFieldSensorValue => 'Reading';
+
+  @override
+  String get meshServicesSensorValueHint => '23.4';
+
+  @override
+  String get meshServicesMinSensorValue => 'Add a reading before sharing.';
+
+  @override
+  String get meshServicesFieldSensorUnit => 'Unit';
+
+  @override
+  String get meshServicesSensorUnitHint => '°C, %, m';
+
+  @override
+  String get meshServicesFieldSensorSource => 'Source';
+
+  @override
+  String get meshServicesSensorSourceHint => 'Trail marker, station, or node';
+
+  @override
+  String get meshServicesSensorUnknownValue => 'No reading yet';
+
+  @override
+  String meshServicesSensorUpdatedLabel(String time) {
+    return 'Updated $time';
+  }
 
   @override
   String get serviceWizardCompletionHeadline => 'Your service is live';

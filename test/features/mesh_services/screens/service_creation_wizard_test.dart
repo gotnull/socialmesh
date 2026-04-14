@@ -35,9 +35,10 @@ void main() {
     await tester.pumpWidget(buildTestApp());
     await tester.pumpAndSettle();
 
-    expect(find.text('What'), findsOneWidget);
-    expect(find.text('Preset'), findsOneWidget);
-    expect(find.text('Review'), findsOneWidget);
+    expect(find.text('Intent'), findsOneWidget);
+    expect(find.text('Template'), findsOneWidget);
+    expect(find.text('Preview'), findsOneWidget);
+    expect(find.text('Post an update'), findsOneWidget);
     expect(find.text('Who'), findsNothing);
     expect(find.text('Who can see it?'), findsNothing);
     expect(find.text('Approved contacts only'), findsNothing);
@@ -47,7 +48,7 @@ void main() {
     await tester.pumpWidget(buildTestApp());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Feed'));
+    await tester.tap(find.text('Post an update'));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Next'));
@@ -56,8 +57,8 @@ void main() {
     await tester.tap(find.text('Next'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Review your service'), findsWidgets);
-    expect(find.text('Capability'), findsOneWidget);
+    expect(find.text('Before you write'), findsOneWidget);
+    expect(find.text('You’re sharing'), findsOneWidget);
     expect(find.text('Audience'), findsNothing);
   });
 }

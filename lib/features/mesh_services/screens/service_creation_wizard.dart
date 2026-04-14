@@ -37,17 +37,17 @@ class _ServiceCreationWizardState extends ConsumerState<ServiceCreationWizard>
   List<GuidedFlowStep> _buildSteps(AppLocalizations l10n) => [
     GuidedFlowStep(
       title: l10n.serviceWizardStepWhat,
-      icon: Icons.category_outlined,
+      icon: Icons.edit_note_outlined,
       color: AccentColors.cyan,
     ),
     GuidedFlowStep(
       title: l10n.serviceWizardStepPreset,
-      icon: Icons.auto_awesome_outlined,
-      color: AccentColors.purple,
+      icon: Icons.style_outlined,
+      color: AccentColors.orange,
     ),
     GuidedFlowStep(
       title: l10n.serviceWizardStepReview,
-      icon: Icons.check_circle_outline,
+      icon: Icons.visibility_outlined,
       color: AppTheme.successGreen,
     ),
   ];
@@ -165,13 +165,11 @@ class _ServiceCreationWizardState extends ConsumerState<ServiceCreationWizard>
     return ListView(
       padding: const EdgeInsets.all(AppTheme.spacing16),
       children: [
-        Text(l10n.serviceWizardWhatTitle, style: context.headingStyle),
-        const SizedBox(height: AppTheme.spacing4),
-        Text(
-          l10n.serviceWizardWhatSubtitle,
-          style: context.bodySecondaryStyle?.copyWith(
-            color: context.textSecondary,
-          ),
+        _StepLead(
+          icon: Icons.wifi_tethering_rounded,
+          color: AccentColors.cyan,
+          title: l10n.serviceWizardWhatTitle,
+          subtitle: l10n.serviceWizardWhatSubtitle,
         ),
         const SizedBox(height: AppTheme.spacing16),
         for (final typeDefinition in MeshServiceCatalog.allTypes)
@@ -179,8 +177,8 @@ class _ServiceCreationWizardState extends ConsumerState<ServiceCreationWizard>
             padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
             child: StepChoiceCard(
               icon: typeDefinition.icon,
-              title: meshServiceTypeName(l10n, typeDefinition.type),
-              description: meshServiceTypeDescription(
+              title: meshServiceIntentName(l10n, typeDefinition.type),
+              description: meshServiceIntentDescription(
                 l10n,
                 typeDefinition.type,
               ),
@@ -205,15 +203,57 @@ class _ServiceCreationWizardState extends ConsumerState<ServiceCreationWizard>
     return ListView(
       padding: const EdgeInsets.all(AppTheme.spacing16),
       children: [
-        Text(l10n.serviceWizardPresetTitle, style: context.headingStyle),
-        const SizedBox(height: AppTheme.spacing4),
-        Text(
-          l10n.serviceWizardPresetSubtitle,
-          style: context.bodySecondaryStyle?.copyWith(
-            color: context.textSecondary,
-          ),
+        _StepLead(
+          icon: base.icon,
+          color: base.accentColor,
+          title: l10n.serviceWizardPresetTitle,
+          subtitle: l10n.serviceWizardPresetSubtitle,
         ),
         const SizedBox(height: AppTheme.spacing16),
+        Container(
+          padding: const EdgeInsets.all(AppTheme.spacing12),
+          decoration: BoxDecoration(
+            color: context.card,
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
+            border: Border.all(color: context.border.withValues(alpha: 0.12)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: base.accentColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius10),
+                ),
+                child: Icon(base.icon, color: base.accentColor, size: 20),
+              ),
+              const SizedBox(width: AppTheme.spacing12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      meshServiceIntentName(l10n, selectedType),
+                      style: context.bodyStyle?.copyWith(
+                        color: context.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spacing2),
+                    Text(
+                      meshServiceIntentDescription(l10n, selectedType),
+                      style: context.bodySmallStyle?.copyWith(
+                        color: context.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacing12),
         StepChoiceCard(
           icon: base.icon,
           title: l10n.serviceWizardPresetGeneric,
@@ -245,29 +285,49 @@ class _ServiceCreationWizardState extends ConsumerState<ServiceCreationWizard>
             canonicalType: selectedType,
             presetId: _selectedPreset,
           );
+    final previewTitle = selectedType == null
+        ? l10n.meshServicesPreviewPlaceholder
+        : meshServiceDisplayName(
+            l10n,
+            canonicalType: selectedType,
+            presetId: _selectedPreset,
+          );
+    final previewDescription = selectedType == null
+        ? l10n.meshServicesPreviewCardDescription
+        : meshServiceDisplayDescription(
+            l10n,
+            canonicalType: selectedType,
+            presetId: _selectedPreset,
+          );
 
     return ListView(
       padding: const EdgeInsets.all(AppTheme.spacing16),
       children: [
-        Text(l10n.serviceWizardReviewTitle, style: context.headingStyle),
-        const SizedBox(height: AppTheme.spacing4),
-        Text(
-          l10n.serviceWizardReviewSubtitle,
-          style: context.bodySecondaryStyle?.copyWith(
-            color: context.textSecondary,
-          ),
+        _StepLead(
+          icon: Icons.remove_red_eye_outlined,
+          color: resolved?.accentColor ?? AppTheme.successGreen,
+          title: l10n.serviceWizardReviewTitle,
+          subtitle: l10n.serviceWizardReviewSubtitle,
+        ),
+        const SizedBox(height: AppTheme.spacing16),
+        _WizardPreviewCard(
+          title: previewTitle,
+          description: previewDescription,
+          icon: resolved?.icon ?? Icons.ios_share_outlined,
+          accentColor: resolved?.accentColor ?? AppTheme.successGreen,
+          visibilityLabel: l10n.meshServicesVisibilityOpen,
         ),
         const SizedBox(height: AppTheme.spacing16),
         SummaryCard(
-          title: l10n.serviceWizardReviewTitle,
-          titleIcon: Icons.checklist,
+          title: l10n.meshServicesPreviewCardTitle,
+          titleIcon: Icons.route_outlined,
           accentColor: AppTheme.successGreen,
           rows: [
             SummaryRow(
               label: l10n.serviceWizardReviewType,
               value: selectedType == null
                   ? '—' // lint-allow: hardcoded-string
-                  : meshServiceTypeName(l10n, selectedType),
+                  : meshServiceIntentName(l10n, selectedType),
               icon: resolved?.icon,
               iconColor: resolved?.accentColor,
             ),
@@ -313,6 +373,144 @@ class _ServiceCreationWizardState extends ConsumerState<ServiceCreationWizard>
           ),
         ),
       ],
+    );
+  }
+}
+
+class _StepLead extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String title;
+  final String subtitle;
+
+  const _StepLead({
+    required this.icon,
+    required this.color,
+    required this.title,
+    required this.subtitle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spacing16),
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
+        border: Border.all(color: context.border.withValues(alpha: 0.12)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
+            ),
+            child: Icon(icon, color: color, size: 22),
+          ),
+          const SizedBox(width: AppTheme.spacing12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: context.headingStyle),
+                const SizedBox(height: AppTheme.spacing4),
+                Text(
+                  subtitle,
+                  style: context.bodySecondaryStyle?.copyWith(
+                    color: context.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WizardPreviewCard extends StatelessWidget {
+  final String title;
+  final String description;
+  final IconData icon;
+  final Color accentColor;
+  final String visibilityLabel;
+
+  const _WizardPreviewCard({
+    required this.title,
+    required this.description,
+    required this.icon,
+    required this.accentColor,
+    required this.visibilityLabel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spacing16),
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
+        border: Border.all(color: accentColor.withValues(alpha: 0.18)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
+                ),
+                child: Icon(icon, color: accentColor, size: 22),
+              ),
+              const SizedBox(width: AppTheme.spacing12),
+              Expanded(
+                child: Text(
+                  title,
+                  style: context.bodyStyle?.copyWith(
+                    color: context.textPrimary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.spacing8,
+                  vertical: AppTheme.spacing4,
+                ),
+                decoration: BoxDecoration(
+                  color: SemanticColors.success.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
+                ),
+                child: Text(
+                  visibilityLabel,
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: SemanticColors.success,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spacing12),
+          Text(
+            description,
+            style: context.bodySecondaryStyle?.copyWith(
+              color: context.textSecondary,
+              height: 1.35,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

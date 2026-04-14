@@ -15,18 +15,23 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/logging.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/delivery_progress_card.dart';
+import '../../../core/widgets/expert_details_expander.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../services/haptic_service.dart';
 import '../../../services/protocol/sip/mrrp_constants.dart';
 import '../../../services/protocol/sip/mrrp_frame.dart';
 import '../../../services/protocol/sip/mrrp_types.dart';
 import '../../../utils/snackbar.dart';
+import '../models/mesh_service_detail_payload.dart';
 import '../models/mesh_service_localization.dart';
+import '../models/mesh_service_signal_kind.dart';
 import '../models/mesh_service_template.dart';
+import '../presentation/mesh_service_presentation.dart';
 import '../models/service_schema.dart';
 import '../models/template_schemas.dart';
 import '../providers/mesh_service_providers.dart';
@@ -54,18 +59,88 @@ class _RemoteInstanceDetail {
   final String instanceId;
   final MeshServiceType? canonicalType;
   final MeshServicePresetId? presetId;
+  final bool hasFetchedDetail;
   final String title;
   final String description;
   final DateTime? expiresAt;
+  final DateTime? createdAt;
+  final List<String> pollOptions;
+  final List<int> pollVoteCounts;
+  final int pollTotalOptions;
+  final int? selectedPollOption;
+  final List<String> listItems;
+  final List<bool> listItemStates;
+  final int listTotalItems;
+  final String? sensorValue;
+  final String? sensorUnit;
+  final String? sensorSource;
+  final DateTime? sensorCapturedAt;
+  final MeshServiceSignalKind? signalKind;
 
   const _RemoteInstanceDetail({
     required this.instanceId,
     required this.canonicalType,
     required this.presetId,
+    this.hasFetchedDetail = false,
     required this.title,
     required this.description,
     this.expiresAt,
+    this.createdAt,
+    this.pollOptions = const [],
+    this.pollVoteCounts = const [],
+    this.pollTotalOptions = 0,
+    this.selectedPollOption,
+    this.listItems = const [],
+    this.listItemStates = const [],
+    this.listTotalItems = 0,
+    this.sensorValue,
+    this.sensorUnit,
+    this.sensorSource,
+    this.sensorCapturedAt,
+    this.signalKind,
   });
+
+  _RemoteInstanceDetail copyWith({
+    bool? hasFetchedDetail,
+    String? description,
+    DateTime? expiresAt,
+    DateTime? createdAt,
+    List<String>? pollOptions,
+    List<int>? pollVoteCounts,
+    int? pollTotalOptions,
+    int? selectedPollOption,
+    List<String>? listItems,
+    List<bool>? listItemStates,
+    int? listTotalItems,
+    String? sensorValue,
+    String? sensorUnit,
+    String? sensorSource,
+    DateTime? sensorCapturedAt,
+    MeshServiceSignalKind? signalKind,
+  }) {
+    return _RemoteInstanceDetail(
+      instanceId: instanceId,
+      canonicalType: canonicalType,
+      presetId: presetId,
+      hasFetchedDetail: hasFetchedDetail ?? this.hasFetchedDetail,
+      title: title,
+      description: description ?? this.description,
+      expiresAt: expiresAt ?? this.expiresAt,
+      createdAt: createdAt ?? this.createdAt,
+      pollOptions: pollOptions ?? this.pollOptions,
+      pollVoteCounts: pollVoteCounts ?? this.pollVoteCounts,
+      pollTotalOptions: pollTotalOptions ?? this.pollTotalOptions,
+      selectedPollOption: selectedPollOption ?? this.selectedPollOption,
+      listItems: listItems ?? this.listItems,
+      listItemStates: listItemStates ?? this.listItemStates,
+      listTotalItems: listTotalItems ?? this.listTotalItems,
+      sensorValue: sensorValue ?? this.sensorValue,
+      sensorUnit: sensorUnit ?? this.sensorUnit,
+      sensorSource: sensorSource ?? this.sensorSource,
+      sensorCapturedAt: sensorCapturedAt ?? this.sensorCapturedAt,
+      signalKind: signalKind ?? this.signalKind,
+    );
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -93,6 +168,33 @@ final _instanceCache = <String, _CachedInstances>{};
 const _cacheStaleDuration = Duration(seconds: 120);
 
 String _cacheKey(int nodeId, int serviceId) => '$nodeId:$serviceId';
+
+bool _cacheHasCompleteDetails(List<_RemoteInstanceDetail> instances) {
+  return instances.every((instance) {
+    if (!instance.hasFetchedDetail) return false;
+
+    return switch (instance.canonicalType) {
+      MeshServiceType.list => instance.listItems.isNotEmpty,
+      MeshServiceType.poll => instance.pollOptions.isNotEmpty,
+      MeshServiceType.sensor =>
+        (instance.sensorValue?.isNotEmpty ?? false) ||
+            (instance.sensorUnit?.isNotEmpty ?? false) ||
+            (instance.sensorSource?.isNotEmpty ?? false) ||
+            instance.sensorCapturedAt != null,
+      MeshServiceType.signal => instance.signalKind != null,
+      MeshServiceType.feed => true,
+      null => true,
+    };
+  });
+}
+
+String _hexPreview(Uint8List bytes, {int maxBytes = 32}) {
+  final limit = bytes.length < maxBytes ? bytes.length : maxBytes;
+  return bytes
+      .sublist(0, limit)
+      .map((byte) => byte.toRadixString(16).padLeft(2, '0'))
+      .join();
+}
 
 /// Service detail screen.
 ///
@@ -145,6 +247,8 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
   /// Active delivery state (shown via DeliveryProgressCard).
   MrrpDeliveryState? _activeDelivery;
   StreamSubscription<MrrpDeliveryState>? _deliverySub;
+  String? _pendingListInstanceId;
+  int? _pendingListItemIndex;
 
   @override
   void initState() {
@@ -155,6 +259,7 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
   @override
   void dispose() {
     _deliverySub?.cancel();
+    _deliverySub = null;
     super.dispose();
   }
 
@@ -164,14 +269,26 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
       final key = _cacheKey(widget.nodeId, widget.serviceId);
       final cached = _instanceCache[key];
       if (cached != null && cached.instances.isNotEmpty) {
-        // Show cached data instantly — no loading spinner.
-        setState(() {
-          _remoteInstances = cached.instances;
-          _loading = false;
-        });
-
-        // Refresh in background if stale.
+        final cacheHasCompleteDetails = _cacheHasCompleteDetails(
+          cached.instances,
+        );
         final age = DateTime.now().difference(cached.fetchedAt);
+        if (cacheHasCompleteDetails) {
+          // Show cached data instantly — no loading spinner.
+          setState(() {
+            _remoteInstances = cached.instances;
+            _loading = false;
+          });
+        }
+
+        // Refresh in background if the cache is stale or still contains
+        // semantically incomplete detail from older or partial GET_INSTANCE
+        // responses. Incomplete cache is not rendered as source of truth.
+        if (!cacheHasCompleteDetails) {
+          _fetchRemoteInstances();
+          return;
+        }
+
         if (age > _cacheStaleDuration) {
           _fetchRemoteInstances(silent: true);
         }
@@ -232,6 +349,7 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
     // Subscribe to delivery state for UI feedback (skip in silent mode).
     if (!silent) {
       _deliverySub?.cancel();
+      _deliverySub = null;
       _deliverySub = tracker.stateChanges.listen((state) {
         if (mounted) setState(() => _activeDelivery = state);
       });
@@ -303,6 +421,8 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
           presetId: inst.presetId,
           title: inst.title,
           description: '',
+          pollTotalOptions: 0,
+          listTotalItems: 0,
         ),
     ];
 
@@ -462,16 +582,202 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
       if (ts > 0) {
         expiresAt = DateTime.fromMillisecondsSinceEpoch(ts * 1000);
       }
+      offset += 4;
+    }
+
+    final extension = MeshServiceDetailPayloadCodec.decode(
+      canonicalType,
+      offset < payload.length
+          ? Uint8List.sublistView(payload, offset)
+          : Uint8List(0),
+    );
+    final detailPayload = offset < payload.length
+        ? Uint8List.sublistView(payload, offset)
+        : Uint8List(0);
+
+    if (canonicalType == MeshServiceType.list) {
+      AppLogging.mrrp(
+        'MESH_SERVICE_DETAIL_PARSE '
+        'instance=$instanceId '
+        'type=${canonicalType?.name ?? 'unknown'} '
+        'payload=${payload.length}B '
+        'detail=${detailPayload.length}B '
+        'items=${extension.listItems.length}/${extension.listTotalItems}',
+      );
+      if (extension.listItems.isEmpty) {
+        AppLogging.mrrp(
+          'MESH_SERVICE_DETAIL_PARSE_EMPTY '
+          'instance=$instanceId '
+          'detailHex=${_hexPreview(detailPayload)}',
+        );
+      }
     }
 
     return _RemoteInstanceDetail(
       instanceId: instanceId,
       canonicalType: canonicalType,
       presetId: presetId,
+      hasFetchedDetail: true,
       title: title,
       description: description,
       expiresAt: expiresAt,
+      createdAt: extension.createdAt,
+      pollOptions: extension.pollOptions,
+      pollVoteCounts: extension.pollVoteCounts,
+      pollTotalOptions: extension.pollTotalOptions,
+      selectedPollOption: extension.selectedPollOption,
+      listItems: extension.listItems,
+      listItemStates: extension.listItemStates,
+      listTotalItems: extension.listTotalItems,
+      sensorValue: extension.sensorValue,
+      sensorUnit: extension.sensorUnit,
+      sensorSource: extension.sensorSource,
+      sensorCapturedAt: extension.sensorCapturedAt,
+      signalKind: extension.signalKind,
     );
+  }
+
+  bool get _interactionBusy {
+    if (_pendingListItemIndex != null) return true;
+    final delivery = _activeDelivery;
+    if (delivery == null) return false;
+    return !delivery.phase.isTerminal;
+  }
+
+  int? _pendingListItemIndexFor(_RemoteInstanceDetail instance) {
+    if (_pendingListInstanceId != instance.instanceId) return null;
+    return _pendingListItemIndex;
+  }
+
+  Future<Uint8List?> _sendInteractionRequest(
+    _RemoteInstanceDetail instance,
+    Uint8List interactionPayload,
+  ) async {
+    final tracker = ref.read(mrrpDeliveryTrackerProvider);
+    if (tracker == null) return null;
+
+    _deliverySub?.cancel();
+    _deliverySub = null;
+    _deliverySub = tracker.stateChanges.listen((state) {
+      if (mounted) setState(() => _activeDelivery = state);
+    });
+
+    final idBytes = MeshServicesHandler.encodeInstanceId(instance.instanceId);
+    final payload = Uint8List(idBytes.length + interactionPayload.length)
+      ..setAll(0, idBytes)
+      ..setAll(idBytes.length, interactionPayload);
+
+    final request = MrrpFrame(
+      versionMajor: MrrpConstants.mrrpVersionMajor,
+      versionMinor: MrrpConstants.mrrpVersionMinor,
+      msgType: MrrpMessageType.request,
+      flags: MrrpFlags.ackRequired,
+      headerLen: MrrpConstants.mrrpHeaderMin,
+      requestId: 0,
+      serviceId: widget.serviceId,
+      actionId: MeshServicesAction.interact,
+      payloadLen: payload.length,
+      payload: payload,
+    );
+
+    final result = await tracker.trackRequest(
+      request,
+      retryPolicy: MrrpRetryPolicy.idempotent,
+    );
+
+    if (!mounted) return null;
+    if (result.phase != DeliveryPhase.delivered || result.response == null) {
+      showErrorSnackBar(context, context.l10n.meshServicesInteractionFailed);
+      return null;
+    }
+
+    return result.response!.payload;
+  }
+
+  void _replaceRemoteInstance(_RemoteInstanceDetail updated) {
+    setState(() {
+      _remoteInstances = [
+        for (final instance in _remoteInstances)
+          if (instance.instanceId == updated.instanceId) updated else instance,
+      ];
+    });
+  }
+
+  Future<void> _voteOnPoll(
+    _RemoteInstanceDetail instance,
+    int optionIndex,
+  ) async {
+    final haptics = ref.read(hapticServiceProvider);
+    await haptics.trigger(HapticType.light);
+    final payload = await _sendInteractionRequest(
+      instance,
+      Uint8List.fromList([optionIndex]),
+    );
+    if (payload == null || payload.isEmpty) return;
+
+    final optionCount = payload[0];
+    final counts = <int>[];
+    var offset = 1;
+    for (var index = 0; index < optionCount; index++) {
+      if (offset + 2 > payload.length) break;
+      counts.add(
+        ByteData.sublistView(
+          payload,
+          offset,
+          offset + 2,
+        ).getUint16(0, Endian.little),
+      );
+      offset += 2;
+    }
+
+    _replaceRemoteInstance(
+      instance.copyWith(
+        pollVoteCounts: counts,
+        selectedPollOption: optionIndex,
+      ),
+    );
+  }
+
+  Future<void> _toggleListItem(
+    _RemoteInstanceDetail instance,
+    int itemIndex,
+    bool checked,
+  ) async {
+    if (_pendingListItemIndex != null) return;
+    final haptics = ref.read(hapticServiceProvider);
+    setState(() {
+      _pendingListInstanceId = instance.instanceId;
+      _pendingListItemIndex = itemIndex;
+    });
+    try {
+      await haptics.trigger(HapticType.light);
+      final payload = await _sendInteractionRequest(
+        instance,
+        Uint8List.fromList([itemIndex, checked ? 1 : 0]),
+      );
+      if (payload == null || payload.isEmpty) return;
+
+      final itemCount = payload[0];
+      final states = <bool>[];
+      for (
+        var index = 0;
+        index < itemCount && index + 1 < payload.length;
+        index++
+      ) {
+        states.add(payload[index + 1] != 0);
+      }
+
+      _replaceRemoteInstance(instance.copyWith(listItemStates: states));
+    } finally {
+      if (mounted &&
+          _pendingListInstanceId == instance.instanceId &&
+          _pendingListItemIndex == itemIndex) {
+        setState(() {
+          _pendingListInstanceId = null;
+          _pendingListItemIndex = null;
+        });
+      }
+    }
   }
 
   Future<void> _onAction(SchemaAction action) async {
@@ -487,6 +793,7 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
     }
 
     _deliverySub?.cancel();
+    _deliverySub = null;
     _deliverySub = tracker.stateChanges.listen((state) {
       if (mounted) setState(() => _activeDelivery = state);
     });
@@ -628,11 +935,13 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _ServiceHeaderCard(
+          l10n: l10n,
           icon: widget.icon,
           title: widget.serviceTitle,
           serviceType: widget.serviceType,
           accentColor: widget.accentColor,
           nodeId: widget.nodeId,
+          serviceId: widget.serviceId,
         ),
         const SizedBox(height: AppTheme.spacing16),
         _buildInstancesSection(context, l10n),
@@ -674,8 +983,28 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Text(
+            l10n.serviceDetailSectionLiveNow,
+            style: context.labelStyle?.copyWith(
+              color: context.textTertiary,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing10),
           for (final inst in _remoteInstances) ...[
-            _RemoteInstanceCard(instance: inst),
+            _RemoteInstanceCard(
+              instance: inst,
+              interactionsBusy: _interactionBusy,
+              pendingListItemIndex: _pendingListItemIndexFor(inst),
+              onVote: inst.canonicalType == MeshServiceType.poll
+                  ? (optionIndex) => _voteOnPoll(inst, optionIndex)
+                  : null,
+              onToggleItem: inst.canonicalType == MeshServiceType.list
+                  ? (itemIndex, checked) =>
+                        _toggleListItem(inst, itemIndex, checked)
+                  : null,
+            ),
             const SizedBox(height: AppTheme.spacing8),
           ],
         ],
@@ -701,18 +1030,22 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
 
 /// Header card showing service icon, title, and node info.
 class _ServiceHeaderCard extends StatelessWidget {
+  final dynamic l10n;
   final IconData icon;
   final String title;
   final String serviceType;
   final Color accentColor;
   final int nodeId;
+  final int serviceId;
 
   const _ServiceHeaderCard({
+    required this.l10n,
     required this.icon,
     required this.title,
     required this.serviceType,
     required this.accentColor,
     required this.nodeId,
+    required this.serviceId,
   });
 
   @override
@@ -724,37 +1057,113 @@ class _ServiceHeaderCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppTheme.spacing12),
         border: Border.all(color: accentColor.withValues(alpha: 0.2)),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: accentColor.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(AppTheme.spacing12),
-            ),
-            child: Icon(icon, color: accentColor, size: 24),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(AppTheme.spacing12),
+                ),
+                child: Icon(icon, color: accentColor, size: 24),
+              ),
+              const SizedBox(width: AppTheme.spacing12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.serviceDetailHeaderEyebrow as String,
+                      style: context.bodySmallStyle?.copyWith(
+                        color: accentColor,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spacing2),
+                    Text(
+                      title,
+                      style: context.titleStyle?.copyWith(
+                        color: context.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spacing6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.spacing8,
+                        vertical: AppTheme.spacing4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.06),
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
+                      ),
+                      child: Text(
+                        serviceType,
+                        style: context.bodySmallStyle?.copyWith(
+                          color: context.textSecondary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: AppTheme.spacing12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: context.titleStyle?.copyWith(
-                    color: context.textPrimary,
+          const SizedBox(height: AppTheme.spacing12),
+          Text(
+            l10n.serviceDetailHeaderBody as String,
+            style: context.bodySecondaryStyle?.copyWith(
+              color: context.textSecondary,
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing8),
+          ExpertDetailsExpander(
+            label: l10n.meshServicesNetworkDetails as String,
+            icon: Icons.router_outlined,
+            expandedBuilder: (context) => Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppTheme.spacing16,
+                0,
+                AppTheme.spacing16,
+                AppTheme.spacing8,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.meshServicesNetworkNode(
+                          '0x${nodeId.toRadixString(16)}',
+                        )
+                        as String,
+                    style: context.bodySmallStyle?.copyWith(
+                      color: context.textSecondary,
+                    ),
                   ),
-                ),
-                const SizedBox(height: AppTheme.spacing2),
-                Text(
-                  // lint-allow: hardcoded-string
-                  '$serviceType · Node 0x${nodeId.toRadixString(16)}',
-                  style: context.captionStyle?.copyWith(
-                    color: context.textTertiary,
+                  const SizedBox(height: AppTheme.spacing6),
+                  Text(
+                    l10n.meshServicesNetworkServiceType(serviceType) as String,
+                    style: context.bodySmallStyle?.copyWith(
+                      color: context.textSecondary,
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: AppTheme.spacing6),
+                  Text(
+                    l10n.meshServicesNetworkServiceId(
+                          '0x${serviceId.toRadixString(16)}',
+                        )
+                        as String,
+                    style: context.bodySmallStyle?.copyWith(
+                      color: context.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -845,26 +1254,60 @@ class _ErrorState extends StatelessWidget {
 /// Card displaying a remote service instance fetched via MRRP.
 class _RemoteInstanceCard extends StatelessWidget {
   final _RemoteInstanceDetail instance;
+  final bool interactionsBusy;
+  final int? pendingListItemIndex;
+  final Future<void> Function(int optionIndex)? onVote;
+  final Future<void> Function(int itemIndex, bool checked)? onToggleItem;
 
-  const _RemoteInstanceCard({required this.instance});
+  const _RemoteInstanceCard({
+    required this.instance,
+    required this.interactionsBusy,
+    this.pendingListItemIndex,
+    this.onVote,
+    this.onToggleItem,
+  });
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final resolved = instance.canonicalType == null
+    final canonicalType = instance.canonicalType;
+    final resolved = canonicalType == null
         ? null
         : MeshServiceCatalog.resolve(
-            canonicalType: instance.canonicalType!,
+            canonicalType: canonicalType,
             presetId: instance.presetId,
           );
     final icon = resolved?.icon ?? Icons.miscellaneous_services_outlined;
     final accentColor = resolved?.accentColor ?? context.accentColor;
-    final typeLabel = instance.canonicalType == null
-        ? null
-        : meshServiceTypeName(l10n, instance.canonicalType!);
     final presetLabel = instance.presetId == null
         ? null
         : meshServicePresetName(l10n, instance.presetId!);
+    final spec = canonicalType == null
+        ? null
+        : MeshServicePresentationRegistry.forType(canonicalType);
+    final eyebrow = spec?.discoveryEyebrow(l10n);
+    final detailData = MeshServiceRemoteDetailViewData(
+      title: instance.title,
+      description: instance.description,
+      expiresAt: instance.expiresAt,
+      createdAt: instance.createdAt,
+      pollOptions: instance.pollOptions,
+      pollVoteCounts: instance.pollVoteCounts,
+      pollTotalOptions: instance.pollTotalOptions,
+      selectedPollOption: instance.selectedPollOption,
+      listItems: instance.listItems,
+      listItemStates: instance.listItemStates,
+      listTotalItems: instance.listTotalItems,
+      signalKind: instance.signalKind,
+      sensorValue: instance.sensorValue,
+      sensorUnit: instance.sensorUnit,
+      sensorSource: instance.sensorSource,
+      sensorCapturedAt: instance.sensorCapturedAt,
+      isInteractionBusy: interactionsBusy,
+      pendingListItemIndex: pendingListItemIndex,
+      onVote: onVote,
+      onToggleItem: onToggleItem,
+    );
 
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing16),
@@ -892,6 +1335,16 @@ class _RemoteInstanceCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    if (eyebrow != null)
+                      Text(
+                        eyebrow,
+                        style: context.bodySmallStyle?.copyWith(
+                          color: accentColor,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    if (eyebrow != null)
+                      const SizedBox(height: AppTheme.spacing2),
                     Text(
                       instance.title,
                       style: context.bodyStyle?.copyWith(
@@ -901,13 +1354,13 @@ class _RemoteInstanceCard extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    if (typeLabel != null)
+                    if (canonicalType != null)
                       Padding(
                         padding: const EdgeInsets.only(top: AppTheme.spacing2),
                         child: Row(
                           children: [
                             Text(
-                              typeLabel,
+                              meshServiceTypeName(l10n, canonicalType),
                               style: context.captionStyle?.copyWith(
                                 color: context.textTertiary,
                               ),
@@ -943,8 +1396,10 @@ class _RemoteInstanceCard extends StatelessWidget {
               ),
             ],
           ),
-          if (instance.description.isNotEmpty) ...[
-            const SizedBox(height: AppTheme.spacing12),
+          const SizedBox(height: AppTheme.spacing12),
+          if (spec != null)
+            spec.buildRemoteDetailContent(context, l10n, detailData)
+          else
             Text(
               instance.description,
               style: context.bodySmallStyle?.copyWith(
@@ -953,7 +1408,6 @@ class _RemoteInstanceCard extends StatelessWidget {
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
             ),
-          ],
           const SizedBox(height: AppTheme.spacing8),
           Text(
             _expiryText(l10n, instance.expiresAt),

@@ -14,6 +14,7 @@
 library;
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
@@ -22,6 +23,7 @@ import '../../../core/logging.dart';
 import '../../../services/protocol/sip/mrrp_frame.dart';
 import '../../../services/protocol/sip/mrrp_service_handler.dart';
 import '../../../services/protocol/sip/mrrp_types.dart';
+import '../models/mesh_service_detail_payload.dart';
 import '../models/mesh_service_instance.dart';
 import '../models/mesh_service_template.dart';
 import '../models/service_schema.dart';
@@ -81,7 +83,7 @@ class MeshServicesHandler implements MrrpServiceHandler {
       case MeshServicesAction.listInstances:
         return _handleListInstances(request);
       case MeshServicesAction.getInstance:
-        return _handleGetInstance(request);
+        return _handleGetInstance(request, senderNodeId);
       case MeshServicesAction.interact:
         return _handleInteract(request, senderNodeId);
       case MeshServicesAction.getSchema:
@@ -117,7 +119,10 @@ class MeshServicesHandler implements MrrpServiceHandler {
     return _buildResponse(request, payload);
   }
 
-  Future<MrrpFrame> _handleGetInstance(MrrpFrame request) async {
+  Future<MrrpFrame> _handleGetInstance(
+    MrrpFrame request,
+    int senderNodeId,
+  ) async {
     if (request.payload.length < 16) {
       return _buildError(request, MrrpStatusCode.invalid);
     }
@@ -136,11 +141,19 @@ class MeshServicesHandler implements MrrpServiceHandler {
     );
     builder.addByte(inst.effectiveStatus.index);
 
-    final titleBytes = truncateUtf8(inst.title, 40);
+    final titleBytes = truncateUtf8(
+      inst.title,
+      MeshServiceDetailPayloadCodec.titleByteBudgetFor(inst.canonicalType),
+    );
     builder.addByte(titleBytes.length);
     builder.add(titleBytes);
 
-    final descBytes = truncateUtf8(inst.description, 80);
+    final descBytes = truncateUtf8(
+      inst.description,
+      MeshServiceDetailPayloadCodec.descriptionByteBudgetFor(
+        inst.canonicalType,
+      ),
+    );
     builder.addByte(descBytes.length);
     builder.add(descBytes);
 
@@ -154,6 +167,26 @@ class MeshServicesHandler implements MrrpServiceHandler {
       );
     }
     builder.add(expiresAtBytes);
+    final detailExtension = MeshServiceDetailPayloadCodec.encodeExtension(
+      instance: inst,
+      pollVotes: _engine.pollVotesFor(inst.instanceId),
+      checklistStates: _engine.checklistStatesFor(inst.instanceId),
+      requesterNodeId: senderNodeId,
+    );
+    if (inst.canonicalType == MeshServiceType.list) {
+      final items =
+          (inst.config['items'] as List<dynamic>?)?.cast<String>() ?? const [];
+      AppLogging.mrrp(
+        'MESH_SERVICE_GET_INSTANCE_BUILD '
+        'instance=${inst.instanceId} '
+        'type=${inst.canonicalType.name} '
+        'title=${titleBytes.length}B '
+        'desc=${descBytes.length}B '
+        'detail=${detailExtension.length}B '
+        'items=${items.length}',
+      );
+    }
+    builder.add(detailExtension);
 
     final payload = Uint8List.fromList(builder.toBytes());
     return _buildResponse(request, payload);
@@ -261,11 +294,14 @@ class MeshServicesHandler implements MrrpServiceHandler {
   /// Truncate a string to fit in [maxBytes] of UTF-8.
   @visibleForTesting
   static Uint8List truncateUtf8(String text, int maxBytes) {
-    var encoded = Uint8List.fromList(text.codeUnits);
+    var encoded = utf8.encode(text);
     if (encoded.length > maxBytes) {
-      encoded = Uint8List.sublistView(encoded, 0, maxBytes);
+      encoded = encoded.sublist(0, maxBytes);
+      while (encoded.isNotEmpty && (encoded.last & 0xC0) == 0x80) {
+        encoded = encoded.sublist(0, encoded.length - 1);
+      }
     }
-    return encoded;
+    return Uint8List.fromList(encoded);
   }
 }
 
@@ -388,6 +424,14 @@ class MeshServiceEngine {
 
   /// Get active local instances.
   Future<List<MeshServiceInstance>> getActiveInstances() => _store.getActive();
+
+  Map<int, Set<int>> pollVotesFor(String instanceId) {
+    return _pollVotes[instanceId] ?? const <int, Set<int>>{};
+  }
+
+  Map<int, bool> checklistStatesFor(String instanceId) {
+    return _checkStates[instanceId] ?? const <int, bool>{};
+  }
 
   /// Handle a service-specific interaction from a remote peer.
   Future<Uint8List?> handleInteraction(
