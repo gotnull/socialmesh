@@ -1303,10 +1303,10 @@ class _AddAutomationSheet extends ConsumerWidget {
           height: 110,
           child: EdgeFade.horizontal(
             fadeSize: 24,
-            fadeColor: context.surface,
+            fadeColor: context.background,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 4),
               itemCount: templates.length,
               separatorBuilder: (context, index) =>
                   const SizedBox(width: AppTheme.spacing12),

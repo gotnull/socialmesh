@@ -114,6 +114,7 @@ class _AnimatedGoldButtonState extends State<AnimatedGoldButton>
                   horizontal: 28,
                   vertical: 14,
                 ),
+                alignment: Alignment.center,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment(-1 + _shimmerAnimation.value, -1),

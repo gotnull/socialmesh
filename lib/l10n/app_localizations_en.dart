@@ -12040,45 +12040,45 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingAutomationsAdvisor =>
-      'Set up rules once, and I\'ll monitor everything. Low battery? I\'ll alert you. Node goes silent? I\'ll let you know. SOS received? I\'ll trigger your webhook.';
+      'Create a rule, and I handle the rest. Need a webhook when someone sends SOS? Done. Want a sound when a node comes online? Easy.';
 
   @override
   String get onboardingAutomationsDescription =>
-      'Trigger actions based on mesh events.\nBattery alerts, geofences, keywords, and more.';
+      'Automatic alerts when batteries drop, nodes go silent, or someone enters a geofence.\nYour mesh monitors itself.';
 
   @override
-  String get onboardingAutomationsTitle => 'Intelligent Automations';
+  String get onboardingAutomationsTitle => 'Set It Once, Never Miss a Thing';
 
   @override
   String get onboardingCheckingRadio => 'Checking radio configuration';
 
   @override
   String get onboardingConnectAdvisor =>
-      'Once connected, we operate completely offline. The mesh is waiting.';
+      'Once paired, we go fully offline. No internet needed from here on out. The mesh is ready when you are.';
 
   @override
   String get onboardingConnectDescription =>
-      'Pair your Meshtastic device to begin.\nBluetooth or USB - your choice.';
+      'Tap below to pair your radio over Bluetooth or USB.\nYou\'ll be sending messages in under a minute.';
 
   @override
   String get onboardingConnectDeviceButton => 'Connect Device';
 
   @override
-  String get onboardingConnectTitle => 'Ready to Connect';
+  String get onboardingConnectTitle => 'Let\'s Get You on the Mesh';
 
   @override
   String get onboardingContinueButton => 'Continue';
 
   @override
   String get onboardingDashboardAdvisor =>
-      'Widgets, maps, stats - arrange them however you work. Your mesh, your view, your control.';
+      'Drag, drop, and resize. Every widget updates in real time so you always know the state of your mesh.';
 
   @override
   String get onboardingDashboardDescription =>
-      'Customizable dashboard with live telemetry.\nTrack nodes, monitor channels, visualize the network.';
+      'Live battery levels, signal strength, node counts — all in one view.\nBuild the dashboard that fits how you work.';
 
   @override
-  String get onboardingDashboardTitle => 'Your Command Center';
+  String get onboardingDashboardTitle => 'See Everything at a Glance';
 
   @override
   String get onboardingDeviceHeltec => 'Heltec V3';
@@ -12133,25 +12133,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingHardwareAdvisor =>
-      'Pick up a SenseCAP T1000-E for tracking, a Heltec V3 for range, or a RAK WisMesh for reliability. I\'ll work with any of them.';
+      'Already own a Meshtastic device? Perfect. Don\'t have one yet? Any of these will get you on the mesh in minutes.';
 
   @override
   String get onboardingHardwareDescription =>
-      'Works with all Meshtastic-compatible devices.\nFrom compact trackers to long-range stations.';
+      'Pair any Meshtastic radio over Bluetooth or USB.\nCompact trackers, long-range stations, and everything between.';
 
   @override
-  String get onboardingHardwareTitle => 'Compatible Hardware';
+  String get onboardingHardwareTitle => 'Pick Your Radio';
 
   @override
   String get onboardingNodedexAdvisor =>
-      'Each node gets a unique sigil, a rarity tier, and a patina that deepens with every encounter. Collect them all — your NodeDex is your story across the mesh.';
+      'Legendary, Epic, Rare — every node you encounter earns its place in your collection. The more you explore, the richer your NodeDex becomes.';
 
   @override
   String get onboardingNodedexBaseCamp => 'Base Camp Node';
 
   @override
   String get onboardingNodedexDescription =>
-      'Every node you encounter becomes a collectible card.\nBuild your field journal across the mesh.';
+      'Every node you discover gets a unique card with a sigil and rarity tier.\nYour NodeDex is your story across the mesh.';
 
   @override
   String get onboardingNodedexEpic => 'EPIC';
@@ -12169,7 +12169,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingNodedexSummitRelay => 'Summit Relay';
 
   @override
-  String get onboardingNodedexTitle => 'NodeDex — Collector Album';
+  String get onboardingNodedexTitle => 'Collect Every Node You Meet';
 
   @override
   String get onboardingNodedexTrailMarker => 'Trail Marker';
@@ -12179,25 +12179,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingOffGridAdvisor =>
-      'Every message hops through the mesh until it reaches its destination. Range measured in kilometers, not bars.';
+      'No cell towers, no Wi-Fi, no subscriptions. Your messages travel radio-to-radio, completely independent of infrastructure.';
 
   @override
   String get onboardingOffGridDescription =>
-      'No cellular towers. No internet required.\nTrue peer-to-peer radio communication.';
+      'Every message hops across the mesh until it arrives.\nRange measured in kilometers, not signal bars.';
 
   @override
-  String get onboardingOffGridTitle => 'Off-Grid by Design';
+  String get onboardingOffGridTitle => 'Works Where Nothing Else Does';
 
   @override
   String get onboardingPrivacyAdvisor =>
-      'Everything is local unless you explicitly enable cloud sync. No tracking, no analytics, no compromise.';
+      'Zero tracking. Zero analytics. Cloud sync is entirely optional and off by default. Your mesh, your rules.';
 
   @override
   String get onboardingPrivacyDescription =>
-      'No accounts required. No cloud by default.\nYour data stays on your device.';
+      'No sign-up required. No cloud unless you want it.\nEverything runs locally, on your terms.';
 
   @override
-  String get onboardingPrivacyTitle => 'Privacy First';
+  String get onboardingPrivacyTitle => 'Your Data Never Leaves Your Device';
 
   @override
   String get onboardingSettingUpDevice => 'Setting up your device...';
@@ -12223,28 +12223,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingSignalsAdvisor =>
-      'Signals are what set us apart. Broadcast to everyone in range, watch them ripple through the network, then disappear on your terms.';
+      'Think of Signals like ephemeral stories — but over radio. No cloud, no server. They exist only on the mesh, only for as long as you choose.';
 
   @override
   String get onboardingSignalsDescription =>
-      'Ephemeral broadcasts across the mesh.\nShare presence, photos, and location - then let them fade.';
+      'Share your location, photos, and updates with everyone in range.\nSignals ripple through the network, then disappear.';
 
   @override
-  String get onboardingSignalsTitle => 'Signals';
+  String get onboardingSignalsTitle => 'Broadcast to the Mesh';
 
   @override
   String get onboardingSkipButton => 'Skip';
 
   @override
   String get onboardingWelcomeAdvisor =>
-      'I\'m Ico, and I\'ll be your guide. Let me show you a communication platform that works when nothing else does.';
+      'I\'m Ico. I\'ll walk you through a mesh radio platform built for the real world — where cell towers don\'t reach.';
 
   @override
   String get onboardingWelcomeDescription =>
-      'The most advanced Meshtastic companion app.\nBuilt for professionals. Designed for everyone.';
+      'Send messages across mountains, forests, and oceans.\nNo towers. No internet. No limits.';
 
   @override
-  String get onboardingWelcomeTitle => 'Welcome to Socialmesh';
+  String get onboardingWelcomeTitle => 'Communication Without Limits';
 
   @override
   String get onboardingWidgetBattery => 'Battery';
@@ -22311,7 +22311,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get subscriptionOneTimePurchases =>
-      'One-time purchases, yours forever';
+      'One purchase. Yours forever. No subscription.';
 
   @override
   String get subscriptionTerms => 'Terms';
@@ -22330,24 +22330,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get subscriptionCompletePackSubtitle =>
-      'Everything. Forever. One price.';
+      'All premium features in one lifetime purchase';
 
   @override
   String subscriptionTones(String count) {
-    return '$count tones';
+    return '$count custom alert tones';
   }
 
   @override
-  String get subscriptionAccentColors => '12 accent colors';
+  String get subscriptionAccentColors =>
+      'Personalize every screen with premium colors';
 
   @override
-  String get subscriptionUnlimitedWidgets => 'Unlimited custom widgets';
+  String get subscriptionUnlimitedWidgets =>
+      'Build live dashboards with real-time data';
 
   @override
-  String get subscriptionTriggersSchedules => 'Triggers & schedules';
+  String get subscriptionTriggersSchedules =>
+      'Automate mesh actions, alerts & schedules';
 
   @override
-  String get subscriptionAppIntegrations => '700+ app integrations';
+  String get subscriptionAppIntegrations => 'Connect to 700+ apps & services';
 
   @override
   String get subscriptionTranslateMessages => 'One-tap message translation';
@@ -22363,10 +22366,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get subscriptionGetTranslation => 'Get';
 
   @override
-  String get subscriptionBestValue => 'Best value - all features';
+  String get subscriptionBestValue => 'Lifetime access · No subscription';
 
   @override
-  String get subscriptionGetAll => 'Get All';
+  String get subscriptionGetAll => 'Unlock Everything';
+
+  @override
+  String subscriptionSavePercent(String percent) {
+    return 'SAVE $percent%';
+  }
 
   @override
   String get subscriptionOwned => 'OWNED';
@@ -33678,7 +33686,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get subscriptionTranslationWithAllowance =>
-      'On-demand translation with managed allowance';
+      'Instant message translation';
 
   @override
   String get subscriptionCompletePackSubtitleWithTranslation =>
@@ -34484,4 +34492,32 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get messageTimelineDetailOpenChat => 'Open conversation';
+
+  @override
+  String get subscriptionGroupPersonalisation => 'Personalisation';
+
+  @override
+  String get subscriptionGroupAutomation => 'Automation';
+
+  @override
+  String get subscriptionGroupDashboard => 'Dashboard';
+
+  @override
+  String get subscriptionGroupCommunication => 'Communication';
+
+  @override
+  String get subscriptionLifetimeReinforcement =>
+      'One-time purchase · Lifetime access · No subscription';
+
+  @override
+  String get subscriptionStarterPack => 'Starter Pack';
+
+  @override
+  String get subscriptionStarterPackSubtitle => 'Themes + Widgets';
+
+  @override
+  String get subscriptionStarterComingSoon => 'Coming Soon';
+
+  @override
+  String get subscriptionPopularBadge => 'MOST POPULAR';
 }

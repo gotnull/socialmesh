@@ -22596,6 +22596,11 @@ class AppLocalizationsPt extends AppLocalizations {
   String get subscriptionGetAll => 'Obter tudo';
 
   @override
+  String subscriptionSavePercent(String percent) {
+    return 'SAVE $percent%';
+  }
+
+  @override
   String get subscriptionOwned => 'ADQUIRIDO';
 
   @override
@@ -34006,7 +34011,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get subscriptionTranslationWithAllowance =>
-      'On-demand translation with managed allowance';
+      'Instant message translation';
 
   @override
   String get subscriptionCompletePackSubtitleWithTranslation =>
@@ -34812,4 +34817,32 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get messageTimelineDetailOpenChat => 'Open conversation';
+
+  @override
+  String get subscriptionGroupPersonalisation => 'Personalisation';
+
+  @override
+  String get subscriptionGroupAutomation => 'Automation';
+
+  @override
+  String get subscriptionGroupDashboard => 'Dashboard';
+
+  @override
+  String get subscriptionGroupCommunication => 'Communication';
+
+  @override
+  String get subscriptionLifetimeReinforcement =>
+      'One-time purchase · Lifetime access · No subscription';
+
+  @override
+  String get subscriptionStarterPack => 'Starter Pack';
+
+  @override
+  String get subscriptionStarterPackSubtitle => 'Themes + Widgets';
+
+  @override
+  String get subscriptionStarterComingSoon => 'Coming Soon';
+
+  @override
+  String get subscriptionPopularBadge => 'MOST POPULAR';
 }

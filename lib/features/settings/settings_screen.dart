@@ -41,6 +41,7 @@ import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/legal_document_sheet.dart';
 import '../../core/widgets/remote_admin_selector_sheet.dart';
 import '../../core/widgets/user_avatar.dart';
+import '../../core/widgets/verified_badge.dart';
 import '../../providers/help_providers.dart';
 import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
@@ -1519,27 +1520,60 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         .length;
     final totalCount = OneTimePurchases.allPurchases.length;
 
+    // Calculate discount for the badge
+    final bundlePrice =
+        storeProducts[RevenueCatConfig.completePackProductId]?.price;
+    final individualTotal = [
+      RevenueCatConfig.themePackProductId,
+      RevenueCatConfig.ringtonePackProductId,
+      RevenueCatConfig.widgetPackProductId,
+      RevenueCatConfig.automationsPackProductId,
+      RevenueCatConfig.iftttPackProductId,
+      RevenueCatConfig.translationPackProductId,
+    ].fold<double>(0, (sum, id) => sum + (storeProducts[id]?.price ?? 0));
+    final discountPercent = (bundlePrice != null && individualTotal > 0)
+        ? ((1 - bundlePrice / individualTotal) * 100).round()
+        : OneTimePurchases.bundleDiscountPercent;
+
+    final ownsAll =
+        ownedCount == totalCount ||
+        purchaseState.hasPurchased(RevenueCatConfig.completePackProductId);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _SectionHeader(title: context.l10n.settingsSectionPremium),
-        // Main Premium card with accent highlight
+        // Complete Pack mini hero card
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                accentColor.withValues(alpha: 0.15),
-                accentColor.withValues(alpha: 0.05),
-              ],
+              colors: ownsAll
+                  ? [
+                      accentColor.withValues(alpha: 0.15),
+                      accentColor.withValues(alpha: 0.05),
+                    ]
+                  : [
+                      accentColor.withValues(alpha: 0.25),
+                      AppTheme.primaryPurple.withValues(alpha: 0.15),
+                    ],
             ),
             borderRadius: BorderRadius.circular(AppTheme.radius12),
             border: Border.all(
-              color: accentColor.withValues(alpha: 0.5),
+              color: accentColor.withValues(alpha: ownsAll ? 0.5 : 0.7),
               width: 1.5,
             ),
+            boxShadow: ownsAll
+                ? null
+                : [
+                    BoxShadow(
+                      color: accentColor.withValues(alpha: 0.15),
+                      blurRadius: 12,
+                      spreadRadius: 0,
+                    ),
+                  ],
           ),
           child: Material(
             color: Colors.transparent,
@@ -1555,18 +1589,41 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                 padding: const EdgeInsets.all(AppTheme.spacing16),
                 child: Row(
                   children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: accentColor.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(AppTheme.radius12),
-                      ),
-                      child: Icon(
-                        Icons.rocket_launch_rounded,
-                        color: accentColor,
-                        size: 26,
-                      ),
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            gradient: ownsAll
+                                ? null
+                                : LinearGradient(
+                                    colors: [
+                                      accentColor,
+                                      AppTheme.primaryPurple,
+                                    ],
+                                  ),
+                            color: ownsAll
+                                ? accentColor.withValues(alpha: 0.2)
+                                : null,
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius12,
+                            ),
+                          ),
+                          child: Icon(
+                            ownsAll ? Icons.verified : Icons.all_inclusive,
+                            color: ownsAll ? accentColor : Colors.white,
+                            size: 26,
+                          ),
+                        ),
+                        if (!ownsAll)
+                          const Positioned(
+                            top: -10,
+                            right: -10,
+                            child: SimpleVerifiedBadge(size: 20),
+                          ),
+                      ],
                     ),
                     SizedBox(width: AppTheme.spacing16),
                     Expanded(
@@ -1574,30 +1631,55 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            context.l10n.settingsPremiumUnlockFeaturesTitle,
+                            ownsAll
+                                ? context.l10n.settingsPremiumAllUnlocked
+                                : context.l10n.subscriptionCompletePack,
                             style: TextStyle(
                               fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: accentColor,
+                              fontWeight: FontWeight.bold,
+                              color: ownsAll ? accentColor : Colors.white,
                             ),
                           ),
+                          if (!ownsAll) ...[
+                            const SizedBox(height: AppTheme.spacing4),
+                            Wrap(
+                              spacing: AppTheme.spacing6,
+                              runSpacing: AppTheme.spacing4,
+                              children: [
+                                _PremiumBadge(
+                                  text: context.l10n.subscriptionPopularBadge,
+                                  backgroundColor: accentColor,
+                                  textColor: Colors.white,
+                                ),
+                                _PremiumBadge(
+                                  text: context.l10n.subscriptionSavePercent(
+                                    discountPercent.toString(),
+                                  ),
+                                  backgroundColor: AppTheme.warningYellow,
+                                  textColor: Colors.black,
+                                ),
+                              ],
+                            ),
+                          ],
                           const SizedBox(height: AppTheme.spacing2),
                           Text(
-                            ownedCount == totalCount
-                                ? context.l10n.settingsPremiumAllUnlocked
-                                : context.l10n.settingsPremiumPartiallyUnlocked(
-                                    ownedCount,
-                                    totalCount,
-                                  ),
+                            ownsAll
+                                ? context.l10n.subscriptionThankYou
+                                : context.l10n.subscriptionCompletePackSubtitle,
                             style: TextStyle(
                               fontSize: 13,
-                              color: context.textSecondary,
+                              color: ownsAll
+                                  ? context.textSecondary
+                                  : Colors.white.withValues(alpha: 0.8),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    Icon(Icons.chevron_right, color: accentColor),
+                    Icon(
+                      Icons.chevron_right,
+                      color: ownsAll ? accentColor : Colors.white,
+                    ),
                   ],
                 ),
               ),
@@ -4646,4 +4728,36 @@ class _SearchableSettingItem {
     this.hasSwitch = false,
     this.switchBuilder,
   });
+}
+
+class _PremiumBadge extends StatelessWidget {
+  final String text;
+  final Color backgroundColor;
+  final Color textColor;
+
+  const _PremiumBadge({
+    required this.text,
+    required this.backgroundColor,
+    required this.textColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(AppTheme.radius6),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 9,
+          fontWeight: FontWeight.w800,
+          color: textColor,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
 }

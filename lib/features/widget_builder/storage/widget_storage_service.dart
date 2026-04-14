@@ -1015,6 +1015,54 @@ class WidgetTemplates {
     );
   }
 
+  /// Distribution chart widget template
+  static WidgetSchema distributionWidget() {
+    return WidgetSchema(
+      name: 'Distribution',
+      description:
+          'Hardware model or role distribution chart', // lint-allow: hardcoded-string
+      tags: ['distribution', 'chart', 'network', 'hardware', 'role'],
+      size: CustomWidgetSize.medium,
+      root: ElementSchema(
+        type: ElementType.column,
+        style: const StyleSchema(padding: 12, spacing: 8),
+        children: [
+          ElementSchema(
+            type: ElementType.row,
+            children: [
+              ElementSchema(
+                type: ElementType.icon,
+                iconName: 'bar_chart',
+                iconSize: 20,
+                style: const StyleSchema(textColor: '#06B6D4'),
+              ),
+              ElementSchema(
+                type: ElementType.spacer,
+                style: const StyleSchema(width: 8),
+              ),
+              ElementSchema(
+                type: ElementType.text,
+                text: 'Distribution', // lint-allow: hardcoded-string
+                style: const StyleSchema(
+                  textColor: '#FFFFFF',
+                  fontSize: 14,
+                  fontWeight: 'w600',
+                ),
+              ),
+            ],
+          ),
+          ElementSchema(
+            type: ElementType.chart,
+            chartType: ChartType.distribution,
+            binding: const BindingSchema(
+              path: 'network.hardwareModelDistribution',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   /// Get all built-in templates
   static List<WidgetSchema> all() {
     return [
@@ -1025,6 +1073,7 @@ class WidgetTemplates {
       gpsWidget(),
       networkOverviewWidget(),
       quickActionsWidget(),
+      distributionWidget(),
     ];
   }
 

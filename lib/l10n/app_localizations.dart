@@ -21128,19 +21128,19 @@ abstract class AppLocalizations {
   /// Ico advisor speech listing automation use cases
   ///
   /// In en, this message translates to:
-  /// **'Set up rules once, and I\'ll monitor everything. Low battery? I\'ll alert you. Node goes silent? I\'ll let you know. SOS received? I\'ll trigger your webhook.'**
+  /// **'Create a rule, and I handle the rest. Need a webhook when someone sends SOS? Done. Want a sound when a node comes online? Easy.'**
   String get onboardingAutomationsAdvisor;
 
   /// Description of the automation triggers system
   ///
   /// In en, this message translates to:
-  /// **'Trigger actions based on mesh events.\nBattery alerts, geofences, keywords, and more.'**
+  /// **'Automatic alerts when batteries drop, nodes go silent, or someone enters a geofence.\nYour mesh monitors itself.'**
   String get onboardingAutomationsDescription;
 
   /// Title for the automations feature page
   ///
   /// In en, this message translates to:
-  /// **'Intelligent Automations'**
+  /// **'Set It Once, Never Miss a Thing'**
   String get onboardingAutomationsTitle;
 
   /// Loading overlay subtitle while checking LoRa radio settings
@@ -21152,13 +21152,13 @@ abstract class AppLocalizations {
   /// Ico advisor speech for the final page before device pairing
   ///
   /// In en, this message translates to:
-  /// **'Once connected, we operate completely offline. The mesh is waiting.'**
+  /// **'Once paired, we go fully offline. No internet needed from here on out. The mesh is ready when you are.'**
   String get onboardingConnectAdvisor;
 
   /// Description prompting the user to pair their device
   ///
   /// In en, this message translates to:
-  /// **'Pair your Meshtastic device to begin.\nBluetooth or USB - your choice.'**
+  /// **'Tap below to pair your radio over Bluetooth or USB.\nYou\'ll be sending messages in under a minute.'**
   String get onboardingConnectDescription;
 
   /// Action button on the last onboarding page to begin device pairing
@@ -21170,7 +21170,7 @@ abstract class AppLocalizations {
   /// Title for the final onboarding page prompting device connection
   ///
   /// In en, this message translates to:
-  /// **'Ready to Connect'**
+  /// **'Let\'s Get You on the Mesh'**
   String get onboardingConnectTitle;
 
   /// Action button to advance to the next onboarding page
@@ -21182,19 +21182,19 @@ abstract class AppLocalizations {
   /// Ico advisor speech about dashboard customization
   ///
   /// In en, this message translates to:
-  /// **'Widgets, maps, stats - arrange them however you work. Your mesh, your view, your control.'**
+  /// **'Drag, drop, and resize. Every widget updates in real time so you always know the state of your mesh.'**
   String get onboardingDashboardAdvisor;
 
   /// Description of the dashboard and telemetry features
   ///
   /// In en, this message translates to:
-  /// **'Customizable dashboard with live telemetry.\nTrack nodes, monitor channels, visualize the network.'**
+  /// **'Live battery levels, signal strength, node counts — all in one view.\nBuild the dashboard that fits how you work.'**
   String get onboardingDashboardDescription;
 
   /// Title for the customizable dashboard page
   ///
   /// In en, this message translates to:
-  /// **'Your Command Center'**
+  /// **'See Everything at a Glance'**
   String get onboardingDashboardTitle;
 
   /// Device name in the compatible hardware showcase
@@ -21296,25 +21296,25 @@ abstract class AppLocalizations {
   /// Ico advisor speech recommending specific hardware by use case
   ///
   /// In en, this message translates to:
-  /// **'Pick up a SenseCAP T1000-E for tracking, a Heltec V3 for range, or a RAK WisMesh for reliability. I\'ll work with any of them.'**
+  /// **'Already own a Meshtastic device? Perfect. Don\'t have one yet? Any of these will get you on the mesh in minutes.'**
   String get onboardingHardwareAdvisor;
 
   /// Description of supported hardware types
   ///
   /// In en, this message translates to:
-  /// **'Works with all Meshtastic-compatible devices.\nFrom compact trackers to long-range stations.'**
+  /// **'Pair any Meshtastic radio over Bluetooth or USB.\nCompact trackers, long-range stations, and everything between.'**
   String get onboardingHardwareDescription;
 
   /// Title for the compatible devices page
   ///
   /// In en, this message translates to:
-  /// **'Compatible Hardware'**
+  /// **'Pick Your Radio'**
   String get onboardingHardwareTitle;
 
   /// Ico advisor speech explaining NodeDex sigils, rarity, and patina
   ///
   /// In en, this message translates to:
-  /// **'Each node gets a unique sigil, a rarity tier, and a patina that deepens with every encounter. Collect them all — your NodeDex is your story across the mesh.'**
+  /// **'Legendary, Epic, Rare — every node you encounter earns its place in your collection. The more you explore, the richer your NodeDex becomes.'**
   String get onboardingNodedexAdvisor;
 
   /// Demo node name in the NodeDex showcase
@@ -21326,7 +21326,7 @@ abstract class AppLocalizations {
   /// Description of the NodeDex collection feature
   ///
   /// In en, this message translates to:
-  /// **'Every node you encounter becomes a collectible card.\nBuild your field journal across the mesh.'**
+  /// **'Every node you discover gets a unique card with a sigil and rarity tier.\nYour NodeDex is your story across the mesh.'**
   String get onboardingNodedexDescription;
 
   /// Rarity tier label for the epic demo node card
@@ -21362,7 +21362,7 @@ abstract class AppLocalizations {
   /// Title for the NodeDex collectible node cards page
   ///
   /// In en, this message translates to:
-  /// **'NodeDex — Collector Album'**
+  /// **'Collect Every Node You Meet'**
   String get onboardingNodedexTitle;
 
   /// Demo node name in the NodeDex showcase
@@ -21380,37 +21380,37 @@ abstract class AppLocalizations {
   /// Ico advisor speech explaining mesh message hopping
   ///
   /// In en, this message translates to:
-  /// **'Every message hops through the mesh until it reaches its destination. Range measured in kilometers, not bars.'**
+  /// **'No cell towers, no Wi-Fi, no subscriptions. Your messages travel radio-to-radio, completely independent of infrastructure.'**
   String get onboardingOffGridAdvisor;
 
   /// Description highlighting offline mesh radio capabilities
   ///
   /// In en, this message translates to:
-  /// **'No cellular towers. No internet required.\nTrue peer-to-peer radio communication.'**
+  /// **'Every message hops across the mesh until it arrives.\nRange measured in kilometers, not signal bars.'**
   String get onboardingOffGridDescription;
 
   /// Title for the off-grid mesh networking page
   ///
   /// In en, this message translates to:
-  /// **'Off-Grid by Design'**
+  /// **'Works Where Nothing Else Does'**
   String get onboardingOffGridTitle;
 
   /// Ico advisor speech emphasizing local-only data by default
   ///
   /// In en, this message translates to:
-  /// **'Everything is local unless you explicitly enable cloud sync. No tracking, no analytics, no compromise.'**
+  /// **'Zero tracking. Zero analytics. Cloud sync is entirely optional and off by default. Your mesh, your rules.'**
   String get onboardingPrivacyAdvisor;
 
   /// Description of the privacy-first data philosophy
   ///
   /// In en, this message translates to:
-  /// **'No accounts required. No cloud by default.\nYour data stays on your device.'**
+  /// **'No sign-up required. No cloud unless you want it.\nEverything runs locally, on your terms.'**
   String get onboardingPrivacyDescription;
 
   /// Title for the privacy-focused onboarding page
   ///
   /// In en, this message translates to:
-  /// **'Privacy First'**
+  /// **'Your Data Never Leaves Your Device'**
   String get onboardingPrivacyTitle;
 
   /// Loading overlay text while configuring the paired device
@@ -21452,19 +21452,19 @@ abstract class AppLocalizations {
   /// Ico advisor speech explaining the Signals differentiator
   ///
   /// In en, this message translates to:
-  /// **'Signals are what set us apart. Broadcast to everyone in range, watch them ripple through the network, then disappear on your terms.'**
+  /// **'Think of Signals like ephemeral stories — but over radio. No cloud, no server. They exist only on the mesh, only for as long as you choose.'**
   String get onboardingSignalsAdvisor;
 
   /// Description of the ephemeral Signals feature
   ///
   /// In en, this message translates to:
-  /// **'Ephemeral broadcasts across the mesh.\nShare presence, photos, and location - then let them fade.'**
+  /// **'Share your location, photos, and updates with everyone in range.\nSignals ripple through the network, then disappear.'**
   String get onboardingSignalsDescription;
 
   /// Title for the Signals feature page
   ///
   /// In en, this message translates to:
-  /// **'Signals'**
+  /// **'Broadcast to the Mesh'**
   String get onboardingSignalsTitle;
 
   /// Skip button to jump to the last onboarding page
@@ -21476,19 +21476,19 @@ abstract class AppLocalizations {
   /// Ico advisor speech for the welcome page introducing itself
   ///
   /// In en, this message translates to:
-  /// **'I\'m Ico, and I\'ll be your guide. Let me show you a communication platform that works when nothing else does.'**
+  /// **'I\'m Ico. I\'ll walk you through a mesh radio platform built for the real world — where cell towers don\'t reach.'**
   String get onboardingWelcomeAdvisor;
 
   /// Description for the welcome onboarding page
   ///
   /// In en, this message translates to:
-  /// **'The most advanced Meshtastic companion app.\nBuilt for professionals. Designed for everyone.'**
+  /// **'Send messages across mountains, forests, and oceans.\nNo towers. No internet. No limits.'**
   String get onboardingWelcomeDescription;
 
   /// Title for the first onboarding page
   ///
   /// In en, this message translates to:
-  /// **'Welcome to Socialmesh'**
+  /// **'Communication Without Limits'**
   String get onboardingWelcomeTitle;
 
   /// Dashboard widget label for battery percentage
@@ -39391,10 +39391,10 @@ abstract class AppLocalizations {
   /// **'Unlock Features'**
   String get subscriptionUnlockFeatures;
 
-  /// UI text: subscription one time purchases
+  /// Subtitle in premium header reinforcing lifetime and no-subscription value prop
   ///
   /// In en, this message translates to:
-  /// **'One-time purchases, yours forever'**
+  /// **'One purchase. Yours forever. No subscription.'**
   String get subscriptionOneTimePurchases;
 
   /// UI text: subscription terms
@@ -39427,40 +39427,40 @@ abstract class AppLocalizations {
   /// **'Complete Pack'**
   String get subscriptionCompletePack;
 
-  /// Subtitle or secondary text
+  /// Subtitle for the Complete Pack hero card
   ///
   /// In en, this message translates to:
-  /// **'Everything. Forever. One price.'**
+  /// **'All premium features in one lifetime purchase'**
   String get subscriptionCompletePackSubtitle;
 
   /// UI text: subscription tones Parameters: {count} = numeric count.
   ///
   /// In en, this message translates to:
-  /// **'{count} tones'**
+  /// **'{count} custom alert tones'**
   String subscriptionTones(String count);
 
-  /// UI text: subscription accent colors
+  /// Outcome-driven benefit line for theme pack in bundle card
   ///
   /// In en, this message translates to:
-  /// **'12 accent colors'**
+  /// **'Personalize every screen with premium colors'**
   String get subscriptionAccentColors;
 
-  /// UI text: subscription unlimited widgets
+  /// Outcome-driven benefit line for widget pack in bundle card
   ///
   /// In en, this message translates to:
-  /// **'Unlimited custom widgets'**
+  /// **'Build live dashboards with real-time data'**
   String get subscriptionUnlimitedWidgets;
 
-  /// UI text: subscription triggers schedules
+  /// Outcome-driven benefit line for automations pack in bundle card
   ///
   /// In en, this message translates to:
-  /// **'Triggers & schedules'**
+  /// **'Automate mesh actions, alerts & schedules'**
   String get subscriptionTriggersSchedules;
 
-  /// UI text: subscription app integrations
+  /// Outcome-driven benefit line for IFTTT pack in bundle card
   ///
   /// In en, this message translates to:
-  /// **'700+ app integrations'**
+  /// **'Connect to 700+ apps & services'**
   String get subscriptionAppIntegrations;
 
   /// UI text: subscription translate messages feature description
@@ -39487,17 +39487,23 @@ abstract class AppLocalizations {
   /// **'Get'**
   String get subscriptionGetTranslation;
 
-  /// UI text: subscription best value
+  /// Value reinforcement text below price on Complete Pack card
   ///
   /// In en, this message translates to:
-  /// **'Best value - all features'**
+  /// **'Lifetime access · No subscription'**
   String get subscriptionBestValue;
 
-  /// UI text: subscription get all
+  /// CTA button text for Complete Pack purchase
   ///
   /// In en, this message translates to:
-  /// **'Get All'**
+  /// **'Unlock Everything'**
   String get subscriptionGetAll;
+
+  /// Savings badge text on Complete Pack card showing computed discount percentage
+  ///
+  /// In en, this message translates to:
+  /// **'SAVE {percent}%'**
+  String subscriptionSavePercent(String percent);
 
   /// UI text: subscription owned
   ///
@@ -59338,10 +59344,10 @@ abstract class AppLocalizations {
   /// **'On-demand translation with smart caching, privacy controls, and BYO provider support'**
   String get subscriptionFeaturedTranslationSubtitleRefactored;
 
-  /// Feature line for translation in Complete Pack bundle list
+  /// Outcome-driven benefit line for translation in bundle card
   ///
   /// In en, this message translates to:
-  /// **'On-demand translation with managed allowance'**
+  /// **'Instant message translation'**
   String get subscriptionTranslationWithAllowance;
 
   /// Updated Complete Pack subtitle now that translation is included
@@ -60717,6 +60723,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open conversation'**
   String get messageTimelineDetailOpenChat;
+
+  /// Group header for theme and ringtone features in Complete Pack card
+  ///
+  /// In en, this message translates to:
+  /// **'Personalisation'**
+  String get subscriptionGroupPersonalisation;
+
+  /// Group header for automation and IFTTT features in Complete Pack card
+  ///
+  /// In en, this message translates to:
+  /// **'Automation'**
+  String get subscriptionGroupAutomation;
+
+  /// Group header for widget features in Complete Pack card
+  ///
+  /// In en, this message translates to:
+  /// **'Dashboard'**
+  String get subscriptionGroupDashboard;
+
+  /// Group header for translation features in Complete Pack card
+  ///
+  /// In en, this message translates to:
+  /// **'Communication'**
+  String get subscriptionGroupCommunication;
+
+  /// Reinforcement text below CTA on Complete Pack card
+  ///
+  /// In en, this message translates to:
+  /// **'One-time purchase · Lifetime access · No subscription'**
+  String get subscriptionLifetimeReinforcement;
+
+  /// Title for the anchor Starter Pack card on subscription screen
+  ///
+  /// In en, this message translates to:
+  /// **'Starter Pack'**
+  String get subscriptionStarterPack;
+
+  /// Subtitle for the Starter Pack anchor card
+  ///
+  /// In en, this message translates to:
+  /// **'Themes + Widgets'**
+  String get subscriptionStarterPackSubtitle;
+
+  /// Badge text for the Starter Pack placeholder card
+  ///
+  /// In en, this message translates to:
+  /// **'Coming Soon'**
+  String get subscriptionStarterComingSoon;
+
+  /// Badge on the Complete Pack hero card to indicate popularity
+  ///
+  /// In en, this message translates to:
+  /// **'MOST POPULAR'**
+  String get subscriptionPopularBadge;
 }
 
 class _AppLocalizationsDelegate

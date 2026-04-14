@@ -835,6 +835,13 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
         icon: Icons.location_on,
         color: ChartColors.orange,
       ),
+      _WidgetTemplateInfo(
+        id: 'distribution',
+        name: context.l10n.widgetBuilderDistributionTemplate,
+        description: context.l10n.widgetBuilderDistributionTemplateDesc,
+        icon: Icons.bar_chart,
+        color: ChartColors.cyan,
+      ),
     ];
   }
 
@@ -906,6 +913,8 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
         schema = WidgetTemplates.networkOverviewWidget();
       case 'gps':
         schema = WidgetTemplates.gpsWidget();
+      case 'distribution':
+        schema = WidgetTemplates.distributionWidget();
     }
 
     if (schema != null) {

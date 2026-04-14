@@ -96,8 +96,24 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
                 const SizedBox(height: AppTheme.spacing16),
               ],
 
-              // Complete Pack Bundle (prominent)
+              // Complete Pack Bundle (hero card with grouped benefits)
               _buildBundleCard(),
+
+              // Error message
+              if (error != null) ...[
+                const SizedBox(height: AppTheme.spacing16),
+                Container(
+                  padding: const EdgeInsets.all(AppTheme.spacing12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.errorRed.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
+                  ),
+                  child: Text(
+                    error,
+                    style: const TextStyle(color: AppTheme.errorRed),
+                  ),
+                ),
+              ],
 
               // Restore Purchases button
               const RestorePurchasesButton(),
@@ -147,23 +163,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
               // One-time purchases (shows OWNED or price depending on state)
               _buildOneTimePurchases(),
 
-              // Error message
-              if (error != null) ...[
-                const SizedBox(height: AppTheme.spacing16),
-                Container(
-                  padding: const EdgeInsets.all(AppTheme.spacing12),
-                  decoration: BoxDecoration(
-                    color: AppTheme.errorRed.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(AppTheme.radius12),
-                  ),
-                  child: Text(
-                    error,
-                    style: const TextStyle(color: AppTheme.errorRed),
-                  ),
-                ),
-              ],
-
-              // Restore Purchases button
+              // Restore Purchases button (bottom)
               const RestorePurchasesButton(),
 
               // Terms & Privacy
@@ -561,25 +561,38 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            context.accentColor.withValues(alpha: 0.25),
-            AppTheme.primaryPurple.withValues(alpha: 0.15),
+            context.accentColor.withValues(alpha: 0.3),
+            AppTheme.primaryPurple.withValues(alpha: 0.2),
           ],
         ),
         borderRadius: BorderRadius.circular(AppTheme.radius16),
-        border: Border.all(color: context.accentColor.withValues(alpha: 0.6)),
+        border: Border.all(
+          color: context.accentColor.withValues(alpha: 0.8),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
-            color: context.accentColor.withValues(alpha: 0.2),
-            blurRadius: 20,
+            color: context.accentColor.withValues(alpha: 0.3),
+            blurRadius: 24,
+            spreadRadius: 2,
+          ),
+          BoxShadow(
+            color: AppTheme.primaryPurple.withValues(alpha: 0.15),
+            blurRadius: 40,
             spreadRadius: 0,
           ),
         ],
       ),
       child: Column(
         children: [
-          // Header with badge
+          // Header with MOST POPULAR + SAVE badges
           Padding(
-            padding: const EdgeInsets.fromLTRB(AppTheme.spacing20, 20, 20, 16),
+            padding: const EdgeInsets.fromLTRB(
+              AppTheme.spacing20,
+              AppTheme.spacing20,
+              AppTheme.spacing20,
+              AppTheme.spacing16,
+            ),
             child: Row(
               children: [
                 Stack(
@@ -618,38 +631,36 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
                             child: Text(
                               context.l10n.subscriptionCompletePack,
                               style: const TextStyle(
-                                fontSize: 20,
+                                fontSize: 22,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          const SizedBox(width: AppTheme.spacing8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
+                        ],
+                      ),
+                      const SizedBox(height: AppTheme.spacing4),
+                      // Badges row
+                      Wrap(
+                        spacing: AppTheme.spacing6,
+                        runSpacing: AppTheme.spacing4,
+                        children: [
+                          _buildBadge(
+                            context.l10n.subscriptionPopularBadge,
+                            context.accentColor,
+                            Colors.white,
+                          ),
+                          _buildBadge(
+                            context.l10n.subscriptionSavePercent(
+                              discountPercent.toString(),
                             ),
-                            decoration: BoxDecoration(
-                              color: AppTheme.warningYellow,
-                              borderRadius: BorderRadius.circular(
-                                AppTheme.radius6,
-                              ),
-                            ),
-                            child: Text(
-                              'SAVE $discountPercent%', // lint-allow: hardcoded-string
-                              style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.black,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
+                            AppTheme.warningYellow,
+                            Colors.black,
                           ),
                         ],
                       ),
-                      const SizedBox(height: AppTheme.spacing2),
+                      const SizedBox(height: AppTheme.spacing4),
                       Text(
                         context.l10n.subscriptionCompletePackSubtitle,
                         style: TextStyle(
@@ -664,22 +675,23 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
             ),
           ),
 
-          // Feature list
+          // Grouped feature list
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 16),
-            padding: const EdgeInsets.all(AppTheme.spacing12),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppTheme.spacing12,
+              vertical: AppTheme.spacing10,
+            ),
             decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.2),
+              color: Colors.black.withValues(alpha: 0.25),
               borderRadius: BorderRadius.circular(AppTheme.radius12),
             ),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildBundleFeature(
-                  Icons.music_note,
-                  storeProducts[RevenueCatConfig.ringtonePackProductId]
-                          ?.title ??
-                      context.l10n.subscriptionFallbackRingtonePack,
-                  context.l10n.subscriptionTones(_ringtoneCountFormatted),
+                // Personalisation group
+                _buildGroupHeader(
+                  context.l10n.subscriptionGroupPersonalisation,
                 ),
                 _buildBundleFeature(
                   Icons.palette,
@@ -688,11 +700,15 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
                   context.l10n.subscriptionAccentColors,
                 ),
                 _buildBundleFeature(
-                  Icons.widgets,
-                  storeProducts[RevenueCatConfig.widgetPackProductId]?.title ??
-                      context.l10n.subscriptionFallbackWidgetPack,
-                  context.l10n.subscriptionUnlimitedWidgets,
+                  Icons.music_note,
+                  storeProducts[RevenueCatConfig.ringtonePackProductId]
+                          ?.title ??
+                      context.l10n.subscriptionFallbackRingtonePack,
+                  context.l10n.subscriptionTones(_ringtoneCountFormatted),
                 ),
+                const SizedBox(height: AppTheme.spacing6),
+                // Automation group
+                _buildGroupHeader(context.l10n.subscriptionGroupAutomation),
                 _buildBundleFeature(
                   Icons.auto_awesome,
                   storeProducts[RevenueCatConfig.automationsPackProductId]
@@ -706,7 +722,21 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
                       context.l10n.subscriptionFallbackIfttt,
                   context.l10n.subscriptionAppIntegrations,
                 ),
-                if (AppFeatureFlags.isTranslationEnabled)
+                const SizedBox(height: AppTheme.spacing6),
+                // Dashboard group
+                _buildGroupHeader(context.l10n.subscriptionGroupDashboard),
+                _buildBundleFeature(
+                  Icons.widgets,
+                  storeProducts[RevenueCatConfig.widgetPackProductId]?.title ??
+                      context.l10n.subscriptionFallbackWidgetPack,
+                  context.l10n.subscriptionUnlimitedWidgets,
+                ),
+                // Communication group (if translation enabled)
+                if (AppFeatureFlags.isTranslationEnabled) ...[
+                  const SizedBox(height: AppTheme.spacing6),
+                  _buildGroupHeader(
+                    context.l10n.subscriptionGroupCommunication,
+                  ),
                   _buildBundleFeature(
                     Icons.translate,
                     storeProducts[RevenueCatConfig.translationPackProductId]
@@ -714,49 +744,111 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
                         context.l10n.subscriptionFallbackTranslationPack,
                     context.l10n.subscriptionTranslationWithAllowance,
                   ),
+                ],
               ],
             ),
           ),
 
-          // Price and CTA
+          const SizedBox(height: AppTheme.spacing16),
+
+          // Price display
           Padding(
-            padding: const EdgeInsets.all(AppTheme.spacing16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        storeProducts[RevenueCatConfig.completePackProductId]
-                                ?.priceString ??
-                            '\$${OneTimePurchases.bundlePrice.toStringAsFixed(2)}', // lint-allow: hardcoded-string
-                        style: const TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      Text(
-                        context.l10n.subscriptionBestValue,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: AppTheme.warningYellow,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
+            padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing20),
+            child: Center(
+              child: Column(
+                children: [
+                  Text(
+                    storeProducts[RevenueCatConfig.completePackProductId]
+                            ?.priceString ??
+                        '\$${OneTimePurchases.bundlePrice.toStringAsFixed(2)}', // lint-allow: hardcoded-string
+                    style: const TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
+                  Text(
+                    context.l10n.subscriptionBestValue,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppTheme.warningYellow,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: AppTheme.spacing12),
+
+          // Full-width CTA
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+            child: SizedBox(
+              width: double.infinity,
+              child: AnimatedGoldButton(
+                text: context.l10n.subscriptionGetAll,
+                isLoading: isLoading,
+                onTap: _purchaseBundle,
+              ),
+            ),
+          ),
+
+          // Lifetime reinforcement
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppTheme.spacing16,
+              AppTheme.spacing8,
+              AppTheme.spacing16,
+              AppTheme.spacing16,
+            ),
+            child: Center(
+              child: Text(
+                context.l10n.subscriptionLifetimeReinforcement,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.5),
+                  fontSize: 11,
                 ),
-                AnimatedGoldButton(
-                  text: context.l10n.subscriptionGetAll,
-                  isLoading: isLoading,
-                  onTap: _purchaseBundle,
-                ),
-              ],
+                textAlign: TextAlign.center,
+              ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildBadge(String text, Color bg, Color fg) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(AppTheme.radius6),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w800,
+          color: fg,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGroupHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(top: AppTheme.spacing2, bottom: 2),
+      child: Text(
+        title.toUpperCase(),
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          color: context.accentColor.withValues(alpha: 0.7),
+          letterSpacing: 1.2,
+        ),
       ),
     );
   }
