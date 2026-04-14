@@ -1359,51 +1359,56 @@ class _UserDetailSheet extends StatelessWidget {
                       if (user.countryCode != null ||
                           user.currency != null) ...[
                         const SizedBox(height: AppTheme.spacing24),
-                        const _SectionHeader(title: 'REGION & PRICING'),
+                        _SectionHeader(
+                          title:
+                              context.l10n.adminPurchasesSectionRegionPricing,
+                        ),
                         if (user.countryCode != null)
                           _InfoTile(
                             icon: Icons.public,
-                            label: 'Country',
+                            label: context.l10n.adminPurchasesCountry,
                             value:
                                 '${user.countryFlag ?? ''} ${user.countryCode!}',
                           ),
                         if (user.currency != null)
                           _InfoTile(
                             icon: Icons.currency_exchange,
-                            label: 'Currency',
+                            label: context.l10n.adminPurchasesCurrency,
                             value: user.currency!,
                           ),
                         if (user.priceLocal != null && user.currency != null)
                           _InfoTile(
                             icon: Icons.local_offer,
-                            label: 'Price (local)',
+                            label: context.l10n.adminPurchasesPriceLocal,
                             value:
                                 '${user.currency!} ${user.priceLocal!.toStringAsFixed(2)}',
                           ),
                         if (user.priceUsd != null)
                           _InfoTile(
                             icon: Icons.attach_money,
-                            label: 'Price (USD)',
-                            value: 'US\$ ${user.priceUsd!.toStringAsFixed(2)}',
+                            label: context.l10n.adminPurchasesPriceUsd,
+                            value: context.l10n.adminPurchasesUsdValue(
+                              user.priceUsd!.toStringAsFixed(2),
+                            ),
                           ),
                         if (user.taxPercentage != null)
                           _InfoTile(
                             icon: Icons.receipt,
-                            label: 'Tax',
+                            label: context.l10n.adminPurchasesTax,
                             value:
                                 '${(user.taxPercentage! * 100).toStringAsFixed(1)}%',
                           ),
                         if (user.commissionPercentage != null)
                           _InfoTile(
                             icon: Icons.store,
-                            label: 'Store commission',
+                            label: context.l10n.adminPurchasesStoreCommission,
                             value:
                                 '${(user.commissionPercentage! * 100).toStringAsFixed(1)}%',
                           ),
                         if (user.offerCode != null)
                           _InfoTile(
                             icon: Icons.discount,
-                            label: 'Offer code',
+                            label: context.l10n.adminPurchasesOfferCode,
                             value: user.offerCode!,
                             onCopy: () =>
                                 _copyToClipboard(context, user.offerCode!),
@@ -1411,8 +1416,8 @@ class _UserDetailSheet extends StatelessWidget {
                         if (user.isFamilyShare)
                           _InfoTile(
                             icon: Icons.family_restroom,
-                            label: 'Family Share',
-                            value: 'Yes',
+                            label: context.l10n.adminPurchasesFamilyShare,
+                            value: context.l10n.adminPurchasesYes,
                           ),
                       ],
 

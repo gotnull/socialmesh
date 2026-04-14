@@ -48612,6 +48612,72 @@ abstract class AppLocalizations {
   /// **'Member Since'**
   String get adminPurchasesMemberSince;
 
+  /// Section header in the admin purchases detail view for regional pricing data
+  ///
+  /// In en, this message translates to:
+  /// **'Region & Pricing'**
+  String get adminPurchasesSectionRegionPricing;
+
+  /// Label for the country field in the admin purchases detail view
+  ///
+  /// In en, this message translates to:
+  /// **'Country'**
+  String get adminPurchasesCountry;
+
+  /// Label for the currency field in the admin purchases detail view
+  ///
+  /// In en, this message translates to:
+  /// **'Currency'**
+  String get adminPurchasesCurrency;
+
+  /// Label for the local currency price field in the admin purchases detail view
+  ///
+  /// In en, this message translates to:
+  /// **'Price (local)'**
+  String get adminPurchasesPriceLocal;
+
+  /// Label for the USD price field in the admin purchases detail view
+  ///
+  /// In en, this message translates to:
+  /// **'Price (USD)'**
+  String get adminPurchasesPriceUsd;
+
+  /// Formatted USD value in the admin purchases detail view. Parameters: {amount} = the numeric amount formatted with two decimals.
+  ///
+  /// In en, this message translates to:
+  /// **'US\$ {amount}'**
+  String adminPurchasesUsdValue(String amount);
+
+  /// Label for the tax field in the admin purchases detail view
+  ///
+  /// In en, this message translates to:
+  /// **'Tax'**
+  String get adminPurchasesTax;
+
+  /// Label for the app store commission field in the admin purchases detail view
+  ///
+  /// In en, this message translates to:
+  /// **'Store commission'**
+  String get adminPurchasesStoreCommission;
+
+  /// Label for the offer code field in the admin purchases detail view
+  ///
+  /// In en, this message translates to:
+  /// **'Offer code'**
+  String get adminPurchasesOfferCode;
+
+  /// Label for the family sharing field in the admin purchases detail view
+  ///
+  /// In en, this message translates to:
+  /// **'Family Share'**
+  String get adminPurchasesFamilyShare;
+
+  /// Affirmative value shown in the admin purchases detail view
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get adminPurchasesYes;
+
   /// Text displayed in admin panel
   ///
   /// In en, this message translates to:

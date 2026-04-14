@@ -37204,6 +37204,55 @@
     "@adminPurchasesMemberSince": {
         "description": "Text displayed in admin panel"
     },
+    "adminPurchasesSectionRegionPricing": "Region & Pricing",
+    "@adminPurchasesSectionRegionPricing": {
+        "description": "Section header in the admin purchases detail view for regional pricing data"
+    },
+    "adminPurchasesCountry": "Country",
+    "@adminPurchasesCountry": {
+        "description": "Label for the country field in the admin purchases detail view"
+    },
+    "adminPurchasesCurrency": "Currency",
+    "@adminPurchasesCurrency": {
+        "description": "Label for the currency field in the admin purchases detail view"
+    },
+    "adminPurchasesPriceLocal": "Price (local)",
+    "@adminPurchasesPriceLocal": {
+        "description": "Label for the local currency price field in the admin purchases detail view"
+    },
+    "adminPurchasesPriceUsd": "Price (USD)",
+    "@adminPurchasesPriceUsd": {
+        "description": "Label for the USD price field in the admin purchases detail view"
+    },
+    "adminPurchasesUsdValue": "US$ {amount}",
+    "@adminPurchasesUsdValue": {
+        "placeholders": {
+            "amount": {
+                "type": "String"
+            }
+        },
+        "description": "Formatted USD value in the admin purchases detail view. Parameters: {amount} = the numeric amount formatted with two decimals."
+    },
+    "adminPurchasesTax": "Tax",
+    "@adminPurchasesTax": {
+        "description": "Label for the tax field in the admin purchases detail view"
+    },
+    "adminPurchasesStoreCommission": "Store commission",
+    "@adminPurchasesStoreCommission": {
+        "description": "Label for the app store commission field in the admin purchases detail view"
+    },
+    "adminPurchasesOfferCode": "Offer code",
+    "@adminPurchasesOfferCode": {
+        "description": "Label for the offer code field in the admin purchases detail view"
+    },
+    "adminPurchasesFamilyShare": "Family Share",
+    "@adminPurchasesFamilyShare": {
+        "description": "Label for the family sharing field in the admin purchases detail view"
+    },
+    "adminPurchasesYes": "Yes",
+    "@adminPurchasesYes": {
+        "description": "Affirmative value shown in the admin purchases detail view"
+    },
     "adminPurchasesSectionPurchases": "Purchases",
     "@adminPurchasesSectionPurchases": {
         "description": "Text displayed in admin panel"

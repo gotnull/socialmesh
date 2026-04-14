@@ -27406,6 +27406,41 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminPurchasesMemberSince => 'Member Since';
 
   @override
+  String get adminPurchasesSectionRegionPricing => 'Region & Pricing';
+
+  @override
+  String get adminPurchasesCountry => 'Country';
+
+  @override
+  String get adminPurchasesCurrency => 'Currency';
+
+  @override
+  String get adminPurchasesPriceLocal => 'Price (local)';
+
+  @override
+  String get adminPurchasesPriceUsd => 'Price (USD)';
+
+  @override
+  String adminPurchasesUsdValue(String amount) {
+    return 'US\$ $amount';
+  }
+
+  @override
+  String get adminPurchasesTax => 'Tax';
+
+  @override
+  String get adminPurchasesStoreCommission => 'Store commission';
+
+  @override
+  String get adminPurchasesOfferCode => 'Offer code';
+
+  @override
+  String get adminPurchasesFamilyShare => 'Family Share';
+
+  @override
+  String get adminPurchasesYes => 'Yes';
+
+  @override
   String get adminPurchasesSectionPurchases => 'Purchases';
 
   @override
