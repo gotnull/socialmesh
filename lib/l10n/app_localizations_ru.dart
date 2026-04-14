@@ -20306,6 +20306,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get widgetBuilderSubmitButton => 'Submit';
 
   @override
+  String get widgetBuilderSubmitAnyway => 'Отправить всё равно';
+
+  @override
   String get widgetBuilderSubmitCancel => 'Cancel';
 
   @override

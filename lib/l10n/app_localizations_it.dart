@@ -20534,6 +20534,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get widgetBuilderSubmitButton => 'Invia';
 
   @override
+  String get widgetBuilderSubmitAnyway => 'Invia comunque';
+
+  @override
   String get widgetBuilderSubmitCancel => 'Annulla';
 
   @override

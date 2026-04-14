@@ -20513,6 +20513,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get widgetBuilderSubmitButton => 'Enviar';
 
   @override
+  String get widgetBuilderSubmitAnyway => 'Enviar mesmo assim';
+
+  @override
   String get widgetBuilderSubmitCancel => 'Cancelar';
 
   @override

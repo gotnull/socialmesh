@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lottie/lottie.dart';
 import '../../config/revenuecat_config.dart';
 import '../../core/l10n/l10n_extension.dart';
+import '../../core/constants.dart';
 import '../../core/logging.dart';
 import '../../providers/connectivity_providers.dart';
 import '../../core/safety/lifecycle_mixin.dart';
@@ -90,8 +91,10 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
               ],
 
               // Featured Translation Pack (standalone add-on)
-              _buildFeaturedTranslationCard(),
-              const SizedBox(height: AppTheme.spacing16),
+              if (AppFeatureFlags.isTranslationEnabled) ...[
+                _buildFeaturedTranslationCard(),
+                const SizedBox(height: AppTheme.spacing16),
+              ],
 
               // Complete Pack Bundle (prominent)
               _buildBundleCard(),
@@ -703,13 +706,14 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
                       context.l10n.subscriptionFallbackIfttt,
                   context.l10n.subscriptionAppIntegrations,
                 ),
-                _buildBundleFeature(
-                  Icons.translate,
-                  storeProducts[RevenueCatConfig.translationPackProductId]
-                          ?.title ??
-                      context.l10n.subscriptionFallbackTranslationPack,
-                  context.l10n.subscriptionTranslationWithAllowance,
-                ),
+                if (AppFeatureFlags.isTranslationEnabled)
+                  _buildBundleFeature(
+                    Icons.translate,
+                    storeProducts[RevenueCatConfig.translationPackProductId]
+                            ?.title ??
+                        context.l10n.subscriptionFallbackTranslationPack,
+                    context.l10n.subscriptionTranslationWithAllowance,
+                  ),
               ],
             ),
           ),

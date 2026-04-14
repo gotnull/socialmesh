@@ -1534,9 +1534,9 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
         AppLogging.marketplace(
           '⚠️ Duplicate detected - showing warning dialog',
         );
-        // Show duplicate warning
+        // Show duplicate warning - let user choose to submit anyway
         if (mounted) {
-          AppBottomSheet.show(
+          final submitAnyway = await AppBottomSheet.show<bool>(
             context: context,
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -1601,25 +1601,65 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
                   style: TextStyle(color: context.textTertiary, fontSize: 13),
                 ),
                 const SizedBox(height: AppTheme.spacing24),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      backgroundColor: context.accentColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.radius12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          side: BorderSide(color: context.textTertiary),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius12,
+                            ),
+                          ),
+                        ),
+                        child: Text(context.l10n.widgetBuilderOk),
                       ),
                     ),
-                    child: Text(context.l10n.widgetBuilderOk),
-                  ),
+                    const SizedBox(width: AppTheme.spacing12),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          backgroundColor: context.accentColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius12,
+                            ),
+                          ),
+                        ),
+                        child: Text(context.l10n.widgetBuilderSubmitAnyway),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           );
+
+          if (submitAnyway != true || !mounted) {
+            AppLogging.marketplace(
+              '↩️ User chose not to submit after duplicate warning',
+            );
+            return;
+          }
+
+          AppLogging.marketplace(
+            '⚡ User chose to submit anyway despite duplicate warning',
+          );
+
+          // Show loading indicator for submission
+          AppBottomSheet.show(
+            context: context,
+            isDismissible: false,
+            child: const Center(child: CircularProgressIndicator()),
+          );
+        } else {
+          return;
         }
-        return;
       }
 
       // Submit to marketplace

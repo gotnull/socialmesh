@@ -39875,6 +39875,10 @@
   "@widgetBuilderSubmitButton": {
     "description": "Submit button label"
   },
+  "widgetBuilderSubmitAnyway": "Enviar mesmo assim",
+  "@widgetBuilderSubmitAnyway": {
+    "description": "Submit anyway button on similar widget dialog"
+  },
   "widgetBuilderSubmitCancel": "Cancelar",
   "@widgetBuilderSubmitCancel": {
     "description": "Cancel button on submit dialog"

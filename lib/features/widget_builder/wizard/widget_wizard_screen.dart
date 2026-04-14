@@ -87,6 +87,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
 
   // Step 2: Name
   final _nameController = TextEditingController();
+  final _nameFocusNode = FocusNode();
+  final _outerScrollController = ScrollController();
 
   // Step 3: Data selection (or Actions for Quick Actions template)
   final Set<String> _selectedBindings = {};
@@ -168,6 +170,25 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
     _currentStep = isEditing ? 1 : 0;
     _pageController = PageController(initialPage: _currentStep);
     _initFromSchema();
+
+    // When the name field gains focus, scroll the outer CustomScrollView
+    // so the live preview is pushed off-screen. On smaller iPhones the preview
+    // eats so much vertical space that the keyboard overlaps the text field.
+    _nameFocusNode.addListener(_scrollToNameField);
+  }
+
+  void _scrollToNameField() {
+    if (!_outerScrollController.hasClients) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _outerScrollController.animateTo(
+        _nameFocusNode.hasFocus
+            ? _outerScrollController.position.maxScrollExtent
+            : 0.0,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
+    });
   }
 
   void _initFromSchema() {
@@ -888,67 +909,73 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
   void dispose() {
     _pageController.dispose();
     _nameController.dispose();
+    _nameFocusNode.dispose();
+    _outerScrollController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.initialSchema != null;
-    return GlassScaffold(
-      title: _steps[_currentStep].title,
-      leading: _currentStep > 0
-          ? IconButton(
-              icon: Icon(Icons.arrow_back, color: context.accentColor),
-              onPressed: _goBack,
-            )
-          : null,
-      actions: [
-        IconButton(icon: const Icon(Icons.close), onPressed: _handleClose),
-      ],
-      slivers: [
-        // Progress indicator
-        SliverToBoxAdapter(child: _buildProgressIndicator()),
-        // Step subtitle
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-            child: Text(
-              _steps[_currentStep].subtitle,
-              style: TextStyle(color: context.textSecondary, fontSize: 14),
-              textAlign: TextAlign.center,
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: GlassScaffold(
+        controller: _outerScrollController,
+        title: _steps[_currentStep].title,
+        leading: _currentStep > 0
+            ? IconButton(
+                icon: Icon(Icons.arrow_back, color: context.accentColor),
+                onPressed: _goBack,
+              )
+            : null,
+        actions: [
+          IconButton(icon: const Icon(Icons.close), onPressed: _handleClose),
+        ],
+        slivers: [
+          // Progress indicator
+          SliverToBoxAdapter(child: _buildProgressIndicator()),
+          // Step subtitle
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+              child: Text(
+                _steps[_currentStep].subtitle,
+                style: TextStyle(color: context.textSecondary, fontSize: 14),
+                textAlign: TextAlign.center,
+              ),
             ),
           ),
-        ),
-        // Live preview (shown after step 1)
-        if (_currentStep > 0)
-          SliverToBoxAdapter(child: _buildLivePreviewPanel()),
-        // Page content + Bottom actions
-        SliverFillRemaining(
-          hasScrollBody: true,
-          child: Column(
-            children: [
-              Expanded(
-                child: PageView(
-                  controller: _pageController,
-                  physics: const NeverScrollableScrollPhysics(),
-                  onPageChanged: (index) =>
-                      setState(() => _currentStep = index),
-                  children: [
-                    _buildTemplateStep(),
-                    _buildNameStep(),
-                    _selectedTemplate?.id == 'actions'
-                        ? _buildActionsStep()
-                        : _buildDataStep(),
-                    _buildAppearanceStep(),
-                  ],
+          // Live preview (shown after step 1)
+          if (_currentStep > 0)
+            SliverToBoxAdapter(child: _buildLivePreviewPanel()),
+          // Page content + Bottom actions
+          SliverFillRemaining(
+            hasScrollBody: true,
+            child: Column(
+              children: [
+                Expanded(
+                  child: PageView(
+                    controller: _pageController,
+                    physics: const NeverScrollableScrollPhysics(),
+                    onPageChanged: (index) =>
+                        setState(() => _currentStep = index),
+                    children: [
+                      _buildTemplateStep(),
+                      _buildNameStep(),
+                      _selectedTemplate?.id == 'actions'
+                          ? _buildActionsStep()
+                          : _buildDataStep(),
+                      _buildAppearanceStep(),
+                    ],
+                  ),
                 ),
-              ),
-              // Bottom actions
-              _buildBottomActions(isEditing),
-            ],
+                // Bottom actions
+                _buildBottomActions(isEditing),
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -1331,6 +1358,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
         TextField(
           maxLength: 100,
           controller: _nameController,
+          focusNode: _nameFocusNode,
           style: TextStyle(color: context.textPrimary, fontSize: 16),
           decoration: InputDecoration(
             hintText: context.l10n.widgetBuilderNameHint,

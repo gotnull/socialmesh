@@ -35825,6 +35825,12 @@ abstract class AppLocalizations {
   /// **'Submit'**
   String get widgetBuilderSubmitButton;
 
+  /// Submit anyway button on similar widget dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Submit Anyway'**
+  String get widgetBuilderSubmitAnyway;
+
   /// Cancel button on submit dialog
   ///
   /// In en, this message translates to:
