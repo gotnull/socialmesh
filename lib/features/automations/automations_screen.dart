@@ -1165,7 +1165,7 @@ class _AddAutomationSheet extends ConsumerWidget {
           height: 110,
           child: EdgeFade.horizontal(
             fadeSize: 24,
-            fadeColor: context.background,
+            fadeColor: context.surface,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 4),
