@@ -8125,7 +8125,7 @@ abstract class AppLocalizations {
   /// Text displayed in developer tools
   ///
   /// In en, this message translates to:
-  /// **'Purchases are completed on the seller\'s official store. Socialmesh does not handle payment, shipping, warranty, or returns.'**
+  /// **'Purchases are completed on the seller\'s official store. Socialmesh may earn a small commission from purchases made through these links. Socialmesh does not handle payment, shipping, warranty, or returns.'**
   String get deviceShopMarketplaceDisclaimer;
 
   /// Title for the developer tools screen
@@ -22238,7 +22238,7 @@ abstract class AppLocalizations {
   /// UI text: product detail purchase disclaimer
   ///
   /// In en, this message translates to:
-  /// **'Purchases completed on seller\'s official store'**
+  /// **'Purchases completed on seller\'s official store · Socialmesh may earn a commission'**
   String get productDetailPurchaseDisclaimer;
 
   /// Screen or section title
@@ -22348,6 +22348,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sign in to save favorites'**
   String get productDetailSignInFavorites;
+
+  /// UI text: product detail sign in to write review
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to write a review'**
+  String get productDetailSignInReview;
 
   /// UI text: product detail sold count Parameters: {count} = numeric count.
   ///

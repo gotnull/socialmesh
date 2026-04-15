@@ -7,10 +7,13 @@ import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/gradient_border_container.dart';
 import '../models/shop_models.dart';
 import '../providers/device_shop_providers.dart';
-import 'product_detail_screen.dart';
+import '../widgets/device_shop_components.dart';
+import '../widgets/product_card.dart';
 
 /// Screen showing all products in a specific category
 class CategoryProductsScreen extends ConsumerStatefulWidget {
@@ -62,26 +65,37 @@ class _CategoryProductsScreenState
         ),
       ],
       slivers: [
+        const SliverToBoxAdapter(child: SizedBox(height: AppTheme.spacing8)),
         productsAsync.when(
-          loading: () => const SliverFillRemaining(
-            child: Center(child: CircularProgressIndicator()),
+          loading: () => SliverPadding(
+            padding: const EdgeInsets.all(AppTheme.spacing16),
+            sliver: SliverGrid(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 0.52,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+              ),
+              delegate: SliverChildBuilderDelegate(
+                (_, _) => const ProductCardSkeleton(),
+                childCount: 4,
+              ),
+            ),
           ),
           error: (e, _) => SliverFillRemaining(
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, color: AppTheme.errorRed, size: 48),
-                  const SizedBox(height: AppTheme.spacing16),
-                  Text(
-                    context.l10n.categoryProductsErrorLoading,
-                    style: TextStyle(color: context.textPrimary),
-                  ),
-                  TextButton(
-                    onPressed: () => ref.invalidate(lilygoProductsProvider),
-                    child: Text(context.l10n.categoryProductsRetry),
-                  ),
-                ],
+            hasScrollBody: false,
+            child: Padding(
+              padding: const EdgeInsets.all(AppTheme.spacing24),
+              child: Center(
+                child: DeviceShopStatePanel(
+                  icon: Icons.cloud_off,
+                  title: context.l10n.categoryProductsErrorLoading,
+                  description: context.l10n.deviceShopTryAgain,
+                  actionLabel: context.l10n.categoryProductsRetry,
+                  actionIcon: Icons.refresh,
+                  onAction: () => ref.invalidate(lilygoProductsProvider),
+                  compact: true,
+                ),
               ),
             ),
           ),
@@ -91,36 +105,21 @@ class _CategoryProductsScreenState
 
             if (sorted.isEmpty) {
               return SliverFillRemaining(
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        _categoryIcon,
-                        color: context.textTertiary,
-                        size: 64,
-                      ),
-                      SizedBox(height: AppTheme.spacing16),
-                      Text(
-                        context.l10n.categoryProductsNotFound,
-                        style: TextStyle(
-                          color: context.textPrimary,
-                          fontSize: 18,
-                        ),
-                      ),
-                      const SizedBox(height: AppTheme.spacing8),
-                      Text(
-                        context.l10n.categoryProductsTryFilters,
-                        style: TextStyle(color: context.textSecondary),
-                      ),
-                      if (_hasActiveFilters)
-                        TextButton(
-                          onPressed: _clearFilters,
-                          child: Text(
-                            context.l10n.categoryProductsClearFilters,
-                          ),
-                        ),
-                    ],
+                hasScrollBody: false,
+                child: Padding(
+                  padding: const EdgeInsets.all(AppTheme.spacing24),
+                  child: Center(
+                    child: DeviceShopStatePanel(
+                      icon: _categoryIcon,
+                      title: context.l10n.categoryProductsNotFound,
+                      description: context.l10n.categoryProductsTryFilters,
+                      actionLabel: _hasActiveFilters
+                          ? context.l10n.categoryProductsClearFilters
+                          : null,
+                      actionIcon: _hasActiveFilters ? Icons.tune : null,
+                      onAction: _hasActiveFilters ? _clearFilters : null,
+                      compact: true,
+                    ),
                   ),
                 ),
               );
@@ -128,51 +127,62 @@ class _CategoryProductsScreenState
 
             return SliverMainAxisGroup(
               slivers: [
-                // Active filters chip
                 if (_hasActiveFilters)
                   SliverToBoxAdapter(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppTheme.spacing16,
+                        AppTheme.spacing0,
+                        AppTheme.spacing16,
+                        AppTheme.spacing12,
                       ),
-                      child: Row(
-                        children: [
-                          Text(
-                            context.l10n.categoryProductsResultCount(
-                              sorted.length,
+                      child: GradientBorderContainer(
+                        borderRadius: AppTheme.radius18,
+                        borderWidth: 1,
+                        accentOpacity: 0.24,
+                        padding: const EdgeInsets.all(AppTheme.spacing14),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                context.l10n.categoryProductsResultCount(
+                                  sorted.length,
+                                ),
+                                style: TextStyle(
+                                  color: context.textSecondary,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ),
-                            style: TextStyle(color: context.textSecondary),
-                          ),
-                          const Spacer(),
-                          TextButton.icon(
-                            onPressed: _clearFilters,
-                            icon: Icon(Icons.clear, size: 18),
-                            label: Text(
-                              context.l10n.categoryProductsClearFilters,
+                            DeviceShopSecondaryButton(
+                              label: context.l10n.categoryProductsClearFilters,
+                              icon: Icons.tune,
+                              onTap: _clearFilters,
                             ),
-                            style: TextButton.styleFrom(
-                              foregroundColor: context.textSecondary,
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
 
-                // Product grid
                 SliverPadding(
-                  padding: const EdgeInsets.all(AppTheme.spacing12),
+                  padding: const EdgeInsets.fromLTRB(
+                    AppTheme.spacing16,
+                    AppTheme.spacing0,
+                    AppTheme.spacing16,
+                    AppTheme.spacing16,
+                  ),
                   sliver: SliverGrid(
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
-                          childAspectRatio: 0.65,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
+                          childAspectRatio: 0.52,
+                          crossAxisSpacing: AppTheme.spacing12,
+                          mainAxisSpacing: AppTheme.spacing12,
                         ),
                     delegate: SliverChildBuilderDelegate((context, index) {
-                      return _ProductGridCard(product: sorted[index]);
+                      return ProductCard(product: sorted[index]);
                     }, childCount: sorted.length),
                   ),
                 ),
@@ -273,379 +283,206 @@ class _CategoryProductsScreenState
   }
 
   void _showFilterSheet(BuildContext context) {
-    showModalBottomSheet(
+    AppBottomSheet.showScrollable<void>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: context.card,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      title: context.l10n.categoryProductsFiltersTitle,
+      initialChildSize: 0.76,
+      footer: SizedBox(
+        width: double.infinity,
+        child: DeviceShopPrimaryButton(
+          label: context.l10n.categoryProductsApplyFilters,
+          icon: Icons.tune,
+          onTap: () => Navigator.pop(context),
+          animate: true,
+        ),
       ),
-      builder: (context) => StatefulBuilder(
+      builder: (scrollController) => StatefulBuilder(
         builder: (context, setSheetState) {
-          return DraggableScrollableSheet(
-            initialChildSize: 0.7,
-            minChildSize: 0.5,
-            maxChildSize: 0.9,
-            expand: false,
-            builder: (context, scrollController) {
-              return SingleChildScrollView(
-                controller: scrollController,
-                padding: const EdgeInsets.all(AppTheme.spacing20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          void sync(VoidCallback updates) {
+            updates();
+            setSheetState(() {});
+            setState(() {});
+          }
+
+          return SingleChildScrollView(
+            controller: scrollController,
+            padding: const EdgeInsets.fromLTRB(
+              AppTheme.spacing24,
+              AppTheme.spacing0,
+              AppTheme.spacing24,
+              AppTheme.spacing8,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    // Handle
-                    Center(
-                      child: Container(
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: context.border,
-                          borderRadius: BorderRadius.circular(AppTheme.radius2),
+                    Expanded(
+                      child: Text(
+                        context.l10n.categoryProductsResultCount(
+                          _sortProducts(
+                            _filterProducts(
+                              ref
+                                      .read(
+                                        lilygoCategoryProductsProvider(
+                                          widget.category,
+                                        ),
+                                      )
+                                      .value ??
+                                  const [],
+                            ),
+                          ).length,
+                        ),
+                        style: TextStyle(
+                          color: context.textSecondary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
-                    const SizedBox(height: AppTheme.spacing20),
-
-                    // Title
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          context.l10n.categoryProductsFiltersTitle,
-                          style: TextStyle(
-                            color: context.textPrimary,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            setSheetState(() {
-                              _inStockOnly = false;
-                              _priceRange = const RangeValues(0, 1000);
-                              _selectedBands = [];
-                            });
-                          },
-                          child: Text(context.l10n.categoryProductsReset),
-                        ),
-                      ],
+                    DeviceShopSecondaryButton(
+                      label: context.l10n.categoryProductsReset,
+                      icon: Icons.refresh,
+                      onTap: () => sync(() {
+                        _inStockOnly = false;
+                        _priceRange = const RangeValues(0, 1000);
+                        _selectedBands = [];
+                      }),
                     ),
-                    const SizedBox(height: AppTheme.spacing24),
-
-                    // In Stock Only
-                    ListTile(
-                      title: Text(
-                        context.l10n.categoryProductsInStockOnly,
-                        style: TextStyle(color: context.textPrimary),
+                  ],
+                ),
+                const SizedBox(height: AppTheme.spacing16),
+                GradientBorderContainer(
+                  borderRadius: AppTheme.radius18,
+                  borderWidth: 1,
+                  accentOpacity: 0.22,
+                  padding: const EdgeInsets.all(AppTheme.spacing16),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              context.l10n.categoryProductsInStockOnly,
+                              style: TextStyle(
+                                color: context.textPrimary,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: AppTheme.spacing4),
+                            Text(
+                              context.l10n.shopFavoritesInStock,
+                              style: TextStyle(
+                                color: context.textSecondary,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      trailing: ThemedSwitch(
+                      ThemedSwitch(
                         value: _inStockOnly,
-                        onChanged: (v) {
-                          setSheetState(() => _inStockOnly = v);
-                          setState(() => _inStockOnly = v);
-                        },
+                        onChanged: (value) => sync(() => _inStockOnly = value),
                       ),
-                    ),
-                    SizedBox(height: AppTheme.spacing16),
-
-                    // Price Range
-                    Text(
-                      context.l10n.categoryProductsPriceRange,
-                      style: TextStyle(
-                        color: context.textPrimary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: AppTheme.spacing8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          '\$${_priceRange.start.round()}',
-                          style: TextStyle(color: context.textSecondary),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spacing16),
+                GradientBorderContainer(
+                  borderRadius: AppTheme.radius18,
+                  borderWidth: 1,
+                  accentOpacity: 0.22,
+                  padding: const EdgeInsets.all(AppTheme.spacing16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.l10n.categoryProductsPriceRange,
+                        style: TextStyle(
+                          color: context.textPrimary,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
                         ),
-                        Text(
-                          '\$${_priceRange.end.round()}',
-                          style: TextStyle(color: context.textSecondary),
-                        ),
-                      ],
-                    ),
-                    RangeSlider(
-                      values: _priceRange,
-                      min: 0,
-                      max: 1000,
-                      divisions: 20,
-                      activeColor: context.accentColor,
-                      onChanged: (v) {
-                        setSheetState(() => _priceRange = v);
-                        setState(() => _priceRange = v);
-                      },
-                    ),
-                    const SizedBox(height: AppTheme.spacing24),
-
-                    // Frequency Bands
-                    Text(
-                      context.l10n.categoryProductsFrequencyBands,
-                      style: TextStyle(
-                        color: context.textPrimary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
                       ),
-                    ),
-                    const SizedBox(height: AppTheme.spacing12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: FrequencyBand.values.map((band) {
-                        final isSelected = _selectedBands.contains(band);
-                        return FilterChip(
-                          label: Text(band.displayLabel(context.l10n)),
-                          selected: isSelected,
-                          onSelected: (selected) {
-                            setSheetState(() {
-                              if (selected) {
-                                _selectedBands = [..._selectedBands, band];
-                              } else {
+                      const SizedBox(height: AppTheme.spacing12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '\$${_priceRange.start.round()}',
+                            style: TextStyle(
+                              color: context.textSecondary,
+                              fontSize: 13,
+                            ),
+                          ),
+                          Text(
+                            '\$${_priceRange.end.round()}',
+                            style: TextStyle(
+                              color: context.textSecondary,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                      RangeSlider(
+                        values: _priceRange,
+                        min: 0,
+                        max: 1000,
+                        divisions: 20,
+                        activeColor: context.accentColor,
+                        onChanged: (value) => sync(() => _priceRange = value),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spacing16),
+                GradientBorderContainer(
+                  borderRadius: AppTheme.radius18,
+                  borderWidth: 1,
+                  accentOpacity: 0.22,
+                  padding: const EdgeInsets.all(AppTheme.spacing16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.l10n.categoryProductsFrequencyBands,
+                        style: TextStyle(
+                          color: context.textPrimary,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: AppTheme.spacing12),
+                      Wrap(
+                        spacing: AppTheme.spacing8,
+                        runSpacing: AppTheme.spacing8,
+                        children: FrequencyBand.values.map((band) {
+                          final isSelected = _selectedBands.contains(band);
+                          return DeviceShopChoiceChip(
+                            label: band.displayLabel(context.l10n),
+                            icon: Icons.radio,
+                            isSelected: isSelected,
+                            onTap: () => sync(() {
+                              if (isSelected) {
                                 _selectedBands = _selectedBands
                                     .where((b) => b != band)
                                     .toList();
+                              } else {
+                                _selectedBands = [..._selectedBands, band];
                               }
-                            });
-                            setState(() {});
-                          },
-                          selectedColor: context.accentColor.withValues(
-                            alpha: 0.3,
-                          ),
-                          checkmarkColor: context.accentColor,
-                          backgroundColor: context.background,
-                          labelStyle: TextStyle(
-                            color: isSelected
-                                ? context.accentColor
-                                : context.textSecondary,
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                    SizedBox(height: AppTheme.spacing32),
-
-                    // Apply button
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () => Navigator.pop(context),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: context.accentColor,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                              AppTheme.radius12,
-                            ),
-                          ),
-                        ),
-                        child: Text(
-                          context.l10n.categoryProductsApplyFilters,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    // Bottom safe area
-                    SizedBox(
-                      height: MediaQuery.of(context).padding.bottom + 16,
-                    ),
-                  ],
-                ),
-              );
-            },
-          );
-        },
-      ),
-    );
-  }
-}
-
-/// Product card for grid view
-class _ProductGridCard extends ConsumerWidget {
-  final ShopProduct product;
-
-  const _ProductGridCard({required this.product});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Material(
-      color: context.card,
-      borderRadius: BorderRadius.circular(AppTheme.radius12),
-      child: InkWell(
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ProductDetailScreen(productId: product.id),
-          ),
-        ),
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Image
-            Expanded(
-              flex: 3,
-              child: Stack(
-                children: [
-                  ClipRRect(
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(12),
-                    ),
-                    child: product.primaryImage != null
-                        ? Image.network(
-                            product.primaryImage!,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                _placeholder(context),
-                          )
-                        : _placeholder(context),
-                  ),
-                  if (product.isOnSale)
-                    Positioned(
-                      top: 8,
-                      left: 8,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppTheme.errorRed,
-                          borderRadius: BorderRadius.circular(AppTheme.radius4),
-                        ),
-                        child: Text(
-                          '-${product.discountPercent}%',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  if (!product.isInStock)
-                    Positioned.fill(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.black54,
-                          borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(12),
-                          ),
-                        ),
-                        child: Center(
-                          child: Text(
-                            context.l10n.categoryProductsOutOfStock,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 11,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-
-            // Details
-            Expanded(
-              flex: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(AppTheme.spacing10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      product.name,
-                      style: TextStyle(
-                        color: context.textPrimary,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: AppTheme.spacing4),
-                    Text(
-                      product.sellerName,
-                      style: TextStyle(
-                        color: context.textSecondary,
-                        fontSize: 11,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const Spacer(),
-                    Row(
-                      children: [
-                        Text(
-                          product.formattedPrice(context.l10n),
-                          style: TextStyle(
-                            color: context.accentColor,
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        if (product.isOnSale) ...[
-                          SizedBox(width: AppTheme.spacing4),
-                          Text(
-                            product.formattedComparePrice!,
-                            style: TextStyle(
-                              color: context.textTertiary,
-                              fontSize: 10,
-                              decoration: TextDecoration.lineThrough,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                    if (product.reviewCount > 0) ...[
-                      SizedBox(height: AppTheme.spacing4),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.star,
-                            color: AppTheme.warningYellow,
-                            size: 12,
-                          ),
-                          const SizedBox(width: AppTheme.spacing2),
-                          Text(
-                            '${product.rating.toStringAsFixed(1)} (${product.reviewCount})',
-                            style: TextStyle(
-                              color: context.textTertiary,
-                              fontSize: 10,
-                            ),
-                          ),
-                        ],
+                            }),
+                          );
+                        }).toList(),
                       ),
                     ],
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _placeholder(BuildContext context) {
-    return Container(
-      color: context.background,
-      child: Center(
-        child: Icon(Icons.router, color: context.textTertiary, size: 40),
+          );
+        },
       ),
     );
   }

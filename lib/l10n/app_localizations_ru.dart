@@ -4559,7 +4559,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get deviceShopMarketplaceDisclaimer =>
-      'Purchases are completed on the seller\'s official store. Socialmesh does not handle payment, shipping, warranty, or returns.';
+      'Purchases are completed on the seller\'s official store. Socialmesh may earn a small commission from purchases made through these links. Socialmesh does not handle payment, shipping, warranty, or returns.';
 
   @override
   String get deviceShopMarketplaceInfoTitle => 'Marketplace Information';
@@ -12675,7 +12675,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get productDetailPurchaseDisclaimer =>
-      'Purchases completed on seller\'s official store';
+      'Purchases completed on seller\'s official store · Socialmesh may earn a commission';
 
   @override
   String get productDetailPurchaseTitle => 'Purchase';
@@ -12743,6 +12743,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get productDetailSignInFavorites => 'Sign in to save favorites';
+
+  @override
+  String get productDetailSignInReview => 'Sign in to write a review';
 
   @override
   String productDetailSoldCount(int count) {

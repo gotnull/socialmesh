@@ -17,6 +17,7 @@ class LilygoApiService {
   static const String _tag = '[LilygoApi]';
   static const String _baseUrl = 'https://lilygo.cc';
   static const String _productsEndpoint = '/products.json';
+  static const String _affiliateRef = 'nLXfLe4gwl';
   static const Duration _httpTimeout = Duration(seconds: 15);
 
   /// Meshtastic-related tags to filter products
@@ -405,7 +406,7 @@ class LilygoApiService {
       createdAt: product.createdAt,
       updatedAt: product.updatedAt,
       isMeshtasticCompatible: true,
-      purchaseUrl: '$_baseUrl/products/${product.handle}',
+      purchaseUrl: '$_baseUrl/products/${product.handle}?bg_ref=$_affiliateRef',
       vendorVerified: true,
     );
 

@@ -284,6 +284,18 @@ class AppFeatureFlags {
     }
   }
 
+  /// Whether the Device Shop feature is enabled.
+  /// Set `DEVICE_SHOP_ENABLED=true` in `.env` to enable.
+  /// Default: false — the device shop is hidden unless explicitly enabled.
+  static bool get isDeviceShopEnabled {
+    try {
+      final raw = dotenv.env['DEVICE_SHOP_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Whether the message timeline / week view is enabled.
   /// Set `MESSAGE_TIMELINE_ENABLED=true` in `.env` to enable.
   /// Default: false — the experimental message timeline is hidden.

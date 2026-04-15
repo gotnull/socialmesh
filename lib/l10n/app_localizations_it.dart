@@ -4611,7 +4611,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get deviceShopMarketplaceDisclaimer =>
-      'Gli acquisti vengono completati sullo store ufficiale del venditore. Socialmesh non gestisce pagamenti, spedizioni, garanzie o resi.';
+      'Gli acquisti vengono completati sullo store ufficiale del venditore. Socialmesh potrebbe ricevere una piccola commissione dagli acquisti effettuati tramite questi link. Socialmesh non gestisce pagamenti, spedizioni, garanzie o resi.';
 
   @override
   String get deviceShopMarketplaceInfoTitle => 'Informazioni Marketplace';
@@ -12794,7 +12794,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get productDetailPurchaseDisclaimer =>
-      'Acquisti completati sul negozio ufficiale del venditore';
+      'Acquisti completati sul negozio ufficiale del venditore · Socialmesh potrebbe ricevere una commissione';
 
   @override
   String get productDetailPurchaseTitle => 'Acquisto';
@@ -12862,6 +12862,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get productDetailSignInFavorites => 'Accedi per salvare i preferiti';
+
+  @override
+  String get productDetailSignInReview => 'Sign in to write a review';
 
   @override
   String productDetailSoldCount(int count) {

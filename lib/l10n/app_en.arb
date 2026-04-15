@@ -5993,7 +5993,7 @@
     "@deviceShopHelpTooltip": {
         "description": "Tooltip in developer tools"
     },
-    "deviceShopMarketplaceDisclaimer": "Purchases are completed on the seller's official store. Socialmesh does not handle payment, shipping, warranty, or returns.",
+    "deviceShopMarketplaceDisclaimer": "Purchases are completed on the seller's official store. Socialmesh may earn a small commission from purchases made through these links. Socialmesh does not handle payment, shipping, warranty, or returns.",
     "@deviceShopMarketplaceDisclaimer": {
         "description": "Text displayed in developer tools"
     },
@@ -17465,7 +17465,7 @@
     "@productDetailOutOfStockButton": {
         "description": "Button or action label"
     },
-    "productDetailPurchaseDisclaimer": "Purchases completed on seller's official store",
+    "productDetailPurchaseDisclaimer": "Purchases completed on seller's official store · Socialmesh may earn a commission",
     "@productDetailPurchaseDisclaimer": {
         "description": "UI text: product detail purchase disclaimer"
     },
@@ -17565,6 +17565,10 @@
     "productDetailSignInFavorites": "Sign in to save favorites",
     "@productDetailSignInFavorites": {
         "description": "UI text: product detail sign in favorites"
+    },
+    "productDetailSignInReview": "Sign in to write a review",
+    "@productDetailSignInReview": {
+        "description": "UI text: product detail sign in to write review"
     },
     "productDetailSoldCount": "{count} sold",
     "@productDetailSoldCount": {

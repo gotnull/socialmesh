@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:socialmesh/features/device_shop/models/shop_models.dart';
 import 'package:socialmesh/features/device_shop/providers/device_shop_providers.dart';
+import 'package:socialmesh/providers/connectivity_providers.dart';
 import 'package:socialmesh/features/device_shop/services/device_shop_event_logger.dart';
 import 'package:socialmesh/features/device_shop/screens/device_shop_screen.dart';
 import 'package:socialmesh/l10n/app_localizations.dart';
@@ -38,13 +39,39 @@ void main() {
           joinedAt: DateTime(2024, 1, 1),
         ),
       ];
+      final mockProducts = [
+        ShopProduct(
+          id: 'lilygo_tdeck',
+          sellerId: 'lilygo',
+          sellerName: 'LilyGO',
+          name: 'T-Deck',
+          description: 'Meshtastic handheld device',
+          category: DeviceCategory.node,
+          price: 149.99,
+          currency: 'USD',
+          isInStock: true,
+          isActive: true,
+          isFeatured: true,
+          createdAt: DateTime(2024, 1, 1),
+          updatedAt: DateTime(2024, 1, 2),
+        ),
+      ];
 
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            lilygoProductsProvider.overrideWith((ref) async => mockProducts),
+            lilygoFeaturedProductsProvider.overrideWith(
+              (ref) => AsyncValue.data(mockProducts),
+            ),
+            lilygoTrendingProductsProvider.overrideWith(
+              (ref) => AsyncValue.data(mockProducts),
+            ),
+            productTapCountsProvider.overrideWith((ref) async => {}),
             officialPartnersProvider.overrideWith((ref) {
               return AsyncValue.data(mockSellers);
             }),
+            isOnlineProvider.overrideWith((ref) => true),
             deviceShopEventLoggerProvider.overrideWithValue(fakeLogger),
           ],
           child: MaterialApp(
@@ -58,9 +85,6 @@ void main() {
       // Pump past AutoScrollText timer (1 second) to avoid pending timer issues
       await tester.pump();
       await tester.pump(const Duration(seconds: 2));
-
-      // Look for "Official Partners" section header
-      expect(find.text('Official Partners'), findsOneWidget);
 
       // Should only find LilyGO
       expect(find.text('LilyGO'), findsWidgets);
@@ -84,11 +108,18 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            shopProductsProvider.overrideWith((ref) => Stream.value([])),
-            featuredProductsProvider.overrideWith((ref) => Stream.value([])),
+            lilygoProductsProvider.overrideWith((ref) async => []),
+            lilygoFeaturedProductsProvider.overrideWith(
+              (ref) => const AsyncValue.data([]),
+            ),
+            lilygoTrendingProductsProvider.overrideWith(
+              (ref) => const AsyncValue.data([]),
+            ),
+            productTapCountsProvider.overrideWith((ref) async => {}),
             officialPartnersProvider.overrideWith(
               (ref) => const AsyncValue.data([]),
             ),
+            isOnlineProvider.overrideWith((ref) => true),
             deviceShopEventLoggerProvider.overrideWithValue(fakeLogger),
           ],
           child: MaterialApp(
@@ -103,10 +134,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(seconds: 2));
 
-      // Check for marketplace information
-      expect(find.text('Marketplace Information'), findsOneWidget);
-
-      // Check for disclaimer text (combined in one text widget)
+      // Check for disclaimer text in the premium hero section
       expect(
         find.textContaining(
           'Purchases are completed on the seller\'s official store',

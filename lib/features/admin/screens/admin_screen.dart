@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/constants.dart';
 import '../../../providers/social_providers.dart';
 import '../../device_shop/screens/device_shop_screen.dart';
 import '../../device_shop/screens/shop_admin_dashboard.dart';
@@ -40,22 +41,24 @@ class AdminScreen extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
-              _SectionHeader(title: context.l10n.adminPanelSectionShop),
-              _AdminTile(
-                icon: Icons.dashboard_customize,
-                label: context.l10n.adminPanelShopDashboard,
-                subtitle: context.l10n.adminPanelShopDashboardSub,
-                iconColor: Colors.purple.shade400,
-                onTap: () => _navigateTo(context, const ShopAdminDashboard()),
-              ),
-              _AdminTile(
-                icon: Icons.store,
-                label: context.l10n.adminPanelDeviceShop,
-                subtitle: context.l10n.adminPanelDeviceShopSub,
-                iconColor: Colors.teal.shade400,
-                onTap: () => _navigateTo(context, const DeviceShopScreen()),
-              ),
-              const SizedBox(height: AppTheme.spacing16),
+              if (AppFeatureFlags.isDeviceShopEnabled) ...[
+                _SectionHeader(title: context.l10n.adminPanelSectionShop),
+                _AdminTile(
+                  icon: Icons.dashboard_customize,
+                  label: context.l10n.adminPanelShopDashboard,
+                  subtitle: context.l10n.adminPanelShopDashboardSub,
+                  iconColor: Colors.purple.shade400,
+                  onTap: () => _navigateTo(context, const ShopAdminDashboard()),
+                ),
+                _AdminTile(
+                  icon: Icons.store,
+                  label: context.l10n.adminPanelDeviceShop,
+                  subtitle: context.l10n.adminPanelDeviceShopSub,
+                  iconColor: Colors.teal.shade400,
+                  onTap: () => _navigateTo(context, const DeviceShopScreen()),
+                ),
+                const SizedBox(height: AppTheme.spacing16),
+              ],
               _SectionHeader(title: context.l10n.adminPanelSectionModeration),
               _AdminTile(
                 icon: Icons.bug_report,

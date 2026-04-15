@@ -10791,7 +10791,7 @@
   "@deviceShopHelpTooltip": {
     "description": "Tooltip in developer tools"
   },
-  "deviceShopMarketplaceDisclaimer": "As compras são concluídas na loja oficial do vendedor. Socialmesh não gerencia pagamento, envio, garantia ou devoluções.",
+  "deviceShopMarketplaceDisclaimer": "As compras são concluídas na loja oficial do vendedor. Socialmesh pode receber uma pequena comissão pelas compras feitas através destes links. Socialmesh não gerencia pagamento, envio, garantia ou devoluções.",
   "@deviceShopMarketplaceDisclaimer": {
     "description": "Text displayed in developer tools"
   },
@@ -27383,7 +27383,7 @@
   "@productDetailOutOfStockButton": {
     "description": "Button or action label"
   },
-  "productDetailPurchaseDisclaimer": "Compras realizadas na loja oficial do vendedor",
+  "productDetailPurchaseDisclaimer": "Compras realizadas na loja oficial do vendedor · Socialmesh pode receber uma comissão",
   "@productDetailPurchaseDisclaimer": {
     "description": "UI text: product detail purchase disclaimer"
   },

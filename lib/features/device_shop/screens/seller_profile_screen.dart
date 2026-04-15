@@ -18,7 +18,8 @@ import '../../../core/widgets/auto_scroll_text.dart';
 import '../../../core/widgets/user_avatar.dart';
 import '../models/shop_models.dart';
 import '../providers/device_shop_providers.dart';
-import 'device_shop_screen.dart';
+import '../widgets/device_shop_components.dart';
+import '../widgets/product_card.dart';
 
 /// Seller profile screen showing seller info and their products
 class SellerProfileScreen extends ConsumerStatefulWidget {
@@ -289,27 +290,16 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
 
                     if (filteredProducts.isEmpty) {
                       return SliverToBoxAdapter(
-                        child: Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(AppTheme.spacing32),
-                            child: Column(
-                              children: [
-                                Icon(
-                                  Icons.search_off,
-                                  color: context.textTertiary,
-                                  size: 48,
-                                ),
-                                SizedBox(height: AppTheme.spacing12),
-                                Text(
-                                  context.l10n.sellerProfileNoSearchResults(
-                                    _searchQuery,
-                                  ),
-                                  style: TextStyle(
-                                    color: context.textSecondary,
-                                  ),
-                                ),
-                              ],
+                        child: Padding(
+                          padding: const EdgeInsets.all(AppTheme.spacing24),
+                          child: DeviceShopStatePanel(
+                            compact: true,
+                            icon: Icons.search_off,
+                            title: context.l10n.sellerProfileNoSearchResults(
+                              _searchQuery,
                             ),
+                            description:
+                                context.l10n.deviceShopTryDifferentKeywords,
                           ),
                         ),
                       );
@@ -321,7 +311,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 2,
-                              childAspectRatio: 0.7,
+                              childAspectRatio: 0.52,
                               crossAxisSpacing: 12,
                               mainAxisSpacing: 12,
                             ),

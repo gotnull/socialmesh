@@ -350,7 +350,7 @@ void main() {
       expect(product.isMeshtasticCompatible, true);
       expect(
         product.purchaseUrl,
-        'https://lilygo.cc/products/t-deck-meshtastic',
+        'https://lilygo.cc/products/t-deck-meshtastic?bg_ref=nLXfLe4gwl',
       );
       expect(product.imageUrls.length, 1);
       expect(product.category, DeviceCategory.node);
