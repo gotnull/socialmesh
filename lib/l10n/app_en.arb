@@ -46731,5 +46731,27 @@
     "subscriptionPopularBadge": "MOST POPULAR",
     "@subscriptionPopularBadge": {
         "description": "Badge on the Complete Pack hero card to indicate popularity"
+    },
+    "tapbackDetailSheetTitle": "Reactions",
+    "@tapbackDetailSheetTitle": {
+        "description": "Title for the bottom sheet showing all senders of a specific reaction emoji."
+    },
+    "tapbackDetailSenderCount": "{count} reactions",
+    "@tapbackDetailSenderCount": {
+        "description": "Subtitle showing how many people sent a particular reaction.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "tapbackGroupOthers": "+{count}",
+    "@tapbackGroupOthers": {
+        "description": "Label showing how many additional senders beyond displayed names, e.g. +3.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
     }
 }

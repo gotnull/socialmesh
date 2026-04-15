@@ -61221,6 +61221,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'MOST POPULAR'**
   String get subscriptionPopularBadge;
+
+  /// Title for the bottom sheet showing all senders of a specific reaction emoji.
+  ///
+  /// In en, this message translates to:
+  /// **'Reactions'**
+  String get tapbackDetailSheetTitle;
+
+  /// Subtitle showing how many people sent a particular reaction.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} reactions'**
+  String tapbackDetailSenderCount(int count);
+
+  /// Label showing how many additional senders beyond displayed names, e.g. +3.
+  ///
+  /// In en, this message translates to:
+  /// **'+{count}'**
+  String tapbackGroupOthers(int count);
 }
 
 class _AppLocalizationsDelegate

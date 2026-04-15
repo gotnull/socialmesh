@@ -35140,4 +35140,17 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get subscriptionPopularBadge => 'MOST POPULAR';
+
+  @override
+  String get tapbackDetailSheetTitle => 'Reactions';
+
+  @override
+  String tapbackDetailSenderCount(int count) {
+    return '$count reactions';
+  }
+
+  @override
+  String tapbackGroupOthers(int count) {
+    return '+$count';
+  }
 }
