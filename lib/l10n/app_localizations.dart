@@ -61275,6 +61275,276 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Message reactions are now grouped by emoji — if five people send a thumbs-up, you see one compact chip instead of five. Long-press any reaction to see every sender.\n\nReactions also wrap to the next line instead of overflowing off-screen, keeping the conversation tidy.'**
   String get whatsNewReactionGroupingDescription;
+
+  /// Title for the mesh feed screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh Feed'**
+  String get meshFeedTitle;
+
+  /// Hint text for the search field on the mesh feed screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Search posts'**
+  String get meshFeedSearchHint;
+
+  /// Label for the mesh feed item in the navigation drawer.
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh Feed'**
+  String get meshFeedDrawerLabel;
+
+  /// Headline shown when the mesh feed has no posts.
+  ///
+  /// In en, this message translates to:
+  /// **'No posts yet'**
+  String get meshFeedEmptyTitle;
+
+  /// Description shown when the mesh feed is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Posts from nearby mesh peers will appear here. Create the first post to start the conversation.'**
+  String get meshFeedEmptyDescription;
+
+  /// Button text on the empty feed state.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Post'**
+  String get meshFeedEmptyAction;
+
+  /// Prefix for animated empty state title (before gradient keyword).
+  ///
+  /// In en, this message translates to:
+  /// **'No '**
+  String get meshFeedEmptyTitlePrefix;
+
+  /// Gradient-animated keyword in the empty state title.
+  ///
+  /// In en, this message translates to:
+  /// **'posts'**
+  String get meshFeedEmptyTitleKeyword;
+
+  /// Suffix for animated empty state title (after gradient keyword).
+  ///
+  /// In en, this message translates to:
+  /// **' on the mesh'**
+  String get meshFeedEmptyTitleSuffix;
+
+  /// Rotating tagline 1 for mesh feed empty state.
+  ///
+  /// In en, this message translates to:
+  /// **'Be the first to broadcast'**
+  String get meshFeedEmptyTagline1;
+
+  /// Rotating tagline 2 for mesh feed empty state.
+  ///
+  /// In en, this message translates to:
+  /// **'Share something with the mesh'**
+  String get meshFeedEmptyTagline2;
+
+  /// Rotating tagline 3 for mesh feed empty state.
+  ///
+  /// In en, this message translates to:
+  /// **'Posts propagate peer to peer'**
+  String get meshFeedEmptyTagline3;
+
+  /// Rotating tagline 4 for mesh feed empty state.
+  ///
+  /// In en, this message translates to:
+  /// **'No internet required'**
+  String get meshFeedEmptyTagline4;
+
+  /// Hint text in the post composer text field.
+  ///
+  /// In en, this message translates to:
+  /// **'Share something with the mesh…'**
+  String get meshFeedComposeHint;
+
+  /// Button label to submit a new mesh feed post.
+  ///
+  /// In en, this message translates to:
+  /// **'Post'**
+  String get meshFeedPostButton;
+
+  /// Label for the TTL selector in the post composer.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires in'**
+  String get meshFeedTtlLabel;
+
+  /// TTL option: 1 hour.
+  ///
+  /// In en, this message translates to:
+  /// **'1 hour'**
+  String get meshFeedTtl1h;
+
+  /// TTL option: 6 hours.
+  ///
+  /// In en, this message translates to:
+  /// **'6 hours'**
+  String get meshFeedTtl6h;
+
+  /// TTL option: 24 hours.
+  ///
+  /// In en, this message translates to:
+  /// **'24 hours'**
+  String get meshFeedTtl24h;
+
+  /// TTL option: 3 days.
+  ///
+  /// In en, this message translates to:
+  /// **'3 days'**
+  String get meshFeedTtl3d;
+
+  /// TTL option: 7 days.
+  ///
+  /// In en, this message translates to:
+  /// **'7 days'**
+  String get meshFeedTtl7d;
+
+  /// Provenance label for a locally authored post.
+  ///
+  /// In en, this message translates to:
+  /// **'Your post'**
+  String get meshFeedProvenanceLocal;
+
+  /// Provenance label for a post from a nearby node (low hop count).
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby'**
+  String get meshFeedProvenanceNearby;
+
+  /// Provenance label for a post received via relay (high hop count).
+  ///
+  /// In en, this message translates to:
+  /// **'Relayed'**
+  String get meshFeedProvenanceRelayed;
+
+  /// Provenance label for a post received via peer sync.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced'**
+  String get meshFeedProvenanceSynced;
+
+  /// Badge text for posts about to expire.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires soon'**
+  String get meshFeedExpiresSoon;
+
+  /// Post count display in the feed header.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No posts} =1{1 post} other{{count} posts}}'**
+  String meshFeedPostCount(int count);
+
+  /// Trust level label: unknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get meshFeedTrustUnknown;
+
+  /// Trust level label: observed.
+  ///
+  /// In en, this message translates to:
+  /// **'Observed'**
+  String get meshFeedTrustObserved;
+
+  /// Trust level label: familiar.
+  ///
+  /// In en, this message translates to:
+  /// **'Familiar'**
+  String get meshFeedTrustFamiliar;
+
+  /// Trust level label: trusted.
+  ///
+  /// In en, this message translates to:
+  /// **'Trusted'**
+  String get meshFeedTrustTrusted;
+
+  /// Trust level label: established.
+  ///
+  /// In en, this message translates to:
+  /// **'Established'**
+  String get meshFeedTrustEstablished;
+
+  /// Feed filter option: show all posts.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get meshFeedFilterAll;
+
+  /// Feed filter option: show only posts from trusted nodes.
+  ///
+  /// In en, this message translates to:
+  /// **'Trusted'**
+  String get meshFeedFilterTrusted;
+
+  /// Feed filter option: show only nearby posts.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby'**
+  String get meshFeedFilterNearby;
+
+  /// Feed filter option: show only locally authored posts.
+  ///
+  /// In en, this message translates to:
+  /// **'My Posts'**
+  String get meshFeedFilterLocal;
+
+  /// Feed sort option: ranked by trust + freshness.
+  ///
+  /// In en, this message translates to:
+  /// **'Ranked'**
+  String get meshFeedSortRanked;
+
+  /// Feed sort option: newest first.
+  ///
+  /// In en, this message translates to:
+  /// **'Newest'**
+  String get meshFeedSortNewest;
+
+  /// Snackbar message shown after successfully creating a post.
+  ///
+  /// In en, this message translates to:
+  /// **'Post created'**
+  String get meshFeedPostCreated;
+
+  /// Snackbar message shown when post creation fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to create post'**
+  String get meshFeedPostFailed;
+
+  /// Badge label indicating mesh feed is in beta.
+  ///
+  /// In en, this message translates to:
+  /// **'BETA'**
+  String get meshFeedBetaLabel;
+
+  /// Note about propagation constraints shown in the composer.
+  ///
+  /// In en, this message translates to:
+  /// **'Posts propagate via mesh radio and local sync. LoRa posts are limited to {maxBytes} bytes.'**
+  String meshFeedPropagationNote(int maxBytes);
+
+  /// Title for the mesh feed post composer sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Post'**
+  String get meshFeedComposeTitle;
+
+  /// Title shown when no posts match the active filter.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching posts'**
+  String get meshFeedEmptyFilterTitle;
+
+  /// Description shown when no posts match the active filter.
+  ///
+  /// In en, this message translates to:
+  /// **'Try changing the filter to see more posts.'**
+  String get meshFeedEmptyFilterDescription;
 }
 
 class _AppLocalizationsDelegate

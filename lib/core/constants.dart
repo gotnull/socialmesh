@@ -496,6 +496,34 @@ class AppFeatureFlags {
       return false;
     }
   }
+
+  /// Whether the Mesh Feed (store-and-forward content feed) is enabled.
+  /// Set `MESH_FEED_ENABLED=true` in `.env` to enable.
+  /// Default: false — mesh feed UI is hidden until ready for release.
+  static bool get isMeshFeedEnabled {
+    try {
+      final raw = dotenv.env['MESH_FEED_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Whether opportunistic peer sync (LAN/BLE) is enabled.
+  /// Set `OPPORTUNISTIC_SYNC_ENABLED=true` in `.env` to enable.
+  /// Requires [isMeshFeedEnabled] to be true.
+  /// Default: false — peer sync is off until protocol is validated.
+  static bool get isOpportunisticSyncEnabled {
+    if (!isMeshFeedEnabled) return false;
+    try {
+      final raw = dotenv.env['OPPORTUNISTIC_SYNC_ENABLED']
+          ?.toLowerCase()
+          .trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
 }
 
 /// Privacy level for content visibility

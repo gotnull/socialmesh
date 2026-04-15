@@ -90,6 +90,7 @@ class AppLogging {
   static bool? _sppLoggingEnabled;
   static bool? _sppNegotiationLoggingEnabled;
   static bool? _stlLoggingEnabled;
+  static bool? _meshFeedLoggingEnabled;
   static bool? _mqttProxyLoggingEnabled;
   static bool? _forceEmptyStates;
   static Logger? _bleLogger;
@@ -682,6 +683,18 @@ class AppLogging {
     if (stlLoggingEnabled) debugPrint('STL: $message');
   }
 
+  /// Mesh Feed logging — ingest, replay protection, propagation, sync.
+  /// Enable with MESH_FEED_LOGGING_ENABLED=true in .env file.
+  static bool get meshFeedLoggingEnabled {
+    _meshFeedLoggingEnabled ??=
+        _safeGetEnv('MESH_FEED_LOGGING_ENABLED')?.toLowerCase() == 'true';
+    return _meshFeedLoggingEnabled!;
+  }
+
+  static void meshFeed(String message) {
+    if (meshFeedLoggingEnabled) debugPrint('MeshFeed: $message');
+  }
+
   /// MQTT client proxy logging.
   /// Enable with MQTT_PROXY_LOGGING_ENABLED=true in .env file.
   static bool get mqttProxyLoggingEnabled {
@@ -760,6 +773,7 @@ class AppLogging {
     _sppLoggingEnabled = null;
     _sppNegotiationLoggingEnabled = null;
     _stlLoggingEnabled = null;
+    _meshFeedLoggingEnabled = null;
     _mqttProxyLoggingEnabled = null;
     _bleLogger = null;
     _noOpLogger = null;

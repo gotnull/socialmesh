@@ -70,6 +70,7 @@ import '../sip/sip_hub_screen.dart';
 import '../mrrp_harness/mrrp_harness_home_screen.dart';
 import '../mesh_explorer/mesh_explorer_screen.dart';
 import '../mesh_services/screens/my_services_screen.dart';
+import '../mesh_feed/screens/mesh_feed_screen.dart';
 import '../incidents/screens/mesh_incident_list_screen.dart';
 import '../tak/screens/tak_screen.dart';
 import '../../providers/activity_providers.dart';
@@ -427,6 +428,14 @@ class _MainShellState extends ConsumerState<MainShell> {
         screen: const MyServicesScreen(),
         iconColor: AccentColors.purple,
         requiresConnection: true,
+      ),
+    if (AppFeatureFlags.isMeshFeedEnabled)
+      DrawerMenuItem(
+        icon: Icons.dynamic_feed_outlined,
+        label: l10n.meshFeedDrawerLabel,
+        screen: const MeshFeedScreen(),
+        iconColor: AccentColors.orange,
+        requiresConnection: false,
       ),
 
     // Identity section — your social presence and interactions

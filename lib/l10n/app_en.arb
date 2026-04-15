@@ -46777,5 +46777,196 @@
     "whatsNewReactionGroupingDescription": "Message reactions are now grouped by emoji — if five people send a thumbs-up, you see one compact chip instead of five. Long-press any reaction to see every sender.\n\nReactions also wrap to the next line instead of overflowing off-screen, keeping the conversation tidy.",
     "@whatsNewReactionGroupingDescription": {
         "description": "Description for the reaction grouping improvement in What's New."
+    },
+
+    "meshFeedTitle": "Mesh Feed",
+    "@meshFeedTitle": {
+        "description": "Title for the mesh feed screen."
+    },
+    "meshFeedSearchHint": "Search posts",
+    "@meshFeedSearchHint": {
+        "description": "Hint text for the search field on the mesh feed screen."
+    },
+    "meshFeedDrawerLabel": "Mesh Feed",
+    "@meshFeedDrawerLabel": {
+        "description": "Label for the mesh feed item in the navigation drawer."
+    },
+    "meshFeedEmptyTitle": "No posts yet",
+    "@meshFeedEmptyTitle": {
+        "description": "Headline shown when the mesh feed has no posts."
+    },
+    "meshFeedEmptyDescription": "Posts from nearby mesh peers will appear here. Create the first post to start the conversation.",
+    "@meshFeedEmptyDescription": {
+        "description": "Description shown when the mesh feed is empty."
+    },
+    "meshFeedEmptyAction": "Create Post",
+    "@meshFeedEmptyAction": {
+        "description": "Button text on the empty feed state."
+    },
+    "meshFeedEmptyTitlePrefix": "No ",
+    "@meshFeedEmptyTitlePrefix": {
+        "description": "Prefix for animated empty state title (before gradient keyword)."
+    },
+    "meshFeedEmptyTitleKeyword": "posts",
+    "@meshFeedEmptyTitleKeyword": {
+        "description": "Gradient-animated keyword in the empty state title."
+    },
+    "meshFeedEmptyTitleSuffix": " on the mesh",
+    "@meshFeedEmptyTitleSuffix": {
+        "description": "Suffix for animated empty state title (after gradient keyword)."
+    },
+    "meshFeedEmptyTagline1": "Be the first to broadcast",
+    "@meshFeedEmptyTagline1": {
+        "description": "Rotating tagline 1 for mesh feed empty state."
+    },
+    "meshFeedEmptyTagline2": "Share something with the mesh",
+    "@meshFeedEmptyTagline2": {
+        "description": "Rotating tagline 2 for mesh feed empty state."
+    },
+    "meshFeedEmptyTagline3": "Posts propagate peer to peer",
+    "@meshFeedEmptyTagline3": {
+        "description": "Rotating tagline 3 for mesh feed empty state."
+    },
+    "meshFeedEmptyTagline4": "No internet required",
+    "@meshFeedEmptyTagline4": {
+        "description": "Rotating tagline 4 for mesh feed empty state."
+    },
+    "meshFeedComposeHint": "Share something with the mesh…",
+    "@meshFeedComposeHint": {
+        "description": "Hint text in the post composer text field."
+    },
+    "meshFeedPostButton": "Post",
+    "@meshFeedPostButton": {
+        "description": "Button label to submit a new mesh feed post."
+    },
+    "meshFeedTtlLabel": "Expires in",
+    "@meshFeedTtlLabel": {
+        "description": "Label for the TTL selector in the post composer."
+    },
+    "meshFeedTtl1h": "1 hour",
+    "@meshFeedTtl1h": {
+        "description": "TTL option: 1 hour."
+    },
+    "meshFeedTtl6h": "6 hours",
+    "@meshFeedTtl6h": {
+        "description": "TTL option: 6 hours."
+    },
+    "meshFeedTtl24h": "24 hours",
+    "@meshFeedTtl24h": {
+        "description": "TTL option: 24 hours."
+    },
+    "meshFeedTtl3d": "3 days",
+    "@meshFeedTtl3d": {
+        "description": "TTL option: 3 days."
+    },
+    "meshFeedTtl7d": "7 days",
+    "@meshFeedTtl7d": {
+        "description": "TTL option: 7 days."
+    },
+    "meshFeedProvenanceLocal": "Your post",
+    "@meshFeedProvenanceLocal": {
+        "description": "Provenance label for a locally authored post."
+    },
+    "meshFeedProvenanceNearby": "Nearby",
+    "@meshFeedProvenanceNearby": {
+        "description": "Provenance label for a post from a nearby node (low hop count)."
+    },
+    "meshFeedProvenanceRelayed": "Relayed",
+    "@meshFeedProvenanceRelayed": {
+        "description": "Provenance label for a post received via relay (high hop count)."
+    },
+    "meshFeedProvenanceSynced": "Synced",
+    "@meshFeedProvenanceSynced": {
+        "description": "Provenance label for a post received via peer sync."
+    },
+    "meshFeedExpiresSoon": "Expires soon",
+    "@meshFeedExpiresSoon": {
+        "description": "Badge text for posts about to expire."
+    },
+    "meshFeedPostCount": "{count, plural, =0{No posts} =1{1 post} other{{count} posts}}",
+    "@meshFeedPostCount": {
+        "description": "Post count display in the feed header.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "meshFeedTrustUnknown": "Unknown",
+    "@meshFeedTrustUnknown": {
+        "description": "Trust level label: unknown."
+    },
+    "meshFeedTrustObserved": "Observed",
+    "@meshFeedTrustObserved": {
+        "description": "Trust level label: observed."
+    },
+    "meshFeedTrustFamiliar": "Familiar",
+    "@meshFeedTrustFamiliar": {
+        "description": "Trust level label: familiar."
+    },
+    "meshFeedTrustTrusted": "Trusted",
+    "@meshFeedTrustTrusted": {
+        "description": "Trust level label: trusted."
+    },
+    "meshFeedTrustEstablished": "Established",
+    "@meshFeedTrustEstablished": {
+        "description": "Trust level label: established."
+    },
+    "meshFeedFilterAll": "All",
+    "@meshFeedFilterAll": {
+        "description": "Feed filter option: show all posts."
+    },
+    "meshFeedFilterTrusted": "Trusted",
+    "@meshFeedFilterTrusted": {
+        "description": "Feed filter option: show only posts from trusted nodes."
+    },
+    "meshFeedFilterNearby": "Nearby",
+    "@meshFeedFilterNearby": {
+        "description": "Feed filter option: show only nearby posts."
+    },
+    "meshFeedFilterLocal": "My Posts",
+    "@meshFeedFilterLocal": {
+        "description": "Feed filter option: show only locally authored posts."
+    },
+    "meshFeedSortRanked": "Ranked",
+    "@meshFeedSortRanked": {
+        "description": "Feed sort option: ranked by trust + freshness."
+    },
+    "meshFeedSortNewest": "Newest",
+    "@meshFeedSortNewest": {
+        "description": "Feed sort option: newest first."
+    },
+    "meshFeedPostCreated": "Post created",
+    "@meshFeedPostCreated": {
+        "description": "Snackbar message shown after successfully creating a post."
+    },
+    "meshFeedPostFailed": "Failed to create post",
+    "@meshFeedPostFailed": {
+        "description": "Snackbar message shown when post creation fails."
+    },
+    "meshFeedBetaLabel": "BETA",
+    "@meshFeedBetaLabel": {
+        "description": "Badge label indicating mesh feed is in beta."
+    },
+    "meshFeedPropagationNote": "Posts propagate via mesh radio and local sync. LoRa posts are limited to {maxBytes} bytes.",
+    "@meshFeedPropagationNote": {
+        "description": "Note about propagation constraints shown in the composer.",
+        "placeholders": {
+            "maxBytes": {
+                "type": "int"
+            }
+        }
+    },
+    "meshFeedComposeTitle": "Create Post",
+    "@meshFeedComposeTitle": {
+        "description": "Title for the mesh feed post composer sheet."
+    },
+    "meshFeedEmptyFilterTitle": "No matching posts",
+    "@meshFeedEmptyFilterTitle": {
+        "description": "Title shown when no posts match the active filter."
+    },
+    "meshFeedEmptyFilterDescription": "Try changing the filter to see more posts.",
+    "@meshFeedEmptyFilterDescription": {
+        "description": "Description shown when no posts match the active filter."
     }
 }

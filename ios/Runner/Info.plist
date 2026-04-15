@@ -126,6 +126,7 @@
 		<key>NSBonjourServices</key>
 		<array>
 			<string>_meshtastic._tcp</string>
+			<string>_socialmesh-sync._tcp</string>
 		</array>
 		<key>NSCameraUsageDescription</key>
 		<string>Socialmesh uses the camera for QR code scanning and AR Node Radar visualization</string>
@@ -133,7 +134,8 @@
 		<string>Socialmesh uses the microphone to record voice messages that are compressed and sent
 			over the mesh radio network</string>
 		<key>NSLocalNetworkUsageDescription</key>
-		<string>Socialmesh uses local networking to connect to WiFi-based Meshtastic nodes</string>
+		<string>Socialmesh uses local networking to connect to WiFi-based Meshtastic nodes and sync
+			mesh feed posts with nearby peers</string>
 		<key>NSLocationUsageDescription</key>
 		<string>Socialmesh uses your location to display on the mesh map and share GPS coordinates
 			with mesh nodes</string>

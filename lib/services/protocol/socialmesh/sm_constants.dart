@@ -21,8 +21,17 @@ abstract final class SmPortnum {
   /// File transfer packets (offer, chunk, nack, ack).
   static const int fileTransfer = 263;
 
+  /// Mesh feed post broadcast.
+  static const int feedPost = 264;
+
   /// All Socialmesh portnums for capability detection.
-  static const Set<int> all = {presence, signal, identity, fileTransfer};
+  static const Set<int> all = {
+    presence,
+    signal,
+    identity,
+    fileTransfer,
+    feedPost,
+  };
 
   /// Returns true if the portnum is a Socialmesh extension portnum.
   static bool isSocialmesh(int portnum) => all.contains(portnum);
@@ -69,6 +78,9 @@ abstract final class SmPacketKind {
 
   /// SPP_ABORT (SPP v1 cancel).
   static const int sppAbort = 0x0A;
+
+  /// SM_FEED_POST — mesh feed post broadcast.
+  static const int feedPost = 0x0B;
 }
 
 /// Rate limiting intervals for each packet type.
@@ -127,6 +139,9 @@ abstract final class SmRateLimit {
   /// missing chunks and exhaust its NACK rounds:
   /// [chunkInactivityTimeout] × [maxNackRounds] + margin.
   static const Duration senderCompletionTimeout = Duration(seconds: 60);
+
+  /// Minimum interval between mesh feed post broadcasts.
+  static const Duration feedPostInterval = Duration(minutes: 5);
 }
 
 /// Transport parameters for each packet type.
@@ -148,6 +163,9 @@ abstract final class SmTransport {
 
   /// Hop limit for file transfer packets.
   static const int fileTransferHopLimit = 3;
+
+  /// Hop limit for mesh feed post broadcasts.
+  static const int feedPostHopLimit = 3;
 }
 
 /// Maximum payload sizes for validation.
@@ -164,6 +182,9 @@ abstract final class SmPayloadLimit {
   /// regulatory constraints. All SM packets enforce hard content caps well
   /// below this ceiling (presence: 63 B, signal: 140 B content).
   static const int loraMtu = 237;
+
+  /// Maximum mesh feed post content length in bytes.
+  static const int feedPostContentMaxBytes = 200;
 }
 
 /// Hard limits for file transfers to prevent mesh pollution.

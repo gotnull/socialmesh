@@ -168,16 +168,6 @@ class _GroupedTapbackChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final count = group.tapbacks.length;
-    final l10n = context.l10n;
-
-    // Build the short-name label: show up to 2 names, then "+N"
-    String namesLabel;
-    if (count <= 2) {
-      namesLabel = group.shortNames.join(', ');
-    } else {
-      final shown = group.shortNames.take(2).join(', ');
-      namesLabel = '$shown ${l10n.tapbackGroupOthers(count - 2)}';
-    }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -190,23 +180,13 @@ class _GroupedTapbackChip extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(group.emoji, style: const TextStyle(fontSize: 16)),
-          if (count > 1) ...[
-            const SizedBox(width: AppTheme.spacing3),
-            Text(
-              '$count',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: context.textPrimary,
-              ),
-            ),
-          ],
-          const SizedBox(width: AppTheme.spacing4),
+          const SizedBox(width: AppTheme.spacing3),
           Text(
-            namesLabel,
-            style: context.captionStyle?.copyWith(
-              color: Colors.white.withValues(alpha: 0.6),
-              fontSize: 11,
+            '$count',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: context.textPrimary,
             ),
           ),
         ],

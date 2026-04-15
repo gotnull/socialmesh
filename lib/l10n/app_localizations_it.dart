@@ -35173,4 +35173,152 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get whatsNewReactionGroupingDescription =>
       'Message reactions are now grouped by emoji — if five people send a thumbs-up, you see one compact chip instead of five. Long-press any reaction to see every sender.\n\nReactions also wrap to the next line instead of overflowing off-screen, keeping the conversation tidy.';
+
+  @override
+  String get meshFeedTitle => 'Mesh Feed';
+
+  @override
+  String get meshFeedSearchHint => 'Search posts';
+
+  @override
+  String get meshFeedDrawerLabel => 'Mesh Feed';
+
+  @override
+  String get meshFeedEmptyTitle => 'No posts yet';
+
+  @override
+  String get meshFeedEmptyDescription =>
+      'Posts from nearby mesh peers will appear here. Create the first post to start the conversation.';
+
+  @override
+  String get meshFeedEmptyAction => 'Create Post';
+
+  @override
+  String get meshFeedEmptyTitlePrefix => 'No ';
+
+  @override
+  String get meshFeedEmptyTitleKeyword => 'posts';
+
+  @override
+  String get meshFeedEmptyTitleSuffix => ' on the mesh';
+
+  @override
+  String get meshFeedEmptyTagline1 => 'Be the first to broadcast';
+
+  @override
+  String get meshFeedEmptyTagline2 => 'Share something with the mesh';
+
+  @override
+  String get meshFeedEmptyTagline3 => 'Posts propagate peer to peer';
+
+  @override
+  String get meshFeedEmptyTagline4 => 'No internet required';
+
+  @override
+  String get meshFeedComposeHint => 'Share something with the mesh…';
+
+  @override
+  String get meshFeedPostButton => 'Post';
+
+  @override
+  String get meshFeedTtlLabel => 'Expires in';
+
+  @override
+  String get meshFeedTtl1h => '1 hour';
+
+  @override
+  String get meshFeedTtl6h => '6 hours';
+
+  @override
+  String get meshFeedTtl24h => '24 hours';
+
+  @override
+  String get meshFeedTtl3d => '3 days';
+
+  @override
+  String get meshFeedTtl7d => '7 days';
+
+  @override
+  String get meshFeedProvenanceLocal => 'Your post';
+
+  @override
+  String get meshFeedProvenanceNearby => 'Nearby';
+
+  @override
+  String get meshFeedProvenanceRelayed => 'Relayed';
+
+  @override
+  String get meshFeedProvenanceSynced => 'Synced';
+
+  @override
+  String get meshFeedExpiresSoon => 'Expires soon';
+
+  @override
+  String meshFeedPostCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count posts',
+      one: '1 post',
+      zero: 'No posts',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshFeedTrustUnknown => 'Unknown';
+
+  @override
+  String get meshFeedTrustObserved => 'Observed';
+
+  @override
+  String get meshFeedTrustFamiliar => 'Familiar';
+
+  @override
+  String get meshFeedTrustTrusted => 'Trusted';
+
+  @override
+  String get meshFeedTrustEstablished => 'Established';
+
+  @override
+  String get meshFeedFilterAll => 'All';
+
+  @override
+  String get meshFeedFilterTrusted => 'Trusted';
+
+  @override
+  String get meshFeedFilterNearby => 'Nearby';
+
+  @override
+  String get meshFeedFilterLocal => 'My Posts';
+
+  @override
+  String get meshFeedSortRanked => 'Ranked';
+
+  @override
+  String get meshFeedSortNewest => 'Newest';
+
+  @override
+  String get meshFeedPostCreated => 'Post created';
+
+  @override
+  String get meshFeedPostFailed => 'Failed to create post';
+
+  @override
+  String get meshFeedBetaLabel => 'BETA';
+
+  @override
+  String meshFeedPropagationNote(int maxBytes) {
+    return 'Posts propagate via mesh radio and local sync. LoRa posts are limited to $maxBytes bytes.';
+  }
+
+  @override
+  String get meshFeedComposeTitle => 'Create Post';
+
+  @override
+  String get meshFeedEmptyFilterTitle => 'No matching posts';
+
+  @override
+  String get meshFeedEmptyFilterDescription =>
+      'Try changing the filter to see more posts.';
 }
