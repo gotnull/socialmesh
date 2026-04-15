@@ -396,13 +396,13 @@ class DeviceShopBadgePill extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 12, color: color),
+            Icon(icon, size: 12, color: Colors.white),
             const SizedBox(width: AppTheme.spacing4),
           ],
           Text(
             label,
-            style: TextStyle(
-              color: color,
+            style: const TextStyle(
+              color: Colors.white,
               fontSize: 11,
               fontWeight: FontWeight.w700,
             ),
