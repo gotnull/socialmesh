@@ -370,13 +370,15 @@ class DeviceShopBadgePill extends StatelessWidget {
   const DeviceShopBadgePill({
     super.key,
     required this.label,
-    required this.icon,
     required this.color,
+    this.icon,
+    this.fillOpacity = 0.98,
   });
 
   final String label;
-  final IconData icon;
+  final IconData? icon;
   final Color color;
+  final double fillOpacity;
 
   @override
   Widget build(BuildContext context) {
@@ -386,15 +388,17 @@ class DeviceShopBadgePill extends StatelessWidget {
         vertical: AppTheme.spacing6,
       ),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.92),
+        color: color.withValues(alpha: fillOpacity),
         borderRadius: BorderRadius.circular(AppTheme.radius16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: Colors.white),
-          const SizedBox(width: AppTheme.spacing4),
+          if (icon != null) ...[
+            Icon(icon, size: 12, color: Colors.white),
+            const SizedBox(width: AppTheme.spacing4),
+          ],
           Text(
             label,
             style: const TextStyle(

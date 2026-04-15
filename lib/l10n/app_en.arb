@@ -5977,6 +5977,14 @@
     "@deviceShopContactUs": {
         "description": "Text displayed in developer tools"
     },
+    "deviceShopContactEmailSubject": "Device Shop seller inquiry",
+    "@deviceShopContactEmailSubject": {
+        "description": "Default email subject when user taps Contact Us from Device Shop seller section"
+    },
+    "deviceShopContactEmailBody": "Hi Socialmesh team,\n\nI am interested in becoming a seller in the Device Shop.\n\nCompany name:\nWebsite:\nProduct types:\nRegion(s):\n\nAdditional details:\n",
+    "@deviceShopContactEmailBody": {
+        "description": "Default email body template when user taps Contact Us from Device Shop seller section"
+    },
     "deviceShopErrorLoadingProducts": "Error loading products",
     "@deviceShopErrorLoadingProducts": {
         "description": "Error message in developer tools"
@@ -5985,9 +5993,21 @@
     "@deviceShopFavoritesTooltip": {
         "description": "Tooltip in developer tools"
     },
+    "deviceShopRemoveFavoriteTitle": "Remove from Favorites?",
+    "@deviceShopRemoveFavoriteTitle": {
+        "description": "Title of the confirmation sheet before removing a product from favorites"
+    },
+    "deviceShopRemoveFavoriteMessage": "This product will be removed from your favorites.",
+    "@deviceShopRemoveFavoriteMessage": {
+        "description": "Body of the confirmation sheet before removing a product from favorites"
+    },
     "deviceShopFeatured": "Featured",
     "@deviceShopFeatured": {
         "description": "Text displayed in developer tools"
+    },
+    "deviceShopFilterAll": "All",
+    "@deviceShopFilterAll": {
+        "description": "Label for Device Shop top-level filter chip showing all products"
     },
     "deviceShopHelpTooltip": "Help",
     "@deviceShopHelpTooltip": {
@@ -6000,6 +6020,10 @@
     "deviceShopMarketplaceInfoTitle": "Marketplace Information",
     "@deviceShopMarketplaceInfoTitle": {
         "description": "Title for the developer tools screen"
+    },
+    "deviceShopInStock": "In Stock",
+    "@deviceShopInStock": {
+        "description": "Label for Device Shop top-level in-stock filter chip"
     },
     "deviceShopNewArrivals": "New Arrivals",
     "@deviceShopNewArrivals": {

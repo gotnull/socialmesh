@@ -4585,13 +4585,30 @@ class AppLocalizationsPt extends AppLocalizations {
   String get deviceShopContactUs => 'Fale Conosco';
 
   @override
+  String get deviceShopContactEmailSubject => 'Device Shop seller inquiry';
+
+  @override
+  String get deviceShopContactEmailBody =>
+      'Hi Socialmesh team,\n\nI am interested in becoming a seller in the Device Shop.\n\nCompany name:\nWebsite:\nProduct types:\nRegion(s):\n\nAdditional details:\n';
+
+  @override
   String get deviceShopErrorLoadingProducts => 'Erro ao carregar produtos';
 
   @override
   String get deviceShopFavoritesTooltip => 'Favoritos';
 
   @override
+  String get deviceShopRemoveFavoriteTitle => 'Remove from Favorites?';
+
+  @override
+  String get deviceShopRemoveFavoriteMessage =>
+      'This product will be removed from your favorites.';
+
+  @override
   String get deviceShopFeatured => 'Destaques';
+
+  @override
+  String get deviceShopFilterAll => 'All';
 
   @override
   String get deviceShopHelpTooltip => 'Ajuda';
@@ -4602,6 +4619,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get deviceShopMarketplaceInfoTitle => 'Informações do Marketplace';
+
+  @override
+  String get deviceShopInStock => 'In Stock';
 
   @override
   String get deviceShopNewArrivals => 'Novidades';

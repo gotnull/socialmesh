@@ -1195,18 +1195,41 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
   }
 
   void _shareProduct(ShopProduct product) {
+    final shareUrl = _resolvedPurchaseUrl(product) ?? product.purchaseUrl;
     final text =
         '''Check out ${product.name} on Socialmesh!
 
 ${product.shortDescription ?? product.description}
 
-Price: ${product.formattedPrice(context.l10n)}${product.purchaseUrl != null ? '\n\n${product.purchaseUrl}' : ''}''';
+Price: ${product.formattedPrice(context.l10n)}${shareUrl != null ? '\n\n$shareUrl' : ''}''';
     shareText(text, subject: product.name, context: context);
+  }
+
+  String? _resolvedPurchaseUrl(ShopProduct product) {
+    final baseUrl = product.purchaseUrl;
+    if (baseUrl == null) return null;
+
+    final variantId = (_selectedVariant?.id ?? product.defaultVariant?.id)
+        ?.trim();
+    if (variantId == null || variantId.isEmpty) {
+      return baseUrl;
+    }
+
+    final parsed = Uri.tryParse(baseUrl);
+    if (parsed == null) {
+      return baseUrl;
+    }
+
+    final params = Map<String, String>.from(parsed.queryParameters)
+      ..['variant'] = variantId;
+
+    return parsed.replace(queryParameters: params).toString();
   }
 
   Future<void> _buyProduct(ShopProduct product) async {
     // Capture navigator before async gap
     final navigator = Navigator.of(context);
+    final destinationUrl = _resolvedPurchaseUrl(product);
 
     // Log the buy now tap
     final logger = ref.read(deviceShopEventLoggerProvider);
@@ -1218,20 +1241,18 @@ Price: ${product.formattedPrice(context.l10n)}${product.purchaseUrl != null ? '\
       category: product.category.name,
       price: product.price,
       currency: product.currency,
-      destinationUrl: product.purchaseUrl ?? 'no-url',
+      destinationUrl: destinationUrl ?? 'no-url',
       screen: 'detail',
     );
 
     if (!mounted) return;
 
-    if (product.purchaseUrl != null) {
+    if (destinationUrl != null) {
       // Open purchase URL in in-app webview
       navigator.push(
         MaterialPageRoute(
-          builder: (_) => _PurchaseWebViewScreen(
-            title: product.name,
-            url: product.purchaseUrl!,
-          ),
+          builder: (_) =>
+              _PurchaseWebViewScreen(title: product.name, url: destinationUrl),
         ),
       );
     } else {

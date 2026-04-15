@@ -8098,6 +8098,18 @@ abstract class AppLocalizations {
   /// **'Contact Us'**
   String get deviceShopContactUs;
 
+  /// Default email subject when user taps Contact Us from Device Shop seller section
+  ///
+  /// In en, this message translates to:
+  /// **'Device Shop seller inquiry'**
+  String get deviceShopContactEmailSubject;
+
+  /// Default email body template when user taps Contact Us from Device Shop seller section
+  ///
+  /// In en, this message translates to:
+  /// **'Hi Socialmesh team,\n\nI am interested in becoming a seller in the Device Shop.\n\nCompany name:\nWebsite:\nProduct types:\nRegion(s):\n\nAdditional details:\n'**
+  String get deviceShopContactEmailBody;
+
   /// Error message in developer tools
   ///
   /// In en, this message translates to:
@@ -8110,11 +8122,29 @@ abstract class AppLocalizations {
   /// **'Favorites'**
   String get deviceShopFavoritesTooltip;
 
+  /// Title of the confirmation sheet before removing a product from favorites
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from Favorites?'**
+  String get deviceShopRemoveFavoriteTitle;
+
+  /// Body of the confirmation sheet before removing a product from favorites
+  ///
+  /// In en, this message translates to:
+  /// **'This product will be removed from your favorites.'**
+  String get deviceShopRemoveFavoriteMessage;
+
   /// Text displayed in developer tools
   ///
   /// In en, this message translates to:
   /// **'Featured'**
   String get deviceShopFeatured;
+
+  /// Label for Device Shop top-level filter chip showing all products
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get deviceShopFilterAll;
 
   /// Tooltip in developer tools
   ///
@@ -8133,6 +8163,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Marketplace Information'**
   String get deviceShopMarketplaceInfoTitle;
+
+  /// Label for Device Shop top-level in-stock filter chip
+  ///
+  /// In en, this message translates to:
+  /// **'In Stock'**
+  String get deviceShopInStock;
 
   /// Text displayed in developer tools
   ///

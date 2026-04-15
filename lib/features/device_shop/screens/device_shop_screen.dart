@@ -2,7 +2,6 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 // lint-allow: haptic-feedback — search dismissal and delegated callbacks are handled by child widgets
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,8 +16,10 @@ import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/gradient_border_container.dart';
 import '../../../core/widgets/search_filter_header.dart';
+import '../../../core/widgets/status_filter_chip.dart';
 import '../../../providers/connectivity_providers.dart';
 import '../../../providers/help_providers.dart';
+import '../../../utils/snackbar.dart';
 import '../models/shop_models.dart';
 import '../providers/device_shop_providers.dart';
 import '../widgets/device_shop_components.dart';
@@ -26,6 +27,24 @@ import '../widgets/product_card.dart';
 import 'category_products_screen.dart';
 import 'seller_profile_screen.dart';
 import 'favorites_screen.dart';
+
+enum _ShopCatalogFilter { all, inStock, featured, onSale, nodes }
+
+bool _matchesShopCatalogFilter(ShopProduct product, _ShopCatalogFilter filter) {
+  switch (filter) {
+    case _ShopCatalogFilter.all:
+      return true;
+    case _ShopCatalogFilter.inStock:
+      return product.isInStock;
+    case _ShopCatalogFilter.featured:
+      return product.isFeatured;
+    case _ShopCatalogFilter.onSale:
+      return product.compareAtPrice != null &&
+          product.compareAtPrice! > product.price;
+    case _ShopCatalogFilter.nodes:
+      return product.category == DeviceCategory.node;
+  }
+}
 
 /// Main device shop screen
 class DeviceShopScreen extends ConsumerStatefulWidget {
@@ -37,6 +56,7 @@ class DeviceShopScreen extends ConsumerStatefulWidget {
 
 class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
   String _searchQuery = '';
+  _ShopCatalogFilter _catalogFilter = _ShopCatalogFilter.all;
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   Timer? _debounce;
@@ -78,8 +98,24 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
     _searchFocusNode.unfocus();
   }
 
+  bool _matchesCatalogFilter(ShopProduct product) {
+    return _matchesShopCatalogFilter(product, _catalogFilter);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final productsSnapshot =
+        ref.watch(lilygoProductsProvider).asData?.value ??
+        const <ShopProduct>[];
+    final inStockCount = productsSnapshot.where((p) => p.isInStock).length;
+    final featuredCount = productsSnapshot.where((p) => p.isFeatured).length;
+    final onSaleCount = productsSnapshot
+        .where((p) => p.compareAtPrice != null && p.compareAtPrice! > p.price)
+        .length;
+    final nodesCount = productsSnapshot
+        .where((p) => p.category == DeviceCategory.node)
+        .length;
+
     return HelpTourController(
       topicId: 'device_shop_overview',
       stepKeys: const {},
@@ -87,31 +123,6 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
         onTap: () => FocusScope.of(context).unfocus(),
         child: GlassScaffold(
           resizeToAvoidBottomInset: false,
-          expandedHeight: 118,
-          flexibleSpace: ClipRect(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      context.background.withValues(alpha: 0.92),
-                      context.card.withValues(alpha: 0.9),
-                    ],
-                  ),
-                  border: Border(
-                    bottom: BorderSide(
-                      color: context.border.withValues(alpha: 0.28),
-                      width: 0.6,
-                    ),
-                  ),
-                ),
-                child: const SizedBox.expand(),
-              ),
-            ),
-          ),
           titleWidget: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -206,7 +217,63 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
                 onSearchChanged: _onSearchChanged,
                 hintText: context.l10n.deviceShopSearchHint,
                 textScaler: MediaQuery.textScalerOf(context),
-                rebuildKey: Object.hashAll([_searchQuery, _recentSearches]),
+                rebuildKey: Object.hashAll([
+                  _searchQuery,
+                  _recentSearches,
+                  _catalogFilter,
+                  productsSnapshot.length,
+                  inStockCount,
+                  featuredCount,
+                  onSaleCount,
+                  nodesCount,
+                ]),
+                filterChips: [
+                  StatusFilterChip(
+                    label: context.l10n.deviceShopFilterAll,
+                    count: productsSnapshot.length,
+                    isSelected: _catalogFilter == _ShopCatalogFilter.all,
+                    onTap: () =>
+                        setState(() => _catalogFilter = _ShopCatalogFilter.all),
+                  ),
+                  StatusFilterChip(
+                    label: context.l10n.deviceShopInStock,
+                    count: inStockCount,
+                    color: AccentColors.green,
+                    isSelected: _catalogFilter == _ShopCatalogFilter.inStock,
+                    onTap: () => setState(
+                      () => _catalogFilter = _ShopCatalogFilter.inStock,
+                    ),
+                  ),
+                  StatusFilterChip(
+                    label: context.l10n.deviceShopFeatured,
+                    count: featuredCount,
+                    color: AccentColors.yellow,
+                    isSelected: _catalogFilter == _ShopCatalogFilter.featured,
+                    onTap: () => setState(
+                      () => _catalogFilter = _ShopCatalogFilter.featured,
+                    ),
+                  ),
+                  StatusFilterChip(
+                    label: context.l10n.deviceShopOnSale,
+                    count: onSaleCount,
+                    color: AppTheme.errorRed,
+                    icon: Icons.local_offer,
+                    isSelected: _catalogFilter == _ShopCatalogFilter.onSale,
+                    onTap: () => setState(
+                      () => _catalogFilter = _ShopCatalogFilter.onSale,
+                    ),
+                  ),
+                  StatusFilterChip(
+                    label: DeviceCategory.node.displayLabel(context.l10n),
+                    count: nodesCount,
+                    color: context.accentColor,
+                    icon: Icons.router,
+                    isSelected: _catalogFilter == _ShopCatalogFilter.nodes,
+                    onTap: () => setState(
+                      () => _catalogFilter = _ShopCatalogFilter.nodes,
+                    ),
+                  ),
+                ],
               ),
             ),
             if (_isSearchFocused && _searchQuery.isEmpty)
@@ -218,10 +285,18 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
                 child: _CategoriesSection(onCategoryTap: _openCategory),
               ),
               const SliverToBoxAdapter(child: _PartnersSection()),
-              const SliverToBoxAdapter(child: _FeaturedSection()),
-              const SliverToBoxAdapter(child: _BestSellersSection()),
-              const SliverToBoxAdapter(child: _NewArrivalsSection()),
-              const SliverToBoxAdapter(child: _OnSaleSection()),
+              SliverToBoxAdapter(
+                child: _FeaturedSection(catalogFilter: _catalogFilter),
+              ),
+              SliverToBoxAdapter(
+                child: _BestSellersSection(catalogFilter: _catalogFilter),
+              ),
+              SliverToBoxAdapter(
+                child: _NewArrivalsSection(catalogFilter: _catalogFilter),
+              ),
+              SliverToBoxAdapter(
+                child: _OnSaleSection(catalogFilter: _catalogFilter),
+              ),
               const SliverToBoxAdapter(child: _BecomeSellerSection()),
             ],
             const SliverPadding(padding: EdgeInsets.only(bottom: 104)),
@@ -399,14 +474,6 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
                           ),
                         ),
                         const Spacer(),
-                        Text(
-                          '${products.length}',
-                          style: TextStyle(
-                            color: context.textPrimary,
-                            fontSize: 24,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
                       ],
                     ),
                     const SizedBox(height: AppTheme.spacing16),
@@ -534,32 +601,37 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
             ref
                 .watch(lilygoTrendingProductsProvider)
                 .when(
-                  data: (products) => products.isEmpty
-                      ? const SizedBox.shrink()
-                      : SizedBox(
-                          height: 340,
-                          child: EdgeFade.end(
-                            fadeSize: 32,
-                            fadeColor: context.background,
-                            child: ListView.separated(
-                              scrollDirection: Axis.horizontal,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: AppTheme.spacing16,
+                  data: (products) {
+                    final filtered = products
+                        .where(_matchesCatalogFilter)
+                        .toList();
+                    return filtered.isEmpty
+                        ? const SizedBox.shrink()
+                        : SizedBox(
+                            height: 316,
+                            child: EdgeFade.end(
+                              fadeSize: 32,
+                              fadeColor: context.background,
+                              child: ListView.separated(
+                                scrollDirection: Axis.horizontal,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: AppTheme.spacing16,
+                                ),
+                                itemCount: filtered.length,
+                                separatorBuilder: (_, _) =>
+                                    const SizedBox(width: AppTheme.spacing12),
+                                itemBuilder: (context, index) {
+                                  return ProductCard(
+                                    product: filtered[index],
+                                    width: 196,
+                                  );
+                                },
                               ),
-                              itemCount: products.length,
-                              separatorBuilder: (_, _) =>
-                                  const SizedBox(width: AppTheme.spacing12),
-                              itemBuilder: (context, index) {
-                                return ProductCard(
-                                  product: products[index],
-                                  width: 196,
-                                );
-                              },
                             ),
-                          ),
-                        ),
+                          );
+                  },
                   loading: () => SizedBox(
-                    height: 340,
+                    height: 316,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(
@@ -634,8 +706,7 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
                               const SizedBox(height: AppTheme.spacing4),
                               Text(
                                 cat.displayDescription(context.l10n),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
+                                maxLines: 3,
                                 style: TextStyle(
                                   color: context.textSecondary,
                                   fontSize: 13,
@@ -682,16 +753,21 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
 
         return productsAsync.when(
           data: (products) {
-            final filteredProducts = products.where((product) {
-              final query = _searchQuery.toLowerCase();
-              return product.name.toLowerCase().contains(query) ||
-                  product.description.toLowerCase().contains(query) ||
-                  product.category
-                      .displayLabel(context.l10n)
-                      .toLowerCase()
-                      .contains(query) ||
-                  product.tags.any((tag) => tag.toLowerCase().contains(query));
-            }).toList();
+            final filteredProducts = products
+                .where((product) {
+                  final query = _searchQuery.toLowerCase();
+                  return product.name.toLowerCase().contains(query) ||
+                      product.description.toLowerCase().contains(query) ||
+                      product.category
+                          .displayLabel(context.l10n)
+                          .toLowerCase()
+                          .contains(query) ||
+                      product.tags.any(
+                        (tag) => tag.toLowerCase().contains(query),
+                      );
+                })
+                .where(_matchesCatalogFilter)
+                .toList();
 
             if (filteredProducts.isEmpty) {
               return SliverFillRemaining(
@@ -741,7 +817,7 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
                   sliver: SliverGrid(
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: crossAxisCount,
-                      childAspectRatio: 0.52,
+                      childAspectRatio: 0.62,
                       crossAxisSpacing: AppTheme.spacing12,
                       mainAxisSpacing: AppTheme.spacing12,
                     ),
@@ -763,7 +839,7 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
             sliver: SliverGrid(
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                childAspectRatio: 0.52,
+                childAspectRatio: 0.62,
                 crossAxisSpacing: AppTheme.spacing12,
                 mainAxisSpacing: AppTheme.spacing12,
               ),
@@ -816,7 +892,7 @@ class _CategoriesSection extends StatelessWidget {
           ),
         ),
         SizedBox(
-          height: 148,
+          height: 166,
           child: EdgeFade.end(
             fadeSize: 32,
             fadeColor: context.background,
@@ -888,8 +964,7 @@ class _CategoryCard extends StatelessWidget {
                 const SizedBox(height: AppTheme.spacing4),
                 Text(
                   category.displayDescription(context.l10n),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                  maxLines: 3,
                   style: TextStyle(
                     color: context.textSecondary,
                     fontSize: 12,
@@ -907,7 +982,9 @@ class _CategoryCard extends StatelessWidget {
 
 /// Featured products section
 class _FeaturedSection extends ConsumerWidget {
-  const _FeaturedSection();
+  final _ShopCatalogFilter catalogFilter;
+
+  const _FeaturedSection({required this.catalogFilter});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -926,6 +1003,7 @@ class _FeaturedSection extends ConsumerWidget {
           title: context.l10n.deviceShopFeatured,
           titleIcon: Icons.star,
           products: products,
+          catalogFilter: catalogFilter,
           onSeeAll: null,
         );
       },
@@ -964,7 +1042,7 @@ class _PartnersSection extends ConsumerWidget {
               ),
             ),
             SizedBox(
-              height: 102,
+              height: 118,
               child: EdgeFade.end(
                 fadeSize: 32,
                 fadeColor: context.background,
@@ -996,7 +1074,7 @@ class _PartnerCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(right: AppTheme.spacing12),
       child: SizedBox(
-        width: 160,
+        width: 176,
         child: BouncyTap(
           onTap: () => Navigator.push(
             context,
@@ -1046,8 +1124,7 @@ class _PartnerCard extends StatelessWidget {
                     children: [
                       Text(
                         seller.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                        maxLines: 2,
                         style: TextStyle(
                           color: context.textPrimary,
                           fontSize: 14,
@@ -1057,8 +1134,7 @@ class _PartnerCard extends StatelessWidget {
                       const SizedBox(height: AppTheme.spacing4),
                       Text(
                         context.l10n.deviceShopOfficialPartners,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                        maxLines: 2,
                         style: TextStyle(
                           color: context.textSecondary,
                           fontSize: 12,
@@ -1083,7 +1159,9 @@ class _PartnerCard extends StatelessWidget {
 
 /// New arrivals section
 class _NewArrivalsSection extends ConsumerWidget {
-  const _NewArrivalsSection();
+  final _ShopCatalogFilter catalogFilter;
+
+  const _NewArrivalsSection({required this.catalogFilter});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -1106,6 +1184,7 @@ class _NewArrivalsSection extends ConsumerWidget {
           title: context.l10n.deviceShopNewArrivals,
           titleIcon: Icons.fiber_new,
           products: sorted.take(10).toList(),
+          catalogFilter: catalogFilter,
           onSeeAll: null,
         );
       },
@@ -1115,7 +1194,9 @@ class _NewArrivalsSection extends ConsumerWidget {
 
 /// Best sellers section - shows popular LILYGO products based on Buy Now taps
 class _BestSellersSection extends ConsumerWidget {
-  const _BestSellersSection();
+  final _ShopCatalogFilter catalogFilter;
+
+  const _BestSellersSection({required this.catalogFilter});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -1157,6 +1238,7 @@ class _BestSellersSection extends ConsumerWidget {
           title: context.l10n.deviceShopPopularDevices,
           titleIcon: Icons.local_fire_department,
           products: popular.take(10).toList(),
+          catalogFilter: catalogFilter,
           onSeeAll: null,
         );
       },
@@ -1241,27 +1323,37 @@ class _BecomeSellerSection extends StatelessWidget {
                 animate: true,
               ),
             ),
-            const SizedBox(height: AppTheme.spacing10),
-            Text(
-              context.l10n.deviceShopSupportEmail,
-              style: TextStyle(color: context.textTertiary, fontSize: 12),
-            ),
           ],
         ),
       ),
     );
   }
 
-  void _contactSocialmesh(BuildContext context) {
-    final uri = Uri.parse(
-      'mailto:support@socialmesh.app?subject=Device%20Shop%20Seller%20Inquiry',
+  void _contactSocialmesh(BuildContext context) async {
+    final subject = Uri.encodeComponent(
+      context.l10n.deviceShopContactEmailSubject,
     );
-    launchUrl(uri);
+    final body = Uri.encodeComponent(context.l10n.deviceShopContactEmailBody);
+    final path = 'support@socialmesh.app';
+    final mailtoUri = Uri.parse('mailto:$path?subject=$subject&body=$body');
+
+    // Try to open with system email app selection
+    try {
+      if (await canLaunchUrl(mailtoUri)) {
+        await launchUrl(mailtoUri, mode: LaunchMode.externalApplication);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        showErrorSnackBar(context, 'Unable to open email client');
+      }
+    }
   }
 }
 
 class _OnSaleSection extends ConsumerWidget {
-  const _OnSaleSection();
+  final _ShopCatalogFilter catalogFilter;
+
+  const _OnSaleSection({required this.catalogFilter});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -1287,6 +1379,7 @@ class _OnSaleSection extends ConsumerWidget {
           title: context.l10n.deviceShopOnSale,
           titleIcon: Icons.local_offer,
           products: onSale.take(10).toList(),
+          catalogFilter: catalogFilter,
           onSeeAll: null,
           highlightColor: AppTheme.errorRed,
         );
@@ -1300,6 +1393,7 @@ class _ProductSection extends StatelessWidget {
   final String title;
   final IconData? titleIcon;
   final List<ShopProduct> products;
+  final _ShopCatalogFilter catalogFilter;
   final VoidCallback? onSeeAll;
   final Color? highlightColor;
 
@@ -1307,12 +1401,21 @@ class _ProductSection extends StatelessWidget {
     required this.title,
     this.titleIcon,
     required this.products,
+    required this.catalogFilter,
     this.onSeeAll,
     this.highlightColor,
   });
 
   @override
   Widget build(BuildContext context) {
+    final visibleProducts = products
+        .where((p) => _matchesShopCatalogFilter(p, catalogFilter))
+        .toList();
+
+    if (visibleProducts.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1321,7 +1424,7 @@ class _ProductSection extends StatelessWidget {
           child: _SectionHeading(
             icon: titleIcon,
             title: title,
-            count: products.length,
+            count: visibleProducts.length,
             trailing: onSeeAll == null
                 ? null
                 : GestureDetector(
@@ -1338,19 +1441,19 @@ class _ProductSection extends StatelessWidget {
           ),
         ),
         SizedBox(
-          height: 340,
+          height: 316,
           child: EdgeFade.end(
             fadeSize: 32,
             fadeColor: context.background,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: products.length,
+              itemCount: visibleProducts.length,
               itemBuilder: (context, index) {
                 return Padding(
                   padding: const EdgeInsets.only(right: AppTheme.spacing12),
                   child: ProductCard(
-                    product: products[index],
+                    product: visibleProducts[index],
                     width: 196,
                     highlightColor: highlightColor,
                   ),
@@ -1493,7 +1596,7 @@ class _SectionLoading extends StatelessWidget {
           child: _SectionHeading(title: title),
         ),
         SizedBox(
-          height: 340,
+          height: 316,
           child: EdgeFade.end(
             fadeSize: 32,
             fadeColor: context.background,

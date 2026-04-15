@@ -311,7 +311,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 2,
-                              childAspectRatio: 0.52,
+                              childAspectRatio: 0.62,
                               crossAxisSpacing: 12,
                               mainAxisSpacing: 12,
                             ),

@@ -72,7 +72,7 @@ class _CategoryProductsScreenState
             sliver: SliverGrid(
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                childAspectRatio: 0.52,
+                childAspectRatio: 0.62,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
               ),
@@ -177,7 +177,7 @@ class _CategoryProductsScreenState
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
-                          childAspectRatio: 0.52,
+                          childAspectRatio: 0.62,
                           crossAxisSpacing: AppTheme.spacing12,
                           mainAxisSpacing: AppTheme.spacing12,
                         ),

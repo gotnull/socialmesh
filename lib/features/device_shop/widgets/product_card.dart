@@ -8,6 +8,7 @@ import 'package:skeletonizer/skeletonizer.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/gradient_border_container.dart';
 import 'device_shop_components.dart';
 import '../../../core/widgets/skeleton_config.dart';
@@ -38,6 +39,7 @@ class _ProductCardState extends ConsumerState<ProductCard>
     with SingleTickerProviderStateMixin, LifecycleSafeMixin<ProductCard> {
   late final AnimationController _heartController;
   late final Animation<double> _heartScale;
+  bool _isFavoriteLoading = false;
 
   @override
   void initState() {
@@ -203,8 +205,8 @@ class _ProductCardState extends ConsumerState<ProductCard>
                 if (widget.product.isFeatured)
                   DeviceShopBadgePill(
                     label: context.l10n.deviceShopFeatured,
-                    icon: Icons.auto_awesome,
                     color: AccentColors.yellow,
+                    fillOpacity: 0.58,
                   ),
                 if (widget.product.isOnSale)
                   DeviceShopBadgePill(
@@ -222,12 +224,37 @@ class _ProductCardState extends ConsumerState<ProductCard>
             right: AppTheme.spacing8,
             child: ScaleTransition(
               scale: _heartScale,
-              child: DeviceShopIconOrb(
-                icon: isFavorite ? Icons.favorite : Icons.favorite_outline,
-                color: isFavorite ? AppTheme.errorRed : Colors.white,
-                onTap: () =>
-                    _toggleFavorite(ref.watch(currentUserProvider)?.uid),
-              ),
+              child: _isFavoriteLoading
+                  ? Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.36),
+                        borderRadius: BorderRadius.circular(AppTheme.radius14),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.12),
+                        ),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppTheme.spacing8),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            context.accentColor,
+                          ),
+                        ),
+                      ),
+                    )
+                  : DeviceShopIconOrb(
+                      icon: isFavorite
+                          ? Icons.favorite
+                          : Icons.favorite_outline,
+                      color: isFavorite ? AppTheme.errorRed : Colors.white,
+                      onTap: () => _toggleFavorite(
+                        ref.watch(currentUserProvider)?.uid,
+                        isFavorite: isFavorite,
+                      ),
+                    ),
             ),
           ),
           if (!widget.product.isInStock)
@@ -379,7 +406,6 @@ class _ProductCardState extends ConsumerState<ProductCard>
   }
 
   Widget _buildFooter(BuildContext context) {
-    final accent = _accentColor(context);
     final stockColor = widget.product.isInStock
         ? AppTheme.successGreen
         : AppTheme.errorRed;
@@ -405,16 +431,6 @@ class _ProductCardState extends ConsumerState<ProductCard>
               fontWeight: FontWeight.w600,
             ),
           ),
-        ),
-        Container(
-          width: 30,
-          height: 30,
-          decoration: BoxDecoration(
-            color: accent.withValues(alpha: 0.14),
-            borderRadius: BorderRadius.circular(AppTheme.radius12),
-            border: Border.all(color: accent.withValues(alpha: 0.24)),
-          ),
-          child: Icon(Icons.north_east_rounded, size: 16, color: accent),
         ),
       ],
     );
@@ -468,22 +484,57 @@ class _ProductCardState extends ConsumerState<ProductCard>
     );
   }
 
-  Future<void> _toggleFavorite(String? userId) async {
+  Future<void> _toggleFavorite(
+    String? userId, {
+    required bool isFavorite,
+  }) async {
     if (userId == null) {
       showSignInRequiredSnackBar(context, context.l10n.shopFavoritesSignIn);
       return;
     }
 
-    await _heartController.forward();
-    if (!mounted) {
-      return;
-    }
-    await _heartController.reverse();
-    if (!mounted) {
+    if (_isFavoriteLoading) {
       return;
     }
 
-    toggleFavoriteQueued(ref, userId: userId, productId: widget.product.id);
+    // Show confirmation before removing from favorites
+    if (isFavorite) {
+      final confirmed = await AppBottomSheet.showConfirm(
+        context: context,
+        title: context.l10n.deviceShopRemoveFavoriteTitle,
+        message: context.l10n.deviceShopRemoveFavoriteMessage,
+        confirmLabel: context.l10n.commonDelete,
+        cancelLabel: context.l10n.commonCancel,
+        isDestructive: true,
+      );
+
+      if (confirmed != true) {
+        return;
+      }
+    }
+
+    setState(() => _isFavoriteLoading = true);
+
+    try {
+      await _heartController.forward();
+      if (!mounted) {
+        return;
+      }
+      await _heartController.reverse();
+      if (!mounted) {
+        return;
+      }
+
+      await toggleFavoriteQueued(
+        ref,
+        userId: userId,
+        productId: widget.product.id,
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isFavoriteLoading = false);
+      }
+    }
   }
 }
 
@@ -506,7 +557,7 @@ class ProductCardSkeleton extends StatelessWidget {
           children: [
             Bone(
               width: double.infinity,
-              height: 144,
+              height: 136,
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(AppTheme.radius18),
               ),
