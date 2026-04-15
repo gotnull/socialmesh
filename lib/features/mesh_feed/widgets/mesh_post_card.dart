@@ -28,8 +28,12 @@ class MeshPostCard extends ConsumerWidget {
     final post = rankedPost.post;
     final nodes = ref.watch(nodeIdentityProvider);
     final node = nodes[post.authorNodeNum];
+    final myNodeNum = ref.watch(myNodeNumProvider);
+    final isMine = myNodeNum != null && post.authorNodeNum == myNodeNum;
     final longName =
-        node?.longName ?? '!${post.authorNodeNum.toRadixString(16)}';
+        node?.longName ??
+        node?.shortName ??
+        '!${post.authorNodeNum.toRadixString(16)}';
     final shortName = node?.shortName;
 
     final expiresIn = post.expiresAt.difference(DateTime.now());
@@ -87,7 +91,11 @@ class MeshPostCard extends ConsumerWidget {
                       ),
                       Row(
                         children: [
-                          _ProvenanceBadge(post: post, l10n: l10n),
+                          _ProvenanceBadge(
+                            post: post,
+                            isMine: isMine,
+                            l10n: l10n,
+                          ),
                           const SizedBox(width: AppTheme.spacing8),
                           Text(
                             _timeAgo(post.createdAtMs),
@@ -139,11 +147,14 @@ class MeshPostCard extends ConsumerWidget {
                 ),
                 const Spacer(),
                 if (post.seenViaTransports.length > 1)
-                  Icon(
-                    Icons.sync,
-                    size: 14,
-                    color: theme.textTheme.bodySmall?.color?.withValues(
-                      alpha: 0.4,
+                  Tooltip(
+                    message: l10n.meshFeedMultiTransportTooltip,
+                    child: Icon(
+                      Icons.swap_horiz,
+                      size: 14,
+                      color: theme.textTheme.bodySmall?.color?.withValues(
+                        alpha: 0.4,
+                      ),
                     ),
                   ),
                 if (post.hopCount != null) ...[
@@ -177,9 +188,14 @@ class MeshPostCard extends ConsumerWidget {
 }
 
 class _ProvenanceBadge extends StatelessWidget {
-  const _ProvenanceBadge({required this.post, required this.l10n});
+  const _ProvenanceBadge({
+    required this.post,
+    required this.isMine,
+    required this.l10n,
+  });
 
   final MeshPost post;
+  final bool isMine;
   final AppLocalizations l10n;
 
   @override
@@ -189,7 +205,9 @@ class _ProvenanceBadge extends StatelessWidget {
     String label;
     Color color;
 
-    if (post.isLocal) {
+    // Authorship is determined solely by authorNodeNum == myNodeNum.
+    // Never use isLocal or transport presence to infer authorship.
+    if (isMine) {
       label = l10n.meshFeedProvenanceLocal;
       color = AccentColors.green;
     } else if (post.seenViaTransports.contains(MeshTransportType.lanPeerSync) ||

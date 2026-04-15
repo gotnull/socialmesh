@@ -94,6 +94,7 @@ class _MeshFeedScreenState extends ConsumerState<MeshFeedScreen>
   }
 
   List<RankedPost> _applyFilter(List<RankedPost> posts) {
+    final myNodeNum = ref.read(myNodeNumProvider);
     return switch (_filter) {
       MeshFeedFilter.all => posts,
       MeshFeedFilter.trusted =>
@@ -102,11 +103,16 @@ class _MeshFeedScreenState extends ConsumerState<MeshFeedScreen>
         posts
             .where(
               (p) =>
-                  p.post.isLocal ||
+                  (myNodeNum != null && p.post.authorNodeNum == myNodeNum) ||
                   (p.post.hopCount != null && p.post.hopCount! <= 1),
             )
             .toList(),
-      MeshFeedFilter.local => posts.where((p) => p.post.isLocal).toList(),
+      MeshFeedFilter.local =>
+        posts
+            .where(
+              (p) => myNodeNum != null && p.post.authorNodeNum == myNodeNum,
+            )
+            .toList(),
     };
   }
 

@@ -46879,6 +46879,10 @@
     "@meshFeedProvenanceSynced": {
         "description": "Provenance label for a post received via peer sync."
     },
+    "meshFeedMultiTransportTooltip": "Seen on multiple transports",
+    "@meshFeedMultiTransportTooltip": {
+        "description": "Tooltip for the multi-transport icon on a post card."
+    },
     "meshFeedExpiresSoon": "Expires soon",
     "@meshFeedExpiresSoon": {
         "description": "Badge text for posts about to expire."

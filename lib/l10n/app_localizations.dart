@@ -61426,6 +61426,12 @@ abstract class AppLocalizations {
   /// **'Synced'**
   String get meshFeedProvenanceSynced;
 
+  /// Tooltip for the multi-transport icon on a post card.
+  ///
+  /// In en, this message translates to:
+  /// **'Seen on multiple transports'**
+  String get meshFeedMultiTransportTooltip;
+
   /// Badge text for posts about to expire.
   ///
   /// In en, this message translates to:

@@ -655,6 +655,10 @@ class LanSyncService {
       // Ingest each post through the repository path.
       for (final postRow in batch.posts) {
         try {
+          // Strip is_local from the wire — the sender's local flag must not
+          // propagate to the receiver. Authorship is determined by
+          // authorNodeNum at display time.
+          postRow['is_local'] = 0;
           final post = MeshPost.fromRow(postRow).copyWith(
             seenViaTransports: {MeshTransportType.lanPeerSync},
             lastSeenAt: DateTime.now(),

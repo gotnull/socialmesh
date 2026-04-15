@@ -35231,6 +35231,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshFeedProvenanceSynced => 'Synced';
 
   @override
+  String get meshFeedMultiTransportTooltip => 'Seen on multiple transports';
+
+  @override
   String get meshFeedExpiresSoon => 'Expires soon';
 
   @override
