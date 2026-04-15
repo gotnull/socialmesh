@@ -2015,6 +2015,7 @@ class ProtocolService {
         case SmPacketType.presence:
         case SmPacketType.signal:
         case SmPacketType.identity:
+        case SmPacketType.feedPost:
           break;
       }
     } catch (e, stack) {
@@ -2085,6 +2086,8 @@ class ProtocolService {
           _handleSppDecline(decoded.sppDecline, packet.from);
         case SmPacketType.sppAbort:
           _handleSppAbort(decoded.sppAbort, packet.from);
+        case SmPacketType.feedPost:
+          _handleSmFeedPost(decoded.feedPostPayload, packet.from, packet);
       }
     } catch (e, stack) {
       AppLogging.protocol(
@@ -2202,6 +2205,37 @@ class ProtocolService {
     required bool hashValid,
   })?
   onSmIdentityUpdate;
+
+  /// Callback for SM_FEED_POST receive. Set by providers to ingest
+  /// feed posts into MeshFeedRepository without importing it here.
+  void Function({
+    required int authorNodeNum,
+    required Uint8List payload,
+    int? hopCount,
+  })?
+  onFeedPostReceived;
+
+  /// Handle incoming SM_FEED_POST.
+  void _handleSmFeedPost(
+    Uint8List payload,
+    int senderNodeNum,
+    pb.MeshPacket packet,
+  ) {
+    AppLogging.meshFeed(
+      'SM_FEED_POST from ${senderNodeNum.toRadixString(16)}: '
+      '${payload.length} bytes',
+    );
+
+    final hopCount = packet.hopStart > 0 && packet.hopLimit >= 0
+        ? packet.hopStart - packet.hopLimit
+        : null;
+
+    onFeedPostReceived?.call(
+      authorNodeNum: senderNodeNum,
+      payload: payload,
+      hopCount: hopCount,
+    );
+  }
 
   /// Handle incoming FILE_OFFER.
   void _handleSmFileOffer(
@@ -4651,6 +4685,44 @@ class ProtocolService {
     AppLogging.social(
       'SM_SIGNAL broadcast: signalId=${SmPacketRouter.signalIdToString(signal.signalId)} '
       'content=${signal.content.length} chars, packetId=$packetId',
+    );
+
+    return packetId;
+  }
+
+  /// Broadcast a SM_FEED_POST (portnum 264).
+  ///
+  /// [loraPayload] is the pre-encoded wire bytes from [MeshPost.encodeForLora].
+  /// Returns the packet ID for tracking, or null if rate-limited or not connected.
+  Future<int?> sendFeedPost(Uint8List loraPayload) async {
+    if (_myNodeNum == null || !_transport.isConnected) return null;
+
+    if (!_smRateLimiter.canSend(SmPortnum.feedPost)) {
+      AppLogging.meshFeed('SM_FEED_POST rate-limited');
+      return null;
+    }
+
+    final packetId = _generatePacketId();
+
+    final data = _createDataWithPortnum(SmPortnum.feedPost, loraPayload);
+
+    final packet = MeshPacketBuilder.userPayload(
+      myNodeNum: _myNodeNum!,
+      to: 0xFFFFFFFF,
+      data: data,
+      packetId: packetId,
+    );
+
+    packet.hopLimit = SmTransport.feedPostHopLimit;
+
+    final toRadio = pb.ToRadio()..packet = packet;
+    await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+
+    _smRateLimiter.recordSend(SmPortnum.feedPost);
+
+    AppLogging.meshFeed(
+      'SM_FEED_POST broadcast: ${loraPayload.length} bytes, '
+      'packetId=$packetId',
     );
 
     return packetId;

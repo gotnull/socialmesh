@@ -22,6 +22,7 @@ enum SmPacketType {
   sppAccept,
   sppDecline,
   sppAbort,
+  feedPost,
 }
 
 /// A decoded Socialmesh extension packet.
@@ -66,6 +67,11 @@ class SmPacket {
 
   /// Cast payload to [SppAbort]. Only valid when [type] == sppAbort.
   SppAbort get sppAbort => payload as SppAbort;
+
+  /// Cast payload to raw [Uint8List]. Only valid when [type] == feedPost.
+  /// The raw bytes are the full wire payload (header + body) for
+  /// further decoding by [MeshPost.decodeFromLora].
+  Uint8List get feedPostPayload => payload as Uint8List;
 }
 
 /// Top-level codec for Socialmesh extension packets.
@@ -107,6 +113,9 @@ class SmCodec {
       case SmPortnum.fileTransfer:
         return decodeFileTransfer(data);
 
+      case SmPortnum.feedPost:
+        return decodeFeedPost(data);
+
       default:
         return null;
     }
@@ -132,6 +141,24 @@ class SmCodec {
 
   /// Encode a file ACK to bytes, ready for `Data.payload`.
   static Uint8List? encodeFileAck(SmFileAck ack) => ack.encode();
+
+  /// Decode a feed post payload (portnum 264).
+  ///
+  /// Validates the header kind nibble matches SM_FEED_POST (0x0B).
+  /// Returns the raw payload wrapped in an [SmPacket] for routing;
+  /// final decode to [MeshPost] happens in the handler (which supplies
+  /// the author node number from the MeshPacket envelope).
+  static SmPacket? decodeFeedPost(Uint8List data) {
+    // minimum: header + createdAtSec + flags + contentLen
+    if (data.length < 7) {
+      return null;
+    }
+    final kind = data[0] & 0x0F;
+    if (kind != SmPacketKind.feedPost) return null;
+    final version = (data[0] >> 4) & 0x0F;
+    if (version > SmVersion.maxSupported) return null;
+    return SmPacket._(SmPacketType.feedPost, Uint8List.fromList(data), version);
+  }
 
   /// Returns true if [data] looks like a binary file-transfer payload
   /// (header kind nibble in 4..0xA, covering data + negotiation packets).
@@ -239,6 +266,8 @@ class SmRateLimiter {
         return SmRateLimit.identityBroadcastInterval;
       case SmPortnum.fileTransfer:
         return SmRateLimit.fileChunkInterval;
+      case SmPortnum.feedPost:
+        return SmRateLimit.feedPostInterval;
       default:
         return const Duration(seconds: 30);
     }

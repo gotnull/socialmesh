@@ -524,6 +524,24 @@ class AppFeatureFlags {
       return false;
     }
   }
+
+  /// Whether Meshtastic RF transport for mesh feed posts is enabled.
+  /// Set `MESH_FEED_RF_ENABLED=true` in `.env` to enable.
+  /// Requires [isMeshFeedEnabled] to be true.
+  /// Default: true when mesh feed is enabled — RF is the primary transport.
+  static bool get isMeshFeedRfEnabled {
+    if (!isMeshFeedEnabled) return false;
+    try {
+      final raw = dotenv.env['MESH_FEED_RF_ENABLED']?.toLowerCase().trim();
+      // Default to true when mesh feed is enabled — RF is the canonical
+      // transport. The flag exists to allow disabling RF in isolation
+      // (e.g. during LAN-only testing).
+      if (raw == null) return true;
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return true;
+    }
+  }
 }
 
 /// Privacy level for content visibility

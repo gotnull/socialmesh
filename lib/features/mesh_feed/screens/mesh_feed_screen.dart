@@ -144,6 +144,9 @@ class _MeshFeedScreenState extends ConsumerState<MeshFeedScreen>
     // the service only when watched.
     ref.watch(lanSyncServiceProvider);
 
+    // Kick off Meshtastic RF transport — wires send/receive for feed posts.
+    ref.watch(meshFeedRfTransportProvider);
+
     var posts = feedState.posts;
     posts = _applyFilter(posts);
     posts = _applySort(posts);

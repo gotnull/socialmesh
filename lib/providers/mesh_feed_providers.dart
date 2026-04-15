@@ -12,11 +12,14 @@
 ///     ↓
 ///   lanSyncServiceProvider (Provider — LAN mDNS discovery + TCP sync)
 ///     ↓
+///   meshFeedRfTransportProvider (Provider — LoRa send/receive wiring)
+///     ↓
 ///   UI: MeshFeedScreen watches meshFeedNotifierProvider
 library;
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/constants.dart';
@@ -25,6 +28,7 @@ import '../services/mesh_feed/mesh_feed_database.dart';
 import '../services/mesh_feed/mesh_feed_ranking.dart';
 import '../services/mesh_feed/mesh_feed_repository.dart';
 import '../services/mesh_feed/mesh_post.dart';
+import '../services/mesh_feed/mesh_propagation_policy.dart';
 import '../services/mesh_feed/mesh_sync_service.dart';
 import '../services/mesh_sync/lan_sync_service.dart';
 import 'app_providers.dart';
@@ -304,4 +308,135 @@ final lanSyncServiceProvider = Provider<LanSyncService?>((ref) {
   });
 
   return service;
+});
+
+// ---------------------------------------------------------------------------
+// Meshtastic RF feature flag
+// ---------------------------------------------------------------------------
+
+/// Whether Meshtastic RF transport for mesh feed is enabled.
+final meshFeedRfEnabledProvider = Provider<bool>((ref) {
+  return AppFeatureFlags.isMeshFeedRfEnabled;
+});
+
+// ---------------------------------------------------------------------------
+// Meshtastic RF transport — send/receive wiring
+// ---------------------------------------------------------------------------
+
+/// Wires MeshPost RF send (outbound) and receive (inbound) into the
+/// real Meshtastic protocol path via [ProtocolService].
+///
+/// Outbound: locally created posts that pass [MeshPropagationPolicy]
+/// are encoded and sent via [ProtocolService.sendFeedPost].
+///
+/// Inbound: [ProtocolService.onFeedPostReceived] callback decodes
+/// incoming payloads and ingests them through [MeshFeedRepository.ingest].
+final meshFeedRfTransportProvider = Provider<void>((ref) {
+  final feedEnabled = ref.watch(meshFeedEnabledProvider);
+  final rfEnabled = ref.watch(meshFeedRfEnabledProvider);
+
+  if (!feedEnabled || !rfEnabled) {
+    AppLogging.meshFeed(
+      'RF-TRANSPORT: disabled (feedEnabled=$feedEnabled '
+      'rfEnabled=$rfEnabled)',
+    );
+    return;
+  }
+
+  final dbAsync = ref.watch(meshFeedDatabaseProvider);
+  final db = dbAsync.value;
+  if (db == null) {
+    AppLogging.meshFeed('RF-TRANSPORT: waiting for database');
+    return;
+  }
+
+  MeshFeedRepository repo;
+  try {
+    repo = ref.watch(meshFeedRepositoryProvider);
+  } catch (_) {
+    AppLogging.meshFeed('RF-TRANSPORT: waiting for repository');
+    return;
+  }
+
+  final protocol = ref.watch(protocolServiceProvider);
+  const policy = MeshPropagationPolicy();
+
+  // ── Inbound: RF → MeshFeedRepository ──────────────────────────────
+  protocol.onFeedPostReceived =
+      ({
+        required int authorNodeNum,
+        required Uint8List payload,
+        int? hopCount,
+      }) {
+        final post = MeshPost.decodeFromLora(payload, authorNodeNum);
+        if (post == null) {
+          AppLogging.meshFeed(
+            'RF-TRANSPORT: failed to decode feed post from '
+            '${authorNodeNum.toRadixString(16)} (${payload.length} bytes)',
+          );
+          return;
+        }
+
+        // Apply hop count from mesh envelope if available.
+        final ingestPost = hopCount != null
+            ? post.copyWith(hopCount: hopCount)
+            : post;
+
+        AppLogging.meshFeed(
+          'RF-TRANSPORT: received post=${ingestPost.id.substring(0, 8)}… '
+          'from ${authorNodeNum.toRadixString(16)} '
+          'hops=$hopCount content=${ingestPost.content.length} chars',
+        );
+
+        repo.ingest(ingestPost);
+      };
+
+  // ── Outbound: new local posts → RF ────────────────────────────────
+  // Listen to the feed stream and auto-send eligible local posts.
+  StreamSubscription<List<RankedPost>>? feedSub;
+  feedSub = repo.feedStream.listen((ranked) {
+    for (final rp in ranked) {
+      final post = rp.post;
+      // Only send locally-authored posts not yet broadcast.
+      if (!post.isLocal) continue;
+      if (post.loraRebroadcastAtMs != null) continue;
+
+      final decision = policy.evaluate(post);
+      if (decision != PropagationDecision.eligible) continue;
+
+      final encoded = post.encodeForLora();
+      if (encoded == null) {
+        AppLogging.meshFeed(
+          'RF-TRANSPORT: encoding failed for post='
+          '${post.id.substring(0, 8)}…',
+        );
+        continue;
+      }
+
+      // Fire-and-forget send with immediate mark to prevent retry.
+      // Mark first to prevent duplicate sends on rapid feed updates.
+      repo.markLoraRebroadcast(post.id).then((_) {
+        protocol.sendFeedPost(encoded).then((packetId) {
+          if (packetId != null) {
+            AppLogging.meshFeed(
+              'RF-TRANSPORT: sent post=${post.id.substring(0, 8)}… '
+              'packetId=$packetId ${encoded.length} bytes',
+            );
+          } else {
+            AppLogging.meshFeed(
+              'RF-TRANSPORT: send failed for post='
+              '${post.id.substring(0, 8)}… (not connected or rate limited)',
+            );
+          }
+        });
+      });
+    }
+  });
+
+  ref.onDispose(() {
+    AppLogging.meshFeed('RF-TRANSPORT: disposing');
+    protocol.onFeedPostReceived = null;
+    feedSub?.cancel();
+    feedSub = null;
+  });
 });
