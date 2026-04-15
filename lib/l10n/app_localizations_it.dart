@@ -35153,4 +35153,24 @@ class AppLocalizationsIt extends AppLocalizations {
   String tapbackGroupOthers(int count) {
     return '+$count';
   }
+
+  @override
+  String get whatsNewVersion1300Subtitle => 'Version 1.30.0';
+
+  @override
+  String get whatsNewAutomationBranchingTitle => 'IF / THEN / ELSE Automations';
+
+  @override
+  String get whatsNewAutomationBranchingDescription =>
+      'Automations now support structured condition trees with IF / THEN / ELSE logic. Build complex rules that branch based on multiple conditions — battery level, node status, time of day, and more.\n\nEach run shows exactly which branch was taken and why, with a detailed execution history you can inspect anytime.';
+
+  @override
+  String get whatsNewCtaOpenAutomations => 'Open Automations';
+
+  @override
+  String get whatsNewReactionGroupingTitle => 'Grouped Reactions';
+
+  @override
+  String get whatsNewReactionGroupingDescription =>
+      'Message reactions are now grouped by emoji — if five people send a thumbs-up, you see one compact chip instead of five. Long-press any reaction to see every sender.\n\nReactions also wrap to the next line instead of overflowing off-screen, keeping the conversation tidy.';
 }

@@ -61239,6 +61239,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'+{count}'**
   String tapbackGroupOthers(int count);
+
+  /// Subtitle for the What's New popup for version 1.30.0.
+  ///
+  /// In en, this message translates to:
+  /// **'Version 1.30.0'**
+  String get whatsNewVersion1300Subtitle;
+
+  /// Title for the condition branching automation feature in What's New.
+  ///
+  /// In en, this message translates to:
+  /// **'IF / THEN / ELSE Automations'**
+  String get whatsNewAutomationBranchingTitle;
+
+  /// Description for the condition branching automation feature in What's New.
+  ///
+  /// In en, this message translates to:
+  /// **'Automations now support structured condition trees with IF / THEN / ELSE logic. Build complex rules that branch based on multiple conditions — battery level, node status, time of day, and more.\n\nEach run shows exactly which branch was taken and why, with a detailed execution history you can inspect anytime.'**
+  String get whatsNewAutomationBranchingDescription;
+
+  /// CTA button label to open the Automations screen from What's New.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Automations'**
+  String get whatsNewCtaOpenAutomations;
+
+  /// Title for the reaction grouping improvement in What's New.
+  ///
+  /// In en, this message translates to:
+  /// **'Grouped Reactions'**
+  String get whatsNewReactionGroupingTitle;
+
+  /// Description for the reaction grouping improvement in What's New.
+  ///
+  /// In en, this message translates to:
+  /// **'Message reactions are now grouped by emoji — if five people send a thumbs-up, you see one compact chip instead of five. Long-press any reaction to see every sender.\n\nReactions also wrap to the next line instead of overflowing off-screen, keeping the conversation tidy.'**
+  String get whatsNewReactionGroupingDescription;
 }
 
 class _AppLocalizationsDelegate

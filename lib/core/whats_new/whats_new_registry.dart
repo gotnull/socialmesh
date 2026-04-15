@@ -305,6 +305,43 @@ class WhatsNewRegistry {
           ),
         ],
       ),
+
+    // v1.30.0 — IF/THEN/ELSE automations + grouped reactions
+    WhatsNewPayload(
+      version: '1.30.0',
+      headline: "What's New in Socialmesh",
+      subtitle: 'Version 1.30.0',
+      items: [
+        WhatsNewItem(
+          id: 'automation_branching_intro',
+          title: 'IF / THEN / ELSE Automations',
+          description:
+              'Automations now support structured condition trees with '
+              'IF / THEN / ELSE logic. Build complex rules that branch '
+              'based on multiple conditions — battery level, node status, '
+              'time of day, and more.\n\n'
+              'Each run shows exactly which branch was taken and why, '
+              'with a detailed execution history you can inspect anytime.',
+          icon: Icons.account_tree_outlined,
+          iconColor: Color(0xFFFF7043), // Colors.deepOrange.shade300
+          deepLinkRoute: '/automations',
+          ctaLabel: 'Open Automations',
+          badgeKey: 'automations',
+        ),
+        WhatsNewItem(
+          id: 'reaction_grouping_intro',
+          title: 'Grouped Reactions',
+          description:
+              'Message reactions are now grouped by emoji — if five people '
+              'send a thumbs-up, you see one compact chip instead of five. '
+              'Long-press any reaction to see every sender.\n\n'
+              'Reactions also wrap to the next line instead of overflowing '
+              'off-screen, keeping the conversation tidy.',
+          icon: Icons.emoji_emotions_outlined,
+          iconColor: Color(0xFFFFCA28), // Colors.amber.shade400
+        ),
+      ],
+    ),
   ];
 
   // ===========================================================================
@@ -454,6 +491,8 @@ class WhatsNewRegistry {
         return l10n.whatsNewVersion1160Subtitle;
       case '1.27.0':
         return l10n.whatsNewVersion1270Subtitle;
+      case '1.30.0':
+        return l10n.whatsNewVersion1300Subtitle;
       default:
         return null;
     }
@@ -498,6 +537,14 @@ class WhatsNewRegistry {
       case 'translation_pack_intro':
         title = l10n.whatsNewTranslationPackTitle;
         description = l10n.whatsNewTranslationPackDescription;
+        ctaLabel = null;
+      case 'automation_branching_intro':
+        title = l10n.whatsNewAutomationBranchingTitle;
+        description = l10n.whatsNewAutomationBranchingDescription;
+        ctaLabel = l10n.whatsNewCtaOpenAutomations;
+      case 'reaction_grouping_intro':
+        title = l10n.whatsNewReactionGroupingTitle;
+        description = l10n.whatsNewReactionGroupingDescription;
         ctaLabel = null;
       default:
         return i;

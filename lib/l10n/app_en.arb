@@ -46753,5 +46753,29 @@
                 "type": "int"
             }
         }
+    },
+    "whatsNewVersion1300Subtitle": "Version 1.30.0",
+    "@whatsNewVersion1300Subtitle": {
+        "description": "Subtitle for the What's New popup for version 1.30.0."
+    },
+    "whatsNewAutomationBranchingTitle": "IF / THEN / ELSE Automations",
+    "@whatsNewAutomationBranchingTitle": {
+        "description": "Title for the condition branching automation feature in What's New."
+    },
+    "whatsNewAutomationBranchingDescription": "Automations now support structured condition trees with IF / THEN / ELSE logic. Build complex rules that branch based on multiple conditions — battery level, node status, time of day, and more.\n\nEach run shows exactly which branch was taken and why, with a detailed execution history you can inspect anytime.",
+    "@whatsNewAutomationBranchingDescription": {
+        "description": "Description for the condition branching automation feature in What's New."
+    },
+    "whatsNewCtaOpenAutomations": "Open Automations",
+    "@whatsNewCtaOpenAutomations": {
+        "description": "CTA button label to open the Automations screen from What's New."
+    },
+    "whatsNewReactionGroupingTitle": "Grouped Reactions",
+    "@whatsNewReactionGroupingTitle": {
+        "description": "Title for the reaction grouping improvement in What's New."
+    },
+    "whatsNewReactionGroupingDescription": "Message reactions are now grouped by emoji — if five people send a thumbs-up, you see one compact chip instead of five. Long-press any reaction to see every sender.\n\nReactions also wrap to the next line instead of overflowing off-screen, keeping the conversation tidy.",
+    "@whatsNewReactionGroupingDescription": {
+        "description": "Description for the reaction grouping improvement in What's New."
     }
 }
