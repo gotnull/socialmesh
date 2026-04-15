@@ -61,12 +61,20 @@ class MeshSyncService {
     required MeshTransportType transport,
     String? displayName,
   }) async {
+    // Check whether this peer already has a cursor (for diagnostics).
+    final existingCursor = await _db.getSyncCursorSeq(peerId);
     await _db.upsertSyncPeer(
       peerId: peerId,
       transport: transport,
       displayName: displayName,
     );
-    AppLogging.meshFeed('sync peer registered: $peerId via ${transport.name}');
+    // Verify cursor survived the upsert.
+    final cursorAfter = await _db.getSyncCursorSeq(peerId);
+    AppLogging.meshFeed(
+      'sync peer registered: $peerId via ${transport.name} '
+      '(cursor: ${existingCursor ?? 'none'}'
+      '${cursorAfter != existingCursor ? ' → ${cursorAfter ?? 'none'} WARNING: cursor changed!' : ' preserved'})',
+    );
   }
 
   /// Get the next batch of posts for a peer based on their sync_seq cursor.
@@ -115,8 +123,11 @@ class MeshSyncService {
     }
 
     await _db.updateSyncCursorSeq(peerId, cursorSeq);
+    // Verify the write persisted.
+    final persisted = await _db.getSyncCursorSeq(peerId);
     AppLogging.meshFeed(
-      'sync ack OK: peer=$peerId cursor ${current ?? 0} → $cursorSeq',
+      'sync ack OK: peer=$peerId cursor ${current ?? 0} → $cursorSeq'
+      '${persisted != cursorSeq ? ' WARNING: readback=${persisted ?? 'none'}' : ''}',
     );
   }
 

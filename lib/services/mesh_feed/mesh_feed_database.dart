@@ -413,14 +413,29 @@ class MeshFeedDatabase {
   }) async {
     final db = await _ensureDb();
     final nowMs = DateTime.now().millisecondsSinceEpoch;
-    await db.insert('mesh_sync_peers', {
-      'peer_id': peerId,
-      'display_name': displayName,
-      'last_seen_at_ms': nowMs,
-      'last_sync_at_ms': syncCursorMs != null ? nowMs : null,
-      'sync_cursor_ms': syncCursorMs,
-      'transport': transport.name,
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
+    // Use INSERT ... ON CONFLICT to preserve existing cursor columns.
+    // ConflictAlgorithm.replace would DELETE the row and re-insert,
+    // nuking sync_cursor_seq back to NULL — destroying cursor state.
+    await db.rawInsert(
+      '''
+      INSERT INTO mesh_sync_peers
+        (peer_id, display_name, last_seen_at_ms, last_sync_at_ms,
+         sync_cursor_ms, transport)
+      VALUES (?, ?, ?, ?, ?, ?)
+      ON CONFLICT(peer_id) DO UPDATE SET
+        display_name = excluded.display_name,
+        last_seen_at_ms = excluded.last_seen_at_ms,
+        transport = excluded.transport
+    ''',
+      [
+        peerId,
+        displayName,
+        nowMs,
+        syncCursorMs != null ? nowMs : null,
+        syncCursorMs,
+        transport.name,
+      ],
+    );
   }
 
   /// Get the sync cursor for a peer (last synced timestamp).

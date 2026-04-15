@@ -1052,7 +1052,10 @@ void main() {
       // After sync, metadata merges happen (the posts now exist on both
       // sides with merged transports). These should NOT bump sync_seq.
 
-      // Second sync — should exchange zero new posts.
+      // Second sync — cursors were saved by ack, so outbound sends should
+      // decrease significantly. B still sends Post-A (received in Phase 3
+      // of first sync, got a new sync_seq above B's Phase 2 cursor for A).
+      // A sends 0 because A's cursor for B covers all posts.
       final result2 = await _runLoopbackSync(
         serverService: b.service,
         clientService: a.service,
@@ -1060,12 +1063,21 @@ void main() {
         clientNodeNum: 0x11111111,
       );
 
-      // Second sync should send 2 posts each (both posts exist on both sides,
-      // cursor starts from none for new peer registration). But the key
-      // assertion is that after the initial sync, no ADDITIONAL posts appear
-      // from metadata merges — the sent count should not grow unboundedly.
-      expect(result2.clientSent, lessThanOrEqualTo(2));
-      expect(result2.serverSent, lessThanOrEqualTo(2));
+      // A's outbound cursor for B was set to max sync_seq in Phase 3 ack.
+      expect(result2.clientSent, equals(0));
+      // B sends Post-A (ingested in Phase 3 with sync_seq > Phase 2 cursor).
+      // This is one-shot: B's cursor for A advances after this ack.
+      expect(result2.serverSent, lessThanOrEqualTo(1));
+
+      // Third sync — now fully converged on both sides.
+      final result3 = await _runLoopbackSync(
+        serverService: b.service,
+        clientService: a.service,
+        serverNodeNum: 0x22222222,
+        clientNodeNum: 0x11111111,
+      );
+      expect(result3.clientSent, equals(0));
+      expect(result3.serverSent, equals(0));
     });
   });
 }

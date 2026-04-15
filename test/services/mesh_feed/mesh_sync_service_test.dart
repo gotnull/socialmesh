@@ -566,4 +566,151 @@ void main() {
       expect(postAfterMerge.syncSeq, equals(originalSyncSeq));
     });
   });
+
+  // -------------------------------------------------------------------------
+  // Cursor persistence across peer registration
+  // -------------------------------------------------------------------------
+
+  group('cursor persistence', () {
+    late _FakeSyncDb db;
+    late MeshSyncService syncService;
+
+    setUp(() {
+      db = _FakeSyncDb();
+      syncService = MeshSyncService(database: db);
+    });
+
+    test(
+      'ack saves cursor, next getPostsForPeer starts from saved cursor',
+      () async {
+        // Register peer first (as happens during hello exchange).
+        await syncService.registerPeer(
+          peerId: 'peer-1',
+          transport: MeshTransportType.lanPeerSync,
+        );
+
+        // Insert 3 posts.
+        await db.upsertPost(_makePost(1, 'A'));
+        await db.upsertPost(_makePost(2, 'B'));
+        await db.upsertPost(_makePost(3, 'C'));
+
+        // First batch — cursor=none, gets all 3.
+        final batch1 = await syncService.getPostsForPeer('peer-1');
+        expect(batch1.posts.length, equals(3));
+        expect(batch1.cursorSeq, isNotNull);
+
+        // Ack the batch.
+        await syncService.acknowledgeSyncBatch('peer-1', batch1.cursorSeq!);
+
+        // Re-register peer (as happens during hello exchange every session).
+        await syncService.registerPeer(
+          peerId: 'peer-1',
+          transport: MeshTransportType.lanPeerSync,
+        );
+
+        // Next batch — cursor should be reused, not reset to none.
+        final batch2 = await syncService.getPostsForPeer('peer-1');
+        expect(batch2.posts, isEmpty);
+        expect(batch2.cursorSeq, isNull);
+      },
+    );
+
+    test('registerPeer preserves existing cursor', () async {
+      // Register and set cursor.
+      await syncService.registerPeer(
+        peerId: 'peer-x',
+        transport: MeshTransportType.lanPeerSync,
+        displayName: 'First',
+      );
+      await db.upsertPost(_makePost(1, 'Post'));
+      final batch = await syncService.getPostsForPeer('peer-x');
+      await syncService.acknowledgeSyncBatch('peer-x', batch.cursorSeq!);
+
+      final cursorBefore = await syncService.getCursorForPeer('peer-x');
+      expect(cursorBefore, isNotNull);
+
+      // Re-register with updated display name.
+      await syncService.registerPeer(
+        peerId: 'peer-x',
+        transport: MeshTransportType.lanPeerSync,
+        displayName: 'Updated',
+      );
+
+      // Cursor must be unchanged.
+      final cursorAfter = await syncService.getCursorForPeer('peer-x');
+      expect(cursorAfter, equals(cursorBefore));
+    });
+
+    test('same peerId used in lookup and write paths', () async {
+      const peerId = '!abc12345';
+
+      await syncService.registerPeer(
+        peerId: peerId,
+        transport: MeshTransportType.lanPeerSync,
+      );
+
+      await db.upsertPost(_makePost(1, 'Post'));
+      final batch = await syncService.getPostsForPeer(peerId);
+      expect(batch.posts.length, equals(1));
+
+      await syncService.acknowledgeSyncBatch(peerId, batch.cursorSeq!);
+      final cursor = await syncService.getCursorForPeer(peerId);
+      expect(cursor, equals(batch.cursorSeq));
+
+      // Same peerId returns empty batch.
+      final batch2 = await syncService.getPostsForPeer(peerId);
+      expect(batch2.posts, isEmpty);
+    });
+
+    test(
+      'initiator→responder→initiator sessions all use same saved cursor',
+      () async {
+        const peerId = '!stable-peer';
+
+        // Session 1: register + serve 2 posts + ack.
+        await syncService.registerPeer(
+          peerId: peerId,
+          transport: MeshTransportType.lanPeerSync,
+        );
+        await db.upsertPost(_makePost(1, 'Post 1'));
+        await db.upsertPost(_makePost(2, 'Post 2'));
+
+        final batch1 = await syncService.getPostsForPeer(peerId);
+        expect(batch1.posts.length, equals(2));
+        await syncService.acknowledgeSyncBatch(peerId, batch1.cursorSeq!);
+
+        final cursorAfter1 = await syncService.getCursorForPeer(peerId);
+
+        // Session 2: re-register (simulates hello in responder role).
+        await syncService.registerPeer(
+          peerId: peerId,
+          transport: MeshTransportType.lanPeerSync,
+          displayName: 'Responder session',
+        );
+
+        // Cursor should survive.
+        final cursorAfter2 = await syncService.getCursorForPeer(peerId);
+        expect(cursorAfter2, equals(cursorAfter1));
+
+        // Serve — should get 0 posts (all already acked).
+        final batch2 = await syncService.getPostsForPeer(peerId);
+        expect(batch2.posts, isEmpty);
+
+        // Session 3: re-register again (initiator role).
+        await syncService.registerPeer(
+          peerId: peerId,
+          transport: MeshTransportType.lanPeerSync,
+          displayName: 'Initiator session 2',
+        );
+
+        // Add a new post.
+        await db.upsertPost(_makePost(3, 'Post 3'));
+
+        // Should get ONLY the new post.
+        final batch3 = await syncService.getPostsForPeer(peerId);
+        expect(batch3.posts.length, equals(1));
+        expect(batch3.posts.first.content, equals('Post 3'));
+      },
+    );
+  });
 }

@@ -698,6 +698,13 @@ class LanSyncService {
     final batchSize = msg.maxBatchSize.clamp(1, 50);
 
     for (var round = 0; round < maxSessionRounds; round++) {
+      // Diagnostic: log cursor lookup before batch selection.
+      final cursorBefore = await _syncService.getCursorForPeer(remotePeerId);
+      AppLogging.meshFeed(
+        'LAN-SYNC: [$role] outbound cursor lookup: '
+        'peer=$remotePeerId cursor=${cursorBefore ?? 'none'}',
+      );
+
       final batch = await _syncService.getPostsForPeer(
         remotePeerId,
         batchSize: batchSize,
