@@ -1122,14 +1122,26 @@ class _PartnerCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        seller.name,
-                        maxLines: 2,
-                        style: TextStyle(
-                          color: context.textPrimary,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                        ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              seller.name,
+                              maxLines: 2,
+                              style: TextStyle(
+                                color: context.textPrimary,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: AppTheme.spacing4),
+                          Icon(
+                            Icons.verified,
+                            color: context.accentColor,
+                            size: 16,
+                          ),
+                        ],
                       ),
                       const SizedBox(height: AppTheme.spacing4),
                       Text(
@@ -1142,11 +1154,6 @@ class _PartnerCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                ),
-                Icon(
-                  Icons.north_east_rounded,
-                  color: context.accentColor,
-                  size: 18,
                 ),
               ],
             ),

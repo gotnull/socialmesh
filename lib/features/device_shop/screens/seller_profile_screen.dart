@@ -13,6 +13,7 @@ import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/search_filter_header.dart';
+import '../../../core/widgets/status_filter_chip.dart';
 import '../../../utils/snackbar.dart';
 import '../../../core/widgets/auto_scroll_text.dart';
 import '../../../core/widgets/user_avatar.dart';
@@ -20,6 +21,8 @@ import '../models/shop_models.dart';
 import '../providers/device_shop_providers.dart';
 import '../widgets/device_shop_components.dart';
 import '../widgets/product_card.dart';
+
+enum _SellerProductFilter { all, inStock, featured, onSale }
 
 /// Seller profile screen showing seller info and their products
 class SellerProfileScreen extends ConsumerStatefulWidget {
@@ -35,8 +38,10 @@ class SellerProfileScreen extends ConsumerStatefulWidget {
 class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
     with LifecycleSafeMixin {
   late ScrollController _scrollController;
+  late FocusNode _searchFocusNode;
   bool _showTitle = false;
   String _searchQuery = '';
+  _SellerProductFilter _productFilter = _SellerProductFilter.all;
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -44,6 +49,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
     super.initState();
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
+    _searchFocusNode = FocusNode();
   }
 
   @override
@@ -51,6 +57,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -177,11 +184,49 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
                   delegate: SearchFilterHeaderDelegate(
                     searchController: _searchController,
                     searchQuery: _searchQuery,
+                    focusNode: _searchFocusNode,
                     onSearchChanged: (value) =>
                         setState(() => _searchQuery = value),
                     hintText: context.l10n.sellerProfileSearchHint,
                     textScaler: MediaQuery.textScalerOf(context),
-                    rebuildKey: _searchQuery,
+                    rebuildKey: Object.hashAll([_searchQuery, _productFilter]),
+                    filterChips: [
+                      StatusFilterChip(
+                        label: context.l10n.deviceShopFilterAll,
+                        isSelected: _productFilter == _SellerProductFilter.all,
+                        onTap: () => setState(
+                          () => _productFilter = _SellerProductFilter.all,
+                        ),
+                      ),
+                      StatusFilterChip(
+                        label: context.l10n.deviceShopInStock,
+                        color: AccentColors.green,
+                        isSelected:
+                            _productFilter == _SellerProductFilter.inStock,
+                        onTap: () => setState(
+                          () => _productFilter = _SellerProductFilter.inStock,
+                        ),
+                      ),
+                      StatusFilterChip(
+                        label: context.l10n.deviceShopFeatured,
+                        color: AccentColors.yellow,
+                        isSelected:
+                            _productFilter == _SellerProductFilter.featured,
+                        onTap: () => setState(
+                          () => _productFilter = _SellerProductFilter.featured,
+                        ),
+                      ),
+                      StatusFilterChip(
+                        label: context.l10n.deviceShopOnSale,
+                        color: AppTheme.errorRed,
+                        icon: Icons.local_offer,
+                        isSelected:
+                            _productFilter == _SellerProductFilter.onSale,
+                        onTap: () => setState(
+                          () => _productFilter = _SellerProductFilter.onSale,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
 
@@ -274,18 +319,40 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
                       );
                     }
 
-                    // Filter products by search query
+                    // Filter by search query and product filter
+                    bool matchesSellerProductFilter(ShopProduct p) {
+                      switch (_productFilter) {
+                        case _SellerProductFilter.all:
+                          return true;
+                        case _SellerProductFilter.inStock:
+                          return p.isInStock;
+                        case _SellerProductFilter.featured:
+                          return p.isFeatured;
+                        case _SellerProductFilter.onSale:
+                          return p.compareAtPrice != null &&
+                              p.compareAtPrice! > p.price;
+                      }
+                    }
+
                     final filteredProducts = _searchQuery.isEmpty
                         ? products
+                              .where((p) => matchesSellerProductFilter(p))
+                              .toList()
                         : products.where((p) {
                             final query = _searchQuery.toLowerCase();
-                            return p.name.toLowerCase().contains(query) ||
-                                (p.description.toLowerCase().contains(query)) ||
-                                (p.shortDescription?.toLowerCase().contains(
+                            final matchesFilter = matchesSellerProductFilter(p);
+                            return matchesFilter &&
+                                (p.name.toLowerCase().contains(query) ||
+                                    (p.description.toLowerCase().contains(
                                       query,
-                                    ) ??
-                                    false) ||
-                                p.category.label.toLowerCase().contains(query);
+                                    )) ||
+                                    (p.shortDescription?.toLowerCase().contains(
+                                          query,
+                                        ) ??
+                                        false) ||
+                                    p.category.label.toLowerCase().contains(
+                                      query,
+                                    ));
                           }).toList();
 
                     if (filteredProducts.isEmpty) {
@@ -462,41 +529,9 @@ class _SellerStats extends StatelessWidget {
             value: '${seller.productCount}',
             label: context.l10n.sellerProfileProductsStat,
           ),
-          _StatDivider(),
-          _StatItem(
-            icon: Icons.shopping_bag,
-            iconColor: AppTheme.successGreen,
-            value: '${seller.salesCount}',
-            label: context.l10n.sellerProfileSalesStat,
-          ),
-          _StatDivider(),
-          _StatItem(
-            icon: Icons.calendar_today,
-            iconColor: context.textSecondary,
-            value: _formatJoinDate(seller.joinedAt),
-            label: context.l10n.sellerProfileFoundedStat,
-          ),
         ],
       ),
     );
-  }
-
-  String _formatJoinDate(DateTime date) {
-    final months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    return "${months[date.month - 1]} '${date.year % 100}";
   }
 }
 
