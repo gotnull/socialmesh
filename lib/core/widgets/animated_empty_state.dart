@@ -119,7 +119,7 @@ class _AnimatedEmptyStateState extends State<AnimatedEmptyState>
   static const double _gyroFriction = 0.94;
   static const double _gyroMax = 12.0;
   static const double _iconSize = 48.0;
-  bool _reduceMotion = false;
+  bool _reduceMotion = true;
 
   /// Sensor sampling period. 50ms (20Hz) is sufficient for smooth parallax
   /// tilt effects while using ~68% less CPU than the previous 16ms (62.5Hz).
@@ -454,11 +454,8 @@ class _AnimatedEmptyStateState extends State<AnimatedEmptyState>
                     ),
                     child: _AnimatedIconCycle(
                       icons: widget.config.icons,
-                      builder: (icon) => _buildGradientIcon(
-                        context,
-                        icon,
-                        animate: !_reduceMotion,
-                      ),
+                      builder: (icon) =>
+                          _buildGradientIcon(context, icon, animate: true),
                     ),
                   ),
 
@@ -468,90 +465,82 @@ class _AnimatedEmptyStateState extends State<AnimatedEmptyState>
                   // based motion) and _convergeController (for the converge
                   // tap effect) so it rebuilds only this layer, not the
                   // entire empty-state tree.
-                  if (!_reduceMotion)
-                    RepaintBoundary(
-                      child: AnimatedBuilder(
-                        animation: Listenable.merge([
-                          _floatController,
-                          _convergeController,
-                        ]),
-                        builder: (context, child) {
-                          final floatTime = _floatTime;
-                          final converge =
-                              1 - (_convergeController.value * 0.25);
-                          return Stack(
-                            alignment: Alignment.center,
-                            children: _floatingNodes.map((node) {
-                              final oscillation = sin(
-                                floatTime *
-                                        2 *
-                                        pi *
-                                        node.speed *
-                                        activityFactor +
-                                    node.phaseOffset,
-                              );
-                              final angle =
-                                  node.angle + (oscillation * node.sweep);
-                              final wobblePhase =
-                                  floatTime * 2 * pi * node.wobbleSpeed +
-                                  node.phaseOffset;
-                              final radius =
-                                  node.radius *
-                                  converge *
-                                  (1 +
-                                      sin(wobblePhase + node.angle) *
-                                          node.wobble);
-                              final depthScale = 0.4 + (node.radius / 140);
-                              final parallax =
-                                  (_tiltOffset + (_gyroOffset * 0.4)) *
-                                  activityFactor;
-                              final x =
-                                  cos(angle) * radius +
-                                  parallax.dx * depthScale;
-                              final y =
-                                  sin(angle) * radius +
-                                  parallax.dy * depthScale;
-                              final opacity =
-                                  node.opacity *
-                                  (widget.config.actionEnabled ? 1.0 : 0.6);
+                  RepaintBoundary(
+                    child: AnimatedBuilder(
+                      animation: Listenable.merge([
+                        _floatController,
+                        _convergeController,
+                      ]),
+                      builder: (context, child) {
+                        final floatTime = _floatTime;
+                        final converge = 1 - (_convergeController.value * 0.25);
+                        return Stack(
+                          alignment: Alignment.center,
+                          children: _floatingNodes.map((node) {
+                            final oscillation = sin(
+                              floatTime * 2 * pi * node.speed * activityFactor +
+                                  node.phaseOffset,
+                            );
+                            final angle =
+                                node.angle + (oscillation * node.sweep);
+                            final wobblePhase =
+                                floatTime * 2 * pi * node.wobbleSpeed +
+                                node.phaseOffset;
+                            final radius =
+                                node.radius *
+                                converge *
+                                (1 +
+                                    sin(wobblePhase + node.angle) *
+                                        node.wobble);
+                            final depthScale = 0.4 + (node.radius / 140);
+                            final parallax =
+                                (_tiltOffset + (_gyroOffset * 0.4)) *
+                                activityFactor;
+                            final x =
+                                cos(angle) * radius + parallax.dx * depthScale;
+                            final y =
+                                sin(angle) * radius + parallax.dy * depthScale;
+                            final opacity =
+                                node.opacity *
+                                (widget.config.actionEnabled ? 1.0 : 0.6);
 
-                              Widget orb = Container(
-                                width: node.size,
-                                height: node.size,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: node.color.withValues(alpha: opacity),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: node.color.withValues(
-                                        alpha: opacity * 0.5,
-                                      ),
-                                      blurRadius: node.size,
-                                      spreadRadius: 2,
+                            Widget orb = Container(
+                              width: node.size,
+                              height: node.size,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: node.color.withValues(alpha: opacity),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: node.color.withValues(
+                                      alpha: opacity * 0.5,
                                     ),
-                                  ],
-                                ),
-                              );
-
-                              if (node.blurSigma > 0) {
-                                orb = ImageFiltered(
-                                  imageFilter: ImageFilter.blur(
-                                    sigmaX: node.blurSigma,
-                                    sigmaY: node.blurSigma,
+                                    blurRadius: node.size,
+                                    spreadRadius: 2,
                                   ),
-                                  child: orb,
-                                );
-                              }
+                                ],
+                              ),
+                            );
 
-                              return Transform.translate(
-                                offset: Offset(x, y),
+                            if (node.blurSigma > 0) {
+                              orb = ImageFiltered(
+                                imageFilter: ImageFilter.blur(
+                                  sigmaX: node.blurSigma,
+                                  sigmaY: node.blurSigma,
+                                ),
                                 child: orb,
                               );
-                            }).toList(),
-                          );
-                        },
-                      ),
+                            }
+
+                            return Transform.translate(
+                              offset: Offset(x, y),
+                              child: orb,
+                            );
+                          }).toList(),
+                        );
+                      },
                     ),
+                  ),
                 ],
               ),
             ),
@@ -581,7 +570,7 @@ class _AnimatedEmptyStateState extends State<AnimatedEmptyState>
                         baseline: TextBaseline.alphabetic,
                         child: AnimatedGradientMask(
                           gradient: gradient,
-                          animate: !_reduceMotion,
+                          animate: true,
                           child: Text(
                             widget.config.titleKeyword,
                             style: baseStyle.copyWith(
@@ -656,7 +645,6 @@ class _AnimatedIconCycleState extends State<_AnimatedIconCycle>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   int _currentIndex = 0;
-  bool _reduceMotion = false;
 
   @override
   void initState() {
@@ -681,25 +669,23 @@ class _AnimatedIconCycleState extends State<_AnimatedIconCycle>
   }
 
   void _startCycling() {
-    if (_reduceMotion) return;
     Future.delayed(AnimatedTagline.displayDuration, () {
       if (!mounted) return;
-      if (_reduceMotion) return;
       _cycleToNext();
     });
   }
 
   Future<void> _cycleToNext() async {
-    if (!mounted || _reduceMotion) return;
+    if (!mounted) return;
     await _controller.reverse();
-    if (!mounted || _reduceMotion) return;
+    if (!mounted) return;
 
     setState(() {
       _currentIndex = (_currentIndex + 1) % widget.icons.length;
     });
 
     await _controller.forward();
-    if (!mounted || _reduceMotion) return;
+    if (!mounted) return;
 
     _startCycling();
   }
@@ -711,26 +697,7 @@ class _AnimatedIconCycleState extends State<_AnimatedIconCycle>
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final reduceMotion =
-        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
-    if (reduceMotion == _reduceMotion) return;
-    _reduceMotion = reduceMotion;
-    if (_reduceMotion) {
-      _controller.value = 1.0;
-      _currentIndex = 0;
-      return;
-    }
-    _controller.value = 1.0;
-    _startCycling();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    if (_reduceMotion) {
-      return widget.builder(widget.icons.first);
-    }
     return FadeTransition(
       opacity: _fadeAnimation,
       child: SlideTransition(
@@ -766,8 +733,6 @@ class _AnimatedActionButton extends StatefulWidget {
 class _AnimatedActionButtonState extends State<_AnimatedActionButton>
     with SingleTickerProviderStateMixin {
   late AnimationController _glowController;
-  bool _reduceMotion = false;
-
   @override
   void initState() {
     super.initState();
@@ -785,7 +750,7 @@ class _AnimatedActionButtonState extends State<_AnimatedActionButton>
   void didUpdateWidget(_AnimatedActionButton oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.enabled != oldWidget.enabled) {
-      if (widget.enabled && !_reduceMotion) {
+      if (widget.enabled) {
         _glowController.repeat(reverse: true);
       } else {
         _glowController.stop();
@@ -797,11 +762,7 @@ class _AnimatedActionButtonState extends State<_AnimatedActionButton>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final reduceMotion =
-        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
-    if (reduceMotion == _reduceMotion) return;
-    _reduceMotion = reduceMotion;
-    if (_reduceMotion || !widget.enabled) {
+    if (!widget.enabled) {
       _glowController.stop();
       _glowController.value = 0;
     } else {
@@ -827,13 +788,13 @@ class _AnimatedActionButtonState extends State<_AnimatedActionButton>
         child: AnimatedBuilder(
           animation: _glowController,
           builder: (context, child) {
-            final glowIntensity = widget.enabled && !_reduceMotion
+            final glowIntensity = widget.enabled
                 ? _glowController.value * 0.3
                 : 0.0;
 
             return AnimatedGradientBackground(
               gradient: gradient,
-              animate: widget.enabled && !_reduceMotion,
+              animate: widget.enabled,
               enabled: widget.enabled,
               borderRadius: BorderRadius.circular(AppTheme.radius24),
               child: Container(
