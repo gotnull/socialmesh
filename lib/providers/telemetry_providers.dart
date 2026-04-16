@@ -667,18 +667,21 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
       _nodeSubscription?.cancel();
       _traceRouteSubscription?.cancel();
     });
+    // Watch both storage AND protocol service so that when the protocol
+    // service is recreated (BLE reconnect, transport change) we re-subscribe
+    // to the new stream controllers. Without this, subscriptions remain on
+    // the old (closed) streams and new telemetry events are silently lost.
     final storageAsync = ref.watch(telemetryStorageProvider);
+    final protocol = ref.watch(protocolServiceProvider);
     final storage = storageAsync.value;
     if (storage != null) {
-      _startLogging(storage);
+      _startLogging(storage, protocol);
       return true;
     }
     return false;
   }
 
-  ProtocolService get _protocol => ref.read(protocolServiceProvider);
-
-  void _startLogging(TelemetryDatabase storage) {
+  void _startLogging(TelemetryDatabase storage, ProtocolService protocol) {
     // Cancel any existing subscriptions first
     _nodeSubscription?.cancel();
     _traceRouteSubscription?.cancel();
@@ -686,7 +689,7 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
     // Listen to traceroute events and persist them to SQLite.
     // Outbound requests arrive with response == false (placeholder).
     // Inbound responses arrive with response == true and replace the placeholder.
-    _traceRouteSubscription = _protocol.traceRouteLogStream.listen((log) async {
+    _traceRouteSubscription = protocol.traceRouteLogStream.listen((log) async {
       try {
         final repo = await ref.read(tracerouteRepositoryProvider.future);
         if (log.response) {
@@ -706,7 +709,7 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
     // lastHeard, telemetry, etc.). To avoid writing duplicate rows when
     // the actual metric values have not changed, each metric type keeps
     // a per-node fingerprint of the last logged values.
-    _nodeSubscription = _protocol.nodeStream.listen((node) async {
+    _nodeSubscription = protocol.nodeStream.listen((node) async {
       try {
         final id = node.nodeNum;
 
