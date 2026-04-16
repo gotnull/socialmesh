@@ -66,6 +66,48 @@ enum ConversationType { channel, directMessage }
 /// Contact filter enum
 enum ContactFilter { all, favorites, messaged, unread, active }
 
+typedef ConversationFallbackRowBuilder =
+    List<ConversationTimelineRow> Function(List<Message> messages);
+
+({
+  List<ConversationTimelineRow> rows,
+  bool usedFallbackRows,
+  int visibleTimelineMessageCount,
+})
+selectConversationDisplayRows({
+  required List<Message> fallbackMessages,
+  required ConversationTimelineState? timelineState,
+  ConversationFallbackRowBuilder fallbackRowBuilder =
+      buildConversationFallbackRows,
+}) {
+  final visibleTimelineMessageCount =
+      timelineState?.rawMessages
+          .where((message) => !message.isCanonicalTapback)
+          .length ??
+      0;
+  final shouldUseFallbackRows =
+      fallbackMessages.isNotEmpty &&
+      (timelineState == null ||
+          timelineState.rows.isEmpty ||
+          visibleTimelineMessageCount < fallbackMessages.length);
+
+  return (
+    rows: shouldUseFallbackRows
+        ? fallbackRowBuilder(fallbackMessages)
+        : (timelineState?.rows ?? const <ConversationTimelineRow>[]),
+    usedFallbackRows: shouldUseFallbackRows,
+    visibleTimelineMessageCount: visibleTimelineMessageCount,
+  );
+}
+
+List<ConversationTimelineRow> buildConversationFallbackRows(
+  List<Message> messages,
+) {
+  return messages
+      .map((message) => ConversationTimelineRow.message(message: message))
+      .toList();
+}
+
 /// Main messaging screen - shows list of conversations
 class MessagingScreen extends ConsumerStatefulWidget {
   /// When true, shows only the body content without AppBar/Scaffold
@@ -2013,31 +2055,19 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
 
     final timelineState = timelineAsync?.asData?.value;
     final isTimelineLoading = timelineAsync == null || timelineAsync.isLoading;
-
-    final fallbackRows = fallbackMessages
-        .map((message) => ConversationTimelineRow.message(message: message))
-        .toList();
-    final visibleTimelineMessageCount =
-        timelineState?.rawMessages
-            .where((message) => !message.isCanonicalTapback)
-            .length ??
-        0;
-    final shouldUseFallbackRows =
-        fallbackRows.isNotEmpty &&
-        (timelineState == null ||
-            timelineState.rows.isEmpty ||
-            visibleTimelineMessageCount < fallbackMessages.length);
-    if (shouldUseFallbackRows && timelineState != null) {
+    final rowSelection = selectConversationDisplayRows(
+      fallbackMessages: fallbackMessages,
+      timelineState: timelineState,
+    );
+    if (rowSelection.usedFallbackRows && timelineState != null) {
       AppLogging.messages(
         '📨 Using fallback rows: timelineRows=${timelineState.rows.length}, '
-        'timelineMessages=$visibleTimelineMessageCount, '
+        'timelineMessages=${rowSelection.visibleTimelineMessageCount}, '
         'fallbackMessages=${fallbackMessages.length}',
       );
     }
 
-    final unfilteredRows = shouldUseFallbackRows
-        ? fallbackRows
-        : (timelineState?.rows ?? fallbackRows);
+    final unfilteredRows = rowSelection.rows;
 
     var filteredRows = [...unfilteredRows];
 
@@ -2461,7 +2491,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                             child: IgnorePointer(
                               ignoring: !_showJumpToLatest,
                               child: AnimatedOpacity(
-                                duration: const Duration(milliseconds: 180),
+                                duration:
+                                    MediaQuery.maybeOf(
+                                          context,
+                                        )?.disableAnimations ??
+                                        false
+                                    ? Duration.zero
+                                    : const Duration(milliseconds: 180),
                                 opacity: _showJumpToLatest ? 1 : 0,
                                 child: Center(
                                   child: BouncyTap(
@@ -2976,8 +3012,12 @@ class _MessageBubble extends ConsumerWidget {
     final isTranslatable = message.text.trim().isNotEmpty && !message.isEmoji;
 
     if (isFromMe) {
+      final disableAnimations =
+          MediaQuery.maybeOf(context)?.disableAnimations ?? false;
       return AnimatedContainer(
-        duration: const Duration(milliseconds: 400),
+        duration: disableAnimations
+            ? Duration.zero
+            : const Duration(milliseconds: 400),
         padding: const EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(
           color: isHighlighted
@@ -3239,8 +3279,12 @@ class _MessageBubble extends ConsumerWidget {
       );
     }
 
+    final disableAnimations =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 400),
+      duration: disableAnimations
+          ? Duration.zero
+          : const Duration(milliseconds: 400),
       padding: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: isHighlighted
@@ -4042,6 +4086,46 @@ class _TranslationShimmerLoadingState extends State<_TranslationShimmerLoading>
 
   @override
   Widget build(BuildContext context) {
+    if (MediaQuery.maybeOf(context)?.disableAnimations ?? false) {
+      final textColor = widget.sentByMe
+          ? Colors.white.withValues(alpha: 0.6)
+          : context.textTertiary;
+      final iconColor = widget.sentByMe
+          ? Colors.white.withValues(alpha: 0.5)
+          : context.textTertiary.withValues(alpha: 0.7);
+      final pillColor = widget.sentByMe
+          ? Colors.white.withValues(alpha: 0.08)
+          : context.textTertiary.withValues(alpha: 0.06);
+
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppTheme.spacing8,
+            vertical: AppTheme.spacing6,
+          ),
+          decoration: BoxDecoration(
+            color: pillColor,
+            borderRadius: BorderRadius.circular(AppTheme.radius8),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.translate_rounded, size: 14, color: iconColor),
+              const SizedBox(width: AppTheme.spacing6),
+              Text(
+                widget.label,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: textColor,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     final textColor = widget.sentByMe
         ? Colors.white.withValues(alpha: 0.6)
         : context.textTertiary;

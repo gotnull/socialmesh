@@ -210,6 +210,8 @@ class AnimatedAvatarStackState extends State<AnimatedAvatarStack>
   /// Whether the app is in a background lifecycle state.
   bool _isBackgrounded = false;
 
+  bool _reduceMotion = false;
+
   /// Explicit animation controller for coordinated motion.
   late final AnimationController _controller;
 
@@ -238,6 +240,22 @@ class AnimatedAvatarStackState extends State<AnimatedAvatarStack>
     );
     _controller.value = 1.0; // Start fully settled.
     WidgetsBinding.instance.addObserver(this);
+    _startCycleTimerIfNeeded();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final reduceMotion =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    if (reduceMotion == _reduceMotion) return;
+    _reduceMotion = reduceMotion;
+    _stopCycleTimer();
+    if (_reduceMotion) {
+      _controller.stop();
+      _controller.value = 1.0;
+      return;
+    }
     _startCycleTimerIfNeeded();
   }
 
@@ -287,6 +305,7 @@ class AnimatedAvatarStackState extends State<AnimatedAvatarStack>
   /// Whether cycling should be active right now.
   bool get _shouldCycle =>
       widget.animationEnabled &&
+      !_reduceMotion &&
       !_isBackgrounded &&
       _visibleCount >= 2 &&
       SchedulerBinding.instance.lifecycleState != AppLifecycleState.paused;

@@ -43,6 +43,8 @@ class TimelineEventCard extends StatelessWidget {
 
     final cardColor = _cardColor(context);
     final isCompact = height < 80;
+    final disableAnimations =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
 
     return GestureDetector(
       onTap: () {
@@ -54,7 +56,9 @@ class TimelineEventCard extends StatelessWidget {
         onLongPress?.call();
       },
       child: AnimatedOpacity(
-        duration: const Duration(milliseconds: 300),
+        duration: disableAnimations
+            ? Duration.zero
+            : const Duration(milliseconds: 300),
         opacity: item.isCompleted ? 0.65 : 1.0,
         child: Container(
           height: height,

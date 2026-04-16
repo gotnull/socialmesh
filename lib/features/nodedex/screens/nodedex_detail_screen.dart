@@ -62,7 +62,6 @@ import '../widgets/observation_timeline.dart';
 import '../widgets/node_activity_timeline.dart';
 import '../widgets/node_summary_card.dart';
 import '../widgets/patina_stamp.dart';
-import '../atmosphere/atmosphere_overlay.dart';
 import '../widgets/sigil_card_sheet.dart';
 import '../widgets/sigil_painter.dart';
 import '../widgets/trait_badge.dart';
@@ -931,9 +930,6 @@ class _SigilHeroSectionState extends ConsumerState<_SigilHeroSection> {
         borderRadius: BorderRadius.circular(AppTheme.radius20),
         child: Stack(
           children: [
-            // Subtle atmosphere behind the hero content.
-            // Only starlight and embers — very low intensity.
-            const Positioned.fill(child: DetailAtmosphere()),
             Padding(
               padding: const EdgeInsets.all(AppTheme.spacing24),
               child: Column(

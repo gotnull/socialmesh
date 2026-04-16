@@ -355,7 +355,11 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
                     children: List.generate(
                       product.imageUrls.length,
                       (index) => AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
+                        duration:
+                            MediaQuery.maybeOf(context)?.disableAnimations ??
+                                false
+                            ? Duration.zero
+                            : const Duration(milliseconds: 200),
                         curve: Curves.easeOutCubic,
                         width: index == _currentImageIndex ? 20 : 8,
                         height: 8,

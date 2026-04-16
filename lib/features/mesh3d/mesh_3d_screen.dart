@@ -340,228 +340,234 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
     );
 
     final bottomPadding = MediaQuery.of(context).padding.bottom;
+    final mediaQuery = MediaQuery.of(context);
 
-    return HelpTourController(
-      topicId: 'mesh_3d_overview',
-      stepKeys: const {},
-      child: GlassScaffold.body(
-        title: _currentMode.label,
-        physics: const NeverScrollableScrollPhysics(),
-        actions: [
-          // View selector — most important action.
-          IconButton(
-            icon: const Icon(Icons.view_carousel),
-            tooltip: context.l10n.mesh3dChangeViewTooltip,
-            onPressed: () async {
-              final selected = await showMesh3DViewSelector(
-                context: context,
-                currentMode: _currentMode,
-              );
-              if (selected != null && selected != _currentMode && mounted) {
-                safeSetState(() => _currentMode = selected);
-              }
-            },
-          ),
-          // Overflow menu for secondary actions.
-          AppBarOverflowMenu<String>(
-            onSelected: (value) {
-              switch (value) {
-                case 'connections':
-                  safeSetState(() => _showConnections = !_showConnections);
-                case 'rotate':
-                  _toggleAutoRotate();
-                case 'help':
-                  ref.read(helpProvider.notifier).startTour('mesh_3d_overview');
-              }
-            },
-            itemBuilder: (context) => [
-              if (_currentMode == Mesh3DViewMode.topology)
-                PopupMenuItem(
-                  value: 'connections',
-                  child: ListTile(
-                    leading: Icon(
-                      _showConnections ? Icons.share : Icons.share_outlined,
+    return MediaQuery(
+      data: mediaQuery.copyWith(disableAnimations: false),
+      child: HelpTourController(
+        topicId: 'mesh_3d_overview',
+        stepKeys: const {},
+        child: GlassScaffold.body(
+          title: _currentMode.label,
+          physics: const NeverScrollableScrollPhysics(),
+          actions: [
+            // View selector — most important action.
+            IconButton(
+              icon: const Icon(Icons.view_carousel),
+              tooltip: context.l10n.mesh3dChangeViewTooltip,
+              onPressed: () async {
+                final selected = await showMesh3DViewSelector(
+                  context: context,
+                  currentMode: _currentMode,
+                );
+                if (selected != null && selected != _currentMode && mounted) {
+                  safeSetState(() => _currentMode = selected);
+                }
+              },
+            ),
+            // Overflow menu for secondary actions.
+            AppBarOverflowMenu<String>(
+              onSelected: (value) {
+                switch (value) {
+                  case 'connections':
+                    safeSetState(() => _showConnections = !_showConnections);
+                  case 'rotate':
+                    _toggleAutoRotate();
+                  case 'help':
+                    ref
+                        .read(helpProvider.notifier)
+                        .startTour('mesh_3d_overview');
+                }
+              },
+              itemBuilder: (context) => [
+                if (_currentMode == Mesh3DViewMode.topology)
+                  PopupMenuItem(
+                    value: 'connections',
+                    child: ListTile(
+                      leading: Icon(
+                        _showConnections ? Icons.share : Icons.share_outlined,
+                      ),
+                      title: Text(
+                        _showConnections
+                            ? context.l10n.mesh3dHideConnections
+                            : context.l10n.mesh3dShowConnections,
+                      ),
+                      contentPadding: EdgeInsets.zero,
+                      visualDensity: VisualDensity.compact,
                     ),
+                  ),
+                PopupMenuItem(
+                  value: 'rotate',
+                  child: ListTile(
+                    leading: const Icon(Icons.rotate_right),
                     title: Text(
-                      _showConnections
-                          ? context.l10n.mesh3dHideConnections
-                          : context.l10n.mesh3dShowConnections,
+                      _autoRotate
+                          ? context.l10n.mesh3dStopRotation
+                          : context.l10n.mesh3dAutoRotate,
                     ),
                     contentPadding: EdgeInsets.zero,
                     visualDensity: VisualDensity.compact,
                   ),
                 ),
-              PopupMenuItem(
-                value: 'rotate',
-                child: ListTile(
-                  leading: const Icon(Icons.rotate_right),
-                  title: Text(
-                    _autoRotate
-                        ? context.l10n.mesh3dStopRotation
-                        : context.l10n.mesh3dAutoRotate,
+                const PopupMenuDivider(),
+                PopupMenuItem(
+                  value: 'help',
+                  child: ListTile(
+                    leading: const Icon(Icons.help_outline),
+                    title: Text(context.l10n.mesh3dHelp),
+                    contentPadding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
                   ),
-                  contentPadding: EdgeInsets.zero,
-                  visualDensity: VisualDensity.compact,
                 ),
-              ),
-              const PopupMenuDivider(),
-              PopupMenuItem(
-                value: 'help',
-                child: ListTile(
-                  leading: const Icon(Icons.help_outline),
-                  title: Text(context.l10n.mesh3dHelp),
-                  contentPadding: EdgeInsets.zero,
-                  visualDensity: VisualDensity.compact,
-                ),
-              ),
-            ],
-          ),
-        ],
-        body: GestureDetector(
-          onTap: () => FocusScope.of(context).unfocus(),
-          child: Column(
-            children: [
-              // Spacing between app bar and chip row.
-              const SizedBox(height: AppTheme.spacing8),
+              ],
+            ),
+          ],
+          body: GestureDetector(
+            onTap: () => FocusScope.of(context).unfocus(),
+            child: Column(
+              children: [
+                // Spacing between app bar and chip row.
+                const SizedBox(height: AppTheme.spacing8),
 
-              // Filter chip row — view modes + node filters.
-              _buildFilterChipRow(_computeFilterCounts(allNodes)),
+                // Filter chip row — view modes + node filters.
+                _buildFilterChipRow(_computeFilterCounts(allNodes)),
 
-              // Stats card.
-              Mesh3DStatsCard(stats: stats),
+                // Stats card.
+                Mesh3DStatsCard(stats: stats),
 
-              // 3D Viewport + overlays.
-              Expanded(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    return Stack(
-                      children: [
-                        // 3D viewport with tap detection.
-                        GestureDetector(
-                          onTapUp: (details) => _handleTap(
-                            details.localPosition,
-                            constraints.biggest,
-                            nodes,
-                          ),
-                          child: DiTreDiDraggable(
-                            controller: _controller,
-                            child: DiTreDi(
-                              figures: Mesh3DFigureBuilder.buildFigures(
-                                mode: _currentMode,
-                                nodes: nodes,
-                                myNodeNum: myNodeNum,
-                                presenceMap: _presenceMap,
-                                showConnections: _showConnections,
-                                connectionQualityThreshold:
-                                    _connectionQualityThreshold,
-                                surfaceColor: context.surface,
-                              ),
+                // 3D Viewport + overlays.
+                Expanded(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      return Stack(
+                        children: [
+                          // 3D viewport with tap detection.
+                          GestureDetector(
+                            onTapUp: (details) => _handleTap(
+                              details.localPosition,
+                              constraints.biggest,
+                              nodes,
+                            ),
+                            child: DiTreDiDraggable(
                               controller: _controller,
-                              config: const DiTreDiConfig(
-                                supportZIndex: true,
-                                defaultPointWidth: 8,
-                                defaultLineWidth: 2,
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        // Node count badge (top-left, map-screen style).
-                        if (!_showNodeList)
-                          Positioned(
-                            left: 16,
-                            top: 12,
-                            child: _NodeCountBadge(
-                              filteredCount: nodes.length,
-                              totalCount: allNodes.length,
-                              isFiltered: _nodeFilter != Mesh3DNodeFilter.all,
-                              onTap: () {
-                                HapticFeedback.selectionClick();
-                                safeSetState(() {
-                                  _showNodeList = true;
-                                  _selectedNodeNum = null;
-                                });
-                              },
-                            ),
-                          ),
-
-                        // Legend overlay (bottom-left).
-                        Positioned(
-                          left: 12,
-                          bottom: _selectedNodeNum != null
-                              ? 200 + bottomPadding
-                              : 12 + bottomPadding,
-                          child: Mesh3DLegend(mode: _currentMode),
-                        ),
-
-                        // Selected node info card (bottom, full width).
-                        if (_selectedNodeNum != null &&
-                            allNodes.containsKey(_selectedNodeNum))
-                          Positioned(
-                            left: 16,
-                            right: 16,
-                            bottom: 16 + bottomPadding,
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(
-                                AppTheme.radius12,
-                              ),
-                              child: BackdropFilter(
-                                filter: ImageFilter.blur(
-                                  sigmaX: 16,
-                                  sigmaY: 16,
+                              child: DiTreDi(
+                                figures: Mesh3DFigureBuilder.buildFigures(
+                                  mode: _currentMode,
+                                  nodes: nodes,
+                                  myNodeNum: myNodeNum,
+                                  presenceMap: _presenceMap,
+                                  showConnections: _showConnections,
+                                  connectionQualityThreshold:
+                                      _connectionQualityThreshold,
+                                  surfaceColor: context.surface,
                                 ),
-                                child: NodeInfoCard(
-                                  node: allNodes[_selectedNodeNum]!,
-                                  isMyNode: _selectedNodeNum == myNodeNum,
-                                  compact: true,
-                                  onClose: () => safeSetState(
-                                    () => _selectedNodeNum = null,
+                                controller: _controller,
+                                config: const DiTreDiConfig(
+                                  supportZIndex: true,
+                                  defaultPointWidth: 8,
+                                  defaultLineWidth: 2,
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          // Node count badge (top-left, map-screen style).
+                          if (!_showNodeList)
+                            Positioned(
+                              left: 16,
+                              top: 12,
+                              child: _NodeCountBadge(
+                                filteredCount: nodes.length,
+                                totalCount: allNodes.length,
+                                isFiltered: _nodeFilter != Mesh3DNodeFilter.all,
+                                onTap: () {
+                                  HapticFeedback.selectionClick();
+                                  safeSetState(() {
+                                    _showNodeList = true;
+                                    _selectedNodeNum = null;
+                                  });
+                                },
+                              ),
+                            ),
+
+                          // Legend overlay (bottom-left).
+                          Positioned(
+                            left: 12,
+                            bottom: _selectedNodeNum != null
+                                ? 200 + bottomPadding
+                                : 12 + bottomPadding,
+                            child: Mesh3DLegend(mode: _currentMode),
+                          ),
+
+                          // Selected node info card (bottom, full width).
+                          if (_selectedNodeNum != null &&
+                              allNodes.containsKey(_selectedNodeNum))
+                            Positioned(
+                              left: 16,
+                              right: 16,
+                              bottom: 16 + bottomPadding,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius12,
+                                ),
+                                child: BackdropFilter(
+                                  filter: ImageFilter.blur(
+                                    sigmaX: 16,
+                                    sigmaY: 16,
+                                  ),
+                                  child: NodeInfoCard(
+                                    node: allNodes[_selectedNodeNum]!,
+                                    isMyNode: _selectedNodeNum == myNodeNum,
+                                    compact: true,
+                                    onClose: () => safeSetState(
+                                      () => _selectedNodeNum = null,
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
 
-                        // Tap-to-dismiss overlay when node list is open.
-                        if (_showNodeList)
-                          Positioned.fill(
-                            child: GestureDetector(
-                              onTap: () =>
+                          // Tap-to-dismiss overlay when node list is open.
+                          if (_showNodeList)
+                            Positioned.fill(
+                              child: GestureDetector(
+                                onTap: () =>
+                                    safeSetState(() => _showNodeList = false),
+                                child: Container(color: Colors.transparent),
+                              ),
+                            ),
+
+                          // Node list panel (slides from left).
+                          AnimatedPositioned(
+                            duration: const Duration(milliseconds: 250),
+                            curve: Curves.easeOutCubic,
+                            left: _showNodeList ? 0 : -300,
+                            top: 0,
+                            bottom: 0,
+                            width: 280,
+                            child: Mesh3DNodePanel(
+                              visibleNodes: nodes,
+                              allNodes: allNodes,
+                              myNodeNum: myNodeNum,
+                              selectedNodeNum: _selectedNodeNum,
+                              presenceMap: _presenceMap,
+                              onNodeSelected: (nodeNum) {
+                                safeSetState(() {
+                                  _selectedNodeNum = nodeNum;
+                                  _showNodeList = false;
+                                });
+                              },
+                              onClose: () =>
                                   safeSetState(() => _showNodeList = false),
-                              child: Container(color: Colors.transparent),
                             ),
                           ),
-
-                        // Node list panel (slides from left).
-                        AnimatedPositioned(
-                          duration: const Duration(milliseconds: 250),
-                          curve: Curves.easeOutCubic,
-                          left: _showNodeList ? 0 : -300,
-                          top: 0,
-                          bottom: 0,
-                          width: 280,
-                          child: Mesh3DNodePanel(
-                            visibleNodes: nodes,
-                            allNodes: allNodes,
-                            myNodeNum: myNodeNum,
-                            selectedNodeNum: _selectedNodeNum,
-                            presenceMap: _presenceMap,
-                            onNodeSelected: (nodeNum) {
-                              safeSetState(() {
-                                _selectedNodeNum = nodeNum;
-                                _showNodeList = false;
-                              });
-                            },
-                            onClose: () =>
-                                safeSetState(() => _showNodeList = false),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
+                        ],
+                      );
+                    },
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

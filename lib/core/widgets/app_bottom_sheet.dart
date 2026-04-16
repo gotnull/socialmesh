@@ -67,6 +67,8 @@ class AppBottomSheet extends StatelessWidget {
     double? maxHeightFraction,
   }) {
     HapticFeedback.lightImpact();
+    final disableAnimations =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
 
     Widget content = useSafeArea ? SafeArea(top: false, child: child) : child;
 
@@ -90,8 +92,12 @@ class AppBottomSheet extends StatelessWidget {
       enableDrag: isDismissible,
       transitionAnimationController: AnimationController(
         vsync: Navigator.of(context),
-        duration: const Duration(milliseconds: 350),
-        reverseDuration: const Duration(milliseconds: 250),
+        duration: disableAnimations
+            ? Duration.zero
+            : const Duration(milliseconds: 350),
+        reverseDuration: disableAnimations
+            ? Duration.zero
+            : const Duration(milliseconds: 250),
       ),
       builder: (context) => AppBottomSheet(
         padding: padding,
@@ -117,10 +123,21 @@ class AppBottomSheet extends StatelessWidget {
     Widget? footer,
   }) {
     HapticFeedback.lightImpact();
+    final disableAnimations =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     return showModalBottomSheet<T>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
+      transitionAnimationController: AnimationController(
+        vsync: Navigator.of(context),
+        duration: disableAnimations
+            ? Duration.zero
+            : const Duration(milliseconds: 350),
+        reverseDuration: disableAnimations
+            ? Duration.zero
+            : const Duration(milliseconds: 250),
+      ),
       builder: (context) => DraggableScrollableSheet(
         initialChildSize: initialChildSize,
         minChildSize: minChildSize,

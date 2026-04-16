@@ -86,7 +86,7 @@ class TimelineEvent {
 }
 
 /// Provider that aggregates all mesh events into a timeline
-final timelineEventsProvider = Provider<List<TimelineEvent>>((ref) {
+final timelineEventsProvider = Provider.autoDispose<List<TimelineEvent>>((ref) {
   final messages = ref.watch(messagesProvider);
   final nodes = ref.watch(nodesProvider);
   final myNodeNum = ref.watch(myNodeNumProvider);

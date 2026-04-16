@@ -18,7 +18,6 @@ import '../../models/accessibility_preferences.dart';
 import '../../providers/accessibility_providers.dart';
 import '../../providers/locale_provider.dart';
 import '../../services/haptic_service.dart';
-import '../nodedex/atmosphere/atmosphere_provider.dart';
 
 // ---------------------------------------------------------------------------
 // Localized display names / descriptions for accessibility preference enums
@@ -298,13 +297,6 @@ class _AppearanceAccessibilityScreenState
               _ReduceMotionToggle(
                 reduceMotion: prefs.reduceMotionMode.shouldReduceMotion,
                 onChanged: (enabled) => _updateReduceMotion(enabled),
-              ),
-
-              const SizedBox(height: AppTheme.spacing16),
-
-              // Elemental Atmosphere toggle
-              _AtmosphereToggle(
-                reduceMotionActive: prefs.reduceMotionMode.shouldReduceMotion,
               ),
 
               const SizedBox(height: AppTheme.spacing24),
@@ -887,6 +879,7 @@ class _ContrastToggle extends StatelessWidget {
         border: Border.all(color: context.border),
       ),
       child: ListTile(
+        onTap: () => onChanged(!isHighContrast),
         title: Text(
           context.l10n.appearanceHighContrast,
           style: Theme.of(context).textTheme.titleSmall,
@@ -898,66 +891,6 @@ class _ContrastToggle extends StatelessWidget {
         trailing: ThemedSwitch(value: isHighContrast, onChanged: onChanged),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTheme.radius12),
-        ),
-      ),
-    );
-  }
-}
-
-/// Reduce motion toggle
-/// Toggle for the Elemental Atmosphere ambient particle effects.
-///
-/// Allows users to enable or disable ambient data-driven particle
-/// effects (rain, embers, mist, starlight) that visualize mesh
-/// activity behind NodeDex and map views. The toggle is disabled
-/// when reduce-motion is active because all particle effects are
-/// suppressed in that mode.
-class _AtmosphereToggle extends ConsumerWidget {
-  const _AtmosphereToggle({required this.reduceMotionActive});
-
-  /// Whether reduce-motion is currently active. When true, the
-  /// toggle is disabled and shows an explanatory subtitle.
-  final bool reduceMotionActive;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final atmosphereEnabled = ref.watch(atmosphereEnabledProvider);
-
-    return Card(
-      margin: EdgeInsets.zero,
-      color: context.card,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      child: ListTile(
-        title: Text(
-          context.l10n.appearanceElementalAtmosphere,
-          style: Theme.of(context).textTheme.titleSmall,
-        ),
-        subtitle: Text(
-          reduceMotionActive
-              ? context.l10n.appearanceElementalDisabled
-              : context.l10n.appearanceElementalDesc,
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-        leading: Icon(
-          Icons.auto_awesome_outlined,
-          color: reduceMotionActive
-              ? context.textTertiary
-              : atmosphereEnabled
-              ? context.accentColor
-              : context.textSecondary,
-        ),
-        trailing: ThemedSwitch(
-          value: reduceMotionActive ? false : atmosphereEnabled,
-          onChanged: reduceMotionActive
-              ? null
-              : (enabled) {
-                  HapticFeedback.selectionClick();
-                  ref
-                      .read(atmosphereEnabledProvider.notifier)
-                      .setEnabled(enabled);
-                },
         ),
       ),
     );
@@ -982,6 +915,7 @@ class _ReduceMotionToggle extends StatelessWidget {
         border: Border.all(color: context.border),
       ),
       child: ListTile(
+        onTap: () => onChanged(!reduceMotion),
         title: Text(
           context.l10n.appearanceReduceMotion,
           style: Theme.of(context).textTheme.titleSmall,

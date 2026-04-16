@@ -10,6 +10,15 @@ Widget _wrap(Widget child) {
   return MaterialApp(home: Scaffold(body: child));
 }
 
+Widget _wrapReducedMotion(Widget child) {
+  return MaterialApp(
+    home: MediaQuery(
+      data: const MediaQueryData(disableAnimations: true),
+      child: Scaffold(body: child),
+    ),
+  );
+}
+
 /// Creates a list of test [AvatarStackItem]s with colored circles.
 List<AvatarStackItem> _items(int count, {VoidCallback? onTap}) {
   const colors = [Colors.red, Colors.blue, Colors.green, Colors.orange];
@@ -205,6 +214,24 @@ void main() {
             items: _items(3),
             cycleInterval: const Duration(milliseconds: 100),
             animationEnabled: false,
+          ),
+        ),
+      );
+      final state = tester.state<AnimatedAvatarStackState>(
+        find.byType(AnimatedAvatarStack),
+      );
+      expect(state.currentFrontIndex, 0);
+
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(state.currentFrontIndex, 0);
+    });
+
+    testWidgets('does not cycle when reduce motion is enabled', (tester) async {
+      await tester.pumpWidget(
+        _wrapReducedMotion(
+          AnimatedAvatarStack(
+            items: _items(3),
+            cycleInterval: const Duration(milliseconds: 100),
           ),
         ),
       );

@@ -1660,8 +1660,14 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
           final clampedTextScaler = mediaQuery.textScaler.clamp(
             maxScaleFactor: 1.3,
           );
+          final disableAnimations =
+              mediaQuery.disableAnimations ||
+              accessibilityPrefs.reduceMotionMode.shouldReduceMotion;
           return MediaQuery(
-            data: mediaQuery.copyWith(textScaler: clampedTextScaler),
+            data: mediaQuery.copyWith(
+              textScaler: clampedTextScaler,
+              disableAnimations: disableAnimations,
+            ),
             child: child!,
           );
         },
@@ -2949,79 +2955,83 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
 
     // Determine status info based on current state
     final statusInfo = _getStatusInfo(autoReconnectState, connectionState);
+    final mediaQuery = MediaQuery.of(context);
 
-    return Scaffold(
-      backgroundColor: context.background,
-      extendBodyBehindAppBar: true,
-      body: Stack(
-        children: [
-          // Apple TV style angled grid of discovered nodes - BEHIND EVERYTHING
-          if (discoveredNodes.isNotEmpty)
-            Positioned.fill(
-              child: _AppleTVAngledGrid(
-                entries: discoveredNodes.take(20).toList(),
-                onDismiss: (id) {
-                  ref
-                      .read(discoveredNodesQueueProvider.notifier)
-                      .removeNode(id);
-                },
+    return MediaQuery(
+      data: mediaQuery.copyWith(disableAnimations: false),
+      child: Scaffold(
+        backgroundColor: context.background,
+        extendBodyBehindAppBar: true,
+        body: Stack(
+          children: [
+            // Apple TV style angled grid of discovered nodes - BEHIND EVERYTHING
+            if (discoveredNodes.isNotEmpty)
+              Positioned.fill(
+                child: _AppleTVAngledGrid(
+                  entries: discoveredNodes.take(20).toList(),
+                  onDismiss: (id) {
+                    ref
+                        .read(discoveredNodesQueueProvider.notifier)
+                        .removeNode(id);
+                  },
+                ),
+              ),
+            // Random intro animation as background - replaces floating icons
+            // Positioned.fill(child: _buildRandomBackground()),
+            // Beautiful parallax floating icons background - full screen
+            const Positioned.fill(child: ConnectingAnimationBackground()),
+            // Content with SafeArea
+            SafeArea(
+              child: Center(
+                child: ConnectingContent(
+                  statusInfo: statusInfo,
+                  showMeshNode: true, // Show mesh node on splash
+                  pulseAnimation: _pulseAnimation,
+                ),
               ),
             ),
-          // Random intro animation as background - replaces floating icons
-          // Positioned.fill(child: _buildRandomBackground()),
-          // Beautiful parallax floating icons background - full screen
-          const Positioned.fill(child: ConnectingAnimationBackground()),
-          // Content with SafeArea
-          SafeArea(
-            child: Center(
-              child: ConnectingContent(
-                statusInfo: statusInfo,
-                showMeshNode: true, // Show mesh node on splash
-                pulseAnimation: _pulseAnimation,
-              ),
-            ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: Consumer(
-        builder: (context, ref, child) {
-          final appVersionAsync = ref.watch(appVersionProvider);
-          final versionText = appVersionAsync.when(
-            data: (version) =>
-                'Socialmesh v$version', // lint-allow: hardcoded-string
-            loading: () => 'Socialmesh',
-            error: (_, _) => 'Socialmesh',
-          );
+          ],
+        ),
+        bottomNavigationBar: Consumer(
+          builder: (context, ref, child) {
+            final appVersionAsync = ref.watch(appVersionProvider);
+            final versionText = appVersionAsync.when(
+              data: (version) =>
+                  'Socialmesh v$version', // lint-allow: hardcoded-string
+              loading: () => 'Socialmesh',
+              error: (_, _) => 'Socialmesh',
+            );
 
-          return Container(
-            color: context.background,
-            padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 16),
-            child: SafeArea(
-              top: false,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    versionText,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: context.textTertiary,
-                      fontWeight: FontWeight.w500,
+            return Container(
+              color: context.background,
+              padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 16),
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      versionText,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.textTertiary,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: AppTheme.spacing2),
-                  Text(
-                    '© 2026 Socialmesh. All rights reserved.',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: context.textTertiary.withValues(alpha: 0.7),
+                    const SizedBox(height: AppTheme.spacing2),
+                    Text(
+                      '© 2026 Socialmesh. All rights reserved.',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: context.textTertiary.withValues(alpha: 0.7),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }

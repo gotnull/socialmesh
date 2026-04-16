@@ -41,6 +41,28 @@ void main() {
       final icon = tester.widget<Icon>(find.byType(Icon));
       expect(icon.color, kGoldBadgeColor);
     });
+
+    testWidgets('renders static badge when reduce motion is enabled', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: MediaQuery(
+            data: MediaQueryData(disableAnimations: true),
+            child: Scaffold(body: SimpleVerifiedBadge()),
+          ),
+        ),
+      );
+
+      expect(
+        find.descendant(
+          of: find.byType(SimpleVerifiedBadge),
+          matching: find.byType(AnimatedBuilder),
+        ),
+        findsNothing,
+      );
+      expect(find.byType(Icon), findsOneWidget);
+    });
   });
 
   group('VerifiedBadge', () {

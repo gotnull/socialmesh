@@ -514,15 +514,18 @@ class _ProductCardState extends ConsumerState<ProductCard>
     }
 
     setState(() => _isFavoriteLoading = true);
+    final reduceMotion = ref.read(reduceMotionEnabledProvider);
 
     try {
-      await _heartController.forward();
-      if (!mounted) {
-        return;
-      }
-      await _heartController.reverse();
-      if (!mounted) {
-        return;
+      if (!reduceMotion) {
+        await _heartController.forward();
+        if (!mounted) {
+          return;
+        }
+        await _heartController.reverse();
+        if (!mounted) {
+          return;
+        }
       }
 
       await toggleFavoriteQueued(

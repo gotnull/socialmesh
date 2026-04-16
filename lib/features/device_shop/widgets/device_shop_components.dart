@@ -72,9 +72,13 @@ class DeviceShopChoiceChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = color ?? context.accentColor;
+    final disableAnimations =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
 
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 180),
+      duration: disableAnimations
+          ? Duration.zero
+          : const Duration(milliseconds: 180),
       curve: Curves.easeOutCubic,
       decoration: BoxDecoration(
         color: isSelected

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 // lint-allow: haptic-feedback — shared animation widgets delegate onTap to parent callbacks
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:socialmesh/core/theme.dart';
@@ -25,6 +26,9 @@ import 'package:socialmesh/core/theme.dart';
 /// - [TypewriterText] - Text reveal
 ///
 /// For skeleton loading states, use the `skeletonizer` package instead.
+
+bool _animationsDisabled(BuildContext context) =>
+    MediaQuery.maybeOf(context)?.disableAnimations ?? false;
 
 /// Bouncy scale animation on tap
 class BouncyTap extends StatefulWidget {
@@ -105,6 +109,13 @@ class _BouncyTapState extends State<BouncyTap>
 
   @override
   Widget build(BuildContext context) {
+    if (_animationsDisabled(context) || !widget.enabled) {
+      return GestureDetector(
+        onTap: widget.enabled ? widget.onTap : null,
+        onLongPress: widget.enabled ? widget.onLongPress : null,
+        child: widget.child,
+      );
+    }
     return GestureDetector(
       onTapDown: _onTapDown,
       onTapUp: _onTapUp,
@@ -205,7 +216,7 @@ class _PulseAnimationState extends State<PulseAnimation>
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.enabled) return widget.child;
+    if (!widget.enabled || _animationsDisabled(context)) return widget.child;
     return ScaleTransition(scale: _animation, child: widget.child);
   }
 }
@@ -256,7 +267,7 @@ class _SpinAnimationState extends State<SpinAnimation>
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.enabled) return widget.child;
+    if (!widget.enabled || _animationsDisabled(context)) return widget.child;
     return RotationTransition(turns: _controller, child: widget.child);
   }
 }
@@ -314,6 +325,9 @@ class _SlideInAnimationState extends State<SlideInAnimation>
 
   @override
   Widget build(BuildContext context) {
+    if (_animationsDisabled(context)) {
+      return widget.child;
+    }
     return FadeTransition(
       opacity: _fadeAnimation,
       child: SlideTransition(position: _slideAnimation, child: widget.child),
@@ -372,6 +386,9 @@ class _ScaleInAnimationState extends State<ScaleInAnimation>
 
   @override
   Widget build(BuildContext context) {
+    if (_animationsDisabled(context)) {
+      return widget.child;
+    }
     return FadeTransition(
       opacity: _fadeAnimation,
       child: ScaleTransition(scale: _scaleAnimation, child: widget.child),
@@ -437,7 +454,7 @@ class _GlowAnimationState extends State<GlowAnimation>
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.enabled) return widget.child;
+    if (!widget.enabled || _animationsDisabled(context)) return widget.child;
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, child) {
@@ -543,7 +560,7 @@ class _FloatAnimationState extends State<FloatAnimation>
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.enabled) return widget.child;
+    if (!widget.enabled || _animationsDisabled(context)) return widget.child;
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, child) {
@@ -594,6 +611,9 @@ class _WaveAnimationState extends State<WaveAnimation>
 
   @override
   Widget build(BuildContext context) {
+    if (_animationsDisabled(context)) {
+      return widget.child;
+    }
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
@@ -631,6 +651,8 @@ class TypewriterText extends StatefulWidget {
 class _TypewriterTextState extends State<TypewriterText> {
   String _displayText = '';
   int _charIndex = 0;
+  bool _reduceMotion = false;
+  Timer? _typingTimer;
 
   @override
   void initState() {
@@ -640,14 +662,24 @@ class _TypewriterTextState extends State<TypewriterText> {
 
   void _typeNextChar() {
     if (_charIndex < widget.text.length) {
-      Future.delayed(widget.charDuration, () {
-        if (mounted) {
-          setState(() {
-            _charIndex++;
-            _displayText = widget.text.substring(0, _charIndex);
-          });
-          _typeNextChar();
+      _typingTimer?.cancel();
+      _typingTimer = Timer(widget.charDuration, () {
+        if (!mounted) {
+          return;
         }
+        if (_reduceMotion) {
+          setState(() {
+            _charIndex = widget.text.length;
+            _displayText = widget.text;
+          });
+          widget.onComplete?.call();
+          return;
+        }
+        setState(() {
+          _charIndex++;
+          _displayText = widget.text.substring(0, _charIndex);
+        });
+        _typeNextChar();
       });
     } else {
       widget.onComplete?.call();
@@ -655,8 +687,30 @@ class _TypewriterTextState extends State<TypewriterText> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final reduceMotion = _animationsDisabled(context);
+    if (reduceMotion == _reduceMotion) return;
+    _reduceMotion = reduceMotion;
+    if (_reduceMotion && _displayText != widget.text) {
+      _typingTimer?.cancel();
+      _charIndex = widget.text.length;
+      _displayText = widget.text;
+    }
+  }
+
+  @override
+  void dispose() {
+    _typingTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Text(_displayText, style: widget.style);
+    return Text(
+      _reduceMotion ? widget.text : _displayText,
+      style: widget.style,
+    );
   }
 }
 
@@ -719,6 +773,15 @@ class _AnimatedCounterState extends State<AnimatedCounter>
 
   @override
   Widget build(BuildContext context) {
+    if (_animationsDisabled(context)) {
+      final displayText = widget.formatter != null
+          ? widget.formatter!(widget.value)
+          : '${widget.value}';
+      return Text(
+        '${widget.prefix ?? ''}$displayText${widget.suffix ?? ''}',
+        style: widget.style,
+      );
+    }
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, child) {
@@ -794,6 +857,9 @@ class _ShakeAnimationState extends State<ShakeAnimation>
 
   @override
   Widget build(BuildContext context) {
+    if (_animationsDisabled(context)) {
+      return widget.child;
+    }
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, child) {
@@ -861,6 +927,9 @@ class _FlipAnimationState extends State<FlipAnimation>
 
   @override
   Widget build(BuildContext context) {
+    if (_animationsDisabled(context)) {
+      return widget.showBack ? widget.back : widget.front;
+    }
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, child) {
@@ -907,6 +976,27 @@ class AnimatedProgressRing extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (_animationsDisabled(context)) {
+      return SizedBox(
+        width: size,
+        height: size,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            CustomPaint(
+              size: Size(size, size),
+              painter: _ProgressRingPainter(
+                progress: progress,
+                strokeWidth: strokeWidth,
+                progressColor: progressColor,
+                backgroundColor: backgroundColor,
+              ),
+            ),
+            if (child != null) child!,
+          ],
+        ),
+      );
+    }
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: progress),
       duration: duration,
@@ -1000,6 +1090,9 @@ class AnimatedMorphIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (_animationsDisabled(context)) {
+      return Icon(icon, size: size, color: color);
+    }
     return AnimatedSwitcher(
       duration: duration,
       transitionBuilder: (child, animation) {
@@ -1165,6 +1258,9 @@ class StaggeredListAnimation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (_animationsDisabled(context)) {
+      return child;
+    }
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
       duration: itemDuration,
@@ -1236,6 +1332,9 @@ class _FadeScaleInState extends State<FadeScaleIn>
 
   @override
   Widget build(BuildContext context) {
+    if (_animationsDisabled(context)) {
+      return widget.child;
+    }
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
@@ -1286,6 +1385,9 @@ class _ShimmerEffectState extends State<ShimmerEffect>
 
   @override
   Widget build(BuildContext context) {
+    if (_animationsDisabled(context)) {
+      return widget.child;
+    }
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
@@ -1333,6 +1435,13 @@ class AnimatedNumber extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (_animationsDisabled(context)) {
+      final buffer = StringBuffer()
+        ..write(prefix ?? '')
+        ..write(value)
+        ..write(suffix ?? '');
+      return Text(buffer.toString(), style: style);
+    }
     return TweenAnimationBuilder<int>(
       tween: IntTween(begin: 0, end: value),
       duration: duration,
@@ -1396,7 +1505,7 @@ class _RippleAnimationState extends State<RippleAnimation>
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.enabled) return widget.child;
+    if (!widget.enabled || _animationsDisabled(context)) return widget.child;
 
     return AnimatedBuilder(
       animation: _controller,
@@ -1452,7 +1561,7 @@ class SharedElement extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!enabled) return child;
+    if (!enabled || _animationsDisabled(context)) return child;
     return Hero(
       tag: tag,
       flightShuttleBuilder:
@@ -1542,6 +1651,9 @@ class _Flip3DCardState extends State<Flip3DCard>
 
   @override
   Widget build(BuildContext context) {
+    if (_animationsDisabled(context)) {
+      return widget.showBack ? widget.back : widget.front;
+    }
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, child) {
@@ -1621,6 +1733,9 @@ class _Tilt3DEffectState extends State<Tilt3DEffect> {
 
   @override
   Widget build(BuildContext context) {
+    if (_animationsDisabled(context)) {
+      return widget.child;
+    }
     return LayoutBuilder(
       builder: (context, constraints) {
         return GestureDetector(
@@ -1707,6 +1822,9 @@ class _Rotate3DListItemState extends State<Rotate3DListItem>
 
   @override
   Widget build(BuildContext context) {
+    if (_animationsDisabled(context)) {
+      return widget.child;
+    }
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
@@ -1778,6 +1896,9 @@ class _Cube3DTransitionState extends State<Cube3DTransition>
 
   @override
   Widget build(BuildContext context) {
+    if (_animationsDisabled(context)) {
+      return widget.child;
+    }
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
@@ -1877,7 +1998,7 @@ class _Perspective3DSlideState extends State<Perspective3DSlide>
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.enabled) {
+    if (!widget.enabled || _animationsDisabled(context)) {
       return widget.child;
     }
 
@@ -1945,6 +2066,9 @@ class _StackedCards3DState extends State<StackedCards3D> {
 
   @override
   Widget build(BuildContext context) {
+    if (_animationsDisabled(context)) {
+      return widget.cards[_currentIndex];
+    }
     return GestureDetector(
       onHorizontalDragEnd: (details) {
         if (details.primaryVelocity! < 0) {

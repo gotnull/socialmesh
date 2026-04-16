@@ -32,6 +32,7 @@ class _AnimatedTaglineState extends State<AnimatedTagline>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   int _currentIndex = 0;
+  bool _reduceMotion = false;
 
   @override
   void initState() {
@@ -59,18 +60,20 @@ class _AnimatedTaglineState extends State<AnimatedTagline>
   }
 
   void _startCycling() {
+    if (_reduceMotion) return;
     Future.delayed(AnimatedTagline.displayDuration, () {
       if (!mounted) return;
+      if (_reduceMotion) return;
       _cycleToNext();
     });
   }
 
   Future<void> _cycleToNext() async {
-    if (!mounted) return;
+    if (!mounted || _reduceMotion) return;
 
     // Fade out
     await _controller.reverse();
-    if (!mounted) return;
+    if (!mounted || _reduceMotion) return;
 
     // Change text
     setState(() {
@@ -79,7 +82,7 @@ class _AnimatedTaglineState extends State<AnimatedTagline>
 
     // Fade in
     await _controller.forward();
-    if (!mounted) return;
+    if (!mounted || _reduceMotion) return;
 
     // Schedule next cycle
     _startCycling();
@@ -92,12 +95,35 @@ class _AnimatedTaglineState extends State<AnimatedTagline>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final reduceMotion =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    if (reduceMotion == _reduceMotion) return;
+    _reduceMotion = reduceMotion;
+    if (_reduceMotion) {
+      _controller.value = 1.0;
+      _currentIndex = 0;
+      return;
+    }
+    _controller.value = 1.0;
+    _startCycling();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final style =
         widget.textStyle ??
         Theme.of(
           context,
         ).textTheme.bodyLarge?.copyWith(color: context.textSecondary);
+    if (_reduceMotion) {
+      return Text(
+        widget.taglines.first,
+        style: style,
+        textAlign: widget.textAlign,
+      );
+    }
     return FadeTransition(
       opacity: _fadeAnimation,
       child: SlideTransition(

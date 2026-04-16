@@ -113,6 +113,9 @@ class _WeeklyTimelineBoardState extends ConsumerState<WeeklyTimelineBoard> {
   }
 
   void _scrollToCurrentTime() {
+    if (!_verticalScroll.hasClients) {
+      return;
+    }
     final now = DateTime.now();
     final offset = (now.hour * 60 + now.minute) * widget.pixelsPerMinute;
     // Center the viewport around current time.
@@ -121,6 +124,12 @@ class _WeeklyTimelineBoardState extends ConsumerState<WeeklyTimelineBoard> {
       0.0,
       _verticalScroll.position.maxScrollExtent,
     );
+    final disableAnimations =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    if (disableAnimations) {
+      _verticalScroll.jumpTo(target);
+      return;
+    }
     _verticalScroll.animateTo(
       target,
       duration: const Duration(milliseconds: 400),
@@ -268,6 +277,8 @@ class _BoardHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final disableAnimations =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -320,7 +331,9 @@ class _BoardHeader extends StatelessWidget {
                     onSegmentChanged?.call(seg);
                   },
                   child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
+                    duration: disableAnimations
+                        ? Duration.zero
+                        : const Duration(milliseconds: 200),
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppTheme.spacing12,
                       vertical: AppTheme.spacing6,
