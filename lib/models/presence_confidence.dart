@@ -4,7 +4,6 @@ import 'dart:convert';
 
 import 'package:flutter/widgets.dart';
 
-import '../utils/text_sanitizer.dart';
 import '../utils/timestamp_validation.dart';
 
 enum PresenceConfidence { active, fading, stale, unknown }
@@ -136,7 +135,7 @@ class ExtendedPresenceInfo {
         status = status.trim();
         if (status.isEmpty) status = null;
         if (status != null && status.length > maxStatusLength) {
-          status = safeSubstring(status, maxStatusLength);
+          status = status.substring(0, maxStatusLength);
         }
       }
       return ExtendedPresenceInfo(intent: intent, shortStatus: status);
