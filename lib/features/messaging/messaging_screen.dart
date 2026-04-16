@@ -87,9 +87,7 @@ selectConversationDisplayRows({
       0;
   final shouldUseFallbackRows =
       fallbackMessages.isNotEmpty &&
-      (timelineState == null ||
-          timelineState.rows.isEmpty ||
-          visibleTimelineMessageCount < fallbackMessages.length);
+      (timelineState == null || timelineState.rows.isEmpty);
 
   return (
     rows: shouldUseFallbackRows

@@ -69,7 +69,7 @@ void main() {
     );
 
     test(
-      'builds fallback rows when timeline data is missing visible messages',
+      'uses timeline rows even when they have fewer visible messages than fallback',
       () {
         final base = DateTime(2026, 4, 16, 12, 0);
         final fallbackMessages = [
@@ -87,13 +87,16 @@ void main() {
           ),
         ];
         final incompleteTimelineMessages = [fallbackMessages.first];
+        final timelineRows = buildConversationTimelineRows(
+          incompleteTimelineMessages,
+        );
         var fallbackBuilds = 0;
 
         final selection = selectConversationDisplayRows(
           fallbackMessages: fallbackMessages,
           timelineState: ConversationTimelineState(
             rawMessages: incompleteTimelineMessages,
-            rows: buildConversationTimelineRows(incompleteTimelineMessages),
+            rows: timelineRows,
             totalMessageCount: fallbackMessages.length,
             hasMoreOlder: false,
             isLoadingOlder: false,
@@ -104,14 +107,69 @@ void main() {
           },
         );
 
-        expect(selection.usedFallbackRows, isTrue);
-        expect(selection.rows.map((row) => row.message?.id), [
-          'message-001',
-          'message-002',
-        ]);
+        expect(selection.usedFallbackRows, isFalse);
+        expect(selection.rows, same(timelineRows));
         expect(selection.visibleTimelineMessageCount, 1);
-        expect(fallbackBuilds, 1);
+        expect(fallbackBuilds, 0);
       },
     );
+
+    test('builds fallback rows when timeline state is null', () {
+      final base = DateTime(2026, 4, 16, 12, 0);
+      final fallbackMessages = [
+        _message(
+          id: 'message-001',
+          text: 'First',
+          timestamp: base,
+          packetId: 1,
+        ),
+      ];
+      var fallbackBuilds = 0;
+
+      final selection = selectConversationDisplayRows(
+        fallbackMessages: fallbackMessages,
+        timelineState: null,
+        fallbackRowBuilder: (messages) {
+          fallbackBuilds += 1;
+          return buildConversationFallbackRows(messages);
+        },
+      );
+
+      expect(selection.usedFallbackRows, isTrue);
+      expect(selection.rows.length, 1);
+      expect(fallbackBuilds, 1);
+    });
+
+    test('builds fallback rows when timeline rows are empty', () {
+      final base = DateTime(2026, 4, 16, 12, 0);
+      final fallbackMessages = [
+        _message(
+          id: 'message-001',
+          text: 'First',
+          timestamp: base,
+          packetId: 1,
+        ),
+      ];
+      var fallbackBuilds = 0;
+
+      final selection = selectConversationDisplayRows(
+        fallbackMessages: fallbackMessages,
+        timelineState: const ConversationTimelineState(
+          rawMessages: [],
+          rows: [],
+          totalMessageCount: 0,
+          hasMoreOlder: false,
+          isLoadingOlder: false,
+        ),
+        fallbackRowBuilder: (messages) {
+          fallbackBuilds += 1;
+          return buildConversationFallbackRows(messages);
+        },
+      );
+
+      expect(selection.usedFallbackRows, isTrue);
+      expect(selection.rows.length, 1);
+      expect(fallbackBuilds, 1);
+    });
   });
 }
