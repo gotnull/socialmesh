@@ -6,6 +6,8 @@ import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart' as crypto;
 
+import '../utils/text_sanitizer.dart';
+
 /// A MeshCore channel for group communication.
 class MeshCoreChannel {
   /// Channel index on device (0-based).
@@ -147,7 +149,9 @@ MeshCoreChannel? parseChannelInfo(Uint8List payload) {
   while (nameEnd < 33 && payload[nameEnd] != 0) {
     nameEnd++;
   }
-  final name = String.fromCharCodes(payload.sublist(1, nameEnd));
+  final name = sanitizeExternalText(
+    String.fromCharCodes(payload.sublist(1, nameEnd)),
+  );
 
   // Read PSK (16 bytes starting at offset 33)
   final psk = Uint8List.fromList(payload.sublist(33, 49));

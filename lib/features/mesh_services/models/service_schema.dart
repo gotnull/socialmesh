@@ -14,6 +14,8 @@ library;
 
 import 'dart:typed_data';
 
+import '../../../utils/text_sanitizer.dart';
+
 /// Field types that a schema descriptor can declare.
 ///
 /// Each maps to a specific UI widget in the generic renderer.
@@ -246,14 +248,18 @@ abstract final class ServiceSchemaCodec {
     // Service type.
     final stLen = data[offset++];
     if (offset + stLen > data.length) return null;
-    final serviceType = String.fromCharCodes(data, offset, offset + stLen);
+    final serviceType = sanitizeExternalText(
+      String.fromCharCodes(data, offset, offset + stLen),
+    );
     offset += stLen;
 
     // Title.
     if (offset >= data.length) return null;
     final titleLen = data[offset++];
     if (offset + titleLen > data.length) return null;
-    final title = String.fromCharCodes(data, offset, offset + titleLen);
+    final title = sanitizeExternalText(
+      String.fromCharCodes(data, offset, offset + titleLen),
+    );
     offset += titleLen;
 
     // Fields.
@@ -328,13 +334,17 @@ abstract final class ServiceSchemaCodec {
 
     final nameLen = data[offset++];
     if (offset + nameLen > data.length) return null;
-    final name = String.fromCharCodes(data, offset, offset + nameLen);
+    final name = sanitizeExternalText(
+      String.fromCharCodes(data, offset, offset + nameLen),
+    );
     offset += nameLen;
 
     if (offset >= data.length) return null;
     final unitLen = data[offset++];
     if (offset + unitLen > data.length) return null;
-    final unit = String.fromCharCodes(data, offset, offset + unitLen);
+    final unit = sanitizeExternalText(
+      String.fromCharCodes(data, offset, offset + unitLen),
+    );
     offset += unitLen;
 
     if (offset >= data.length) return null;
@@ -344,7 +354,11 @@ abstract final class ServiceSchemaCodec {
       if (offset >= data.length) return null;
       final optLen = data[offset++];
       if (offset + optLen > data.length) return null;
-      options.add(String.fromCharCodes(data, offset, offset + optLen));
+      options.add(
+        sanitizeExternalText(
+          String.fromCharCodes(data, offset, offset + optLen),
+        ),
+      );
       offset += optLen;
     }
 

@@ -25,6 +25,8 @@ import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 
+import '../../utils/text_sanitizer.dart';
+
 /// TTL class for mesh posts — longer-lived than ephemeral signals.
 enum MeshPostTtl {
   /// 1 hour — quick local announcement.
@@ -408,7 +410,9 @@ class MeshPost {
     if (offset + contentLen > data.length) return null;
 
     final contentBytes = data.sublist(offset, offset + contentLen);
-    final content = utf8.decode(contentBytes, allowMalformed: true);
+    final content = sanitizeExternalText(
+      utf8.decode(contentBytes, allowMalformed: true),
+    );
 
     final createdAtMs = createdAtSec * 1000;
 

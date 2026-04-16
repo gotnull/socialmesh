@@ -7,6 +7,7 @@ import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 
+import '../../../utils/text_sanitizer.dart';
 import '../../payload/spp_constants.dart';
 import 'sm_constants.dart';
 
@@ -284,14 +285,24 @@ class SmFileOffer {
     if (offset >= data.length) return null;
     final filenameLen = buffer.getUint8(offset++);
     if (offset + filenameLen > data.length) return null;
-    final filename = utf8.decode(data.sublist(offset, offset + filenameLen));
+    final filename = sanitizeExternalText(
+      utf8.decode(
+        data.sublist(offset, offset + filenameLen),
+        allowMalformed: true,
+      ),
+    );
     offset += filenameLen;
 
     // MIME type
     if (offset >= data.length) return null;
     final mimeTypeLen = buffer.getUint8(offset++);
     if (offset + mimeTypeLen > data.length) return null;
-    final mimeType = utf8.decode(data.sublist(offset, offset + mimeTypeLen));
+    final mimeType = sanitizeExternalText(
+      utf8.decode(
+        data.sublist(offset, offset + mimeTypeLen),
+        allowMalformed: true,
+      ),
+    );
     offset += mimeTypeLen;
 
     // Total bytes

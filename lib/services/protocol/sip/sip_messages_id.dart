@@ -10,6 +10,7 @@ library;
 import 'dart:typed_data';
 
 import '../../../core/logging.dart';
+import '../../../utils/text_sanitizer.dart';
 import 'sip_constants.dart';
 import 'sip_types.dart';
 
@@ -223,9 +224,9 @@ abstract final class SipIdMessages {
 
     return SipIdClaim(
       keyType: keyType,
-      displayName: String.fromCharCodes(nameBytes),
-      status: String.fromCharCodes(statusBytes),
-      deviceModel: String.fromCharCodes(modelBytes),
+      displayName: sanitizeExternalText(String.fromCharCodes(nameBytes)),
+      status: sanitizeExternalText(String.fromCharCodes(statusBytes)),
+      deviceModel: sanitizeExternalText(String.fromCharCodes(modelBytes)),
       createdAt: createdAt,
       personaId: personaId,
       pubkey: pubkey,

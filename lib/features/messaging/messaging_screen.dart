@@ -11,6 +11,7 @@ import '../../core/safety/lifecycle_mixin.dart';
 import 'package:flutter/services.dart';
 import 'widgets/chat_composer.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../utils/text_sanitizer.dart';
 import '../../utils/time_format.dart';
 import 'dart:async';
 import '../../providers/app_providers.dart';
@@ -2596,9 +2597,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                             ),
                             const SizedBox(height: AppTheme.spacing2),
                             Text(
-                              _replyingTo!.text.length > 80
-                                  ? '${_replyingTo!.text.substring(0, 80)}…'
-                                  : _replyingTo!.text,
+                              safeSubstring(_replyingTo!.text, 80),
                               style: TextStyle(
                                 fontSize: 13,
                                 color: context.textSecondary,

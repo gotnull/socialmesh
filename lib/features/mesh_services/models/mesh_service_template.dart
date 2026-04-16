@@ -14,6 +14,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
 import '../../../core/theme.dart';
+import '../../../utils/text_sanitizer.dart';
 
 /// The real capability a mesh service instance provides.
 enum MeshServiceType {
@@ -188,7 +189,9 @@ class MeshServiceAdvertMetadata {
           ? null
           : MeshServicePresetId.fromCode(presetCode);
       final title = metadata.length > 5
-          ? utf8.decode(metadata.sublist(5), allowMalformed: true)
+          ? sanitizeExternalText(
+              utf8.decode(metadata.sublist(5), allowMalformed: true),
+            )
           : '';
       return MeshServiceAdvertMetadata(
         canonicalType: canonicalType,
@@ -198,7 +201,7 @@ class MeshServiceAdvertMetadata {
     }
 
     return MeshServiceAdvertMetadata(
-      title: utf8.decode(metadata, allowMalformed: true),
+      title: sanitizeExternalText(utf8.decode(metadata, allowMalformed: true)),
     );
   }
 }

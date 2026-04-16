@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:socialmesh/l10n/app_localizations.dart';
 import '../../models/mesh_models.dart';
+import '../../utils/text_sanitizer.dart';
 import 'package:socialmesh/core/theme.dart';
 import 'package:socialmesh/l10n/l10n_utils.dart';
 
@@ -741,9 +742,7 @@ class NotificationService {
     );
 
     // Truncate message if too long
-    final truncatedMessage = message.length > 100
-        ? '${message.substring(0, 100)}…'
-        : message;
+    final truncatedMessage = safeSubstring(message, 100);
 
     AppLogging.notifications(
       '🔔 Calling _notifications.show() for DM from $senderName',
@@ -841,9 +840,7 @@ class NotificationService {
     );
 
     // Truncate message if too long
-    final truncatedMessage = message.length > 100
-        ? '${message.substring(0, 100)}…'
-        : message;
+    final truncatedMessage = safeSubstring(message, 100);
 
     // Use short name (4-char code) if available, otherwise last 4 hex digits
     final shortCode =
@@ -1195,9 +1192,7 @@ class NotificationService {
     );
 
     // Truncate description for notification body
-    final truncated = description.length > 120
-        ? '${description.substring(0, 120)}…'
-        : description;
+    final truncated = safeSubstring(description, 120);
 
     final subtitle = email != null && email.isNotEmpty
         ? 'From: $email' // lint-allow: hardcoded-string
@@ -1257,9 +1252,7 @@ class NotificationService {
     );
 
     // Truncate message if too long
-    final truncatedMessage = message.length > 100
-        ? '${message.substring(0, 100)}…'
-        : message;
+    final truncatedMessage = safeSubstring(message, 100);
 
     // Use session tag modulo to keep ID within 32-bit signed int range.
     // Offset by 4000000 to avoid collision with other notification IDs.
