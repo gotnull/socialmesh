@@ -38,7 +38,7 @@ Message? parsePushMessagePayload(Map<String, dynamic> data) {
       'True' => true,
       _ => false,
     };
-    final String text = sanitizeUtf16(
+    final String text = sanitizeExternalText(
       (data['text'] ?? data['message'] ?? '') as String,
     );
     if (text.isEmpty) return null;

@@ -684,7 +684,7 @@ class MessageDatabase {
       id: row['id'] as String,
       from: row['from_node'] as int,
       to: row['to_node'] as int,
-      text: sanitizeUtf16(row['text'] as String),
+      text: sanitizeExternalText(row['text'] as String),
       timestamp: DateTime.fromMillisecondsSinceEpoch(row['timestamp'] as int),
       // Normalise channel for broadcast messages: if the DB column is NULL
       // but to_node indicates a broadcast (0xFFFFFFFF), default to Primary
@@ -704,10 +704,10 @@ class MessageDatabase {
       source: _parseMessageSource(row['source'] as String?),
       read: (row['read'] as int) == 1,
       senderLongName: row['sender_long_name'] != null
-          ? sanitizeUtf16(row['sender_long_name'] as String)
+          ? sanitizeExternalText(row['sender_long_name'] as String)
           : null,
       senderShortName: row['sender_short_name'] != null
-          ? sanitizeUtf16(row['sender_short_name'] as String)
+          ? sanitizeExternalText(row['sender_short_name'] as String)
           : null,
       senderAvatarColor: row['sender_avatar_color'] as int?,
       replyId: row['reply_id'] as int?,
@@ -788,7 +788,7 @@ class MessageDatabase {
               id: json['id'] as String,
               from: json['from'] as int,
               to: json['to'] as int,
-              text: sanitizeUtf16(json['text'] as String),
+              text: sanitizeExternalText(json['text'] as String),
               timestamp: DateTime.fromMillisecondsSinceEpoch(
                 json['timestamp'] as int,
               ),
@@ -799,10 +799,10 @@ class MessageDatabase {
               source: _parseMessageSource(json['source'] as String?),
               read: json['read'] as bool? ?? false,
               senderLongName: json['senderLongName'] != null
-                  ? sanitizeUtf16(json['senderLongName'] as String)
+                  ? sanitizeExternalText(json['senderLongName'] as String)
                   : null,
               senderShortName: json['senderShortName'] != null
-                  ? sanitizeUtf16(json['senderShortName'] as String)
+                  ? sanitizeExternalText(json['senderShortName'] as String)
                   : null,
               senderAvatarColor: json['senderAvatarColor'] as int?,
               // These fields were not persisted in the old format —

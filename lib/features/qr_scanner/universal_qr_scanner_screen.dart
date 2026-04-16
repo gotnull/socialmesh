@@ -426,9 +426,9 @@ class _UniversalQrScannerScreenState
     double? lat,
     double? lon,
   }) async {
-    final sanitizedLongName = longName != null ? sanitizeUtf16(longName) : null;
+    final sanitizedLongName = longName != null ? sanitizeExternalText(longName) : null;
     final sanitizedShortName = shortName != null
-        ? sanitizeUtf16(shortName)
+        ? sanitizeExternalText(shortName)
         : null;
 
     final existingNodes = ref.read(nodesProvider);

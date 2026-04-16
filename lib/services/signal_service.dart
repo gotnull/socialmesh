@@ -3536,7 +3536,7 @@ class SignalService {
       return SignalResponse(
         id: row['id'] as String,
         signalId: row['signalId'] as String,
-        content: sanitizeUtf16(row['content'] as String),
+        content: sanitizeExternalText(row['content'] as String),
         authorId: row['authorId'] as String,
         authorName: row['authorName'] as String?,
         parentId: row['parentId'] as String?,
@@ -3590,7 +3590,7 @@ class SignalService {
       return SignalResponse(
         id: id,
         signalId: row['signalId'] as String,
-        content: sanitizeUtf16(row['content'] as String),
+        content: sanitizeExternalText(row['content'] as String),
         authorId: row['authorId'] as String,
         authorName: row['authorName'] as String?,
         parentId: row['parentId'] as String?,

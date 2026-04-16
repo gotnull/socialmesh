@@ -109,7 +109,7 @@ class MeshSignalPacket {
     final json = jsonDecode(jsonStr) as Map<String, dynamic>;
 
     // Support both compressed and full keys
-    final content = sanitizeUtf16(
+    final content = sanitizeExternalText(
       json['c'] as String? ?? json['content'] as String? ?? '',
     );
     final ttl = json['t'] as int? ?? json['ttl'] as int? ?? 60;
@@ -201,7 +201,7 @@ class DetectionSensorEvent {
     int senderNodeId,
     List<int> payload,
   ) {
-    final text = sanitizeUtf16(utf8.decode(payload));
+    final text = sanitizeExternalText(utf8.decode(payload));
     // Detection sensor format is typically "SensorName: Detected" or "SensorName: Clear"
     final parts = text.split(':');
     final sensorName = parts.isNotEmpty ? parts[0].trim() : 'Unknown Sensor';
@@ -2366,7 +2366,7 @@ class ProtocolService {
     try {
       final statusMsg = pb.StatusMessage.fromBuffer(data.payload);
       final status = statusMsg.hasStatus()
-          ? sanitizeUtf16(statusMsg.status)
+          ? sanitizeExternalText(statusMsg.status)
           : null;
 
       AppLogging.protocol(
@@ -2672,14 +2672,14 @@ class ProtocolService {
         AppLogging.protocol(
           'Received canned messages text (${messages.length} chars)',
         );
-        _cannedMessageTextController.add(sanitizeUtf16(messages));
+        _cannedMessageTextController.add(sanitizeExternalText(messages));
       } else if (adminMsg.hasGetRingtoneResponse()) {
         // Handle ringtone text response (RTTTL format)
         final ringtone = adminMsg.getRingtoneResponse;
         AppLogging.protocol(
           'Received ringtone text (${ringtone.length} chars)',
         );
-        _ringtoneTextController.add(sanitizeUtf16(ringtone));
+        _ringtoneTextController.add(sanitizeExternalText(ringtone));
       } else if (adminMsg.hasGetDeviceMetadataResponse()) {
         // Handle device metadata response - update node with firmware version
         final metadata = adminMsg.getDeviceMetadataResponse;
@@ -2720,7 +2720,7 @@ class ProtocolService {
 
           final updatedNode = existingNode.copyWith(
             firmwareVersion: metadata.firmwareVersion.isNotEmpty
-                ? sanitizeUtf16(metadata.firmwareVersion)
+                ? sanitizeExternalText(metadata.firmwareVersion)
                 : null,
             hasWifi: metadata.hasWifi,
             hasBluetooth: metadata.hasBluetooth,
@@ -2745,7 +2745,7 @@ class ProtocolService {
 
           final updatedRemote = remoteNode.copyWith(
             firmwareVersion: metadata.firmwareVersion.isNotEmpty
-                ? sanitizeUtf16(metadata.firmwareVersion)
+                ? sanitizeExternalText(metadata.firmwareVersion)
                 : null,
             hasWifi: metadata.hasWifi,
             hasBluetooth: metadata.hasBluetooth,
@@ -2783,10 +2783,10 @@ class ProtocolService {
 
           final updatedNode = existingNode.copyWith(
             longName: user.longName.isNotEmpty
-                ? sanitizeUtf16(user.longName)
+                ? sanitizeExternalText(user.longName)
                 : existingNode.longName,
             shortName: user.shortName.isNotEmpty
-                ? sanitizeUtf16(user.shortName)
+                ? sanitizeExternalText(user.shortName)
                 : existingNode.shortName,
             userId: user.hasId() ? user.id : existingNode.userId,
             hardwareModel: hwModel ?? existingNode.hardwareModel,
@@ -2824,10 +2824,10 @@ class ProtocolService {
           final newNode = MeshNode(
             nodeNum: packet.from,
             longName: user.longName.isNotEmpty
-                ? sanitizeUtf16(user.longName)
+                ? sanitizeExternalText(user.longName)
                 : null,
             shortName: user.shortName.isNotEmpty
-                ? sanitizeUtf16(user.shortName)
+                ? sanitizeExternalText(user.shortName)
                 : null,
             userId: user.hasId() ? user.id : null,
             hardwareModel: hwModel,
@@ -2926,7 +2926,7 @@ class ProtocolService {
   /// These are important messages that should be displayed to the user.
   void _handleClientNotification(pb.ClientNotification notification) {
     final levelName = notification.level.name;
-    final message = sanitizeUtf16(notification.message);
+    final message = sanitizeExternalText(notification.message);
 
     // Log with appropriate level
     if (notification.level == pb.LogRecord_Level.ERROR ||
@@ -2980,7 +2980,7 @@ class ProtocolService {
 
       final updatedNode = existingNode.copyWith(
         firmwareVersion: metadata.firmwareVersion.isNotEmpty
-            ? sanitizeUtf16(metadata.firmwareVersion)
+            ? sanitizeExternalText(metadata.firmwareVersion)
             : null,
         hasWifi: metadata.hasWifi,
         hasBluetooth: metadata.hasBluetooth,
@@ -3020,7 +3020,7 @@ class ProtocolService {
   /// Handle text message
   void _handleTextMessage(pb.MeshPacket packet, pb.Data data) {
     try {
-      final text = sanitizeUtf16(
+      final text = sanitizeExternalText(
         utf8.decode(data.payload, allowMalformed: true),
       );
       AppLogging.protocol('Text message from ${packet.from}: $text');
@@ -3033,10 +3033,10 @@ class ProtocolService {
 
       if (senderNode != null) {
         senderLongName = senderNode.longName != null
-            ? sanitizeUtf16(senderNode.longName!)
+            ? sanitizeExternalText(senderNode.longName!)
             : null;
         senderShortName = senderNode.shortName != null
-            ? sanitizeUtf16(senderNode.shortName!)
+            ? sanitizeExternalText(senderNode.shortName!)
             : null;
         senderAvatarColor = senderNode.avatarColor;
       }
@@ -3756,8 +3756,8 @@ class ProtocolService {
       final user = pb.User.fromBuffer(data.payload);
 
       // Sanitize node names to prevent UTF-16 crashes when rendering text
-      final longName = sanitizeUtf16(user.longName);
-      final shortName = sanitizeUtf16(user.shortName);
+      final longName = sanitizeExternalText(user.longName);
+      final shortName = sanitizeExternalText(user.shortName);
 
       AppLogging.protocol(
         '🔑 📥 Received node info from ${packet.from.toRadixString(16)}: $longName ($shortName)',
@@ -4093,13 +4093,13 @@ class ProtocolService {
       // and should be replaced by null so displayName uses the proper fallback.
       final newLongName =
           nodeInfo.hasUser() && nodeInfo.user.longName.isNotEmpty
-          ? sanitizeUtf16(nodeInfo.user.longName)
+          ? sanitizeExternalText(nodeInfo.user.longName)
           : NodeDisplayNameResolver.sanitizeName(existingNode.longName) != null
           ? existingNode.longName
           : null;
       final newShortName =
           nodeInfo.hasUser() && nodeInfo.user.shortName.isNotEmpty
-          ? sanitizeUtf16(nodeInfo.user.shortName)
+          ? sanitizeExternalText(nodeInfo.user.shortName)
           : NodeDisplayNameResolver.sanitizeName(existingNode.shortName) != null
           ? existingNode.shortName
           : null;
@@ -4147,11 +4147,11 @@ class ProtocolService {
       // Use null for empty strings to trigger fallback display logic, sanitize to prevent UTF-16 crashes
       final userLongName =
           nodeInfo.hasUser() && nodeInfo.user.longName.isNotEmpty
-          ? sanitizeUtf16(nodeInfo.user.longName)
+          ? sanitizeExternalText(nodeInfo.user.longName)
           : null;
       final userShortName =
           nodeInfo.hasUser() && nodeInfo.user.shortName.isNotEmpty
-          ? sanitizeUtf16(nodeInfo.user.shortName)
+          ? sanitizeExternalText(nodeInfo.user.shortName)
           : null;
 
       updatedNode = MeshNode(
@@ -4193,10 +4193,10 @@ class ProtocolService {
       final user = nodeInfo.user;
       // Sanitize names for the callback as well
       final sanitizedLongName = user.longName.isNotEmpty
-          ? sanitizeUtf16(user.longName)
+          ? sanitizeExternalText(user.longName)
           : null;
       final sanitizedShortName = user.shortName.isNotEmpty
-          ? sanitizeUtf16(user.shortName)
+          ? sanitizeExternalText(user.shortName)
           : null;
       onIdentityUpdate?.call(
         nodeNum: nodeInfo.num,
@@ -4273,7 +4273,7 @@ class ProtocolService {
 
     final channelConfig = ChannelConfig(
       index: channel.index,
-      name: channel.hasSettings() ? sanitizeUtf16(channel.settings.name) : '',
+      name: channel.hasSettings() ? sanitizeExternalText(channel.settings.name) : '',
       psk: channel.hasSettings() ? channel.settings.psk : [],
       uplink: channel.hasSettings() ? channel.settings.uplinkEnabled : false,
       downlink: channel.hasSettings()

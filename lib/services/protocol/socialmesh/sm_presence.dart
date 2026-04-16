@@ -162,7 +162,7 @@ class SmPresence {
     String? status;
     if (statusLen > 0) {
       if (offset + statusLen > data.length) return null;
-      status = sanitizeUtf16(
+      status = sanitizeExternalText(
         utf8.decode(
           data.sublist(offset, offset + statusLen),
           allowMalformed: true,

@@ -6,38 +6,6 @@ import 'package:characters/characters.dart';
 bool _isHighSurrogate(int codeUnit) => codeUnit >= 0xD800 && codeUnit <= 0xDBFF;
 bool _isLowSurrogate(int codeUnit) => codeUnit >= 0xDC00 && codeUnit <= 0xDFFF;
 
-/// Replace unpaired UTF-16 surrogates with U+FFFD to prevent text layout crashes.
-String sanitizeUtf16(String input) {
-  if (input.isEmpty) return input;
-
-  final codeUnits = input.codeUnits;
-  var hadInvalid = false;
-  final buffer = StringBuffer();
-
-  for (var i = 0; i < codeUnits.length; i++) {
-    final unit = codeUnits[i];
-    if (_isHighSurrogate(unit)) {
-      if (i + 1 < codeUnits.length && _isLowSurrogate(codeUnits[i + 1])) {
-        buffer.writeCharCode(unit);
-        buffer.writeCharCode(codeUnits[i + 1]);
-        i++;
-      } else {
-        hadInvalid = true;
-        buffer.write('\uFFFD');
-      }
-      continue;
-    }
-    if (_isLowSurrogate(unit)) {
-      hadInvalid = true;
-      buffer.write('\uFFFD');
-      continue;
-    }
-    buffer.writeCharCode(unit);
-  }
-
-  return hadInvalid ? buffer.toString() : input;
-}
-
 /// Whether [codeUnit] is a C0/C1 control character unsafe for text rendering.
 ///
 /// Keeps tab (0x09), newline (0x0A), and carriage return (0x0D) which are
@@ -56,7 +24,7 @@ bool _isUnsafeControl(int codeUnit) {
 
 /// Full sanitization for external/untrusted text before UI rendering.
 ///
-/// Combines surrogate repair ([sanitizeUtf16]) with removal of null bytes and
+/// Repairs unpaired UTF-16 surrogates and removes null bytes and
 /// control characters that crash Flutter's native paragraph builder on iOS.
 /// Safe characters (tab, newline, carriage return) are preserved. Normal emoji,
 /// multilingual text, and combining characters pass through unchanged.

@@ -284,7 +284,7 @@ class GeoChatBridge {
     }
 
     // Sanitize message text.
-    final sanitizedText = sanitizeUtf16(message.text);
+    final sanitizedText = sanitizeExternalText(message.text);
     if (sanitizedText.isEmpty) return null;
 
     // Determine destination.

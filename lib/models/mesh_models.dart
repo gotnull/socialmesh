@@ -270,10 +270,10 @@ class Message {
   /// Get the sender's display name from cached info or fallback to node number
   String get senderDisplayName {
     if (senderLongName != null && senderLongName!.isNotEmpty) {
-      return sanitizeUtf16(senderLongName!);
+      return sanitizeExternalText(senderLongName!);
     }
     if (senderShortName != null && senderShortName!.isNotEmpty) {
-      return sanitizeUtf16(senderShortName!);
+      return sanitizeExternalText(senderShortName!);
     }
     return NodeDisplayNameResolver.defaultName(from);
   }
@@ -281,10 +281,10 @@ class Message {
   /// Get the sender's avatar name from cached info or fallback to hex ID
   String get senderAvatarName {
     if (senderShortName != null && senderShortName!.isNotEmpty) {
-      return sanitizeUtf16(senderShortName!);
+      return sanitizeExternalText(senderShortName!);
     }
     if (senderLongName != null && senderLongName!.isNotEmpty) {
-      final sanitized = sanitizeUtf16(senderLongName!);
+      final sanitized = sanitizeExternalText(senderLongName!);
       return sanitized.substring(0, sanitized.length.clamp(0, 4));
     }
     return NodeDisplayNameResolver.shortHex(from);
@@ -799,10 +799,10 @@ class MeshNode {
   /// Prefers shortName, falls back to longName prefix, then last 4 hex digits
   String get avatarName {
     if (shortName != null && shortName!.isNotEmpty) {
-      return sanitizeUtf16(shortName!);
+      return sanitizeExternalText(shortName!);
     }
     if (longName != null && longName!.isNotEmpty) {
-      final sanitized = sanitizeUtf16(longName!);
+      final sanitized = sanitizeExternalText(longName!);
       return sanitized.substring(0, sanitized.length.clamp(0, 4));
     }
     return NodeDisplayNameResolver.shortHex(nodeNum);

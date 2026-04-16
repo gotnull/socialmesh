@@ -121,7 +121,7 @@ class NodeDisplayNameResolver {
 
   static String? _normalize(String? value) {
     if (value == null) return null;
-    final trimmed = sanitizeUtf16(value).trim();
+    final trimmed = sanitizeExternalText(value).trim();
     return trimmed.isEmpty ? null : trimmed;
   }
 

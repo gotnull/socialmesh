@@ -407,8 +407,8 @@ class DeepLinkManager {
     // Create a MeshNode from the deep link data, sanitizing names
     final node = MeshNode(
       nodeNum: nodeNum,
-      longName: longName != null ? sanitizeUtf16(longName) : null,
-      shortName: shortName != null ? sanitizeUtf16(shortName) : null,
+      longName: longName != null ? sanitizeExternalText(longName) : null,
+      shortName: shortName != null ? sanitizeExternalText(shortName) : null,
       userId: userId,
       latitude: latitude,
       longitude: longitude,

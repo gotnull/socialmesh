@@ -225,7 +225,7 @@ class SmSignal {
     var content = '';
     if (contentLen > 0) {
       if (offset + contentLen > data.length) return null;
-      content = sanitizeUtf16(
+      content = sanitizeExternalText(
         utf8.decode(
           data.sublist(offset, offset + contentLen),
           allowMalformed: true,

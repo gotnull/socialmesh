@@ -1226,8 +1226,8 @@ class NodeStorageService {
 
     return MeshNode(
       nodeNum: json['nodeNum'] as int,
-      longName: rawLongName != null ? sanitizeUtf16(rawLongName) : null,
-      shortName: rawShortName != null ? sanitizeUtf16(rawShortName) : null,
+      longName: rawLongName != null ? sanitizeExternalText(rawLongName) : null,
+      shortName: rawShortName != null ? sanitizeExternalText(rawShortName) : null,
       userId: json['userId'] as String?,
       hardwareModel: json['hardwareModel'] as String?,
       latitude: (json['latitude'] as num?)?.toDouble(),
@@ -1237,7 +1237,7 @@ class NodeStorageService {
       snr: json['snr'] as int?,
       rssi: json['rssi'] as int?,
       firmwareVersion: json['firmwareVersion'] != null
-          ? sanitizeUtf16(json['firmwareVersion'] as String)
+          ? sanitizeExternalText(json['firmwareVersion'] as String)
           : null,
       lastHeard: json['lastHeard'] != null
           ? DateTime.fromMillisecondsSinceEpoch(json['lastHeard'] as int)
@@ -1313,7 +1313,7 @@ class NodeStorageService {
       noiseFloor: json['noiseFloor'] as int?,
       // Node Status
       nodeStatus: json['nodeStatus'] != null
-          ? sanitizeUtf16(json['nodeStatus'] as String)
+          ? sanitizeExternalText(json['nodeStatus'] as String)
           : null,
       // Traffic Management Stats
       tmPacketsInspected: json['tmPacketsInspected'] as int?,
