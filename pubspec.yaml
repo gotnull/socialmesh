@@ -124,7 +124,7 @@ dependencies:
 
   # Background scheduling
   workmanager: ^0.9.0
-  background_fetch: ^1.5.1
+  background_fetch: ^1.6.1
   timezone: ^0.10.0
 
   # Background BLE foreground service (Android)
