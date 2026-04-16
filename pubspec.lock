@@ -125,10 +125,10 @@ packages:
     dependency: "direct main"
     description:
       name: background_fetch
-      sha256: f5f0a5774cbe5e71ce62a9daf7f01007d07b3ac0c1fea1ecb131a3c5a273ca38
+      sha256: e2ada4efaf3ee45b2448fbe37a074a2ddd50ed4846a5a65dee43fd6d54c4e8b4
       url: "https://pub.dev"
     source: hosted
-    version: "1.5.1"
+    version: "1.6.1"
   bluez:
     dependency: transitive
     description:
