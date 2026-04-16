@@ -24,8 +24,9 @@ import 'package:socialmesh/utils/text_sanitizer.dart';
 /// prevents the crash.
 void main() {
   group('E2E: malformed text → decode → render (paragraph builder crash)', () {
-    testWidgets('message with unpaired surrogates renders without crash',
-        (tester) async {
+    testWidgets('message with unpaired surrogates renders without crash', (
+      tester,
+    ) async {
       // Simulate a message decoded from protocol with an unpaired high surrogate.
       const malformedText = 'Hello \uD800 world';
 
@@ -82,8 +83,9 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('message with null bytes from protocol renders without crash',
-        (tester) async {
+    testWidgets('message with null bytes from protocol renders without crash', (
+      tester,
+    ) async {
       // Simulate bytes that come from a mesh radio containing null bytes —
       // the exact pattern that caused the production crash.
       final protocolBytes = Uint8List.fromList([
@@ -105,7 +107,9 @@ void main() {
               children: [
                 ListTile(
                   title: Text(decoded),
-                  subtitle: Text('Sender: Node-42'), // lint-allow: hardcoded-string
+                  subtitle: Text(
+                    'Sender: Node-42',
+                  ), // lint-allow: hardcoded-string
                 ),
               ],
             ),
@@ -117,9 +121,9 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets(
-        'mesh service schema with control chars renders without crash',
-        (tester) async {
+    testWidgets('mesh service schema with control chars renders without crash', (
+      tester,
+    ) async {
       // Build a schema with control characters embedded in field names —
       // simulates a firmware bug or malicious peer.
       final schemaBytes = _buildSchemaWithControlChars();
@@ -148,21 +152,16 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('mesh post with corrupt UTF-8 renders without crash',
-        (tester) async {
+    testWidgets('mesh post with corrupt UTF-8 renders without crash', (
+      tester,
+    ) async {
       // Build a mesh post wire payload with corrupt UTF-8 in the content.
       final post = _decodeMeshPostWithCorruptContent();
       expect(post, isNotNull);
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: ListView(
-              children: [
-                Text(post!.content),
-              ],
-            ),
-          ),
+          home: Scaffold(body: ListView(children: [Text(post!.content)])),
         ),
       );
 
@@ -170,8 +169,9 @@ void main() {
       expect(find.byType(Text), findsOneWidget);
     });
 
-    testWidgets('multiple malformed messages in scrollable list',
-        (tester) async {
+    testWidgets('multiple malformed messages in scrollable list', (
+      tester,
+    ) async {
       // Reproduce the exact crash scenario: multiple messages in a scrollable
       // list, some with malformed text.
       final messages = [
@@ -230,7 +230,18 @@ Uint8List _buildSchemaWithControlChars() {
   builder.add(stBytes);
 
   // Title: "My\x01Service" (with SOH control).
-  final titleBytes = [0x4D, 0x79, 0x01, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65];
+  final titleBytes = [
+    0x4D,
+    0x79,
+    0x01,
+    0x53,
+    0x65,
+    0x72,
+    0x76,
+    0x69,
+    0x63,
+    0x65,
+  ];
   builder.addByte(titleBytes.length);
   builder.add(titleBytes);
 
@@ -274,8 +285,5 @@ MeshPost? _decodeMeshPostWithCorruptContent() {
   builder.add(contentBytes);
 
   // authorNodeNum comes from the packet envelope, not the payload.
-  return MeshPost.decodeFromLora(
-    Uint8List.fromList(builder.toBytes()),
-    42,
-  );
+  return MeshPost.decodeFromLora(Uint8List.fromList(builder.toBytes()), 42);
 }

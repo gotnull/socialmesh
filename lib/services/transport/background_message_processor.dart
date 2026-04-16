@@ -361,7 +361,9 @@ class BackgroundMessageProcessor {
     }
 
     // ---- Decode text ---------------------------------------------------
-    final text = sanitizeExternalText(utf8.decode(data.payload, allowMalformed: true));
+    final text = sanitizeExternalText(
+      utf8.decode(data.payload, allowMalformed: true),
+    );
     if (text.isEmpty) return;
 
     // ---- Resolve sender identity from NodeDex --------------------------

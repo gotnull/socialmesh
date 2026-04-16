@@ -4273,7 +4273,9 @@ class ProtocolService {
 
     final channelConfig = ChannelConfig(
       index: channel.index,
-      name: channel.hasSettings() ? sanitizeExternalText(channel.settings.name) : '',
+      name: channel.hasSettings()
+          ? sanitizeExternalText(channel.settings.name)
+          : '',
       psk: channel.hasSettings() ? channel.settings.psk : [],
       uplink: channel.hasSettings() ? channel.settings.uplinkEnabled : false,
       downlink: channel.hasSettings()

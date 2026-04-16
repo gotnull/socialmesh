@@ -1227,7 +1227,9 @@ class NodeStorageService {
     return MeshNode(
       nodeNum: json['nodeNum'] as int,
       longName: rawLongName != null ? sanitizeExternalText(rawLongName) : null,
-      shortName: rawShortName != null ? sanitizeExternalText(rawShortName) : null,
+      shortName: rawShortName != null
+          ? sanitizeExternalText(rawShortName)
+          : null,
       userId: json['userId'] as String?,
       hardwareModel: json['hardwareModel'] as String?,
       latitude: (json['latitude'] as num?)?.toDouble(),
