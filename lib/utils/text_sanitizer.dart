@@ -100,11 +100,40 @@ String sanitizeExternalText(String input) {
   return hadInvalid ? buffer.toString() : input;
 }
 
+/// Code-unit truncation that avoids splitting UTF-16 surrogate pairs.
+///
+/// Truncates [input] to at most [maxCodeUnits] code units. If the cut would
+/// land between a high and low surrogate, backs off by one to keep the pair
+/// intact. Use this at data boundaries where the length constraint is in
+/// code units, not visible characters.
+String safeTruncateCodeUnits(String input, int maxCodeUnits) {
+  if (input.length <= maxCodeUnits) return input;
+  if (maxCodeUnits <= 0) return '';
+  final truncated = input.substring(0, maxCodeUnits);
+  if (_isHighSurrogate(truncated.codeUnits.last)) {
+    return truncated.substring(0, maxCodeUnits - 1);
+  }
+  return truncated;
+}
+
+/// Grapheme-safe truncation that never splits emoji or combining characters.
+///
+/// Returns at most [maxLength] visible grapheme clusters from [input].
+/// No suffix is appended — use this at data boundaries where the exact
+/// length constraint matters (e.g., protocol field size limits).
+String safeTruncate(String input, int maxLength) {
+  if (input.isEmpty || maxLength <= 0) return '';
+  final chars = input.characters;
+  if (chars.length <= maxLength) return input;
+  return chars.take(maxLength).string;
+}
+
 /// Grapheme-safe substring that never splits emoji or combining characters.
 ///
 /// Returns at most [maxLength] visible grapheme clusters from [input],
 /// appending '…' if truncation occurred. Uses [Characters] from
 /// `package:characters` to respect grapheme cluster boundaries.
+/// Use this for UI display where the ellipsis signals truncation to the user.
 String safeSubstring(String input, int maxLength) {
   if (input.isEmpty || maxLength <= 0) return '';
   final chars = input.characters;

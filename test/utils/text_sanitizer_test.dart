@@ -199,6 +199,54 @@ void main() {
     });
   });
 
+  group('safeTruncateCodeUnits', () {
+    test('returns input when shorter than limit', () {
+      const input = 'hello';
+      expect(safeTruncateCodeUnits(input, 10), input);
+    });
+
+    test('returns input when equal to limit', () {
+      const input = 'hello';
+      expect(safeTruncateCodeUnits(input, 5), input);
+    });
+
+    test('truncates ASCII to exact code unit count', () {
+      expect(safeTruncateCodeUnits('hello world', 5), 'hello');
+    });
+
+    test('returns empty for zero limit', () {
+      expect(safeTruncateCodeUnits('hello', 0), '');
+    });
+
+    test('does not split surrogate pair at boundary', () {
+      // '😃' is U+1F603, encoded as two code units: \uD83D \uDE03
+      const input = 'AB😃CD';
+      // Code units: A(1) B(1) \uD83D(1) \uDE03(1) C(1) D(1) = 6 total
+      // Truncating at 3 would land on \uDE03 (low surrogate after high at 2)
+      // But \uD83D at index 2 is a high surrogate, so truncating at 3 keeps it.
+      // Truncating at 2 would end right before the emoji — that's fine.
+      final result = safeTruncateCodeUnits(input, 3);
+      // Position 2 is high surrogate \uD83D — backs off to 2
+      expect(result, 'AB');
+      expect(result.length, 2);
+    });
+
+    test('keeps complete surrogate pair when limit includes both units', () {
+      const input = 'A😃B';
+      // Code units: A(1) \uD83D(1) \uDE03(1) B(1) = 4
+      // Limit 3 → substring(0,3) = 'A\uD83D\uDE03' = 'A😃' — last char is low surrogate, fine
+      final result = safeTruncateCodeUnits(input, 3);
+      expect(result, 'A😃');
+    });
+
+    test('preserves BMP characters at boundary', () {
+      const input = '日本語テスト';
+      final result = safeTruncateCodeUnits(input, 3);
+      expect(result, '日本語');
+      expect(result.length, 3);
+    });
+  });
+
   group('integration: decode + sanitize pipeline', () {
     test('mesh service schema bytes with null and control chars', () {
       final payload = Uint8List.fromList([
