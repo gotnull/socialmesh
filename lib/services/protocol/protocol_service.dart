@@ -576,6 +576,11 @@ class ProtocolService {
   void attachSipHandshake(SipHandshakeManager? handshake) {
     _sipHandshake = handshake;
     if (handshake != null) {
+      handshake.onHelloRetransmit = (peerNodeId, frame) {
+        final encoded = SipCodec.encode(frame);
+        if (encoded == null) return;
+        _sendSipAndCount(encoded, SipMessageType.hsHello);
+      };
       AppLogging.sip('ProtocolService: SipHandshakeManager attached');
     }
   }
@@ -5175,6 +5180,8 @@ class ProtocolService {
     }();
 
     // Queue the request for user consent — no automatic challenge response.
+    // Consent is a hard privacy boundary and is required even on the
+    // simultaneous-open yield path.
     hs.handleHello(senderNodeId, frame);
   }
 

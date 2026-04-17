@@ -355,6 +355,8 @@ void main() {
     test('simultaneous-open: higher nodeId wins initiator role', () async {
       // Both nodes initiate at the same time. Node A (0xAAAA) has higher ID
       // than node B (0x5555), so A keeps initiator and B becomes responder.
+      // B still goes through user consent — initiating does not grant
+      // consent on the incoming HELLO (privacy boundary).
       const nodeA = 0xAAAA;
       const nodeB = 0x5555;
 

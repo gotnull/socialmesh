@@ -14,6 +14,7 @@
 /// Each peer tracks handshake state per remote node.
 library;
 
+import 'dart:async';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -67,6 +68,17 @@ class _HandshakeSession {
   int? sessionTag;
   int? expiresInS;
   DateTime startedAt;
+
+  /// Cached HS_HELLO frame for retransmit while the session sits in
+  /// [SipHandshakeState.helloSent]. Reusing the original frame (same
+  /// wrapper nonce, timestamp, and payload) is intentional: duplicate
+  /// arrivals at the peer are rejected by the replay cache, giving
+  /// idempotent retries without breaking nonce binding.
+  SipFrame? helloFrame;
+
+  /// Timers scheduled to retransmit [helloFrame]. Cancelled whenever
+  /// the session leaves [SipHandshakeState.helloSent].
+  final List<Timer> retransmitTimers = [];
 
   _HandshakeSession({required this.peerNodeId}) : startedAt = DateTime.now();
 
@@ -150,12 +162,33 @@ class SipHandshakeManager {
   /// How long a terminal state (declined/failed) is visible via getState().
   static const int _kTerminalDisplayMs = 5000;
 
+  /// Delays (from session start) at which HS_HELLO is retransmitted while
+  /// the session remains in [SipHandshakeState.helloSent].
+  ///
+  /// Mesh broadcast is lossy: a single dropped HELLO would otherwise wedge
+  /// both sides until the 60s handshake timeout. Three retries fit inside
+  /// the window and cost 3x72B = 216B against the 1024B/60s SIP budget.
+  /// Peers reject duplicates via the replay cache, so retries that arrive
+  /// after the original are idempotent.
+  static const List<Duration> _helloRetransmitSchedule = [
+    Duration(seconds: 8),
+    Duration(seconds: 20),
+    Duration(seconds: 40),
+  ];
+
   /// Called whenever any session state changes (progress, accept, fail).
   void Function()? onStateChanged;
 
   /// Called when a new incoming handshake request arrives and needs user
   /// consent. The UI should show an Accept/Decline prompt.
   void Function(int peerNodeId)? onHandshakeRequest;
+
+  /// Called when a cached HS_HELLO should be retransmitted because the
+  /// session is still in [SipHandshakeState.helloSent] at one of the
+  /// scheduled retry offsets. The caller is responsible for encoding and
+  /// transmitting the frame (same replay-accounted path as the original
+  /// send).
+  void Function(int peerNodeId, SipFrame frame)? onHelloRetransmit;
 
   /// Whether DMs are available (handshakes accepted).
   ///
@@ -233,7 +266,7 @@ class SipHandshakeManager {
       'client_nonce=${_hexPrefix(session.clientNonce!)}',
     );
 
-    return SipFrame(
+    final frame = SipFrame(
       versionMajor: SipConstants.sipVersionMajor,
       versionMinor: SipConstants.sipVersionMinor,
       msgType: SipMessageType.hsHello,
@@ -245,6 +278,11 @@ class SipHandshakeManager {
       payloadLen: payload.length,
       payload: payload,
     );
+
+    session.helloFrame = frame;
+    _scheduleHelloRetransmits(peerNodeId);
+
+    return frame;
   }
 
   /// Process a received HS_CHALLENGE (initiator receives this).
@@ -278,6 +316,10 @@ class SipHandshakeManager {
       _failSession(peerNodeId, 'nonce mismatch');
       return null;
     }
+
+    // The initiator's HELLO reached the peer and was answered — no further
+    // retransmits are needed regardless of how the rest of the flow lands.
+    _cancelRetransmits(peerNodeId);
 
     session.serverNonce = challenge.serverNonce;
     session.peerEphemeralPub = challenge.serverEphemeralPub;
@@ -366,6 +408,7 @@ class SipHandshakeManager {
     );
 
     _putCompleted(peerNodeId, result);
+    _cancelRetransmits(peerNodeId);
     _sessions.remove(peerNodeId);
     _failCooldownMs.remove(peerNodeId);
     _counters?.recordHandshakeCompleted();
@@ -388,7 +431,10 @@ class SipHandshakeManager {
   ///
   /// Queues the request for user consent — does NOT send an immediate
   /// HS_CHALLENGE. The UI must show an Accept/Decline prompt, then call
-  /// [acceptHandshake] or [declineHandshake] to proceed.
+  /// [acceptHandshake] or [declineHandshake] to proceed. This is a hard
+  /// privacy boundary: consent is mandatory on every incoming HELLO, even
+  /// when the local side already initiated its own handshake to the same
+  /// peer (simultaneous-open loser path). No auto-accept, ever.
   ///
   /// **Simultaneous-open tie-breaker:** When both peers initiate at the
   /// same time, each receives the other's HS_HELLO while in `helloSent`
@@ -426,13 +472,15 @@ class SipHandshakeManager {
         return;
       } else {
         // We lose the tie-break — discard our initiator session, become
-        // the responder for this peer's HELLO. Still requires consent.
+        // the responder for this peer's HELLO. Still requires consent
+        // (privacy boundary; initiating does not imply accepting).
         AppLogging.sip(
           'SIP_HS: simultaneous-open with '
           'node=0x${peerNodeId.toRadixString(16)}: '
           'we yield (local=0x${_localNodeId.toRadixString(16)} < '
           'peer=0x${peerNodeId.toRadixString(16)}), becoming responder',
         );
+        _cancelRetransmits(peerNodeId);
         _sessions.remove(peerNodeId);
       }
     }
@@ -527,8 +575,23 @@ class SipHandshakeManager {
       return null;
     }
 
-    final hello = pending.hello;
+    AppLogging.sip(
+      'SIP_HS: user ACCEPTED handshake from '
+      'node=0x${peerNodeId.toRadixString(16)}',
+    );
 
+    final challenge = _buildChallengeSession(peerNodeId, pending.hello);
+    onStateChanged?.call();
+    return challenge;
+  }
+
+  /// Construct a `challengeSent` session for [peerNodeId] bound to the
+  /// client nonce and ephemeral pub from [hello], and return the
+  /// HS_CHALLENGE frame to transmit.
+  ///
+  /// Shared by both consent-driven [acceptHandshake] and the
+  /// simultaneous-open auto-accept path in [handleHello].
+  SipFrame _buildChallengeSession(int peerNodeId, SipHsHello hello) {
     final session = _HandshakeSession(peerNodeId: peerNodeId);
     session.clientNonce = hello.clientNonce;
     session.peerEphemeralPub = hello.clientEphemeralPub;
@@ -536,7 +599,6 @@ class SipHandshakeManager {
     session.localEphemeralPub = _generateEphemeralPub();
     session.state = SipHandshakeState.challengeSent;
     _sessions[peerNodeId] = session;
-    onStateChanged?.call();
 
     final challenge = SipHsChallenge(
       serverNonce: session.serverNonce!,
@@ -548,8 +610,6 @@ class SipHandshakeManager {
     final payload = SipHsMessages.encodeChallenge(challenge);
 
     AppLogging.sip(
-      'SIP_HS: user ACCEPTED handshake from '
-      'node=0x${peerNodeId.toRadixString(16)}\n'
       'SIP_HS: -> HS_CHALLENGE, '
       'server_nonce=${_hexPrefix(session.serverNonce!)}',
     );
@@ -627,6 +687,7 @@ class SipHandshakeManager {
       return;
     }
 
+    _cancelRetransmits(peerNodeId);
     _sessions.remove(peerNodeId);
     _counters?.recordHandshakeFailed();
 
@@ -815,6 +876,11 @@ class SipHandshakeManager {
 
   /// Reset all handshake state.
   void reset() {
+    for (final session in _sessions.values) {
+      for (final timer in session.retransmitTimers) {
+        timer.cancel();
+      }
+    }
     _sessions.clear();
     _pendingRequests.clear();
     _completed.clear();
@@ -827,6 +893,7 @@ class SipHandshakeManager {
   // ---------------------------------------------------------------------------
 
   void _failSession(int peerNodeId, String reason) {
+    _cancelRetransmits(peerNodeId);
     _sessions.remove(peerNodeId);
     _counters?.recordHandshakeFailed();
 
@@ -874,6 +941,45 @@ class SipHandshakeManager {
       }
       onStateChanged?.call();
     }
+  }
+
+  /// Schedule HS_HELLO retransmits for a session in [SipHandshakeState.helloSent].
+  ///
+  /// Fires [onHelloRetransmit] at each offset in [_helloRetransmitSchedule]
+  /// as long as the session is still owned by this manager and hasn't
+  /// advanced past `helloSent`.
+  void _scheduleHelloRetransmits(int peerNodeId) {
+    final session = _sessions[peerNodeId];
+    if (session == null) return;
+    for (final delay in _helloRetransmitSchedule) {
+      session.retransmitTimers.add(
+        Timer(delay, () => _onRetransmitTick(peerNodeId)),
+      );
+    }
+  }
+
+  void _onRetransmitTick(int peerNodeId) {
+    final session = _sessions[peerNodeId];
+    if (session == null) return;
+    if (session.state != SipHandshakeState.helloSent) return;
+    final frame = session.helloFrame;
+    if (frame == null) return;
+    AppLogging.sip(
+      'SIP_HS: retransmit HS_HELLO to '
+      'node=0x${peerNodeId.toRadixString(16)} '
+      '(no response yet, state=helloSent)',
+    );
+    onHelloRetransmit?.call(peerNodeId, frame);
+  }
+
+  /// Cancel any scheduled HELLO retransmit timers for [peerNodeId].
+  void _cancelRetransmits(int peerNodeId) {
+    final session = _sessions[peerNodeId];
+    if (session == null) return;
+    for (final timer in session.retransmitTimers) {
+      timer.cancel();
+    }
+    session.retransmitTimers.clear();
   }
 
   Uint8List _generateNonce16() {
