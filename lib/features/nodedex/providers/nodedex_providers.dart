@@ -319,8 +319,15 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
       if (existing == null) {
         // New discovery: create a fresh NodeDex entry.
         final sigil = SigilGenerator.generate(nodeNum);
-        final currentPreset = _resolveCurrentPreset();
-        final currentFreqOffset = _resolveCurrentFrequencyOffset();
+        // Only attach the local radio's current preset/frequency offset when
+        // the node is actually freshly heard. Stale entries from the device's
+        // NodeDB (heard hours or days ago on some other preset) must not be
+        // tagged with whatever preset the radio happens to be on right now.
+        final freshlyHeard = !isOwnNode && _isRecentCoSeenActivity(node, now);
+        final currentPreset = freshlyHeard ? _resolveCurrentPreset() : null;
+        final currentFreqOffset = freshlyHeard
+            ? _resolveCurrentFrequencyOffset()
+            : null;
         final newEntry = NodeDexEntry.discovered(
           nodeNum: nodeNum,
           timestamp: node.firstHeard ?? now,
@@ -398,10 +405,21 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
           node.lastHeard,
           now: now,
         );
+        // A packet was genuinely heard since our last tick only when the
+        // device's lastHeard has advanced. Without this, a nodesProvider
+        // refresh (e.g. triggered by a local config change such as a preset
+        // switch) would re-record encounters for every online-window node
+        // and smear the new preset across nodes that were actually heard on
+        // the previous one.
+        final prevLastHeard = previous[nodeNum]?.lastHeard;
+        final hasFreshLastHeard =
+            node.lastHeard != null &&
+            (prevLastHeard == null || node.lastHeard!.isAfter(prevLastHeard));
         final lastEncounter = _lastEncounterTime[nodeNum];
         final shouldRecord =
             !seedOnly &&
             isRecentlyHeard &&
+            hasFreshLastHeard &&
             (lastEncounter == null ||
                 now.difference(lastEncounter) >= _encounterCooldown);
 

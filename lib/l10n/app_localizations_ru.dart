@@ -8924,6 +8924,207 @@ class AppLocalizationsRu extends AppLocalizations {
   String get navigationNodeDex => 'NodeDex';
 
   @override
+  String get nodeboardDrawerLabel => 'NodeBoard';
+
+  @override
+  String get nodeboardTitle => 'NodeBoard';
+
+  @override
+  String get nodeboardMyBoards => 'My Boards';
+
+  @override
+  String get nodeboardDiscover => 'Discover';
+
+  @override
+  String get nodeboardCreateBoard => 'Create Board';
+
+  @override
+  String get nodeboardEmptyMyBoards => 'You haven\'t created any boards yet';
+
+  @override
+  String get nodeboardEmptyMyBoardsDescription =>
+      'Create your first personal BBS and share it with the mesh';
+
+  @override
+  String get nodeboardEmptyDiscover => 'No public boards found';
+
+  @override
+  String get nodeboardEmptyDiscoverDescription =>
+      'Be the first to create a board';
+
+  @override
+  String get nodeboardEmptyThreads => 'No threads yet';
+
+  @override
+  String get nodeboardEmptyThreadsDescription => 'Start the conversation';
+
+  @override
+  String get nodeboardWizardTitle => 'Create NodeBoard';
+
+  @override
+  String get nodeboardWizardStepName => 'Name & Identity';
+
+  @override
+  String get nodeboardWizardStepTagline => 'Tagline & Description';
+
+  @override
+  String get nodeboardWizardStepSections => 'Sections';
+
+  @override
+  String get nodeboardWizardStepTheme => 'Theme';
+
+  @override
+  String get nodeboardWizardStepWelcome => 'Welcome & Splash';
+
+  @override
+  String get nodeboardWizardStepReview => 'Review';
+
+  @override
+  String get nodeboardBoardTitle => 'Board Title';
+
+  @override
+  String get nodeboardSysopName => 'Sysop Name';
+
+  @override
+  String get nodeboardSlug => 'Board URL Slug';
+
+  @override
+  String get nodeboardTagline => 'Tagline';
+
+  @override
+  String get nodeboardDescription => 'Description';
+
+  @override
+  String get nodeboardWelcomeText => 'Welcome Text';
+
+  @override
+  String get nodeboardAnsiSplash => 'ASCII/ANSI Splash';
+
+  @override
+  String get nodeboardVisibilityPublic => 'Public';
+
+  @override
+  String get nodeboardVisibilityUnlisted => 'Unlisted';
+
+  @override
+  String get nodeboardVisibilityPrivate => 'Private';
+
+  @override
+  String get nodeboardSysop => 'SysOp';
+
+  @override
+  String nodeboardThreadCount(int count) {
+    return '$count threads';
+  }
+
+  @override
+  String nodeboardReplyCount(int count) {
+    return '$count replies';
+  }
+
+  @override
+  String get nodeboardTerminalMode => 'Terminal Mode';
+
+  @override
+  String get nodeboardNativeMode => 'Native Mode';
+
+  @override
+  String get nodeboardReplyHint => 'Write a reply...';
+
+  @override
+  String get nodeboardThreadLocked => 'This thread is locked';
+
+  @override
+  String get nodeboardPinned => 'Pinned';
+
+  @override
+  String get nodeboardLocked => 'Locked';
+
+  @override
+  String get nodeboardNext => 'Next';
+
+  @override
+  String get nodeboardBack => 'Back';
+
+  @override
+  String get nodeboardCreateBoardAction => 'Create Board';
+
+  @override
+  String get nodeboardLoadError => 'Failed to load';
+
+  @override
+  String get nodeboardBoardNotFound => 'Board not found';
+
+  @override
+  String get nodeboardThreadNotFound => 'Thread not found';
+
+  @override
+  String get nodeboardEditBoard => 'Edit Board';
+
+  @override
+  String get nodeboardShareBoard => 'Share Board';
+
+  @override
+  String nodeboardSectionCount(int count) {
+    return '$count sections';
+  }
+
+  @override
+  String get nodeboardNoSections => 'No sections yet';
+
+  @override
+  String get nodeboardReplyFailed => 'Failed to send reply';
+
+  @override
+  String get nodeboardNewThread => 'New Thread';
+
+  @override
+  String get nodeboardCreateFirstBoard => 'Create Your First Board';
+
+  @override
+  String get nodeboardWelcomeSectionTitle => 'Welcome';
+
+  @override
+  String get nodeboardSectionsSectionTitle => 'Sections';
+
+  @override
+  String get nodeboardThreadsSectionTitle => 'Threads';
+
+  @override
+  String get nodeboardShareCopied => 'Share link copied to clipboard';
+
+  @override
+  String get nodeboardComposerComingSoon => 'Thread composer coming soon';
+
+  @override
+  String get nodeboardJustNow => 'just now';
+
+  @override
+  String nodeboardMinutesAgo(int count) {
+    return '${count}m ago';
+  }
+
+  @override
+  String nodeboardHoursAgo(int count) {
+    return '${count}h ago';
+  }
+
+  @override
+  String nodeboardDaysAgo(int count) {
+    return '${count}d ago';
+  }
+
+  @override
+  String nodeboardMonthsAgo(int count) {
+    return '${count}mo ago';
+  }
+
+  @override
+  String nodeboardYearsAgo(int count) {
+    return '${count}y ago';
+  }
+
+  @override
   String get navigationNodes => 'Узлы';
 
   @override

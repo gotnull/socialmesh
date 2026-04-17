@@ -48,6 +48,11 @@ class AppUrls {
   static String get takGatewayUrl =>
       dotenv.env['TAK_GATEWAY_URL'] ?? 'https://tak.socialmesh.app';
 
+  /// NodeBoard API URL — personal BBS boards.
+  /// Default: nodeboard.socialmesh.app (Nodeboard BBS)
+  static String get nodeBoardApiUrl =>
+      dotenv.env['NODEBOARD_API_URL'] ?? 'https://nodeboard.socialmesh.app';
+
   // Legal & Documentation URLs
   static String get termsUrl => '$baseUrl/terms';
   static String get privacyUrl => '$baseUrl/privacy';
@@ -503,6 +508,18 @@ class AppFeatureFlags {
     if (!isSipEnabled || !isMrrpEnabled) return false;
     try {
       final raw = dotenv.env['MESH_SERVICES_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Whether the NodeBoard (personal BBS) feature is enabled.
+  /// Set `NODEBOARD_ENABLED=true` in `.env` to enable.
+  /// Default: false — NodeBoard UI is hidden until ready for release.
+  static bool get isNodeBoardEnabled {
+    try {
+      final raw = dotenv.env['NODEBOARD_ENABLED']?.toLowerCase().trim();
       return raw == 'true' || raw == '1';
     } catch (_) {
       return false;

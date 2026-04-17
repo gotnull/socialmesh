@@ -72,6 +72,7 @@ import '../mrrp_harness/mrrp_harness_home_screen.dart';
 import '../mesh_explorer/mesh_explorer_screen.dart';
 import '../mesh_services/screens/my_services_screen.dart';
 import '../mesh_feed/screens/mesh_feed_screen.dart';
+import '../nodeboard/screens/nodeboard_list_screen.dart';
 import '../incidents/screens/mesh_incident_list_screen.dart';
 import '../tak/screens/tak_screen.dart';
 import '../../providers/activity_providers.dart';
@@ -399,6 +400,15 @@ class _MainShellState extends ConsumerState<MainShell> {
       requiresConnection: false,
       whatsNewBadgeKey: 'nodedex',
     ),
+    if (AppFeatureFlags.isNodeBoardEnabled)
+      DrawerMenuItem(
+        icon: Icons.dashboard_outlined,
+        label: l10n.nodeboardDrawerLabel,
+        screen: const NodeBoardListScreen(),
+        iconColor: AccentColors.coral,
+        requiresConnection: false,
+        whatsNewBadgeKey: 'nodeboard',
+      ),
     DrawerMenuItem(
       icon: Icons.people_alt_outlined,
       label: l10n.navigationPresence,

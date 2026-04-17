@@ -648,10 +648,10 @@ class _NodeDexStatsCard extends StatelessWidget {
 
   String _formatDistance(double? meters) {
     if (meters == null) return '--';
-    if (meters >= 1000) {
-      return '${(meters / 1000).toStringAsFixed(1)}km';
-    }
-    return '${meters.round()}m';
+    if (meters < 1000) return '${meters.round()}m';
+    final km = meters / 1000;
+    if (km >= 100) return '${km.round()}km';
+    return '${km.toStringAsFixed(1)}km';
   }
 }
 
@@ -682,13 +682,19 @@ class _StatChip extends StatelessWidget {
         children: [
           Icon(icon, size: 12, color: context.textTertiary),
           const SizedBox(width: AppTheme.spacing3),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: context.textPrimary,
-              fontFamily: AppTheme.fontFamily,
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                value,
+                maxLines: 1,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: context.textPrimary,
+                  fontFamily: AppTheme.fontFamily,
+                ),
+              ),
             ),
           ),
         ],

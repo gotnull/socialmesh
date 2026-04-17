@@ -15883,6 +15883,372 @@ abstract class AppLocalizations {
   /// **'NodeDex'**
   String get navigationNodeDex;
 
+  /// Label for the NodeBoard drawer item.
+  ///
+  /// In en, this message translates to:
+  /// **'NodeBoard'**
+  String get nodeboardDrawerLabel;
+
+  /// Title for the NodeBoard feature.
+  ///
+  /// In en, this message translates to:
+  /// **'NodeBoard'**
+  String get nodeboardTitle;
+
+  /// Tab label for the user's own boards.
+  ///
+  /// In en, this message translates to:
+  /// **'My Boards'**
+  String get nodeboardMyBoards;
+
+  /// Tab label for discovering public boards.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover'**
+  String get nodeboardDiscover;
+
+  /// Button label for creating a new NodeBoard.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Board'**
+  String get nodeboardCreateBoard;
+
+  /// Empty state message when user has no boards.
+  ///
+  /// In en, this message translates to:
+  /// **'You haven\'t created any boards yet'**
+  String get nodeboardEmptyMyBoards;
+
+  /// Empty state description when user has no boards.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your first personal BBS and share it with the mesh'**
+  String get nodeboardEmptyMyBoardsDescription;
+
+  /// Empty state message when no public boards exist.
+  ///
+  /// In en, this message translates to:
+  /// **'No public boards found'**
+  String get nodeboardEmptyDiscover;
+
+  /// Empty state description when no public boards exist.
+  ///
+  /// In en, this message translates to:
+  /// **'Be the first to create a board'**
+  String get nodeboardEmptyDiscoverDescription;
+
+  /// Empty state when a section has no threads.
+  ///
+  /// In en, this message translates to:
+  /// **'No threads yet'**
+  String get nodeboardEmptyThreads;
+
+  /// Empty state description for a section with no threads.
+  ///
+  /// In en, this message translates to:
+  /// **'Start the conversation'**
+  String get nodeboardEmptyThreadsDescription;
+
+  /// Title for the board creation wizard.
+  ///
+  /// In en, this message translates to:
+  /// **'Create NodeBoard'**
+  String get nodeboardWizardTitle;
+
+  /// Wizard step label for board name.
+  ///
+  /// In en, this message translates to:
+  /// **'Name & Identity'**
+  String get nodeboardWizardStepName;
+
+  /// Wizard step label for tagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Tagline & Description'**
+  String get nodeboardWizardStepTagline;
+
+  /// Wizard step label for sections.
+  ///
+  /// In en, this message translates to:
+  /// **'Sections'**
+  String get nodeboardWizardStepSections;
+
+  /// Wizard step label for theme selection.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get nodeboardWizardStepTheme;
+
+  /// Wizard step label for welcome text.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome & Splash'**
+  String get nodeboardWizardStepWelcome;
+
+  /// Wizard step label for review.
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get nodeboardWizardStepReview;
+
+  /// Label for the board title field.
+  ///
+  /// In en, this message translates to:
+  /// **'Board Title'**
+  String get nodeboardBoardTitle;
+
+  /// Label for the sysop name field.
+  ///
+  /// In en, this message translates to:
+  /// **'Sysop Name'**
+  String get nodeboardSysopName;
+
+  /// Label for the board slug field.
+  ///
+  /// In en, this message translates to:
+  /// **'Board URL Slug'**
+  String get nodeboardSlug;
+
+  /// Label for the tagline field.
+  ///
+  /// In en, this message translates to:
+  /// **'Tagline'**
+  String get nodeboardTagline;
+
+  /// Label for the description field.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get nodeboardDescription;
+
+  /// Label for the welcome text field.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome Text'**
+  String get nodeboardWelcomeText;
+
+  /// Label for the ANSI splash field.
+  ///
+  /// In en, this message translates to:
+  /// **'ASCII/ANSI Splash'**
+  String get nodeboardAnsiSplash;
+
+  /// Visibility option: public.
+  ///
+  /// In en, this message translates to:
+  /// **'Public'**
+  String get nodeboardVisibilityPublic;
+
+  /// Visibility option: unlisted.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlisted'**
+  String get nodeboardVisibilityUnlisted;
+
+  /// Visibility option: private.
+  ///
+  /// In en, this message translates to:
+  /// **'Private'**
+  String get nodeboardVisibilityPrivate;
+
+  /// Label for sysop role.
+  ///
+  /// In en, this message translates to:
+  /// **'SysOp'**
+  String get nodeboardSysop;
+
+  /// Thread count display.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} threads'**
+  String nodeboardThreadCount(int count);
+
+  /// Reply count display.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} replies'**
+  String nodeboardReplyCount(int count);
+
+  /// Label for terminal mode toggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminal Mode'**
+  String get nodeboardTerminalMode;
+
+  /// Label for native mode toggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Native Mode'**
+  String get nodeboardNativeMode;
+
+  /// Hint text for the reply composer.
+  ///
+  /// In en, this message translates to:
+  /// **'Write a reply...'**
+  String get nodeboardReplyHint;
+
+  /// Message when a thread is locked.
+  ///
+  /// In en, this message translates to:
+  /// **'This thread is locked'**
+  String get nodeboardThreadLocked;
+
+  /// Badge label for pinned threads.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned'**
+  String get nodeboardPinned;
+
+  /// Badge label for locked threads.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked'**
+  String get nodeboardLocked;
+
+  /// Next button in wizard.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get nodeboardNext;
+
+  /// Back button in wizard.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get nodeboardBack;
+
+  /// Create board action button.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Board'**
+  String get nodeboardCreateBoardAction;
+
+  /// Generic load error message.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load'**
+  String get nodeboardLoadError;
+
+  /// Message when a board is not found.
+  ///
+  /// In en, this message translates to:
+  /// **'Board not found'**
+  String get nodeboardBoardNotFound;
+
+  /// Message when a thread is not found.
+  ///
+  /// In en, this message translates to:
+  /// **'Thread not found'**
+  String get nodeboardThreadNotFound;
+
+  /// Menu item for editing a board.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Board'**
+  String get nodeboardEditBoard;
+
+  /// Menu item for sharing a board.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Board'**
+  String get nodeboardShareBoard;
+
+  /// Section count display.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} sections'**
+  String nodeboardSectionCount(int count);
+
+  /// Message when board has no sections.
+  ///
+  /// In en, this message translates to:
+  /// **'No sections yet'**
+  String get nodeboardNoSections;
+
+  /// Error when reply submission fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to send reply'**
+  String get nodeboardReplyFailed;
+
+  /// Button label for creating a new thread.
+  ///
+  /// In en, this message translates to:
+  /// **'New Thread'**
+  String get nodeboardNewThread;
+
+  /// Empty state action to create first board.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Your First Board'**
+  String get nodeboardCreateFirstBoard;
+
+  /// Card title for the board welcome text section.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome'**
+  String get nodeboardWelcomeSectionTitle;
+
+  /// Card title for the board sections picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Sections'**
+  String get nodeboardSectionsSectionTitle;
+
+  /// Card title for the board threads list.
+  ///
+  /// In en, this message translates to:
+  /// **'Threads'**
+  String get nodeboardThreadsSectionTitle;
+
+  /// Confirmation shown after copying a board share link.
+  ///
+  /// In en, this message translates to:
+  /// **'Share link copied to clipboard'**
+  String get nodeboardShareCopied;
+
+  /// Placeholder message shown when the thread composer is tapped.
+  ///
+  /// In en, this message translates to:
+  /// **'Thread composer coming soon'**
+  String get nodeboardComposerComingSoon;
+
+  /// Time-ago label for events in the last minute.
+  ///
+  /// In en, this message translates to:
+  /// **'just now'**
+  String get nodeboardJustNow;
+
+  /// Time-ago label for events in the last hour.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}m ago'**
+  String nodeboardMinutesAgo(int count);
+
+  /// Time-ago label for events in the last day.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}h ago'**
+  String nodeboardHoursAgo(int count);
+
+  /// Time-ago label for events in the last month.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}d ago'**
+  String nodeboardDaysAgo(int count);
+
+  /// Time-ago label for events in the last year.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}mo ago'**
+  String nodeboardMonthsAgo(int count);
+
+  /// Time-ago label for events more than a year ago.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}y ago'**
+  String nodeboardYearsAgo(int count);
+
   /// Label for the Nodes bottom nav tab.
   ///
   /// In en, this message translates to:

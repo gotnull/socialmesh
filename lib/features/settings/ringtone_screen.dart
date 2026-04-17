@@ -2181,7 +2181,6 @@ class _AddCustomRingtoneContentState extends State<_AddCustomRingtoneContent> {
             hint: '24:d=4,o=5,b=120:c,e,g',
             maxLines: 3,
             maxLength: 228,
-            monospace: true,
             errorText: _error,
             onChanged: (value) {
               setState(() {

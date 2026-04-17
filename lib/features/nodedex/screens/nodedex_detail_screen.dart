@@ -41,6 +41,7 @@ import '../../../core/widgets/ico_help_system.dart';
 import '../../../models/mesh_models.dart';
 import '../../../providers/app_providers.dart';
 
+import '../../nodeboard/widgets/nodeboard_node_card.dart';
 import '../../nodes/node_display_name_resolver.dart';
 
 import '../../../services/protocol/sip/mrrp_types.dart';
@@ -237,6 +238,18 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
               ),
             ),
           ),
+
+          // NodeBoard bridge — shows the node's personal BBS if it has one.
+          // Feature-flag gated; NodeBoardNodeCard itself renders nothing when
+          // the node has no associated board, so this is safe to always mount.
+          if (AppFeatureFlags.isNodeBoardEnabled)
+            SliverToBoxAdapter(
+              child: _DetailEntrance(
+                index: 2,
+                reduceMotion: reduceMotion,
+                child: NodeBoardNodeCard(nodeId: hexId),
+              ),
+            ),
 
           // Co-seen network card — animated avatar cluster with social context
           if (recentCoSeenLinks.isNotEmpty)

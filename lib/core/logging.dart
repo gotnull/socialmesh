@@ -68,6 +68,7 @@ class AppLogging {
   static bool? _bugReportLoggingEnabled;
   static bool? _shopLoggingEnabled;
   static bool? _nodeDexLoggingEnabled;
+  static bool? _nodeBoardLoggingEnabled;
   static bool? _syncLoggingEnabled;
   static bool? _mfaLoggingEnabled;
   static bool? _aetherLoggingEnabled;
@@ -271,6 +272,12 @@ class AppLogging {
     return _nodeDexLoggingEnabled!;
   }
 
+  static bool get nodeBoardLoggingEnabled {
+    _nodeBoardLoggingEnabled ??=
+        _safeGetEnv('NODEBOARD_LOGGING_ENABLED')?.toLowerCase() != 'false';
+    return _nodeBoardLoggingEnabled!;
+  }
+
   static bool get mfaLoggingEnabled {
     _mfaLoggingEnabled ??=
         _safeGetEnv('MFA_LOGGING_ENABLED')?.toLowerCase() != 'false';
@@ -463,6 +470,10 @@ class AppLogging {
 
   static void nodeDex(String message) {
     if (nodeDexLoggingEnabled) debugPrint('NodeDex: $message');
+  }
+
+  static void nodeBoard(String message) {
+    if (nodeBoardLoggingEnabled) debugPrint('NodeBoard: $message');
   }
 
   /// Always-on Cloud Sync logging channel.
@@ -751,6 +762,7 @@ class AppLogging {
     _bugReportLoggingEnabled = null;
     _shopLoggingEnabled = null;
     _nodeDexLoggingEnabled = null;
+    _nodeBoardLoggingEnabled = null;
     _syncLoggingEnabled = null;
     _mfaLoggingEnabled = null;
     _aetherLoggingEnabled = null;

@@ -12112,6 +12112,290 @@
     "@navigationNodeDex": {
         "description": "Label for the NodeDex drawer item."
     },
+    "nodeboardDrawerLabel": "NodeBoard",
+    "@nodeboardDrawerLabel": {
+        "description": "Label for the NodeBoard drawer item."
+    },
+    "nodeboardTitle": "NodeBoard",
+    "@nodeboardTitle": {
+        "description": "Title for the NodeBoard feature."
+    },
+    "nodeboardMyBoards": "My Boards",
+    "@nodeboardMyBoards": {
+        "description": "Tab label for the user's own boards."
+    },
+    "nodeboardDiscover": "Discover",
+    "@nodeboardDiscover": {
+        "description": "Tab label for discovering public boards."
+    },
+    "nodeboardCreateBoard": "Create Board",
+    "@nodeboardCreateBoard": {
+        "description": "Button label for creating a new NodeBoard."
+    },
+    "nodeboardEmptyMyBoards": "You haven't created any boards yet",
+    "@nodeboardEmptyMyBoards": {
+        "description": "Empty state message when user has no boards."
+    },
+    "nodeboardEmptyMyBoardsDescription": "Create your first personal BBS and share it with the mesh",
+    "@nodeboardEmptyMyBoardsDescription": {
+        "description": "Empty state description when user has no boards."
+    },
+    "nodeboardEmptyDiscover": "No public boards found",
+    "@nodeboardEmptyDiscover": {
+        "description": "Empty state message when no public boards exist."
+    },
+    "nodeboardEmptyDiscoverDescription": "Be the first to create a board",
+    "@nodeboardEmptyDiscoverDescription": {
+        "description": "Empty state description when no public boards exist."
+    },
+    "nodeboardEmptyThreads": "No threads yet",
+    "@nodeboardEmptyThreads": {
+        "description": "Empty state when a section has no threads."
+    },
+    "nodeboardEmptyThreadsDescription": "Start the conversation",
+    "@nodeboardEmptyThreadsDescription": {
+        "description": "Empty state description for a section with no threads."
+    },
+    "nodeboardWizardTitle": "Create NodeBoard",
+    "@nodeboardWizardTitle": {
+        "description": "Title for the board creation wizard."
+    },
+    "nodeboardWizardStepName": "Name & Identity",
+    "@nodeboardWizardStepName": {
+        "description": "Wizard step label for board name."
+    },
+    "nodeboardWizardStepTagline": "Tagline & Description",
+    "@nodeboardWizardStepTagline": {
+        "description": "Wizard step label for tagline."
+    },
+    "nodeboardWizardStepSections": "Sections",
+    "@nodeboardWizardStepSections": {
+        "description": "Wizard step label for sections."
+    },
+    "nodeboardWizardStepTheme": "Theme",
+    "@nodeboardWizardStepTheme": {
+        "description": "Wizard step label for theme selection."
+    },
+    "nodeboardWizardStepWelcome": "Welcome & Splash",
+    "@nodeboardWizardStepWelcome": {
+        "description": "Wizard step label for welcome text."
+    },
+    "nodeboardWizardStepReview": "Review",
+    "@nodeboardWizardStepReview": {
+        "description": "Wizard step label for review."
+    },
+    "nodeboardBoardTitle": "Board Title",
+    "@nodeboardBoardTitle": {
+        "description": "Label for the board title field."
+    },
+    "nodeboardSysopName": "Sysop Name",
+    "@nodeboardSysopName": {
+        "description": "Label for the sysop name field."
+    },
+    "nodeboardSlug": "Board URL Slug",
+    "@nodeboardSlug": {
+        "description": "Label for the board slug field."
+    },
+    "nodeboardTagline": "Tagline",
+    "@nodeboardTagline": {
+        "description": "Label for the tagline field."
+    },
+    "nodeboardDescription": "Description",
+    "@nodeboardDescription": {
+        "description": "Label for the description field."
+    },
+    "nodeboardWelcomeText": "Welcome Text",
+    "@nodeboardWelcomeText": {
+        "description": "Label for the welcome text field."
+    },
+    "nodeboardAnsiSplash": "ASCII/ANSI Splash",
+    "@nodeboardAnsiSplash": {
+        "description": "Label for the ANSI splash field."
+    },
+    "nodeboardVisibilityPublic": "Public",
+    "@nodeboardVisibilityPublic": {
+        "description": "Visibility option: public."
+    },
+    "nodeboardVisibilityUnlisted": "Unlisted",
+    "@nodeboardVisibilityUnlisted": {
+        "description": "Visibility option: unlisted."
+    },
+    "nodeboardVisibilityPrivate": "Private",
+    "@nodeboardVisibilityPrivate": {
+        "description": "Visibility option: private."
+    },
+    "nodeboardSysop": "SysOp",
+    "@nodeboardSysop": {
+        "description": "Label for sysop role."
+    },
+    "nodeboardThreadCount": "{count} threads",
+    "@nodeboardThreadCount": {
+        "description": "Thread count display.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "nodeboardReplyCount": "{count} replies",
+    "@nodeboardReplyCount": {
+        "description": "Reply count display.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "nodeboardTerminalMode": "Terminal Mode",
+    "@nodeboardTerminalMode": {
+        "description": "Label for terminal mode toggle."
+    },
+    "nodeboardNativeMode": "Native Mode",
+    "@nodeboardNativeMode": {
+        "description": "Label for native mode toggle."
+    },
+    "nodeboardReplyHint": "Write a reply...",
+    "@nodeboardReplyHint": {
+        "description": "Hint text for the reply composer."
+    },
+    "nodeboardThreadLocked": "This thread is locked",
+    "@nodeboardThreadLocked": {
+        "description": "Message when a thread is locked."
+    },
+    "nodeboardPinned": "Pinned",
+    "@nodeboardPinned": {
+        "description": "Badge label for pinned threads."
+    },
+    "nodeboardLocked": "Locked",
+    "@nodeboardLocked": {
+        "description": "Badge label for locked threads."
+    },
+    "nodeboardNext": "Next",
+    "@nodeboardNext": {
+        "description": "Next button in wizard."
+    },
+    "nodeboardBack": "Back",
+    "@nodeboardBack": {
+        "description": "Back button in wizard."
+    },
+    "nodeboardCreateBoardAction": "Create Board",
+    "@nodeboardCreateBoardAction": {
+        "description": "Create board action button."
+    },
+    "nodeboardLoadError": "Failed to load",
+    "@nodeboardLoadError": {
+        "description": "Generic load error message."
+    },
+    "nodeboardBoardNotFound": "Board not found",
+    "@nodeboardBoardNotFound": {
+        "description": "Message when a board is not found."
+    },
+    "nodeboardThreadNotFound": "Thread not found",
+    "@nodeboardThreadNotFound": {
+        "description": "Message when a thread is not found."
+    },
+    "nodeboardEditBoard": "Edit Board",
+    "@nodeboardEditBoard": {
+        "description": "Menu item for editing a board."
+    },
+    "nodeboardShareBoard": "Share Board",
+    "@nodeboardShareBoard": {
+        "description": "Menu item for sharing a board."
+    },
+    "nodeboardSectionCount": "{count} sections",
+    "@nodeboardSectionCount": {
+        "description": "Section count display.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "nodeboardNoSections": "No sections yet",
+    "@nodeboardNoSections": {
+        "description": "Message when board has no sections."
+    },
+    "nodeboardReplyFailed": "Failed to send reply",
+    "@nodeboardReplyFailed": {
+        "description": "Error when reply submission fails."
+    },
+    "nodeboardNewThread": "New Thread",
+    "@nodeboardNewThread": {
+        "description": "Button label for creating a new thread."
+    },
+    "nodeboardCreateFirstBoard": "Create Your First Board",
+    "@nodeboardCreateFirstBoard": {
+        "description": "Empty state action to create first board."
+    },
+    "nodeboardWelcomeSectionTitle": "Welcome",
+    "@nodeboardWelcomeSectionTitle": {
+        "description": "Card title for the board welcome text section."
+    },
+    "nodeboardSectionsSectionTitle": "Sections",
+    "@nodeboardSectionsSectionTitle": {
+        "description": "Card title for the board sections picker."
+    },
+    "nodeboardThreadsSectionTitle": "Threads",
+    "@nodeboardThreadsSectionTitle": {
+        "description": "Card title for the board threads list."
+    },
+    "nodeboardShareCopied": "Share link copied to clipboard",
+    "@nodeboardShareCopied": {
+        "description": "Confirmation shown after copying a board share link."
+    },
+    "nodeboardComposerComingSoon": "Thread composer coming soon",
+    "@nodeboardComposerComingSoon": {
+        "description": "Placeholder message shown when the thread composer is tapped."
+    },
+    "nodeboardJustNow": "just now",
+    "@nodeboardJustNow": {
+        "description": "Time-ago label for events in the last minute."
+    },
+    "nodeboardMinutesAgo": "{count}m ago",
+    "@nodeboardMinutesAgo": {
+        "description": "Time-ago label for events in the last hour.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "nodeboardHoursAgo": "{count}h ago",
+    "@nodeboardHoursAgo": {
+        "description": "Time-ago label for events in the last day.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "nodeboardDaysAgo": "{count}d ago",
+    "@nodeboardDaysAgo": {
+        "description": "Time-ago label for events in the last month.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "nodeboardMonthsAgo": "{count}mo ago",
+    "@nodeboardMonthsAgo": {
+        "description": "Time-ago label for events in the last year.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "nodeboardYearsAgo": "{count}y ago",
+    "@nodeboardYearsAgo": {
+        "description": "Time-ago label for events more than a year ago.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
     "navigationNodes": "Nodes",
     "@navigationNodes": {
         "description": "Label for the Nodes bottom nav tab."
