@@ -187,6 +187,7 @@ abstract final class MeshServicePresentationRegistry {
   static const MeshServicePresentationSpec _poll = _PollPresentationSpec();
   static const MeshServicePresentationSpec _signal = _SignalPresentationSpec();
   static const MeshServicePresentationSpec _sensor = _SensorPresentationSpec();
+  static const MeshServicePresentationSpec _game = _GamePresentationSpec();
 
   static MeshServicePresentationSpec forType(MeshServiceType type) {
     return switch (type) {
@@ -195,6 +196,7 @@ abstract final class MeshServicePresentationRegistry {
       MeshServiceType.poll => _poll,
       MeshServiceType.signal => _signal,
       MeshServiceType.sensor => _sensor,
+      MeshServiceType.game => _game,
     };
   }
 }
@@ -609,6 +611,73 @@ class _SignalPresentationSpec extends MeshServicePresentationSpec {
       label: meshServiceSignalKindName(l10n, kind),
       color: SemanticColors.warning,
     );
+  }
+}
+
+class _GamePresentationSpec extends MeshServicePresentationSpec {
+  const _GamePresentationSpec();
+
+  @override
+  MeshServiceType get type => MeshServiceType.game;
+
+  @override
+  String discoveryEyebrow(AppLocalizations l10n) =>
+      l10n.meshServicesEyebrowGame;
+
+  @override
+  String discoveryCta(AppLocalizations l10n) => l10n.meshServicesOpenGameAction;
+
+  @override
+  Widget buildComposePreviewContent(
+    BuildContext context,
+    AppLocalizations l10n,
+    MeshServiceComposeDraft draft,
+  ) {
+    return _PreviewNarrative(
+      description: draft.description.isEmpty
+          ? l10n.meshServicesGameComposeLead
+          : draft.description,
+    );
+  }
+
+  @override
+  Widget buildRemoteDetailContent(
+    BuildContext context,
+    AppLocalizations l10n,
+    MeshServiceRemoteDetailViewData detail,
+  ) {
+    // Graphical rendering lives in GameDetailScreen. This is only shown
+    // when a remote game is viewed via the generic service detail surface.
+    return _NarrativeDetail(
+      description: detail.description.isEmpty
+          ? l10n.meshServicesGameRemoteHint
+          : detail.description,
+    );
+  }
+
+  @override
+  Widget buildLocalSummary(
+    BuildContext context,
+    AppLocalizations l10n,
+    MeshServiceInstance instance,
+  ) {
+    final gameTypeCode = (instance.config['gameTypeCode'] as int?) ?? 0;
+    final statusCode = (instance.config['gameStatusCode'] as int?) ?? 1;
+    final label = switch (statusCode) {
+      2 => l10n.meshGamesStatusCompleted,
+      3 => l10n.meshGamesStatusAbandoned,
+      4 => l10n.meshGamesStatusStale,
+      _ => _gameTypeLabel(l10n, gameTypeCode),
+    };
+    return _StatusPill(label: label, color: context.accentColor);
+  }
+
+  String _gameTypeLabel(AppLocalizations l10n, int code) {
+    return switch (code) {
+      0x01 => l10n.meshGamesTypeRps,
+      0x02 => l10n.meshGamesTypeTicTacToe,
+      _ => l10n.meshGamesTypeUnknown,
+    };
   }
 }
 

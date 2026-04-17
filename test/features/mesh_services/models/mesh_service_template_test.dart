@@ -7,8 +7,8 @@ import 'package:socialmesh/features/mesh_services/models/mesh_service_template.d
 
 void main() {
   group('MeshServiceCatalog', () {
-    test('allTypes contains exactly 5 canonical service types', () {
-      expect(MeshServiceCatalog.allTypes.length, 5);
+    test('allTypes contains exactly 6 canonical service types', () {
+      expect(MeshServiceCatalog.allTypes.length, 6);
     });
 
     test('all canonical type IDs are unique', () {

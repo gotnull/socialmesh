@@ -10,7 +10,9 @@ import 'package:socialmesh/features/mesh_services/models/template_schemas.dart';
 void main() {
   group('MeshServiceSchemas', () {
     test('forType returns non-null for all canonical types', () {
-      for (final type in MeshServiceType.values) {
+      for (final type in MeshServiceType.values.where(
+        (t) => t != MeshServiceType.game,
+      )) {
         final schema = MeshServiceSchemas.forType(type);
         expect(
           schema,
@@ -21,21 +23,27 @@ void main() {
     });
 
     test('all schemas have non-empty serviceType', () {
-      for (final type in MeshServiceType.values) {
+      for (final type in MeshServiceType.values.where(
+        (t) => t != MeshServiceType.game,
+      )) {
         final schema = MeshServiceSchemas.forType(type)!;
         expect(schema.serviceType, isNotEmpty, reason: '$type');
       }
     });
 
     test('all schemas have non-empty title', () {
-      for (final type in MeshServiceType.values) {
+      for (final type in MeshServiceType.values.where(
+        (t) => t != MeshServiceType.game,
+      )) {
         final schema = MeshServiceSchemas.forType(type)!;
         expect(schema.title, isNotEmpty, reason: '$type');
       }
     });
 
     test('all field IDs within a schema are unique', () {
-      for (final type in MeshServiceType.values) {
+      for (final type in MeshServiceType.values.where(
+        (t) => t != MeshServiceType.game,
+      )) {
         final schema = MeshServiceSchemas.forType(type)!;
         final fieldIds = schema.fields.map((f) => f.id).toSet();
         expect(
@@ -47,7 +55,9 @@ void main() {
     });
 
     test('all action IDs within a schema are unique', () {
-      for (final type in MeshServiceType.values) {
+      for (final type in MeshServiceType.values.where(
+        (t) => t != MeshServiceType.game,
+      )) {
         final schema = MeshServiceSchemas.forType(type)!;
         final actionIds = schema.actions.map((a) => a.id).toSet();
         expect(
@@ -59,7 +69,9 @@ void main() {
     });
 
     test('all field IDs are in 1-255 range', () {
-      for (final type in MeshServiceType.values) {
+      for (final type in MeshServiceType.values.where(
+        (t) => t != MeshServiceType.game,
+      )) {
         final schema = MeshServiceSchemas.forType(type)!;
         for (final f in schema.fields) {
           expect(
@@ -72,7 +84,9 @@ void main() {
     });
 
     test('all schemas fit within 512-byte wire limit', () {
-      for (final type in MeshServiceType.values) {
+      for (final type in MeshServiceType.values.where(
+        (t) => t != MeshServiceType.game,
+      )) {
         final schema = MeshServiceSchemas.forType(type)!;
         final bytes = ServiceSchemaCodec.encode(schema);
         expect(
@@ -84,7 +98,9 @@ void main() {
     });
 
     test('all schemas round-trip through codec', () {
-      for (final type in MeshServiceType.values) {
+      for (final type in MeshServiceType.values.where(
+        (t) => t != MeshServiceType.game,
+      )) {
         final schema = MeshServiceSchemas.forType(type)!;
         final bytes = ServiceSchemaCodec.encode(schema)!;
         final decoded = ServiceSchemaCodec.decode(bytes)!;
@@ -95,6 +111,16 @@ void main() {
         expect(decoded.actions.length, schema.actions.length, reason: '$type');
       }
     });
+
+    test(
+      'forType(game) returns null — games use dedicated UI, not schema',
+      () {
+        expect(
+          MeshServiceSchemas.forType(MeshServiceType.game),
+          isNull,
+        );
+      },
+    );
 
     test('feed schema has feed.v1 type', () {
       expect(MeshServiceSchemas.feed.serviceType, 'feed.v1');

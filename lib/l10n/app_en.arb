@@ -44128,6 +44128,23 @@
     },
     "meshServicesTypeSensorDescription": "Live measurements or telemetry people nearby can check",
 
+    "meshServicesTypeGame": "Games",
+    "@meshServicesTypeGame": {
+        "description": "Canonical mesh service type name for mesh-games."
+    },
+    "meshServicesTypeGameDescription": "Two-peer games playable over mesh",
+    "@meshServicesTypeGameDescription": {
+        "description": "Canonical mesh service type description for mesh-games."
+    },
+    "meshServicesIntentGame": "Play a game",
+    "@meshServicesIntentGame": {
+        "description": "Intent-first label for the game capability in the creation flow."
+    },
+    "meshServicesIntentGameDescription": "Invite a peer to a quick game over the mesh.",
+    "@meshServicesIntentGameDescription": {
+        "description": "Intent-first description for the game capability in the creation flow."
+    },
+
     "meshServicesIntentFeed": "Post an update",
     "@meshServicesIntentFeed": {
         "description": "Intent-first label for the feed capability in the creation flow."
@@ -44532,6 +44549,157 @@
             "count": {
                 "type": "int"
             }
+        }
+    },
+    "meshGamesTitle": "Mesh Games",
+    "@meshGamesTitle": {
+        "description": "Mesh Games feature title."
+    },
+    "meshGamesTabLabel": "Games",
+    "@meshGamesTabLabel": {
+        "description": "Filter chip label for the games tab on the services list."
+    },
+    "meshGamesEmptyTitle": "No games yet",
+    "@meshGamesEmptyTitle": {
+        "description": "Empty state title for the games list."
+    },
+    "meshGamesEmptyTagline": "Invite a peer to a quick match",
+    "@meshGamesEmptyTagline": {
+        "description": "Empty state tagline for the games list."
+    },
+    "meshGamesNewGame": "New Game",
+    "@meshGamesNewGame": {
+        "description": "Button label for starting a new game."
+    },
+    "meshGamesNewGameTitle": "Start a New Game",
+    "@meshGamesNewGameTitle": {
+        "description": "Title for the new-game sheet."
+    },
+    "meshGamesTypeRps": "Rock Paper Scissors",
+    "@meshGamesTypeRps": {
+        "description": "Human-readable name of the RPS game."
+    },
+    "meshGamesTypeRpsDescription": "Best of one. Both players reveal at the same time.",
+    "@meshGamesTypeRpsDescription": {
+        "description": "Description of RPS game."
+    },
+    "meshGamesTypeTicTacToe": "Tic Tac Toe",
+    "@meshGamesTypeTicTacToe": {
+        "description": "Human-readable name of the Tic Tac Toe game."
+    },
+    "meshGamesTypeTicTacToeDescription": "Three in a row. Take turns marking the grid.",
+    "@meshGamesTypeTicTacToeDescription": {
+        "description": "Description of Tic Tac Toe game."
+    },
+    "meshGamesTypeUnknown": "Game",
+    "@meshGamesTypeUnknown": {
+        "description": "Fallback label for an unknown game type."
+    },
+    "meshGamesStatusYourTurn": "Your turn",
+    "@meshGamesStatusYourTurn": {
+        "description": "Status chip when it is the local player's turn."
+    },
+    "meshGamesStatusWaiting": "Waiting",
+    "@meshGamesStatusWaiting": {
+        "description": "Status chip when waiting for the opponent to move."
+    },
+    "meshGamesStatusYouWon": "You won",
+    "@meshGamesStatusYouWon": {
+        "description": "Status chip when the local player has won."
+    },
+    "meshGamesStatusYouLost": "You lost",
+    "@meshGamesStatusYouLost": {
+        "description": "Status chip when the local player has lost."
+    },
+    "meshGamesStatusDraw": "Draw",
+    "@meshGamesStatusDraw": {
+        "description": "Status chip for a draw."
+    },
+    "meshGamesStatusCompleted": "Completed",
+    "@meshGamesStatusCompleted": {
+        "description": "Generic status chip when a game has finished."
+    },
+    "meshGamesStatusAbandoned": "Abandoned",
+    "@meshGamesStatusAbandoned": {
+        "description": "Status chip when a game was abandoned."
+    },
+    "meshGamesStatusStale": "Syncing…",
+    "@meshGamesStatusStale": {
+        "description": "Status chip when the session is stale (awaiting resync)."
+    },
+    "meshGamesStatusActive": "Active",
+    "@meshGamesStatusActive": {
+        "description": "Generic status chip when a game is in progress."
+    },
+    "meshGamesActionResync": "Resync",
+    "@meshGamesActionResync": {
+        "description": "Action label that triggers a STATE_REQ to the peer."
+    },
+    "meshGamesActionAbandon": "Abandon",
+    "@meshGamesActionAbandon": {
+        "description": "Action label that abandons the current session."
+    },
+    "meshGamesAbandonConfirmTitle": "Abandon this game?",
+    "@meshGamesAbandonConfirmTitle": {
+        "description": "Confirmation title for abandoning a game."
+    },
+    "meshGamesAbandonConfirmMessage": "The other player will be notified.",
+    "@meshGamesAbandonConfirmMessage": {
+        "description": "Confirmation body for abandoning a game."
+    },
+    "meshGamesOpponentLabel": "Opponent",
+    "@meshGamesOpponentLabel": {
+        "description": "Label for the opponent field."
+    },
+    "meshGamesOpponentPickerTitle": "Pick an opponent",
+    "@meshGamesOpponentPickerTitle": {
+        "description": "Title for the opponent picker."
+    },
+    "meshGamesOpponentMissing": "No peers available",
+    "@meshGamesOpponentMissing": {
+        "description": "Shown when no peers are available."
+    },
+    "meshGamesSendFailed": "Couldn't send move",
+    "@meshGamesSendFailed": {
+        "description": "Error label when a move fails to transmit."
+    },
+    "meshGamesRpsRock": "Rock",
+    "@meshGamesRpsRock": {
+        "description": "RPS throw: rock."
+    },
+    "meshGamesRpsPaper": "Paper",
+    "@meshGamesRpsPaper": {
+        "description": "RPS throw: paper."
+    },
+    "meshGamesRpsScissors": "Scissors",
+    "@meshGamesRpsScissors": {
+        "description": "RPS throw: scissors."
+    },
+    "meshGamesRpsPickPrompt": "Pick your throw",
+    "@meshGamesRpsPickPrompt": {
+        "description": "Prompt shown in the RPS chooser."
+    },
+    "meshGamesRpsRevealTitle": "Reveal",
+    "@meshGamesRpsRevealTitle": {
+        "description": "Title shown on the RPS reveal card."
+    },
+    "meshGamesTttMarkX": "X",
+    "@meshGamesTttMarkX": {
+        "description": "TTT mark X."
+    },
+    "meshGamesTttMarkO": "O",
+    "@meshGamesTttMarkO": {
+        "description": "TTT mark O."
+    },
+    "meshGamesTttTapPrompt": "Tap a cell to place your mark",
+    "@meshGamesTttTapPrompt": {
+        "description": "Prompt in the TTT board when it is the local player's turn."
+    },
+    "meshGamesRevision": "Rev {revision}",
+    "@meshGamesRevision": {
+        "description": "Revision counter label.",
+        "placeholders": {
+            "revision": {"type": "int"}
         }
     },
     "meshServicesTitleRequired": "Title is required",
@@ -46708,6 +46876,10 @@
     "@meshServicesEyebrowSensor": {
         "description": "Eyebrow shown on sensor cards and detail surfaces."
     },
+    "meshServicesEyebrowGame": "Mesh game",
+    "@meshServicesEyebrowGame": {
+        "description": "Eyebrow shown on game cards and detail surfaces."
+    },
     "meshServicesOpenFeedAction": "Read update",
     "@meshServicesOpenFeedAction": {
         "description": "CTA label for opening a feed-style mesh share."
@@ -46723,6 +46895,18 @@
     "meshServicesOpenSignalAction": "View alert",
     "@meshServicesOpenSignalAction": {
         "description": "CTA label for opening a signal-style mesh share."
+    },
+    "meshServicesOpenGameAction": "Open game",
+    "@meshServicesOpenGameAction": {
+        "description": "CTA label for opening a mesh game."
+    },
+    "meshServicesGameComposeLead": "Invite a peer to a quick game.",
+    "@meshServicesGameComposeLead": {
+        "description": "Lead text in the new-game composer preview."
+    },
+    "meshServicesGameRemoteHint": "Tap to open the game board.",
+    "@meshServicesGameRemoteHint": {
+        "description": "Fallback body text when a mesh game is viewed via the generic service detail surface."
     },
     "meshServicesOpenSensorAction": "Check reading",
     "@meshServicesOpenSensorAction": {

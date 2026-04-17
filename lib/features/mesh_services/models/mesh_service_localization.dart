@@ -14,6 +14,7 @@ String meshServiceTypeName(AppLocalizations l10n, MeshServiceType type) {
     MeshServiceType.poll => l10n.meshServicesTypePoll,
     MeshServiceType.signal => l10n.meshServicesTypeSignal,
     MeshServiceType.sensor => l10n.meshServicesTypeSensor,
+    MeshServiceType.game => l10n.meshServicesTypeGame,
   };
 }
 
@@ -24,6 +25,7 @@ String meshServiceIntentName(AppLocalizations l10n, MeshServiceType type) {
     MeshServiceType.poll => l10n.meshServicesIntentPoll,
     MeshServiceType.signal => l10n.meshServicesIntentSignal,
     MeshServiceType.sensor => l10n.meshServicesIntentSensor,
+    MeshServiceType.game => l10n.meshServicesIntentGame,
   };
 }
 
@@ -37,6 +39,7 @@ String meshServiceIntentDescription(
     MeshServiceType.poll => l10n.meshServicesIntentPollDescription,
     MeshServiceType.signal => l10n.meshServicesIntentSignalDescription,
     MeshServiceType.sensor => l10n.meshServicesIntentSensorDescription,
+    MeshServiceType.game => l10n.meshServicesIntentGameDescription,
   };
 }
 
@@ -47,6 +50,7 @@ String meshServiceTypeDescription(AppLocalizations l10n, MeshServiceType type) {
     MeshServiceType.poll => l10n.meshServicesTypePollDescription,
     MeshServiceType.signal => l10n.meshServicesTypeSignalDescription,
     MeshServiceType.sensor => l10n.meshServicesTypeSensorDescription,
+    MeshServiceType.game => l10n.meshServicesTypeGameDescription,
   };
 }
 
@@ -65,6 +69,8 @@ String meshServicePresetName(
     MeshServicePresetId.weatherStation =>
       l10n.meshServicesTemplateWeatherStation,
     MeshServicePresetId.sensorNode => l10n.meshServicesTemplateSensorNode,
+    MeshServicePresetId.rpsV1 => l10n.meshGamesTypeRps,
+    MeshServicePresetId.ticTacToeV1 => l10n.meshGamesTypeTicTacToe,
   };
 }
 
@@ -89,6 +95,8 @@ String meshServicePresetDescription(
       l10n.meshServicesTemplateWeatherStationDescription,
     MeshServicePresetId.sensorNode =>
       l10n.meshServicesTemplateSensorNodeDescription,
+    MeshServicePresetId.rpsV1 => l10n.meshGamesTypeRpsDescription,
+    MeshServicePresetId.ticTacToeV1 => l10n.meshGamesTypeTicTacToeDescription,
   };
 }
 

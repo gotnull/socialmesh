@@ -24,6 +24,12 @@ class MeshServiceRemoteDetailExtension {
   final String? sensorUnit;
   final String? sensorSource;
   final DateTime? sensorCapturedAt;
+  final int? gameTypeCode;
+  final int? gameRevision;
+  final int? gameTurnIndex;
+  final int? gameStatusCode;
+  final int? gameWinnerIndex;
+  final Uint8List? gameStateBlob;
 
   const MeshServiceRemoteDetailExtension({
     this.createdAt,
@@ -39,6 +45,12 @@ class MeshServiceRemoteDetailExtension {
     this.sensorUnit,
     this.sensorSource,
     this.sensorCapturedAt,
+    this.gameTypeCode,
+    this.gameRevision,
+    this.gameTurnIndex,
+    this.gameStatusCode,
+    this.gameWinnerIndex,
+    this.gameStateBlob,
   });
 }
 
@@ -60,6 +72,7 @@ abstract final class MeshServiceDetailPayloadCodec {
       MeshServiceType.feed => 40,
       MeshServiceType.signal => 40,
       MeshServiceType.sensor => 40,
+      MeshServiceType.game => 40,
     };
   }
 
@@ -70,6 +83,7 @@ abstract final class MeshServiceDetailPayloadCodec {
       MeshServiceType.feed => 80,
       MeshServiceType.signal => 60,
       MeshServiceType.sensor => 40,
+      MeshServiceType.game => 40,
     };
   }
 
@@ -138,9 +152,44 @@ abstract final class MeshServiceDetailPayloadCodec {
         break;
       case MeshServiceType.feed:
         break;
+      case MeshServiceType.game:
+        // Compact game state for remote peers. Format:
+        //   gameTypeCode(1) + revision(2 LE) + turnIndex(1) +
+        //   statusCode(1) + winnerIndex(1) + stateBlobLen(1) + stateBlob(N)
+        final gameTypeCode = (instance.config['gameTypeCode'] as int?) ?? 0;
+        final revision = (instance.config['revision'] as int?) ?? 0;
+        final turnIndex = (instance.config['turnIndex'] as int?) ?? 0;
+        final statusCode = (instance.config['gameStatusCode'] as int?) ?? 1;
+        final winnerIndex =
+            (instance.config['gameWinnerIndex'] as int?) ?? 0xFF;
+        final stateBlob = _decodeStateBlob(instance.config['stateBlob']);
+        builder.addByte(gameTypeCode & 0xFF);
+        _addUint16(builder, revision);
+        builder.addByte(turnIndex & 0xFF);
+        builder.addByte(statusCode & 0xFF);
+        builder.addByte(winnerIndex & 0xFF);
+        final truncated = stateBlob.length > 96
+            ? Uint8List.sublistView(stateBlob, 0, 96)
+            : stateBlob;
+        builder.addByte(truncated.length);
+        builder.add(truncated);
+        break;
     }
 
     return Uint8List.fromList(builder.toBytes());
+  }
+
+  static Uint8List _decodeStateBlob(Object? raw) {
+    if (raw is Uint8List) return raw;
+    if (raw is List<int>) return Uint8List.fromList(raw);
+    if (raw is String && raw.isNotEmpty) {
+      try {
+        return Uint8List.fromList(base64Decode(raw));
+      } catch (_) {
+        return Uint8List(0);
+      }
+    }
+    return Uint8List(0);
   }
 
   static MeshServiceRemoteDetailExtension decode(
@@ -268,6 +317,30 @@ abstract final class MeshServiceDetailPayloadCodec {
         );
       case MeshServiceType.feed:
         return MeshServiceRemoteDetailExtension(createdAt: createdAtDate);
+      case MeshServiceType.game:
+        if (offset + 7 > payload.length) {
+          return MeshServiceRemoteDetailExtension(createdAt: createdAtDate);
+        }
+        final gameTypeCode = payload[offset++];
+        final revision = _readUint16(payload, offset);
+        offset += 2;
+        final turnIndex = payload[offset++];
+        final statusCode = payload[offset++];
+        final winnerIndex = payload[offset++];
+        final stateLen = payload[offset++];
+        final end = offset + stateLen;
+        final stateBlob = end <= payload.length
+            ? Uint8List.fromList(payload.sublist(offset, end))
+            : Uint8List(0);
+        return MeshServiceRemoteDetailExtension(
+          createdAt: createdAtDate,
+          gameTypeCode: gameTypeCode,
+          gameRevision: revision,
+          gameTurnIndex: turnIndex,
+          gameStatusCode: statusCode,
+          gameWinnerIndex: winnerIndex,
+          gameStateBlob: stateBlob,
+        );
     }
   }
 

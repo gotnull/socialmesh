@@ -32857,6 +32857,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Live measurements or telemetry people nearby can check';
 
   @override
+  String get meshServicesTypeGame => 'Games';
+
+  @override
+  String get meshServicesTypeGameDescription =>
+      'Two-peer games playable over mesh';
+
+  @override
+  String get meshServicesIntentGame => 'Play a game';
+
+  @override
+  String get meshServicesIntentGameDescription =>
+      'Invite a peer to a quick game over the mesh.';
+
+  @override
   String get meshServicesIntentFeed => 'Post an update';
 
   @override
@@ -33156,6 +33170,122 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String meshServicesDurationHours(int count) {
     return '$count hr';
+  }
+
+  @override
+  String get meshGamesTitle => 'Mesh Games';
+
+  @override
+  String get meshGamesTabLabel => 'Games';
+
+  @override
+  String get meshGamesEmptyTitle => 'No games yet';
+
+  @override
+  String get meshGamesEmptyTagline => 'Invite a peer to a quick match';
+
+  @override
+  String get meshGamesNewGame => 'New Game';
+
+  @override
+  String get meshGamesNewGameTitle => 'Start a New Game';
+
+  @override
+  String get meshGamesTypeRps => 'Rock Paper Scissors';
+
+  @override
+  String get meshGamesTypeRpsDescription =>
+      'Best of one. Both players reveal at the same time.';
+
+  @override
+  String get meshGamesTypeTicTacToe => 'Tic Tac Toe';
+
+  @override
+  String get meshGamesTypeTicTacToeDescription =>
+      'Three in a row. Take turns marking the grid.';
+
+  @override
+  String get meshGamesTypeUnknown => 'Game';
+
+  @override
+  String get meshGamesStatusYourTurn => 'Your turn';
+
+  @override
+  String get meshGamesStatusWaiting => 'Waiting';
+
+  @override
+  String get meshGamesStatusYouWon => 'You won';
+
+  @override
+  String get meshGamesStatusYouLost => 'You lost';
+
+  @override
+  String get meshGamesStatusDraw => 'Draw';
+
+  @override
+  String get meshGamesStatusCompleted => 'Completed';
+
+  @override
+  String get meshGamesStatusAbandoned => 'Abandoned';
+
+  @override
+  String get meshGamesStatusStale => 'Syncing…';
+
+  @override
+  String get meshGamesStatusActive => 'Active';
+
+  @override
+  String get meshGamesActionResync => 'Resync';
+
+  @override
+  String get meshGamesActionAbandon => 'Abandon';
+
+  @override
+  String get meshGamesAbandonConfirmTitle => 'Abandon this game?';
+
+  @override
+  String get meshGamesAbandonConfirmMessage =>
+      'The other player will be notified.';
+
+  @override
+  String get meshGamesOpponentLabel => 'Opponent';
+
+  @override
+  String get meshGamesOpponentPickerTitle => 'Pick an opponent';
+
+  @override
+  String get meshGamesOpponentMissing => 'No peers available';
+
+  @override
+  String get meshGamesSendFailed => 'Couldn\'t send move';
+
+  @override
+  String get meshGamesRpsRock => 'Rock';
+
+  @override
+  String get meshGamesRpsPaper => 'Paper';
+
+  @override
+  String get meshGamesRpsScissors => 'Scissors';
+
+  @override
+  String get meshGamesRpsPickPrompt => 'Pick your throw';
+
+  @override
+  String get meshGamesRpsRevealTitle => 'Reveal';
+
+  @override
+  String get meshGamesTttMarkX => 'X';
+
+  @override
+  String get meshGamesTttMarkO => 'O';
+
+  @override
+  String get meshGamesTttTapPrompt => 'Tap a cell to place your mark';
+
+  @override
+  String meshGamesRevision(int revision) {
+    return 'Rev $revision';
   }
 
   @override
@@ -34782,6 +34912,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meshServicesEyebrowSensor => 'Live reading';
 
   @override
+  String get meshServicesEyebrowGame => 'Mesh game';
+
+  @override
   String get meshServicesOpenFeedAction => 'Read update';
 
   @override
@@ -34792,6 +34925,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get meshServicesOpenSignalAction => 'View alert';
+
+  @override
+  String get meshServicesOpenGameAction => 'Open game';
+
+  @override
+  String get meshServicesGameComposeLead => 'Invite a peer to a quick game.';
+
+  @override
+  String get meshServicesGameRemoteHint => 'Tap to open the game board.';
 
   @override
   String get meshServicesOpenSensorAction => 'Check reading';

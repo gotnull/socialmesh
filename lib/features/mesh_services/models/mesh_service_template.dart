@@ -22,7 +22,8 @@ enum MeshServiceType {
   list(1),
   poll(2),
   signal(3),
-  sensor(4);
+  sensor(4),
+  game(5);
 
   const MeshServiceType(this.code);
 
@@ -45,7 +46,9 @@ enum MeshServicePresetId {
   resourceList(4),
   taskBoard(5),
   weatherStation(6),
-  sensorNode(7);
+  sensorNode(7),
+  rpsV1(8),
+  ticTacToeV1(9);
 
   const MeshServicePresetId(this.code);
 
@@ -258,6 +261,18 @@ abstract final class MeshServiceCatalog {
     maxDescriptionLength: 100,
   );
 
+  /// Mesh games — two-peer session-based games over MRRP.
+  /// See docs/mesh_games/MESH_GAMES_V0_1.md.
+  static const game = MeshServiceTypeDefinition(
+    type: MeshServiceType.game,
+    icon: Icons.extension_outlined,
+    accentColor: AccentColors.lavender,
+    defaultTtlMinutes: 1440 * 7,
+    maxTtlMinutes: 1440 * 7,
+    maxTitleLength: 40,
+    maxDescriptionLength: 80,
+  );
+
   static const bulletinBoard = MeshServicePreset(
     id: MeshServicePresetId.bulletinBoard,
     canonicalType: MeshServiceType.feed,
@@ -346,7 +361,31 @@ abstract final class MeshServiceCatalog {
     maxDescriptionLength: 100,
   );
 
-  static const allTypes = [feed, list, poll, signal, sensor];
+  /// Rock–Paper–Scissors (v1) preset.
+  static const rpsV1 = MeshServicePreset(
+    id: MeshServicePresetId.rpsV1,
+    canonicalType: MeshServiceType.game,
+    icon: Icons.back_hand_outlined,
+    accentColor: AccentColors.pink,
+    defaultTtlMinutes: 1440 * 7,
+    maxTtlMinutes: 1440 * 7,
+    maxTitleLength: 40,
+    maxDescriptionLength: 80,
+  );
+
+  /// Tic-Tac-Toe (v1) preset.
+  static const ticTacToeV1 = MeshServicePreset(
+    id: MeshServicePresetId.ticTacToeV1,
+    canonicalType: MeshServiceType.game,
+    icon: Icons.grid_3x3,
+    accentColor: AccentColors.sky,
+    defaultTtlMinutes: 1440 * 7,
+    maxTtlMinutes: 1440 * 7,
+    maxTitleLength: 40,
+    maxDescriptionLength: 80,
+  );
+
+  static const allTypes = [feed, list, poll, signal, sensor, game];
 
   static const allPresets = [
     bulletinBoard,
@@ -357,6 +396,8 @@ abstract final class MeshServiceCatalog {
     taskBoard,
     weatherStation,
     sensorNode,
+    rpsV1,
+    ticTacToeV1,
   ];
 
   static MeshServiceTypeDefinition? typeById(MeshServiceType type) {

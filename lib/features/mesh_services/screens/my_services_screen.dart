@@ -13,11 +13,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/animated_empty_state.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/search_filter_header.dart';
 import '../../../core/widgets/status_filter_chip.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../services/haptic_service.dart';
+import '../../../models/mesh_models.dart';
+import '../../../providers/app_providers.dart';
+import '../../mesh_games/models/mesh_game_session.dart';
+import '../../mesh_games/screens/game_detail_screen.dart';
+import '../../mesh_games/screens/new_game_sheet.dart';
+import '../../mesh_games/widgets/mesh_game_instance_card.dart';
 import '../models/mesh_service_instance.dart';
 import '../models/mesh_service_template.dart';
 import '../providers/mesh_service_providers.dart';
@@ -34,7 +42,7 @@ class MyServicesScreen extends ConsumerStatefulWidget {
 }
 
 /// Filter options for the My Services list.
-enum _ServiceFilter { all, active, expired, stopped }
+enum _ServiceFilter { all, active, expired, stopped, games }
 
 class _MyServicesScreenState extends ConsumerState<MyServicesScreen>
     with LifecycleSafeMixin {
@@ -82,6 +90,9 @@ class _MyServicesScreenState extends ConsumerState<MyServicesScreen>
             final stoppedCount = instances
                 .where((i) => i.effectiveStatus == MeshServiceStatus.stopped)
                 .length;
+            final gamesCount = instances
+                .where((i) => i.canonicalType == MeshServiceType.game)
+                .length;
 
             // Apply filter.
             var filtered = _applyFilter(instances);
@@ -111,6 +122,7 @@ class _MyServicesScreenState extends ConsumerState<MyServicesScreen>
                       activeCount,
                       expiredCount,
                       stoppedCount,
+                      gamesCount,
                     ]),
                     filterChips: [
                       StatusFilterChip(
@@ -147,6 +159,15 @@ class _MyServicesScreenState extends ConsumerState<MyServicesScreen>
                           () => _activeFilter = _ServiceFilter.stopped,
                         ),
                       ),
+                      StatusFilterChip(
+                        label: l10n.meshGamesTabLabel,
+                        count: gamesCount,
+                        isSelected: _activeFilter == _ServiceFilter.games,
+                        color: AccentColors.lavender,
+                        onTap: () => setState(
+                          () => _activeFilter = _ServiceFilter.games,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -154,12 +175,14 @@ class _MyServicesScreenState extends ConsumerState<MyServicesScreen>
                   SliverFillRemaining(
                     hasScrollBody: false,
                     child: Center(
-                      child: Text(
-                        l10n.meshServicesNoResults,
-                        style: context.bodySmallStyle?.copyWith(
-                          color: context.textTertiary,
-                        ),
-                      ),
+                      child: _activeFilter == _ServiceFilter.games
+                          ? _buildGamesEmptyState(context, l10n)
+                          : Text(
+                              l10n.meshServicesNoResults,
+                              style: context.bodySmallStyle?.copyWith(
+                                color: context.textTertiary,
+                              ),
+                            ),
                     ),
                   )
                 else
@@ -174,6 +197,28 @@ class _MyServicesScreenState extends ConsumerState<MyServicesScreen>
                           const SizedBox(height: AppTheme.spacing8),
                       itemBuilder: (context, index) {
                         final instance = filtered[index];
+                        if (instance.canonicalType == MeshServiceType.game) {
+                          final session = MeshGameSession.tryFromConfig(
+                            instanceId: instance.instanceId,
+                            config: instance.config,
+                          );
+                          if (session != null) {
+                            final myNodeNum = session.initiatorNodeNum;
+                            final opponent =
+                                session.opponentNodeNum(myNodeNum) ?? 0;
+                            return MeshGameInstanceCard(
+                              session: session,
+                              myNodeNum: myNodeNum,
+                              opponentLabel: '0x${opponent.toRadixString(16)}',
+                              onTap: () => _onGameInstanceTap(
+                                context,
+                                instance,
+                                myNodeNum,
+                                opponent,
+                              ),
+                            );
+                          }
+                        }
                         return MeshServiceInstanceCard(
                           instance: instance,
                           onTap: () => _onInstanceTap(context, instance),
@@ -213,6 +258,10 @@ class _MyServicesScreenState extends ConsumerState<MyServicesScreen>
       case _ServiceFilter.stopped:
         return instances
             .where((i) => i.effectiveStatus == MeshServiceStatus.stopped)
+            .toList();
+      case _ServiceFilter.games:
+        return instances
+            .where((i) => i.canonicalType == MeshServiceType.game)
             .toList();
     }
   }
@@ -256,11 +305,74 @@ class _MyServicesScreenState extends ConsumerState<MyServicesScreen>
     );
   }
 
+  Widget _buildGamesEmptyState(BuildContext context, dynamic l10n) {
+    final appL10n = AppLocalizations.of(context);
+    return AnimatedEmptyState(
+      config: AnimatedEmptyStateConfig(
+        icons: const [Icons.extension_outlined, Icons.back_hand_outlined],
+        taglines: [appL10n.meshGamesEmptyTagline],
+        titlePrefix: '',
+        titleKeyword: appL10n.meshGamesEmptyTitle,
+        titleSuffix: '',
+        actionLabel: appL10n.meshGamesNewGame,
+        actionIcon: Icons.play_arrow,
+        onAction: () => _onCreateGameTap(context),
+      ),
+    );
+  }
+
   void _onCreateTap(BuildContext context) {
     ref.read(hapticServiceProvider).trigger(HapticType.light);
+    if (_activeFilter == _ServiceFilter.games) {
+      _onCreateGameTap(context);
+      return;
+    }
     Navigator.of(context).push(
       MaterialPageRoute<void>(builder: (_) => const ServiceCreationWizard()),
     );
+  }
+
+  Future<void> _onCreateGameTap(BuildContext context) async {
+    final myNodeNum = ref.read(myNodeNumProvider);
+    if (myNodeNum == null) return;
+    final nodes = ref.read(nodesProvider);
+    final peers = _resolvePeers(nodes, myNodeNum);
+    final navigator = Navigator.of(context);
+    final result = await NewGameSheet.show(
+      context: context,
+      myNodeNum: myNodeNum,
+      availablePeers: peers,
+    );
+    if (!mounted || result == null) return;
+    final opponent = result.opponentNodeNum;
+    await navigator.push(
+      MaterialPageRoute<void>(
+        builder: (_) => GameDetailScreen(
+          instanceId: result.instanceId,
+          myNodeNum: myNodeNum,
+          opponentLabel: '0x${opponent.toRadixString(16)}',
+        ),
+      ),
+    );
+  }
+
+  List<MeshGamePeer> _resolvePeers(Map<int, MeshNode> nodes, int myNodeNum) {
+    final peers = <MeshGamePeer>[];
+    for (final node in nodes.values) {
+      if (node.nodeNum == myNodeNum) continue;
+      peers.add(
+        MeshGamePeer(
+          nodeNum: node.nodeNum,
+          displayName: node.longName?.isNotEmpty == true
+              ? node.longName!
+              : node.shortName?.isNotEmpty == true
+              ? node.shortName!
+              : '0x${node.nodeNum.toRadixString(16)}',
+        ),
+      );
+    }
+    peers.sort((a, b) => a.displayName.compareTo(b.displayName));
+    return peers;
   }
 
   void _onInstanceTap(BuildContext context, MeshServiceInstance instance) {
@@ -268,6 +380,24 @@ class _MyServicesScreenState extends ConsumerState<MyServicesScreen>
     AppBottomSheet.show(
       context: context,
       child: _InstanceDetailSheet(instance: instance),
+    );
+  }
+
+  void _onGameInstanceTap(
+    BuildContext context,
+    MeshServiceInstance instance,
+    int myNodeNum,
+    int opponentNodeNum,
+  ) {
+    ref.read(hapticServiceProvider).trigger(HapticType.light);
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => GameDetailScreen(
+          instanceId: instance.instanceId,
+          myNodeNum: myNodeNum,
+          opponentLabel: '0x${opponentNodeNum.toRadixString(16)}',
+        ),
+      ),
     );
   }
 }

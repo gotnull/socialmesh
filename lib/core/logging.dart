@@ -92,6 +92,10 @@ class AppLogging {
   static bool? _sppNegotiationLoggingEnabled;
   static bool? _stlLoggingEnabled;
   static bool? _meshFeedLoggingEnabled;
+  static bool? _meshGamesLoggingEnabled;
+  static bool? _meshGameTransportLoggingEnabled;
+  static bool? _meshGameSessionLoggingEnabled;
+  static bool? _meshGameUiLoggingEnabled;
   static bool? _mqttProxyLoggingEnabled;
   static bool? _forceEmptyStates;
   static Logger? _bleLogger;
@@ -704,6 +708,57 @@ class AppLogging {
 
   static void meshFeed(String message) {
     if (meshFeedLoggingEnabled) debugPrint('MeshFeed: $message');
+  }
+
+  /// Mesh Games logging — session lifecycle (create/join/complete/abandon).
+  /// Enable with MESH_GAMES_LOGGING_ENABLED=true in .env file.
+  static bool get meshGamesLoggingEnabled {
+    _meshGamesLoggingEnabled ??=
+        _safeGetEnv('MESH_GAMES_LOGGING_ENABLED')?.toLowerCase() == 'true';
+    return _meshGamesLoggingEnabled!;
+  }
+
+  static void meshGames(String message) {
+    if (meshGamesLoggingEnabled) debugPrint('MeshGames: $message');
+  }
+
+  /// Mesh Games transport logging — encode/decode of game wire frames.
+  static bool get meshGameTransportLoggingEnabled {
+    _meshGameTransportLoggingEnabled ??=
+        _safeGetEnv('MESH_GAME_TRANSPORT_LOGGING_ENABLED')?.toLowerCase() ==
+        'true';
+    return _meshGameTransportLoggingEnabled!;
+  }
+
+  static void meshGameTransport(String message) {
+    if (meshGameTransportLoggingEnabled) {
+      debugPrint('MeshGameTransport: $message');
+    }
+  }
+
+  /// Mesh Games session logging — persistence + state transitions.
+  static bool get meshGameSessionLoggingEnabled {
+    _meshGameSessionLoggingEnabled ??=
+        _safeGetEnv('MESH_GAME_SESSION_LOGGING_ENABLED')?.toLowerCase() ==
+        'true';
+    return _meshGameSessionLoggingEnabled!;
+  }
+
+  static void meshGameSession(String message) {
+    if (meshGameSessionLoggingEnabled) {
+      debugPrint('MeshGameSession: $message');
+    }
+  }
+
+  /// Mesh Games UI logging — user actions + screen transitions.
+  static bool get meshGameUiLoggingEnabled {
+    _meshGameUiLoggingEnabled ??=
+        _safeGetEnv('MESH_GAME_UI_LOGGING_ENABLED')?.toLowerCase() == 'true';
+    return _meshGameUiLoggingEnabled!;
+  }
+
+  static void meshGameUi(String message) {
+    if (meshGameUiLoggingEnabled) debugPrint('MeshGameUi: $message');
   }
 
   /// MQTT client proxy logging.

@@ -31,7 +31,10 @@ Future<bool?> showMeshPostComposer({
   required Future<bool> Function(String content, MeshPostTtl ttl) onPost,
 }) {
   return Navigator.of(context).push<bool>(
-    MaterialPageRoute(builder: (_) => _MeshPostComposerScreen(onPost: onPost)),
+    MaterialPageRoute(
+      builder: (_) => _MeshPostComposerScreen(onPost: onPost),
+      fullscreenDialog: true,
+    ),
   );
 }
 

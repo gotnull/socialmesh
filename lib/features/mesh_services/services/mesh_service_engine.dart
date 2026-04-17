@@ -305,12 +305,28 @@ class MeshServicesHandler implements MrrpServiceHandler {
   }
 }
 
+/// Pluggable handler for `MeshServiceType.game` interactions.
+///
+/// The mesh-games feature registers one of these on the engine so that
+/// inbound MRRP `interact` requests targeting a game instance are routed
+/// into the dedicated router. Keeps the games feature out of the engine's
+/// hard dependencies.
+typedef MeshGameInteractionHandler =
+    Future<Uint8List?> Function(
+      MeshServiceInstance instance,
+      int senderNodeId,
+      Uint8List interactionPayload,
+    );
+
 /// Engine managing instance lifecycle and interaction routing.
 class MeshServiceEngine {
   final MeshServiceStore _store;
 
   /// Callback fired when instances change (for provider invalidation).
   void Function()? onChanged;
+
+  /// Optional dispatcher for `MeshServiceType.game` interactions.
+  MeshGameInteractionHandler? gameInteractionHandler;
 
   /// Callback fired when a new instance is successfully published.
   ///
@@ -453,6 +469,10 @@ class MeshServiceEngine {
       case MeshServiceType.sensor:
         // Feed, signal, and sensor services currently expose read-only views.
         return null;
+      case MeshServiceType.game:
+        final handler = gameInteractionHandler;
+        if (handler == null) return null;
+        return handler(instance, senderNodeId, interactionPayload);
     }
   }
 

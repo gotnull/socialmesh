@@ -183,6 +183,9 @@ bool _cacheHasCompleteDetails(List<_RemoteInstanceDetail> instances) {
             instance.sensorCapturedAt != null,
       MeshServiceType.signal => instance.signalKind != null,
       MeshServiceType.feed => true,
+      // Games fetch full state over STATE_REQ and do not flow through
+      // the generic detail cache; treat them as always complete here.
+      MeshServiceType.game => true,
       null => true,
     };
   });

@@ -57850,6 +57850,30 @@ abstract class AppLocalizations {
   /// **'Live measurements or telemetry people nearby can check'**
   String get meshServicesTypeSensorDescription;
 
+  /// Canonical mesh service type name for mesh-games.
+  ///
+  /// In en, this message translates to:
+  /// **'Games'**
+  String get meshServicesTypeGame;
+
+  /// Canonical mesh service type description for mesh-games.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-peer games playable over mesh'**
+  String get meshServicesTypeGameDescription;
+
+  /// Intent-first label for the game capability in the creation flow.
+  ///
+  /// In en, this message translates to:
+  /// **'Play a game'**
+  String get meshServicesIntentGame;
+
+  /// Intent-first description for the game capability in the creation flow.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite a peer to a quick game over the mesh.'**
+  String get meshServicesIntentGameDescription;
+
   /// Intent-first label for the feed capability in the creation flow.
   ///
   /// In en, this message translates to:
@@ -58347,6 +58371,228 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} hr'**
   String meshServicesDurationHours(int count);
+
+  /// Mesh Games feature title.
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh Games'**
+  String get meshGamesTitle;
+
+  /// Filter chip label for the games tab on the services list.
+  ///
+  /// In en, this message translates to:
+  /// **'Games'**
+  String get meshGamesTabLabel;
+
+  /// Empty state title for the games list.
+  ///
+  /// In en, this message translates to:
+  /// **'No games yet'**
+  String get meshGamesEmptyTitle;
+
+  /// Empty state tagline for the games list.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite a peer to a quick match'**
+  String get meshGamesEmptyTagline;
+
+  /// Button label for starting a new game.
+  ///
+  /// In en, this message translates to:
+  /// **'New Game'**
+  String get meshGamesNewGame;
+
+  /// Title for the new-game sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a New Game'**
+  String get meshGamesNewGameTitle;
+
+  /// Human-readable name of the RPS game.
+  ///
+  /// In en, this message translates to:
+  /// **'Rock Paper Scissors'**
+  String get meshGamesTypeRps;
+
+  /// Description of RPS game.
+  ///
+  /// In en, this message translates to:
+  /// **'Best of one. Both players reveal at the same time.'**
+  String get meshGamesTypeRpsDescription;
+
+  /// Human-readable name of the Tic Tac Toe game.
+  ///
+  /// In en, this message translates to:
+  /// **'Tic Tac Toe'**
+  String get meshGamesTypeTicTacToe;
+
+  /// Description of Tic Tac Toe game.
+  ///
+  /// In en, this message translates to:
+  /// **'Three in a row. Take turns marking the grid.'**
+  String get meshGamesTypeTicTacToeDescription;
+
+  /// Fallback label for an unknown game type.
+  ///
+  /// In en, this message translates to:
+  /// **'Game'**
+  String get meshGamesTypeUnknown;
+
+  /// Status chip when it is the local player's turn.
+  ///
+  /// In en, this message translates to:
+  /// **'Your turn'**
+  String get meshGamesStatusYourTurn;
+
+  /// Status chip when waiting for the opponent to move.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting'**
+  String get meshGamesStatusWaiting;
+
+  /// Status chip when the local player has won.
+  ///
+  /// In en, this message translates to:
+  /// **'You won'**
+  String get meshGamesStatusYouWon;
+
+  /// Status chip when the local player has lost.
+  ///
+  /// In en, this message translates to:
+  /// **'You lost'**
+  String get meshGamesStatusYouLost;
+
+  /// Status chip for a draw.
+  ///
+  /// In en, this message translates to:
+  /// **'Draw'**
+  String get meshGamesStatusDraw;
+
+  /// Generic status chip when a game has finished.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get meshGamesStatusCompleted;
+
+  /// Status chip when a game was abandoned.
+  ///
+  /// In en, this message translates to:
+  /// **'Abandoned'**
+  String get meshGamesStatusAbandoned;
+
+  /// Status chip when the session is stale (awaiting resync).
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing…'**
+  String get meshGamesStatusStale;
+
+  /// Generic status chip when a game is in progress.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get meshGamesStatusActive;
+
+  /// Action label that triggers a STATE_REQ to the peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Resync'**
+  String get meshGamesActionResync;
+
+  /// Action label that abandons the current session.
+  ///
+  /// In en, this message translates to:
+  /// **'Abandon'**
+  String get meshGamesActionAbandon;
+
+  /// Confirmation title for abandoning a game.
+  ///
+  /// In en, this message translates to:
+  /// **'Abandon this game?'**
+  String get meshGamesAbandonConfirmTitle;
+
+  /// Confirmation body for abandoning a game.
+  ///
+  /// In en, this message translates to:
+  /// **'The other player will be notified.'**
+  String get meshGamesAbandonConfirmMessage;
+
+  /// Label for the opponent field.
+  ///
+  /// In en, this message translates to:
+  /// **'Opponent'**
+  String get meshGamesOpponentLabel;
+
+  /// Title for the opponent picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick an opponent'**
+  String get meshGamesOpponentPickerTitle;
+
+  /// Shown when no peers are available.
+  ///
+  /// In en, this message translates to:
+  /// **'No peers available'**
+  String get meshGamesOpponentMissing;
+
+  /// Error label when a move fails to transmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t send move'**
+  String get meshGamesSendFailed;
+
+  /// RPS throw: rock.
+  ///
+  /// In en, this message translates to:
+  /// **'Rock'**
+  String get meshGamesRpsRock;
+
+  /// RPS throw: paper.
+  ///
+  /// In en, this message translates to:
+  /// **'Paper'**
+  String get meshGamesRpsPaper;
+
+  /// RPS throw: scissors.
+  ///
+  /// In en, this message translates to:
+  /// **'Scissors'**
+  String get meshGamesRpsScissors;
+
+  /// Prompt shown in the RPS chooser.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick your throw'**
+  String get meshGamesRpsPickPrompt;
+
+  /// Title shown on the RPS reveal card.
+  ///
+  /// In en, this message translates to:
+  /// **'Reveal'**
+  String get meshGamesRpsRevealTitle;
+
+  /// TTT mark X.
+  ///
+  /// In en, this message translates to:
+  /// **'X'**
+  String get meshGamesTttMarkX;
+
+  /// TTT mark O.
+  ///
+  /// In en, this message translates to:
+  /// **'O'**
+  String get meshGamesTttMarkO;
+
+  /// Prompt in the TTT board when it is the local player's turn.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a cell to place your mark'**
+  String get meshGamesTttTapPrompt;
+
+  /// Revision counter label.
+  ///
+  /// In en, this message translates to:
+  /// **'Rev {revision}'**
+  String meshGamesRevision(int revision);
 
   /// Validation error when title is empty.
   ///
@@ -61210,6 +61456,12 @@ abstract class AppLocalizations {
   /// **'Live reading'**
   String get meshServicesEyebrowSensor;
 
+  /// Eyebrow shown on game cards and detail surfaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh game'**
+  String get meshServicesEyebrowGame;
+
   /// CTA label for opening a feed-style mesh share.
   ///
   /// In en, this message translates to:
@@ -61233,6 +61485,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'View alert'**
   String get meshServicesOpenSignalAction;
+
+  /// CTA label for opening a mesh game.
+  ///
+  /// In en, this message translates to:
+  /// **'Open game'**
+  String get meshServicesOpenGameAction;
+
+  /// Lead text in the new-game composer preview.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite a peer to a quick game.'**
+  String get meshServicesGameComposeLead;
+
+  /// Fallback body text when a mesh game is viewed via the generic service detail surface.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to open the game board.'**
+  String get meshServicesGameRemoteHint;
 
   /// CTA label for opening a sensor-style mesh share.
   ///
