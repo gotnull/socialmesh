@@ -397,6 +397,21 @@ class ProtocolService {
   Timer? _rssiTimer;
   bool _pollingConfig = false;
 
+  // --- Phased connect handshake ---
+  //
+  // The firmware replays packets that arrived while the phone app was
+  // disconnected from its internal `phoneQueue` — but only in response to a
+  // second wantConfigId following the initial one. Mirrors the two-phase
+  // `sendWantConfig` / `sendWantDatabase` sequence the official Meshtastic
+  // iOS app uses (NONCE_ONLY_CONFIG = 69420 then NONCE_ONLY_DB = 69421).
+  //
+  // See meshtastic-ios/Meshtastic/Accessory/Accessory Manager/
+  //   AccessoryManager.swift (lines 117–118, 193–252, 707–737) and
+  //   AccessoryManager+Connect.swift (Steps 3 and 5).
+  static const int _nonceInitialConfig = 69420;
+  static const int _nonceQueueDrain = 69421;
+  _HandshakePhase _handshakePhase = _HandshakePhase.idle;
+
   /// Timestamp of the last data received from the transport layer.
   ///
   /// Updated inside [_handleDataAsync] every time the transport delivers
@@ -1106,6 +1121,7 @@ class ProtocolService {
     _nodes.clear();
     _myNodeNum = null;
     _configurationComplete = false;
+    _handshakePhase = _HandshakePhase.idle;
     // Discard any SIP/MRRP frames buffered from a prior BLE session.
     // Without this, frames from Device A remain in the buffer and are
     // replayed to Device B's SipDiscovery / MrrpEngine after reconnect.
@@ -1356,6 +1372,7 @@ class ProtocolService {
     }
     _framer.clear();
     _configurationComplete = false;
+    _handshakePhase = _HandshakePhase.idle;
   }
 
   /// Handle incoming data from transport
@@ -1411,6 +1428,12 @@ class ProtocolService {
   Future<void> handleIncomingPacket(List<int> packet) =>
       _handleDataAsync(packet);
 
+  /// Test-only seam: send the initial `wantConfigId` and enter the
+  /// `awaitingInitialConfig` phase without running the full `start()`
+  /// coroutine (which waits on BLE notifications and a 30-second timeout).
+  @visibleForTesting
+  Future<void> sendInitialConfigRequestForTest() => _requestConfiguration();
+
   /// Process a complete packet
   Future<void> _processPacket(List<int> packet) async {
     try {
@@ -1453,31 +1476,7 @@ class ProtocolService {
       } else if (fromRadio.hasClientNotification()) {
         _handleClientNotification(fromRadio.clientNotification);
       } else if (fromRadio.hasConfigCompleteId()) {
-        AppLogging.protocol(
-          'Configuration complete! ID: ${fromRadio.configCompleteId}',
-        );
-        AppLogging.protocol(
-          'Configuration complete: ${fromRadio.configCompleteId}',
-        );
-        _configurationComplete = true;
-        if (_configCompleter != null && !_configCompleter!.isCompleted) {
-          _configCompleter!.complete();
-        }
-
-        // Log summary of all nodes and their position status
-        AppLogging.protocol('=== NODE SUMMARY AFTER CONFIG COMPLETE ===');
-        AppLogging.protocol('Total nodes: ${_nodes.length}');
-        for (final node in _nodes.values) {
-          AppLogging.protocol(
-            '  Node ${node.nodeNum}: "${node.longName}" hasPosition=${node.hasPosition}, '
-            'lat=${node.latitude}, lng=${node.longitude}',
-          );
-        }
-        AppLogging.protocol('==========================================');
-
-        // Request additional config after initial sync
-        // Using unawaited calls with error handling to prevent crashes on disconnect
-        _requestPostConfigData();
+        _handleConfigCompleteId(fromRadio.configCompleteId);
       }
     } catch (e, stack) {
       _consecutiveParseFailures++;
@@ -1500,6 +1499,57 @@ class ProtocolService {
         _transport.disconnect();
       }
     }
+  }
+
+  /// Dispatch a configCompleteId against the two-phase handshake state
+  /// machine. Nonces are matched against `_nonceInitialConfig` (first phase)
+  /// and `_nonceQueueDrain` (second phase); unexpected nonces or duplicates
+  /// are logged and ignored so no loop or double-setup can occur.
+  void _handleConfigCompleteId(int nonce) {
+    AppLogging.protocol(
+      'Handshake: configCompleteId received (nonce: $nonce, '
+      'phase: ${_handshakePhase.name})',
+    );
+
+    if (nonce == _nonceInitialConfig &&
+        _handshakePhase == _HandshakePhase.awaitingInitialConfig) {
+      _configurationComplete = true;
+      if (_configCompleter != null && !_configCompleter!.isCompleted) {
+        _configCompleter!.complete();
+      }
+
+      AppLogging.protocol('=== NODE SUMMARY AFTER CONFIG COMPLETE ===');
+      AppLogging.protocol('Total nodes: ${_nodes.length}');
+      for (final node in _nodes.values) {
+        AppLogging.protocol(
+          '  Node ${node.nodeNum}: "${node.longName}" hasPosition=${node.hasPosition}, '
+          'lat=${node.latitude}, lng=${node.longitude}',
+        );
+      }
+      AppLogging.protocol('==========================================');
+
+      // Initial config done — run one-time post-config setup, then fire the
+      // single queue-drain request so the device replays any MeshPackets
+      // buffered while the phone was offline. Both are unawaited so a
+      // disconnect mid-flight cannot block the receive path.
+      _requestPostConfigData();
+      unawaited(_requestQueueDrain());
+      return;
+    }
+
+    if (nonce == _nonceQueueDrain &&
+        _handshakePhase == _HandshakePhase.awaitingQueueDrain) {
+      _handshakePhase = _HandshakePhase.complete;
+      AppLogging.protocol(
+        'Handshake: queue drain complete — phoneQueue replay done',
+      );
+      return;
+    }
+
+    AppLogging.protocol(
+      'Handshake: ignoring unexpected configCompleteId '
+      '(nonce: $nonce, phase: ${_handshakePhase.name})',
+    );
   }
 
   /// Request additional configuration data after initial config sync completes.
@@ -4349,12 +4399,14 @@ class ProtocolService {
         await Future.delayed(const Duration(milliseconds: 100));
       }
 
-      // Generate a config ID to track this request
-      // The firmware will send back all config + NodeDB with positions
-      final configId = _random.nextInt(0x7FFFFFFF);
-
-      AppLogging.protocol('Requesting config with ID: $configId');
-      final toRadio = pb.ToRadio()..wantConfigId = configId;
+      // Phase 1 of the two-step handshake: request the main configuration
+      // bundle (config + NodeDB). The second phase (queue drain) is kicked
+      // off on receipt of configCompleteId; see `_requestQueueDrain`.
+      _handshakePhase = _HandshakePhase.awaitingInitialConfig;
+      AppLogging.protocol(
+        'Handshake: sending initial wantConfigId (nonce: $_nonceInitialConfig)',
+      );
+      final toRadio = pb.ToRadio()..wantConfigId = _nonceInitialConfig;
       final bytes = toRadio.writeToBuffer();
 
       // BLE uses raw protobufs, Serial/USB requires framing
@@ -4366,6 +4418,34 @@ class ProtocolService {
       AppLogging.protocol('Configuration request sent');
     } catch (e) {
       AppLogging.protocol('Error requesting configuration: $e');
+    }
+  }
+
+  /// Second wantConfigId that triggers the firmware to replay packets it
+  /// buffered in its `phoneQueue` while the app was disconnected.
+  ///
+  /// Called once, immediately after the first configCompleteId. The device
+  /// replays queued MeshPackets and then sends a second configCompleteId
+  /// bearing the drain nonce, completing the handshake.
+  Future<void> _requestQueueDrain() async {
+    try {
+      if (!_transport.isConnected) {
+        AppLogging.protocol('Cannot request queue drain: not connected');
+        return;
+      }
+      _handshakePhase = _HandshakePhase.awaitingQueueDrain;
+      AppLogging.protocol(
+        'Handshake: sending queue-drain wantConfigId '
+        '(nonce: $_nonceQueueDrain)',
+      );
+      final toRadio = pb.ToRadio()..wantConfigId = _nonceQueueDrain;
+      final bytes = toRadio.writeToBuffer();
+      final sendBytes = _transport.requiresFraming
+          ? PacketFramer.frame(bytes)
+          : bytes;
+      await _transport.send(sendBytes);
+    } catch (e) {
+      AppLogging.protocol('Error requesting queue drain: $e');
     }
   }
 
@@ -8825,4 +8905,13 @@ class ProtocolService {
     await _mqttClientProxyMessageController.close();
     await _localConfigWriteController.close();
   }
+}
+
+/// Phases of the two-step connect handshake. See `_nonceInitialConfig` and
+/// `_nonceQueueDrain` for the nonces exchanged in each phase.
+enum _HandshakePhase {
+  idle,
+  awaitingInitialConfig,
+  awaitingQueueDrain,
+  complete,
 }
