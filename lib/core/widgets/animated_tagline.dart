@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../theme.dart';
 
@@ -33,6 +35,7 @@ class _AnimatedTaglineState extends State<AnimatedTagline>
   late Animation<Offset> _slideAnimation;
   int _currentIndex = 0;
   bool _reduceMotion = false;
+  Timer? _cycleTimer;
 
   @override
   void initState() {
@@ -60,8 +63,9 @@ class _AnimatedTaglineState extends State<AnimatedTagline>
   }
 
   void _startCycling() {
+    _cycleTimer?.cancel();
     if (_reduceMotion) return;
-    Future.delayed(AnimatedTagline.displayDuration, () {
+    _cycleTimer = Timer(AnimatedTagline.displayDuration, () {
       if (!mounted) return;
       if (_reduceMotion) return;
       _cycleToNext();
@@ -90,6 +94,7 @@ class _AnimatedTaglineState extends State<AnimatedTagline>
 
   @override
   void dispose() {
+    _cycleTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }

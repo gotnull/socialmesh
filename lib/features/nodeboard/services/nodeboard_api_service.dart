@@ -29,6 +29,26 @@ class NodeBoardApiService {
 
   String get _baseUrl => AppUrls.nodeBoardApiUrl;
 
+  /// Every request is bounded by this timeout. Offline or flaky mesh
+  /// gateways otherwise hang requests until the underlying socket aborts,
+  /// which can stall the UI for the OS TCP timeout window.
+  static const Duration _httpTimeout = Duration(seconds: 15);
+
+  Future<http.Response> _get(Uri url, {Map<String, String>? headers}) =>
+      _client.get(url, headers: headers).timeout(_httpTimeout);
+
+  Future<http.Response> _post(
+    Uri url, {
+    Map<String, String>? headers,
+    Object? body,
+  }) => _client.post(url, headers: headers, body: body).timeout(_httpTimeout);
+
+  Future<http.Response> _patch(
+    Uri url, {
+    Map<String, String>? headers,
+    Object? body,
+  }) => _client.patch(url, headers: headers, body: body).timeout(_httpTimeout);
+
   Future<Map<String, String>> _writeHeaders() async {
     final token = await _getIdToken();
     return {
@@ -51,7 +71,7 @@ class NodeBoardApiService {
   Future<NodeBoard?> getBoardBySlug(String slug) async {
     AppLogging.nodeBoard('API getBoardBySlug: slug=$slug');
     final headers = await _readHeaders();
-    final response = await _client.get(
+    final response = await _get(
       Uri.parse('$_baseUrl/api/boards/$slug'),
       headers: headers,
     );
@@ -68,7 +88,7 @@ class NodeBoardApiService {
 
   Future<NodeBoardSummary?> getBoardSummaryBySlug(String slug) async {
     AppLogging.nodeBoard('API getBoardSummaryBySlug: slug=$slug');
-    final response = await _client.get(
+    final response = await _get(
       Uri.parse('$_baseUrl/api/boards/$slug/summary'),
     );
     if (response.statusCode == 404) {
@@ -85,7 +105,7 @@ class NodeBoardApiService {
 
   Future<NodeBoardSummary?> getBoardSummaryByNodeId(String nodeId) async {
     AppLogging.nodeBoard('API getBoardSummaryByNodeId: nodeId=$nodeId');
-    final response = await _client.get(
+    final response = await _get(
       Uri.parse('$_baseUrl/api/boards/by-node/$nodeId/summary'),
     );
     if (response.statusCode == 404) {
@@ -103,7 +123,7 @@ class NodeBoardApiService {
   Future<List<NodeBoardSummary>> getBoardsByUserId(String userId) async {
     AppLogging.nodeBoard('API getBoardsByUserId: userId=$userId');
     final headers = await _readHeaders();
-    final response = await _client.get(
+    final response = await _get(
       Uri.parse('$_baseUrl/api/boards/by-user/$userId'),
       headers: headers,
     );
@@ -123,7 +143,7 @@ class NodeBoardApiService {
     final params = <String, String>{'limit': '$limit'};
     if (cursor != null) params['cursor'] = cursor;
 
-    final response = await _client.get(
+    final response = await _get(
       Uri.parse('$_baseUrl/api/boards').replace(queryParameters: params),
     );
     _checkResponse(response);
@@ -178,7 +198,7 @@ class NodeBoardApiService {
     };
 
     AppLogging.nodeBoard('API createBoard: slug=$slug title=$title');
-    final response = await _client.post(
+    final response = await _post(
       Uri.parse('$_baseUrl/api/boards'),
       headers: headers,
       body: jsonEncode(body),
@@ -199,7 +219,7 @@ class NodeBoardApiService {
       'API updateBoard: boardId=$boardId keys=${updates.keys.toList()}',
     );
     final headers = await _writeHeaders();
-    final response = await _client.patch(
+    final response = await _patch(
       Uri.parse('$_baseUrl/api/boards/$boardId'),
       headers: headers,
       body: jsonEncode(updates),
@@ -219,7 +239,7 @@ class NodeBoardApiService {
   Future<List<NodeBoardSection>> getSections(String slug) async {
     AppLogging.nodeBoard('API getSections: slug=$slug');
     final headers = await _readHeaders();
-    final response = await _client.get(
+    final response = await _get(
       Uri.parse('$_baseUrl/api/boards/$slug/sections'),
       headers: headers,
     );
@@ -239,7 +259,7 @@ class NodeBoardApiService {
   ) async {
     AppLogging.nodeBoard('API createSection: boardId=$boardId input=$input');
     final headers = await _writeHeaders();
-    final response = await _client.post(
+    final response = await _post(
       Uri.parse('$_baseUrl/api/boards/$boardId/sections'),
       headers: headers,
       body: jsonEncode(input),
@@ -270,7 +290,7 @@ class NodeBoardApiService {
     final params = <String, String>{'limit': '$limit'};
     if (cursor != null) params['cursor'] = cursor;
 
-    final response = await _client.get(
+    final response = await _get(
       Uri.parse(
         '$_baseUrl/api/boards/$slug/sections/$sectionId/threads',
       ).replace(queryParameters: params),
@@ -311,7 +331,7 @@ class NodeBoardApiService {
     if (cursor != null) params['cursor'] = cursor;
 
     final uri = Uri.parse('$_baseUrl/api/boards/$slug/threads/$threadId');
-    final response = await _client.get(
+    final response = await _get(
       params.isNotEmpty ? uri.replace(queryParameters: params) : uri,
       headers: headers,
     );
@@ -347,7 +367,7 @@ class NodeBoardApiService {
       'API createThread: slug=$slug sectionId=${input['sectionId']}',
     );
     final headers = await _writeHeaders();
-    final response = await _client.post(
+    final response = await _post(
       Uri.parse('$_baseUrl/api/boards/$slug/threads'),
       headers: headers,
       body: jsonEncode(input),
@@ -371,7 +391,7 @@ class NodeBoardApiService {
   ) async {
     AppLogging.nodeBoard('API createReply: slug=$slug threadId=$threadId');
     final headers = await _writeHeaders();
-    final response = await _client.post(
+    final response = await _post(
       Uri.parse('$_baseUrl/api/boards/$slug/threads/$threadId/replies'),
       headers: headers,
       body: jsonEncode(input),
@@ -448,7 +468,7 @@ class NodeBoardApiService {
     Map<String, dynamic> body,
   ) async {
     final headers = await _writeHeaders();
-    final response = await _client.post(
+    final response = await _post(
       Uri.parse('$_baseUrl/api/boards/$boardId/mod/$action'),
       headers: headers,
       body: jsonEncode(body),
@@ -464,7 +484,7 @@ class NodeBoardApiService {
   Future<void> markBoardViewed(String slug) async {
     AppLogging.nodeBoard('API markBoardViewed: slug=$slug');
     final headers = await _writeHeaders();
-    final response = await _client.post(
+    final response = await _post(
       Uri.parse('$_baseUrl/api/boards/$slug/read-state'),
       headers: headers,
     );
@@ -488,7 +508,7 @@ class NodeBoardApiService {
     final headers = await _readHeaders();
     final params = {'q': query, 'limit': '$limit', 'offset': '$offset'};
 
-    final response = await _client.get(
+    final response = await _get(
       Uri.parse(
         '$_baseUrl/api/boards/$slug/search',
       ).replace(queryParameters: params),
@@ -512,7 +532,7 @@ class NodeBoardApiService {
 
   Future<List<NodeBoardTheme>> getThemes() async {
     AppLogging.nodeBoard('API getThemes');
-    final response = await _client.get(Uri.parse('$_baseUrl/api/themes'));
+    final response = await _get(Uri.parse('$_baseUrl/api/themes'));
     _checkResponse(response);
     final json = jsonDecode(response.body) as Map<String, dynamic>;
     final list = json['themes'] as List<dynamic>;

@@ -645,6 +645,7 @@ class _AnimatedIconCycleState extends State<_AnimatedIconCycle>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   int _currentIndex = 0;
+  Timer? _cycleTimer;
 
   @override
   void initState() {
@@ -669,7 +670,8 @@ class _AnimatedIconCycleState extends State<_AnimatedIconCycle>
   }
 
   void _startCycling() {
-    Future.delayed(AnimatedTagline.displayDuration, () {
+    _cycleTimer?.cancel();
+    _cycleTimer = Timer(AnimatedTagline.displayDuration, () {
       if (!mounted) return;
       _cycleToNext();
     });
@@ -692,6 +694,7 @@ class _AnimatedIconCycleState extends State<_AnimatedIconCycle>
 
   @override
   void dispose() {
+    _cycleTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }
