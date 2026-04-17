@@ -91,14 +91,17 @@ void main() {
       expect(v.emptyThreadsTitle(), v.emptyThreadsTitle());
     });
 
-    test('different seeds can produce different phrases (when options exist)', () {
-      final tone = BoardTone.hacker;
-      final posts = <String>{
-        for (var seed = 0; seed < 50; seed++)
-          NodeBoardVoice(tone: tone, seed: seed).postedThread(),
-      };
-      expect(posts.length, greaterThan(1));
-    });
+    test(
+      'different seeds can produce different phrases (when options exist)',
+      () {
+        final tone = BoardTone.hacker;
+        final posts = <String>{
+          for (var seed = 0; seed < 50; seed++)
+            NodeBoardVoice(tone: tone, seed: seed).postedThread(),
+        };
+        expect(posts.length, greaterThan(1));
+      },
+    );
   });
 
   group('NodeBoardVoice.activityLabel', () {
@@ -154,7 +157,9 @@ void main() {
     test('neutral and hacker empty titles are textually distinct', () {
       expect(
         NodeBoardVoice(tone: BoardTone.neutral).emptyThreadsTitle(),
-        isNot(equals(NodeBoardVoice(tone: BoardTone.hacker).emptyThreadsTitle())),
+        isNot(
+          equals(NodeBoardVoice(tone: BoardTone.hacker).emptyThreadsTitle()),
+        ),
       );
     });
   });

@@ -7,8 +7,14 @@ import 'package:socialmesh/features/nodeboard/models/terminal_preset.dart';
 void main() {
   group('TerminalPreset.fromId', () {
     test('maps each known id to the right preset', () {
-      expect(TerminalPreset.fromId('classic_green'), TerminalPreset.classicGreen);
-      expect(TerminalPreset.fromId('amber_terminal'), TerminalPreset.amberTerminal);
+      expect(
+        TerminalPreset.fromId('classic_green'),
+        TerminalPreset.classicGreen,
+      );
+      expect(
+        TerminalPreset.fromId('amber_terminal'),
+        TerminalPreset.amberTerminal,
+      );
       expect(TerminalPreset.fromId('cyber_blue'), TerminalPreset.cyberBlue);
       expect(TerminalPreset.fromId('wasteland'), TerminalPreset.wasteland);
       expect(TerminalPreset.fromId('fire_ansi'), TerminalPreset.fireAnsi);
