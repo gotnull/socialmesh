@@ -58522,6 +58522,18 @@ abstract class AppLocalizations {
   /// **'Opponent'**
   String get meshGamesOpponentLabel;
 
+  /// Label for the local player in a game.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get meshGamesYouLabel;
+
+  /// Separator shown between the local player and opponent (e.g. 'You vs Opponent').
+  ///
+  /// In en, this message translates to:
+  /// **'vs'**
+  String get meshGamesVsSeparator;
+
   /// Title for the opponent picker.
   ///
   /// In en, this message translates to:
@@ -58593,6 +58605,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Rev {revision}'**
   String meshGamesRevision(int revision);
+
+  /// Title for a mesh game session shown in the services list. Combines the localized game type name with the opponent display name.
+  ///
+  /// In en, this message translates to:
+  /// **'{gameName} · {opponent}'**
+  String meshGamesSessionTitle(String gameName, String opponent);
 
   /// Validation error when title is empty.
   ///

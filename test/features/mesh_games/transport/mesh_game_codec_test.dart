@@ -106,10 +106,7 @@ void main() {
 
     test('rejects moveData > 16 bytes', () {
       expect(
-        () => MeshGameCodec.encodeMove(
-          revision: 0,
-          moveData: Uint8List(17),
-        ),
+        () => MeshGameCodec.encodeMove(revision: 0, moveData: Uint8List(17)),
         throwsA(isA<ArgumentError>()),
       );
     });

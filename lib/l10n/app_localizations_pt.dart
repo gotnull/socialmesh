@@ -33574,6 +33574,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshGamesOpponentLabel => 'Opponent';
 
   @override
+  String get meshGamesYouLabel => 'You';
+
+  @override
+  String get meshGamesVsSeparator => 'vs';
+
+  @override
   String get meshGamesOpponentPickerTitle => 'Pick an opponent';
 
   @override
@@ -33609,6 +33615,11 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String meshGamesRevision(int revision) {
     return 'Rev $revision';
+  }
+
+  @override
+  String meshGamesSessionTitle(String gameName, String opponent) {
+    return '$gameName · $opponent';
   }
 
   @override

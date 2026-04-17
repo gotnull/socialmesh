@@ -44651,6 +44651,14 @@
     "@meshGamesOpponentLabel": {
         "description": "Label for the opponent field."
     },
+    "meshGamesYouLabel": "You",
+    "@meshGamesYouLabel": {
+        "description": "Label for the local player in a game."
+    },
+    "meshGamesVsSeparator": "vs",
+    "@meshGamesVsSeparator": {
+        "description": "Separator shown between the local player and opponent (e.g. 'You vs Opponent')."
+    },
     "meshGamesOpponentPickerTitle": "Pick an opponent",
     "@meshGamesOpponentPickerTitle": {
         "description": "Title for the opponent picker."
@@ -44700,6 +44708,14 @@
         "description": "Revision counter label.",
         "placeholders": {
             "revision": {"type": "int"}
+        }
+    },
+    "meshGamesSessionTitle": "{gameName} · {opponent}",
+    "@meshGamesSessionTitle": {
+        "description": "Title for a mesh game session shown in the services list. Combines the localized game type name with the opponent display name.",
+        "placeholders": {
+            "gameName": {"type": "String"},
+            "opponent": {"type": "String"}
         }
     },
     "meshServicesTitleRequired": "Title is required",

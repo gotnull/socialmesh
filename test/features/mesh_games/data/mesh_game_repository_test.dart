@@ -33,27 +33,30 @@ void main() {
     await store.close();
   });
 
-  test('createLocalSession persists a session that can be loaded back', () async {
-    final created = await repo.createLocalSession(
-      instanceId: 'abc0123456789def',
-      gameType: MeshGameType.ticTacToeV1,
-      presetId: MeshServicePresetId.ticTacToeV1,
-      title: 'ttt@2',
-      participants: [0x11, 0x22],
-      initiatorNodeNum: 0x11,
-      turnIndex: 0,
-      initialStateBlob: GameEngineRegistry.ticTacToe.encodeState(
-        GameEngineRegistry.ticTacToe.initialState(initiatorIndex: 0),
-      ),
-    );
-    expect(created, isNotNull);
-    final loaded = await repo.loadSession('abc0123456789def');
-    expect(loaded, isNotNull);
-    expect(loaded!.gameType, MeshGameType.ticTacToeV1);
-    expect(loaded.participants, [0x11, 0x22]);
-    expect(loaded.revision, 0);
-    expect(loaded.status, MeshGameStatus.active);
-  });
+  test(
+    'createLocalSession persists a session that can be loaded back',
+    () async {
+      final created = await repo.createLocalSession(
+        instanceId: 'abc0123456789def',
+        gameType: MeshGameType.ticTacToeV1,
+        presetId: MeshServicePresetId.ticTacToeV1,
+        title: 'ttt@2',
+        participants: [0x11, 0x22],
+        initiatorNodeNum: 0x11,
+        turnIndex: 0,
+        initialStateBlob: GameEngineRegistry.ticTacToe.encodeState(
+          GameEngineRegistry.ticTacToe.initialState(initiatorIndex: 0),
+        ),
+      );
+      expect(created, isNotNull);
+      final loaded = await repo.loadSession('abc0123456789def');
+      expect(loaded, isNotNull);
+      expect(loaded!.gameType, MeshGameType.ticTacToeV1);
+      expect(loaded.participants, [0x11, 0x22]);
+      expect(loaded.revision, 0);
+      expect(loaded.status, MeshGameStatus.active);
+    },
+  );
 
   test('saveSession persists updated revision + state', () async {
     await repo.createLocalSession(
@@ -136,7 +139,9 @@ void main() {
         title: 'shopping',
         createdAt: DateTime.now(),
         expiresAt: DateTime.now().add(const Duration(hours: 1)),
-        config: const {'items': ['a', 'b']},
+        config: const {
+          'items': ['a', 'b'],
+        },
       ),
     );
     final loaded = await repo.loadSession('listxxxxxxxxxxxx');

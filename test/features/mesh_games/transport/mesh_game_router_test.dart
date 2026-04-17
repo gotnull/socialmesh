@@ -76,18 +76,29 @@ void main() {
   group('MOVE routing', () {
     setUp(seedTtt);
 
-    test('accepts a valid next-revision move from the expected actor', () async {
-      final ack = await router.handle(instance, alice, moveFrame(revision: 1, cell: 4));
-      expect(ack, isNotNull);
-      expect(ack!.isEmpty, isTrue);
-      final session = await repo.loadSession(instance.instanceId);
-      expect(session!.revision, 1);
-      expect(session.turnIndex, 1);
-      expect(session.lastMoveBy, alice);
-    });
+    test(
+      'accepts a valid next-revision move from the expected actor',
+      () async {
+        final ack = await router.handle(
+          instance,
+          alice,
+          moveFrame(revision: 1, cell: 4),
+        );
+        expect(ack, isNotNull);
+        expect(ack!.isEmpty, isTrue);
+        final session = await repo.loadSession(instance.instanceId);
+        expect(session!.revision, 1);
+        expect(session.turnIndex, 1);
+        expect(session.lastMoveBy, alice);
+      },
+    );
 
     test('rejects an out-of-turn move', () async {
-      final ack = await router.handle(instance, bob, moveFrame(revision: 1, cell: 0));
+      final ack = await router.handle(
+        instance,
+        bob,
+        moveFrame(revision: 1, cell: 0),
+      );
       expect(ack, isNotNull);
       expect(ack!.isNotEmpty, isTrue);
       expect(ack[0], MrrpStatusCode.invalid.code);
@@ -97,23 +108,32 @@ void main() {
 
     test('rejects a duplicate revision', () async {
       await router.handle(instance, alice, moveFrame(revision: 1, cell: 4));
-      final ack =
-          await router.handle(instance, alice, moveFrame(revision: 1, cell: 0));
+      final ack = await router.handle(
+        instance,
+        alice,
+        moveFrame(revision: 1, cell: 0),
+      );
       expect(ack, isNotNull);
       expect(ack![0], MrrpStatusCode.duplicate.code);
     });
 
     test('rejects a stale revision (< current)', () async {
       await router.handle(instance, alice, moveFrame(revision: 1, cell: 4));
-      final ack =
-          await router.handle(instance, bob, moveFrame(revision: 0, cell: 0));
+      final ack = await router.handle(
+        instance,
+        bob,
+        moveFrame(revision: 0, cell: 0),
+      );
       expect(ack, isNotNull);
       expect(ack![0], MrrpStatusCode.duplicate.code);
     });
 
     test('rejects a future-skipped revision (> current+1)', () async {
-      final ack =
-          await router.handle(instance, alice, moveFrame(revision: 5, cell: 0));
+      final ack = await router.handle(
+        instance,
+        alice,
+        moveFrame(revision: 5, cell: 0),
+      );
       expect(ack, isNotNull);
       expect(ack![0], MrrpStatusCode.invalid.code);
     });
@@ -258,7 +278,8 @@ void main() {
         expect(
           ack!.isEmpty,
           isTrue,
-          reason: 'rev=$rev cell=$cell actor=$actor '
+          reason:
+              'rev=$rev cell=$cell actor=$actor '
               'payload=${ack.isEmpty ? "ok" : "err(${ack[0]})"}',
         );
       }

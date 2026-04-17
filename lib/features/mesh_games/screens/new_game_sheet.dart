@@ -297,6 +297,7 @@ class _NewGameSheetBodyState extends ConsumerState<_NewGameSheetBody>
     if (peer == null) return;
     final repo = ref.read(meshGameRepositoryProvider);
     if (repo == null) return;
+    final l10n = AppLocalizations.of(context);
 
     safeSetState(() => _isSubmitting = true);
     ref.haptics.buttonTap();
@@ -318,11 +319,15 @@ class _NewGameSheetBodyState extends ConsumerState<_NewGameSheetBody>
       final presetId = _gameType == MeshGameType.rpsV1
           ? MeshServicePresetId.rpsV1
           : MeshServicePresetId.ticTacToeV1;
+      final gameName = switch (_gameType) {
+        MeshGameType.rpsV1 => l10n.meshGamesTypeRps,
+        MeshGameType.ticTacToeV1 => l10n.meshGamesTypeTicTacToe,
+      };
       final created = await repo.createLocalSession(
         instanceId: instanceId,
         gameType: _gameType,
         presetId: presetId,
-        title: '${_gameType.identifier}@${peer.nodeNum}',
+        title: l10n.meshGamesSessionTitle(gameName, peer.displayName),
         participants: participants,
         initiatorNodeNum: widget.myNodeNum,
         turnIndex: initiatorIndex,

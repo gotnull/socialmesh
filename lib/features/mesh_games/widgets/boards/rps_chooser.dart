@@ -100,13 +100,16 @@ class RpsChooser extends StatelessWidget {
               throwValue: state.throws[_opponentIndex()],
             ),
             Text(
-              'vs',
+              l10n.meshGamesVsSeparator,
               style: context.titleStyle?.copyWith(
                 color: context.textTertiary,
                 fontFamily: AppTheme.fontFamily,
               ),
             ),
-            _RevealTile(label: 'You', throwValue: state.throws[_myIndex()]),
+            _RevealTile(
+              label: l10n.meshGamesYouLabel,
+              throwValue: state.throws[_myIndex()],
+            ),
           ],
         ),
       ],
