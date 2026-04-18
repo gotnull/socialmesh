@@ -1394,7 +1394,25 @@ class ProtocolService {
     }
   }
 
-  /// Poll for configuration data in background (non-blocking)
+  /// Drain the FROMRADIO characteristic during the two-phase connect
+  /// handshake.
+  ///
+  /// Mirrors the official iOS app's `startDrainPendingPackets()` pattern
+  /// (meshtastic-ios/Meshtastic/Accessory/Accessory Manager/AccessoryManager.swift
+  /// lines 210 and 240, and Transports/Bluetooth Low Energy/BLEConnection.swift
+  /// lines 130–169). The iOS app explicitly reads FROMRADIO after every
+  /// `wantConfigID` write because BLE NOTIFY alone is not reliable on iOS
+  /// during the quiet window between phase 1 and phase 2 — the firmware's
+  /// phase-2 response can sit in the FROMRADIO characteristic unread until
+  /// something forces a read.
+  ///
+  /// Prior behavior here terminated the poll loop the moment
+  /// `_configurationComplete` flipped (i.e. end of phase 1), which left
+  /// phase 2 relying on NOTIFY alone and produced a reliable ~180s stall
+  /// until the data-health watchdog refreshed the subscription on
+  /// T1000-E / Heltec firmware on iOS. The poll loop now continues until
+  /// the full handshake reports `complete` (or we hit the poll budget,
+  /// whichever first), matching the iOS reference behavior.
   void _pollForConfigurationAsync() {
     if (_pollingConfig) {
       AppLogging.protocol('Config poll already running, skipping');
@@ -1402,10 +1420,14 @@ class ProtocolService {
     }
     _pollingConfig = true;
     int pollCount = 0;
-    const maxPolls = 100;
+    // 250 ms × 200 ≈ 50 s total poll budget — covers both handshake phases
+    // on busy meshes. The loop also exits early when the handshake reaches
+    // `complete` or the transport disconnects.
+    const maxPolls = 200;
 
     Future.doWhile(() async {
-      if (_configurationComplete || pollCount >= maxPolls) {
+      final handshakeDone = _handshakePhase == _HandshakePhase.complete;
+      if (handshakeDone || pollCount >= maxPolls) {
         _pollingConfig = false;
         return false; // Stop polling
       }
@@ -1576,17 +1598,42 @@ class ProtocolService {
   }
 
   /// Dispatch a configCompleteId against the two-phase handshake state
-  /// machine. Nonces are matched against `_nonceInitialConfig` (first phase)
-  /// and `_nonceQueueDrain` (second phase); unexpected nonces or duplicates
-  /// are logged and ignored so no loop or double-setup can occur.
+  /// machine.
+  ///
+  /// Phase-1 (`_nonceInitialConfig`) marks the configuration complete, fires
+  /// the completer (so `start()` and the UI unblock), and kicks off the
+  /// queue-drain request that triggers the firmware to deliver the rest of
+  /// the NodeDB plus any buffered packets.
+  ///
+  /// Phase-2 (`_nonceQueueDrain`) marks the handshake complete and only
+  /// THEN runs `_requestPostConfigData()`. This deferral matters: the burst
+  /// of admin/position requests in `_requestPostConfigData` competes with
+  /// the firmware's phase-2 NodeDB stream for BLE bandwidth and reliably
+  /// stalls the iOS BLE NOTIFY path on T1000-E / Heltec firmware (~180s
+  /// silence until the data-health watchdog refreshes notifications). With
+  /// the deferral, phase 2 streams cleanly and post-config setup runs
+  /// against the full NodeDB rather than just the local node.
+  ///
+  /// Defensive nonce handling: if the first phase sends back a nonce the
+  /// firmware did not echo (older builds, custom forks), we still accept it
+  /// while we're in the matching phase — log the discrepancy but proceed.
+  /// Same applies to phase 2. Without this we hard-fail on any firmware
+  /// that doesn't preserve `wantConfigId` in `configCompleteId`.
   void _handleConfigCompleteId(int nonce) {
     AppLogging.protocol(
       'Handshake: configCompleteId received (nonce: $nonce, '
       'phase: ${_handshakePhase.name})',
     );
 
-    if (nonce == _nonceInitialConfig &&
-        _handshakePhase == _HandshakePhase.awaitingInitialConfig) {
+    if (_handshakePhase == _HandshakePhase.awaitingInitialConfig) {
+      if (nonce != _nonceInitialConfig) {
+        AppLogging.protocol(
+          'Handshake: phase-1 nonce mismatch (got $nonce, expected '
+          '$_nonceInitialConfig) — proceeding defensively (firmware may not '
+          'echo wantConfigId)',
+        );
+      }
+
       _configurationComplete = true;
       if (_configCompleter != null && !_configCompleter!.isCompleted) {
         _configCompleter!.complete();
@@ -1602,21 +1649,29 @@ class ProtocolService {
       }
       AppLogging.protocol('==========================================');
 
-      // Initial config done — run one-time post-config setup, then fire the
-      // single queue-drain request so the device replays any MeshPackets
-      // buffered while the phone was offline. Both are unawaited so a
-      // disconnect mid-flight cannot block the receive path.
-      _requestPostConfigData();
+      // Phase-1 done — kick off phase 2 and DO NOT run post-config setup
+      // yet. Post-config admin chatter is deferred to the phase-2 branch
+      // below so it does not contend with the NodeDB stream.
       unawaited(_requestQueueDrain());
       return;
     }
 
-    if (nonce == _nonceQueueDrain &&
-        _handshakePhase == _HandshakePhase.awaitingQueueDrain) {
+    if (_handshakePhase == _HandshakePhase.awaitingQueueDrain) {
+      if (nonce != _nonceQueueDrain) {
+        AppLogging.protocol(
+          'Handshake: phase-2 nonce mismatch (got $nonce, expected '
+          '$_nonceQueueDrain) — proceeding defensively',
+        );
+      }
       _handshakePhase = _HandshakePhase.complete;
       AppLogging.protocol(
         'Handshake: queue drain complete — phoneQueue replay done',
       );
+
+      // Now safe to run the post-config admin requests. The full NodeDB
+      // is in `_nodes` so position/metadata fan-outs operate on the real
+      // set rather than just the local node.
+      _requestPostConfigData();
       return;
     }
 

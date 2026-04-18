@@ -309,6 +309,105 @@ void main() {
     },
   );
 
+  // Regression: post-config admin requests must be deferred to phase 2.
+  // If they fire alongside the queue-drain wantConfigId in phase 1, they
+  // contend with the firmware's NodeDB stream for BLE bandwidth and
+  // reliably stall the iOS NOTIFY path on T1000-E / Heltec firmware.
+  // Symptom: the user sees only their own node for ~180s until the
+  // data-health watchdog refreshes BLE notifications.
+  //
+  // We verify this through an observable proxy: phase 1 must fire the
+  // queue-drain wantConfigId AND nothing else on the wire (no admin
+  // mesh packets) before phase 2 completes.
+  test(
+    'phase-1 fires only the queue-drain wantConfigId — admin requests are '
+    'deferred until phase-2 completes',
+    () async {
+      await _withTempDirectory((dir) async {
+        final transport = _FakeTransport();
+        final protocol = await _freshProtocol(dir, transport);
+        try {
+          await protocol.sendInitialConfigRequestForTest();
+          transport.sent.clear(); // discard the initial wantConfigId frame
+
+          // Complete phase 1.
+          await protocol.handleIncomingPacket(
+            _configCompleteFrame(_nonceInitialConfig),
+          );
+          // Allow microtasks + the small Future.delayed inside
+          // _requestPostConfigData to run if it had been called.
+          await Future<void>.delayed(const Duration(milliseconds: 80));
+
+          // Only the queue-drain wantConfigId must have been sent. If
+          // _requestPostConfigData fired in phase 1, additional admin
+          // packets would already be on the wire by now.
+          final phase1Frames = List<List<int>>.of(transport.sent);
+          expect(
+            phase1Frames.length,
+            1,
+            reason:
+                'Phase 1 must send exactly one frame (the queue-drain '
+                'wantConfigId); admin requests must be deferred. '
+                'Sent: ${phase1Frames.length} frames.',
+          );
+          expect(
+            _sentWantConfigNonces(transport),
+            contains(_nonceQueueDrain),
+            reason: 'Phase 1 must fire the queue-drain request',
+          );
+
+          // Phase-1 already unblocks the UI / start() — assert it.
+          expect(
+            protocol.configurationComplete,
+            isTrue,
+            reason: 'configurationComplete flips on phase 1',
+          );
+        } finally {
+          protocol.stop();
+        }
+      });
+    },
+  );
+
+  // Regression: defensive nonce handling. Older / forked firmware that
+  // doesn't echo the wantConfigId in configCompleteId would have
+  // hard-failed with the original strict-equality gate. We accept any
+  // nonce in the matching phase, log the discrepancy, and proceed.
+  test(
+    'phase-1 accepts a non-matching nonce defensively (firmware that does '
+    'not echo wantConfigId)',
+    () async {
+      await _withTempDirectory((dir) async {
+        final transport = _FakeTransport();
+        final protocol = await _freshProtocol(dir, transport);
+        try {
+          await protocol.sendInitialConfigRequestForTest();
+
+          // Firmware sends back a different nonce than we asked for.
+          await protocol.handleIncomingPacket(_configCompleteFrame(0xCAFEBABE));
+          await Future<void>.delayed(const Duration(milliseconds: 10));
+
+          expect(
+            protocol.configurationComplete,
+            isTrue,
+            reason:
+                'Phase 1 must complete defensively even when the firmware '
+                'does not echo wantConfigId',
+          );
+          expect(
+            _sentWantConfigNonces(transport),
+            contains(_nonceQueueDrain),
+            reason:
+                'Queue-drain request must still be sent after defensive '
+                'phase-1 completion',
+          );
+        } finally {
+          protocol.stop();
+        }
+      });
+    },
+  );
+
   test(
     'queued packets replayed during drain are ingested and deduped',
     () async {
