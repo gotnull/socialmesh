@@ -39,6 +39,7 @@ import '../../providers/help_providers.dart';
 import '../../providers/sip_providers.dart';
 import '../../services/haptic_service.dart';
 import '../../services/protocol/sip/sip_codec.dart';
+import '../../services/protocol/sip/sip_types.dart';
 import '../../services/protocol/sip/sip_discovery.dart';
 import '../../services/protocol/sip/sip_dm.dart';
 import '../../services/protocol/sip/sip_handshake.dart';
@@ -233,7 +234,7 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
     }
 
     final protocol = ref.read(protocolServiceProvider);
-    protocol.sendSipPacket(encoded);
+    protocol.sendSipGated(encoded, SipMessageType.hsHello);
     ref.read(sipCountersProvider).recordHandshakeInitiated();
     // No snackbar — the handshake chip updates in real-time via epoch.
   }

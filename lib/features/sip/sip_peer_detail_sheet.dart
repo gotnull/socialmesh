@@ -29,6 +29,7 @@ import '../../providers/app_providers.dart';
 import '../../providers/sip_providers.dart';
 import '../../services/haptic_service.dart';
 import '../../services/protocol/sip/sip_codec.dart';
+import '../../services/protocol/sip/sip_types.dart';
 import '../../services/protocol/sip/sip_discovery.dart';
 import '../../services/protocol/sip/sip_handshake.dart';
 import '../../utils/snackbar.dart';
@@ -415,7 +416,7 @@ class _HandshakeButton extends ConsumerWidget {
     }
 
     final protocol = ref.read(protocolServiceProvider);
-    protocol.sendSipPacket(encoded);
+    protocol.sendSipGated(encoded, SipMessageType.hsHello);
     ref.read(sipCountersProvider).recordHandshakeInitiated();
 
     showInfoSnackBar(context, localL10n.sipHandshakeInProgress);

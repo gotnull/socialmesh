@@ -463,12 +463,22 @@ class SipHandshakeManager {
     if (existing != null && existing.state == SipHandshakeState.helloSent) {
       if (_localNodeId > peerNodeId) {
         // We win the tie-break — keep our initiator session, ignore theirs.
+        //
+        // Cancel the HS_HELLO retransmit schedule: the peer has either
+        // already received our HELLO (they must have, to detect the
+        // simultaneous-open and yield) or they've queued us for user
+        // consent — in both cases further HELLOs from us are wasted
+        // airtime. We still sit in `helloSent` state so an inbound
+        // HS_CHALLENGE from the peer (once their user approves) can
+        // drive the session forward normally.
         AppLogging.sip(
           'SIP_HS: simultaneous-open with '
           'node=0x${peerNodeId.toRadixString(16)}: '
           'we win tie-break (local=0x${_localNodeId.toRadixString(16)} > '
-          'peer=0x${peerNodeId.toRadixString(16)}), keeping initiator role',
+          'peer=0x${peerNodeId.toRadixString(16)}), keeping initiator role '
+          '(retransmits cancelled)',
         );
+        _cancelRetransmits(peerNodeId);
         return;
       } else {
         // We lose the tie-break — discard our initiator session, become

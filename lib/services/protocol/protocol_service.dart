@@ -45,6 +45,7 @@ import 'sip/sip_dm.dart';
 import 'sip/sip_frame.dart';
 import 'sip/sip_handshake.dart';
 import 'sip/sip_identity.dart';
+import 'sip/sip_rate_limiter.dart';
 import 'sip/sip_types.dart';
 import 'overlay/overlay_link_codec.dart';
 import '../mesh_packet_dedupe_store.dart';
@@ -528,6 +529,12 @@ class ProtocolService {
   SipDmManager? _sipDm;
   SipCounters? _sipCounters;
 
+  /// Shared SIP rate limiter. When attached, HS_HELLO retransmits (and
+  /// any future handshake/identity sends routed through this service)
+  /// will consult + record against the byte budget rather than bypassing
+  /// it entirely.
+  SipRateLimiter? _sipRateLimiter;
+
   // --- MRRP protocol component ---
   MrrpEngine? _mrrpEngine;
 
@@ -630,9 +637,21 @@ class ProtocolService {
       handshake.onHelloRetransmit = (peerNodeId, frame) {
         final encoded = SipCodec.encode(frame);
         if (encoded == null) return;
-        _sendSipAndCount(encoded, SipMessageType.hsHello);
+        // Route through the gated path so retransmits respect the SIP
+        // byte budget instead of bypassing it.
+        sendSipGated(encoded, SipMessageType.hsHello);
       };
       AppLogging.sip('ProtocolService: SipHandshakeManager attached');
+    }
+  }
+
+  /// Attach the shared SIP rate limiter. Gates HS_HELLO retransmits
+  /// (and future handshake send paths) against the byte budget.
+  /// Pass `null` to detach.
+  void attachSipRateLimiter(SipRateLimiter? limiter) {
+    _sipRateLimiter = limiter;
+    if (limiter != null) {
+      AppLogging.sip('ProtocolService: SipRateLimiter attached');
     }
   }
 
@@ -5421,6 +5440,38 @@ class ProtocolService {
     return ok;
   }
 
+  /// Send a SIP packet with rate-limiter enforcement **and** TX counter
+  /// accounting.
+  ///
+  /// Use this for send paths that are **not** pre-accounted by their own
+  /// builders (handshake, identity claims — HS_HELLO, HS_CHALLENGE,
+  /// HS_RESPONSE, HS_ACCEPT, HS_DECLINE, ID_CLAIM, ID_RESP). Discovery
+  /// and DM builders record their own bytes against the limiter before
+  /// returning the encoded frame; those paths MUST continue to call
+  /// [sendSipPacket] directly (via `_sendSipAndCount`) to avoid
+  /// double-counting the budget.
+  ///
+  /// When no rate limiter has been attached (tests, early boot),
+  /// behaviour degrades gracefully to [_sendSipAndCount]. When the
+  /// limiter refuses the send, the bytes are dropped, the throttle
+  /// counter is incremented, and `false` is returned — no exceptions.
+  Future<bool> sendSipGated(Uint8List encoded, SipMessageType type) async {
+    final limiter = _sipRateLimiter;
+    if (limiter != null) {
+      if (!limiter.canSend(encoded.length)) {
+        AppLogging.sip(
+          'SIP_TX: ${type.name} suppressed '
+          '(budget insufficient for ${encoded.length}B, '
+          'remaining=${limiter.remainingBytes})',
+        );
+        _sipCounters?.recordBudgetThrottle();
+        return false;
+      }
+      limiter.recordSend(encoded.length);
+    }
+    return _sendSipAndCount(encoded, type);
+  }
+
   /// Wrap a raw payload in a SIP frame envelope and send it on-air.
   ///
   /// Creates a [SipFrame] with the given [type], SIP-encodes it via
@@ -5455,7 +5506,7 @@ class ProtocolService {
     if (challengeFrame == null) return;
     final encoded = SipCodec.encode(challengeFrame);
     if (encoded != null) {
-      await _sendSipAndCount(encoded, SipMessageType.hsChallenge);
+      await sendSipGated(encoded, SipMessageType.hsChallenge);
     }
   }
 
@@ -5469,7 +5520,7 @@ class ProtocolService {
     if (declineFrame == null) return;
     final encoded = SipCodec.encode(declineFrame);
     if (encoded != null) {
-      await _sendSipAndCount(encoded, SipMessageType.hsDecline);
+      await sendSipGated(encoded, SipMessageType.hsDecline);
     }
   }
 
@@ -5531,7 +5582,7 @@ class ProtocolService {
       if (responseFrame != null) {
         final encoded = SipCodec.encode(responseFrame);
         if (encoded != null) {
-          _sendSipAndCount(encoded, SipMessageType.hsResponse);
+          sendSipGated(encoded, SipMessageType.hsResponse);
         }
       }
     });
@@ -5545,7 +5596,7 @@ class ProtocolService {
       if (acceptFrame != null) {
         final encoded = SipCodec.encode(acceptFrame);
         if (encoded != null) {
-          _sendSipAndCount(encoded, SipMessageType.hsAccept);
+          sendSipGated(encoded, SipMessageType.hsAccept);
           // Responder-side: handshake complete. Auto-create DM session.
           _completeSipHandshake(senderNodeId);
         }

@@ -206,6 +206,11 @@ final sipDiscoveryProvider = Provider<SipDiscovery?>((ref) {
   final counters = ref.read(sipCountersProvider);
   protocol.attachSipCounters(counters);
 
+  // Share the rate limiter with the protocol service so handshake
+  // retransmits (and other non-discovery, non-DM SIP sends routed
+  // through it) respect the byte budget instead of bypassing it.
+  protocol.attachSipRateLimiter(limiter);
+
   // Start periodic CAP_BEACON broadcast.
   discovery.start();
 
@@ -214,6 +219,7 @@ final sipDiscoveryProvider = Provider<SipDiscovery?>((ref) {
     discovery.dispose();
     protocol.attachSipDiscovery(null);
     protocol.attachSipCounters(null);
+    protocol.attachSipRateLimiter(null);
   });
 
   return discovery;

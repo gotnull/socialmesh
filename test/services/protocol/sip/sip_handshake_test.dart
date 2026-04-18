@@ -3,6 +3,7 @@
 
 import 'dart:typed_data';
 
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/services/protocol/sip/sip_codec.dart';
 import 'package:socialmesh/services/protocol/sip/sip_constants.dart';
@@ -425,6 +426,59 @@ void main() {
       expect(resultB, isNotNull);
       expect(resultB!.sessionTag, resultA.sessionTag);
     });
+
+    test(
+      'simultaneous-open WIN cancels HS_HELLO retransmits (airtime fix)',
+      () {
+        // Regression: previously, the tie-break WIN branch left the
+        // retransmit Timers running, causing ~3 useless HS_HELLO
+        // broadcasts over a 60-second window. The peer has either
+        // already received our HELLO (they must have, to detect the
+        // simultaneous open at all) or has queued us for consent;
+        // duplicate HELLOs do nothing useful.
+        FakeAsync().run((fake) {
+          const nodeA = 0xAAAA;
+          const nodeB = 0x5555;
+
+          final mgrA = SipHandshakeManager(
+            replayCache: SipReplayCache(),
+            localNodeId: nodeA,
+          );
+          mgrA.isDmAvailable = true;
+          var retransmitCount = 0;
+          mgrA.onHelloRetransmit = (_, _) => retransmitCount++;
+
+          final mgrB = SipHandshakeManager(
+            replayCache: SipReplayCache(),
+            localNodeId: nodeB,
+          );
+          mgrB.isDmAvailable = true;
+
+          // A initiates (schedules retransmits at 8s/20s/40s).
+          mgrA.initiateHandshake(nodeB);
+          final helloFromB = mgrB.initiateHandshake(nodeA);
+          expect(helloFromB, isNotNull);
+
+          // A receives B's HELLO — tie-break WIN.
+          mgrA.handleHello(nodeB, helloFromB!);
+          expect(
+            mgrA.getState(nodeB),
+            SipHandshakeState.helloSent,
+            reason: 'winner stays in helloSent awaiting HS_CHALLENGE',
+          );
+
+          // Advance past every retransmit slot. None should fire
+          // because the WIN branch cancelled them.
+          fake.elapse(const Duration(seconds: 60));
+
+          expect(
+            retransmitCount,
+            0,
+            reason: 'tie-break WIN must cancel retransmits',
+          );
+        });
+      },
+    );
 
     test('simultaneous-open: equal nodeIds both yield (edge case)', () {
       // If both have the same nodeId (should never happen in practice),
