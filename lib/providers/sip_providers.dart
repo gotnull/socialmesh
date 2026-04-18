@@ -28,6 +28,7 @@ import '../services/notifications/notification_service.dart';
 import 'app_providers.dart';
 import 'app_lifecycle_provider.dart';
 import 'mesh_explorer_providers.dart';
+import 'overlay_providers.dart';
 import 'sip_nodedex_bridge.dart';
 
 /// Whether SIP is enabled (sourced from SmFeatureFlag).
@@ -211,6 +212,33 @@ final sipDiscoveryProvider = Provider<SipDiscovery?>((ref) {
   // through it) respect the byte budget instead of bypassing it.
   protocol.attachSipRateLimiter(limiter);
 
+  // Advertise overlay capability bits in CAP_BEACON / CAP_RESP when
+  // the overlay flag is on. Evaluated per-emit so a runtime flag flip
+  // propagates on the next beacon.
+  discovery.localFeaturesOverride = () {
+    final flags = ref.read(overlayFlagProvider);
+    var bits = SipFeatureBits.allV01;
+    if (flags.linkEnabled) bits |= SipFeatureBits.overlayLinkV02;
+    if (flags.resourceActive) bits |= SipFeatureBits.overlayResourceV02;
+    return bits;
+  };
+
+  // Overlay v0.2 lifecycle anchor. The attachment providers self-gate
+  // on OVERLAY_LINK_ENABLED / OVERLAY_RESOURCE_ENABLED — when off, the
+  // futures resolve to null and nothing is wired. When on, this watch
+  // forces the FutureProviders to build so the ingress handlers attach
+  // onto ProtocolService alongside SIP.
+  ref.watch(overlayAttachmentProvider);
+  ref.watch(overlayResourceIngressProvider);
+
+  // Wire the handshake-completion hook. On every successful SIP
+  // handshake, attempt to auto-open an overlay v0.2 link in the
+  // background when both peers support it. Fire-and-forget — failures
+  // are logged but never block DM readiness.
+  protocol.onSipHandshakeComplete = (peerNodeId) {
+    _autoOpenOverlayLink(ref, peerNodeId, discovery);
+  };
+
   // Start periodic CAP_BEACON broadcast.
   discovery.start();
 
@@ -220,10 +248,66 @@ final sipDiscoveryProvider = Provider<SipDiscovery?>((ref) {
     protocol.attachSipDiscovery(null);
     protocol.attachSipCounters(null);
     protocol.attachSipRateLimiter(null);
+    protocol.onSipHandshakeComplete = null;
   });
 
   return discovery;
 });
+
+/// Auto-open an overlay v0.2 link for [peerNodeId] when both sides
+/// support it. Invoked from [ProtocolService.onSipHandshakeComplete]
+/// after the SIP handshake + DM session are ready.
+///
+/// Policy (strict — all must hold, otherwise silent no-op):
+/// - local `OVERLAY_LINK_ENABLED` is on;
+/// - peer's last-seen CAP_RESP advertised [SipFeatureBits.overlayLinkV02];
+/// - no non-terminal overlay link already exists for the peer.
+///
+/// This runs fire-and-forget. Exceptions are logged and counted but
+/// never propagate to the SIP layer — chat must remain functional even
+/// if overlay misbehaves.
+void _autoOpenOverlayLink(Ref ref, int peerNodeId, SipDiscovery discovery) {
+  final flags = ref.read(overlayFlagProvider);
+  if (!flags.linkEnabled) return;
+
+  final peer = discovery.getPeer(peerNodeId);
+  if (peer == null || !peer.supportsOverlayLinkV02) {
+    AppLogging.overlay(
+      'auto-open skipped: peer=0x${peerNodeId.toRadixString(16)} '
+      '${peer == null ? 'not in cache' : 'does not advertise overlay link'}',
+    );
+    return;
+  }
+
+  // Fire-and-forget. The `ref` object is a Riverpod ProviderRef (alive
+  // for the lifetime of sipDiscoveryProvider). No `await` at the call
+  // site — we must not block DM completion on overlay.
+  Future(() async {
+    try {
+      final engine = await ref.read(overlayLinkEngineProvider.future);
+      // The engine itself rejects a second openLocal for an active
+      // peer (throws StateError). That's our dedup layer: if a link
+      // is already opening / active / stale for this persona hint,
+      // the call will throw and we swallow it here.
+      final hint = Uint8List(8);
+      ByteData.view(hint.buffer).setUint32(0, peerNodeId);
+      final record = await engine.openLocal(
+        peerPersonaHint: hint,
+        peerNodeNum: peerNodeId,
+      );
+      AppLogging.overlay(
+        'auto-open initiated linkId=0x${record.linkId.toRadixString(16)} '
+        'peer=0x${peerNodeId.toRadixString(16)}',
+      );
+    } catch (e) {
+      // StateError from openLocal when an active link already exists
+      // is expected and healthy — not a failure to surface.
+      AppLogging.overlay(
+        'auto-open suppressed for peer=0x${peerNodeId.toRadixString(16)}: $e',
+      );
+    }
+  });
+}
 
 /// SIP handshake manager — attached to protocol service for dispatch.
 final sipHandshakeProvider = Provider<SipHandshakeManager?>((ref) {

@@ -66,6 +66,21 @@ class SipPeerCapability {
   /// Whether this peer supports SIP-3 (micro-exchange).
   bool get supportsSip3 =>
       (features & SipFeatureBits.sip3) == SipFeatureBits.sip3;
+
+  /// Whether this peer advertised overlay v0.2 link support.
+  ///
+  /// Used by the handshake-completion hook to decide whether to
+  /// auto-open an overlay link in the background once a DM session is
+  /// established.
+  bool get supportsOverlayLinkV02 =>
+      (features & SipFeatureBits.overlayLinkV02) ==
+      SipFeatureBits.overlayLinkV02;
+
+  /// Whether this peer advertised overlay v0.2 resource (SPP v0.2)
+  /// support. Implies [supportsOverlayLinkV02] by protocol rule.
+  bool get supportsOverlayResourceV02 =>
+      (features & SipFeatureBits.overlayResourceV02) ==
+      SipFeatureBits.overlayResourceV02;
 }
 
 /// Outbound SIP frame ready to send via the transport.
@@ -110,6 +125,21 @@ class SipDiscovery {
   ///
   /// Set by the provider layer to wire into ProtocolService.
   Future<bool> Function(Uint8List encoded)? onSend;
+
+  /// Optional overrider for the local SIP feature bitmap advertised in
+  /// CAP_BEACON / CAP_RESP / ROLLCALL_RESP. When set, its return value
+  /// replaces [SipFeatureBits.allV01]. Used by the provider layer to
+  /// layer overlay capability bits on top of the v0.1 baseline when
+  /// `OVERLAY_LINK_ENABLED` (and its dependents) are set.
+  ///
+  /// The override is evaluated on every emit so runtime flag flips are
+  /// picked up without rebuilding the discovery engine.
+  int Function()? localFeaturesOverride;
+
+  int _resolveLocalFeatures() {
+    final override = localFeaturesOverride;
+    return override == null ? SipFeatureBits.allV01 : override();
+  }
 
   /// Optional callback invoked whenever the peer cache changes.
   ///
@@ -326,7 +356,7 @@ class SipDiscovery {
 
     // Build the beacon payload.
     final beacon = SipCapBeacon(
-      features: SipFeatureBits.allV01,
+      features: _resolveLocalFeatures(),
       deviceClass: 1, // phone-app
       maxProtoMinor: SipConstants.sipVersionMinor,
       mtuHint: SipConstants.sipMaxPayload,
@@ -500,7 +530,7 @@ class SipDiscovery {
     }
 
     final beacon = SipCapBeacon(
-      features: SipFeatureBits.allV01,
+      features: _resolveLocalFeatures(),
       deviceClass: 1,
       maxProtoMinor: SipConstants.sipVersionMinor,
       mtuHint: SipConstants.sipMaxPayload,

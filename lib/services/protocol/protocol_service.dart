@@ -655,6 +655,18 @@ class ProtocolService {
     }
   }
 
+  /// Callback fired exactly once per successful handshake completion,
+  /// **after** the DM session is created (or deduped).
+  ///
+  /// The provider layer wires this to auto-open an overlay v0.2 link in
+  /// the background when both peers advertise overlay capability. Kept
+  /// as a narrow void callback — protocol_service must not depend on
+  /// the overlay engine directly.
+  ///
+  /// Invoked fire-and-forget. Exceptions thrown by the callback are
+  /// logged and swallowed — they MUST NOT break the SIP/DM ready path.
+  void Function(int peerNodeId)? onSipHandshakeComplete;
+
   /// Attach a SipIdentityHandler for inbound identity frames.
   void attachSipIdentity(SipIdentityHandler? identity) {
     _sipIdentity = identity;
@@ -5648,18 +5660,32 @@ class ProtocolService {
 
     _sipCounters?.recordHandshakeCompleted();
 
-    // Prevent duplicate DM sessions with the same peer.
-    final existing = dm?.activeSessions.where(
-      (s) => s.peerNodeId == peerNodeId,
-    );
+    // Handle an existing DM session for this peer.
+    //
+    // Same tag → true duplicate (e.g. handshake state-machine re-entry
+    // during a race). Skip without creating another entry.
+    //
+    // Different tag → the peer re-handshook and installed a new
+    // session_tag on its side. Expire the prior local session(s) so
+    // the new one takes over; otherwise the peer's DMs get dropped as
+    // `unknown session` and our sends target a tag the peer discarded.
+    final existing = dm?.activeSessions
+        .where((s) => s.peerNodeId == peerNodeId)
+        .toList();
     if (existing != null && existing.isNotEmpty) {
-      AppLogging.sip(
-        'SIP: DM session already exists for '
-        'node=0x${peerNodeId.toRadixString(16)}, '
-        'existing_tag=0x${existing.first.sessionTag.toRadixString(16)}, '
-        'skipping duplicate creation',
+      final duplicateTag = existing.any(
+        (s) => s.sessionTag == result.sessionTag,
       );
-      return;
+      if (duplicateTag) {
+        AppLogging.sip(
+          'SIP: DM session already exists for '
+          'node=0x${peerNodeId.toRadixString(16)}, '
+          'existing_tag=0x${result.sessionTag.toRadixString(16)}, '
+          'skipping duplicate creation',
+        );
+        return;
+      }
+      dm?.supersedeSessionsForPeer(peerNodeId, exceptTag: result.sessionTag);
     }
 
     // Create ephemeral DM session from handshake result.
@@ -5674,6 +5700,20 @@ class ProtocolService {
       'node=0x${peerNodeId.toRadixString(16)}, '
       'session_tag=0x${result.sessionTag.toRadixString(16)}',
     );
+
+    // Hand off to the provider-level overlay auto-opener. Fire-and-
+    // forget: any exception is the provider's problem and must not
+    // break DM readiness.
+    final hsHook = onSipHandshakeComplete;
+    if (hsHook != null) {
+      try {
+        hsHook(peerNodeId);
+      } catch (e, st) {
+        AppLogging.sip(
+          'SIP: onSipHandshakeComplete hook threw (ignored): $e\n$st',
+        );
+      }
+    }
 
     // Fire local notification for handshake completion.
     // Gated on master + DM notification preferences.

@@ -51,6 +51,7 @@ import '../services/protocol/overlay/overlay_resource_ingress_dispatcher.dart';
 import '../services/protocol/overlay/overlay_resource_protocol_egress.dart';
 import '../services/protocol/overlay/overlay_resource_store.dart';
 import 'app_providers.dart';
+import 'sip_providers.dart';
 
 /// Exposes the overlay feature flag snapshot. Re-evaluated only when
 /// the provider is invalidated.
@@ -122,6 +123,7 @@ final overlayProtocolEgressProvider = Provider<OverlayLinkEgress>((ref) {
   return OverlayProtocolEgress(
     sipSink: (bytes, type) => protocol.sendSipPayload(bytes, type),
     flags: () => ref.read(overlayFlagProvider),
+    rateLimiter: () => ref.read(sipRateLimiterProvider),
   );
 });
 

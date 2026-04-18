@@ -322,11 +322,12 @@ class _PeerAction extends ConsumerWidget {
 
     switch (peer.tier) {
       case InteractionTier.anonymous:
-        // If the peer already sent us a handshake request, accept it
-        // instead of creating a conflicting outbound session.
+        // If the peer already sent us a handshake request, do not
+        // accept via tile-tap — consent is mandatory via the explicit
+        // Accept / Decline buttons in the SIP hub's incoming-request
+        // card. A tap here must never stand in for that consent.
         final currentState = hs?.getState(peer.nodeId);
         if (currentState == SipHandshakeState.pendingApproval) {
-          protocol.acceptSipHandshake(peer.nodeId);
           return;
         }
         // Already in progress — don't interrupt.

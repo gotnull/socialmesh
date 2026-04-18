@@ -16,6 +16,8 @@ library;
 import 'dart:typed_data';
 
 import '../../../core/logging.dart';
+import '../sip/sip_constants.dart';
+import '../sip/sip_rate_limiter.dart';
 import '../sip/sip_types.dart';
 import 'overlay_feature_flag.dart';
 import 'overlay_link_codec.dart';
@@ -33,6 +35,7 @@ typedef OverlaySipSink =
 class OverlayProtocolEgress implements OverlayLinkEgress {
   final OverlaySipSink _sipSink;
   final OverlayFeatureFlags Function() _flags;
+  final SipRateLimiter? Function() _rateLimiter;
 
   /// Construct a new adapter.
   ///
@@ -40,11 +43,20 @@ class OverlayProtocolEgress implements OverlayLinkEgress {
   /// on each send. P2 expects the provider to supply a constant but
   /// the indirection is there so a runtime toggle in P3 does not
   /// require a new API.
+  ///
+  /// [rateLimiter] is a getter returning the shared [SipRateLimiter],
+  /// or null when the limiter is not yet attached. Overlay link frames
+  /// share the 1024 B / 60 s SIP airtime budget with SIP v0.1 and
+  /// MRRP v0.1 — we pre-account the on-wire size (MRRP bytes + SIP
+  /// wrapper) before handing off to the sink, mirroring the
+  /// `mrrp_providers.dart` accounting path.
   OverlayProtocolEgress({
     required OverlaySipSink sipSink,
     required OverlayFeatureFlags Function() flags,
+    SipRateLimiter? Function()? rateLimiter,
   }) : _sipSink = sipSink,
-       _flags = flags;
+       _flags = flags,
+       _rateLimiter = rateLimiter ?? (() => null);
 
   @override
   Future<bool> send(OverlayLinkFrame frame, int peerNodeNum) async {
@@ -62,6 +74,22 @@ class OverlayProtocolEgress implements OverlayLinkEgress {
         'egress refused: encode returned null msg=${frame.msgType.name}',
       );
       return false;
+    }
+
+    // Pre-account against the shared SIP airtime budget. The SIP sink
+    // wraps `wire` in a 22-byte SIP header, so the on-wire size is
+    // wire.length + sipWrapperMin.
+    final wireSize = wire.length + SipConstants.sipWrapperMin;
+    final limiter = _rateLimiter();
+    if (limiter != null) {
+      if (!limiter.canSend(wireSize)) {
+        AppLogging.overlay(
+          'egress suppressed by rate limiter msg=${frame.msgType.name} '
+          'bytes=$wireSize',
+        );
+        return false;
+      }
+      limiter.recordSend(wireSize);
     }
 
     try {
