@@ -1183,17 +1183,41 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       final service = await ref.read(subscriptionServiceProvider.future);
       AppLogging.debug('💰 RevenueCat initialized');
 
-      // If user is already signed in, sync RevenueCat with Firebase UID
+      // Deterministic bootstrap sequence (Play Billing 8 / RC 10.x):
+      //   1. configure                — done by service.initialize() above
+      //   2. syncPurchases (anonymous)— merge any store-held tokens into RC
+      //   3. logIn(firebaseUid)       — alias anonymous → identified
+      //   4. syncPurchases (identified)— attach receipt under the UID alias
+      //   5. refreshPurchases         — explicit deterministic state pull
+      // Anonymous users only need step 2.
       final firebaseUser = FirebaseAuth.instance.currentUser;
+      AppLogging.subscriptions(
+        '💰 [Bootstrap] firebaseUser=${firebaseUser?.uid ?? "(anonymous)"}',
+      );
+
+      AppLogging.subscriptions(
+        '💰 [Bootstrap] step 2: pre-login syncPurchases',
+      );
+      await service.syncPurchases();
+
       if (firebaseUser != null) {
         AppLogging.subscriptions(
-          '💰 User already signed in, syncing RevenueCat with Firebase UID...',
+          '💰 [Bootstrap] step 3: logIn(${firebaseUser.uid})',
         );
         await service.logIn(firebaseUser.uid);
-        AppLogging.subscriptions('💰 RevenueCat synced with Firebase UID');
-      }
 
-      // Initialize cloud sync entitlement service
+        AppLogging.subscriptions(
+          '💰 [Bootstrap] step 4: post-login syncPurchases',
+        );
+        await service.syncPurchases();
+
+        AppLogging.subscriptions('💰 [Bootstrap] step 5: refreshPurchases');
+        await service.refreshPurchases();
+      }
+      AppLogging.subscriptions('💰 [Bootstrap] complete');
+
+      // Initialize cloud sync entitlement service AFTER purchases are
+      // bootstrapped so its initial RC read sees the freshly-synced state.
       if (!mounted) return;
       final cloudSyncService = ref.read(cloudSyncEntitlementServiceProvider);
       await cloudSyncService.initialize();

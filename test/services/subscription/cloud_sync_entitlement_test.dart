@@ -259,4 +259,108 @@ void main() {
       expect(yearly.expiresAt!.isAfter(monthly.expiresAt!), true);
     });
   });
+
+  // ─────────────────────────────────────────────────────────────────────
+  // Regression: RC-ARCH-01 — RevenueCat is the source of truth.
+  // The Firestore mirror at user_entitlements/{uid} is a cache and may
+  // lag (e.g. user just upgraded from a feature pack to Cloud Monthly,
+  // or syncPurchasesToFirestore failed silently — see RC-ARCH-04).
+  // shouldApplyMirrorStatus must NEVER let a stale mirror downgrade an
+  // entitlement that RC has already proven as full access.
+  // ─────────────────────────────────────────────────────────────────────
+  group('RC-ARCH-01: shouldApplyMirrorStatus (RC wins on downgrade)', () {
+    test('feature_only mirror is REJECTED when RC already says active', () {
+      // Scenario A in the task spec: Firestore says feature_only / stale,
+      // RC says active — feature must STAY UNLOCKED.
+      expect(
+        CloudSyncEntitlementService.shouldApplyMirrorStatus(
+          currentState: CloudSyncEntitlementState.active,
+          mirrorStatus: 'feature_only',
+        ),
+        isFalse,
+        reason: 'Active RC entitlement must override stale feature_only mirror',
+      );
+    });
+
+    test('feature_only mirror is REJECTED for cancelled-but-active', () {
+      // Cancelled subscriptions still grant access until expiry.
+      expect(
+        CloudSyncEntitlementService.shouldApplyMirrorStatus(
+          currentState: CloudSyncEntitlementState.cancelled,
+          mirrorStatus: 'feature_only',
+        ),
+        isFalse,
+      );
+    });
+
+    test('feature_only mirror is REJECTED during gracePeriod', () {
+      expect(
+        CloudSyncEntitlementService.shouldApplyMirrorStatus(
+          currentState: CloudSyncEntitlementState.gracePeriod,
+          mirrorStatus: 'feature_only',
+        ),
+        isFalse,
+      );
+    });
+
+    test('feature_only mirror is REJECTED when grandfathered', () {
+      expect(
+        CloudSyncEntitlementService.shouldApplyMirrorStatus(
+          currentState: CloudSyncEntitlementState.grandfathered,
+          mirrorStatus: 'feature_only',
+        ),
+        isFalse,
+      );
+    });
+
+    test('feature_only mirror IS APPLIED when RC has no full access', () {
+      // Scenario C in the task spec: Firestore says feature_only AND RC
+      // has not granted cloud sync — the user is correctly limited.
+      // No accidental unlock here.
+      for (final state in [
+        CloudSyncEntitlementState.none,
+        CloudSyncEntitlementState.expired,
+        CloudSyncEntitlementState.featureOnly,
+      ]) {
+        expect(
+          CloudSyncEntitlementService.shouldApplyMirrorStatus(
+            currentState: state,
+            mirrorStatus: 'feature_only',
+          ),
+          isTrue,
+          reason: 'feature_only must apply when current=$state',
+        );
+      }
+    });
+
+    test('grandfathered mirror is ALWAYS applied (upgrade is safe)', () {
+      // grandfathered is never a downgrade — applying it always grants
+      // more access, never less.
+      for (final state in CloudSyncEntitlementState.values) {
+        expect(
+          CloudSyncEntitlementService.shouldApplyMirrorStatus(
+            currentState: state,
+            mirrorStatus: 'grandfathered',
+          ),
+          isTrue,
+          reason: 'grandfathered upgrade must apply from current=$state',
+        );
+      }
+    });
+
+    test('null/unknown mirror status is never applied by the listener', () {
+      // The listener only acts on grandfathered and feature_only; other
+      // states (active, expired, etc.) come from RC directly.
+      for (final status in <String?>[null, 'active', 'expired', 'unknown']) {
+        expect(
+          CloudSyncEntitlementService.shouldApplyMirrorStatus(
+            currentState: CloudSyncEntitlementState.none,
+            mirrorStatus: status,
+          ),
+          isFalse,
+          reason: 'mirrorStatus=$status must not be applied by the listener',
+        );
+      }
+    });
+  });
 }

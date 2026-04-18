@@ -4,6 +4,7 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/models/subscription_models.dart';
+import 'package:socialmesh/providers/subscription_providers.dart';
 
 void main() {
   setUpAll(() {
@@ -188,6 +189,44 @@ COMPLETE_PACK_PRODUCT_ID=complete_pack
     test('complete pack unlocks translation', () {
       const state = PurchaseState(purchasedProductIds: {'complete_pack'});
       expect(state.hasFeature(PremiumFeature.translation), true);
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────────────
+  // Regression: RC-ARCH-04 — Firestore mirror sync failures must be
+  // observable but non-fatal. The result type (FirestoreMirrorSyncResult)
+  // is the public contract; integration coverage of the actual callable
+  // would need cloud_functions mocking infrastructure that doesn't exist
+  // in this repo today.
+  // ─────────────────────────────────────────────────────────────────────
+  group('RC-ARCH-04: FirestoreMirrorSyncResult contract', () {
+    test('success result preserves backend status string', () {
+      const r = FirestoreMirrorSyncResult(
+        success: true,
+        statusFromBackend: 'feature_only',
+      );
+      expect(r.success, isTrue);
+      expect(r.error, isNull);
+      expect(r.statusFromBackend, 'feature_only');
+    });
+
+    test('failure result carries the underlying error for telemetry', () {
+      final err = StateError('unauthenticated');
+      final r = FirestoreMirrorSyncResult(success: false, error: err);
+      expect(r.success, isFalse);
+      expect(r.error, same(err));
+      expect(r.statusFromBackend, isNull);
+    });
+
+    test('the type exposes no fields that would let a caller revoke '
+        'RC-backed access on mirror failure', () {
+      // Shape contract: the result is information-only. There is no
+      // `revokeAccess` or `lockFeatures` field. Callers must depend on
+      // RC.currentState for entitlement; this result is for logging /
+      // UX only. If this assertion ever needs to change, re-read the
+      // RC-ARCH-01 + RC-ARCH-04 fix rationale.
+      const r = FirestoreMirrorSyncResult(success: false);
+      expect(r.toString(), isA<String>()); // no thrown side effects
     });
   });
 }

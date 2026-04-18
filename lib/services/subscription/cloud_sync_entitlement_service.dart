@@ -4,6 +4,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -461,6 +462,41 @@ class CloudSyncEntitlementService {
     }
   }
 
+  /// RC-WINS predicate (RC-ARCH-01).
+  ///
+  /// RevenueCat is the source of truth for entitlement. The Firestore
+  /// mirror at `user_entitlements/{uid}` is a cache — its value may lag
+  /// (e.g. the user just upgraded from a feature pack to Cloud Monthly
+  /// but `syncPurchasesToFirestore` hasn't re-run yet, or it failed
+  /// silently — see RC-ARCH-04).
+  ///
+  /// Returns false when the mirror would *downgrade* an entitlement that
+  /// RevenueCat has already resolved as full access. In that case the
+  /// listener must keep the RC-derived state and ignore the mirror value.
+  /// `grandfathered` is always allowed to apply because it's an upgrade,
+  /// never a downgrade.
+  @visibleForTesting
+  static bool shouldApplyMirrorStatus({
+    required CloudSyncEntitlementState currentState,
+    required String? mirrorStatus,
+  }) {
+    if (mirrorStatus == 'grandfathered') return true;
+    if (mirrorStatus == 'feature_only') {
+      const fullAccess = {
+        CloudSyncEntitlementState.active,
+        CloudSyncEntitlementState.cancelled,
+        CloudSyncEntitlementState.gracePeriod,
+        CloudSyncEntitlementState.grandfathered,
+      };
+      // Defer to mirror only when we have NOT already resolved full
+      // access from RevenueCat.
+      return !fullAccess.contains(currentState);
+    }
+    // Other statuses are handled by RevenueCat directly; the listener
+    // does not apply them.
+    return false;
+  }
+
   void _listenToFirestoreEntitlement(String uid) {
     _firestoreSubscription?.cancel();
     _firestoreSubscription = _firestore
@@ -474,6 +510,8 @@ class CloudSyncEntitlementService {
               final status = data['cloud_sync'] as String?;
 
               if (status == 'grandfathered') {
+                // Upgrade is always safe — grandfathered grants more access,
+                // never less.
                 _updateEntitlement(
                   const CloudSyncEntitlement(
                     state: CloudSyncEntitlementState.grandfathered,
@@ -482,8 +520,18 @@ class CloudSyncEntitlementService {
                   ),
                 );
               } else if (status == 'feature_only') {
-                // User has feature packs but no cloud sync
-                // They can use local features but not cloud sync
+                // RC-WINS GUARD (RC-ARCH-01). See [shouldApplyMirrorStatus].
+                if (!shouldApplyMirrorStatus(
+                  currentState: _cachedEntitlement.state,
+                  mirrorStatus: status,
+                )) {
+                  AppLogging.subscriptions(
+                    '☁️ Mirror says feature_only but RC already granted '
+                    'full access (state=${_cachedEntitlement.state}); '
+                    'ignoring mirror downgrade — RC wins.',
+                  );
+                  return;
+                }
                 _updateEntitlement(
                   const CloudSyncEntitlement(
                     state: CloudSyncEntitlementState.featureOnly,

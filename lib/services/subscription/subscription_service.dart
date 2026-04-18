@@ -609,6 +609,39 @@ class PurchaseService {
     }
   }
 
+  /// Programmatically sync the device store's purchase tokens with RevenueCat
+  /// without invoking the OS restore prompt. Safe to call at any time;
+  /// callers should not depend on its return value for entitlement decisions
+  /// (use the resulting [currentState] / [stateStream] instead).
+  ///
+  /// On Android with Play Billing 8 this is the recommended call to make
+  /// before/after [logIn] so anonymous-tied tokens get re-sent under the
+  /// identified RC customer. Returns false on error so the bootstrap flow
+  /// can decide whether to surface anything; never throws.
+  Future<bool> syncPurchases() async {
+    if (!_isInitialized) {
+      AppLogging.subscriptions(
+        '💰 syncPurchases skipped — RevenueCat not initialized',
+      );
+      return false;
+    }
+    try {
+      AppLogging.subscriptions('💰 syncPurchases — START');
+      await Purchases.syncPurchases();
+      final customerInfo = await Purchases.getCustomerInfo();
+      _updateStateFromCustomerInfo(customerInfo);
+      AppLogging.subscriptions(
+        '💰 syncPurchases — DONE customerId=${customerInfo.originalAppUserId} '
+        'products=${customerInfo.allPurchasedProductIdentifiers}',
+      );
+      return true;
+    } catch (e, stackTrace) {
+      AppLogging.subscriptions('💰 ❌ syncPurchases error: $e');
+      AppLogging.subscriptions('💰 Stack: $stackTrace');
+      return false;
+    }
+  }
+
   /// Refresh purchases from RevenueCat
   Future<void> refreshPurchases() async {
     AppLogging.subscriptions(
