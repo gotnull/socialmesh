@@ -46,6 +46,7 @@ import 'sip/sip_frame.dart';
 import 'sip/sip_handshake.dart';
 import 'sip/sip_identity.dart';
 import 'sip/sip_types.dart';
+import 'overlay/overlay_link_codec.dart';
 import '../mesh_packet_dedupe_store.dart';
 import '../mesh_health/mesh_health_models.dart';
 import '../notifications/notification_service.dart';
@@ -542,6 +543,32 @@ class ProtocolService {
   static const int _kMrrpStartupBufferMax = 16;
   final List<({int senderNodeId, SipFrame frame})> _mrrpStartupBuffer = [];
 
+  // Overlay v0.2 ingress hook. `null` when the overlay attachment
+  // provider has not attached yet, or when OVERLAY_LINK_ENABLED is off
+  // (the provider simply does not call [attachOverlayInbound]). Frames
+  // that sniff as v0.2 link frames are buffered here while the hook
+  // is unset so they survive the provider-init window, mirroring the
+  // MRRP startup-buffer pattern.
+  static const int _kOverlayStartupBufferMax = 16;
+  final List<({int senderNodeId, Uint8List mrrpPayload})>
+  _overlayStartupBuffer = [];
+  Future<void> Function(int senderNodeId, Uint8List mrrpPayload)?
+  _overlayInbound;
+
+  /// Cumulative count of overlay v0.2 frames discarded because the
+  /// startup buffer was full at the time of arrival. Observability
+  /// hook for "overlay traffic vanished mysteriously" diagnostics
+  /// (P2 caveat). Logged at rate-limited intervals — never per-frame.
+  int _overlayStartupBufferDrops = 0;
+
+  /// Next drop count at which an aggregate log line will fire.
+  /// Doubles each time to keep logs bounded even under sustained loss.
+  int _overlayStartupBufferNextLogAt = 1;
+
+  /// Diagnostic: total overlay v0.2 frames discarded due to a full
+  /// startup buffer since the [ProtocolService] was created.
+  int get overlayStartupBufferDrops => _overlayStartupBufferDrops;
+
   /// Attach a SipDiscovery instance so inbound SIP packets can be routed.
   ///
   /// Called from the provider layer once the discovery engine is created.
@@ -571,6 +598,9 @@ class ProtocolService {
     }
     _sipStartupBuffer.clear();
     _mrrpStartupBuffer.clear();
+    _overlayStartupBuffer.clear();
+    _overlayStartupBufferDrops = 0;
+    _overlayStartupBufferNextLogAt = 1;
   }
 
   /// Drain frames buffered before [SipDiscovery] was attached.
@@ -659,6 +689,50 @@ class ProtocolService {
     }
     AppLogging.mrrp('MRRP_STARTUP: drain complete');
   }
+
+  /// Attach a handler for inbound MRRP v0.2 overlay link frames.
+  ///
+  /// The handler is the single authoritative ingress path for the
+  /// overlay. Only one handler may be attached at a time; passing
+  /// `null` detaches. The provider layer (`overlayAttachmentProvider`)
+  /// calls `attachOverlayInbound(null)` from `ref.onDispose` to null
+  /// the reference on every teardown — avoiding the class of bugs
+  /// described in the "no duplicate subscribers" P1 locked rule.
+  ///
+  /// When [handler] is attached and the startup buffer contains
+  /// frames that arrived before attach, they are drained in a
+  /// microtask to avoid cross-provider mutation during synchronous
+  /// provider init — same contract as [attachMrrpEngine].
+  void attachOverlayInbound(
+    Future<void> Function(int senderNodeId, Uint8List mrrpPayload)? handler,
+  ) {
+    _overlayInbound = handler;
+    if (handler != null) {
+      AppLogging.overlay('ProtocolService: overlay ingress attached');
+      Future.microtask(_drainOverlayStartupBuffer);
+    } else {
+      AppLogging.overlay('ProtocolService: overlay ingress detached');
+    }
+  }
+
+  /// Drain overlay frames buffered before [attachOverlayInbound].
+  Future<void> _drainOverlayStartupBuffer() async {
+    if (_overlayStartupBuffer.isEmpty) return;
+    final handler = _overlayInbound;
+    if (handler == null) return;
+    final buffered = List.of(_overlayStartupBuffer);
+    _overlayStartupBuffer.clear();
+    AppLogging.overlay(
+      'OVERLAY_STARTUP: draining ${buffered.length} buffered frame(s)',
+    );
+    for (final item in buffered) {
+      await handler(item.senderNodeId, item.mrrpPayload);
+    }
+    AppLogging.overlay('OVERLAY_STARTUP: drain complete');
+  }
+
+  /// Diagnostic: buffered overlay frames awaiting attachment.
+  int get overlayStartupBufferLength => _overlayStartupBuffer.length;
 
   /// Callback invoked when an identity claim is verified, for NodeDex bridging.
   ///
@@ -5027,6 +5101,45 @@ class ProtocolService {
 
   /// Handle an inbound MRRP frame embedded in a SIP mrrpData packet.
   void _handleMrrpPacket(int senderNodeId, SipFrame frame) {
+    // Overlay v0.2 pre-filter. MRRP v0.2 link frames use
+    // version_minor=2 and msg_type 0x20..0x27 — none of which the
+    // MRRP v0.1 engine recognises, so a v0.1-only peer would drop
+    // them. Give the overlay first look; fall through only when this
+    // is not a v0.2 frame.
+    if (OverlayLinkCodec.isLinkFrame(frame.payload)) {
+      final handler = _overlayInbound;
+      if (handler != null) {
+        handler(senderNodeId, frame.payload);
+        return;
+      }
+      // Buffer so overlay attachment during startup doesn't lose
+      // frames. Bounded to avoid unbounded growth if the flag is off
+      // or attachment never happens.
+      if (_overlayStartupBuffer.length < _kOverlayStartupBufferMax) {
+        _overlayStartupBuffer.add((
+          senderNodeId: senderNodeId,
+          mrrpPayload: frame.payload,
+        ));
+        AppLogging.overlay(
+          'OVERLAY_STARTUP: buffering early v0.2 frame '
+          '(${_overlayStartupBuffer.length}/$_kOverlayStartupBufferMax)',
+        );
+      } else {
+        _overlayStartupBufferDrops++;
+        // Rate-limited aggregate log: fire at 1, 2, 4, 8, 16, 32…
+        // drops so operators see the signal without per-frame spam.
+        if (_overlayStartupBufferDrops >= _overlayStartupBufferNextLogAt) {
+          AppLogging.overlay(
+            'OVERLAY_STARTUP: buffer full — '
+            'total drops=$_overlayStartupBufferDrops '
+            '(unattached or flag off)',
+          );
+          _overlayStartupBufferNextLogAt *= 2;
+        }
+      }
+      return;
+    }
+
     final engine = _mrrpEngine;
     if (engine == null) {
       // Buffer early MRRP frames so they survive the gap between BLE connect

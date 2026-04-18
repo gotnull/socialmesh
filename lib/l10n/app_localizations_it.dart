@@ -8852,9 +8852,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get messagingTechInfoNoRadioData => 'No radio data';
 
   @override
-  String get messagingTechInfoToggleTooltip => 'Radio details';
-
-  @override
   String get messagingTechInfoExplainHopsTitle => 'Hop Count';
 
   @override

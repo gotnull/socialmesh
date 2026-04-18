@@ -16,6 +16,7 @@ import '../../providers/countdown_providers.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/map_config.dart';
+import '../../core/safe_lat_lng.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
@@ -251,6 +252,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
   /// Animate camera to a specific location with smooth easing
   void _animatedMove(LatLng destLocation, double destZoom, {double? rotation}) {
+    if (!isFiniteLatLng(destLocation) || !destZoom.isFinite) return;
     _animationController?.dispose();
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 500),
@@ -1468,128 +1470,130 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       if (widget.tracerouteLog != null)
                         MarkerLayer(
                           rotate: true,
-                          markers: _buildTracerouteMarkers(
-                            widget.tracerouteLog!,
-                            nodes,
+                          markers: finiteMarkers(
+                            _buildTracerouteMarkers(
+                              widget.tracerouteLog!,
+                              nodes,
+                            ),
                           ),
                         ),
                       // Waypoint markers
                       MarkerLayer(
                         rotate: true,
-                        markers: _waypoints.map((w) {
-                          return Marker(
-                            point: w.position,
-                            width: 32,
-                            height: 40,
-                            child: GestureDetector(
-                              onTap: () => _showWaypointDetails(w),
-                              child: Column(
-                                children: [
-                                  Container(
-                                    width: 24,
-                                    height: 24,
-                                    decoration: BoxDecoration(
-                                      color: AppTheme.warningYellow,
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: Colors.white,
-                                        width: 2,
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withValues(
-                                            alpha: 0.3,
-                                          ),
-                                          blurRadius: 4,
+                        markers: finiteMarkers(
+                          _waypoints.map((w) {
+                            return Marker(
+                              point: w.position,
+                              width: 32,
+                              height: 40,
+                              child: GestureDetector(
+                                onTap: () => _showWaypointDetails(w),
+                                child: Column(
+                                  children: [
+                                    Container(
+                                      width: 24,
+                                      height: 24,
+                                      decoration: BoxDecoration(
+                                        color: AppTheme.warningYellow,
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: Colors.white,
+                                          width: 2,
                                         ),
-                                      ],
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withValues(
+                                              alpha: 0.3,
+                                            ),
+                                            blurRadius: 4,
+                                          ),
+                                        ],
+                                      ),
+                                      child: const Icon(
+                                        Icons.place,
+                                        size: 14,
+                                        color: Colors.white,
+                                      ),
                                     ),
-                                    child: const Icon(
-                                      Icons.place,
-                                      size: 14,
-                                      color: Colors.white,
+                                    Container(
+                                      width: 2,
+                                      height: 12,
+                                      color: AppTheme.warningYellow,
                                     ),
-                                  ),
-                                  Container(
-                                    width: 2,
-                                    height: 12,
-                                    color: AppTheme.warningYellow,
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                          );
-                        }).toList(),
+                            );
+                          }),
+                        ),
                       ),
                       // Node markers - hide in location only mode
                       if (!widget.locationOnlyMode)
                         MarkerLayer(
                           rotate: true,
-                          markers:
-                              ([...nodesWithPosition]..sort((a, b) {
-                                    // Own node renders last = on top
-                                    final aIsMe = a.node.nodeNum == myNodeNum;
-                                    final bIsMe = b.node.nodeNum == myNodeNum;
-                                    if (aIsMe != bIsMe) return aIsMe ? 1 : -1;
-                                    return 0;
-                                  }))
-                                  .map((n) {
-                                    final isMyNode =
-                                        n.node.nodeNum == myNodeNum;
-                                    final isSelected =
-                                        _selectedNode?.nodeNum ==
-                                        n.node.nodeNum;
-                                    return Marker(
-                                      point: LatLng(n.latitude, n.longitude),
-                                      width: isMyNode
-                                          ? 56
-                                          : (isSelected ? 56 : 44),
-                                      height: isMyNode
-                                          ? 56
-                                          : (isSelected ? 56 : 44),
-                                      child: GestureDetector(
-                                        onTap: () {
-                                          HapticFeedback.selectionClick();
-                                          if (_measureMode) {
-                                            _handleMeasureNodeTap(n);
-                                          } else {
-                                            setState(() {
-                                              _selectedNode = n.node;
-                                              _selectedTakEntity = null;
-                                            });
-                                          }
-                                        },
-                                        onLongPress: () {
-                                          HapticFeedback.heavyImpact();
+                          markers: finiteMarkers(
+                            ([...nodesWithPosition]..sort((a, b) {
+                                  // Own node renders last = on top
+                                  final aIsMe = a.node.nodeNum == myNodeNum;
+                                  final bIsMe = b.node.nodeNum == myNodeNum;
+                                  if (aIsMe != bIsMe) return aIsMe ? 1 : -1;
+                                  return 0;
+                                }))
+                                .map((n) {
+                                  final isMyNode = n.node.nodeNum == myNodeNum;
+                                  final isSelected =
+                                      _selectedNode?.nodeNum == n.node.nodeNum;
+                                  return Marker(
+                                    point: LatLng(n.latitude, n.longitude),
+                                    width: isMyNode
+                                        ? 56
+                                        : (isSelected ? 56 : 44),
+                                    height: isMyNode
+                                        ? 56
+                                        : (isSelected ? 56 : 44),
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        HapticFeedback.selectionClick();
+                                        if (_measureMode) {
+                                          _handleMeasureNodeTap(n);
+                                        } else {
                                           setState(() {
-                                            _measureMode = true;
-                                            _measureStart = LatLng(
-                                              n.latitude,
-                                              n.longitude,
-                                            );
-                                            _measureEnd = null;
-                                            _measureNodeA = n.node;
-                                            _measureNodeB = null;
-                                            _measureTerrainPolylines = null;
-                                            _measureTerrainResult = null;
-                                            _selectedNode = null;
+                                            _selectedNode = n.node;
                                             _selectedTakEntity = null;
                                           });
-                                        },
-                                        child: _NodeMarker(
-                                          node: n.node,
-                                          presence: presenceConfidenceFor(
-                                            presenceMap,
-                                            n.node,
-                                          ),
-                                          isMyNode: isMyNode,
-                                          isSelected: isSelected,
-                                          isStale: n.isStale,
+                                        }
+                                      },
+                                      onLongPress: () {
+                                        HapticFeedback.heavyImpact();
+                                        setState(() {
+                                          _measureMode = true;
+                                          _measureStart = LatLng(
+                                            n.latitude,
+                                            n.longitude,
+                                          );
+                                          _measureEnd = null;
+                                          _measureNodeA = n.node;
+                                          _measureNodeB = null;
+                                          _measureTerrainPolylines = null;
+                                          _measureTerrainResult = null;
+                                          _selectedNode = null;
+                                          _selectedTakEntity = null;
+                                        });
+                                      },
+                                      child: _NodeMarker(
+                                        node: n.node,
+                                        presence: presenceConfidenceFor(
+                                          presenceMap,
+                                          n.node,
                                         ),
+                                        isMyNode: isMyNode,
+                                        isSelected: isSelected,
+                                        isStale: n.isStale,
                                       ),
-                                    );
-                                  })
-                                  .toList(),
+                                    ),
+                                  );
+                                }),
+                          ),
                         ),
                       // TAK movement trails for tracked entities
                       if (_showTakLayer &&
@@ -1633,10 +1637,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
                           AppFeatureFlags.isTakGatewayEnabled)
                         _TakHeadingVectorOverlay(),
                       // Measurement markers
-                      if (_measureStart != null)
+                      if (_measureStart != null &&
+                          isFiniteLatLng(_measureStart))
                         MarkerLayer(
                           rotate: true,
-                          markers: [
+                          markers: finiteMarkers([
                             Marker(
                               point: _measureStart!,
                               width: 20,
@@ -1686,15 +1691,14 @@ class _MapScreenState extends ConsumerState<MapScreen>
                                   ),
                                 ),
                               ),
-                          ],
+                          ]),
                         ),
                       // Distance labels layer - hide in location only mode
                       if (!widget.locationOnlyMode)
                         MarkerLayer(
                           rotate: true,
-                          markers: _buildDistanceLabels(
-                            nodesWithPosition,
-                            myNodeNum,
+                          markers: finiteMarkers(
+                            _buildDistanceLabels(nodesWithPosition, myNodeNum),
                           ),
                         ),
                       // Map attribution (matches world mesh style)

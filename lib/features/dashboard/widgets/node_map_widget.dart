@@ -5,6 +5,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import '../../../core/map_config.dart';
+import '../../../core/safe_lat_lng.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/mesh_map_widget.dart';
 import '../../../providers/app_providers.dart';
@@ -89,19 +90,24 @@ class NodeMapContent extends ConsumerWidget {
                   additionalLayers: [
                     // Mini node markers
                     MarkerLayer(
-                      markers: nodesWithPosition.map((node) {
-                        final isMyNode = node.nodeNum == myNodeNum;
-                        return Marker(
-                          point: LatLng(node.latitude!, node.longitude!),
-                          width: 24,
-                          height: 24,
-                          child: MiniMeshNodeMarker(
-                            node: node,
-                            isMyNode: isMyNode,
-                            presence: presenceConfidenceFor(presenceMap, node),
-                          ),
-                        );
-                      }).toList(),
+                      markers: finiteMarkers(
+                        nodesWithPosition.map((node) {
+                          final isMyNode = node.nodeNum == myNodeNum;
+                          return Marker(
+                            point: LatLng(node.latitude!, node.longitude!),
+                            width: 24,
+                            height: 24,
+                            child: MiniMeshNodeMarker(
+                              node: node,
+                              isMyNode: isMyNode,
+                              presence: presenceConfidenceFor(
+                                presenceMap,
+                                node,
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
                     ),
                   ],
                 ),

@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/core/safety/error_handler.dart';
@@ -508,6 +509,79 @@ void main() {
 
     test('clearUserContext does not throw', () {
       expect(() => AppErrorHandler.clearUserContext(), returnsNormally);
+    });
+  });
+
+  group('MQTT keep-alive socket error detection', () {
+    // Replicates the private _isMqttKeepAliveSocketError filter used in
+    // _handlePlatformError to suppress shamblett/mqtt_client#377 noise.
+    // Kept in sync with the implementation in error_handler.dart.
+    bool isMqttKeepAliveSocketError(Object error, StackTrace stack) {
+      if (error is! SocketException) return false;
+      final stackStr = stack.toString();
+      return stackStr.contains('mqtt_client_mqtt_connection_keep_alive') ||
+          stackStr.contains('mqtt_client_mqtt_server_normal_connection') ||
+          stackStr.contains('MqttConnectionKeepAlive.pingRequired') ||
+          stackStr.contains('MqttServerNormalConnection.send');
+    }
+
+    test('matches SocketException with pingRequired frame', () {
+      final stack = StackTrace.fromString(
+        '#0      _Socket.add (dart:io)\n'
+        '#1      MqttServerNormalConnection.send '
+        '(package:mqtt_client/src/connectionhandling/server/'
+        'mqtt_client_mqtt_server_normal_connection.dart:133)\n'
+        '#2      MqttConnectionHandlerBase.sendMessage '
+        '(package:mqtt_client/src/connectionhandling/'
+        'mqtt_client_mqtt_connection_handler_base.dart:190)\n'
+        '#3      MqttConnectionKeepAlive.pingRequired '
+        '(package:mqtt_client/src/connectionhandling/'
+        'mqtt_client_mqtt_connection_keep_alive.dart:121)',
+      );
+      final err = const SocketException('Broken pipe');
+      expect(isMqttKeepAliveSocketError(err, stack), isTrue);
+    });
+
+    test('does NOT match unrelated SocketException', () {
+      final stack = StackTrace.fromString(
+        '#0      _HttpClient._getConnection (dart:_http)\n'
+        '#1      _HttpClient._openUrl (dart:_http)',
+      );
+      final err = const SocketException('Connection refused');
+      expect(isMqttKeepAliveSocketError(err, stack), isFalse);
+    });
+
+    test('does NOT match Firestore SocketException', () {
+      final stack = StackTrace.fromString(
+        '#0      _Socket.add (dart:io)\n'
+        '#1      cloud_firestore_platform_interface (...)',
+      );
+      final err = const SocketException('Write failed');
+      expect(isMqttKeepAliveSocketError(err, stack), isFalse);
+    });
+
+    test('does NOT match non-SocketException with mqtt frames', () {
+      // A StateError from mqtt_client internals should still be reported —
+      // only SocketException from the keep-alive path is suppressed.
+      final stack = StackTrace.fromString(
+        '#0      MqttConnectionKeepAlive.pingRequired '
+        '(package:mqtt_client/...)',
+      );
+      expect(
+        isMqttKeepAliveSocketError(StateError('bad state'), stack),
+        isFalse,
+      );
+    });
+
+    test('matches server normal connection send frame', () {
+      final stack = StackTrace.fromString(
+        '#0      _Socket.add (dart:io)\n'
+        '#1      MqttServerNormalConnection.send '
+        '(package:mqtt_client/src/connectionhandling/server/'
+        'mqtt_client_mqtt_server_normal_connection.dart:133)',
+      );
+      final err = const SocketException('Software caused connection abort');
+      expect(isMqttKeepAliveSocketError(err, stack), isTrue);
     });
   });
 }

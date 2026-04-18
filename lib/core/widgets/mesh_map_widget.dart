@@ -7,6 +7,7 @@ import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../map_config.dart';
+import '../safe_lat_lng.dart';
 import '../theme.dart';
 import '../../models/mesh_models.dart';
 import '../../models/presence_confidence.dart';
@@ -182,7 +183,7 @@ class MeshMapWidget extends StatelessWidget {
                 maxClusterRadius: clusterRadius.toInt(),
                 size: const Size(48, 48),
                 padding: const EdgeInsets.all(AppTheme.spacing50),
-                markers: clusteredMarkers!,
+                markers: finiteMarkers(clusteredMarkers!),
                 popupOptions: popupController != null && popupBuilder != null
                     ? PopupOptions(
                         popupSnap: PopupSnap.markerTop,
@@ -202,29 +203,31 @@ class MeshMapWidget extends StatelessWidget {
               nodeMarkers!.isNotEmpty)
             MarkerLayer(
               rotate: true,
-              markers: nodeMarkers!.map((data) {
-                final isMyNode = data.node.nodeNum == myNodeNum;
-                final isSelected = data.node.nodeNum == selectedNodeNum;
-                return Marker(
-                  point: LatLng(data.latitude, data.longitude),
-                  width: isSelected ? 56 : 44,
-                  height: isSelected ? 56 : 44,
-                  child: GestureDetector(
-                    onTap: onNodeTap != null
-                        ? () {
-                            HapticFeedback.selectionClick();
-                            onNodeTap!(data.node);
-                          }
-                        : null,
-                    child: MeshNodeMarker(
-                      node: data.node,
-                      isMyNode: isMyNode,
-                      isSelected: isSelected,
-                      isStale: data.isStale,
+              markers: finiteMarkers(
+                nodeMarkers!.map((data) {
+                  final isMyNode = data.node.nodeNum == myNodeNum;
+                  final isSelected = data.node.nodeNum == selectedNodeNum;
+                  return Marker(
+                    point: LatLng(data.latitude, data.longitude),
+                    width: isSelected ? 56 : 44,
+                    height: isSelected ? 56 : 44,
+                    child: GestureDetector(
+                      onTap: onNodeTap != null
+                          ? () {
+                              HapticFeedback.selectionClick();
+                              onNodeTap!(data.node);
+                            }
+                          : null,
+                      child: MeshNodeMarker(
+                        node: data.node,
+                        isMyNode: isMyNode,
+                        isSelected: isSelected,
+                        isStale: data.isStale,
+                      ),
                     ),
-                  ),
-                );
-              }).toList(),
+                  );
+                }),
+              ),
             ),
 
           // Attribution (matches world mesh style)

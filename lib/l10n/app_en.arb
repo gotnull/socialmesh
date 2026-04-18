@@ -11868,10 +11868,6 @@
     "@messagingTechInfoNoRadioData": {
         "description": "Shown when a message has no radio metadata (SNR, RSSI, hops)."
     },
-    "messagingTechInfoToggleTooltip": "Radio details",
-    "@messagingTechInfoToggleTooltip": {
-        "description": "Tooltip for the toggle button that shows/hides inline radio metadata on messages."
-    },
     "messagingTechInfoExplainHopsTitle": "Hop Count",
     "@messagingTechInfoExplainHopsTitle": {
         "description": "Title for the bottom sheet explaining hop count."

@@ -2,7 +2,9 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 // lint-allow: haptic-feedback — shared animation widgets delegate onTap to parent callbacks
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'dart:math' as math;
+import 'package:flutter/cupertino.dart' show CupertinoSwitch;
 import 'package:flutter/material.dart';
 import 'package:socialmesh/core/theme.dart';
 
@@ -1123,7 +1125,21 @@ class ThemedSwitch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accentColor = activeColor ?? Theme.of(context).colorScheme.primary;
-    return Switch.adaptive(
+    // Use CupertinoSwitch directly on iOS to avoid a null-dereference crash
+    // in Flutter's _SwitchPainter when Switch.adaptive renders the Cupertino
+    // variant before `_pressedInactiveThumbRadius` / `_pressedThumbExtension`
+    // are populated (switch.dart:1563).
+    if (Platform.isIOS) {
+      return CupertinoSwitch(
+        value: value,
+        onChanged: onChanged,
+        activeTrackColor: accentColor,
+        inactiveTrackColor: SemanticColors.divider,
+        thumbColor: SemanticColors.onAccent,
+        inactiveThumbColor: SemanticColors.disabled,
+      );
+    }
+    return Switch(
       value: value,
       onChanged: onChanged,
       activeThumbColor: SemanticColors.onAccent,

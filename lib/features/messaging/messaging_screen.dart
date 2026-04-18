@@ -873,9 +873,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   /// Tracks which message IDs have inline technical info expanded.
   final Set<String> _expandedTechInfoIds = {};
 
-  /// Whether the global tech info bar is toggled on for all received messages.
-  bool _showAllTechInfo = false;
-
   /// The message being replied to, or null if not replying.
   Message? _replyingTo;
 
@@ -890,28 +887,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       if (mounted) {
         _messageFocusNode.requestFocus();
         _markAsRead();
-        _loadTechInfoPreference();
       }
     });
     _searchController.addListener(_onSearchChanged);
-  }
-
-  Future<void> _loadTechInfoPreference() async {
-    final settings = await ref.read(settingsServiceProvider.future);
-    if (mounted) {
-      setState(() => _showAllTechInfo = settings.messageTechInfoEnabled);
-    }
-  }
-
-  Future<void> _toggleTechInfo() async {
-    ref.haptics.trigger(HapticType.light);
-    final newValue = !_showAllTechInfo;
-    setState(() {
-      _showAllTechInfo = newValue;
-      if (!newValue) _expandedTechInfoIds.clear();
-    });
-    final settings = await ref.read(settingsServiceProvider.future);
-    await settings.setMessageTechInfoEnabled(newValue);
   }
 
   /// Mark all messages in this conversation as read.
@@ -1968,16 +1946,20 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   @override
   Widget build(BuildContext context) {
     final messages = ref.watch(messagesProvider);
-    final nodes = ref.watch(nodesProvider);
+    // Read (not watch) nodes/channels/offlineQueue: re-reading them on every
+    // messagesProvider-driven rebuild gives fresh values in busy channels
+    // without adding independent rebuild triggers on every node tick.
+    final nodes = ref.read(nodesProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
-    final channels = ref.watch(channelsProvider);
+    final channels = ref.read(channelsProvider);
 
-    // Debug: Log rebuild + state to help diagnose message display issues
-    AppLogging.messages(
-      '📨 ConversationScreen.build: totalMessages=${messages.length}, '
-      'myNodeNum=$myNodeNum, type=${widget.type}, '
-      'channelIndex=${widget.channelIndex}, nodeNum=${widget.nodeNum}',
-    );
+    if (AppLogging.messagesLoggingEnabled) {
+      AppLogging.messages(
+        '📨 ConversationScreen.build: totalMessages=${messages.length}, '
+        'myNodeNum=$myNodeNum, type=${widget.type}, '
+        'channelIndex=${widget.channelIndex}, nodeNum=${widget.nodeNum}',
+      );
+    }
 
     // Determine if messages are encrypted
     // DMs are always encrypted, channels are encrypted if they have a PSK
@@ -1992,7 +1974,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     }
 
     // Get queued message IDs
-    final offlineQueue = ref.watch(offlineQueueProvider);
+    final offlineQueue = ref.read(offlineQueueProvider);
     final queuedMessageIds = offlineQueue.queue.map((m) => m.id).toSet();
 
     // Filter visible messages for this conversation. These act as the fallback
@@ -2001,33 +1983,33 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     List<Message> fallbackMessages;
     if (widget.type == ConversationType.channel) {
       fallbackMessages = messages
-          .where((m) => m.channel == widget.channelIndex && m.isBroadcast)
+          .where(
+            (m) =>
+                m.channel == widget.channelIndex &&
+                m.isBroadcast &&
+                !m.isCanonicalTapback,
+          )
           .toList();
-      AppLogging.messages(
-        '📨 Channel filter: channel=${widget.channelIndex}, '
-        'matched=${fallbackMessages.length}/${messages.length} '
-        '(sent=${fallbackMessages.where((m) => m.sent).length}, '
-        'received=${fallbackMessages.where((m) => !m.sent).length})',
-      );
     } else {
       fallbackMessages = messages
           .where(
             (m) =>
                 m.isDirect &&
-                (m.from == widget.nodeNum || m.to == widget.nodeNum),
+                (m.from == widget.nodeNum || m.to == widget.nodeNum) &&
+                !m.isCanonicalTapback,
           )
           .toList();
-      AppLogging.messages(
-        '📨 DM filter: nodeNum=${widget.nodeNum}, '
-        'matched=${fallbackMessages.length}/${messages.length} '
-        '(sent=${fallbackMessages.where((m) => m.sent).length}, '
-        'received=${fallbackMessages.where((m) => !m.sent).length})',
-      );
     }
 
-    fallbackMessages = fallbackMessages
-        .where((message) => !message.isCanonicalTapback)
-        .toList();
+    if (AppLogging.messagesLoggingEnabled) {
+      AppLogging.messages(
+        widget.type == ConversationType.channel
+            ? '📨 Channel filter: channel=${widget.channelIndex}, '
+                  'matched=${fallbackMessages.length}/${messages.length}'
+            : '📨 DM filter: nodeNum=${widget.nodeNum}, '
+                  'matched=${fallbackMessages.length}/${messages.length}',
+      );
+    }
 
     final timelineQuery = widget.type == ConversationType.channel
         ? ConversationTimelineQuery.channel(
@@ -2196,17 +2178,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
           actions: [
             IconButton(
               icon: Icon(
-                _showAllTechInfo ? Icons.cell_tower : Icons.cell_tower_outlined,
-                color: _showAllTechInfo
-                    ? context.accentColor
-                    : context.textPrimary,
-                size: 20,
-              ),
-              tooltip: context.l10n.messagingTechInfoToggleTooltip,
-              onPressed: _toggleTechInfo,
-            ),
-            IconButton(
-              icon: Icon(
                 _isSearching ? Icons.close : Icons.search,
                 color: _isSearching ? context.accentColor : context.textPrimary,
               ),
@@ -2356,7 +2327,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                               final message = row.message!;
                               final isFromMe = message.from == myNodeNum;
 
-                              if (index == filteredRows.length - 1) {
+                              if (index == filteredRows.length - 1 &&
+                                  AppLogging.messagesLoggingEnabled) {
                                 AppLogging.messages(
                                   '📨 Latest visible message: from=${message.from}, myNodeNum=$myNodeNum, isFromMe=$isFromMe, text="${message.text.substring(0, message.text.length.clamp(0, 20))}"',
                                 );
@@ -2395,9 +2367,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                                   ),
                                   isHighlighted:
                                       _highlightedMessageId == message.id,
-                                  showTechInfo:
-                                      _showAllTechInfo ||
-                                      _expandedTechInfoIds.contains(message.id),
+                                  showTechInfo: _expandedTechInfoIds.contains(
+                                    message.id,
+                                  ),
                                   onToggleTechInfo: () {
                                     ref.haptics.trigger(HapticType.light);
                                     setState(() {

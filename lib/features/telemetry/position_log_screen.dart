@@ -14,6 +14,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/map_config.dart';
+import '../../core/safe_lat_lng.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
@@ -1084,44 +1085,46 @@ class _PositionMapViewState extends State<_PositionMapView> {
 
             // Position markers (tappable)
             MarkerLayer(
-              markers: cappedLogs.map((log) {
-                final color = _getNodeColor(log.nodeNum);
-                final isSelected = _selectedLog == log;
-                return Marker(
-                  point: LatLng(log.latitude, log.longitude),
-                  width: isSelected ? 24 : 16,
-                  height: isSelected ? 24 : 16,
-                  child: GestureDetector(
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      setState(() {
-                        _selectedLog = _selectedLog == log ? null : log;
-                      });
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: color,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: isSelected
-                              ? Colors.white
-                              : Colors.white.withValues(alpha: 0.8),
-                          width: isSelected ? 3 : 2,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: color.withValues(
-                              alpha: isSelected ? 0.7 : 0.4,
-                            ),
-                            blurRadius: isSelected ? 8 : 4,
-                            spreadRadius: isSelected ? 2 : 1,
+              markers: finiteMarkers(
+                cappedLogs.map((log) {
+                  final color = _getNodeColor(log.nodeNum);
+                  final isSelected = _selectedLog == log;
+                  return Marker(
+                    point: LatLng(log.latitude, log.longitude),
+                    width: isSelected ? 24 : 16,
+                    height: isSelected ? 24 : 16,
+                    child: GestureDetector(
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        setState(() {
+                          _selectedLog = _selectedLog == log ? null : log;
+                        });
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: color,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isSelected
+                                ? Colors.white
+                                : Colors.white.withValues(alpha: 0.8),
+                            width: isSelected ? 3 : 2,
                           ),
-                        ],
+                          boxShadow: [
+                            BoxShadow(
+                              color: color.withValues(
+                                alpha: isSelected ? 0.7 : 0.4,
+                              ),
+                              blurRadius: isSelected ? 8 : 4,
+                              spreadRadius: isSelected ? 2 : 1,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                );
-              }).toList(),
+                  );
+                }),
+              ),
             ),
           ],
         ),

@@ -15583,12 +15583,6 @@ abstract class AppLocalizations {
   /// **'No radio data'**
   String get messagingTechInfoNoRadioData;
 
-  /// Tooltip for the toggle button that shows/hides inline radio metadata on messages.
-  ///
-  /// In en, this message translates to:
-  /// **'Radio details'**
-  String get messagingTechInfoToggleTooltip;
-
   /// Title for the bottom sheet explaining hop count.
   ///
   /// In en, this message translates to:

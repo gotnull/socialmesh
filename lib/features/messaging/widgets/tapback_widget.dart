@@ -33,9 +33,11 @@ class TapbackDisplay extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final nodes = ref.watch(nodesProvider);
-
     if (tapbacks.isEmpty) return const SizedBox.shrink();
+    // Read (not watch): avoids cascading rebuilds on every node tick. Short
+    // names rarely change, and the parent ChatScreen rebuilds whenever new
+    // messages/tapbacks arrive, refreshing this lookup naturally.
+    final nodes = ref.read(nodesProvider);
 
     // Group tapbacks by emoji
     final groups = _buildGroups(nodes);

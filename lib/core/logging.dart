@@ -91,6 +91,7 @@ class AppLogging {
   static bool? _sppLoggingEnabled;
   static bool? _sppNegotiationLoggingEnabled;
   static bool? _stlLoggingEnabled;
+  static bool? _overlayLoggingEnabled;
   static bool? _meshFeedLoggingEnabled;
   static bool? _meshGamesLoggingEnabled;
   static bool? _meshGameTransportLoggingEnabled;
@@ -696,6 +697,19 @@ class AppLogging {
 
   static void stl(String message) {
     if (stlLoggingEnabled) debugPrint('STL: $message');
+  }
+
+  /// Socialmesh Overlay v0.2 logging — link state, resource transfer,
+  /// persistence, capability negotiation. Enable with
+  /// `OVERLAY_LOGGING_ENABLED=true` in the .env file.
+  static bool get overlayLoggingEnabled {
+    _overlayLoggingEnabled ??=
+        _safeGetEnv('OVERLAY_LOGGING_ENABLED')?.toLowerCase() == 'true';
+    return _overlayLoggingEnabled!;
+  }
+
+  static void overlay(String message) {
+    if (overlayLoggingEnabled) debugPrint('Overlay: $message');
   }
 
   /// Mesh Feed logging — ingest, replay protection, propagation, sync.

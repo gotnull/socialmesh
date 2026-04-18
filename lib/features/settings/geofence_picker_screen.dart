@@ -12,6 +12,7 @@ import 'package:latlong2/latlong.dart';
 
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/map_config.dart';
+import '../../core/safe_lat_lng.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/bottom_action_bar.dart';
 import '../../core/widgets/glass_scaffold.dart';
@@ -415,29 +416,34 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen>
                 // Node markers (using custom marker for monitored state)
                 MarkerLayer(
                   rotate: true,
-                  markers: allNodesWithPosition.map((n) {
-                    final isMyNode = n.node.nodeNum == myNodeNum;
-                    final isSelected = n.node.nodeNum == _selectedNodeNum;
-                    final isMonitored = n.node.nodeNum == _monitoredNodeNum;
-                    return Marker(
-                      point: LatLng(n.latitude, n.longitude),
-                      width: isSelected ? 52 : 44,
-                      height: isSelected ? 52 : 44,
-                      child: GestureDetector(
-                        onTap: () => _selectNode(n),
-                        child: _NodeMarker(
-                          node: n.node,
-                          presence: presenceConfidenceFor(presenceMap, n.node),
-                          isMyNode: isMyNode,
-                          isSelected: isSelected,
-                          isMonitored: isMonitored,
+                  markers: finiteMarkers(
+                    allNodesWithPosition.map((n) {
+                      final isMyNode = n.node.nodeNum == myNodeNum;
+                      final isSelected = n.node.nodeNum == _selectedNodeNum;
+                      final isMonitored = n.node.nodeNum == _monitoredNodeNum;
+                      return Marker(
+                        point: LatLng(n.latitude, n.longitude),
+                        width: isSelected ? 52 : 44,
+                        height: isSelected ? 52 : 44,
+                        child: GestureDetector(
+                          onTap: () => _selectNode(n),
+                          child: _NodeMarker(
+                            node: n.node,
+                            presence: presenceConfidenceFor(
+                              presenceMap,
+                              n.node,
+                            ),
+                            isMyNode: isMyNode,
+                            isSelected: isSelected,
+                            isMonitored: isMonitored,
+                          ),
                         ),
-                      ),
-                    );
-                  }).toList(),
+                      );
+                    }),
+                  ),
                 ),
                 // Center marker (geofence center)
-                if (_center != null)
+                if (_center != null && isFiniteLatLng(_center))
                   MarkerLayer(
                     markers: [
                       Marker(

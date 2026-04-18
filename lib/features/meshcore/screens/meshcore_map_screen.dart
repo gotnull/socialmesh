@@ -12,6 +12,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/los_analysis.dart';
 import '../../../core/map_config.dart';
+import '../../../core/safe_lat_lng.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
@@ -220,7 +221,7 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
                       evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
                     ),
                     MarkerLayer(
-                      markers: [
+                      markers: finiteMarkers([
                         if (widget.highlightPosition != null)
                           Marker(
                             point: widget.highlightPosition!,
@@ -233,7 +234,7 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
                             ),
                           ),
                         ..._buildContactMarkers(contactsWithLocation),
-                      ],
+                      ]),
                     ),
                     // Measurement polyline
                     if (_measureStart != null && _measureEnd != null)
@@ -250,9 +251,9 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
                         ],
                       ),
                     // Measurement markers
-                    if (_measureStart != null)
+                    if (_measureStart != null && isFiniteLatLng(_measureStart))
                       MarkerLayer(
-                        markers: [
+                        markers: finiteMarkers([
                           Marker(
                             point: _measureStart!,
                             width: 24,
@@ -304,7 +305,7 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
                                 ),
                               ),
                             ),
-                        ],
+                        ]),
                       ),
                   ],
                 ),

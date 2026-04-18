@@ -8,6 +8,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../../core/map_config.dart';
+import '../../../core/safe_lat_lng.dart';
 import '../../../core/theme.dart';
 import '../data/airports.dart';
 import '../models/aether_flight.dart';
@@ -119,7 +120,7 @@ class FlightRouteMap extends StatelessWidget {
 
               // Airport markers and optional live plane
               MarkerLayer(
-                markers: [
+                markers: finiteMarkers([
                   // Departure airport marker
                   _airportMarker(
                     context,
@@ -143,7 +144,7 @@ class FlightRouteMap extends StatelessWidget {
                   // Live plane position
                   if (livePosition != null)
                     _planeMarker(context, livePosition!),
-                ],
+                ]),
               ),
             ],
           ),

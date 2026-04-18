@@ -3,9 +3,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
-import 'package:latlong2/latlong.dart';
 
 import '../../../core/logging.dart';
+import '../../../core/safe_lat_lng.dart';
 import '../models/tak_event.dart';
 import '../utils/cot_affiliation.dart';
 import 'tak_map_marker.dart';
@@ -100,12 +100,21 @@ class _TakMapLayerState extends State<TakMapLayer> {
         continue;
       }
 
+      final point = safeLatLng(event.lat, event.lon);
+      if (point == null) {
+        AppLogging.tak(
+          'Skipping marker for uid=${event.uid}: non-finite position '
+          '(${event.lat}, ${event.lon})',
+        );
+        continue;
+      }
+
       eventByUid[event.uid] = event;
 
       markers.add(
         Marker(
           key: ValueKey(event.uid),
-          point: LatLng(event.lat, event.lon),
+          point: point,
           width: TakMapMarker.labelWidth,
           height: TakMapMarker.totalHeight,
           child: TakMapMarker(

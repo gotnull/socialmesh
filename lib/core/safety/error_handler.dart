@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io' show SocketException;
 import 'dart:ui' as ui;
 
 import 'package:crypto/crypto.dart';
@@ -85,6 +86,20 @@ class AppErrorHandler {
 
   /// Handle platform/isolate errors.
   static bool _handlePlatformError(Object error, StackTrace stack) {
+    // Known-uncatchable upstream bug in mqtt_client (shamblett/mqtt_client#377,
+    // #441, #403): SocketException from the keep-alive ping path bypasses
+    // the library's sync try/catch because `_Socket.add` reports write
+    // failures asynchronously via the socket's error stream. autoReconnect
+    // recovers the connection independently — we log locally and skip the
+    // Crashlytics report to silence the non-actionable noise.
+    if (_isMqttKeepAliveSocketError(error, stack)) {
+      AppLogging.mqttProxyWarning(
+        'Suppressed keep-alive socket error (upstream mqtt_client#377): '
+        '$error',
+      );
+      return true;
+    }
+
     final log = _loggerForError(error, stack);
 
     // Capture the ACTUAL error type before any sanitization —
@@ -138,6 +153,20 @@ class AppErrorHandler {
     // Return true to indicate the error was handled
     // This prevents the error from propagating and crashing the app
     return true;
+  }
+
+  /// Detects the upstream-uncatchable mqtt_client keep-alive socket error.
+  ///
+  /// Matches only SocketException originating from the mqtt_client keep-alive
+  /// ping path (shamblett/mqtt_client#377). Unrelated SocketExceptions — HTTP,
+  /// Firestore, BLE-over-TCP — will not have these frames and are unaffected.
+  static bool _isMqttKeepAliveSocketError(Object error, StackTrace stack) {
+    if (error is! SocketException) return false;
+    final stackStr = stack.toString();
+    return stackStr.contains('mqtt_client_mqtt_connection_keep_alive') ||
+        stackStr.contains('mqtt_client_mqtt_server_normal_connection') ||
+        stackStr.contains('MqttConnectionKeepAlive.pingRequired') ||
+        stackStr.contains('MqttServerNormalConnection.send');
   }
 
   /// Categorize a platform error by inspecting its type and stack trace.
