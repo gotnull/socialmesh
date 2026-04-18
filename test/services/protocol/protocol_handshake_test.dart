@@ -161,7 +161,9 @@ void main() {
           await protocol.handleIncomingPacket(
             _configCompleteFrame(_nonceInitialConfig),
           );
-          await Future<void>.delayed(const Duration(milliseconds: 10));
+          // Heartbeat has a 100ms post-send pause before the wantConfigId
+          // frame is queued; wait long enough for both to land.
+          await Future<void>.delayed(const Duration(milliseconds: 250));
 
           final nonces = _sentWantConfigNonces(transport).toList();
           expect(
@@ -199,7 +201,9 @@ void main() {
           await protocol.handleIncomingPacket(
             _configCompleteFrame(_nonceInitialConfig),
           );
-          await Future<void>.delayed(const Duration(milliseconds: 10));
+          // Wait past the heartbeat pause so the queue-drain wantConfigId
+          // is on the wire before we ack it.
+          await Future<void>.delayed(const Duration(milliseconds: 250));
 
           await protocol.handleIncomingPacket(
             _configCompleteFrame(_nonceQueueDrain),
@@ -234,7 +238,8 @@ void main() {
           await protocol.handleIncomingPacket(
             _configCompleteFrame(_nonceInitialConfig),
           );
-          await Future<void>.delayed(const Duration(milliseconds: 10));
+          // Wait past the heartbeat pause before phase-2 ack.
+          await Future<void>.delayed(const Duration(milliseconds: 250));
           await protocol.handleIncomingPacket(
             _configCompleteFrame(_nonceQueueDrain),
           );
@@ -279,7 +284,8 @@ void main() {
           await protocol.handleIncomingPacket(
             _configCompleteFrame(_nonceInitialConfig),
           );
-          await Future<void>.delayed(const Duration(milliseconds: 10));
+          // Wait past the heartbeat pause before phase-2 ack.
+          await Future<void>.delayed(const Duration(milliseconds: 250));
           await protocol.handleIncomingPacket(
             _configCompleteFrame(_nonceQueueDrain),
           );
@@ -309,6 +315,116 @@ void main() {
     },
   );
 
+  // Regression: phase 1 must send a heartbeat BEFORE the queue-drain
+  // wantConfigId. Mirrors AccessoryManager+Connect.swift Step 4. Without
+  // this, iOS Core Bluetooth NOTIFY goes stale after the phase-1 burst
+  // and the firmware's phase-2 response sits in the BLE buffer for
+  // ~180s until the data-health watchdog refreshes notifications.
+  test(
+    'phase-1 emits heartbeat then queue-drain wantConfigId in that order',
+    () async {
+      await _withTempDirectory((dir) async {
+        final transport = _FakeTransport();
+        final protocol = await _freshProtocol(dir, transport);
+        try {
+          await protocol.sendInitialConfigRequestForTest();
+          transport.sent.clear(); // discard the initial wantConfigId frame
+
+          await protocol.handleIncomingPacket(
+            _configCompleteFrame(_nonceInitialConfig),
+          );
+          // Allow the heartbeat (with its 100ms post-send pause) and the
+          // queue-drain send to run.
+          await Future<void>.delayed(const Duration(milliseconds: 250));
+
+          // Decode each sent ToRadio frame in order to assert ordering:
+          // [heartbeat, wantConfigId(_nonceQueueDrain)].
+          final toRadios = transport.sent
+              .map((bytes) => pb.ToRadio.fromBuffer(bytes))
+              .toList();
+
+          expect(
+            toRadios.length,
+            greaterThanOrEqualTo(2),
+            reason:
+                'Phase-1 must send a heartbeat AND a queue-drain '
+                'wantConfigId. Got ${toRadios.length} ToRadio frames.',
+          );
+          expect(
+            toRadios[0].hasHeartbeat(),
+            isTrue,
+            reason: 'First post-phase-1 frame must be a heartbeat (iOS Step 4)',
+          );
+          expect(
+            toRadios[1].hasWantConfigId(),
+            isTrue,
+            reason: 'Second post-phase-1 frame must be the wantConfigId',
+          );
+          expect(
+            toRadios[1].wantConfigId,
+            _nonceQueueDrain,
+            reason: 'Second wantConfigId must carry the drain nonce',
+          );
+        } finally {
+          protocol.stop();
+        }
+      });
+    },
+  );
+
+  // Regression: queue-drain must retry if the firmware doesn't reply in
+  // time. Mirrors iOS Step 5 `retryStep(attempts: 3)` with 3-second
+  // per-attempt timeout. We exercise this by completing phase 1 and
+  // never sending the phase-2 configCompleteId; the loop should issue
+  // multiple wantConfigId(69421) frames before giving up.
+  test(
+    'queue-drain retries when phase-2 configCompleteId never arrives',
+    () async {
+      await _withTempDirectory((dir) async {
+        final transport = _FakeTransport();
+        final protocol = await _freshProtocol(dir, transport);
+        try {
+          // Use a faked _requestQueueDrain via the public seam:
+          // sendInitialConfigRequestForTest triggers phase 1, then we
+          // ack phase 1 to start the retry loop. We can't tune the
+          // per-attempt timeout from outside, so we just wait long
+          // enough for at least 2 attempts (3s each) to fire and
+          // assert retry observability.
+          // NB: this test takes ~7 seconds — kept fast by not waiting
+          // for the full 3-attempt exhaustion.
+          await protocol.sendInitialConfigRequestForTest();
+          transport.sent.clear();
+
+          await protocol.handleIncomingPacket(
+            _configCompleteFrame(_nonceInitialConfig),
+          );
+
+          // Wait for two attempts: heartbeat + wantConfigId, timeout 3s,
+          // then heartbeat + wantConfigId again. Allow some slack.
+          await Future<void>.delayed(const Duration(milliseconds: 6500));
+
+          final wantConfigIdFrames = transport.sent
+              .map((bytes) => pb.ToRadio.fromBuffer(bytes))
+              .where((tr) => tr.hasWantConfigId())
+              .where((tr) => tr.wantConfigId == _nonceQueueDrain)
+              .toList();
+
+          expect(
+            wantConfigIdFrames.length,
+            greaterThanOrEqualTo(2),
+            reason:
+                'When phase-2 ack is missing, queue-drain must retry — '
+                'expected at least 2 wantConfigId(69421) frames, got '
+                '${wantConfigIdFrames.length}',
+          );
+        } finally {
+          protocol.stop();
+        }
+      });
+    },
+    timeout: const Timeout(Duration(seconds: 30)),
+  );
+
   // Regression: post-config admin requests must be deferred to phase 2.
   // If they fire alongside the queue-drain wantConfigId in phase 1, they
   // contend with the firmware's NodeDB stream for BLE bandwidth and
@@ -332,21 +448,25 @@ void main() {
         await protocol.handleIncomingPacket(
           _configCompleteFrame(_nonceInitialConfig),
         );
-        // Allow microtasks + the small Future.delayed inside
-        // _requestPostConfigData to run if it had been called.
-        await Future<void>.delayed(const Duration(milliseconds: 80));
+        // Wait long enough for the heartbeat's 100ms post-send pause and
+        // the subsequent wantConfigId send, but NOT so long that any
+        // post-config admin requests (first one is at +50ms into
+        // _requestPostConfigData, others further out) would appear if
+        // they had been fired in phase 1.
+        await Future<void>.delayed(const Duration(milliseconds: 250));
 
-        // Only the queue-drain wantConfigId must have been sent. If
-        // _requestPostConfigData fired in phase 1, additional admin
-        // packets would already be on the wire by now.
+        // Phase 1 must send exactly two frames: a heartbeat (iOS Step 4)
+        // and the queue-drain wantConfigId (iOS Step 5). Admin requests
+        // from _requestPostConfigData are deferred to phase 2 and must
+        // not appear yet.
         final phase1Frames = List<List<int>>.of(transport.sent);
         expect(
           phase1Frames.length,
-          1,
+          2,
           reason:
-              'Phase 1 must send exactly one frame (the queue-drain '
-              'wantConfigId); admin requests must be deferred. '
-              'Sent: ${phase1Frames.length} frames.',
+              'Phase 1 must send exactly 2 frames (heartbeat + '
+              'queue-drain wantConfigId); admin requests must be '
+              'deferred. Sent: ${phase1Frames.length} frames.',
         );
         expect(
           _sentWantConfigNonces(transport),
@@ -380,7 +500,9 @@ void main() {
 
         // Firmware sends back a different nonce than we asked for.
         await protocol.handleIncomingPacket(_configCompleteFrame(0xCAFEBABE));
-        await Future<void>.delayed(const Duration(milliseconds: 10));
+        // Enough for the heartbeat's 100ms post-send pause + the
+        // subsequent wantConfigId send.
+        await Future<void>.delayed(const Duration(milliseconds: 250));
 
         expect(
           protocol.configurationComplete,
@@ -415,7 +537,9 @@ void main() {
           await protocol.handleIncomingPacket(
             _configCompleteFrame(_nonceInitialConfig),
           );
-          await Future<void>.delayed(const Duration(milliseconds: 10));
+          // Wait past the heartbeat pause so the queue-drain wantConfigId
+          // has landed on the wire before the firmware replays packets.
+          await Future<void>.delayed(const Duration(milliseconds: 250));
 
           // Firmware replays two queued text messages after the drain request.
           await protocol.handleIncomingPacket(

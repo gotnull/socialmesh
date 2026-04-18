@@ -1139,8 +1139,16 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
       connectedDeviceNotifier.setState(device);
 
-      // Save device for auto-reconnect (with protocol for future reconnect routing)
+      // Capture the previously-saved device id BEFORE setLastDevice
+      // overwrites it. clearDeviceDataBeforeConnect uses this to detect a
+      // device switch and force a node-data clear so the new device's
+      // NodeDB does not get unioned with the prior device's persisted
+      // nodes (the bug that made every device appear to share the same
+      // node count).
       final settingsService = settingsAsync.value;
+      final previousDeviceId = settingsService?.lastDeviceId;
+
+      // Save device for auto-reconnect (with protocol for future reconnect routing)
       if (settingsService != null) {
         final deviceType = switch (device.type) {
           TransportType.ble => 'ble',
@@ -1155,9 +1163,14 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         );
       }
 
-      // Clear all previous device data before starting new connection
-      // This follows the Meshtastic iOS approach of always fetching fresh data from the device
-      await clearDeviceDataBeforeConnect(ref);
+      // Clear all previous device data before starting new connection.
+      // Pass previous + new IDs so the helper can auto-clear node data on
+      // device switch.
+      await clearDeviceDataBeforeConnect(
+        ref,
+        previousDeviceId: previousDeviceId,
+        newDeviceId: device.id,
+      );
 
       // Start protocol service and wait for configuration
       AppLogging.debug(

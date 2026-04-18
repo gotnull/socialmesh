@@ -2,7 +2,7 @@ name: socialmesh
 description: "A mesh radio companion app for Meshtastic. Connect over BLE or USB, message off-grid, map your nodes, and explore the mesh — no internet required."
 publish_to: "none"
 
-version: 1.32.0+161
+version: 1.33.0+162
 
 environment:
   sdk: ^3.10.0

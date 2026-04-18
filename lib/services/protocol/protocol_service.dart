@@ -413,6 +413,12 @@ class ProtocolService {
   static const int _nonceQueueDrain = 69421;
   _HandshakePhase _handshakePhase = _HandshakePhase.idle;
 
+  /// Completes when the phase-2 `configCompleteId(69421)` arrives. The
+  /// queue-drain retry loop in `_requestQueueDrain` awaits this to decide
+  /// whether to re-send. Fresh per attempt, recreated by
+  /// `_requestQueueDrain` on every retry.
+  Completer<void>? _queueDrainCompleter;
+
   /// Timestamp of the last data received from the transport layer.
   ///
   /// Updated inside [_handleDataAsync] every time the transport delivers
@@ -1196,6 +1202,10 @@ class ProtocolService {
     _myNodeNum = null;
     _configurationComplete = false;
     _handshakePhase = _HandshakePhase.idle;
+    if (_queueDrainCompleter != null && !_queueDrainCompleter!.isCompleted) {
+      _queueDrainCompleter!.completeError('Connection reset');
+    }
+    _queueDrainCompleter = null;
     // Discard any SIP/MRRP frames buffered from a prior BLE session.
     // Without this, frames from Device A remain in the buffer and are
     // replayed to Device B's SipDiscovery / MrrpEngine after reconnect.
@@ -1461,6 +1471,10 @@ class ProtocolService {
       _configCompleter!.completeError('Service stopped');
     }
     _configCompleter = null;
+    if (_queueDrainCompleter != null && !_queueDrainCompleter!.isCompleted) {
+      _queueDrainCompleter!.completeError('Service stopped');
+    }
+    _queueDrainCompleter = null;
     if (_dataSubscription != null) {
       _dataSubscription?.cancel();
       AppLogging.protocol('DATA_SUBSCRIPTION_CANCELLED');
@@ -1667,6 +1681,12 @@ class ProtocolService {
       AppLogging.protocol(
         'Handshake: queue drain complete — phoneQueue replay done',
       );
+
+      // Release the retry loop in _requestQueueDrain.
+      if (_queueDrainCompleter != null && !_queueDrainCompleter!.isCompleted) {
+        _queueDrainCompleter!.complete();
+      }
+      _queueDrainCompleter = null;
 
       // Now safe to run the post-config admin requests. The full NodeDB
       // is in `_nodes` so position/metadata fan-outs operate on the real
@@ -4551,31 +4571,101 @@ class ProtocolService {
   }
 
   /// Second wantConfigId that triggers the firmware to replay packets it
-  /// buffered in its `phoneQueue` while the app was disconnected.
+  /// buffered in its `phoneQueue` while the app was disconnected and — on
+  /// firmware versions like T1000-E 2.7.x — stream the rest of the NodeDB.
   ///
-  /// Called once, immediately after the first configCompleteId. The device
-  /// replays queued MeshPackets and then sends a second configCompleteId
-  /// bearing the drain nonce, completing the handshake.
-  Future<void> _requestQueueDrain() async {
-    try {
+  /// Mirrors the iOS reference behavior (AccessoryManager+Connect.swift
+  /// Steps 4–5): send a heartbeat first to nudge iOS Core Bluetooth's
+  /// NOTIFY path, then the `wantConfigId(_nonceQueueDrain)`; wait up to
+  /// `timeoutPerAttempt` for the matching `configCompleteId`. Without the
+  /// heartbeat the NOTIFY subscription goes stale after the phase-1 burst
+  /// and the firmware's phase-2 response sits in the iOS BLE buffer for
+  /// ~180s until the data-health watchdog refreshes notifications.
+  ///
+  /// Retries up to `maxAttempts` times matching the iOS Step 5 policy
+  /// (`retryStep(attempts: 3)` with a 3-second per-step timeout).
+  Future<void> _requestQueueDrain({
+    int maxAttempts = 3,
+    Duration timeoutPerAttempt = const Duration(seconds: 3),
+  }) async {
+    _handshakePhase = _HandshakePhase.awaitingQueueDrain;
+
+    for (var attempt = 1; attempt <= maxAttempts; attempt++) {
       if (!_transport.isConnected) {
         AppLogging.protocol('Cannot request queue drain: not connected');
         return;
       }
-      _handshakePhase = _HandshakePhase.awaitingQueueDrain;
-      AppLogging.protocol(
-        'Handshake: sending queue-drain wantConfigId '
-        '(nonce: $_nonceQueueDrain)',
-      );
-      final toRadio = pb.ToRadio()..wantConfigId = _nonceQueueDrain;
-      final bytes = toRadio.writeToBuffer();
-      final sendBytes = _transport.requiresFraming
-          ? PacketFramer.frame(bytes)
-          : bytes;
-      await _transport.send(sendBytes);
-    } catch (e) {
-      AppLogging.protocol('Error requesting queue drain: $e');
+
+      // Already advanced to `complete` by a stray early configCompleteId?
+      // Nothing to do.
+      if (_handshakePhase == _HandshakePhase.complete) return;
+
+      // Fresh completer per attempt; _handleConfigCompleteId completes it
+      // when phase-2 configCompleteId arrives. Capture the reference now
+      // so a stray early phase-2 ack (received during the awaits below)
+      // that nulls `_queueDrainCompleter` does not trip a null deref.
+      final completer = Completer<void>();
+      _queueDrainCompleter = completer;
+
+      try {
+        // Step 4 (iOS): heartbeat before wantConfigId. This pings the
+        // firmware BLE path and refreshes the NOTIFY subscription state
+        // so the phase-2 response is actually delivered.
+        await _sendHeartbeat();
+
+        if (!_transport.isConnected) {
+          AppLogging.protocol(
+            'Queue-drain aborted: transport dropped after heartbeat',
+          );
+          return;
+        }
+
+        // Phase-2 could already be satisfied if a stray configCompleteId
+        // arrived during the heartbeat. Short-circuit to avoid sending
+        // a pointless wantConfigId.
+        if (completer.isCompleted ||
+            _handshakePhase == _HandshakePhase.complete) {
+          return;
+        }
+
+        AppLogging.protocol(
+          'Handshake: sending queue-drain wantConfigId '
+          '(nonce: $_nonceQueueDrain, attempt $attempt/$maxAttempts)',
+        );
+        final toRadio = pb.ToRadio()..wantConfigId = _nonceQueueDrain;
+        final bytes = toRadio.writeToBuffer();
+        final sendBytes = _transport.requiresFraming
+            ? PacketFramer.frame(bytes)
+            : bytes;
+        await _transport.send(sendBytes);
+
+        // Step 5a (iOS): wait for the matching configCompleteId.
+        await completer.future.timeout(timeoutPerAttempt);
+        // Completer fired — phase-2 complete. Loop exits via this return.
+        return;
+      } on TimeoutException {
+        AppLogging.protocol(
+          'Handshake: queue-drain attempt $attempt/$maxAttempts timed out '
+          'after ${timeoutPerAttempt.inSeconds}s — retrying with fresh '
+          'heartbeat',
+        );
+        // Clear the completer so _handleConfigCompleteId doesn't complete a
+        // stale one if the firmware's laggy response finally arrives after
+        // we've given up on this attempt.
+        _queueDrainCompleter = null;
+        // Fall through to next iteration.
+      } catch (e) {
+        AppLogging.protocol('Error requesting queue drain: $e');
+        _queueDrainCompleter = null;
+        return;
+      }
     }
+
+    AppLogging.protocol(
+      'Handshake: queue-drain exhausted $maxAttempts attempts — giving up. '
+      'Phase-2 may complete late; handshake state stays `awaitingQueueDrain` '
+      'and a stray configCompleteId(69421) will still transition to complete.',
+    );
   }
 
   /// Send a text message

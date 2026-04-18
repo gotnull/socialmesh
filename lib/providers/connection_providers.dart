@@ -1416,8 +1416,24 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
 
       state = state.copyWith(state: DevicePairingState.configuring);
 
+      // Capture the previously-saved device id BEFORE clearing so the
+      // helper can detect a device switch and force a node-data clear.
+      // (settings.lastDeviceId is unchanged at this point since this path
+      // does not call setLastDevice before the clear.)
+      String? previousDeviceId;
+      try {
+        final settings = await ref.read(settingsServiceProvider.future);
+        previousDeviceId = settings.lastDeviceId;
+      } catch (_) {
+        previousDeviceId = null;
+      }
+
       // Clear previous device data
-      await clearDeviceDataBeforeConnectRef(ref);
+      await clearDeviceDataBeforeConnectRef(
+        ref,
+        previousDeviceId: previousDeviceId,
+        newDeviceId: device.id,
+      );
 
       // Start protocol service
       final protocol = ref.read(protocolServiceProvider);

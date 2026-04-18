@@ -1115,8 +1115,24 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
           AppLogging.connection(
             '📱 RECONNECT ON RESUME: BLE connected, starting protocol...',
           );
-          // Clear all previous device data before starting new connection
-          await clearDeviceDataBeforeConnect(ref);
+          // Clear all previous device data before starting new connection.
+          // Pass previous + new IDs so node data is auto-cleared if this
+          // resume happens to land on a different physical device than
+          // was last connected (rare on this auto-reconnect path, but
+          // harmless when they match).
+          String? previousDeviceId;
+          try {
+            final settings = await ref.read(settingsServiceProvider.future);
+            if (mounted) previousDeviceId = settings.lastDeviceId;
+          } catch (_) {
+            previousDeviceId = null;
+          }
+          if (!mounted) return;
+          await clearDeviceDataBeforeConnect(
+            ref,
+            previousDeviceId: previousDeviceId,
+            newDeviceId: foundDevice.id,
+          );
 
           if (!mounted) return;
           final protocol = ref.read(protocolServiceProvider);

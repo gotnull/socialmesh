@@ -1353,13 +1353,44 @@ final rebootExpectedProvider = NotifierProvider<RebootExpectedNotifier, bool>(
   RebootExpectedNotifier.new,
 );
 
+/// True when the connect target is a different physical device than the
+/// last one we connected to. Both IDs must be present and non-equal; if
+/// either is null we treat it as a fresh / first connect and let the
+/// caller's explicit `clearNodeData` decision stand.
+@visibleForTesting
+bool isDeviceSwitchForTest(String? previousDeviceId, String? newDeviceId) =>
+    _isDeviceSwitch(previousDeviceId, newDeviceId);
+
+bool _isDeviceSwitch(String? previousDeviceId, String? newDeviceId) {
+  if (previousDeviceId == null || newDeviceId == null) return false;
+  return previousDeviceId != newDeviceId;
+}
+
 /// Helper function to clear all device-specific data before connecting to a (potentially different) device.
 /// This follows the Meshtastic iOS approach of always fetching fresh data from the device.
 /// Should be called BEFORE protocol.start() in all connection paths.
+///
+/// When both [previousDeviceId] and [newDeviceId] are non-null AND differ,
+/// node data is auto-cleared regardless of [clearNodeData]. This prevents
+/// the cross-device leak where `NodeStorageService` (a single SQLite store
+/// that is NOT scoped per radio) loads every node identity ever seen into
+/// the UI, making every device appear to have the same node count (the
+/// historical union, not the device's actual NodeDB).
 Future<void> clearDeviceDataBeforeConnect(
   WidgetRef ref, {
   bool clearNodeData = false,
+  String? previousDeviceId,
+  String? newDeviceId,
 }) async {
+  final isDeviceSwitch = _isDeviceSwitch(previousDeviceId, newDeviceId);
+  if (isDeviceSwitch && !clearNodeData) {
+    AppLogging.app(
+      '🔁 Device switch detected ($previousDeviceId -> $newDeviceId) — '
+      'forcing node data clear so the new device\'s NodeDB does not get '
+      'unioned with the prior device\'s persisted nodes',
+    );
+    clearNodeData = true;
+  }
   final messageCount = ref.read(messagesProvider).length;
   AppLogging.app(
     '🧹 Clearing device data before new connection '
@@ -1427,11 +1458,24 @@ Future<void> clearDeviceDataBeforeConnect(
   );
 }
 
-/// Ref-based version for use in providers (non-widget contexts)
+/// Ref-based version for use in providers (non-widget contexts).
+/// See [clearDeviceDataBeforeConnect] for the device-switch auto-clear
+/// semantics — they apply identically here.
 Future<void> clearDeviceDataBeforeConnectRef(
   Ref ref, {
   bool clearNodeData = false,
+  String? previousDeviceId,
+  String? newDeviceId,
 }) async {
+  final isDeviceSwitch = _isDeviceSwitch(previousDeviceId, newDeviceId);
+  if (isDeviceSwitch && !clearNodeData) {
+    AppLogging.app(
+      '🔁 Device switch detected ($previousDeviceId -> $newDeviceId) — '
+      'forcing node data clear so the new device\'s NodeDB does not get '
+      'unioned with the prior device\'s persisted nodes',
+    );
+    clearNodeData = true;
+  }
   final messageCount = ref.read(messagesProvider).length;
   AppLogging.app(
     '🧹 Clearing device data before new connection '
@@ -2224,8 +2268,21 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
           // Restart protocol service
           AppLogging.connection('Starting protocol service...');
 
-          // Clear all previous device data before starting new connection
-          await clearDeviceDataBeforeConnectRef(ref);
+          // Clear all previous device data before starting new connection.
+          // Pass previous + new IDs so node data is auto-cleared if this
+          // is a different physical device than was last connected.
+          String? previousDeviceId;
+          try {
+            final settings = await ref.read(settingsServiceProvider.future);
+            previousDeviceId = settings.lastDeviceId;
+          } catch (_) {
+            previousDeviceId = null;
+          }
+          await clearDeviceDataBeforeConnectRef(
+            ref,
+            previousDeviceId: previousDeviceId,
+            newDeviceId: foundDevice.id,
+          );
 
           final protocol = ref.read(protocolServiceProvider);
 
