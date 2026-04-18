@@ -2,6 +2,7 @@
 .git-backup/
 
 # Miscellaneous
+logs.txt
 *.class
 *.log
 *.pyc
