@@ -70,7 +70,6 @@ import '../aether/widgets/aether_flight_detected_overlay.dart';
 import '../sip/sip_hub_screen.dart';
 import '../mrrp_harness/mrrp_harness_home_screen.dart';
 import '../mesh_explorer/mesh_explorer_screen.dart';
-import '../mesh_services/screens/my_services_screen.dart';
 import '../mesh_feed/screens/mesh_feed_screen.dart';
 import '../nodeboard/screens/nodeboard_list_screen.dart';
 import '../incidents/screens/mesh_incident_list_screen.dart';
@@ -431,14 +430,6 @@ class _MainShellState extends ConsumerState<MainShell> {
         iconColor: AccentColors.teal,
         requiresConnection: true,
         badgeProviderKey: 'mesh_explorer',
-      ),
-    if (AppFeatureFlags.isMeshServicesEnabled)
-      DrawerMenuItem(
-        icon: Icons.miscellaneous_services_outlined,
-        label: l10n.meshServicesDrawerLabel,
-        screen: const MyServicesScreen(),
-        iconColor: AccentColors.purple,
-        requiresConnection: true,
       ),
     if (AppFeatureFlags.isMeshFeedEnabled)
       DrawerMenuItem(

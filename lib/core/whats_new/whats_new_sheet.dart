@@ -517,31 +517,17 @@ class _WhatsNewItemCard extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header row: icon + title
-          Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: itemColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(AppTheme.radius12),
-                ),
-                child: Icon(item.icon, color: itemColor, size: 24),
-              ),
-              const SizedBox(width: AppTheme.spacing12),
-              Expanded(
-                child: Text(
-                  item.title,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    fontFamily: AppTheme.fontFamily,
-                    color: context.textPrimary,
-                  ),
-                ),
-              ),
-            ],
+          // Header row: icon + title.
+          //
+          // The title is parsed for leading all-caps slash-separated tokens
+          // (e.g. "IF / THEN / ELSE Automations" → chips [IF][THEN][ELSE]
+          // + text "Automations"). This keeps technical shorthand visually
+          // distinct from the rest of the title without forcing a data-
+          // model change on `WhatsNewItem`.
+          _WhatsNewTitleRow(
+            title: item.title,
+            icon: item.icon,
+            iconColor: itemColor,
           ),
 
           const SizedBox(height: AppTheme.spacing12),
@@ -764,5 +750,166 @@ class _WhatsNewItemCard extends ConsumerWidget {
       default:
         return null;
     }
+  }
+}
+
+/// Header row for a [_WhatsNewItemCard]: leading icon square, followed by
+/// the item's title. When the title begins with a run of uppercase
+/// slash-separated tokens (e.g. "IF / THEN / ELSE Automations") those
+/// tokens render as small chips and only the trailing words render as
+/// plain title text. Non-conforming titles render unchanged.
+class _WhatsNewTitleRow extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final Color iconColor;
+
+  const _WhatsNewTitleRow({
+    required this.title,
+    required this.icon,
+    required this.iconColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final parts = _TitleParts.fromTitle(title);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: iconColor.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
+          ),
+          child: Icon(icon, color: iconColor, size: 24),
+        ),
+        const SizedBox(width: AppTheme.spacing12),
+        Expanded(
+          child: parts.chips.isEmpty
+              ? Text(
+                  parts.remainder,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    fontFamily: AppTheme.fontFamily,
+                    color: context.textPrimary,
+                  ),
+                )
+              : Wrap(
+                  spacing: AppTheme.spacing6,
+                  runSpacing: AppTheme.spacing6,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    for (final chip in parts.chips)
+                      _TitleTokenChip(label: chip, color: iconColor),
+                    if (parts.remainder.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(left: AppTheme.spacing2),
+                        child: Text(
+                          parts.remainder,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            fontFamily: AppTheme.fontFamily,
+                            color: context.textPrimary,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+        ),
+      ],
+    );
+  }
+}
+
+class _TitleTokenChip extends StatelessWidget {
+  final String label;
+  final Color color;
+
+  const _TitleTokenChip({required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing8,
+        vertical: AppTheme.spacing2,
+      ),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(AppTheme.radius6),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          fontFamily: AppTheme.fontFamily,
+          color: color,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+}
+
+/// Splits a title string into a leading list of all-caps slash-separated
+/// tokens plus the trailing remainder.
+///
+/// "IF / THEN / ELSE Automations" → `chips = [IF, THEN, ELSE]`, `remainder = "Automations"`
+/// "World Map" → `chips = []`, `remainder = "World Map"`
+/// "AI / ML Toolkit" → `chips = [AI, ML]`, `remainder = "Toolkit"`
+///
+/// A token is considered chip-eligible if it is 1–6 characters long and
+/// consists entirely of ASCII uppercase letters. Tokens are separated by
+/// " / " (spaces-slash-space). The scan stops at the first non-matching
+/// token; everything from there on is the remainder.
+class _TitleParts {
+  final List<String> chips;
+  final String remainder;
+
+  const _TitleParts({required this.chips, required this.remainder});
+
+  static final _allCaps = RegExp(r'^[A-Z]{1,6}$');
+
+  factory _TitleParts.fromTitle(String title) {
+    final trimmed = title.trim();
+    if (trimmed.isEmpty) {
+      return const _TitleParts(chips: [], remainder: '');
+    }
+
+    // Tokens separated by whitespace. We then walk in groups of
+    // (TOKEN, '/', TOKEN, '/', ...) until we fail the pattern.
+    final tokens = trimmed.split(RegExp(r'\s+'));
+    final chips = <String>[];
+    var consumed = 0;
+
+    while (consumed < tokens.length) {
+      final tok = tokens[consumed];
+      if (!_allCaps.hasMatch(tok)) break;
+      // Expect a '/' separator after an accepted chip, unless this is
+      // the last token in the run (next word is a non-chip).
+      final next = consumed + 1 < tokens.length ? tokens[consumed + 1] : null;
+      chips.add(tok);
+      if (next == '/') {
+        consumed += 2;
+        continue;
+      }
+      // Non-'/' follows → this chip ends the run.
+      consumed += 1;
+      break;
+    }
+
+    // A single chip (e.g. title is just "DM") is probably not what the
+    // author intended as a chip treatment — fall back to plain text.
+    if (chips.length < 2) {
+      return _TitleParts(chips: const [], remainder: trimmed);
+    }
+
+    final remainder = tokens.sublist(consumed).join(' ').trim();
+    return _TitleParts(chips: chips, remainder: remainder);
   }
 }

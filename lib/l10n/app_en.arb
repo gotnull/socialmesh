@@ -6255,6 +6255,22 @@
     "@drawerNodeOnline": {
         "description": "Connection status chip label when the device is connected."
     },
+    "emailLauncherChooseApp": "Choose email app",
+    "@emailLauncherChooseApp": {
+        "description": "Title of the bottom sheet that lets the user pick which installed email app to open when sending a support email."
+    },
+    "emailLauncherNoAppsInstalled": "No email app installed",
+    "@emailLauncherNoAppsInstalled": {
+        "description": "Error message shown when the user taps an email link but no email app is installed on the device."
+    },
+    "emailLauncherUnableToOpen": "Unable to open email client",
+    "@emailLauncherUnableToOpen": {
+        "description": "Error message shown when launching the chosen email app fails."
+    },
+    "emailLauncherDefaultBadge": "Default",
+    "@emailLauncherDefaultBadge": {
+        "description": "Badge shown next to the user's default email app in the picker."
+    },
     "explorerTitleCartographer": "Cartographer",
     "@explorerTitleCartographer": {
         "description": "Explorer title for 50-99 discovered nodes."
@@ -24213,6 +24229,14 @@
     "socialSuggestionsFailed": "Failed to load suggestions",
     "@socialSuggestionsFailed": {
         "description": "Error message in social features"
+    },
+    "socialSuspendedAppealBody": "Hi,\n\nI would like to appeal my account suspension.\n\nPlease review my case.\n\nThank you.",
+    "@socialSuspendedAppealBody": {
+        "description": "Default body of the email opened when a suspended user taps Contact Support to appeal."
+    },
+    "socialSuspendedAppealSubject": "Account Suspension Appeal",
+    "@socialSuspendedAppealSubject": {
+        "description": "Default subject of the email opened when a suspended user taps Contact Support to appeal."
     },
     "socialSuspendedContactSupport": "Contact support to appeal this decision",
     "@socialSuspendedContactSupport": {
@@ -42633,6 +42657,62 @@
     "@sipHubSectionIncomingRequests": {
         "description": "Section header for pending handshake consent requests."
     },
+    "sipHubSectionYourServices": "Your Services",
+    "@sipHubSectionYourServices": {
+        "description": "Section header on the SIP hub for the user's own local mesh services."
+    },
+    "sipHubCreateServiceCta": "Create Service",
+    "@sipHubCreateServiceCta": {
+        "description": "Primary CTA label on the SIP hub 'Your Services' section that opens the service creation wizard."
+    },
+    "sipHubPeerDetailOverlayLink": "Overlay link v0.2",
+    "@sipHubPeerDetailOverlayLink": {
+        "description": "Capability chip label indicating peer supports overlay link v0.2."
+    },
+    "sipHubPeerDetailOverlayResource": "Overlay resource v0.2",
+    "@sipHubPeerDetailOverlayResource": {
+        "description": "Capability chip label indicating peer supports overlay resource v0.2."
+    },
+    "sipHubPeerDetailOverlaySecure": "Overlay secure v0.3",
+    "@sipHubPeerDetailOverlaySecure": {
+        "description": "Capability chip label indicating peer supports overlay secure v0.3 (encrypted DM session)."
+    },
+    "sipHubPeerDetailOpenChat": "Open chat",
+    "@sipHubPeerDetailOpenChat": {
+        "description": "Primary CTA on the peer detail sheet that opens the active DM conversation with the peer."
+    },
+    "sipHubPeerServicesHeader": "Services",
+    "@sipHubPeerServicesHeader": {
+        "description": "Header label above the list of services advertised by a remote peer."
+    },
+    "sipHubPeerServiceVersionLine": "v{major}.{minor} · {bytes}B metadata",
+    "@sipHubPeerServiceVersionLine": {
+        "description": "Secondary line on a peer's advertised service tile showing version and metadata size.",
+        "placeholders": {
+            "major": {
+                "type": "int",
+                "example": "1"
+            },
+            "minor": {
+                "type": "int",
+                "example": "0"
+            },
+            "bytes": {
+                "type": "int",
+                "example": "24"
+            }
+        }
+    },
+    "sipHubPeerServiceMoreCount": "+{count}",
+    "@sipHubPeerServiceMoreCount": {
+        "description": "Indicator on the peer tile for extra services beyond the inline preview cap.",
+        "placeholders": {
+            "count": {
+                "type": "int",
+                "example": "2"
+            }
+        }
+    },
     "sipHubIncomingRequestFrom": "{peerName} wants to connect",
     "@sipHubIncomingRequestFrom": {
         "description": "Incoming handshake request label.",
@@ -44082,7 +44162,7 @@
     "@meshServicesCreateAction": {
         "description": "Button label to create a new service instance."
     },
-    "meshServicesCreateTitle": "Share on the mesh",
+    "meshServicesCreateTitle": "Share with the mesh",
     "@meshServicesCreateTitle": {
         "description": "App bar title for the template picker / create service screen."
     },
@@ -46689,7 +46769,7 @@
     "@guidedFlowCancel": {
         "description": "Cancel button in wizard"
     },
-    "serviceWizardTitle": "Share on the mesh",
+    "serviceWizardTitle": "Share with the mesh",
     "@serviceWizardTitle": {
         "description": "Title for the service creation wizard"
     },

@@ -8470,6 +8470,30 @@ abstract class AppLocalizations {
   /// **'Online'**
   String get drawerNodeOnline;
 
+  /// Title of the bottom sheet that lets the user pick which installed email app to open when sending a support email.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose email app'**
+  String get emailLauncherChooseApp;
+
+  /// Error message shown when the user taps an email link but no email app is installed on the device.
+  ///
+  /// In en, this message translates to:
+  /// **'No email app installed'**
+  String get emailLauncherNoAppsInstalled;
+
+  /// Error message shown when launching the chosen email app fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to open email client'**
+  String get emailLauncherUnableToOpen;
+
+  /// Badge shown next to the user's default email app in the picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get emailLauncherDefaultBadge;
+
   /// Explorer title for 50-99 discovered nodes.
   ///
   /// In en, this message translates to:
@@ -31030,6 +31054,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to load suggestions'**
   String get socialSuggestionsFailed;
+
+  /// Default body of the email opened when a suspended user taps Contact Support to appeal.
+  ///
+  /// In en, this message translates to:
+  /// **'Hi,\n\nI would like to appeal my account suspension.\n\nPlease review my case.\n\nThank you.'**
+  String get socialSuspendedAppealBody;
+
+  /// Default subject of the email opened when a suspended user taps Contact Support to appeal.
+  ///
+  /// In en, this message translates to:
+  /// **'Account Suspension Appeal'**
+  String get socialSuspendedAppealSubject;
 
   /// Text displayed in social features
   ///
@@ -55900,6 +55936,60 @@ abstract class AppLocalizations {
   /// **'Connection requests'**
   String get sipHubSectionIncomingRequests;
 
+  /// Section header on the SIP hub for the user's own local mesh services.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Services'**
+  String get sipHubSectionYourServices;
+
+  /// Primary CTA label on the SIP hub 'Your Services' section that opens the service creation wizard.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Service'**
+  String get sipHubCreateServiceCta;
+
+  /// Capability chip label indicating peer supports overlay link v0.2.
+  ///
+  /// In en, this message translates to:
+  /// **'Overlay link v0.2'**
+  String get sipHubPeerDetailOverlayLink;
+
+  /// Capability chip label indicating peer supports overlay resource v0.2.
+  ///
+  /// In en, this message translates to:
+  /// **'Overlay resource v0.2'**
+  String get sipHubPeerDetailOverlayResource;
+
+  /// Capability chip label indicating peer supports overlay secure v0.3 (encrypted DM session).
+  ///
+  /// In en, this message translates to:
+  /// **'Overlay secure v0.3'**
+  String get sipHubPeerDetailOverlaySecure;
+
+  /// Primary CTA on the peer detail sheet that opens the active DM conversation with the peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Open chat'**
+  String get sipHubPeerDetailOpenChat;
+
+  /// Header label above the list of services advertised by a remote peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Services'**
+  String get sipHubPeerServicesHeader;
+
+  /// Secondary line on a peer's advertised service tile showing version and metadata size.
+  ///
+  /// In en, this message translates to:
+  /// **'v{major}.{minor} · {bytes}B metadata'**
+  String sipHubPeerServiceVersionLine(int major, int minor, int bytes);
+
+  /// Indicator on the peer tile for extra services beyond the inline preview cap.
+  ///
+  /// In en, this message translates to:
+  /// **'+{count}'**
+  String sipHubPeerServiceMoreCount(int count);
+
   /// Incoming handshake request label.
   ///
   /// In en, this message translates to:
@@ -57781,7 +57871,7 @@ abstract class AppLocalizations {
   /// App bar title for the template picker / create service screen.
   ///
   /// In en, this message translates to:
-  /// **'Share on the mesh'**
+  /// **'Share with the mesh'**
   String get meshServicesCreateTitle;
 
   /// Subtitle on the template picker screen.
@@ -61207,7 +61297,7 @@ abstract class AppLocalizations {
   /// Title for the service creation wizard
   ///
   /// In en, this message translates to:
-  /// **'Share on the mesh'**
+  /// **'Share with the mesh'**
   String get serviceWizardTitle;
 
   /// Step indicator label: choose what to create

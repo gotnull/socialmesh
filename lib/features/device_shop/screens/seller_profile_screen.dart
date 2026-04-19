@@ -14,6 +14,7 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/search_filter_header.dart';
 import '../../../core/widgets/status_filter_chip.dart';
+import '../../../utils/email_launcher.dart';
 import '../../../utils/snackbar.dart';
 import '../../../core/widgets/auto_scroll_text.dart';
 import '../../../core/widgets/user_avatar.dart';
@@ -675,7 +676,11 @@ class _ContactSection extends ConsumerWidget {
                   actionType: 'email',
                   destinationUrl: 'mailto:${seller.contactEmail}',
                 );
-                await _launchUrl('mailto:${seller.contactEmail}');
+                if (!context.mounted) return;
+                await launchEmailCompose(
+                  context: context,
+                  to: seller.contactEmail!,
+                );
               },
             ),
 

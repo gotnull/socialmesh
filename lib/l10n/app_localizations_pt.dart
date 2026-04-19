@@ -4789,6 +4789,18 @@ class AppLocalizationsPt extends AppLocalizations {
   String get drawerNodeOnline => 'Online';
 
   @override
+  String get emailLauncherChooseApp => 'Choose email app';
+
+  @override
+  String get emailLauncherNoAppsInstalled => 'No email app installed';
+
+  @override
+  String get emailLauncherUnableToOpen => 'Unable to open email client';
+
+  @override
+  String get emailLauncherDefaultBadge => 'Default';
+
+  @override
   String get explorerTitleCartographer => 'Cartógrafo';
 
   @override
@@ -17801,6 +17813,13 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get socialSuggestionsFailed => 'Falha ao carregar sugestões';
+
+  @override
+  String get socialSuspendedAppealBody =>
+      'Hi,\n\nI would like to appeal my account suspension.\n\nPlease review my case.\n\nThank you.';
+
+  @override
+  String get socialSuspendedAppealSubject => 'Account Suspension Appeal';
 
   @override
   String get socialSuspendedContactSupport =>
@@ -32061,6 +32080,37 @@ class AppLocalizationsPt extends AppLocalizations {
   String get sipHubSectionIncomingRequests => 'Pedidos Recebidos';
 
   @override
+  String get sipHubSectionYourServices => 'Your Services';
+
+  @override
+  String get sipHubCreateServiceCta => 'Create Service';
+
+  @override
+  String get sipHubPeerDetailOverlayLink => 'Overlay link v0.2';
+
+  @override
+  String get sipHubPeerDetailOverlayResource => 'Overlay resource v0.2';
+
+  @override
+  String get sipHubPeerDetailOverlaySecure => 'Overlay secure v0.3';
+
+  @override
+  String get sipHubPeerDetailOpenChat => 'Open chat';
+
+  @override
+  String get sipHubPeerServicesHeader => 'Services';
+
+  @override
+  String sipHubPeerServiceVersionLine(int major, int minor, int bytes) {
+    return 'v$major.$minor · ${bytes}B metadata';
+  }
+
+  @override
+  String sipHubPeerServiceMoreCount(int count) {
+    return '+$count';
+  }
+
+  @override
   String sipHubIncomingRequestFrom(String peerName) {
     return '$peerName quer ligar-se';
   }
@@ -35092,7 +35142,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get guidedFlowCancel => 'Cancel';
 
   @override
-  String get serviceWizardTitle => 'Share on the mesh';
+  String get serviceWizardTitle => 'Share with the mesh';
 
   @override
   String get serviceWizardStepWhat => 'Intent';
