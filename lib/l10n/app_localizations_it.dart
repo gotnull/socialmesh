@@ -22688,6 +22688,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get restorePurchasesNone => 'Nessun acquisto trovato da ripristinare';
 
   @override
+  String get restorePurchasesPending =>
+      'Your purchase is still being processed by the store. This can take up to 72 hours — please try again later.';
+
+  @override
   String get bluetoothTitle => 'Bluetooth';
 
   @override

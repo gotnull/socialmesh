@@ -39613,6 +39613,12 @@ abstract class AppLocalizations {
   /// **'No purchases found to restore'**
   String get restorePurchasesNone;
 
+  /// Restore result when the store has a PaymentPendingError receipt that RevenueCat cannot yet accept
+  ///
+  /// In en, this message translates to:
+  /// **'Your purchase is still being processed by the store. This can take up to 72 hours — please try again later.'**
+  String get restorePurchasesPending;
+
   /// Screen or section title
   ///
   /// In en, this message translates to:

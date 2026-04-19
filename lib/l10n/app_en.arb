@@ -30758,6 +30758,10 @@
     "@restorePurchasesNone": {
         "description": "UI text: restore purchases none"
     },
+    "restorePurchasesPending": "Your purchase is still being processed by the store. This can take up to 72 hours — please try again later.",
+    "@restorePurchasesPending": {
+        "description": "Restore result when the store has a PaymentPendingError receipt that RevenueCat cannot yet accept"
+    },
     "bluetoothTitle": "Bluetooth",
     "@bluetoothTitle": {
         "description": "Screen or section title"

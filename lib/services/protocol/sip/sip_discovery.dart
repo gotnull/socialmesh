@@ -81,6 +81,14 @@ class SipPeerCapability {
   bool get supportsOverlayResourceV02 =>
       (features & SipFeatureBits.overlayResourceV02) ==
       SipFeatureBits.overlayResourceV02;
+
+  /// Whether this peer advertised overlay v0.3 secure-session support.
+  /// Implies [supportsOverlayLinkV02] by protocol rule (secure rides
+  /// on the canonical link). Orthogonal to
+  /// [supportsOverlayResourceV02].
+  bool get supportsOverlaySecureV03 =>
+      (features & SipFeatureBits.overlaySecureV03) ==
+      SipFeatureBits.overlaySecureV03;
 }
 
 /// Outbound SIP frame ready to send via the transport.

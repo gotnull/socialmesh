@@ -34,9 +34,9 @@ import '../../features/nodedex/screens/nodedex_detail_screen.dart';
 import '../../features/nodedex/widgets/sigil_painter.dart';
 import '../../features/nodes/node_display_name_resolver.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/sip_dm_secure_router.dart';
 import '../../providers/sip_providers.dart';
 import '../../services/haptic_service.dart';
-import '../../services/protocol/sip/sip_codec.dart';
 import '../../services/protocol/sip/sip_dm.dart';
 import '../../services/protocol/sip/sip_messages_dm.dart';
 import '../../utils/snackbar.dart';
@@ -107,7 +107,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
     FocusScope.of(context).unfocus();
   }
 
-  void _sendMessage() {
+  Future<void> _sendMessage() async {
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
 
@@ -124,23 +124,16 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
           )
         : text;
 
-    final result = dm.buildDmMessage(
-      sessionTag: widget.sessionTag,
-      text: messageText,
-    );
+    // Phase 2: route through the secure-aware DM router instead of
+    // building a plaintext frame directly. The router picks secure or
+    // plaintext per the encrypt-when-all-true gate and sends exactly
+    // one transport.
+    final outcome = await ref
+        .read(sipDmRouterProvider)
+        .sendText(sessionTag: widget.sessionTag, text: messageText);
 
-    if (result.isOk) {
-      final encoded = SipCodec.encode(result.frame!);
-      if (encoded == null) {
-        haptics.trigger(HapticType.error);
-        _showSendError(SipDmSendError.textTooLong);
-        return;
-      }
-      final protocol = ref.read(protocolServiceProvider);
-      protocol.sendSipPacket(encoded);
-      ref
-          .read(sipCountersProvider)
-          .recordTx(result.frame!.msgType, encoded.length);
+    if (!mounted) return;
+    if (outcome.isOk) {
       haptics.trigger(HapticType.light);
       _messageController.clear();
       _cancelReply();
@@ -148,7 +141,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
       _scrollToBottom();
     } else {
       haptics.trigger(HapticType.error);
-      _showSendError(result.error);
+      _showSendError(outcome.error);
     }
   }
 
@@ -257,7 +250,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
     });
   }
 
-  void _onReact(SipDmHistoryEntry entry, int emojiIndex) {
+  Future<void> _onReact(SipDmHistoryEntry entry, int emojiIndex) async {
     final dm = ref.read(sipDmManagerProvider);
     if (dm == null) return;
 
@@ -271,15 +264,15 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
       return;
     }
 
-    final encoded = dm.buildDmReaction(
-      sessionTag: widget.sessionTag,
-      emojiIndex: emojiIndex,
-      targetEntry: entry,
-    );
-    if (encoded != null) {
-      final protocol = ref.read(protocolServiceProvider);
-      protocol.sendSipPacket(encoded);
-    }
+    // Phase 2: route reactions through the secure-aware router.
+    await ref
+        .read(sipDmRouterProvider)
+        .sendReaction(
+          sessionTag: widget.sessionTag,
+          emojiIndex: emojiIndex,
+          targetEntry: entry,
+        );
+    if (!mounted) return;
     setState(() {});
   }
 

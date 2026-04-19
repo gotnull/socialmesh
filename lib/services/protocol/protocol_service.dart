@@ -5511,7 +5511,20 @@ class ProtocolService {
   /// Accept an incoming SIP handshake request from [peerNodeId].
   ///
   /// Sends HS_CHALLENGE to the peer. No-ops if no pending request exists.
+  ///
+  /// **Defensive trace:** every invocation logs its originating call
+  /// site via a captured stack trace. The mandatory consent rule says
+  /// only an explicit user button tap may reach this method; if a
+  /// field log ever shows a stack frame that is not the SIP hub's
+  /// `_IncomingRequestTile` Accept button or the Mesh Explorer peer
+  /// detail sheet's `_onAccept`, that points to a consent-bypass
+  /// regression we must fix immediately.
   Future<void> acceptSipHandshake(int peerNodeId) async {
+    final stack = StackTrace.current.toString().split('\n').take(6).join(' | ');
+    AppLogging.sip(
+      'SIP_HS: acceptSipHandshake call peer=0x${peerNodeId.toRadixString(16)} '
+      'stack=$stack',
+    );
     final hs = _sipHandshake;
     if (hs == null) return;
     final challengeFrame = hs.acceptHandshake(peerNodeId);

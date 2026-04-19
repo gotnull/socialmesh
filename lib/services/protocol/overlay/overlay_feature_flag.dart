@@ -64,7 +64,7 @@ class OverlayFeatureFlags {
     return OverlayFeatureFlags(
       linkEnabled: _readBool('OVERLAY_LINK_ENABLED'),
       resourceEnabled: _readBool('OVERLAY_RESOURCE_ENABLED'),
-      secureEnabled: false,
+      secureEnabled: _readBool('OVERLAY_SECURE_ENABLED'),
     );
   }
 
@@ -73,6 +73,13 @@ class OverlayFeatureFlags {
   /// rather than reading [resourceEnabled] directly — it encodes the
   /// "resource requires link" invariant once.
   bool get resourceActive => linkEnabled && resourceEnabled;
+
+  /// True only if both [linkEnabled] and [secureEnabled] are set.
+  /// Secure sessions ride on the canonical overlay link; the flag is
+  /// intentionally orthogonal to [resourceEnabled] so a mesh may
+  /// advertise secure support without committing to resource
+  /// transfer. See `OVERLAY_V0_2.md §25.9`.
+  bool get secureActive => linkEnabled && secureEnabled;
 
   static bool _readBool(String key) {
     try {

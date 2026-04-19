@@ -34,8 +34,21 @@ class PurchaseService {
   /// These are preserved across refreshes AND app restarts to prevent losing unlock status
   final Set<String> _storeConfirmedProducts = {};
 
+  /// Set when the most recent restore encountered PaymentPendingError —
+  /// the store believes a purchase exists but RevenueCat has not accepted
+  /// its receipt. Typical Android case: Google Play returns the purchase
+  /// in queryPurchaseHistory but /v1/receipts returns 400 with
+  /// PaymentPendingError. UI reads this flag to distinguish a "nothing to
+  /// restore" outcome from a "store has a pending receipt" outcome so the
+  /// user sees a helpful message instead of the misleading "none" state.
+  bool _lastRestoreHadPendingPayment = false;
+
   /// Current purchase state
   PurchaseState get currentState => _currentState;
+
+  /// True when the most recent `restorePurchases()` call encountered
+  /// PaymentPendingError. Reset at the start of every restore attempt.
+  bool get lastRestoreHadPendingPayment => _lastRestoreHadPendingPayment;
 
   /// Stream of purchase state changes
   Stream<PurchaseState> get stateStream => _stateController.stream;
@@ -684,6 +697,10 @@ class PurchaseService {
     );
     AppLogging.subscriptions('💰 isInitialized: $_isInitialized');
 
+    // Reset pending-payment flag at the start of every attempt so the UI
+    // only reacts to the outcome of THIS restore, not a stale prior one.
+    _lastRestoreHadPendingPayment = false;
+
     if (!_isInitialized) {
       AppLogging.subscriptions(
         '💰 ❌ RESTORE FAILED: RevenueCat not initialized',
@@ -854,6 +871,7 @@ class PurchaseService {
           AppLogging.subscriptions(
             '💰 ⚠️ PaymentPendingError detected (old pending purchase)',
           );
+          _lastRestoreHadPendingPayment = true;
           return _handleRestoreFallback();
 
         // Network error - retryable, but try fallback first

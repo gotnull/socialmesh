@@ -174,6 +174,123 @@ abstract final class SipDmMessages {
     final bd = ByteData.sublistView(payload);
     return bd.getUint32(0, Endian.big);
   }
+
+  // ---------------------------------------------------------------------------
+  // Secure DM payload codecs (Phase 2)
+  //
+  // These wrap the plaintext `0x40` / `0x42` content with a sender-provided
+  // timestamp so the decrypted payload can be reconstructed into a
+  // synthetic [SipFrame] that flows through the existing
+  // `SipDmManager.handleInboundDm` / `handleInboundReaction` paths
+  // unchanged. Typing (`0x41`) is explicitly NOT carried over secure —
+  // its high frequency / low content value doesn't justify the 62 B
+  // per-frame overhead.
+  //
+  // Wire-layout inside `LINK_SECURE_DATA` (after AEAD strip):
+  //   subtype=0x02  dmText       : timestamp_s(4) ‖ utf8_text
+  //   subtype=0x03  dmReaction   : timestamp_s(4) ‖ emoji_index(1) ‖ target_ts(4)
+  // ---------------------------------------------------------------------------
+
+  /// Prefix-overhead (bytes) added by the secure DM text envelope.
+  static const int secureDmTextOverhead = 4;
+
+  /// Total size (bytes) of a secure DM reaction payload.
+  static const int secureDmReactionSize = 9;
+
+  /// Encode a secure DM text payload. Prepends [timestampS] (seconds)
+  /// to the raw UTF-8 bytes so the receiver can reconstruct a synthetic
+  /// SIP frame with the original sender time.
+  static Uint8List? encodeSecureDmText({
+    required String text,
+    required int timestampS,
+  }) {
+    if (timestampS < 0 || timestampS > 0xFFFFFFFF) return null;
+    final body = encodeDm(text);
+    if (body == null) return null;
+    final out = Uint8List(secureDmTextOverhead + body.length);
+    ByteData.sublistView(out).setUint32(0, timestampS, Endian.big);
+    out.setRange(secureDmTextOverhead, out.length, body);
+    return out;
+  }
+
+  /// Decode a secure DM text payload into its timestamp + parsed
+  /// message. Returns null when too short, out-of-range, or the body
+  /// fails UTF-8 decoding.
+  static SecureDmTextDecoded? decodeSecureDmText(Uint8List payload) {
+    if (payload.length < secureDmTextOverhead + 1) {
+      AppLogging.sip(
+        'SIP_DM: decodeSecureDmText rejected: ${payload.length}B too short',
+      );
+      return null;
+    }
+    final timestampS = ByteData.sublistView(
+      payload,
+      0,
+      secureDmTextOverhead,
+    ).getUint32(0, Endian.big);
+    final body = Uint8List.sublistView(payload, secureDmTextOverhead);
+    final msg = decodeDm(body);
+    if (msg == null) return null;
+    return SecureDmTextDecoded(timestampS: timestampS, message: msg);
+  }
+
+  /// Encode a secure DM reaction payload.
+  static Uint8List? encodeSecureReaction({
+    required int timestampS,
+    required int emojiIndex,
+    required int targetTimestampS,
+  }) {
+    if (timestampS < 0 || timestampS > 0xFFFFFFFF) return null;
+    if (emojiIndex < 0 || emojiIndex > 6) return null;
+    if (targetTimestampS < 0 || targetTimestampS > 0xFFFFFFFF) return null;
+    final out = Uint8List(secureDmReactionSize);
+    final bd = ByteData.sublistView(out);
+    bd.setUint32(0, timestampS, Endian.big);
+    out[4] = emojiIndex;
+    bd.setUint32(5, targetTimestampS, Endian.big);
+    return out;
+  }
+
+  /// Decode a secure DM reaction payload. Returns null when length or
+  /// emoji index is out of range.
+  static SecureDmReactionDecoded? decodeSecureReaction(Uint8List payload) {
+    if (payload.length != secureDmReactionSize) {
+      AppLogging.sip(
+        'SIP_DM: decodeSecureReaction rejected: '
+        '${payload.length}B != ${secureDmReactionSize}B',
+      );
+      return null;
+    }
+    final bd = ByteData.sublistView(payload);
+    final timestampS = bd.getUint32(0, Endian.big);
+    final emojiIndex = payload[4];
+    if (emojiIndex > 6) return null;
+    final targetTimestampS = bd.getUint32(5, Endian.big);
+    return SecureDmReactionDecoded(
+      timestampS: timestampS,
+      reaction: SipDmReaction(
+        emojiIndex: emojiIndex,
+        targetTimestampS: targetTimestampS,
+      ),
+    );
+  }
+}
+
+/// Parsed result of a secure DM text payload.
+class SecureDmTextDecoded {
+  final int timestampS;
+  final SipDmMessage message;
+  const SecureDmTextDecoded({required this.timestampS, required this.message});
+}
+
+/// Parsed result of a secure DM reaction payload.
+class SecureDmReactionDecoded {
+  final int timestampS;
+  final SipDmReaction reaction;
+  const SecureDmReactionDecoded({
+    required this.timestampS,
+    required this.reaction,
+  });
 }
 
 /// Predefined reaction emojis for DM messages.

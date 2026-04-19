@@ -171,6 +171,31 @@ class OverlayLinkStore {
     return _recordFromRow(rows.first);
   }
 
+  /// Load every non-terminal record for a given peer node num, in
+  /// `link_id` ascending order. Used for simultaneous-open tie-break:
+  /// at auto-open time we only know the peer's SIP node num, not the
+  /// real persona hint (that arrives inside the signed LINK_OPEN body),
+  /// so [getActiveForPeer] can't match across synthetic vs real hints.
+  /// Looking up by `peer_node_num` bridges the two views so both
+  /// initiator and responder records converge on one canonical link.
+  Future<List<OverlayLinkRecord>> getNonTerminalForPeerNode(
+    int peerNodeNum,
+  ) async {
+    final rows = await _database.query(
+      _tableName,
+      where: 'peer_node_num = ? AND state IN (?, ?, ?, ?)',
+      whereArgs: [
+        peerNodeNum,
+        OverlayLinkState.opening.code,
+        OverlayLinkState.active.code,
+        OverlayLinkState.stale.code,
+        OverlayLinkState.draining.code,
+      ],
+      orderBy: 'link_id ASC',
+    );
+    return rows.map(_recordFromRow).toList(growable: false);
+  }
+
   /// Load every record regardless of state. Used on engine startup for
   /// [OverlayLinkEngine.restore].
   Future<List<OverlayLinkRecord>> loadAll() async {

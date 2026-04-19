@@ -50,6 +50,7 @@ import '../services/protocol/overlay/overlay_resource_engine.dart';
 import '../services/protocol/overlay/overlay_resource_ingress_dispatcher.dart';
 import '../services/protocol/overlay/overlay_resource_protocol_egress.dart';
 import '../services/protocol/overlay/overlay_resource_store.dart';
+import '../services/protocol/overlay/overlay_secure_session_manager.dart';
 import 'app_providers.dart';
 import 'sip_providers.dart';
 
@@ -127,6 +128,35 @@ final overlayProtocolEgressProvider = Provider<OverlayLinkEgress>((ref) {
   );
 });
 
+/// v0.3 secure-session manager. Attached into [overlayLinkEngineProvider]
+/// so the engine forwards link activation / secure-inbound / link
+/// terminate hooks automatically. The manager's own `_enabledFlag`
+/// reads `overlayFlagProvider.secureActive` per call, so a runtime
+/// flag flip propagates without rebuilding either the manager or the
+/// engine.
+///
+/// The manager shares the same `OverlayLinkStore` and egress sink as
+/// the engine — they must operate on identical link state or secure
+/// frames go to the wrong link.
+final overlaySecureSessionManagerProvider =
+    FutureProvider<OverlaySecureSessionManager>((ref) async {
+      final store = await ref.watch(overlayLinkStoreProvider.future);
+      final egress = ref.read(overlayProtocolEgressProvider);
+      final endpointManager = await ref.watch(
+        overlayEndpointManagerProvider.future,
+      );
+      final manager = OverlaySecureSessionManager(
+        store: store,
+        egress: egress,
+        endpointManager: endpointManager,
+        enabledFlag: () => ref.read(overlayFlagProvider).secureActive,
+      );
+      ref.onDispose(() async {
+        await manager.dispose();
+      });
+      return manager;
+    });
+
 /// The single authoritative [OverlayLinkEngine] for this app process.
 final overlayLinkEngineProvider = FutureProvider<OverlayLinkEngine>((
   ref,
@@ -136,11 +166,15 @@ final overlayLinkEngineProvider = FutureProvider<OverlayLinkEngine>((
   final endpointManager = await ref.watch(
     overlayEndpointManagerProvider.future,
   );
+  final secureSessionManager = await ref.watch(
+    overlaySecureSessionManagerProvider.future,
+  );
 
   final engine = OverlayLinkEngine(
     store: store,
     egress: egress,
     endpointManager: endpointManager,
+    secureSessionManager: secureSessionManager,
   );
   ref.onDispose(() async {
     await engine.dispose();

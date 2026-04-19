@@ -21,6 +21,8 @@ import '../services/protocol/sip/sip_handshake.dart';
 import '../services/protocol/sip/sip_identity.dart';
 import '../services/protocol/sip/sip_identity_store.dart';
 import '../services/protocol/sip/sip_keypair.dart';
+import '../services/protocol/overlay/overlay_link_models.dart';
+import '../services/protocol/overlay/overlay_types.dart';
 import '../services/protocol/sip/sip_rate_limiter.dart';
 import '../services/protocol/sip/sip_replay_cache.dart';
 import '../services/protocol/sip/sip_types.dart';
@@ -29,6 +31,7 @@ import 'app_providers.dart';
 import 'app_lifecycle_provider.dart';
 import 'mesh_explorer_providers.dart';
 import 'overlay_providers.dart';
+import 'sip_dm_secure_router.dart';
 import 'sip_nodedex_bridge.dart';
 
 /// Whether SIP is enabled (sourced from SmFeatureFlag).
@@ -215,11 +218,21 @@ final sipDiscoveryProvider = Provider<SipDiscovery?>((ref) {
   // Advertise overlay capability bits in CAP_BEACON / CAP_RESP when
   // the overlay flag is on. Evaluated per-emit so a runtime flag flip
   // propagates on the next beacon.
+  //
+  // Capability dependencies (see OVERLAY_V0_2.md §25.9):
+  // - overlayLinkV02 requires OVERLAY_LINK_ENABLED.
+  // - overlayResourceV02 requires both link + resource flags
+  //   (resource rides on link; encoded in `resourceActive`).
+  // - overlaySecureV03 requires link + secure flags (encoded in
+  //   `secureActive`). Resource enablement is orthogonal — a peer
+  //   may advertise secure without resource, or resource without
+  //   secure.
   discovery.localFeaturesOverride = () {
     final flags = ref.read(overlayFlagProvider);
     var bits = SipFeatureBits.allV01;
     if (flags.linkEnabled) bits |= SipFeatureBits.overlayLinkV02;
     if (flags.resourceActive) bits |= SipFeatureBits.overlayResourceV02;
+    if (flags.secureActive) bits |= SipFeatureBits.overlaySecureV03;
     return bits;
   };
 
@@ -230,6 +243,13 @@ final sipDiscoveryProvider = Provider<SipDiscovery?>((ref) {
   // onto ProtocolService alongside SIP.
   ref.watch(overlayAttachmentProvider);
   ref.watch(overlayResourceIngressProvider);
+
+  // Phase 2 secure DM ingress. Self-gates on OVERLAY_SECURE_ENABLED —
+  // when off, the future resolves immediately without subscribing.
+  // When on, decrypted DM-text / DM-reaction payloads emitted by the
+  // secure manager are synthesised into plaintext SIP frames and
+  // routed through the existing dm.handleInbound* handlers.
+  ref.watch(sipSecureDmIngressProvider);
 
   // Wire the handshake-completion hook. On every successful SIP
   // handshake, attempt to auto-open an overlay v0.2 link in the
@@ -279,21 +299,33 @@ void _autoOpenOverlayLink(Ref ref, int peerNodeId, SipDiscovery discovery) {
     return;
   }
 
+  // Project the peer's SIP-advertised overlay bits onto the overlay
+  // link capability bitset. This hint is honoured by `openLocal` when
+  // it reuses a stale canonical record whose stored overlay caps are
+  // older than the peer's current SIP advertisement — without it, the
+  // manager's `_peerSupportsSecure` check runs against yesterday's
+  // capabilities and silently skips SECURE_INIT.
+  var peerBits = OverlayCapabilityFeature.linkV02;
+  if (peer.supportsOverlayResourceV02) {
+    peerBits |= OverlayCapabilityFeature.resourceV02;
+  }
+  if (peer.supportsOverlaySecureV03) {
+    peerBits |= OverlayCapabilityFeature.secureV03;
+  }
+  final peerCapsHint = OverlayLinkCapabilities(supportedFeatures: peerBits);
+
   // Fire-and-forget. The `ref` object is a Riverpod ProviderRef (alive
   // for the lifetime of sipDiscoveryProvider). No `await` at the call
   // site — we must not block DM completion on overlay.
   Future(() async {
     try {
       final engine = await ref.read(overlayLinkEngineProvider.future);
-      // The engine itself rejects a second openLocal for an active
-      // peer (throws StateError). That's our dedup layer: if a link
-      // is already opening / active / stale for this persona hint,
-      // the call will throw and we swallow it here.
       final hint = Uint8List(8);
       ByteData.view(hint.buffer).setUint32(0, peerNodeId);
       final record = await engine.openLocal(
         peerPersonaHint: hint,
         peerNodeNum: peerNodeId,
+        peerCapabilitiesHint: peerCapsHint,
       );
       AppLogging.overlay(
         'auto-open initiated linkId=0x${record.linkId.toRadixString(16)} '

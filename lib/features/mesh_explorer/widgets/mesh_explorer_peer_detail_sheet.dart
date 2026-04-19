@@ -401,6 +401,10 @@ class _ActionButtons extends ConsumerWidget {
   }
 
   void _onAccept(BuildContext context, WidgetRef ref) {
+    AppLogging.sip(
+      'MESH_EXPLORER: Accept tapped for '
+      'peer=0x${peer.nodeId.toRadixString(16)}',
+    );
     ref.read(hapticServiceProvider).trigger(HapticType.medium);
     final protocol = ref.read(protocolServiceProvider);
     protocol.acceptSipHandshake(peer.nodeId);

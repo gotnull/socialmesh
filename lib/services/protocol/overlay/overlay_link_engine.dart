@@ -32,6 +32,7 @@ import 'overlay_link_codec.dart';
 import 'overlay_link_egress.dart';
 import 'overlay_link_models.dart';
 import 'overlay_link_store.dart';
+import 'overlay_secure_session_manager.dart';
 import 'overlay_types.dart';
 
 /// Wall-clock source for the engine. Defaults to
@@ -64,6 +65,17 @@ class OverlayLinkEngine {
   /// only peers is preserved.
   final OverlayEndpointManager? _endpointManager;
 
+  /// Optional v0.3 secure-session manager. When present, the engine
+  /// forwards three lifecycle hooks onto it:
+  ///   - `onLinkActivated` after a link transitions to `active` (via
+  ///     either `_handleLinkOpen` acceptance or `_handleLinkOpenOk`).
+  ///   - `onSecureInbound` for every `linkSecureInit`/`linkSecureAck`/
+  ///     `linkSecureData` frame.
+  ///   - `onLinkTerminated` on any terminal transition.
+  /// When `null`, secure-family frames are logged and dropped (§25.7
+  /// fail-closed semantics for the link).
+  final OverlaySecureSessionManager? _secureSessionManager;
+
   final StreamController<OverlayLinkEvent> _events =
       StreamController<OverlayLinkEvent>.broadcast();
 
@@ -82,12 +94,14 @@ class OverlayLinkEngine {
     OverlayLinkClock? clock,
     OverlayLinkIdGenerator? linkIdGenerator,
     OverlayEndpointManager? endpointManager,
+    OverlaySecureSessionManager? secureSessionManager,
   }) : _store = store,
        _egress = egress,
        _acceptPolicy = acceptPolicy,
        _clock = clock ?? _defaultClock,
        _linkIdGenerator = linkIdGenerator ?? _defaultLinkIdGenerator,
-       _endpointManager = endpointManager;
+       _endpointManager = endpointManager,
+       _secureSessionManager = secureSessionManager;
 
   /// Stream of engine events. Broadcast; late subscribers do not
   /// replay.
@@ -112,15 +126,26 @@ class OverlayLinkEngine {
 
   /// Open a new link to [peerNodeNum].
   ///
-  /// Rejects with [StateError] if a non-terminal record for the same
-  /// [peerPersonaHint] already exists.
+  /// When a canonical non-terminal link already exists for [peerNodeNum]
+  /// it is reused (§tie-break). On reuse, [peerCapabilitiesHint] — if
+  /// supplied — overwrites the record's stored capabilities. The
+  /// provider layer uses this to propagate the peer's CURRENT SIP-
+  /// advertised overlay capabilities (e.g. `secureV03` toggled on
+  /// today when yesterday's stored record predates that rollout) onto
+  /// the canonical record without a fresh `LINK_OPEN` round-trip.
   Future<OverlayLinkRecord> openLocal({
     required Uint8List peerPersonaHint,
     required int peerNodeNum,
     OverlayLinkCapabilities localCapabilities = OverlayLinkCapabilities.none,
+    OverlayLinkCapabilities? peerCapabilitiesHint,
   }) {
     return _serialize(
-      () => _openLocalLocked(peerPersonaHint, peerNodeNum, localCapabilities),
+      () => _openLocalLocked(
+        peerPersonaHint,
+        peerNodeNum,
+        localCapabilities,
+        peerCapabilitiesHint,
+      ),
     );
   }
 
@@ -195,14 +220,67 @@ class OverlayLinkEngine {
     Uint8List peerPersonaHint,
     int peerNodeNum,
     OverlayLinkCapabilities capabilities,
+    OverlayLinkCapabilities? peerCapabilitiesHint,
   ) async {
-    final existing = await _store.getActiveForPeer(peerPersonaHint);
-    if (existing != null) {
-      throw StateError(
-        'openLocal rejected: active link already exists for peer '
-        '(linkId=0x${existing.linkId.toRadixString(16)}, '
-        'state=${existing.state.name})',
+    // Canonical-link rule: at most one non-terminal link per peer
+    // node. The lookup is by `peerNodeNum` rather than
+    // `peerPersonaHint` because at auto-open time the caller may only
+    // know a synthetic hint (the peer's real persona hint arrives
+    // inside the signed LINK_OPEN body). Looking up by node num
+    // bridges the synthetic/real view so initiator and responder
+    // records for the same peer converge on one canonical link.
+    //
+    // If a non-terminal record already exists for this peer — whether
+    // from a prior openLocal, a restored record, or an inbound
+    // LINK_OPEN the responder path already accepted — reuse it. No
+    // second LINK_OPEN is fired; the sim-open race handling in
+    // `_handleLinkOpen` picks the deterministic winner when both
+    // sides race.
+    final nodeMatches = await _store.getNonTerminalForPeerNode(peerNodeNum);
+    if (nodeMatches.isNotEmpty) {
+      final canonical = nodeMatches.first;
+      AppLogging.overlay(
+        'openLocal reused canonical linkId=0x${canonical.linkId.toRadixString(16)} '
+        'peer=$peerNodeNum state=${canonical.state.name}',
       );
+      // A successful caller-side `openLocal` is a strong signal that
+      // the peer is reachable RIGHT NOW — SIP handshake just
+      // completed, user is actively trying to talk to them. Promote a
+      // `stale` canonical (typically restored from a prior run, per
+      // §21.1) back to `active` and refresh activity so downstream
+      // consumers — chiefly the secure-session manager — see a live
+      // link.
+      final refreshedNow = _clock();
+      var promoted = canonical;
+      final needsPromotion = canonical.state != OverlayLinkState.active;
+      final capsChanged =
+          peerCapabilitiesHint != null &&
+          peerCapabilitiesHint.supportedFeatures !=
+              canonical.capabilities.supportedFeatures;
+      if (needsPromotion || capsChanged) {
+        promoted = canonical.copyWith(
+          state: OverlayLinkState.active,
+          lastActivityMs: refreshedNow,
+          capabilities: peerCapabilitiesHint ?? canonical.capabilities,
+        );
+        await _store.upsert(promoted);
+        AppLogging.overlay(
+          'canonical promoted to active linkId=0x${canonical.linkId.toRadixString(16)} '
+          'from=${canonical.state.name} '
+          'caps=0x${promoted.capabilities.supportedFeatures.toRadixString(16)}',
+        );
+        _emit(
+          OverlayLinkEvent(
+            kind: OverlayLinkEventKind.activated,
+            record: promoted,
+          ),
+        );
+      }
+      // Fire secure-activation hook so an auto-init can attach even
+      // when the link was already in memory. The manager itself is
+      // idempotent on the session-exists case.
+      await _notifySecureActivated(promoted);
+      return promoted;
     }
 
     final now = _clock();
@@ -263,6 +341,22 @@ class OverlayLinkEngine {
         await _handleLinkAck(frame, now);
       case OverlayLinkMsgType.linkClose:
         await _handleLinkClose(frame, now);
+      case OverlayLinkMsgType.linkSecureInit:
+      case OverlayLinkMsgType.linkSecureAck:
+      case OverlayLinkMsgType.linkSecureData:
+        // v0.3 secure-session frames. Forwarded to the optional
+        // secure-session manager; engine state is not affected. When
+        // no manager is attached (flag off or unsigned-only peer),
+        // the frames are logged and dropped per §25.7 fail-closed.
+        final mgr = _secureSessionManager;
+        if (mgr == null) {
+          AppLogging.overlay(
+            'SECURE drop: ${frame.msgType.name} with no session manager '
+            'linkId=0x${frame.linkId.toRadixString(16)}',
+          );
+          return;
+        }
+        await mgr.onSecureInbound(frame, senderNodeNum);
     }
   }
 
@@ -319,6 +413,63 @@ class OverlayLinkEngine {
             supportedFeatures: verify.body!.capabilityBitset,
           )
         : OverlayLinkCapabilities.none;
+
+    // Canonical-link tie-break: if we already hold a non-terminal
+    // record for this peer node num whose `linkId` differs from the
+    // incoming frame's, both sides raced `openLocal` (sim-open). Pick
+    // the deterministic winner: lower `linkId` wins.
+    //
+    // - Incoming wins → supersede our existing record(s), accept the
+    //   incoming as the responder side of the canonical link.
+    // - Existing wins → silently drop the incoming LINK_OPEN. The peer
+    //   will see our (lower) LINK_OPEN, apply the same rule, and
+    //   converge on our record.
+    //
+    // Same-linkId collisions are handled earlier by the `getByLinkId`
+    // check above, so `competing` only contains records with a
+    // different `linkId`.
+    final peerMatches = await _store.getNonTerminalForPeerNode(senderNodeNum);
+    final competing = peerMatches
+        .where((r) => r.linkId != frame.linkId)
+        .toList();
+    if (competing.isNotEmpty) {
+      final existingHasLower = competing.any((r) => r.linkId < frame.linkId);
+      if (existingHasLower) {
+        AppLogging.overlay(
+          'LINK_OPEN tie-break loss: incoming '
+          'linkId=0x${frame.linkId.toRadixString(16)} yields to existing '
+          '(lower linkId) for peer=$senderNodeNum',
+        );
+        return;
+      }
+      // Incoming is the new canonical. Supersede every higher-linkId
+      // non-terminal record locally. No LINK_CLOSE is emitted: the
+      // peer is about to see our LINK_OPEN (if it hasn't already),
+      // apply the same tie-break, and discard its own loser.
+      for (final c in competing) {
+        final superseded = c.copyWith(
+          state: OverlayLinkState.failed,
+          closeReason: OverlayLinkCloseReason.collision,
+          closedAtMs: now,
+          lastActivityMs: now,
+        );
+        await _store.upsert(superseded);
+        AppLogging.overlay(
+          'LINK_OPEN tie-break supersede '
+          'linkId=0x${c.linkId.toRadixString(16)} by incoming '
+          '0x${frame.linkId.toRadixString(16)} for peer=$senderNodeNum',
+        );
+        _emit(
+          OverlayLinkEvent(
+            kind: OverlayLinkEventKind.terminated,
+            record: superseded,
+            detail: 'tie_break_superseded',
+          ),
+        );
+      }
+      // Fall through to the responder-accept path.
+    }
+
     final candidate = OverlayLinkRecord(
       linkId: frame.linkId,
       peerPersonaHint: Uint8List.fromList(peerHint),
@@ -382,6 +533,7 @@ class OverlayLinkEngine {
     _emit(
       OverlayLinkEvent(kind: OverlayLinkEventKind.activated, record: activated),
     );
+    await _notifySecureActivated(activated);
   }
 
   Future<void> _handleLinkOpenOk(OverlayLinkFrame frame, int now) async {
@@ -459,6 +611,7 @@ class OverlayLinkEngine {
     _emit(
       OverlayLinkEvent(kind: OverlayLinkEventKind.activated, record: bound),
     );
+    await _notifySecureActivated(bound);
   }
 
   Future<void> _handleLinkOpenNo(OverlayLinkFrame frame, int now) async {
@@ -887,6 +1040,29 @@ class OverlayLinkEngine {
   void _emit(OverlayLinkEvent event) {
     if (_events.isClosed) return;
     _events.add(event);
+    // Forward terminal transitions onto the secure-session manager so
+    // it can drop in-memory keys for this link. No-op when no manager
+    // is attached.
+    if (event.kind == OverlayLinkEventKind.terminated) {
+      _secureSessionManager?.onLinkTerminated(event.record.linkId);
+    }
+  }
+
+  /// Forward an `active` transition to the secure-session manager.
+  /// Invoked from both `_handleLinkOpen` (responder path, direct
+  /// transition to active) and `_handleLinkOpenOk` (initiator path).
+  /// No-op when no manager is attached.
+  Future<void> _notifySecureActivated(OverlayLinkRecord record) async {
+    final mgr = _secureSessionManager;
+    if (mgr == null) return;
+    try {
+      await mgr.onLinkActivated(record);
+    } catch (e, st) {
+      AppLogging.overlay(
+        'SECURE onLinkActivated threw (ignored, link unaffected) '
+        'linkId=0x${record.linkId.toRadixString(16)}: $e\n$st',
+      );
+    }
   }
 
   // ---------------------------------------------------------------

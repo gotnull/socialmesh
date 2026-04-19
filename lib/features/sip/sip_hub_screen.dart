@@ -641,6 +641,10 @@ class _IncomingRequestTile extends ConsumerWidget {
                   Expanded(
                     child: FilledButton.icon(
                       onPressed: () {
+                        AppLogging.sip(
+                          'SIP_HUB: Accept tapped for '
+                          'peer=0x${peerNodeId.toRadixString(16)}',
+                        );
                         ref
                             .read(hapticServiceProvider)
                             .trigger(HapticType.medium);

@@ -38,7 +38,23 @@ enum OverlayLinkMsgType {
   linkData(0x26),
 
   /// Selective cumulative ACK / NACK hint.
-  linkAck(0x27);
+  linkAck(0x27),
+
+  /// v0.3 secure-session Init (initiator → responder). Carries
+  /// ephemeral X25519 pub, random nonce, and Ed25519 signature over
+  /// the initiator-side transcript. See OVERLAY_V0_2.md §25.
+  linkSecureInit(0x28),
+
+  /// v0.3 secure-session Ack (responder → initiator). Carries
+  /// responder ephemeral X25519 pub, nonce, and Ed25519 signature
+  /// over the full transcript. See OVERLAY_V0_2.md §25.
+  linkSecureAck(0x29),
+
+  /// v0.3 secure data frame. Payload is
+  /// `subtype(1) ‖ seq(4) ‖ aead_tag(16) ‖ ciphertext` encrypted
+  /// with the session's per-direction ChaCha20-Poly1305 key. See
+  /// OVERLAY_V0_2.md §25.5.
+  linkSecureData(0x2A);
 
   const OverlayLinkMsgType(this.code);
 
@@ -95,6 +111,38 @@ enum OverlayResourceMsgType {
 
   /// Resolve a wire code to a message type, or null if unknown.
   static OverlayResourceMsgType? fromCode(int code) {
+    for (final type in values) {
+      if (type.code == code) return type;
+    }
+    return null;
+  }
+}
+
+/// v0.3 secure-data subtype (byte 0 of a [OverlayLinkMsgType.linkSecureData]
+/// payload). Allows Phase 2 to multiplex distinct encrypted payload
+/// families (DM text, reaction, RPC envelope) onto the same frame type
+/// without wire-format evolution. See OVERLAY_V0_2.md §25.5.
+enum OverlaySecureDataSubtype {
+  /// Phase 1 sentinel. Opaque encrypted payload; higher-layer schema
+  /// is defined by the application.
+  generic(0x01),
+
+  /// Phase 2: encrypted DM text (UTF-8 bytes).
+  dmText(0x02),
+
+  /// Phase 2: encrypted reaction (UTF-8 emoji cluster).
+  dmReaction(0x03),
+
+  /// Phase 2+: encrypted MRRP RPC envelope.
+  rpcEnvelope(0x04);
+
+  const OverlaySecureDataSubtype(this.code);
+
+  /// Wire code for this subtype.
+  final int code;
+
+  /// Resolve a wire code to a subtype, or null if unknown/reserved.
+  static OverlaySecureDataSubtype? fromCode(int code) {
     for (final type in values) {
       if (type.code == code) return type;
     }
