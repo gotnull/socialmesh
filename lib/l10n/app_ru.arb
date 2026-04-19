@@ -405,7 +405,7 @@
     "arSettingsMaxDistanceLabel": "100 км",
     "arSettingsMinDistanceLabel": "100 м",
     "arSettingsMinimal": "Минимальный",
-    "arSettingsNodeFilters": "ФИЛЬТРЫ УЗЛОВ",
+    "arSettingsNodeFilters": "ФИЛЬТРЫ НОД",
     "arSettingsShowOfflineNodes": "Показывать офлайн-ноды",
     "arSettingsTactical": "Расширенный",
     "arSettingsViewMode": "РЕЖИМ ПРОСМОТРА",
@@ -3044,7 +3044,7 @@
     "meshcoreFilterChatNodes": "Ноды чата",
     "meshcoreFilterMap": "Фильтр карты",
     "meshcoreFilterOtherNodes": "Другие ноды",
-    "meshcoreFilterRepeaters": "Ретрансляторы",
+    "meshcoreFilterRepeaters": "Репитеры",
     "meshcoreFilterTooltip": "Фильтр",
     "meshcoreFramesLabel": "Кадры",
     "meshcoreFrequencyLabel": "Частота",
@@ -3064,7 +3064,7 @@
     "meshcoreLeaveChannelTitle": "Покинуть канал?",
     "meshcoreLeftChannel": "Вы покинули {channelName}",
     "meshcoreLegendChat": "Чат",
-    "meshcoreLegendRepeater": "Ретранслятор",
+    "meshcoreLegendRepeater": "Репитер",
     "meshcoreLegendRoom": "Комната",
     "meshcoreLegendSensor": "Датчик",
     "meshcoreLoadingChannels": "Загрузка каналов...",
@@ -3148,7 +3148,7 @@
     "meshcoreRemoveContact": "Удалить контакт",
     "meshcoreRemoveContactMessage": "Вы уверены, что хотите удалить {contactName}?",
     "meshcoreRemoveContactTitle": "Удалить контакт?",
-    "meshcoreRepeaterNode": "Нода-ретранслятор",
+    "meshcoreRepeaterNode": "Нода-репитер",
     "meshcoreRestartMeshCoreDevice": "Перезапустить устройство MeshCore",
     "meshcoreReverseMeasurementDirection": "Поменять направление измерения",
     "meshcoreRoomNode": "Нода-комната",
@@ -4282,7 +4282,7 @@
     "nodedexAgeDiscoveredYearsAgo": "обнаружен {years} л. назад",
     "nodedexAgeDiscoveredYesterday": "обнаружен вчера",
     "nodedexAgeNewToday": "новый сегодня",
-    "nodedexAirUtilTxLabel": "Air Util TX",
+    "nodedexAirUtilTxLabel": "Загрузка передачи (TX)",
     "nodedexBatteryLabel": "Батарея",
     "nodedexBestRssi": "Лучший RSSI",
     "nodedexBestSnr": "Лучший SNR",
@@ -4777,7 +4777,7 @@
     "nodedexStatMessages": "Сообщения",
     "nodedexStatsDays": "ДНИ",
     "nodedexStatsEncounters": "ВСТРЕЧИ",
-    "nodedexStatsNodes": "УЗЛЫ",
+    "nodedexStatsNodes": "НОДЫ",
     "nodedexStatsRegions": "РЕГИОНЫ",
     "nodedexStreakDays": "Серия {count} дней",
     "nodedexStrengthEmerging": "Формирующаяся",
@@ -5918,7 +5918,7 @@
     "showcaseCardConnected": "Подключено к сети",
     "showcaseCardEncrypted": "Сквозное шифрование",
     "showcaseCardMeshNetwork": "MESH-СЕТЬ",
-    "showcaseCardNodeOnline": "УЗЕЛ В СЕТИ",
+    "showcaseCardNodeOnline": "НОДА В СЕТИ",
     "showcaseCardOffGrid": "Связь без инфраструктуры",
     "showcaseCardReachEveryone": "Свяжитесь с каждым",
     "showcaseCardSecureChannel": "ЗАЩИЩЁННЫЙ КАНАЛ",
@@ -7675,7 +7675,7 @@
     "remoteAdminSearchHint": "Поиск нод...",
     "remoteAdminConnectedDevice": "Подключённое устройство",
     "remoteAdminLocalVia": "Локально (через BLE/USB)",
-    "remoteAdminPkiEnabledNodes": "УЗЛЫ С PKI",
+    "remoteAdminPkiEnabledNodes": "НОДЫ С PKI",
     "remoteAdminNodesAvailable": "{count} доступно",
     "remoteAdminRequiresPki": "Для удалённого администрирования целевая нода должен иметь ваш публичный ключ в списке Admin Keys.",
     "remoteAdminNoNodes": "Нет нод с включённым PKI",
@@ -7781,7 +7781,7 @@
     "actionSheetTraceroute": "Трассировка",
     "actionSheetTracerouteTo": "Трассировка до",
     "actionSheetTracerouteInfo": "Трассировка определяет путь пакетов до ноды через сеть Mesh",
-    "actionSheetTargetNode": "ЦЕЛЕВОЙ УЗЕЛ",
+    "actionSheetTargetNode": "ЦЕЛЕВАЯ НОДА",
     "actionSheetSelected": "Выбран",
     "actionSheetTapToSelectNode": "Нажмите для выбора ноды",
     "actionSheetTrace": "Трассировать",
@@ -8842,7 +8842,7 @@
     "radioConfigPresetShortFastDesc": "Малый радиус, максимальная скорость",
     "radioConfigPresetShortSlow": "Ближний медленный",
     "radioConfigPresetShortSlowDesc": "Малый радиус, надёжно",
-    "radioConfigPresetShortTurbo": "Short Turbo",
+    "radioConfigPresetShortTurbo": "Ближний турбо",
     "@radioConfigPresetShortTurbo": {
         "description": "Modem preset label: short range, turbo data rate"
     },
@@ -8850,7 +8850,7 @@
     "@radioConfigPresetShortTurboDesc": {
         "description": "Description for short turbo modem preset"
     },
-    "radioConfigPresetLongTurbo": "Long Turbo",
+    "radioConfigPresetLongTurbo": "Дальний турбо",
     "@radioConfigPresetLongTurbo": {
         "description": "Modem preset label: long range, turbo data rate"
     },
@@ -9440,7 +9440,7 @@
     "iftttConfigPremiumExampleDesc": "Автоматически включить умный свет или отправить себе уведомление, когда вашу ноду перестаёт отвечать.",
     "iftttConfigSectionWebhook": "ВЕБХУК",
     "iftttConfigSectionMessageTriggers": "ТРИГГЕРЫ СООБЩЕНИЙ",
-    "iftttConfigSectionNodeTriggers": "ТРИГГЕРЫ СОСТОЯНИЯ УЗЛА",
+    "iftttConfigSectionNodeTriggers": "ТРИГГЕРЫ СОСТОЯНИЯ НОДЫ",
     "iftttConfigSectionTelemetryTriggers": "ТРИГГЕРЫ ТЕЛЕМЕТРИИ",
     "iftttConfigSectionGeofencing": "ГЕОЗОНЫ",
     "iftttConfigEnable": "Включить IFTTT",
@@ -14411,7 +14411,7 @@
     "@mapCompassUnavailable": {
         "description": "Snackbar message when the device does not have a compass/magnetometer sensor"
     },
-    "takBridgeSectionTitle": "Mesh Bridge",
+    "takBridgeSectionTitle": "Mesh-мост",
     "@takBridgeSectionTitle": {
         "description": "Section header for the TAK mesh bridge controls in settings"
     },
