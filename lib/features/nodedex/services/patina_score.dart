@@ -250,8 +250,8 @@ class PatinaScore {
   ///
   /// Blends co-seen node count (60%) and message count (40%).
   static double _scoreSocial(NodeDexEntry entry) {
-    final coSeenScore = entry.coSeenCount > 0
-        ? (math.log(1.0 + entry.coSeenCount) /
+    final coSeenScore = entry.historicalCoSeenCount > 0
+        ? (math.log(1.0 + entry.historicalCoSeenCount) /
                   math.log(1.0 + _coSeenSaturation))
               .clamp(0.0, 1.0)
         : 0.0;

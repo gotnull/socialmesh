@@ -15,12 +15,11 @@
 library;
 
 import 'dart:convert';
-import 'dart:ui' show PlatformDispatcher;
-
 import '../../l10n/app_localizations.dart';
 import 'mqtt_config.dart';
 import 'mqtt_connection_state.dart';
 import 'mqtt_metrics.dart';
+import 'package:socialmesh/l10n/l10n_utils.dart';
 
 /// The outcome of a single diagnostic check.
 enum DiagnosticStatus {
@@ -626,7 +625,7 @@ class ConfigDiagnostics {
 
     stopwatch.stop();
 
-    final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    final l10n = safeL10n();
 
     if (issues.isEmpty) {
       return DiagnosticCheckResult.passed(

@@ -1,17 +1,22 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
+import 'dart:async';
+
 import 'package:clock/clock.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:socialmesh/core/transport.dart';
 import 'package:socialmesh/features/nodedex/models/nodedex_entry.dart';
 import 'package:socialmesh/features/nodedex/providers/nodedex_providers.dart';
 import 'package:socialmesh/features/nodedex/services/nodedex_database.dart';
 import 'package:socialmesh/features/nodedex/services/nodedex_sqlite_store.dart';
+import 'package:socialmesh/features/nodedex/widgets/coseen_network_card.dart';
 import 'package:socialmesh/models/mesh_models.dart';
 import 'package:socialmesh/providers/app_providers.dart';
 import 'package:socialmesh/providers/cloud_sync_entitlement_providers.dart';
+import 'package:socialmesh/services/protocol/protocol_service.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 // =============================================================================
@@ -44,6 +49,55 @@ class _TestNodesNotifier extends NodesNotifier {
   }
 }
 
+/// Minimal no-op transport for constructing a ProtocolService in tests
+/// without triggering platform channel dependencies.
+class _FakeTransport extends DeviceTransport {
+  @override
+  TransportType get type => TransportType.ble;
+
+  @override
+  bool get requiresFraming => false;
+
+  @override
+  DeviceConnectionState get state => DeviceConnectionState.disconnected;
+
+  final StreamController<DeviceConnectionState> _stateCtrl =
+      StreamController<DeviceConnectionState>.broadcast();
+
+  @override
+  Stream<DeviceConnectionState> get stateStream => _stateCtrl.stream;
+
+  @override
+  Stream<List<int>> get dataStream => const Stream.empty();
+
+  @override
+  Stream<DeviceInfo> scan({Duration? timeout, bool scanAll = false}) =>
+      const Stream.empty();
+
+  @override
+  Future<void> connect(DeviceInfo device) async {}
+
+  @override
+  Future<void> disconnect() async {}
+
+  @override
+  Future<void> enableNotifications() async {}
+
+  @override
+  Future<void> pollOnce() async {}
+
+  @override
+  Future<void> send(List<int> data) async {}
+
+  @override
+  Future<int?> readRssi() async => null;
+
+  @override
+  Future<void> dispose() async {
+    await _stateCtrl.close();
+  }
+}
+
 class _TestMyNodeNumNotifier extends MyNodeNumNotifier {
   final int? _initial;
 
@@ -68,6 +122,7 @@ MeshNode _makeNode(
   double? longitude,
   DateTime? firstHeard,
   DateTime? lastHeard,
+  bool stale = false,
 }) {
   return MeshNode(
     nodeNum: nodeNum,
@@ -77,7 +132,9 @@ MeshNode _makeNode(
     latitude: latitude,
     longitude: longitude,
     firstHeard: firstHeard,
-    lastHeard: lastHeard,
+    // Default to clock.now() so the node passes the online presence check,
+    // unless the caller explicitly requests a stale (offline) node.
+    lastHeard: stale ? lastHeard : (lastHeard ?? clock.now()),
   );
 }
 
@@ -144,6 +201,11 @@ _createTestContainer({
       // Prevent Firebase cascade: cloudSyncEntitlementServiceProvider →
       // CloudSyncEntitlementService() → FirebaseFirestore.instance
       canCloudSyncWriteProvider.overrideWithValue(false),
+      // Prevent MeshPacketDedupeStore platform channel cascade when
+      // NodeDexNotifier._resolveCurrentPreset() reads the protocol service.
+      protocolServiceProvider.overrideWithValue(
+        ProtocolService(_FakeTransport()),
+      ),
     ],
   );
 
@@ -447,6 +509,13 @@ void main() {
     test(
       'co-seen relationships created after manual flush for co-present nodes',
       () async {
+        NodeDexNotifier.coSeenFlushIntervalOverride = const Duration(days: 1);
+        addTearDown(() {
+          NodeDexNotifier.coSeenFlushIntervalOverride = const Duration(
+            milliseconds: 50,
+          );
+        });
+
         final ctx = _createTestContainer(preInitStore: preInitStore);
         addTearDown(ctx.container.dispose);
 
@@ -602,6 +671,408 @@ void main() {
       // The store should have received saveEntries from the flush.
       // We verify the store's internal state survived the dispose flush.
     });
+  });
+
+  group('nodeDexRecentCoSeenLinksProvider', () {
+    test(
+      'includes recent valid co-seen pair from live session evidence',
+      () async {
+        final now = DateTime(2026, 4, 13, 12);
+
+        await withClock(Clock.fixed(now), () async {
+          final ctx = _createTestContainer(preInitStore: preInitStore);
+          addTearDown(ctx.container.dispose);
+
+          await _initProvider(ctx.container);
+
+          ctx.nodesNotifier.setNodes({
+            100: _makeNode(100),
+            200: _makeNode(200),
+          });
+          await _pumpEventQueue();
+
+          ctx.container.read(nodeDexProvider.notifier).flushCoSeenForTest();
+          await _waitForSave();
+
+          final links = ctx.container.read(
+            nodeDexRecentCoSeenLinksProvider(100),
+          );
+          expect(links, hasLength(1));
+          expect(links.first.otherNodeNum, equals(200));
+          expect(links.first.relationship.count, equals(1));
+        });
+      },
+    );
+
+    test('excludes stale candidate older than 30 minutes', () async {
+      final now = DateTime(2026, 4, 13, 12);
+      final recentRelationship = CoSeenRelationship(
+        count: 3,
+        firstSeen: now.subtract(const Duration(minutes: 20)),
+        lastSeen: now.subtract(const Duration(minutes: 5)),
+      );
+
+      await withClock(Clock.fixed(now), () async {
+        await preInitStore.bulkInsert([
+          _makeEntry(
+            nodeNum: 100,
+            lastSeen: now.subtract(const Duration(minutes: 2)),
+            coSeenNodes: {200: recentRelationship},
+          ),
+          _makeEntry(
+            nodeNum: 200,
+            lastSeen: now.subtract(const Duration(minutes: 5)),
+            coSeenNodes: {100: recentRelationship},
+          ),
+        ]);
+
+        final ctx = _createTestContainer(
+          preInitStore: preInitStore,
+          initialNodes: {
+            100: _makeNode(100),
+            200: _makeNode(
+              200,
+              lastHeard: now.subtract(const Duration(minutes: 31)),
+              stale: true,
+            ),
+          },
+        );
+        addTearDown(ctx.container.dispose);
+
+        await _initProvider(ctx.container);
+
+        final links = ctx.container.read(nodeDexRecentCoSeenLinksProvider(100));
+        expect(links, isEmpty);
+      });
+    });
+
+    test('excludes months-old historical relationship', () async {
+      final now = DateTime(2026, 4, 13, 12);
+      final staleRelationship = CoSeenRelationship(
+        count: 9,
+        firstSeen: now.subtract(const Duration(days: 150)),
+        lastSeen: now.subtract(const Duration(days: 120)),
+      );
+
+      await withClock(Clock.fixed(now), () async {
+        await preInitStore.bulkInsert([
+          _makeEntry(
+            nodeNum: 100,
+            lastSeen: now.subtract(const Duration(minutes: 1)),
+            coSeenNodes: {200: staleRelationship},
+          ),
+          _makeEntry(
+            nodeNum: 200,
+            lastSeen: now.subtract(const Duration(minutes: 1)),
+            coSeenNodes: {100: staleRelationship},
+          ),
+        ]);
+
+        final ctx = _createTestContainer(
+          preInitStore: preInitStore,
+          initialNodes: {100: _makeNode(100), 200: _makeNode(200)},
+        );
+        addTearDown(ctx.container.dispose);
+
+        await _initProvider(ctx.container);
+
+        final links = ctx.container.read(nodeDexRecentCoSeenLinksProvider(100));
+        expect(links, isEmpty);
+      });
+    });
+
+    test(
+      'preserves pair-specific counts instead of collapsing to a shared value',
+      () async {
+        final now = DateTime(2026, 4, 13, 12);
+        final rel200 = CoSeenRelationship(
+          count: 5,
+          firstSeen: now.subtract(const Duration(minutes: 20)),
+          lastSeen: now.subtract(const Duration(minutes: 3)),
+        );
+        final rel300 = CoSeenRelationship(
+          count: 2,
+          firstSeen: now.subtract(const Duration(minutes: 18)),
+          lastSeen: now.subtract(const Duration(minutes: 6)),
+        );
+
+        await withClock(Clock.fixed(now), () async {
+          await preInitStore.bulkInsert([
+            _makeEntry(
+              nodeNum: 100,
+              lastSeen: now.subtract(const Duration(minutes: 1)),
+              coSeenNodes: {200: rel200, 300: rel300},
+            ),
+            _makeEntry(
+              nodeNum: 200,
+              lastSeen: now.subtract(const Duration(minutes: 1)),
+              coSeenNodes: {100: rel200},
+            ),
+            _makeEntry(
+              nodeNum: 300,
+              lastSeen: now.subtract(const Duration(minutes: 1)),
+              coSeenNodes: {100: rel300},
+            ),
+          ]);
+
+          final ctx = _createTestContainer(
+            preInitStore: preInitStore,
+            initialNodes: {
+              100: _makeNode(100),
+              200: _makeNode(200),
+              300: _makeNode(300),
+            },
+          );
+          addTearDown(ctx.container.dispose);
+
+          await _initProvider(ctx.container);
+
+          final links = ctx.container.read(
+            nodeDexRecentCoSeenLinksProvider(100),
+          );
+          expect(links.map((link) => link.otherNodeNum).toList(), [200, 300]);
+          expect(links.map((link) => link.relationship.count).toList(), [5, 2]);
+        });
+      },
+    );
+
+    test('preserves pair-specific timestamps for each row', () async {
+      final now = DateTime(2026, 4, 13, 12);
+      final rel200 = CoSeenRelationship(
+        count: 4,
+        firstSeen: now.subtract(const Duration(minutes: 19)),
+        lastSeen: now.subtract(const Duration(minutes: 4)),
+      );
+      final rel300 = CoSeenRelationship(
+        count: 1,
+        firstSeen: now.subtract(const Duration(minutes: 17)),
+        lastSeen: now.subtract(const Duration(minutes: 9)),
+      );
+
+      await withClock(Clock.fixed(now), () async {
+        await preInitStore.bulkInsert([
+          _makeEntry(
+            nodeNum: 100,
+            lastSeen: now.subtract(const Duration(minutes: 1)),
+            coSeenNodes: {200: rel200, 300: rel300},
+          ),
+          _makeEntry(
+            nodeNum: 200,
+            lastSeen: now.subtract(const Duration(minutes: 1)),
+            coSeenNodes: {100: rel200},
+          ),
+          _makeEntry(
+            nodeNum: 300,
+            lastSeen: now.subtract(const Duration(minutes: 1)),
+            coSeenNodes: {100: rel300},
+          ),
+        ]);
+
+        final ctx = _createTestContainer(
+          preInitStore: preInitStore,
+          initialNodes: {
+            100: _makeNode(100),
+            200: _makeNode(200),
+            300: _makeNode(300),
+          },
+        );
+        addTearDown(ctx.container.dispose);
+
+        await _initProvider(ctx.container);
+
+        final links = ctx.container.read(nodeDexRecentCoSeenLinksProvider(100));
+        final linkByNode = {for (final link in links) link.otherNodeNum: link};
+        expect(linkByNode[200]!.relationship.lastSeen, equals(rel200.lastSeen));
+        expect(linkByNode[300]!.relationship.lastSeen, equals(rel300.lastSeen));
+      });
+    });
+
+    test(
+      'excludes geographically implausible distant pairings when positions exist',
+      () async {
+        final now = DateTime(2026, 4, 13, 12);
+        final recentRelationship = CoSeenRelationship(
+          count: 2,
+          firstSeen: now.subtract(const Duration(minutes: 15)),
+          lastSeen: now.subtract(const Duration(minutes: 2)),
+        );
+
+        await withClock(Clock.fixed(now), () async {
+          await preInitStore.bulkInsert([
+            _makeEntry(
+              nodeNum: 100,
+              lastSeen: now.subtract(const Duration(minutes: 1)),
+              coSeenNodes: {200: recentRelationship},
+            ),
+            _makeEntry(
+              nodeNum: 200,
+              lastSeen: now.subtract(const Duration(minutes: 1)),
+              coSeenNodes: {100: recentRelationship},
+            ),
+          ]);
+
+          final ctx = _createTestContainer(
+            preInitStore: preInitStore,
+            initialNodes: {
+              100: _makeNode(100, latitude: -33.8688, longitude: 151.2093),
+              200: _makeNode(200, latitude: 51.5074, longitude: -0.1278),
+            },
+          );
+          addTearDown(ctx.container.dispose);
+
+          await _initProvider(ctx.container);
+
+          final links = ctx.container.read(
+            nodeDexRecentCoSeenLinksProvider(100),
+          );
+          expect(links, isEmpty);
+        });
+      },
+    );
+
+    test(
+      'uses deterministic tie-breaking for equal weight and timestamp',
+      () async {
+        final now = DateTime(2026, 4, 13, 12);
+        final rel200 = CoSeenRelationship(
+          count: 4,
+          firstSeen: now.subtract(const Duration(minutes: 16)),
+          lastSeen: now.subtract(const Duration(minutes: 3)),
+        );
+        final rel300 = CoSeenRelationship(
+          count: 4,
+          firstSeen: now.subtract(const Duration(minutes: 16)),
+          lastSeen: now.subtract(const Duration(minutes: 3)),
+        );
+
+        await withClock(Clock.fixed(now), () async {
+          await preInitStore.bulkInsert([
+            _makeEntry(
+              nodeNum: 100,
+              lastSeen: now.subtract(const Duration(minutes: 1)),
+              coSeenNodes: {300: rel300, 200: rel200},
+            ),
+            _makeEntry(
+              nodeNum: 200,
+              lastSeen: now.subtract(const Duration(minutes: 1)),
+              coSeenNodes: {100: rel200},
+            ),
+            _makeEntry(
+              nodeNum: 300,
+              lastSeen: now.subtract(const Duration(minutes: 1)),
+              coSeenNodes: {100: rel300},
+            ),
+          ]);
+
+          final ctx = _createTestContainer(
+            preInitStore: preInitStore,
+            initialNodes: {
+              100: _makeNode(100),
+              200: _makeNode(200),
+              300: _makeNode(300),
+            },
+          );
+          addTearDown(ctx.container.dispose);
+
+          await _initProvider(ctx.container);
+
+          final links = ctx.container.read(
+            nodeDexRecentCoSeenLinksProvider(100),
+          );
+          expect(links.map((link) => link.otherNodeNum).toList(), [200, 300]);
+        });
+      },
+    );
+
+    test('filters invalid links at the provider layer before render', () async {
+      final now = DateTime(2026, 4, 13, 12);
+      final staleRelationship = CoSeenRelationship(
+        count: 7,
+        firstSeen: now.subtract(const Duration(days: 90)),
+        lastSeen: now.subtract(const Duration(days: 60)),
+      );
+
+      await withClock(Clock.fixed(now), () async {
+        await preInitStore.bulkInsert([
+          _makeEntry(
+            nodeNum: 100,
+            lastSeen: now.subtract(const Duration(minutes: 1)),
+            coSeenNodes: {200: staleRelationship},
+          ),
+          _makeEntry(
+            nodeNum: 200,
+            lastSeen: now.subtract(const Duration(minutes: 1)),
+            coSeenNodes: {100: staleRelationship},
+          ),
+        ]);
+
+        final ctx = _createTestContainer(
+          preInitStore: preInitStore,
+          initialNodes: {100: _makeNode(100), 200: _makeNode(200)},
+        );
+        addTearDown(ctx.container.dispose);
+
+        await _initProvider(ctx.container);
+
+        expect(
+          ctx.container.read(nodeDexRecentCoSeenLinksProvider(100)),
+          isEmpty,
+        );
+      });
+    });
+  });
+
+  group('historical co-seen semantics', () {
+    test(
+      'historical links remain available when recent-facing providers filter them out',
+      () async {
+        final now = DateTime(2026, 4, 13, 12);
+        final staleRelationship = CoSeenRelationship(
+          count: 4,
+          firstSeen: now.subtract(const Duration(days: 120)),
+          lastSeen: now.subtract(const Duration(days: 90)),
+        );
+
+        await withClock(Clock.fixed(now), () async {
+          await preInitStore.bulkInsert([
+            _makeEntry(
+              nodeNum: 100,
+              lastSeen: now.subtract(const Duration(minutes: 1)),
+              coSeenNodes: {200: staleRelationship},
+            ),
+            _makeEntry(
+              nodeNum: 200,
+              lastSeen: now.subtract(const Duration(minutes: 1)),
+              coSeenNodes: {100: staleRelationship},
+            ),
+          ]);
+
+          final ctx = _createTestContainer(
+            preInitStore: preInitStore,
+            initialNodes: {100: _makeNode(100), 200: _makeNode(200)},
+          );
+          addTearDown(ctx.container.dispose);
+
+          await _initProvider(ctx.container);
+
+          final historicalLinks = ctx.container.read(
+            nodeDexHistoricalCoSeenLinksProvider(100),
+          );
+          final recentLinks = ctx.container.read(
+            nodeDexRecentCoSeenLinksProvider(100),
+          );
+          final cardViewModel = ctx.container.read(
+            nodeDexCoSeenCardProvider(100),
+          );
+
+          expect(historicalLinks, hasLength(1));
+          expect(historicalLinks.first.otherNodeNum, equals(200));
+          expect(historicalLinks.first.relationship.count, equals(4));
+          expect(recentLinks, isEmpty);
+          expect(cardViewModel, isNull);
+        });
+      },
+    );
   });
 
   // ===========================================================================
@@ -1198,6 +1669,61 @@ void main() {
       expect(constellation.nodeCount, equals(2));
       expect(constellation.edgeCount, equals(0));
     });
+
+    test(
+      'constellation keeps historical edges even when recent links are empty',
+      () async {
+        final now = DateTime(2026, 4, 13, 12);
+        final staleRelationship = CoSeenRelationship(
+          count: 6,
+          firstSeen: now.subtract(const Duration(days: 200)),
+          lastSeen: now.subtract(const Duration(days: 100)),
+        );
+
+        await withClock(Clock.fixed(now), () async {
+          await preInitStore.bulkInsert([
+            _makeEntry(
+              nodeNum: 100,
+              lastSeen: now.subtract(const Duration(minutes: 1)),
+              coSeenNodes: {200: staleRelationship},
+            ),
+            _makeEntry(
+              nodeNum: 200,
+              lastSeen: now.subtract(const Duration(minutes: 1)),
+              coSeenNodes: {100: staleRelationship},
+            ),
+          ]);
+
+          final ctx = _createTestContainer(
+            preInitStore: preInitStore,
+            initialNodes: {100: _makeNode(100), 200: _makeNode(200)},
+          );
+          addTearDown(ctx.container.dispose);
+
+          await _initProvider(ctx.container);
+
+          final constellation = ctx.container.read(
+            nodeDexConstellationProvider,
+          );
+          final node100 = constellation.nodes.firstWhere(
+            (node) => node.nodeNum == 100,
+          );
+
+          expect(
+            ctx.container.read(nodeDexRecentCoSeenLinksProvider(100)),
+            isEmpty,
+          );
+          expect(constellation.nodeCount, equals(2));
+          expect(constellation.edgeCount, equals(1));
+          expect(node100.connectionCount, equals(1));
+          expect(constellation.edges.first.weight, equals(6));
+          expect(
+            constellation.edges.first.lastSeen,
+            equals(staleRelationship.lastSeen),
+          );
+        });
+      },
+    );
   });
 
   // ===========================================================================
@@ -1465,7 +1991,7 @@ void main() {
       },
     );
 
-    test('initial node sync on init populates session', () async {
+    test('initial node snapshot does not seed co-seen session state', () async {
       // Start with nodes already present
       final ctx = _createTestContainer(
         preInitStore: preInitStore,
@@ -1480,13 +2006,18 @@ void main() {
       expect(state.containsKey(100), isTrue);
       expect(state.containsKey(200), isTrue);
 
-      // Flush co-seen — initial sync should have added to session
+      // Flush co-seen — the cached initial snapshot should not count as
+      // recent overlap evidence for co-seen link generation.
       ctx.container.read(nodeDexProvider.notifier).flushCoSeenForTest();
       await _waitForSave();
 
       state = ctx.container.read(nodeDexProvider);
-      expect(state[100]!.coSeenNodes.containsKey(200), isTrue);
-      expect(state[200]!.coSeenNodes.containsKey(100), isTrue);
+      expect(state[100]!.coSeenNodes, isEmpty);
+      expect(state[200]!.coSeenNodes, isEmpty);
+      expect(
+        ctx.container.read(nodeDexRecentCoSeenLinksProvider(100)),
+        isEmpty,
+      );
     });
   });
 }

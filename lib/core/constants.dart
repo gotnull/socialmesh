@@ -48,6 +48,11 @@ class AppUrls {
   static String get takGatewayUrl =>
       dotenv.env['TAK_GATEWAY_URL'] ?? 'https://tak.socialmesh.app';
 
+  /// NodeBoard API URL — personal BBS boards.
+  /// Default: nodeboard.socialmesh.app (Nodeboard BBS)
+  static String get nodeBoardApiUrl =>
+      dotenv.env['NODEBOARD_API_URL'] ?? 'https://nodeboard.socialmesh.app';
+
   // Legal & Documentation URLs
   static String get termsUrl => '$baseUrl/terms';
   static String get privacyUrl => '$baseUrl/privacy';
@@ -272,6 +277,42 @@ class NodeDexConfig {
 class AppFeatureFlags {
   AppFeatureFlags._();
 
+  /// Whether the Voice Messages feature is enabled.
+  /// Set `VOICE_MESSAGES_ENABLED=true` in `.env` to enable.
+  /// Default: false — experimental Codec2 voice messages are hidden.
+  static bool get isVoiceMessagesEnabled {
+    try {
+      final raw = dotenv.env['VOICE_MESSAGES_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Whether the Device Shop feature is enabled.
+  /// Set `DEVICE_SHOP_ENABLED=true` in `.env` to enable.
+  /// Default: false — the device shop is hidden unless explicitly enabled.
+  static bool get isDeviceShopEnabled {
+    try {
+      final raw = dotenv.env['DEVICE_SHOP_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Whether the message timeline / week view is enabled.
+  /// Set `MESSAGE_TIMELINE_ENABLED=true` in `.env` to enable.
+  /// Default: false — the experimental message timeline is hidden.
+  static bool get isMessageTimelineEnabled {
+    try {
+      final raw = dotenv.env['MESSAGE_TIMELINE_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Whether the File Transfer feature is enabled.
   /// Set `FILE_TRANSFER_ENABLED=true` in `.env` to enable.
   /// Default: false — experimental mesh file transfer is hidden.
@@ -301,6 +342,18 @@ class AppFeatureFlags {
   static bool get isTakGatewayEnabled {
     try {
       final raw = dotenv.env['TAK_GATEWAY_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Whether the TAK Mesh Bridge (on-device TAK server) is enabled.
+  /// Set `TAK_MESH_BRIDGE_ENABLED=true` in `.env` to enable.
+  /// Default: false — bridge functionality is off unless explicitly enabled.
+  static bool get isTakMeshBridgeEnabled {
+    try {
+      final raw = dotenv.env['TAK_MESH_BRIDGE_ENABLED']?.toLowerCase().trim();
       return raw == 'true' || raw == '1';
     } catch (_) {
       return false;
@@ -357,6 +410,19 @@ class AppFeatureFlags {
     }
   }
 
+  /// Whether TAK video streaming is enabled.
+  /// Set `TAK_VIDEO_ENABLED=true` in `.env` to enable.
+  /// Requires [isTakGatewayEnabled] to be true. Default: false.
+  static bool get isTakVideoEnabled {
+    if (!isTakGatewayEnabled) return false;
+    try {
+      final raw = dotenv.env['TAK_VIDEO_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Whether the MRRP (Mesh Request/Response Protocol) feature is enabled.
   /// Set `MRRP_ENABLED=true` in `.env` to enable.
   /// Requires [isSipEnabled] to be true. Default: false.
@@ -382,6 +448,129 @@ class AppFeatureFlags {
       return false;
     }
   }
+
+  /// Whether mesh incident reporting over MRRP/SPP is enabled.
+  /// Set `MESH_INCIDENTS_ENABLED=true` in `.env` to enable.
+  /// Requires [isMrrpEnabled] to be true. Default: false.
+  static bool get isMeshIncidentsEnabled {
+    if (!isMrrpEnabled) return false;
+    try {
+      final raw = dotenv.env['MESH_INCIDENTS_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Whether the Translation Pack feature UI is enabled.
+  /// Set `TRANSLATION_ENABLED=true` in `.env` to enable.
+  /// Default: false — translation features are hidden until ready for release.
+  static bool get isTranslationEnabled {
+    try {
+      final raw = dotenv.env['TRANSLATION_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Whether the in-app language selector is shown in Appearance & Accessibility.
+  /// Set `LANGUAGE_SELECTOR_ENABLED=true` in `.env` to enable.
+  /// Default: false — translations are handled by the OS locale automatically.
+  static bool get isLanguageSelectorEnabled {
+    try {
+      final raw = dotenv.env['LANGUAGE_SELECTOR_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Whether the Mesh Explorer public-facing discovery experience is enabled.
+  /// Set `MESH_EXPLORER_ENABLED=true` in `.env` to enable.
+  /// Requires both [isSipEnabled] and [isMrrpEnabled] to be true.
+  /// Default: false.
+  static bool get isMeshExplorerEnabled {
+    if (!isSipEnabled || !isMrrpEnabled) return false;
+    try {
+      final raw = dotenv.env['MESH_EXPLORER_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Whether the Mesh Services (Create Service) feature is enabled.
+  /// Set `MESH_SERVICES_ENABLED=true` in `.env` to enable.
+  /// Requires both [isSipEnabled] and [isMrrpEnabled] to be true.
+  /// Default: false.
+  static bool get isMeshServicesEnabled {
+    if (!isSipEnabled || !isMrrpEnabled) return false;
+    try {
+      final raw = dotenv.env['MESH_SERVICES_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Whether the NodeBoard (personal BBS) feature is enabled.
+  /// Set `NODEBOARD_ENABLED=true` in `.env` to enable.
+  /// Default: false — NodeBoard UI is hidden until ready for release.
+  static bool get isNodeBoardEnabled {
+    try {
+      final raw = dotenv.env['NODEBOARD_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Whether the Mesh Feed (store-and-forward content feed) is enabled.
+  /// Set `MESH_FEED_ENABLED=true` in `.env` to enable.
+  /// Default: false — mesh feed UI is hidden until ready for release.
+  static bool get isMeshFeedEnabled {
+    try {
+      final raw = dotenv.env['MESH_FEED_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Whether opportunistic peer sync (LAN/BLE) is enabled.
+  /// Set `OPPORTUNISTIC_SYNC_ENABLED=true` in `.env` to enable.
+  /// Requires [isMeshFeedEnabled] to be true.
+  /// Default: false — peer sync is off until protocol is validated.
+  static bool get isOpportunisticSyncEnabled {
+    if (!isMeshFeedEnabled) return false;
+    try {
+      final raw = dotenv.env['OPPORTUNISTIC_SYNC_ENABLED']
+          ?.toLowerCase()
+          .trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Whether Meshtastic RF transport for mesh feed posts is enabled.
+  /// Set `MESH_FEED_RF_ENABLED=true` in `.env` to enable.
+  /// Requires [isMeshFeedEnabled] to be true.
+  /// Default: true when mesh feed is enabled — RF is the primary transport.
+  static bool get isMeshFeedRfEnabled {
+    if (!isMeshFeedEnabled) return false;
+    try {
+      final raw = dotenv.env['MESH_FEED_RF_ENABLED']?.toLowerCase().trim();
+      // Default to true when mesh feed is enabled — RF is the canonical
+      // transport. The flag exists to allow disabling RF in isolation
+      // (e.g. during LAN-only testing).
+      if (raw == null) return true;
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return true;
+    }
+  }
 }
 
 /// Privacy level for content visibility
@@ -394,4 +583,35 @@ enum PrivacyLevel {
   final String displayName;
   final String description;
   const PrivacyLevel(this.displayName, this.description);
+}
+
+/// Constants governing the DM confirmation-timeout and bounded auto-retry
+/// feature.  Centralised here so they are easy to adjust without hunting
+/// through UI code.
+class DmRetryConstants {
+  DmRetryConstants._();
+
+  /// A sent DM with no ACK after this duration transitions from "Sent to
+  /// radio" → "Unconfirmed".
+  ///
+  /// Rationale: Meshtastic firmware retransmits up to ~5× over ~15–30 s.
+  /// Five minutes gives ample time for the packet to traverse the mesh and
+  /// for the radio's own firmware-level retry mechanism to complete.
+  static const Duration ackTimeout = Duration(minutes: 5);
+
+  /// Fixed interval between auto-retry attempts.
+  static const Duration retryInterval = Duration(seconds: 60);
+
+  /// Maximum number of auto-retry attempts before the coordinator gives up
+  /// and leaves the message in the Unconfirmed state.
+  static const int maxAutoRetries = 5;
+
+  /// Auto-retry stops after this window measured from the first send time,
+  /// regardless of [maxAutoRetries].
+  static const Duration autoRetryWindow = Duration(minutes: 10);
+
+  /// How often the retry coordinator polls for timed-out / unconfirmed
+  /// messages.  Short enough to notice timeouts promptly; long enough to
+  /// be negligible on battery.
+  static const Duration coordinatorTickInterval = Duration(seconds: 15);
 }

@@ -257,6 +257,10 @@ void main() {
         claimTtlS: 86400,
         clock: () => nowMs,
       );
+
+      // Enable privacy gates for testing.
+      aliceHandler.isProfileSharingEnabled = true;
+      bobHandler.isProfileSharingEnabled = true;
     });
 
     test('buildIdReq produces valid frame', () {

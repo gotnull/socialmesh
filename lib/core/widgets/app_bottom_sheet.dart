@@ -67,6 +67,8 @@ class AppBottomSheet extends StatelessWidget {
     double? maxHeightFraction,
   }) {
     HapticFeedback.lightImpact();
+    final disableAnimations =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
 
     Widget content = useSafeArea ? SafeArea(top: false, child: child) : child;
 
@@ -90,8 +92,12 @@ class AppBottomSheet extends StatelessWidget {
       enableDrag: isDismissible,
       transitionAnimationController: AnimationController(
         vsync: Navigator.of(context),
-        duration: const Duration(milliseconds: 350),
-        reverseDuration: const Duration(milliseconds: 250),
+        duration: disableAnimations
+            ? Duration.zero
+            : const Duration(milliseconds: 350),
+        reverseDuration: disableAnimations
+            ? Duration.zero
+            : const Duration(milliseconds: 250),
       ),
       builder: (context) => AppBottomSheet(
         padding: padding,
@@ -117,10 +123,21 @@ class AppBottomSheet extends StatelessWidget {
     Widget? footer,
   }) {
     HapticFeedback.lightImpact();
+    final disableAnimations =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     return showModalBottomSheet<T>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
+      transitionAnimationController: AnimationController(
+        vsync: Navigator.of(context),
+        duration: disableAnimations
+            ? Duration.zero
+            : const Duration(milliseconds: 350),
+        reverseDuration: disableAnimations
+            ? Duration.zero
+            : const Duration(milliseconds: 250),
+      ),
       builder: (context) => DraggableScrollableSheet(
         initialChildSize: initialChildSize,
         minChildSize: minChildSize,
@@ -536,7 +553,6 @@ class BottomSheetTextField extends StatelessWidget {
   final List<TextInputFormatter>? inputFormatters;
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
-  final bool monospace;
 
   const BottomSheetTextField({
     super.key,
@@ -551,7 +567,6 @@ class BottomSheetTextField extends StatelessWidget {
     this.inputFormatters,
     this.onChanged,
     this.onSubmitted,
-    this.monospace = false,
   });
 
   @override
@@ -571,17 +586,18 @@ class BottomSheetTextField extends StatelessWidget {
       style: TextStyle(
         color: context.textPrimary,
         fontSize: 16,
-        fontFamily: monospace
-            ? AppTheme.fontFamily
-            : AppTheme.fontFamilyFallback,
+        fontFamily: AppTheme.fontFamily,
       ),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(color: context.textSecondary),
+        labelStyle: TextStyle(
+          color: context.textSecondary,
+          fontFamily: AppTheme.fontFamily,
+        ),
         hintText: hint,
         hintStyle: TextStyle(
           color: context.textSecondary.withAlpha(128),
-          fontFamily: monospace ? AppTheme.fontFamily : null,
+          fontFamily: AppTheme.fontFamily,
         ),
         errorText: errorText,
         filled: true,
@@ -605,7 +621,10 @@ class BottomSheetTextField extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppTheme.radius12),
           borderSide: const BorderSide(color: AppTheme.errorRed, width: 2),
         ),
-        counterStyle: TextStyle(color: context.textSecondary),
+        counterStyle: TextStyle(
+          color: context.textSecondary,
+          fontFamily: AppTheme.fontFamily,
+        ),
         counterText: '',
       ),
     );

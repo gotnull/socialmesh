@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -147,12 +148,28 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent>
 
       if (!mounted) return;
 
+      // Read current state — ACK may have arrived during the async send.
+      // Build from current message to avoid overwriting delivered status.
+      final currentMessages = widget.ref.read(messagesProvider);
+      final currentMsg = currentMessages.firstWhereOrNull(
+        (m) => m.id == messageId,
+      );
+      if (currentMsg == null || currentMsg.status == MessageStatus.delivered) {
+        Navigator.pop(context);
+        return;
+      }
+
       // Update optimistic pending message to sent with packet ID.
       // Broadcast: final status (no ACK expected).
       // DM: delivery updates arrive later via ACK tracking.
+      final isDm = _selectedNodeNum != null;
       messagesNotifier.updateMessage(
         messageId,
-        pendingMessage.copyWith(status: MessageStatus.sent, packetId: packetId),
+        currentMsg.copyWith(
+          status: MessageStatus.sent,
+          packetId: packetId,
+          sentAt: isDm ? DateTime.now() : null,
+        ),
       );
       Navigator.pop(context);
       // Use captured nodes and presenceMap for target name lookup

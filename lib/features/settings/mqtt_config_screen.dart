@@ -2,6 +2,8 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import '../../utils/time_format.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
@@ -12,6 +14,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/countdown_providers.dart';
+import '../../providers/mqtt_client_proxy_providers.dart';
+import '../../services/mqtt/mqtt_client_proxy_service.dart'
+    show MqttProxyDiagnostics;
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/module_config.pb.dart' as module_pb;
@@ -610,6 +615,9 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                         },
                       ),
                     ),
+                    if (_proxyToClientEnabled &&
+                        ref.watch(adminModeEnabledProvider))
+                      _buildProxyDiagnostics(),
                     _SettingsTile(
                       icon: Icons.map_outlined,
                       iconColor: _mapReportingEnabled
@@ -636,6 +644,170 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
         ],
       ),
     );
+  }
+
+  Widget _buildProxyDiagnostics() {
+    final diag = ref.watch(mqttProxyDiagnosticsProvider);
+    final l10n = context.l10n;
+    final none = l10n.mqttProxyNoneLabel;
+    final dateFmt = AppTimeFormat.withDatePrefix(context, 'd MMM,');
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(height: AppTheme.spacing16),
+        _SectionHeader(title: l10n.mqttProxySectionDiagnostics),
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
+          decoration: BoxDecoration(
+            color: context.card,
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
+          ),
+          child: Column(
+            children: [
+              _DiagRow(
+                label: l10n.mqttProxyStatusLabel,
+                value: diag.isConnected
+                    ? l10n.mqttProxyStatusConnected
+                    : l10n.mqttProxyStatusDisconnected,
+                valueColor: diag.isConnected
+                    ? SemanticColors.success
+                    : SemanticColors.error,
+              ),
+              _DiagRow(
+                label: l10n.mqttProxyBroker,
+                value: diag.brokerHost != null
+                    ? '${diag.brokerHost}:${diag.brokerPort ?? 1883}'
+                    : none,
+              ),
+              _DiagRow(
+                label: l10n.mqttProxyTls,
+                value: diag.tlsEnabled
+                    ? l10n.mqttProxyEnabled
+                    : l10n.mqttProxyDisabled,
+              ),
+              _DiagRow(
+                label: l10n.mqttProxyAuth,
+                value: diag.hasAuth
+                    ? l10n.mqttProxyConfigured
+                    : l10n.mqttProxyNone,
+              ),
+              _DiagRow(
+                label: l10n.mqttProxyTopic,
+                value: diag.subscribedTopic ?? none,
+              ),
+              _DiagRow(
+                label: l10n.mqttProxyLastConnectAttempt,
+                value: diag.lastConnectAttempt != null
+                    ? dateFmt.format(diag.lastConnectAttempt!)
+                    : none,
+              ),
+              _DiagRow(
+                label: l10n.mqttProxyLastConnectedAt,
+                value: diag.lastConnectedAt != null
+                    ? dateFmt.format(diag.lastConnectedAt!)
+                    : none,
+              ),
+              _DiagRow(
+                label: l10n.mqttProxyPublished,
+                value: diag.messagesPublished.toString(),
+              ),
+              _DiagRow(
+                label: l10n.mqttProxyRelayed,
+                value: diag.messagesRelayed.toString(),
+              ),
+              if (diag.reconnectAttempts > 0)
+                _DiagRow(
+                  label: l10n.mqttProxyReconnects,
+                  value: diag.reconnectAttempts.toString(),
+                ),
+              if (diag.lastError != null)
+                _DiagRow(
+                  label: l10n.mqttProxyLastError,
+                  value: diag.lastError!,
+                  valueColor: SemanticColors.error,
+                ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => _copyProxyDiagnostics(diag),
+              icon: const Icon(Icons.copy, size: 16),
+              label: Text(l10n.mqttProxyCopyDiagnostics),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _copyProxyDiagnostics(MqttProxyDiagnostics diag) {
+    HapticFeedback.selectionClick();
+    final timePart = AppTimeFormat.timeWithSecondsPattern(context);
+    final dateFmt = DateFormat('d MMM, $timePart');
+    final status = diag.isConnected
+        ? context.l10n.mqttProxyStatusConnected
+        : context.l10n.mqttProxyStatusDisconnected;
+    final broker = diag.brokerHost != null
+        ? '${diag.brokerHost}:${diag.brokerPort ?? 1883}'
+        : context.l10n.mqttProxyNoneLabel;
+    final tls = diag.tlsEnabled
+        ? context.l10n.mqttProxyEnabled
+        : context.l10n.mqttProxyDisabled;
+    final auth = diag.hasAuth
+        ? context.l10n.mqttProxyConfigured
+        : context.l10n.mqttProxyNone;
+    final lastAttempt = diag.lastConnectAttempt != null
+        ? dateFmt.format(diag.lastConnectAttempt!)
+        : context.l10n.mqttProxyNoneLabel;
+    final lastConnected = diag.lastConnectedAt != null
+        ? dateFmt.format(diag.lastConnectedAt!)
+        : context.l10n.mqttProxyNoneLabel;
+
+    final buffer = StringBuffer()
+      ..writeln(
+        '${context.l10n.mqttProxyStatusLabel}: $status',
+      ) // lint-allow: hardcoded-string
+      ..writeln(
+        '${context.l10n.mqttProxyBroker}: $broker',
+      ) // lint-allow: hardcoded-string
+      ..writeln(
+        '${context.l10n.mqttProxyTls}: $tls',
+      ) // lint-allow: hardcoded-string
+      ..writeln(
+        '${context.l10n.mqttProxyAuth}: $auth',
+      ) // lint-allow: hardcoded-string
+      ..writeln(
+        '${context.l10n.mqttProxyLastConnectAttempt}: $lastAttempt',
+      ) // lint-allow: hardcoded-string
+      ..writeln(
+        '${context.l10n.mqttProxyLastConnectedAt}: $lastConnected',
+      ) // lint-allow: hardcoded-string
+      ..writeln(
+        '${context.l10n.mqttProxyPublished}: ${diag.messagesPublished}',
+      ) // lint-allow: hardcoded-string
+      ..writeln(
+        '${context.l10n.mqttProxyRelayed}: ${diag.messagesRelayed}',
+      ); // lint-allow: hardcoded-string
+
+    if (diag.reconnectAttempts > 0) {
+      buffer.writeln(
+        '${context.l10n.mqttProxyReconnects}: ${diag.reconnectAttempts}',
+      ); // lint-allow: hardcoded-string
+    }
+    if (diag.lastError != null) {
+      buffer.writeln(
+        '${context.l10n.mqttProxyLastError}: ${diag.lastError}',
+      ); // lint-allow: hardcoded-string
+    }
+
+    Clipboard.setData(ClipboardData(text: buffer.toString()));
+    showSuccessSnackBar(context, context.l10n.mqttProxyDiagnosticsCopied);
   }
 
   Widget _buildInfoCard() {
@@ -882,6 +1054,43 @@ class _SettingsTile extends StatelessWidget {
             if (trailing != null) trailing!,
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _DiagRow extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color? valueColor;
+
+  const _DiagRow({required this.label, required this.value, this.valueColor});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Text(
+            label,
+            style: TextStyle(fontSize: 13, color: context.textSecondary),
+          ),
+          const Spacer(),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: valueColor ?? context.textPrimary,
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 2,
+            ),
+          ),
+        ],
       ),
     );
   }

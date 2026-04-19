@@ -290,3 +290,17 @@ class MapAtmosphere extends StatelessWidget {
     );
   }
 }
+
+/// Pre-configured atmosphere overlay for the main NodeDex list screen.
+///
+/// Uses full intensity multiplier (1.0) with all effects enabled,
+/// matching the constellation screen's atmospheric presence so the
+/// list view feels equally alive.
+class NodeDexListAtmosphere extends StatelessWidget {
+  const NodeDexListAtmosphere({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const AtmosphereOverlay(context: AtmosphereContext.constellation);
+  }
+}

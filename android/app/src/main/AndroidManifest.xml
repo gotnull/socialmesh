@@ -37,6 +37,9 @@
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
 
+    <!-- Microphone permission for Codec2 voice message recording -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
     <!-- Network permissions for WiFi-based nodes -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -71,6 +74,7 @@
         android:name=".SocialmeshApplication"
         android:icon="@mipmap/ic_launcher"
         android:allowBackup="false"
+        android:extractNativeLibs="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:networkSecurityConfig="@xml/network_security_config">
         <!-- Disable Firebase automatic screen reporting for privacy -->

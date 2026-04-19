@@ -12,9 +12,16 @@ class PacketFramer {
   static const int _headerSize = 4;
   static const int _maxPacketSize = 512;
 
+  /// Max consecutive invalid frames before triggering abuse callback.
+  static const int _maxConsecutiveInvalid = 10;
+
   final List<int> _buffer = [];
 
-  PacketFramer();
+  /// Called when sustained abuse is detected (e.g. 10+ consecutive invalid
+  /// frames). The transport layer should disconnect.
+  final void Function()? onAbuseDetected;
+
+  PacketFramer({this.onAbuseDetected});
 
   /// Frame a packet for transmission
   static List<int> frame(List<int> payload) {
@@ -29,22 +36,60 @@ class PacketFramer {
     return [_magicByte1, _magicByte2, msb, lsb, ...payload];
   }
 
+  /// Track consecutive invalid frames for abuse detection.
+  int _consecutiveInvalidFrames = 0;
+
+  /// Total bytes discarded in this session (security metric).
+  int _totalBytesDiscarded = 0;
+
+  /// Number of buffer clears due to overflow.
+  int _bufferOverflowCount = 0;
+
   /// Add received data to buffer and extract complete packets
   List<List<int>> addData(List<int> data) {
     _buffer.addAll(data);
+
+    // --- SECURITY AUDIT LOGGING ---
+    AppLogging.protocol(
+      'FRAMER SECURITY: addData(${data.length} bytes) '
+      'bufferSize=${_buffer.length} '
+      'consecutiveInvalid=$_consecutiveInvalidFrames '
+      'totalDiscarded=$_totalBytesDiscarded '
+      'overflowClears=$_bufferOverflowCount',
+    );
+    // --- END SECURITY AUDIT LOGGING ---
 
     final packets = <List<int>>[];
 
     while (true) {
       final packet = _extractPacket();
       if (packet == null) break;
+      _consecutiveInvalidFrames = 0; // Reset on valid packet
       packets.add(packet);
     }
 
-    // Prevent buffer from growing indefinitely
-    if (_buffer.length > _maxPacketSize * 2) {
-      AppLogging.protocol('⚠️ Buffer too large (${_buffer.length}), clearing');
+    // Prevent buffer from growing indefinitely — cap at max packet + header
+    if (_buffer.length > _maxPacketSize + _headerSize) {
+      _bufferOverflowCount++;
+      _totalBytesDiscarded += _buffer.length;
+      AppLogging.protocol(
+        '⚠️ FRAMER SECURITY: Buffer overflow #$_bufferOverflowCount — '
+        'clearing ${_buffer.length} bytes '
+        '(totalDiscarded=$_totalBytesDiscarded)',
+      );
       _buffer.clear();
+      _consecutiveInvalidFrames = 0;
+    }
+
+    // Abuse detection: sustained invalid frames → disconnect
+    if (_consecutiveInvalidFrames >= _maxConsecutiveInvalid) {
+      AppLogging.protocol(
+        '🚨 FRAMER SECURITY: Abuse threshold reached — '
+        '$_consecutiveInvalidFrames consecutive invalid frames. '
+        'Requesting disconnect.',
+      );
+      _consecutiveInvalidFrames = 0;
+      onAbuseDetected?.call();
     }
 
     return packets;
@@ -70,6 +115,15 @@ class PacketFramer {
     if (magicIndex == -1) {
       // Keep last byte in case it's the start of magic
       if (_buffer.length > 1) {
+        final discarded = _buffer.length - 1;
+        _totalBytesDiscarded += discarded;
+        _consecutiveInvalidFrames++;
+        AppLogging.protocol(
+          '⚠️ FRAMER SECURITY: No magic bytes in ${_buffer.length} bytes — '
+          'discarding $discarded bytes '
+          'consecutiveInvalid=$_consecutiveInvalidFrames '
+          'first8=${_buffer.take(8).map((b) => b.toRadixString(16).padLeft(2, '0')).join(' ')}',
+        );
         _buffer.removeRange(0, _buffer.length - 1);
       }
       return null;
@@ -77,7 +131,11 @@ class PacketFramer {
 
     // Remove bytes before magic
     if (magicIndex > 0) {
-      AppLogging.protocol('⚠️ Discarding $magicIndex bytes before magic');
+      _totalBytesDiscarded += magicIndex;
+      AppLogging.protocol(
+        '⚠️ FRAMER SECURITY: Discarding $magicIndex bytes before magic '
+        '(totalDiscarded=$_totalBytesDiscarded)',
+      );
       _buffer.removeRange(0, magicIndex);
     }
 
@@ -93,7 +151,14 @@ class PacketFramer {
 
     // Validate length
     if (length < 0 || length > _maxPacketSize) {
-      AppLogging.protocol('⚠️ Invalid packet length: $length');
+      _consecutiveInvalidFrames++;
+      _totalBytesDiscarded += 2;
+      AppLogging.protocol(
+        '⚠️ FRAMER SECURITY: Invalid packet length=$length '
+        '(max=$_maxPacketSize) — consecutiveInvalid=$_consecutiveInvalidFrames '
+        'bufferSize=${_buffer.length} '
+        'headerHex=${_buffer.take(8).map((b) => b.toRadixString(16).padLeft(2, '0')).join(' ')}',
+      );
       _buffer.removeRange(0, 2); // Remove magic and try again
       return null;
     }

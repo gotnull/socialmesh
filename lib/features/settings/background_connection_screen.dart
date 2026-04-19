@@ -14,18 +14,16 @@ import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/animations.dart';
+import '../../providers/app_providers.dart';
 import '../../providers/connection_providers.dart';
 import '../../services/transport/background_ble_service.dart';
 import 'battery_optimization_guide.dart';
 
-/// SharedPreferences keys for background notification settings.
-///
-/// These are separate from the global notification keys so users can
-/// independently control which notifications fire while the app is
-/// backgrounded.
-const String kBgNotifyMessages = 'bg_notify_messages';
-const String kBgNotifyChannels = 'bg_notify_channels';
-const String kBgNotifyNodes = 'bg_notify_nodes';
+/// SharedPreferences key to enable/disable the iOS Live Activity
+/// (Dynamic Island + Lock Screen). Default: true.
+const String kLiveActivityEnabled = 'live_activity_enabled';
+
+/// SharedPreferences key for the Android persistent notification style.
 const String kBgNotifStyle = 'bg_notif_style';
 
 /// Notification style for the persistent Android foreground notification.
@@ -57,10 +55,8 @@ class _BackgroundConnectionScreenState
     extends ConsumerState<BackgroundConnectionScreen>
     with LifecycleSafeMixin {
   bool _bgBleEnabled = true;
-  bool _bgNotifyMessages = true;
-  bool _bgNotifyChannels = true;
-  bool _bgNotifyNodes = false;
   NotificationStyle _notifStyle = NotificationStyle.minimal;
+  bool _liveActivityEnabled = true;
 
   bool _loaded = false;
 
@@ -75,12 +71,10 @@ class _BackgroundConnectionScreenState
     if (!mounted) return;
     safeSetState(() {
       _bgBleEnabled = prefs.getBool(kBgBleEnabled) ?? true;
-      _bgNotifyMessages = prefs.getBool(kBgNotifyMessages) ?? true;
-      _bgNotifyChannels = prefs.getBool(kBgNotifyChannels) ?? true;
-      _bgNotifyNodes = prefs.getBool(kBgNotifyNodes) ?? false;
       _notifStyle = NotificationStyle.fromValue(
         prefs.getInt(kBgNotifStyle) ?? 0,
       );
+      _liveActivityEnabled = prefs.getBool(kLiveActivityEnabled) ?? true;
       _loaded = true;
     });
   }
@@ -131,28 +125,26 @@ class _BackgroundConnectionScreenState
     }
   }
 
-  Future<void> _setBgNotifyMessages(bool value) async {
+  Future<void> _setLiveActivityEnabled(bool value) async {
     HapticFeedback.selectionClick();
-    final prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
-    await prefs.setBool(kBgNotifyMessages, value);
-    safeSetState(() => _bgNotifyMessages = value);
-  }
 
-  Future<void> _setBgNotifyChannels(bool value) async {
-    HapticFeedback.selectionClick();
-    final prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
-    await prefs.setBool(kBgNotifyChannels, value);
-    safeSetState(() => _bgNotifyChannels = value);
-  }
+    if (!value) {
+      final confirmed = await AppBottomSheet.showConfirm(
+        context: context,
+        title: context.l10n.bgConnLiveActivityDisableTitle,
+        message: context.l10n.bgConnLiveActivityDisableBody,
+        confirmLabel: context.l10n.bgConnLiveActivityDisableConfirm,
+        isDestructive: true,
+      );
+      if (confirmed != true || !mounted) return;
+      // End any running activity immediately.
+      ref.read(liveActivityManagerProvider.notifier).endLiveActivity();
+    }
 
-  Future<void> _setBgNotifyNodes(bool value) async {
-    HapticFeedback.selectionClick();
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
-    await prefs.setBool(kBgNotifyNodes, value);
-    safeSetState(() => _bgNotifyNodes = value);
+    await prefs.setBool(kLiveActivityEnabled, value);
+    safeSetState(() => _liveActivityEnabled = value);
   }
 
   Future<void> _setNotifStyle(NotificationStyle style) async {
@@ -212,37 +204,32 @@ class _BackgroundConnectionScreenState
                       ),
               ),
 
-              const SizedBox(height: AppTheme.spacing24),
-
-              // -- Notification toggles -------------------------------------
-              _SectionHeader(title: context.l10n.bgConnSectionNotifications),
-              _SettingTile(
-                icon: Icons.chat_bubble_outline,
-                title: context.l10n.bgConnDirectMessages,
-                subtitle: context.l10n.bgConnDirectMessagesSubtitle,
-                trailing: ThemedSwitch(
-                  value: _bgNotifyMessages && _bgBleEnabled,
-                  onChanged: _bgBleEnabled ? _setBgNotifyMessages : null,
+              // -- Live Activity (iOS only) ----------------------------------
+              if (Platform.isIOS) ...[
+                const SizedBox(height: AppTheme.spacing24),
+                _SectionHeader(title: context.l10n.bgConnSectionLiveActivity),
+                _SettingTile(
+                  icon: Icons.dynamic_feed_outlined,
+                  title: context.l10n.bgConnLiveActivityTitle,
+                  subtitle: context.l10n.bgConnLiveActivitySubtitle,
+                  trailing: _loaded
+                      ? ThemedSwitch(
+                          value: _liveActivityEnabled,
+                          onChanged: _setLiveActivityEnabled,
+                        )
+                      : const SizedBox(
+                          width: 48,
+                          height: 24,
+                          child: Center(
+                            child: SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                        ),
                 ),
-              ),
-              _SettingTile(
-                icon: Icons.forum_outlined,
-                title: context.l10n.bgConnChannelMessages,
-                subtitle: context.l10n.bgConnChannelMessagesSubtitle,
-                trailing: ThemedSwitch(
-                  value: _bgNotifyChannels && _bgBleEnabled,
-                  onChanged: _bgBleEnabled ? _setBgNotifyChannels : null,
-                ),
-              ),
-              _SettingTile(
-                icon: Icons.cell_tower,
-                title: context.l10n.bgConnNodeDiscovery,
-                subtitle: context.l10n.bgConnNodeDiscoverySubtitle,
-                trailing: ThemedSwitch(
-                  value: _bgNotifyNodes && _bgBleEnabled,
-                  onChanged: _bgBleEnabled ? _setBgNotifyNodes : null,
-                ),
-              ),
+              ],
 
               // -- Notification style (Android only) ------------------------
               if (Platform.isAndroid) ...[

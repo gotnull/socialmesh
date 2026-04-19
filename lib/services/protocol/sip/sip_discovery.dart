@@ -8,6 +8,7 @@
 /// rate-limited by the SIP token bucket.
 library;
 
+import 'dart:async';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -65,6 +66,29 @@ class SipPeerCapability {
   /// Whether this peer supports SIP-3 (micro-exchange).
   bool get supportsSip3 =>
       (features & SipFeatureBits.sip3) == SipFeatureBits.sip3;
+
+  /// Whether this peer advertised overlay v0.2 link support.
+  ///
+  /// Used by the handshake-completion hook to decide whether to
+  /// auto-open an overlay link in the background once a DM session is
+  /// established.
+  bool get supportsOverlayLinkV02 =>
+      (features & SipFeatureBits.overlayLinkV02) ==
+      SipFeatureBits.overlayLinkV02;
+
+  /// Whether this peer advertised overlay v0.2 resource (SPP v0.2)
+  /// support. Implies [supportsOverlayLinkV02] by protocol rule.
+  bool get supportsOverlayResourceV02 =>
+      (features & SipFeatureBits.overlayResourceV02) ==
+      SipFeatureBits.overlayResourceV02;
+
+  /// Whether this peer advertised overlay v0.3 secure-session support.
+  /// Implies [supportsOverlayLinkV02] by protocol rule (secure rides
+  /// on the canonical link). Orthogonal to
+  /// [supportsOverlayResourceV02].
+  bool get supportsOverlaySecureV03 =>
+      (features & SipFeatureBits.overlaySecureV03) ==
+      SipFeatureBits.overlaySecureV03;
 }
 
 /// Outbound SIP frame ready to send via the transport.
@@ -105,6 +129,26 @@ class SipDiscovery {
        _replayCache = replayCache,
        _clock = clock;
 
+  /// Callback to send an encoded SIP frame via the mesh transport.
+  ///
+  /// Set by the provider layer to wire into ProtocolService.
+  Future<bool> Function(Uint8List encoded)? onSend;
+
+  /// Optional overrider for the local SIP feature bitmap advertised in
+  /// CAP_BEACON / CAP_RESP / ROLLCALL_RESP. When set, its return value
+  /// replaces [SipFeatureBits.allV01]. Used by the provider layer to
+  /// layer overlay capability bits on top of the v0.1 baseline when
+  /// `OVERLAY_LINK_ENABLED` (and its dependents) are set.
+  ///
+  /// The override is evaluated on every emit so runtime flag flips are
+  /// picked up without rebuilding the discovery engine.
+  int Function()? localFeaturesOverride;
+
+  int _resolveLocalFeatures() {
+    final override = localFeaturesOverride;
+    return override == null ? SipFeatureBits.allV01 : override();
+  }
+
   /// Optional callback invoked whenever the peer cache changes.
   ///
   /// Set by the provider layer to trigger Riverpod invalidation so the
@@ -122,6 +166,9 @@ class SipDiscovery {
   final SipCounters? _counters;
   final SipReplayCache? _replayCache;
   final int? Function()? _clock;
+
+  /// Timer for periodic CAP_BEACON broadcast.
+  Timer? _beaconTimer;
 
   /// Maximum peers in the capability cache.
   final int maxPeers;
@@ -144,6 +191,29 @@ class SipDiscovery {
   /// Peer capability cache: node_id -> capability.
   final Map<int, SipPeerCapability> _cache = {};
 
+  /// Whether discovery (beacon emission, rollcall responses) is enabled.
+  ///
+  /// Set by the provider layer from the mesh privacy discoverable setting.
+  /// When false, outbound CAP_BEACON and ROLLCALL_RESP are suppressed
+  /// (unless a scan window is active — see [_scanWindowExpiresMs]).
+  /// Inbound processing (caching discovered peers) continues regardless.
+  bool isDiscoverable = false;
+
+  /// Scan-window expiry timestamp (ms since epoch).
+  ///
+  /// When a user-initiated rollcall request is sent (force=true), a 10-second
+  /// scan window opens. During this window, rollcall responses bypass the
+  /// [isDiscoverable] privacy gate so that bi-directional discovery works:
+  /// Device A scans → Device B (also scanning) receives the request and
+  /// responds, even if its persistent privacy toggle is off.
+  ///
+  /// The beacon gate is NOT bypassed — beacons remain suppressed when
+  /// not discoverable, as they are unsolicited background broadcasts.
+  int _scanWindowExpiresMs = 0;
+
+  /// Whether a user-initiated scan window is currently active.
+  bool get isInScanWindow => _nowMs() < _scanWindowExpiresMs;
+
   /// Timestamp (ms) of last beacon emission.
   ///
   /// Publicly settable for resume restoration (prevents burst after app resume).
@@ -157,11 +227,58 @@ class SipDiscovery {
   /// Rate limiter for per-peer rollcall responses: node_id -> last response ms.
   final Map<int, int> _lastRollcallRespMs = {};
 
+  /// Duration of the scan window opened by a user-initiated rollcall request.
+  static const int _kScanWindowMs = 10 * 1000; // 10s
+
   static final Random _jitterRng = Random();
 
   int _nowMs() => _clock?.call() ?? DateTime.now().millisecondsSinceEpoch;
 
   int _nowS() => _nowMs() ~/ 1000;
+
+  // ---------------------------------------------------------------------------
+  // Lifecycle
+  // ---------------------------------------------------------------------------
+
+  /// Start the periodic CAP_BEACON broadcast.
+  void start() {
+    _scheduleNextBeacon();
+    AppLogging.sip(
+      'SIP_DISCOVERY: CAP_BEACON scheduled, '
+      'interval=${beaconIntervalMs ~/ 1000}s+jitter', // lint-allow: hardcoded-string
+    );
+  }
+
+  /// Stop the periodic beacon broadcast.
+  void stop() {
+    _beaconTimer?.cancel();
+    _beaconTimer = null;
+  }
+
+  /// Dispose: stop timer and clear state.
+  void dispose() {
+    stop();
+    _cache.clear();
+    _lastRollcallRespMs.clear();
+    onSend = null;
+    onPeersChanged = null;
+    onPeerDiscovered = null;
+  }
+
+  void _scheduleNextBeacon() {
+    final jitterMs = _jitterRng.nextInt(beaconJitterMs + 1);
+    final delayMs = beaconIntervalMs + jitterMs;
+    _beaconTimer?.cancel();
+    _beaconTimer = Timer(Duration(milliseconds: delayMs), _emitPeriodicBeacon);
+  }
+
+  Future<void> _emitPeriodicBeacon() async {
+    final outbound = buildBeacon();
+    if (outbound != null) {
+      await onSend?.call(outbound.encoded);
+    }
+    _scheduleNextBeacon();
+  }
 
   // ---------------------------------------------------------------------------
   // Peer cache
@@ -175,6 +292,15 @@ class SipDiscovery {
 
   /// Look up a specific peer.
   SipPeerCapability? getPeer(int nodeId) => _cache[nodeId];
+
+  /// Clear the entire peer cache and notify listeners.
+  void clearPeerCache() {
+    if (_cache.isEmpty) return;
+    _cache.clear();
+    _lastRollcallRespMs.clear();
+    onPeersChanged?.call();
+    AppLogging.sip('SIP_DISCOVERY: peer cache cleared by user');
+  }
 
   /// Evict expired entries. Returns the number evicted.
   int evictExpired() {
@@ -202,6 +328,14 @@ class SipDiscovery {
   /// is true, skips the interval check (but still respects budget and
   /// congestion).
   SipOutbound? buildBeacon({bool force = false}) {
+    // Privacy gate: suppress beacon when not discoverable.
+    if (!isDiscoverable) {
+      AppLogging.sip(
+        'SIP_DISCOVERY: CAP_BEACON suppressed (discoverable=false)',
+      );
+      return null;
+    }
+
     final nowMs = _nowMs();
 
     // Suppress non-essential discovery during congestion or budget pressure.
@@ -230,7 +364,7 @@ class SipDiscovery {
 
     // Build the beacon payload.
     final beacon = SipCapBeacon(
-      features: SipFeatureBits.allV01,
+      features: _resolveLocalFeatures(),
       deviceClass: 1, // phone-app
       maxProtoMinor: SipConstants.sipVersionMinor,
       mtuHint: SipConstants.sipMaxPayload,
@@ -280,15 +414,28 @@ class SipDiscovery {
   // Outbound: ROLLCALL_REQ
   // ---------------------------------------------------------------------------
 
-  /// Build a ROLLCALL_REQ frame. Rate-limited to 1 per cooldown plus jitter.
+  /// Build a ROLLCALL_REQ frame.
   ///
-  /// Returns null if rate-limited, budget insufficient, or non-essential
-  /// sends are suppressed.
-  SipOutbound? buildRollcallReq() {
+  /// For periodic/automatic sends, rate-limited to 1 per cooldown plus jitter.
+  /// For user-initiated scans, pass [force] = true to bypass the time cooldown
+  /// and resume-suppression window while still respecting active mesh
+  /// congestion and the hard byte budget.
+  ///
+  /// Returns null if rate-limited, budget insufficient, or congested.
+  SipOutbound? buildRollcallReq({bool force = false}) {
     final nowMs = _nowMs();
 
-    // Suppress non-essential discovery during congestion or budget pressure.
-    if (_rateLimiter.shouldSuppressNonEssential) {
+    // Always suppress during active mesh congestion. For automatic sends also
+    // suppress on budget pressure / resume suppression window.
+    if (force) {
+      if (_rateLimiter.isCongested) {
+        AppLogging.sip(
+          'SIP_DISCOVERY: ROLLCALL_REQ (force) suppressed '
+          '(active congestion)',
+        );
+        return null;
+      }
+    } else if (_rateLimiter.shouldSuppressNonEssential) {
       AppLogging.sip(
         'SIP_DISCOVERY: ROLLCALL_REQ suppressed (non-essential suppression '
         'active, congested=${_rateLimiter.isCongested}, '
@@ -298,19 +445,22 @@ class SipDiscovery {
       return null;
     }
 
-    final jitterMs = _jitterRng.nextInt(
-      SipConstants.rollcallReqJitter.inMilliseconds + 1,
-    );
-    final effectiveCooldownMs = rollcallCooldownMs + jitterMs;
-
-    if (nowMs - lastRollcallReqMs < effectiveCooldownMs) {
-      AppLogging.sip(
-        'SIP_DISCOVERY: ROLLCALL_REQ rate-limited '
-        '(${(nowMs - lastRollcallReqMs) ~/ 1000}s < '
-        '${effectiveCooldownMs ~/ 1000}s, '
-        'base=${rollcallCooldownMs ~/ 1000}s jitter=${jitterMs ~/ 1000}s)',
+    // Time cooldown only applies to automatic (non-forced) sends.
+    if (!force) {
+      final jitterMs = _jitterRng.nextInt(
+        SipConstants.rollcallReqJitter.inMilliseconds + 1,
       );
-      return null;
+      final effectiveCooldownMs = rollcallCooldownMs + jitterMs;
+
+      if (nowMs - lastRollcallReqMs < effectiveCooldownMs) {
+        AppLogging.sip(
+          'SIP_DISCOVERY: ROLLCALL_REQ rate-limited '
+          '(${(nowMs - lastRollcallReqMs) ~/ 1000}s < '
+          '${effectiveCooldownMs ~/ 1000}s, '
+          'base=${rollcallCooldownMs ~/ 1000}s jitter=${jitterMs ~/ 1000}s)',
+        );
+        return null;
+      }
     }
 
     final frame = SipFrame(
@@ -340,6 +490,16 @@ class SipDiscovery {
     _rateLimiter.recordSend(encoded.length);
     lastRollcallReqMs = nowMs;
 
+    // Open scan window on user-initiated (forced) requests so that incoming
+    // rollcall responses from other scanning peers are allowed through even
+    // when the persistent discoverable toggle is off.
+    if (force) {
+      _scanWindowExpiresMs = nowMs + _kScanWindowMs;
+      AppLogging.sip(
+        'SIP_DISCOVERY: scan window opened for ${_kScanWindowMs ~/ 1000}s',
+      );
+    }
+
     AppLogging.sip(
       'SIP_DISCOVERY: ROLLCALL_REQ broadcast, ${encoded.length}B total',
     );
@@ -356,6 +516,16 @@ class SipDiscovery {
   /// Returns null if rate-limited or budget insufficient.
   /// The caller should apply a random delay (0-3s) before sending.
   SipOutbound? buildRollcallResp(int peerNodeId) {
+    // Privacy gate: suppress rollcall responses when not discoverable,
+    // unless a user-initiated scan window is active (allows bi-directional
+    // discovery between two scanning peers).
+    if (!isDiscoverable && !isInScanWindow) {
+      AppLogging.sip(
+        'SIP_DISCOVERY: ROLLCALL_RESP suppressed (discoverable=false)',
+      );
+      return null;
+    }
+
     final nowMs = _nowMs();
 
     final lastMs = _lastRollcallRespMs[peerNodeId];
@@ -368,7 +538,7 @@ class SipDiscovery {
     }
 
     final beacon = SipCapBeacon(
-      features: SipFeatureBits.allV01,
+      features: _resolveLocalFeatures(),
       deviceClass: 1,
       maxProtoMinor: SipConstants.sipVersionMinor,
       mtuHint: SipConstants.sipMaxPayload,
@@ -480,6 +650,12 @@ class SipDiscovery {
 
   /// Handle an inbound ROLLCALL_REQ. Returns a response to send, or null.
   ///
+  /// Also performs **passive discovery**: receiving a ROLLCALL_REQ proves the
+  /// sender is a SIP peer. If they are not already cached, an entry with
+  /// minimal capabilities (SIP-0 only, capsHash=0) is created so the peer
+  /// appears in the UI immediately. The entry is upgraded when a
+  /// ROLLCALL_RESP or CAP_BEACON arrives with full capability data.
+  ///
   /// Ignores duplicate packets seen via multi-hop.
   /// The caller should delay sending by 0-3s (random jitter).
   SipOutbound? handleRollcallReq(int senderNodeId, {SipFrame? frame}) {
@@ -488,6 +664,28 @@ class SipDiscovery {
     // Duplicate suppression for the request itself.
     if (frame != null && _isDuplicateDiscovery(senderNodeId, frame)) {
       return null;
+    }
+
+    // Passive discovery: a ROLLCALL_REQ proves the sender is a SIP peer.
+    // If already cached with full capabilities, just refresh the timestamp.
+    // Otherwise create a minimal entry so the peer is visible immediately.
+    final existing = _cache[senderNodeId];
+    if (existing != null) {
+      existing.lastSeenMs = _nowMs();
+    } else {
+      AppLogging.sip(
+        'SIP_DISCOVERY: passive discovery from ROLLCALL_REQ, '
+        'node=0x${senderNodeId.toRadixString(16)}',
+      );
+      _upsertPeer(
+        nodeId: senderNodeId,
+        features: SipFeatureBits.sip0,
+        deviceClass: 0,
+        maxProtoMinor: frame?.versionMinor ?? 0,
+        mtuHint: 0,
+        rxWindowS: 0,
+        capsHash: 0,
+      );
     }
 
     return buildRollcallResp(senderNodeId);

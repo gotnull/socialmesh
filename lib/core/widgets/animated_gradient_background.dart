@@ -67,10 +67,13 @@ class _AnimatedGradientBackgroundState extends State<AnimatedGradientBackground>
     if (!widget.enabled) {
       return widget.child;
     }
+    final disableAnimations =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    final animate = widget.animate && !disableAnimations;
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
-        final slide = widget.animate ? (_controller.value * 2) - 1.0 : 0.0;
+        final slide = animate ? (_controller.value * 2) - 1.0 : 0.0;
         final decoration = BoxDecoration(
           gradient: LinearGradient(
             colors: widget.gradient.colors,

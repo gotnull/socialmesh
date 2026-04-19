@@ -24,6 +24,21 @@ String? _safeGetEnv(String key) {
 
 /// Centralized logging configuration
 class AppLogging {
+  /// Optional callback that receives structured log events for the in-app
+  /// log viewer. Set once during app initialization to bridge console
+  /// logging into the in-memory [AppLogger] ring buffer.
+  ///
+  /// Signature: (int level, String source, String message)
+  /// Levels: 0=debug, 1=info, 2=warning, 3=error
+  static void Function(int level, String source, String message)? _appLogSink;
+
+  /// Registers the in-app log sink. Call once during app startup.
+  static void setAppLogSink(
+    void Function(int level, String source, String message) sink,
+  ) {
+    _appLogSink = sink;
+  }
+
   static bool? _bleLoggingEnabled;
   static bool? _mapLoggingEnabled;
   static bool? _protocolLoggingEnabled;
@@ -53,6 +68,7 @@ class AppLogging {
   static bool? _bugReportLoggingEnabled;
   static bool? _shopLoggingEnabled;
   static bool? _nodeDexLoggingEnabled;
+  static bool? _nodeBoardLoggingEnabled;
   static bool? _syncLoggingEnabled;
   static bool? _mfaLoggingEnabled;
   static bool? _aetherLoggingEnabled;
@@ -69,6 +85,19 @@ class AppLogging {
   static bool? _sipLoggingEnabled;
   static bool? _mrrpDebugEnabled;
   static bool? _mrrpHarnessDebugEnabled;
+  static bool? _meshExplorerDebugEnabled;
+  static bool? _voiceLoggingEnabled;
+  static bool? _codec2LoggingEnabled;
+  static bool? _sppLoggingEnabled;
+  static bool? _sppNegotiationLoggingEnabled;
+  static bool? _stlLoggingEnabled;
+  static bool? _overlayLoggingEnabled;
+  static bool? _meshFeedLoggingEnabled;
+  static bool? _meshGamesLoggingEnabled;
+  static bool? _meshGameTransportLoggingEnabled;
+  static bool? _meshGameSessionLoggingEnabled;
+  static bool? _meshGameUiLoggingEnabled;
+  static bool? _mqttProxyLoggingEnabled;
   static bool? _forceEmptyStates;
   static Logger? _bleLogger;
   static Logger? _mapLogger;
@@ -248,6 +277,12 @@ class AppLogging {
     return _nodeDexLoggingEnabled!;
   }
 
+  static bool get nodeBoardLoggingEnabled {
+    _nodeBoardLoggingEnabled ??=
+        _safeGetEnv('NODEBOARD_LOGGING_ENABLED')?.toLowerCase() != 'false';
+    return _nodeBoardLoggingEnabled!;
+  }
+
   static bool get mfaLoggingEnabled {
     _mfaLoggingEnabled ??=
         _safeGetEnv('MFA_LOGGING_ENABLED')?.toLowerCase() != 'false';
@@ -372,7 +407,10 @@ class AppLogging {
   }
 
   static void app(String message) {
-    if (appLoggingEnabled) debugPrint('App: $message');
+    if (appLoggingEnabled) {
+      debugPrint('App: $message');
+      _appLogSink?.call(1, 'app', message); // lint-allow: hardcoded-string
+    }
   }
 
   static void subscriptions(String message) {
@@ -437,6 +475,10 @@ class AppLogging {
 
   static void nodeDex(String message) {
     if (nodeDexLoggingEnabled) debugPrint('NodeDex: $message');
+  }
+
+  static void nodeBoard(String message) {
+    if (nodeBoardLoggingEnabled) debugPrint('NodeBoard: $message');
   }
 
   /// Always-on Cloud Sync logging channel.
@@ -585,7 +627,182 @@ class AppLogging {
     if (mrrpHarnessDebugEnabled) debugPrint('MRRP_HARNESS: $message');
   }
 
+  /// Mesh Explorer debug logging.
+  /// Enable with MESH_EXPLORER_DEBUG=true in .env file.
+  static bool get meshExplorerDebugEnabled {
+    _meshExplorerDebugEnabled ??=
+        _safeGetEnv('MESH_EXPLORER_DEBUG')?.toLowerCase() == 'true';
+    return _meshExplorerDebugEnabled!;
+  }
+
+  static void meshExplorer(String message) {
+    if (meshExplorerDebugEnabled) debugPrint('MESH_EXPLORER: $message');
+  }
+
+  /// Voice message pipeline logging.
+  /// Enable with VOICE_LOGGING_ENABLED=true in .env file.
+  static bool get voiceLoggingEnabled {
+    _voiceLoggingEnabled ??=
+        _safeGetEnv('VOICE_LOGGING_ENABLED')?.toLowerCase() == 'true';
+    return _voiceLoggingEnabled!;
+  }
+
+  static void voice(String message) {
+    if (voiceLoggingEnabled) debugPrint('Voice: $message');
+  }
+
+  /// Codec2 FFI encode/decode logging.
+  /// Enable with CODEC2_LOGGING_ENABLED=true in .env file.
+  static bool get codec2LoggingEnabled {
+    _codec2LoggingEnabled ??=
+        _safeGetEnv('CODEC2_LOGGING_ENABLED')?.toLowerCase() == 'true';
+    return _codec2LoggingEnabled!;
+  }
+
+  static void codec2(String message) {
+    if (codec2LoggingEnabled) debugPrint('Codec2: $message');
+  }
+
+  /// SPP payload transfer logging.
+  /// Enable with SPP_LOGGING_ENABLED=true in .env file.
+  static bool get sppLoggingEnabled {
+    _sppLoggingEnabled ??=
+        _safeGetEnv('SPP_LOGGING_ENABLED')?.toLowerCase() == 'true';
+    return _sppLoggingEnabled!;
+  }
+
+  static void spp(String message) {
+    if (sppLoggingEnabled) debugPrint('SPP: $message');
+  }
+
+  /// SPP negotiation logging.
+  /// Enable with SPP_NEGOTIATION_LOGGING_ENABLED=true in .env file.
+  static bool get sppNegotiationLoggingEnabled {
+    _sppNegotiationLoggingEnabled ??=
+        _safeGetEnv('SPP_NEGOTIATION_LOGGING_ENABLED')?.toLowerCase() == 'true';
+    return _sppNegotiationLoggingEnabled!;
+  }
+
+  static void sppNegotiation(String message) {
+    if (sppNegotiationLoggingEnabled) debugPrint('SPP_NEG: $message');
+  }
+
+  /// STL (Socialmesh Trust Layer) logging.
+  /// Enable with STL_LOGGING_ENABLED=true in .env file.
+  static bool get stlLoggingEnabled {
+    _stlLoggingEnabled ??=
+        _safeGetEnv('STL_LOGGING_ENABLED')?.toLowerCase() == 'true';
+    return _stlLoggingEnabled!;
+  }
+
+  static void stl(String message) {
+    if (stlLoggingEnabled) debugPrint('STL: $message');
+  }
+
+  /// Socialmesh Overlay v0.2 logging — link state, resource transfer,
+  /// persistence, capability negotiation. Enable with
+  /// `OVERLAY_LOGGING_ENABLED=true` in the .env file.
+  static bool get overlayLoggingEnabled {
+    _overlayLoggingEnabled ??=
+        _safeGetEnv('OVERLAY_LOGGING_ENABLED')?.toLowerCase() == 'true';
+    return _overlayLoggingEnabled!;
+  }
+
+  static void overlay(String message) {
+    if (overlayLoggingEnabled) debugPrint('Overlay: $message');
+  }
+
+  /// Mesh Feed logging — ingest, replay protection, propagation, sync.
+  /// Enable with MESH_FEED_LOGGING_ENABLED=true in .env file.
+  static bool get meshFeedLoggingEnabled {
+    _meshFeedLoggingEnabled ??=
+        _safeGetEnv('MESH_FEED_LOGGING_ENABLED')?.toLowerCase() == 'true';
+    return _meshFeedLoggingEnabled!;
+  }
+
+  static void meshFeed(String message) {
+    if (meshFeedLoggingEnabled) debugPrint('MeshFeed: $message');
+  }
+
+  /// Mesh Games logging — session lifecycle (create/join/complete/abandon).
+  /// Enable with MESH_GAMES_LOGGING_ENABLED=true in .env file.
+  static bool get meshGamesLoggingEnabled {
+    _meshGamesLoggingEnabled ??=
+        _safeGetEnv('MESH_GAMES_LOGGING_ENABLED')?.toLowerCase() == 'true';
+    return _meshGamesLoggingEnabled!;
+  }
+
+  static void meshGames(String message) {
+    if (meshGamesLoggingEnabled) debugPrint('MeshGames: $message');
+  }
+
+  /// Mesh Games transport logging — encode/decode of game wire frames.
+  static bool get meshGameTransportLoggingEnabled {
+    _meshGameTransportLoggingEnabled ??=
+        _safeGetEnv('MESH_GAME_TRANSPORT_LOGGING_ENABLED')?.toLowerCase() ==
+        'true';
+    return _meshGameTransportLoggingEnabled!;
+  }
+
+  static void meshGameTransport(String message) {
+    if (meshGameTransportLoggingEnabled) {
+      debugPrint('MeshGameTransport: $message');
+    }
+  }
+
+  /// Mesh Games session logging — persistence + state transitions.
+  static bool get meshGameSessionLoggingEnabled {
+    _meshGameSessionLoggingEnabled ??=
+        _safeGetEnv('MESH_GAME_SESSION_LOGGING_ENABLED')?.toLowerCase() ==
+        'true';
+    return _meshGameSessionLoggingEnabled!;
+  }
+
+  static void meshGameSession(String message) {
+    if (meshGameSessionLoggingEnabled) {
+      debugPrint('MeshGameSession: $message');
+    }
+  }
+
+  /// Mesh Games UI logging — user actions + screen transitions.
+  static bool get meshGameUiLoggingEnabled {
+    _meshGameUiLoggingEnabled ??=
+        _safeGetEnv('MESH_GAME_UI_LOGGING_ENABLED')?.toLowerCase() == 'true';
+    return _meshGameUiLoggingEnabled!;
+  }
+
+  static void meshGameUi(String message) {
+    if (meshGameUiLoggingEnabled) debugPrint('MeshGameUi: $message');
+  }
+
+  /// MQTT client proxy logging.
+  /// Enable with MQTT_PROXY_LOGGING_ENABLED=true in .env file.
+  static bool get mqttProxyLoggingEnabled {
+    _mqttProxyLoggingEnabled ??=
+        _safeGetEnv('MQTT_PROXY_LOGGING_ENABLED')?.toLowerCase() == 'true';
+    return _mqttProxyLoggingEnabled!;
+  }
+
+  static void mqttProxy(String message) {
+    if (mqttProxyLoggingEnabled) debugPrint('MQTT_PROXY: $message');
+    // Always forward to in-app log viewer for support visibility
+    _appLogSink?.call(1, 'mqtt_proxy', message); // lint-allow: hardcoded-string
+  }
+
+  /// Logs an MQTT proxy error to both console and in-app log viewer.
+  static void mqttProxyError(String message) {
+    if (mqttProxyLoggingEnabled) debugPrint('MQTT_PROXY: $message');
+    _appLogSink?.call(3, 'mqtt_proxy', message); // lint-allow: hardcoded-string
+  }
+
+  /// Logs an MQTT proxy warning to both console and in-app log viewer.
+  static void mqttProxyWarning(String message) {
+    if (mqttProxyLoggingEnabled) debugPrint('MQTT_PROXY: $message');
+    _appLogSink?.call(2, 'mqtt_proxy', message); // lint-allow: hardcoded-string
+  }
+
   static void reset() {
+    _appLogSink = null;
     _bleLoggingEnabled = null;
     _protocolLoggingEnabled = null;
     _widgetsLoggingEnabled = null;
@@ -614,6 +831,7 @@ class AppLogging {
     _bugReportLoggingEnabled = null;
     _shopLoggingEnabled = null;
     _nodeDexLoggingEnabled = null;
+    _nodeBoardLoggingEnabled = null;
     _syncLoggingEnabled = null;
     _mfaLoggingEnabled = null;
     _aetherLoggingEnabled = null;
@@ -630,6 +848,14 @@ class AppLogging {
     _sipLoggingEnabled = null;
     _mrrpDebugEnabled = null;
     _mrrpHarnessDebugEnabled = null;
+    _meshExplorerDebugEnabled = null;
+    _voiceLoggingEnabled = null;
+    _codec2LoggingEnabled = null;
+    _sppLoggingEnabled = null;
+    _sppNegotiationLoggingEnabled = null;
+    _stlLoggingEnabled = null;
+    _meshFeedLoggingEnabled = null;
+    _mqttProxyLoggingEnabled = null;
     _bleLogger = null;
     _noOpLogger = null;
   }

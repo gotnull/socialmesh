@@ -97,6 +97,42 @@ class SettingsService {
   /// Initialize the service
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
+    await _migrateNotificationSettingsV2();
+  }
+
+  /// One-time migration: consolidate background-specific notification toggles
+  /// into the global toggles. Prior to this migration, the Background
+  /// Connection screen had separate `bg_notify_messages` and
+  /// `bg_notify_channels` keys that acted as extra gates on background
+  /// notifications. These have been removed; the global keys now control
+  /// both foreground and background notification delivery.
+  ///
+  /// If a user had explicitly disabled a background toggle while the global
+  /// toggle was still on, we disable the global toggle to preserve intent.
+  Future<void> _migrateNotificationSettingsV2() async {
+    const migrationKey = 'notification_settings_v2_migrated';
+    if (_prefs!.getBool(migrationKey) == true) return;
+
+    // bg_notify_messages (background DM toggle) → dm_notifications_enabled
+    final bgDm = _prefs!.getBool('bg_notify_messages');
+    if (bgDm == false) {
+      final globalDm = _prefs!.getBool('dm_notifications_enabled') ?? true;
+      if (globalDm) {
+        await _prefs!.setBool('dm_notifications_enabled', false);
+      }
+    }
+
+    // bg_notify_channels (background channel toggle) → channel_notifications_enabled
+    final bgChannel = _prefs!.getBool('bg_notify_channels');
+    if (bgChannel == false) {
+      final globalChannel =
+          _prefs!.getBool('channel_notifications_enabled') ?? true;
+      if (globalChannel) {
+        await _prefs!.setBool('channel_notifications_enabled', false);
+      }
+    }
+
+    await _prefs!.setBool(migrationKey, true);
   }
 
   SharedPreferences get _preferences {
@@ -172,6 +208,29 @@ class SettingsService {
 
   bool get sipAutoScanEnabled =>
       _preferences.getBool('sip_auto_scan_enabled') ?? false;
+
+  // Mesh privacy: discoverable (allow peers to discover via SIP)
+  Future<void> setMeshDiscoverable(bool enabled) async {
+    await _preferences.setBool('mesh_discoverable', enabled);
+  }
+
+  bool get meshDiscoverable =>
+      _preferences.getBool('mesh_discoverable') ?? true;
+
+  // Mesh privacy: profile sharing (let peers request profile and services)
+  Future<void> setMeshProfileSharing(bool enabled) async {
+    await _preferences.setBool('mesh_profile_sharing', enabled);
+  }
+
+  bool get meshProfileSharing =>
+      _preferences.getBool('mesh_profile_sharing') ?? true;
+
+  // Mesh privacy: DM available (accept handshakes and direct messages)
+  Future<void> setMeshDmAvailable(bool enabled) async {
+    await _preferences.setBool('mesh_dm_available', enabled);
+  }
+
+  bool get meshDmAvailable => _preferences.getBool('mesh_dm_available') ?? true;
 
   // Theme
   Future<void> setDarkMode(bool enabled) async {
@@ -369,6 +428,50 @@ class SettingsService {
 
   int get mapTileStyleIndex => _preferences.getInt('map_tile_style_index') ?? 0;
 
+  // Map layer toggles
+  Future<void> setMapShowRangeCircles(bool enabled) async {
+    await _preferences.setBool('map_show_range_circles', enabled);
+  }
+
+  bool get mapShowRangeCircles =>
+      _preferences.getBool('map_show_range_circles') ?? false;
+
+  Future<void> setMapShowConnectionLines(bool enabled) async {
+    await _preferences.setBool('map_show_connection_lines', enabled);
+  }
+
+  bool get mapShowConnectionLines =>
+      _preferences.getBool('map_show_connection_lines') ?? false;
+
+  Future<void> setMapShowPositionHistory(bool enabled) async {
+    await _preferences.setBool('map_show_position_history', enabled);
+  }
+
+  bool get mapShowPositionHistory =>
+      _preferences.getBool('map_show_position_history') ?? false;
+
+  Future<void> setMapConnectionMaxDistance(double km) async {
+    await _preferences.setDouble('map_connection_max_distance', km);
+  }
+
+  double get mapConnectionMaxDistance =>
+      _preferences.getDouble('map_connection_max_distance') ?? 15.0;
+
+  // Node list view mode (0 = cards, 1 = compact)
+  Future<void> setNodeViewModeIndex(int index) async {
+    await _preferences.setInt('node_view_mode_index', index);
+  }
+
+  int get nodeViewModeIndex => _preferences.getInt('node_view_mode_index') ?? 0;
+
+  // Message tech info bar (inline radio metadata below messages)
+  Future<void> setMessageTechInfoEnabled(bool enabled) async {
+    await _preferences.setBool('message_tech_info_enabled', enabled);
+  }
+
+  bool get messageTechInfoEnabled =>
+      _preferences.getBool('message_tech_info_enabled') ?? false;
+
   // 3D Animations Enabled
   Future<void> setAnimations3DEnabled(bool enabled) async {
     await _preferences.setBool('animations_3d_enabled', enabled);
@@ -440,14 +543,28 @@ class SettingsService {
   String? get termsAcceptedBuild =>
       _preferences.getString('terms_accepted_build');
 
-  // Age eligibility confirmation (16+)
-  Future<void> setAgeEligibilityConfirmed({required int policyVersion}) async {
+  // Age eligibility confirmation (18+)
+  Future<void> setAgeEligibilityConfirmed({
+    required int policyVersion,
+    required String ageGroupName,
+    String ageSource = 'selfAttestation',
+  }) async {
     await _preferences.setBool('age_eligibility_confirmed', true);
     await _preferences.setString(
       'age_eligibility_confirmed_at',
       DateTime.now().toUtc().toIso8601String(),
     );
     await _preferences.setInt('age_eligibility_policy_version', policyVersion);
+    await _preferences.setString('age_eligibility_age_group', ageGroupName);
+    await _preferences.setString('age_eligibility_age_source', ageSource);
+  }
+
+  /// Clear age-eligibility confirmation so the gate re-appears.
+  Future<void> clearAgeEligibility() async {
+    await _preferences.setBool('age_eligibility_confirmed', false);
+    await _preferences.setInt('age_eligibility_policy_version', 0);
+    await _preferences.setString('age_eligibility_age_group', 'unknown');
+    await _preferences.setString('age_eligibility_age_source', 'unknown');
   }
 
   bool get ageEligibilityConfirmed =>
@@ -458,6 +575,12 @@ class SettingsService {
 
   int get ageEligibilityPolicyVersion =>
       _preferences.getInt('age_eligibility_policy_version') ?? 0;
+
+  String? get ageEligibilityAgeGroupName =>
+      _preferences.getString('age_eligibility_age_group');
+
+  String? get ageEligibilityAgeSourceName =>
+      _preferences.getString('age_eligibility_age_source');
 
   // Canned responses
   Future<void> setCannedResponses(List<CannedResponse> responses) async {
@@ -723,9 +846,16 @@ class SettingsService {
   bool get fileTransferAutoAccept =>
       _preferences.getBool('file_transfer_auto_accept') ?? true;
 
+  Future<void> setStlSigningEnabled(bool enabled) async {
+    await _preferences.setBool('stl_signing_enabled', enabled);
+  }
+
+  bool get stlSigningEnabled =>
+      _preferences.getBool('stl_signing_enabled') ?? false;
+
   // Phone GPS Location Sharing
   // Whether to send the phone's GPS position to the mesh on a periodic timer.
-  // Matches meshtastic-ios UserDefaults.provideLocation (default: false).
+  // Follows the standard Meshtastic companion app default (opt-in, false).
   // When false, the 30-second position timer is a no-op — no POSITION_APP
   // packets are emitted from the phone to the mesh.
   Future<void> setProvidePhoneLocation(bool enabled) async {
@@ -785,6 +915,14 @@ class DeviceFavoritesService {
       set.map((n) => n.toString()).toList(),
     );
     AppLogging.debug('Removed node $nodeNum from favorites');
+  }
+
+  /// Replace the entire favorites set in one write (used for device-sync on connect).
+  Future<void> replaceAllFavorites(Set<int> newFavorites) async {
+    await _preferences.setStringList(
+      _favoritesKey,
+      newFavorites.map((n) => n.toString()).toList(),
+    );
   }
 
   /// Get all ignored node numbers
@@ -1088,8 +1226,10 @@ class NodeStorageService {
 
     return MeshNode(
       nodeNum: json['nodeNum'] as int,
-      longName: rawLongName != null ? sanitizeUtf16(rawLongName) : null,
-      shortName: rawShortName != null ? sanitizeUtf16(rawShortName) : null,
+      longName: rawLongName != null ? sanitizeExternalText(rawLongName) : null,
+      shortName: rawShortName != null
+          ? sanitizeExternalText(rawShortName)
+          : null,
       userId: json['userId'] as String?,
       hardwareModel: json['hardwareModel'] as String?,
       latitude: (json['latitude'] as num?)?.toDouble(),
@@ -1098,7 +1238,9 @@ class NodeStorageService {
       batteryLevel: json['batteryLevel'] as int?,
       snr: json['snr'] as int?,
       rssi: json['rssi'] as int?,
-      firmwareVersion: json['firmwareVersion'] as String?,
+      firmwareVersion: json['firmwareVersion'] != null
+          ? sanitizeExternalText(json['firmwareVersion'] as String)
+          : null,
       lastHeard: json['lastHeard'] != null
           ? DateTime.fromMillisecondsSinceEpoch(json['lastHeard'] as int)
           : null,
@@ -1172,7 +1314,9 @@ class NodeStorageService {
       numTxDropped: json['numTxDropped'] as int?,
       noiseFloor: json['noiseFloor'] as int?,
       // Node Status
-      nodeStatus: json['nodeStatus'] as String?,
+      nodeStatus: json['nodeStatus'] != null
+          ? sanitizeExternalText(json['nodeStatus'] as String)
+          : null,
       // Traffic Management Stats
       tmPacketsInspected: json['tmPacketsInspected'] as int?,
       tmPositionDedupDrops: json['tmPositionDedupDrops'] as int?,

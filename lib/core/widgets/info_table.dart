@@ -10,12 +10,14 @@ class InfoTableRow {
   final String value;
   final IconData? icon;
   final Color? iconColor;
+  final VoidCallback? onTap;
 
   const InfoTableRow({
     required this.label,
     required this.value,
     this.icon,
     this.iconColor,
+    this.onTap,
   });
 }
 
@@ -43,7 +45,7 @@ class InfoTable extends StatelessWidget {
             final item = entry.value;
             final isOdd = index % 2 == 1;
 
-            return Container(
+            final rowContainer = Container(
               decoration: BoxDecoration(
                 color: isOdd ? context.cardAlt : context.background,
                 border: Border(
@@ -115,6 +117,15 @@ class InfoTable extends StatelessWidget {
                 ),
               ),
             );
+
+            if (item.onTap != null) {
+              return Material(
+                type: MaterialType.transparency,
+                child: InkWell(onTap: item.onTap, child: rowContainer),
+              );
+            }
+
+            return rowContainer;
           }).toList(),
         ),
       ),

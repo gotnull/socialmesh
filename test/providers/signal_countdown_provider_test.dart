@@ -4,6 +4,7 @@
 import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:socialmesh/core/transport.dart';
 import 'package:socialmesh/providers/auth_providers.dart';
@@ -43,6 +44,9 @@ class FakeTransport implements DeviceTransport {
 
   @override
   Future<void> send(List<int> data) async {}
+
+  @override
+  Future<void> refreshNotifications() async {}
 
   @override
   Future<void> pollOnce() async {}
@@ -86,10 +90,15 @@ class FakeSignalService extends SignalService {
   Future<int> retryCloudLookups() async {
     return 0;
   }
+
+  @override
+  Future<List<Post>> getAllLocalSignals() async => [];
 }
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  SharedPreferences.setMockInitialValues({});
+
   test('Signal countdown ticker updates lastRefresh each second', () {
     fakeAsync((async) {
       final container = ProviderContainer(

@@ -88,6 +88,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Aether skeleton shimmer transitions use AnimatedSwitcher with proper keyed children
 - Aether stale partial-match search results no longer overwrite newer results (generation counter)
 
+## [1.25.0] - 2026-03-23
+
+### Added
+
+- iOS Live Activity toggle in Background Connection settings — "LIVE ACTIVITY" section with a "Dynamic Island & Lock Screen" switch; toggling off confirms via bottom sheet and ends any running activity immediately
+- In-app language selector re-enabled in Appearance & Accessibility settings (was previously hidden behind `LANGUAGE_SELECTOR_ENABLED` feature flag)
+
+### Changed
+
+- `LiveActivityManagerNotifier._startLiveActivity()` now checks the `live_activity_enabled` SharedPreferences key before starting a Live Activity; disabled state is respected across reconnections
+- `LiveActivityManagerNotifier` exposes a public `endLiveActivity()` method for use by settings UI
+
+### Dependencies
+
+- `subosito/flutter-action` 2.21.0 → 2.22.0 (CI GitHub Action)
+- `ffi` 2.1.5 → 2.2.0
+- `build_runner` 2.10.5 → 2.13.0 (up to 4× faster incremental builds)
+- `logger` 2.6.2 → 2.7.0
+- `purchases_flutter` 9.14.0 → 9.15.0
+- `fl_chart` 1.1.1 → 1.2.0
+- `json` gem 2.16.0 → 2.17.1.2 (iOS/Bundler — security fix CVE-2026-33210)
+
 ## [1.2.0] - 2026-02-01
 
 ### Added

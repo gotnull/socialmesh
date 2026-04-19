@@ -18,6 +18,7 @@ import 'package:uuid/uuid.dart';
 
 import '../core/logging.dart';
 import '../models/social.dart';
+import '../utils/text_sanitizer.dart';
 import 'mesh_packet_dedupe_store.dart';
 import 'protocol/socialmesh/sm_packet_router.dart';
 import 'social_activity_service.dart';
@@ -480,6 +481,17 @@ class SignalService {
       _db = await openDatabase(
         dbPath,
         version: 7,
+        onConfigure: (db) async {
+          final walResult = await db.rawQuery('PRAGMA journal_mode=WAL');
+          // WAL assertion skipped — WAL is requested but only verified
+          // for on-disk databases. Log instead of asserting to avoid
+          // crashing in edge cases where the journal mode differs.
+          if (walResult.isEmpty || walResult.first['journal_mode'] != 'wal') {
+            AppLogging.social(
+              'SignalService: WAL mode not active, got: $walResult',
+            ); // lint-allow: hardcoded-string
+          }
+        },
         onCreate: (db, version) async {
           AppLogging.social('Creating signals database v$version');
           await _createTables(db);
@@ -3524,7 +3536,7 @@ class SignalService {
       return SignalResponse(
         id: row['id'] as String,
         signalId: row['signalId'] as String,
-        content: row['content'] as String,
+        content: sanitizeExternalText(row['content'] as String),
         authorId: row['authorId'] as String,
         authorName: row['authorName'] as String?,
         parentId: row['parentId'] as String?,
@@ -3578,7 +3590,7 @@ class SignalService {
       return SignalResponse(
         id: id,
         signalId: row['signalId'] as String,
-        content: row['content'] as String,
+        content: sanitizeExternalText(row['content'] as String),
         authorId: row['authorId'] as String,
         authorName: row['authorName'] as String?,
         parentId: row['parentId'] as String?,

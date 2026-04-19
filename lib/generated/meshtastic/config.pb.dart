@@ -1297,6 +1297,7 @@ class Config_LoRaConfig extends $pb.GeneratedMessage {
     $core.Iterable<$core.int>? ignoreIncoming,
     $core.bool? ignoreMqtt,
     $core.bool? configOkToMqtt,
+    Config_LoRaConfig_FEM_LNA_Mode? femLnaMode,
   }) {
     final result = create();
     if (usePreset != null) result.usePreset = usePreset;
@@ -1318,6 +1319,7 @@ class Config_LoRaConfig extends $pb.GeneratedMessage {
     if (ignoreIncoming != null) result.ignoreIncoming.addAll(ignoreIncoming);
     if (ignoreMqtt != null) result.ignoreMqtt = ignoreMqtt;
     if (configOkToMqtt != null) result.configOkToMqtt = configOkToMqtt;
+    if (femLnaMode != null) result.femLnaMode = femLnaMode;
     return result;
   }
 
@@ -1359,6 +1361,9 @@ class Config_LoRaConfig extends $pb.GeneratedMessage {
         103, _omitFieldNames ? '' : 'ignoreIncoming', $pb.PbFieldType.KU3)
     ..aOB(104, _omitFieldNames ? '' : 'ignoreMqtt')
     ..aOB(105, _omitFieldNames ? '' : 'configOkToMqtt')
+    ..aE<Config_LoRaConfig_FEM_LNA_Mode>(
+        106, _omitFieldNames ? '' : 'femLnaMode',
+        enumValues: Config_LoRaConfig_FEM_LNA_Mode.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1602,6 +1607,18 @@ class Config_LoRaConfig extends $pb.GeneratedMessage {
   $core.bool hasConfigOkToMqtt() => $_has(17);
   @$pb.TagNumber(105)
   void clearConfigOkToMqtt() => $_clearField(105);
+
+  ///
+  ///  Set where LORA FEM is enabled, disabled, or not present
+  @$pb.TagNumber(106)
+  Config_LoRaConfig_FEM_LNA_Mode get femLnaMode => $_getN(18);
+  @$pb.TagNumber(106)
+  set femLnaMode(Config_LoRaConfig_FEM_LNA_Mode value) =>
+      $_setField(106, value);
+  @$pb.TagNumber(106)
+  $core.bool hasFemLnaMode() => $_has(18);
+  @$pb.TagNumber(106)
+  void clearFemLnaMode() => $_clearField(106);
 }
 
 class Config_BluetoothConfig extends $pb.GeneratedMessage {

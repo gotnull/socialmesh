@@ -15,12 +15,10 @@
 
 import 'dart:async';
 import 'dart:io' show Platform;
-import 'dart:ui' show PlatformDispatcher;
 
 import 'package:flutter/foundation.dart' show kDebugMode, visibleForTesting;
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:socialmesh/l10n/app_localizations.dart';
 
 import '../core/logging.dart';
 import '../core/safety/error_handler.dart';
@@ -30,6 +28,7 @@ import '../services/transport/background_ble_service.dart';
 import 'app_providers.dart';
 import 'connectivity_providers.dart';
 import 'meshcore_providers.dart';
+import 'package:socialmesh/l10n/l10n_utils.dart';
 
 // =============================================================================
 // DEVICE PAIRING STATE
@@ -788,7 +787,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     final btState = await FlutterBluePlus.adapterState.first;
     if (btState != BluetoothAdapterState.on) {
       AppLogging.connection('🔌 startBackgroundConnection: Bluetooth is off');
-      final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+      final l10n = safeL10n();
       state = state.copyWith(
         state: DevicePairingState.error,
         reason: DisconnectReason.bluetoothDisabled,
@@ -1078,7 +1077,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     final btState = await FlutterBluePlus.adapterState.first;
     if (btState != BluetoothAdapterState.on) {
       AppLogging.connection('🔌 MeshCore background connect: Bluetooth is off');
-      final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+      final l10n = safeL10n();
       state = state.copyWith(
         state: DevicePairingState.error,
         reason: DisconnectReason.bluetoothDisabled,
@@ -1203,9 +1202,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
         state = state.copyWith(
           state: DevicePairingState.disconnected,
           reason: DisconnectReason.deviceNotFound,
-          errorMessage: lookupAppLocalizations(
-            PlatformDispatcher.instance.locale,
-          ).connectionErrorDeviceNotFound,
+          errorMessage: safeL10n().connectionErrorDeviceNotFound,
         );
         ref
             .read(autoReconnectStateProvider.notifier)
@@ -1323,9 +1320,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     state = state.copyWith(
       state: DevicePairingState.disconnected,
       reason: DisconnectReason.deviceNotFound,
-      errorMessage: lookupAppLocalizations(
-        PlatformDispatcher.instance.locale,
-      ).connectionErrorDeviceNotFound,
+      errorMessage: safeL10n().connectionErrorDeviceNotFound,
     );
 
     return false;
@@ -1377,7 +1372,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       // Ignore disconnect errors during invalidation.
     }
 
-    await clearDeviceDataBeforeConnectRef(ref);
+    await clearDeviceDataBeforeConnectRef(ref, clearNodeData: true);
     await settings.clearLastDevice();
     clearSavedDeviceId(ref);
     ref.read(connectedDeviceProvider.notifier).setState(null);
@@ -1389,9 +1384,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     state = DeviceConnectionState2(
       state: DevicePairingState.pairedDeviceInvalidated,
       reason: DisconnectReason.deviceNotFound,
-      errorMessage: lookupAppLocalizations(
-        PlatformDispatcher.instance.locale,
-      ).connectionErrorDeviceReset,
+      errorMessage: safeL10n().connectionErrorDeviceReset,
       connectionSessionId: _connectionSessionId,
     );
   }
@@ -1423,8 +1416,47 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
 
       state = state.copyWith(state: DevicePairingState.configuring);
 
+      // Capture the previously-saved device id + logical identity BEFORE
+      // clearing so the helper can distinguish true device switch from
+      // transport rebind (same physical radio, rotated BLE UUID). A raw
+      // UUID mismatch alone is not a switch — ESP32/nRF peripherals
+      // rotate their advertised UUID and we must not wipe NodeDB in that
+      // case. (settings.lastDeviceId is unchanged at this point since
+      // this path does not call setLastDevice before the clear.)
+      String? previousDeviceId;
+      int? lastMyNodeNum;
+      String? lastDeviceName;
+      try {
+        final settings = await ref.read(settingsServiceProvider.future);
+        previousDeviceId = settings.lastDeviceId;
+        lastMyNodeNum = settings.lastMyNodeNum;
+        lastDeviceName = settings.lastDeviceName;
+      } catch (_) {
+        previousDeviceId = null;
+      }
+      final isTransportRebind = isLogicalTransportRebind(
+        newDeviceName: device.name,
+        newDeviceId: device.id,
+        previousDeviceId: previousDeviceId,
+        lastMyNodeNum: lastMyNodeNum,
+        lastDeviceName: lastDeviceName,
+      );
+      AppLogging.connection(
+        '🧮 SWITCH CLASSIFY (connection_providers): '
+        'previousDeviceId=$previousDeviceId '
+        'newDeviceId=${device.id} '
+        'lastMyNodeNum=${lastMyNodeNum?.toRadixString(16)} '
+        'lastDeviceName=$lastDeviceName '
+        'isTransportRebind=$isTransportRebind',
+      );
+
       // Clear previous device data
-      await clearDeviceDataBeforeConnectRef(ref);
+      await clearDeviceDataBeforeConnectRef(
+        ref,
+        previousDeviceId: previousDeviceId,
+        newDeviceId: device.id,
+        isTransportRebind: isTransportRebind,
+      );
 
       // Start protocol service
       final protocol = ref.read(protocolServiceProvider);
@@ -1594,6 +1626,16 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       reason: reason,
     );
 
+    // Reset transport type to BLE so the scanner resumes BLE scanning.
+    // Without this, transportTypeProvider stays stuck on network after
+    // a TCP disconnect and the scanner shows zero BLE devices.
+    if (ref.read(transportTypeProvider) == TransportType.network) {
+      ref.read(transportTypeProvider.notifier).setType(TransportType.ble);
+      AppLogging.connection(
+        '🔌 _handleDisconnect: Reset transport type to BLE',
+      );
+    }
+
     ref.read(connectedDeviceProvider.notifier).setState(null);
 
     // If user disconnected, don't trigger any auto-reconnect behavior
@@ -1668,6 +1710,12 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     AppLogging.connection('🔌 disconnect(): Calling transport.disconnect()...');
     await transport.disconnect();
     AppLogging.connection('🔌 disconnect(): Transport disconnected');
+
+    // Reset transport type to BLE so the scanner resumes BLE scanning.
+    if (ref.read(transportTypeProvider) == TransportType.network) {
+      ref.read(transportTypeProvider.notifier).setType(TransportType.ble);
+      AppLogging.connection('🔌 disconnect(): Reset transport type to BLE');
+    }
 
     state = state.copyWith(
       state: DevicePairingState.disconnected,
@@ -1878,7 +1926,6 @@ enum FeatureId {
   positionShare,
   requestPosition,
   sendBell,
-  requestTelemetry,
   removeNode,
   rebootDevice,
   factoryReset,
@@ -1927,7 +1974,6 @@ const Map<FeatureId, FeatureRequirement> _featureRegistry = {
   FeatureId.positionShare: FeatureRequirement.deviceConnection,
   FeatureId.requestPosition: FeatureRequirement.deviceConnection,
   FeatureId.sendBell: FeatureRequirement.deviceConnection,
-  FeatureId.requestTelemetry: FeatureRequirement.deviceConnection,
   FeatureId.removeNode: FeatureRequirement.deviceConnection,
   FeatureId.rebootDevice: FeatureRequirement.deviceConnection,
   FeatureId.factoryReset: FeatureRequirement.deviceConnection,

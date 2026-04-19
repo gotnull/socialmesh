@@ -20,25 +20,25 @@ void main() {
       final step = QaStep(
         description: 'test step', // lint-allow: hardcoded-string
         expectedOutcome: 'expected', // lint-allow: hardcoded-string
-        verify: (_) => true,
+        verify: (_) async => true,
       );
 
       expect(step.status, QaStepStatus.pending);
       expect(step.actualOutcome, isNull);
     });
 
-    test('verify callback executes correctly', () {
+    test('verify callback executes correctly', () async {
       var callCount = 0;
       final step = QaStep(
         description: 'test', // lint-allow: hardcoded-string
         expectedOutcome: 'expected', // lint-allow: hardcoded-string
-        verify: (_) {
+        verify: (_) async {
           callCount++;
           return true;
         },
       );
 
-      expect(step.verify(null), isTrue);
+      expect(await step.verify(null), isTrue);
       expect(callCount, 1);
     });
   });
@@ -51,13 +51,13 @@ void main() {
           QaStep(
             description: 's1', // lint-allow: hardcoded-string
             expectedOutcome: 'e1', // lint-allow: hardcoded-string
-            verify: (_) => true,
+            verify: (_) async => true,
             status: QaStepStatus.pass,
           ),
           QaStep(
             description: 's2', // lint-allow: hardcoded-string
             expectedOutcome: 'e2', // lint-allow: hardcoded-string
-            verify: (_) => true,
+            verify: (_) async => true,
             status: QaStepStatus.pass,
           ),
         ],
@@ -74,13 +74,13 @@ void main() {
           QaStep(
             description: 's1', // lint-allow: hardcoded-string
             expectedOutcome: 'e1', // lint-allow: hardcoded-string
-            verify: (_) => true,
+            verify: (_) async => true,
             status: QaStepStatus.pass,
           ),
           QaStep(
             description: 's2', // lint-allow: hardcoded-string
             expectedOutcome: 'e2', // lint-allow: hardcoded-string
-            verify: (_) => false,
+            verify: (_) async => false,
             status: QaStepStatus.fail,
           ),
         ],
@@ -97,7 +97,7 @@ void main() {
           QaStep(
             description: 's1', // lint-allow: hardcoded-string
             expectedOutcome: 'e1', // lint-allow: hardcoded-string
-            verify: (_) => true,
+            verify: (_) async => true,
           ),
         ],
       );
@@ -112,13 +112,13 @@ void main() {
           QaStep(
             description: 's1', // lint-allow: hardcoded-string
             expectedOutcome: 'e1', // lint-allow: hardcoded-string
-            verify: (_) => true,
+            verify: (_) async => true,
             status: QaStepStatus.pass,
           ),
           QaStep(
             description: 's2', // lint-allow: hardcoded-string
             expectedOutcome: 'e2', // lint-allow: hardcoded-string
-            verify: (_) => true,
+            verify: (_) async => true,
           ),
         ],
       );
@@ -133,13 +133,13 @@ void main() {
           QaStep(
             description: 's1', // lint-allow: hardcoded-string
             expectedOutcome: 'e1', // lint-allow: hardcoded-string
-            verify: (_) => true,
+            verify: (_) async => true,
             status: QaStepStatus.pass,
           ),
           QaStep(
             description: 's2', // lint-allow: hardcoded-string
             expectedOutcome: 'e2', // lint-allow: hardcoded-string
-            verify: (_) => false,
+            verify: (_) async => false,
             status: QaStepStatus.fail,
           ),
         ],
@@ -205,12 +205,14 @@ void main() {
       }
     });
 
-    test('all step verify callbacks pass (known-good fixture data)', () {
+    test('all step verify callbacks pass (known-good fixture data)', () async {
       final scenarios = buildQaScenarios();
-      for (final s in scenarios) {
+      // Only test scenarios 1-7 (fixture-based); scenario 8 requires live engine.
+      for (var i = 0; i < 7; i++) {
+        final s = scenarios[i];
         for (final step in s.steps) {
           expect(
-            step.verify(null),
+            await step.verify(null),
             isTrue,
             reason: '${s.name}/${step.description} should pass',
           ); // lint-allow: hardcoded-string

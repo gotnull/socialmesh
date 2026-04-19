@@ -125,6 +125,42 @@ void main() {
       expect(dm.sessionCount, equals(1));
     });
 
+    test('supersedeSessionsForPeer expires prior sessions for a peer and '
+        'keeps sessions of other peers untouched', () {
+      dm.createSession(sessionTag: 0xAA, peerNodeId: 0x1111);
+      dm.createSession(sessionTag: 0xBB, peerNodeId: 0x1111);
+      dm.createSession(sessionTag: 0xCC, peerNodeId: 0x2222);
+
+      final removed = dm.supersedeSessionsForPeer(0x1111, exceptTag: 0xBB);
+
+      expect(removed, equals(1));
+      expect(dm.getSession(0xAA), isNull);
+      expect(dm.getSession(0xBB), isNotNull);
+      expect(dm.getSession(0xCC), isNotNull);
+    });
+
+    test(
+      'supersedeSessionsForPeer is a no-op when no prior sessions match',
+      () {
+        dm.createSession(sessionTag: 0xAA, peerNodeId: 0x1111);
+        final removed = dm.supersedeSessionsForPeer(0x9999, exceptTag: 0xBB);
+        expect(removed, equals(0));
+        expect(dm.getSession(0xAA), isNotNull);
+      },
+    );
+
+    test('supersedeSessionsForPeer fires onStateChanged exactly once when '
+        'it supersedes sessions', () {
+      dm.createSession(sessionTag: 0xAA, peerNodeId: 0x1111);
+      dm.createSession(sessionTag: 0xBB, peerNodeId: 0x1111);
+
+      var stateChangedCount = 0;
+      dm.onStateChanged = () => stateChangedCount++;
+
+      dm.supersedeSessionsForPeer(0x1111, exceptTag: 0xCC);
+      expect(stateChangedCount, equals(1));
+    });
+
     test('createSession allows custom TTL', () {
       final session = dm.createSession(
         sessionTag: 0x11,
@@ -202,7 +238,7 @@ void main() {
 
     test('closeSession marks session as closed and removes it', () {
       dm.createSession(sessionTag: 0x11, peerNodeId: 0x22);
-      expect(dm.closeSession(0x11), isTrue);
+      expect(dm.closeSession(0x11), isNotNull);
 
       // Closed session is still in the map but getSession
       // should return null since status != active on next access
@@ -214,7 +250,7 @@ void main() {
     });
 
     test('closeSession returns false for unknown session', () {
-      expect(dm.closeSession(0x99), isFalse);
+      expect(dm.closeSession(0x99), isNull);
     });
 
     test('cleanExpired removes expired sessions', () {

@@ -5,14 +5,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
-import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/auto_scroll_text.dart';
+import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/gradient_border_container.dart';
 import '../../../providers/auth_providers.dart';
 import '../models/shop_models.dart';
 import '../providers/device_shop_providers.dart';
+import '../widgets/device_shop_components.dart';
 import 'product_detail_screen.dart';
 
-/// Screen showing user's favorited products
+/// Screen showing user's favorited products.
 class FavoritesScreen extends ConsumerWidget {
   const FavoritesScreen({super.key});
 
@@ -26,31 +28,20 @@ class FavoritesScreen extends ConsumerWidget {
           context.l10n.shopFavoritesTitle,
           style: TextStyle(color: context.textPrimary),
           maxLines: 1,
-          velocity: 30.0,
-          fadeWidth: 20.0,
+          velocity: 30,
+          fadeWidth: 20,
         ),
         slivers: [
           SliverFillRemaining(
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.favorite_outline,
-                    color: context.textTertiary,
-                    size: 64,
-                  ),
-                  SizedBox(height: AppTheme.spacing16),
-                  Text(
-                    context.l10n.shopFavoritesSignIn,
-                    style: TextStyle(color: context.textPrimary, fontSize: 18),
-                  ),
-                  const SizedBox(height: AppTheme.spacing8),
-                  Text(
-                    context.l10n.shopFavoritesSignInSubtitle,
-                    style: TextStyle(color: context.textSecondary),
-                  ),
-                ],
+            hasScrollBody: false,
+            child: Padding(
+              padding: const EdgeInsets.all(AppTheme.spacing24),
+              child: Center(
+                child: DeviceShopStatePanel(
+                  icon: Icons.favorite_outline,
+                  title: context.l10n.shopFavoritesSignIn,
+                  description: context.l10n.shopFavoritesSignInSubtitle,
+                ),
               ),
             ),
           ),
@@ -65,60 +56,49 @@ class FavoritesScreen extends ConsumerWidget {
         context.l10n.shopFavoritesTitle,
         style: TextStyle(color: context.textPrimary),
         maxLines: 1,
-        velocity: 30.0,
-        fadeWidth: 20.0,
+        velocity: 30,
+        fadeWidth: 20,
       ),
       slivers: [
         favoritesAsync.when(
-          loading: () => SliverFillRemaining(
-            child: Center(child: CircularProgressIndicator()),
+          loading: () => SliverPadding(
+            padding: const EdgeInsets.all(AppTheme.spacing16),
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (_, _) => const _FavoriteProductSkeleton(),
+                childCount: 3,
+              ),
+            ),
           ),
-          error: (e, _) => SliverFillRemaining(
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, color: AppTheme.errorRed, size: 48),
-                  const SizedBox(height: AppTheme.spacing16),
-                  Text(
-                    context.l10n.shopFavoritesErrorLoading,
-                    style: TextStyle(color: context.textPrimary),
-                  ),
-                  TextButton(
-                    onPressed: () =>
-                        ref.invalidate(userFavoritesProvider(user.uid)),
-                    child: Text(context.l10n.shopFavoritesRetry),
-                  ),
-                ],
+          error: (error, _) => SliverFillRemaining(
+            hasScrollBody: false,
+            child: Padding(
+              padding: const EdgeInsets.all(AppTheme.spacing24),
+              child: Center(
+                child: DeviceShopStatePanel(
+                  icon: Icons.error_outline,
+                  title: context.l10n.shopFavoritesErrorLoading,
+                  description: context.l10n.deviceShopTryAgain,
+                  actionLabel: context.l10n.shopFavoritesRetry,
+                  actionIcon: Icons.refresh,
+                  onAction: () =>
+                      ref.invalidate(userFavoritesProvider(user.uid)),
+                ),
               ),
             ),
           ),
           data: (favorites) {
             if (favorites.isEmpty) {
               return SliverFillRemaining(
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.favorite_outline,
-                        color: context.textTertiary,
-                        size: 64,
-                      ),
-                      SizedBox(height: AppTheme.spacing16),
-                      Text(
-                        context.l10n.shopFavoritesEmpty,
-                        style: TextStyle(
-                          color: context.textPrimary,
-                          fontSize: 18,
-                        ),
-                      ),
-                      const SizedBox(height: AppTheme.spacing8),
-                      Text(
-                        context.l10n.shopFavoritesEmptySubtitle,
-                        style: TextStyle(color: context.textSecondary),
-                      ),
-                    ],
+                hasScrollBody: false,
+                child: Padding(
+                  padding: const EdgeInsets.all(AppTheme.spacing24),
+                  child: Center(
+                    child: DeviceShopStatePanel(
+                      icon: Icons.favorite_outline,
+                      title: context.l10n.shopFavoritesEmpty,
+                      description: context.l10n.shopFavoritesEmptySubtitle,
+                    ),
                   ),
                 ),
               );
@@ -143,10 +123,10 @@ class FavoritesScreen extends ConsumerWidget {
 }
 
 class _FavoriteProductCard extends ConsumerWidget {
+  const _FavoriteProductCard({required this.favorite, required this.userId});
+
   final ProductFavorite favorite;
   final String userId;
-
-  const _FavoriteProductCard({required this.favorite, required this.userId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -156,7 +136,7 @@ class _FavoriteProductCard extends ConsumerWidget {
 
     return productAsync.when(
       loading: () => _buildLoadingCard(context),
-      error: (error, stack) => _buildErrorCard(context, ref),
+      error: (_, _) => _buildErrorCard(context, ref),
       data: (product) {
         if (product == null) {
           return _buildRemovedCard(context, ref);
@@ -167,57 +147,60 @@ class _FavoriteProductCard extends ConsumerWidget {
   }
 
   Widget _buildLoadingCard(BuildContext context) {
-    return Card(
-      color: context.card,
-      margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      child: Container(
-        height: 100,
-        padding: const EdgeInsets.all(AppTheme.spacing12),
-        child: const Center(child: CircularProgressIndicator()),
-      ),
-    );
+    return const _FavoriteProductSkeleton();
   }
 
   Widget _buildErrorCard(BuildContext context, WidgetRef ref) {
-    return Card(
-      color: context.card,
-      margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      child: ListTile(
-        leading: Icon(Icons.error_outline, color: AppTheme.errorRed),
-        title: Text(
-          context.l10n.shopFavoritesUnableToLoad,
-          style: TextStyle(color: context.textPrimary),
-        ),
-        trailing: IconButton(
-          icon: Icon(Icons.delete_outline, color: context.textTertiary),
-          onPressed: () => _removeFavorite(ref),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppTheme.spacing12),
+      child: GradientBorderContainer(
+        borderRadius: AppTheme.radius18,
+        borderWidth: 1,
+        accentOpacity: 0.22,
+        padding: const EdgeInsets.all(AppTheme.spacing16),
+        child: Row(
+          children: [
+            Icon(Icons.error_outline, color: AppTheme.errorRed),
+            const SizedBox(width: AppTheme.spacing12),
+            Expanded(
+              child: Text(
+                context.l10n.shopFavoritesUnableToLoad,
+                style: TextStyle(color: context.textPrimary),
+              ),
+            ),
+            IconButton(
+              icon: Icon(Icons.delete_outline, color: context.textTertiary),
+              onPressed: () => _removeFavorite(ref),
+            ),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildRemovedCard(BuildContext context, WidgetRef ref) {
-    return Card(
-      color: context.card,
-      margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      child: ListTile(
-        leading: Icon(Icons.inventory_2_outlined, color: context.textTertiary),
-        title: Text(
-          context.l10n.shopFavoritesProductRemoved,
-          style: TextStyle(color: context.textSecondary),
-        ),
-        trailing: IconButton(
-          icon: Icon(Icons.delete_outline, color: context.textTertiary),
-          onPressed: () => _removeFavorite(ref),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppTheme.spacing12),
+      child: GradientBorderContainer(
+        borderRadius: AppTheme.radius18,
+        borderWidth: 1,
+        accentOpacity: 0.18,
+        padding: const EdgeInsets.all(AppTheme.spacing16),
+        child: Row(
+          children: [
+            Icon(Icons.inventory_2_outlined, color: context.textTertiary),
+            const SizedBox(width: AppTheme.spacing12),
+            Expanded(
+              child: Text(
+                context.l10n.shopFavoritesProductRemoved,
+                style: TextStyle(color: context.textSecondary),
+              ),
+            ),
+            IconButton(
+              icon: Icon(Icons.delete_outline, color: context.textTertiary),
+              onPressed: () => _removeFavorite(ref),
+            ),
+          ],
         ),
       ),
     );
@@ -232,64 +215,58 @@ class _FavoriteProductCard extends ConsumerWidget {
       key: Key(favorite.id),
       direction: DismissDirection.endToStart,
       background: Container(
-        margin: const EdgeInsets.only(bottom: 12),
+        margin: const EdgeInsets.only(bottom: AppTheme.spacing12),
         decoration: BoxDecoration(
           color: AppTheme.errorRed,
-          borderRadius: BorderRadius.circular(AppTheme.radius12),
+          borderRadius: BorderRadius.circular(AppTheme.radius16),
         ),
         alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
-        child: Icon(Icons.delete, color: Colors.white),
+        padding: const EdgeInsets.only(right: AppTheme.spacing20),
+        child: const Icon(Icons.delete, color: Colors.white),
       ),
       onDismissed: (_) => _removeFavorite(ref),
-      child: Card(
-        color: context.card,
-        margin: const EdgeInsets.only(bottom: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppTheme.radius12),
-        ),
-        child: InkWell(
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: AppTheme.spacing12),
+        child: BouncyTap(
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(
               builder: (_) => ProductDetailScreen(productId: product.id),
             ),
           ),
-          borderRadius: BorderRadius.circular(AppTheme.radius12),
-          child: Padding(
+          child: GradientBorderContainer(
+            borderRadius: AppTheme.radius18,
+            borderWidth: 1,
+            accentOpacity: 0.22,
             padding: const EdgeInsets.all(AppTheme.spacing12),
             child: Row(
               children: [
-                // Image
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(AppTheme.radius8),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                   child: product.primaryImage != null
                       ? Image.network(
                           product.primaryImage!,
-                          width: 80,
-                          height: 80,
+                          width: 88,
+                          height: 88,
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              _imagePlaceholder(context),
+                          errorBuilder: (_, _, _) => _imagePlaceholder(context),
                         )
                       : _imagePlaceholder(context),
                 ),
-                SizedBox(width: AppTheme.spacing12),
-
-                // Details
+                const SizedBox(width: AppTheme.spacing14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         product.name,
-                        style: TextStyle(
-                          color: context.textPrimary,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: context.textPrimary,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                       const SizedBox(height: AppTheme.spacing4),
                       Text(
@@ -299,106 +276,79 @@ class _FavoriteProductCard extends ConsumerWidget {
                           fontSize: 12,
                         ),
                       ),
-                      SizedBox(height: AppTheme.spacing8),
+                      const SizedBox(height: AppTheme.spacing10),
                       Row(
                         children: [
                           Text(
                             product.formattedPrice(context.l10n),
                             style: TextStyle(
                               color: context.accentColor,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
                             ),
                           ),
                           if (product.isOnSale) ...[
-                            const SizedBox(width: AppTheme.spacing6),
+                            const SizedBox(width: AppTheme.spacing8),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 4,
-                                vertical: 2,
+                                horizontal: 6,
+                                vertical: 3,
                               ),
                               decoration: BoxDecoration(
-                                color: AppTheme.errorRed,
+                                color: AppTheme.errorRed.withValues(
+                                  alpha: 0.12,
+                                ),
                                 borderRadius: BorderRadius.circular(
-                                  AppTheme.radius4,
+                                  AppTheme.radius8,
                                 ),
                               ),
                               child: Text(
-                                '-${product.discountPercent}%',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
+                                context.l10n.productDetailDiscountBadge(
+                                  product.discountPercent,
+                                ),
+                                style: TextStyle(
+                                  color: AppTheme.errorRed,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
                             ),
                           ],
-                          const Spacer(),
-                          // Stock status
+                        ],
+                      ),
+                      const SizedBox(height: AppTheme.spacing10),
+                      Row(
+                        children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
+                            width: 8,
+                            height: 8,
                             decoration: BoxDecoration(
                               color: product.isInStock
-                                  ? AppTheme.successGreen.withValues(alpha: 0.2)
-                                  : AppTheme.errorRed.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(
-                                AppTheme.radius4,
-                              ),
+                                  ? AppTheme.successGreen
+                                  : AppTheme.errorRed,
+                              shape: BoxShape.circle,
                             ),
-                            child: Text(
-                              product.isInStock
-                                  ? context.l10n.shopFavoritesInStock
-                                  : context.l10n.shopFavoritesOutOfStock,
-                              style: TextStyle(
-                                color: product.isInStock
-                                    ? AppTheme.successGreen
-                                    : AppTheme.errorRed,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                              ),
+                          ),
+                          const SizedBox(width: AppTheme.spacing6),
+                          Text(
+                            product.isInStock
+                                ? context.l10n.shopFavoritesInStock
+                                : context.l10n.shopFavoritesOutOfStock,
+                            style: TextStyle(
+                              color: product.isInStock
+                                  ? AppTheme.successGreen
+                                  : AppTheme.errorRed,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ],
                       ),
-                      // Reviews
-                      if (product.reviewCount > 0) ...[
-                        const SizedBox(height: AppTheme.spacing6),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.star,
-                              color: AppTheme.warningYellow,
-                              size: 14,
-                            ),
-                            const SizedBox(width: AppTheme.spacing4),
-                            Text(
-                              product.rating.toStringAsFixed(1),
-                              style: TextStyle(
-                                color: context.textSecondary,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            Text(
-                              ' (${product.reviewCount} review${product.reviewCount == 1 ? '' : 's'})',
-                              style: TextStyle(
-                                color: context.textTertiary,
-                                fontSize: 11,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
                     ],
                   ),
                 ),
-
-                // Remove button
                 IconButton(
-                  icon: const Icon(Icons.favorite, color: AppTheme.errorRed),
+                  icon: Icon(Icons.delete_outline, color: context.textTertiary),
                   onPressed: () => _removeFavorite(ref),
                 ),
               ],
@@ -411,8 +361,8 @@ class _FavoriteProductCard extends ConsumerWidget {
 
   Widget _imagePlaceholder(BuildContext context) {
     return Container(
-      width: 80,
-      height: 80,
+      width: 88,
+      height: 88,
       color: context.background,
       child: Icon(Icons.router, color: context.textTertiary, size: 32),
     );
@@ -420,5 +370,26 @@ class _FavoriteProductCard extends ConsumerWidget {
 
   void _removeFavorite(WidgetRef ref) {
     toggleFavoriteQueued(ref, userId: userId, productId: favorite.productId);
+  }
+}
+
+class _FavoriteProductSkeleton extends StatelessWidget {
+  const _FavoriteProductSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppTheme.spacing12),
+      child: GradientBorderContainer(
+        borderRadius: AppTheme.radius18,
+        borderWidth: 1,
+        accentOpacity: 0.18,
+        padding: const EdgeInsets.all(AppTheme.spacing16),
+        child: const SizedBox(
+          height: 92,
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      ),
+    );
   }
 }

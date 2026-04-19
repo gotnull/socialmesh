@@ -1,0 +1,50 @@
+NodeDex — Mesh Field Journal and Identity System
+----------------------------------------------------------------------
+
+SYSTEM DESIGN LICENSE
+The NodeDex system design — including the identity model, sigil
+generation algorithm, patina scoring model, trait engine rules,
+constellation graph schema, and trust score specification — is
+published under the Apache License, Version 2.0. This grants any
+implementor the right to build independent, compatible identity
+systems without open-sourcing their own code.
+
+  SPDX-License-Identifier: Apache-2.0
+  Copyright (C) 2025-2026 gotnull (developer@socialmesh.app)
+
+  Full text: licenses/APACHE-2.0 (repository root)
+  Canonical specs:
+    docs/engineering/MESH_EXPLORER.md
+    docs/sip/AMBIENT_IDENTITY_V0_1.md
+    docs/sip/SIP_V0_1.md
+
+DART IMPLEMENTATION LICENSE
+The Dart source files in this directory and all subdirectories
+(*.dart) are part of the Socialmesh application and are subject to
+the GNU General Public License, version 3 or later (GPL-3.0-or-later),
+as declared by the SPDX header present in every source file.
+
+  SPDX-License-Identifier: GPL-3.0-or-later
+  Copyright (C) 2025-2026 gotnull (developer@socialmesh.app)
+
+  Full text: LICENSE (repository root)
+
+RATIONALE
+The NodeDex Dart implementation imports from lib/core/, lib/providers/,
+and lib/services/protocol/sip/ (all GPL-3.0-or-later). Under GPL
+section 5, any work that incorporates GPL code must itself be
+distributed under the GPL. The Apache-2.0 grant above covers only the
+system design — it does not override the GPL terms that apply to this
+compiled Dart implementation.
+
+In plain terms:
+  - You MAY design and implement a NodeDex-compatible identity system
+    in your own project under Apache-2.0.
+  - You MAY NOT copy, fork, or redistribute the Dart files in this
+    directory under a non-GPL license.
+
+MESHTASTIC DEPENDENCY NOTE
+NodeDex entries are keyed on Meshtastic node IDs. The Meshtastic
+protobuf integration (lib/generated/meshtastic/) is GPL-3.0-only
+per upstream (https://github.com/meshtastic/protobufs). This creates
+a GPL-3.0-only floor for any combined binary that includes both layers.

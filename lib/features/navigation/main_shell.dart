@@ -48,9 +48,11 @@ import '../presence/presence_screen.dart';
 import '../mesh3d/mesh_3d_screen.dart';
 import '../world_mesh/world_mesh_screen.dart';
 import '../settings/subscription_screen.dart';
+import '../settings/translation_settings_screen.dart';
 import '../widget_builder/widget_builder_screen.dart';
 import '../reachability/mesh_reachability_screen.dart';
 import '../device_shop/providers/admin_shop_providers.dart';
+import '../device_shop/screens/device_shop_screen.dart';
 import '../admin/bug_reports/admin_bug_report_watcher.dart';
 import '../mesh_health/widgets/mesh_health_dashboard.dart';
 import '../signals/signals.dart';
@@ -67,8 +69,14 @@ import '../aether/widgets/aether_flight_detected_overlay.dart';
 // import '../global_layer/screens/global_layer_hub_screen.dart';
 import '../sip/sip_hub_screen.dart';
 import '../mrrp_harness/mrrp_harness_home_screen.dart';
+import '../mesh_explorer/mesh_explorer_screen.dart';
+import '../mesh_services/screens/my_services_screen.dart';
+import '../mesh_feed/screens/mesh_feed_screen.dart';
+import '../nodeboard/screens/nodeboard_list_screen.dart';
+import '../incidents/screens/mesh_incident_list_screen.dart';
 import '../tak/screens/tak_screen.dart';
 import '../../providers/activity_providers.dart';
+import '../../providers/mesh_explorer_providers.dart';
 import '../../providers/whats_new_providers.dart';
 import '../../core/whats_new/whats_new_sheet.dart';
 import 'widgets/drawer_admin_section.dart';
@@ -155,10 +163,12 @@ class HamburgerMenuButton extends ConsumerWidget {
     final theme = Theme.of(context);
     final adminNotificationCount = ref.watch(adminNotificationCountProvider);
     final activityCount = ref.watch(unreadActivityCountProvider);
+    final newPeerCount = ref.watch(newMeshPeerCountProvider);
     final hasUnseenWhatsNew = ref.watch(whatsNewHasUnseenProvider);
 
-    // Combine admin and activity counts for hamburger badge
-    final totalBadgeCount = adminNotificationCount + activityCount;
+    // Combine admin, activity, and new-peer counts for hamburger badge
+    final totalBadgeCount =
+        adminNotificationCount + activityCount + newPeerCount;
 
     // Determine which badge to show on the icon itself
     Widget menuIcon = Icon(
@@ -390,6 +400,15 @@ class _MainShellState extends ConsumerState<MainShell> {
       requiresConnection: false,
       whatsNewBadgeKey: 'nodedex',
     ),
+    if (AppFeatureFlags.isNodeBoardEnabled)
+      DrawerMenuItem(
+        icon: Icons.dashboard_outlined,
+        label: l10n.nodeboardDrawerLabel,
+        screen: const NodeBoardListScreen(),
+        iconColor: AccentColors.coral,
+        requiresConnection: false,
+        whatsNewBadgeKey: 'nodeboard',
+      ),
     DrawerMenuItem(
       icon: Icons.people_alt_outlined,
       label: l10n.navigationPresence,
@@ -404,6 +423,31 @@ class _MainShellState extends ConsumerState<MainShell> {
       iconColor: AccentColors.blue,
       requiresConnection: false, // Shows global mesh data from server
     ),
+    if (AppFeatureFlags.isMeshExplorerEnabled)
+      DrawerMenuItem(
+        icon: Icons.explore_outlined,
+        label: l10n.meshExplorerDrawerLabel,
+        screen: const MeshExplorerScreen(),
+        iconColor: AccentColors.teal,
+        requiresConnection: true,
+        badgeProviderKey: 'mesh_explorer',
+      ),
+    if (AppFeatureFlags.isMeshServicesEnabled)
+      DrawerMenuItem(
+        icon: Icons.miscellaneous_services_outlined,
+        label: l10n.meshServicesDrawerLabel,
+        screen: const MyServicesScreen(),
+        iconColor: AccentColors.purple,
+        requiresConnection: true,
+      ),
+    if (AppFeatureFlags.isMeshFeedEnabled)
+      DrawerMenuItem(
+        icon: Icons.dynamic_feed_outlined,
+        label: l10n.meshFeedDrawerLabel,
+        screen: const MeshFeedScreen(),
+        iconColor: AccentColors.orange,
+        requiresConnection: false,
+      ),
 
     // Identity section — your social presence and interactions
     if (AppFeatureFlags.isSocialEnabled)
@@ -429,12 +473,23 @@ class _MainShellState extends ConsumerState<MainShell> {
     ),
 
     // Tools section — operational capabilities
+    if (AppFeatureFlags.isDeviceShopEnabled)
+      DrawerMenuItem(
+        icon: Icons.storefront_outlined,
+        label: l10n.deviceShopTitle,
+        screen: const DeviceShopScreen(),
+        sectionHeader: l10n.navigationSectionTools,
+        iconColor: AccentColors.cyan,
+        requiresConnection: false,
+      ),
     if (AppFeatureFlags.isFileTransferEnabled)
       DrawerMenuItem(
         icon: Icons.swap_vert,
         label: l10n.navigationFileTransfers,
         screen: const FileTransfersContainerScreen(),
-        sectionHeader: l10n.navigationSectionTools,
+        sectionHeader: AppFeatureFlags.isDeviceShopEnabled
+            ? null
+            : l10n.navigationSectionTools,
         iconColor: AccentColors.cyan,
         requiresConnection: true,
         whatsNewBadgeKey: 'file_transfers',
@@ -444,22 +499,26 @@ class _MainShellState extends ConsumerState<MainShell> {
         icon: Icons.flight_takeoff_outlined,
         label: l10n.navigationAether,
         screen: const AetherScreen(),
-        // Only set section header when File Transfers is hidden
-        sectionHeader: AppFeatureFlags.isFileTransferEnabled
+        // Only set section header when earlier tools are hidden
+        sectionHeader:
+            AppFeatureFlags.isDeviceShopEnabled ||
+                AppFeatureFlags.isFileTransferEnabled
             ? null
             : l10n.navigationSectionTools,
         iconColor: AccentColors.sky,
         requiresConnection: false,
         whatsNewBadgeKey: 'aether',
       ),
-    if (AppFeatureFlags.isTakGatewayEnabled)
+    if (AppFeatureFlags.isTakGatewayEnabled ||
+        AppFeatureFlags.isTakMeshBridgeEnabled)
       DrawerMenuItem(
         icon: Icons.gps_fixed,
         label: l10n.navigationTakGateway,
         screen: const TakScreen(),
-        // Only set section header when both above are hidden
+        // Only set section header when earlier tools are hidden
         sectionHeader:
-            !AppFeatureFlags.isFileTransferEnabled &&
+            !AppFeatureFlags.isDeviceShopEnabled &&
+                !AppFeatureFlags.isFileTransferEnabled &&
                 !AppFeatureFlags.isAetherEnabled
             ? l10n.navigationSectionTools
             : null,
@@ -467,7 +526,8 @@ class _MainShellState extends ConsumerState<MainShell> {
         requiresConnection: false,
         whatsNewBadgeKey: 'tak',
       ),
-    if (AppFeatureFlags.isTakGatewayEnabled)
+    if (AppFeatureFlags.isTakGatewayEnabled ||
+        AppFeatureFlags.isTakMeshBridgeEnabled)
       DrawerMenuItem(
         icon: Icons.military_tech,
         label: l10n.navigationTakMap,
@@ -481,11 +541,13 @@ class _MainShellState extends ConsumerState<MainShell> {
         icon: Icons.wifi_tethering,
         label: l10n.sipBadgeLabel,
         screen: const SipHubScreen(),
-        // Only set section header when all above tools are hidden
+        // Only set section header when earlier tools are hidden
         sectionHeader:
-            !AppFeatureFlags.isFileTransferEnabled &&
+            !AppFeatureFlags.isDeviceShopEnabled &&
+                !AppFeatureFlags.isFileTransferEnabled &&
                 !AppFeatureFlags.isAetherEnabled &&
-                !AppFeatureFlags.isTakGatewayEnabled
+                !AppFeatureFlags.isTakGatewayEnabled &&
+                !AppFeatureFlags.isTakMeshBridgeEnabled
             ? l10n.navigationSectionTools
             : null,
         iconColor: AccentColors.teal,
@@ -498,6 +560,14 @@ class _MainShellState extends ConsumerState<MainShell> {
         label: l10n.mrrpHarnessDrawerLabel,
         screen: const MrrpHarnessHomeScreen(),
         iconColor: AccentColors.purple,
+        requiresConnection: true,
+      ),
+    if (AppFeatureFlags.isMeshIncidentsEnabled)
+      DrawerMenuItem(
+        icon: Icons.warning_amber_outlined,
+        label: l10n.navigationMeshIncidents,
+        screen: const MeshIncidentListScreen(),
+        iconColor: AccentColors.red,
         requiresConnection: true,
       ),
 
@@ -544,13 +614,25 @@ class _MainShellState extends ConsumerState<MainShell> {
     ),
 
     // Premium Features - mixed requirements
+    if (AppFeatureFlags.isTranslationEnabled)
+      DrawerMenuItem(
+        icon: Icons.translate_outlined,
+        label: l10n.navigationTranslationPack,
+        screen: const TranslationSettingsScreen(),
+        premiumFeature: PremiumFeature.translation,
+        sectionHeader: l10n.navigationSectionPremium,
+        iconColor: AccentColors.teal,
+        whatsNewBadgeKey: 'translation_pack',
+      ),
     DrawerMenuItem(
       icon: Icons.palette_outlined,
       label: l10n.navigationThemePack,
       screen: const ThemeSettingsScreen(),
       premiumFeature: PremiumFeature.premiumThemes,
-      sectionHeader: l10n.navigationSectionPremium,
       iconColor: AccentColors.purple,
+      sectionHeader: !AppFeatureFlags.isTranslationEnabled
+          ? l10n.navigationSectionPremium
+          : null,
     ),
     DrawerMenuItem(
       icon: Icons.music_note_outlined,
@@ -731,12 +813,17 @@ class _MainShellState extends ConsumerState<MainShell> {
               int? badgeCount;
               if (item.badgeProviderKey == 'activity') {
                 badgeCount = ref.watch(unreadActivityCountProvider);
+              } else if (item.badgeProviderKey == 'mesh_explorer') {
+                badgeCount = ref.watch(newMeshPeerCountProvider);
+                if (badgeCount == 0) badgeCount = null;
               }
 
               // Check if this item should show a NEW chip
+              // Suppress when already purchased — the verified badge is enough
               final isNew =
                   item.whatsNewBadgeKey != null &&
-                  unseenBadgeKeys.contains(item.whatsNewBadgeKey);
+                  unseenBadgeKeys.contains(item.whatsNewBadgeKey) &&
+                  !(isPremium && hasAccess);
 
               return Column(
                 children: [
@@ -762,6 +849,12 @@ class _MainShellState extends ConsumerState<MainShell> {
                               ref
                                   .read(whatsNewProvider.notifier)
                                   .dismissBadgeKey(item.whatsNewBadgeKey!);
+                            }
+                            // Dismiss peer-found badge immediately on tapping Mesh Explorer
+                            if (item.badgeProviderKey == 'mesh_explorer') {
+                              ref
+                                  .read(newMeshPeerCountProvider.notifier)
+                                  .clear();
                             }
                             if (item.tabIndex != null) {
                               // Tab-based item — switch bottom-nav index

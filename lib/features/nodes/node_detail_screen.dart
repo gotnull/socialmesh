@@ -9,6 +9,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/l10n/l10n_extension.dart';
+import '../../utils/time_format.dart';
+import '../../utils/timestamp_validation.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
@@ -20,15 +22,19 @@ import '../../core/widgets/info_table.dart';
 import '../../core/widgets/node_avatar.dart';
 import '../../core/widgets/qr_share_sheet.dart';
 import '../../models/mesh_models.dart';
+import '../../models/telemetry_log.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/countdown_providers.dart';
+import '../../providers/telemetry_providers.dart';
 import '../../utils/snackbar.dart';
+import '../../utils/uptime_formatter.dart';
 
 import '../device/device_config_screen.dart';
 import '../map/map_screen.dart';
 import '../messaging/messaging_screen.dart';
 import '../nodedex/models/nodedex_entry.dart';
 import '../nodedex/providers/nodedex_providers.dart';
+import '../nodedex/screens/nodedex_detail_screen.dart';
 import '../nodedex/services/sigil_generator.dart';
 import '../nodedex/services/trait_engine.dart';
 import '../nodedex/widgets/sigil_card_sheet.dart';
@@ -67,6 +73,15 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
   bool _isTogglingFavorite = false;
   bool _isTogglingMute = false;
   bool _isSendingTraceroute = false;
+
+  /// Tracks the ID of the last traceroute result shown in the summary snackbar.
+  /// Prevents duplicate popups for the same result across rebuilds.
+  String? _lastShownTracerouteId;
+
+  /// Timestamp of the most recent traceroute request sent from this screen.
+  /// Used to ignore late-arriving responses from previous requests that
+  /// predate the current one (the mesh has no request-response correlation).
+  DateTime? _lastTracerouteSentAt;
 
   final ScrollController _scrollController = ScrollController();
   bool _showAppBarIdentity = false;
@@ -130,19 +145,6 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
     if (level >= 50) return AccentColors.green;
     if (level >= 20) return AppTheme.warningYellow;
     return AppTheme.errorRed;
-  }
-
-  String _formatUptime(int seconds) {
-    if (seconds < 60) return '${seconds}s';
-    if (seconds < 3600) return '${seconds ~/ 60}m';
-    if (seconds < 86400) {
-      final h = seconds ~/ 3600;
-      final m = (seconds % 3600) ~/ 60;
-      return '${h}h ${m}m';
-    }
-    final d = seconds ~/ 86400;
-    final h = (seconds % 86400) ~/ 3600;
-    return '${d}d ${h}h';
   }
 
   // ─────────────────────── actions ───────────────────────
@@ -327,6 +329,7 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
     final displayName = node.displayName;
 
     try {
+      _lastTracerouteSentAt = DateTime.now();
       await protocol.sendTraceroute(node.nodeNum);
 
       if (!mounted) return;
@@ -355,12 +358,47 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
   }
 
   void _showTracerouteHistory(BuildContext context, MeshNode node) {
+    if (!mounted) return;
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => TraceRouteLogScreen(nodeNum: node.nodeNum),
       ),
     );
+  }
+
+  /// Formats a one-line traceroute summary: transport + hops + SNR.
+  String _formatTracerouteSummary(BuildContext context, TraceRouteLog log) {
+    final l10n = context.l10n;
+    final hops = log.hopsTowards;
+    final snr = log.snr;
+    final mqtt = log.viaMqtt ?? false;
+    final isDirect = hops == 0;
+
+    if (mqtt) {
+      if (isDirect && snr != null) {
+        return l10n.nodeDetailTracerouteSummaryMqttDirect(
+          snr.toStringAsFixed(1),
+        );
+      }
+      if (!isDirect && snr != null) {
+        return l10n.nodeDetailTracerouteSummaryMqtt(
+          hops,
+          snr.toStringAsFixed(1),
+        );
+      }
+    } else {
+      if (isDirect && snr != null) {
+        return l10n.nodeDetailTracerouteSummaryRfDirect(snr.toStringAsFixed(1));
+      }
+      if (!isDirect && snr != null) {
+        return l10n.nodeDetailTracerouteSummaryRf(hops, snr.toStringAsFixed(1));
+      }
+    }
+
+    // Fallback: no SNR available
+    if (isDirect) return l10n.nodeDetailTracerouteSummaryDirectNoSnr;
+    return l10n.nodeDetailTracerouteSummaryHopsOnly(hops);
   }
 
   Future<void> _showRebootConfirmation(
@@ -579,16 +617,21 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
 
   /// Whether a node was heard recently enough to be considered online.
   bool _isNodeOnline(MeshNode node) {
-    final lastHeard = node.lastHeard;
+    final lastHeard = TimestampValidation.validated(node.lastHeard);
     if (lastHeard == null) return false;
-    return DateTime.now().difference(lastHeard).inMinutes < 30;
+    final age = DateTime.now().difference(lastHeard);
+    if (age.isNegative) return false;
+    return age.inMinutes < 30;
   }
 
   /// Human-friendly relative time string for last heard.
   String _relativeLastHeard(BuildContext context, DateTime? lastHeard) {
-    if (lastHeard == null) return context.l10n.nodeDetailLastHeardNever;
-    final diff = DateTime.now().difference(lastHeard);
-    if (diff.inSeconds < 60) return context.l10n.nodeDetailLastHeardJustNow;
+    final validated = TimestampValidation.validated(lastHeard);
+    if (validated == null) return context.l10n.nodeDetailLastHeardNever;
+    final diff = DateTime.now().difference(validated);
+    if (diff.isNegative || diff.inSeconds < 60) {
+      return context.l10n.nodeDetailLastHeardJustNow;
+    }
     if (diff.inMinutes < 60) {
       return context.l10n.nodeDetailLastHeardMinutesAgo(diff.inMinutes);
     }
@@ -598,7 +641,7 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
     if (diff.inDays < 7) {
       return context.l10n.nodeDetailLastHeardDaysAgo(diff.inDays);
     }
-    return DateFormat('MMM d').format(lastHeard);
+    return DateFormat('MMM d').format(validated);
   }
 
   /// Signal quality label from SNR value.
@@ -791,6 +834,14 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
                   (node.distance! / 1000).toStringAsFixed(1),
                 ),
           color: context.accentColor,
+          onTap: node.hasPosition
+              ? () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => MapScreen(initialNodeNum: node.nodeNum),
+                  ),
+                )
+              : null,
         ),
       );
     }
@@ -920,6 +971,14 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
                 : context.l10n.nodeDetailDistanceKilometers(
                     (node.distance! / 1000).toStringAsFixed(1),
                   ),
+            onTap: node.hasPosition
+                ? () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => MapScreen(initialNodeNum: node.nodeNum),
+                    ),
+                  )
+                : null,
           ),
         if (node.hasPosition)
           InfoTableRow(
@@ -927,6 +986,12 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
             label: context.l10n.nodeDetailLabelPosition,
             value:
                 '${node.latitude!.toStringAsFixed(5)}, ${node.longitude!.toStringAsFixed(5)}',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => MapScreen(initialNodeNum: node.nodeNum),
+              ),
+            ),
           ),
         if (node.altitude != null)
           InfoTableRow(
@@ -982,7 +1047,7 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
           InfoTableRow(
             icon: Icons.timer,
             label: context.l10n.nodeDetailLabelUptime,
-            value: _formatUptime(node.uptimeSeconds!),
+            value: formatUptime(node.uptimeSeconds!),
           ),
       ],
     );
@@ -1206,6 +1271,55 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
     final nodesMap = ref.watch(nodesProvider);
     final node = nodesMap[_initialNode.nodeNum] ?? _initialNode;
 
+    // Listen for new traceroute results and show a one-time summary popup.
+    ref.listen<AsyncValue<List<TraceRouteLog>>>(
+      nodeTraceRouteLogsProvider(node.nodeNum),
+      (prev, next) {
+        final logs = next.value;
+        if (logs == null || logs.isEmpty) return;
+
+        // Find the most recent completed result
+        final latest = logs.firstWhere(
+          (l) => l.response,
+          orElse: () => logs.first,
+        );
+        if (!latest.response) return;
+
+        // Ignore late-arriving responses from previous traceroute requests.
+        // The mesh has no request-response correlation, so a response that
+        // arrives after a new request was sent likely belongs to the old one.
+        if (_lastTracerouteSentAt != null &&
+            latest.timestamp.isBefore(_lastTracerouteSentAt!)) {
+          return;
+        }
+
+        // On the initial data load — whether prev was null (provider not yet
+        // observed) or prev had no value (AsyncLoading → AsyncData) — seed
+        // the dedup ID so pre-existing DB entries never trigger a snackbar.
+        if (prev == null || !prev.hasValue) {
+          _lastShownTracerouteId = latest.id;
+          return;
+        }
+
+        if (latest.id == _lastShownTracerouteId) return;
+
+        _lastShownTracerouteId = latest.id;
+
+        if (!mounted) return;
+        final l10n = context.l10n;
+        final summary = _formatTracerouteSummary(context, latest);
+        showActionSnackBar(
+          context,
+          '${l10n.nodeDetailTracerouteComplete}\n$summary',
+          actionLabel: l10n.nodeDetailTracerouteViewDetails,
+          onAction: () => _showTracerouteHistory(context, node),
+          type: SnackBarType.success,
+          duration: const Duration(seconds: 6),
+        );
+        HapticFeedback.mediumImpact();
+      },
+    );
+
     return GlassScaffold(
       controller: _scrollController,
       titleWidget: AnimatedSwitcher(
@@ -1287,6 +1401,15 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
                   contentPadding: EdgeInsets.zero,
                 ),
               ),
+            PopupMenuItem(
+              value: 'nodedex',
+              child: ListTile(
+                leading: Icon(Icons.auto_awesome, color: context.accentColor),
+                title: Text(context.l10n.nodeDetailMenuViewInNodeDex),
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
             if (!isMyNode) ...[
               PopupMenuItem(
                 value: 'traceroute_history',
@@ -1378,6 +1501,13 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
                     builder: (_) => MapScreen(initialNodeNum: node.nodeNum),
                   ),
                 );
+              case 'nodedex':
+                Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (_) => NodeDexDetailScreen(nodeNum: node.nodeNum),
+                  ),
+                );
               case 'traceroute_history':
                 _showTracerouteHistory(context, node);
               case 'request_info':
@@ -1414,7 +1544,7 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
         SliverToBoxAdapter(child: _buildTrafficCard(context, node)),
 
         // Last heard timestamp at the bottom
-        if (node.lastHeard != null)
+        if (TimestampValidation.isPlausible(node.lastHeard))
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 12, 16, 4),
@@ -1429,7 +1559,9 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
                   const SizedBox(width: AppTheme.spacing4),
                   Text(
                     context.l10n.nodeDetailLastHeardTimestamp(
-                      DateFormat('MMM d, yyyy HH:mm').format(node.lastHeard!),
+                      AppTimeFormat.fullDateAndTime(
+                        context,
+                      ).format(node.lastHeard!),
                     ),
                     style: TextStyle(fontSize: 11, color: context.textTertiary),
                   ),
@@ -1634,16 +1766,18 @@ class _QuickStatChip extends StatelessWidget {
   final IconData icon;
   final String value;
   final Color color;
+  final VoidCallback? onTap;
 
   const _QuickStatChip({
     required this.icon,
     required this.value,
     required this.color,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final chip = Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
@@ -1665,6 +1799,16 @@ class _QuickStatChip extends StatelessWidget {
           ),
         ],
       ),
+    );
+
+    if (onTap == null) return chip;
+
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap!();
+      },
+      child: chip,
     );
   }
 }

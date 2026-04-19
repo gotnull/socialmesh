@@ -25,6 +25,7 @@ class AdminBugReport {
   final DateTime createdAt;
   final DateTime? lastResponseAt;
   final List<BugReportResponse> responses;
+  final bool responsesLoaded;
   final bool hasUnreadUserReplies;
   final int unreadUserReplyCount;
 
@@ -44,27 +45,53 @@ class AdminBugReport {
     required this.createdAt,
     this.lastResponseAt,
     this.responses = const [],
+    this.responsesLoaded = true,
     this.hasUnreadUserReplies = false,
     this.unreadUserReplyCount = 0,
   });
 
   bool get isAnonymous => uid == null || uid!.isEmpty;
 
+  AdminBugReport copyWith({
+    List<BugReportResponse>? responses,
+    bool? responsesLoaded,
+    bool? hasUnreadUserReplies,
+    int? unreadUserReplyCount,
+  }) {
+    return AdminBugReport(
+      id: id,
+      description: description,
+      screenshotUrl: screenshotUrl,
+      uid: uid,
+      email: email,
+      appVersion: appVersion,
+      buildNumber: buildNumber,
+      platform: platform,
+      platformVersion: platformVersion,
+      deviceModel: deviceModel,
+      osVersion: osVersion,
+      status: status,
+      createdAt: createdAt,
+      lastResponseAt: lastResponseAt,
+      responses: responses ?? this.responses,
+      responsesLoaded: responsesLoaded ?? this.responsesLoaded,
+      hasUnreadUserReplies: hasUnreadUserReplies ?? this.hasUnreadUserReplies,
+      unreadUserReplyCount: unreadUserReplyCount ?? this.unreadUserReplyCount,
+    );
+  }
+
   factory AdminBugReport.fromFirestore(
     DocumentSnapshot<Map<String, dynamic>> doc, {
     List<BugReportResponse> responses = const [],
     List<bool> readByAdminFlags = const [],
+    bool responsesLoaded = true,
   }) {
     final data = doc.data()!;
 
-    // Count unread user replies
-    int unreadCount = 0;
-    for (int i = 0; i < responses.length; i++) {
-      if (responses[i].isFromUser) {
-        final isRead = i < readByAdminFlags.length ? readByAdminFlags[i] : true;
-        if (!isRead) unreadCount++;
-      }
-    }
+    final unreadCount = countUnreadUserRepliesForAdmin(
+      responses: responses,
+      readByAdminFlags: readByAdminFlags,
+    );
 
     return AdminBugReport(
       id: doc.id,
@@ -82,15 +109,126 @@ class AdminBugReport {
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       lastResponseAt: (data['lastResponseAt'] as Timestamp?)?.toDate(),
       responses: responses,
+      responsesLoaded: responsesLoaded,
       hasUnreadUserReplies: unreadCount > 0,
       unreadUserReplyCount: unreadCount,
     );
   }
 }
 
+class AdminBugReportThreadData {
+  const AdminBugReportThreadData({
+    required this.responses,
+    required this.readByAdminFlags,
+  });
+
+  final List<BugReportResponse> responses;
+  final List<bool> readByAdminFlags;
+}
+
+int countUnreadUserRepliesForAdmin({
+  required List<BugReportResponse> responses,
+  required List<bool> readByAdminFlags,
+}) {
+  var unreadCount = 0;
+  for (var index = 0; index < responses.length; index++) {
+    if (!responses[index].isFromUser) {
+      continue;
+    }
+
+    final isRead = index < readByAdminFlags.length
+        ? readByAdminFlags[index]
+        : true;
+    if (!isRead) {
+      unreadCount++;
+    }
+  }
+  return unreadCount;
+}
+
+List<AdminBugReport> hydrateAdminBugReports({
+  required List<AdminBugReport> reports,
+  required Map<String, AdminBugReportThreadData> threadDataByReportId,
+}) {
+  return reports.map((report) {
+    final threadData = threadDataByReportId[report.id];
+    final responses = threadData?.responses ?? const <BugReportResponse>[];
+    final readByAdminFlags = threadData?.readByAdminFlags ?? const <bool>[];
+    final unreadCount = countUnreadUserRepliesForAdmin(
+      responses: responses,
+      readByAdminFlags: readByAdminFlags,
+    );
+
+    return report.copyWith(
+      responses: responses,
+      responsesLoaded: true,
+      hasUnreadUserReplies: unreadCount > 0,
+      unreadUserReplyCount: unreadCount,
+    );
+  }).toList();
+}
+
 /// Repository for admin-scoped bug report operations.
 class AdminBugReportRepository {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  AdminBugReportRepository({FirebaseFirestore? firestore})
+    : _firestore = firestore ?? FirebaseFirestore.instance;
+
+  final FirebaseFirestore _firestore;
+
+  Future<AdminBugReportThreadData> _fetchResponsesForReport(
+    DocumentReference<Map<String, dynamic>> reportRef,
+  ) async {
+    try {
+      final responsesSnapshot = await reportRef
+          .collection('responses')
+          .orderBy('createdAt', descending: false)
+          .get();
+
+      return AdminBugReportThreadData(
+        responses: responsesSnapshot.docs
+            .map(BugReportResponse.fromFirestore)
+            .toList(),
+        readByAdminFlags: responsesSnapshot.docs
+            .map((doc) => doc.data()['readByAdmin'] as bool? ?? false)
+            .toList(),
+      );
+    } catch (e) {
+      AppLogging.bugReport(
+        'Admin: failed to fetch responses for ${reportRef.id}: $e',
+      );
+      return const AdminBugReportThreadData(
+        responses: <BugReportResponse>[],
+        readByAdminFlags: <bool>[],
+      );
+    }
+  }
+
+  List<AdminBugReport> _buildReportShells(
+    Iterable<DocumentSnapshot<Map<String, dynamic>>> docs,
+  ) {
+    return docs
+        .map((doc) => AdminBugReport.fromFirestore(doc, responsesLoaded: false))
+        .toList();
+  }
+
+  Future<List<AdminBugReport>> _hydrateReports(
+    Iterable<DocumentSnapshot<Map<String, dynamic>>> docs,
+  ) async {
+    final shellReports = _buildReportShells(docs);
+    final responseEntries = await Future.wait(
+      docs.map((doc) async {
+        final responseData = await _fetchResponsesForReport(doc.reference);
+        return MapEntry(doc.id, responseData);
+      }),
+    );
+
+    return hydrateAdminBugReports(
+      reports: shellReports,
+      threadDataByReportId: Map<String, AdminBugReportThreadData>.fromEntries(
+        responseEntries,
+      ),
+    );
+  }
 
   /// Stream all bug reports (admin view) ordered by most recent.
   Stream<List<AdminBugReport>> watchAllReports() {
@@ -98,34 +236,22 @@ class AdminBugReportRepository {
         .collection('bugReports')
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .asyncMap((snapshot) async {
-          final reports = <AdminBugReport>[];
+        .asyncExpand((snapshot) async* {
+          final shellReports = _buildReportShells(snapshot.docs);
+          AppLogging.bugReport(
+            'Admin: streamed ${shellReports.length} bug report shells',
+          );
+          yield shellReports;
 
-          for (final doc in snapshot.docs) {
-            final responsesSnapshot = await doc.reference
-                .collection('responses')
-                .orderBy('createdAt', descending: false)
-                .get();
-
-            final responses = responsesSnapshot.docs
-                .map(BugReportResponse.fromFirestore)
-                .toList();
-
-            final readByAdminFlags = responsesSnapshot.docs.map((d) {
-              return d.data()['readByAdmin'] as bool? ?? false;
-            }).toList();
-
-            reports.add(
-              AdminBugReport.fromFirestore(
-                doc,
-                responses: responses,
-                readByAdminFlags: readByAdminFlags,
-              ),
-            );
+          if (snapshot.docs.isEmpty) {
+            return;
           }
 
-          AppLogging.bugReport('Admin: streamed ${reports.length} bug reports');
-          return reports;
+          final hydratedReports = await _hydrateReports(snapshot.docs);
+          AppLogging.bugReport(
+            'Admin: hydrated ${hydratedReports.length} bug reports',
+          );
+          yield hydratedReports;
         })
         .handleError((Object e) {
           AppLogging.bugReport('Admin bug reports stream error: $e');

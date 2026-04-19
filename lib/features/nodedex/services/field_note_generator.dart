@@ -212,15 +212,15 @@ class FieldNoteGenerator {
     NodeDexEntry entry,
   ) {
     return switch (index) {
-      0 => l10n.nodedexFieldNoteAnchor0(entry.coSeenCount),
+      0 => l10n.nodedexFieldNoteAnchor0(entry.historicalCoSeenCount),
       1 => l10n.nodedexFieldNoteAnchor1,
-      2 => l10n.nodedexFieldNoteAnchor2(entry.coSeenCount),
+      2 => l10n.nodedexFieldNoteAnchor2(entry.historicalCoSeenCount),
       3 => l10n.nodedexFieldNoteAnchor3,
       4 => l10n.nodedexFieldNoteAnchor4,
       5 => l10n.nodedexFieldNoteAnchor5,
-      6 => l10n.nodedexFieldNoteAnchor6(entry.coSeenCount),
+      6 => l10n.nodedexFieldNoteAnchor6(entry.historicalCoSeenCount),
       7 => l10n.nodedexFieldNoteAnchor7,
-      _ => l10n.nodedexFieldNoteAnchor0(entry.coSeenCount),
+      _ => l10n.nodedexFieldNoteAnchor0(entry.historicalCoSeenCount),
     };
   }
 

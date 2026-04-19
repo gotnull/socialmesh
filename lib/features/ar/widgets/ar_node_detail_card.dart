@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
+import '../../../utils/timestamp_validation.dart';
 
 import '../ar_engine.dart';
 
@@ -124,7 +125,7 @@ class ARNodeDetailCard extends StatelessWidget {
                     context.l10n.arNodeDetailAltitude,
                     '${meshNode.altitude}m',
                   ),
-                if (meshNode.lastHeard != null)
+                if (TimestampValidation.isPlausible(meshNode.lastHeard))
                   _buildDetailRow(
                     Icons.access_time,
                     context.l10n.arNodeDetailLastHeard,

@@ -34,8 +34,21 @@ class PurchaseService {
   /// These are preserved across refreshes AND app restarts to prevent losing unlock status
   final Set<String> _storeConfirmedProducts = {};
 
+  /// Set when the most recent restore encountered PaymentPendingError —
+  /// the store believes a purchase exists but RevenueCat has not accepted
+  /// its receipt. Typical Android case: Google Play returns the purchase
+  /// in queryPurchaseHistory but /v1/receipts returns 400 with
+  /// PaymentPendingError. UI reads this flag to distinguish a "nothing to
+  /// restore" outcome from a "store has a pending receipt" outcome so the
+  /// user sees a helpful message instead of the misleading "none" state.
+  bool _lastRestoreHadPendingPayment = false;
+
   /// Current purchase state
   PurchaseState get currentState => _currentState;
+
+  /// True when the most recent `restorePurchases()` call encountered
+  /// PaymentPendingError. Reset at the start of every restore attempt.
+  bool get lastRestoreHadPendingPayment => _lastRestoreHadPendingPayment;
 
   /// Stream of purchase state changes
   Stream<PurchaseState> get stateStream => _stateController.stream;
@@ -118,12 +131,11 @@ class PurchaseService {
         return;
       }
 
-      // Enable verbose debug logging in debug mode for sandbox testing
+      // Enable debug logging in debug mode (not verbose — verbose dumps
+      // full product JSON on every BillingClient query, flooding logcat).
       if (kDebugMode) {
-        AppLogging.subscriptions(
-          '💰 Setting LogLevel.verbose for debug mode...',
-        );
-        await Purchases.setLogLevel(LogLevel.verbose);
+        AppLogging.subscriptions('💰 Setting LogLevel.debug for debug mode...');
+        await Purchases.setLogLevel(LogLevel.debug);
         AppLogging.subscriptions(
           '💰 RevenueCat debug logging enabled for sandbox testing',
         );
@@ -326,12 +338,14 @@ class PurchaseService {
           );
           return PurchaseResult.error;
 
-        // Network error - retryable by user
+        // Network error - receipt validation failed but transaction may
+        // have completed. Wait briefly for iOS networking to recover
+        // (stale QUIC connections after App Store sheet), then sync.
         case PurchasesErrorCode.networkError:
           AppLogging.subscriptions(
-            '💳 Network error - retryable. User should check connection and retry.',
+            '💳 Network error - attempting recovery via syncPurchases...',
           );
-          return PurchaseResult.error;
+          return _handleNetworkErrorRecovery(productId);
 
         // Payment pending - inform user
         case PurchasesErrorCode.paymentPendingError:
@@ -463,6 +477,53 @@ class PurchaseService {
     return PurchaseResult.success;
   }
 
+  /// Handle network errors during purchase.
+  ///
+  /// The App Store transaction typically completes before the receipt is
+  /// sent to RevenueCat. When the QUIC connection goes stale (common after
+  /// the App Store payment sheet backgrounds the app), the receipt POST
+  /// fails with `-1005 "The network connection was lost."`.
+  ///
+  /// Recovery: wait for iOS networking to settle, then sync purchases
+  /// to pick up the completed transaction.
+  Future<PurchaseResult> _handleNetworkErrorRecovery(String productId) async {
+    AppLogging.subscriptions(
+      '💳 _handleNetworkErrorRecovery($productId) — waiting for network...',
+    );
+
+    // Brief delay for iOS to tear down the stale QUIC connection and
+    // establish a fresh one.
+    await Future<void>.delayed(const Duration(seconds: 2));
+
+    try {
+      await Purchases.syncPurchases();
+      AppLogging.subscriptions(
+        '💳 syncPurchases() completed after network recovery',
+      );
+
+      final customerInfo = await Purchases.getCustomerInfo();
+      _updateStateFromCustomerInfo(customerInfo);
+    } catch (e) {
+      AppLogging.subscriptions('💳 syncPurchases() failed during recovery: $e');
+    }
+
+    if (_currentState.hasPurchased(productId)) {
+      AppLogging.subscriptions(
+        '💳 ✅ Product $productId recovered after network error',
+      );
+      return PurchaseResult.success;
+    }
+
+    // Transaction may not have completed (user cancelled at App Store
+    // before payment went through). Report error so the UI shows the
+    // failure message and the user can retry.
+    AppLogging.subscriptions(
+      '💳 ❌ Product $productId not found after network recovery — '
+      'transaction may not have completed',
+    );
+    return PurchaseResult.error;
+  }
+
   /// Handle the case where a product is already owned by the store
   /// but not recognized by RevenueCat
   Future<PurchaseResult> _handleAlreadyOwned(String productId) async {
@@ -561,6 +622,39 @@ class PurchaseService {
     }
   }
 
+  /// Programmatically sync the device store's purchase tokens with RevenueCat
+  /// without invoking the OS restore prompt. Safe to call at any time;
+  /// callers should not depend on its return value for entitlement decisions
+  /// (use the resulting [currentState] / [stateStream] instead).
+  ///
+  /// On Android with Play Billing 8 this is the recommended call to make
+  /// before/after [logIn] so anonymous-tied tokens get re-sent under the
+  /// identified RC customer. Returns false on error so the bootstrap flow
+  /// can decide whether to surface anything; never throws.
+  Future<bool> syncPurchases() async {
+    if (!_isInitialized) {
+      AppLogging.subscriptions(
+        '💰 syncPurchases skipped — RevenueCat not initialized',
+      );
+      return false;
+    }
+    try {
+      AppLogging.subscriptions('💰 syncPurchases — START');
+      await Purchases.syncPurchases();
+      final customerInfo = await Purchases.getCustomerInfo();
+      _updateStateFromCustomerInfo(customerInfo);
+      AppLogging.subscriptions(
+        '💰 syncPurchases — DONE customerId=${customerInfo.originalAppUserId} '
+        'products=${customerInfo.allPurchasedProductIdentifiers}',
+      );
+      return true;
+    } catch (e, stackTrace) {
+      AppLogging.subscriptions('💰 ❌ syncPurchases error: $e');
+      AppLogging.subscriptions('💰 Stack: $stackTrace');
+      return false;
+    }
+  }
+
   /// Refresh purchases from RevenueCat
   Future<void> refreshPurchases() async {
     AppLogging.subscriptions(
@@ -602,6 +696,10 @@ class PurchaseService {
       '💰 ═══════════════════════════════════════════════',
     );
     AppLogging.subscriptions('💰 isInitialized: $_isInitialized');
+
+    // Reset pending-payment flag at the start of every attempt so the UI
+    // only reacts to the outcome of THIS restore, not a stale prior one.
+    _lastRestoreHadPendingPayment = false;
 
     if (!_isInitialized) {
       AppLogging.subscriptions(
@@ -773,6 +871,7 @@ class PurchaseService {
           AppLogging.subscriptions(
             '💰 ⚠️ PaymentPendingError detected (old pending purchase)',
           );
+          _lastRestoreHadPendingPayment = true;
           return _handleRestoreFallback();
 
         // Network error - retryable, but try fallback first

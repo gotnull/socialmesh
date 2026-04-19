@@ -77,17 +77,44 @@ class _MrrpResponseViewerScreenState extends State<MrrpResponseViewerScreen> {
           sliver: SliverList(
             delegate: SliverChildListDelegate([
               // Request info
-              _InfoRow(label: l10n.mrrpHarnessSelectPeer, value: nodeHex),
-              _InfoRow(
-                label: l10n.mrrpHarnessSelectService,
-                value: serviceName,
+              // REQUEST section header
+              Padding(
+                padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
+                child: Text(
+                  l10n.mrrpHarnessResponseSectionRequest,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: context.textTertiary,
+                    letterSpacing: 1.2,
+                  ),
+                ),
               ),
-              _InfoRow(
-                label: l10n.mrrpHarnessSelectAction,
-                value: '0x${widget.actionId.toRadixString(16).padLeft(4, '0')}',
+              Container(
+                padding: const EdgeInsets.all(AppTheme.spacing16),
+                decoration: BoxDecoration(
+                  color: context.card,
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
+                  border: Border.all(
+                    color: context.border.withValues(alpha: 0.5),
+                    width: 0.5,
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    _InfoRow(label: l10n.mrrpHarnessSelectPeer, value: nodeHex),
+                    _InfoRow(
+                      label: l10n.mrrpHarnessSelectService,
+                      value: serviceName,
+                    ),
+                    _InfoRow(
+                      label: l10n.mrrpHarnessSelectAction,
+                      value:
+                          '0x${widget.actionId.toRadixString(16).padLeft(4, '0')}',
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: AppTheme.spacing16),
-              const Divider(height: 1),
               const SizedBox(height: AppTheme.spacing16),
 
               // Result section
@@ -107,7 +134,31 @@ class _MrrpResponseViewerScreenState extends State<MrrpResponseViewerScreen> {
                   ),
                 ),
               ] else ...[
-                _buildResultSection(context),
+                // RESULT section header
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
+                  child: Text(
+                    l10n.mrrpHarnessResponseSectionResult,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: context.textTertiary,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.all(AppTheme.spacing16),
+                  decoration: BoxDecoration(
+                    color: context.card,
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
+                    border: Border.all(
+                      color: context.border.withValues(alpha: 0.5),
+                      width: 0.5,
+                    ),
+                  ),
+                  child: _buildResultSection(context),
+                ),
               ],
             ]),
           ),
@@ -149,14 +200,38 @@ class _MrrpResponseViewerScreenState extends State<MrrpResponseViewerScreen> {
         if (isTimeout)
           Padding(
             padding: const EdgeInsets.only(top: AppTheme.spacing8),
-            child: Chip(
-              avatar: Icon(
-                Icons.timer_off,
-                size: 16,
-                color: SemanticColors.warning,
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spacing8,
+                vertical: AppTheme.spacing4,
               ),
-              label: Text(l10n.mrrpHarnessResponseTimeout),
-              backgroundColor: SemanticColors.warning.withAlpha(25),
+              decoration: BoxDecoration(
+                color: SemanticColors.warning.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
+                border: Border.all(
+                  color: SemanticColors.warning.withValues(alpha: 0.3),
+                  width: 0.5,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.timer_off,
+                    size: 14,
+                    color: SemanticColors.warning,
+                  ),
+                  const SizedBox(width: AppTheme.spacing4),
+                  Text(
+                    l10n.mrrpHarnessResponseTimeout,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: SemanticColors.warning,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
 
@@ -166,8 +241,13 @@ class _MrrpResponseViewerScreenState extends State<MrrpResponseViewerScreen> {
           Row(
             children: [
               Text(
-                l10n.mrrpHarnessPayloadRawHex,
-                style: Theme.of(context).textTheme.labelLarge,
+                l10n.mrrpHarnessPayloadRawHex.toUpperCase(),
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: context.textTertiary,
+                  letterSpacing: 1.2,
+                ),
               ),
               const Spacer(),
               IconButton(
@@ -186,18 +266,23 @@ class _MrrpResponseViewerScreenState extends State<MrrpResponseViewerScreen> {
           const SizedBox(height: AppTheme.spacing4),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(AppTheme.spacing8),
+            padding: const EdgeInsets.all(AppTheme.spacing12),
             decoration: BoxDecoration(
-              color: context.surface,
-              borderRadius: BorderRadius.circular(AppTheme.radius6),
+              color: context.textPrimary.withValues(alpha: 0.04),
+              borderRadius: BorderRadius.circular(AppTheme.radius8),
+              border: Border.all(
+                color: context.border.withValues(alpha: 0.3),
+                width: 0.5,
+              ),
             ),
             child: Text(
               result.response!.payload
                   .map((b) => b.toRadixString(16).padLeft(2, '0'))
                   .join(' ')
                   .toUpperCase(),
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontFamily: 'monospace', // lint-allow: hardcoded-string
+              style: TextStyle(
+                fontSize: 12,
+                fontFamily: AppTheme.fontFamily,
                 color: context.textSecondary,
               ),
             ),
@@ -217,10 +302,20 @@ class _InfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dotColor = valueColor ?? context.accentColor;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing4),
       child: Row(
         children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(
+              color: dotColor.withValues(alpha: 0.5),
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: AppTheme.spacing8),
           Text(
             label,
             style: Theme.of(
@@ -232,8 +327,10 @@ class _InfoRow extends StatelessWidget {
             child: Text(
               value,
               textAlign: TextAlign.end,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              style: TextStyle(
+                fontSize: 14,
                 fontWeight: FontWeight.w600,
+                fontFamily: AppTheme.fontFamily,
                 color: valueColor ?? context.textPrimary,
               ),
             ),

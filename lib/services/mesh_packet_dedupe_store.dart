@@ -116,7 +116,20 @@ class MeshPacketDedupeStore {
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
       onDowngrade: _onDowngrade,
+      onConfigure: _onConfigure,
     );
+  }
+
+  Future<void> _onConfigure(Database db) async {
+    final walResult = await db.rawQuery('PRAGMA journal_mode=WAL');
+    // Only enforce WAL for on-disk databases. In-memory databases
+    // (used in tests via _dbPathOverride) do not support WAL mode.
+    if (_dbPathOverride == null) {
+      assert(
+        walResult.isNotEmpty && walResult.first['journal_mode'] == 'wal',
+        'WAL mode not active',
+      ); // lint-allow: hardcoded-string
+    }
   }
 
   /// Create the database schema.

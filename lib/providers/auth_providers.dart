@@ -3,7 +3,6 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
-import 'dart:ui' show PlatformDispatcher;
 
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:crypto/crypto.dart';
@@ -14,12 +13,12 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
-import 'package:socialmesh/l10n/app_localizations.dart';
 
 import '../core/logging.dart';
 import '../main.dart' show firebaseReady;
 import '../services/local_data_wipe_service.dart';
 import '../services/notifications/push_notification_service.dart';
+import 'package:socialmesh/l10n/l10n_utils.dart';
 
 /// Exception thrown when account linking is required
 /// (e.g., GitHub sign-in with an email that's already linked to Google)
@@ -255,7 +254,7 @@ class AuthService {
     } on GoogleSignInException catch (e) {
       if (e.code == GoogleSignInExceptionCode.canceled) {
         AppLogging.auth('signInWithGoogle - ❌ CANCELLED by user');
-        final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+        final l10n = safeL10n();
         throw FirebaseAuthException(
           code: 'sign-in-cancelled',
           message: l10n.authErrorGoogleSignInCancelled,
@@ -274,7 +273,7 @@ class AuthService {
     final idToken = googleUser.authentication.idToken;
     if (idToken == null) {
       AppLogging.auth('signInWithGoogle - ❌ No idToken received');
-      final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+      final l10n = safeL10n();
       throw FirebaseAuthException(
         code: 'missing-id-token',
         message: l10n.authErrorGoogleNoIdToken,
@@ -542,7 +541,7 @@ class AuthService {
     final user = _auth.currentUser;
     if (user == null) {
       AppLogging.auth('linkPendingCredential - ❌ No current user');
-      final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+      final l10n = safeL10n();
       throw FirebaseAuthException(
         code: 'no-current-user',
         message: l10n.authErrorNoCurrentUser,
@@ -654,7 +653,7 @@ class AuthService {
     } on GoogleSignInException catch (e) {
       if (e.code == GoogleSignInExceptionCode.canceled) {
         AppLogging.auth('reauthenticateWithGoogle - ❌ CANCELLED by user');
-        final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+        final l10n = safeL10n();
         throw FirebaseAuthException(
           code: 'reauthentication-cancelled',
           message: l10n.authErrorGoogleReauthCancelled,
@@ -696,7 +695,7 @@ class AuthService {
     final idToken = googleUser.authentication.idToken;
     if (idToken == null) {
       AppLogging.auth('reauthenticateWithGoogle - ❌ No idToken received');
-      final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+      final l10n = safeL10n();
       throw FirebaseAuthException(
         code: 'missing-id-token',
         message: l10n.authErrorGoogleNoIdToken,
@@ -784,7 +783,7 @@ class AuthService {
       await reauthenticateWithApple();
     } else {
       AppLogging.auth('reauthenticate - ❌ No supported provider found');
-      final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+      final l10n = safeL10n();
       throw FirebaseAuthException(
         code: 'no-supported-provider',
         message: l10n.authErrorNoSupportedProvider,
@@ -1104,9 +1103,7 @@ class AuthService {
     if (user == null) {
       throw FirebaseAuthException(
         code: 'no-current-user',
-        message: lookupAppLocalizations(
-          PlatformDispatcher.instance.locale,
-        ).authErrorNoUserSignedIn,
+        message: safeL10n().authErrorNoUserSignedIn,
       );
     }
 
@@ -1127,9 +1124,7 @@ class AuthService {
       AppLogging.mfa('unenrollMFA - ❌ No user signed in');
       throw FirebaseAuthException(
         code: 'no-current-user',
-        message: lookupAppLocalizations(
-          PlatformDispatcher.instance.locale,
-        ).authErrorNoUserSignedIn,
+        message: safeL10n().authErrorNoUserSignedIn,
       );
     }
 
@@ -1197,9 +1192,7 @@ class AuthService {
             AppLogging.mfa('unenrollMFA - ❌ No user after re-auth');
             throw FirebaseAuthException(
               code: 'no-current-user',
-              message: lookupAppLocalizations(
-                PlatformDispatcher.instance.locale,
-              ).authErrorSessionLost,
+              message: safeL10n().authErrorSessionLost,
             );
           }
 
@@ -1314,9 +1307,7 @@ class AuthService {
       if (verificationId == null) {
         throw FirebaseAuthException(
           code: 'verification-failed',
-          message: lookupAppLocalizations(
-            PlatformDispatcher.instance.locale,
-          ).authErrorVerificationCodeFailed,
+          message: safeL10n().authErrorVerificationCodeFailed,
         );
       }
 

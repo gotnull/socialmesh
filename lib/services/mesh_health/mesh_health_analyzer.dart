@@ -8,9 +8,7 @@
 
 import 'dart:async';
 import 'dart:math' as math;
-import 'dart:ui' show PlatformDispatcher;
-
-import 'package:socialmesh/l10n/app_localizations.dart';
+import 'package:socialmesh/l10n/l10n_utils.dart';
 
 import 'mesh_health_models.dart';
 
@@ -414,9 +412,9 @@ class MeshHealthAnalyzer {
           severity: avgRssi < -110
               ? IssueSeverity.critical
               : IssueSeverity.warning,
-          message: lookupAppLocalizations(
-            PlatformDispatcher.instance.locale,
-          ).meshHealthRssiDegraded(avgRssi.toStringAsFixed(0)),
+          message: safeL10n().meshHealthRssiDegraded(
+            avgRssi.toStringAsFixed(0),
+          ),
           metric: avgRssi,
           timestamp: now,
         ),

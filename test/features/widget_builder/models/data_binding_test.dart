@@ -563,6 +563,380 @@ void main() {
         expect(value, isNotNull);
         expect(value, isA<num>());
       });
+
+      test(
+        'network.hardwareModelDistribution returns placeholder in preview mode',
+        () {
+          final binding = BindingSchema(
+            path: 'network.hardwareModelDistribution',
+          );
+          final value = engine.resolveBinding(binding);
+          expect(value, isNotNull);
+          expect(value, isA<Map<String, int>>());
+          final data = value as Map<String, int>;
+          expect(data.isNotEmpty, true);
+          expect(data.containsKey('T-Echo'), true);
+        },
+      );
+
+      test('network.roleDistribution returns placeholder in preview mode', () {
+        final binding = BindingSchema(path: 'network.roleDistribution');
+        final value = engine.resolveBinding(binding);
+        expect(value, isNotNull);
+        expect(value, isA<Map<String, int>>());
+        final data = value as Map<String, int>;
+        expect(data.isNotEmpty, true);
+        expect(data.containsKey('CLIENT'), true);
+      });
+    });
+
+    group('distribution bindings', () {
+      late DataBindingEngine engine;
+
+      setUp(() {
+        engine = DataBindingEngine();
+      });
+
+      test('hardwareModelDistribution groups nodes by hardware model', () {
+        final nodes = <int, MeshNode>{
+          1: MeshNode(
+            nodeNum: 1,
+            hardwareModel: 'Heltec V3',
+            lastHeard: DateTime.now(),
+          ),
+          2: MeshNode(
+            nodeNum: 2,
+            hardwareModel: 'Heltec V3',
+            lastHeard: DateTime.now(),
+          ),
+          3: MeshNode(
+            nodeNum: 3,
+            hardwareModel: 'T-Echo',
+            lastHeard: DateTime.now(),
+          ),
+          4: MeshNode(
+            nodeNum: 4,
+            hardwareModel: 'RAK4631',
+            lastHeard: DateTime.now(),
+          ),
+          5: MeshNode(
+            nodeNum: 5,
+            hardwareModel: 'RAK4631',
+            lastHeard: DateTime.now(),
+          ),
+          6: MeshNode(
+            nodeNum: 6,
+            hardwareModel: 'RAK4631',
+            lastHeard: DateTime.now(),
+          ),
+        };
+        engine.setAllNodes(nodes);
+
+        final binding = BindingSchema(
+          path: 'network.hardwareModelDistribution',
+        );
+        final value = engine.resolveBinding(binding);
+        expect(value, isA<Map<String, int>>());
+        final data = value as Map<String, int>;
+        expect(data['Heltec V3'], 2);
+        expect(data['T-Echo'], 1);
+        expect(data['RAK4631'], 3);
+      });
+
+      test('hardwareModelDistribution returns empty map when no nodes', () {
+        engine.setAllNodes({});
+
+        final binding = BindingSchema(
+          path: 'network.hardwareModelDistribution',
+        );
+        final value = engine.resolveBinding(binding);
+        expect(value, isA<Map<String, int>>());
+        final data = value as Map<String, int>;
+        expect(data.isEmpty, true);
+      });
+
+      test('hardwareModelDistribution groups null/empty models as Unknown', () {
+        final nodes = <int, MeshNode>{
+          1: MeshNode(
+            nodeNum: 1,
+            hardwareModel: 'T-Echo',
+            lastHeard: DateTime.now(),
+          ),
+          2: MeshNode(
+            nodeNum: 2,
+            hardwareModel: null,
+            lastHeard: DateTime.now(),
+          ),
+          3: MeshNode(nodeNum: 3, hardwareModel: '', lastHeard: DateTime.now()),
+        };
+        engine.setAllNodes(nodes);
+
+        final binding = BindingSchema(
+          path: 'network.hardwareModelDistribution',
+        );
+        final value = engine.resolveBinding(binding);
+        final data = value as Map<String, int>;
+        expect(data.length, 2);
+        expect(data['T-Echo'], 1);
+        expect(data[DistributionKeys.unknown], 2);
+      });
+
+      test('roleDistribution groups nodes by role', () {
+        final nodes = <int, MeshNode>{
+          1: MeshNode(nodeNum: 1, role: 'CLIENT', lastHeard: DateTime.now()),
+          2: MeshNode(nodeNum: 2, role: 'CLIENT', lastHeard: DateTime.now()),
+          3: MeshNode(nodeNum: 3, role: 'ROUTER', lastHeard: DateTime.now()),
+          4: MeshNode(nodeNum: 4, role: null, lastHeard: DateTime.now()),
+        };
+        engine.setAllNodes(nodes);
+
+        final binding = BindingSchema(path: 'network.roleDistribution');
+        final value = engine.resolveBinding(binding);
+        final data = value as Map<String, int>;
+        expect(data['CLIENT'], 2);
+        expect(data['ROUTER'], 1);
+        expect(data[DistributionKeys.unknown], 1);
+      });
+
+      test('roleDistribution returns empty map when no nodes', () {
+        engine.setAllNodes({});
+
+        final binding = BindingSchema(path: 'network.roleDistribution');
+        final value = engine.resolveBinding(binding);
+        final data = value as Map<String, int>;
+        expect(data.isEmpty, true);
+      });
+
+      test('distribution sort is deterministic: count desc then label asc', () {
+        // Three models with count 2 each — should sort alphabetically
+        // (case-insensitive), then Unknown last.
+        final nodes = <int, MeshNode>{
+          1: MeshNode(
+            nodeNum: 1,
+            hardwareModel: 'Zebra',
+            lastHeard: DateTime.now(),
+          ),
+          2: MeshNode(
+            nodeNum: 2,
+            hardwareModel: 'Zebra',
+            lastHeard: DateTime.now(),
+          ),
+          3: MeshNode(
+            nodeNum: 3,
+            hardwareModel: 'alpha',
+            lastHeard: DateTime.now(),
+          ),
+          4: MeshNode(
+            nodeNum: 4,
+            hardwareModel: 'alpha',
+            lastHeard: DateTime.now(),
+          ),
+          5: MeshNode(
+            nodeNum: 5,
+            hardwareModel: 'Bravo',
+            lastHeard: DateTime.now(),
+          ),
+          6: MeshNode(
+            nodeNum: 6,
+            hardwareModel: 'Bravo',
+            lastHeard: DateTime.now(),
+          ),
+        };
+        engine.setAllNodes(nodes);
+
+        final binding = BindingSchema(
+          path: 'network.hardwareModelDistribution',
+        );
+        final data = engine.resolveBinding(binding) as Map<String, int>;
+        final keys = data.keys.toList();
+
+        // All counts equal → alphabetical case-insensitive
+        expect(keys, ['alpha', 'Bravo', 'Zebra']);
+      });
+
+      test(
+        'distribution sort puts Unknown and Other after real categories',
+        () {
+          // Create nodes with models that include the sentinel values.
+          final nodes = <int, MeshNode>{
+            1: MeshNode(
+              nodeNum: 1,
+              hardwareModel: 'T-Echo',
+              lastHeard: DateTime.now(),
+            ),
+            2: MeshNode(
+              nodeNum: 2,
+              hardwareModel: 'T-Echo',
+              lastHeard: DateTime.now(),
+            ),
+            3: MeshNode(
+              nodeNum: 3,
+              hardwareModel: null,
+              lastHeard: DateTime.now(),
+            ),
+          };
+          engine.setAllNodes(nodes);
+
+          final binding = BindingSchema(
+            path: 'network.hardwareModelDistribution',
+          );
+          final data = engine.resolveBinding(binding) as Map<String, int>;
+          final keys = data.keys.toList();
+
+          // Unknown sorts after T-Echo despite count comparison
+          expect(keys.last, DistributionKeys.unknown);
+          expect(keys.first, 'T-Echo');
+        },
+      );
+
+      test('distribution truncates to defaultMaxItems with Other bucket', () {
+        // Create 10 distinct models → should truncate to 8 visible.
+        final models = [
+          'Alpha',
+          'Bravo',
+          'Charlie',
+          'Delta',
+          'Echo',
+          'Foxtrot',
+          'Golf',
+          'Hotel',
+          'India',
+          'Juliet',
+        ];
+        final nodes = <int, MeshNode>{};
+        var id = 1;
+        for (var i = 0; i < models.length; i++) {
+          // Give each model (models.length - i) nodes so counts are distinct
+          // and deterministic: Alpha=10, Bravo=9, ..., Juliet=1
+          for (var j = 0; j <= i; j++) {
+            nodes[id] = MeshNode(
+              nodeNum: id,
+              hardwareModel: models[i],
+              lastHeard: DateTime.now(),
+            );
+            id++;
+          }
+        }
+        engine.setAllNodes(nodes);
+
+        final binding = BindingSchema(
+          path: 'network.hardwareModelDistribution',
+        );
+        final data = engine.resolveBinding(binding) as Map<String, int>;
+
+        // 7 top entries + Other = 8 total (defaultMaxItems).
+        // Sorted by count desc: Juliet(10), India(9), Hotel(8), Golf(7),
+        //   Foxtrot(6), Echo(5), Delta(4) → then Other merges the rest.
+        expect(data.length, 8);
+        expect(data.containsKey(DistributionKeys.other), true);
+
+        // Other = Charlie(3) + Bravo(2) + Alpha(1) = 6
+        expect(data[DistributionKeys.other], 6);
+
+        // Top model should be present with correct count
+        expect(data['Juliet'], 10);
+      });
+
+      test('distribution preserves Unknown through truncation', () {
+        // Create 10 models + some Unknown nodes.
+        // Unknown should survive even if it'd normally be in the overflow.
+        final models = List.generate(
+          10,
+          (i) => 'Model${i.toString().padLeft(2, '0')}',
+        );
+        final nodes = <int, MeshNode>{};
+        var id = 1;
+
+        // Give each model 5 nodes
+        for (final model in models) {
+          for (var j = 0; j < 5; j++) {
+            nodes[id] = MeshNode(
+              nodeNum: id,
+              hardwareModel: model,
+              lastHeard: DateTime.now(),
+            );
+            id++;
+          }
+        }
+        // Add 1 node with null hardware model (→ Unknown)
+        nodes[id] = MeshNode(
+          nodeNum: id,
+          hardwareModel: null,
+          lastHeard: DateTime.now(),
+        );
+
+        engine.setAllNodes(nodes);
+
+        final binding = BindingSchema(
+          path: 'network.hardwareModelDistribution',
+        );
+        final data = engine.resolveBinding(binding) as Map<String, int>;
+
+        // Unknown should be preserved even though it has count 1
+        // (lowest) and there are 10 models.
+        expect(data.containsKey(DistributionKeys.unknown), true);
+        expect(data[DistributionKeys.unknown], 1);
+
+        // Other bucket should exist for the overflow models
+        expect(data.containsKey(DistributionKeys.other), true);
+      });
+
+      test('Unknown and Other are distinct sentinel categories', () {
+        // Verify that an explicit "Unknown" hardware model
+        // and the null→Unknown mapping merge correctly.
+        final nodes = <int, MeshNode>{
+          1: MeshNode(
+            nodeNum: 1,
+            hardwareModel: 'Unknown',
+            lastHeard: DateTime.now(),
+          ),
+          2: MeshNode(
+            nodeNum: 2,
+            hardwareModel: null,
+            lastHeard: DateTime.now(),
+          ),
+          3: MeshNode(nodeNum: 3, hardwareModel: '', lastHeard: DateTime.now()),
+        };
+        engine.setAllNodes(nodes);
+
+        final binding = BindingSchema(
+          path: 'network.hardwareModelDistribution',
+        );
+        final data = engine.resolveBinding(binding) as Map<String, int>;
+
+        // All three should merge into the Unknown bucket
+        expect(data.length, 1);
+        expect(data[DistributionKeys.unknown], 3);
+      });
+
+      test('distribution with count below maxItems returns all entries', () {
+        final nodes = <int, MeshNode>{
+          1: MeshNode(
+            nodeNum: 1,
+            hardwareModel: 'A',
+            lastHeard: DateTime.now(),
+          ),
+          2: MeshNode(
+            nodeNum: 2,
+            hardwareModel: 'B',
+            lastHeard: DateTime.now(),
+          ),
+          3: MeshNode(
+            nodeNum: 3,
+            hardwareModel: 'C',
+            lastHeard: DateTime.now(),
+          ),
+        };
+        engine.setAllNodes(nodes);
+
+        final binding = BindingSchema(
+          path: 'network.hardwareModelDistribution',
+        );
+        final data = engine.resolveBinding(binding) as Map<String, int>;
+
+        expect(data.length, 3);
+        expect(data.containsKey(DistributionKeys.other), false);
+      });
     });
   });
 }

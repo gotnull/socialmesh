@@ -53,7 +53,7 @@ class TelemetrySensorType extends $pb.ProtobufEnum {
       TelemetrySensorType._(6, _omitEnumNames ? '' : 'BMP280');
 
   ///
-  ///  High accuracy temperature and humidity
+  ///  TODO - REMOVE High accuracy temperature and humidity
   static const TelemetrySensorType SHTC3 =
       TelemetrySensorType._(7, _omitEnumNames ? '' : 'SHTC3');
 
@@ -78,7 +78,7 @@ class TelemetrySensorType extends $pb.ProtobufEnum {
       TelemetrySensorType._(11, _omitEnumNames ? '' : 'QMC5883L');
 
   ///
-  ///  High accuracy temperature and humidity
+  ///  TODO - REMOVE High accuracy temperature and humidity
   static const TelemetrySensorType SHT31 =
       TelemetrySensorType._(12, _omitEnumNames ? '' : 'SHT31');
 
@@ -103,7 +103,7 @@ class TelemetrySensorType extends $pb.ProtobufEnum {
       TelemetrySensorType._(16, _omitEnumNames ? '' : 'RCWL9620');
 
   ///
-  ///  Sensirion High accuracy temperature and humidity
+  ///  TODO - REMOVE Sensirion High accuracy temperature and humidity
   static const TelemetrySensorType SHT4X =
       TelemetrySensorType._(17, _omitEnumNames ? '' : 'SHT4X');
 
@@ -253,7 +253,7 @@ class TelemetrySensorType extends $pb.ProtobufEnum {
       TelemetrySensorType._(46, _omitEnumNames ? '' : 'HDC1080');
 
   ///
-  ///  STH21 Temperature and R. Humidity sensor
+  ///  TODO - REMOVE STH21 Temperature and R. Humidity sensor
   static const TelemetrySensorType SHT21 =
       TelemetrySensorType._(47, _omitEnumNames ? '' : 'SHT21');
 
@@ -261,6 +261,16 @@ class TelemetrySensorType extends $pb.ProtobufEnum {
   ///  Sensirion STC31 CO2 sensor
   static const TelemetrySensorType STC31 =
       TelemetrySensorType._(48, _omitEnumNames ? '' : 'STC31');
+
+  ///
+  ///  SCD30 CO2, humidity, temperature sensor
+  static const TelemetrySensorType SCD30 =
+      TelemetrySensorType._(49, _omitEnumNames ? '' : 'SCD30');
+
+  ///
+  ///  SHT family of sensors for temperature and humidity
+  static const TelemetrySensorType SHTXX =
+      TelemetrySensorType._(50, _omitEnumNames ? '' : 'SHTXX');
 
   static const $core.List<TelemetrySensorType> values = <TelemetrySensorType>[
     SENSOR_UNSET,
@@ -312,10 +322,12 @@ class TelemetrySensorType extends $pb.ProtobufEnum {
     HDC1080,
     SHT21,
     STC31,
+    SCD30,
+    SHTXX,
   ];
 
   static final $core.List<TelemetrySensorType?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 48);
+      $pb.ProtobufEnum.$_initByValueList(values, 50);
   static TelemetrySensorType? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 

@@ -49,7 +49,7 @@ class DeviceShopService {
 
   /// Pick an image from gallery
   Future<File?> pickImage() async {
-    final result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFiles(
       type: FileType.image,
       allowMultiple: false,
     );
@@ -63,7 +63,7 @@ class DeviceShopService {
 
   /// Pick multiple images from gallery
   Future<List<File>> pickMultipleImages({int maxImages = 10}) async {
-    final result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFiles(
       type: FileType.image,
       allowMultiple: true,
     );
@@ -744,9 +744,16 @@ class DeviceShopService {
     if (snapshot.docs.isNotEmpty) {
       // Remove favorite
       await snapshot.docs.first.reference.delete();
-      await _productsCollection.doc(productId).update({
-        'favoriteCount': FieldValue.increment(-1),
-      });
+      try {
+        await _productsCollection.doc(productId).update({
+          'favoriteCount': FieldValue.increment(-1),
+        });
+      } catch (e) {
+        AppLogging.app(
+          '[DeviceShop] Failed to decrement favoriteCount for '
+          'product $productId: $e',
+        );
+      }
       return false;
     } else {
       // Add favorite
@@ -757,9 +764,16 @@ class DeviceShopService {
         addedAt: DateTime.now(),
       );
       await _favoritesCollection.add(favorite.toFirestore());
-      await _productsCollection.doc(productId).update({
-        'favoriteCount': FieldValue.increment(1),
-      });
+      try {
+        await _productsCollection.doc(productId).update({
+          'favoriteCount': FieldValue.increment(1),
+        });
+      } catch (e) {
+        AppLogging.app(
+          '[DeviceShop] Failed to increment favoriteCount for '
+          'product $productId: $e',
+        );
+      }
       return true;
     }
   }

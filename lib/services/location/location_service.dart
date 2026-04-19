@@ -2,8 +2,10 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:async';
 
-import '../../core/logging.dart';
+import 'package:flutter/foundation.dart' show protected;
 import 'package:geolocator/geolocator.dart';
+
+import '../../core/logging.dart';
 import '../protocol/protocol_service.dart';
 import 'phone_position_governor.dart';
 
@@ -32,8 +34,34 @@ class LocationService {
   Position? _lastPosition;
   bool _isRunning = false;
 
+  /// Consecutive GPS failure count for exponential backoff.
+  /// Reset to 0 on any successful position fix.
+  int _consecutiveFailures = 0;
+
+  /// Maximum number of consecutive failures before we stop attempting
+  /// GPS reads until a manual request or restart succeeds.
+  static const int maxConsecutiveFailures = 10;
+
+  /// Timer tick counter for backoff modulo calculation.
+  int _tickCount = 0;
+
   /// Whether periodic location updates are currently active.
   bool get isRunning => _isRunning;
+
+  /// Exposed for testing: how many consecutive GPS failures have occurred.
+  int get consecutiveFailures => _consecutiveFailures;
+
+  /// Reset failure counter. Called internally on successful GPS fix.
+  /// Exposed as protected for testable subclasses that override
+  /// [getCurrentPosition].
+  @protected
+  void resetConsecutiveFailures() => _consecutiveFailures = 0;
+
+  /// Increment failure counter. Called internally on GPS failure.
+  /// Exposed as protected for testable subclasses that override
+  /// [getCurrentPosition].
+  @protected
+  void incrementConsecutiveFailures() => _consecutiveFailures++;
 
   /// The governor instance, exposed for provider wiring and testing.
   PhonePositionGovernor get governor => _governor;
@@ -133,12 +161,16 @@ class LocationService {
       );
 
       _lastPosition = position;
+      resetConsecutiveFailures();
       AppLogging.debug(
         '📍 Got phone GPS position: ${position.latitude}, ${position.longitude}',
       );
       return position;
     } catch (e) {
-      AppLogging.nodes('Error getting location: $e');
+      incrementConsecutiveFailures();
+      AppLogging.nodes(
+        'Error getting location (failure $_consecutiveFailures): $e',
+      );
       return null;
     }
   }
@@ -200,6 +232,7 @@ class LocationService {
     _locationTimer?.cancel();
     _locationTimer = null;
     _isRunning = false;
+    _tickCount = 0;
     AppLogging.nodes('Stopped location updates');
   }
 
@@ -256,10 +289,42 @@ class LocationService {
   ///
   /// This is the single internal path for all publish attempts that need
   /// to read the phone GPS first. The governor enforces all gates.
+  ///
+  /// When GPS fails repeatedly, an exponential backoff skips timer ticks
+  /// to avoid waking the GPS radio every 30s when there is no fix
+  /// (e.g. deep indoors). Manual actions bypass the backoff so the user
+  /// can always force a retry.
   Future<PublishDecision> _governedTick(PositionPublishReason reason) async {
     // Quick gate: if sharing is disabled, skip GPS wake entirely.
     if (!(isLocationSharingEnabled?.call() ?? false)) {
       return PublishDecision.blockedDisabled;
+    }
+
+    // Exponential backoff for timer ticks after repeated GPS failures.
+    // Manual actions and lifecycle resume always attempt a fresh read so
+    // the user (or an app resume) can break out of the backoff cycle.
+    if (reason == PositionPublishReason.timerTick && _consecutiveFailures > 0) {
+      // Skip this tick unless it aligns with the backoff schedule.
+      // Backoff: skip 1, 2, 4, 8... ticks (capped at maxConsecutiveFailures).
+      // Example at 30s interval: after 3 failures, only attempt every 4th
+      // tick (120s); after 5 failures, every 16th tick (480s).
+      final skipCount = 1 << _consecutiveFailures.clamp(0, 6); // max 64 ticks
+      // Use a simple modulo on consecutive failures to determine skip.
+      // _consecutiveFailures doubles as both the backoff exponent and
+      // the tick counter since it only increments on actual GPS attempts.
+      if (_consecutiveFailures >= maxConsecutiveFailures) {
+        AppLogging.nodes(
+          'GPS backoff: skipping tick ($_consecutiveFailures failures, '
+          'max reached — use manual action to retry)',
+        );
+        return PublishDecision.blockedNoPosition;
+      }
+      // Simple check: let through every skipCount-th timer tick.
+      // We use _tickCount to avoid coupling to _consecutiveFailures.
+      _tickCount++;
+      if (_tickCount % skipCount != 0) {
+        return PublishDecision.blockedNoPosition;
+      }
     }
 
     try {

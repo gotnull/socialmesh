@@ -67,6 +67,7 @@ class GlassScaffold extends StatelessWidget {
     this.primary = true,
     this.sigmaOverride,
     this.resizeToAvoidBottomInset = true,
+    this.backgroundLayer,
   }) : body = null,
        hasScrollBody = false;
 
@@ -107,6 +108,7 @@ class GlassScaffold extends StatelessWidget {
     this.primary = true,
     this.sigmaOverride,
     this.resizeToAvoidBottomInset = true,
+    this.backgroundLayer,
   }) : slivers = const [];
 
   /// Title text for the app bar.
@@ -196,6 +198,11 @@ class GlassScaffold extends StatelessWidget {
   /// Whether the body should resize when the keyboard appears.
   final bool resizeToAvoidBottomInset;
 
+  /// An optional widget to display behind the scroll content.
+  /// Useful for ambient effects like the Elemental Atmosphere that
+  /// should render between the background color and the scroll content.
+  final Widget? backgroundLayer;
+
   /// Whether the physics disables scrolling entirely.
   bool get _isNonScrollable => physics is NeverScrollableScrollPhysics;
 
@@ -248,29 +255,58 @@ class GlassScaffold extends StatelessWidget {
       floatingActionButtonLocation: floatingActionButtonLocation,
       bottomNavigationBar: bottomNavigationBar,
       resizeToAvoidBottomInset: resizeToAvoidBottomInset,
-      body: CustomScrollView(
-        controller: controller,
-        physics: effectivePhysics,
-        primary: effectivePrimary,
-        slivers: [
-          _GlassSliverAppBarInternal(
-            title: effectiveTitle,
-            leading: leading,
-            actions: actions,
-            pinned: pinned,
-            floating: floating,
-            snap: snap,
-            centerTitle: centerTitle,
-            automaticallyImplyLeading: automaticallyImplyLeading,
-            expandedHeight: expandedHeight,
-            flexibleSpace: flexibleSpace,
-            bottom: bottom,
-            sigmaOverride: sigmaOverride,
-            isDark: isDark,
-          ),
-          ...effectiveSlivers,
-        ],
-      ),
+      body: backgroundLayer != null
+          ? Stack(
+              children: [
+                Positioned.fill(child: backgroundLayer!),
+                CustomScrollView(
+                  controller: controller,
+                  physics: effectivePhysics,
+                  primary: effectivePrimary,
+                  slivers: [
+                    _GlassSliverAppBarInternal(
+                      title: effectiveTitle,
+                      leading: leading,
+                      actions: actions,
+                      pinned: pinned,
+                      floating: floating,
+                      snap: snap,
+                      centerTitle: centerTitle,
+                      automaticallyImplyLeading: automaticallyImplyLeading,
+                      expandedHeight: expandedHeight,
+                      flexibleSpace: flexibleSpace,
+                      bottom: bottom,
+                      sigmaOverride: sigmaOverride,
+                      isDark: isDark,
+                    ),
+                    ...effectiveSlivers,
+                  ],
+                ),
+              ],
+            )
+          : CustomScrollView(
+              controller: controller,
+              physics: effectivePhysics,
+              primary: effectivePrimary,
+              slivers: [
+                _GlassSliverAppBarInternal(
+                  title: effectiveTitle,
+                  leading: leading,
+                  actions: actions,
+                  pinned: pinned,
+                  floating: floating,
+                  snap: snap,
+                  centerTitle: centerTitle,
+                  automaticallyImplyLeading: automaticallyImplyLeading,
+                  expandedHeight: expandedHeight,
+                  flexibleSpace: flexibleSpace,
+                  bottom: bottom,
+                  sigmaOverride: sigmaOverride,
+                  isDark: isDark,
+                ),
+                ...effectiveSlivers,
+              ],
+            ),
     );
   }
 
@@ -338,7 +374,14 @@ class GlassScaffold extends StatelessWidget {
           ),
         ),
       ),
-      body: body,
+      body: backgroundLayer != null
+          ? Stack(
+              children: [
+                Positioned.fill(child: backgroundLayer!),
+                body!,
+              ],
+            )
+          : body,
     );
   }
 }

@@ -20,6 +20,33 @@ import UIKit
       UNUserNotificationCenter.current().delegate = self
     }
     
+    // Native badge-reset channel.
+    // flutter_local_notifications' cancelAll() removes delivered notifications
+    // from the notification centre but does NOT reset
+    // UIApplication.applicationIconBadgeNumber. Dart calls clearBadge via this
+    // channel whenever the app comes to the foreground so the icon badge is
+    // cleared even when the badge was set by an APNs push payload.
+    if let controller = window?.rootViewController as? FlutterViewController {
+      let badgeChannel = FlutterMethodChannel(
+        name: "socialmesh/badge",
+        binaryMessenger: controller.binaryMessenger
+      )
+      badgeChannel.setMethodCallHandler { call, result in
+        if call.method == "clearBadge" {
+          if #available(iOS 16.0, *) {
+            UNUserNotificationCenter.current().setBadgeCount(0) { _ in
+              result(nil)
+            }
+          } else {
+            UIApplication.shared.applicationIconBadgeNumber = 0
+            result(nil)
+          }
+        } else {
+          result(FlutterMethodNotImplemented)
+        }
+      }
+    }
+    
     // Setup App Intents manager for Shortcuts integration
     if #available(iOS 16.0, *) {
       if let controller = window?.rootViewController as? FlutterViewController {

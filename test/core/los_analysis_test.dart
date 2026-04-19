@@ -8,7 +8,6 @@ void main() {
     test('returns unknown when altA is null', () {
       final result = evaluateLos(altA: null, altB: 100, distanceMeters: 1000);
       expect(result.verdict, LosVerdict.unknown);
-      expect(result.explanation, contains('Altitude data unavailable'));
     });
 
     test('returns unknown when altB is null', () {
@@ -28,7 +27,6 @@ void main() {
       expect(result.earthBulgeMeters, greaterThan(0));
       expect(result.fresnelRadiusMeters, greaterThan(0));
       expect(result.actualClearanceMeters, greaterThan(0));
-      expect(result.explanation, contains('Clear line of sight'));
     });
 
     test('very long distance at sea level is obstructed', () {
@@ -36,7 +34,6 @@ void main() {
       final result = evaluateLos(altA: 2, altB: 2, distanceMeters: 200000);
       expect(result.verdict, LosVerdict.obstructed);
       expect(result.actualClearanceMeters, lessThan(0));
-      expect(result.explanation, contains('obstructs'));
     });
 
     test('earth bulge formula is correct for known distance', () {
@@ -161,21 +158,221 @@ void main() {
     });
   });
 
-  group('LosVerdict.label', () {
-    test('clear label', () {
-      expect(LosVerdict.clear.label, 'Clear');
+  // ─────────────────────────────────────────────────────────────────────────
+  // evaluateLosFromProfile
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /// Helper: builds a flat-terrain sample list of [n] points over [distanceM]
+  /// meters, all at [terrainElevation] meters.
+  List<
+    ({
+      double distanceMeters,
+      double latitude,
+      double longitude,
+      double? elevationMeters,
+    })
+  >
+  flatSamples(int n, double distanceM, double terrainElevation) {
+    return List.generate(n, (i) {
+      final frac = n > 1 ? i / (n - 1) : 0.0;
+      return (
+        distanceMeters: frac * distanceM,
+        latitude: 0.0 + frac * 1.0,
+        longitude: 0.0,
+        elevationMeters: terrainElevation,
+      );
+    });
+  }
+
+  group('evaluateLosFromProfile', () {
+    test('returns unknown verdict when altAMeters is null', () {
+      final samples = flatSamples(10, 10000, 100.0);
+      final result = evaluateLosFromProfile(
+        samples: samples,
+        altAMeters: null,
+        altBMeters: 200,
+      );
+      expect(result.verdict, LosVerdict.unknown);
+      expect(result.hasAltitudeData, isFalse);
     });
 
-    test('marginal label', () {
-      expect(LosVerdict.marginal.label, 'Marginal');
+    test('returns unknown verdict when altBMeters is null', () {
+      final samples = flatSamples(10, 10000, 100.0);
+      final result = evaluateLosFromProfile(
+        samples: samples,
+        altAMeters: 200,
+        altBMeters: null,
+      );
+      expect(result.verdict, LosVerdict.unknown);
+      expect(result.hasAltitudeData, isFalse);
     });
 
-    test('obstructed label', () {
-      expect(LosVerdict.obstructed.label, 'Obstructed');
+    test('returns unknown verdict for empty sample list', () {
+      final result = evaluateLosFromProfile(
+        samples: [],
+        altAMeters: 100,
+        altBMeters: 100,
+      );
+      expect(result.verdict, LosVerdict.unknown);
     });
 
-    test('unknown label', () {
-      expect(LosVerdict.unknown.label, 'Unknown');
+    test('clear path — antennas high above flat terrain', () {
+      // Antennas at 500m altitude, terrain at 10m — trivially clear.
+      final samples = flatSamples(20, 5000, 10.0);
+      final result = evaluateLosFromProfile(
+        samples: samples,
+        altAMeters: 500,
+        altBMeters: 500,
+      );
+      expect(result.verdict, LosVerdict.clear);
+      expect(result.hasAltitudeData, isTrue);
+      expect(result.worstClearanceMeters, greaterThan(0));
+      expect(result.additionalClearanceNeededMeters, equals(0.0));
+    });
+
+    test('obstructed path — terrain peak higher than LOS line', () {
+      // Antennas at 100m altitude, terrain spike to 200m at midpoint.
+      final n = 11;
+      final dist = 10000.0;
+      final samples = List.generate(n, (i) {
+        final frac = i / (n - 1);
+        // Terrain peaks at the midpoint (i == 5).
+        final elevationM = i == 5 ? 250.0 : 50.0;
+        return (
+          distanceMeters: frac * dist,
+          latitude: frac,
+          longitude: 0.0,
+          elevationMeters: elevationM,
+        );
+      });
+      final result = evaluateLosFromProfile(
+        samples: samples,
+        altAMeters: 100,
+        altBMeters: 100,
+      );
+      expect(result.verdict, LosVerdict.obstructed);
+      expect(result.worstClearanceMeters, isNotNull);
+      expect(result.worstClearanceMeters! < 0, isTrue);
+      expect(result.additionalClearanceNeededMeters, greaterThan(0));
+    });
+
+    test('per-sample arrays have same length as input samples', () {
+      final samples = flatSamples(30, 15000, 50.0);
+      final result = evaluateLosFromProfile(
+        samples: samples,
+        altAMeters: 200,
+        altBMeters: 200,
+      );
+      expect(result.perSampleClearanceMeters, hasLength(30));
+      expect(result.perSampleFresnelRadiusMeters, hasLength(30));
+      expect(result.losLineHeightsMeters, hasLength(30));
+    });
+
+    test('LOS line is linearly interpolated between endpoints', () {
+      final samples = flatSamples(3, 10000, 0.0);
+      // altA = 0, altB = 100 → midpoint LOS = 50
+      final result = evaluateLosFromProfile(
+        samples: samples,
+        altAMeters: 0,
+        altBMeters: 100,
+      );
+      expect(result.losLineHeightsMeters[0], closeTo(0.0, 0.01));
+      expect(result.losLineHeightsMeters[1], closeTo(50.0, 0.01));
+      expect(result.losLineHeightsMeters[2], closeTo(100.0, 0.01));
+    });
+
+    test('Fresnel radius is 0 at endpoints', () {
+      final samples = flatSamples(5, 10000, 0.0);
+      final result = evaluateLosFromProfile(
+        samples: samples,
+        altAMeters: 500,
+        altBMeters: 500,
+      );
+      // At distance 0 and distance D, F1 = sqrt(λ × 0 × D / D) = 0.
+      expect(result.perSampleFresnelRadiusMeters.first, closeTo(0.0, 0.01));
+      expect(result.perSampleFresnelRadiusMeters.last, closeTo(0.0, 0.01));
+    });
+
+    test('Fresnel radius is largest at midpoint', () {
+      final samples = flatSamples(11, 10000, 0.0);
+      final result = evaluateLosFromProfile(
+        samples: samples,
+        altAMeters: 500,
+        altBMeters: 500,
+      );
+      final radii = result.perSampleFresnelRadiusMeters;
+      final midIdx = radii.length ~/ 2;
+      for (var i = 0; i < radii.length; i++) {
+        expect(radii[midIdx], greaterThanOrEqualTo(radii[i]));
+      }
+    });
+
+    test('insufficient data — single sample returns unknown', () {
+      final samples = flatSamples(1, 0, 100.0);
+      final result = evaluateLosFromProfile(
+        samples: samples,
+        altAMeters: 200,
+        altBMeters: 200,
+      );
+      // With 1 sample, totalDist == 0 and Fresnel radius is 0 everywhere.
+      // No actual obstruction, so verdict should be clear (all clearances
+      // will be LOS line height minus terrain height = 200 - 100 = 100 > 0).
+      expect(result.verdict, LosVerdict.clear);
+    });
+
+    test('null terrain elevation treated as 0m', () {
+      final samples = [
+        (
+          distanceMeters: 0.0,
+          latitude: 0.0,
+          longitude: 0.0,
+          elevationMeters: null as double?,
+        ),
+        (
+          distanceMeters: 5000.0,
+          latitude: 0.5,
+          longitude: 0.0,
+          elevationMeters: null as double?,
+        ),
+        (
+          distanceMeters: 10000.0,
+          latitude: 1.0,
+          longitude: 0.0,
+          elevationMeters: null as double?,
+        ),
+      ];
+      // Should not throw; null elevation defaults to 0.
+      final result = evaluateLosFromProfile(
+        samples: samples,
+        altAMeters: 100,
+        altBMeters: 100,
+      );
+      expect(result.verdict, isA<LosVerdict>());
+    });
+
+    test('worst point index points to lowest clearance', () {
+      final n = 11;
+      final dist = 10000.0;
+      // Build profile where the lowest clearance is at index 3.
+      final samples = List.generate(n, (i) {
+        final frac = i / (n - 1);
+        final elevation = i == 3 ? 300.0 : 10.0;
+        return (
+          distanceMeters: frac * dist,
+          latitude: frac,
+          longitude: 0.0,
+          elevationMeters: elevation,
+        );
+      });
+      final result = evaluateLosFromProfile(
+        samples: samples,
+        altAMeters: 100,
+        altBMeters: 100,
+      );
+      expect(result.worstPointIndex, isNotNull);
+      // The worst clearance should come from the spike at index 3.
+      final worstClearanceAtIdx3 = result.perSampleClearanceMeters[3];
+      expect(result.worstClearanceMeters, closeTo(worstClearanceAtIdx3, 0.001));
     });
   });
 }

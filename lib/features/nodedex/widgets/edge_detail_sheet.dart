@@ -24,6 +24,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../utils/time_format.dart';
+
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/logging.dart';
 import '../../../core/theme.dart';
@@ -48,6 +50,13 @@ class EdgeDetailSheet extends ConsumerWidget {
   /// Node number of the second endpoint.
   final int toNodeNum;
 
+  /// Optional relationship override from the row that opened the sheet.
+  ///
+  /// When present, this keeps the sheet aligned with the exact co-seen
+  /// evidence already shown in the UI instead of falling back to the raw
+  /// historical edge map.
+  final CoSeenRelationship? relationship;
+
   /// Callback when the user taps an endpoint to navigate to its detail.
   final ValueChanged<int>? onOpenNodeDetail;
 
@@ -55,6 +64,7 @@ class EdgeDetailSheet extends ConsumerWidget {
     super.key,
     required this.fromNodeNum,
     required this.toNodeNum,
+    this.relationship,
     this.onOpenNodeDetail,
   });
 
@@ -63,6 +73,7 @@ class EdgeDetailSheet extends ConsumerWidget {
     required BuildContext context,
     required int fromNodeNum,
     required int toNodeNum,
+    CoSeenRelationship? relationship,
     ValueChanged<int>? onOpenNodeDetail,
   }) {
     final fromHex =
@@ -75,6 +86,7 @@ class EdgeDetailSheet extends ConsumerWidget {
       child: EdgeDetailSheet(
         fromNodeNum: fromNodeNum,
         toNodeNum: toNodeNum,
+        relationship: relationship,
         onOpenNodeDetail: onOpenNodeDetail,
       ),
     );
@@ -90,10 +102,12 @@ class EdgeDetailSheet extends ConsumerWidget {
 
     // Resolve the relationship from both directions (pick the one
     // that exists — they should be symmetric but we handle edge cases).
-    final relationship =
-        fromEntry?.coSeenNodes[toNodeNum] ?? toEntry?.coSeenNodes[fromNodeNum];
+    final resolvedRelationship =
+        relationship ??
+        fromEntry?.coSeenNodes[toNodeNum] ??
+        toEntry?.coSeenNodes[fromNodeNum];
 
-    if (relationship == null) {
+    if (resolvedRelationship == null) {
       AppLogging.nodeDex(
         'Edge detail: no relationship found between $fromNodeNum and $toNodeNum',
       );
@@ -101,9 +115,10 @@ class EdgeDetailSheet extends ConsumerWidget {
     }
 
     AppLogging.nodeDex(
-      'Edge detail loaded: co-seen ${relationship.count} times, '
-      'messages: ${relationship.messageCount}, '
-      'first: ${relationship.firstSeen}, last: ${relationship.lastSeen}',
+      'Edge detail loaded: co-seen ${resolvedRelationship.count} times, '
+      'messages: ${resolvedRelationship.messageCount}, '
+      'first: ${resolvedRelationship.firstSeen}, '
+      'last: ${resolvedRelationship.lastSeen}',
     );
 
     final fromSigil = fromEntry?.sigil ?? SigilGenerator.generate(fromNodeNum);
@@ -152,22 +167,22 @@ class EdgeDetailSheet extends ConsumerWidget {
         const SizedBox(height: AppTheme.spacing20),
 
         // Strength indicator
-        _buildStrengthIndicator(context, relationship, blendedColor),
+        _buildStrengthIndicator(context, resolvedRelationship, blendedColor),
 
         const SizedBox(height: AppTheme.spacing16),
 
         // Stats grid
-        _buildStatsGrid(context, relationship, blendedColor),
+        _buildStatsGrid(context, resolvedRelationship, blendedColor),
 
         const SizedBox(height: AppTheme.spacing16),
 
         // Timeline
-        _buildTimeline(context, relationship, blendedColor),
+        _buildTimeline(context, resolvedRelationship, blendedColor),
 
         // Message activity section (if any messages)
-        if (relationship.messageCount > 0) ...[
+        if (resolvedRelationship.messageCount > 0) ...[
           const SizedBox(height: AppTheme.spacing16),
-          _buildMessageActivity(context, relationship, blendedColor),
+          _buildMessageActivity(context, resolvedRelationship, blendedColor),
         ],
 
         const SizedBox(height: AppTheme.spacing8),
@@ -505,7 +520,7 @@ class EdgeDetailSheet extends ConsumerWidget {
     CoSeenRelationship relationship,
     Color accent,
   ) {
-    final dateFormat = DateFormat('d MMM yyyy, HH:mm');
+    final dateFormat = AppTimeFormat.withDatePrefix(context, 'd MMM yyyy,');
     final isDark = context.isDarkMode;
 
     return Column(

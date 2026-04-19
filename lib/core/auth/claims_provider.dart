@@ -118,10 +118,19 @@ class ClaimsNotifier extends Notifier<ClaimsState> {
 
   /// Load cached claims from secure storage, then refresh from JWT.
   Future<void> _loadCachedAndRefresh(User user) async {
-    // Load from cache first for instant availability
-    final cached = await _cache.read();
-    if (cached != null) {
-      _updateState(cached);
+    // Load from cache first for instant availability.
+    // Wrapped in try-catch because this is called fire-and-forget from
+    // build() — an unhandled exception here becomes an unhandled future
+    // error that crashes the app. ClaimsCache.read() already handles
+    // PlatformException (e.g. iOS Keychain -25308 when device is locked),
+    // but we defend in depth against any unexpected storage failure.
+    try {
+      final cached = await _cache.read();
+      if (cached != null) {
+        _updateState(cached);
+      }
+    } catch (e) {
+      AppLogging.claims('Claims: failed to load cached claims ($e)');
     }
 
     // Then refresh from JWT

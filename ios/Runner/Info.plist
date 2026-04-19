@@ -126,11 +126,16 @@
 		<key>NSBonjourServices</key>
 		<array>
 			<string>_meshtastic._tcp</string>
+			<string>_socialmesh-sync._tcp</string>
 		</array>
 		<key>NSCameraUsageDescription</key>
 		<string>Socialmesh uses the camera for QR code scanning and AR Node Radar visualization</string>
+		<key>NSMicrophoneUsageDescription</key>
+		<string>Socialmesh uses the microphone to record voice messages that are compressed and sent
+			over the mesh radio network</string>
 		<key>NSLocalNetworkUsageDescription</key>
-		<string>Socialmesh uses local networking to connect to WiFi-based Meshtastic nodes</string>
+		<string>Socialmesh uses local networking to connect to WiFi-based Meshtastic nodes and sync
+			mesh feed posts with nearby peers</string>
 		<key>NSLocationUsageDescription</key>
 		<string>Socialmesh uses your location to display on the mesh map and share GPS coordinates
 			with mesh nodes</string>
@@ -146,10 +151,16 @@
 		<true />
 		<key>UIApplicationSupportsIndirectInputEvents</key>
 		<true />
+		<key>BGTaskSchedulerPermittedIdentifiers</key>
+		<array>
+			<string>com.transistorsoft.fetch</string>
+			<string>com.pravera.flutter_foreground_task.refresh</string>
+		</array>
 		<key>UIBackgroundModes</key>
 		<array>
 			<string>bluetooth-central</string>
 			<string>fetch</string>
+			<string>processing</string>
 			<string>remote-notification</string>
 		</array>
 		<key>UILaunchStoryboardName</key>

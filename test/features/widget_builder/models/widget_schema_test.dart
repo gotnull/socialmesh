@@ -417,5 +417,51 @@ void main() {
 
       expect(upgraded.schemaVersion, 2);
     });
+
+    test('ChartType.distribution serializes and deserializes', () {
+      final element = ElementSchema(
+        type: ElementType.chart,
+        chartType: ChartType.distribution,
+        binding: const BindingSchema(path: 'network.hardwareModelDistribution'),
+      );
+
+      final json = element.toJson();
+      expect(json['chartType'], 'distribution');
+
+      final restored = ElementSchema.fromJson(json);
+      expect(restored.chartType, ChartType.distribution);
+      expect(restored.binding?.path, 'network.hardwareModelDistribution');
+    });
+
+    test('distribution widget schema round-trips through JSON', () {
+      final schema = WidgetSchema(
+        name: 'Hardware Distribution',
+        tags: ['distribution'],
+        root: ElementSchema(
+          type: ElementType.column,
+          children: [
+            ElementSchema(
+              type: ElementType.chart,
+              chartType: ChartType.distribution,
+              binding: const BindingSchema(
+                path: 'network.hardwareModelDistribution',
+              ),
+              style: const StyleSchema(height: 200),
+            ),
+          ],
+        ),
+      );
+
+      final json = schema.toJson();
+      final restored = WidgetSchema.fromJson(json);
+
+      expect(restored.name, 'Hardware Distribution');
+      expect(restored.tags, ['distribution']);
+      expect(restored.root.children.first.chartType, ChartType.distribution);
+      expect(
+        restored.root.children.first.binding?.path,
+        'network.hardwareModelDistribution',
+      );
+    });
   });
 }

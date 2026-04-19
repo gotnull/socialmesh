@@ -14,6 +14,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/los_analysis.dart';
 import '../../core/map_config.dart';
+import '../../core/safe_lat_lng.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
@@ -83,6 +84,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
   }
 
   void _animatedMove(LatLng destLocation, double destZoom, {double? rotation}) {
+    if (!isFiniteLatLng(destLocation) || !destZoom.isFinite) return;
     _animationController?.dispose();
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 500),
@@ -727,87 +729,92 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                     centerMarker: Duration.zero,
                     spiderfy: Duration(milliseconds: 200),
                   ),
-                  markers: displayNodes.map((node) {
-                    final isSelected = _selectedNode?.nodeNum == node.nodeNum;
-                    // Use larger tap target (44px) but smaller visual marker
-                    const tapTargetSize = 44.0;
-                    final visualSize = isSelected ? 24.0 : 14.0;
-                    return Marker(
-                      point: LatLng(
-                        node.latitudeDecimal,
-                        node.longitudeDecimal,
-                      ),
-                      width: tapTargetSize,
-                      height: tapTargetSize,
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onTap: () {
-                          HapticFeedback.selectionClick();
-                          if (_measureMode) {
-                            _handleMeasureNodeTap(node);
-                            return;
-                          }
-                          setState(() {
-                            _isLoadingNodeInfo = true;
-                            _selectedNode = node;
-                          });
-                          Future.delayed(const Duration(milliseconds: 150), () {
-                            if (mounted) {
-                              setState(() => _isLoadingNodeInfo = false);
+                  markers: finiteMarkers(
+                    displayNodes.map((node) {
+                      final isSelected = _selectedNode?.nodeNum == node.nodeNum;
+                      // Use larger tap target (44px) but smaller visual marker
+                      const tapTargetSize = 44.0;
+                      final visualSize = isSelected ? 24.0 : 14.0;
+                      return Marker(
+                        point: LatLng(
+                          node.latitudeDecimal,
+                          node.longitudeDecimal,
+                        ),
+                        width: tapTargetSize,
+                        height: tapTargetSize,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            if (_measureMode) {
+                              _handleMeasureNodeTap(node);
+                              return;
                             }
-                          });
-                        },
-                        onLongPress: () {
-                          HapticFeedback.heavyImpact();
-                          setState(() {
-                            _measureMode = true;
-                            _measureStart = LatLng(
-                              node.latitudeDecimal,
-                              node.longitudeDecimal,
+                            setState(() {
+                              _isLoadingNodeInfo = true;
+                              _selectedNode = node;
+                            });
+                            Future.delayed(
+                              const Duration(milliseconds: 150),
+                              () {
+                                if (mounted) {
+                                  setState(() => _isLoadingNodeInfo = false);
+                                }
+                              },
                             );
-                            _measureEnd = null;
-                            _measureNodeA = node;
-                            _measureNodeB = null;
-                            _selectedNode = null;
-                            _isLoadingNodeInfo = false;
-                          });
-                        },
-                        child: Center(
-                          child: Container(
-                            width: visualSize,
-                            height: visualSize,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: isSelected
-                                  ? accentColor
-                                  : node.isRecentlySeen
-                                  ? accentColor.withValues(alpha: 0.8)
-                                  : SemanticColors.disabled.withValues(
-                                      alpha: 0.5,
-                                    ),
-                              border: Border.all(
+                          },
+                          onLongPress: () {
+                            HapticFeedback.heavyImpact();
+                            setState(() {
+                              _measureMode = true;
+                              _measureStart = LatLng(
+                                node.latitudeDecimal,
+                                node.longitudeDecimal,
+                              );
+                              _measureEnd = null;
+                              _measureNodeA = node;
+                              _measureNodeB = null;
+                              _selectedNode = null;
+                              _isLoadingNodeInfo = false;
+                            });
+                          },
+                          child: Center(
+                            child: Container(
+                              width: visualSize,
+                              height: visualSize,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
                                 color: isSelected
-                                    ? Colors.white
-                                    : Colors.white.withValues(alpha: 0.6),
-                                width: isSelected ? 2 : 1,
-                              ),
-                              boxShadow: isSelected
-                                  ? [
-                                      BoxShadow(
-                                        color: accentColor.withValues(
-                                          alpha: 0.5,
-                                        ),
-                                        blurRadius: 8,
-                                        spreadRadius: 2,
+                                    ? accentColor
+                                    : node.isRecentlySeen
+                                    ? accentColor.withValues(alpha: 0.8)
+                                    : SemanticColors.disabled.withValues(
+                                        alpha: 0.5,
                                       ),
-                                    ]
-                                  : null,
+                                border: Border.all(
+                                  color: isSelected
+                                      ? Colors.white
+                                      : Colors.white.withValues(alpha: 0.6),
+                                  width: isSelected ? 2 : 1,
+                                ),
+                                boxShadow: isSelected
+                                    ? [
+                                        BoxShadow(
+                                          color: accentColor.withValues(
+                                            alpha: 0.5,
+                                          ),
+                                          blurRadius: 8,
+                                          spreadRadius: 2,
+                                        ),
+                                      ]
+                                    : null,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    );
-                  }).toList(),
+                      );
+                    }),
+                  ),
                   builder: (context, markers) {
                     // Cluster marker builder
                     final count = markers.length;
@@ -860,9 +867,9 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                   ],
                 ),
               // Measurement markers
-              if (_measureStart != null)
+              if (_measureStart != null && isFiniteLatLng(_measureStart))
                 MarkerLayer(
-                  markers: [
+                  markers: finiteMarkers([
                     Marker(
                       point: _measureStart!,
                       width: 24,
@@ -908,7 +915,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                           ),
                         ),
                       ),
-                  ],
+                  ]),
                 ),
             ],
           ),
@@ -2676,7 +2683,12 @@ class _WorldLosResultPanel extends StatelessWidget {
               Icon(verdictIcon, size: 16, color: verdictColor),
               const SizedBox(width: AppTheme.spacing4),
               Text(
-                context.l10n.worldMeshLosVerdict(result.verdict.label),
+                context.l10n.worldMeshLosVerdict(switch (result.verdict) {
+                  LosVerdict.clear => context.l10n.losVerdictClear,
+                  LosVerdict.marginal => context.l10n.losVerdictMarginal,
+                  LosVerdict.obstructed => context.l10n.losVerdictObstructed,
+                  LosVerdict.unknown => context.l10n.losVerdictUnknown,
+                }),
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -2694,10 +2706,19 @@ class _WorldLosResultPanel extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppTheme.spacing4),
-          Text(
-            result.explanation,
-            style: TextStyle(fontSize: 11, color: context.textSecondary),
-          ),
+          Text(switch (result.verdict) {
+            LosVerdict.unknown => context.l10n.losExplanationNoAltitude,
+            LosVerdict.obstructed => context.l10n.losExplanationObstructed(
+              (-result.actualClearanceMeters).toStringAsFixed(0),
+            ),
+            LosVerdict.clear => context.l10n.losExplanationClear(
+              result.actualClearanceMeters.toStringAsFixed(0),
+            ),
+            LosVerdict.marginal => context.l10n.losExplanationMarginal(
+              result.actualClearanceMeters.toStringAsFixed(0),
+              result.requiredClearanceMeters.toStringAsFixed(0),
+            ),
+          }, style: TextStyle(fontSize: 11, color: context.textSecondary)),
         ],
       ),
     );

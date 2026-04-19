@@ -101,7 +101,7 @@ class _SignalComposerState extends ConsumerState<SignalComposer>
 
   Future<void> _pickFile() async {
     final l10n = context.l10n;
-    final result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFiles(
       type: FileType.any,
       withData: true,
     );

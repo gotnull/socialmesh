@@ -13,6 +13,8 @@ import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/animations.dart';
+import '../../utils/validation.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/bottom_action_bar.dart';
 import '../../core/widgets/branded_qr_code.dart';
 import '../../core/widgets/glass_scaffold.dart';
@@ -239,18 +241,114 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
 
   void _nextStep() {
     if (_currentStep < _totalSteps - 1) {
-      // Regenerate key when privacy level changes
-      if (_currentStep == 1) {
-        _generateKey();
+      // Warn about default key when advancing from privacy step with "Shared"
+      if (_currentStep == 1 && _privacyLevel == PrivacyLevel.shared) {
+        _showDefaultKeyWarning();
+        return;
       }
-      setState(() {
-        _currentStep++;
-      });
-      _pageController.nextPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
+      _proceedToNextStep();
     }
+  }
+
+  void _proceedToNextStep() {
+    // Regenerate key when privacy level changes
+    if (_currentStep == 1) {
+      _generateKey();
+    }
+    setState(() {
+      _currentStep++;
+    });
+    _pageController.nextPage(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  void _showDefaultKeyWarning() {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    AppBottomSheet.show(
+      context: context,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: AppTheme.spacing16),
+          Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: AppTheme.warningYellow.withAlpha(51),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
+                ),
+                child: const Icon(
+                  Icons.warning_amber_rounded,
+                  color: AppTheme.warningYellow,
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing16),
+              Expanded(
+                child: Text(
+                  l10n.channelWizardDefaultKeyWarningTitle,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: context.textPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spacing20),
+          Text(
+            l10n.channelWizardDefaultKeyWarningBody,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: context.textSecondary,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing24),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: () {
+                Navigator.pop(context);
+                setState(() {
+                  _privacyLevel = PrivacyLevel.private;
+                });
+                _proceedToNextStep();
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: AppTheme.successGreen,
+                padding: const EdgeInsets.symmetric(
+                  vertical: AppTheme.spacing16,
+                ),
+              ),
+              child: Text(l10n.channelWizardDefaultKeyUpgrade),
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _proceedToNextStep();
+              },
+              style: OutlinedButton.styleFrom(
+                foregroundColor: context.textSecondary,
+                side: BorderSide(color: context.border),
+                padding: const EdgeInsets.symmetric(
+                  vertical: AppTheme.spacing16,
+                ),
+              ),
+              child: Text(l10n.channelWizardDefaultKeyKeep),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _previousStep() {
@@ -568,9 +666,9 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
           TextField(
             controller: _nameController,
             style: TextStyle(color: context.textPrimary),
-            maxLength: 12,
+            maxLength: maxChannelNameLength,
             inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
+              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9_\-]')),
             ],
             decoration: InputDecoration(
               labelText: context.l10n.channelWizardNameLabel,

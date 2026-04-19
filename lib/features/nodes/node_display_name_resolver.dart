@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
+import '../../utils/text_sanitizer.dart';
 
 /// Centralized node display name resolution.
 ///
@@ -120,7 +121,7 @@ class NodeDisplayNameResolver {
 
   static String? _normalize(String? value) {
     if (value == null) return null;
-    final trimmed = value.trim();
+    final trimmed = sanitizeExternalText(value).trim();
     return trimmed.isEmpty ? null : trimmed;
   }
 

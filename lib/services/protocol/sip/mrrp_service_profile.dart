@@ -78,6 +78,13 @@ class MrrpServiceProfile implements MrrpServiceHandler {
   final ProfileConfigProvider _configProvider;
   final PeerIdentityChecker? _identityChecker;
 
+  /// Whether profile sharing is enabled.
+  ///
+  /// When `false` (default), all profile requests are rejected with
+  /// FORBIDDEN. Wired from the mesh privacy "profile sharing" toggle
+  /// via the provider layer.
+  bool isProfileSharingEnabled = false;
+
   MrrpServiceProfile({
     required ProfileConfigProvider configProvider,
     PeerIdentityChecker? identityChecker,
@@ -96,6 +103,15 @@ class MrrpServiceProfile implements MrrpServiceHandler {
 
   @override
   Future<MrrpFrame> handleRequest(MrrpFrame request, int senderNodeId) async {
+    // Privacy gate: reject all profile requests when profile sharing is off.
+    if (!isProfileSharingEnabled) {
+      AppLogging.mrrp(
+        'MRRP_SERVICE: profile.v1 request rejected — '
+        'profile sharing disabled', // lint-allow: hardcoded-string
+      );
+      return _buildError(request, MrrpStatusCode.unauthorized);
+    }
+
     switch (request.actionId) {
       case ProfileAction.getSummary:
         return _handleGetSummary(request);

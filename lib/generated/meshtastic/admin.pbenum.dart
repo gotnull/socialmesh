@@ -210,6 +210,11 @@ class AdminMessage_ModuleConfigType extends $pb.ProtobufEnum {
       AdminMessage_ModuleConfigType._(
           14, _omitEnumNames ? '' : 'TRAFFICMANAGEMENT_CONFIG');
 
+  ///
+  ///  TAK module config
+  static const AdminMessage_ModuleConfigType TAK_CONFIG =
+      AdminMessage_ModuleConfigType._(15, _omitEnumNames ? '' : 'TAK_CONFIG');
+
   static const $core.List<AdminMessage_ModuleConfigType> values =
       <AdminMessage_ModuleConfigType>[
     MQTT_CONFIG,
@@ -227,10 +232,11 @@ class AdminMessage_ModuleConfigType extends $pb.ProtobufEnum {
     PAXCOUNTER_CONFIG,
     STATUSMESSAGE_CONFIG,
     TRAFFICMANAGEMENT_CONFIG,
+    TAK_CONFIG,
   ];
 
   static final $core.List<AdminMessage_ModuleConfigType?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 14);
+      $pb.ProtobufEnum.$_initByValueList(values, 15);
   static AdminMessage_ModuleConfigType? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 

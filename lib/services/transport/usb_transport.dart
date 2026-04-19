@@ -193,6 +193,11 @@ class UsbTransport implements DeviceTransport {
   }
 
   @override
+  Future<void> refreshNotifications() async {
+    // No-op for USB. BLE-only concept.
+  }
+
+  @override
   Future<void> pollOnce() async {
     // USB serial uses continuous stream, no polling needed
   }

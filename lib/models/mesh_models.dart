@@ -3,13 +3,16 @@
 import 'package:uuid/uuid.dart';
 import 'presence_confidence.dart';
 import '../features/nodes/node_display_name_resolver.dart';
+import '../utils/text_sanitizer.dart';
 
 /// Message status enum
 enum MessageStatus {
   pending, // Message being sent
-  sent, // Message sent to device
-  delivered, // Message delivered (acked)
-  failed, // Failed to send
+  sent, // Message sent to radio — awaiting confirmation
+  delivered, // Message confirmed (ACK received)
+  failed, // Terminal send failure (routing error, PKI, etc.)
+  unconfirmed, // Sent but no ACK within the timeout window
+  retrying, // Auto-retry in progress
 }
 
 /// Routing error codes from Meshtastic protocol
@@ -116,6 +119,23 @@ class Message {
   final int? packetId; // Meshtastic packet ID for tracking delivery
   final MessageSource source; // Where the message originated from
 
+  // --- Retry / confirmation tracking ---
+
+  /// When this message was first dispatched to the radio (epoch ms).
+  /// Set when status transitions to [MessageStatus.sent].  Null for
+  /// channel/broadcast messages (they never get ACKs) and for legacy
+  /// persisted messages created before this feature was added.
+  final DateTime? sentAt;
+
+  /// Timestamp of the most recent resend attempt.
+  final DateTime? lastAttemptAt;
+
+  /// Number of resend attempts made (manual + auto-retry).
+  final int retryCount;
+
+  /// Whether bounded auto-retry is enabled for this message.
+  final bool autoRetryEnabled;
+
   /// Meshtastic replyId — the packet ID of the message this is replying to.
   /// Used for tapback reactions and threaded replies.
   final int? replyId;
@@ -174,6 +194,10 @@ class Message {
     this.senderLongName,
     this.senderShortName,
     this.senderAvatarColor,
+    this.sentAt,
+    this.lastAttemptAt,
+    this.retryCount = 0,
+    this.autoRetryEnabled = false,
   }) : id = id ?? const Uuid().v4(),
        timestamp = timestamp ?? DateTime.now();
 
@@ -202,6 +226,12 @@ class Message {
     String? senderLongName,
     String? senderShortName,
     int? senderAvatarColor,
+    DateTime? sentAt,
+    bool clearSentAt = false,
+    DateTime? lastAttemptAt,
+    bool clearLastAttemptAt = false,
+    int? retryCount,
+    bool? autoRetryEnabled,
   }) {
     return Message(
       id: id ?? this.id,
@@ -228,16 +258,22 @@ class Message {
       senderLongName: senderLongName ?? this.senderLongName,
       senderShortName: senderShortName ?? this.senderShortName,
       senderAvatarColor: senderAvatarColor ?? this.senderAvatarColor,
+      sentAt: clearSentAt ? null : sentAt ?? this.sentAt,
+      lastAttemptAt: clearLastAttemptAt
+          ? null
+          : lastAttemptAt ?? this.lastAttemptAt,
+      retryCount: retryCount ?? this.retryCount,
+      autoRetryEnabled: autoRetryEnabled ?? this.autoRetryEnabled,
     );
   }
 
   /// Get the sender's display name from cached info or fallback to node number
   String get senderDisplayName {
     if (senderLongName != null && senderLongName!.isNotEmpty) {
-      return senderLongName!;
+      return sanitizeExternalText(senderLongName!);
     }
     if (senderShortName != null && senderShortName!.isNotEmpty) {
-      return senderShortName!;
+      return sanitizeExternalText(senderShortName!);
     }
     return NodeDisplayNameResolver.defaultName(from);
   }
@@ -245,19 +281,54 @@ class Message {
   /// Get the sender's avatar name from cached info or fallback to hex ID
   String get senderAvatarName {
     if (senderShortName != null && senderShortName!.isNotEmpty) {
-      return senderShortName!;
+      return sanitizeExternalText(senderShortName!);
     }
     if (senderLongName != null && senderLongName!.isNotEmpty) {
-      return senderLongName!.substring(0, senderLongName!.length.clamp(0, 4));
+      final sanitized = sanitizeExternalText(senderLongName!);
+      return sanitized.substring(0, sanitized.length.clamp(0, 4));
     }
     return NodeDisplayNameResolver.shortHex(from);
   }
 
   bool get isBroadcast => to == 0xFFFFFFFF;
   bool get isDirect => !isBroadcast;
+  bool get isCanonicalTapback => isEmoji && replyId != null;
   bool get isFailed => status == MessageStatus.failed;
   bool get isPending => status == MessageStatus.pending;
+  bool get isUnconfirmed => status == MessageStatus.unconfirmed;
+  bool get isRetrying => status == MessageStatus.retrying;
   bool get isRetryable => routingError?.isRetryable ?? false;
+
+  /// Generate a deterministic message ID from mesh packet identity.
+  ///
+  /// Uses the firmware-assigned [packetId] and [fromNode] to produce a
+  /// stable identifier that is identical regardless of which ingest path
+  /// (foreground ProtocolService or BackgroundMessageProcessor) creates
+  /// the [Message] object.  This eliminates the TOCTOU race where both
+  /// paths generate different random UUIDs for the same physical packet.
+  ///
+  /// Format: `pkt-<fromHex>-<packetIdHex>` — human-readable, cannot
+  /// collide with UUID v4 or SHA1 IDs from push notifications.
+  static String deterministicId({
+    required int packetId,
+    required int fromNode,
+  }) {
+    final fromHex = fromNode.toRadixString(16);
+    final pktHex = packetId.toRadixString(16);
+    return 'pkt-$fromHex-$pktHex'; // lint-allow: hardcoded-string
+  }
+
+  /// Returns true when a manual Resend action should be offered: the message
+  /// is a DM from us, is in an unconfirmed/failed state, and is not currently
+  /// being retried automatically.
+  bool get canResend => isDirect && (isUnconfirmed || isFailed) && !isRetrying;
+
+  /// Returns true when the user can enable bounded auto-retry.
+  bool get canEnableAutoRetry =>
+      isDirect && (isUnconfirmed || isFailed) && !autoRetryEnabled;
+
+  /// Returns true when the user can stop an active auto-retry.
+  bool get canStopAutoRetry => autoRetryEnabled || isRetrying;
 
   @override
   String toString() => 'Message(from: $from, to: $to, text: $text)';
@@ -299,6 +370,7 @@ class MeshNode {
   final double? humidity; // Relative humidity percentage
   final String? firmwareVersion;
   final String? hardwareModel;
+  final int? hwModelId; // Raw HardwareModel protobuf enum value
   final String? role; // 'CLIENT', 'ROUTER', etc.
   final double? distance; // distance in meters
   final bool isFavorite;
@@ -413,6 +485,7 @@ class MeshNode {
     this.humidity,
     this.firmwareVersion,
     this.hardwareModel,
+    this.hwModelId,
     this.role,
     this.distance,
     this.isFavorite = false,
@@ -519,6 +592,7 @@ class MeshNode {
     double? humidity,
     String? firmwareVersion,
     String? hardwareModel,
+    int? hwModelId,
     String? role,
     double? distance,
     bool? isFavorite,
@@ -622,6 +696,7 @@ class MeshNode {
       humidity: humidity ?? this.humidity,
       firmwareVersion: firmwareVersion ?? this.firmwareVersion,
       hardwareModel: hardwareModel ?? this.hardwareModel,
+      hwModelId: hwModelId ?? this.hwModelId,
       role: role ?? this.role,
       distance: distance ?? this.distance,
       isFavorite: isFavorite ?? this.isFavorite,
@@ -723,9 +798,12 @@ class MeshNode {
   /// Get a short display name suitable for avatars (max 4 chars)
   /// Prefers shortName, falls back to longName prefix, then last 4 hex digits
   String get avatarName {
-    if (shortName != null && shortName!.isNotEmpty) return shortName!;
+    if (shortName != null && shortName!.isNotEmpty) {
+      return sanitizeExternalText(shortName!);
+    }
     if (longName != null && longName!.isNotEmpty) {
-      return longName!.substring(0, longName!.length.clamp(0, 4));
+      final sanitized = sanitizeExternalText(longName!);
+      return sanitized.substring(0, sanitized.length.clamp(0, 4));
     }
     return NodeDisplayNameResolver.shortHex(nodeNum);
   }

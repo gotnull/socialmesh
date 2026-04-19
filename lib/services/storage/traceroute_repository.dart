@@ -381,6 +381,13 @@ class SqliteTracerouteRepository implements TracerouteHistoryRepository {
       TracerouteTables.colReturnHops: run.hopsBack,
       TracerouteTables.colResponseReceived: run.response ? 1 : 0,
       TracerouteTables.colSnr: run.snr,
+      TracerouteTables.colViaMqtt: run.viaMqtt == null
+          ? null
+          : (run.viaMqtt! ? 1 : 0),
+      TracerouteTables.colOriginLatitude: run.originLatitude,
+      TracerouteTables.colOriginLongitude: run.originLongitude,
+      TracerouteTables.colTargetLatitude: run.targetLatitude,
+      TracerouteTables.colTargetLongitude: run.targetLongitude,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
@@ -403,6 +410,8 @@ class SqliteTracerouteRepository implements TracerouteHistoryRepository {
         TracerouteTables.colHopSnr: hop.snr,
         TracerouteTables.colRssi: null,
         TracerouteTables.colDirection: direction,
+        TracerouteTables.colLatitude: hop.latitude,
+        TracerouteTables.colLongitude: hop.longitude,
       }, conflictAlgorithm: ConflictAlgorithm.replace);
     }
   }
@@ -446,6 +455,8 @@ class SqliteTracerouteRepository implements TracerouteHistoryRepository {
         nodeNum: row[TracerouteTables.colNodeId] as int,
         snr: row[TracerouteTables.colHopSnr] as double?,
         back: direction == TracerouteTables.directionReturn,
+        latitude: row[TracerouteTables.colLatitude] as double?,
+        longitude: row[TracerouteTables.colLongitude] as double?,
       );
     }).toList();
   }
@@ -470,6 +481,13 @@ class SqliteTracerouteRepository implements TracerouteHistoryRepository {
       hopsBack: row[TracerouteTables.colReturnHops] as int? ?? 0,
       hops: hops,
       snr: row[TracerouteTables.colSnr] as double?,
+      viaMqtt: row[TracerouteTables.colViaMqtt] == null
+          ? null
+          : (row[TracerouteTables.colViaMqtt] as int) == 1,
+      originLatitude: row[TracerouteTables.colOriginLatitude] as double?,
+      originLongitude: row[TracerouteTables.colOriginLongitude] as double?,
+      targetLatitude: row[TracerouteTables.colTargetLatitude] as double?,
+      targetLongitude: row[TracerouteTables.colTargetLongitude] as double?,
     );
   }
 

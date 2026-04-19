@@ -24,6 +24,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../utils/time_format.dart';
+
 import '../../../providers/accessibility_providers.dart';
 
 import '../../../core/constants.dart';
@@ -39,17 +41,20 @@ import '../../../core/widgets/ico_help_system.dart';
 import '../../../models/mesh_models.dart';
 import '../../../providers/app_providers.dart';
 
+import '../../nodeboard/widgets/nodeboard_node_card.dart';
 import '../../nodes/node_display_name_resolver.dart';
 
 import '../../../services/protocol/sip/mrrp_types.dart';
 
 import '../models/nodedex_entry.dart';
+import '../models/observed_radio_preset.dart';
 import '../models/sigil_evolution.dart';
 import '../providers/nodedex_providers.dart';
 import '../services/patina_score.dart';
 
 import '../services/trait_engine.dart';
 import '../services/trust_score.dart';
+import '../widgets/coseen_network_card.dart';
 import '../widgets/edge_detail_sheet.dart';
 import '../widgets/animated_sigil_container.dart';
 import '../widgets/field_note_widget.dart';
@@ -58,7 +63,6 @@ import '../widgets/observation_timeline.dart';
 import '../widgets/node_activity_timeline.dart';
 import '../widgets/node_summary_card.dart';
 import '../widgets/patina_stamp.dart';
-import '../atmosphere/atmosphere_overlay.dart';
 import '../widgets/sigil_card_sheet.dart';
 import '../widgets/sigil_painter.dart';
 import '../widgets/trait_badge.dart';
@@ -107,6 +111,9 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
     final entry = ref.watch(nodeDexEntryProvider(widget.nodeNum));
     final nodes = ref.watch(nodesProvider);
     final node = nodes[widget.nodeNum];
+    final recentCoSeenLinks = ref.watch(
+      nodeDexRecentCoSeenLinksProvider(widget.nodeNum),
+    );
     final traitResult = ref.watch(nodeDexTraitProvider(widget.nodeNum));
     final disclosure = ref.watch(nodeDexDisclosureProvider(widget.nodeNum));
     final patinaResult = ref.watch(nodeDexPatinaProvider(widget.nodeNum));
@@ -231,6 +238,31 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
               ),
             ),
           ),
+
+          // NodeBoard bridge — shows the node's personal BBS if it has one.
+          // Feature-flag gated; NodeBoardNodeCard itself renders nothing when
+          // the node has no associated board, so this is safe to always mount.
+          if (AppFeatureFlags.isNodeBoardEnabled)
+            SliverToBoxAdapter(
+              child: _DetailEntrance(
+                index: 2,
+                reduceMotion: reduceMotion,
+                child: NodeBoardNodeCard(nodeId: hexId),
+              ),
+            ),
+
+          // Co-seen network card — animated avatar cluster with social context
+          if (recentCoSeenLinks.isNotEmpty)
+            SliverToBoxAdapter(
+              child: _DetailEntrance(
+                index: 2,
+                reduceMotion: reduceMotion,
+                child: CoSeenNetworkCard(
+                  nodeNum: entry.nodeNum,
+                  onTap: () => _showCoSeenSheet(context, entry),
+                ),
+              ),
+            ),
 
           // Trait card
           if (disclosure.showPrimaryTrait)
@@ -395,8 +427,19 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
               ),
             ),
 
-          // Encounter activity visualization
-          if (entry.encounters.isNotEmpty)
+          // Encounter activity — pinned header + body
+          if (entry.encounters.isNotEmpty) ...[
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _NodeDexStickyHeaderDelegate(
+                title: context.l10n.nodedexEncounterActivityTitle,
+                icon: Icons.insights,
+                helpKey: 'encounters',
+                trailing: context.l10n.nodedexTotalCount(
+                  entry.encounters.length,
+                ),
+              ),
+            ),
             SliverToBoxAdapter(
               child: _DetailEntrance(
                 index: 14,
@@ -404,6 +447,29 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
                 child: _EncounterActivityCard(entry: entry),
               ),
             ),
+          ],
+
+          // Co-seen nodes — pinned header + body
+          if (recentCoSeenLinks.isNotEmpty) ...[
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _NodeDexStickyHeaderDelegate(
+                title: context.l10n.nodedexCoSeenLinksTitle,
+                icon: Icons.auto_awesome,
+                helpKey: 'coseen',
+                trailing: context.l10n.nodedexTotalCount(
+                  recentCoSeenLinks.length,
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: _DetailEntrance(
+                index: 15,
+                reduceMotion: reduceMotion,
+                child: _CoSeenNodesBody(entry: entry),
+              ),
+            ),
+          ],
 
           // Node activity timeline — unified chronological feed
           SliverPersistentHeader(
@@ -419,7 +485,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
           ),
           SliverToBoxAdapter(
             child: _DetailEntrance(
-              index: 14,
+              index: 16,
               reduceMotion: reduceMotion,
               child: _StickyCardBody(
                 child: NodeActivityTimeline(
@@ -429,28 +495,6 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
               ),
             ),
           ),
-
-          // Co-seen nodes — pinned header + body
-          if (entry.coSeenNodes.isNotEmpty) ...[
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: _NodeDexStickyHeaderDelegate(
-                title: context.l10n.nodedexCoSeenLinksTitle,
-                icon: Icons.auto_awesome,
-                helpKey: 'coseen',
-                trailing: context.l10n.nodedexTotalCount(
-                  entry.coSeenNodes.length,
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: _DetailEntrance(
-                index: 16,
-                reduceMotion: reduceMotion,
-                child: _CoSeenNodesBody(entry: entry),
-              ),
-            ),
-          ],
 
           // Bottom padding
           SliverToBoxAdapter(
@@ -483,6 +527,171 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
           notifier.setSocialTag(nodeNum, tag);
           navigator.pop();
         },
+      ),
+    );
+  }
+
+  void _showCoSeenSheet(BuildContext context, NodeDexEntry entry) {
+    final nodes = ref.read(nodesProvider);
+    final recentCoSeenLinks = ref.read(
+      nodeDexRecentCoSeenLinksProvider(entry.nodeNum),
+    );
+    final dateFormat = DateFormat('d MMM yyyy');
+    final navigator = Navigator.of(context);
+
+    AppBottomSheet.showScrollable<void>(
+      context: context,
+      title: context.l10n.nodedexCoSeenLinksTitle,
+      initialChildSize: 0.5,
+      minChildSize: 0.3,
+      maxChildSize: 0.7,
+      builder: (scrollController) => ListView(
+        controller: scrollController,
+        padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing24),
+        children: [
+          Text(
+            context.l10n.nodedexCoSeenDescription,
+            style: TextStyle(fontSize: 13, color: context.textTertiary),
+          ),
+          const SizedBox(height: AppTheme.spacing16),
+          ...recentCoSeenLinks.map((coSeen) {
+            final relationship = coSeen.relationship;
+            final coSeenNode = nodes[coSeen.otherNodeNum];
+            final coSeenEntry = ref.read(
+              nodeDexEntryProvider(coSeen.otherNodeNum),
+            );
+            final name =
+                coSeenEntry?.localNickname ??
+                coSeenNode?.displayName ??
+                coSeenEntry?.lastKnownName ??
+                NodeDisplayNameResolver.defaultName(coSeen.otherNodeNum);
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 2),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    navigator.pop();
+                    navigator.push(
+                      MaterialPageRoute<void>(
+                        builder: (_) =>
+                            NodeDexDetailScreen(nodeNum: coSeen.otherNodeNum),
+                      ),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(AppTheme.radius10),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 6,
+                      horizontal: 4,
+                    ),
+                    child: Row(
+                      children: [
+                        SigilAvatar(
+                          sigil: coSeenEntry?.sigil,
+                          nodeNum: coSeen.otherNodeNum,
+                          size: 36,
+                        ),
+                        const SizedBox(width: AppTheme.spacing10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                name,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: context.textPrimary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: AppTheme.spacing2),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.schedule,
+                                    size: 10,
+                                    color: context.textTertiary,
+                                  ),
+                                  const SizedBox(width: AppTheme.spacing3),
+                                  Text(
+                                    dateFormat.format(relationship.lastSeen),
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: context.textTertiary,
+                                    ),
+                                  ),
+                                  if (relationship.messageCount > 0) ...[
+                                    const SizedBox(width: AppTheme.spacing8),
+                                    Icon(
+                                      Icons.chat_bubble_outline,
+                                      size: 10,
+                                      color: context.textTertiary,
+                                    ),
+                                    const SizedBox(width: AppTheme.spacing3),
+                                    Text(
+                                      '${relationship.messageCount}',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: context.textTertiary,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: context.accentColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius10,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.visibility_outlined,
+                                size: 10,
+                                color: context.accentColor,
+                              ),
+                              const SizedBox(width: AppTheme.spacing3),
+                              Text(
+                                '${relationship.count}',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: context.accentColor,
+                                  fontFamily: AppTheme.fontFamily,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: AppTheme.spacing4),
+                        Icon(
+                          Icons.chevron_right,
+                          size: 16,
+                          color: context.textTertiary.withValues(alpha: 0.4),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }),
+        ],
       ),
     );
   }
@@ -734,9 +943,6 @@ class _SigilHeroSectionState extends ConsumerState<_SigilHeroSection> {
         borderRadius: BorderRadius.circular(AppTheme.radius20),
         child: Stack(
           children: [
-            // Subtle atmosphere behind the hero content.
-            // Only starlight and embers — very low intensity.
-            const Positioned.fill(child: DetailAtmosphere()),
             Padding(
               padding: const EdgeInsets.all(AppTheme.spacing24),
               child: Column(
@@ -1089,7 +1295,7 @@ class _DiscoveryStatsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('MMM d, yyyy');
-    final timeFormat = DateFormat('HH:mm');
+    final timeFormat = AppTimeFormat.timeOnly(context);
     final firstSeen = dateFormat.format(entry.firstSeen);
     final lastSeen = dateFormat.format(entry.lastSeen);
     final lastSeenTime = timeFormat.format(entry.lastSeen);
@@ -1147,6 +1353,25 @@ class _DiscoveryStatsCard extends StatelessWidget {
             value: entry.distinctPositionCount.toString(),
             icon: Icons.pin_drop_outlined,
           ),
+          if (entry.lastObservedOnPreset != null)
+            _InfoRow(
+              label: context.l10n.nodedexFilterRadioPreset,
+              value:
+                  ObservedRadioPreset.fromProtobufValue(
+                    entry.lastObservedOnPreset!,
+                  )?.label(context.l10n) ??
+                  context.l10n.nodedexRadioPresetUnknown,
+              icon: Icons.radio_outlined,
+            ),
+          if (entry.lastObservedFrequencyOffset != null &&
+              entry.lastObservedFrequencyOffset != 0.0)
+            _InfoRow(
+              label: context.l10n.nodedexFrequencyOffset,
+              value: context.l10n.nodedexFrequencyOffsetValue(
+                entry.lastObservedFrequencyOffset!.toStringAsFixed(1),
+              ),
+              icon: Icons.tune_outlined,
+            ),
         ],
       ),
     );
@@ -1636,7 +1861,7 @@ class _EncounterActivityCardState extends State<_EncounterActivityCard> {
   Widget build(BuildContext context) {
     final allEncounters = widget.entry.encounters.reversed.toList();
     final encounters = _filteredEncounters;
-    final dateFormat = DateFormat('MMM d, HH:mm');
+    final dateFormat = AppTimeFormat.dateAndTime(context);
     final pageSize = NodeDexConfig.encounterPageSize;
     final totalPages = (encounters.length / pageSize).ceil();
 
@@ -1654,18 +1879,7 @@ class _EncounterActivityCardState extends State<_EncounterActivityCard> {
         ? <EncounterRecord>[]
         : encounters.sublist(startIndex, endIndex);
 
-    return _CardContainer(
-      title: context.l10n.nodedexEncounterActivityTitle,
-      icon: Icons.insights,
-      helpKey: 'encounters',
-      trailing: Text(
-        context.l10n.nodedexTotalCount(allEncounters.length),
-        style: TextStyle(
-          fontSize: 11,
-          color: context.textTertiary,
-          fontFamily: AppTheme.fontFamily,
-        ),
-      ),
+    return _StickyCardBody(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -2553,7 +2767,14 @@ class _CoSeenNodesBodyState extends ConsumerState<_CoSeenNodesBody> {
     super.didUpdateWidget(oldWidget);
     // Reset page if data changed and current page is out of range.
     final pageSize = NodeDexConfig.coSeenPageSize;
-    final totalPages = (widget.entry.coSeenNodes.length / pageSize).ceil();
+    final totalPages =
+        (ref
+                    .read(
+                      nodeDexRecentCoSeenLinksProvider(widget.entry.nodeNum),
+                    )
+                    .length /
+                pageSize)
+            .ceil();
     if (_currentPage >= totalPages && totalPages > 0) {
       _currentPage = totalPages - 1;
     }
@@ -2564,10 +2785,9 @@ class _CoSeenNodesBodyState extends ConsumerState<_CoSeenNodesBody> {
     final nodes = ref.watch(nodesProvider);
     final pageSize = NodeDexConfig.coSeenPageSize;
     final dateFormat = DateFormat('d MMM yyyy');
-
-    // Sort by co-seen count descending.
-    final coSeenSorted = widget.entry.coSeenNodes.entries.toList()
-      ..sort((a, b) => b.value.count.compareTo(a.value.count));
+    final coSeenSorted = ref.watch(
+      nodeDexRecentCoSeenLinksProvider(widget.entry.nodeNum),
+    );
 
     final totalCount = coSeenSorted.length;
     final totalPages = (totalCount / pageSize).ceil();
@@ -2591,13 +2811,15 @@ class _CoSeenNodesBodyState extends ConsumerState<_CoSeenNodesBody> {
           ),
           const SizedBox(height: AppTheme.spacing8),
           ...pageItems.map((coSeen) {
-            final relationship = coSeen.value;
-            final coSeenNode = nodes[coSeen.key];
-            final coSeenEntry = ref.watch(nodeDexEntryProvider(coSeen.key));
+            final relationship = coSeen.relationship;
+            final coSeenNode = nodes[coSeen.otherNodeNum];
+            final coSeenEntry = ref.watch(
+              nodeDexEntryProvider(coSeen.otherNodeNum),
+            );
             final name =
                 coSeenNode?.displayName ??
                 coSeenEntry?.lastKnownName ??
-                NodeDisplayNameResolver.defaultName(coSeen.key);
+                NodeDisplayNameResolver.defaultName(coSeen.otherNodeNum);
 
             return Padding(
               padding: const EdgeInsets.only(top: 6),
@@ -2607,14 +2829,15 @@ class _CoSeenNodesBodyState extends ConsumerState<_CoSeenNodesBody> {
                   onTap: () {
                     AppLogging.nodeDex(
                       'Constellation link tapped: '
-                      '${widget.entry.nodeNum} → ${coSeen.key} '
+                      '${widget.entry.nodeNum} → ${coSeen.otherNodeNum} '
                       '(co-seen ${relationship.count} times)',
                     );
                     HapticFeedback.selectionClick();
                     EdgeDetailSheet.show(
                       context: context,
                       fromNodeNum: widget.entry.nodeNum,
-                      toNodeNum: coSeen.key,
+                      toNodeNum: coSeen.otherNodeNum,
+                      relationship: relationship,
                       onOpenNodeDetail: (nodeNum) {
                         Navigator.of(context).push(
                           MaterialPageRoute<void>(
@@ -2632,7 +2855,7 @@ class _CoSeenNodesBodyState extends ConsumerState<_CoSeenNodesBody> {
                       children: [
                         SigilAvatar(
                           sigil: coSeenEntry?.sigil,
-                          nodeNum: coSeen.key,
+                          nodeNum: coSeen.otherNodeNum,
                           size: 32,
                         ),
                         const SizedBox(width: AppTheme.spacing10),

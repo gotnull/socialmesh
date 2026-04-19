@@ -61,6 +61,8 @@ class PremiumPreviewBanner extends ConsumerWidget {
         return context.l10n.premiumPreviewRingtones;
       case PremiumFeature.premiumThemes:
         return context.l10n.premiumPreviewThemes;
+      case PremiumFeature.translation:
+        return context.l10n.premiumPreviewTranslation;
     }
   }
 
@@ -516,6 +518,8 @@ class _PremiumInfoSheetState extends ConsumerState<PremiumInfoSheet>
         return Icons.music_note;
       case PremiumFeature.premiumThemes:
         return Icons.palette;
+      case PremiumFeature.translation:
+        return Icons.translate;
     }
   }
 
@@ -531,6 +535,8 @@ class _PremiumInfoSheetState extends ConsumerState<PremiumInfoSheet>
         return context.l10n.premiumHeadlineRingtonesAlt;
       case PremiumFeature.premiumThemes:
         return context.l10n.premiumHeadlineThemes;
+      case PremiumFeature.translation:
+        return context.l10n.premiumHeadlineTranslation;
     }
   }
 
@@ -548,6 +554,8 @@ class _PremiumInfoSheetState extends ConsumerState<PremiumInfoSheet>
         return context.l10n.premiumDescRingtones;
       case PremiumFeature.premiumThemes:
         return context.l10n.premiumDescThemes;
+      case PremiumFeature.translation:
+        return context.l10n.premiumDescTranslation;
     }
   }
 
@@ -636,6 +644,24 @@ class _PremiumInfoSheetState extends ConsumerState<PremiumInfoSheet>
             Icons.auto_awesome,
             context.l10n.premiumBenefitExclusive,
             context.l10n.premiumBenefitExclusiveDesc,
+          ),
+        ];
+      case PremiumFeature.translation:
+        return [
+          _Benefit(
+            Icons.translate,
+            context.l10n.premiumBenefitInstantTranslation,
+            context.l10n.premiumBenefitInstantTranslationDesc,
+          ),
+          _Benefit(
+            Icons.language,
+            context.l10n.premiumBenefitAutoDetect,
+            context.l10n.premiumBenefitAutoDetectDesc,
+          ),
+          _Benefit(
+            Icons.cached,
+            context.l10n.premiumBenefitSmartCache,
+            context.l10n.premiumBenefitSmartCacheDesc,
           ),
         ];
     }
@@ -884,10 +910,7 @@ class _PremiumInfoSheetState extends ConsumerState<PremiumInfoSheet>
                         : Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(
-                                Icons.star_rounded,
-                                color: Colors.white,
-                              ),
+                              Icon(_featureIcon, color: Colors.white),
                               const SizedBox(width: AppTheme.spacing8),
                               Text(
                                 context.l10n.premiumUnlockFor(displayPrice),

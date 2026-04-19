@@ -2,6 +2,7 @@
 .git-backup/
 
 # Miscellaneous
+logs.txt
 *.class
 *.log
 *.pyc
@@ -22,10 +23,16 @@ meshtastic-android/
 .firebase
 android/.kotlin/sessions/
 .github/copilot-instructions.md
+.github/instructions/
 CLAUDE.md
 AGENTS.md
 .claude/
 /assets/screenshots/
+
+# Native codec2 builds (large, can be re-generated from source, and contain build artifacts)
+/ios/codec2/
+/macos/codec2/
+/android/app/src/main/jni/
 
 # Backend services (proprietary, not part of public repo)
 /backend/
@@ -92,6 +99,8 @@ firebase-service-account.json
 /scripts/railway-up.sh
 /scripts/security_audit_socialmesh.py
 /scripts/seed-beta-testers.js
+/scripts/store-versions.sh
+/scripts/test-mdns*.sh
 !/scripts/hooks/socialmesh-lint.sh
 /artifacts/
 

@@ -14,6 +14,9 @@ enum PremiumFeature {
   // Automation
   automations,
   iftttIntegration,
+
+  // Communication
+  translation,
 }
 
 /// One-time purchasable items
@@ -86,10 +89,20 @@ class OneTimePurchases {
     unlocksFeature: PremiumFeature.iftttIntegration,
   );
 
+  static OneTimePurchase get translationPack => OneTimePurchase(
+    id: 'translation_pack',
+    name: 'Translation Pack',
+    description:
+        'Unlock on-demand message translation with smart caching and privacy controls — includes a managed allowance, or bring your own API key for extended use', // lint-allow: hardcoded-string
+    price: 2.99,
+    productId: RevenueCatConfig.translationPackProductId,
+    unlocksFeature: PremiumFeature.translation,
+  );
+
   /// Complete Pack - all features bundled at 25% off
   static const double bundlePrice = 14.99;
   static double get bundleSavings {
-    final total = allIndividualPurchases.fold<double>(
+    final total = completePackPurchases.fold<double>(
       0,
       (sum, p) => sum + p.price,
     );
@@ -97,15 +110,27 @@ class OneTimePurchases {
   }
 
   static int get bundleDiscountPercent {
-    final total = allIndividualPurchases.fold<double>(
+    final total = completePackPurchases.fold<double>(
       0,
       (sum, p) => sum + p.price,
     );
     return ((1 - bundlePrice / total) * 100).round();
   }
 
-  /// Individual purchases (excludes bundle)
+  /// Purchases included in the Complete Pack bundle.
+  /// Translation Pack is included — grants feature unlock with managed allowance.
+  static List<OneTimePurchase> get completePackPurchases => <OneTimePurchase>[
+    themePack,
+    ringtonePack,
+    widgetPack,
+    automationsPack,
+    iftttPack,
+    translationPack,
+  ];
+
+  /// All individual purchases (includes Translation Pack, excludes bundle)
   static List<OneTimePurchase> get allIndividualPurchases => <OneTimePurchase>[
+    translationPack,
     themePack,
     ringtonePack,
     widgetPack,
@@ -114,6 +139,7 @@ class OneTimePurchases {
   ];
 
   static List<OneTimePurchase> get allPurchases => <OneTimePurchase>[
+    translationPack,
     themePack,
     ringtonePack,
     widgetPack,
@@ -153,12 +179,13 @@ class PurchaseState {
     // Direct purchase check
     if (purchasedProductIds.contains(productId)) return true;
 
-    // If user owns Complete Pack, they have access to all individual packs
+    // If user owns Complete Pack, they have access to all bundled packs
+    // (including Translation Pack)
     if (purchasedProductIds.contains(RevenueCatConfig.completePackProductId)) {
-      final individualIds = OneTimePurchases.allIndividualPurchases
+      final bundledIds = OneTimePurchases.completePackPurchases
           .map((p) => p.productId)
           .toSet();
-      if (individualIds.contains(productId)) return true;
+      if (bundledIds.contains(productId)) return true;
     }
 
     return false;

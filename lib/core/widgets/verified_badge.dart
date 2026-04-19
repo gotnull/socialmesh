@@ -87,7 +87,7 @@ class SimpleVerifiedBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget badge;
-    if (animate) {
+    if (animate && !(MediaQuery.maybeOf(context)?.disableAnimations ?? false)) {
       badge = _AnimatedGoldBadge(size: size);
     } else {
       badge = _GoldGradientBadge(size: size);
@@ -156,6 +156,7 @@ class _AnimatedGoldBadgeState extends State<_AnimatedGoldBadge>
 
   final Random _random = Random();
   bool _isSpinning = false;
+  bool _reduceMotion = false;
 
   // Timers for scheduled spins and sparkles so tests can cancel them
   Timer? _spinTimer;
@@ -203,6 +204,12 @@ class _AnimatedGoldBadgeState extends State<_AnimatedGoldBadge>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncReduceMotion(MediaQuery.maybeOf(context)?.disableAnimations ?? false);
+  }
+
+  @override
   void dispose() {
     _spinTimer?.cancel();
     _sparkleTimer?.cancel();
@@ -222,11 +229,12 @@ class _AnimatedGoldBadgeState extends State<_AnimatedGoldBadge>
   }
 
   void _scheduleNextSpin() {
+    if (_reduceMotion) return;
     // Random delay between 3-8 seconds
     final delay = Duration(milliseconds: 3000 + _random.nextInt(5000));
     _spinTimer?.cancel();
     _spinTimer = Timer(delay, () {
-      if (mounted && !_isSpinning) {
+      if (mounted && !_reduceMotion && !_isSpinning) {
         _isSpinning = true;
         _spinController.forward();
       }
@@ -234,11 +242,12 @@ class _AnimatedGoldBadgeState extends State<_AnimatedGoldBadge>
   }
 
   void _scheduleNextSparkle() {
+    if (_reduceMotion) return;
     // Random delay between 2-5 seconds
     final delay = Duration(milliseconds: 2000 + _random.nextInt(3000));
     _sparkleTimer?.cancel();
     _sparkleTimer = Timer(delay, () {
-      if (mounted) {
+      if (mounted && !_reduceMotion) {
         _triggerSparkles();
         _scheduleNextSparkle();
       }
@@ -246,6 +255,7 @@ class _AnimatedGoldBadgeState extends State<_AnimatedGoldBadge>
   }
 
   void _triggerSparkles() {
+    if (_reduceMotion) return;
     setState(() {
       _sparkles.clear();
       // Generate 2-4 sparkles at random positions around the badge
@@ -266,8 +276,36 @@ class _AnimatedGoldBadgeState extends State<_AnimatedGoldBadge>
     _sparkleController.forward(from: 0);
   }
 
+  void _syncReduceMotion(bool reduceMotion) {
+    if (reduceMotion == _reduceMotion) return;
+    _reduceMotion = reduceMotion;
+    _spinTimer?.cancel();
+    _sparkleTimer?.cancel();
+    if (_reduceMotion) {
+      _spinController.stop();
+      _spinController.value = 0;
+      _shimmerController.stop();
+      _sparkleController.stop();
+      _isSpinning = false;
+      if (_sparkles.isNotEmpty) {
+        setState(_sparkles.clear);
+      }
+      return;
+    }
+    _shimmerController.repeat(reverse: true);
+    _scheduleNextSpin();
+    _scheduleNextSparkle();
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_reduceMotion) {
+      return SizedBox(
+        width: widget.size * 1.6,
+        height: widget.size * 1.6,
+        child: Center(child: _GoldGradientBadge(size: widget.size)),
+      );
+    }
     return SizedBox(
       width: widget.size * 1.6,
       height: widget.size * 1.6,

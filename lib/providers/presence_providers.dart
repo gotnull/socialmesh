@@ -15,6 +15,7 @@ import '../providers/app_providers.dart';
 import '../providers/app_lifecycle_provider.dart';
 import '../features/automations/automation_providers.dart';
 import '../services/extended_presence_service.dart';
+import '../utils/timestamp_validation.dart';
 
 final presenceClockProvider = Provider<DateTime Function()>(
   (_) => DateTime.now,
@@ -133,6 +134,14 @@ class NodePresence {
   ConfidenceTier get confidenceTier =>
       ConfidenceTier.fromConfidence(confidence);
 
+  /// Whether this node is considered **online** — heard within the
+  /// Meshtastic firmware online window (2 h).  Broader than
+  /// [PresenceConfidence.isActive] (2 min).
+  bool get isOnline {
+    if (timeSinceLastHeard == null) return false;
+    return timeSinceLastHeard! <= PresenceThresholds.onlineWindow;
+  }
+
   NodePresence copyWith({
     MeshNode? node,
     PresenceConfidence? confidence,
@@ -213,9 +222,11 @@ PresenceConfidence presenceConfidenceFor(
 Duration? lastHeardAgeFor(Map<int, NodePresence> presenceMap, MeshNode node) {
   final presence = presenceMap[node.nodeNum];
   if (presence != null) return presence.timeSinceLastHeard;
-  final heard = node.lastHeard;
+  final heard = TimestampValidation.validated(node.lastHeard);
   if (heard == null) return null;
-  return DateTime.now().difference(heard);
+  final age = DateTime.now().difference(heard);
+  if (age.isNegative) return null;
+  return age;
 }
 
 class PresenceNotifier extends Notifier<Map<int, NodePresence>> {
@@ -368,12 +379,18 @@ class PresenceNotifier extends Notifier<Map<int, NodePresence>> {
     final store = storeAsync.asData?.value;
     if (store != null) {
       unawaited(
-        store.insertPresenceTransition(
-          nodeNum: node.nodeNum,
-          fromState: previous.name,
-          toState: current.name,
-          timestamp: ref.read(presenceClockProvider)(),
-        ),
+        store
+            .insertPresenceTransition(
+              nodeNum: node.nodeNum,
+              fromState: previous.name,
+              toState: current.name,
+              timestamp: ref.read(presenceClockProvider)(),
+            )
+            .catchError((Object e) {
+              AppLogging.storage(
+                'PresenceNotifier: insertPresenceTransition failed: $e',
+              );
+            }),
       );
     }
 

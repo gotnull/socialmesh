@@ -23,6 +23,7 @@ import 'dart:typed_data';
 import '../../../core/logging.dart';
 import 'mrrp_codec.dart';
 import 'mrrp_constants.dart';
+import 'mrrp_counters.dart';
 import 'mrrp_frame.dart';
 import 'mrrp_service_registry.dart';
 import 'mrrp_types.dart';
@@ -70,6 +71,15 @@ class MrrpDispatcher {
   /// Callback to send a raw MRRP frame via SIP transport.
   Future<bool> Function(Uint8List payload)? onSend;
 
+  /// Optional callback for sim peer request interception.
+  ///
+  /// Returns response frames from a simulated peer, or null to
+  /// proceed with normal (over-the-wire) send.
+  Future<List<MrrpFrame>?> Function(MrrpFrame request)? onSimPeerRequest;
+
+  /// Instrumentation counters (optional, injected by provider layer).
+  MrrpCounters? counters;
+
   /// Pending outbound requests indexed by request_id.
   final Map<int, _PendingRequest> _pending = {};
 
@@ -87,6 +97,18 @@ class MrrpDispatcher {
   ///
   /// Returns a RESPONSE or ERROR frame to be sent back to the requester.
   Future<MrrpFrame> dispatch(MrrpFrame request, int senderNodeId) async {
+    counters?.recordRequestReceived(serviceId: request.serviceId);
+
+    AppLogging.mrrp(
+      'MRRP_TRACE_REQ_RX '
+      'sender=0x${senderNodeId.toRadixString(16)} '
+      'req_id=0x${request.requestId.toRadixString(16)} '
+      'service=0x${request.serviceId.toRadixString(16).padLeft(8, '0')} '
+      'action=0x${request.actionId.toRadixString(16).padLeft(4, '0')} '
+      'flags=0x${request.flags.toRadixString(16)} '
+      'payload=${request.payload.length}B',
+    );
+
     final handler = _registry.getHandler(request.serviceId);
 
     if (handler == null) {
@@ -95,6 +117,7 @@ class MrrpDispatcher {
         'service=0x${request.serviceId.toRadixString(16).padLeft(8, '0')} '
         '-> NOT_FOUND', // lint-allow: hardcoded-string
       );
+      counters?.recordErrorSent();
       return _buildError(request, MrrpStatusCode.notFound);
     }
 
@@ -105,6 +128,7 @@ class MrrpDispatcher {
         'action=0x${request.actionId.toRadixString(16)} '
         '-> UNSUPPORTED', // lint-allow: hardcoded-string
       );
+      counters?.recordErrorSent();
       return _buildError(request, MrrpStatusCode.unsupported);
     }
 
@@ -117,18 +141,36 @@ class MrrpDispatcher {
 
     try {
       final response = await handler.handleRequest(request, senderNodeId);
+      final statusTlv = response.findExtension(MrrpTlvType.statusCode);
+      final statusName =
+          response.isError && statusTlv != null && statusTlv.value.isNotEmpty
+          ? (MrrpStatusCode.fromCode(statusTlv.value[0])?.name ?? 'unknown')
+          : MrrpStatusCode.ok.name;
+
+      AppLogging.mrrp(
+        'MRRP_TRACE_RESP_BUILT '
+        'req_id=0x${response.requestId.toRadixString(16)} '
+        'service=0x${response.serviceId.toRadixString(16).padLeft(8, '0')} '
+        'action=0x${response.actionId.toRadixString(16).padLeft(4, '0')} '
+        'msgType=${response.msgType.name} '
+        'status=$statusName '
+        'flags=0x${response.flags.toRadixString(16)} '
+        'payload=${response.payload.length}B',
+      );
 
       AppLogging.mrrp(
         'MRRP_DISPATCH: RESPONSE req_id=0x${request.requestId.toRadixString(16)} '
         'status=OK, ${response.payload.length}B payload', // lint-allow: hardcoded-string
       );
 
+      counters?.recordResponseSent(serviceId: request.serviceId);
       return response;
     } on Exception catch (e) {
       AppLogging.mrrp(
         'MRRP_DISPATCH: handler error for '
         'req_id=0x${request.requestId.toRadixString(16)}: $e', // lint-allow: hardcoded-string
       );
+      counters?.recordErrorSent();
       return _buildError(request, MrrpStatusCode.internal);
     }
   }
@@ -183,6 +225,21 @@ class MrrpDispatcher {
 
     _pending[requestId] = pending;
 
+    counters?.recordRequestSent(serviceId: request.serviceId);
+
+    // Check sim peer interception.
+    final simHandler = onSimPeerRequest;
+    if (simHandler != null) {
+      final simResponses = await simHandler(frame);
+      if (simResponses != null) {
+        // Sim peer handled — inject responses through correlation path.
+        for (final response in simResponses) {
+          handleResponse(response);
+        }
+        return completer.future;
+      }
+    }
+
     // Encode and send via SIP transport.
     final encoded = _encodeFrame(frame);
     if (encoded != null) {
@@ -201,6 +258,22 @@ class MrrpDispatcher {
   void handleResponse(MrrpFrame frame) {
     final pending = _pending.remove(frame.requestId);
     if (pending == null) {
+      final pendingSummary = _pending.values
+          .map(
+            (p) =>
+                '0x${p.requestId.toRadixString(16)}:'
+                '0x${p.serviceId.toRadixString(16).padLeft(8, '0')}/'
+                '0x${p.actionId.toRadixString(16).padLeft(4, '0')}',
+          )
+          .join(',');
+      AppLogging.mrrp(
+        'MRRP_TRACE_RESP_UNMATCHED '
+        'req_id=0x${frame.requestId.toRadixString(16)} '
+        'service=0x${frame.serviceId.toRadixString(16).padLeft(8, '0')} '
+        'action=0x${frame.actionId.toRadixString(16).padLeft(4, '0')} '
+        'msgType=${frame.msgType.name} '
+        'pending=${_pending.length}${pendingSummary.isEmpty ? '' : ' [$pendingSummary]'}',
+      );
       AppLogging.mrrp(
         'MRRP_DISPATCH: stale ${frame.msgType.name} '
         'req_id=0x${frame.requestId.toRadixString(16)}, '
@@ -210,6 +283,13 @@ class MrrpDispatcher {
     }
 
     if (pending.cancelled) {
+      AppLogging.mrrp(
+        'MRRP_TRACE_RESP_REJECT '
+        'req_id=0x${frame.requestId.toRadixString(16)} '
+        'reason=cancelled '
+        'service=0x${frame.serviceId.toRadixString(16).padLeft(8, '0')} '
+        'action=0x${frame.actionId.toRadixString(16).padLeft(4, '0')}',
+      );
       AppLogging.mrrp(
         'MRRP_DISPATCH: ${frame.msgType.name} '
         'req_id=0x${frame.requestId.toRadixString(16)} '
@@ -222,9 +302,12 @@ class MrrpDispatcher {
     pending.timeoutTimer?.cancel();
     final latency = DateTime.now().difference(pending.sentAt);
 
+    final statusTlv = frame.isError
+        ? frame.findExtension(MrrpTlvType.statusCode)
+        : null;
+
     MrrpStatusCode status;
     if (frame.isError) {
-      final statusTlv = frame.findExtension(MrrpTlvType.statusCode);
       final statusCode = statusTlv != null && statusTlv.value.isNotEmpty
           ? MrrpStatusCode.fromCode(statusTlv.value[0])
           : null;
@@ -234,12 +317,34 @@ class MrrpDispatcher {
     }
 
     AppLogging.mrrp(
+      'MRRP_TRACE_RESP_MATCH '
+      'req_id=0x${frame.requestId.toRadixString(16)} '
+      'pending_service=0x${pending.serviceId.toRadixString(16).padLeft(8, '0')} '
+      'frame_service=0x${frame.serviceId.toRadixString(16).padLeft(8, '0')} '
+      'pending_action=0x${pending.actionId.toRadixString(16).padLeft(4, '0')} '
+      'frame_action=0x${frame.actionId.toRadixString(16).padLeft(4, '0')} '
+      'status=${status.name} '
+      'latency=${latency.inMilliseconds}ms',
+    );
+
+    AppLogging.mrrp(
       'MRRP_DISPATCH: ${frame.msgType.name} '
       'req_id=0x${frame.requestId.toRadixString(16)} '
       'status=${status.name}, '
       '${frame.payload.length}B payload, '
       'latency=${latency.inMilliseconds}ms', // lint-allow: hardcoded-string
     );
+
+    if (frame.isError) {
+      counters?.recordErrorReceived(
+        statusCode: statusTlv != null && statusTlv.value.isNotEmpty
+            ? statusTlv.value[0]
+            : null,
+      );
+    } else {
+      counters?.recordResponseReceived(serviceId: pending.serviceId);
+      counters?.recordLatency(pending.serviceId, latency);
+    }
 
     if (!pending.completer.isCompleted) {
       pending.completer.complete(
@@ -266,6 +371,8 @@ class MrrpDispatcher {
     AppLogging.mrrp(
       'MRRP_DISPATCH: CANCEL req_id=0x${requestId.toRadixString(16)}', // lint-allow: hardcoded-string
     );
+
+    counters?.recordRequestCancellation();
 
     // Send CANCEL frame to peer.
     final cancelFrame = MrrpFrame(
@@ -317,6 +424,8 @@ class MrrpDispatcher {
       'MRRP_DISPATCH: req_id=0x${requestId.toRadixString(16)} '
       'TIMEOUT after ${MrrpConstants.mrrpRequestTimeoutS}s', // lint-allow: hardcoded-string
     );
+
+    counters?.recordRequestTimeout(serviceId: pending.serviceId);
 
     if (!pending.completer.isCompleted) {
       pending.completer.complete(

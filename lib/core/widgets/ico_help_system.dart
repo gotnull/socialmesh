@@ -80,7 +80,9 @@ class _IcoHelpButtonState extends ConsumerState<IcoHelpButton>
   @override
   Widget build(BuildContext context) {
     final helpState = ref.watch(helpProvider);
+    final animationsEnabled = ref.watch(helpAnimationsEnabledProvider);
     final shouldShow = helpState.shouldShowHelp(widget.topicId);
+    _syncPulseAnimation(animationsEnabled);
 
     if (!shouldShow && !helpState.showPulsingHint) {
       return const SizedBox.shrink();
@@ -159,6 +161,17 @@ class _IcoHelpButtonState extends ConsumerState<IcoHelpButton>
       ),
     );
   }
+
+  void _syncPulseAnimation(bool enabled) {
+    if (!enabled) {
+      _pulseController.stop();
+      _pulseController.value = 0;
+      return;
+    }
+    if (!_pulseController.isAnimating) {
+      _pulseController.repeat(reverse: true);
+    }
+  }
 }
 
 // ============================================================================
@@ -228,7 +241,9 @@ class _IcoHelpAppBarButtonState extends ConsumerState<IcoHelpAppBarButton>
   @override
   Widget build(BuildContext context) {
     final helpState = ref.watch(helpProvider);
+    final animationsEnabled = ref.watch(helpAnimationsEnabledProvider);
     final isThisTourActive = helpState.activeTourId == widget.topicId;
+    _syncRingAnimation(animationsEnabled);
 
     return AnimatedBuilder(
       animation: _ringController,
@@ -306,6 +321,17 @@ class _IcoHelpAppBarButtonState extends ConsumerState<IcoHelpAppBarButton>
         );
       },
     );
+  }
+
+  void _syncRingAnimation(bool enabled) {
+    if (!enabled) {
+      _ringController.stop();
+      _ringController.value = 0;
+      return;
+    }
+    if (!_ringController.isAnimating) {
+      _ringController.repeat(reverse: true);
+    }
   }
 }
 
@@ -709,24 +735,29 @@ class _IcoHighlightedFieldState extends ConsumerState<IcoHighlightedField>
   @override
   Widget build(BuildContext context) {
     final helpState = ref.watch(helpProvider);
+    final animationsEnabled = ref.watch(helpAnimationsEnabledProvider);
     final isHighlighted = _isHighlighted(helpState);
+    final animation = animationsEnabled
+        ? _controller
+        : const AlwaysStoppedAnimation(0.0);
 
     // Handle focus changes
     _handleHighlightChange(isHighlighted);
+    _syncBorderAnimation(animationsEnabled);
 
     // For builder pattern (TextFields) - pass animation for InputBorder
     if (widget.builder != null) {
       return AnimatedBuilder(
-        animation: _controller,
+        animation: animation,
         builder: (context, _) {
-          return widget.builder!(context, isHighlighted, _controller);
+          return widget.builder!(context, isHighlighted, animation);
         },
       );
     }
 
     // For child pattern - wrap with AnimatedDottedBorder
     return AnimatedDottedBorder(
-      animation: _controller,
+      animation: animation,
       isVisible: isHighlighted,
       color: widget.color,
       strokeWidth: widget.strokeWidth,
@@ -736,6 +767,17 @@ class _IcoHighlightedFieldState extends ConsumerState<IcoHighlightedField>
       padding: widget.borderPadding,
       child: widget.child!,
     );
+  }
+
+  void _syncBorderAnimation(bool enabled) {
+    if (!enabled) {
+      _controller.stop();
+      _controller.value = 0;
+      return;
+    }
+    if (!_controller.isAnimating) {
+      _controller.repeat();
+    }
   }
 }
 
@@ -919,6 +961,7 @@ class _IcoSpeechBubbleWithArrowState
   late Animation<double> _entry;
   late Animation<double> _glow;
   late Animation<double> _scanline;
+  bool _reduceMotion = false;
 
   @override
   void initState() {
@@ -955,6 +998,13 @@ class _IcoSpeechBubbleWithArrowState
   }
 
   void _startTyping() {
+    if (_reduceMotion) {
+      setState(() {
+        _displayedText = widget.text;
+        _currentCharIndex = widget.text.length;
+      });
+      return;
+    }
     _currentCharIndex = 0;
     _displayedText = '';
     _typingTimer?.cancel();
@@ -975,6 +1025,12 @@ class _IcoSpeechBubbleWithArrowState
         timer.cancel();
       }
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncReduceMotion(!(ref.read(helpAnimationsEnabledProvider)));
   }
 
   void _completeTyping() {
@@ -999,6 +1055,11 @@ class _IcoSpeechBubbleWithArrowState
   @override
   Widget build(BuildContext context) {
     final helpState = ref.watch(helpProvider);
+    final reduceMotion = !ref.watch(helpAnimationsEnabledProvider);
+    _syncReduceMotion(reduceMotion);
+    final entryValue = reduceMotion ? 1.0 : _entry.value;
+    final glowValue = reduceMotion ? 0.5 : _glow.value;
+    final scanlineValue = reduceMotion ? 0.0 : _scanline.value;
 
     return AnimatedBuilder(
       animation: Listenable.merge([
@@ -1008,9 +1069,9 @@ class _IcoSpeechBubbleWithArrowState
       ]),
       builder: (context, child) {
         return Transform.scale(
-          scale: 0.9 + (_entry.value * 0.1),
+          scale: 0.9 + (entryValue * 0.1),
           child: Opacity(
-            opacity: _entry.value,
+            opacity: entryValue,
             child: GestureDetector(
               onTap: _isTypingComplete ? null : _completeTyping,
               child: Container(
@@ -1023,7 +1084,7 @@ class _IcoSpeechBubbleWithArrowState
                     // Animated outer glow like onboarding
                     BoxShadow(
                       color: context.accentColor.withValues(
-                        alpha: _glow.value * 0.4,
+                        alpha: glowValue * 0.4,
                       ),
                       blurRadius: 20,
                       spreadRadius: 2,
@@ -1042,9 +1103,7 @@ class _IcoSpeechBubbleWithArrowState
                       color: context.card.withValues(alpha: 0.95),
                       borderRadius: BorderRadius.circular(AppTheme.radius16),
                       border: Border.all(
-                        color: context.accentColor.withValues(
-                          alpha: _glow.value,
-                        ),
+                        color: context.accentColor.withValues(alpha: glowValue),
                         width: 1.5,
                       ),
                     ),
@@ -1054,7 +1113,7 @@ class _IcoSpeechBubbleWithArrowState
                         Positioned.fill(
                           child: CustomPaint(
                             painter: _ScanlinePainter(
-                              progress: _scanline.value,
+                              progress: scanlineValue,
                               color: context.accentColor.withValues(
                                 alpha: 0.08,
                               ),
@@ -1335,6 +1394,27 @@ class _IcoSpeechBubbleWithArrowState
         );
       },
     );
+  }
+
+  void _syncReduceMotion(bool reduceMotion) {
+    if (reduceMotion == _reduceMotion) return;
+    _reduceMotion = reduceMotion;
+    _typingTimer?.cancel();
+    if (_reduceMotion) {
+      _entryController.stop();
+      _entryController.value = 1;
+      _glowController.stop();
+      _scanlineController.stop();
+      _displayedText = widget.text;
+      _currentCharIndex = widget.text.length;
+      return;
+    }
+    if (!_glowController.isAnimating) {
+      _glowController.repeat(reverse: true);
+    }
+    if (!_scanlineController.isAnimating) {
+      _scanlineController.repeat();
+    }
   }
 }
 

@@ -13,6 +13,7 @@
 #   no-unimplemented           throw UnimplementedError
 #   no-bare-scaffold           Bare Scaffold (use GlassScaffold)
 #   no-bare-switch             Bare Switch/SwitchListTile (use ThemedSwitch)
+#   no-bare-dropdown           Bare DropdownButton (wrap in DropdownButtonHideUnderline)
 #   no-ignore-directive        // ignore: outside lib/generated/
 #   no-railway-domains         Railway *.up.railway.app domains
 #   spdx-wrong-path            SPDX header in prohibited dirs
@@ -705,6 +706,33 @@ check_file() {
       "no-switch-list-tile" \
       "SwitchListTile — use ListTile with ThemedSwitch trailing instead" \
       "error" true true
+  fi
+
+  # ------------------------------------------------------------------
+  # ERROR: Bare DropdownButton (must be wrapped in DropdownButtonHideUnderline)
+  # Checks preceding 5 lines for the HideUnderline wrapper.
+  # ------------------------------------------------------------------
+  if [ "$in_lib" = true ] && [ "$in_lib_generated" = false ]; then
+    while IFS=: read -r lineno matched_line; do
+      line_in_scope "$file" "$lineno" || continue
+      local trimmed="${matched_line#"${matched_line%%[![:space:]]*}"}"
+      [[ "$trimmed" == //* ]] && continue
+      [[ "$matched_line" == import* ]] && continue
+      # Skip if this line itself is the HideUnderline wrapper
+      [[ "$matched_line" =~ DropdownButtonHideUnderline ]] && continue
+      # Check preceding 5 lines for DropdownButtonHideUnderline
+      # Also check following 12 lines for underline: override pattern
+      # (generous window to handle multi-line generic type params)
+      local start_line=$(( lineno > 5 ? lineno - 5 : 1 ))
+      local end_line=$(( lineno + 12 ))
+      local context
+      context=$(sed -n "${start_line},${end_line}p" "$file" 2>/dev/null || true)
+      if [[ ! "$context" =~ DropdownButtonHideUnderline ]] \
+         && [[ ! "$context" =~ underline: ]]; then
+        record_hit "$file" "$lineno" "no-bare-dropdown" \
+          "Bare DropdownButton — wrap in DropdownButtonHideUnderline" "error"
+      fi
+    done < <(grep -nE '\bDropdownButton[<(]' "$file" 2>/dev/null || true)
   fi
 
   # ------------------------------------------------------------------

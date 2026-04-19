@@ -1,0 +1,42 @@
+name: License Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions: read-all
+
+jobs:
+  check-licenses:
+    name: SPDX headers and license boundaries
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Check license files present
+        run: |
+          missing=0
+          for f in \
+            licenses/APACHE-2.0 \
+            licenses/LGPL-3.0 \
+            protos/meshtastic/LICENSE \
+            lib/generated/meshtastic/LICENSE \
+            lib/services/protocol/sip/LICENSE \
+            lib/features/nodedex/LICENSE \
+            lib/services/LICENSE; do
+            if [[ ! -f "$f" ]]; then
+              echo "::error file=${f}::Required license file missing: ${f}"
+              missing=$((missing + 1))
+            fi
+          done
+          if [[ $missing -gt 0 ]]; then
+            echo "::error::${missing} required license file(s) missing"
+            exit 1
+          fi
+          echo "All required license files present."
+
+      - name: Run license boundary checks
+        run: bash scripts/check-licenses.sh

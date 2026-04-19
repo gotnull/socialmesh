@@ -360,6 +360,11 @@ class TraceRouteLog extends TelemetryLogEntry {
   final int hopsBack;
   final List<TraceRouteHop> hops;
   final double? snr;
+  final bool? viaMqtt;
+  final double? originLatitude;
+  final double? originLongitude;
+  final double? targetLatitude;
+  final double? targetLongitude;
 
   TraceRouteLog({
     super.id,
@@ -372,6 +377,11 @@ class TraceRouteLog extends TelemetryLogEntry {
     this.hopsBack = 0,
     this.hops = const [],
     this.snr,
+    this.viaMqtt,
+    this.originLatitude,
+    this.originLongitude,
+    this.targetLatitude,
+    this.targetLongitude,
   });
 
   factory TraceRouteLog.fromJson(Map<String, dynamic> json) {
@@ -392,6 +402,11 @@ class TraceRouteLog extends TelemetryLogEntry {
               .toList() ??
           [],
       snr: (json['snr'] as num?)?.toDouble(),
+      viaMqtt: json['viaMqtt'] as bool?,
+      originLatitude: (json['originLatitude'] as num?)?.toDouble(),
+      originLongitude: (json['originLongitude'] as num?)?.toDouble(),
+      targetLatitude: (json['targetLatitude'] as num?)?.toDouble(),
+      targetLongitude: (json['targetLongitude'] as num?)?.toDouble(),
     );
   }
 
@@ -407,6 +422,11 @@ class TraceRouteLog extends TelemetryLogEntry {
     'hopsBack': hopsBack,
     'hops': hops.map((h) => h.toJson()).toList(),
     'snr': _sanitizeDouble(snr),
+    'viaMqtt': viaMqtt,
+    'originLatitude': _sanitizeDouble(originLatitude),
+    'originLongitude': _sanitizeDouble(originLongitude),
+    'targetLatitude': _sanitizeDouble(targetLatitude),
+    'targetLongitude': _sanitizeDouble(targetLongitude),
   };
 }
 

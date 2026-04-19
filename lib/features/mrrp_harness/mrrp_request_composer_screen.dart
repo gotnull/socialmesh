@@ -9,6 +9,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/animations.dart';
+import '../../core/widgets/bottom_action_bar.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../providers/mrrp_providers.dart';
 import '../../providers/sip_providers.dart';
@@ -96,148 +98,314 @@ class _MrrpRequestComposerScreenState
       onTap: () => FocusScope.of(context).unfocus(),
       child: GlassScaffold(
         title: l10n.mrrpHarnessComposerTitle,
+        bottomNavigationBar: BottomActionBar(
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: canSend ? _onSend : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: context.accentColor,
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: context.border.withValues(alpha: 0.3),
+                disabledForegroundColor: context.textTertiary,
+                padding: const EdgeInsets.symmetric(
+                  vertical: AppTheme.spacing12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
+                ),
+              ),
+              icon: _sending
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.send, size: 18),
+              label: Text(l10n.mrrpHarnessSend),
+            ),
+          ),
+        ),
         slivers: [
           SliverPadding(
             padding: const EdgeInsets.all(AppTheme.spacing16),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                // --- Peer selector ---
-                _buildDropdown<int>(
-                  context: context,
-                  label: l10n.mrrpHarnessSelectPeer,
-                  value: _selectedPeerId,
-                  items: peerIds.map((id) {
-                    final hex =
-                        '0x${id.toRadixString(16).padLeft(8, '0').toUpperCase()}';
-                    return DropdownMenuItem(value: id, child: Text(hex));
-                  }).toList(),
-                  onChanged: (v) => setState(() {
-                    _selectedPeerId = v;
-                    _selectedServiceId = null;
-                    _selectedActionId = null;
-                  }),
-                ),
-                const SizedBox(height: AppTheme.spacing12),
-
-                // --- Service selector ---
-                _buildDropdown<int>(
-                  context: context,
-                  label: l10n.mrrpHarnessSelectService,
-                  value: _selectedServiceId,
-                  items: peerServices.map((svc) {
-                    final name = MrrpServiceId.nameOf(svc.descriptor.serviceId);
-                    return DropdownMenuItem(
-                      value: svc.descriptor.serviceId,
-                      child: Text(name),
-                    );
-                  }).toList(),
-                  onChanged: (v) => setState(() {
-                    _selectedServiceId = v;
-                    _selectedActionId = null;
-                  }),
-                ),
-                const SizedBox(height: AppTheme.spacing12),
-
-                // --- Action selector ---
-                _buildDropdown<int>(
-                  context: context,
-                  label: l10n.mrrpHarnessSelectAction,
-                  value: _selectedActionId,
-                  items: actions
-                      .map(
-                        (a) =>
-                            DropdownMenuItem(value: a.id, child: Text(a.name)),
-                      )
-                      .toList(),
-                  onChanged: (v) => setState(() => _selectedActionId = v),
-                ),
-                const SizedBox(height: AppTheme.spacing16),
-
-                // --- Payload editor ---
-                Text(
-                  l10n.mrrpHarnessPayloadRawHex,
-                  style: Theme.of(context).textTheme.labelLarge,
-                ),
-                const SizedBox(height: AppTheme.spacing4),
-                TextField(
-                  controller: _payloadController,
-                  maxLength: MrrpConstants.mrrpMaxPayload * 2,
-                  decoration: InputDecoration(
-                    hintText: 'DEADBEEF', // lint-allow: hardcoded-string
-                    border: const OutlineInputBorder(),
-                    errorText:
-                        payloadBytes == null &&
-                            _payloadController.text.isNotEmpty
-                        ? 'Invalid hex' // lint-allow: hardcoded-string
-                        : null,
+                // --- TARGET section card ---
+                Container(
+                  decoration: BoxDecoration(
+                    color: context.card,
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontFamily: 'monospace', // lint-allow: hardcoded-string
-                  ),
-                  onChanged: (_) => setState(() {}),
-                ),
-                const SizedBox(height: AppTheme.spacing8),
+                  padding: const EdgeInsets.all(AppTheme.spacing16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.mrrpHarnessComposerSectionTarget,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: context.textTertiary,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: AppTheme.spacing16),
 
-                // --- TTL selector ---
-                Text(
-                  l10n.mrrpHarnessRequestTtl,
-                  style: Theme.of(context).textTheme.labelLarge,
-                ),
-                const SizedBox(height: AppTheme.spacing4),
-                SegmentedButton<int>(
-                  segments: const [
-                    ButtonSegment(
-                      value: 5,
-                      label: Text('5s'),
-                    ), // lint-allow: hardcoded-string
-                    ButtonSegment(
-                      value: 10,
-                      label: Text('10s'),
-                    ), // lint-allow: hardcoded-string
-                    ButtonSegment(
-                      value: 15,
-                      label: Text('15s'),
-                    ), // lint-allow: hardcoded-string
-                    ButtonSegment(
-                      value: 30,
-                      label: Text('30s'),
-                    ), // lint-allow: hardcoded-string
-                  ],
-                  selected: {_ttlSeconds},
-                  onSelectionChanged: (v) =>
-                      setState(() => _ttlSeconds = v.first),
-                ),
-                const SizedBox(height: AppTheme.spacing16),
+                      // Peer selector
+                      _buildDropdown<int>(
+                        context: context,
+                        label: l10n.mrrpHarnessSelectPeer,
+                        value: _selectedPeerId,
+                        items: peerIds.map((id) {
+                          final hex =
+                              '0x${id.toRadixString(16).padLeft(8, '0').toUpperCase()}';
+                          return DropdownMenuItem(value: id, child: Text(hex));
+                        }).toList(),
+                        onChanged: (v) => setState(() {
+                          _selectedPeerId = v;
+                          _selectedServiceId = null;
+                          _selectedActionId = null;
+                        }),
+                      ),
+                      const SizedBox(height: AppTheme.spacing8),
 
-                // --- Encoded size ---
-                Text(
-                  l10n.mrrpHarnessEncodedSize(encodedSize),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: exceedsMax
-                        ? SemanticColors.error
-                        : context.textSecondary,
+                      // Service selector
+                      _buildDropdown<int>(
+                        context: context,
+                        label: l10n.mrrpHarnessSelectService,
+                        value: _selectedServiceId,
+                        items: peerServices.map((svc) {
+                          final name = MrrpServiceId.nameOf(
+                            svc.descriptor.serviceId,
+                          );
+                          return DropdownMenuItem(
+                            value: svc.descriptor.serviceId,
+                            child: Text(name),
+                          );
+                        }).toList(),
+                        onChanged: (v) => setState(() {
+                          _selectedServiceId = v;
+                          _selectedActionId = null;
+                        }),
+                      ),
+                      const SizedBox(height: AppTheme.spacing8),
+
+                      // Action selector
+                      _buildDropdown<int>(
+                        context: context,
+                        label: l10n.mrrpHarnessSelectAction,
+                        value: _selectedActionId,
+                        items: actions
+                            .map(
+                              (a) => DropdownMenuItem(
+                                value: a.id,
+                                child: Text(a.name),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (v) => setState(() => _selectedActionId = v),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: AppTheme.spacing24),
 
-                // --- Send button ---
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: canSend ? _onSend : null,
-                    icon: _sending
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
+                // --- PAYLOAD section card ---
+                Container(
+                  decoration: BoxDecoration(
+                    color: context.card,
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
+                  ),
+                  padding: const EdgeInsets.all(AppTheme.spacing16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.mrrpHarnessComposerSectionPayload,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: context.textTertiary,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: AppTheme.spacing16),
+
+                      // Payload editor
+                      Text(
+                        l10n.mrrpHarnessPayloadRawHex,
+                        style: TextStyle(
+                          color: context.textPrimary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: AppTheme.spacing8),
+                      TextField(
+                        controller: _payloadController,
+                        maxLength: MrrpConstants.mrrpMaxPayload * 2,
+                        decoration: InputDecoration(
+                          hintText:
+                              '0xDEADBEEF', // lint-allow: hardcoded-string
+                          hintStyle: TextStyle(color: context.textTertiary),
+                          errorText:
+                              payloadBytes == null &&
+                                  _payloadController.text.isNotEmpty
+                              ? 'Invalid hex' // lint-allow: hardcoded-string
+                              : null,
+                          filled: true,
+                          fillColor: context.surface,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius8,
                             ),
-                          )
-                        : const Icon(Icons.send),
-                    label: Text(l10n.mrrpHarnessSend),
+                            borderSide: BorderSide(color: context.border),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius8,
+                            ),
+                            borderSide: BorderSide(color: context.border),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius8,
+                            ),
+                            borderSide: BorderSide(color: context.accentColor),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius8,
+                            ),
+                            borderSide: const BorderSide(
+                              color: SemanticColors.error,
+                            ),
+                          ),
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius8,
+                            ),
+                            borderSide: const BorderSide(
+                              color: SemanticColors.error,
+                              width: 2,
+                            ),
+                          ),
+                          counterText: '',
+                        ),
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontFamily: AppTheme.fontFamily,
+                          color: context.textPrimary,
+                        ),
+                        onChanged: (_) => setState(() {}),
+                      ),
+                      const SizedBox(height: AppTheme.spacing16),
+
+                      // TTL selector
+                      Text(
+                        l10n.mrrpHarnessRequestTtl,
+                        style: TextStyle(
+                          color: context.textPrimary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: AppTheme.spacing8),
+                      Wrap(
+                        spacing: AppTheme.spacing8,
+                        runSpacing: AppTheme.spacing8,
+                        children: [5, 10, 15, 30].map((seconds) {
+                          final isSelected = seconds == _ttlSeconds;
+                          return BouncyTap(
+                            onTap: () => setState(() => _ttlSeconds = seconds),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppTheme.spacing16,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? context.accentColor.withValues(
+                                        alpha: 0.15,
+                                      )
+                                    : context.card,
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius20,
+                                ),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? context.accentColor
+                                      : context.border.withValues(alpha: 0.5),
+                                  width: isSelected ? 2 : 1,
+                                ),
+                              ),
+                              child: Text(
+                                '${seconds}s', // lint-allow: hardcoded-string
+                                style: TextStyle(
+                                  color: isSelected
+                                      ? context.accentColor
+                                      : context.textSecondary,
+                                  fontSize: 14,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w600
+                                      : FontWeight.normal,
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: AppTheme.spacing12),
+
+                      // Encoded size
+                      Text(
+                        l10n.mrrpHarnessEncodedSize(encodedSize),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: exceedsMax
+                              ? SemanticColors.error
+                              : context.textSecondary,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+                const SizedBox(height: AppTheme.spacing24),
+
+                // --- Info card ---
+                Container(
+                  decoration: BoxDecoration(
+                    color: context.accentColor.withAlpha(20),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
+                    border: Border.all(
+                      color: context.accentColor.withAlpha(50),
+                    ),
+                  ),
+                  padding: const EdgeInsets.all(AppTheme.spacing16),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        color: context.accentColor,
+                        size: 20,
+                      ),
+                      const SizedBox(width: AppTheme.spacing12),
+                      Expanded(
+                        child: Text(
+                          l10n.mrrpHarnessComposerInfoText,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: context.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spacing32),
               ]),
             ),
           ),
@@ -253,23 +421,39 @@ class _MrrpRequestComposerScreenState
     required List<DropdownMenuItem<T>> items,
     required ValueChanged<T?> onChanged,
   }) {
-    return InputDecorator(
-      decoration: InputDecoration(
-        labelText: label,
-        border: const OutlineInputBorder(),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppTheme.spacing12,
-          vertical: AppTheme.spacing4,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            color: context.textPrimary,
+            fontWeight: FontWeight.w500,
+          ),
         ),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<T>(
-          value: value,
-          isExpanded: true,
-          items: items,
-          onChanged: onChanged,
+        const SizedBox(height: AppTheme.spacing4),
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppTheme.spacing12,
+            vertical: AppTheme.spacing4,
+          ),
+          decoration: BoxDecoration(
+            color: context.background,
+            borderRadius: BorderRadius.circular(AppTheme.radius8),
+            border: Border.all(color: context.border),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<T>(
+              value: value,
+              isExpanded: true,
+              items: items,
+              onChanged: onChanged,
+              dropdownColor: context.card,
+              style: TextStyle(fontSize: 14, color: context.textPrimary),
+            ),
+          ),
         ),
-      ),
+      ],
     );
   }
 
@@ -405,7 +589,10 @@ class _MrrpRequestComposerScreenState
   }
 
   Uint8List? _parseHexPayload(String text) {
-    final hex = text.replaceAll(RegExp(r'\s+'), '');
+    var hex = text.replaceAll(RegExp(r'\s+'), '');
+    if (hex.startsWith('0x') || hex.startsWith('0X')) {
+      hex = hex.substring(2);
+    }
     if (hex.isEmpty) return Uint8List(0);
     if (hex.length.isOdd) return null;
     if (!RegExp(r'^[0-9a-fA-F]+$').hasMatch(hex)) return null;

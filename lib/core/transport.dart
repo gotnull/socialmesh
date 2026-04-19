@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 /// Transport types supported by the app
-enum TransportType { ble, usb }
+enum TransportType { ble, usb, network }
 
 /// Device information from scan results
 class DeviceInfo {
@@ -96,6 +96,14 @@ abstract class DeviceTransport {
   /// Read current RSSI value (BLE-specific)
   /// Returns null if not supported or not connected
   Future<int?> readRssi();
+
+  /// Re-subscribe to BLE characteristic notifications.
+  ///
+  /// On iOS/Android, BLE notification subscriptions can be silently dropped
+  /// by the OS while the GATT connection remains alive. Calling this method
+  /// reapplies `setNotifyValue(true)` on the fromNum characteristic to
+  /// restore the data-flow path. No-op for non-BLE transports.
+  Future<void> refreshNotifications() async {}
 
   /// Get the BLE device model number from Device Information Service
   /// Returns null if not available (USB transport or not read yet)

@@ -165,6 +165,20 @@ void main() {
     });
   });
 
+  group('AppFeatureFlags', () {
+    test('message timeline defaults to disabled', () {
+      dotenv.loadFromString(envString: 'TEST_MODE=true');
+      expect(AppFeatureFlags.isMessageTimelineEnabled, isFalse);
+    });
+
+    test('message timeline can be enabled from env', () {
+      dotenv.loadFromString(
+        envString: 'TEST_MODE=true\nMESSAGE_TIMELINE_ENABLED=true',
+      );
+      expect(AppFeatureFlags.isMessageTimelineEnabled, isTrue);
+    });
+  });
+
   group('IdentityConstants', () {
     test('has correct key rotation interval', () {
       expect(IdentityConstants.keyRotationIntervalHours, 24);

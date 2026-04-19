@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/features/messaging/widgets/chat_composer.dart';
+import 'package:socialmesh/services/protocol/text_message_payload_budget.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -24,7 +25,12 @@ void main() {
     focusNode.dispose();
   });
 
-  Widget buildSubject({VoidCallback? onSend}) {
+  Widget buildSubject({
+    VoidCallback? onSend,
+    int maxLength = 500,
+    ChatComposerBudgetResolver? budgetResolver,
+    ChatComposerBudgetLabelBuilder? budgetLabelBuilder,
+  }) {
     return MaterialApp(
       home: Scaffold(
         body: ChatComposer(
@@ -32,7 +38,10 @@ void main() {
           focusNode: focusNode,
           onSend: onSend ?? () => sendCalled = true,
           hintText: 'Message',
+          maxLength: maxLength,
           sendTooltip: 'Send (Ctrl/Cmd+Enter)',
+          budgetResolver: budgetResolver,
+          budgetLabelBuilder: budgetLabelBuilder,
         ),
       ),
     );
@@ -282,22 +291,122 @@ void main() {
       expect(sendCalled, isFalse);
     });
 
-    testWidgets('crossAxisAlignment is end so button aligns to bottom', (
+    testWidgets('shows a live byte counter for raw draft bytes', (
       tester,
     ) async {
-      await tester.pumpWidget(buildSubject());
+      final sizer = TextMessagePayloadSizer.standard();
 
-      // Enter multiline text to make the field grow.
-      await tester.enterText(find.byType(TextField), 'line1\nline2\nline3');
+      await tester.pumpWidget(
+        buildSubject(
+          maxLength: sizer.maxUtf8Bytes,
+          budgetResolver: sizer.measure,
+          budgetLabelBuilder: (_, budget) =>
+              '${budget.utf8Bytes}/${budget.maxUtf8Bytes} bytes',
+        ),
+      );
+
+      expect(find.byKey(const Key('chat-composer-byte-counter')), findsNothing);
+
+      await tester.tap(find.byType(TextField));
+      await tester.pump();
+      await tester.enterText(find.byType(TextField), 'hello ');
       await tester.pump();
 
-      // The Row inside ChatComposer should use CrossAxisAlignment.end.
-      // We verify the send button exists and is rendered at the bottom by
-      // checking layout — the button's bottom should be near the row's bottom.
-      final sendButton = find.byIcon(Icons.send);
-      expect(sendButton, findsOneWidget);
-
-      // Just verifying it renders without overflow errors is the main value.
+      expect(find.text('6/228 bytes'), findsOneWidget);
     });
+
+    testWidgets('send stays disabled when the draft exceeds the byte budget', (
+      tester,
+    ) async {
+      final sizer = TextMessagePayloadSizer.standard();
+
+      await tester.pumpWidget(
+        buildSubject(
+          maxLength: sizer.maxUtf8Bytes,
+          budgetResolver: sizer.measure,
+          budgetLabelBuilder: (_, budget) =>
+              '${budget.utf8Bytes}/${budget.maxUtf8Bytes} bytes',
+        ),
+      );
+
+      await tester.tap(find.byType(TextField));
+      await tester.pump();
+      await tester.enterText(find.byType(TextField), '🙂' * 58);
+      await tester.pump();
+
+      expect(find.text('232/228 bytes'), findsOneWidget);
+
+      await tester.tap(find.byIcon(Icons.send));
+      await tester.pump();
+
+      expect(sendCalled, isFalse);
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pump();
+
+      expect(sendCalled, isFalse);
+    });
+
+    testWidgets(
+      'side buttons stay top aligned when the byte counter is visible',
+      (tester) async {
+        final sizer = TextMessagePayloadSizer.standard();
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: ChatComposer(
+                controller: controller,
+                focusNode: focusNode,
+                onSend: () {},
+                hintText: 'Message',
+                maxLength: sizer.maxUtf8Bytes,
+                budgetResolver: sizer.measure,
+                budgetLabelBuilder: (_, budget) =>
+                    '${budget.utf8Bytes}/${budget.maxUtf8Bytes} bytes',
+                leading: Container(
+                  key: const Key('leading-button'),
+                  width: 40,
+                  height: 40,
+                  color: Colors.red,
+                ),
+              ),
+            ),
+          ),
+        );
+
+        await tester.tap(find.byType(TextField));
+        await tester.pump();
+        await tester.enterText(find.byType(TextField), 'hello');
+        await tester.pump();
+
+        expect(
+          find.byKey(const Key('chat-composer-byte-counter')),
+          findsOneWidget,
+        );
+
+        final textFieldRect = tester.getRect(find.byType(TextField));
+        final leadingRect = tester.getRect(
+          find.byKey(const Key('leading-button')),
+        );
+        final sendButtonRect = tester.getRect(
+          find.ancestor(
+            of: find.byIcon(Icons.send),
+            matching: find.byType(AnimatedContainer),
+          ),
+        );
+
+        expect(
+          leadingRect.top,
+          moreOrLessEquals(textFieldRect.top, epsilon: 0.1),
+        );
+        expect(
+          sendButtonRect.top,
+          moreOrLessEquals(textFieldRect.top, epsilon: 0.1),
+        );
+      },
+    );
   });
 }

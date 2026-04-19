@@ -50,6 +50,7 @@ void main() {
       configProvider: () => config,
       identityChecker: (nodeId) => identityVerified,
     );
+    handler.isProfileSharingEnabled = true;
   });
 
   test('serviceId and supportedActions', () {
@@ -92,6 +93,7 @@ void main() {
         registeredServices: const [],
       );
       handler = MrrpServiceProfile(configProvider: () => config);
+      handler.isProfileSharingEnabled = true;
 
       final request = _makeRequest(actionId: ProfileAction.getSummary);
       final response = await handler.handleRequest(request, 0xABCD);
@@ -122,6 +124,7 @@ void main() {
 
     test('returns UNAUTHORIZED when no identity checker', () async {
       handler = MrrpServiceProfile(configProvider: () => config);
+      handler.isProfileSharingEnabled = true;
       final request = _makeRequest(actionId: ProfileAction.getContactCard);
       final response = await handler.handleRequest(request, 0xABCD);
       expect(response.msgType, MrrpMessageType.error);

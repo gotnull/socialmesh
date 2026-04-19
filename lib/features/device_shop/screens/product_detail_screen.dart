@@ -25,6 +25,7 @@ import '../../../utils/snackbar.dart';
 import '../models/shop_models.dart';
 import '../providers/admin_shop_providers.dart';
 import '../providers/device_shop_providers.dart';
+import '../widgets/device_shop_components.dart';
 import 'category_products_screen.dart';
 import 'admin_products_screen.dart';
 
@@ -79,34 +80,6 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
     }
   }
 
-  /// Styled icon button with semi-transparent background for visibility over images
-  Widget _buildStyledIconButton({
-    required IconData icon,
-    required VoidCallback onPressed,
-    Color? iconColor,
-  }) {
-    return Container(
-      margin: const EdgeInsets.all(AppTheme.spacing8),
-      decoration: BoxDecoration(
-        color: context.background.withValues(alpha: 0.7),
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: IconButton(
-        icon: Icon(icon, color: iconColor ?? context.textPrimary, size: 22),
-        onPressed: onPressed,
-        padding: const EdgeInsets.all(AppTheme.spacing8),
-        constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final productAsync = ref.watch(singleProductProvider(widget.productId));
@@ -121,7 +94,30 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
         title: context.l10n.productDetailTitle,
         slivers: [
           SliverFillRemaining(
-            child: Center(child: CircularProgressIndicator()),
+            hasScrollBody: false,
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 48,
+                    height: 48,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: context.accentColor,
+                    ),
+                  ),
+                  const SizedBox(height: AppTheme.spacing16),
+                  Text(
+                    context.l10n.productDetailTitle,
+                    style: TextStyle(
+                      color: context.textSecondary,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),
@@ -129,22 +125,20 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
         title: context.l10n.productDetailTitle,
         slivers: [
           SliverFillRemaining(
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, color: AppTheme.errorRed, size: 48),
-                  const SizedBox(height: AppTheme.spacing16),
-                  Text(
-                    context.l10n.productDetailErrorLoading,
-                    style: TextStyle(color: context.textPrimary),
-                  ),
-                  const SizedBox(height: AppTheme.spacing8),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Text(context.l10n.productDetailGoBack),
-                  ),
-                ],
+            hasScrollBody: false,
+            child: Padding(
+              padding: const EdgeInsets.all(AppTheme.spacing24),
+              child: Center(
+                child: DeviceShopStatePanel(
+                  icon: Icons.error_outline,
+                  title: context.l10n.productDetailErrorLoading,
+                  description: context.l10n.deviceShopTryAgain,
+                  actionLabel: context.l10n.productDetailGoBack,
+                  actionIcon: Icons.arrow_back,
+                  onAction: () => Navigator.pop(context),
+                  accentColor: AppTheme.errorRed,
+                  compact: true,
+                ),
               ),
             ),
           ),
@@ -156,26 +150,19 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
             title: context.l10n.productDetailTitle,
             slivers: [
               SliverFillRemaining(
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.search_off,
-                        color: context.textTertiary,
-                        size: 48,
-                      ),
-                      const SizedBox(height: AppTheme.spacing16),
-                      Text(
-                        context.l10n.productDetailNotFound,
-                        style: TextStyle(color: context.textPrimary),
-                      ),
-                      const SizedBox(height: AppTheme.spacing8),
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: Text(context.l10n.productDetailGoBack),
-                      ),
-                    ],
+                hasScrollBody: false,
+                child: Padding(
+                  padding: const EdgeInsets.all(AppTheme.spacing24),
+                  child: Center(
+                    child: DeviceShopStatePanel(
+                      icon: Icons.search_off,
+                      title: context.l10n.productDetailNotFound,
+                      description: context.l10n.deviceShopTryAgain,
+                      actionLabel: context.l10n.productDetailGoBack,
+                      actionIcon: Icons.arrow_back,
+                      onAction: () => Navigator.pop(context),
+                      compact: true,
+                    ),
                   ),
                 ),
               ),
@@ -238,9 +225,14 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
       backgroundColor: context.card,
       expandedHeight: 350,
       pinned: true,
-      leading: _buildStyledIconButton(
-        icon: Icons.arrow_back,
-        onPressed: () => Navigator.pop(context),
+      leading: Padding(
+        padding: const EdgeInsets.all(AppTheme.spacing8),
+        child: DeviceShopIconOrb(
+          icon: Icons.arrow_back,
+          color: Colors.white,
+          size: 38,
+          onTap: () => Navigator.pop(context),
+        ),
       ),
       title: _showTitle
           ? AutoScrollText(
@@ -256,23 +248,36 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
             )
           : null,
       actions: [
-        _buildStyledIconButton(
-          icon: isFavorite ? Icons.favorite : Icons.favorite_outline,
-          iconColor: isFavorite ? AppTheme.errorRed : null,
-          onPressed: () {
-            if (userId != null) {
-              toggleFavoriteQueued(ref, userId: userId, productId: product.id);
-            } else {
-              showSignInRequiredSnackBar(
-                context,
-                context.l10n.productDetailSignInFavorites,
-              );
-            }
-          },
+        Padding(
+          padding: const EdgeInsets.only(right: AppTheme.spacing4),
+          child: DeviceShopIconOrb(
+            icon: isFavorite ? Icons.favorite : Icons.favorite_outline,
+            color: isFavorite ? AppTheme.errorRed : Colors.white,
+            size: 38,
+            onTap: () {
+              if (userId != null) {
+                toggleFavoriteQueued(
+                  ref,
+                  userId: userId,
+                  productId: product.id,
+                );
+              } else {
+                showSignInRequiredSnackBar(
+                  context,
+                  context.l10n.productDetailSignInFavorites,
+                );
+              }
+            },
+          ),
         ),
-        _buildStyledIconButton(
-          icon: Icons.share,
-          onPressed: () => _shareProduct(product),
+        Padding(
+          padding: const EdgeInsets.only(right: AppTheme.spacing8),
+          child: DeviceShopIconOrb(
+            icon: Icons.share,
+            color: Colors.white,
+            size: 38,
+            onTap: () => _shareProduct(product),
+          ),
         ),
       ],
       flexibleSpace: FlexibleSpaceBar(
@@ -349,15 +354,21 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(
                       product.imageUrls.length,
-                      (index) => Container(
-                        width: 8,
+                      (index) => AnimatedContainer(
+                        duration:
+                            MediaQuery.maybeOf(context)?.disableAnimations ??
+                                false
+                            ? Duration.zero
+                            : const Duration(milliseconds: 200),
+                        curve: Curves.easeOutCubic,
+                        width: index == _currentImageIndex ? 20 : 8,
                         height: 8,
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        margin: const EdgeInsets.symmetric(horizontal: 3),
                         decoration: BoxDecoration(
-                          shape: BoxShape.circle,
+                          borderRadius: BorderRadius.circular(AppTheme.radius4),
                           color: index == _currentImageIndex
                               ? context.accentColor
-                              : Colors.white.withValues(alpha: 0.5),
+                              : Colors.white.withValues(alpha: 0.4),
                         ),
                       ),
                     ),
@@ -368,26 +379,14 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
             // Sale badge
             if (product.isOnSale)
               Positioned(
-                top: 150,
+                top: 140,
                 left: 16,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
+                child: DeviceShopBadgePill(
+                  label: context.l10n.productDetailDiscountBadge(
+                    product.discountPercent,
                   ),
-                  decoration: BoxDecoration(
-                    color: AppTheme.errorRed,
-                    borderRadius: BorderRadius.circular(AppTheme.radius4),
-                  ),
-                  child: Text(
-                    context.l10n.productDetailDiscountBadge(
-                      product.discountPercent,
-                    ),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  icon: Icons.local_offer,
+                  color: AppTheme.errorRed,
                 ),
               ),
           ],
@@ -397,13 +396,15 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
   }
 
   Widget _buildProductInfo(ShopProduct product) {
-    return Container(
+    final categoryColor = deviceShopCategoryColor(product.category);
+
+    return Padding(
       padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Category badge
-          GestureDetector(
+          BouncyTap(
             onTap: () {
               HapticFeedback.lightImpact();
               Navigator.push(
@@ -414,20 +415,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
                 ),
               );
             },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: context.accentColor.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(AppTheme.radius4),
-              ),
-              child: Text(
-                product.category.displayLabel(context.l10n),
-                style: TextStyle(
-                  color: context.accentColor,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+            child: DeviceShopInfoPill(
+              label: product.category.displayLabel(context.l10n),
+              color: categoryColor,
             ),
           ),
           SizedBox(height: AppTheme.spacing12),
@@ -447,7 +437,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
           const SizedBox(height: AppTheme.spacing8),
 
           // Seller
-          GestureDetector(
+          BouncyTap(
             onTap: () {
               HapticFeedback.lightImpact();
               Navigator.push(
@@ -465,54 +455,75 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
                   style: TextStyle(color: context.textSecondary, fontSize: 14),
                 ),
                 SizedBox(width: AppTheme.spacing4),
+                if (product.vendorVerified ||
+                    product.sellerName == 'LILYGO') ...[
+                  Icon(Icons.verified, size: 16, color: context.accentColor),
+                  SizedBox(width: AppTheme.spacing4),
+                ],
                 Icon(Icons.chevron_right, color: context.accentColor, size: 18),
               ],
             ),
           ),
           SizedBox(height: AppTheme.spacing16),
 
-          // Rating & Stats
-          Row(
-            children: [
-              if (product.reviewCount > 0) ...[
-                Icon(Icons.star, color: AppTheme.warningYellow, size: 20),
-                const SizedBox(width: AppTheme.spacing4),
-                Text(
-                  product.rating.toStringAsFixed(1),
-                  style: TextStyle(
-                    color: context.textPrimary,
-                    fontWeight: FontWeight.bold,
+          // Rating & Stats in a premium panel
+          GradientBorderContainer(
+            borderRadius: AppTheme.radius16,
+            borderWidth: 1,
+            accentOpacity: 0.2,
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppTheme.spacing16,
+              vertical: AppTheme.spacing14,
+            ),
+            child: Row(
+              children: [
+                if (product.reviewCount > 0) ...[
+                  Icon(
+                    Icons.star_rounded,
+                    color: AppTheme.warningYellow,
+                    size: 20,
                   ),
+                  const SizedBox(width: AppTheme.spacing4),
+                  Text(
+                    product.rating.toStringAsFixed(1),
+                    style: TextStyle(
+                      color: context.textPrimary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: AppTheme.spacing4),
+                  Text(
+                    context.l10n.productDetailReviewCount(product.reviewCount),
+                    style: TextStyle(
+                      color: context.textSecondary,
+                      fontSize: 13,
+                    ),
+                  ),
+                  _statDivider(),
+                ],
+                Icon(
+                  Icons.remove_red_eye_outlined,
+                  color: context.textTertiary,
+                  size: 17,
                 ),
-                const SizedBox(width: AppTheme.spacing4),
+                SizedBox(width: AppTheme.spacing4),
                 Text(
-                  context.l10n.productDetailReviewCount(product.reviewCount),
-                  style: TextStyle(color: context.textSecondary, fontSize: 14),
+                  '${product.viewCount}',
+                  style: TextStyle(color: context.textSecondary, fontSize: 13),
                 ),
-                SizedBox(width: AppTheme.spacing16),
+                _statDivider(),
+                Icon(
+                  Icons.shopping_bag_outlined,
+                  color: context.textTertiary,
+                  size: 17,
+                ),
+                SizedBox(width: AppTheme.spacing4),
+                Text(
+                  context.l10n.productDetailSoldCount(product.salesCount),
+                  style: TextStyle(color: context.textSecondary, fontSize: 13),
+                ),
               ],
-              Icon(
-                Icons.remove_red_eye_outlined,
-                color: context.textTertiary,
-                size: 18,
-              ),
-              SizedBox(width: AppTheme.spacing4),
-              Text(
-                '${product.viewCount}',
-                style: TextStyle(color: context.textTertiary, fontSize: 14),
-              ),
-              SizedBox(width: AppTheme.spacing16),
-              Icon(
-                Icons.shopping_bag_outlined,
-                color: context.textTertiary,
-                size: 18,
-              ),
-              SizedBox(width: AppTheme.spacing4),
-              Text(
-                context.l10n.productDetailSoldCount(product.salesCount),
-                style: TextStyle(color: context.textTertiary, fontSize: 14),
-              ),
-            ],
+            ),
           ),
           SizedBox(height: AppTheme.spacing16),
 
@@ -581,7 +592,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
           ],
 
           const SizedBox(height: AppTheme.spacing20),
-          Divider(color: context.border),
+          Divider(color: context.border.withValues(alpha: 0.5)),
           SizedBox(height: AppTheme.spacing16),
 
           // Description
@@ -605,18 +616,32 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
             ),
           ),
           if (product.description.length > 200)
-            TextButton(
-              onPressed: () {
-                setState(() => _showFullDescription = !_showFullDescription);
-              },
-              child: Text(
-                _showFullDescription
+            Padding(
+              padding: const EdgeInsets.only(top: AppTheme.spacing4),
+              child: DeviceShopSecondaryButton(
+                label: _showFullDescription
                     ? context.l10n.productDetailShowLess
                     : context.l10n.productDetailReadMore,
-                style: TextStyle(color: context.accentColor),
+                icon: _showFullDescription
+                    ? Icons.expand_less
+                    : Icons.expand_more,
+                onTap: () {
+                  setState(() => _showFullDescription = !_showFullDescription);
+                },
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  Widget _statDivider() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing10),
+      child: Container(
+        width: 1,
+        height: 16,
+        color: context.border.withValues(alpha: 0.5),
       ),
     );
   }
@@ -667,7 +692,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
             children: option.values.map((value) {
               final isSelected = _selectedOptions[option.name] == value;
 
-              return GestureDetector(
+              return DeviceShopChoiceChip(
+                label: _formatOptionValue(value),
+                isSelected: isSelected,
                 onTap: () {
                   setState(() {
                     _selectedOptions[option.name] = value;
@@ -675,34 +702,6 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
                     _selectedVariant = _findMatchingVariant(product);
                   });
                 },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? context.accentColor.withValues(alpha: 0.15)
-                        : context.card,
-                    border: Border.all(
-                      color: isSelected ? context.accentColor : context.border,
-                      width: isSelected ? 2 : 1,
-                    ),
-                    borderRadius: BorderRadius.circular(AppTheme.radius8),
-                  ),
-                  child: Text(
-                    _formatOptionValue(value),
-                    style: TextStyle(
-                      color: isSelected
-                          ? context.accentColor
-                          : context.textPrimary,
-                      fontSize: 14,
-                      fontWeight: isSelected
-                          ? FontWeight.w600
-                          : FontWeight.normal,
-                    ),
-                  ),
-                ),
               );
             }).toList(),
           ),
@@ -775,7 +774,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
   }
 
   Widget _buildSpecsSection(ShopProduct product) {
-    return Container(
+    return Padding(
       padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -792,37 +791,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
                 ),
               ),
               if (product.vendorVerified)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: context.accentColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(AppTheme.radius6),
-                    border: Border.all(
-                      color: context.accentColor.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.verified,
-                        size: 14,
-                        color: context.accentColor,
-                      ),
-                      const SizedBox(width: AppTheme.spacing4),
-                      Text(
-                        context.l10n.productDetailVendorVerified,
-                        style: TextStyle(
-                          color: context.accentColor,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
+                DeviceShopInfoPill(
+                  label: context.l10n.productDetailVendorVerified,
+                  color: context.accentColor,
                 ),
             ],
           ),
@@ -836,12 +807,10 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
             ),
           ],
           const SizedBox(height: AppTheme.spacing16),
-          Container(
-            decoration: BoxDecoration(
-              color: context.card,
-              borderRadius: BorderRadius.circular(AppTheme.radius12),
-              border: Border.all(color: context.border),
-            ),
+          GradientBorderContainer(
+            borderRadius: AppTheme.radius16,
+            borderWidth: 1,
+            accentOpacity: 0.22,
             child: Column(
               children: [
                 if (product.chipset != null)
@@ -887,11 +856,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
   }
 
   Widget _specRow(String label, String value) {
-    return Container(
+    return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: context.border)),
-      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -958,7 +924,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
 
     if (features.isEmpty) return const SizedBox.shrink();
 
-    return Container(
+    return Padding(
       padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1009,7 +975,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
   }
 
   Widget _buildShippingSection(ShopProduct product) {
-    return Container(
+    return Padding(
       padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1023,13 +989,11 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
             ),
           ),
           const SizedBox(height: AppTheme.spacing16),
-          Container(
+          GradientBorderContainer(
+            borderRadius: AppTheme.radius16,
+            borderWidth: 1,
+            accentOpacity: 0.22,
             padding: const EdgeInsets.all(AppTheme.spacing16),
-            decoration: BoxDecoration(
-              color: context.card,
-              borderRadius: BorderRadius.circular(AppTheme.radius12),
-              border: Border.all(color: context.border),
-            ),
             child: Column(
               children: [
                 Row(
@@ -1116,17 +1080,11 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
         mainAxisSize: MainAxisSize.min,
         children: [
           // Marketplace disclaimer
-          Container(
+          GradientBorderContainer(
+            borderRadius: AppTheme.radius12,
+            borderWidth: 1,
+            accentOpacity: 0.16,
             padding: const EdgeInsets.all(AppTheme.spacing12),
-            margin: const EdgeInsets.only(bottom: 12),
-            decoration: BoxDecoration(
-              color: context.background.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(AppTheme.radius8),
-              border: Border.all(
-                color: context.accentColor.withValues(alpha: 0.2),
-                width: 1,
-              ),
-            ),
             child: Row(
               children: [
                 Icon(Icons.info_outline, color: context.accentColor, size: 16),
@@ -1143,6 +1101,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
               ],
             ),
           ),
+          const SizedBox(height: AppTheme.spacing12),
           Row(
             children: [
               // Price summary
@@ -1172,8 +1131,10 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
               // Admin edit button
               if (isAdmin) ...[
                 const SizedBox(width: AppTheme.spacing8),
-                OutlinedButton.icon(
-                  onPressed: () {
+                DeviceShopSecondaryButton(
+                  label: context.l10n.productDetailEdit,
+                  icon: Icons.edit,
+                  onTap: () {
                     ref.read(productFormProvider.notifier).loadProduct(product);
                     Navigator.push(
                       context,
@@ -1185,46 +1146,21 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
                       (_) => ref.invalidate(singleProductProvider(product.id)),
                     );
                   },
-                  icon: Icon(Icons.edit, size: 18),
-                  label: Text(context.l10n.productDetailEdit),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: context.accentColor,
-                    side: BorderSide(color: context.accentColor),
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 16,
-                      horizontal: 16,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.radius12),
-                    ),
-                  ),
                 ),
               ],
               const SizedBox(width: AppTheme.spacing8),
               // Buy button
               Expanded(
-                child: ElevatedButton(
-                  onPressed: product.isInStock
-                      ? () => _buyProduct(product)
-                      : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: context.accentColor,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.radius12),
-                    ),
-                    disabledBackgroundColor: context.border,
-                  ),
-                  child: Text(
-                    product.isInStock
-                        ? context.l10n.productDetailBuyNow
-                        : context.l10n.productDetailOutOfStockButton,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                child: DeviceShopPrimaryButton(
+                  label: product.isInStock
+                      ? context.l10n.productDetailBuyNow
+                      : context.l10n.productDetailOutOfStockButton,
+                  icon: product.isInStock
+                      ? Icons.shopping_cart_outlined
+                      : Icons.inventory_2_outlined,
+                  enabled: product.isInStock,
+                  animate: product.isInStock,
+                  onTap: () => _buyProduct(product),
                 ),
               ),
             ],
@@ -1263,18 +1199,41 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
   }
 
   void _shareProduct(ShopProduct product) {
+    final shareUrl = _resolvedPurchaseUrl(product) ?? product.purchaseUrl;
     final text =
         '''Check out ${product.name} on Socialmesh!
 
 ${product.shortDescription ?? product.description}
 
-Price: ${product.formattedPrice(context.l10n)}${product.purchaseUrl != null ? '\n\n${product.purchaseUrl}' : ''}''';
+Price: ${product.formattedPrice(context.l10n)}${shareUrl != null ? '\n\n$shareUrl' : ''}''';
     shareText(text, subject: product.name, context: context);
+  }
+
+  String? _resolvedPurchaseUrl(ShopProduct product) {
+    final baseUrl = product.purchaseUrl;
+    if (baseUrl == null) return null;
+
+    final variantId = (_selectedVariant?.id ?? product.defaultVariant?.id)
+        ?.trim();
+    if (variantId == null || variantId.isEmpty) {
+      return baseUrl;
+    }
+
+    final parsed = Uri.tryParse(baseUrl);
+    if (parsed == null) {
+      return baseUrl;
+    }
+
+    final params = Map<String, String>.from(parsed.queryParameters)
+      ..['variant'] = variantId;
+
+    return parsed.replace(queryParameters: params).toString();
   }
 
   Future<void> _buyProduct(ShopProduct product) async {
     // Capture navigator before async gap
     final navigator = Navigator.of(context);
+    final destinationUrl = _resolvedPurchaseUrl(product);
 
     // Log the buy now tap
     final logger = ref.read(deviceShopEventLoggerProvider);
@@ -1286,20 +1245,18 @@ Price: ${product.formattedPrice(context.l10n)}${product.purchaseUrl != null ? '\
       category: product.category.name,
       price: product.price,
       currency: product.currency,
-      destinationUrl: product.purchaseUrl ?? 'no-url',
+      destinationUrl: destinationUrl ?? 'no-url',
       screen: 'detail',
     );
 
     if (!mounted) return;
 
-    if (product.purchaseUrl != null) {
+    if (destinationUrl != null) {
       // Open purchase URL in in-app webview
       navigator.push(
         MaterialPageRoute(
-          builder: (_) => _PurchaseWebViewScreen(
-            title: product.name,
-            url: product.purchaseUrl!,
-          ),
+          builder: (_) =>
+              _PurchaseWebViewScreen(title: product.name, url: destinationUrl),
         ),
       );
     } else {
@@ -1332,22 +1289,17 @@ Price: ${product.formattedPrice(context.l10n)}${product.purchaseUrl != null ? '\
           Row(
             children: [
               Expanded(
-                child: OutlinedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    side: BorderSide(color: SemanticColors.divider),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.radius12),
-                    ),
-                  ),
-                  child: Text(context.l10n.productDetailCancel),
+                child: DeviceShopSecondaryButton(
+                  label: context.l10n.productDetailCancel,
+                  onTap: () => Navigator.pop(context),
                 ),
               ),
               const SizedBox(width: AppTheme.spacing12),
               Expanded(
-                child: FilledButton(
-                  onPressed: () {
+                child: DeviceShopPrimaryButton(
+                  label: context.l10n.productDetailContactSeller,
+                  icon: Icons.storefront,
+                  onTap: () {
                     Navigator.pop(context);
                     Navigator.push(
                       context,
@@ -1357,13 +1309,6 @@ Price: ${product.formattedPrice(context.l10n)}${product.purchaseUrl != null ? '\
                       ),
                     );
                   },
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.radius12),
-                    ),
-                  ),
-                  child: Text(context.l10n.productDetailContactSeller),
                 ),
               ),
             ],
@@ -1594,10 +1539,9 @@ class _FeatureChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GradientBorderContainer(
-      borderRadius: 8,
-      borderWidth: 2,
-      accentOpacity: 0.3,
-      backgroundColor: context.accentColor.withValues(alpha: 0.15),
+      borderRadius: AppTheme.radius14,
+      borderWidth: 1,
+      accentOpacity: 0.28,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1607,9 +1551,9 @@ class _FeatureChip extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              color: context.accentColor,
+              color: context.textPrimary,
               fontSize: 13,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
@@ -1631,7 +1575,7 @@ class _ReviewsSection extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1644,52 +1588,39 @@ class _ReviewsSection extends ConsumerWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              TextButton.icon(
-                onPressed: () => _showWriteReviewSheet(context, ref),
-                icon: Icon(Icons.edit, size: 18),
-                label: Text(context.l10n.productDetailWriteReview),
+              DeviceShopSecondaryButton(
+                label: context.l10n.productDetailWriteReview,
+                icon: Icons.edit,
+                onTap: () => _showWriteReviewSheet(context, ref),
               ),
             ],
           ),
           const SizedBox(height: AppTheme.spacing16),
           reviewsAsync.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: () => Padding(
+              padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing24),
+              child: Center(
+                child: SizedBox(
+                  width: 32,
+                  height: 32,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: context.accentColor,
+                  ),
+                ),
+              ),
+            ),
             error: (error, stack) => Text(
               context.l10n.productDetailUnableToLoadReviews,
               style: TextStyle(color: context.textSecondary),
             ),
             data: (reviews) {
               if (reviews.isEmpty) {
-                return Container(
-                  padding: const EdgeInsets.all(AppTheme.spacing24),
-                  decoration: BoxDecoration(
-                    color: context.card,
-                    borderRadius: BorderRadius.circular(AppTheme.radius12),
-                  ),
-                  child: Center(
-                    child: Column(
-                      children: [
-                        Icon(
-                          Icons.rate_review_outlined,
-                          color: context.textTertiary,
-                          size: 48,
-                        ),
-                        SizedBox(height: AppTheme.spacing12),
-                        Text(
-                          context.l10n.productDetailNoReviews,
-                          style: TextStyle(color: context.textSecondary),
-                        ),
-                        SizedBox(height: AppTheme.spacing8),
-                        Text(
-                          context.l10n.productDetailBeFirstReviewer,
-                          style: TextStyle(
-                            color: context.textTertiary,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                return DeviceShopStatePanel(
+                  icon: Icons.rate_review_outlined,
+                  title: context.l10n.productDetailNoReviews,
+                  description: context.l10n.productDetailBeFirstReviewer,
+                  compact: true,
                 );
               }
 
@@ -1709,7 +1640,10 @@ class _ReviewsSection extends ConsumerWidget {
   void _showWriteReviewSheet(BuildContext context, WidgetRef ref) {
     final user = ref.read(currentUserProvider);
     if (user == null) {
-      showSignInRequiredSnackBar(context, 'Sign in to write a review');
+      showSignInRequiredSnackBar(
+        context,
+        context.l10n.productDetailSignInReview,
+      );
       return;
     }
 
@@ -1741,147 +1675,130 @@ class _ReviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(AppTheme.spacing16),
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-        border: Border.all(color: context.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              UserAvatar(
-                imageUrl: review.userPhotoUrl,
-                size: 36,
-                backgroundColor: context.background,
-                foregroundColor: context.textTertiary,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: GradientBorderContainer(
+        borderRadius: AppTheme.radius16,
+        borderWidth: 1,
+        accentOpacity: 0.18,
+        padding: const EdgeInsets.all(AppTheme.spacing16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                UserAvatar(
+                  imageUrl: review.userPhotoUrl,
+                  size: 36,
+                  backgroundColor: context.background,
+                  foregroundColor: context.textTertiary,
+                ),
+                SizedBox(width: AppTheme.spacing12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            review.userName ??
+                                context.l10n.productDetailAnonymous,
+                            style: TextStyle(
+                              color: context.textPrimary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          if (review.isVerifiedPurchase) ...[
+                            const SizedBox(width: AppTheme.spacing8),
+                            DeviceShopInfoPill(
+                              label: context.l10n.productDetailReviewVerified,
+                              color: AppTheme.successGreen,
+                            ),
+                          ],
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          ...List.generate(
+                            5,
+                            (i) => Icon(
+                              i < review.rating
+                                  ? Icons.star
+                                  : Icons.star_outline,
+                              color: AppTheme.warningYellow,
+                              size: 14,
+                            ),
+                          ),
+                          const SizedBox(width: AppTheme.spacing8),
+                          Text(
+                            _formatDate(context, review.createdAt),
+                            style: TextStyle(
+                              color: context.textTertiary,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            if (review.title != null) ...[
+              SizedBox(height: AppTheme.spacing12),
+              Text(
+                review.title!,
+                style: TextStyle(
+                  color: context.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-              SizedBox(width: AppTheme.spacing12),
-              Expanded(
+            ],
+            if (review.body != null) ...[
+              const SizedBox(height: AppTheme.spacing8),
+              Text(
+                review.body!,
+                style: TextStyle(color: context.textSecondary, height: 1.5),
+              ),
+            ],
+            if (review.sellerResponse != null) ...[
+              SizedBox(height: AppTheme.spacing12),
+              GradientBorderContainer(
+                borderRadius: AppTheme.radius12,
+                borderWidth: 1,
+                accentOpacity: 0.2,
+                padding: const EdgeInsets.all(AppTheme.spacing12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
+                        Icon(Icons.store, color: context.accentColor, size: 16),
+                        SizedBox(width: AppTheme.spacing6),
                         Text(
-                          review.userName ??
-                              context.l10n.productDetailAnonymous,
+                          context.l10n.productDetailSellerResponse,
                           style: TextStyle(
-                            color: context.textPrimary,
+                            color: context.accentColor,
+                            fontSize: 12,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        if (review.isVerifiedPurchase) ...[
-                          const SizedBox(width: AppTheme.spacing8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppTheme.successGreen.withValues(
-                                alpha: 0.2,
-                              ),
-                              borderRadius: BorderRadius.circular(
-                                AppTheme.radius4,
-                              ),
-                            ),
-                            child: Text(
-                              context.l10n.productDetailReviewVerified,
-                              style: TextStyle(
-                                color: AppTheme.successGreen,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ],
                       ],
                     ),
-                    Row(
-                      children: [
-                        ...List.generate(
-                          5,
-                          (i) => Icon(
-                            i < review.rating ? Icons.star : Icons.star_outline,
-                            color: AppTheme.warningYellow,
-                            size: 14,
-                          ),
-                        ),
-                        const SizedBox(width: AppTheme.spacing8),
-                        Text(
-                          _formatDate(context, review.createdAt),
-                          style: TextStyle(
-                            color: context.textTertiary,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
+                    SizedBox(height: AppTheme.spacing8),
+                    Text(
+                      review.sellerResponse!,
+                      style: TextStyle(
+                        color: context.textSecondary,
+                        fontSize: 13,
+                      ),
                     ),
                   ],
                 ),
               ),
             ],
-          ),
-          if (review.title != null) ...[
-            SizedBox(height: AppTheme.spacing12),
-            Text(
-              review.title!,
-              style: TextStyle(
-                color: context.textPrimary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
           ],
-          if (review.body != null) ...[
-            const SizedBox(height: AppTheme.spacing8),
-            Text(
-              review.body!,
-              style: TextStyle(color: context.textSecondary, height: 1.5),
-            ),
-          ],
-          if (review.sellerResponse != null) ...[
-            SizedBox(height: AppTheme.spacing12),
-            Container(
-              padding: const EdgeInsets.all(AppTheme.spacing12),
-              decoration: BoxDecoration(
-                color: context.background,
-                borderRadius: BorderRadius.circular(AppTheme.radius8),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.store, color: context.accentColor, size: 16),
-                      SizedBox(width: AppTheme.spacing6),
-                      Text(
-                        context.l10n.productDetailSellerResponse,
-                        style: TextStyle(
-                          color: context.accentColor,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: AppTheme.spacing8),
-                  Text(
-                    review.sellerResponse!,
-                    style: TextStyle(
-                      color: context.textSecondary,
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
+        ),
       ),
     );
   }
@@ -2117,32 +2034,11 @@ class _WriteReviewSheetState extends ConsumerState<_WriteReviewSheet>
               // Submit button
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _isSubmitting ? null : _submitReview,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: context.accentColor,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.radius12),
-                    ),
-                  ),
-                  child: _isSubmitting
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : Text(
-                          context.l10n.productDetailSubmitReview,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                child: DeviceShopPrimaryButton(
+                  label: context.l10n.productDetailSubmitReview,
+                  icon: Icons.send,
+                  enabled: !_isSubmitting,
+                  onTap: _submitReview,
                 ),
               ),
               const SizedBox(height: AppTheme.spacing16),

@@ -7,17 +7,16 @@ import 'package:flutter/foundation.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/transport_path.dart';
 import '../../../models/mesh_models.dart';
-import '../../../models/tapback.dart';
 import '../../../core/theme.dart';
 import '../../../providers/app_providers.dart';
-import '../../../providers/telemetry_providers.dart';
 import '../../../services/haptic_service.dart';
 import '../../../core/logging.dart';
 import '../../../utils/snackbar.dart';
+import '../../../utils/time_format.dart';
 
 /// Shows a context menu for a message with tapback, reply, copy, details, and delete options
 class MessageContextMenu extends ConsumerStatefulWidget {
@@ -27,6 +26,10 @@ class MessageContextMenu extends ConsumerStatefulWidget {
   final int? channelIndex;
   final VoidCallback? onReply;
   final VoidCallback? onDelete;
+  final VoidCallback? onResend;
+  final VoidCallback? onAutoRetry;
+  final VoidCallback? onStopRetry;
+  final VoidCallback? onTranslate;
 
   const MessageContextMenu({
     super.key,
@@ -36,6 +39,10 @@ class MessageContextMenu extends ConsumerStatefulWidget {
     this.channelIndex,
     this.onReply,
     this.onDelete,
+    this.onResend,
+    this.onAutoRetry,
+    this.onStopRetry,
+    this.onTranslate,
   });
 
   @override
@@ -113,10 +120,57 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
             },
           ),
 
+          // Translate (only for non-emoji text messages with content)
+          if (widget.onTranslate != null)
+            _buildMenuItem(
+              icon: Icons.translate,
+              label: context.l10n.translateAction,
+              onTap: () {
+                Navigator.pop(context);
+                widget.onTranslate?.call();
+              },
+            ),
+
           // Message Details section
           _buildDetailsSection(),
 
           _buildDivider(),
+
+          // Resend (unconfirmed DMs only)
+          if (widget.onResend != null) ...[
+            _buildMenuItem(
+              icon: Icons.send,
+              label: context.l10n.messagingResend,
+              onTap: () {
+                Navigator.pop(context);
+                widget.onResend?.call();
+              },
+            ),
+          ],
+
+          // Auto-retry enable (unconfirmed DMs without active retry)
+          if (widget.onAutoRetry != null) ...[
+            _buildMenuItem(
+              icon: Icons.loop,
+              label: context.l10n.messagingAutoRetryEnable,
+              onTap: () {
+                Navigator.pop(context);
+                widget.onAutoRetry?.call();
+              },
+            ),
+          ],
+
+          // Stop retrying (active auto-retry)
+          if (widget.onStopRetry != null) ...[
+            _buildMenuItem(
+              icon: Icons.stop_circle_outlined,
+              label: context.l10n.messagingAutoRetryStop,
+              onTap: () {
+                Navigator.pop(context);
+                widget.onStopRetry?.call();
+              },
+            ),
+          ],
 
           // Delete
           _buildMenuItem(
@@ -208,7 +262,6 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
     // Capture all provider references BEFORE any async operations
     final protocol = ref.read(protocolServiceProvider);
     final myNodeNum = ref.read(myNodeNumProvider);
-    final storage = ref.read(tapbackStorageProvider).value;
     final haptics = ref.read(hapticServiceProvider);
     final navigator = Navigator.of(context);
 
@@ -219,35 +272,34 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
 
     AppLogging.messages(
       '🏷️ _sendTapback: myNodeNum=$myNodeNum, '
-      'storage=${storage != null ? "available" : "NULL"}',
+      'replyPacketId=${widget.message.packetId}',
     );
 
-    // Create local tapback record
-    final tapback = MessageTapback(
-      messageId: widget.message.id,
-      fromNodeNum: myNodeNum,
-      emoji: emoji,
-    );
-
-    // Save locally
-    await storage?.addTapback(tapback);
-    AppLogging.messages(
-      '🏷️ _sendTapback: local tapback stored for message ${widget.message.id}',
-    );
-
-    // Invalidate tapbacks so UI updates for own tapback
-    ref.invalidate(messageTapbacksProvider(widget.message.id));
+    final replyPacketId = widget.message.packetId;
+    if (replyPacketId == null) {
+      AppLogging.messages(
+        '🏷️ _sendTapback ABORT: parent message has no packetId',
+      );
+      navigator.pop();
+      showErrorSnackBar(context, context.l10n.messageContextMenuTapbackFailed);
+      return;
+    }
 
     // Send tapback emoji over the mesh
     try {
-      final toNode = widget.isFromMe ? widget.message.to : widget.message.from;
+      final isChannelTapback = widget.channelIndex != null;
+      final toNode = isChannelTapback
+          ? 0xFFFFFFFF
+          : widget.isFromMe
+          ? widget.message.to
+          : widget.message.from;
       // Broadcast messages (0xFFFFFFFF) never receive ACKs, so wantAck must
       // be false to avoid the message being stuck in pending status forever.
       final isBroadcast = toNode == 0xFFFFFFFF;
       AppLogging.messages(
         '🏷️ _sendTapback: sending over mesh — to=$toNode, '
         'channel=${widget.channelIndex ?? 0}, isBroadcast=$isBroadcast, '
-        'replyId=${widget.message.packetId}',
+        'replyId=$replyPacketId',
       );
       await protocol.sendMessage(
         text: emoji,
@@ -255,7 +307,7 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
         channel: widget.channelIndex ?? 0,
         wantAck: !isBroadcast,
         isEmoji: true,
-        replyId: widget.message.packetId,
+        replyId: replyPacketId,
         source: MessageSource.tapback,
       );
 
@@ -277,7 +329,7 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
   }
 
   Widget _buildDetailsSection() {
-    final dateFormat = DateFormat('dd/MM/yy, h:mm:ss a');
+    final dateFormat = AppTimeFormat.numericDateAndTimeWithSeconds(context);
     final formattedDate = dateFormat.format(widget.message.timestamp);
 
     return Column(
@@ -418,6 +470,10 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
           widget.message.errorMessage ??
               'Unknown error', // lint-allow: hardcoded-string
         );
+      case MessageStatus.unconfirmed:
+        return context.l10n.messagingStatusUnconfirmed;
+      case MessageStatus.retrying:
+        return context.l10n.messagingStatusRetrying;
     }
   }
 }
@@ -431,6 +487,10 @@ Future<void> showMessageContextMenu(
   int? channelIndex,
   VoidCallback? onReply,
   VoidCallback? onDelete,
+  VoidCallback? onResend,
+  VoidCallback? onAutoRetry,
+  VoidCallback? onStopRetry,
+  VoidCallback? onTranslate,
 }) {
   HapticFeedback.selectionClick();
 
@@ -449,6 +509,10 @@ Future<void> showMessageContextMenu(
         channelIndex: channelIndex,
         onReply: onReply,
         onDelete: onDelete,
+        onResend: onResend,
+        onAutoRetry: onAutoRetry,
+        onStopRetry: onStopRetry,
+        onTranslate: onTranslate,
       ),
     ),
   );

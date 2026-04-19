@@ -266,6 +266,10 @@ class MrrpServiceBoard implements MrrpServiceHandler {
   void _purgeExpired() {
     final now = _now();
     _posts.removeWhere((_, p) => p.isExpiredAt(now));
+
+    // Prune stale rate-limit entries for peers with no recent posts.
+    final cutoff = now.subtract(const Duration(seconds: _postRateLimitS));
+    _lastPostTime.removeWhere((_, t) => t.isBefore(cutoff));
   }
 
   MrrpFrame _buildResponse(MrrpFrame request, Uint8List payload) {

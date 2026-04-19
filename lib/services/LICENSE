@@ -1,0 +1,55 @@
+Socialmesh Service Engine
+----------------------------------------------------------------------
+
+SERVICE ENGINE DESIGN LICENSE
+The Socialmesh service engine design — including the mesh service
+execution framework, automation engine interface, offline-first
+service contract, service lifecycle model, and capability
+advertisement schema — is published under the GNU Lesser General
+Public License, version 3 only (LGPL-3.0-only).
+
+This grants external applications the right to link against a
+compatible implementation of the service engine without being
+required to open-source their own application code, provided they
+satisfy the LGPL conditions for the library boundary itself.
+
+  SPDX-License-Identifier: LGPL-3.0-only
+  Copyright (C) 2025-2026 gotnull (developer@socialmesh.app)
+
+  Full text: licenses/LGPL-3.0 (repository root)
+
+DART IMPLEMENTATION LICENSE
+The Dart source files in this directory and all subdirectories
+(*.dart) are part of the Socialmesh application and are subject to
+the GNU General Public License, version 3 or later (GPL-3.0-or-later),
+as declared by the SPDX header present in every source file.
+
+  SPDX-License-Identifier: GPL-3.0-or-later
+  Copyright (C) 2025-2026 gotnull (developer@socialmesh.app)
+
+  Full text: LICENSE (repository root)
+
+RATIONALE
+The service engine Dart implementation imports from lib/core/,
+lib/generated/meshtastic/ (GPL-3.0-only), and lib/services/protocol/
+(GPL-3.0-or-later). Under GPL section 5, any work that incorporates
+GPL code must itself be distributed under the GPL. The LGPL-3.0-only
+grant above covers only the service engine design and interface
+contract — it does not override the GPL terms that apply to this
+compiled Dart implementation.
+
+In plain terms:
+  - You MAY design and implement a compatible service engine in your
+    own project under LGPL-3.0-only terms, meaning your application
+    code that merely uses the engine does not need to be open-sourced.
+  - You MAY NOT copy, fork, or redistribute the Dart files in this
+    directory under a non-GPL license.
+  - If you modify the service engine itself (not just use it), those
+    modifications must be released under LGPL-3.0-only or GPL-3.0-or-later.
+
+MESHTASTIC DEPENDENCY NOTE
+The service engine routes packets over the Meshtastic radio transport.
+The Meshtastic protobuf integration (lib/generated/meshtastic/) is
+GPL-3.0-only per upstream (https://github.com/meshtastic/protobufs).
+This creates a GPL-3.0-only floor for any combined binary that
+includes both layers.

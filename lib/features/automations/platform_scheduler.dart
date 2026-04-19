@@ -5,7 +5,6 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:socialmesh/l10n/app_localizations.dart';
 import 'package:workmanager/workmanager.dart' as wm;
 import 'package:background_fetch/background_fetch.dart' as bgf;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -14,6 +13,7 @@ import 'package:timezone/timezone.dart' as tz;
 import '../../core/logging.dart';
 import 'models/schedule_spec.dart';
 import 'scheduler_service.dart';
+import 'package:socialmesh/l10n/l10n_utils.dart';
 
 /// Key used to store scheduled task IDs in SharedPreferences
 const _scheduledTasksKey = 'scheduled_platform_tasks';
@@ -401,7 +401,7 @@ class IOSBGTaskScheduler implements PlatformScheduler {
     // Strategy B: Schedule a local notification for exact-time UX
     // This doesn't execute code but alerts the user
     if (_notifications != null) {
-      final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+      final l10n = safeL10n();
       await _scheduleLocalNotification(
         taskId: taskId,
         scheduledFor: scheduledFor,
@@ -473,7 +473,9 @@ class IOSBGTaskScheduler implements PlatformScheduler {
     }
 
     // Stop background fetch if no periodic schedules remain
-    await bgf.BackgroundFetch.stop();
+    if (_initialized) {
+      await bgf.BackgroundFetch.stop();
+    }
 
     AppLogging.automations('IOSBGTaskScheduler: Cancelled all tasks');
   }
@@ -758,9 +760,12 @@ class SchedulerBridge {
   /// Process due schedules when returning from background
   ///
   /// Call this when app resumes to process any missed schedules.
-  void processOnResume() {
+  Future<void> processOnResume() async {
     final now = _now();
-    inAppScheduler.tick(now);
+    final events = inAppScheduler.tick(now);
+    if (events.isNotEmpty) {
+      await inAppScheduler.persist();
+    }
     AppLogging.automations(
       'SchedulerBridge: Processed due schedules on resume',
     );

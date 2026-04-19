@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/l10n/l10n_extension.dart';
@@ -15,6 +16,8 @@ import '../../config/revenuecat_config.dart';
 import '../../core/transport.dart' show DeviceConnectionState;
 import '../../models/user_profile.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/age_eligibility_provider.dart';
+import '../../core/legal/age_group.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/profile_providers.dart';
 // import '../../providers/social_providers.dart';
@@ -38,6 +41,7 @@ import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/legal_document_sheet.dart';
 import '../../core/widgets/remote_admin_selector_sheet.dart';
 import '../../core/widgets/user_avatar.dart';
+import '../../core/widgets/verified_badge.dart';
 import '../../providers/help_providers.dart';
 import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
@@ -93,6 +97,8 @@ import '../../core/whats_new/whats_new_sheet.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/constants.dart';
 import '../tak/screens/tak_settings_screen.dart';
+import 'network_endpoints_screen.dart';
+import 'translation_settings_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   /// Optional search query to pre-fill on open, allowing callers to
@@ -295,6 +301,46 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             }
           },
         ),
+        if (AppFeatureFlags.isTranslationEnabled)
+          _SearchableSettingItem(
+            icon: Icons.translate,
+            title: purchaseState.hasFeature(PremiumFeature.translation)
+                ? context.l10n.translationSettingsSearchTitle
+                : storeProducts[RevenueCatConfig.translationPackProductId]
+                          ?.title ??
+                      context.l10n.settingsSearchTranslationPackTitle,
+            subtitle: purchaseState.hasFeature(PremiumFeature.translation)
+                ? context.l10n.translationSettingsSearchSubtitle
+                : context.l10n.settingsSearchTranslationPackSubtitle,
+            keywords: [
+              'translation',
+              'translate',
+              'language',
+              'foreign',
+              'multilingual',
+              'privacy',
+              'api',
+              'key',
+              'byo',
+              'cache',
+            ],
+            section: context.l10n.settingsSectionPremium,
+            onTap: () {
+              if (purchaseState.hasFeature(PremiumFeature.translation)) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const TranslationSettingsScreen(),
+                  ),
+                );
+              } else {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+                );
+              }
+            },
+          ),
 
         // Profile
         _SearchableSettingItem(
@@ -309,6 +355,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               builder: (_) => const AccountSubscriptionsScreen(),
             ),
           ),
+        ),
+
+        // Age Group
+        _SearchableSettingItem(
+          icon: Icons.cake_outlined,
+          title: context.l10n.settingsAgeGroupTitle,
+          subtitle: context.l10n.settingsAgeGroupSubtitleUnknown,
+          keywords: ['age', 'minor', 'teen', 'adult', 'eligibility', 'safety'],
+          section: context.l10n.settingsSectionAccount,
         ),
 
         // Social Notifications
@@ -395,14 +450,83 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             value: settingsService.providePhoneLocation,
             onChanged: (value) async {
               HapticFeedback.selectionClick();
+              if (value) {
+                // Check location services are enabled on the device.
+                final serviceEnabled =
+                    await Geolocator.isLocationServiceEnabled();
+                if (!serviceEnabled) {
+                  if (context.mounted) {
+                    showActionSnackBar(
+                      context,
+                      context.l10n.settingsLocationServicesDisabled,
+                      actionLabel: context.l10n.settingsLocationOpenSettings,
+                      onAction: () => Geolocator.openLocationSettings(),
+                      type: SnackBarType.warning,
+                    );
+                  }
+                  return;
+                }
+
+                // Check and request OS location permission.
+                var permission = await Geolocator.checkPermission();
+                if (permission == LocationPermission.denied) {
+                  permission = await Geolocator.requestPermission();
+                  if (permission == LocationPermission.denied) {
+                    if (context.mounted) {
+                      showActionSnackBar(
+                        context,
+                        context.l10n.settingsLocationPermissionDenied,
+                        actionLabel: context.l10n.settingsLocationOpenSettings,
+                        onAction: () => Geolocator.openAppSettings(),
+                        type: SnackBarType.warning,
+                      );
+                    }
+                    return;
+                  }
+                }
+
+                if (permission == LocationPermission.deniedForever) {
+                  if (context.mounted) {
+                    showActionSnackBar(
+                      context,
+                      context.l10n.settingsLocationPermissionPermanentlyDenied,
+                      actionLabel: context.l10n.settingsLocationOpenSettings,
+                      onAction: () => Geolocator.openAppSettings(),
+                      type: SnackBarType.warning,
+                    );
+                  }
+                  return;
+                }
+              }
               await settingsService.setProvidePhoneLocation(value);
               ref.invalidate(settingsServiceProvider);
             },
           ),
         ),
 
+        _SearchableSettingItem(
+          icon: Icons.lan,
+          title: context.l10n.settingsTileNetworkEndpointsTitle,
+          subtitle: context.l10n.settingsTileNetworkEndpointsSubtitle,
+          keywords: [
+            'network',
+            'tcp',
+            'ip',
+            'endpoint',
+            'wifi',
+            'mdns',
+            'connect',
+          ],
+          section: context.l10n.settingsSectionConnection,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const NetworkEndpointsScreen()),
+          ),
+        ),
+
         // TAK Gateway (feature-gated)
-        if (AppFeatureFlags.isTakGatewayEnabled)
+        if (AppFeatureFlags.isTakGatewayEnabled ||
+            AppFeatureFlags.isTakMeshBridgeEnabled)
           _SearchableSettingItem(
             icon: Icons.military_tech,
             title: context.l10n.settingsSearchTakGatewayTitle,
@@ -581,45 +705,73 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         ),
 
         // File Transfer
-        _SearchableSettingItem(
-          icon: Icons.swap_vert,
-          title: context.l10n.settingsSearchFileTransferTitle,
-          subtitle: context.l10n.settingsSearchFileTransferSubtitle,
-          keywords: ['file', 'transfer', 'send', 'receive', 'share'],
-          section: context.l10n.settingsSectionFileTransfer,
-          hasSwitch: true,
-          switchBuilder: (context, ref, settingsService) => ThemedSwitch(
-            value: settingsService.fileTransferEnabled,
-            onChanged: (value) async {
-              HapticFeedback.selectionClick();
-              await settingsService.setFileTransferEnabled(value);
-              safeSetState(() {});
-            },
+        if (AppFeatureFlags.isFileTransferEnabled)
+          _SearchableSettingItem(
+            icon: Icons.swap_vert,
+            title: context.l10n.settingsSearchFileTransferTitle,
+            subtitle: context.l10n.settingsSearchFileTransferSubtitle,
+            keywords: ['file', 'transfer', 'send', 'receive', 'share'],
+            section: context.l10n.settingsSectionFileTransfer,
+            hasSwitch: true,
+            switchBuilder: (context, ref, settingsService) => ThemedSwitch(
+              value: settingsService.fileTransferEnabled,
+              onChanged: (value) async {
+                HapticFeedback.selectionClick();
+                await settingsService.setFileTransferEnabled(value);
+                safeSetState(() {});
+              },
+            ),
           ),
-        ),
-        _SearchableSettingItem(
-          icon: Icons.auto_awesome,
-          title: context.l10n.settingsSearchAutoAcceptTransfersTitle,
-          subtitle: context.l10n.settingsSearchAutoAcceptTransfersSubtitle,
-          keywords: [
-            'auto',
-            'accept',
-            'file',
-            'transfer',
-            'receive',
-            'automatic',
-          ],
-          section: context.l10n.settingsSectionFileTransfer,
-          hasSwitch: true,
-          switchBuilder: (context, ref, settingsService) => ThemedSwitch(
-            value: settingsService.fileTransferAutoAccept,
-            onChanged: (value) async {
-              HapticFeedback.selectionClick();
-              await settingsService.setFileTransferAutoAccept(value);
-              safeSetState(() {});
-            },
+        if (AppFeatureFlags.isFileTransferEnabled)
+          _SearchableSettingItem(
+            icon: Icons.auto_awesome,
+            title: context.l10n.settingsSearchAutoAcceptTransfersTitle,
+            subtitle: context.l10n.settingsSearchAutoAcceptTransfersSubtitle,
+            keywords: [
+              'auto',
+              'accept',
+              'file',
+              'transfer',
+              'receive',
+              'automatic',
+            ],
+            section: context.l10n.settingsSectionFileTransfer,
+            hasSwitch: true,
+            switchBuilder: (context, ref, settingsService) => ThemedSwitch(
+              value: settingsService.fileTransferAutoAccept,
+              onChanged: (value) async {
+                HapticFeedback.selectionClick();
+                await settingsService.setFileTransferAutoAccept(value);
+                safeSetState(() {});
+              },
+            ),
           ),
-        ),
+        if (AppFeatureFlags.isSipEnabled)
+          _SearchableSettingItem(
+            icon: Icons.verified_user,
+            title: context.l10n.stlSigningTitle,
+            subtitle: context.l10n.stlSigningSubtitle,
+            keywords: [
+              'stl',
+              'signing',
+              'trust',
+              'security',
+              'signature',
+              'verify',
+              'file',
+              'transfer',
+            ],
+            section: context.l10n.settingsSectionFileTransfer,
+            hasSwitch: true,
+            switchBuilder: (context, ref, settingsService) => ThemedSwitch(
+              value: settingsService.stlSigningEnabled,
+              onChanged: (value) async {
+                HapticFeedback.selectionClick();
+                await settingsService.setStlSigningEnabled(value);
+                safeSetState(() {});
+              },
+            ),
+          ),
 
         // Data & Storage
         _SearchableSettingItem(
@@ -1368,27 +1520,60 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         .length;
     final totalCount = OneTimePurchases.allPurchases.length;
 
+    // Calculate discount for the badge
+    final bundlePrice =
+        storeProducts[RevenueCatConfig.completePackProductId]?.price;
+    final individualTotal = [
+      RevenueCatConfig.themePackProductId,
+      RevenueCatConfig.ringtonePackProductId,
+      RevenueCatConfig.widgetPackProductId,
+      RevenueCatConfig.automationsPackProductId,
+      RevenueCatConfig.iftttPackProductId,
+      RevenueCatConfig.translationPackProductId,
+    ].fold<double>(0, (sum, id) => sum + (storeProducts[id]?.price ?? 0));
+    final discountPercent = (bundlePrice != null && individualTotal > 0)
+        ? ((1 - bundlePrice / individualTotal) * 100).round()
+        : OneTimePurchases.bundleDiscountPercent;
+
+    final ownsAll =
+        ownedCount == totalCount ||
+        purchaseState.hasPurchased(RevenueCatConfig.completePackProductId);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _SectionHeader(title: context.l10n.settingsSectionPremium),
-        // Main Premium card with accent highlight
+        // Complete Pack mini hero card
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                accentColor.withValues(alpha: 0.15),
-                accentColor.withValues(alpha: 0.05),
-              ],
+              colors: ownsAll
+                  ? [
+                      accentColor.withValues(alpha: 0.15),
+                      accentColor.withValues(alpha: 0.05),
+                    ]
+                  : [
+                      accentColor.withValues(alpha: 0.25),
+                      AppTheme.primaryPurple.withValues(alpha: 0.15),
+                    ],
             ),
             borderRadius: BorderRadius.circular(AppTheme.radius12),
             border: Border.all(
-              color: accentColor.withValues(alpha: 0.5),
+              color: accentColor.withValues(alpha: ownsAll ? 0.5 : 0.7),
               width: 1.5,
             ),
+            boxShadow: ownsAll
+                ? null
+                : [
+                    BoxShadow(
+                      color: accentColor.withValues(alpha: 0.15),
+                      blurRadius: 12,
+                      spreadRadius: 0,
+                    ),
+                  ],
           ),
           child: Material(
             color: Colors.transparent,
@@ -1404,18 +1589,41 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                 padding: const EdgeInsets.all(AppTheme.spacing16),
                 child: Row(
                   children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: accentColor.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(AppTheme.radius12),
-                      ),
-                      child: Icon(
-                        Icons.rocket_launch_rounded,
-                        color: accentColor,
-                        size: 26,
-                      ),
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            gradient: ownsAll
+                                ? null
+                                : LinearGradient(
+                                    colors: [
+                                      accentColor,
+                                      AppTheme.primaryPurple,
+                                    ],
+                                  ),
+                            color: ownsAll
+                                ? accentColor.withValues(alpha: 0.2)
+                                : null,
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius12,
+                            ),
+                          ),
+                          child: Icon(
+                            ownsAll ? Icons.verified : Icons.all_inclusive,
+                            color: ownsAll ? accentColor : Colors.white,
+                            size: 26,
+                          ),
+                        ),
+                        if (!ownsAll)
+                          const Positioned(
+                            top: -10,
+                            right: -10,
+                            child: SimpleVerifiedBadge(size: 20),
+                          ),
+                      ],
                     ),
                     SizedBox(width: AppTheme.spacing16),
                     Expanded(
@@ -1423,30 +1631,55 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            context.l10n.settingsPremiumUnlockFeaturesTitle,
+                            ownsAll
+                                ? context.l10n.settingsPremiumAllUnlocked
+                                : context.l10n.subscriptionCompletePack,
                             style: TextStyle(
                               fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: accentColor,
+                              fontWeight: FontWeight.bold,
+                              color: ownsAll ? accentColor : Colors.white,
                             ),
                           ),
+                          if (!ownsAll) ...[
+                            const SizedBox(height: AppTheme.spacing4),
+                            Wrap(
+                              spacing: AppTheme.spacing6,
+                              runSpacing: AppTheme.spacing4,
+                              children: [
+                                _PremiumBadge(
+                                  text: context.l10n.subscriptionPopularBadge,
+                                  backgroundColor: accentColor,
+                                  textColor: Colors.white,
+                                ),
+                                _PremiumBadge(
+                                  text: context.l10n.subscriptionSavePercent(
+                                    discountPercent.toString(),
+                                  ),
+                                  backgroundColor: AppTheme.warningYellow,
+                                  textColor: Colors.black,
+                                ),
+                              ],
+                            ),
+                          ],
                           const SizedBox(height: AppTheme.spacing2),
                           Text(
-                            ownedCount == totalCount
-                                ? context.l10n.settingsPremiumAllUnlocked
-                                : context.l10n.settingsPremiumPartiallyUnlocked(
-                                    ownedCount,
-                                    totalCount,
-                                  ),
+                            ownsAll
+                                ? context.l10n.subscriptionThankYou
+                                : context.l10n.subscriptionCompletePackSubtitle,
                             style: TextStyle(
                               fontSize: 13,
-                              color: context.textSecondary,
+                              color: ownsAll
+                                  ? context.textSecondary
+                                  : Colors.white.withValues(alpha: 0.8),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    Icon(Icons.chevron_right, color: accentColor),
+                    Icon(
+                      Icons.chevron_right,
+                      color: ownsAll ? accentColor : Colors.white,
+                    ),
                   ],
                 ),
               ),
@@ -1454,7 +1687,32 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           ),
         ),
         const SizedBox(height: AppTheme.spacing8),
-        // Premium feature tiles - order matches drawer
+        // Premium feature tiles - Translation Pack first (new), then others
+        if (AppFeatureFlags.isTranslationEnabled)
+          _PremiumFeatureTile(
+            icon: Icons.translate_outlined,
+            iconColor: AccentColors.teal,
+            title:
+                storeProducts[RevenueCatConfig.translationPackProductId]
+                    ?.title ??
+                context.l10n.settingsSearchTranslationPackTitle,
+            feature: PremiumFeature.translation,
+            onTap: () {
+              if (purchaseState.hasFeature(PremiumFeature.translation)) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const TranslationSettingsScreen(),
+                  ),
+                );
+              } else {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+                );
+              }
+            },
+          ),
         _PremiumFeatureTile(
           icon: Icons.palette_outlined,
           iconColor: AccentColors.purple,
@@ -1950,6 +2208,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
+
+                          _AgeGroupTile(),
 
                           // _FollowRequestsTile()
 
@@ -4374,6 +4634,78 @@ class _SocialNotificationsSectionState
   }
 }
 
+class _AgeGroupTile extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final policy = ref.watch(ageSafetyPolicyProvider);
+    final subtitle = switch (policy.ageGroup) {
+      AgeGroup.under13 => context.l10n.settingsAgeGroupSubtitleUnder13,
+      AgeGroup.teen => context.l10n.settingsAgeGroupSubtitleTeen,
+      AgeGroup.adult => context.l10n.settingsAgeGroupSubtitleAdult,
+      AgeGroup.unknown => context.l10n.settingsAgeGroupSubtitleUnknown,
+    };
+
+    return _SettingsTile(
+      icon: Icons.cake_outlined,
+      title: context.l10n.settingsAgeGroupTitle,
+      subtitle: subtitle,
+      trailing: Icon(Icons.chevron_right, color: context.textTertiary),
+      onTap: () {
+        final notifier = ref.read(ageEligibilityProvider.notifier);
+        AppBottomSheet.showPicker<AgeGroup>(
+          context: context,
+          title: context.l10n.settingsAgeGroupTitle,
+          items: const [AgeGroup.teen, AgeGroup.adult],
+          selectedItem:
+              policy.ageGroup == AgeGroup.unknown ||
+                  policy.ageGroup == AgeGroup.under13
+              ? null
+              : policy.ageGroup,
+          itemBuilder: (group, isSelected) {
+            final label = switch (group) {
+              AgeGroup.teen => context.l10n.legalEligibilityOptionTeen,
+              AgeGroup.adult => context.l10n.legalEligibilityOptionAdult,
+              AgeGroup.under13 || AgeGroup.unknown => '',
+            };
+            final groupSubtitle = switch (group) {
+              AgeGroup.teen => context.l10n.legalEligibilityOptionTeenSubtitle,
+              AgeGroup.adult || AgeGroup.under13 || AgeGroup.unknown => '',
+            };
+            return ListTile(
+              leading: Icon(
+                isSelected
+                    ? Icons.radio_button_checked
+                    : Icons.radio_button_unchecked,
+                color: isSelected ? context.accentColor : context.textTertiary,
+              ),
+              title: Text(
+                label,
+                style: TextStyle(
+                  color: context.textPrimary,
+                  fontFamily: AppTheme.fontFamily,
+                ),
+              ),
+              subtitle: groupSubtitle.isNotEmpty
+                  ? Text(
+                      groupSubtitle,
+                      style: TextStyle(
+                        color: context.textTertiary,
+                        fontSize: 12,
+                      ),
+                    )
+                  : null,
+            );
+          },
+        ).then((selected) {
+          if (selected != null) {
+            notifier.confirm(ageGroup: selected);
+          }
+        });
+      },
+    );
+  }
+}
+
 /// Model for searchable settings item
 class _SearchableSettingItem {
   final IconData icon;
@@ -4396,4 +4728,36 @@ class _SearchableSettingItem {
     this.hasSwitch = false,
     this.switchBuilder,
   });
+}
+
+class _PremiumBadge extends StatelessWidget {
+  final String text;
+  final Color backgroundColor;
+  final Color textColor;
+
+  const _PremiumBadge({
+    required this.text,
+    required this.backgroundColor,
+    required this.textColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(AppTheme.radius6),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 9,
+          fontWeight: FontWeight.w800,
+          color: textColor,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
 }

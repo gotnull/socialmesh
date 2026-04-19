@@ -3,7 +3,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+import '../../../utils/time_format.dart';
 
 import '../../../core/auth/permission.dart';
 import '../../../core/l10n/l10n_extension.dart';
@@ -199,7 +199,10 @@ class _IncidentTile extends ConsumerWidget {
                       color: _priorityColor(incident.priority),
                     ),
                     Text(
-                      DateFormat('d MMM yyyy HH:mm').format(incident.createdAt),
+                      AppTimeFormat.withDatePrefix(
+                        context,
+                        'd MMM yyyy',
+                      ).format(incident.createdAt),
                       style: context.captionMutedStyle,
                     ),
                     if (incident.assigneeId != null)

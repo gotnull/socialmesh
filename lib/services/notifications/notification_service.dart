@@ -3,11 +3,13 @@
 import '../../core/logging.dart';
 import 'dart:async';
 import 'dart:io';
-import 'dart:ui' show Color, PlatformDispatcher;
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:socialmesh/l10n/app_localizations.dart';
 import '../../models/mesh_models.dart';
+import '../../utils/text_sanitizer.dart';
 import 'package:socialmesh/core/theme.dart';
+import 'package:socialmesh/l10n/l10n_utils.dart';
 
 /// Represents a pending message notification for batching
 class PendingMessageNotification {
@@ -15,6 +17,7 @@ class PendingMessageNotification {
   final String? senderShortName;
   final String message;
   final int fromNodeNum;
+  final int? replyPacketId;
   final int? channelIndex;
   final String? channelName;
   final DateTime timestamp;
@@ -24,12 +27,76 @@ class PendingMessageNotification {
     this.senderShortName,
     required this.message,
     required this.fromNodeNum,
+    this.replyPacketId,
     this.channelIndex,
     this.channelName,
     DateTime? timestamp,
   }) : timestamp = timestamp ?? DateTime.now();
 
-  bool get isChannelMessage => channelIndex != null && channelIndex! > 0;
+  bool get isChannelMessage => channelIndex != null;
+
+  MessageReactionTarget? get reactionTarget {
+    final replyPacketId = this.replyPacketId;
+    if (replyPacketId == null) return null;
+    return MessageReactionTarget(
+      toNodeNum: fromNodeNum,
+      channelIndex: channelIndex,
+      replyPacketId: replyPacketId,
+    );
+  }
+}
+
+class MessageReactionTarget {
+  final int toNodeNum;
+  final int? channelIndex;
+  final int replyPacketId;
+
+  const MessageReactionTarget({
+    required this.toNodeNum,
+    required this.replyPacketId,
+    this.channelIndex,
+  });
+
+  bool get isChannelMessage => channelIndex != null;
+
+  String toPayload() {
+    if (channelIndex != null) {
+      return 'channel:$channelIndex:$toNodeNum:$replyPacketId';
+    }
+    return 'dm:$toNodeNum:$replyPacketId';
+  }
+
+  static MessageReactionTarget? fromPayload(String payload) {
+    if (payload.startsWith('dm:')) {
+      final parts = payload.split(':');
+      if (parts.length < 3) return null;
+      final toNodeNum = int.tryParse(parts[1]);
+      final replyPacketId = int.tryParse(parts[2]);
+      if (toNodeNum == null || replyPacketId == null) return null;
+      return MessageReactionTarget(
+        toNodeNum: toNodeNum,
+        replyPacketId: replyPacketId,
+      );
+    }
+
+    if (payload.startsWith('channel:')) {
+      final parts = payload.split(':');
+      if (parts.length < 4) return null;
+      final channelIndex = int.tryParse(parts[1]);
+      final toNodeNum = int.tryParse(parts[2]);
+      final replyPacketId = int.tryParse(parts[3]);
+      if (channelIndex == null || toNodeNum == null || replyPacketId == null) {
+        return null;
+      }
+      return MessageReactionTarget(
+        toNodeNum: toNodeNum,
+        channelIndex: channelIndex,
+        replyPacketId: replyPacketId,
+      );
+    }
+
+    return null;
+  }
 }
 
 /// Represents a pending node notification for batching
@@ -49,7 +116,8 @@ class NotificationActions {
 }
 
 /// Callback type for sending reaction messages
-typedef ReactionCallback = Future<void> Function(int toNodeNum, String emoji);
+typedef ReactionCallback =
+    Future<void> Function(MessageReactionTarget target, String emoji);
 
 /// Service for handling local push notifications
 /// Local notifications do NOT require APNs (Apple Push Notification service)
@@ -61,8 +129,7 @@ class NotificationService {
 
   /// Resolve [AppLocalizations] from the platform locale.
   /// Usable without [BuildContext] for background notifications.
-  AppLocalizations get _l10n =>
-      lookupAppLocalizations(PlatformDispatcher.instance.locale);
+  AppLocalizations get _l10n => safeL10n();
 
   final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();
@@ -215,32 +282,22 @@ class NotificationService {
       return;
     }
 
-    // Parse payload to get node number
-    // Payload format: "dm:nodeNum" or "channel:channelIndex:nodeNum"
-    int? nodeNum;
-
-    if (payload.startsWith('dm:')) {
-      nodeNum = int.tryParse(payload.substring(3));
-    } else if (payload.startsWith('channel:')) {
-      // For channel messages, payload is "channel:index:nodeNum"
-      final parts = payload.split(':');
-      if (parts.length >= 3) {
-        nodeNum = int.tryParse(parts[2]);
-      }
-    }
-
-    if (nodeNum == null) {
+    final target = MessageReactionTarget.fromPayload(payload);
+    if (target == null) {
       AppLogging.notifications(
-        '🔔 Could not parse node number from payload: $payload',
+        '🔔 Could not parse reaction target from payload: $payload',
       );
       return;
     }
 
-    AppLogging.notifications('🔔 Sending $emoji reaction to node $nodeNum');
+    AppLogging.notifications(
+      '🔔 Sending $emoji reaction to node ${target.toNodeNum} '
+      '(channel=${target.channelIndex}, replyPacketId=${target.replyPacketId})',
+    );
 
     // Call the reaction callback if set
     if (onReactionSelected != null) {
-      onReactionSelected!(nodeNum, emoji);
+      onReactionSelected!(target, emoji);
     } else {
       AppLogging.notifications(
         '🔔 No reaction callback set, cannot send reaction',
@@ -622,6 +679,7 @@ class NotificationService {
     required String? senderShortName,
     required String message,
     required int fromNodeNum,
+    int? replyPacketId,
     bool playSound = true,
     bool vibrate = true,
   }) async {
@@ -635,6 +693,13 @@ class NotificationService {
       return;
     }
 
+    final reactionTarget = replyPacketId != null
+        ? MessageReactionTarget(
+            toNodeNum: fromNodeNum,
+            replyPacketId: replyPacketId,
+          )
+        : null;
+
     final androidDetails = AndroidNotificationDetails(
       'direct_messages',
       'Direct Messages', // lint-allow: hardcoded-string
@@ -645,25 +710,29 @@ class NotificationService {
       groupKey: 'mesh_direct_messages',
       playSound: playSound,
       enableVibration: vibrate,
-      actions: <AndroidNotificationAction>[
-        const AndroidNotificationAction(
-          NotificationActions.thumbsUp,
-          '👍',
-          showsUserInterface: true,
-        ),
-        const AndroidNotificationAction(
-          NotificationActions.thumbsDown,
-          '👎',
-          showsUserInterface: true,
-        ),
-      ],
+      actions: reactionTarget == null
+          ? const <AndroidNotificationAction>[]
+          : <AndroidNotificationAction>[
+              const AndroidNotificationAction(
+                NotificationActions.thumbsUp,
+                '👍',
+                showsUserInterface: true,
+              ),
+              const AndroidNotificationAction(
+                NotificationActions.thumbsDown,
+                '👎',
+                showsUserInterface: true,
+              ),
+            ],
     );
 
     final iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
       presentSound: playSound,
-      categoryIdentifier: NotificationActions.messageCategory,
+      categoryIdentifier: reactionTarget == null
+          ? null
+          : NotificationActions.messageCategory,
     );
 
     final notificationDetails = NotificationDetails(
@@ -673,9 +742,7 @@ class NotificationService {
     );
 
     // Truncate message if too long
-    final truncatedMessage = message.length > 100
-        ? '${message.substring(0, 100)}…'
-        : message;
+    final truncatedMessage = safeSubstring(message, 100);
 
     AppLogging.notifications(
       '🔔 Calling _notifications.show() for DM from $senderName',
@@ -698,7 +765,7 @@ class NotificationService {
         title: _l10n.notificationDirectMessageTitle(senderName, shortCode),
         body: truncatedMessage,
         notificationDetails: notificationDetails,
-        payload: 'dm:$fromNodeNum',
+        payload: reactionTarget?.toPayload() ?? 'dm:$fromNodeNum',
       );
       AppLogging.notifications(
         '🔔 Successfully showed DM notification from: $senderName',
@@ -717,10 +784,19 @@ class NotificationService {
     required String message,
     required int channelIndex,
     required int fromNodeNum,
+    int? replyPacketId,
     bool playSound = true,
     bool vibrate = true,
   }) async {
     if (!_initialized) return;
+
+    final reactionTarget = replyPacketId != null
+        ? MessageReactionTarget(
+            toNodeNum: fromNodeNum,
+            channelIndex: channelIndex,
+            replyPacketId: replyPacketId,
+          )
+        : null;
 
     final androidDetails = AndroidNotificationDetails(
       'channel_messages',
@@ -732,25 +808,29 @@ class NotificationService {
       groupKey: 'mesh_channel_messages',
       playSound: playSound,
       enableVibration: vibrate,
-      actions: <AndroidNotificationAction>[
-        const AndroidNotificationAction(
-          NotificationActions.thumbsUp,
-          '👍',
-          showsUserInterface: true,
-        ),
-        const AndroidNotificationAction(
-          NotificationActions.thumbsDown,
-          '👎',
-          showsUserInterface: true,
-        ),
-      ],
+      actions: reactionTarget == null
+          ? const <AndroidNotificationAction>[]
+          : <AndroidNotificationAction>[
+              const AndroidNotificationAction(
+                NotificationActions.thumbsUp,
+                '👍',
+                showsUserInterface: true,
+              ),
+              const AndroidNotificationAction(
+                NotificationActions.thumbsDown,
+                '👎',
+                showsUserInterface: true,
+              ),
+            ],
     );
 
     final iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
       presentSound: playSound,
-      categoryIdentifier: NotificationActions.messageCategory,
+      categoryIdentifier: reactionTarget == null
+          ? null
+          : NotificationActions.messageCategory,
     );
 
     final notificationDetails = NotificationDetails(
@@ -760,9 +840,7 @@ class NotificationService {
     );
 
     // Truncate message if too long
-    final truncatedMessage = message.length > 100
-        ? '${message.substring(0, 100)}…'
-        : message;
+    final truncatedMessage = safeSubstring(message, 100);
 
     // Use short name (4-char code) if available, otherwise last 4 hex digits
     final shortCode =
@@ -781,7 +859,8 @@ class NotificationService {
       ),
       body: truncatedMessage,
       notificationDetails: notificationDetails,
-      payload: 'channel:$channelIndex:$fromNodeNum',
+      payload:
+          reactionTarget?.toPayload() ?? 'channel:$channelIndex:$fromNodeNum',
     );
 
     AppLogging.notifications(
@@ -792,6 +871,35 @@ class NotificationService {
   /// Cancel all notifications
   Future<void> cancelAll() async {
     await _notifications.cancelAll();
+  }
+
+  /// Native method channel used to reset the iOS/macOS app icon badge count.
+  ///
+  /// [flutter_local_notifications]' [cancelAll] removes delivered notifications
+  /// from the notification centre but does NOT reset
+  /// [UIApplication.applicationIconBadgeNumber] (iOS) or the dock-tile badge
+  /// (macOS). Setting the badge to 0 requires an explicit native call, which
+  /// is wired up in AppDelegate.swift on both platforms.
+  static const _badgeChannel = MethodChannel('socialmesh/badge');
+
+  /// Clear the app icon badge.
+  ///
+  /// Cancels all delivered local notifications (removing them from the system
+  /// tray) and then calls the native [_badgeChannel] to set the badge count
+  /// to 0. The native call is necessary because [UIApplication
+  /// .applicationIconBadgeNumber] is a separate counter from the notification
+  /// centre — [cancelAll] alone does not reset it.
+  Future<void> clearBadge() async {
+    if (!_initialized) return;
+    await _notifications.cancelAll();
+    if (Platform.isIOS || Platform.isMacOS) {
+      try {
+        await _badgeChannel.invokeMethod<void>('clearBadge');
+      } catch (e) {
+        AppLogging.notifications('🔔 clearBadge channel error: $e');
+      }
+    }
+    AppLogging.notifications('🔔 Badge cleared');
   }
 
   /// Cancel notification by ID
@@ -994,7 +1102,7 @@ class NotificationService {
     }
 
     // Multiple nodes - show summary
-    title = '$nodeCount new nodes discovered';
+    title = _l10n.notificationBatchedNodesTitle(nodeCount);
     final nodeNames = nodes.take(3).map((n) => n.node.displayName).join(', ');
     body = nodeNames + (nodeCount > 3 ? '…' : '');
 
@@ -1016,21 +1124,27 @@ class NotificationService {
       presentSound: playSound,
     );
 
-    await _notifications.show(
-      id: 3000003, // Fixed ID for batched node notifications
-      title: title,
-      body: body,
-      notificationDetails: NotificationDetails(
-        android: androidDetails,
-        iOS: iosDetails,
-        macOS: iosDetails,
-      ),
-      payload: 'batched_nodes',
-    );
+    try {
+      await _notifications.show(
+        id: 3000003, // Fixed ID for batched node notifications
+        title: title,
+        body: body,
+        notificationDetails: NotificationDetails(
+          android: androidDetails,
+          iOS: iosDetails,
+          macOS: iosDetails,
+        ),
+        payload: 'batched_nodes',
+      );
 
-    AppLogging.notifications(
-      '🔔 Showed batched node notification: $nodeCount nodes',
-    );
+      AppLogging.notifications(
+        '🔔 Showed batched node notification: $nodeCount nodes',
+      );
+    } catch (e) {
+      AppLogging.notifications(
+        '🔔 Failed to show batched node notification: $e',
+      );
+    }
   }
 
   /// Fixed notification ID for admin bug report notifications
@@ -1078,9 +1192,7 @@ class NotificationService {
     );
 
     // Truncate description for notification body
-    final truncated = description.length > 120
-        ? '${description.substring(0, 120)}…'
-        : description;
+    final truncated = safeSubstring(description, 120);
 
     final subtitle = email != null && email.isNotEmpty
         ? 'From: $email' // lint-allow: hardcoded-string
@@ -1140,9 +1252,7 @@ class NotificationService {
     );
 
     // Truncate message if too long
-    final truncatedMessage = message.length > 100
-        ? '${message.substring(0, 100)}…'
-        : message;
+    final truncatedMessage = safeSubstring(message, 100);
 
     // Use session tag modulo to keep ID within 32-bit signed int range.
     // Offset by 4000000 to avoid collision with other notification IDs.
@@ -1258,6 +1368,102 @@ class NotificationService {
 
     AppLogging.notifications(
       '🔔 Showed SIP handshake request notification from: $peerName',
+    );
+  }
+
+  /// Show notification when a peer declines our SIP handshake request.
+  Future<void> showSipHandshakeDeclinedNotification({
+    required String peerName,
+    required int peerNodeId,
+  }) async {
+    if (!_initialized) return;
+
+    final androidDetails = AndroidNotificationDetails(
+      'sip_handshakes',
+      'SIP Handshakes', // lint-allow: hardcoded-string
+      channelDescription: _l10n.notificationChannelSipHandshake,
+      importance: Importance.defaultImportance,
+      priority: Priority.defaultPriority,
+      icon: '@mipmap/ic_launcher',
+      groupKey: 'sip_handshakes',
+      playSound: false,
+      enableVibration: false,
+      color: AccentColors.red,
+    );
+
+    final iosDetails = const DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: false,
+      presentSound: false,
+      threadIdentifier: 'sip_handshakes',
+    );
+
+    final notificationDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+      macOS: iosDetails,
+    );
+
+    final notificationId = (peerNodeId.abs() % 1000000) + 7000000;
+
+    await _notifications.show(
+      id: notificationId,
+      title: _l10n.notificationSipHandshakeDeclinedTitle,
+      body: _l10n.notificationSipHandshakeDeclinedBody(peerName),
+      notificationDetails: notificationDetails,
+      payload: 'sip_handshake_declined:$peerNodeId',
+    );
+
+    AppLogging.notifications(
+      '🔔 Showed SIP handshake declined notification from: $peerName',
+    );
+  }
+
+  /// Show notification when a new SIP peer is discovered nearby.
+  ///
+  /// Fires on the `sip_discovery` channel. Intended to run in the background
+  /// so the user knows to open Mesh Explorer and connect.
+  Future<void> showSipPeerFoundNotification({required int peerNodeId}) async {
+    if (!_initialized) return;
+
+    final androidDetails = AndroidNotificationDetails(
+      'sip_discovery',
+      'Peer Discovery', // lint-allow: hardcoded-string
+      channelDescription: _l10n.notificationChannelSipDiscovery,
+      importance: Importance.high,
+      priority: Priority.high,
+      icon: '@mipmap/ic_launcher',
+      groupKey: 'sip_discovery',
+      playSound: false,
+      enableVibration: false,
+      color: AccentColors.teal,
+    );
+
+    final iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: false,
+      threadIdentifier: 'sip_discovery',
+    );
+
+    final notificationDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+      macOS: iosDetails,
+    );
+
+    final notificationId = (peerNodeId.abs() % 1000000) + 7000000;
+
+    await _notifications.show(
+      id: notificationId,
+      title: _l10n.notificationSipPeerFoundTitle,
+      body: _l10n.notificationSipPeerFoundBody,
+      notificationDetails: notificationDetails,
+      payload: 'sip_peer_found:$peerNodeId',
+    );
+
+    AppLogging.notifications(
+      '🔔 Showed SIP peer found notification for: $peerNodeId',
     );
   }
 }

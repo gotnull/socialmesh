@@ -143,6 +143,10 @@ const HardwareModel$json = {
     {'1': 'MESHSTICK_1262', '2': 121},
     {'1': 'TBEAM_1_WATT', '2': 122},
     {'1': 'T5_S3_EPAPER_PRO', '2': 123},
+    {'1': 'TBEAM_BPF', '2': 124},
+    {'1': 'MINI_EPAPER_S3', '2': 125},
+    {'1': 'TDISPLAY_S3_PRO', '2': 126},
+    {'1': 'HELTEC_MESH_NODE_T096', '2': 127},
     {'1': 'PRIVATE_HW', '2': 255},
   ],
 };
@@ -191,7 +195,9 @@ final $typed_data.Uint8List hardwareModelDescriptor = $convert.base64Decode(
     'JBQ0tFUl9WMhBxEhEKDVRfV0FUQ0hfVUxUUkEQchIQCgxUSElOS05PREVfTTMQcxISCg5XSVNN'
     'RVNIX1RBUF9WMhB0EgsKB1JBSzM0MDEQdRILCgdSQUs2NDIxEHYSEAoMVEhJTktOT0RFX000EH'
     'cSEAoMVEhJTktOT0RFX002EHgSEgoOTUVTSFNUSUNLXzEyNjIQeRIQCgxUQkVBTV8xX1dBVFQQ'
-    'ehIUChBUNV9TM19FUEFQRVJfUFJPEHsSDwoKUFJJVkFURV9IVxD/AQ==');
+    'ehIUChBUNV9TM19FUEFQRVJfUFJPEHsSDQoJVEJFQU1fQlBGEHwSEgoOTUlOSV9FUEFQRVJfUz'
+    'MQfRITCg9URElTUExBWV9TM19QUk8QfhIZChVIRUxURUNfTUVTSF9OT0RFX1QwOTYQfxIPCgpQ'
+    'UklWQVRFX0hXEP8B');
 
 @$core.Deprecated('Use constantsDescriptor instead')
 const Constants$json = {

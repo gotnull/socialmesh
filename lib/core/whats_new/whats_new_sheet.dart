@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../features/automations/automations_screen.dart';
 import '../../features/navigation/main_shell.dart';
 import '../../features/nodedex/screens/nodedex_screen.dart';
 import '../../features/onboarding/widgets/mesh_node_brain.dart';
@@ -425,55 +426,60 @@ class _WhatsNewPage extends ConsumerWidget {
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(AppTheme.spacing24, 0, 24, 8),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Ico mascot — SizedBox matches actual render size
-          SizedBox(
-            width: mascotRenderSize,
-            height: mascotRenderSize,
-            child: MeshNodeBrain(mood: MeshBrainMood.excited, size: mascotSize),
-          ),
-          const SizedBox(height: AppTheme.spacing4),
-
-          // Headline
-          Text(
-            payload.headline,
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              fontFamily: AppTheme.fontFamily,
-              color: context.textPrimary,
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Ico mascot — SizedBox matches actual render size
+            SizedBox(
+              width: mascotRenderSize,
+              height: mascotRenderSize,
+              child: MeshNodeBrain(
+                mood: MeshBrainMood.excited,
+                size: mascotSize,
+              ),
             ),
-            textAlign: TextAlign.center,
-          ),
-
-          // Subtitle
-          if (payload.subtitle != null) ...[
             const SizedBox(height: AppTheme.spacing4),
+
+            // Headline
             Text(
-              payload.subtitle!,
+              payload.headline,
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
                 fontFamily: AppTheme.fontFamily,
-                color: context.textTertiary,
-                letterSpacing: 0.5,
+                color: context.textPrimary,
               ),
               textAlign: TextAlign.center,
             ),
-          ],
 
-          const SizedBox(height: AppTheme.spacing16),
+            // Subtitle
+            if (payload.subtitle != null) ...[
+              const SizedBox(height: AppTheme.spacing4),
+              Text(
+                payload.subtitle!,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontFamily: AppTheme.fontFamily,
+                  color: context.textTertiary,
+                  letterSpacing: 0.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
 
-          // Feature items
-          ...payload.items.map(
-            (item) => _WhatsNewItemCard(
-              item: item,
-              onDismissSheet: onDismissSheet,
-              readOnly: readOnly,
+            const SizedBox(height: AppTheme.spacing16),
+
+            // Feature items
+            ...payload.items.map(
+              (item) => _WhatsNewItemCard(
+                item: item,
+                onDismissSheet: onDismissSheet,
+                readOnly: readOnly,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -753,6 +759,8 @@ class _WhatsNewItemCard extends ConsumerWidget {
         return const TakScreen();
       case '/presence':
         return const PresenceScreen();
+      case '/automations':
+        return const AutomationsScreen();
       default:
         return null;
     }

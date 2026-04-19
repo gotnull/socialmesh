@@ -269,8 +269,9 @@ class ProgressiveDisclosure {
     }
 
     // Co-seen richness
-    if (entry.coSeenCount > 0) {
-      richness += 0.25 * _logScale(entry.coSeenCount.toDouble(), 20.0);
+    if (entry.historicalCoSeenCount > 0) {
+      richness +=
+          0.25 * _logScale(entry.historicalCoSeenCount.toDouble(), 20.0);
     }
 
     final bonus = headroom * richness.clamp(0.0, 1.0);

@@ -100,6 +100,9 @@ class _NodeDiscoveryOverlayState extends ConsumerState<NodeDiscoveryOverlay>
 
   @override
   Widget build(BuildContext context) {
+    if (MediaQuery.maybeOf(context)?.disableAnimations ?? false) {
+      return widget.child;
+    }
     final discoveredNodes = ref.watch(discoveredNodesQueueProvider);
     final isConnecting =
         ref.watch(autoReconnectStateProvider) ==

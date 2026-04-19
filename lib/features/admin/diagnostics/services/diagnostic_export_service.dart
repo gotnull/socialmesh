@@ -7,13 +7,13 @@ import 'dart:ui';
 import 'package:archive/archive.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:socialmesh/l10n/app_localizations.dart';
 
 import '../../../../core/logging.dart';
 import '../../../../utils/share_utils.dart';
 import '../models/diagnostic_run.dart';
 import '../models/diagnostic_summary.dart';
 import 'diagnostic_capture_service.dart';
+import 'package:socialmesh/l10n/l10n_utils.dart';
 
 /// Handles building the diagnostic export bundle (zip).
 class DiagnosticExportService {
@@ -111,7 +111,7 @@ Format: NDJSON lines are newline-delimited JSON (one object per line).
     required String runId,
     Rect? sharePosition,
   }) async {
-    final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    final l10n = safeL10n();
     await shareFiles(
       [XFile(zipPath)],
       subject: l10n.adminDiagnosticBundleSubject(runId),

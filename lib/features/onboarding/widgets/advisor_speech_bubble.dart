@@ -66,6 +66,7 @@ class _AdvisorSpeechBubbleState extends State<AdvisorSpeechBubble>
   String _displayedText = '';
   Timer? _typingTimer;
   int _currentCharIndex = 0;
+  bool _reduceMotion = false;
 
   @override
   void initState() {
@@ -114,6 +115,14 @@ class _AdvisorSpeechBubbleState extends State<AdvisorSpeechBubble>
   }
 
   void _startTyping() {
+    if (_reduceMotion) {
+      setState(() {
+        _displayedText = widget.text;
+        _currentCharIndex = widget.text.length;
+      });
+      widget.onTypingComplete?.call();
+      return;
+    }
     _currentCharIndex = 0;
     _displayedText = '';
     _typingTimer?.cancel();
@@ -136,6 +145,12 @@ class _AdvisorSpeechBubbleState extends State<AdvisorSpeechBubble>
         widget.onTypingComplete?.call();
       }
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncReduceMotion(MediaQuery.maybeOf(context)?.disableAnimations ?? false);
   }
 
   @override
@@ -170,6 +185,12 @@ class _AdvisorSpeechBubbleState extends State<AdvisorSpeechBubble>
 
   @override
   Widget build(BuildContext context) {
+    final entryValue = _reduceMotion
+        ? (widget.visible ? 1.0 : 0.0)
+        : _entry.value;
+    final glowValue = _reduceMotion ? 0.5 : _glow.value;
+    final scanlineValue = _reduceMotion ? 0.0 : _scanline.value;
+    if (entryValue == 0) return const SizedBox.shrink();
     return AnimatedBuilder(
       animation: Listenable.merge([
         _glowController,
@@ -177,17 +198,44 @@ class _AdvisorSpeechBubbleState extends State<AdvisorSpeechBubble>
         _scanlineController,
       ]),
       builder: (context, child) {
-        if (_entry.value == 0) return const SizedBox.shrink();
-
         return Transform.scale(
-          scale: 0.8 + _entry.value * 0.2,
-          child: Opacity(opacity: _entry.value, child: _buildBubble()),
+          scale: 0.8 + entryValue * 0.2,
+          child: Opacity(
+            opacity: entryValue,
+            child: _buildBubble(
+              glowValue: glowValue,
+              scanlineValue: scanlineValue,
+            ),
+          ),
         );
       },
     );
   }
 
-  Widget _buildBubble() {
+  void _syncReduceMotion(bool reduceMotion) {
+    if (reduceMotion == _reduceMotion) return;
+    _reduceMotion = reduceMotion;
+    _typingTimer?.cancel();
+    if (_reduceMotion) {
+      _glowController.stop();
+      _scanlineController.stop();
+      _entryController.stop();
+      _displayedText = widget.text;
+      _currentCharIndex = widget.text.length;
+      return;
+    }
+    if (!_glowController.isAnimating) {
+      _glowController.repeat(reverse: true);
+    }
+    if (!_scanlineController.isAnimating) {
+      _scanlineController.repeat();
+    }
+  }
+
+  Widget _buildBubble({
+    required double glowValue,
+    required double scanlineValue,
+  }) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 24),
       child: Stack(
@@ -200,7 +248,7 @@ class _AdvisorSpeechBubbleState extends State<AdvisorSpeechBubble>
                 boxShadow: [
                   BoxShadow(
                     color: widget.accentColor.withValues(
-                      alpha: _glow.value * 0.3,
+                      alpha: glowValue * 0.3,
                     ),
                     blurRadius: 20,
                     spreadRadius: 2,
@@ -218,7 +266,7 @@ class _AdvisorSpeechBubbleState extends State<AdvisorSpeechBubble>
                 color: context.card.withValues(alpha: 0.9),
                 borderRadius: BorderRadius.circular(AppTheme.radius16),
                 border: Border.all(
-                  color: widget.accentColor.withValues(alpha: _glow.value),
+                  color: widget.accentColor.withValues(alpha: glowValue),
                   width: 1.5,
                 ),
               ),
@@ -228,7 +276,7 @@ class _AdvisorSpeechBubbleState extends State<AdvisorSpeechBubble>
                   Positioned.fill(
                     child: CustomPaint(
                       painter: _ScanlinePainter(
-                        progress: _scanline.value,
+                        progress: scanlineValue,
                         color: widget.accentColor.withValues(alpha: 0.1),
                       ),
                     ),

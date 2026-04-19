@@ -17,6 +17,7 @@ import '../../providers/app_providers.dart';
 import '../../providers/help_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../providers/subscription_providers.dart';
+import '../../services/haptic_service.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/edge_fade.dart';
@@ -25,6 +26,7 @@ import 'automation_repository.dart';
 import 'automation_share_utils.dart';
 import 'models/automation.dart';
 import 'widgets/automation_card.dart';
+import 'widgets/automation_history_sheet.dart';
 import 'automation_editor_screen.dart';
 
 /// Screen showing all configured automations
@@ -355,13 +357,13 @@ class AutomationsScreen extends ConsumerWidget {
         ),
         const SizedBox(height: AppTheme.spacing12),
         SizedBox(
-          height: 110,
+          height: 130,
           child: EdgeFade.horizontal(
             fadeSize: 24,
             fadeColor: context.background,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 4),
               itemCount: templates.length,
               separatorBuilder: (context, index) =>
                   const SizedBox(width: AppTheme.spacing12),
@@ -370,7 +372,7 @@ class AutomationsScreen extends ConsumerWidget {
                 return BouncyTap(
                   onTap: () => _addFromTemplate(context, ref, template.id),
                   child: Container(
-                    width: 140,
+                    width: 160,
                     padding: const EdgeInsets.all(AppTheme.spacing12),
                     decoration: BoxDecoration(
                       color: context.card,
@@ -407,8 +409,6 @@ class AutomationsScreen extends ConsumerWidget {
                             fontWeight: FontWeight.w600,
                             fontSize: 13,
                           ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
@@ -658,6 +658,10 @@ class AutomationsScreen extends ConsumerWidget {
                 label: context.l10n.automationScreenStatExecutions,
                 value: stats.totalTriggers.toString(),
                 icon: Icons.trending_up,
+                onTap: () {
+                  ref.haptics.trigger(HapticType.light);
+                  _showExecutionLog(context, ref);
+                },
               ),
             ],
           ),
@@ -671,6 +675,9 @@ class AutomationsScreen extends ConsumerWidget {
           delegate: SliverChildBuilderDelegate((context, index) {
             final automation = automations[index];
             final animationsEnabled = ref.watch(animationsEnabledProvider);
+            final history = ref.watch(
+              automationHistoryByIdProvider(automation.id),
+            );
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: Perspective3DSlide(
@@ -679,6 +686,7 @@ class AutomationsScreen extends ConsumerWidget {
                 enabled: animationsEnabled,
                 child: AutomationCard(
                   automation: automation,
+                  lastRun: history.isNotEmpty ? history.first : null,
                   onToggle: (enabled) {
                     ref
                         .read(automationsProvider.notifier)
@@ -708,8 +716,9 @@ class AutomationsScreen extends ConsumerWidget {
     required String value,
     required IconData icon,
     Color? color,
+    VoidCallback? onTap,
   }) {
-    return Column(
+    final content = Column(
       children: [
         Icon(icon, size: 24, color: color ?? SemanticColors.disabled),
         const SizedBox(height: AppTheme.spacing4),
@@ -727,6 +736,12 @@ class AutomationsScreen extends ConsumerWidget {
           ).textTheme.bodySmall?.copyWith(color: SemanticColors.disabled),
         ),
       ],
+    );
+    if (onTap == null) return content;
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: content,
     );
   }
 
@@ -924,8 +939,6 @@ class AutomationsScreen extends ConsumerWidget {
   }
 
   void _showExecutionLog(BuildContext context, WidgetRef ref) {
-    final log = ref.read(automationLogProvider);
-
     showModalBottomSheet(
       context: context,
       backgroundColor: context.surface,
@@ -933,105 +946,12 @@ class AutomationsScreen extends ConsumerWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.7,
-        minChildSize: 0.5,
-        maxChildSize: 0.95,
-        expand: false,
-        builder: (context, scrollController) => SafeArea(
-          top: false,
-          child: Column(
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: SemanticColors.muted,
-                  borderRadius: BorderRadius.circular(AppTheme.radius2),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      context.l10n.automationScreenExecutionLog,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    if (log.isNotEmpty)
-                      TextButton(
-                        onPressed: () {
-                          ref.read(automationRepositoryProvider).clearLog();
-                          Navigator.pop(context);
-                        },
-                        child: Text(context.l10n.automationScreenClear),
-                      ),
-                  ],
-                ),
-              ),
-              const Divider(),
-              Expanded(
-                child: log.isEmpty
-                    ? Center(
-                        child: Text(
-                          context.l10n.automationScreenNoExecutions,
-                          style: const TextStyle(
-                            color: SemanticColors.disabled,
-                          ),
-                        ),
-                      )
-                    : ListView.builder(
-                        controller: scrollController,
-                        itemCount: log.length,
-                        itemBuilder: (context, index) {
-                          final entry = log[index];
-                          return ListTile(
-                            leading: Icon(
-                              entry.success ? Icons.check_circle : Icons.error,
-                              color: entry.success
-                                  ? AppTheme.successGreen
-                                  : AppTheme.errorRed,
-                            ),
-                            title: Text(entry.automationName),
-                            subtitle: Text(
-                              entry.triggerDetails ?? '',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            trailing: Text(
-                              _formatTime(context, entry.timestamp),
-                              style: const TextStyle(
-                                color: SemanticColors.disabled,
-                                fontSize: 12,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-              ),
-            ],
-          ),
-        ),
+      builder: (_) => AutomationHistorySheet(
+        onClear: () {
+          ref.read(automationsProvider.notifier).clearExecutionLog();
+        },
       ),
     );
-  }
-
-  String _formatTime(BuildContext context, DateTime time) {
-    final now = DateTime.now();
-    final diff = now.difference(time);
-
-    if (diff.inMinutes < 1) return context.l10n.automationScreenJustNow;
-    if (diff.inMinutes < 60) {
-      return context.l10n.automationScreenMinutesAgo(diff.inMinutes);
-    }
-    if (diff.inHours < 24) {
-      return context.l10n.automationScreenHoursAgo(diff.inHours);
-    }
-    return context.l10n.automationScreenDaysAgo(diff.inDays);
   }
 }
 
@@ -1240,13 +1160,13 @@ class _AddAutomationSheet extends ConsumerWidget {
         ),
         const SizedBox(height: AppTheme.spacing12),
         SizedBox(
-          height: 110,
+          height: 130,
           child: EdgeFade.horizontal(
             fadeSize: 24,
             fadeColor: context.surface,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 4),
               itemCount: templates.length,
               separatorBuilder: (context, index) =>
                   const SizedBox(width: AppTheme.spacing12),
@@ -1255,7 +1175,7 @@ class _AddAutomationSheet extends ConsumerWidget {
                 return BouncyTap(
                   onTap: () => onSelectTemplate(template.id),
                   child: Container(
-                    width: 140,
+                    width: 160,
                     padding: const EdgeInsets.all(AppTheme.spacing12),
                     decoration: BoxDecoration(
                       color: context.card,
@@ -1292,8 +1212,6 @@ class _AddAutomationSheet extends ConsumerWidget {
                             fontWeight: FontWeight.w600,
                             fontSize: 13,
                           ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),

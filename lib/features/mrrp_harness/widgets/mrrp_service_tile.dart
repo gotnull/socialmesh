@@ -38,92 +38,132 @@ class _MrrpServiceTileState extends State<MrrpServiceTile> {
 
     return Padding(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppTheme.spacing12,
-        vertical: AppTheme.spacing4,
+        horizontal: AppTheme.spacing16,
+        vertical: AppTheme.spacing6,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                _serviceIcon(d.serviceId),
-                size: 18,
-                color: widget.isExpired
-                    ? SemanticColors.muted
-                    : context.accentColor,
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color:
+                      (widget.isExpired
+                              ? SemanticColors.muted
+                              : context.accentColor)
+                          .withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
+                ),
+                child: Icon(
+                  _serviceIcon(d.serviceId),
+                  size: 14,
+                  color: widget.isExpired
+                      ? SemanticColors.muted
+                      : context.accentColor,
+                ),
               ),
               const SizedBox(width: AppTheme.spacing8),
               Expanded(
                 child: Text(
                   serviceName,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  style: TextStyle(
                     fontWeight: FontWeight.w600,
-                    color: widget.isExpired ? SemanticColors.muted : null,
+                    fontSize: 14,
+                    color: widget.isExpired
+                        ? SemanticColors.muted
+                        : context.textPrimary,
                   ),
                 ),
               ),
               Text(
                 l10n.mrrpHarnessServiceVersion(d.versionMajor, d.versionMinor),
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: context.textSecondary),
+                style: TextStyle(
+                  fontFamily: AppTheme.fontFamily,
+                  fontSize: 12,
+                  color: context.textTertiary,
+                ),
               ),
             ],
           ),
           if (flags.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.only(left: 26, top: AppTheme.spacing2),
+              padding: const EdgeInsets.only(left: 36, top: AppTheme.spacing4),
               child: Wrap(
                 spacing: AppTheme.spacing4,
-                runSpacing: AppTheme.spacing2,
+                runSpacing: AppTheme.spacing4,
                 children: flags.map((f) => _FlagChip(label: f)).toList(),
               ),
             ),
           if (d.metadata.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.only(left: 26, top: AppTheme.spacing2),
+              padding: const EdgeInsets.only(left: 36, top: AppTheme.spacing4),
               child: Text(
                 String.fromCharCodes(d.metadata),
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                style: TextStyle(
                   color: context.textTertiary,
                   fontStyle: FontStyle.italic,
+                  fontSize: 12,
                 ),
               ),
             ),
           // Raw hex toggle
           Padding(
-            padding: const EdgeInsets.only(left: 26, top: AppTheme.spacing2),
+            padding: const EdgeInsets.only(left: 36, top: AppTheme.spacing4),
             child: GestureDetector(
               // lint-allow: haptic-feedback — toggle control, not navigation action
               onTap: () => setState(() => _showRawHex = !_showRawHex),
-              child: Text(
-                l10n.mrrpHarnessRawHex,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: context.accentColor,
-                  decoration: TextDecoration.underline,
-                ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _showRawHex
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
+                    size: 14,
+                    color: context.accentColor,
+                  ),
+                  const SizedBox(width: AppTheme.spacing4),
+                  Text(
+                    l10n.mrrpHarnessRawHex,
+                    style: TextStyle(
+                      color: context.accentColor,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
           if (_showRawHex)
             Padding(
               padding: const EdgeInsets.only(
-                left: 26,
-                top: AppTheme.spacing4,
+                left: 36,
+                top: AppTheme.spacing6,
                 bottom: AppTheme.spacing4,
               ),
               child: Container(
-                padding: const EdgeInsets.all(AppTheme.spacing8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.spacing12,
+                  vertical: AppTheme.spacing8,
+                ),
                 decoration: BoxDecoration(
-                  color: context.surface,
-                  borderRadius: BorderRadius.circular(AppTheme.radius6),
+                  color: context.textPrimary.withValues(alpha: 0.04),
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
+                  border: Border.all(
+                    color: context.border.withValues(alpha: 0.3),
+                    width: 0.5,
+                  ),
                 ),
                 child: Text(
                   _buildRawHex(d),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontFamily: 'monospace', // lint-allow: hardcoded-string
+                  style: TextStyle(
+                    fontFamily: AppTheme.fontFamily,
                     color: context.textSecondary,
+                    fontSize: 11,
                   ),
                 ),
               ),
@@ -191,23 +231,43 @@ class _FlagChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final chipColor = _flagColor(label);
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppTheme.spacing6,
-        vertical: 1,
+        horizontal: AppTheme.spacing8,
+        vertical: 3,
       ),
       decoration: BoxDecoration(
-        color: context.surface,
-        borderRadius: BorderRadius.circular(AppTheme.radius4),
-        border: Border.all(color: context.border),
+        color: chipColor.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
+        border: Border.all(
+          color: chipColor.withValues(alpha: 0.25),
+          width: 0.5,
+        ),
       ),
       child: Text(
         label,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: context.textSecondary,
-          fontSize: 10,
+        style: TextStyle(
+          color: chipColor,
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.2,
         ),
       ),
     );
+  }
+
+  static Color _flagColor(String label) {
+    return switch (label) {
+      'request' => AccentColors.teal, // lint-allow: hardcoded-string
+      'response' => AccentColors.indigo, // lint-allow: hardcoded-string
+      'handshake' => AccentColors.orange, // lint-allow: hardcoded-string
+      'identity' => AccentColors.purple, // lint-allow: hardcoded-string
+      'cached' => AccentColors.yellow, // lint-allow: hardcoded-string
+      'test' => SemanticColors.muted, // lint-allow: hardcoded-string
+      'ephemeral' => AccentColors.pink, // lint-allow: hardcoded-string
+      'visible' => SemanticColors.success, // lint-allow: hardcoded-string
+      _ => SemanticColors.muted,
+    };
   }
 }

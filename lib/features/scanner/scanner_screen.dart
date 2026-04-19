@@ -33,6 +33,8 @@ import '../../providers/app_providers.dart';
 import '../../services/storage/storage_service.dart';
 import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import 'widgets/connecting_animation.dart';
+import 'widgets/mdns_discovery_section.dart';
+import 'widgets/network_connection_section.dart';
 import '../device/region_selection_screen.dart';
 
 class ScannerScreen extends ConsumerStatefulWidget {
@@ -505,6 +507,8 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   Future<void> _startScan({bool isRescan = false}) async {
     _rescanTimer?.cancel();
 
+    if (!mounted) return;
+
     if (_scanning) {
       AppLogging.connection(
         '📡 SCANNER: _startScan called but already scanning',
@@ -516,7 +520,18 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     // connected. The aggressive cleanup (stopScan, system device
     // disconnect) can destroy an active connection and trigger a
     // cascade of auto-reconnect cycles.
-    final currentDeviceState = ref.read(conn.deviceConnectionProvider);
+    final conn.DeviceConnectionState2 currentDeviceState;
+    final bool userJustDisconnected;
+    final Future<SettingsService> settingsFuture;
+    final DeviceTransport transport;
+    final bool showAllDevices;
+    try {
+      currentDeviceState = ref.read(conn.deviceConnectionProvider);
+    } on StateError {
+      // ProviderScope may be gone during widget tree teardown (e.g. Timer
+      // fires between mounted check and element detach). Safe to bail.
+      return;
+    }
     if (currentDeviceState.isConnected ||
         currentDeviceState.state == conn.DevicePairingState.configuring) {
       AppLogging.connection(
@@ -527,10 +542,14 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     }
 
     // Capture providers BEFORE any await
-    final userJustDisconnected = ref.read(userDisconnectedProvider);
-    final settingsFuture = ref.read(settingsServiceProvider.future);
-    final transport = ref.read(transportProvider);
-    final showAllDevices = ref.read(showAllBleDevicesProvider);
+    try {
+      userJustDisconnected = ref.read(userDisconnectedProvider);
+      settingsFuture = ref.read(settingsServiceProvider.future);
+      transport = ref.read(transportProvider);
+      showAllDevices = ref.read(showAllBleDevicesProvider);
+    } on StateError {
+      return;
+    }
     AppLogging.connection(
       '📡 SCANNER: Starting 10s scan... '
       '(isRescan=$isRescan, userJustDisconnected=$userJustDisconnected)',
@@ -823,6 +842,9 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   TransportType _transportTypeFromString(String? type) {
     if (type == 'usb') {
       return TransportType.usb;
+    }
+    if (type == 'network') {
+      return TransportType.network;
     }
     return TransportType.ble;
   }
@@ -1117,10 +1139,42 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
       connectedDeviceNotifier.setState(device);
 
-      // Save device for auto-reconnect (with protocol for future reconnect routing)
+      // Capture the previously-saved device id + logical identity BEFORE
+      // setLastDevice overwrites it. clearDeviceDataBeforeConnect uses
+      // these to distinguish:
+      //   * true device switch → wipe cached NodeDB so the new device's
+      //     nodes don't get unioned with the old one's
+      //   * transport rebind (same physical radio, BLE UUID rotated on
+      //     ESP32/nRF) → preserve cached NodeDB
+      // Without the rebind check we wipe the user's own-node metadata
+      // every time a BLE peripheral rotates its UUID.
       final settingsService = settingsAsync.value;
+      final previousDeviceId = settingsService?.lastDeviceId;
+      final lastMyNodeNum = settingsService?.lastMyNodeNum;
+      final lastDeviceName = settingsService?.lastDeviceName;
+      final isTransportRebind = isLogicalTransportRebind(
+        newDeviceName: device.name,
+        newDeviceId: device.id,
+        previousDeviceId: previousDeviceId,
+        lastMyNodeNum: lastMyNodeNum,
+        lastDeviceName: lastDeviceName,
+      );
+      AppLogging.connection(
+        '🧮 SWITCH CLASSIFY (scanner): '
+        'previousDeviceId=$previousDeviceId '
+        'newDeviceId=${device.id} '
+        'lastMyNodeNum=${lastMyNodeNum?.toRadixString(16)} '
+        'lastDeviceName=$lastDeviceName '
+        'isTransportRebind=$isTransportRebind',
+      );
+
+      // Save device for auto-reconnect (with protocol for future reconnect routing)
       if (settingsService != null) {
-        final deviceType = device.type == TransportType.ble ? 'ble' : 'usb';
+        final deviceType = switch (device.type) {
+          TransportType.ble => 'ble',
+          TransportType.usb => 'usb',
+          TransportType.network => 'network',
+        };
         await settingsService.setLastDevice(
           device.id,
           deviceType,
@@ -1129,9 +1183,16 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         );
       }
 
-      // Clear all previous device data before starting new connection
-      // This follows the Meshtastic iOS approach of always fetching fresh data from the device
-      await clearDeviceDataBeforeConnect(ref);
+      // Clear all previous device data before starting new connection.
+      // Pass previous + new IDs so the helper can auto-clear node data on
+      // a real device switch, but suppress the auto-clear on a transport
+      // rebind (same radio, rotated BLE UUID).
+      await clearDeviceDataBeforeConnect(
+        ref,
+        previousDeviceId: previousDeviceId,
+        newDeviceId: device.id,
+        isTransportRebind: isTransportRebind,
+      );
 
       // Start protocol service and wait for configuration
       AppLogging.debug(
@@ -1930,13 +1991,27 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                             color: context.textSecondary,
                           ),
                         ),
-                        SizedBox(height: AppTheme.spacing8),
-                        Text(
-                          context.l10n.scannerEnableBluetoothHint,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: context.textTertiary,
+                        SizedBox(height: AppTheme.spacing16),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _ScannerTip(
+                                icon: Icons.bluetooth,
+                                text: context.l10n.scannerEnableBluetoothHint,
+                              ),
+                              SizedBox(height: AppTheme.spacing10),
+                              _ScannerTip(
+                                icon: Icons.app_blocking_outlined,
+                                text: context.l10n.scannerTipNoOtherApps,
+                              ),
+                              SizedBox(height: AppTheme.spacing10),
+                              _ScannerTip(
+                                icon: Icons.devices_other,
+                                text: context.l10n.scannerTipNoOtherDevices,
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -1992,6 +2067,39 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                       );
                     },
                   ),
+
+                // mDNS auto-discovered Wi-Fi radios
+                const SizedBox(height: AppTheme.spacing24),
+                Divider(color: context.border, height: 1),
+                const SizedBox(height: AppTheme.spacing16),
+                MdnsDiscoverySection(
+                  onConnectionSuccess: () {
+                    if (!mounted) return;
+                    final appState = ref.read(appInitProvider);
+                    if (appState == AppInitState.needsScanner) {
+                      ref.read(appInitProvider.notifier).setReady();
+                    } else if (!widget.isInline) {
+                      _navigateToMain();
+                    }
+                  },
+                ),
+
+                // Network (TCP/IP) manual connection section
+                const SizedBox(height: AppTheme.spacing16),
+                Divider(color: context.border, height: 1),
+                const SizedBox(height: AppTheme.spacing16),
+                NetworkConnectionSection(
+                  compact: true,
+                  onConnectionSuccess: () {
+                    if (!mounted) return;
+                    final appState = ref.read(appInitProvider);
+                    if (appState == AppInitState.needsScanner) {
+                      ref.read(appInitProvider.notifier).setReady();
+                    } else if (!widget.isInline) {
+                      _navigateToMain();
+                    }
+                  },
+                ),
               ]),
             ),
           ),
@@ -2083,6 +2191,34 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   }
 }
 
+class _ScannerTip extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const _ScannerTip({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 16, color: context.textTertiary),
+        SizedBox(width: AppTheme.spacing8),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(
+              fontSize: 13,
+              color: context.textTertiary,
+              height: 1.3,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _DeviceCard extends StatelessWidget {
   final DeviceInfo device;
   final MeshProtocolType protocolType;
@@ -2131,9 +2267,11 @@ class _DeviceCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
                   child: Icon(
-                    device.type == TransportType.ble
-                        ? Icons.bluetooth
-                        : Icons.usb,
+                    switch (device.type) {
+                      TransportType.ble => Icons.bluetooth,
+                      TransportType.usb => Icons.usb,
+                      TransportType.network => Icons.lan,
+                    },
                     color: isUnknown && showDebugInfo
                         ? AccentColors.orange
                         : context.accentColor,
@@ -2157,9 +2295,14 @@ class _DeviceCard extends StatelessWidget {
                       Row(
                         children: [
                           Text(
-                            device.type == TransportType.ble
-                                ? context.l10n.scannerTransportBluetooth
-                                : context.l10n.scannerTransportUsb,
+                            switch (device.type) {
+                              TransportType.ble =>
+                                context.l10n.scannerTransportBluetooth,
+                              TransportType.usb =>
+                                context.l10n.scannerTransportUsb,
+                              TransportType.network =>
+                                context.l10n.deviceSheetNetwork,
+                            },
                             style: TextStyle(
                               fontSize: 14,
                               color: context.textTertiary,
@@ -2276,9 +2419,11 @@ class _DeviceDetailsTable extends StatelessWidget {
         (context.l10n.scannerDetailAddress, device.address!),
       (
         context.l10n.scannerDetailConnectionType,
-        device.type == TransportType.ble
-            ? context.l10n.scannerDetailBluetoothLowEnergy
-            : context.l10n.scannerDetailUsbSerial,
+        switch (device.type) {
+          TransportType.ble => context.l10n.scannerDetailBluetoothLowEnergy,
+          TransportType.usb => context.l10n.scannerDetailUsbSerial,
+          TransportType.network => context.l10n.deviceSheetNetwork,
+        },
       ),
       if (device.rssi != null)
         (context.l10n.scannerDetailSignalStrength, '${device.rssi} dBm'),

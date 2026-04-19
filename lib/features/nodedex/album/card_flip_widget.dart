@@ -809,7 +809,7 @@ class _BottomSummary extends StatelessWidget {
         ),
         _CompactStat(
           icon: Icons.people_outline,
-          value: '${entry.coSeenCount}',
+          value: '${entry.historicalCoSeenCount}',
           label: context.l10n.nodedexCoSeenCompactLabel,
           color: rarity.borderColor,
           scale: scale,

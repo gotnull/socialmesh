@@ -1991,7 +1991,7 @@ void main() {
 
       await engine.executeAutomationManually(automation, event);
 
-      // Manual execution bypasses _shouldTrigger, so it executes
+      // Manual execution bypasses _evaluateTrigger, so it executes
       expect(sentMessages, isNotEmpty);
     });
   });

@@ -2,18 +2,27 @@ package com.gotnull.socialmesh
 
 import android.content.Intent
 import android.net.Uri
+import android.os.Bundle
 import android.provider.Settings
-import io.flutter.embedding.android.FlutterActivity
+import androidx.activity.enableEdgeToEdge
+import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
-class MainActivity : FlutterActivity() {
+class MainActivity : FlutterFragmentActivity() {
     private val SETTINGS_CHANNEL = "com.socialmesh/settings"
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
+        super.onCreate(savedInstanceState)
+    }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         // Register GlyphMatrix plugin for Nothing Phone 3
         flutterEngine.plugins.add(GlyphMatrixPlugin())
+        // Register age signal plugin (scaffold — returns unknown until SDK wired)
+        flutterEngine.plugins.add(AgeSignalPlugin())
         
         // Register settings method channel
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, SETTINGS_CHANNEL).setMethodCallHandler { call, result ->

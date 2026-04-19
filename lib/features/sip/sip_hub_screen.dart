@@ -14,6 +14,7 @@
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -34,13 +35,19 @@ import '../../features/nodes/node_display_name_resolver.dart';
 import '../../models/mesh_models.dart';
 import '../../core/constants.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/age_eligibility_provider.dart';
+import '../../providers/help_providers.dart';
+import '../../providers/overlay_providers.dart';
 import '../../providers/sip_providers.dart';
 import '../../services/haptic_service.dart';
 import '../../services/protocol/sip/sip_codec.dart';
+import '../../services/protocol/sip/sip_types.dart';
 import '../../services/protocol/sip/sip_discovery.dart';
 import '../../services/protocol/sip/sip_dm.dart';
 import '../../services/protocol/sip/sip_handshake.dart';
 import '../../utils/snackbar.dart';
+import '../../core/widgets/animated_empty_state.dart';
+import '../../core/widgets/ico_help_system.dart';
 import '../mrrp_harness/mrrp_harness_home_screen.dart';
 import 'sip_dm_screen.dart';
 
@@ -64,6 +71,7 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
   Timer? _autoScanTimer;
   Timer? _scanTimeoutTimer;
   int _scanStartEpoch = -1;
+  String _lastLogSignature = '';
 
   /// Continuous rotation controller for the radar icon when auto-scan is on.
   late final AnimationController _radarController;
@@ -136,7 +144,7 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
     AppLogging.sip('SIP_HUB: scan tapped, discovery=${discovery != null}');
     if (discovery == null) return;
 
-    final outbound = discovery.buildRollcallReq();
+    final outbound = discovery.buildRollcallReq(force: true);
     if (outbound != null) {
       final protocol = ref.read(protocolServiceProvider);
       protocol.sendSipPacket(outbound.encoded);
@@ -146,10 +154,20 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
       setState(() => _scanning = true);
       // Record epoch at scan start; stop scanning when it bumps (peers arrive).
       _scanStartEpoch = ref.read(sipPeerCacheEpochProvider);
-      // Safety timeout: stop scanning after 10s regardless.
+      // Poll the discovery engine's scan window state instead of using a fixed
+      // timeout. The engine tracks the real expiry; we add a grace period after
+      // the window closes for the last response to propagate back over the mesh.
       _scanTimeoutTimer?.cancel();
-      _scanTimeoutTimer = Timer(const Duration(seconds: 10), () {
-        if (mounted) setState(() => _scanning = false);
+      _scanTimeoutTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+        final d = ref.read(sipDiscoveryProvider);
+        if (d == null || !d.isInScanWindow) {
+          _scanTimeoutTimer?.cancel();
+          // Grace period: responses sent just before the window closed are
+          // still in flight. Wait for mesh propagation before giving up.
+          Future.delayed(const Duration(seconds: 5), () {
+            if (mounted && _scanning) setState(() => _scanning = false);
+          });
+        }
       });
     }
   }
@@ -157,7 +175,8 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
   /// Called from build — checks if peers arrived since scan started.
   void _checkScanComplete(int currentEpoch) {
     if (_scanning && currentEpoch > _scanStartEpoch) {
-      // Peers have arrived — keep indicator briefly for perceived smoothness.
+      // Peers have arrived — cancel the scan window poll and stop scanning
+      // after a brief delay for perceived smoothness.
       _scanTimeoutTimer?.cancel();
       Future.delayed(const Duration(milliseconds: 500), () {
         if (mounted) setState(() => _scanning = false);
@@ -193,8 +212,18 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
     }
 
     // Already handshaking — let the chip show progress, don't interrupt.
+    //
+    // pendingApproval is NOT a tile-tap shortcut: the dedicated
+    // `_IncomingRequestTile` above the peer list owns Accept / Decline
+    // as explicit, deliberate buttons. Tapping the peer tile must not
+    // stand in for consent — the mandatory ACCEPT / REJECT rule
+    // requires a direct user action on the consent UI.
     final currentState = handshake.getState(peer.nodeId);
+    if (currentState == SipHandshakeState.pendingApproval) {
+      return;
+    }
     if (currentState != SipHandshakeState.idle &&
+        currentState != SipHandshakeState.declined &&
         currentState != SipHandshakeState.failed &&
         currentState != SipHandshakeState.timedOut) {
       return;
@@ -210,7 +239,7 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
     }
 
     final protocol = ref.read(protocolServiceProvider);
-    protocol.sendSipPacket(encoded);
+    protocol.sendSipGated(encoded, SipMessageType.hsHello);
     ref.read(sipCountersProvider).recordHandshakeInitiated();
     // No snackbar — the handshake chip updates in real-time via epoch.
   }
@@ -244,14 +273,28 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
     final peerCount = ref.watch(sipPeerCountProvider);
     final peerEpoch = ref.watch(sipPeerCacheEpochProvider);
     final autoScanEnabled = ref.watch(sipAutoScanProvider);
+    final pendingRequestNodeIds = ref.watch(sipPendingHandshakeProvider);
 
     // Stop scanning indicator when peers arrive (epoch bumps).
     if (_scanning) _checkScanComplete(peerEpoch);
 
-    AppLogging.sip(
-      'SIP_HUB: build — enabled=$sipEnabled, peers=$peerCount, '
-      'sessions=${sessions.length}',
-    );
+    // Deduplicate identical log lines across rebuilds.
+    final sig =
+        '$sipEnabled|$peerCount|${sessions.length}|${pendingRequestNodeIds.length}'; // lint-allow: hardcoded-string
+    if (sig != _lastLogSignature) {
+      _lastLogSignature = sig;
+      AppLogging.sip(
+        'SIP_HUB: build — enabled=$sipEnabled, peers=$peerCount, '
+        'sessions=${sessions.length}, '
+        'pendingRequests=${pendingRequestNodeIds.length}', // lint-allow: hardcoded-string
+      );
+      if (pendingRequestNodeIds.isNotEmpty) {
+        AppLogging.sip(
+          'SIP_HUB: pending request nodeIds='
+          '${pendingRequestNodeIds.map((id) => '0x${id.toRadixString(16)}').join(', ')}', // lint-allow: hardcoded-string
+        );
+      }
+    }
 
     // Filter out peers that already have an active DM session —
     // those appear under Conversations only (issue 3).
@@ -262,97 +305,118 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
 
     final hasPeers = unconnectedPeers.isNotEmpty;
     final hasSessions = sessions.isNotEmpty;
-    final isEmpty = !hasPeers && !hasSessions && !_scanning;
+    final hasPendingRequests = pendingRequestNodeIds.isNotEmpty;
+    final isEmpty =
+        !hasPeers && !hasSessions && !_scanning && !hasPendingRequests;
 
     // lint-allow: haptic-feedback — keyboard dismissal, not interactive action
-    return GestureDetector(
-      onTap: () => FocusScope.of(context).unfocus(),
-      child: GlassScaffold(
-        title: l10n.sipHubTitle,
-        actions: [
-          // Scan button — rotates continuously when auto-scan is enabled
-          IconButton(
-            icon: _scanning
-                ? SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: context.textSecondary,
-                    ),
-                  )
-                : AnimatedBuilder(
-                    animation: _radarController,
-                    builder: (context, child) => Transform.rotate(
-                      angle: _radarController.value * 2 * 3.14159265,
-                      child: child,
-                    ),
-                    child: Icon(
-                      Icons.radar,
-                      size: 22,
-                      color: autoScanEnabled ? AccentColors.green : null,
-                    ),
+    return HelpTourController(
+      topicId: 'sip_hub_overview',
+      stepKeys: const {},
+      child: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: GlassScaffold(
+          title: l10n.sipHubTitle,
+          actions: [
+            // Scan button — hidden during scans, rotates when auto-scan on
+            if (!_scanning)
+              IconButton(
+                icon: AnimatedBuilder(
+                  animation: _radarController,
+                  builder: (context, child) => Transform.rotate(
+                    angle: _radarController.value * 2 * 3.14159265,
+                    child: child,
                   ),
-            tooltip: l10n.sipDiscoveryScanButton,
-            onPressed: _scanning
-                ? null
-                : autoScanEnabled
-                ? _toggleAutoScan
-                : _onScan,
-          ),
-          // Overflow menu
-          AppBarOverflowMenu<String>(
-            onSelected: (value) {
-              if (value == 'autoscan') {
-                _toggleAutoScan(); // lint-allow: hardcoded-string
-              }
-              if (value == 'counters') {
-                _showCounters(); // lint-allow: hardcoded-string
-              }
-              if (value == 'harness') {
-                _openHarness(); // lint-allow: hardcoded-string
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'autoscan', // lint-allow: hardcoded-string
-                child: ListTile(
-                  leading: Icon(
-                    autoScanEnabled ? Icons.sync_disabled : Icons.sync,
+                  child: Icon(
+                    Icons.radar,
+                    size: 22,
+                    color: autoScanEnabled ? AccentColors.green : null,
                   ),
-                  title: Text(l10n.sipAutoScanToggle),
-                  trailing: autoScanEnabled
-                      ? Icon(Icons.check, size: 18, color: AccentColors.green)
-                      : null,
-                  contentPadding: EdgeInsets.zero,
-                  visualDensity: VisualDensity.compact,
                 ),
+                tooltip: l10n.sipDiscoveryScanButton,
+                onPressed: autoScanEnabled ? _toggleAutoScan : _onScan,
               ),
-              PopupMenuItem(
-                value: 'counters', // lint-allow: hardcoded-string
-                child: ListTile(
-                  leading: const Icon(Icons.analytics_outlined),
-                  title: Text(l10n.sipCountersTitle),
-                  contentPadding: EdgeInsets.zero,
-                  visualDensity: VisualDensity.compact,
-                ),
-              ),
-              if (AppFeatureFlags.isMrrpHarnessEnabled)
+            // Overflow menu
+            AppBarOverflowMenu<String>(
+              onSelected: (value) {
+                if (value == 'autoscan') {
+                  _toggleAutoScan(); // lint-allow: hardcoded-string
+                }
+                if (value == 'counters') {
+                  _showCounters(); // lint-allow: hardcoded-string
+                }
+                if (value == 'harness') {
+                  _openHarness(); // lint-allow: hardcoded-string
+                }
+                if (value == 'help') {
+                  ref
+                      .read(helpProvider.notifier)
+                      .startTour(
+                        'sip_hub_overview',
+                      ); // lint-allow: hardcoded-string
+                }
+              },
+              itemBuilder: (context) => [
                 PopupMenuItem(
-                  value: 'harness', // lint-allow: hardcoded-string
+                  value: 'autoscan', // lint-allow: hardcoded-string
                   child: ListTile(
-                    leading: const Icon(Icons.hub),
-                    title: Text(l10n.mrrpHarnessDrawerLabel),
+                    leading: Icon(
+                      autoScanEnabled ? Icons.sync_disabled : Icons.sync,
+                    ),
+                    title: Text(l10n.sipAutoScanToggle),
+                    trailing: autoScanEnabled
+                        ? Icon(Icons.check, size: 18, color: AccentColors.green)
+                        : null,
                     contentPadding: EdgeInsets.zero,
                     visualDensity: VisualDensity.compact,
                   ),
                 ),
-            ],
-          ),
-        ],
-        slivers: isEmpty
-            ? _buildEmptySlivers(context)
-            : _buildContentSlivers(context, unconnectedPeers, sessions),
+                PopupMenuItem(
+                  value: 'counters', // lint-allow: hardcoded-string
+                  child: ListTile(
+                    leading: const Icon(Icons.analytics_outlined),
+                    title: Text(l10n.sipCountersTitle),
+                    contentPadding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+                if (AppFeatureFlags.isMrrpHarnessEnabled)
+                  PopupMenuItem(
+                    value: 'harness', // lint-allow: hardcoded-string
+                    child: ListTile(
+                      leading: const Icon(Icons.hub),
+                      title: Text(l10n.mrrpHarnessDrawerLabel),
+                      contentPadding: EdgeInsets.zero,
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ),
+                const PopupMenuDivider(),
+                PopupMenuItem(
+                  value: 'help', // lint-allow: hardcoded-string
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.help_outline,
+                        size: 18,
+                        color: context.textSecondary,
+                      ),
+                      SizedBox(width: AppTheme.spacing8),
+                      Text(l10n.sipHubHelp),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+          slivers: isEmpty
+              ? _buildEmptySlivers(context)
+              : _buildContentSlivers(
+                  context,
+                  unconnectedPeers,
+                  sessions,
+                  pendingRequestNodeIds,
+                ),
+        ),
       ),
     );
   }
@@ -363,70 +427,37 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
 
   List<Widget> _buildEmptySlivers(BuildContext context) {
     final l10n = context.l10n;
+    final taglines = [
+      l10n.sipHubScanningTagline1,
+      l10n.sipHubScanningTagline2,
+      l10n.sipHubScanningTagline3,
+      l10n.sipHubScanningTagline4,
+    ];
 
     return [
       SliverFillRemaining(
         hasScrollBody: false,
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(AppTheme.spacing32),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.wifi_tethering,
-                  size: 56,
-                  color: context.textTertiary.withValues(alpha: 0.4),
-                ),
-                const SizedBox(height: AppTheme.spacing16),
-                Text(
-                  l10n.sipHubEmptyTitle,
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                    color: context.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spacing8),
-                Text(
-                  l10n.sipHubEmptyDescription,
-                  style: TextStyle(fontSize: 13, color: context.textTertiary),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: AppTheme.spacing24),
-                if (_scanning)
-                  Padding(
-                    padding: const EdgeInsets.only(top: AppTheme.spacing8),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: context.accentColor,
-                          ),
-                        ),
-                        const SizedBox(width: AppTheme.spacing8),
-                        Text(
-                          l10n.sipScanningIndicator,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: context.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                else
-                  FilledButton.icon(
-                    onPressed: _onScan,
-                    icon: const Icon(Icons.radar, size: 18),
-                    label: Text(l10n.sipDiscoveryScanButton),
-                  ),
-              ],
-            ),
+        child: AnimatedEmptyState(
+          config: AnimatedEmptyStateConfig(
+            icons: const [
+              Icons.sensors,
+              Icons.wifi_find,
+              Icons.radar,
+              Icons.people_outline,
+              Icons.explore_outlined,
+              Icons.person_search,
+              Icons.network_check,
+              Icons.cell_tower,
+            ],
+            taglines: taglines,
+            titlePrefix: l10n.sipHubScanningTitlePrefix,
+            titleKeyword: l10n.sipHubScanningTitleKeyword,
+            titleSuffix: l10n.sipHubScanningTitleSuffix,
+            actionLabel: l10n.sipDiscoveryScanButton,
+            actionIcon: Icons.sensors,
+            onAction: _scanning ? null : _onScan,
+            actionEnabled: !_scanning,
+            actionDisabledReason: _scanning ? l10n.sipScanningIndicator : null,
           ),
         ),
       ),
@@ -441,11 +472,38 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
     BuildContext context,
     List<SipPeerCapability> peers,
     List<SipDmSession> sessions,
+    List<int> pendingRequestNodeIds,
   ) {
+    final shouldRestrict = ref
+        .read(ageSafetyPolicyProvider)
+        .shouldRestrictUnsolicitedContact;
     return [
       const SliverToBoxAdapter(child: SizedBox(height: AppTheme.spacing8)),
 
-      // Active conversations (shown first — most important)
+      // Incoming handshake requests — shown first, require user action.
+      // Hidden when user is a confirmed minor (contact restriction).
+      if (pendingRequestNodeIds.isNotEmpty && !shouldRestrict) ...[
+        SliverPersistentHeader(
+          pinned: true,
+          delegate: SectionHeaderDelegate(
+            title: context.l10n.sipHubSectionIncomingRequests,
+            count: pendingRequestNodeIds.length,
+          ),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+          sliver: SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) => _IncomingRequestTile(
+                peerNodeId: pendingRequestNodeIds[index],
+              ),
+              childCount: pendingRequestNodeIds.length,
+            ),
+          ),
+        ),
+      ],
+
+      // Active conversations (shown after pending requests)
       if (sessions.isNotEmpty) ...[
         SliverPersistentHeader(
           pinned: true,
@@ -473,26 +531,13 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
             title: context.l10n.sipHubSectionPeers,
             count: peers.length,
             trailing: _scanning
-                ? Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SizedBox(
-                        width: 12,
-                        height: 12,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 1.5,
-                          color: context.textTertiary,
-                        ),
-                      ),
-                      const SizedBox(width: AppTheme.spacing6),
-                      Text(
-                        context.l10n.sipScanningIndicator,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: context.textTertiary,
-                        ),
-                      ),
-                    ],
+                ? SizedBox(
+                    width: 12,
+                    height: 12,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 1.5,
+                      color: context.textTertiary,
+                    ),
                   )
                 : null,
           ),
@@ -533,116 +578,323 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
 }
 
 // =============================================================================
-// Peer tile — card container + BouncyTap (matches Channels pattern)
+// Incoming Request Tile — Accept / Decline card for pending handshake requests
 // =============================================================================
 
-class _PeerTile extends ConsumerWidget {
+class _IncomingRequestTile extends ConsumerWidget {
+  final int peerNodeId;
+
+  const _IncomingRequestTile({required this.peerNodeId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final entry = ref.watch(nodeDexEntryProvider(peerNodeId));
+    final nodes = ref.watch(nodesProvider);
+    final node = nodes[peerNodeId];
+    final displayName =
+        entry?.localNickname ??
+        entry?.sipDisplayName ??
+        node?.displayName ??
+        entry?.lastKnownName ??
+        NodeDisplayNameResolver.defaultName(peerNodeId);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
+      child: Container(
+        decoration: BoxDecoration(
+          color: context.card,
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
+          border: Border.all(
+            color: AccentColors.orange.withValues(alpha: 0.4),
+            width: 1,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(AppTheme.spacing12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.wifi_tethering,
+                    size: 16,
+                    color: AccentColors.orange,
+                  ),
+                  const SizedBox(width: AppTheme.spacing6),
+                  Expanded(
+                    child: Text(
+                      l10n.sipHubIncomingRequestFrom(displayName),
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: context.textPrimary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppTheme.spacing12),
+              Row(
+                children: [
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: () {
+                        AppLogging.sip(
+                          'SIP_HUB: Accept tapped for '
+                          'peer=0x${peerNodeId.toRadixString(16)}',
+                        );
+                        ref
+                            .read(hapticServiceProvider)
+                            .trigger(HapticType.medium);
+                        ref
+                            .read(protocolServiceProvider)
+                            .acceptSipHandshake(peerNodeId);
+                      },
+                      icon: const Icon(Icons.check, size: 16),
+                      label: Text(l10n.sipHubAccept),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AccentColors.green,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size.fromHeight(36),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppTheme.spacing12,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppTheme.spacing8),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        ref
+                            .read(hapticServiceProvider)
+                            .trigger(HapticType.light);
+                        ref
+                            .read(protocolServiceProvider)
+                            .declineSipHandshake(peerNodeId);
+                      },
+                      icon: const Icon(Icons.close, size: 16),
+                      label: Text(l10n.sipHubDecline),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AccentColors.red,
+                        side: BorderSide(
+                          color: AccentColors.red.withValues(alpha: 0.6),
+                        ),
+                        minimumSize: const Size.fromHeight(36),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppTheme.spacing12,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// Peer tile — card container + BouncyTap with shake animation on decline
+// =============================================================================
+
+class _PeerTile extends ConsumerStatefulWidget {
   final SipPeerCapability peer;
   final VoidCallback onHandshake;
 
   const _PeerTile({required this.peer, required this.onHandshake});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final entry = ref.watch(nodeDexEntryProvider(peer.nodeId));
+  ConsumerState<_PeerTile> createState() => _PeerTileState();
+}
+
+class _PeerTileState extends ConsumerState<_PeerTile>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _shakeController;
+  late final Animation<double> _shakeAnimation;
+  SipHandshakeState? _prevHsState;
+
+  @override
+  void initState() {
+    super.initState();
+    _shakeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    // Shake: rapid horizontal oscillation that decays.
+    _shakeAnimation = TweenSequence<double>(
+      [
+        TweenSequenceItem(tween: Tween(begin: 0, end: 8), weight: 1),
+        TweenSequenceItem(tween: Tween(begin: 8, end: -8), weight: 2),
+        TweenSequenceItem(tween: Tween(begin: -8, end: 6), weight: 2),
+        TweenSequenceItem(tween: Tween(begin: 6, end: -4), weight: 2),
+        TweenSequenceItem(tween: Tween(begin: -4, end: 2), weight: 2),
+        TweenSequenceItem(tween: Tween(begin: 2, end: 0), weight: 1),
+      ],
+    ).animate(CurvedAnimation(parent: _shakeController, curve: Curves.easeOut));
+  }
+
+  @override
+  void dispose() {
+    _shakeController.dispose();
+    super.dispose();
+  }
+
+  /// Trigger shake when state transitions to declined/failed/timedOut.
+  void _onHandshakeStateChanged(SipHandshakeState newState) {
+    if (_prevHsState != null &&
+        _prevHsState != newState &&
+        _isNegative(newState)) {
+      _shakeController.forward(from: 0);
+      ref.read(hapticServiceProvider).trigger(HapticType.heavy);
+    }
+    _prevHsState = newState;
+  }
+
+  static bool _isNegative(SipHandshakeState s) =>
+      s == SipHandshakeState.declined ||
+      s == SipHandshakeState.failed ||
+      s == SipHandshakeState.timedOut;
+
+  static bool _isHandshaking(SipHandshakeState state) => switch (state) {
+    SipHandshakeState.helloSent ||
+    SipHandshakeState.challengeReceived ||
+    SipHandshakeState.responseSent ||
+    SipHandshakeState.challengeSent ||
+    SipHandshakeState.responseReceived => true,
+    _ => false,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final entry = ref.watch(nodeDexEntryProvider(widget.peer.nodeId));
     final nodes = ref.watch(nodesProvider);
-    final node = nodes[peer.nodeId];
-    final hsState = ref.watch(sipHandshakeStateProvider(peer.nodeId));
-    final patinaResult = ref.watch(nodeDexPatinaProvider(peer.nodeId));
-    final traitResult = ref.watch(nodeDexTraitProvider(peer.nodeId));
+    final node = nodes[widget.peer.nodeId];
+    final hsState = ref.watch(sipHandshakeStateProvider(widget.peer.nodeId));
+    final patinaResult = ref.watch(nodeDexPatinaProvider(widget.peer.nodeId));
+    final traitResult = ref.watch(nodeDexTraitProvider(widget.peer.nodeId));
+
+    // Detect transitions to negative states.
+    _onHandshakeStateChanged(hsState);
 
     // Check if a DM session already exists for this peer.
     ref.watch(sipDmEpochProvider); // rebuild when DM sessions change
     final dm = ref.watch(sipDmManagerProvider);
     final hasDmSession =
-        dm?.activeSessions.any((s) => s.peerNodeId == peer.nodeId) ?? false;
+        dm?.activeSessions.any((s) => s.peerNodeId == widget.peer.nodeId) ??
+        false;
 
-    final displayName = _resolveDisplayName(entry, node, peer.nodeId);
+    final displayName = _resolveDisplayName(entry, node, widget.peer.nodeId);
     final hexId =
-        '!${peer.nodeId.toRadixString(16).toUpperCase().padLeft(4, '0')}';
+        '!${widget.peer.nodeId.toRadixString(16).toUpperCase().padLeft(4, '0')}';
 
-    // Block taps while handshake is in-progress.
+    // Block taps while handshake is in-progress (not pendingApproval —
+    // that requires user action so the card stays tappable).
     final isBusy = _isHandshaking(hsState);
+    final isDeclined = _isNegative(hsState);
 
-    return BouncyTap(
-      onTap: isBusy ? null : onHandshake,
-      onLongPress: isBusy ? null : onHandshake,
-      enabled: !isBusy,
-      scaleFactor: 0.98,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: AppTheme.spacing8),
-        decoration: BoxDecoration(
-          color: context.card,
-          borderRadius: BorderRadius.circular(AppTheme.radius12),
-          border: Border.all(color: context.border),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(AppTheme.spacing14),
-          child: Row(
-            children: [
-              // Sigil avatar with evolution
-              _buildAvatar(context, entry, patinaResult, traitResult),
-              const SizedBox(width: AppTheme.spacing14),
+    return AnimatedBuilder(
+      animation: _shakeAnimation,
+      builder: (context, child) => Transform.translate(
+        offset: Offset(_shakeAnimation.value, 0),
+        child: child,
+      ),
+      child: BouncyTap(
+        onTap: isBusy ? null : widget.onHandshake,
+        onLongPress: isBusy ? null : widget.onHandshake,
+        enabled: !isBusy,
+        scaleFactor: 0.98,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          margin: const EdgeInsets.only(bottom: AppTheme.spacing8),
+          decoration: BoxDecoration(
+            color: context.card,
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
+            border: Border.all(
+              color: isDeclined
+                  ? AccentColors.red.withValues(alpha: 0.6)
+                  : context.border,
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(AppTheme.spacing14),
+            child: Row(
+              children: [
+                // Sigil avatar with evolution
+                _buildAvatar(context, entry, patinaResult, traitResult),
+                const SizedBox(width: AppTheme.spacing14),
 
-              // Name, hex ID, and status badges
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Name row
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            displayName,
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: context.textPrimary,
+                // Name, hex ID, and status badges
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Name row
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              displayName,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: context.textPrimary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                        const SizedBox(width: AppTheme.spacing6),
-                        Text(
-                          hexId,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: context.textTertiary,
-                            fontFamily: AppTheme.fontFamily,
+                          const SizedBox(width: AppTheme.spacing6),
+                          Text(
+                            hexId,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: context.textTertiary,
+                              fontFamily: AppTheme.fontFamily,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppTheme.spacing6),
+                        ],
+                      ),
+                      const SizedBox(height: AppTheme.spacing6),
 
-                    // Status row: handshake state + last seen
-                    Row(
-                      children: [
-                        _HandshakeChip(
-                          state: hsState,
-                          hasDmSession: hasDmSession,
-                        ),
-                        const SizedBox(width: AppTheme.spacing8),
-                        _LastSeenChip(lastSeenMs: peer.lastSeenMs),
-                      ],
-                    ),
-                  ],
+                      // Status row: handshake state + last seen
+                      Row(
+                        children: [
+                          _HandshakeChip(
+                            state: hsState,
+                            hasDmSession: hasDmSession,
+                          ),
+                          const SizedBox(width: AppTheme.spacing8),
+                          _LastSeenChip(lastSeenMs: widget.peer.lastSeenMs),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
 
-              // Chevron — chat icon when DM session exists
-              const SizedBox(width: AppTheme.spacing4),
-              Icon(
-                hasDmSession ? Icons.chat_bubble_outline : Icons.chevron_right,
-                size: 20,
-                color: hasDmSession
-                    ? AccentColors.green.withValues(alpha: 0.7)
-                    : context.textTertiary.withValues(alpha: 0.5),
-              ),
-            ],
+                // Dev-only: Overlay v0.2 link opener. Only visible
+                // when OVERLAY_LINK_ENABLED=true in .env.
+                _OverlayLinkDevAction(peer: widget.peer),
+
+                // Chevron — chat icon when DM session exists
+                const SizedBox(width: AppTheme.spacing4),
+                Icon(
+                  hasDmSession
+                      ? Icons.chat_bubble_outline
+                      : Icons.chevron_right,
+                  size: 20,
+                  color: hasDmSession
+                      ? AccentColors.green.withValues(alpha: 0.7)
+                      : context.textTertiary.withValues(alpha: 0.5),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -658,7 +910,7 @@ class _PeerTile extends ConsumerWidget {
     if (entry?.sigil != null) {
       return SigilAvatar(
         sigil: entry!.sigil,
-        nodeNum: peer.nodeId,
+        nodeNum: widget.peer.nodeId,
         size: 48,
         evolution: SigilEvolution.fromPatina(
           patinaResult.score,
@@ -681,16 +933,6 @@ class _PeerTile extends ConsumerWidget {
       ),
     );
   }
-
-  static bool _isHandshaking(SipHandshakeState state) => switch (state) {
-    SipHandshakeState.helloSent ||
-    SipHandshakeState.challengeReceived ||
-    SipHandshakeState.responseSent ||
-    SipHandshakeState.helloReceived ||
-    SipHandshakeState.challengeSent ||
-    SipHandshakeState.responseReceived => true,
-    _ => false,
-  };
 
   static String _resolveDisplayName(
     NodeDexEntry? entry,
@@ -746,13 +988,19 @@ class _HandshakeChipState extends State<_HandshakeChip>
   }
 
   void _syncAnimation() {
-    if (!widget.hasDmSession && _isInProgress(widget.state)) {
+    if (!widget.hasDmSession &&
+        (_isInProgress(widget.state) || _isNegative(widget.state))) {
       _pulseController.repeat(reverse: true);
     } else {
       _pulseController.stop();
       _pulseController.value = 1.0;
     }
   }
+
+  static bool _isNegative(SipHandshakeState s) =>
+      s == SipHandshakeState.declined ||
+      s == SipHandshakeState.failed ||
+      s == SipHandshakeState.timedOut;
 
   @override
   void dispose() {
@@ -764,7 +1012,6 @@ class _HandshakeChipState extends State<_HandshakeChip>
     SipHandshakeState.helloSent ||
     SipHandshakeState.challengeReceived ||
     SipHandshakeState.responseSent ||
-    SipHandshakeState.helloReceived ||
     SipHandshakeState.challengeSent ||
     SipHandshakeState.responseReceived => true,
     _ => false,
@@ -773,6 +1020,12 @@ class _HandshakeChipState extends State<_HandshakeChip>
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+
+    AppLogging.sip(
+      'SIP_HUB_CHIP: state=${widget.state.name}, '
+      'hasDm=${widget.hasDmSession}, '
+      'inProgress=${_isInProgress(widget.state)}', // lint-allow: hardcoded-string
+    );
 
     // If a DM session exists, show "Connected" regardless of handshake state.
     final (label, color, icon) = widget.hasDmSession
@@ -787,6 +1040,16 @@ class _HandshakeChipState extends State<_HandshakeChip>
               l10n.sipHubReady,
               AccentColors.green,
               Icons.check_circle_outline,
+            ),
+            SipHandshakeState.pendingApproval => (
+              l10n.sipHandshakePendingLabel,
+              AccentColors.orange,
+              Icons.schedule_outlined,
+            ),
+            SipHandshakeState.declined => (
+              l10n.sipHandshakeFailed,
+              AccentColors.red,
+              Icons.cancel_outlined,
             ),
             SipHandshakeState.failed || SipHandshakeState.timedOut => (
               l10n.sipHandshakeFailed,
@@ -826,7 +1089,8 @@ class _HandshakeChipState extends State<_HandshakeChip>
       ),
     );
 
-    if (!widget.hasDmSession && _isInProgress(widget.state)) {
+    if (!widget.hasDmSession &&
+        (_isInProgress(widget.state) || _isNegative(widget.state))) {
       chip = FadeTransition(opacity: _pulseAnimation, child: chip);
     }
 
@@ -1385,5 +1649,61 @@ class _ShimmerPeerPlaceholderState extends State<_ShimmerPeerPlaceholder>
         );
       },
     );
+  }
+}
+
+// =============================================================================
+// Overlay v0.2 dev-only link opener (inline on peer tile)
+// =============================================================================
+
+/// Dev-only IconButton that calls [OverlayLinkEngine.openLocal] against
+/// the tile's peer. Renders only when `OVERLAY_LINK_ENABLED=true` in
+/// `.env`. The IconButton absorbs taps so the surrounding `BouncyTap`
+/// does not also trigger a handshake.
+class _OverlayLinkDevAction extends ConsumerWidget {
+  final SipPeerCapability peer;
+
+  const _OverlayLinkDevAction({required this.peer});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Debug-only diagnostic. Production builds auto-open the overlay
+    // link from _autoOpenOverlayLink after handshake completion, so no
+    // user-facing control is needed. Delete this widget once auto-open
+    // has been verified stable in the field.
+    if (!kDebugMode) return const SizedBox.shrink();
+    final flags = ref.watch(overlayFlagProvider);
+    if (!flags.linkEnabled) return const SizedBox.shrink();
+
+    return IconButton(
+      icon: const Icon(Icons.link, size: 18),
+      tooltip: 'Open Overlay Link (dev)', // lint-allow: hardcoded-string
+      visualDensity: VisualDensity.compact,
+      color: AccentColors.teal,
+      onPressed: () => _openLink(context, ref),
+    );
+  }
+
+  Future<void> _openLink(BuildContext context, WidgetRef ref) async {
+    ref.read(hapticServiceProvider).trigger(HapticType.medium);
+    try {
+      final engine = await ref.read(overlayLinkEngineProvider.future);
+      final hint = Uint8List(8);
+      ByteData.view(hint.buffer).setUint32(0, peer.nodeId);
+      final record = await engine.openLocal(
+        peerPersonaHint: hint,
+        peerNodeNum: peer.nodeId,
+      );
+      if (!context.mounted) return;
+      showInfoSnackBar(
+        context,
+        // lint-allow: hardcoded-string
+        'Overlay link opening: 0x${record.linkId.toRadixString(16)}',
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      // lint-allow: hardcoded-string
+      showErrorSnackBar(context, 'Overlay link failed: $e');
+    }
   }
 }

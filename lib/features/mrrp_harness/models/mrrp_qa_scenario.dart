@@ -3,8 +3,15 @@
 
 import 'dart:typed_data';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../providers/mrrp_providers.dart';
 import '../../../services/protocol/sip/mrrp_codec.dart';
+import '../../../core/logging.dart';
+import '../../../services/protocol/sip/mrrp_constants.dart';
 import '../../../services/protocol/sip/mrrp_frame.dart';
+import '../../../services/protocol/sip/mrrp_messages_advert.dart';
+import '../../../services/protocol/sip/mrrp_simulated_peer.dart';
 import '../../../services/protocol/sip/mrrp_types.dart';
 
 /// Result state for a single QA step.
@@ -14,7 +21,7 @@ enum QaStepStatus { pending, pass, fail }
 class QaStep {
   final String description;
   final String expectedOutcome;
-  final bool Function(MrrpFrame? decoded) verify;
+  final Future<bool> Function(WidgetRef? ref) verify;
 
   QaStepStatus status;
   String? actualOutcome;
@@ -115,7 +122,7 @@ QaScenario _discoveryDirProfile() {
         description: 'Decode SERVICE_ADVERT', // lint-allow: hardcoded-string
         expectedOutcome:
             'msg_type=0x01, 2 services', // lint-allow: hardcoded-string
-        verify: (_) {
+        verify: (_) async {
           final frame = MrrpCodec.decode(advertBytes);
           return frame != null &&
               frame.msgType == MrrpMessageType.serviceAdvert &&
@@ -126,7 +133,7 @@ QaScenario _discoveryDirProfile() {
         description: 'Decode SERVICE_DIR_REQ', // lint-allow: hardcoded-string
         expectedOutcome:
             'msg_type=0x02, request_id=1', // lint-allow: hardcoded-string
-        verify: (_) {
+        verify: (_) async {
           final frame = MrrpCodec.decode(dirReqBytes);
           return frame != null &&
               frame.msgType == MrrpMessageType.serviceDirReq &&
@@ -137,7 +144,7 @@ QaScenario _discoveryDirProfile() {
         description: 'Decode SERVICE_DIR_RESP', // lint-allow: hardcoded-string
         expectedOutcome:
             'msg_type=0x03, 1 service', // lint-allow: hardcoded-string
-        verify: (_) {
+        verify: (_) async {
           final frame = MrrpCodec.decode(dirRespBytes);
           return frame != null &&
               frame.msgType == MrrpMessageType.serviceDirResp &&
@@ -149,7 +156,7 @@ QaScenario _discoveryDirProfile() {
             'Decode REQUEST to echo.test', // lint-allow: hardcoded-string
         expectedOutcome:
             'msg_type=0x10, service=0xffff0001, 4B payload', // lint-allow: hardcoded-string
-        verify: (_) {
+        verify: (_) async {
           final frame = MrrpCodec.decode(requestBytes);
           return frame != null &&
               frame.msgType == MrrpMessageType.request &&
@@ -189,7 +196,7 @@ QaScenario _meetupFlow() {
         description: 'Create meetup request', // lint-allow: hardcoded-string
         expectedOutcome:
             'REQUEST to meetup.v1, action=create', // lint-allow: hardcoded-string
-        verify: (_) {
+        verify: (_) async {
           final frame = MrrpCodec.decode(createBytes);
           return frame != null &&
               frame.msgType == MrrpMessageType.request &&
@@ -200,7 +207,7 @@ QaScenario _meetupFlow() {
         description: 'Accept meetup response', // lint-allow: hardcoded-string
         expectedOutcome:
             'RESPONSE from meetup.v1', // lint-allow: hardcoded-string
-        verify: (_) {
+        verify: (_) async {
           final frame = MrrpCodec.decode(acceptBytes);
           return frame != null &&
               frame.msgType == MrrpMessageType.response &&
@@ -211,7 +218,7 @@ QaScenario _meetupFlow() {
         description: 'Cancel meetup', // lint-allow: hardcoded-string
         expectedOutcome:
             'CANCEL with matching request_id', // lint-allow: hardcoded-string
-        verify: (_) {
+        verify: (_) async {
           final frame = MrrpCodec.decode(cancelBytes);
           return frame != null &&
               frame.msgType == MrrpMessageType.cancel &&
@@ -251,7 +258,7 @@ QaScenario _boardFlow() {
             'Post short message to board.v1', // lint-allow: hardcoded-string
         expectedOutcome:
             'REQUEST to board.v1, action=post_short', // lint-allow: hardcoded-string
-        verify: (_) {
+        verify: (_) async {
           final frame = MrrpCodec.decode(postBytes);
           return frame != null &&
               frame.msgType == MrrpMessageType.request &&
@@ -263,7 +270,7 @@ QaScenario _boardFlow() {
         description: 'List recent posts', // lint-allow: hardcoded-string
         expectedOutcome:
             'REQUEST to board.v1, action=list_recent', // lint-allow: hardcoded-string
-        verify: (_) {
+        verify: (_) async {
           final frame = MrrpCodec.decode(listBytes);
           return frame != null &&
               frame.msgType == MrrpMessageType.request &&
@@ -275,7 +282,7 @@ QaScenario _boardFlow() {
         description: 'Receive list response', // lint-allow: hardcoded-string
         expectedOutcome:
             'RESPONSE from board.v1 with post data', // lint-allow: hardcoded-string
-        verify: (_) {
+        verify: (_) async {
           final frame = MrrpCodec.decode(listRespBytes);
           return frame != null &&
               frame.msgType == MrrpMessageType.response &&
@@ -311,7 +318,7 @@ QaScenario _timeoutRetry() {
             'Send request to unavailable service', // lint-allow: hardcoded-string
         expectedOutcome:
             'REQUEST encodes correctly', // lint-allow: hardcoded-string
-        verify: (_) {
+        verify: (_) async {
           final frame = MrrpCodec.decode(requestBytes);
           return frame != null && frame.msgType == MrrpMessageType.request;
         },
@@ -320,7 +327,7 @@ QaScenario _timeoutRetry() {
         description: 'Decode ERROR response', // lint-allow: hardcoded-string
         expectedOutcome:
             'ERROR with status NOT_FOUND, TLV status_code=1', // lint-allow: hardcoded-string
-        verify: (_) {
+        verify: (_) async {
           final frame = MrrpCodec.decode(errorBytes);
           if (frame == null || frame.msgType != MrrpMessageType.error) {
             return false;
@@ -334,7 +341,7 @@ QaScenario _timeoutRetry() {
         description: 'Retry same request_id', // lint-allow: hardcoded-string
         expectedOutcome:
             'Same request_id=0x42 decodes', // lint-allow: hardcoded-string
-        verify: (_) {
+        verify: (_) async {
           final frame = MrrpCodec.decode(requestBytes);
           return frame != null && frame.requestId == 0x42;
         },
@@ -366,7 +373,7 @@ QaScenario _duplicateHandling() {
         description: 'First REQUEST decode', // lint-allow: hardcoded-string
         expectedOutcome:
             'Decode succeeds, request_id=0x42', // lint-allow: hardcoded-string
-        verify: (_) {
+        verify: (_) async {
           final frame = MrrpCodec.decode(requestBytes);
           return frame != null && frame.requestId == 0x42;
         },
@@ -376,7 +383,7 @@ QaScenario _duplicateHandling() {
             'Duplicate REQUEST (same bytes)', // lint-allow: hardcoded-string
         expectedOutcome:
             'Decode succeeds (dedup is dispatcher-level)', // lint-allow: hardcoded-string
-        verify: (_) {
+        verify: (_) async {
           final frame = MrrpCodec.decode(requestBytes);
           return frame != null && frame.requestId == 0x42;
         },
@@ -386,7 +393,7 @@ QaScenario _duplicateHandling() {
             'RESPONSE for same request_id', // lint-allow: hardcoded-string
         expectedOutcome:
             'RESPONSE decode OK, request_id matches', // lint-allow: hardcoded-string
-        verify: (_) {
+        verify: (_) async {
           final frame = MrrpCodec.decode(responseBytes);
           return frame != null &&
               frame.msgType == MrrpMessageType.response &&
@@ -421,7 +428,7 @@ QaScenario _errorInjection() {
             'Send echo.test request with echo_error', // lint-allow: hardcoded-string
         expectedOutcome:
             'REQUEST to echo.test decodes OK', // lint-allow: hardcoded-string
-        verify: (_) {
+        verify: (_) async {
           final frame = MrrpCodec.decode(echoReqBytes);
           return frame != null &&
               frame.msgType == MrrpMessageType.request &&
@@ -433,7 +440,7 @@ QaScenario _errorInjection() {
             'Verify ERROR response with status code', // lint-allow: hardcoded-string
         expectedOutcome:
             'ERROR decode OK, has status_code TLV', // lint-allow: hardcoded-string
-        verify: (_) {
+        verify: (_) async {
           final frame = MrrpCodec.decode(errorBytes);
           if (frame == null || frame.msgType != MrrpMessageType.error) {
             return false;
@@ -448,7 +455,7 @@ QaScenario _errorInjection() {
             'Verify error service_id matches request', // lint-allow: hardcoded-string
         expectedOutcome:
             'ERROR service_id = 0xffff0001', // lint-allow: hardcoded-string
-        verify: (_) {
+        verify: (_) async {
           final frame = MrrpCodec.decode(errorBytes);
           return frame != null && frame.serviceId == 0xFFFF0001;
         },
@@ -475,7 +482,7 @@ QaScenario _budgetExhaustion() {
         description: 'Encode small REQUEST', // lint-allow: hardcoded-string
         expectedOutcome:
             'Encode produces 24 bytes', // lint-allow: hardcoded-string
-        verify: (_) {
+        verify: (_) async {
           final frame = MrrpCodec.decode(smallReqBytes);
           if (frame == null) return false;
           final encoded = MrrpCodec.encode(frame);
@@ -487,7 +494,7 @@ QaScenario _budgetExhaustion() {
             'Verify max-size frame accepted', // lint-allow: hardcoded-string
         expectedOutcome:
             '215-byte frame decodes OK', // lint-allow: hardcoded-string
-        verify: (_) {
+        verify: (_) async {
           final maxFrame = Uint8List(215);
           maxFrame[0] = 0x4D;
           maxFrame[1] = 0x52;
@@ -507,7 +514,7 @@ QaScenario _budgetExhaustion() {
             'Verify oversized frame rejected', // lint-allow: hardcoded-string
         expectedOutcome:
             '216-byte frame returns null', // lint-allow: hardcoded-string
-        verify: (_) {
+        verify: (_) async {
           final oversized = Uint8List(216);
           oversized[0] = 0x4D;
           oversized[1] = 0x52;
@@ -530,76 +537,124 @@ QaScenario _budgetExhaustion() {
 // ---------------------------------------------------------------------------
 
 QaScenario _simPeerRoundTrip() {
-  final advertBytes = _hexToBytes(
-    '4D 52 00 01 01 00 14 00 00 00 00 00 00 00 00 00'
-    '00 00 15 00'
-    '02'
-    '01 00 00 00 00 01 00 6D 00 00'
-    '01 00 FF FF 02 01 00 8C 00 00',
-  );
-  final dirRespBytes = _hexToBytes(
-    '4D 52 00 01 03 02 14 00 01 00 00 00 00 00 00 00'
-    '00 00 0B 00'
-    '01'
-    '02 00 00 00 00 01 00 7F 00 00',
-  );
-  final reqBytes = _hexToBytes(
-    '4D 52 00 01 10 01 14 00 42 00 00 00 01 00 FF FF'
-    '01 00 04 00'
-    'DE AD BE EF',
-  );
-  final respBytes = _hexToBytes(
-    '4D 52 00 01 11 02 14 00 42 00 00 00 01 00 FF FF'
-    '01 00 04 00'
-    'DE AD BE EF',
-  );
-
   return QaScenario(
     name: 'Simulated Peer Round-Trip', // lint-allow: hardcoded-string
     steps: [
       QaStep(
+        description: 'Ensure sim peer exists', // lint-allow: hardcoded-string
+        expectedOutcome:
+            'SIM peer present in registry', // lint-allow: hardcoded-string
+        verify: (ref) async {
+          if (ref == null) return false;
+          final simPeers = ref.read(mrrpSimPeersProvider);
+          if (simPeers.isEmpty) {
+            // Auto-create a sim peer for the test.
+            final notifier = ref.read(mrrpSimPeersProvider.notifier);
+            final index = notifier.allocateIndex();
+            final simId = 'SIM-$index'; // lint-allow: hardcoded-string
+            final nodeId = MrrpSimulatedPeer.generateNodeId(index);
+            notifier.add(
+              MrrpSimulatedPeer(
+                simId: simId,
+                nodeId: nodeId,
+                serviceIds: [MrrpServiceId.echoTest],
+              ),
+            );
+            // Inject into advert cache.
+            ref.read(mrrpAdvertEngineProvider)?.injectSimulatedPeer(nodeId, [
+              MrrpAdvertDescriptor(
+                serviceId: MrrpServiceId.echoTest,
+                serviceType: MrrpServiceType.test,
+                versionMajor: MrrpConstants.mrrpVersionMajor,
+                versionMinor: MrrpConstants.mrrpVersionMinor,
+                serviceFlags:
+                    MrrpServiceFlags.supportsRequest |
+                    MrrpServiceFlags.supportsResponse |
+                    MrrpServiceFlags.testOnly,
+                metadata: Uint8List(0),
+              ),
+            ]);
+          }
+          return ref.read(mrrpSimPeersProvider).isNotEmpty;
+        },
+      ),
+      QaStep(
         description:
-            'Discover simulated peer (SERVICE_ADVERT)', // lint-allow: hardcoded-string
+            'Sim peer visible in advert cache', // lint-allow: hardcoded-string
         expectedOutcome:
-            'SERVICE_ADVERT with 2 services', // lint-allow: hardcoded-string
-        verify: (_) {
-          final frame = MrrpCodec.decode(advertBytes);
-          return frame != null &&
-              frame.msgType == MrrpMessageType.serviceAdvert;
+            'Cached services contain sim peer', // lint-allow: hardcoded-string
+        verify: (ref) async {
+          if (ref == null) return false;
+          final cached = ref.read(mrrpCachedServicesProvider);
+          final simPeers = ref.read(mrrpSimPeersProvider);
+          if (simPeers.isEmpty) return false;
+          return cached.containsKey(simPeers.first.nodeId);
         },
       ),
       QaStep(
-        description: 'Get service directory', // lint-allow: hardcoded-string
-        expectedOutcome:
-            'SERVICE_DIR_RESP with 1 service', // lint-allow: hardcoded-string
-        verify: (_) {
-          final frame = MrrpCodec.decode(dirRespBytes);
-          return frame != null &&
-              frame.msgType == MrrpMessageType.serviceDirResp;
-        },
-      ),
-      QaStep(
-        description: 'Send echo.test REQUEST', // lint-allow: hardcoded-string
-        expectedOutcome:
-            'REQUEST to 0xffff0001, 4B payload', // lint-allow: hardcoded-string
-        verify: (_) {
-          final frame = MrrpCodec.decode(reqBytes);
-          return frame != null &&
-              frame.msgType == MrrpMessageType.request &&
-              frame.serviceId == 0xFFFF0001 &&
-              frame.payloadLen == 4;
-        },
-      ),
-      QaStep(
-        description: 'Receive echo RESPONSE', // lint-allow: hardcoded-string
+        description:
+            'Send echo.test REQUEST via engine', // lint-allow: hardcoded-string
         expectedOutcome:
             'RESPONSE with echoed payload', // lint-allow: hardcoded-string
-        verify: (_) {
-          final frame = MrrpCodec.decode(respBytes);
-          return frame != null &&
-              frame.msgType == MrrpMessageType.response &&
-              frame.requestId == 0x42 &&
-              frame.payloadLen == 4;
+        verify: (ref) async {
+          if (ref == null) return false;
+          final engine = ref.read(mrrpEngineProvider);
+          if (engine == null) {
+            AppLogging.mrrpHarness(
+              'MRRP_QA: step3 FAIL — engine is null', // lint-allow: hardcoded-string
+            );
+            return false;
+          }
+
+          final payload = Uint8List.fromList([0xDE, 0xAD, 0xBE, 0xEF]);
+          final request = MrrpFrame(
+            versionMajor: MrrpConstants.mrrpVersionMajor,
+            versionMinor: MrrpConstants.mrrpVersionMinor,
+            msgType: MrrpMessageType.request,
+            flags: MrrpFlags.ackRequired,
+            headerLen: MrrpConstants.mrrpHeaderMin,
+            requestId: 0, // allocated by dispatcher
+            serviceId: MrrpServiceId.echoTest,
+            actionId: EchoAction.echo,
+            payloadLen: payload.length,
+            payload: payload,
+          );
+
+          try {
+            final result = await engine.sendRequest(request);
+            final passed =
+                result.isSuccess &&
+                result.response != null &&
+                result.response!.payload.length == payload.length;
+
+            if (!passed) {
+              AppLogging.mrrpHarness(
+                'MRRP_QA: step3 FAIL — '
+                'isSuccess=${result.isSuccess}, '
+                'status=${result.status.name}, '
+                'hasResponse=${result.response != null}, '
+                'responsePayloadLen=${result.response?.payload.length}, '
+                'expectedPayloadLen=${payload.length}', // lint-allow: hardcoded-string
+              );
+            }
+            return passed;
+          } on Object catch (e) {
+            AppLogging.mrrpHarness(
+              'MRRP_QA: step3 EXCEPTION — $e', // lint-allow: hardcoded-string
+            );
+            return false;
+          }
+        },
+      ),
+      QaStep(
+        description:
+            'Counters record the round-trip', // lint-allow: hardcoded-string
+        expectedOutcome:
+            'requestsSent > 0 and responsesReceived > 0', // lint-allow: hardcoded-string
+        verify: (ref) async {
+          if (ref == null) return false;
+          final counters = ref.read(mrrpCountersProvider);
+          return counters.requestsSent > 0 && counters.responsesReceived > 0;
         },
       ),
     ],

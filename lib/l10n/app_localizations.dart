@@ -3766,6 +3766,150 @@ abstract class AppLocalizations {
   /// **'Within geofence'**
   String get automationConditionWithinGeofence;
 
+  /// Button label for adding a new condition
+  ///
+  /// In en, this message translates to:
+  /// **'Add Condition'**
+  String get automationEditorAddCondition;
+
+  /// Button label for adding an optional ELSE branch
+  ///
+  /// In en, this message translates to:
+  /// **'Add ELSE actions'**
+  String get automationEditorAddElseActions;
+
+  /// Description for the ALL (AND) condition grouping
+  ///
+  /// In en, this message translates to:
+  /// **'All conditions must be true'**
+  String get automationEditorConditionsAll;
+
+  /// Section title for the ELSE branch
+  ///
+  /// In en, this message translates to:
+  /// **'ELSE'**
+  String get automationEditorElse;
+
+  /// Flow connector text before ELSE actions
+  ///
+  /// In en, this message translates to:
+  /// **'otherwise do...'**
+  String get automationEditorElseDescription;
+
+  /// Section title for the conditions section
+  ///
+  /// In en, this message translates to:
+  /// **'IF'**
+  String get automationEditorIf;
+
+  /// Flow connector text before conditions
+  ///
+  /// In en, this message translates to:
+  /// **'only if...'**
+  String get automationEditorIfDescription;
+
+  /// Hint text when no conditions are set
+  ///
+  /// In en, this message translates to:
+  /// **'No conditions — always runs'**
+  String get automationEditorNoConditions;
+
+  /// Button label for removing the ELSE branch
+  ///
+  /// In en, this message translates to:
+  /// **'Remove ELSE'**
+  String get automationEditorRemoveElse;
+
+  /// Title for the condition type selection bottom sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Select Condition Type'**
+  String get automationEditorSelectConditionType;
+
+  /// Validation error when ELSE exists but has no actions
+  ///
+  /// In en, this message translates to:
+  /// **'ELSE branch must have at least one action, or remove the ELSE section'**
+  String get automationEditorValidateElseActions;
+
+  /// Validation error when THEN actions list is empty
+  ///
+  /// In en, this message translates to:
+  /// **'Please add at least one THEN action'**
+  String get automationEditorValidateThenActions;
+
+  /// Label for ELSE actions in import preview
+  ///
+  /// In en, this message translates to:
+  /// **'ELSE Actions ({count})'**
+  String automationImportElseActions(int count);
+
+  /// Label for THEN actions in import preview
+  ///
+  /// In en, this message translates to:
+  /// **'THEN Actions ({count})'**
+  String automationImportThenActions(int count);
+
+  /// Human-readable ELSE clause in automation summary
+  ///
+  /// In en, this message translates to:
+  /// **'else {actions}'**
+  String automationSummaryElse(String actions);
+
+  /// Human-readable IF clause in automation summary
+  ///
+  /// In en, this message translates to:
+  /// **'if {conditions}'**
+  String automationSummaryIf(String conditions);
+
+  /// Human-readable THEN clause in automation summary
+  ///
+  /// In en, this message translates to:
+  /// **'then {actions}'**
+  String automationSummaryThen(String actions);
+
+  /// Human-readable WHEN clause in automation summary
+  ///
+  /// In en, this message translates to:
+  /// **'When {trigger}'**
+  String automationSummaryWhen(String trigger);
+
+  /// Branch indicator label for THEN in automation card
+  ///
+  /// In en, this message translates to:
+  /// **'THEN'**
+  String get automationCardBranchThen;
+
+  /// Branch indicator label for ELSE in automation card
+  ///
+  /// In en, this message translates to:
+  /// **'ELSE'**
+  String get automationCardBranchElse;
+
+  /// Condition count display in automation card
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 condition} other{{count} conditions}}'**
+  String automationCardConditionCount(int count);
+
+  /// Battery threshold display in condition editor
+  ///
+  /// In en, this message translates to:
+  /// **'Battery threshold: {threshold}%'**
+  String automationConditionConfigBatteryThreshold(int threshold);
+
+  /// Days of week display in condition editor
+  ///
+  /// In en, this message translates to:
+  /// **'Days: {days}'**
+  String automationConditionConfigDays(String days);
+
+  /// Time range display in condition editor
+  ///
+  /// In en, this message translates to:
+  /// **'{start} – {end}'**
+  String automationConditionConfigTimeRange(String start, String end);
+
   /// Button label and sheet title for adding a new action
   ///
   /// In en, this message translates to:
@@ -4192,6 +4336,18 @@ abstract class AppLocalizations {
   /// **'Clear'**
   String get automationScreenClear;
 
+  /// Title of the confirmation dialog when clearing the automation execution log
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Execution Log'**
+  String get automationScreenClearLogTitle;
+
+  /// Body of the confirmation dialog when clearing the automation execution log
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to clear the execution log? This action cannot be undone.'**
+  String get automationScreenClearLogMessage;
+
   /// CTA card title for creating a custom automation
   ///
   /// In en, this message translates to:
@@ -4330,10 +4486,10 @@ abstract class AppLocalizations {
   /// **'Failed to run: {error}'**
   String automationScreenRunFailed(String error);
 
-  /// Success snackbar after running an automation
+  /// Success snackbar after manual run — clarifies conditions were bypassed
   ///
   /// In en, this message translates to:
-  /// **'Ran \"{name}\" successfully'**
+  /// **'Ran \"{name}\" — conditions bypassed, THEN executed'**
   String automationScreenRunSuccess(String name);
 
   /// Loading snackbar while running an automation
@@ -5524,11 +5680,35 @@ abstract class AppLocalizations {
   /// **'Show'**
   String get channelOptionsShowButton;
 
+  /// Action to mute notifications for a channel
+  ///
+  /// In en, this message translates to:
+  /// **'Mute Notifications'**
+  String get channelOptionsMuteNotifications;
+
+  /// Action to unmute notifications for a channel
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute Notifications'**
+  String get channelOptionsUnmuteNotifications;
+
   /// Text displayed in channel configuration
   ///
   /// In en, this message translates to:
   /// **'View Encryption Key'**
   String get channelOptionsViewKey;
+
+  /// Action to view the channel QR code for offline sharing
+  ///
+  /// In en, this message translates to:
+  /// **'View QR Code'**
+  String get channelOptionsViewQr;
+
+  /// Info text shown below the channel QR code
+  ///
+  /// In en, this message translates to:
+  /// **'Scan this QR code in Socialmesh to join this channel'**
+  String get channelOptionsViewQrInfo;
 
   /// Text displayed in channel configuration
   ///
@@ -5619,6 +5799,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Uses the default Meshtastic key. Other users with default settings may intercept messages.'**
   String get channelWizardCompatShared;
+
+  /// Title of the warning bottom sheet shown when creating a channel with the shared default key
+  ///
+  /// In en, this message translates to:
+  /// **'Default Key Warning'**
+  String get channelWizardDefaultKeyWarningTitle;
+
+  /// Body text of the warning bottom sheet for default key channels
+  ///
+  /// In en, this message translates to:
+  /// **'The shared default key is publicly known. Anyone with a Meshtastic device using default settings can read messages on this channel.\n\nThis is fine for public community channels, but not recommended for private conversations.'**
+  String get channelWizardDefaultKeyWarningBody;
+
+  /// Button label to continue with the publicly known default key
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Default Key'**
+  String get channelWizardDefaultKeyKeep;
+
+  /// Button label to upgrade from default key to AES-128 private key
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade to Private Key'**
+  String get channelWizardDefaultKeyUpgrade;
 
   /// Button label in channel configuration
   ///
@@ -6297,6 +6501,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Message'**
   String get nodeInfoMessage;
+
+  /// Tooltip for the quick traceroute icon button on the node info card.
+  ///
+  /// In en, this message translates to:
+  /// **'Traceroute'**
+  String get nodeInfoTraceroute;
+
+  /// Tooltip for the node detail navigation icon button on the node info card.
+  ///
+  /// In en, this message translates to:
+  /// **'View Details'**
+  String get nodeInfoViewDetails;
+
+  /// Tooltip for the traceroute history icon button on the node info card.
+  ///
+  /// In en, this message translates to:
+  /// **'Traceroute History'**
+  String get nodeInfoViewHistory;
+
+  /// Tooltip for the show position track button on the node info card.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Position Track'**
+  String get nodeInfoShowTrack;
+
+  /// Tooltip for the hide position track button on the node info card.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide Position Track'**
+  String get nodeInfoHideTrack;
+
+  /// Tooltip for the view position log button on the node info card.
+  ///
+  /// In en, this message translates to:
+  /// **'Position Log'**
+  String get nodeInfoViewPositionLog;
+
+  /// Tooltip for the share location icon button on the node info card.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Location'**
+  String get nodeInfoShareLocation;
+
+  /// Tooltip for the copy coordinates icon button on the node info card.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Coordinates'**
+  String get nodeInfoCopyCoordinates;
+
+  /// Title of the confirmation sheet before requesting a position exchange.
+  ///
+  /// In en, this message translates to:
+  /// **'Request Position'**
+  String get nodeInfoPositionConfirmTitle;
+
+  /// Body of the confirmation sheet before requesting a position exchange.
+  ///
+  /// In en, this message translates to:
+  /// **'Request {name}\'s current position over the mesh?'**
+  String nodeInfoPositionConfirmMessage(String name);
+
+  /// Title of the confirmation sheet before sharing a node's location.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Location'**
+  String get nodeInfoShareConfirmTitle;
+
+  /// Body of the confirmation sheet before sharing a node's location.
+  ///
+  /// In en, this message translates to:
+  /// **'Share this node\'s coordinates as a link?'**
+  String get nodeInfoShareConfirmMessage;
+
+  /// Title of the confirmation sheet before sending a traceroute.
+  ///
+  /// In en, this message translates to:
+  /// **'Send Traceroute'**
+  String get nodeInfoTracerouteConfirmTitle;
+
+  /// Body of the confirmation sheet before sending a traceroute.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a traceroute packet to {name}? This uses mesh airtime.'**
+  String nodeInfoTracerouteConfirmMessage(String name);
+
+  /// Title for the node info card action legend bottom sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Action Legend'**
+  String get nodeInfoLegendTitle;
+
+  /// Legend description for the position exchange action.
+  ///
+  /// In en, this message translates to:
+  /// **'Request the node\'s current GPS position over the mesh.'**
+  String get nodeInfoLegendPosition;
+
+  /// Legend description for the send message action.
+  ///
+  /// In en, this message translates to:
+  /// **'Open a direct message conversation with this node.'**
+  String get nodeInfoLegendMessage;
+
+  /// Legend description for the share location action.
+  ///
+  /// In en, this message translates to:
+  /// **'Share this node\'s coordinates as a link via the system share sheet.'**
+  String get nodeInfoLegendShare;
+
+  /// Legend description for the copy coordinates action.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy the node\'s GPS coordinates to the clipboard.'**
+  String get nodeInfoLegendCopy;
+
+  /// Legend description for the traceroute action.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a traceroute packet to discover the route to this node.'**
+  String get nodeInfoLegendTraceroute;
+
+  /// Legend description for the view details action.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the full detail screen for this node.'**
+  String get nodeInfoLegendViewDetails;
+
+  /// Legend description for the view history action.
+  ///
+  /// In en, this message translates to:
+  /// **'View the traceroute history for this node.'**
+  String get nodeInfoLegendHistory;
+
+  /// Legend description for the show/hide track action.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle the node\'s position track polyline on the map.'**
+  String get nodeInfoLegendTrack;
+
+  /// Legend description for the position log action.
+  ///
+  /// In en, this message translates to:
+  /// **'View the full position log for this node.'**
+  String get nodeInfoLegendPositionLog;
 
   /// Empty state text when no binding variables match the search.
   ///
@@ -7399,7 +7747,7 @@ abstract class AppLocalizations {
   /// Subtitle in developer tools
   ///
   /// In en, this message translates to:
-  /// **'Radio, display, power, and position settings'**
+  /// **'Reboot, shutdown, factory reset'**
   String get deviceSheetActionDeviceManagementSubtitle;
 
   /// Text displayed in developer tools
@@ -7750,6 +8098,18 @@ abstract class AppLocalizations {
   /// **'Contact Us'**
   String get deviceShopContactUs;
 
+  /// Default email subject when user taps Contact Us from Device Shop seller section
+  ///
+  /// In en, this message translates to:
+  /// **'Device Shop seller inquiry'**
+  String get deviceShopContactEmailSubject;
+
+  /// Default email body template when user taps Contact Us from Device Shop seller section
+  ///
+  /// In en, this message translates to:
+  /// **'Hi Socialmesh team,\n\nI am interested in becoming a seller in the Device Shop.\n\nCompany name:\nWebsite:\nProduct types:\nRegion(s):\n\nAdditional details:\n'**
+  String get deviceShopContactEmailBody;
+
   /// Error message in developer tools
   ///
   /// In en, this message translates to:
@@ -7762,11 +8122,29 @@ abstract class AppLocalizations {
   /// **'Favorites'**
   String get deviceShopFavoritesTooltip;
 
+  /// Title of the confirmation sheet before removing a product from favorites
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from Favorites?'**
+  String get deviceShopRemoveFavoriteTitle;
+
+  /// Body of the confirmation sheet before removing a product from favorites
+  ///
+  /// In en, this message translates to:
+  /// **'This product will be removed from your favorites.'**
+  String get deviceShopRemoveFavoriteMessage;
+
   /// Text displayed in developer tools
   ///
   /// In en, this message translates to:
   /// **'Featured'**
   String get deviceShopFeatured;
+
+  /// Label for Device Shop top-level filter chip showing all products
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get deviceShopFilterAll;
 
   /// Tooltip in developer tools
   ///
@@ -7777,7 +8155,7 @@ abstract class AppLocalizations {
   /// Text displayed in developer tools
   ///
   /// In en, this message translates to:
-  /// **'Purchases are completed on the seller\'s official store. Socialmesh does not handle payment, shipping, warranty, or returns.'**
+  /// **'Purchases are completed on the seller\'s official store. Socialmesh may earn a small commission from purchases made through these links. Socialmesh does not handle payment, shipping, warranty, or returns.'**
   String get deviceShopMarketplaceDisclaimer;
 
   /// Title for the developer tools screen
@@ -7785,6 +8163,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Marketplace Information'**
   String get deviceShopMarketplaceInfoTitle;
+
+  /// Label for Device Shop top-level in-stock filter chip
+  ///
+  /// In en, this message translates to:
+  /// **'In Stock'**
+  String get deviceShopInStock;
 
   /// Text displayed in developer tools
   ///
@@ -9004,6 +9388,156 @@ abstract class AppLocalizations {
   /// **'Sent'**
   String get fileTransferDirectionSent;
 
+  /// Transfer card status — created, not yet sent
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing…'**
+  String get fileTransferStatusPreparing;
+
+  /// Transfer card status — offer sent to remote node
+  ///
+  /// In en, this message translates to:
+  /// **'Offer sent, waiting…'**
+  String get fileTransferStatusOfferSent;
+
+  /// Transfer card status — inbound offer waiting for user acceptance
+  ///
+  /// In en, this message translates to:
+  /// **'Incoming file — tap to review'**
+  String get fileTransferStatusOfferPending;
+
+  /// Transfer card status — outbound transfer in progress
+  ///
+  /// In en, this message translates to:
+  /// **'Sending {pct}%'**
+  String fileTransferStatusSending(String pct);
+
+  /// Transfer card status — inbound transfer in progress
+  ///
+  /// In en, this message translates to:
+  /// **'Receiving {pct}%'**
+  String fileTransferStatusReceiving(String pct);
+
+  /// Transfer card status — NACK recovery phase
+  ///
+  /// In en, this message translates to:
+  /// **'Recovering missing chunks…'**
+  String get fileTransferStatusRecovering;
+
+  /// Transfer card status — transfer complete and verified
+  ///
+  /// In en, this message translates to:
+  /// **'Complete'**
+  String get fileTransferStatusComplete;
+
+  /// Transfer card status — transfer cancelled
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get fileTransferStatusCancelled;
+
+  /// Transfer card status — outbound offer sent, waiting for receiver to accept
+  ///
+  /// In en, this message translates to:
+  /// **'Awaiting Accept'**
+  String get fileTransferStatusAwaitingAccept;
+
+  /// Transfer card status — generic failure
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get fileTransferStatusFailed;
+
+  /// Transfer fail reason — file exceeded mesh size limit
+  ///
+  /// In en, this message translates to:
+  /// **'File too large for mesh transfer'**
+  String get fileTransferFailReasonOversized;
+
+  /// Transfer fail reason — no response within timeout
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer timed out'**
+  String get fileTransferFailReasonTimeout;
+
+  /// Transfer fail reason — malformed chunk data
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid data received'**
+  String get fileTransferFailReasonInvalid;
+
+  /// Transfer fail reason — airtime rate limiter fired
+  ///
+  /// In en, this message translates to:
+  /// **'Rate limited — try again later'**
+  String get fileTransferFailReasonRateLimited;
+
+  /// Transfer fail reason — SHA-256 mismatch
+  ///
+  /// In en, this message translates to:
+  /// **'File verification failed'**
+  String get fileTransferFailReasonHashMismatch;
+
+  /// Transfer fail reason — too many NACK rounds
+  ///
+  /// In en, this message translates to:
+  /// **'Max retries exceeded'**
+  String get fileTransferFailReasonMaxRetries;
+
+  /// Transfer fail reason — transfer TTL exceeded
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer expired'**
+  String get fileTransferFailReasonExpired;
+
+  /// Transfer card metadata — destination node display name or short hex
+  ///
+  /// In en, this message translates to:
+  /// **'to {nodeName}'**
+  String fileTransferMetaNodeTo(String nodeName);
+
+  /// Transfer card metadata — source node display name or short hex
+  ///
+  /// In en, this message translates to:
+  /// **'from {nodeName}'**
+  String fileTransferMetaNodeFrom(String nodeName);
+
+  /// Transfer card relative time — less than one minute ago
+  ///
+  /// In en, this message translates to:
+  /// **'just now'**
+  String get fileTransferTimeJustNow;
+
+  /// Transfer card relative time — N minutes ago
+  ///
+  /// In en, this message translates to:
+  /// **'{count}m ago'**
+  String fileTransferTimeMinutesAgo(int count);
+
+  /// Transfer card relative time — N hours ago
+  ///
+  /// In en, this message translates to:
+  /// **'{count}h ago'**
+  String fileTransferTimeHoursAgo(int count);
+
+  /// Transfer card relative time — N days ago
+  ///
+  /// In en, this message translates to:
+  /// **'{count}d ago'**
+  String fileTransferTimeDaysAgo(int count);
+
+  /// Transfer card date for transfers older than one week
+  ///
+  /// In en, this message translates to:
+  /// **'{month}/{day}'**
+  String fileTransferTimeDate(String month, String day);
+
+  /// Badge label on file transfer cards for voice/audio messages
+  ///
+  /// In en, this message translates to:
+  /// **'Voice'**
+  String get fileTransferVoiceBadge;
+
   /// Empty state description for inbound filter
   ///
   /// In en, this message translates to:
@@ -9422,6 +9956,126 @@ abstract class AppLocalizations {
   /// **'{count} lines'**
   String fileTransferLineCount(int count);
 
+  /// Section header for archive entry list
+  ///
+  /// In en, this message translates to:
+  /// **'Contents'**
+  String get archiveContentsHeader;
+
+  /// Number of files in an archive
+  ///
+  /// In en, this message translates to:
+  /// **'{count} files'**
+  String archiveEntryCount(int count);
+
+  /// Summary count of image entries in archive
+  ///
+  /// In en, this message translates to:
+  /// **'{count} images'**
+  String archiveSummaryImages(int count);
+
+  /// Summary count of voice/audio entries in archive
+  ///
+  /// In en, this message translates to:
+  /// **'{count} voice'**
+  String archiveSummaryVoice(int count);
+
+  /// Summary count of text/config entries in archive
+  ///
+  /// In en, this message translates to:
+  /// **'{count} text'**
+  String archiveSummaryText(int count);
+
+  /// Summary count of other supported entries in archive
+  ///
+  /// In en, this message translates to:
+  /// **'{count} other'**
+  String archiveSummaryOther(int count);
+
+  /// Summary count of unsupported entries in archive
+  ///
+  /// In en, this message translates to:
+  /// **'{count} unsupported'**
+  String archiveSummaryUnsupported(int count);
+
+  /// Button label to preview an archive entry
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get archiveActionPreview;
+
+  /// Button label to play an audio archive entry
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get archiveActionPlay;
+
+  /// Button label to save an archive entry
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get archiveActionSave;
+
+  /// Badge label for supported archive entries
+  ///
+  /// In en, this message translates to:
+  /// **'Supported'**
+  String get archiveStatusSupported;
+
+  /// Badge label for unsupported archive entries
+  ///
+  /// In en, this message translates to:
+  /// **'Unsupported'**
+  String get archiveStatusUnsupported;
+
+  /// Badge label for oversized archive entries
+  ///
+  /// In en, this message translates to:
+  /// **'Too large'**
+  String get archiveStatusTooLarge;
+
+  /// Badge label for unsafe/blocked archive entries
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked'**
+  String get archiveStatusBlocked;
+
+  /// Badge label for nested archive entries
+  ///
+  /// In en, this message translates to:
+  /// **'Nested archive'**
+  String get archiveStatusNested;
+
+  /// Message shown when a ZIP is encrypted
+  ///
+  /// In en, this message translates to:
+  /// **'This archive is encrypted or password-protected and cannot be inspected.'**
+  String get archiveRejectEncrypted;
+
+  /// Message shown when a ZIP is corrupt
+  ///
+  /// In en, this message translates to:
+  /// **'This archive is corrupt or unreadable.'**
+  String get archiveRejectCorrupt;
+
+  /// Message shown when a ZIP has too many entries
+  ///
+  /// In en, this message translates to:
+  /// **'This archive contains too many files and cannot be inspected.'**
+  String get archiveRejectTooManyEntries;
+
+  /// Message shown when total uncompressed size exceeds limit
+  ///
+  /// In en, this message translates to:
+  /// **'The total uncompressed size of this archive exceeds the safety limit.'**
+  String get archiveRejectTotalSizeTooLarge;
+
+  /// Hint that the original ZIP can be saved even if inspection fails
+  ///
+  /// In en, this message translates to:
+  /// **'You can still save the archive file as-is.'**
+  String get archiveRejectSaveHint;
+
   /// Firmware = the software running on the Meshtastic radio device (not the phone app).
   ///
   /// In en, this message translates to:
@@ -9595,6 +10249,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'WiFi'**
   String get firmwareUpdateWifi;
+
+  /// DFU status: downloading firmware archive
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading firmware…'**
+  String get firmwareDfuDownloading;
+
+  /// DFU download progress with percentage
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading: {percent}%'**
+  String firmwareDfuDownloadProgress(String percent);
+
+  /// DFU status: sending enter-DFU-mode command
+  ///
+  /// In en, this message translates to:
+  /// **'Entering DFU mode…'**
+  String get firmwareDfuEnteringBootloader;
+
+  /// DFU status: transferring firmware via BLE
+  ///
+  /// In en, this message translates to:
+  /// **'Updating firmware…'**
+  String get firmwareDfuTransferring;
+
+  /// DFU transfer progress
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% complete'**
+  String firmwareDfuProgress(int percent);
+
+  /// DFU status: completed successfully
+  ///
+  /// In en, this message translates to:
+  /// **'Firmware updated successfully!'**
+  String get firmwareDfuComplete;
+
+  /// DFU status: update failed
+  ///
+  /// In en, this message translates to:
+  /// **'Firmware update failed'**
+  String get firmwareDfuFailed;
+
+  /// Info text after DFU completes
+  ///
+  /// In en, this message translates to:
+  /// **'Your device will restart to apply the update.'**
+  String get firmwareDfuDeviceWillRestart;
+
+  /// Warning shown during DFU transfer
+  ///
+  /// In en, this message translates to:
+  /// **'Do not disconnect your device during the update.'**
+  String get firmwareDfuDoNotDisconnect;
+
+  /// Button label to start the in-app DFU process
+  ///
+  /// In en, this message translates to:
+  /// **'Start Update'**
+  String get firmwareDfuStartUpdate;
+
+  /// Button label to retry a failed DFU
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get firmwareDfuRetry;
+
+  /// Badge or label indicating in-app DFU is available for this device
+  ///
+  /// In en, this message translates to:
+  /// **'In-App Update Available'**
+  String get firmwareDfuInAppSupported;
+
+  /// DFU transfer speed
+  ///
+  /// In en, this message translates to:
+  /// **'{speed} KB/s'**
+  String firmwareDfuSpeed(String speed);
+
+  /// Error when firmware zip doesnt contain a file for the device
+  ///
+  /// In en, this message translates to:
+  /// **'No firmware file found for this device model.'**
+  String get firmwareDfuNoFirmwareFound;
+
+  /// Chipset name for Nordic nRF52840 devices
+  ///
+  /// In en, this message translates to:
+  /// **'nRF52840'**
+  String get firmwareArchitectureNrf52;
+
+  /// Chipset name for Espressif ESP32 devices
+  ///
+  /// In en, this message translates to:
+  /// **'ESP32'**
+  String get firmwareArchitectureEsp32;
+
+  /// Chipset name when architecture cannot be determined
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get firmwareArchitectureUnknown;
+
+  /// Label for the in-app DFU update method
+  ///
+  /// In en, this message translates to:
+  /// **'In-App Update'**
+  String get firmwareUpdateMethodInApp;
+
+  /// Label for the web flasher update method
+  ///
+  /// In en, this message translates to:
+  /// **'Web Flasher'**
+  String get firmwareUpdateMethodWebFlasher;
+
+  /// Label for the device chipset architecture row
+  ///
+  /// In en, this message translates to:
+  /// **'Architecture'**
+  String get firmwareArchitecture;
+
+  /// Label for which firmware update method is available
+  ///
+  /// In en, this message translates to:
+  /// **'Update Method'**
+  String get firmwareUpdateMethod;
+
+  /// Bottom sheet title confirming DFU start
+  ///
+  /// In en, this message translates to:
+  /// **'Start Firmware Update?'**
+  String get firmwareDfuConfirmTitle;
+
+  /// Bottom sheet body confirming DFU start
+  ///
+  /// In en, this message translates to:
+  /// **'This will update your device to version {version}. The device will restart during the update.\n\nDo not disconnect or turn off your device until the update completes.'**
+  String firmwareDfuConfirmBody(String version);
+
+  /// Button in confirmation sheet to begin DFU
+  ///
+  /// In en, this message translates to:
+  /// **'Start Update'**
+  String get firmwareDfuConfirmStart;
 
   /// Empty state message
   ///
@@ -11021,25 +11819,25 @@ abstract class AppLocalizations {
   /// Body text explaining the age requirement and that confirmation is needed to proceed
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh is intended for people aged 16 or older. You must confirm you are 16+ to continue.'**
+  /// **'This helps us apply the right privacy settings. Your age range is not shared with other users.'**
   String get legalEligibilityBody;
 
-  /// Primary action button confirming the user meets the minimum age requirement to use the app
+  /// Primary action button that confirms the user's age selection and proceeds into the app
   ///
   /// In en, this message translates to:
-  /// **'I Am 16 or Older'**
+  /// **'Continue'**
   String get legalEligibilityConfirmButton;
 
   /// Semantics label for the confirm button on the eligibility gate screen
   ///
   /// In en, this message translates to:
-  /// **'I am 16 or older. Tap to confirm and continue.'**
+  /// **'Continue. Tap to confirm your age selection and proceed.'**
   String get legalEligibilityConfirmSemantics;
 
   /// Explanation shown on iOS when user taps Exit, since iOS cannot force-quit; informs them they can return and confirm later
   ///
   /// In en, this message translates to:
-  /// **'You must confirm you are 16 or older to use Socialmesh. You can confirm whenever you are ready.'**
+  /// **'You must confirm your age to use Socialmesh. You can confirm whenever you are ready.'**
   String get legalEligibilityExitBody;
 
   /// Secondary button to exit the app if the user does not meet the age requirement
@@ -11051,7 +11849,7 @@ abstract class AppLocalizations {
   /// Semantics label for the exit button on the eligibility gate screen
   ///
   /// In en, this message translates to:
-  /// **'Exit. You must be 16 or older to use Socialmesh.'**
+  /// **'Exit. You must confirm your age to use Socialmesh.'**
   String get legalEligibilityExitSemantics;
 
   /// Title shown on the iOS exit explanation screen when user taps Exit
@@ -11102,10 +11900,10 @@ abstract class AppLocalizations {
   /// **'Terms'**
   String get legalEligibilityTermsLink;
 
-  /// Title on the age eligibility gate screen indicating the minimum age requirement
+  /// Title on the age eligibility gate screen
   ///
   /// In en, this message translates to:
-  /// **'Ages 16+'**
+  /// **'Age Confirmation'**
   String get legalEligibilityTitle;
 
   /// Semantics label for the Privacy Policy link on the eligibility gate screen
@@ -11119,6 +11917,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'View Terms of Service'**
   String get legalEligibilityViewTermsSemantics;
+
+  /// Prompt above the age range selector on the eligibility gate screen
+  ///
+  /// In en, this message translates to:
+  /// **'Select your age range to continue.'**
+  String get legalEligibilityAgePrompt;
+
+  /// Age range option: under 13 years old
+  ///
+  /// In en, this message translates to:
+  /// **'Under 13'**
+  String get legalEligibilityOptionUnder13;
+
+  /// Subtitle shown beneath the Under 13 age range option
+  ///
+  /// In en, this message translates to:
+  /// **'App not available'**
+  String get legalEligibilityOptionUnder13Subtitle;
+
+  /// Age range option: 13 to 17 years old
+  ///
+  /// In en, this message translates to:
+  /// **'13 to 17'**
+  String get legalEligibilityOptionTeen;
+
+  /// Subtitle shown beneath the 13 to 17 age range option
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy-enhanced settings apply'**
+  String get legalEligibilityOptionTeenSubtitle;
+
+  /// Age range option: 18 years or older
+  ///
+  /// In en, this message translates to:
+  /// **'18 or Older'**
+  String get legalEligibilityOptionAdult;
+
+  /// Title for the age group tile in Settings
+  ///
+  /// In en, this message translates to:
+  /// **'Age Group'**
+  String get settingsAgeGroupTitle;
+
+  /// Subtitle when the user has not yet selected an age group
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get settingsAgeGroupSubtitleUnknown;
+
+  /// Subtitle showing the Under 13 age group in Settings
+  ///
+  /// In en, this message translates to:
+  /// **'Under 13'**
+  String get settingsAgeGroupSubtitleUnder13;
+
+  /// Subtitle showing the 13 to 17 age group in Settings
+  ///
+  /// In en, this message translates to:
+  /// **'13 to 17'**
+  String get settingsAgeGroupSubtitleTeen;
+
+  /// Subtitle showing the 18+ age group in Settings
+  ///
+  /// In en, this message translates to:
+  /// **'18 or older'**
+  String get settingsAgeGroupSubtitleAdult;
 
   /// UI text: lilygo model price unavailable
   ///
@@ -11449,6 +12313,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Earth curvature + Fresnel zone check'**
   String get mapLosAnalysisSubtitle;
+
+  /// Shown on measurement line while terrain elevation data is loading
+  ///
+  /// In en, this message translates to:
+  /// **'Fetching terrain…'**
+  String get mapLosFetchingTerrain;
+
+  /// LOS legend label for green (clear path)
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get mapLosLegendClear;
+
+  /// LOS legend label for yellow (marginal path)
+  ///
+  /// In en, this message translates to:
+  /// **'Marginal'**
+  String get mapLosLegendMarginal;
+
+  /// LOS legend label for red (obstructed path)
+  ///
+  /// In en, this message translates to:
+  /// **'Obstructed'**
+  String get mapLosLegendObstructed;
 
   /// Text in map view Parameters: {bulge}, {fresnel}.
   ///
@@ -11911,11 +12799,11 @@ abstract class AppLocalizations {
   /// **'Show Connections'**
   String get mesh3dShowConnections;
 
-  /// Stats card label: active node count
+  /// Stats card label: online node count
   ///
   /// In en, this message translates to:
-  /// **'Active'**
-  String get mesh3dStatActive;
+  /// **'Online'**
+  String get mesh3dStatOnline;
 
   /// Stats card label: channel utilization
   ///
@@ -14341,6 +15229,12 @@ abstract class AppLocalizations {
   /// **'Active'**
   String get messagingFilterActive;
 
+  /// Label for the Online filter chip in the contacts list (heard within 2 hours).
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get messagingFilterOnline;
+
   /// Label for the All filter chip in the contacts list.
   ///
   /// In en, this message translates to:
@@ -14394,6 +15288,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Send (Ctrl/Cmd+Enter)'**
   String get messagingSendTooltip;
+
+  /// Live UTF-8 byte counter in the chat composer.
+  ///
+  /// In en, this message translates to:
+  /// **'{used}/{max} bytes'**
+  String messagingComposerByteCounter(int used, int max);
+
+  /// Error shown when a composed message exceeds the Meshtastic wire budget.
+  ///
+  /// In en, this message translates to:
+  /// **'Message is too long for the mesh ({used}/{max} bytes).'**
+  String messagingComposerTooLong(int used, int max);
 
   /// Info snackbar shown when a message is queued because the device is offline.
   ///
@@ -14479,6 +15385,66 @@ abstract class AppLocalizations {
   /// **'Retry Message'**
   String get messagingRetryMessage;
 
+  /// Delivery status label shown on a DM that has been sent to the radio but no ACK has been received yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Awaiting confirmation'**
+  String get messagingStatusAwaitingConfirmation;
+
+  /// Delivery status label shown on a DM that timed out without receiving an ACK.
+  ///
+  /// In en, this message translates to:
+  /// **'Unconfirmed'**
+  String get messagingStatusUnconfirmed;
+
+  /// Delivery status label shown while an auto-retry is in progress.
+  ///
+  /// In en, this message translates to:
+  /// **'Retrying'**
+  String get messagingStatusRetrying;
+
+  /// Delivery status label shown when a DM has been confirmed by the mesh network.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed'**
+  String get messagingStatusConfirmed;
+
+  /// Delivery status label shown immediately after a message has been handed to the radio.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent to radio'**
+  String get messagingStatusSentToRadio;
+
+  /// Action label for manually resending an unconfirmed direct message.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend'**
+  String get messagingResend;
+
+  /// Action label to enable bounded automatic resend for an unconfirmed DM.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry every 60s until confirmed'**
+  String get messagingAutoRetryEnable;
+
+  /// Action label to cancel an active auto-retry for a DM.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop retrying'**
+  String get messagingAutoRetryStop;
+
+  /// Warning subtitle shown alongside the auto-retry option.
+  ///
+  /// In en, this message translates to:
+  /// **'May increase airtime and battery usage'**
+  String get messagingAutoRetryWarning;
+
+  /// Shows current retry attempt count vs maximum.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}/{max} retries'**
+  String messagingRetryProgress(int count, int max);
+
   /// Popup menu item to scan a QR code for a channel.
   ///
   /// In en, this message translates to:
@@ -14491,16 +15457,28 @@ abstract class AppLocalizations {
   /// **'Search contacts'**
   String get messagingSearchContactsHint;
 
+  /// Search results count shown above the conversation timeline while filtering messages.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} {count, plural, =1{message} other{messages}} found'**
+  String messagingSearchResultsCount(int count);
+
   /// Tooltip for the icon button that opens the message search bar.
   ///
   /// In en, this message translates to:
   /// **'Search Messages'**
   String get messagingSearchMessages;
 
-  /// Section header for recently active contacts.
+  /// Affordance shown when the user is reading older chat history and can jump back to the newest messages.
   ///
   /// In en, this message translates to:
-  /// **'Active'**
+  /// **'Jump to latest'**
+  String get messagingJumpToLatest;
+
+  /// Section header for online contacts (heard within 2 hours).
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
   String get messagingSectionActive;
 
   /// Section header for favorite contacts in the contact list.
@@ -14509,10 +15487,10 @@ abstract class AppLocalizations {
   /// **'Favorites'**
   String get messagingSectionFavorites;
 
-  /// Section header for inactive contacts.
+  /// Section header for offline contacts (not heard within 2 hours).
   ///
   /// In en, this message translates to:
-  /// **'Inactive'**
+  /// **'Offline'**
   String get messagingSectionInactive;
 
   /// Section header for contacts with unread messages.
@@ -14551,6 +15529,132 @@ abstract class AppLocalizations {
   /// **'Tapback'**
   String get messagingSourceTapback;
 
+  /// Label shown when a message was received directly (0 hops).
+  ///
+  /// In en, this message translates to:
+  /// **'Direct'**
+  String get messagingTechInfoDirectHop;
+
+  /// Hop count label shown in inline technical info on message bubbles.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} {count, plural, =1{hop} other{hops}}'**
+  String messagingTechInfoHops(int count);
+
+  /// Transport label when message arrived via MQTT.
+  ///
+  /// In en, this message translates to:
+  /// **'MQTT'**
+  String get messagingTechInfoMqtt;
+
+  /// Transport label when message arrived via radio (RF).
+  ///
+  /// In en, this message translates to:
+  /// **'Radio'**
+  String get messagingTechInfoRadio;
+
+  /// RSSI value label shown in inline technical info.
+  ///
+  /// In en, this message translates to:
+  /// **'RSSI {value} dBm'**
+  String messagingTechInfoRssi(int value);
+
+  /// SNR value label shown in inline technical info.
+  ///
+  /// In en, this message translates to:
+  /// **'SNR {value} dB'**
+  String messagingTechInfoSnr(String value);
+
+  /// Node ID in hex shown in inline technical info.
+  ///
+  /// In en, this message translates to:
+  /// **'Node !{nodeHex}'**
+  String messagingTechInfoNodeId(String nodeHex);
+
+  /// Packet ID shown in inline technical info.
+  ///
+  /// In en, this message translates to:
+  /// **'Packet #{packetId}'**
+  String messagingTechInfoPacketId(int packetId);
+
+  /// Shown when a message has no radio metadata (SNR, RSSI, hops).
+  ///
+  /// In en, this message translates to:
+  /// **'No radio data'**
+  String get messagingTechInfoNoRadioData;
+
+  /// Title for the bottom sheet explaining hop count.
+  ///
+  /// In en, this message translates to:
+  /// **'Hop Count'**
+  String get messagingTechInfoExplainHopsTitle;
+
+  /// Explanation of hop count shown in a bottom sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'The number of times this message was relayed by other nodes before reaching you. \'Direct\' means no relay — the sender was in direct radio range.'**
+  String get messagingTechInfoExplainHopsBody;
+
+  /// Title for the bottom sheet explaining SNR.
+  ///
+  /// In en, this message translates to:
+  /// **'Signal-to-Noise Ratio (SNR)'**
+  String get messagingTechInfoExplainSnrTitle;
+
+  /// Explanation of SNR shown in a bottom sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Measures how clearly the radio signal was received compared to background noise. Higher is better. Typical range: -20 dB (very weak) to +15 dB (excellent).'**
+  String get messagingTechInfoExplainSnrBody;
+
+  /// Title for the bottom sheet explaining RSSI.
+  ///
+  /// In en, this message translates to:
+  /// **'Signal Strength (RSSI)'**
+  String get messagingTechInfoExplainRssiTitle;
+
+  /// Explanation of RSSI shown in a bottom sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Received Signal Strength Indicator — how strong the radio signal was when it arrived. Closer to 0 is stronger. Typical range: -120 dBm (very weak) to -40 dBm (very strong).'**
+  String get messagingTechInfoExplainRssiBody;
+
+  /// Title for the bottom sheet explaining transport type.
+  ///
+  /// In en, this message translates to:
+  /// **'Transport'**
+  String get messagingTechInfoExplainTransportTitle;
+
+  /// Explanation of transport type shown in a bottom sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'How this message reached you. \'Radio\' means it travelled entirely over the mesh radio network. \'MQTT\' means it passed through an internet gateway at some point.'**
+  String get messagingTechInfoExplainTransportBody;
+
+  /// Title for the bottom sheet explaining sender node ID.
+  ///
+  /// In en, this message translates to:
+  /// **'Sender Node ID'**
+  String get messagingTechInfoExplainNodeIdTitle;
+
+  /// Explanation of node ID shown in a bottom sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'The unique hardware identifier of the node that sent this message, shown in hexadecimal.'**
+  String get messagingTechInfoExplainNodeIdBody;
+
+  /// Title for the bottom sheet explaining packet ID.
+  ///
+  /// In en, this message translates to:
+  /// **'Packet ID'**
+  String get messagingTechInfoExplainPacketIdTitle;
+
+  /// Explanation of packet ID shown in a bottom sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'The unique identifier for this radio packet, assigned by the sending node. Useful for debugging delivery issues.'**
+  String get messagingTechInfoExplainPacketIdBody;
+
   /// Empty state text in a new DM conversation.
   ///
   /// In en, this message translates to:
@@ -14562,6 +15666,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unknown Node'**
   String get messagingUnknownNode;
+
+  /// Label for the timeline filter button.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter'**
+  String get timelineFilterLabel;
+
+  /// Segment label for the Today view in the timeline board.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get timelineToday;
+
+  /// Segment label for the Week view in the timeline board.
+  ///
+  /// In en, this message translates to:
+  /// **'Week'**
+  String get timelineWeek;
+
+  /// Segment label for the Month view in the timeline board.
+  ///
+  /// In en, this message translates to:
+  /// **'Month'**
+  String get timelineMonth;
+
+  /// Segment label for the Year view in the timeline board.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get timelineYear;
+
+  /// Priority label for low-priority timeline items.
+  ///
+  /// In en, this message translates to:
+  /// **'Low'**
+  String get timelinePriorityLow;
+
+  /// Priority label for medium-priority timeline items.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get timelinePriorityMedium;
+
+  /// Priority label for high-priority timeline items.
+  ///
+  /// In en, this message translates to:
+  /// **'High'**
+  String get timelinePriorityHigh;
+
+  /// Priority label for completed timeline items.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get timelinePriorityDone;
+
+  /// Label shown on break-time slots in the timeline board.
+  ///
+  /// In en, this message translates to:
+  /// **'Break time'**
+  String get timelineBreakTime;
+
+  /// Duration format for timeline item footer (e.g. 01h 53m).
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h {minutes}m'**
+  String timelineDuration(String hours, String minutes);
+
+  /// Duration format when less than one hour.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes}m'**
+  String timelineDurationMinutesOnly(String minutes);
+
+  /// Overflow label for participant avatar stack.
+  ///
+  /// In en, this message translates to:
+  /// **'+{count}'**
+  String timelineOverflowParticipants(int count);
 
   /// Label for the Activity drawer item.
   ///
@@ -14653,6 +15835,12 @@ abstract class AppLocalizations {
   /// **'IFTTT Integration'**
   String get navigationIftttIntegration;
 
+  /// Label for the Translation Pack premium drawer item.
+  ///
+  /// In en, this message translates to:
+  /// **'Translation Pack'**
+  String get navigationTranslationPack;
+
   /// Label for the Map bottom nav tab.
   ///
   /// In en, this message translates to:
@@ -14688,6 +15876,372 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'NodeDex'**
   String get navigationNodeDex;
+
+  /// Label for the NodeBoard drawer item.
+  ///
+  /// In en, this message translates to:
+  /// **'NodeBoard'**
+  String get nodeboardDrawerLabel;
+
+  /// Title for the NodeBoard feature.
+  ///
+  /// In en, this message translates to:
+  /// **'NodeBoard'**
+  String get nodeboardTitle;
+
+  /// Tab label for the user's own boards.
+  ///
+  /// In en, this message translates to:
+  /// **'My Boards'**
+  String get nodeboardMyBoards;
+
+  /// Tab label for discovering public boards.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover'**
+  String get nodeboardDiscover;
+
+  /// Button label for creating a new NodeBoard.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Board'**
+  String get nodeboardCreateBoard;
+
+  /// Empty state message when user has no boards.
+  ///
+  /// In en, this message translates to:
+  /// **'You haven\'t created any boards yet'**
+  String get nodeboardEmptyMyBoards;
+
+  /// Empty state description when user has no boards.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your first personal BBS and share it with the mesh'**
+  String get nodeboardEmptyMyBoardsDescription;
+
+  /// Empty state message when no public boards exist.
+  ///
+  /// In en, this message translates to:
+  /// **'No public boards found'**
+  String get nodeboardEmptyDiscover;
+
+  /// Empty state description when no public boards exist.
+  ///
+  /// In en, this message translates to:
+  /// **'Be the first to create a board'**
+  String get nodeboardEmptyDiscoverDescription;
+
+  /// Empty state when a section has no threads.
+  ///
+  /// In en, this message translates to:
+  /// **'No threads yet'**
+  String get nodeboardEmptyThreads;
+
+  /// Empty state description for a section with no threads.
+  ///
+  /// In en, this message translates to:
+  /// **'Start the conversation'**
+  String get nodeboardEmptyThreadsDescription;
+
+  /// Title for the board creation wizard.
+  ///
+  /// In en, this message translates to:
+  /// **'Create NodeBoard'**
+  String get nodeboardWizardTitle;
+
+  /// Wizard step label for board name.
+  ///
+  /// In en, this message translates to:
+  /// **'Name & Identity'**
+  String get nodeboardWizardStepName;
+
+  /// Wizard step label for tagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Tagline & Description'**
+  String get nodeboardWizardStepTagline;
+
+  /// Wizard step label for sections.
+  ///
+  /// In en, this message translates to:
+  /// **'Sections'**
+  String get nodeboardWizardStepSections;
+
+  /// Wizard step label for theme selection.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get nodeboardWizardStepTheme;
+
+  /// Wizard step label for welcome text.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome & Splash'**
+  String get nodeboardWizardStepWelcome;
+
+  /// Wizard step label for review.
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get nodeboardWizardStepReview;
+
+  /// Label for the board title field.
+  ///
+  /// In en, this message translates to:
+  /// **'Board Title'**
+  String get nodeboardBoardTitle;
+
+  /// Label for the sysop name field.
+  ///
+  /// In en, this message translates to:
+  /// **'Sysop Name'**
+  String get nodeboardSysopName;
+
+  /// Label for the board slug field.
+  ///
+  /// In en, this message translates to:
+  /// **'Board URL Slug'**
+  String get nodeboardSlug;
+
+  /// Label for the tagline field.
+  ///
+  /// In en, this message translates to:
+  /// **'Tagline'**
+  String get nodeboardTagline;
+
+  /// Label for the description field.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get nodeboardDescription;
+
+  /// Label for the welcome text field.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome Text'**
+  String get nodeboardWelcomeText;
+
+  /// Label for the ANSI splash field.
+  ///
+  /// In en, this message translates to:
+  /// **'ASCII/ANSI Splash'**
+  String get nodeboardAnsiSplash;
+
+  /// Visibility option: public.
+  ///
+  /// In en, this message translates to:
+  /// **'Public'**
+  String get nodeboardVisibilityPublic;
+
+  /// Visibility option: unlisted.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlisted'**
+  String get nodeboardVisibilityUnlisted;
+
+  /// Visibility option: private.
+  ///
+  /// In en, this message translates to:
+  /// **'Private'**
+  String get nodeboardVisibilityPrivate;
+
+  /// Label for sysop role.
+  ///
+  /// In en, this message translates to:
+  /// **'SysOp'**
+  String get nodeboardSysop;
+
+  /// Thread count display.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} threads'**
+  String nodeboardThreadCount(int count);
+
+  /// Reply count display.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} replies'**
+  String nodeboardReplyCount(int count);
+
+  /// Label for terminal mode toggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminal Mode'**
+  String get nodeboardTerminalMode;
+
+  /// Label for native mode toggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Native Mode'**
+  String get nodeboardNativeMode;
+
+  /// Hint text for the reply composer.
+  ///
+  /// In en, this message translates to:
+  /// **'Write a reply...'**
+  String get nodeboardReplyHint;
+
+  /// Message when a thread is locked.
+  ///
+  /// In en, this message translates to:
+  /// **'This thread is locked'**
+  String get nodeboardThreadLocked;
+
+  /// Badge label for pinned threads.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned'**
+  String get nodeboardPinned;
+
+  /// Badge label for locked threads.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked'**
+  String get nodeboardLocked;
+
+  /// Next button in wizard.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get nodeboardNext;
+
+  /// Back button in wizard.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get nodeboardBack;
+
+  /// Create board action button.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Board'**
+  String get nodeboardCreateBoardAction;
+
+  /// Generic load error message.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load'**
+  String get nodeboardLoadError;
+
+  /// Message when a board is not found.
+  ///
+  /// In en, this message translates to:
+  /// **'Board not found'**
+  String get nodeboardBoardNotFound;
+
+  /// Message when a thread is not found.
+  ///
+  /// In en, this message translates to:
+  /// **'Thread not found'**
+  String get nodeboardThreadNotFound;
+
+  /// Menu item for editing a board.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Board'**
+  String get nodeboardEditBoard;
+
+  /// Menu item for sharing a board.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Board'**
+  String get nodeboardShareBoard;
+
+  /// Section count display.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} sections'**
+  String nodeboardSectionCount(int count);
+
+  /// Message when board has no sections.
+  ///
+  /// In en, this message translates to:
+  /// **'No sections yet'**
+  String get nodeboardNoSections;
+
+  /// Error when reply submission fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to send reply'**
+  String get nodeboardReplyFailed;
+
+  /// Button label for creating a new thread.
+  ///
+  /// In en, this message translates to:
+  /// **'New Thread'**
+  String get nodeboardNewThread;
+
+  /// Empty state action to create first board.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Your First Board'**
+  String get nodeboardCreateFirstBoard;
+
+  /// Card title for the board welcome text section.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome'**
+  String get nodeboardWelcomeSectionTitle;
+
+  /// Card title for the board sections picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Sections'**
+  String get nodeboardSectionsSectionTitle;
+
+  /// Card title for the board threads list.
+  ///
+  /// In en, this message translates to:
+  /// **'Threads'**
+  String get nodeboardThreadsSectionTitle;
+
+  /// Confirmation shown after copying a board share link.
+  ///
+  /// In en, this message translates to:
+  /// **'Share link copied to clipboard'**
+  String get nodeboardShareCopied;
+
+  /// Placeholder message shown when the thread composer is tapped.
+  ///
+  /// In en, this message translates to:
+  /// **'Thread composer coming soon'**
+  String get nodeboardComposerComingSoon;
+
+  /// Time-ago label for events in the last minute.
+  ///
+  /// In en, this message translates to:
+  /// **'just now'**
+  String get nodeboardJustNow;
+
+  /// Time-ago label for events in the last hour.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}m ago'**
+  String nodeboardMinutesAgo(int count);
+
+  /// Time-ago label for events in the last day.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}h ago'**
+  String nodeboardHoursAgo(int count);
+
+  /// Time-ago label for events in the last month.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}d ago'**
+  String nodeboardDaysAgo(int count);
+
+  /// Time-ago label for events in the last year.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}mo ago'**
+  String nodeboardMonthsAgo(int count);
+
+  /// Time-ago label for events more than a year ago.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}y ago'**
+  String nodeboardYearsAgo(int count);
 
   /// Label for the Nodes bottom nav tab.
   ///
@@ -15853,6 +17407,12 @@ abstract class AppLocalizations {
   /// **'Traceroute History'**
   String get nodeDetailMenuTracerouteHistory;
 
+  /// Overflow menu item to navigate to the NodeDex detail screen for this node.
+  ///
+  /// In en, this message translates to:
+  /// **'View in NodeDex'**
+  String get nodeDetailMenuViewInNodeDex;
+
   /// Action button label for messaging the node.
   ///
   /// In en, this message translates to:
@@ -16150,7 +17710,7 @@ abstract class AppLocalizations {
   /// Success snackbar after sending a traceroute.
   ///
   /// In en, this message translates to:
-  /// **'Traceroute sent to {name} — check Traceroute History for results'**
+  /// **'Traceroute sent to {name}'**
   String nodeDetailTracerouteSent(String name);
 
   /// Tooltip for the traceroute button.
@@ -16158,6 +17718,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Traceroute'**
   String get nodeDetailTracerouteTooltip;
+
+  /// Snackbar title when a traceroute result arrives.
+  ///
+  /// In en, this message translates to:
+  /// **'Traceroute complete'**
+  String get nodeDetailTracerouteComplete;
+
+  /// Traceroute summary for RF direct connection.
+  ///
+  /// In en, this message translates to:
+  /// **'RF • direct • SNR {snr} dB'**
+  String nodeDetailTracerouteSummaryRfDirect(String snr);
+
+  /// Traceroute summary for RF with hops.
+  ///
+  /// In en, this message translates to:
+  /// **'RF • {hops} hops • SNR {snr} dB'**
+  String nodeDetailTracerouteSummaryRf(int hops, String snr);
+
+  /// Traceroute summary for MQTT direct connection.
+  ///
+  /// In en, this message translates to:
+  /// **'MQTT • direct • SNR {snr} dB'**
+  String nodeDetailTracerouteSummaryMqttDirect(String snr);
+
+  /// Traceroute summary for MQTT with hops.
+  ///
+  /// In en, this message translates to:
+  /// **'MQTT • {hops} hops • SNR {snr} dB'**
+  String nodeDetailTracerouteSummaryMqtt(int hops, String snr);
+
+  /// Traceroute summary for direct connection without SNR.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct connection'**
+  String get nodeDetailTracerouteSummaryDirectNoSnr;
+
+  /// Traceroute summary showing only hop count.
+  ///
+  /// In en, this message translates to:
+  /// **'{hops} hops'**
+  String nodeDetailTracerouteSummaryHopsOnly(int hops);
+
+  /// Action button label to open full traceroute log.
+  ///
+  /// In en, this message translates to:
+  /// **'View details'**
+  String get nodeDetailTracerouteViewDetails;
 
   /// Tooltip for unmuting a node.
   ///
@@ -16636,25 +18244,25 @@ abstract class AppLocalizations {
   /// Label in node management
   ///
   /// In en, this message translates to:
-  /// **'Co-seen'**
+  /// **'Historical links'**
   String get nodedexCoSeenCompactLabel;
 
   /// Description text in node management
   ///
   /// In en, this message translates to:
-  /// **'Nodes frequently seen in the same session'**
+  /// **'Nodes heard with this node in the recent session window'**
   String get nodedexCoSeenDescription;
 
   /// Title for the node management screen
   ///
   /// In en, this message translates to:
-  /// **'Co-Seen Links'**
+  /// **'Recent Co-Seen Links'**
   String get nodedexCoSeenLinksTitle;
 
   /// Text displayed in node management
   ///
   /// In en, this message translates to:
-  /// **'Co-seen relationship details'**
+  /// **'Recent co-seen relationship details'**
   String get nodedexCoSeenRelationshipDetails;
 
   /// Text in node management Parameters: {count} = numeric count.
@@ -16684,25 +18292,25 @@ abstract class AppLocalizations {
   /// Subtitle in node management
   ///
   /// In en, this message translates to:
-  /// **'Discover more nodes to see how they connect.\nNodes seen together form constellation links.'**
+  /// **'Discover more nodes to build the historical graph.\nHistorically co-seen nodes form constellation links.'**
   String get nodedexConstellationEmptySubtitle;
 
   /// Title for the node management screen
   ///
   /// In en, this message translates to:
-  /// **'No Constellation Yet'**
+  /// **'No Historical Constellation Yet'**
   String get nodedexConstellationEmptyTitle;
 
   /// Text in node management Parameters: {count} = numeric count.
   ///
   /// In en, this message translates to:
-  /// **'{count} links'**
+  /// **'{count} historical links'**
   String nodedexConstellationLinkCount(int count);
 
   /// Title for the node management screen
   ///
   /// In en, this message translates to:
-  /// **'Constellation Link'**
+  /// **'Recent Co-Seen Link'**
   String get nodedexConstellationLinkTitle;
 
   /// Text in node management Parameters: {count} = numeric count.
@@ -16732,7 +18340,7 @@ abstract class AppLocalizations {
   /// Title for the node management screen
   ///
   /// In en, this message translates to:
-  /// **'Constellation'**
+  /// **'Historical Constellation'**
   String get nodedexConstellationTitle;
 
   /// Text displayed in node management
@@ -17254,7 +18862,7 @@ abstract class AppLocalizations {
   /// Text in node management Parameters: {count} = numeric count.
   ///
   /// In en, this message translates to:
-  /// **'Co-seen with {count} nodes'**
+  /// **'Historically co-seen with {count} nodes'**
   String nodedexEvidenceCoSeenWith(int count);
 
   /// Text in node management Parameters: {count} = numeric count.
@@ -17422,7 +19030,7 @@ abstract class AppLocalizations {
   /// Text in node management Parameters: {coSeen}.
   ///
   /// In en, this message translates to:
-  /// **'Hub node. Co-seen with {coSeen} other nodes.'**
+  /// **'Hub node. Historically co-seen with {coSeen} other nodes.'**
   String nodedexFieldNoteAnchor0(int coSeen);
 
   /// Text displayed in node management
@@ -17434,7 +19042,7 @@ abstract class AppLocalizations {
   /// Text in node management Parameters: {coSeen}.
   ///
   /// In en, this message translates to:
-  /// **'Persistent hub. {coSeen} nodes observed in proximity.'**
+  /// **'Persistent hub. {coSeen} nodes historically observed nearby.'**
   String nodedexFieldNoteAnchor2(int coSeen);
 
   /// Text displayed in node management
@@ -17458,7 +19066,7 @@ abstract class AppLocalizations {
   /// Text in node management Parameters: {coSeen}.
   ///
   /// In en, this message translates to:
-  /// **'Infrastructure anchor. {coSeen} peers linked.'**
+  /// **'Infrastructure anchor. Historically linked with {coSeen} peers.'**
   String nodedexFieldNoteAnchor6(int coSeen);
 
   /// Text displayed in node management
@@ -17880,6 +19488,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tagged'**
   String get nodedexFilterTagged;
+
+  /// Label showing the radio preset a node was observed on
+  ///
+  /// In en, this message translates to:
+  /// **'Observed on: {preset}'**
+  String nodedexObservedOnPreset(String preset);
+
+  /// Label showing the last radio preset a node was observed on
+  ///
+  /// In en, this message translates to:
+  /// **'Last observed on {preset}'**
+  String nodedexLastObservedOnPreset(String preset);
+
+  /// Filter chip label for filtering nodes by radio preset
+  ///
+  /// In en, this message translates to:
+  /// **'Radio Preset'**
+  String get nodedexFilterRadioPreset;
+
+  /// Label shown when the radio preset is not known
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get nodedexRadioPresetUnknown;
+
+  /// Label for the frequency offset row in NodeDex discovery stats
+  ///
+  /// In en, this message translates to:
+  /// **'Freq Offset'**
+  String get nodedexFrequencyOffset;
+
+  /// Formatted frequency offset value with Hz unit
+  ///
+  /// In en, this message translates to:
+  /// **'{offset} Hz'**
+  String nodedexFrequencyOffsetValue(String offset);
+
+  /// Option to show nodes from all radio presets (no filter)
+  ///
+  /// In en, this message translates to:
+  /// **'All Presets'**
+  String get nodedexFilterRadioPresetAll;
+
+  /// Title for the radio preset filter bottom sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Filter by Radio Preset'**
+  String get nodedexRadioPresetSheetTitle;
 
   /// Label in node management
   ///
@@ -18910,7 +20566,7 @@ abstract class AppLocalizations {
   /// Text in node management Parameters: {count} = numeric count.
   ///
   /// In en, this message translates to:
-  /// **'{count} links'**
+  /// **'{count} historical links'**
   String nodedexSelectedLinksCount(int count);
 
   /// Text displayed in node management
@@ -19679,10 +21335,10 @@ abstract class AppLocalizations {
   /// **'No nodes match this filter'**
   String get nodesScreenEmptyFiltered;
 
-  /// Filter chip label for active nodes.
+  /// Filter chip label for online nodes (heard within 2 hours).
   ///
   /// In en, this message translates to:
-  /// **'Active'**
+  /// **'Online'**
   String get nodesScreenFilterActive;
 
   /// Filter chip label showing all nodes.
@@ -19697,10 +21353,10 @@ abstract class AppLocalizations {
   /// **'Favorites'**
   String get nodesScreenFilterFavorites;
 
-  /// Filter chip label for inactive nodes.
+  /// Filter chip label for offline nodes (not heard within 2 hours).
   ///
   /// In en, this message translates to:
-  /// **'Inactive'**
+  /// **'Offline'**
   String get nodesScreenFilterInactive;
 
   /// Filter chip label for MQTT-connected nodes.
@@ -20012,19 +21668,19 @@ abstract class AppLocalizations {
   /// Ico advisor speech listing automation use cases
   ///
   /// In en, this message translates to:
-  /// **'Set up rules once, and I\'ll monitor everything. Low battery? I\'ll alert you. Node goes silent? I\'ll let you know. SOS received? I\'ll trigger your webhook.'**
+  /// **'Create a rule, and I handle the rest. Need a webhook when someone sends SOS? Done. Want a sound when a node comes online? Easy.'**
   String get onboardingAutomationsAdvisor;
 
   /// Description of the automation triggers system
   ///
   /// In en, this message translates to:
-  /// **'Trigger actions based on mesh events.\nBattery alerts, geofences, keywords, and more.'**
+  /// **'Automatic alerts when batteries drop, nodes go silent, or someone enters a geofence.\nYour mesh monitors itself.'**
   String get onboardingAutomationsDescription;
 
   /// Title for the automations feature page
   ///
   /// In en, this message translates to:
-  /// **'Intelligent Automations'**
+  /// **'Set It Once, Never Miss a Thing'**
   String get onboardingAutomationsTitle;
 
   /// Loading overlay subtitle while checking LoRa radio settings
@@ -20036,13 +21692,13 @@ abstract class AppLocalizations {
   /// Ico advisor speech for the final page before device pairing
   ///
   /// In en, this message translates to:
-  /// **'Once connected, we operate completely offline. The mesh is waiting.'**
+  /// **'Once paired, we go fully offline. No internet needed from here on out. The mesh is ready when you are.'**
   String get onboardingConnectAdvisor;
 
   /// Description prompting the user to pair their device
   ///
   /// In en, this message translates to:
-  /// **'Pair your Meshtastic device to begin.\nBluetooth or USB - your choice.'**
+  /// **'Tap below to pair your radio over Bluetooth or USB.\nYou\'ll be sending messages in under a minute.'**
   String get onboardingConnectDescription;
 
   /// Action button on the last onboarding page to begin device pairing
@@ -20054,7 +21710,7 @@ abstract class AppLocalizations {
   /// Title for the final onboarding page prompting device connection
   ///
   /// In en, this message translates to:
-  /// **'Ready to Connect'**
+  /// **'Let\'s Get You on the Mesh'**
   String get onboardingConnectTitle;
 
   /// Action button to advance to the next onboarding page
@@ -20066,19 +21722,19 @@ abstract class AppLocalizations {
   /// Ico advisor speech about dashboard customization
   ///
   /// In en, this message translates to:
-  /// **'Widgets, maps, stats - arrange them however you work. Your mesh, your view, your control.'**
+  /// **'Drag, drop, and resize. Every widget updates in real time so you always know the state of your mesh.'**
   String get onboardingDashboardAdvisor;
 
   /// Description of the dashboard and telemetry features
   ///
   /// In en, this message translates to:
-  /// **'Customizable dashboard with live telemetry.\nTrack nodes, monitor channels, visualize the network.'**
+  /// **'Live battery levels, signal strength, node counts — all in one view.\nBuild the dashboard that fits how you work.'**
   String get onboardingDashboardDescription;
 
   /// Title for the customizable dashboard page
   ///
   /// In en, this message translates to:
-  /// **'Your Command Center'**
+  /// **'See Everything at a Glance'**
   String get onboardingDashboardTitle;
 
   /// Device name in the compatible hardware showcase
@@ -20180,25 +21836,25 @@ abstract class AppLocalizations {
   /// Ico advisor speech recommending specific hardware by use case
   ///
   /// In en, this message translates to:
-  /// **'Pick up a SenseCAP T1000-E for tracking, a Heltec V3 for range, or a RAK WisMesh for reliability. I\'ll work with any of them.'**
+  /// **'Already own a Meshtastic device? Perfect. Don\'t have one yet? Any of these will get you on the mesh in minutes.'**
   String get onboardingHardwareAdvisor;
 
   /// Description of supported hardware types
   ///
   /// In en, this message translates to:
-  /// **'Works with all Meshtastic-compatible devices.\nFrom compact trackers to long-range stations.'**
+  /// **'Pair any Meshtastic radio over Bluetooth or USB.\nCompact trackers, long-range stations, and everything between.'**
   String get onboardingHardwareDescription;
 
   /// Title for the compatible devices page
   ///
   /// In en, this message translates to:
-  /// **'Compatible Hardware'**
+  /// **'Pick Your Radio'**
   String get onboardingHardwareTitle;
 
   /// Ico advisor speech explaining NodeDex sigils, rarity, and patina
   ///
   /// In en, this message translates to:
-  /// **'Each node gets a unique sigil, a rarity tier, and a patina that deepens with every encounter. Collect them all — your NodeDex is your story across the mesh.'**
+  /// **'Legendary, Epic, Rare — every node you encounter earns its place in your collection. The more you explore, the richer your NodeDex becomes.'**
   String get onboardingNodedexAdvisor;
 
   /// Demo node name in the NodeDex showcase
@@ -20210,7 +21866,7 @@ abstract class AppLocalizations {
   /// Description of the NodeDex collection feature
   ///
   /// In en, this message translates to:
-  /// **'Every node you encounter becomes a collectible card.\nBuild your field journal across the mesh.'**
+  /// **'Every node you discover gets a unique card with a sigil and rarity tier.\nYour NodeDex is your story across the mesh.'**
   String get onboardingNodedexDescription;
 
   /// Rarity tier label for the epic demo node card
@@ -20246,7 +21902,7 @@ abstract class AppLocalizations {
   /// Title for the NodeDex collectible node cards page
   ///
   /// In en, this message translates to:
-  /// **'NodeDex — Collector Album'**
+  /// **'Collect Every Node You Meet'**
   String get onboardingNodedexTitle;
 
   /// Demo node name in the NodeDex showcase
@@ -20264,37 +21920,37 @@ abstract class AppLocalizations {
   /// Ico advisor speech explaining mesh message hopping
   ///
   /// In en, this message translates to:
-  /// **'Every message hops through the mesh until it reaches its destination. Range measured in kilometers, not bars.'**
+  /// **'No cell towers, no Wi-Fi, no subscriptions. Your messages travel radio-to-radio, completely independent of infrastructure.'**
   String get onboardingOffGridAdvisor;
 
   /// Description highlighting offline mesh radio capabilities
   ///
   /// In en, this message translates to:
-  /// **'No cellular towers. No internet required.\nTrue peer-to-peer radio communication.'**
+  /// **'Every message hops across the mesh until it arrives.\nRange measured in kilometers, not signal bars.'**
   String get onboardingOffGridDescription;
 
   /// Title for the off-grid mesh networking page
   ///
   /// In en, this message translates to:
-  /// **'Off-Grid by Design'**
+  /// **'Works Where Nothing Else Does'**
   String get onboardingOffGridTitle;
 
   /// Ico advisor speech emphasizing local-only data by default
   ///
   /// In en, this message translates to:
-  /// **'Everything is local unless you explicitly enable cloud sync. No tracking, no analytics, no compromise.'**
+  /// **'Zero tracking. Zero analytics. Cloud sync is entirely optional and off by default. Your mesh, your rules.'**
   String get onboardingPrivacyAdvisor;
 
   /// Description of the privacy-first data philosophy
   ///
   /// In en, this message translates to:
-  /// **'No accounts required. No cloud by default.\nYour data stays on your device.'**
+  /// **'No sign-up required. No cloud unless you want it.\nEverything runs locally, on your terms.'**
   String get onboardingPrivacyDescription;
 
   /// Title for the privacy-focused onboarding page
   ///
   /// In en, this message translates to:
-  /// **'Privacy First'**
+  /// **'Your Data Never Leaves Your Device'**
   String get onboardingPrivacyTitle;
 
   /// Loading overlay text while configuring the paired device
@@ -20336,19 +21992,19 @@ abstract class AppLocalizations {
   /// Ico advisor speech explaining the Signals differentiator
   ///
   /// In en, this message translates to:
-  /// **'Signals are what set us apart. Broadcast to everyone in range, watch them ripple through the network, then disappear on your terms.'**
+  /// **'Think of Signals like ephemeral stories — but over radio. No cloud, no server. They exist only on the mesh, only for as long as you choose.'**
   String get onboardingSignalsAdvisor;
 
   /// Description of the ephemeral Signals feature
   ///
   /// In en, this message translates to:
-  /// **'Ephemeral broadcasts across the mesh.\nShare presence, photos, and location - then let them fade.'**
+  /// **'Share your location, photos, and updates with everyone in range.\nSignals ripple through the network, then disappear.'**
   String get onboardingSignalsDescription;
 
   /// Title for the Signals feature page
   ///
   /// In en, this message translates to:
-  /// **'Signals'**
+  /// **'Broadcast to the Mesh'**
   String get onboardingSignalsTitle;
 
   /// Skip button to jump to the last onboarding page
@@ -20360,19 +22016,19 @@ abstract class AppLocalizations {
   /// Ico advisor speech for the welcome page introducing itself
   ///
   /// In en, this message translates to:
-  /// **'I\'m Ico, and I\'ll be your guide. Let me show you a communication platform that works when nothing else does.'**
+  /// **'I\'m Ico. I\'ll walk you through a mesh radio platform built for the real world — where cell towers don\'t reach.'**
   String get onboardingWelcomeAdvisor;
 
   /// Description for the welcome onboarding page
   ///
   /// In en, this message translates to:
-  /// **'The most advanced Meshtastic companion app.\nBuilt for professionals. Designed for everyone.'**
+  /// **'Send messages across mountains, forests, and oceans.\nNo towers. No internet. No limits.'**
   String get onboardingWelcomeDescription;
 
   /// Title for the first onboarding page
   ///
   /// In en, this message translates to:
-  /// **'Welcome to Socialmesh'**
+  /// **'Communication Without Limits'**
   String get onboardingWelcomeTitle;
 
   /// Dashboard widget label for battery percentage
@@ -20978,7 +22634,7 @@ abstract class AppLocalizations {
   /// UI text: product detail purchase disclaimer
   ///
   /// In en, this message translates to:
-  /// **'Purchases completed on seller\'s official store'**
+  /// **'Purchases completed on seller\'s official store · Socialmesh may earn a commission'**
   String get productDetailPurchaseDisclaimer;
 
   /// Screen or section title
@@ -21088,6 +22744,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sign in to save favorites'**
   String get productDetailSignInFavorites;
+
+  /// UI text: product detail sign in to write review
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to write a review'**
+  String get productDetailSignInReview;
 
   /// UI text: product detail sold count Parameters: {count} = numeric count.
   ///
@@ -21748,6 +23410,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Name'**
   String get qrScannerChannelInfoName;
+
+  /// Recommendation text in default key warning when importing a channel.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap \"Edit First\" to generate a secure encryption key before importing.'**
+  String get qrScannerChannelDefaultKeyRecommendation;
+
+  /// Warning shown when importing a channel with the default 1-byte key.
+  ///
+  /// In en, this message translates to:
+  /// **'This channel uses the default encryption key, which is publicly known and provides no real security.'**
+  String get qrScannerChannelDefaultKeyWarning;
 
   /// Info notice in channel import dialog
   ///
@@ -23165,6 +24839,18 @@ abstract class AppLocalizations {
   /// **'Scanning for nearby devices'**
   String get scannerScanningTitle;
 
+  /// Troubleshooting tip: check no other apps are using the BLE connection.
+  ///
+  /// In en, this message translates to:
+  /// **'Ensure no other app (e.g. official Meshtastic app) is connected to this device'**
+  String get scannerTipNoOtherApps;
+
+  /// Troubleshooting tip: check no other phones/tablets are paired.
+  ///
+  /// In en, this message translates to:
+  /// **'Ensure no other phone or tablet is already connected to the device via Bluetooth'**
+  String get scannerTipNoOtherDevices;
+
   /// Transport type label for BLE devices in the device card.
   ///
   /// In en, this message translates to:
@@ -24143,6 +25829,18 @@ abstract class AppLocalizations {
   /// **'IFTTT Pack'**
   String get settingsSearchIftttPackTitle;
 
+  /// Fallback title for the Translation pack search item.
+  ///
+  /// In en, this message translates to:
+  /// **'Translation Pack'**
+  String get settingsSearchTranslationPackTitle;
+
+  /// Subtitle for the Translation pack search item.
+  ///
+  /// In en, this message translates to:
+  /// **'One-tap message translation'**
+  String get settingsSearchTranslationPackSubtitle;
+
   /// Subtitle for the Likes search item.
   ///
   /// In en, this message translates to:
@@ -24524,7 +26222,7 @@ abstract class AppLocalizations {
   /// Subtitle of the appearance and accessibility settings tile.
   ///
   /// In en, this message translates to:
-  /// **'Font, text size, density, contrast, motion'**
+  /// **'Font, text size, time format, density, contrast, motion'**
   String get settingsTileAppearanceSubtitle;
 
   /// Title of the appearance and accessibility settings tile.
@@ -24548,7 +26246,7 @@ abstract class AppLocalizations {
   /// Subtitle of the background connection settings tile.
   ///
   /// In en, this message translates to:
-  /// **'Background BLE, notifications, and power settings'**
+  /// **'Background BLE connection and power settings'**
   String get settingsTileBackgroundConnectionSubtitle;
 
   /// Title of the background connection settings tile.
@@ -25037,10 +26735,34 @@ abstract class AppLocalizations {
   /// **'Provide phone location'**
   String get settingsTileProvideLocationTitle;
 
+  /// Snackbar message when location services are turned off on the device.
+  ///
+  /// In en, this message translates to:
+  /// **'Location services are disabled. Enable them in your device settings.'**
+  String get settingsLocationServicesDisabled;
+
+  /// Snackbar message when user denies location permission from the provide phone location switch.
+  ///
+  /// In en, this message translates to:
+  /// **'Location permission denied. Grant location access to share your position.'**
+  String get settingsLocationPermissionDenied;
+
+  /// Snackbar message when location permission is permanently denied (iOS/Android).
+  ///
+  /// In en, this message translates to:
+  /// **'Location permission permanently denied. Enable in your device settings.'**
+  String get settingsLocationPermissionPermanentlyDenied;
+
+  /// Action label for snackbar to open device settings for location permission.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settings'**
+  String get settingsLocationOpenSettings;
+
   /// Subtitle of the push notifications master toggle tile.
   ///
   /// In en, this message translates to:
-  /// **'Master toggle for all notifications'**
+  /// **'Controls all notifications, including background'**
   String get settingsTilePushNotificationsSubtitle;
 
   /// Title of the push notifications master toggle tile.
@@ -31973,12 +33695,6 @@ abstract class AppLocalizations {
   /// **'Timeline'**
   String get timelineTitle;
 
-  /// Date group header for today
-  ///
-  /// In en, this message translates to:
-  /// **'Today'**
-  String get timelineToday;
-
   /// Empty state subtitle for search/filter miss
   ///
   /// In en, this message translates to:
@@ -32240,25 +33956,25 @@ abstract class AppLocalizations {
   /// Data binding label
   ///
   /// In en, this message translates to:
-  /// **'Active Mesh Nodes'**
+  /// **'Online Mesh Nodes'**
   String get widgetBuilderBindingActiveMeshNodes;
 
   /// Data binding description
   ///
   /// In en, this message translates to:
-  /// **'Nodes heard recently'**
+  /// **'Nodes heard within 2 hours'**
   String get widgetBuilderBindingActiveMeshNodesDesc;
 
   /// Data binding label
   ///
   /// In en, this message translates to:
-  /// **'Active Mesh Nodes (legacy)'**
+  /// **'Online Mesh Nodes (legacy)'**
   String get widgetBuilderBindingActiveMeshNodesLegacy;
 
   /// Data binding description
   ///
   /// In en, this message translates to:
-  /// **'Alias for active node count (back-compat)'**
+  /// **'Alias for online node count (back-compat)'**
   String get widgetBuilderBindingActiveMeshNodesLegacyDesc;
 
   /// Data binding label
@@ -32956,6 +34672,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Number of unread messages'**
   String get widgetBuilderBindingUnreadMessagesDesc;
+
+  /// Data binding label for hardware model distribution
+  ///
+  /// In en, this message translates to:
+  /// **'Hardware Model Distribution'**
+  String get widgetBuilderBindingHardwareModelDistribution;
+
+  /// Data binding description for hardware model distribution
+  ///
+  /// In en, this message translates to:
+  /// **'Node count grouped by hardware model'**
+  String get widgetBuilderBindingHardwareModelDistributionDesc;
+
+  /// Data binding label for role distribution
+  ///
+  /// In en, this message translates to:
+  /// **'Role Distribution'**
+  String get widgetBuilderBindingRoleDistribution;
+
+  /// Data binding description for role distribution
+  ///
+  /// In en, this message translates to:
+  /// **'Node count grouped by device role'**
+  String get widgetBuilderBindingRoleDistributionDesc;
+
+  /// Widget builder template name for distribution charts
+  ///
+  /// In en, this message translates to:
+  /// **'Distribution'**
+  String get widgetBuilderDistributionTemplate;
+
+  /// Widget builder template description for distribution charts
+  ///
+  /// In en, this message translates to:
+  /// **'Hardware model or role breakdown across your mesh'**
+  String get widgetBuilderDistributionTemplateDesc;
+
+  /// Empty state message when no nodes have hardware model info
+  ///
+  /// In en, this message translates to:
+  /// **'No hardware data available'**
+  String get widgetBuilderDistributionEmpty;
+
+  /// Empty state hint for distribution widget
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to the mesh to see device distribution'**
+  String get widgetBuilderDistributionEmptyHint;
+
+  /// Label for nodes with missing or unrecognized hardware model in distribution chart
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get widgetBuilderDistributionUnknown;
+
+  /// Label for overflow categories merged due to display limit in distribution chart
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get widgetBuilderDistributionOther;
 
   /// Data binding label
   ///
@@ -34594,6 +36370,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Submit'**
   String get widgetBuilderSubmitButton;
+
+  /// Submit anyway button on similar widget dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Submit Anyway'**
+  String get widgetBuilderSubmitAnyway;
 
   /// Cancel button on submit dialog
   ///
@@ -37747,6 +39529,12 @@ abstract class AppLocalizations {
   /// **'IFTTT'**
   String get subscriptionFallbackIfttt;
 
+  /// Fallback name for translation pack subscription product.
+  ///
+  /// In en, this message translates to:
+  /// **'Translation Pack'**
+  String get subscriptionFallbackTranslationPack;
+
   /// UI text: geofence locating
   ///
   /// In en, this message translates to:
@@ -37824,6 +39612,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No purchases found to restore'**
   String get restorePurchasesNone;
+
+  /// Restore result when the store has a PaymentPendingError receipt that RevenueCat cannot yet accept
+  ///
+  /// In en, this message translates to:
+  /// **'Your purchase is still being processed by the store. This can take up to 72 hours — please try again later.'**
+  String get restorePurchasesPending;
 
   /// Screen or section title
   ///
@@ -38149,10 +39943,10 @@ abstract class AppLocalizations {
   /// **'Unlock Features'**
   String get subscriptionUnlockFeatures;
 
-  /// UI text: subscription one time purchases
+  /// Subtitle in premium header reinforcing lifetime and no-subscription value prop
   ///
   /// In en, this message translates to:
-  /// **'One-time purchases, yours forever'**
+  /// **'One purchase. Yours forever. No subscription.'**
   String get subscriptionOneTimePurchases;
 
   /// UI text: subscription terms
@@ -38185,53 +39979,83 @@ abstract class AppLocalizations {
   /// **'Complete Pack'**
   String get subscriptionCompletePack;
 
-  /// Subtitle or secondary text
+  /// Subtitle for the Complete Pack hero card
   ///
   /// In en, this message translates to:
-  /// **'Everything. Forever. One price.'**
+  /// **'All premium features in one lifetime purchase'**
   String get subscriptionCompletePackSubtitle;
 
   /// UI text: subscription tones Parameters: {count} = numeric count.
   ///
   /// In en, this message translates to:
-  /// **'{count} tones'**
+  /// **'{count} custom alert tones'**
   String subscriptionTones(String count);
 
-  /// UI text: subscription accent colors
+  /// Outcome-driven benefit line for theme pack in bundle card
   ///
   /// In en, this message translates to:
-  /// **'12 accent colors'**
+  /// **'Personalize every screen with premium colors'**
   String get subscriptionAccentColors;
 
-  /// UI text: subscription unlimited widgets
+  /// Outcome-driven benefit line for widget pack in bundle card
   ///
   /// In en, this message translates to:
-  /// **'Unlimited custom widgets'**
+  /// **'Build live dashboards with real-time data'**
   String get subscriptionUnlimitedWidgets;
 
-  /// UI text: subscription triggers schedules
+  /// Outcome-driven benefit line for automations pack in bundle card
   ///
   /// In en, this message translates to:
-  /// **'Triggers & schedules'**
+  /// **'Automate mesh actions, alerts & schedules'**
   String get subscriptionTriggersSchedules;
 
-  /// UI text: subscription app integrations
+  /// Outcome-driven benefit line for IFTTT pack in bundle card
   ///
   /// In en, this message translates to:
-  /// **'700+ app integrations'**
+  /// **'Connect to 700+ apps & services'**
   String get subscriptionAppIntegrations;
 
-  /// UI text: subscription best value
+  /// UI text: subscription translate messages feature description
   ///
   /// In en, this message translates to:
-  /// **'Best value - all features'**
+  /// **'One-tap message translation'**
+  String get subscriptionTranslateMessages;
+
+  /// Section label for new standalone add-on on subscription screen
+  ///
+  /// In en, this message translates to:
+  /// **'New Add-on'**
+  String get subscriptionNewAddon;
+
+  /// Subtitle for the featured Translation Pack card on subscription screen
+  ///
+  /// In en, this message translates to:
+  /// **'On-demand translation with smart caching, privacy controls, and BYO provider support'**
+  String get subscriptionFeaturedTranslationSubtitle;
+
+  /// CTA button text for purchasing the Translation Pack
+  ///
+  /// In en, this message translates to:
+  /// **'Get'**
+  String get subscriptionGetTranslation;
+
+  /// Value reinforcement text below price on Complete Pack card
+  ///
+  /// In en, this message translates to:
+  /// **'Lifetime access · No subscription'**
   String get subscriptionBestValue;
 
-  /// UI text: subscription get all
+  /// CTA button text for Complete Pack purchase
   ///
   /// In en, this message translates to:
-  /// **'Get All'**
+  /// **'Unlock Everything'**
   String get subscriptionGetAll;
+
+  /// Savings badge text on Complete Pack card showing computed discount percentage
+  ///
+  /// In en, this message translates to:
+  /// **'SAVE {percent}%'**
+  String subscriptionSavePercent(String percent);
 
   /// UI text: subscription owned
   ///
@@ -39547,6 +41371,48 @@ abstract class AppLocalizations {
   /// **'Reset'**
   String get appearanceResetDialogConfirm;
 
+  /// Section header for time format in appearance settings
+  ///
+  /// In en, this message translates to:
+  /// **'Time Format'**
+  String get appearanceTimeFormat;
+
+  /// Time format option name in appearance settings
+  ///
+  /// In en, this message translates to:
+  /// **'System Default'**
+  String get appearanceTimeFormatSystem;
+
+  /// Time format option description in appearance settings
+  ///
+  /// In en, this message translates to:
+  /// **'Follow your device’s clock setting'**
+  String get appearanceTimeFormatSystemDesc;
+
+  /// Time format option name in appearance settings
+  ///
+  /// In en, this message translates to:
+  /// **'12-hour'**
+  String get appearanceTimeFormat12h;
+
+  /// Time format option description in appearance settings
+  ///
+  /// In en, this message translates to:
+  /// **'1:30 PM'**
+  String get appearanceTimeFormat12hDesc;
+
+  /// Time format option name in appearance settings
+  ///
+  /// In en, this message translates to:
+  /// **'24-hour'**
+  String get appearanceTimeFormat24h;
+
+  /// Time format option description in appearance settings
+  ///
+  /// In en, this message translates to:
+  /// **'13:30'**
+  String get appearanceTimeFormat24hDesc;
+
   /// Text displayed in settings
   ///
   /// In en, this message translates to:
@@ -40181,6 +42047,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Shows connection status with node count and last message time'**
   String get bgConnStyleDetailedDesc;
+
+  /// Section header for iOS Live Activity / Dynamic Island settings
+  ///
+  /// In en, this message translates to:
+  /// **'LIVE ACTIVITY'**
+  String get bgConnSectionLiveActivity;
+
+  /// Toggle title for the iOS Live Activity feature
+  ///
+  /// In en, this message translates to:
+  /// **'Dynamic Island & Lock Screen'**
+  String get bgConnLiveActivityTitle;
+
+  /// Toggle subtitle for the iOS Live Activity feature
+  ///
+  /// In en, this message translates to:
+  /// **'Show device connection status on the Dynamic Island and Lock Screen'**
+  String get bgConnLiveActivitySubtitle;
+
+  /// Confirmation sheet title when user disables Live Activity
+  ///
+  /// In en, this message translates to:
+  /// **'End Live Activity?'**
+  String get bgConnLiveActivityDisableTitle;
+
+  /// Confirmation sheet body when user disables Live Activity
+  ///
+  /// In en, this message translates to:
+  /// **'The current Dynamic Island activity will be ended immediately. Connection status will no longer appear on your Lock Screen.'**
+  String get bgConnLiveActivityDisableBody;
+
+  /// Confirmation button label when disabling Live Activity
+  ///
+  /// In en, this message translates to:
+  /// **'End Activity'**
+  String get bgConnLiveActivityDisableConfirm;
 
   /// Screen or section title
   ///
@@ -40979,6 +42881,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Short range, reliable'**
   String get radioConfigPresetShortSlowDesc;
+
+  /// Modem preset label: short range, turbo data rate
+  ///
+  /// In en, this message translates to:
+  /// **'Short Turbo'**
+  String get radioConfigPresetShortTurbo;
+
+  /// Description for short turbo modem preset
+  ///
+  /// In en, this message translates to:
+  /// **'Short range with turbo speed'**
+  String get radioConfigPresetShortTurboDesc;
+
+  /// Modem preset label: long range, turbo data rate
+  ///
+  /// In en, this message translates to:
+  /// **'Long Turbo'**
+  String get radioConfigPresetLongTurbo;
+
+  /// Description for long turbo modem preset
+  ///
+  /// In en, this message translates to:
+  /// **'Long range with turbo speed'**
+  String get radioConfigPresetLongTurboDesc;
 
   /// UI text: radio config preset must match
   ///
@@ -45138,6 +47064,132 @@ abstract class AppLocalizations {
   /// **'Failed to save: {error}'**
   String mqttConfigSaveFailed(String error);
 
+  /// Section header for the MQTT client proxy diagnostics panel
+  ///
+  /// In en, this message translates to:
+  /// **'CLIENT PROXY STATUS'**
+  String get mqttProxySectionDiagnostics;
+
+  /// Label for the connection status row in MQTT proxy diagnostics
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get mqttProxyStatusLabel;
+
+  /// MQTT proxy connection status: connected to broker
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get mqttProxyStatusConnected;
+
+  /// MQTT proxy connection status: not connected to broker
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnected'**
+  String get mqttProxyStatusDisconnected;
+
+  /// Label for the MQTT broker host:port in diagnostics
+  ///
+  /// In en, this message translates to:
+  /// **'Broker'**
+  String get mqttProxyBroker;
+
+  /// Label for TLS status in MQTT proxy diagnostics
+  ///
+  /// In en, this message translates to:
+  /// **'TLS'**
+  String get mqttProxyTls;
+
+  /// Label for authentication status in MQTT proxy diagnostics
+  ///
+  /// In en, this message translates to:
+  /// **'Auth'**
+  String get mqttProxyAuth;
+
+  /// Label for subscribed MQTT topic in diagnostics
+  ///
+  /// In en, this message translates to:
+  /// **'Topic'**
+  String get mqttProxyTopic;
+
+  /// Label for count of messages published to MQTT broker
+  ///
+  /// In en, this message translates to:
+  /// **'Published'**
+  String get mqttProxyPublished;
+
+  /// Label for count of messages relayed from broker to device
+  ///
+  /// In en, this message translates to:
+  /// **'Relayed'**
+  String get mqttProxyRelayed;
+
+  /// Label for the last error encountered by the MQTT proxy
+  ///
+  /// In en, this message translates to:
+  /// **'Last Error'**
+  String get mqttProxyLastError;
+
+  /// Label for number of auto-reconnect attempts
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnects'**
+  String get mqttProxyReconnects;
+
+  /// Generic enabled status label
+  ///
+  /// In en, this message translates to:
+  /// **'Enabled'**
+  String get mqttProxyEnabled;
+
+  /// Generic disabled status label
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled'**
+  String get mqttProxyDisabled;
+
+  /// Auth status: credentials configured
+  ///
+  /// In en, this message translates to:
+  /// **'Configured'**
+  String get mqttProxyConfigured;
+
+  /// Auth status: no credentials
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get mqttProxyNone;
+
+  /// Placeholder for empty diagnostic values
+  ///
+  /// In en, this message translates to:
+  /// **'–'**
+  String get mqttProxyNoneLabel;
+
+  /// Label for last connection attempt timestamp
+  ///
+  /// In en, this message translates to:
+  /// **'Last Attempt'**
+  String get mqttProxyLastConnectAttempt;
+
+  /// Label for last successful connection timestamp
+  ///
+  /// In en, this message translates to:
+  /// **'Last Connected'**
+  String get mqttProxyLastConnectedAt;
+
+  /// Button label to copy diagnostics to clipboard
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Diagnostics'**
+  String get mqttProxyCopyDiagnostics;
+
+  /// Snackbar message after copying diagnostics
+  ///
+  /// In en, this message translates to:
+  /// **'Diagnostics copied to clipboard'**
+  String get mqttProxyDiagnosticsCopied;
+
   /// Screen or section title
   ///
   /// In en, this message translates to:
@@ -45864,6 +47916,108 @@ abstract class AppLocalizations {
   /// **'Provider-bound device conformance & stress tests'**
   String get adminPanelConformanceSub;
 
+  /// Admin panel tile label for the storage health screen
+  ///
+  /// In en, this message translates to:
+  /// **'Storage Health'**
+  String get adminPanelStorageHealth;
+
+  /// Admin panel tile subtitle for the storage health screen
+  ///
+  /// In en, this message translates to:
+  /// **'Verify WAL mode is active on all SQLite databases'**
+  String get adminPanelStorageHealthSub;
+
+  /// App bar title for the admin storage health screen
+  ///
+  /// In en, this message translates to:
+  /// **'Storage Health'**
+  String get adminStorageHealthTitle;
+
+  /// Tooltip for the refresh button on the storage health screen
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get adminStorageHealthRefresh;
+
+  /// Status text shown while WAL checks are running
+  ///
+  /// In en, this message translates to:
+  /// **'Checking databases…'**
+  String get adminStorageHealthChecking;
+
+  /// Summary header when every database passes the WAL check
+  ///
+  /// In en, this message translates to:
+  /// **'All databases in WAL mode'**
+  String get adminStorageHealthAllPass;
+
+  /// Summary header when one or more databases fail the WAL check
+  ///
+  /// In en, this message translates to:
+  /// **'Some databases not in WAL mode'**
+  String get adminStorageHealthSomeFail;
+
+  /// Summary line showing pass/fail/total counts
+  ///
+  /// In en, this message translates to:
+  /// **'{pass} passed · {fail} failed · {total} total'**
+  String adminStorageHealthSummary(int pass, int fail, int total);
+
+  /// Badge label when a database is confirmed in WAL mode
+  ///
+  /// In en, this message translates to:
+  /// **'WAL'**
+  String get adminStorageStatusWal;
+
+  /// Badge label when the journal mode could not be determined
+  ///
+  /// In en, this message translates to:
+  /// **'UNKNOWN'**
+  String get adminStorageStatusUnknown;
+
+  /// Badge label when a database file does not exist yet
+  ///
+  /// In en, this message translates to:
+  /// **'NOT OPENED'**
+  String get adminStorageStatusMissing;
+
+  /// Badge label when the WAL check threw an exception
+  ///
+  /// In en, this message translates to:
+  /// **'ERROR'**
+  String get adminStorageStatusError;
+
+  /// Chip label when the WAL sidecar file exists
+  ///
+  /// In en, this message translates to:
+  /// **'-wal present'**
+  String get adminStorageWalPresent;
+
+  /// Chip label when the WAL sidecar file does not exist
+  ///
+  /// In en, this message translates to:
+  /// **'-wal absent'**
+  String get adminStorageWalAbsent;
+
+  /// Chip label when the SHM sidecar file exists
+  ///
+  /// In en, this message translates to:
+  /// **'-shm present'**
+  String get adminStorageShmPresent;
+
+  /// Chip label when the SHM sidecar file does not exist
+  ///
+  /// In en, this message translates to:
+  /// **'-shm absent'**
+  String get adminStorageShmAbsent;
+
+  /// Snackbar message after long-pressing a database tile to copy its path
+  ///
+  /// In en, this message translates to:
+  /// **'Path copied to clipboard'**
+  String get adminStoragePathCopied;
+
   /// Text displayed in admin panel
   ///
   /// In en, this message translates to:
@@ -45953,6 +48107,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This will send a push notification to every Socialmesh user. Use sparingly for important announcements only.'**
   String get adminBroadcastWarning;
+
+  /// Label for platform target selector in admin broadcast panel
+  ///
+  /// In en, this message translates to:
+  /// **'Target Platform'**
+  String get adminBroadcastPlatformLabel;
+
+  /// Helper text for platform target selector in admin broadcast panel
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which platform receives this notification.'**
+  String get adminBroadcastPlatformHelper;
+
+  /// Option to send to all platforms in admin broadcast panel
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get adminBroadcastPlatformAll;
+
+  /// Option to send to Android only in admin broadcast panel
+  ///
+  /// In en, this message translates to:
+  /// **'Android'**
+  String get adminBroadcastPlatformAndroid;
+
+  /// Option to send to iOS only in admin broadcast panel
+  ///
+  /// In en, this message translates to:
+  /// **'iOS'**
+  String get adminBroadcastPlatformIos;
 
   /// Label in admin panel
   ///
@@ -46979,6 +49163,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Member Since'**
   String get adminPurchasesMemberSince;
+
+  /// Section header in the admin purchases detail view for regional pricing data
+  ///
+  /// In en, this message translates to:
+  /// **'Region & Pricing'**
+  String get adminPurchasesSectionRegionPricing;
+
+  /// Label for the country field in the admin purchases detail view
+  ///
+  /// In en, this message translates to:
+  /// **'Country'**
+  String get adminPurchasesCountry;
+
+  /// Label for the currency field in the admin purchases detail view
+  ///
+  /// In en, this message translates to:
+  /// **'Currency'**
+  String get adminPurchasesCurrency;
+
+  /// Label for the local currency price field in the admin purchases detail view
+  ///
+  /// In en, this message translates to:
+  /// **'Price (local)'**
+  String get adminPurchasesPriceLocal;
+
+  /// Label for the USD price field in the admin purchases detail view
+  ///
+  /// In en, this message translates to:
+  /// **'Price (USD)'**
+  String get adminPurchasesPriceUsd;
+
+  /// Formatted USD value in the admin purchases detail view. Parameters: {amount} = the numeric amount formatted with two decimals.
+  ///
+  /// In en, this message translates to:
+  /// **'US\$ {amount}'**
+  String adminPurchasesUsdValue(String amount);
+
+  /// Label for the tax field in the admin purchases detail view
+  ///
+  /// In en, this message translates to:
+  /// **'Tax'**
+  String get adminPurchasesTax;
+
+  /// Label for the app store commission field in the admin purchases detail view
+  ///
+  /// In en, this message translates to:
+  /// **'Store commission'**
+  String get adminPurchasesStoreCommission;
+
+  /// Label for the offer code field in the admin purchases detail view
+  ///
+  /// In en, this message translates to:
+  /// **'Offer code'**
+  String get adminPurchasesOfferCode;
+
+  /// Label for the family sharing field in the admin purchases detail view
+  ///
+  /// In en, this message translates to:
+  /// **'Family Share'**
+  String get adminPurchasesFamilyShare;
+
+  /// Affirmative value shown in the admin purchases detail view
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get adminPurchasesYes;
 
   /// Text displayed in admin panel
   ///
@@ -49503,13 +51753,13 @@ abstract class AppLocalizations {
   /// Title for nodedex_constellation help topic
   ///
   /// In en, this message translates to:
-  /// **'Constellation View'**
+  /// **'Historical Constellation'**
   String get helpNodedexConstellationTitle;
 
   /// Description for nodedex_constellation help topic
   ///
   /// In en, this message translates to:
-  /// **'A star-map visualization of co-seen node relationships'**
+  /// **'A star-map visualization of historical co-seen node relationships'**
   String get helpNodedexConstellationDescription;
 
   /// Title for the help center screen
@@ -49635,7 +51885,7 @@ abstract class AppLocalizations {
   /// Help bubble text for step privacy_level
   ///
   /// In en, this message translates to:
-  /// **'How secret should your channel be?\\n\\n**OPEN**: Anyone can listen in.\\n**SHARED**: Like a password everyone knows.\\n**PRIVATE**: Only friends you invite.\\n**MAXIMUM**: Super duper secret!'**
+  /// **'How secret should your channel be?\n\n**OPEN**: Anyone can listen in.\n**SHARED**: Like a password everyone knows.\n**PRIVATE**: Only friends you invite.\n**MAXIMUM**: Super duper secret!'**
   String get helpPrivacyLevelBubble;
 
   /// Help bubble text for step encryption_key
@@ -49707,7 +51957,7 @@ abstract class AppLocalizations {
   /// Help bubble text for step nodes_status
   ///
   /// In en, this message translates to:
-  /// **'**Green dot** means **Active** (heard very recently). **Yellow** means **Seen recently**. **Gray** means **Inactive**. LoRa has no offline signal—status is inferred.'**
+  /// **'**Green dot** means **Online** (heard recently). **Yellow** means **Seen recently**. **Gray** means **Offline**. LoRa has no offline signal—status is inferred.'**
   String get helpNodesStatusBubble;
 
   /// Help bubble text for step nodes_info
@@ -49719,7 +51969,7 @@ abstract class AppLocalizations {
   /// Help bubble text for step nodes_filters
   ///
   /// In en, this message translates to:
-  /// **'Use the **filters** at the top to find specific nodes. You can show only **Active** nodes, favorites, or nodes with GPS.'**
+  /// **'Use the **filters** at the top to find specific nodes. You can show only **Online** nodes, favorites, or nodes with GPS.'**
   String get helpNodesFiltersBubble;
 
   /// Help bubble text for step nodes_actions
@@ -49809,8 +52059,14 @@ abstract class AppLocalizations {
   /// Help bubble text for step connection_troubleshoot
   ///
   /// In en, this message translates to:
-  /// **'Can\'t find your device? Check:\\n- **Bluetooth is on**\\n- Device has power\\n- Device isn\'t connected elsewhere\\n- You\'re close enough (under 10m)'**
+  /// **'Can\'t find your device? Check:\n- **Bluetooth is on**\n- Device has power\n- Device isn\'t connected elsewhere\n- You\'re close enough (under 10m)'**
   String get helpConnectionTroubleshootBubble;
+
+  /// Help bubble text for step connection_disconnect
+  ///
+  /// In en, this message translates to:
+  /// **'Keep getting **disconnected**? Common causes:\n- **Another app** (e.g. Meshtastic app) is already connected to this node\n- On **TCP/IP (ESP devices)**, only one client can connect at a time\n- Try closing other apps or disconnecting other devices first'**
+  String get helpConnectionDisconnectBubble;
 
   /// Help bubble text for step gps_intro
   ///
@@ -49887,7 +52143,7 @@ abstract class AppLocalizations {
   /// Help bubble text for step map_filters
   ///
   /// In en, this message translates to:
-  /// **'Use **filters** to show only **Active** nodes, or nodes with GPS. Helps when your map gets crowded!'**
+  /// **'Use **filters** to show only **Online** nodes, or nodes with GPS. Helps when your map gets crowded!'**
   String get helpMapFiltersBubble;
 
   /// Help bubble text for step channels_intro
@@ -50403,19 +52659,19 @@ abstract class AppLocalizations {
   /// Help bubble text for step presence_active
   ///
   /// In en, this message translates to:
-  /// **'**Active** nodes (green) sent a message in the last 2 minutes. They\'re definitely online!'**
+  /// **'**Online** nodes (green) were heard within the last 2 hours — matching the Meshtastic firmware definition of online.'**
   String get helpPresenceActiveBubble;
 
   /// Help bubble text for step presence_recent
   ///
   /// In en, this message translates to:
-  /// **'**Recently seen** nodes (yellow) were active 2-10 minutes ago. Probably still around.'**
+  /// **'**Recently seen** nodes (yellow) were heard a few minutes ago. Probably still around.'**
   String get helpPresenceRecentBubble;
 
   /// Help bubble text for step presence_inactive
   ///
   /// In en, this message translates to:
-  /// **'**Inactive** nodes (gray) haven\'t been heard from in over 10 minutes. They might be out of range or powered off.'**
+  /// **'**Offline** nodes (gray) haven\'t been heard from in over 2 hours. They might be out of range or powered off.'**
   String get helpPresenceInactiveBubble;
 
   /// Help bubble text for step presence_chart
@@ -51033,181 +53289,181 @@ abstract class AppLocalizations {
   /// Section help text for sigil in nodeDexSectionHelp
   ///
   /// In en, this message translates to:
-  /// **'A unique procedural glyph generated from this node\'s identity. '**
+  /// **'A unique procedural glyph generated from this node\'s identity. The shape, symmetry, and color palette are deterministic — the same node always produces the same sigil. Think of it as a visual fingerprint.'**
   String get helpNodeDexSectionSigil;
 
   /// Section help text for trait in nodeDexSectionHelp
   ///
   /// In en, this message translates to:
-  /// **'An inferred personality archetype derived from behavioral signals: '**
+  /// **'An inferred personality archetype derived from behavioral signals: movement patterns, encounter frequency, signal consistency, and session duration. Confidence increases as more data is collected over time.'**
   String get helpNodeDexSectionTrait;
 
   /// Section help text for auto_summary in nodeDexSectionHelp
   ///
   /// In en, this message translates to:
-  /// **'Computed insights from this node\'s encounter history. The time-of-day '**
+  /// **'Computed insights from this node\'s encounter history. The time-of-day distribution shows when encounters most often occur, the streak tracks consecutive observation days, and the busiest day highlights weekly patterns. All stats update automatically as new encounters arrive.'**
   String get helpNodeDexSectionAutoSummary;
 
   /// Section help text for observation_timeline in nodeDexSectionHelp
   ///
   /// In en, this message translates to:
-  /// **'A visual timeline of this node\'s observation history. The bar shows '**
+  /// **'A visual timeline of this node\'s observation history. The bar shows encounter density over time, with relative labels (\"3w ago\", \"2h ago\") showing how recently each endpoint was recorded. The sighting count reflects total distinct encounters.'**
   String get helpNodeDexSectionObservationTimeline;
 
   /// Section help text for discovery in nodeDexSectionHelp
   ///
   /// In en, this message translates to:
-  /// **'Tracks when this node was first and last seen on your mesh, the total '**
+  /// **'Tracks when this node was first and last seen on your mesh, the total number of encounters, and the closest recorded range. All values update automatically as new packets arrive.'**
   String get helpNodeDexSectionDiscovery;
 
   /// Section help text for signal in nodeDexSectionHelp
   ///
   /// In en, this message translates to:
-  /// **'Best and most recent SNR (Signal-to-Noise Ratio) and RSSI '**
+  /// **'Best and most recent SNR (Signal-to-Noise Ratio) and RSSI (Received Signal Strength Indicator) values. Higher SNR and less negative RSSI indicate a stronger, more reliable link.'**
   String get helpNodeDexSectionSignal;
 
   /// Section help text for social_tag in nodeDexSectionHelp
   ///
   /// In en, this message translates to:
-  /// **'A personal label you assign to categorize this node. Social tags are '**
+  /// **'A personal label you assign to categorize this node. Social tags are stored locally and included in NodeDex exports, but never transmitted over the mesh. Use them to mark friends, relays, base stations, or any category that helps you organize your network.'**
   String get helpNodeDexSectionSocialTag;
 
   /// Section help text for note in nodeDexSectionHelp
   ///
   /// In en, this message translates to:
-  /// **'A free-text note for anything you want to remember about this node. '**
+  /// **'A free-text note for anything you want to remember about this node. Notes are private, stored locally, and included in NodeDex exports.'**
   String get helpNodeDexSectionNote;
 
   /// Section help text for regions in nodeDexSectionHelp
   ///
   /// In en, this message translates to:
-  /// **'Every regulatory region where this node has been observed. Region '**
+  /// **'Every regulatory region where this node has been observed. Region data is recorded from the node\'s configuration packets and helps track mobile nodes across different geographic areas.'**
   String get helpNodeDexSectionRegions;
 
   /// Section help text for encounters in nodeDexSectionHelp
   ///
   /// In en, this message translates to:
-  /// **'A chronological timeline of when this node appeared on your mesh. '**
+  /// **'A chronological timeline of when this node appeared on your mesh. Each encounter records the timestamp, signal quality (SNR/RSSI), and distance if GPS coordinates were available on both sides. The most recent 10 encounters are shown.'**
   String get helpNodeDexSectionEncounters;
 
   /// Section help text for activity_timeline in nodeDexSectionHelp
   ///
   /// In en, this message translates to:
-  /// **'A unified chronological feed of everything observed about this node: '**
+  /// **'A unified chronological feed of everything observed about this node: encounters, messages, presence state changes, signals, and milestones. Scroll through the full narrative of your interaction history with this node. The timeline loads the most recent 50 events and can expand to show the complete history.'**
   String get helpNodeDexSectionActivityTimeline;
 
   /// Section help text for coseen in nodeDexSectionHelp
   ///
   /// In en, this message translates to:
-  /// **'Nodes that are frequently observed in the same session as this node. '**
+  /// **'Nodes that are frequently observed in the same session as this node. A higher count means these nodes tend to appear together — they may be co-located, part of the same deployment, or carried by the same person. Tap any link to see the full edge detail including shared encounter history and message activity.'**
   String get helpNodeDexSectionCoseen;
 
   /// Section help text for device in nodeDexSectionHelp
   ///
   /// In en, this message translates to:
-  /// **'Live telemetry from the node: battery percentage, hardware model, '**
+  /// **'Live telemetry from the node: battery percentage, hardware model, firmware version, channel utilization, and uptime. This data is only available when the node is actively heard on the mesh.'**
   String get helpNodeDexSectionDevice;
 
   /// Section help text for album_rarity in nodeDexSectionHelp
   ///
   /// In en, this message translates to:
-  /// **'Rarity tiers are computed from encounter count and inferred trait. '**
+  /// **'Rarity tiers are computed from encounter count and inferred trait. Common nodes have few encounters, while Legendary nodes combine rare traits with deep observation history. Rarity determines the card border color and holographic shimmer intensity.'**
   String get helpNodeDexSectionAlbumRarity;
 
   /// Section help text for album_grouping in nodeDexSectionHelp
   ///
   /// In en, this message translates to:
-  /// **'Cards can be grouped by Trait (behavioral archetype), Rarity '**
+  /// **'Cards can be grouped by Trait (behavioral archetype), Rarity (encounter-based tier), or Region (geographic area where first seen). Tap the group chips below the cover to switch between views.'**
   String get helpNodeDexSectionAlbumGrouping;
 
   /// Section help text for album_explorer_title in nodeDexSectionHelp
   ///
   /// In en, this message translates to:
-  /// **'Your Explorer Title reflects your overall collection progress. '**
+  /// **'Your Explorer Title reflects your overall collection progress. Newcomer, Scout, Cartographer, Pathfinder, and Chronicler are earned by discovering more nodes, encountering them repeatedly, and exploring multiple regions.'**
   String get helpNodeDexSectionAlbumExplorerTitle;
 
   /// Section help text for album_holographic in nodeDexSectionHelp
   ///
   /// In en, this message translates to:
-  /// **'The holographic shimmer on cards is a visual indicator of rarity. '**
+  /// **'The holographic shimmer on cards is a visual indicator of rarity. Common cards have no shimmer. Uncommon cards shimmer faintly. Rare, Epic, and Legendary cards glow with increasing intensity. The effect respects your reduce-motion preference.'**
   String get helpNodeDexSectionAlbumHolographic;
 
   /// Section help text for album_patina in nodeDexSectionHelp
   ///
   /// In en, this message translates to:
-  /// **'Patina is a composite score reflecting how deeply you have observed '**
+  /// **'Patina is a composite score reflecting how deeply you have observed a node — encounter frequency, signal quality, co-seen connections, and time since first discovery all contribute. Higher patina means richer visual detail on the card.'**
   String get helpNodeDexSectionAlbumPatina;
 
   /// Section help text for album_cloud_sync in nodeDexSectionHelp
   ///
   /// In en, this message translates to:
-  /// **'With a Cloud Sync subscription, your entire NodeDex album backs up '**
+  /// **'With a Cloud Sync subscription, your entire NodeDex album backs up to the cloud and syncs across devices — sigils, encounters, social tags, notes, co-seen links, and collection progress. If you delete the app or get a new phone, everything restores when you sign back in. Without Cloud Sync, your collection exists only on this device and is lost if the app is removed. You can still export/import as JSON for manual backups.'**
   String get helpNodeDexSectionAlbumCloudSync;
 
   /// Section help text for status in takSectionHelp
   ///
   /// In en, this message translates to:
-  /// **'The status card shows whether the WebSocket connection to the TAK '**
+  /// **'The status card shows whether the WebSocket connection to the TAK Gateway is active, the gateway URL, how long the connection has been up, and how many CoT events have been received since connecting.'**
   String get helpTakSectionStatus;
 
   /// Section help text for affiliation in takSectionHelp
   ///
   /// In en, this message translates to:
-  /// **'Affiliation describes the relationship of an entity to '**
+  /// **'Affiliation describes the relationship of an entity to the observer: Friendly (blue), Hostile (red), Neutral (green), or Unknown (yellow). Affiliation is parsed from the second character of the CoT type string (e.g. a-f-G = friendly ground).'**
   String get helpTakSectionAffiliation;
 
   /// Section help text for cot_type in takSectionHelp
   ///
   /// In en, this message translates to:
-  /// **'The CoT type string encodes an entity\'s affiliation, dimension, '**
+  /// **'The CoT type string encodes an entity\'s affiliation, dimension, and function using standard atoms separated by hyphens. For example, \"a-f-G-U-C-I\" is an atom (a), friendly (f), ground (G), unit (U-C), sub-type (I). The icon and color are derived from this string.'**
   String get helpTakSectionCotType;
 
   /// Section help text for identity in takSectionHelp
   ///
   /// In en, this message translates to:
-  /// **'The UID uniquely identifies this entity across all CoT messages. '**
+  /// **'The UID uniquely identifies this entity across all CoT messages. The callsign is a human-readable label assigned by the TAK server. The type string determines the entity\'s icon, color, and classification.'**
   String get helpTakSectionIdentity;
 
   /// Section help text for position in takSectionHelp
   ///
   /// In en, this message translates to:
-  /// **'Latitude and longitude in WGS-84 decimal degrees as reported in '**
+  /// **'Latitude and longitude in WGS-84 decimal degrees as reported in the CoT event. Tap the \"Show on Map\" icon in the app bar to center the map on this position.'**
   String get helpTakSectionPosition;
 
   /// Section help text for motion in takSectionHelp
   ///
   /// In en, this message translates to:
-  /// **'Speed, course, and altitude parsed from the CoT event\'s track and '**
+  /// **'Speed, course, and altitude parsed from the CoT event\'s track and point elements. Speed is shown in km/h and knots. Course is the heading in degrees from true north with a compass direction. Altitude is height above ellipsoid in meters and feet. This section is hidden when the gateway does not provide motion data.'**
   String get helpTakSectionMotion;
 
   /// Section help text for timestamps in takSectionHelp
   ///
   /// In en, this message translates to:
-  /// **'Event Time is when the CoT event was generated. Stale Time is when '**
+  /// **'Event Time is when the CoT event was generated. Stale Time is when the entity should be considered outdated if no update arrives. Received is when Socialmesh received the event from the gateway. An entity is marked STALE when the current time exceeds Stale Time.'**
   String get helpTakSectionTimestamps;
 
   /// Section help text for tracking in takSectionHelp
   ///
   /// In en, this message translates to:
-  /// **'Tracked entities are pinned and highlighted on the map with a '**
+  /// **'Tracked entities are pinned and highlighted on the map with a distinct marker ring. They remain visible even when you navigate away from the TAK screen. Long-press a tile to toggle tracking, or use the pin icon in the detail screen.'**
   String get helpTakSectionTracking;
 
   /// Section help text for raw_payload in takSectionHelp
   ///
   /// In en, this message translates to:
-  /// **'The raw JSON payload as received from the TAK Gateway WebSocket. '**
+  /// **'The raw JSON payload as received from the TAK Gateway WebSocket. This includes all CoT fields, XML attributes, and any extension data attached to the event. Useful for debugging or verifying what the gateway is sending.'**
   String get helpTakSectionRawPayload;
 
   /// Section help text for filters in takSectionHelp
   ///
   /// In en, this message translates to:
-  /// **'Filter chips let you narrow the entity list by affiliation. The '**
+  /// **'Filter chips let you narrow the entity list by affiliation. The stale-mode chip cycles through All (show everything), Active Only (hide stale entities), and Stale Only (show only expired entities). The search bar matches against callsign and UID.'**
   String get helpTakSectionFilters;
 
   /// Section help text for settings in takSectionHelp
   ///
   /// In en, this message translates to:
-  /// **'TAK Settings let you configure the gateway URL, toggle auto-connect '**
+  /// **'TAK Settings let you configure the gateway URL, toggle auto-connect on screen open, and set the stale timeout duration. All settings persist locally between app sessions.'**
   String get helpTakSectionSettings;
 
   /// Title for blocked route screen
@@ -51291,7 +53547,7 @@ abstract class AppLocalizations {
   /// What's new description for Reachability feature
   ///
   /// In en, this message translates to:
-  /// **'Estimate how likely you are to reach each node on your mesh — without sending a single test packet.\\n\\nReachability passively observes traffic flowing through the network and assigns High, Medium, or Low confidence to every node. Find it in the drawer menu under Mesh.'**
+  /// **'Estimate how likely you are to reach each node on your mesh — without sending a single test packet.\n\nReachability passively observes traffic flowing through the network and assigns High, Medium, or Low confidence to every node. Find it in the drawer menu under Mesh.'**
   String get whatsNewReachabilityDescription;
 
   /// What's new subtitle for version 1.10.0
@@ -51309,7 +53565,7 @@ abstract class AppLocalizations {
   /// What's new description for World Map feature
   ///
   /// In en, this message translates to:
-  /// **'See the entire global Meshtastic network on a single map. Every dot is a node sharing its location — zoom, pan, and tap to explore node details, hardware info, and last-seen times.\\n\\nNo connection required. The World Map pulls live data from the Socialmesh backend so you can explore the mesh anywhere.'**
+  /// **'See the entire global Meshtastic network on a single map. Every dot is a node sharing its location — zoom, pan, and tap to explore node details, hardware info, and last-seen times.\n\nNo connection required. The World Map pulls live data from the Socialmesh backend so you can explore the mesh anywhere.'**
   String get whatsNewWorldMapDescription;
 
   /// What's new subtitle for version 1.10.1
@@ -51327,7 +53583,7 @@ abstract class AppLocalizations {
   /// What's new description for Presence feature
   ///
   /// In en, this message translates to:
-  /// **'See who is active on your mesh at a glance. Presence shows real-time node activity with intent indicators — whether someone is monitoring, mobile, or at a fixed base station.\\n\\nFilter by activity level, search by name, and tap any node to see their full profile. Find it in the drawer under Social.'**
+  /// **'See who is active on your mesh at a glance. Presence shows real-time node activity with intent indicators — whether someone is monitoring, mobile, or at a fixed base station.\n\nFilter by activity level, search by name, and tap any node to see their full profile. Find it in the drawer under Social.'**
   String get whatsNewPresenceDescription;
 
   /// What's new subtitle for version 1.11.0
@@ -51345,7 +53601,7 @@ abstract class AppLocalizations {
   /// What's new description for Signals feature
   ///
   /// In en, this message translates to:
-  /// **'Broadcast ephemeral moments to your mesh. Signals are short-lived posts — share text, a photo, or your location with a TTL from 15 minutes up to 24 hours.\\n\\nNearby signals appear first with proximity badges showing hop count. When they fade, they are gone. True off-grid, ephemeral content.'**
+  /// **'Broadcast ephemeral moments to your mesh. Signals are short-lived posts — share text, a photo, or your location with a TTL from 15 minutes up to 24 hours.\n\nNearby signals appear first with proximity badges showing hop count. When they fade, they are gone. True off-grid, ephemeral content.'**
   String get whatsNewSignalsDescription;
 
   /// What's new subtitle for version 1.13.0
@@ -51363,7 +53619,7 @@ abstract class AppLocalizations {
   /// What's new description for NodeDex feature
   ///
   /// In en, this message translates to:
-  /// **'A living field journal of the mesh world. Every node you discover is automatically recorded with a unique procedural Sigil and a personality Trait derived from real behavior.\\n\\nFind it in the drawer menu under Social. Filter by trait, search by name or hex ID, and tap any entry to explore its full profile — signal history, discovery timeline, and more.'**
+  /// **'A living field journal of the mesh world. Every node you discover is automatically recorded with a unique procedural Sigil and a personality Trait derived from real behavior.\n\nFind it in the drawer menu under Social. Filter by trait, search by name or hex ID, and tap any entry to explore its full profile — signal history, discovery timeline, and more.'**
   String get whatsNewNodeDexDescription;
 
   /// What's new subtitle for version 1.15.0
@@ -51381,7 +53637,7 @@ abstract class AppLocalizations {
   /// What's new description for Aether feature
   ///
   /// In en, this message translates to:
-  /// **'Track Meshtastic nodes at altitude! Schedule your flight with your mesh node and let ground stations around the world listen for your signal.\\n\\nAt 35,000 ft, LoRa can reach 400+ km. Report receptions, compete on the distance leaderboard, and set new range records. Find it in the drawer menu under Social.'**
+  /// **'Track Meshtastic nodes at altitude! Schedule your flight with your mesh node and let ground stations around the world listen for your signal.\n\nAt 35,000 ft, LoRa can reach 400+ km. Report receptions, compete on the distance leaderboard, and set new range records. Find it in the drawer menu under Social.'**
   String get whatsNewAetherDescription;
 
   /// What's new subtitle for version 1.16.0
@@ -51399,8 +53655,26 @@ abstract class AppLocalizations {
   /// What's new description for TAK Gateway feature
   ///
   /// In en, this message translates to:
-  /// **'Bridge your mesh into the Team Awareness Kit (TAK) ecosystem. Socialmesh now connects to a TAK Gateway via WebSocket and streams live Cursor-on-Target entities onto your map.\\n\\nEvery entity is colored by standard affiliation and given a dimension-specific icon. Filter by affiliation, search callsigns, track entities with a long-press, and tap any marker for full CoT details. Find it in the drawer menu under Mesh.'**
+  /// **'Bridge your mesh into the Team Awareness Kit (TAK) ecosystem. Socialmesh now connects to a TAK Gateway via WebSocket and streams live Cursor-on-Target entities onto your map.\n\nEvery entity is colored by standard affiliation and given a dimension-specific icon. Filter by affiliation, search callsigns, track entities with a long-press, and tap any marker for full CoT details. Find it in the drawer menu under Mesh.'**
   String get whatsNewTakGatewayDescription;
+
+  /// What's new subtitle for version 1.27.0
+  ///
+  /// In en, this message translates to:
+  /// **'Version 1.27.0'**
+  String get whatsNewVersion1270Subtitle;
+
+  /// What's new feature title: Translation Pack
+  ///
+  /// In en, this message translates to:
+  /// **'Translation Pack'**
+  String get whatsNewTranslationPackTitle;
+
+  /// What's new description for Translation Pack feature
+  ///
+  /// In en, this message translates to:
+  /// **'Translate any mesh message on demand with smart caching and privacy controls. Includes a managed translation allowance, or bring your own OpenAI API key for extended use.\n\nLong-press any message and tap Translate to see the result inline — with smart caching so repeated translations are instant. Now included in the Complete Pack.'**
+  String get whatsNewTranslationPackDescription;
 
   /// Notification title for new node discovery
   ///
@@ -51413,6 +53687,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{nodeName} ({shortCode}) joined the mesh'**
   String notificationNewNodeBody(String nodeName, String shortCode);
+
+  /// Notification title for batched node discovery
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 new node discovered} other{{count} new nodes discovered}}'**
+  String notificationBatchedNodesTitle(int count);
 
   /// Notification title for aether flight detection
   ///
@@ -52060,6 +54340,258 @@ abstract class AppLocalizations {
   /// **'Tap to run scheduled automation'**
   String get automationScheduledBody;
 
+  /// Label for node name in automation log entry details
+  ///
+  /// In en, this message translates to:
+  /// **'Node: {nodeName}'**
+  String automationLogNode(String nodeName);
+
+  /// Label for battery level in automation log entry details
+  ///
+  /// In en, this message translates to:
+  /// **'Battery: {level}%'**
+  String automationLogBattery(int level);
+
+  /// Label for message text in automation log entry details
+  ///
+  /// In en, this message translates to:
+  /// **'Message: {text}'**
+  String automationLogMessage(String text);
+
+  /// History label when THEN branch was executed
+  ///
+  /// In en, this message translates to:
+  /// **'Ran THEN branch'**
+  String get automationHistoryOutcomeThen;
+
+  /// History label when ELSE branch was executed
+  ///
+  /// In en, this message translates to:
+  /// **'Ran ELSE branch'**
+  String get automationHistoryOutcomeElse;
+
+  /// History label when automation executed without branching
+  ///
+  /// In en, this message translates to:
+  /// **'Executed'**
+  String get automationHistoryOutcomeExecuted;
+
+  /// History label when automation was manually triggered — clarifies THEN was forced
+  ///
+  /// In en, this message translates to:
+  /// **'Ran THEN manually'**
+  String get automationHistoryOutcomeManual;
+
+  /// History label when automation execution failed
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get automationHistoryOutcomeFailed;
+
+  /// History label when condition failed and no ELSE branch exists
+  ///
+  /// In en, this message translates to:
+  /// **'Did not run'**
+  String get automationHistoryOutcomeSkippedNoElse;
+
+  /// History label when automation was throttled
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped (cooldown)'**
+  String get automationHistoryOutcomeSkippedThrottled;
+
+  /// History label when automation was disabled
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped (disabled)'**
+  String get automationHistoryOutcomeSkippedDisabled;
+
+  /// History label when automation was filtered out
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped (not eligible)'**
+  String get automationHistoryOutcomeSkippedFiltered;
+
+  /// Label for trigger type in history detail view
+  ///
+  /// In en, this message translates to:
+  /// **'Trigger'**
+  String get automationHistoryDetailTrigger;
+
+  /// Label for branch selection in history detail view
+  ///
+  /// In en, this message translates to:
+  /// **'Branch'**
+  String get automationHistoryDetailBranch;
+
+  /// Label for condition summary in history detail view
+  ///
+  /// In en, this message translates to:
+  /// **'Conditions'**
+  String get automationHistoryDetailConditions;
+
+  /// Label for action results in history detail view
+  ///
+  /// In en, this message translates to:
+  /// **'Actions'**
+  String get automationHistoryDetailActions;
+
+  /// Label for error message in history detail view
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get automationHistoryDetailError;
+
+  /// Label indicating manual execution bypassed conditions and forced THEN
+  ///
+  /// In en, this message translates to:
+  /// **'THEN branch forced — conditions not evaluated'**
+  String get automationHistoryDetailManualBypass;
+
+  /// Expanded detail note explaining manual run differs from automatic
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic execution may select a different branch based on conditions.'**
+  String get automationHistoryDetailManualNote;
+
+  /// Shown when automation history is empty
+  ///
+  /// In en, this message translates to:
+  /// **'No automation activity yet'**
+  String get automationHistoryEmpty;
+
+  /// Label for a successful action in history details
+  ///
+  /// In en, this message translates to:
+  /// **'Succeeded'**
+  String get automationHistoryActionSuccess;
+
+  /// Label for a failed action in history details
+  ///
+  /// In en, this message translates to:
+  /// **'Failed: {error}'**
+  String automationHistoryActionFailed(String error);
+
+  /// Summary of action results in history
+  ///
+  /// In en, this message translates to:
+  /// **'{success} of {total} actions succeeded'**
+  String automationHistoryActionCount(int success, int total);
+
+  /// Label for a condition that passed evaluation
+  ///
+  /// In en, this message translates to:
+  /// **'Passed: {condition}'**
+  String automationConditionPassed(String condition);
+
+  /// Label for a condition that failed evaluation
+  ///
+  /// In en, this message translates to:
+  /// **'Failed: {condition}'**
+  String automationConditionFailed(String condition);
+
+  /// Summary when all conditions in a group passed
+  ///
+  /// In en, this message translates to:
+  /// **'All {count} conditions passed'**
+  String automationConditionAllPassed(int count);
+
+  /// Summary when some conditions in a group failed
+  ///
+  /// In en, this message translates to:
+  /// **'{failed} of {total} conditions failed'**
+  String automationConditionSomeFailed(int failed, int total);
+
+  /// Summary for ANY group when some conditions matched
+  ///
+  /// In en, this message translates to:
+  /// **'{matched} of {total} conditions matched'**
+  String automationConditionSomeMatched(int matched, int total);
+
+  /// Summary for ANY group when no conditions matched
+  ///
+  /// In en, this message translates to:
+  /// **'No conditions matched'**
+  String get automationConditionNoneMatched;
+
+  /// Summary for NOT group when inverted result is true
+  ///
+  /// In en, this message translates to:
+  /// **'NOT condition passed'**
+  String get automationConditionNotPassed;
+
+  /// Summary for NOT group when inverted result is false
+  ///
+  /// In en, this message translates to:
+  /// **'NOT condition failed'**
+  String get automationConditionNotFailed;
+
+  /// Readable skip reason: automation disabled
+  ///
+  /// In en, this message translates to:
+  /// **'Automation is disabled'**
+  String get automationSkipDisabled;
+
+  /// Readable skip reason: trigger type mismatch
+  ///
+  /// In en, this message translates to:
+  /// **'Trigger event did not match'**
+  String get automationSkipTriggerMismatch;
+
+  /// Readable skip reason: throttled/cooldown
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped due to cooldown'**
+  String get automationSkipThrottled;
+
+  /// Readable skip reason: node filter mismatch
+  ///
+  /// In en, this message translates to:
+  /// **'Node did not match filter'**
+  String get automationSkipNodeFilter;
+
+  /// Readable skip reason: battery threshold not met
+  ///
+  /// In en, this message translates to:
+  /// **'Battery level did not reach threshold'**
+  String get automationSkipBatteryThreshold;
+
+  /// Readable skip reason: keyword not matched
+  ///
+  /// In en, this message translates to:
+  /// **'Message did not contain keyword'**
+  String get automationSkipKeywordNotMatched;
+
+  /// Readable skip reason: signal threshold not met
+  ///
+  /// In en, this message translates to:
+  /// **'Signal level did not reach threshold'**
+  String get automationSkipSignalThreshold;
+
+  /// Readable skip reason: channel filter mismatch
+  ///
+  /// In en, this message translates to:
+  /// **'Channel did not match filter'**
+  String get automationSkipChannelFilter;
+
+  /// Readable skip reason: condition failed without ELSE branch
+  ///
+  /// In en, this message translates to:
+  /// **'Condition failed and no ELSE actions set'**
+  String get automationSkipConditionFailed;
+
+  /// Brief last run outcome shown on automation card
+  ///
+  /// In en, this message translates to:
+  /// **'Last: {outcome}'**
+  String automationCardLastRun(String outcome);
+
+  /// Brief last run outcome on card when run was manual — distinct from auto success
+  ///
+  /// In en, this message translates to:
+  /// **'Last: Manual test'**
+  String get automationCardLastRunManual;
+
   /// Error message shown to the user
   ///
   /// In en, this message translates to:
@@ -52143,6 +54675,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Broadcasting position to mesh'**
   String get countdownBroadcastingPosition;
+
+  /// Countdown banner label while waiting for a file transfer to be accepted
+  ///
+  /// In en, this message translates to:
+  /// **'Awaiting accept for {filename}'**
+  String countdownAwaitingAccept(String filename);
+
+  /// Countdown banner label while sending a file transfer
+  ///
+  /// In en, this message translates to:
+  /// **'Sending {filename}'**
+  String countdownSendingFile(String filename);
+
+  /// Countdown banner label while receiving a file transfer
+  ///
+  /// In en, this message translates to:
+  /// **'Receiving {filename}'**
+  String countdownReceivingFile(String filename);
 
   /// Text displayed in lifecycle management
   ///
@@ -53047,31 +55597,31 @@ abstract class AppLocalizations {
   /// Title for the SIP discovery bottom sheet.
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh Discovery'**
+  /// **'Find people nearby'**
   String get sipDiscoveryTitle;
 
   /// Label showing how many SIP peers are nearby.
   ///
   /// In en, this message translates to:
-  /// **'{count} Socialmesh {count, plural, =1{peer} other{peers}} nearby'**
+  /// **'{count} {count, plural, =1{person} other{people}} nearby'**
   String sipDiscoveryPeersNearby(int count);
 
   /// Empty state text when no Socialmesh peers are found.
   ///
   /// In en, this message translates to:
-  /// **'No Socialmesh peers detected'**
+  /// **'No one nearby yet'**
   String get sipDiscoveryNoPeers;
 
   /// Description for the empty state in Socialmesh discovery.
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh peers will appear here when detected via beacon or rollcall.'**
+  /// **'People using Socialmesh will appear here when they’re in range.'**
   String get sipDiscoveryNoPeersDescription;
 
   /// Button to trigger a Socialmesh rollcall scan.
   ///
   /// In en, this message translates to:
-  /// **'Scan for Socialmesh'**
+  /// **'Look for people'**
   String get sipDiscoveryScanButton;
 
   /// Label shown when scan is on cooldown.
@@ -53083,38 +55633,44 @@ abstract class AppLocalizations {
   /// Fallback label for a SIP peer before identity exchange.
   ///
   /// In en, this message translates to:
-  /// **'SIP Peer'**
+  /// **'Mesh User'**
   String get sipDiscoveryPeerAnonymous;
 
   /// Device class label in peer detail.
   ///
   /// In en, this message translates to:
-  /// **'Device class: {deviceClass}'**
+  /// **'{deviceClass}'**
   String sipDiscoveryDeviceClass(String deviceClass);
 
   /// Button label to initiate a SIP handshake with a peer.
   ///
   /// In en, this message translates to:
-  /// **'Handshake'**
+  /// **'Connect'**
   String get sipHandshakeAction;
 
   /// Status text while handshake is ongoing.
   ///
   /// In en, this message translates to:
-  /// **'Handshake in progress…'**
+  /// **'Connecting…'**
   String get sipHandshakeInProgress;
 
   /// Status text when handshake completes successfully.
   ///
   /// In en, this message translates to:
-  /// **'Handshake complete'**
+  /// **'Connected'**
   String get sipHandshakeComplete;
 
   /// Status text when handshake fails.
   ///
   /// In en, this message translates to:
-  /// **'Handshake failed'**
+  /// **'Could not connect'**
   String get sipHandshakeFailed;
+
+  /// Chip label shown on a peer tile when they have sent an incoming handshake request awaiting user action.
+  ///
+  /// In en, this message translates to:
+  /// **'Request sent'**
+  String get sipHandshakePendingLabel;
 
   /// Button label to request identity from a SIP peer.
   ///
@@ -53131,7 +55687,7 @@ abstract class AppLocalizations {
   /// Title for the SIP ephemeral DM screen.
   ///
   /// In en, this message translates to:
-  /// **'Ephemeral DM'**
+  /// **'Mesh message'**
   String get sipDmTitle;
 
   /// Label showing session time remaining.
@@ -53173,13 +55729,13 @@ abstract class AppLocalizations {
   /// Error when DM send fails due to rate limiting.
   ///
   /// In en, this message translates to:
-  /// **'Airtime budget exhausted. Try again later.'**
+  /// **'Sending paused — mesh bandwidth limit reached. Try again shortly.'**
   String get sipDmBudgetExhausted;
 
   /// Message when trying to send on a closed session.
   ///
   /// In en, this message translates to:
-  /// **'This session has been closed.'**
+  /// **'This conversation has ended.'**
   String get sipDmSessionClosed;
 
   /// Action to pin a DM session to prevent expiry.
@@ -53209,7 +55765,7 @@ abstract class AppLocalizations {
   /// Title for the SIP peer detail bottom sheet.
   ///
   /// In en, this message translates to:
-  /// **'Peer Details'**
+  /// **'About this person'**
   String get sipPeerDetailTitle;
 
   /// Label for the peer's mesh node identifier.
@@ -53221,19 +55777,19 @@ abstract class AppLocalizations {
   /// Label for the peer's device class.
   ///
   /// In en, this message translates to:
-  /// **'Device Class'**
+  /// **'Device type'**
   String get sipPeerDetailDeviceClass;
 
   /// Label for the peer's SIP feature bitmap.
   ///
   /// In en, this message translates to:
-  /// **'Features'**
+  /// **'Capabilities'**
   String get sipPeerDetailFeatures;
 
   /// Label for the peer's advertised MTU hint.
   ///
   /// In en, this message translates to:
-  /// **'MTU Hint'**
+  /// **'Signal strength hint'**
   String get sipPeerDetailMtu;
 
   /// Label for when the peer was last seen.
@@ -53263,20 +55819,56 @@ abstract class AppLocalizations {
   /// Label indicating the peer supports SIP-1.
   ///
   /// In en, this message translates to:
-  /// **'Identity & Handshake'**
+  /// **'Identity & secure connection'**
   String get sipPeerDetailSupportsSip1;
 
   /// Label indicating the peer supports SIP-3.
   ///
   /// In en, this message translates to:
-  /// **'Micro-Exchange'**
+  /// **'Contact exchange'**
   String get sipPeerDetailSupportsSip3;
 
   /// Section header for peer capabilities.
   ///
   /// In en, this message translates to:
-  /// **'Capabilities'**
+  /// **'What they support'**
   String get sipPeerDetailCapabilities;
+
+  /// Device class label for unknown device type.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get sipPeerDetailDeviceUnknown;
+
+  /// Device class label for phone.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone'**
+  String get sipPeerDetailDevicePhone;
+
+  /// Device class label for tablet.
+  ///
+  /// In en, this message translates to:
+  /// **'Tablet'**
+  String get sipPeerDetailDeviceTablet;
+
+  /// Device class label for desktop.
+  ///
+  /// In en, this message translates to:
+  /// **'Desktop'**
+  String get sipPeerDetailDeviceDesktop;
+
+  /// Device class label for an unrecognised device code.
+  ///
+  /// In en, this message translates to:
+  /// **'Type {code}'**
+  String sipPeerDetailDeviceType(int code);
+
+  /// Toggle label for expert/diagnostic fields in peer detail sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Technical details'**
+  String get sipPeerDetailExpertToggle;
 
   /// Title for the SIP debug counters screen.
   ///
@@ -53293,7 +55885,7 @@ abstract class AppLocalizations {
   /// Section header for discovered SIP peers.
   ///
   /// In en, this message translates to:
-  /// **'Nearby Peers'**
+  /// **'People'**
   String get sipHubSectionPeers;
 
   /// Section header for active DM sessions.
@@ -53301,6 +55893,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Conversations'**
   String get sipHubSectionConversations;
+
+  /// Section header for pending handshake consent requests.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection requests'**
+  String get sipHubSectionIncomingRequests;
+
+  /// Incoming handshake request label.
+  ///
+  /// In en, this message translates to:
+  /// **'{peerName} wants to connect'**
+  String sipHubIncomingRequestFrom(String peerName);
+
+  /// Accept button label for incoming handshake requests.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get sipHubAccept;
+
+  /// Decline button label for incoming handshake requests.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get sipHubDecline;
 
   /// Empty state title when no SIP peers are found.
   ///
@@ -53314,6 +55930,90 @@ abstract class AppLocalizations {
   /// **'Tap Scan to look for other Socialmesh users on the mesh.'**
   String get sipHubEmptyDescription;
 
+  /// Prefix for the animated SIP Hub scanning empty state title (trailing space separates from keyword).
+  ///
+  /// In en, this message translates to:
+  /// **'No peers '**
+  String get sipHubScanningTitlePrefix;
+
+  /// Keyword for the animated SIP Hub scanning empty state title (gradient-animated).
+  ///
+  /// In en, this message translates to:
+  /// **'nearby'**
+  String get sipHubScanningTitleKeyword;
+
+  /// Suffix for the animated SIP Hub scanning empty state title.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get sipHubScanningTitleSuffix;
+
+  /// SIP Hub animated scanning state tagline 1.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening for nearby users…'**
+  String get sipHubScanningTagline1;
+
+  /// SIP Hub animated scanning state tagline 2.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap Look for people to send a signal…'**
+  String get sipHubScanningTagline2;
+
+  /// SIP Hub animated scanning state tagline 3.
+  ///
+  /// In en, this message translates to:
+  /// **'Others will appear when found…'**
+  String get sipHubScanningTagline3;
+
+  /// SIP Hub animated scanning state tagline 4.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep the app open to discover more…'**
+  String get sipHubScanningTagline4;
+
+  /// Help overflow menu item label for the SIP Hub screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Help'**
+  String get sipHubHelp;
+
+  /// Help topic title for the SIP Hub screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Socialmesh'**
+  String get helpSipHubOverviewTitle;
+
+  /// Help topic description for the SIP Hub screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover and chat with nearby Socialmesh peers'**
+  String get helpSipHubOverviewDescription;
+
+  /// Help bubble: SIP Hub intro step.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to **Socialmesh**! This is your peer discovery hub. Nearby devices running Socialmesh appear here once they beacon or respond to a rollcall.'**
+  String get helpSipHubIntroBubble;
+
+  /// Help bubble: SIP Hub scan step.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the **scan icon** to send a rollcall request. Nearby peers will respond within seconds. Auto-scan fires every 60 seconds in the background.'**
+  String get helpSipHubScanBubble;
+
+  /// Help bubble: SIP Hub handshake step.
+  ///
+  /// In en, this message translates to:
+  /// **'Once you see a peer, tap **Handshake** to exchange identity. After the handshake you can open an **end-to-end encrypted** ephemeral DM — no servers, no accounts.'**
+  String get helpSipHubHandshakeBubble;
+
+  /// Help bubble: SIP Hub privacy step.
+  ///
+  /// In en, this message translates to:
+  /// **'All discovery is **anonymous by default**. Peers only reveal a rotating 4-byte ambient ID until you mutually agree to a handshake.'**
+  String get helpSipHubPrivacyBubble;
+
   /// Last seen time label for a peer.
   ///
   /// In en, this message translates to:
@@ -53323,7 +56023,7 @@ abstract class AppLocalizations {
   /// Status badge shown during a handshake.
   ///
   /// In en, this message translates to:
-  /// **'Handshaking…'**
+  /// **'Connecting…'**
   String get sipHubHandshaking;
 
   /// Status badge after handshake completes.
@@ -53371,13 +56071,13 @@ abstract class AppLocalizations {
   /// Snackbar confirmation when auto-scan is turned on.
   ///
   /// In en, this message translates to:
-  /// **'Auto-scan enabled'**
+  /// **'Auto-discovery on'**
   String get sipAutoScanEnabled;
 
   /// Snackbar confirmation when auto-scan is turned off.
   ///
   /// In en, this message translates to:
-  /// **'Auto-scan disabled'**
+  /// **'Auto-discovery off'**
   String get sipAutoScanDisabled;
 
   /// Label for the auto-scan toggle in the overflow menu.
@@ -53446,47 +56146,59 @@ abstract class AppLocalizations {
   /// **'This will delete the message for both you and the recipient.'**
   String get sipDmDeleteConfirmMessage;
 
-  /// Notification title for an incoming SIP ephemeral DM.
+  /// Notification title for an incoming ephemeral DM.
   ///
   /// In en, this message translates to:
-  /// **'SIP: {peerName}'**
+  /// **'{peerName}'**
   String notificationSipDmTitle(String peerName);
 
-  /// Notification title when a SIP handshake completes and a DM session is created.
+  /// Notification title when a secure chat session is established.
   ///
   /// In en, this message translates to:
-  /// **'SIP Handshake Complete'**
+  /// **'Secure Chat Ready'**
   String get notificationSipHandshakeTitle;
 
   /// Notification body when a SIP handshake completes.
   ///
   /// In en, this message translates to:
-  /// **'Ephemeral DM session established with {peerName}.'**
+  /// **'You can now send private messages with {peerName}.'**
   String notificationSipHandshakeBody(String peerName);
 
-  /// Android notification channel name for SIP DM messages.
+  /// Android notification channel name for ephemeral DM messages.
   ///
   /// In en, this message translates to:
-  /// **'SIP Ephemeral Messages'**
+  /// **'Ephemeral Messages'**
   String get notificationChannelSipMessages;
 
-  /// Android notification channel name for SIP handshake events.
+  /// Android notification channel name for secure chat connection events.
   ///
   /// In en, this message translates to:
-  /// **'SIP Handshakes'**
+  /// **'Connection Requests'**
   String get notificationChannelSipHandshake;
 
-  /// Notification title when another peer sends a handshake request.
+  /// Notification title when another peer sends a secure connection request.
   ///
   /// In en, this message translates to:
-  /// **'Handshake Request'**
+  /// **'Connection Request'**
   String get notificationSipHandshakeRequestTitle;
 
   /// Notification body when an incoming SIP handshake request (HS_HELLO) is received.
   ///
   /// In en, this message translates to:
-  /// **'{peerName} wants to start an ephemeral DM session.'**
+  /// **'{peerName} wants to establish a secure connection.'**
   String notificationSipHandshakeRequestBody(String peerName);
+
+  /// Notification title when a SIP handshake request is declined by the remote peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection Declined'**
+  String get notificationSipHandshakeDeclinedTitle;
+
+  /// Notification body when an outgoing SIP handshake is declined.
+  ///
+  /// In en, this message translates to:
+  /// **'{peerName} declined your connection request.'**
+  String notificationSipHandshakeDeclinedBody(String peerName);
 
   /// Title for the MRRP protocol harness home screen.
   ///
@@ -53883,6 +56595,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Filter by service'**
   String get mrrpHarnessTrafficFilterService;
+
+  /// Filter chip label showing all traffic events (no filter).
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get mrrpHarnessTrafficFilterAll;
+
+  /// Filter chip for MRRP request messages.
+  ///
+  /// In en, this message translates to:
+  /// **'Request'**
+  String get mrrpHarnessTrafficFilterRequest;
+
+  /// Filter chip for MRRP response messages.
+  ///
+  /// In en, this message translates to:
+  /// **'Response'**
+  String get mrrpHarnessTrafficFilterResponse;
+
+  /// Filter chip for MRRP error messages.
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get mrrpHarnessTrafficFilterError;
+
+  /// Filter chip for MRRP cancel messages.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get mrrpHarnessTrafficFilterCancel;
+
+  /// Filter chip for MRRP service advert messages.
+  ///
+  /// In en, this message translates to:
+  /// **'Advert'**
+  String get mrrpHarnessTrafficFilterAdvert;
+
+  /// Filter chip for MRRP service directory request messages.
+  ///
+  /// In en, this message translates to:
+  /// **'Dir Req'**
+  String get mrrpHarnessTrafficFilterDirReq;
+
+  /// Filter chip for MRRP service directory response messages.
+  ///
+  /// In en, this message translates to:
+  /// **'Dir Resp'**
+  String get mrrpHarnessTrafficFilterDirResp;
+
+  /// Hint text for the search field in traffic console.
+  ///
+  /// In en, this message translates to:
+  /// **'Search events...'**
+  String get mrrpHarnessTrafficSearchHint;
+
+  /// Info card text explaining the request composer.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a discovered peer, service, and action to compose an MRRP request frame. The payload field accepts raw hex bytes.'**
+  String get mrrpHarnessComposerInfoText;
+
+  /// Section header for target peer/service/action selection.
+  ///
+  /// In en, this message translates to:
+  /// **'TARGET'**
+  String get mrrpHarnessComposerSectionTarget;
+
+  /// Section header for payload and TTL configuration.
+  ///
+  /// In en, this message translates to:
+  /// **'PAYLOAD'**
+  String get mrrpHarnessComposerSectionPayload;
+
+  /// Info card text explaining the simulated peer lab.
+  ///
+  /// In en, this message translates to:
+  /// **'Create virtual MRRP peers for testing. Each peer advertises echo.test and can simulate different response modes including delays, errors, and malformed data.'**
+  String get mrrpHarnessSimLabInfoText;
+
+  /// Section header for request details in response viewer.
+  ///
+  /// In en, this message translates to:
+  /// **'REQUEST'**
+  String get mrrpHarnessResponseSectionRequest;
+
+  /// Section header for result details in response viewer.
+  ///
+  /// In en, this message translates to:
+  /// **'RESULT'**
+  String get mrrpHarnessResponseSectionResult;
+
+  /// Info card text explaining the peer inspector.
+  ///
+  /// In en, this message translates to:
+  /// **'Discovered peers advertising MRRP services over SIP. Expand a peer to view its service directory and test requests.'**
+  String get mrrpHarnessPeerInspectorInfoText;
 
   /// Action to copy a traffic event to clipboard.
   ///
@@ -54315,6 +57123,5130 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Simulated Faults'**
   String get mrrpHarnessCountersSimFaults;
+
+  /// Title for the Mesh Explorer screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh Explorer'**
+  String get meshExplorerTitle;
+
+  /// Drawer menu label for Mesh Explorer.
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh Explorer'**
+  String get meshExplorerDrawerLabel;
+
+  /// Hero status when radio is connected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected to mesh'**
+  String get meshExplorerHeroConnected;
+
+  /// Hero status when no radio is connected.
+  ///
+  /// In en, this message translates to:
+  /// **'No radio connected'**
+  String get meshExplorerHeroDisconnected;
+
+  /// Peer count in the hero section.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No nearby peers} =1{1 nearby peer} other{{count} nearby peers}}'**
+  String meshExplorerHeroPeersCount(int count);
+
+  /// Service count in the hero section.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No services} =1{1 service} other{{count} services}}'**
+  String meshExplorerHeroServicesCount(int count);
+
+  /// Section header for nearby peers.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby'**
+  String get meshExplorerSectionNearby;
+
+  /// Section header for nearby services.
+  ///
+  /// In en, this message translates to:
+  /// **'Services'**
+  String get meshExplorerSectionServices;
+
+  /// Section header for board posts.
+  ///
+  /// In en, this message translates to:
+  /// **'Board Activity'**
+  String get meshExplorerSectionBoard;
+
+  /// Prefix for the animated scanning empty state title (trailing space separates from keyword).
+  ///
+  /// In en, this message translates to:
+  /// **'No peers '**
+  String get meshExplorerScanningTitlePrefix;
+
+  /// Keyword for the animated scanning empty state title (gradient-animated).
+  ///
+  /// In en, this message translates to:
+  /// **'nearby'**
+  String get meshExplorerScanningTitleKeyword;
+
+  /// Suffix for the animated scanning empty state title.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get meshExplorerScanningTitleSuffix;
+
+  /// Animated scanning state tagline 1.
+  ///
+  /// In en, this message translates to:
+  /// **'Scans for Socialmesh peers broadcasting on the mesh'**
+  String get meshExplorerScanningTagline1;
+
+  /// Animated scanning state tagline 2.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap Scan to send a rollcall — wakes up nearby peers'**
+  String get meshExplorerScanningTagline2;
+
+  /// Animated scanning state tagline 3.
+  ///
+  /// In en, this message translates to:
+  /// **'Peers appear anonymously — handshake to identify them'**
+  String get meshExplorerScanningTagline3;
+
+  /// Animated scanning state tagline 4.
+  ///
+  /// In en, this message translates to:
+  /// **'Radio range matters — try moving closer to the mesh'**
+  String get meshExplorerScanningTagline4;
+
+  /// Help overflow menu item label for the Mesh Explorer screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Help'**
+  String get meshExplorerHelp;
+
+  /// Help topic title for the Mesh Explorer screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh Explorer'**
+  String get helpMeshExplorerOverviewTitle;
+
+  /// Help topic description for the Mesh Explorer screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore nearby peers and mesh services'**
+  String get helpMeshExplorerOverviewDescription;
+
+  /// Help bubble: Mesh Explorer intro step.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to **Mesh Explorer**! This shows all Socialmesh-capable peers currently in radio range. Anonymous peers appear instantly — no handshake needed.'**
+  String get helpMeshExplorerIntroBubble;
+
+  /// Help bubble: Mesh Explorer peers step.
+  ///
+  /// In en, this message translates to:
+  /// **'Each tile shows a **peer\'s ambient sigil** and capabilities. Tap a peer to view details or initiate a **SIP handshake** for identity exchange.'**
+  String get helpMeshExplorerPeersBubble;
+
+  /// Help bubble: Mesh Explorer services step.
+  ///
+  /// In en, this message translates to:
+  /// **'The **Services** section shows what nearby peers are offering — Bulletin Boards, Profiles, and more. Tap a service tile to interact with it.'**
+  String get helpMeshExplorerServicesBubble;
+
+  /// Help bubble: Mesh Explorer scan step.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the **sensor icon** to broadcast a rollcall to the mesh. Peers respond within seconds. The explorer refreshes automatically when new peers are heard.'**
+  String get helpMeshExplorerScanBubble;
+
+  /// Action button label on the animated scanning empty state.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan now'**
+  String get meshExplorerScanningAction;
+
+  /// Notification title when a new SIP peer is discovered.
+  ///
+  /// In en, this message translates to:
+  /// **'Peer found nearby'**
+  String get notificationSipPeerFoundTitle;
+
+  /// Notification body when a new SIP peer is discovered.
+  ///
+  /// In en, this message translates to:
+  /// **'A Socialmesh peer is in range. Open Mesh Explorer to connect.'**
+  String get notificationSipPeerFoundBody;
+
+  /// Notification channel name for SIP peer discovery alerts.
+  ///
+  /// In en, this message translates to:
+  /// **'Peer Discovery'**
+  String get notificationChannelSipDiscovery;
+
+  /// Empty state title when no peers are nearby.
+  ///
+  /// In en, this message translates to:
+  /// **'No nearby peers'**
+  String get meshExplorerEmptyNearbyTitle;
+
+  /// Empty state body when no peers are nearby.
+  ///
+  /// In en, this message translates to:
+  /// **'Peers will appear when mesh devices are in range'**
+  String get meshExplorerEmptyNearbyBody;
+
+  /// Empty state title when no services are nearby.
+  ///
+  /// In en, this message translates to:
+  /// **'No services found'**
+  String get meshExplorerEmptyServicesTitle;
+
+  /// Empty state body when no services are nearby.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby peers will advertise services here'**
+  String get meshExplorerEmptyServicesBody;
+
+  /// Empty state title when no board posts exist.
+  ///
+  /// In en, this message translates to:
+  /// **'No board activity'**
+  String get meshExplorerEmptyBoardTitle;
+
+  /// Empty state body when no board posts exist.
+  ///
+  /// In en, this message translates to:
+  /// **'Board posts from nearby peers will appear here'**
+  String get meshExplorerEmptyBoardBody;
+
+  /// Empty state title when no radio is connected.
+  ///
+  /// In en, this message translates to:
+  /// **'Radio not connected'**
+  String get meshExplorerNotConnectedTitle;
+
+  /// Empty state body when no radio is connected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect a Meshtastic radio to discover the mesh around you'**
+  String get meshExplorerNotConnectedBody;
+
+  /// Label for an anonymous peer tile.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby peer'**
+  String get meshExplorerPeerAnonymous;
+
+  /// Badge label for handshaked peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Handshaked'**
+  String get meshExplorerPeerHandshaked;
+
+  /// Badge label for verified identity peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified'**
+  String get meshExplorerPeerVerified;
+
+  /// Badge label for pinned peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned'**
+  String get meshExplorerPeerPinned;
+
+  /// Hop count label for peer proximity.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 hop} other{{count} hops}}'**
+  String meshExplorerHopCount(int count);
+
+  /// Label for peers more than 2 hops away.
+  ///
+  /// In en, this message translates to:
+  /// **'3+ hops'**
+  String get meshExplorerHopCountFar;
+
+  /// Hop count label when hop data is unavailable from the transport layer.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby'**
+  String get meshExplorerHopCountUnknown;
+
+  /// Service count on peer tile.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No services} =1{1 service} other{{count} services}}'**
+  String meshExplorerServiceCount(int count);
+
+  /// Action button to initiate SIP handshake.
+  ///
+  /// In en, this message translates to:
+  /// **'Handshake'**
+  String get meshExplorerActionHandshake;
+
+  /// Action button to view peer details.
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get meshExplorerActionView;
+
+  /// Action button to request identity exchange.
+  ///
+  /// In en, this message translates to:
+  /// **'Request Identity'**
+  String get meshExplorerActionRequestIdentity;
+
+  /// Action to open full NodeDex detail.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in NodeDex'**
+  String get meshExplorerActionOpenNodeDex;
+
+  /// Action to block a peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Block'**
+  String get meshExplorerActionBlock;
+
+  /// Action to pin an identified peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin Peer'**
+  String get meshExplorerActionPin;
+
+  /// Action to unpin a pinned peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpin Peer'**
+  String get meshExplorerActionUnpin;
+
+  /// Title for peer detail bottom sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Peer Detail'**
+  String get meshExplorerPeerDetail;
+
+  /// Section in peer detail for identity info.
+  ///
+  /// In en, this message translates to:
+  /// **'Identity'**
+  String get meshExplorerPeerDetailIdentity;
+
+  /// Section in peer detail for services.
+  ///
+  /// In en, this message translates to:
+  /// **'Available Services'**
+  String get meshExplorerPeerDetailServices;
+
+  /// Section in peer detail for available actions.
+  ///
+  /// In en, this message translates to:
+  /// **'Actions'**
+  String get meshExplorerPeerDetailActions;
+
+  /// Public name for board.v1 service.
+  ///
+  /// In en, this message translates to:
+  /// **'Bulletin Board'**
+  String get meshExplorerServiceBulletinBoard;
+
+  /// Subtitle for board.v1 service.
+  ///
+  /// In en, this message translates to:
+  /// **'Local mesh posts'**
+  String get meshExplorerServiceBulletinBoardSub;
+
+  /// Public name for profile.v1 service.
+  ///
+  /// In en, this message translates to:
+  /// **'Peer Profile'**
+  String get meshExplorerServicePeerProfile;
+
+  /// Subtitle for profile.v1 service.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared identity info'**
+  String get meshExplorerServicePeerProfileSub;
+
+  /// Fallback name for unknown MRRP services.
+  ///
+  /// In en, this message translates to:
+  /// **'Service'**
+  String get meshExplorerServiceGeneric;
+
+  /// Fallback subtitle for unknown services.
+  ///
+  /// In en, this message translates to:
+  /// **'Available nearby'**
+  String get meshExplorerServiceGenericSub;
+
+  /// Action label for board service.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Board'**
+  String get meshExplorerServiceOpenBoard;
+
+  /// Action label for profile service.
+  ///
+  /// In en, this message translates to:
+  /// **'View Profile'**
+  String get meshExplorerServiceViewProfile;
+
+  /// Generic action label for services.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get meshExplorerServiceDetails;
+
+  /// Chip label when a service requires SIP handshake.
+  ///
+  /// In en, this message translates to:
+  /// **'Requires handshake'**
+  String get meshExplorerServiceRequiresHandshake;
+
+  /// Chip label when a service requires identity verification.
+  ///
+  /// In en, this message translates to:
+  /// **'Requires identity'**
+  String get meshExplorerServiceRequiresIdentity;
+
+  /// Peer count offering a service.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 peer} other{{count} peers}}'**
+  String meshExplorerServicePeerCount(int count);
+
+  /// Title for mesh privacy settings screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh Privacy'**
+  String get meshExplorerPrivacyTitle;
+
+  /// Section header for visibility toggles.
+  ///
+  /// In en, this message translates to:
+  /// **'Visibility'**
+  String get meshExplorerPrivacySectionVisibility;
+
+  /// Section header for sharing toggles.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing'**
+  String get meshExplorerPrivacySectionSharing;
+
+  /// Section header for privacy actions.
+  ///
+  /// In en, this message translates to:
+  /// **'Actions'**
+  String get meshExplorerPrivacySectionActions;
+
+  /// Toggle label: broadcast presence to mesh.
+  ///
+  /// In en, this message translates to:
+  /// **'Discoverable'**
+  String get meshExplorerPrivacyDiscoverable;
+
+  /// Description for discoverable toggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Broadcast your presence to nearby mesh peers'**
+  String get meshExplorerPrivacyDiscoverableSub;
+
+  /// Toggle label: respond to profile requests.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile Sharing'**
+  String get meshExplorerPrivacyProfileSharing;
+
+  /// Description for profile sharing toggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Respond to profile requests from peers'**
+  String get meshExplorerPrivacyProfileSharingSub;
+
+  /// Toggle label: allow DMs from identified peers.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct Messages'**
+  String get meshExplorerPrivacyDmAvailable;
+
+  /// Description for DM toggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow direct messages from identified peers'**
+  String get meshExplorerPrivacyDmAvailableSub;
+
+  /// Action label: clear nearby peer data.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Nearby Cache'**
+  String get meshExplorerPrivacyClearCache;
+
+  /// Description for clear cache action.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove all discovered nearby peer data'**
+  String get meshExplorerPrivacyClearCacheSub;
+
+  /// Snackbar message after clearing cache.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby cache cleared'**
+  String get meshExplorerPrivacyCacheCleared;
+
+  /// App bar action to scan for nearby peers.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan'**
+  String get meshExplorerScanAction;
+
+  /// Action to refresh mesh data.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get meshExplorerRefreshAction;
+
+  /// Badge label for peer with changed identity key.
+  ///
+  /// In en, this message translates to:
+  /// **'Changed key'**
+  String get meshExplorerChangedKey;
+
+  /// Snackbar message after rollcall request sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanning for nearby peers…'**
+  String get meshExplorerScanSent;
+
+  /// Snackbar when scan is blocked due to active mesh congestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh is busy, scan blocked'**
+  String get meshExplorerScanCooldown;
+
+  /// Snackbar after HS_HELLO sent to peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Handshake request sent'**
+  String get meshExplorerHandshakeSent;
+
+  /// Snackbar when handshake is rate-limited or already in progress.
+  ///
+  /// In en, this message translates to:
+  /// **'Handshake on cooldown, try again shortly'**
+  String get meshExplorerHandshakeCooldown;
+
+  /// Label shown on peer tile while handshake is in-flight.
+  ///
+  /// In en, this message translates to:
+  /// **'In progress…'**
+  String get meshExplorerHandshakeInProgress;
+
+  /// Button label to accept an incoming handshake request from a nearby peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get meshExplorerHandshakeAccept;
+
+  /// Button label to decline an incoming handshake request from a nearby peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get meshExplorerHandshakeDecline;
+
+  /// Subtitle shown on peer detail when a pending handshake request exists from this peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Handshake request received'**
+  String get meshExplorerHandshakeReceived;
+
+  /// Compact status strip text when radio is connected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected to mesh'**
+  String get meshExplorerStatusConnected;
+
+  /// Compact status showing peer and service counts.
+  ///
+  /// In en, this message translates to:
+  /// **'{peers} nearby · {services} live'**
+  String meshExplorerStatusPeersAndServices(int peers, int services);
+
+  /// Section header for currently active services.
+  ///
+  /// In en, this message translates to:
+  /// **'Live now'**
+  String get meshExplorerSectionLiveNow;
+
+  /// Section header for compact nearby peers strip.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby'**
+  String get meshExplorerSectionNearbyPeers;
+
+  /// Audience badge for open/public services.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get meshExplorerCardOpen;
+
+  /// Badge indicating a service is currently live.
+  ///
+  /// In en, this message translates to:
+  /// **'LIVE'**
+  String get meshExplorerCardLive;
+
+  /// Freshness label for services seen in the last minute.
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get meshExplorerFreshnessJustNow;
+
+  /// Freshness label in minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}m ago'**
+  String meshExplorerFreshnessMinutes(int count);
+
+  /// Freshness label in hours.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}h ago'**
+  String meshExplorerFreshnessHours(int count);
+
+  /// Empty state headline when no services are available.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover the mesh'**
+  String get meshExplorerEmptyTitle;
+
+  /// Empty state description encouraging service discovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Things shared by nearby people will show up here. Updates, questions, checklists, alerts, and readings all travel over the local mesh.'**
+  String get meshExplorerEmptyBody;
+
+  /// Action button on empty state to create a service.
+  ///
+  /// In en, this message translates to:
+  /// **'Share something'**
+  String get meshExplorerEmptyAction;
+
+  /// Compact label for the create service action.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get meshExplorerCreateLabel;
+
+  /// Action button in not-connected empty state.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect a radio'**
+  String get meshExplorerNotConnectedAction;
+
+  /// Drawer menu label for the Mesh Services screen.
+  ///
+  /// In en, this message translates to:
+  /// **'My shares'**
+  String get meshServicesDrawerLabel;
+
+  /// App bar title for the My Services management screen.
+  ///
+  /// In en, this message translates to:
+  /// **'My shares'**
+  String get meshServicesTitle;
+
+  /// Empty state headline when user has no service instances.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing shared yet'**
+  String get meshServicesEmpty;
+
+  /// Empty state description on My Services screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Share an update, question, checklist, alert, or reading with people nearby on the mesh.'**
+  String get meshServicesEmptyDescription;
+
+  /// Button label to create a new service instance.
+  ///
+  /// In en, this message translates to:
+  /// **'Share something'**
+  String get meshServicesCreateAction;
+
+  /// App bar title for the template picker / create service screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Share on the mesh'**
+  String get meshServicesCreateTitle;
+
+  /// Subtitle on the template picker screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose what you want to share nearby'**
+  String get meshServicesCreateSubtitle;
+
+  /// Canonical mesh service type name for feed-style services.
+  ///
+  /// In en, this message translates to:
+  /// **'Updates'**
+  String get meshServicesTypeFeed;
+
+  /// Canonical mesh service type description for feed-style services.
+  ///
+  /// In en, this message translates to:
+  /// **'Posts and updates people nearby can open and read'**
+  String get meshServicesTypeFeedDescription;
+
+  /// Canonical mesh service type name for list-style services.
+  ///
+  /// In en, this message translates to:
+  /// **'Checklists'**
+  String get meshServicesTypeList;
+
+  /// Canonical mesh service type description for list-style services.
+  ///
+  /// In en, this message translates to:
+  /// **'Lists, checklists, or supplies people nearby can work through together'**
+  String get meshServicesTypeListDescription;
+
+  /// Canonical mesh service type name for poll services.
+  ///
+  /// In en, this message translates to:
+  /// **'Questions'**
+  String get meshServicesTypePoll;
+
+  /// Canonical mesh service type description for poll services.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask nearby people to pick an answer'**
+  String get meshServicesTypePollDescription;
+
+  /// Canonical mesh service type name for signal services.
+  ///
+  /// In en, this message translates to:
+  /// **'Alerts'**
+  String get meshServicesTypeSignal;
+
+  /// Canonical mesh service type description for signal services.
+  ///
+  /// In en, this message translates to:
+  /// **'Short-lived alerts or beacons that stand out nearby'**
+  String get meshServicesTypeSignalDescription;
+
+  /// Canonical mesh service type name for sensor services.
+  ///
+  /// In en, this message translates to:
+  /// **'Readings'**
+  String get meshServicesTypeSensor;
+
+  /// Canonical mesh service type description for sensor services.
+  ///
+  /// In en, this message translates to:
+  /// **'Live measurements or telemetry people nearby can check'**
+  String get meshServicesTypeSensorDescription;
+
+  /// Canonical mesh service type name for mesh-games.
+  ///
+  /// In en, this message translates to:
+  /// **'Games'**
+  String get meshServicesTypeGame;
+
+  /// Canonical mesh service type description for mesh-games.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-peer games playable over mesh'**
+  String get meshServicesTypeGameDescription;
+
+  /// Intent-first label for the game capability in the creation flow.
+  ///
+  /// In en, this message translates to:
+  /// **'Play a game'**
+  String get meshServicesIntentGame;
+
+  /// Intent-first description for the game capability in the creation flow.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite a peer to a quick game over the mesh.'**
+  String get meshServicesIntentGameDescription;
+
+  /// Intent-first label for the feed capability in the creation flow.
+  ///
+  /// In en, this message translates to:
+  /// **'Post an update'**
+  String get meshServicesIntentFeed;
+
+  /// Intent-first description for the feed capability in the creation flow.
+  ///
+  /// In en, this message translates to:
+  /// **'Share news, status, or a notice people nearby can open.'**
+  String get meshServicesIntentFeedDescription;
+
+  /// Intent-first label for the list capability in the creation flow.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a checklist'**
+  String get meshServicesIntentList;
+
+  /// Intent-first description for the list capability in the creation flow.
+  ///
+  /// In en, this message translates to:
+  /// **'Organize items, jobs, or supplies people nearby can work through together.'**
+  String get meshServicesIntentListDescription;
+
+  /// Intent-first label for the poll capability in the creation flow.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask a question'**
+  String get meshServicesIntentPoll;
+
+  /// Intent-first description for the poll capability in the creation flow.
+  ///
+  /// In en, this message translates to:
+  /// **'Put a multiple-choice question out to nearby people.'**
+  String get meshServicesIntentPollDescription;
+
+  /// Intent-first label for the signal capability in the creation flow.
+  ///
+  /// In en, this message translates to:
+  /// **'Send an alert'**
+  String get meshServicesIntentSignal;
+
+  /// Intent-first description for the signal capability in the creation flow.
+  ///
+  /// In en, this message translates to:
+  /// **'Broadcast a short-lived alert, check-in, or beacon nearby.'**
+  String get meshServicesIntentSignalDescription;
+
+  /// Intent-first label for the sensor capability in the creation flow.
+  ///
+  /// In en, this message translates to:
+  /// **'Share a reading'**
+  String get meshServicesIntentSensor;
+
+  /// Intent-first description for the sensor capability in the creation flow.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish a live reading, measurement, or status from a device.'**
+  String get meshServicesIntentSensorDescription;
+
+  /// Badge label indicating a mesh service is discoverable by nearby peers.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby'**
+  String get meshServicesVisibilityOpen;
+
+  /// Template display name for mesh bulletin board.
+  ///
+  /// In en, this message translates to:
+  /// **'Bulletin Board'**
+  String get meshServicesTemplateBoard;
+
+  /// Template description for mesh bulletin board.
+  ///
+  /// In en, this message translates to:
+  /// **'Share short posts with nearby peers'**
+  String get meshServicesTemplateBoardDescription;
+
+  /// Template display name for signal beacon.
+  ///
+  /// In en, this message translates to:
+  /// **'Signal Beacon'**
+  String get meshServicesTemplateSignal;
+
+  /// Template description for signal beacon.
+  ///
+  /// In en, this message translates to:
+  /// **'Broadcast a signal to nearby peers'**
+  String get meshServicesTemplateSignalDescription;
+
+  /// Template display name for quick poll.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Poll'**
+  String get meshServicesTemplatePoll;
+
+  /// Template description for quick poll.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask a question with multiple choice answers'**
+  String get meshServicesTemplatePollDescription;
+
+  /// Template display name for shared checklist.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared Checklist'**
+  String get meshServicesTemplateChecklist;
+
+  /// Template description for shared checklist.
+  ///
+  /// In en, this message translates to:
+  /// **'Collaborate on a checklist with nearby peers'**
+  String get meshServicesTemplateChecklistDescription;
+
+  /// Template display name for resource list.
+  ///
+  /// In en, this message translates to:
+  /// **'Resource List'**
+  String get meshServicesTemplateResourceList;
+
+  /// Template description for resource list.
+  ///
+  /// In en, this message translates to:
+  /// **'Share a list of useful resources or supplies'**
+  String get meshServicesTemplateResourceListDescription;
+
+  /// Template display name for weather station.
+  ///
+  /// In en, this message translates to:
+  /// **'Weather Station'**
+  String get meshServicesTemplateWeatherStation;
+
+  /// Template description for weather station.
+  ///
+  /// In en, this message translates to:
+  /// **'Share local weather readings with nearby peers'**
+  String get meshServicesTemplateWeatherStationDescription;
+
+  /// Template display name for sensor node.
+  ///
+  /// In en, this message translates to:
+  /// **'Sensor Node'**
+  String get meshServicesTemplateSensorNode;
+
+  /// Template description for sensor node.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish sensor data from a connected device'**
+  String get meshServicesTemplateSensorNodeDescription;
+
+  /// Template display name for task board.
+  ///
+  /// In en, this message translates to:
+  /// **'Task Board'**
+  String get meshServicesTemplateTaskBoard;
+
+  /// Template description for task board.
+  ///
+  /// In en, this message translates to:
+  /// **'Coordinate tasks with nearby peers'**
+  String get meshServicesTemplateTaskBoardDescription;
+
+  /// Template display name for trail conditions.
+  ///
+  /// In en, this message translates to:
+  /// **'Trail Conditions'**
+  String get meshServicesTemplateTrailConditions;
+
+  /// Template description for trail conditions.
+  ///
+  /// In en, this message translates to:
+  /// **'Report trail and route conditions for others'**
+  String get meshServicesTemplateTrailConditionsDescription;
+
+  /// Template display name for lost and found.
+  ///
+  /// In en, this message translates to:
+  /// **'Lost & Found'**
+  String get meshServicesTemplateLostAndFound;
+
+  /// Template description for lost and found.
+  ///
+  /// In en, this message translates to:
+  /// **'Post lost or found items for nearby peers'**
+  String get meshServicesTemplateLostAndFoundDescription;
+
+  /// Placeholder shown when a schema field has no value.
+  ///
+  /// In en, this message translates to:
+  /// **'No data'**
+  String get schemaFieldNoData;
+
+  /// Placeholder shown when a list-type schema field is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty list'**
+  String get schemaFieldEmptyList;
+
+  /// Label showing number of additional list items not displayed.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} more'**
+  String schemaFieldMoreItems(int count);
+
+  /// Relative time label for timestamps less than a minute ago.
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get schemaFieldJustNow;
+
+  /// Relative time label for timestamps minutes ago.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}m ago'**
+  String schemaFieldMinutesAgo(int count);
+
+  /// Relative time label for timestamps hours ago.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}h ago'**
+  String schemaFieldHoursAgo(int count);
+
+  /// Relative time label for timestamps days ago.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}d ago'**
+  String schemaFieldDaysAgo(int count);
+
+  /// Title shown when a service type is not recognized.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown Service'**
+  String get serviceDetailUnknownTitle;
+
+  /// Body text shown when a service type is not recognized.
+  ///
+  /// In en, this message translates to:
+  /// **'Service type \"{serviceType}\" is not recognized by this version of the app.'**
+  String serviceDetailUnknownBody(String serviceType);
+
+  /// Error shown when MRRP engine is unavailable and an action cannot be dispatched.
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh network is not available right now.'**
+  String get serviceDetailMeshUnavailable;
+
+  /// Snackbar shown when an MRRP action completes.
+  ///
+  /// In en, this message translates to:
+  /// **'{actionName} completed successfully.'**
+  String serviceDetailActionSuccess(String actionName);
+
+  /// Snackbar shown when an MRRP action fails.
+  ///
+  /// In en, this message translates to:
+  /// **'{actionName} could not be completed.'**
+  String serviceDetailActionFailed(String actionName);
+
+  /// Snackbar shown when an interactive mesh share action fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not update this share right now.'**
+  String get meshServicesInteractionFailed;
+
+  /// Loading text shown while fetching remote service instances via MRRP.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading what’s being shared…'**
+  String get serviceDetailFetchingInstances;
+
+  /// Error text shown when a single MRRP request attempt to fetch remote instances fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach this service. The peer may be out of range.'**
+  String get serviceDetailFetchFailed;
+
+  /// Error text shown when MRRP request fails after multiple retry attempts.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach this service after {attempts} attempts. The peer may be out of range.'**
+  String serviceDetailFetchFailedRetried(int attempts);
+
+  /// Empty state when remote peer has no active service instances.
+  ///
+  /// In en, this message translates to:
+  /// **'No active instances'**
+  String get serviceDetailNoInstances;
+
+  /// Empty state description when remote peer has no active service instances.
+  ///
+  /// In en, this message translates to:
+  /// **'This peer is not hosting any active services right now.'**
+  String get serviceDetailNoInstancesBody;
+
+  /// Label for the instance description field in the remote instance detail.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get serviceDetailInstanceDescription;
+
+  /// Expiry information for a remote service instance.
+  ///
+  /// In en, this message translates to:
+  /// **'Ends in {time}'**
+  String serviceDetailInstanceExpires(String time);
+
+  /// Shown when a remote service instance has no expiry time set.
+  ///
+  /// In en, this message translates to:
+  /// **'Stays live until removed'**
+  String get serviceDetailInstanceNoExpiry;
+
+  /// Shown when a remote service instance has expired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get serviceDetailInstanceExpired;
+
+  /// Label for the service title input field.
+  ///
+  /// In en, this message translates to:
+  /// **'Headline'**
+  String get meshServicesFieldTitle;
+
+  /// Label for the service description input field.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get meshServicesFieldDescription;
+
+  /// Hint text for the service description text field.
+  ///
+  /// In en, this message translates to:
+  /// **'Add the context nearby people need'**
+  String get meshServicesDescriptionHint;
+
+  /// Label for the service duration/TTL selector.
+  ///
+  /// In en, this message translates to:
+  /// **'Visible for'**
+  String get meshServicesFieldDuration;
+
+  /// Label for poll question input field.
+  ///
+  /// In en, this message translates to:
+  /// **'Question'**
+  String get meshServicesFieldQuestion;
+
+  /// Label for poll option input field.
+  ///
+  /// In en, this message translates to:
+  /// **'Option {index}'**
+  String meshServicesFieldOption(int index);
+
+  /// Button label to add a poll option.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Option'**
+  String get meshServicesFieldAddOption;
+
+  /// Label for checklist/resource list item input.
+  ///
+  /// In en, this message translates to:
+  /// **'Item {index}'**
+  String meshServicesFieldItem(int index);
+
+  /// Button label to add an item to checklist or resource list.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Item'**
+  String get meshServicesFieldAddItem;
+
+  /// App bar title for the service preview screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get meshServicesPreviewTitle;
+
+  /// Subtitle on the preview screen.
+  ///
+  /// In en, this message translates to:
+  /// **'People nearby will see the headline first, then open the full details.'**
+  String get meshServicesPreviewSubtitle;
+
+  /// Button label to publish/create the service instance.
+  ///
+  /// In en, this message translates to:
+  /// **'Share now'**
+  String get meshServicesPublishAction;
+
+  /// Snackbar message after successfully creating a service.
+  ///
+  /// In en, this message translates to:
+  /// **'Service published'**
+  String get meshServicesPublishSuccess;
+
+  /// Completion panel headline after a service has been published.
+  ///
+  /// In en, this message translates to:
+  /// **'Your share is live'**
+  String get meshServicesCreatedHeadline;
+
+  /// Completion panel description after publishing a service.
+  ///
+  /// In en, this message translates to:
+  /// **'People nearby can now discover it and open the full details.'**
+  String get meshServicesCreatedDescription;
+
+  /// Mesh hint shown in the completion panel after publishing.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing works best when other radios are active nearby.'**
+  String get meshServicesCreatedMeshHint;
+
+  /// Primary action button in the completion panel to navigate to My Services list.
+  ///
+  /// In en, this message translates to:
+  /// **'See my shares'**
+  String get meshServicesCreatedViewServices;
+
+  /// Secondary action button in the completion panel to start a new service creation.
+  ///
+  /// In en, this message translates to:
+  /// **'Share another'**
+  String get meshServicesCreatedCreateAnother;
+
+  /// Status badge label for active instances.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get meshServicesStatusActive;
+
+  /// Status badge label for stopped instances.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped'**
+  String get meshServicesStatusStopped;
+
+  /// Status badge label for expired instances.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get meshServicesStatusExpired;
+
+  /// Action label to stop an active service instance.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get meshServicesStopAction;
+
+  /// Action label to delete a service instance.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get meshServicesDeleteAction;
+
+  /// Section label for instance detail sheet actions.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage this share'**
+  String get meshServicesActionsLabel;
+
+  /// Confirmation message when stopping a service.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop this service? Nearby peers will no longer see it.'**
+  String get meshServicesStopConfirm;
+
+  /// Confirmation message when deleting a service.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this service? This cannot be undone.'**
+  String get meshServicesDeleteConfirm;
+
+  /// App bar title for the service instance detail screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Service Details'**
+  String get meshServicesDetailTitle;
+
+  /// Shows remaining time before service expires.
+  ///
+  /// In en, this message translates to:
+  /// **'{duration} remaining'**
+  String meshServicesRemainingTime(String duration);
+
+  /// Short duration label in minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} min'**
+  String meshServicesDurationMinutes(int count);
+
+  /// Short duration label in hours.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} hr'**
+  String meshServicesDurationHours(int count);
+
+  /// Mesh Games feature title.
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh Games'**
+  String get meshGamesTitle;
+
+  /// Filter chip label for the games tab on the services list.
+  ///
+  /// In en, this message translates to:
+  /// **'Games'**
+  String get meshGamesTabLabel;
+
+  /// Empty state title for the games list.
+  ///
+  /// In en, this message translates to:
+  /// **'No games yet'**
+  String get meshGamesEmptyTitle;
+
+  /// Empty state tagline for the games list.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite a peer to a quick match'**
+  String get meshGamesEmptyTagline;
+
+  /// Button label for starting a new game.
+  ///
+  /// In en, this message translates to:
+  /// **'New Game'**
+  String get meshGamesNewGame;
+
+  /// Title for the new-game sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a New Game'**
+  String get meshGamesNewGameTitle;
+
+  /// Human-readable name of the RPS game.
+  ///
+  /// In en, this message translates to:
+  /// **'Rock Paper Scissors'**
+  String get meshGamesTypeRps;
+
+  /// Description of RPS game.
+  ///
+  /// In en, this message translates to:
+  /// **'Best of one. Both players reveal at the same time.'**
+  String get meshGamesTypeRpsDescription;
+
+  /// Human-readable name of the Tic Tac Toe game.
+  ///
+  /// In en, this message translates to:
+  /// **'Tic Tac Toe'**
+  String get meshGamesTypeTicTacToe;
+
+  /// Description of Tic Tac Toe game.
+  ///
+  /// In en, this message translates to:
+  /// **'Three in a row. Take turns marking the grid.'**
+  String get meshGamesTypeTicTacToeDescription;
+
+  /// Fallback label for an unknown game type.
+  ///
+  /// In en, this message translates to:
+  /// **'Game'**
+  String get meshGamesTypeUnknown;
+
+  /// Status chip when it is the local player's turn.
+  ///
+  /// In en, this message translates to:
+  /// **'Your turn'**
+  String get meshGamesStatusYourTurn;
+
+  /// Status chip when waiting for the opponent to move.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting'**
+  String get meshGamesStatusWaiting;
+
+  /// Status chip when the local player has won.
+  ///
+  /// In en, this message translates to:
+  /// **'You won'**
+  String get meshGamesStatusYouWon;
+
+  /// Status chip when the local player has lost.
+  ///
+  /// In en, this message translates to:
+  /// **'You lost'**
+  String get meshGamesStatusYouLost;
+
+  /// Status chip for a draw.
+  ///
+  /// In en, this message translates to:
+  /// **'Draw'**
+  String get meshGamesStatusDraw;
+
+  /// Generic status chip when a game has finished.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get meshGamesStatusCompleted;
+
+  /// Status chip when a game was abandoned.
+  ///
+  /// In en, this message translates to:
+  /// **'Abandoned'**
+  String get meshGamesStatusAbandoned;
+
+  /// Status chip when the session is stale (awaiting resync).
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing…'**
+  String get meshGamesStatusStale;
+
+  /// Generic status chip when a game is in progress.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get meshGamesStatusActive;
+
+  /// Action label that triggers a STATE_REQ to the peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Resync'**
+  String get meshGamesActionResync;
+
+  /// Action label that abandons the current session.
+  ///
+  /// In en, this message translates to:
+  /// **'Abandon'**
+  String get meshGamesActionAbandon;
+
+  /// Confirmation title for abandoning a game.
+  ///
+  /// In en, this message translates to:
+  /// **'Abandon this game?'**
+  String get meshGamesAbandonConfirmTitle;
+
+  /// Confirmation body for abandoning a game.
+  ///
+  /// In en, this message translates to:
+  /// **'The other player will be notified.'**
+  String get meshGamesAbandonConfirmMessage;
+
+  /// Label for the opponent field.
+  ///
+  /// In en, this message translates to:
+  /// **'Opponent'**
+  String get meshGamesOpponentLabel;
+
+  /// Label for the local player in a game.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get meshGamesYouLabel;
+
+  /// Separator shown between the local player and opponent (e.g. 'You vs Opponent').
+  ///
+  /// In en, this message translates to:
+  /// **'vs'**
+  String get meshGamesVsSeparator;
+
+  /// Title for the opponent picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick an opponent'**
+  String get meshGamesOpponentPickerTitle;
+
+  /// Shown when no peers are available.
+  ///
+  /// In en, this message translates to:
+  /// **'No peers available'**
+  String get meshGamesOpponentMissing;
+
+  /// Error label when a move fails to transmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t send move'**
+  String get meshGamesSendFailed;
+
+  /// RPS throw: rock.
+  ///
+  /// In en, this message translates to:
+  /// **'Rock'**
+  String get meshGamesRpsRock;
+
+  /// RPS throw: paper.
+  ///
+  /// In en, this message translates to:
+  /// **'Paper'**
+  String get meshGamesRpsPaper;
+
+  /// RPS throw: scissors.
+  ///
+  /// In en, this message translates to:
+  /// **'Scissors'**
+  String get meshGamesRpsScissors;
+
+  /// Prompt shown in the RPS chooser.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick your throw'**
+  String get meshGamesRpsPickPrompt;
+
+  /// Title shown on the RPS reveal card.
+  ///
+  /// In en, this message translates to:
+  /// **'Reveal'**
+  String get meshGamesRpsRevealTitle;
+
+  /// TTT mark X.
+  ///
+  /// In en, this message translates to:
+  /// **'X'**
+  String get meshGamesTttMarkX;
+
+  /// TTT mark O.
+  ///
+  /// In en, this message translates to:
+  /// **'O'**
+  String get meshGamesTttMarkO;
+
+  /// Prompt in the TTT board when it is the local player's turn.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a cell to place your mark'**
+  String get meshGamesTttTapPrompt;
+
+  /// Revision counter label.
+  ///
+  /// In en, this message translates to:
+  /// **'Rev {revision}'**
+  String meshGamesRevision(int revision);
+
+  /// Title for a mesh game session shown in the services list. Combines the localized game type name with the opponent display name.
+  ///
+  /// In en, this message translates to:
+  /// **'{gameName} · {opponent}'**
+  String meshGamesSessionTitle(String gameName, String opponent);
+
+  /// Validation error when title is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Title is required'**
+  String get meshServicesTitleRequired;
+
+  /// Validation error for poll with fewer than 2 options.
+  ///
+  /// In en, this message translates to:
+  /// **'At least 2 options required'**
+  String get meshServicesMinOptions;
+
+  /// Validation error for checklist/resource list with no items.
+  ///
+  /// In en, this message translates to:
+  /// **'At least 1 item required'**
+  String get meshServicesMinItems;
+
+  /// Generic confirm button label.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get meshServicesConfirmAction;
+
+  /// Generic cancel button label.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get meshServicesCancelAction;
+
+  /// Hint text for the search field on the My Services screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Search my shares'**
+  String get meshServicesSearchHint;
+
+  /// Filter chip label for all service instances.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get meshServicesFilterAll;
+
+  /// Filter chip label for active service instances.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get meshServicesFilterActive;
+
+  /// Filter chip label for expired service instances.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get meshServicesFilterExpired;
+
+  /// Filter chip label for stopped service instances.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped'**
+  String get meshServicesFilterStopped;
+
+  /// Empty state text when search or filter yields no results.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching shares'**
+  String get meshServicesNoResults;
+
+  /// Label for the terrain profile action in the measurement card actions sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Terrain Profile'**
+  String get mapTerrainProfile;
+
+  /// Subtitle for the terrain profile action button.
+  ///
+  /// In en, this message translates to:
+  /// **'Elevation cross-section + LOS overlay'**
+  String get mapTerrainProfileSubtitle;
+
+  /// Title for the terrain profile screen app bar.
+  ///
+  /// In en, this message translates to:
+  /// **'Terrain Profile'**
+  String get mapTerrainProfileTitle;
+
+  /// Loading message shown while the elevation API request is in progress.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetching elevation data…'**
+  String get mapTerrainProfileLoading;
+
+  /// Warning shown when the device is offline and elevation data cannot be fetched.
+  ///
+  /// In en, this message translates to:
+  /// **'Elevation data unavailable offline'**
+  String get mapTerrainProfileOffline;
+
+  /// Subtitle for the offline warning on the terrain profile screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to the internet to load terrain elevation.'**
+  String get mapTerrainProfileOfflineSubtitle;
+
+  /// Error message shown when the elevation API call fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load elevation data'**
+  String get mapTerrainProfileError;
+
+  /// Subtitle for the elevation fetch error banner.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your connection and try again.'**
+  String get mapTerrainProfileErrorSubtitle;
+
+  /// Note shown when endpoint altitude data is missing and the LOS line cannot be rendered.
+  ///
+  /// In en, this message translates to:
+  /// **'LOS overlay unavailable'**
+  String get mapTerrainProfileNeedsAltitude;
+
+  /// Subtitle explaining why the LOS overlay is hidden.
+  ///
+  /// In en, this message translates to:
+  /// **'One or both nodes have no GPS altitude. Terrain profile is still shown.'**
+  String get mapTerrainProfileNeedsAltitudeSubtitle;
+
+  /// Info note shown when terrain elevation is used as a fallback altitude for the LOS overlay because no GPS altitude is available.
+  ///
+  /// In en, this message translates to:
+  /// **'Using terrain elevation for LOS'**
+  String get mapTerrainProfileUsingTerrainAltitude;
+
+  /// Subtitle explaining that terrain elevation is being used as a fallback for antenna altitude.
+  ///
+  /// In en, this message translates to:
+  /// **'No GPS altitude — ground level assumed for one or both points.'**
+  String get mapTerrainProfileUsingTerrainAltitudeSubtitle;
+
+  /// Label showing how many elevation samples were loaded.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} elevation samples'**
+  String mapTerrainProfileSampleCount(int count);
+
+  /// Tooltip for the icon button that switches between 2D chart and 3D terrain view.
+  ///
+  /// In en, this message translates to:
+  /// **'3D view'**
+  String get mapTerrainProfile3DToggle;
+
+  /// Tooltip for the icon button that switches back to the 2D terrain chart.
+  ///
+  /// In en, this message translates to:
+  /// **'2D chart'**
+  String get mapTerrainProfile2DToggle;
+
+  /// Terrain-aware LOS verdict label.
+  ///
+  /// In en, this message translates to:
+  /// **'Terrain LOS: {verdict}'**
+  String mapTerrainLosVerdict(String verdict);
+
+  /// Shown when a path is obstructed and extra height is needed.
+  ///
+  /// In en, this message translates to:
+  /// **'Additional clearance needed: {meters}m'**
+  String mapTerrainAdditionalClearance(String meters);
+
+  /// Button label to retry a failed elevation fetch.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get mapTerrainRetry;
+
+  /// Title for the antenna height input section on the terrain profile screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Antenna height above ground'**
+  String get mapTerrainAntennaHeightTitle;
+
+  /// Subtitle explaining why the user should enter antenna height above ground.
+  ///
+  /// In en, this message translates to:
+  /// **'Set antenna height above ground level for points without GPS altitude to improve LOS accuracy.'**
+  String get mapTerrainAntennaHeightSubtitle;
+
+  /// Label for an antenna height input field, e.g. 'Point A: NodeName'.
+  ///
+  /// In en, this message translates to:
+  /// **'Point {prefix}: {name}'**
+  String mapTerrainAntennaHeightPointLabel(String prefix, String name);
+
+  /// Shows the terrain elevation at an endpoint so the user has context for their AGL input.
+  ///
+  /// In en, this message translates to:
+  /// **'Ground: {altitude}m AMSL'**
+  String mapTerrainAntennaHeightGroundLevel(int altitude);
+
+  /// Explanation shown when terrain fully blocks the LOS path.
+  ///
+  /// In en, this message translates to:
+  /// **'Terrain obstructs path by {depth}m at the worst point.'**
+  String terrainLosExplanationObstructed(String depth);
+
+  /// Explanation shown when terrain causes marginal LOS degradation.
+  ///
+  /// In en, this message translates to:
+  /// **'Path clears terrain but Fresnel zone is partially obstructed. Signal may be degraded.'**
+  String get terrainLosExplanationMarginal;
+
+  /// Explanation shown when terrain LOS is fully clear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear LOS with ≥60% first Fresnel zone clearance throughout.'**
+  String get terrainLosExplanationClear;
+
+  /// Abbreviation for kilometres, used as a chart axis label.
+  ///
+  /// In en, this message translates to:
+  /// **'km'**
+  String get unitKm;
+
+  /// Abbreviation for metres, used as a chart axis label.
+  ///
+  /// In en, this message translates to:
+  /// **'m'**
+  String get unitM;
+
+  /// Altitude suffix shown next to a node name in the terrain profile endpoint row.
+  ///
+  /// In en, this message translates to:
+  /// **'· {value}m'**
+  String mapTerrainNodeAltitude(String value);
+
+  /// Endpoint label in the terrain profile screen, e.g. 'A: Node Name'.
+  ///
+  /// In en, this message translates to:
+  /// **'{prefix}: {name}'**
+  String mapTerrainEndpointLabel(String prefix, String name);
+
+  /// Endpoint label when no node name is available, showing coordinates.
+  ///
+  /// In en, this message translates to:
+  /// **'{prefix}: {lat}, {lon}'**
+  String mapTerrainEndpointCoords(String prefix, String lat, String lon);
+
+  /// LOS verdict label: clear line of sight.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get losVerdictClear;
+
+  /// LOS verdict label: marginal line of sight.
+  ///
+  /// In en, this message translates to:
+  /// **'Marginal'**
+  String get losVerdictMarginal;
+
+  /// LOS verdict label: path is obstructed.
+  ///
+  /// In en, this message translates to:
+  /// **'Obstructed'**
+  String get losVerdictObstructed;
+
+  /// LOS verdict label: insufficient data to determine LOS.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get losVerdictUnknown;
+
+  /// LOS result explanation when altitude data is missing.
+  ///
+  /// In en, this message translates to:
+  /// **'Altitude data unavailable for one or both points.'**
+  String get losExplanationNoAltitude;
+
+  /// LOS result explanation when earth curvature blocks the path.
+  ///
+  /// In en, this message translates to:
+  /// **'Earth curvature obstructs the path by {depth}m at midpoint. Terrain/obstacles not considered.'**
+  String losExplanationObstructed(String depth);
+
+  /// LOS result explanation when line of sight is clear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear line of sight with {clearance}m clearance above earth bulge. Terrain/obstacles not considered.'**
+  String losExplanationClear(String clearance);
+
+  /// LOS result explanation when clearance is below the Fresnel threshold.
+  ///
+  /// In en, this message translates to:
+  /// **'Marginal clearance ({clearance}m) — below the recommended {required}m Fresnel clearance. Terrain/obstacles not considered.'**
+  String losExplanationMarginal(String clearance, String required);
+
+  /// Tooltip for card view mode toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Card View'**
+  String get nodesScreenViewModeCards;
+
+  /// Tooltip for compact view mode toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Compact View'**
+  String get nodesScreenViewModeCompact;
+
+  /// Compact uptime display on node card
+  ///
+  /// In en, this message translates to:
+  /// **'Up {uptime}'**
+  String nodesScreenUptimeLabel(String uptime);
+
+  /// Title for the nodes screen icon legend bottom sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Icon Legend'**
+  String get nodesScreenLegendTitle;
+
+  /// Legend entry for green active status dot
+  ///
+  /// In en, this message translates to:
+  /// **'Active — heard recently'**
+  String get nodesScreenLegendStatusActive;
+
+  /// Legend entry for yellow fading status dot
+  ///
+  /// In en, this message translates to:
+  /// **'Fading — not heard for a while'**
+  String get nodesScreenLegendStatusFading;
+
+  /// Legend entry for grey stale status dot
+  ///
+  /// In en, this message translates to:
+  /// **'Stale — last heard long ago'**
+  String get nodesScreenLegendStatusStale;
+
+  /// Legend entry for dim unknown status dot
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown — never heard directly'**
+  String get nodesScreenLegendStatusUnknown;
+
+  /// Legend entry for 4-bar signal
+  ///
+  /// In en, this message translates to:
+  /// **'Strong signal (≥ −70 dBm)'**
+  String get nodesScreenLegendSignalStrong;
+
+  /// Legend entry for 2-3 bar signal
+  ///
+  /// In en, this message translates to:
+  /// **'Medium signal (−70 to −85 dBm)'**
+  String get nodesScreenLegendSignalMedium;
+
+  /// Legend entry for 1-bar signal
+  ///
+  /// In en, this message translates to:
+  /// **'Weak signal (< −85 dBm)'**
+  String get nodesScreenLegendSignalWeak;
+
+  /// Legend entry for 0-hop direct connection
+  ///
+  /// In en, this message translates to:
+  /// **'Direct — no hops'**
+  String get nodesScreenLegendHopsDirect;
+
+  /// Legend entry for 1-hop node
+  ///
+  /// In en, this message translates to:
+  /// **'1 hop away'**
+  String get nodesScreenLegendHops1;
+
+  /// Legend entry for 2-hop node
+  ///
+  /// In en, this message translates to:
+  /// **'2 hops away'**
+  String get nodesScreenLegendHops2;
+
+  /// Legend entry for 3-hop node
+  ///
+  /// In en, this message translates to:
+  /// **'3 hops away'**
+  String get nodesScreenLegendHops3;
+
+  /// Legend entry for 4+ hop node
+  ///
+  /// In en, this message translates to:
+  /// **'4+ hops away'**
+  String get nodesScreenLegendHops4Plus;
+
+  /// Legend entry for RF transport icon
+  ///
+  /// In en, this message translates to:
+  /// **'Radio frequency (RF)'**
+  String get nodesScreenLegendTransportRf;
+
+  /// Legend entry for MQTT transport icon
+  ///
+  /// In en, this message translates to:
+  /// **'Internet (MQTT)'**
+  String get nodesScreenLegendTransportMqtt;
+
+  /// Legend entry for green battery
+  ///
+  /// In en, this message translates to:
+  /// **'Battery good (≥ 50%)'**
+  String get nodesScreenLegendBatteryGood;
+
+  /// Legend entry for yellow battery
+  ///
+  /// In en, this message translates to:
+  /// **'Battery low (20–49%)'**
+  String get nodesScreenLegendBatteryLow;
+
+  /// Legend entry for red battery
+  ///
+  /// In en, this message translates to:
+  /// **'Battery critical (< 20%)'**
+  String get nodesScreenLegendBatteryCritical;
+
+  /// Section header for status dots in the legend
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get nodesScreenLegendSectionStatus;
+
+  /// Section header for signal bars in the legend
+  ///
+  /// In en, this message translates to:
+  /// **'Signal Strength'**
+  String get nodesScreenLegendSectionSignal;
+
+  /// Section header for hop indicators in the legend
+  ///
+  /// In en, this message translates to:
+  /// **'Hop Count'**
+  String get nodesScreenLegendSectionHops;
+
+  /// Section header for transport icons in the legend
+  ///
+  /// In en, this message translates to:
+  /// **'Transport'**
+  String get nodesScreenLegendSectionTransport;
+
+  /// Section header for battery icons in the legend
+  ///
+  /// In en, this message translates to:
+  /// **'Battery'**
+  String get nodesScreenLegendSectionBattery;
+
+  /// Title for the board.v1 MRRP service card
+  ///
+  /// In en, this message translates to:
+  /// **'Bulletin Board'**
+  String get servicePresentationBoardTitle;
+
+  /// Subtitle for the board.v1 MRRP service card
+  ///
+  /// In en, this message translates to:
+  /// **'Local mesh posts'**
+  String get servicePresentationBoardSubtitle;
+
+  /// Action label for the board.v1 MRRP service card
+  ///
+  /// In en, this message translates to:
+  /// **'Open Board'**
+  String get servicePresentationBoardAction;
+
+  /// Title for the profile.v1 MRRP service card
+  ///
+  /// In en, this message translates to:
+  /// **'Peer Profile'**
+  String get servicePresentationProfileTitle;
+
+  /// Subtitle for the profile.v1 MRRP service card
+  ///
+  /// In en, this message translates to:
+  /// **'Shared identity info'**
+  String get servicePresentationProfileSubtitle;
+
+  /// Action label for the profile.v1 MRRP service card
+  ///
+  /// In en, this message translates to:
+  /// **'View Profile'**
+  String get servicePresentationProfileAction;
+
+  /// Title for the meetup.v1 MRRP service card
+  ///
+  /// In en, this message translates to:
+  /// **'Coordination'**
+  String get servicePresentationMeetupTitle;
+
+  /// Subtitle for the meetup.v1 MRRP service card
+  ///
+  /// In en, this message translates to:
+  /// **'Rendezvous tokens'**
+  String get servicePresentationMeetupSubtitle;
+
+  /// Action label for the meetup.v1 MRRP service card
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get servicePresentationMeetupAction;
+
+  /// Title for the signal.v1 MRRP service card
+  ///
+  /// In en, this message translates to:
+  /// **'Signals'**
+  String get servicePresentationSignalsTitle;
+
+  /// Subtitle for the signal.v1 MRRP service card
+  ///
+  /// In en, this message translates to:
+  /// **'Anonymous status broadcasts'**
+  String get servicePresentationSignalsSubtitle;
+
+  /// Action label for the signal.v1 MRRP service card
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get servicePresentationSignalsAction;
+
+  /// Title for the user-created mesh services card
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh Services'**
+  String get servicePresentationMeshServicesTitle;
+
+  /// Subtitle for the user-created mesh services card
+  ///
+  /// In en, this message translates to:
+  /// **'User-created services'**
+  String get servicePresentationMeshServicesSubtitle;
+
+  /// Action label for the user-created mesh services card
+  ///
+  /// In en, this message translates to:
+  /// **'Browse'**
+  String get servicePresentationMeshServicesAction;
+
+  /// Title for unknown MRRP service cards
+  ///
+  /// In en, this message translates to:
+  /// **'Service'**
+  String get servicePresentationFallbackTitle;
+
+  /// Subtitle for unknown MRRP service cards
+  ///
+  /// In en, this message translates to:
+  /// **'Available nearby'**
+  String get servicePresentationFallbackSubtitle;
+
+  /// Action label for unknown MRRP service cards
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get servicePresentationFallbackAction;
+
+  /// Label for the hold-to-record voice message button in the contacts detail sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Voice'**
+  String get voiceMessageSendButton;
+
+  /// Status text shown while a voice message is being recorded
+  ///
+  /// In en, this message translates to:
+  /// **'Recording…'**
+  String get voiceMessageRecording;
+
+  /// Hint text shown on the press-to-talk record button before recording starts
+  ///
+  /// In en, this message translates to:
+  /// **'Hold to record'**
+  String get voiceMessageRecordingHint;
+
+  /// Snackbar message when the user releases the PTT button too quickly
+  ///
+  /// In en, this message translates to:
+  /// **'Recording too short — hold longer'**
+  String get voiceMessageTooShort;
+
+  /// Snackbar message after a voice message is successfully transmitted
+  ///
+  /// In en, this message translates to:
+  /// **'Voice message sent'**
+  String get voiceMessageSent;
+
+  /// Snackbar message when voice message encoding or transfer initiation fails
+  ///
+  /// In en, this message translates to:
+  /// **'Voice message could not be sent'**
+  String get voiceMessageFailed;
+
+  /// Snackbar message shown when microphone permission was denied
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone access is required to send voice messages'**
+  String get voiceMessagePermissionDenied;
+
+  /// Action label on the microphone-permission-denied snackbar that opens system settings
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settings'**
+  String get voiceMessagePermissionSettings;
+
+  /// Accessibility label / tooltip on the play button in the voice message player widget
+  ///
+  /// In en, this message translates to:
+  /// **'Play voice message'**
+  String get voiceMessagePlay;
+
+  /// Accessibility label / tooltip on the stop button in the voice message player widget
+  ///
+  /// In en, this message translates to:
+  /// **'Stop playback'**
+  String get voiceMessageStop;
+
+  /// Label shown below the pause button in the voice recording overlay preview
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get voiceMessagePause;
+
+  /// Duration label shown in the voice message player (e.g. '12s')
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds}s'**
+  String voiceMessageDuration(int seconds);
+
+  /// Snackbar message shown when recording auto-stops at the 54-second limit
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum recording length reached'**
+  String get voiceMessageAutoStopped;
+
+  /// Hint text below the stop button in the voice recording overlay
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to stop recording'**
+  String get voiceRecordingTapToStop;
+
+  /// Label for the stop-recording button in the voice recording overlay
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get voiceRecordingStopButton;
+
+  /// Live recording indicator label shown in the recording overlay
+  ///
+  /// In en, this message translates to:
+  /// **'REC'**
+  String get voiceRecordingLive;
+
+  /// Recording overlay subtitle showing the maximum recording duration
+  ///
+  /// In en, this message translates to:
+  /// **'of {seconds}s max'**
+  String voiceRecordingMaxSeconds(String seconds);
+
+  /// Cancel button in the voice recording overlay — discards the recording
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get voiceRecordingCancelButton;
+
+  /// Title for the confirmation dialog when discarding a voice recording
+  ///
+  /// In en, this message translates to:
+  /// **'Discard recording?'**
+  String get voiceRecordingDiscardTitle;
+
+  /// Message in the confirmation dialog when discarding a voice recording
+  ///
+  /// In en, this message translates to:
+  /// **'Your recording will be lost.'**
+  String get voiceRecordingDiscardMessage;
+
+  /// Confirm button label in the discard recording dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get voiceRecordingDiscardConfirm;
+
+  /// Retake button in the voice recording overlay — discards and restarts the recording
+  ///
+  /// In en, this message translates to:
+  /// **'Retake'**
+  String get voiceRecordingRetakeButton;
+
+  /// Send confirmation button in the voice recording review phase
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get voiceRecordingSendButton;
+
+  /// Status shown after the user stops recording and before they confirm send
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to send'**
+  String get voiceRecordingReadyToSend;
+
+  /// Hint shown below the play button in the voice recording review phase
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to preview'**
+  String get voiceRecordingTapToPreview;
+
+  /// Hint shown below the record button when the overlay is in idle state
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to record'**
+  String get voiceRecordingTapToRecord;
+
+  /// Status pill label shown when recording is paused
+  ///
+  /// In en, this message translates to:
+  /// **'PAUSED'**
+  String get voiceRecordingPaused;
+
+  /// Label for the pause button during voice recording
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get voiceRecordingPauseButton;
+
+  /// Label for the resume button when voice recording is paused
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get voiceRecordingResumeButton;
+
+  /// Label for the 1200 bps voice quality mode (longest recording)
+  ///
+  /// In en, this message translates to:
+  /// **'Extended'**
+  String get voiceQualityExtended;
+
+  /// Label for the 2400 bps voice quality mode (balanced)
+  ///
+  /// In en, this message translates to:
+  /// **'Standard'**
+  String get voiceQualityStandard;
+
+  /// Label for the 3200 bps voice quality mode (best quality, shortest recording)
+  ///
+  /// In en, this message translates to:
+  /// **'High quality'**
+  String get voiceQualityHigh;
+
+  /// Max recording duration shown next to quality label
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds}s'**
+  String voiceQualityDuration(String seconds);
+
+  /// Title of the bottom sheet that lets users pick voice quality
+  ///
+  /// In en, this message translates to:
+  /// **'Voice quality'**
+  String get voiceQualityPickerTitle;
+
+  /// Label shown at the top of the voice attachment playback card
+  ///
+  /// In en, this message translates to:
+  /// **'Voice message'**
+  String get voiceAttachmentCardTitle;
+
+  /// Status label while waveform is being analysed in the voice attachment card
+  ///
+  /// In en, this message translates to:
+  /// **'Analysing…'**
+  String get voiceAttachmentAnalysing;
+
+  /// Error label shown when voice message playback fails
+  ///
+  /// In en, this message translates to:
+  /// **'Playback failed'**
+  String get voiceAttachmentPlaybackFailed;
+
+  /// Audio channel count label for mono (single-channel) voice messages
+  ///
+  /// In en, this message translates to:
+  /// **'Mono'**
+  String get voiceAttachmentMono;
+
+  /// Tooltip for the pause button on the voice attachment card
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get voiceAttachmentPause;
+
+  /// Label for the Voice button in the contact detail sheet action row
+  ///
+  /// In en, this message translates to:
+  /// **'Voice'**
+  String get fileTransferContactsSendVoice;
+
+  /// Settings tile title for enabling STL signing on file transfers
+  ///
+  /// In en, this message translates to:
+  /// **'Trust Layer Signing'**
+  String get stlSigningTitle;
+
+  /// Settings tile subtitle for STL signing
+  ///
+  /// In en, this message translates to:
+  /// **'Sign outbound transfers with your identity key'**
+  String get stlSigningSubtitle;
+
+  /// Label shown when an inbound transfer has a valid STL signature
+  ///
+  /// In en, this message translates to:
+  /// **'Signature verified'**
+  String get stlSignatureValid;
+
+  /// Warning label shown when an inbound transfer has an invalid STL signature
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid signature'**
+  String get stlSignatureInvalid;
+
+  /// Button label in the traceroute card to open the route on the map
+  ///
+  /// In en, this message translates to:
+  /// **'Show on Map'**
+  String get tracerouteShowOnMap;
+
+  /// Title of the map screen when showing a traceroute path
+  ///
+  /// In en, this message translates to:
+  /// **'Traceroute Map'**
+  String get tracerouteMapTitle;
+
+  /// Overflow menu option to hide nodes not part of the traceroute and show only the route nodes
+  ///
+  /// In en, this message translates to:
+  /// **'Show route only'**
+  String get tracerouteShowRouteOnly;
+
+  /// Overflow menu option to show all nodes on the map again after hiding unrelated ones
+  ///
+  /// In en, this message translates to:
+  /// **'Show all nodes'**
+  String get tracerouteShowAllNodes;
+
+  /// Tooltip for heading-up compass mode that rotates the map to match device orientation
+  ///
+  /// In en, this message translates to:
+  /// **'Heading up'**
+  String get mapControlsHeadingUp;
+
+  /// Snackbar message when the device does not have a compass/magnetometer sensor
+  ///
+  /// In en, this message translates to:
+  /// **'Compass sensor not available on this device'**
+  String get mapCompassUnavailable;
+
+  /// Section header for the TAK mesh bridge controls in settings
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh Bridge'**
+  String get takBridgeSectionTitle;
+
+  /// Toggle label to enable/disable the on-device TAK server and mesh bridge
+  ///
+  /// In en, this message translates to:
+  /// **'Enable TAK Mesh Bridge'**
+  String get takBridgeEnableToggle;
+
+  /// Subtitle explaining what the TAK mesh bridge does
+  ///
+  /// In en, this message translates to:
+  /// **'Run an on-device TAK server for direct ATAK/iTAK connections over mesh'**
+  String get takBridgeEnableSubtitle;
+
+  /// Label for the TAK server port number field
+  ///
+  /// In en, this message translates to:
+  /// **'Server Port'**
+  String get takBridgeServerPort;
+
+  /// Badge text when the TAK bridge server is running
+  ///
+  /// In en, this message translates to:
+  /// **'Running'**
+  String get takBridgeStatusRunning;
+
+  /// Badge text when the TAK bridge server is stopped
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped'**
+  String get takBridgeStatusStopped;
+
+  /// Shows the number of connected TAK clients
+  ///
+  /// In en, this message translates to:
+  /// **'{count} connected'**
+  String takBridgeConnectedClients(int count);
+
+  /// Label for the inbound packet counter (mesh to TAK)
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh → TAK'**
+  String get takBridgePacketsInbound;
+
+  /// Label for the outbound packet counter (TAK to mesh)
+  ///
+  /// In en, this message translates to:
+  /// **'TAK → Mesh'**
+  String get takBridgePacketsOutbound;
+
+  /// Button label to export a TAK data package ZIP for ATAK/iTAK import
+  ///
+  /// In en, this message translates to:
+  /// **'Export Data Package'**
+  String get takBridgeExportPackage;
+
+  /// Subtitle for the data package export button
+  ///
+  /// In en, this message translates to:
+  /// **'Generate connection package for ATAK/iTAK clients'**
+  String get takBridgeExportPackageSubtitle;
+
+  /// Title for the bridge statistics card
+  ///
+  /// In en, this message translates to:
+  /// **'Bridge Statistics'**
+  String get takBridgeStatsTitle;
+
+  /// Title for the connected TAK clients list
+  ///
+  /// In en, this message translates to:
+  /// **'Connected Clients'**
+  String get takBridgeClientsTitle;
+
+  /// Empty state text when no TAK clients are connected to the bridge
+  ///
+  /// In en, this message translates to:
+  /// **'No TAK clients connected'**
+  String get takBridgeNoClients;
+
+  /// Shows how long a TAK client has been connected
+  ///
+  /// In en, this message translates to:
+  /// **'Connected {duration}'**
+  String takBridgeClientDuration(String duration);
+
+  /// Title for the TAK identity registry viewer
+  ///
+  /// In en, this message translates to:
+  /// **'Identity Registry'**
+  String get takIdentityRegistryTitle;
+
+  /// Empty state when identity registry has no entries
+  ///
+  /// In en, this message translates to:
+  /// **'No identity mappings recorded'**
+  String get takIdentityNoEntries;
+
+  /// Label indicating an identity is a Meshtastic mesh node
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh Node'**
+  String get takIdentityMeshNode;
+
+  /// Label indicating an identity is a TAK client
+  ///
+  /// In en, this message translates to:
+  /// **'TAK Client'**
+  String get takIdentityTakClient;
+
+  /// Title for the callsign override bottom sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Override Callsign'**
+  String get takIdentityOverrideCallsign;
+
+  /// Hint text for the callsign override text field
+  ///
+  /// In en, this message translates to:
+  /// **'Enter custom callsign'**
+  String get takIdentityOverrideHint;
+
+  /// Title shown on TAK screen when only the mesh bridge feature is enabled
+  ///
+  /// In en, this message translates to:
+  /// **'TAK Mesh Bridge'**
+  String get takScreenBridgeOnlyTitle;
+
+  /// Description shown on TAK screen when only the mesh bridge is enabled, directing users to settings
+  ///
+  /// In en, this message translates to:
+  /// **'Use TAK Settings to configure and start the mesh bridge for ATAK/iTAK clients.'**
+  String get takScreenBridgeOnlyDescription;
+
+  /// Button label to open TAK settings from bridge-only TAK screen
+  ///
+  /// In en, this message translates to:
+  /// **'Open TAK Settings'**
+  String get takScreenBridgeOnlyOpenSettings;
+
+  /// Title for the TAK video streams screen
+  ///
+  /// In en, this message translates to:
+  /// **'Live Streams'**
+  String get takVideoTitle;
+
+  /// Button label to start a live video stream
+  ///
+  /// In en, this message translates to:
+  /// **'Go Live'**
+  String get takVideoGoLive;
+
+  /// Label for the stream name input field
+  ///
+  /// In en, this message translates to:
+  /// **'Stream Name'**
+  String get takVideoStreamName;
+
+  /// Label for the callsign input field when creating a stream
+  ///
+  /// In en, this message translates to:
+  /// **'Callsign'**
+  String get takVideoCallsign;
+
+  /// Button label to begin streaming after setup
+  ///
+  /// In en, this message translates to:
+  /// **'Start Streaming'**
+  String get takVideoStartStream;
+
+  /// Button label to stop an active stream
+  ///
+  /// In en, this message translates to:
+  /// **'Stop Streaming'**
+  String get takVideoStopStream;
+
+  /// Button label to end and clean up a stream
+  ///
+  /// In en, this message translates to:
+  /// **'End Stream'**
+  String get takVideoEndStream;
+
+  /// Status message when camera is being initialized
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing camera...'**
+  String get takVideoPreparing;
+
+  /// Status message when stream is being registered with backend
+  ///
+  /// In en, this message translates to:
+  /// **'Registering stream...'**
+  String get takVideoRegistering;
+
+  /// Status badge text when stream is actively broadcasting
+  ///
+  /// In en, this message translates to:
+  /// **'LIVE'**
+  String get takVideoLive;
+
+  /// Status message when publisher is attempting to reconnect
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnecting...'**
+  String get takVideoReconnecting;
+
+  /// Status message when streaming has failed
+  ///
+  /// In en, this message translates to:
+  /// **'Stream failed'**
+  String get takVideoFailed;
+
+  /// Status message when stream has ended normally
+  ///
+  /// In en, this message translates to:
+  /// **'Stream ended'**
+  String get takVideoEnded;
+
+  /// Status message when publisher is idle and ready
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to stream'**
+  String get takVideoIdle;
+
+  /// Title for empty state when no live streams are available
+  ///
+  /// In en, this message translates to:
+  /// **'No Live Streams'**
+  String get takVideoEmptyTitle;
+
+  /// Description for empty state when no streams are found
+  ///
+  /// In en, this message translates to:
+  /// **'There are no active video streams at the moment.'**
+  String get takVideoEmptyDescription;
+
+  /// Button label to refresh the stream list
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get takVideoRefresh;
+
+  /// Status message when stream list is being loaded
+  ///
+  /// In en, this message translates to:
+  /// **'Loading streams...'**
+  String get takVideoLoading;
+
+  /// Count of active live streams
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 live stream} other{{count} live streams}}'**
+  String takVideoStreamCount(int count);
+
+  /// Button label to watch a live stream
+  ///
+  /// In en, this message translates to:
+  /// **'Watch Stream'**
+  String get takVideoWatchStream;
+
+  /// Title for the video player screen
+  ///
+  /// In en, this message translates to:
+  /// **'Live Stream'**
+  String get takVideoPlayerTitle;
+
+  /// Status message when video player is loading
+  ///
+  /// In en, this message translates to:
+  /// **'Loading stream...'**
+  String get takVideoPlayerLoading;
+
+  /// Message when the stream being watched has ended
+  ///
+  /// In en, this message translates to:
+  /// **'Stream has ended'**
+  String get takVideoPlayerEnded;
+
+  /// Message when video player encounters an error
+  ///
+  /// In en, this message translates to:
+  /// **'Playback error'**
+  String get takVideoPlayerError;
+
+  /// Message when camera/mic permissions are not granted
+  ///
+  /// In en, this message translates to:
+  /// **'Camera and microphone permissions are required to stream.'**
+  String get takVideoPermissionRequired;
+
+  /// Message when user needs to sign in for video streaming
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to use video streaming.'**
+  String get takVideoAuthRequired;
+
+  /// Attribution text showing who is streaming
+  ///
+  /// In en, this message translates to:
+  /// **'by {callsign}'**
+  String takVideoStreamBy(String callsign);
+
+  /// Button label to retry a failed operation
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get takVideoRetry;
+
+  /// Button label to create a new stream from empty state
+  ///
+  /// In en, this message translates to:
+  /// **'New Stream'**
+  String get takVideoNewStream;
+
+  /// Transport type label for TCP/IP network connections
+  ///
+  /// In en, this message translates to:
+  /// **'Network (TCP)'**
+  String get deviceSheetNetwork;
+
+  /// Tab title for network transport in scanner screen
+  ///
+  /// In en, this message translates to:
+  /// **'Network'**
+  String get networkSectionTitle;
+
+  /// Section header for saved network endpoints list
+  ///
+  /// In en, this message translates to:
+  /// **'Saved Endpoints'**
+  String get networkSavedEndpoints;
+
+  /// Empty state headline when no network endpoints are saved
+  ///
+  /// In en, this message translates to:
+  /// **'No saved endpoints'**
+  String get networkNoSavedEndpoints;
+
+  /// Empty state description for no saved endpoints
+  ///
+  /// In en, this message translates to:
+  /// **'Add an endpoint to connect to a Meshtastic device over the network.'**
+  String get networkNoSavedEndpointsDescription;
+
+  /// Button label to add a new network endpoint
+  ///
+  /// In en, this message translates to:
+  /// **'Add Endpoint'**
+  String get networkAddEndpoint;
+
+  /// Label for network host input field
+  ///
+  /// In en, this message translates to:
+  /// **'Host'**
+  String get networkHost;
+
+  /// Hint text for network host input field
+  ///
+  /// In en, this message translates to:
+  /// **'IP address or hostname'**
+  String get networkHostHint;
+
+  /// Label for network port input field
+  ///
+  /// In en, this message translates to:
+  /// **'Port'**
+  String get networkPort;
+
+  /// Label for optional endpoint display name
+  ///
+  /// In en, this message translates to:
+  /// **'Name (optional)'**
+  String get networkEndpointName;
+
+  /// Hint text for endpoint name input
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Living Room Node'**
+  String get networkEndpointNameHint;
+
+  /// Status text while connecting to a network endpoint
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting to {address}...'**
+  String networkConnecting(String address);
+
+  /// Error message when network connection fails
+  ///
+  /// In en, this message translates to:
+  /// **'Connection to {address} failed'**
+  String networkConnectionFailed(String address);
+
+  /// Error when DNS lookup fails for network endpoint
+  ///
+  /// In en, this message translates to:
+  /// **'Could not resolve hostname'**
+  String get networkDnsResolutionFailed;
+
+  /// Error when network connection times out
+  ///
+  /// In en, this message translates to:
+  /// **'Connection timed out'**
+  String get networkConnectionTimeout;
+
+  /// Error when target device refuses the TCP connection
+  ///
+  /// In en, this message translates to:
+  /// **'Connection refused'**
+  String get networkConnectionRefused;
+
+  /// Validation error for empty host field
+  ///
+  /// In en, this message translates to:
+  /// **'Host is required'**
+  String get networkHostRequired;
+
+  /// Validation error for invalid port number
+  ///
+  /// In en, this message translates to:
+  /// **'Port must be between 1 and 65535'**
+  String get networkPortInvalid;
+
+  /// Button label to delete a saved network endpoint
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Endpoint'**
+  String get networkDeleteEndpoint;
+
+  /// Confirmation message for deleting a saved endpoint
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {address} from saved endpoints?'**
+  String networkDeleteEndpointConfirm(String address);
+
+  /// Shows when the endpoint was last connected
+  ///
+  /// In en, this message translates to:
+  /// **'Last used {time}'**
+  String networkLastUsed(String time);
+
+  /// Tab label for Bluetooth transport in scanner
+  ///
+  /// In en, this message translates to:
+  /// **'Bluetooth'**
+  String get scannerTabBluetooth;
+
+  /// Tab label for Network transport in scanner
+  ///
+  /// In en, this message translates to:
+  /// **'Network'**
+  String get scannerTabNetwork;
+
+  /// Section header for mDNS-discovered Meshtastic devices on the local network
+  ///
+  /// In en, this message translates to:
+  /// **'Wi-Fi Radios'**
+  String get mdnsDiscoveredRadios;
+
+  /// Empty state headline when no mDNS devices are discovered
+  ///
+  /// In en, this message translates to:
+  /// **'No Wi-Fi radios found'**
+  String get mdnsNoDevicesFound;
+
+  /// Empty state description for mDNS discovery section
+  ///
+  /// In en, this message translates to:
+  /// **'Meshtastic devices with WiFi enabled will appear here automatically.'**
+  String get mdnsNoDevicesDescription;
+
+  /// Status text shown while connecting to a discovered mDNS device
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting…'**
+  String get mdnsConnecting;
+
+  /// Transport type label for TCP connections
+  ///
+  /// In en, this message translates to:
+  /// **'TCP'**
+  String get mdnsTransportTcp;
+
+  /// Status text shown while mDNS discovery is actively scanning
+  ///
+  /// In en, this message translates to:
+  /// **'Scanning…'**
+  String get mdnsScanning;
+
+  /// Title for the network endpoints settings screen
+  ///
+  /// In en, this message translates to:
+  /// **'Network Endpoints'**
+  String get settingsNetworkEndpointsTitle;
+
+  /// Settings tile title for network endpoints
+  ///
+  /// In en, this message translates to:
+  /// **'Network Endpoints'**
+  String get settingsTileNetworkEndpointsTitle;
+
+  /// Settings tile subtitle for network endpoints
+  ///
+  /// In en, this message translates to:
+  /// **'Manage saved TCP endpoints and discover Wi-Fi radios'**
+  String get settingsTileNetworkEndpointsSubtitle;
+
+  /// Drawer menu label for the mesh incidents feature
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh Incidents'**
+  String get navigationMeshIncidents;
+
+  /// Title for the mesh incident list screen
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh Incidents'**
+  String get meshIncidentListTitle;
+
+  /// Title for the mesh incident detail screen
+  ///
+  /// In en, this message translates to:
+  /// **'Incident Detail'**
+  String get meshIncidentDetailTitle;
+
+  /// Title for the mesh incident composer screen
+  ///
+  /// In en, this message translates to:
+  /// **'Report Incident'**
+  String get meshIncidentComposerTitle;
+
+  /// Title for update incident composer
+  ///
+  /// In en, this message translates to:
+  /// **'Update Incident'**
+  String get meshIncidentComposerUpdateTitle;
+
+  /// Title for correction composer
+  ///
+  /// In en, this message translates to:
+  /// **'Correct Report'**
+  String get meshIncidentComposerCorrectionTitle;
+
+  /// Empty state title for mesh incident list
+  ///
+  /// In en, this message translates to:
+  /// **'No Mesh Incidents'**
+  String get meshIncidentEmptyTitle;
+
+  /// Empty state description for mesh incident list
+  ///
+  /// In en, this message translates to:
+  /// **'Incident reports from the mesh network will appear here. Tap the button to create a new report.'**
+  String get meshIncidentEmptyDescription;
+
+  /// Empty state cycling tagline 1
+  ///
+  /// In en, this message translates to:
+  /// **'Report incidents across the mesh'**
+  String get meshIncidentEmptyTagline1;
+
+  /// Empty state cycling tagline 2
+  ///
+  /// In en, this message translates to:
+  /// **'Coordinate responses in real-time'**
+  String get meshIncidentEmptyTagline2;
+
+  /// Empty state cycling tagline 3
+  ///
+  /// In en, this message translates to:
+  /// **'Track situation awareness off-grid'**
+  String get meshIncidentEmptyTagline3;
+
+  /// Button label to create a new mesh incident report
+  ///
+  /// In en, this message translates to:
+  /// **'Create Report'**
+  String get meshIncidentCreateButton;
+
+  /// Button label to send the incident report over mesh
+  ///
+  /// In en, this message translates to:
+  /// **'Send Report'**
+  String get meshIncidentSendButton;
+
+  /// Button label to send an incident update
+  ///
+  /// In en, this message translates to:
+  /// **'Send Update'**
+  String get meshIncidentSendUpdateButton;
+
+  /// Button label to send an incident correction
+  ///
+  /// In en, this message translates to:
+  /// **'Send Correction'**
+  String get meshIncidentSendCorrectionButton;
+
+  /// Label for the incident classification field
+  ///
+  /// In en, this message translates to:
+  /// **'Classification'**
+  String get meshIncidentClassificationLabel;
+
+  /// Label for the incident priority field
+  ///
+  /// In en, this message translates to:
+  /// **'Priority'**
+  String get meshIncidentPriorityLabel;
+
+  /// Label for the incident confidence level field
+  ///
+  /// In en, this message translates to:
+  /// **'Confidence'**
+  String get meshIncidentConfidenceLabel;
+
+  /// Label for the reporter role field
+  ///
+  /// In en, this message translates to:
+  /// **'Your Role'**
+  String get meshIncidentRoleLabel;
+
+  /// Label for the incident body/summary text field
+  ///
+  /// In en, this message translates to:
+  /// **'Summary'**
+  String get meshIncidentBodyLabel;
+
+  /// Hint text for the incident body field
+  ///
+  /// In en, this message translates to:
+  /// **'Describe the situation concisely'**
+  String get meshIncidentBodyHint;
+
+  /// Validation error when body is empty
+  ///
+  /// In en, this message translates to:
+  /// **'Summary is required'**
+  String get meshIncidentBodyRequired;
+
+  /// Label for the include location toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Include Location'**
+  String get meshIncidentLocationLabel;
+
+  /// Label for unconfirmed confidence level
+  ///
+  /// In en, this message translates to:
+  /// **'Unconfirmed'**
+  String get meshIncidentConfidenceUnconfirmed;
+
+  /// Label for probable confidence level
+  ///
+  /// In en, this message translates to:
+  /// **'Probable'**
+  String get meshIncidentConfidenceProbable;
+
+  /// Label for confirmed confidence level
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed'**
+  String get meshIncidentConfidenceConfirmed;
+
+  /// Label for observer reporter role
+  ///
+  /// In en, this message translates to:
+  /// **'Observer'**
+  String get meshIncidentRoleObserver;
+
+  /// Label for operator reporter role
+  ///
+  /// In en, this message translates to:
+  /// **'Operator'**
+  String get meshIncidentRoleOperator;
+
+  /// Label for supervisor reporter role
+  ///
+  /// In en, this message translates to:
+  /// **'Supervisor'**
+  String get meshIncidentRoleSupervisor;
+
+  /// Label for admin reporter role
+  ///
+  /// In en, this message translates to:
+  /// **'Admin'**
+  String get meshIncidentRoleAdmin;
+
+  /// Label for reported incident status
+  ///
+  /// In en, this message translates to:
+  /// **'Reported'**
+  String get meshIncidentStatusReported;
+
+  /// Label for active incident status
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get meshIncidentStatusActive;
+
+  /// Label for contained incident status
+  ///
+  /// In en, this message translates to:
+  /// **'Contained'**
+  String get meshIncidentStatusContained;
+
+  /// Label for resolved incident status
+  ///
+  /// In en, this message translates to:
+  /// **'Resolved'**
+  String get meshIncidentStatusResolved;
+
+  /// Label for cancelled incident status
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get meshIncidentStatusCancelled;
+
+  /// Label for initial incident report type
+  ///
+  /// In en, this message translates to:
+  /// **'Initial Report'**
+  String get meshIncidentUpdateTypeInitial;
+
+  /// Label for incident update type
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get meshIncidentUpdateTypeUpdate;
+
+  /// Label for incident correction type
+  ///
+  /// In en, this message translates to:
+  /// **'Correction'**
+  String get meshIncidentUpdateTypeCorrection;
+
+  /// Label for incident closure type
+  ///
+  /// In en, this message translates to:
+  /// **'Closure'**
+  String get meshIncidentUpdateTypeClosure;
+
+  /// Display label for a mesh incident case ID
+  ///
+  /// In en, this message translates to:
+  /// **'Case {caseId}'**
+  String meshIncidentCaseId(String caseId);
+
+  /// Number of reports in a case
+  ///
+  /// In en, this message translates to:
+  /// **'{count} reports'**
+  String meshIncidentReportCount(int count);
+
+  /// Number of contributing nodes
+  ///
+  /// In en, this message translates to:
+  /// **'{count} contributors'**
+  String meshIncidentContributors(int count);
+
+  /// Section title for incident report timeline
+  ///
+  /// In en, this message translates to:
+  /// **'Timeline'**
+  String get meshIncidentTimelineTitle;
+
+  /// Badge label for superseded reports
+  ///
+  /// In en, this message translates to:
+  /// **'Superseded'**
+  String get meshIncidentSuperseded;
+
+  /// Badge label for correction reports
+  ///
+  /// In en, this message translates to:
+  /// **'Correction'**
+  String get meshIncidentCorrectionBadge;
+
+  /// Snackbar message after successfully sending a report
+  ///
+  /// In en, this message translates to:
+  /// **'Report sent over mesh'**
+  String get meshIncidentSentSuccess;
+
+  /// Snackbar message when report fails to send
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to send report'**
+  String get meshIncidentSendFailed;
+
+  /// Display label for encoded payload size
+  ///
+  /// In en, this message translates to:
+  /// **'{bytes} bytes'**
+  String meshIncidentPayloadSize(int bytes);
+
+  /// Label showing which node sent a report
+  ///
+  /// In en, this message translates to:
+  /// **'Node {nodeId}'**
+  String meshIncidentFromNode(String nodeId);
+
+  /// Action label for closing an incident case
+  ///
+  /// In en, this message translates to:
+  /// **'Close Case'**
+  String get meshIncidentCloseCase;
+
+  /// Action label for adding an incident update
+  ///
+  /// In en, this message translates to:
+  /// **'Add Update'**
+  String get meshIncidentAddUpdate;
+
+  /// Action label for correcting a report
+  ///
+  /// In en, this message translates to:
+  /// **'Correct Report'**
+  String get meshIncidentCorrectReport;
+
+  /// Title for handoff/export plain-language summary
+  ///
+  /// In en, this message translates to:
+  /// **'Handoff Summary'**
+  String get meshIncidentHandoffTitle;
+
+  /// Label indicating coarse location data
+  ///
+  /// In en, this message translates to:
+  /// **'Approx. location'**
+  String get meshIncidentLocationCoarse;
+
+  /// Action label to translate a message
+  ///
+  /// In en, this message translates to:
+  /// **'Translate'**
+  String get translateAction;
+
+  /// Label shown above translated text when source language is unknown
+  ///
+  /// In en, this message translates to:
+  /// **'Translated'**
+  String get translateLabel;
+
+  /// Loading label while translation is in progress
+  ///
+  /// In en, this message translates to:
+  /// **'Translating…'**
+  String get translateLoading;
+
+  /// Error message when translation fails because the user is not signed in and has no BYO API key configured
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in or add an API key to translate'**
+  String get translateAuthRequired;
+
+  /// Error message when translation fails
+  ///
+  /// In en, this message translates to:
+  /// **'Translation failed'**
+  String get translateFailed;
+
+  /// Error message when translation rate limit is exceeded
+  ///
+  /// In en, this message translates to:
+  /// **'Too many translations — try again shortly'**
+  String get translateRateLimited;
+
+  /// Error message when the target or source language is not supported
+  ///
+  /// In en, this message translates to:
+  /// **'Language not supported for translation'**
+  String get translateUnsupportedLanguage;
+
+  /// Retry action label for failed translation
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get translateRetry;
+
+  /// Message shown when translation is unavailable offline
+  ///
+  /// In en, this message translates to:
+  /// **'Translation requires internet'**
+  String get translateRequiresInternet;
+
+  /// Label showing the detected source language of the translation
+  ///
+  /// In en, this message translates to:
+  /// **'Translated from {language}'**
+  String translateFromLanguage(String language);
+
+  /// Banner text for translation premium preview mode
+  ///
+  /// In en, this message translates to:
+  /// **'Preview Mode — Upgrade to translate messages'**
+  String get premiumPreviewTranslation;
+
+  /// Headline for translation pack premium sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Translate Messages'**
+  String get premiumHeadlineTranslation;
+
+  /// Description for translation pack premium sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock on-demand message translation with smart caching and privacy controls — includes managed allowance, or bring your own API key'**
+  String get premiumDescTranslation;
+
+  /// Subtitle for translation pack upsell sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Break language barriers on your mesh network'**
+  String get premiumSubtitleTranslation;
+
+  /// Translation pack benefit title - instant translation
+  ///
+  /// In en, this message translates to:
+  /// **'One-Tap Translation'**
+  String get premiumBenefitInstantTranslation;
+
+  /// Translation pack benefit description - instant translation
+  ///
+  /// In en, this message translates to:
+  /// **'Translate any message in channels or DMs with a single tap'**
+  String get premiumBenefitInstantTranslationDesc;
+
+  /// Translation pack benefit title - auto detect
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-Detect Language'**
+  String get premiumBenefitAutoDetect;
+
+  /// Translation pack benefit description - auto detect
+  ///
+  /// In en, this message translates to:
+  /// **'Automatically detects the source language — no manual selection needed'**
+  String get premiumBenefitAutoDetectDesc;
+
+  /// Translation pack benefit title - smart cache
+  ///
+  /// In en, this message translates to:
+  /// **'Smart Caching'**
+  String get premiumBenefitSmartCache;
+
+  /// Translation pack benefit description - smart cache
+  ///
+  /// In en, this message translates to:
+  /// **'Translations are cached locally so you only pay for each message once'**
+  String get premiumBenefitSmartCacheDesc;
+
+  /// Error message when managed translation quota is exhausted
+  ///
+  /// In en, this message translates to:
+  /// **'Managed translation allowance used — switch to your own OpenAI API key in settings'**
+  String get translateQuotaExhausted;
+
+  /// Error message when strict privacy blocks managed provider
+  ///
+  /// In en, this message translates to:
+  /// **'Strict privacy mode blocks managed OpenAI translation'**
+  String get translatePrivacyBlocked;
+
+  /// Error message when translation provider is disabled
+  ///
+  /// In en, this message translates to:
+  /// **'Translation provider is disabled'**
+  String get translateProviderDisabled;
+
+  /// Error message when BYO provider selected but no key set
+  ///
+  /// In en, this message translates to:
+  /// **'BYO API key required — configure in settings'**
+  String get translateByoKeyMissing;
+
+  /// Error message when content is not eligible for translation
+  ///
+  /// In en, this message translates to:
+  /// **'This content cannot be translated'**
+  String get translateContentIneligible;
+
+  /// Updated subtitle for the featured Translation Pack card — no longer implies unlimited
+  ///
+  /// In en, this message translates to:
+  /// **'On-demand translation with smart caching, privacy controls, and BYO provider support'**
+  String get subscriptionFeaturedTranslationSubtitleRefactored;
+
+  /// Outcome-driven benefit line for translation in bundle card
+  ///
+  /// In en, this message translates to:
+  /// **'Instant message translation'**
+  String get subscriptionTranslationWithAllowance;
+
+  /// Updated Complete Pack subtitle now that translation is included
+  ///
+  /// In en, this message translates to:
+  /// **'Every feature, one price — including translation'**
+  String get subscriptionCompletePackSubtitleWithTranslation;
+
+  /// Title for the translation settings screen
+  ///
+  /// In en, this message translates to:
+  /// **'Translation'**
+  String get translationSettingsTitle;
+
+  /// Label for translation provider mode selector
+  ///
+  /// In en, this message translates to:
+  /// **'Provider Mode'**
+  String get translationSettingsProviderModeLabel;
+
+  /// Option label for Socialmesh-managed provider mode
+  ///
+  /// In en, this message translates to:
+  /// **'Managed'**
+  String get translationSettingsProviderManaged;
+
+  /// Description for managed provider mode
+  ///
+  /// In en, this message translates to:
+  /// **'Managed OpenAI translation — included allowance'**
+  String get translationSettingsProviderManagedDesc;
+
+  /// Option label for BYO provider mode
+  ///
+  /// In en, this message translates to:
+  /// **'Bring Your Own Key'**
+  String get translationSettingsProviderByo;
+
+  /// Description for BYO provider mode
+  ///
+  /// In en, this message translates to:
+  /// **'Use your own OpenAI API key — unlimited'**
+  String get translationSettingsProviderByoDesc;
+
+  /// Option label for disabled provider mode
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled'**
+  String get translationSettingsProviderDisabled;
+
+  /// Description for disabled provider mode
+  ///
+  /// In en, this message translates to:
+  /// **'Translation is turned off'**
+  String get translationSettingsProviderDisabledDesc;
+
+  /// Label for translation privacy mode selector
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Mode'**
+  String get translationSettingsPrivacyModeLabel;
+
+  /// Option label for standard privacy mode
+  ///
+  /// In en, this message translates to:
+  /// **'Standard'**
+  String get translationSettingsPrivacyStandard;
+
+  /// Description for standard privacy mode
+  ///
+  /// In en, this message translates to:
+  /// **'Cache translations locally for fast reuse'**
+  String get translationSettingsPrivacyStandardDesc;
+
+  /// Option label for private privacy mode
+  ///
+  /// In en, this message translates to:
+  /// **'Private'**
+  String get translationSettingsPrivacyPrivate;
+
+  /// Description for private privacy mode
+  ///
+  /// In en, this message translates to:
+  /// **'Cache channels only — DM translations are not stored'**
+  String get translationSettingsPrivacyPrivateDesc;
+
+  /// Option label for strict privacy mode
+  ///
+  /// In en, this message translates to:
+  /// **'Strict'**
+  String get translationSettingsPrivacyStrict;
+
+  /// Description for strict privacy mode
+  ///
+  /// In en, this message translates to:
+  /// **'BYO provider only — no caching, no managed server'**
+  String get translationSettingsPrivacyStrictDesc;
+
+  /// Label for the BYO API key entry field
+  ///
+  /// In en, this message translates to:
+  /// **'API Key'**
+  String get translationSettingsByoKeyLabel;
+
+  /// Hint text for BYO API key text field
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your OpenAI API key'**
+  String get translationSettingsByoKeyHint;
+
+  /// Confirmation message after saving BYO key
+  ///
+  /// In en, this message translates to:
+  /// **'API key saved securely'**
+  String get translationSettingsByoKeySaved;
+
+  /// Confirmation message after removing BYO key
+  ///
+  /// In en, this message translates to:
+  /// **'API key removed'**
+  String get translationSettingsByoKeyRemoved;
+
+  /// Indicator that a BYO key is currently stored
+  ///
+  /// In en, this message translates to:
+  /// **'Key stored'**
+  String get translationSettingsByoKeyStored;
+
+  /// Indicator that no BYO key is currently stored
+  ///
+  /// In en, this message translates to:
+  /// **'No key set'**
+  String get translationSettingsByoKeyNone;
+
+  /// Button label to remove stored BYO key
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Key'**
+  String get translationSettingsByoKeyRemove;
+
+  /// Confirmation sheet title when removing BYO OpenAI API key
+  ///
+  /// In en, this message translates to:
+  /// **'Remove API Key?'**
+  String get translationSettingsByoKeyRemoveConfirmTitle;
+
+  /// Confirmation sheet message when removing BYO OpenAI API key
+  ///
+  /// In en, this message translates to:
+  /// **'Your OpenAI API key will be permanently deleted from this device. You can add a new key at any time.'**
+  String get translationSettingsByoKeyRemoveConfirmMessage;
+
+  /// Label for translation quota status display
+  ///
+  /// In en, this message translates to:
+  /// **'Managed Allowance'**
+  String get translationSettingsQuotaLabel;
+
+  /// Character quota status text showing used vs limit
+  ///
+  /// In en, this message translates to:
+  /// **'{used} of {limit} characters used'**
+  String translationSettingsQuotaRemaining(int used, int limit);
+
+  /// Shows when the quota period resets
+  ///
+  /// In en, this message translates to:
+  /// **'Resets {date}'**
+  String translationSettingsQuotaResetsAt(String date);
+
+  /// Button to clear all cached translations
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Translation Cache'**
+  String get translationSettingsClearCache;
+
+  /// Confirmation message after clearing cache
+  ///
+  /// In en, this message translates to:
+  /// **'Translation cache cleared'**
+  String get translationSettingsCacheCleared;
+
+  /// Title for translation settings in settings search
+  ///
+  /// In en, this message translates to:
+  /// **'Translation Settings'**
+  String get translationSettingsSearchTitle;
+
+  /// Subtitle for translation settings in settings search
+  ///
+  /// In en, this message translates to:
+  /// **'Provider mode, privacy, API key, cache'**
+  String get translationSettingsSearchSubtitle;
+
+  /// Confirm dialog message for clearing translation cache
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all cached translations? This cannot be undone.'**
+  String get translationSettingsClearCacheConfirm;
+
+  /// Confirm button text for clearing translation cache
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Cache'**
+  String get translationSettingsClearCacheConfirmAction;
+
+  /// Button to test BYO API key by making a lightweight translation call
+  ///
+  /// In en, this message translates to:
+  /// **'Test OpenAI Connection'**
+  String get translationSettingsByoTestConnection;
+
+  /// Success message when BYO key test passes
+  ///
+  /// In en, this message translates to:
+  /// **'OpenAI API key is valid'**
+  String get translationSettingsByoTestSuccess;
+
+  /// Error message when BYO key test fails
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid OpenAI API key'**
+  String get translationSettingsByoTestFailed;
+
+  /// Loading text during BYO key validation
+  ///
+  /// In en, this message translates to:
+  /// **'Testing…'**
+  String get translationSettingsByoTestTesting;
+
+  /// Button text to open translation settings to configure BYO key
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settings'**
+  String get translationSettingsQuotaOpenSettings;
+
+  /// Accessibility label for the co-seen avatar cluster on a NodeDex card
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 recent co-seen node} other{{count} recent co-seen nodes}}'**
+  String avatarStackCoSeenLabel(int count);
+
+  /// Tooltip shown when hovering over a co-seen node avatar in the stack
+  ///
+  /// In en, this message translates to:
+  /// **'{name}'**
+  String avatarStackNodeTooltip(String name);
+
+  /// Accessibility label for the overflow indicator circle in an avatar stack, e.g. '+3 more'
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{+1 more} other{+{count} more}}'**
+  String avatarStackOverflowLabel(int count);
+
+  /// Title for the co-seen nodes card on the node detail screen
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Co-Seen'**
+  String get nodedexCoSeenCardTitle;
+
+  /// Subtitle for the co-seen card showing how many peers share sessions
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 node heard with this node recently} other{{count} nodes heard with this node recently}}'**
+  String nodedexCoSeenCardSubtitle(int count);
+
+  /// CTA text to scroll to the full co-seen links section
+  ///
+  /// In en, this message translates to:
+  /// **'View recent links'**
+  String get nodedexCoSeenCardViewAll;
+
+  /// Title for the nearby people/discovery screen
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby'**
+  String get nearbyTitle;
+
+  /// Subtitle explaining what the nearby screen shows
+  ///
+  /// In en, this message translates to:
+  /// **'People and devices on the mesh'**
+  String get nearbySubtitle;
+
+  /// Button to start scanning for nearby mesh users
+  ///
+  /// In en, this message translates to:
+  /// **'Look for people'**
+  String get nearbyScanButton;
+
+  /// Status text while scanning for nearby peers
+  ///
+  /// In en, this message translates to:
+  /// **'Looking for people nearby…'**
+  String get nearbyScanningLabel;
+
+  /// Scan cooldown timer
+  ///
+  /// In en, this message translates to:
+  /// **'Scan again in {seconds}s'**
+  String nearbyScanCooldownLabel(int seconds);
+
+  /// Fallback name for an unidentified nearby peer
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh User'**
+  String get nearbyPersonAnonymous;
+
+  /// Status when a peer was just seen
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby now'**
+  String get nearbyStatusNow;
+
+  /// Status when peer was seen minutes ago
+  ///
+  /// In en, this message translates to:
+  /// **'Seen {count} min ago'**
+  String nearbyStatusMinutesAgo(int count);
+
+  /// Status when peer was seen hours ago
+  ///
+  /// In en, this message translates to:
+  /// **'Seen {count}h ago'**
+  String nearbyStatusHoursAgo(int count);
+
+  /// Empty state title when no nearby people found
+  ///
+  /// In en, this message translates to:
+  /// **'No one nearby yet'**
+  String get nearbyEmptyTitle;
+
+  /// Empty state description guiding the user to scan
+  ///
+  /// In en, this message translates to:
+  /// **'Tap “Look for people” to find other Socialmesh users on the mesh'**
+  String get nearbyEmptyDescription;
+
+  /// Animated tagline during empty scan state
+  ///
+  /// In en, this message translates to:
+  /// **'Listening for nearby users…'**
+  String get nearbyEmptyTagline1;
+
+  /// Animated tagline during empty scan state
+  ///
+  /// In en, this message translates to:
+  /// **'Tap Look for people to send a signal…'**
+  String get nearbyEmptyTagline2;
+
+  /// Animated tagline during empty scan state
+  ///
+  /// In en, this message translates to:
+  /// **'Others will appear here when found…'**
+  String get nearbyEmptyTagline3;
+
+  /// Animated tagline during empty scan state
+  ///
+  /// In en, this message translates to:
+  /// **'Keep the app open to discover more…'**
+  String get nearbyEmptyTagline4;
+
+  /// Device type label for a phone
+  ///
+  /// In en, this message translates to:
+  /// **'Phone'**
+  String get nearbyDevicePhone;
+
+  /// Device type label for a tablet
+  ///
+  /// In en, this message translates to:
+  /// **'Tablet'**
+  String get nearbyDeviceTablet;
+
+  /// Device type label for a desktop
+  ///
+  /// In en, this message translates to:
+  /// **'Desktop'**
+  String get nearbyDeviceDesktop;
+
+  /// Fallback device type label
+  ///
+  /// In en, this message translates to:
+  /// **'Device'**
+  String get nearbyDeviceUnknown;
+
+  /// Section header for discovered people
+  ///
+  /// In en, this message translates to:
+  /// **'People'**
+  String get nearbySectionPeople;
+
+  /// Section header for active mesh conversations
+  ///
+  /// In en, this message translates to:
+  /// **'Conversations'**
+  String get nearbySectionConversations;
+
+  /// Section header for pending incoming connection requests
+  ///
+  /// In en, this message translates to:
+  /// **'Connection requests'**
+  String get nearbySectionRequests;
+
+  /// Button label to request a connection with a nearby person
+  ///
+  /// In en, this message translates to:
+  /// **'Connect'**
+  String get connectionRequestConnect;
+
+  /// Ongoing connection request state
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting…'**
+  String get connectionStateConnecting;
+
+  /// Established secure connection state
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get connectionStateConnected;
+
+  /// Connection request was sent and awaits response
+  ///
+  /// In en, this message translates to:
+  /// **'Request sent'**
+  String get connectionStatePending;
+
+  /// The other person declined the connection
+  ///
+  /// In en, this message translates to:
+  /// **'Declined'**
+  String get connectionStateDeclined;
+
+  /// Connection attempt failed
+  ///
+  /// In en, this message translates to:
+  /// **'Could not connect'**
+  String get connectionStateFailed;
+
+  /// Connection request timed out
+  ///
+  /// In en, this message translates to:
+  /// **'No response'**
+  String get connectionStateTimedOut;
+
+  /// Incoming connection request notification
+  ///
+  /// In en, this message translates to:
+  /// **'{name} wants to connect'**
+  String connectionIncomingTitle(String name);
+
+  /// Accept an incoming connection request
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get connectionAcceptButton;
+
+  /// Decline an incoming connection request
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get connectionDeclineButton;
+
+  /// Title for the contact/profile exchange flow
+  ///
+  /// In en, this message translates to:
+  /// **'Share contact card'**
+  String get contactExchangeTitle;
+
+  /// Description for contact exchange flow
+  ///
+  /// In en, this message translates to:
+  /// **'Exchange identity with a nearby person so you can message each other'**
+  String get contactExchangeDescription;
+
+  /// Button to share your contact card
+  ///
+  /// In en, this message translates to:
+  /// **'Share my contact'**
+  String get contactExchangeShareButton;
+
+  /// Confirmation when contact was shared
+  ///
+  /// In en, this message translates to:
+  /// **'Contact shared'**
+  String get contactExchangeShared;
+
+  /// Title for an ephemeral mesh DM screen
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh message'**
+  String get meshConversationTitle;
+
+  /// Time until the conversation expires
+  ///
+  /// In en, this message translates to:
+  /// **'Expires in {time}'**
+  String meshConversationExpiry(String time);
+
+  /// Badge for a pinned conversation
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned'**
+  String get meshConversationPinned;
+
+  /// Placeholder text in the message input
+  ///
+  /// In en, this message translates to:
+  /// **'Message…'**
+  String get meshConversationInputHint;
+
+  /// Error when airtime budget is exhausted
+  ///
+  /// In en, this message translates to:
+  /// **'Sending paused — mesh bandwidth limit reached. Try again shortly.'**
+  String get meshConversationBudgetExhausted;
+
+  /// Message when a DM session is closed
+  ///
+  /// In en, this message translates to:
+  /// **'This conversation has ended.'**
+  String get meshConversationClosed;
+
+  /// Status when DM session is established
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to chat'**
+  String get meshConversationReadyToChat;
+
+  /// Delivery phase: getting data ready to send
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing'**
+  String get deliveryPhasePreparing;
+
+  /// Description for preparing phase
+  ///
+  /// In en, this message translates to:
+  /// **'Getting your data ready to send over the mesh.'**
+  String get deliveryPhasePreparingDesc;
+
+  /// Delivery phase: actively sending
+  ///
+  /// In en, this message translates to:
+  /// **'Sending'**
+  String get deliveryPhaseSending;
+
+  /// Description for sending phase
+  ///
+  /// In en, this message translates to:
+  /// **'Sending to the mesh network.'**
+  String get deliveryPhaseSendingDesc;
+
+  /// Delivery phase: data committed to mesh
+  ///
+  /// In en, this message translates to:
+  /// **'Sent to mesh'**
+  String get deliveryPhaseSentToMesh;
+
+  /// Description for sent-to-mesh phase
+  ///
+  /// In en, this message translates to:
+  /// **'Your data is on the mesh and being relayed.'**
+  String get deliveryPhaseSentToMeshDesc;
+
+  /// Delivery phase: no route available yet
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for path'**
+  String get deliveryPhaseWaitingForPath;
+
+  /// Description for waiting-for-path phase
+  ///
+  /// In en, this message translates to:
+  /// **'The mesh hasn’t found a route yet. Delivery will continue automatically.'**
+  String get deliveryPhaseWaitingForPathDesc;
+
+  /// Delivery phase: data being relayed
+  ///
+  /// In en, this message translates to:
+  /// **'Delivering'**
+  String get deliveryPhaseDelivering;
+
+  /// Description for delivering phase
+  ///
+  /// In en, this message translates to:
+  /// **'Your data is being relayed through the mesh.'**
+  String get deliveryPhaseDeliveringDesc;
+
+  /// Delivery phase: some parts arrived
+  ///
+  /// In en, this message translates to:
+  /// **'Partially delivered'**
+  String get deliveryPhasePartiallyDelivered;
+
+  /// Description for partially-delivered phase
+  ///
+  /// In en, this message translates to:
+  /// **'Some parts arrived. The rest will resume when the connection improves.'**
+  String get deliveryPhasePartiallyDeliveredDesc;
+
+  /// Delivery phase: automatic retry
+  ///
+  /// In en, this message translates to:
+  /// **'Retrying'**
+  String get deliveryPhaseRetrying;
+
+  /// Description for retrying phase
+  ///
+  /// In en, this message translates to:
+  /// **'Retrying automatically — no action needed.'**
+  String get deliveryPhaseRetryingDesc;
+
+  /// Delivery phase: resuming previous transfer
+  ///
+  /// In en, this message translates to:
+  /// **'Resuming'**
+  String get deliveryPhaseResuming;
+
+  /// Description for resuming phase
+  ///
+  /// In en, this message translates to:
+  /// **'Picking up where it left off.'**
+  String get deliveryPhaseResumingDesc;
+
+  /// Delivery phase: all data arrived
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered'**
+  String get deliveryPhaseDelivered;
+
+  /// Description for delivered phase
+  ///
+  /// In en, this message translates to:
+  /// **'Everything arrived at its destination.'**
+  String get deliveryPhaseDeliveredDesc;
+
+  /// Delivery phase: integrity verified
+  ///
+  /// In en, this message translates to:
+  /// **'Verified'**
+  String get deliveryPhaseVerified;
+
+  /// Description for verified phase
+  ///
+  /// In en, this message translates to:
+  /// **'Everything arrived correctly and has been verified.'**
+  String get deliveryPhaseVerifiedDesc;
+
+  /// Delivery phase: user action needed
+  ///
+  /// In en, this message translates to:
+  /// **'Needs attention'**
+  String get deliveryPhaseNeedsAttention;
+
+  /// Description for needs-attention phase
+  ///
+  /// In en, this message translates to:
+  /// **'Something needs your attention to continue.'**
+  String get deliveryPhaseNeedsAttentionDesc;
+
+  /// Delivery phase: transfer failed
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get deliveryPhaseFailed;
+
+  /// Description for failed phase when only a single attempt was made.
+  ///
+  /// In en, this message translates to:
+  /// **'The request timed out before a response was received.'**
+  String get deliveryPhaseFailedDesc;
+
+  /// Description for failed phase when multiple retry attempts were made.
+  ///
+  /// In en, this message translates to:
+  /// **'The request timed out after {attempts} attempts.'**
+  String deliveryPhaseFailedDescRetried(int attempts);
+
+  /// Hint that the user can leave and delivery continues
+  ///
+  /// In en, this message translates to:
+  /// **'Safe to close — delivery continues in the background'**
+  String get deliverySafeToClose;
+
+  /// Hint that user can navigate away
+  ///
+  /// In en, this message translates to:
+  /// **'You can leave — transfer will continue'**
+  String get deliverySafeToLeave;
+
+  /// Multi-part transfer progress
+  ///
+  /// In en, this message translates to:
+  /// **'{current} of {total} parts'**
+  String deliveryProgressParts(int current, int total);
+
+  /// Toggle label for expert diagnostic section
+  ///
+  /// In en, this message translates to:
+  /// **'Show delivery details'**
+  String get deliveryExpertToggle;
+
+  /// Next step button in wizard
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get guidedFlowNext;
+
+  /// Previous step button in wizard
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get guidedFlowBack;
+
+  /// Finish button in wizard
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get guidedFlowDone;
+
+  /// Create/commit button in wizard
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get guidedFlowCreate;
+
+  /// Continue to next screen button in wizard
+  ///
+  /// In en, this message translates to:
+  /// **'Write it'**
+  String get guidedFlowContinue;
+
+  /// Cancel button in wizard
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get guidedFlowCancel;
+
+  /// Title for the service creation wizard
+  ///
+  /// In en, this message translates to:
+  /// **'Share on the mesh'**
+  String get serviceWizardTitle;
+
+  /// Step indicator label: choose what to create
+  ///
+  /// In en, this message translates to:
+  /// **'Intent'**
+  String get serviceWizardStepWhat;
+
+  /// Step indicator label: optionally choose a preset for the selected canonical service type
+  ///
+  /// In en, this message translates to:
+  /// **'Template'**
+  String get serviceWizardStepPreset;
+
+  /// Step indicator label: choose audience
+  ///
+  /// In en, this message translates to:
+  /// **'Who'**
+  String get serviceWizardStepWho;
+
+  /// Step indicator label: fill in details
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get serviceWizardStepDetails;
+
+  /// Step indicator label: review before creating
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get serviceWizardStepReview;
+
+  /// Step 1 title
+  ///
+  /// In en, this message translates to:
+  /// **'What are you sharing?'**
+  String get serviceWizardWhatTitle;
+
+  /// Step 1 subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Start with the kind of thing you want to put out nearby.'**
+  String get serviceWizardWhatSubtitle;
+
+  /// Step title for optionally choosing a preset for the selected canonical service type
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a starting point'**
+  String get serviceWizardPresetTitle;
+
+  /// Step subtitle for the optional preset selection step
+  ///
+  /// In en, this message translates to:
+  /// **'Templates give you a head start without changing what the share can do.'**
+  String get serviceWizardPresetSubtitle;
+
+  /// Label for using a canonical service type without a preset
+  ///
+  /// In en, this message translates to:
+  /// **'Start from scratch'**
+  String get serviceWizardPresetGeneric;
+
+  /// Description for choosing no preset in the service creation wizard
+  ///
+  /// In en, this message translates to:
+  /// **'Use the basic layout and shape it yourself.'**
+  String get serviceWizardPresetGenericDescription;
+
+  /// Step 2 title: audience selection
+  ///
+  /// In en, this message translates to:
+  /// **'Who can see it?'**
+  String get serviceWizardWhoTitle;
+
+  /// Step 2 subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Choose who will be able to discover and use your service'**
+  String get serviceWizardWhoSubtitle;
+
+  /// Audience option: open to all
+  ///
+  /// In en, this message translates to:
+  /// **'Anyone nearby'**
+  String get serviceWizardAudienceAnyone;
+
+  /// Expanded description for the anyone-nearby audience
+  ///
+  /// In en, this message translates to:
+  /// **'Anyone on the mesh can discover and use this'**
+  String get serviceWizardAudienceAnyoneDesc;
+
+  /// Audience option: contacts
+  ///
+  /// In en, this message translates to:
+  /// **'Approved contacts only'**
+  String get serviceWizardAudienceContacts;
+
+  /// Description for contacts audience
+  ///
+  /// In en, this message translates to:
+  /// **'Only people you’ve exchanged contacts with'**
+  String get serviceWizardAudienceContactsDesc;
+
+  /// Review step title
+  ///
+  /// In en, this message translates to:
+  /// **'Before you write'**
+  String get serviceWizardReviewTitle;
+
+  /// Review step subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'This is the shape of the share you’re about to compose.'**
+  String get serviceWizardReviewSubtitle;
+
+  /// Summary row label: service type
+  ///
+  /// In en, this message translates to:
+  /// **'You’re sharing'**
+  String get serviceWizardReviewType;
+
+  /// Summary row label: selected preset
+  ///
+  /// In en, this message translates to:
+  /// **'Starting point'**
+  String get serviceWizardReviewPreset;
+
+  /// Summary row label: audience
+  ///
+  /// In en, this message translates to:
+  /// **'Audience'**
+  String get serviceWizardReviewAudience;
+
+  /// Mesh behavior hint on review step
+  ///
+  /// In en, this message translates to:
+  /// **'People nearby will discover the headline first, then open the full details.'**
+  String get serviceWizardReviewMeshHint;
+
+  /// Section title for the live preview card in the mesh share composer.
+  ///
+  /// In en, this message translates to:
+  /// **'Live preview'**
+  String get meshServicesPreviewCardTitle;
+
+  /// Section subtitle for the live preview card in the mesh share composer.
+  ///
+  /// In en, this message translates to:
+  /// **'This is the kind of card nearby people will open.'**
+  String get meshServicesPreviewCardDescription;
+
+  /// Placeholder headline in the live preview card before the user types a title.
+  ///
+  /// In en, this message translates to:
+  /// **'Your headline will show here'**
+  String get meshServicesPreviewPlaceholder;
+
+  /// Placeholder body text in the live preview card before the user types a description.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a few details so people nearby know what this is.'**
+  String get meshServicesPreviewNoDetails;
+
+  /// Disclosure label for secondary sharing controls such as duration.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing details'**
+  String get meshServicesAdvancedDetails;
+
+  /// Helper text under the duration control in the secondary details section.
+  ///
+  /// In en, this message translates to:
+  /// **'You can change how long this stays visible on the mesh.'**
+  String get meshServicesAdvancedDurationHint;
+
+  /// Eyebrow label shown above the remote share header on the detail screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared nearby'**
+  String get serviceDetailHeaderEyebrow;
+
+  /// Supporting text under the remote share header on the detail screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the items this nearby radio is sharing right now.'**
+  String get serviceDetailHeaderBody;
+
+  /// Section title for the list of currently shared remote items on the detail screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared right now'**
+  String get serviceDetailSectionLiveNow;
+
+  /// Disclosure label for secondary technical details about a remote mesh share.
+  ///
+  /// In en, this message translates to:
+  /// **'Network details'**
+  String get meshServicesNetworkDetails;
+
+  /// Technical detail row showing the originating node for a remote share.
+  ///
+  /// In en, this message translates to:
+  /// **'From node {nodeId}'**
+  String meshServicesNetworkNode(String nodeId);
+
+  /// Technical detail row showing the share type on the detail screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Share type: {serviceType}'**
+  String meshServicesNetworkServiceType(String serviceType);
+
+  /// Technical detail row showing the numeric MRRP service ID on the detail screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Service ID: {serviceId}'**
+  String meshServicesNetworkServiceId(String serviceId);
+
+  /// Byline for a nearby shared item when the creator is anonymous.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared by someone nearby'**
+  String get meshServicesSharedByAnonymous;
+
+  /// Byline for a nearby shared item when the creator identity is known.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared by {name}'**
+  String meshServicesSharedByPerson(String name);
+
+  /// Label describing how long a share remains visible.
+  ///
+  /// In en, this message translates to:
+  /// **'Visible for {time}'**
+  String meshServicesVisibleFor(String time);
+
+  /// Eyebrow shown on feed cards and detail surfaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby update'**
+  String get meshServicesEyebrowFeed;
+
+  /// Eyebrow shown on list cards and detail surfaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared checklist'**
+  String get meshServicesEyebrowList;
+
+  /// Eyebrow shown on poll cards and detail surfaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby question'**
+  String get meshServicesEyebrowPoll;
+
+  /// Eyebrow shown on signal cards and detail surfaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Active alert'**
+  String get meshServicesEyebrowSignal;
+
+  /// Eyebrow shown on sensor cards and detail surfaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Live reading'**
+  String get meshServicesEyebrowSensor;
+
+  /// Eyebrow shown on game cards and detail surfaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh game'**
+  String get meshServicesEyebrowGame;
+
+  /// CTA label for opening a feed-style mesh share.
+  ///
+  /// In en, this message translates to:
+  /// **'Read update'**
+  String get meshServicesOpenFeedAction;
+
+  /// CTA label for opening a list-style mesh share.
+  ///
+  /// In en, this message translates to:
+  /// **'Open checklist'**
+  String get meshServicesOpenListAction;
+
+  /// CTA label for opening a poll-style mesh share.
+  ///
+  /// In en, this message translates to:
+  /// **'Answer question'**
+  String get meshServicesOpenPollAction;
+
+  /// CTA label for opening a signal-style mesh share.
+  ///
+  /// In en, this message translates to:
+  /// **'View alert'**
+  String get meshServicesOpenSignalAction;
+
+  /// CTA label for opening a mesh game.
+  ///
+  /// In en, this message translates to:
+  /// **'Open game'**
+  String get meshServicesOpenGameAction;
+
+  /// Lead text in the new-game composer preview.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite a peer to a quick game.'**
+  String get meshServicesGameComposeLead;
+
+  /// Fallback body text when a mesh game is viewed via the generic service detail surface.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to open the game board.'**
+  String get meshServicesGameRemoteHint;
+
+  /// CTA label for opening a sensor-style mesh share.
+  ///
+  /// In en, this message translates to:
+  /// **'Check reading'**
+  String get meshServicesOpenSensorAction;
+
+  /// Compact count label for checklist or list items.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} items'**
+  String meshServicesItemsCount(int count);
+
+  /// Compact count label for poll options.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} choices'**
+  String meshServicesChoicesCount(int count);
+
+  /// Progress label for checklist completion state.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} done'**
+  String meshServicesListProgress(int done, int total);
+
+  /// Label indicating that a remote checklist has additional hidden items.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} more items'**
+  String meshServicesMoreItemsCount(int count);
+
+  /// State label for a poll with no recorded votes.
+  ///
+  /// In en, this message translates to:
+  /// **'No votes yet'**
+  String get meshServicesPollNoVotes;
+
+  /// Compact vote count label for poll detail surfaces.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} votes'**
+  String meshServicesPollVotesCount(int count);
+
+  /// Signal kind label for a routine check-in beacon.
+  ///
+  /// In en, this message translates to:
+  /// **'Check-in'**
+  String get meshServicesSignalKindCheckIn;
+
+  /// Signal kind label for a help request beacon.
+  ///
+  /// In en, this message translates to:
+  /// **'Need help'**
+  String get meshServicesSignalKindNeedHelp;
+
+  /// Signal kind label for a hazard or warning beacon.
+  ///
+  /// In en, this message translates to:
+  /// **'Hazard'**
+  String get meshServicesSignalKindHazard;
+
+  /// Signal kind label for a meetup or regroup beacon.
+  ///
+  /// In en, this message translates to:
+  /// **'Meet here'**
+  String get meshServicesSignalKindMeetHere;
+
+  /// Signal kind label for an active relay or repeater beacon.
+  ///
+  /// In en, this message translates to:
+  /// **'Relay active'**
+  String get meshServicesSignalKindRelayActive;
+
+  /// Status label for a currently active signal.
+  ///
+  /// In en, this message translates to:
+  /// **'Active now'**
+  String get meshServicesSignalActiveLabel;
+
+  /// Title field label for a sensor-style mesh share.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading name'**
+  String get meshServicesFieldSensorName;
+
+  /// Field label for a sensor value input.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading'**
+  String get meshServicesFieldSensorValue;
+
+  /// Hint text for a sensor value input.
+  ///
+  /// In en, this message translates to:
+  /// **'23.4'**
+  String get meshServicesSensorValueHint;
+
+  /// Validation error shown when a sensor share has no reading value.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a reading before sharing.'**
+  String get meshServicesMinSensorValue;
+
+  /// Field label for a sensor unit input.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit'**
+  String get meshServicesFieldSensorUnit;
+
+  /// Hint text for a sensor unit input.
+  ///
+  /// In en, this message translates to:
+  /// **'°C, %, m'**
+  String get meshServicesSensorUnitHint;
+
+  /// Field label for a sensor source input.
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get meshServicesFieldSensorSource;
+
+  /// Hint text for a sensor source input.
+  ///
+  /// In en, this message translates to:
+  /// **'Trail marker, station, or node'**
+  String get meshServicesSensorSourceHint;
+
+  /// Fallback label when a sensor share has no current reading value.
+  ///
+  /// In en, this message translates to:
+  /// **'No reading yet'**
+  String get meshServicesSensorUnknownValue;
+
+  /// Freshness label for a sensor reading.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {time}'**
+  String meshServicesSensorUpdatedLabel(String time);
+
+  /// Headline after service creation
+  ///
+  /// In en, this message translates to:
+  /// **'Your service is live'**
+  String get serviceWizardCompletionHeadline;
+
+  /// Description after service creation
+  ///
+  /// In en, this message translates to:
+  /// **'Other mesh users can now discover and interact with your service. You can manage it from My Services.'**
+  String get serviceWizardCompletionDescription;
+
+  /// Primary action after creation
+  ///
+  /// In en, this message translates to:
+  /// **'View my services'**
+  String get serviceWizardCompletionViewServices;
+
+  /// Secondary action after creation
+  ///
+  /// In en, this message translates to:
+  /// **'Create another'**
+  String get serviceWizardCompletionCreateAnother;
+
+  /// Peer seen within the last minute
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get peerDetailLastSeenJustNow;
+
+  /// Section header for peer capabilities (replacing technical 'Capabilities')
+  ///
+  /// In en, this message translates to:
+  /// **'What they support'**
+  String get peerDetailCapabilities;
+
+  /// Capability: supports identity exchange and secure handshake
+  ///
+  /// In en, this message translates to:
+  /// **'Identity & secure connection'**
+  String get peerDetailCapIdentity;
+
+  /// Capability: supports micro-exchange / contact sharing
+  ///
+  /// In en, this message translates to:
+  /// **'Contact exchange'**
+  String get peerDetailCapExchange;
+
+  /// Label for device type row (replacing 'Device Class')
+  ///
+  /// In en, this message translates to:
+  /// **'Device type'**
+  String get peerDetailDeviceType;
+
+  /// Status when auto-scan is enabled
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-discovery on'**
+  String get nearbyAutoScanEnabled;
+
+  /// Status when auto-scan is disabled
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-discovery off'**
+  String get nearbyAutoScanDisabled;
+
+  /// Label for basic disclosure level
+  ///
+  /// In en, this message translates to:
+  /// **'Simple view'**
+  String get disclosureBasic;
+
+  /// Label for curious/intermediate disclosure level
+  ///
+  /// In en, this message translates to:
+  /// **'More detail'**
+  String get disclosureCurious;
+
+  /// Label for expert disclosure level
+  ///
+  /// In en, this message translates to:
+  /// **'Full diagnostics'**
+  String get disclosureExpert;
+
+  /// Overflow menu label to open the weekly timeline view from messages
+  ///
+  /// In en, this message translates to:
+  /// **'Week View'**
+  String get messagingWeekView;
+
+  /// Title for the message weekly timeline screen
+  ///
+  /// In en, this message translates to:
+  /// **'Message Activity'**
+  String get messageTimelineTitle;
+
+  /// Empty state headline when no messages appear on the weekly timeline
+  ///
+  /// In en, this message translates to:
+  /// **'No message activity this week'**
+  String get messageTimelineEmpty;
+
+  /// Empty state description for the weekly message timeline
+  ///
+  /// In en, this message translates to:
+  /// **'Messages and channel activity will appear here as they happen'**
+  String get messageTimelineEmptyDescription;
+
+  /// Button label to clear timeline filters and show all message activity
+  ///
+  /// In en, this message translates to:
+  /// **'Show all activity'**
+  String get messageTimelineShowAll;
+
+  /// Filter chip label for direct messages on the message timeline
+  ///
+  /// In en, this message translates to:
+  /// **'Direct'**
+  String get messageTimelineFilterDm;
+
+  /// Filter chip label for channel messages on the message timeline
+  ///
+  /// In en, this message translates to:
+  /// **'Channels'**
+  String get messageTimelineFilterChannel;
+
+  /// Filter chip label showing all messages on the message timeline
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get messageTimelineFilterAll;
+
+  /// Subtitle showing message count in a timeline session card
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 message} other{{count} messages}}'**
+  String messageTimelineSessionMessages(int count);
+
+  /// Subtitle prefix showing channel name on a timeline card
+  ///
+  /// In en, this message translates to:
+  /// **'Ch: {name}'**
+  String messageTimelineChannelPrefix(String name);
+
+  /// Title for a direct message session on the timeline
+  ///
+  /// In en, this message translates to:
+  /// **'DM with {name}'**
+  String messageTimelineDmWith(String name);
+
+  /// Label for the type row in the timeline detail sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get messageTimelineDetailType;
+
+  /// DM type value in the timeline detail sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Direct message'**
+  String get messageTimelineDetailTypeDm;
+
+  /// Channel type value in the timeline detail sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Channel'**
+  String get messageTimelineDetailTypeChannel;
+
+  /// Label for the time row in the timeline detail sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get messageTimelineDetailTime;
+
+  /// Label for the duration row in the timeline detail sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get messageTimelineDetailDuration;
+
+  /// Duration value in minutes
+  ///
+  /// In en, this message translates to:
+  /// **'{count} min'**
+  String messageTimelineDetailDurationMinutes(int count);
+
+  /// Label for the messages row in the timeline detail sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Messages'**
+  String get messageTimelineDetailMessages;
+
+  /// Label for the participants section in the timeline detail sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Participants'**
+  String get messageTimelineDetailParticipants;
+
+  /// Button label to navigate to the chat from the detail sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Open conversation'**
+  String get messageTimelineDetailOpenChat;
+
+  /// Group header for theme and ringtone features in Complete Pack card
+  ///
+  /// In en, this message translates to:
+  /// **'Personalisation'**
+  String get subscriptionGroupPersonalisation;
+
+  /// Group header for automation and IFTTT features in Complete Pack card
+  ///
+  /// In en, this message translates to:
+  /// **'Automation'**
+  String get subscriptionGroupAutomation;
+
+  /// Group header for widget features in Complete Pack card
+  ///
+  /// In en, this message translates to:
+  /// **'Dashboard'**
+  String get subscriptionGroupDashboard;
+
+  /// Group header for translation features in Complete Pack card
+  ///
+  /// In en, this message translates to:
+  /// **'Communication'**
+  String get subscriptionGroupCommunication;
+
+  /// Reinforcement text below CTA on Complete Pack card
+  ///
+  /// In en, this message translates to:
+  /// **'One-time purchase · Lifetime access · No subscription'**
+  String get subscriptionLifetimeReinforcement;
+
+  /// Title for the anchor Starter Pack card on subscription screen
+  ///
+  /// In en, this message translates to:
+  /// **'Starter Pack'**
+  String get subscriptionStarterPack;
+
+  /// Subtitle for the Starter Pack anchor card
+  ///
+  /// In en, this message translates to:
+  /// **'Themes + Widgets'**
+  String get subscriptionStarterPackSubtitle;
+
+  /// Badge text for the Starter Pack placeholder card
+  ///
+  /// In en, this message translates to:
+  /// **'Coming Soon'**
+  String get subscriptionStarterComingSoon;
+
+  /// Badge on the Complete Pack hero card to indicate popularity
+  ///
+  /// In en, this message translates to:
+  /// **'MOST POPULAR'**
+  String get subscriptionPopularBadge;
+
+  /// Title for the bottom sheet showing all senders of a specific reaction emoji.
+  ///
+  /// In en, this message translates to:
+  /// **'Reactions'**
+  String get tapbackDetailSheetTitle;
+
+  /// Subtitle showing how many people sent a particular reaction.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} reactions'**
+  String tapbackDetailSenderCount(int count);
+
+  /// Label showing how many additional senders beyond displayed names, e.g. +3.
+  ///
+  /// In en, this message translates to:
+  /// **'+{count}'**
+  String tapbackGroupOthers(int count);
+
+  /// Subtitle for the What's New popup for version 1.30.0.
+  ///
+  /// In en, this message translates to:
+  /// **'Version 1.30.0'**
+  String get whatsNewVersion1300Subtitle;
+
+  /// Title for the condition branching automation feature in What's New.
+  ///
+  /// In en, this message translates to:
+  /// **'IF / THEN / ELSE Automations'**
+  String get whatsNewAutomationBranchingTitle;
+
+  /// Description for the condition branching automation feature in What's New.
+  ///
+  /// In en, this message translates to:
+  /// **'Automations now support structured condition trees with IF / THEN / ELSE logic. Build complex rules that branch based on multiple conditions — battery level, node status, time of day, and more.\n\nEach run shows exactly which branch was taken and why, with a detailed execution history you can inspect anytime.'**
+  String get whatsNewAutomationBranchingDescription;
+
+  /// CTA button label to open the Automations screen from What's New.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Automations'**
+  String get whatsNewCtaOpenAutomations;
+
+  /// Title for the reaction grouping improvement in What's New.
+  ///
+  /// In en, this message translates to:
+  /// **'Grouped Reactions'**
+  String get whatsNewReactionGroupingTitle;
+
+  /// Description for the reaction grouping improvement in What's New.
+  ///
+  /// In en, this message translates to:
+  /// **'Message reactions are now grouped by emoji — if five people send a thumbs-up, you see one compact chip instead of five. Long-press any reaction to see every sender.\n\nReactions also wrap to the next line instead of overflowing off-screen, keeping the conversation tidy.'**
+  String get whatsNewReactionGroupingDescription;
+
+  /// Title for the mesh feed screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh Feed'**
+  String get meshFeedTitle;
+
+  /// Hint text for the search field on the mesh feed screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Search posts'**
+  String get meshFeedSearchHint;
+
+  /// Label for the mesh feed item in the navigation drawer.
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh Feed'**
+  String get meshFeedDrawerLabel;
+
+  /// Headline shown when the mesh feed has no posts.
+  ///
+  /// In en, this message translates to:
+  /// **'No posts yet'**
+  String get meshFeedEmptyTitle;
+
+  /// Description shown when the mesh feed is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Posts from nearby mesh peers will appear here. Create the first post to start the conversation.'**
+  String get meshFeedEmptyDescription;
+
+  /// Button text on the empty feed state.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Post'**
+  String get meshFeedEmptyAction;
+
+  /// Prefix for animated empty state title (before gradient keyword).
+  ///
+  /// In en, this message translates to:
+  /// **'No '**
+  String get meshFeedEmptyTitlePrefix;
+
+  /// Gradient-animated keyword in the empty state title.
+  ///
+  /// In en, this message translates to:
+  /// **'posts'**
+  String get meshFeedEmptyTitleKeyword;
+
+  /// Suffix for animated empty state title (after gradient keyword).
+  ///
+  /// In en, this message translates to:
+  /// **' on the mesh'**
+  String get meshFeedEmptyTitleSuffix;
+
+  /// Rotating tagline 1 for mesh feed empty state.
+  ///
+  /// In en, this message translates to:
+  /// **'Be the first to broadcast'**
+  String get meshFeedEmptyTagline1;
+
+  /// Rotating tagline 2 for mesh feed empty state.
+  ///
+  /// In en, this message translates to:
+  /// **'Share something with the mesh'**
+  String get meshFeedEmptyTagline2;
+
+  /// Rotating tagline 3 for mesh feed empty state.
+  ///
+  /// In en, this message translates to:
+  /// **'Posts propagate peer to peer'**
+  String get meshFeedEmptyTagline3;
+
+  /// Rotating tagline 4 for mesh feed empty state.
+  ///
+  /// In en, this message translates to:
+  /// **'No internet required'**
+  String get meshFeedEmptyTagline4;
+
+  /// Hint text in the post composer text field.
+  ///
+  /// In en, this message translates to:
+  /// **'Share something with the mesh…'**
+  String get meshFeedComposeHint;
+
+  /// Button label to submit a new mesh feed post.
+  ///
+  /// In en, this message translates to:
+  /// **'Post'**
+  String get meshFeedPostButton;
+
+  /// Label for the TTL selector in the post composer.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires in'**
+  String get meshFeedTtlLabel;
+
+  /// TTL option: 1 hour.
+  ///
+  /// In en, this message translates to:
+  /// **'1 hour'**
+  String get meshFeedTtl1h;
+
+  /// TTL option: 6 hours.
+  ///
+  /// In en, this message translates to:
+  /// **'6 hours'**
+  String get meshFeedTtl6h;
+
+  /// TTL option: 24 hours.
+  ///
+  /// In en, this message translates to:
+  /// **'24 hours'**
+  String get meshFeedTtl24h;
+
+  /// TTL option: 3 days.
+  ///
+  /// In en, this message translates to:
+  /// **'3 days'**
+  String get meshFeedTtl3d;
+
+  /// TTL option: 7 days.
+  ///
+  /// In en, this message translates to:
+  /// **'7 days'**
+  String get meshFeedTtl7d;
+
+  /// Provenance label for a locally authored post.
+  ///
+  /// In en, this message translates to:
+  /// **'Your post'**
+  String get meshFeedProvenanceLocal;
+
+  /// Provenance label for a post from a nearby node (low hop count).
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby'**
+  String get meshFeedProvenanceNearby;
+
+  /// Provenance label for a post received via relay (high hop count).
+  ///
+  /// In en, this message translates to:
+  /// **'Relayed'**
+  String get meshFeedProvenanceRelayed;
+
+  /// Provenance label for a post received via peer sync.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced'**
+  String get meshFeedProvenanceSynced;
+
+  /// Tooltip for the multi-transport icon on a post card.
+  ///
+  /// In en, this message translates to:
+  /// **'Seen on multiple transports'**
+  String get meshFeedMultiTransportTooltip;
+
+  /// Badge text for posts about to expire.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires soon'**
+  String get meshFeedExpiresSoon;
+
+  /// Post count display in the feed header.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No posts} =1{1 post} other{{count} posts}}'**
+  String meshFeedPostCount(int count);
+
+  /// Trust level label: unknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get meshFeedTrustUnknown;
+
+  /// Trust level label: observed.
+  ///
+  /// In en, this message translates to:
+  /// **'Observed'**
+  String get meshFeedTrustObserved;
+
+  /// Trust level label: familiar.
+  ///
+  /// In en, this message translates to:
+  /// **'Familiar'**
+  String get meshFeedTrustFamiliar;
+
+  /// Trust level label: trusted.
+  ///
+  /// In en, this message translates to:
+  /// **'Trusted'**
+  String get meshFeedTrustTrusted;
+
+  /// Trust level label: established.
+  ///
+  /// In en, this message translates to:
+  /// **'Established'**
+  String get meshFeedTrustEstablished;
+
+  /// Feed filter option: show all posts.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get meshFeedFilterAll;
+
+  /// Feed filter option: show only posts from trusted nodes.
+  ///
+  /// In en, this message translates to:
+  /// **'Trusted'**
+  String get meshFeedFilterTrusted;
+
+  /// Feed filter option: show only nearby posts.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby'**
+  String get meshFeedFilterNearby;
+
+  /// Feed filter option: show only locally authored posts.
+  ///
+  /// In en, this message translates to:
+  /// **'My Posts'**
+  String get meshFeedFilterLocal;
+
+  /// Feed sort option: ranked by trust + freshness.
+  ///
+  /// In en, this message translates to:
+  /// **'Ranked'**
+  String get meshFeedSortRanked;
+
+  /// Feed sort option: newest first.
+  ///
+  /// In en, this message translates to:
+  /// **'Newest'**
+  String get meshFeedSortNewest;
+
+  /// Snackbar message shown after successfully creating a post.
+  ///
+  /// In en, this message translates to:
+  /// **'Post created'**
+  String get meshFeedPostCreated;
+
+  /// Snackbar message shown when post creation fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to create post'**
+  String get meshFeedPostFailed;
+
+  /// Badge label indicating mesh feed is in beta.
+  ///
+  /// In en, this message translates to:
+  /// **'BETA'**
+  String get meshFeedBetaLabel;
+
+  /// Note about propagation constraints shown in the composer.
+  ///
+  /// In en, this message translates to:
+  /// **'Posts propagate via mesh radio and local sync. LoRa posts are limited to {maxBytes} bytes.'**
+  String meshFeedPropagationNote(int maxBytes);
+
+  /// Title for the mesh feed post composer sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Post'**
+  String get meshFeedComposeTitle;
+
+  /// Title shown when no posts match the active filter.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching posts'**
+  String get meshFeedEmptyFilterTitle;
+
+  /// Description shown when no posts match the active filter.
+  ///
+  /// In en, this message translates to:
+  /// **'Try changing the filter to see more posts.'**
+  String get meshFeedEmptyFilterDescription;
 }
 
 class _AppLocalizationsDelegate

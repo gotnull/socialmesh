@@ -2,22 +2,36 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:convert';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/core/auth/claims_cache.dart';
 
 /// In-memory fake for FlutterSecureStorage to avoid platform channel calls.
 class FakeSecureStorage {
   final Map<String, String> _store = {};
+  bool throwOnRead = false;
+  bool throwOnWrite = false;
+  bool throwOnDelete = false;
+
+  /// The [PlatformException] thrown when simulating keychain-locked errors.
+  static PlatformException keychainLockedException() => PlatformException(
+    code: 'Unexpected security result code',
+    message: 'Code: -25308, Message: User interaction is not allowed.',
+    details: -25308,
+  );
 
   Future<void> write({required String key, required String value}) async {
+    if (throwOnWrite) throw keychainLockedException();
     _store[key] = value;
   }
 
   Future<String?> read({required String key}) async {
+    if (throwOnRead) throw keychainLockedException();
     return _store[key];
   }
 
   Future<void> delete({required String key}) async {
+    if (throwOnDelete) throw keychainLockedException();
     _store.remove(key);
   }
 
@@ -377,6 +391,64 @@ void main() {
         'tokenExpiry': 1700003600000,
       });
     });
+
+    group('PlatformException handling (keychain locked)', () {
+      test(
+        'read returns null when keychain throws PlatformException',
+        () async {
+          fakeStorage.throwOnRead = true;
+
+          final result = await cache.read();
+          expect(result, isNull);
+        },
+      );
+
+      test(
+        'read returns null on PlatformException even if cache has data',
+        () async {
+          // Write data successfully first
+          const claims = CachedClaims(
+            orgId: 'org-uuid-123',
+            role: 'operator',
+            cachedAt: 1700000000000,
+            tokenExpiry: 1700003600000,
+          );
+          await cache.write(claims);
+
+          // Now simulate keychain locked
+          fakeStorage.throwOnRead = true;
+          final result = await cache.read();
+          expect(result, isNull);
+
+          // Data should still be in storage (not cleared, since clear would
+          // also fail when keychain is locked)
+          fakeStorage.throwOnRead = false;
+          final resultAfter = await cache.read();
+          expect(resultAfter, isNotNull);
+          expect(resultAfter!.orgId, 'org-uuid-123');
+        },
+      );
+
+      test('write does not throw when keychain is locked', () async {
+        fakeStorage.throwOnWrite = true;
+        const claims = CachedClaims(
+          orgId: 'org-uuid-123',
+          role: 'operator',
+          cachedAt: 1700000000000,
+          tokenExpiry: 1700003600000,
+        );
+
+        // Should not throw — error is swallowed gracefully
+        await expectLater(cache.write(claims), completes);
+      });
+
+      test('clear does not throw when keychain is locked', () async {
+        fakeStorage.throwOnDelete = true;
+
+        // Should not throw — error is swallowed gracefully
+        await expectLater(cache.clear(), completes);
+      });
+    });
   });
 
   group('ClaimsState-equivalent behavior', () {
@@ -407,6 +479,10 @@ void main() {
 }
 
 /// Testable wrapper around [ClaimsCache] that uses [FakeSecureStorage].
+///
+/// Mirrors the real [ClaimsCache] implementation, including graceful handling
+/// of [PlatformException] from the iOS Keychain (e.g. -25308
+/// errSecInteractionNotAllowed when device is locked or app is in background).
 class _TestableClaimsCache {
   static const _storageKey = 'org_claims_cache';
   final FakeSecureStorage _storage;
@@ -414,21 +490,30 @@ class _TestableClaimsCache {
   _TestableClaimsCache(this._storage);
 
   Future<void> write(CachedClaims claims) async {
-    final json = jsonEncode(claims.toJson());
-    await _storage.write(key: _storageKey, value: json);
+    try {
+      final json = jsonEncode(claims.toJson());
+      await _storage.write(key: _storageKey, value: json);
+    } on PlatformException catch (_) {
+      // Keychain locked — silently skip write
+    }
   }
 
   Future<CachedClaims?> read() async {
-    final raw = await _storage.read(key: _storageKey);
-    if (raw == null) return null;
-
     try {
+      final raw = await _storage.read(key: _storageKey);
+      if (raw == null) return null;
+
       final json = jsonDecode(raw) as Map<String, dynamic>;
       if (json['cachedAt'] is! int || json['tokenExpiry'] is! int) {
         await clear();
         return null;
       }
       return CachedClaims.fromJson(json);
+    } on PlatformException catch (_) {
+      // iOS Keychain error (e.g. -25308 errSecInteractionNotAllowed) —
+      // device locked or app in background. Return null gracefully
+      // without attempting clear() (which would also fail).
+      return null;
     } catch (_) {
       await clear();
       return null;
@@ -436,6 +521,10 @@ class _TestableClaimsCache {
   }
 
   Future<void> clear() async {
-    await _storage.delete(key: _storageKey);
+    try {
+      await _storage.delete(key: _storageKey);
+    } on PlatformException catch (_) {
+      // Keychain locked — silently skip clear
+    }
   }
 }

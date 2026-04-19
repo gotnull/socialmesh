@@ -38,6 +38,9 @@ SYNC_DIRS=(
   web-redirect
   web-sprints-redirect
   .claude
+  ios/codec2
+  macos/codec2
+  android/app/src/main/jni
 )
 
 # Individual files to sync (relative to repo root)
@@ -58,6 +61,11 @@ SYNC_FILES=(
   android/upload-keystore.jks
   CLAUDE.md
   AGENTS.md
+  lib/providers/CLAUDE.md
+  lib/services/CLAUDE.md
+  lib/features/CLAUDE.md
+  lib/services/protocol/CLAUDE.md
+  lib/services/storage/CLAUDE.md
 )
 
 # Patterns to exclude from rsync (node_modules, build artifacts, CI workflows, etc.)

@@ -160,8 +160,8 @@ void main() {
   });
 
   group('RtttlLibraryService', () {
-    test('maxRtttlLength is 230', () {
-      expect(RtttlLibraryService.maxRtttlLength, 230);
+    test('maxRtttlLength is 228', () {
+      expect(RtttlLibraryService.maxRtttlLength, 228);
     });
 
     test('clearCache resets loaded state', () {

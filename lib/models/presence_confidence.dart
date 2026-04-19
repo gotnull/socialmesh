@@ -4,6 +4,9 @@ import 'dart:convert';
 
 import 'package:flutter/widgets.dart';
 
+import '../utils/text_sanitizer.dart';
+import '../utils/timestamp_validation.dart';
+
 enum PresenceConfidence { active, fading, stale, unknown }
 
 /// Fuzzy last-seen buckets for human-friendly time display.
@@ -133,7 +136,7 @@ class ExtendedPresenceInfo {
         status = status.trim();
         if (status.isEmpty) status = null;
         if (status != null && status.length > maxStatusLength) {
-          status = status.substring(0, maxStatusLength);
+          status = safeTruncateCodeUnits(status, maxStatusLength);
         }
       }
       return ExtendedPresenceInfo(intent: intent, shortStatus: status);
@@ -164,7 +167,7 @@ class ExtendedPresenceInfo {
       final trimmed = shortStatus!.trim();
       if (trimmed.isNotEmpty) {
         json['s'] = trimmed.length > maxStatusLength
-            ? trimmed.substring(0, maxStatusLength)
+            ? safeTruncateCodeUnits(trimmed, maxStatusLength)
             : trimmed;
       }
     }
@@ -217,6 +220,11 @@ class PresenceThresholds {
   /// Heard within this window is treated as stale (likely offline).
   static const Duration staleWindow = Duration(minutes: 60);
 
+  /// Nodes heard within this window are considered "online" (reachable on
+  /// the mesh). Matches the Meshtastic firmware default of `online_secs`
+  /// (7200 s = 2 h).
+  static const Duration onlineWindow = Duration(hours: 2);
+
   const PresenceThresholds();
 }
 
@@ -228,8 +236,12 @@ class PresenceCalculator {
     if (lastHeard == null) {
       return PresenceConfidence.unknown;
     }
+    if (!TimestampValidation.isPlausible(lastHeard, referenceTime: now)) {
+      return PresenceConfidence.unknown;
+    }
 
     final age = now.difference(lastHeard);
+    if (age.isNegative) return PresenceConfidence.unknown;
     if (age <= PresenceThresholds.activeWindow) {
       return PresenceConfidence.active;
     }
@@ -240,6 +252,21 @@ class PresenceCalculator {
       return PresenceConfidence.stale;
     }
     return PresenceConfidence.unknown;
+  }
+
+  /// Whether a node should be considered **online** (heard within the
+  /// Meshtastic firmware online window of 2 hours).
+  ///
+  /// This is intentionally broader than [fromLastHeard] which classifies
+  /// presence into fine-grained tiers (active/fading/stale/unknown).
+  static bool isOnline(DateTime? lastHeard, {required DateTime now}) {
+    if (lastHeard == null) return false;
+    if (!TimestampValidation.isPlausible(lastHeard, referenceTime: now)) {
+      return false;
+    }
+    final age = now.difference(lastHeard);
+    if (age.isNegative) return false;
+    return age <= PresenceThresholds.onlineWindow;
   }
 }
 

@@ -69,6 +69,10 @@ class PushNotificationService {
   /// SharedPreferences key for persisting the last-saved FCM token so we can
   /// delete the stale Firestore entry when the platform rotates it.
   static const _kPreviousFcmToken = 'previous_fcm_token';
+  static const _kMasterToggle = 'notifications_enabled';
+  static const _kChannelToggle = 'channel_notifications_enabled';
+  static const _kDmToggle = 'dm_notifications_enabled';
+  static const _kMutedChannels = 'muted_channel_indices';
 
   /// Notification channel for Android
   static const AndroidNotificationChannel
@@ -162,11 +166,23 @@ class PushNotificationService {
     }
   }
 
-  /// Subscribe to the announcements FCM topic for admin broadcasts
+  /// Subscribe to the announcements FCM topic for admin broadcasts.
+  ///
+  /// Subscribes to both the general `announcements` topic (for broadcasts
+  /// targeting all platforms) and the platform-specific topic
+  /// (`announcements_android` or `announcements_ios`) so admins can send
+  /// platform-targeted push notifications.
   Future<void> _subscribeToAnnouncementsTopic() async {
     try {
       await _messaging.subscribeToTopic('announcements');
       AppLogging.notifications('🔔 Subscribed to announcements topic');
+
+      // Subscribe to platform-specific topic for targeted broadcasts
+      final platformTopic = Platform.isAndroid
+          ? 'announcements_android'
+          : 'announcements_ios';
+      await _messaging.subscribeToTopic(platformTopic);
+      AppLogging.notifications('🔔 Subscribed to $platformTopic topic');
     } catch (e) {
       AppLogging.notifications(
         '🔔 Error subscribing to announcements topic: $e',
@@ -279,6 +295,41 @@ class PushNotificationService {
 
     final notification = message.notification;
     if (notification == null) return;
+
+    // Respect user notification preferences for mesh message types.
+    // The content refresh event above has already been emitted so the
+    // message is persisted regardless — we only suppress the visible
+    // notification here.
+    final pushType = message.data['type'] as String?;
+    if (pushType == 'channel_message' || pushType == 'direct_message') {
+      final prefs = await SharedPreferences.getInstance();
+      final masterEnabled = prefs.getBool(_kMasterToggle) ?? true;
+      if (!masterEnabled) return;
+
+      // Respect per-channel mute preference.
+      // This check runs before the channel/DM type split because the
+      // primary channel (index 0) may arrive as either push type
+      // depending on server classification.  Without this early gate,
+      // muting channel 0 has no effect for push notifications.
+      final channelStr = message.data['channel'] as String?;
+      final channelIndex = channelStr != null ? int.tryParse(channelStr) : null;
+      if (channelIndex != null) {
+        final mutedRaw = prefs.getStringList(_kMutedChannels);
+        if (mutedRaw != null) {
+          final mutedSet = mutedRaw
+              .map((s) => int.tryParse(s))
+              .whereType<int>()
+              .toSet();
+          if (mutedSet.contains(channelIndex)) return;
+        }
+      }
+
+      if (pushType == 'channel_message') {
+        if (!(prefs.getBool(_kChannelToggle) ?? true)) return;
+      } else {
+        if (!(prefs.getBool(_kDmToggle) ?? true)) return;
+      }
+    }
 
     // Try to get image URL from data payload
     final imageUrl = message.data['imageUrl'] as String?;

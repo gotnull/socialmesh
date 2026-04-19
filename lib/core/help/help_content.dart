@@ -226,7 +226,7 @@ class HelpContent {
       HelpStep(
         id: 'nodes_status',
         bubbleText:
-            "**Green dot** means **Active** (heard very recently). **Yellow** means **Seen recently**. **Gray** means **Inactive**. LoRa has no offline signal—status is inferred.",
+            "**Green dot** means **Online** (heard recently). **Yellow** means **Seen recently**. **Gray** means **Offline**. LoRa has no offline signal—status is inferred.",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
@@ -238,7 +238,7 @@ class HelpContent {
       HelpStep(
         id: 'nodes_filters',
         bubbleText:
-            "Use the **filters** at the top to find specific nodes. You can show only **Active** nodes, favorites, or nodes with GPS.",
+            "Use the **filters** at the top to find specific nodes. You can show only **Online** nodes, favorites, or nodes with GPS.",
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
@@ -379,6 +379,12 @@ class HelpContent {
             "Can't find your device? Check:\n- **Bluetooth is on**\n- Device has power\n- Device isn't connected elsewhere\n- You're close enough (under 10m)",
         icoMood: MeshBrainMood.thinking,
       ),
+      HelpStep(
+        id: 'connection_disconnect',
+        bubbleText:
+            "Keep getting **disconnected**? Common causes:\n- **Another app** (e.g. Meshtastic app) is already connected to this node\n- On **TCP/IP (ESP devices)**, only one client can connect at a time\n- Try closing other apps or disconnecting other devices first",
+        icoMood: MeshBrainMood.thinking,
+      ),
     ],
   );
 
@@ -502,7 +508,7 @@ class HelpContent {
       HelpStep(
         id: 'map_filters',
         bubbleText:
-            "Use **filters** to show only **Active** nodes, or nodes with GPS. Helps when your map gets crowded!",
+            "Use **filters** to show only **Online** nodes, or nodes with GPS. Helps when your map gets crowded!",
         icoMood: MeshBrainMood.playful,
       ),
     ],
@@ -1363,19 +1369,19 @@ class HelpContent {
       HelpStep(
         id: 'presence_active',
         bubbleText:
-            "**Active** nodes (green) sent a message in the last 2 minutes. They're definitely online!",
+            "**Online** nodes (green) were heard within the last 2 hours — matching the Meshtastic firmware definition of online.",
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
         id: 'presence_recent',
         bubbleText:
-            "**Recently seen** nodes (yellow) were active 2-10 minutes ago. Probably still around.",
+            "**Recently seen** nodes (yellow) were heard a few minutes ago. Probably still around.",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'presence_inactive',
         bubbleText:
-            "**Inactive** nodes (gray) haven't been heard from in over 10 minutes. They might be out of range or powered off.",
+            "**Offline** nodes (gray) haven't been heard from in over 2 hours. They might be out of range or powered off.",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
@@ -2406,6 +2412,86 @@ class HelpContent {
   );
 
   // ============================================================================
+  // SIP HUB HELP
+  // ============================================================================
+
+  static final HelpTopic sipHubOverview = HelpTopic(
+    id: 'sip_hub_overview',
+    title: 'Socialmesh',
+    description: 'Discover and chat with nearby Socialmesh peers',
+    icon: Icons.sensors,
+    category: catNetwork,
+    priority: 7,
+    steps: [
+      HelpStep(
+        id: 'sip_hub_intro',
+        bubbleText:
+            "Welcome to **Socialmesh**! This is your peer discovery hub. Nearby devices running Socialmesh appear here once they beacon or respond to a rollcall.",
+        icoMood: MeshBrainMood.excited,
+        canGoBack: false,
+      ),
+      HelpStep(
+        id: 'sip_hub_scan',
+        bubbleText:
+            "Tap the **scan icon** to send a rollcall request. Nearby peers will respond within seconds. Auto-scan fires every 60 seconds in the background.",
+        icoMood: MeshBrainMood.speaking,
+      ),
+      HelpStep(
+        id: 'sip_hub_handshake',
+        bubbleText:
+            "Once you see a peer, tap **Handshake** to exchange identity. After the handshake you can open an **end-to-end encrypted** ephemeral DM — no servers, no accounts.",
+        icoMood: MeshBrainMood.approving,
+      ),
+      HelpStep(
+        id: 'sip_hub_privacy',
+        bubbleText:
+            "All discovery is **anonymous by default**. Peers only reveal a rotating 4-byte ambient ID until you mutually agree to a handshake.",
+        icoMood: MeshBrainMood.playful,
+      ),
+    ],
+  );
+
+  // ============================================================================
+  // MESH EXPLORER HELP
+  // ============================================================================
+
+  static final HelpTopic meshExplorerOverview = HelpTopic(
+    id: 'mesh_explorer_overview',
+    title: 'Mesh Explorer',
+    description: 'Explore nearby peers and mesh services',
+    icon: Icons.explore_outlined,
+    category: catNetwork,
+    priority: 8,
+    steps: [
+      HelpStep(
+        id: 'mesh_explorer_intro',
+        bubbleText:
+            "Welcome to **Mesh Explorer**! This shows all Socialmesh-capable peers currently in radio range. Anonymous peers appear instantly — no handshake needed.",
+        icoMood: MeshBrainMood.excited,
+        canGoBack: false,
+      ),
+      HelpStep(
+        id: 'mesh_explorer_peers',
+        bubbleText:
+            "Each tile shows a **peer's ambient sigil** and capabilities. Tap a peer to view details or initiate a **SIP handshake** for identity exchange.",
+        icoMood: MeshBrainMood.speaking,
+      ),
+      HelpStep(
+        id: 'mesh_explorer_services',
+        bubbleText:
+            "The **Services** section shows what nearby peers are offering — Bulletin Boards, Profiles, and more. Tap a service tile to interact with it.",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'mesh_explorer_scan',
+        bubbleText:
+            "Tap the **sensor icon** to broadcast a rollcall to the mesh. Peers respond within seconds. The explorer refreshes automatically when new peers are heard.",
+        icoMood: MeshBrainMood.approving,
+      ),
+    ],
+  );
+
+  // ============================================================================
   // ALL TOPICS
   // ============================================================================
 
@@ -2455,6 +2541,8 @@ class HelpContent {
     takGatewayOverview,
     fileTransferOverview,
     fileTransferLimits,
+    sipHubOverview,
+    meshExplorerOverview,
   ];
 
   /// Get a topic by ID
@@ -2539,6 +2627,8 @@ class HelpContent {
         'user_responsibility' => l10n.helpUserResponsibilityTitle,
         'file_transfer_overview' => l10n.helpFileTransferOverviewTitle,
         'file_transfer_limits' => l10n.helpFileTransferLimitsTitle,
+        'sip_hub_overview' => l10n.helpSipHubOverviewTitle,
+        'mesh_explorer_overview' => l10n.helpMeshExplorerOverviewTitle,
         _ => topicId,
       };
 
@@ -2590,6 +2680,8 @@ class HelpContent {
         'user_responsibility' => l10n.helpUserResponsibilityDescription,
         'file_transfer_overview' => l10n.helpFileTransferOverviewDescription,
         'file_transfer_limits' => l10n.helpFileTransferLimitsDescription,
+        'sip_hub_overview' => l10n.helpSipHubOverviewDescription,
+        'mesh_explorer_overview' => l10n.helpMeshExplorerOverviewDescription,
         _ => topicId,
       };
 
@@ -2630,6 +2722,7 @@ class HelpContent {
     'connection_usb' => l10n.helpConnectionUsbBubble,
     'connection_pairing' => l10n.helpConnectionPairingBubble,
     'connection_troubleshoot' => l10n.helpConnectionTroubleshootBubble,
+    'connection_disconnect' => l10n.helpConnectionDisconnectBubble,
     'gps_intro' => l10n.helpGpsIntroBubble,
     'gps_broadcast' => l10n.helpGpsBroadcastBubble,
     'gps_privacy' => l10n.helpGpsPrivacyBubble,
@@ -2833,6 +2926,14 @@ class HelpContent {
     'ftl_duty' => l10n.helpFtlDutyBubble,
     'ftl_cap' => l10n.helpFtlCapBubble,
     'ftl_usb' => l10n.helpFtlUsbBubble,
+    'sip_hub_intro' => l10n.helpSipHubIntroBubble,
+    'sip_hub_scan' => l10n.helpSipHubScanBubble,
+    'sip_hub_handshake' => l10n.helpSipHubHandshakeBubble,
+    'sip_hub_privacy' => l10n.helpSipHubPrivacyBubble,
+    'mesh_explorer_intro' => l10n.helpMeshExplorerIntroBubble,
+    'mesh_explorer_peers' => l10n.helpMeshExplorerPeersBubble,
+    'mesh_explorer_services' => l10n.helpMeshExplorerServicesBubble,
+    'mesh_explorer_scan' => l10n.helpMeshExplorerScanBubble,
     _ => stepId,
   };
 

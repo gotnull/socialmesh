@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/animations.dart';
 import '../../../l10n/app_localizations.dart';
 
 /// Result of comparing a single decoded field against its expected value.
@@ -74,14 +75,19 @@ class _MrrpFixtureResultTileState extends State<MrrpFixtureResultTile> {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
-      child: Material(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius8),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(AppTheme.radius8),
-          onTap: r.fields.isNotEmpty
-              ? () => setState(() => _expanded = !_expanded)
-              : null,
+      child: BouncyTap(
+        onTap: r.fields.isNotEmpty
+            ? () => setState(() => _expanded = !_expanded)
+            : () {},
+        child: Container(
+          decoration: BoxDecoration(
+            color: context.card,
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
+            border: Border.all(
+              color: context.border.withValues(alpha: 0.5),
+              width: 0.5,
+            ),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(AppTheme.spacing12),
             child: Column(
@@ -90,19 +96,34 @@ class _MrrpFixtureResultTileState extends State<MrrpFixtureResultTile> {
                 // Header row: name + pass/fail badge
                 Row(
                   children: [
-                    Icon(
-                      passed ? Icons.check_circle : Icons.cancel,
-                      size: 20,
-                      color: passed
-                          ? SemanticColors.success
-                          : SemanticColors.error,
+                    Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        color:
+                            (passed
+                                    ? SemanticColors.success
+                                    : SemanticColors.error)
+                                .withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
+                      ),
+                      child: Icon(
+                        passed ? Icons.check_circle : Icons.cancel,
+                        size: 16,
+                        color: passed
+                            ? SemanticColors.success
+                            : SemanticColors.error,
+                      ),
                     ),
                     const SizedBox(width: AppTheme.spacing8),
                     Expanded(
                       child: Text(
                         r.name,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        style: TextStyle(
+                          fontSize: 14,
                           fontWeight: FontWeight.w600,
+                          fontFamily: AppTheme.fontFamily,
+                          color: context.textPrimary,
                         ),
                       ),
                     ),
@@ -199,12 +220,24 @@ class _FieldRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            field.matches ? Icons.check : Icons.close,
-            size: 14,
-            color: field.matches
-                ? SemanticColors.success
-                : SemanticColors.error,
+          Container(
+            width: 18,
+            height: 18,
+            decoration: BoxDecoration(
+              color:
+                  (field.matches
+                          ? SemanticColors.success
+                          : SemanticColors.error)
+                      .withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(AppTheme.radius4),
+            ),
+            child: Icon(
+              field.matches ? Icons.check : Icons.close,
+              size: 12,
+              color: field.matches
+                  ? SemanticColors.success
+                  : SemanticColors.error,
+            ),
           ),
           const SizedBox(width: AppTheme.spacing4),
           Expanded(
@@ -213,9 +246,12 @@ class _FieldRow extends StatelessWidget {
               children: [
                 Text(
                   field.name,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: AppTheme.fontFamily,
+                    color: context.textPrimary,
+                  ),
                 ),
                 if (!field.matches)
                   Text(

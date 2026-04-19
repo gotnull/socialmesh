@@ -4,9 +4,9 @@ import 'dart:math' as math;
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
+import '../../../utils/time_format.dart';
 import '../../../core/theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../services/node_history_service.dart';
@@ -269,7 +269,7 @@ class _NodeHistoryChartsState extends State<NodeHistoryCharts> {
                 return Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(
-                    DateFormat('HH:mm').format(entry.timestamp),
+                    AppTimeFormat.timeOnly(context).format(entry.timestamp),
                     style: context.captionStyle?.copyWith(
                       color: context.textTertiary,
                     ),
@@ -309,7 +309,7 @@ class _NodeHistoryChartsState extends State<NodeHistoryCharts> {
                 if (index >= 0 && index < sortedHistory.length) {
                   final entry = sortedHistory[index];
                   return LineTooltipItem(
-                    '${spot.y.toStringAsFixed(_selectedMetric == NodeChartMetric.connectivity ? 0 : 1)}${_selectedMetric.unit}\n${DateFormat('MMM d, HH:mm').format(entry.timestamp)}',
+                    '${spot.y.toStringAsFixed(_selectedMetric == NodeChartMetric.connectivity ? 0 : 1)}${_selectedMetric.unit}\n${AppTimeFormat.dateAndTime(context).format(entry.timestamp)}',
                     TextStyle(
                       color: lineColor,
                       fontSize: 11,

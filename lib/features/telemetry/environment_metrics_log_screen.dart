@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../utils/time_format.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/safety/lifecycle_mixin.dart';
@@ -466,7 +467,7 @@ class _EnvironmentMetricsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('MMM d, yyyy');
-    final timeFormat = DateFormat('HH:mm:ss');
+    final timeFormat = AppTimeFormat.timeWithSeconds(context);
 
     return Card(
       margin: EdgeInsets.zero,
@@ -727,7 +728,9 @@ class _EnvironmentMetricsChart extends StatelessWidget {
                         return Padding(
                           padding: const EdgeInsets.only(top: 6),
                           child: Text(
-                            DateFormat('HH:mm').format(sorted[idx].timestamp),
+                            AppTimeFormat.timeOnly(
+                              context,
+                            ).format(sorted[idx].timestamp),
                             style: TextStyle(
                               fontSize: 10,
                               color: context.textTertiary,
@@ -751,7 +754,7 @@ class _EnvironmentMetricsChart extends StatelessWidget {
                           ? '${((spot.y / 100) * tRange + tAxisMin).toStringAsFixed(1)}°C'
                           : '${spot.y.toStringAsFixed(1)}%';
                       return LineTooltipItem(
-                        '$display\n${DateFormat('MMM d HH:mm').format(log.timestamp)}',
+                        '$display\n${AppTimeFormat.withDatePrefix(context, 'MMM d').format(log.timestamp)}',
                         TextStyle(
                           color: color,
                           fontWeight: FontWeight.w600,

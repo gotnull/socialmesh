@@ -24,6 +24,7 @@ enum SipMessageType {
   hsChallenge(0x14),
   hsResponse(0x15),
   hsAccept(0x16),
+  hsDecline(0x17),
 
   // SIP-3: Micro-Exchange
   txStart(0x30),
@@ -38,6 +39,7 @@ enum SipMessageType {
   dmTyping(0x41),
   dmReaction(0x42),
   dmDelete(0x43),
+  dmClose(0x44),
 
   // MRRP (Mesh Request/Response Protocol)
   mrrpData(0x50),
@@ -134,6 +136,17 @@ abstract final class SipFeatureBits {
 
   /// SIP-3 micro-exchange supported.
   static const int sip3 = 1 << 3;
+
+  /// Overlay v0.2 link layer supported. When set, peer can accept
+  /// `LINK_OPEN` and participate in the signed-identity session.
+  static const int overlayLinkV02 = 1 << 8;
+
+  /// Overlay v0.2 resource transfer (SPP v0.2) supported. Requires
+  /// [overlayLinkV02]; peers advertise both together or neither.
+  static const int overlayResourceV02 = 1 << 9;
+
+  /// Reserved for overlay v0.3 secure envelope. Never set today.
+  static const int overlaySecureV03 = 1 << 10;
 
   /// All features in v0.1.
   static const int allV01 = sip0 | sip1 | sip3; // 0x000B

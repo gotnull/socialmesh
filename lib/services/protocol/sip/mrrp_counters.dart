@@ -9,6 +9,11 @@ library;
 
 /// Aggregated MRRP counters for budget and timing diagnostics.
 class MrrpCounters {
+  /// Called after any counter is recorded, to trigger UI rebuilds.
+  void Function()? onChange;
+
+  void _notify() => onChange?.call();
+
   // --- Advert counters ---
   int serviceAdvertsSent = 0;
   int serviceAdvertsReceived = 0;
@@ -75,17 +80,34 @@ class MrrpCounters {
   void recordServiceAdvertSent() {
     serviceAdvertsSent++;
     lastAdvertSent = DateTime.now();
+    _notify();
   }
 
   void recordServiceAdvertReceived() {
     serviceAdvertsReceived++;
     lastAdvertReceived = DateTime.now();
+    _notify();
   }
 
-  void recordServiceDirRequestSent() => serviceDirRequestsSent++;
-  void recordServiceDirRequestReceived() => serviceDirRequestsReceived++;
-  void recordServiceDirResponseSent() => serviceDirResponsesSent++;
-  void recordServiceDirResponseReceived() => serviceDirResponsesReceived++;
+  void recordServiceDirRequestSent() {
+    serviceDirRequestsSent++;
+    _notify();
+  }
+
+  void recordServiceDirRequestReceived() {
+    serviceDirRequestsReceived++;
+    _notify();
+  }
+
+  void recordServiceDirResponseSent() {
+    serviceDirResponsesSent++;
+    _notify();
+  }
+
+  void recordServiceDirResponseReceived() {
+    serviceDirResponsesReceived++;
+    _notify();
+  }
 
   void recordRequestSent({int? serviceId}) {
     requestsSent++;
@@ -93,6 +115,7 @@ class MrrpCounters {
       requestsSentPerService[serviceId] =
           (requestsSentPerService[serviceId] ?? 0) + 1;
     }
+    _notify();
   }
 
   void recordRequestReceived({int? serviceId}) {
@@ -101,6 +124,7 @@ class MrrpCounters {
       requestsReceivedPerService[serviceId] =
           (requestsReceivedPerService[serviceId] ?? 0) + 1;
     }
+    _notify();
   }
 
   void recordResponseSent({int? serviceId}) {
@@ -109,6 +133,7 @@ class MrrpCounters {
       responsesSentPerService[serviceId] =
           (responsesSentPerService[serviceId] ?? 0) + 1;
     }
+    _notify();
   }
 
   void recordResponseReceived({int? serviceId}) {
@@ -117,9 +142,13 @@ class MrrpCounters {
       responsesReceivedPerService[serviceId] =
           (responsesReceivedPerService[serviceId] ?? 0) + 1;
     }
+    _notify();
   }
 
-  void recordErrorSent() => errorsSent++;
+  void recordErrorSent() {
+    errorsSent++;
+    _notify();
+  }
 
   void recordErrorReceived({int? statusCode}) {
     errorsReceived++;
@@ -127,11 +156,23 @@ class MrrpCounters {
       errorsReceivedPerStatus[statusCode] =
           (errorsReceivedPerStatus[statusCode] ?? 0) + 1;
     }
+    _notify();
   }
 
-  void recordDuplicateRequestIgnored() => duplicateRequestsIgnored++;
-  void recordDuplicateResponseIgnored() => duplicateResponsesIgnored++;
-  void recordCachedResponseServed() => cachedResponsesServed++;
+  void recordDuplicateRequestIgnored() {
+    duplicateRequestsIgnored++;
+    _notify();
+  }
+
+  void recordDuplicateResponseIgnored() {
+    duplicateResponsesIgnored++;
+    _notify();
+  }
+
+  void recordCachedResponseServed() {
+    cachedResponsesServed++;
+    _notify();
+  }
 
   void recordRequestTimeout({int? serviceId}) {
     requestTimeouts++;
@@ -139,23 +180,40 @@ class MrrpCounters {
       requestTimeoutsPerService[serviceId] =
           (requestTimeoutsPerService[serviceId] ?? 0) + 1;
     }
+    _notify();
   }
 
-  void recordResponseTimeout() => responseTimeouts++;
-  void recordRequestCancellation() => requestCancellations++;
+  void recordResponseTimeout() {
+    responseTimeouts++;
+    _notify();
+  }
+
+  void recordRequestCancellation() {
+    requestCancellations++;
+    _notify();
+  }
 
   void recordHarnessAction(String actionType) {
     harnessActionsPerformed[actionType] =
         (harnessActionsPerformed[actionType] ?? 0) + 1;
+    _notify();
   }
 
   void recordSimulatedFault(String faultType) {
     simulatedFaultsInjected[faultType] =
         (simulatedFaultsInjected[faultType] ?? 0) + 1;
+    _notify();
   }
 
-  void recordPayloadTooLargeRejection() => payloadTooLargeRejections++;
-  void recordBudgetThrottle() => budgetThrottles++;
+  void recordPayloadTooLargeRejection() {
+    payloadTooLargeRejections++;
+    _notify();
+  }
+
+  void recordBudgetThrottle() {
+    budgetThrottles++;
+    _notify();
+  }
 
   // --- Legacy recording aliases ---
   void recordSendBlocked() => recordBudgetThrottle();
@@ -168,6 +226,7 @@ class MrrpCounters {
   void recordLatency(int serviceId, Duration latency) {
     _latencies.putIfAbsent(serviceId, _LatencyTracker.new);
     _latencies[serviceId]!.record(latency);
+    _notify();
   }
 
   /// Get latency stats for a service. Returns null if no data.
@@ -218,6 +277,7 @@ class MrrpCounters {
     lastAdvertSent = null;
     lastAdvertReceived = null;
     _latencies.clear();
+    _notify();
   }
 }
 

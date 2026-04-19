@@ -2,10 +2,8 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 import 'dart:async';
-import 'dart:ui' show PlatformDispatcher;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:socialmesh/l10n/app_localizations.dart';
 
 import '../core/logging.dart';
 import '../core/navigation.dart';
@@ -15,6 +13,7 @@ import '../providers/app_providers.dart';
 import '../features/nodes/node_display_name_resolver.dart';
 import '../utils/snackbar.dart';
 import 'package:flutter/material.dart';
+import 'package:socialmesh/l10n/l10n_utils.dart';
 
 /// The type of countdown operation. Used for grouping, deduplication, and
 /// visual styling in the [CountdownBanner].
@@ -31,6 +30,9 @@ enum CountdownType {
 
   /// Broadcasting local position to the mesh.
   positionBroadcast,
+
+  /// A file transfer in progress (sending or receiving chunks).
+  fileTransfer,
 }
 
 /// Immutable snapshot of a single active countdown.
@@ -104,6 +106,13 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
   /// Brief duration for local position broadcast propagation.
   static const positionBroadcastSeconds = 10;
 
+  /// File transfer: estimated seconds per chunk (matches
+  /// [SmRateLimit.fileChunkInterval]).
+  static const fileTransferSecondsPerChunk = 2;
+
+  /// File transfer: negotiation timeout (awaiting accept/decline).
+  static const fileTransferNegotiationSeconds = 60;
+
   /// Canonical countdown id for the device reboot operation.
   static const deviceRebootId = 'device_reboot';
 
@@ -139,7 +148,8 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
   // -----------------------------------------------------------------------
 
   /// Starts a new countdown. If a countdown with the same [id] already exists
-  /// it is replaced (restarted).
+  /// and is still running, the call is ignored to prevent timer resets when
+  /// the user retries during cooldown.
   void startCountdown({
     required String id,
     required String label,
@@ -147,6 +157,9 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
     required CountdownType type,
     int? targetNodeNum,
   }) {
+    // Don't restart an already-active countdown for the same id.
+    if (state.containsKey(id)) return;
+
     final task = CountdownTask(
       id: id,
       label: label,
@@ -173,7 +186,7 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
     final displayName =
         node?.displayName ?? NodeDisplayNameResolver.defaultName(nodeNum);
 
-    final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    final l10n = safeL10n();
 
     startCountdown(
       id: tracerouteId(nodeNum),
@@ -210,7 +223,7 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
   /// Shown after requesting positions from all mesh nodes. The countdown
   /// sets user expectations for how long positions take to trickle in.
   void startPositionRequestCountdown() {
-    final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    final l10n = safeL10n();
     startCountdown(
       id: positionRequestId,
       label: l10n.countdownRequestingPositions,
@@ -223,13 +236,36 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
   ///
   /// Shown after sharing the local device position to the mesh.
   void startPositionBroadcastCountdown() {
-    final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    final l10n = safeL10n();
     startCountdown(
       id: positionBroadcastId,
       label: l10n.countdownBroadcastingPosition,
       totalSeconds: positionBroadcastSeconds,
       type: CountdownType.positionBroadcast,
     );
+  }
+
+  /// Convenience: start a file transfer countdown.
+  ///
+  /// [fileIdHex] uniquely identifies the transfer (used for dedup and
+  /// cancellation). [label] is the banner text (e.g. "Sending photo.jpg").
+  /// [totalSeconds] is the estimated completion time.
+  void startFileTransferCountdown({
+    required String fileIdHex,
+    required String label,
+    required int totalSeconds,
+  }) {
+    startCountdown(
+      id: fileTransferId(fileIdHex),
+      label: label,
+      totalSeconds: totalSeconds,
+      type: CountdownType.fileTransfer,
+    );
+  }
+
+  /// Cancel an active file transfer countdown.
+  void cancelFileTransferCountdown(String fileIdHex) {
+    cancelCountdown(fileTransferId(fileIdHex));
   }
 
   /// Cancel and remove a countdown by [id].
@@ -269,6 +305,9 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
 
   /// Build the canonical id for a traceroute countdown.
   static String tracerouteId(int nodeNum) => 'traceroute_$nodeNum';
+
+  /// Build the canonical id for a file transfer countdown.
+  static String fileTransferId(String fileIdHex) => 'file_transfer_$fileIdHex';
 
   // -----------------------------------------------------------------------
   // Internal tick logic
@@ -319,6 +358,9 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
         _onPositionRequestComplete(task);
       case CountdownType.positionBroadcast:
         _onPositionBroadcastComplete(task);
+      case CountdownType.fileTransfer:
+        // No completion action needed — transfer state drives the UI.
+        break;
     }
   }
 
@@ -326,7 +368,7 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
     final targetNodeNum = task.targetNodeNum;
     if (targetNodeNum == null) return;
 
-    final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    final l10n = safeL10n();
     showGlobalActionSnackBar(
       'Traceroute results may be ready', // lint-allow: hardcoded-string
       actionLabel: l10n.actionView,

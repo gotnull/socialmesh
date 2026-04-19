@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:async';
-import 'dart:ui' show PlatformDispatcher;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:socialmesh/l10n/app_localizations.dart';
 import '../core/command/commands.dart';
 import '../core/logging.dart';
 import 'connection_providers.dart';
+import 'package:socialmesh/l10n/l10n_utils.dart';
 
 /// Manages lifecycle-aware command execution.
 /// Prevents device commands from executing during invalid app states.
@@ -63,7 +62,7 @@ class LifecycleCommandManager {
     AppLogging.debug(
       'LifecycleCommandManager: Rejected ${command.runtimeType} (app inactive)',
     );
-    final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    final l10n = safeL10n();
     return CommandFailure(
       CommandError(
         type: CommandErrorType.executionFailed,
@@ -77,7 +76,7 @@ class LifecycleCommandManager {
   void _processDeferredCommands() {
     if (_deferredCommands.isEmpty) return;
 
-    final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    final l10n = safeL10n();
     final now = DateTime.now();
     final expiredCommands = <_DeferredCommand>[];
     final validCommands = <_DeferredCommand>[];
@@ -125,7 +124,7 @@ class LifecycleCommandManager {
 
   /// Cancel all deferred commands
   void cancelAllDeferred() {
-    final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    final l10n = safeL10n();
     for (final deferred in _deferredCommands) {
       deferred.completer.complete(
         CommandFailure(

@@ -972,6 +972,30 @@ class _EncounterConfig extends StatefulWidget {
 }
 
 class _EncounterConfigState extends State<_EncounterConfig> {
+  late final TextEditingController _thresholdController;
+
+  @override
+  void initState() {
+    super.initState();
+    _thresholdController = TextEditingController(
+      text: widget.config.threshold.toString(),
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant _EncounterConfig oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.config.threshold != oldWidget.config.threshold) {
+      _thresholdController.text = widget.config.threshold.toString();
+    }
+  }
+
+  @override
+  void dispose() {
+    _thresholdController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -990,9 +1014,7 @@ class _EncounterConfigState extends State<_EncounterConfig> {
           height: 24,
           child: TextField(
             maxLength: 10,
-            controller: TextEditingController(
-              text: widget.config.threshold.toString(),
-            ),
+            controller: _thresholdController,
             keyboardType: TextInputType.number,
             style: const TextStyle(
               color: _kQueryAccent,

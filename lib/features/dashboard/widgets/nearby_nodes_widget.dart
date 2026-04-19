@@ -6,6 +6,8 @@ import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
 import '../../../providers/app_providers.dart';
 import '../../../models/mesh_models.dart';
+import '../../../utils/timestamp_validation.dart';
+import '../../nodes/node_detail_screen.dart';
 import 'dashboard_widget.dart';
 
 /// Nearby Nodes Widget - Shows closest nodes by signal strength
@@ -45,7 +47,7 @@ class NearbyNodesContent extends ConsumerWidget {
       ),
       itemBuilder: (context, index) {
         final node = topNodes[index];
-        return _NodeTile(node: node);
+        return _NodeTile(node: node, myNodeNum: myNodeNum);
       },
     );
   }
@@ -53,98 +55,104 @@ class NearbyNodesContent extends ConsumerWidget {
 
 class _NodeTile extends StatelessWidget {
   final MeshNode node;
+  final int? myNodeNum;
 
-  const _NodeTile({required this.node});
+  const _NodeTile({required this.node, required this.myNodeNum});
 
   @override
   Widget build(BuildContext context) {
     final rssi = node.rssi ?? -100;
     final signalColor = _getSignalColor(rssi);
-    final lastSeen = node.lastHeard != null
-        ? _formatLastSeen(node.lastHeard!)
+    final validatedLastHeard = TimestampValidation.validated(node.lastHeard);
+    final lastSeen = validatedLastHeard != null
+        ? _formatLastSeen(validatedLastHeard)
         : 'Unknown';
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      child: Row(
-        children: [
-          // Signal indicator
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: signalColor.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(AppTheme.radius10),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.signal_cellular_alt, color: signalColor, size: 16),
-                Text(
-                  '$rssi',
-                  style: TextStyle(
-                    fontSize: 8,
-                    fontWeight: FontWeight.w700,
-                    color: signalColor,
+    return InkWell(
+      onTap: () => showNodeDetails(context, node, node.nodeNum == myNodeNum),
+      borderRadius: BorderRadius.circular(AppTheme.radius8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Row(
+          children: [
+            // Signal indicator
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: signalColor.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(AppTheme.radius10),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.signal_cellular_alt, color: signalColor, size: 16),
+                  Text(
+                    '$rssi',
+                    style: TextStyle(
+                      fontSize: 8,
+                      fontWeight: FontWeight.w700,
+                      color: signalColor,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          SizedBox(width: AppTheme.spacing10),
-          // Node info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    if (node.isFavorite)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 4),
-                        child: Icon(
-                          Icons.star,
-                          size: 12,
-                          color: AppTheme.warningYellow,
+            SizedBox(width: AppTheme.spacing10),
+            // Node info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      if (node.isFavorite)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 4),
+                          child: Icon(
+                            Icons.star,
+                            size: 12,
+                            color: AppTheme.warningYellow,
+                          ),
+                        ),
+                      Expanded(
+                        child: Text(
+                          node.displayName,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: context.textPrimary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                    Expanded(
-                      child: Text(
-                        node.displayName,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: context.textPrimary,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppTheme.spacing2),
-                Row(
-                  children: [
-                    if (node.role != null) ...[
-                      _RoleChip(role: node.role!),
-                      const SizedBox(width: AppTheme.spacing6),
                     ],
-                    Text(
-                      lastSeen,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: context.textTertiary,
+                  ),
+                  const SizedBox(height: AppTheme.spacing2),
+                  Row(
+                    children: [
+                      if (node.role != null) ...[
+                        _RoleChip(role: node.role!),
+                        const SizedBox(width: AppTheme.spacing6),
+                      ],
+                      Text(
+                        lastSeen,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: context.textTertiary,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-          // Battery if available
-          if (node.batteryLevel != null)
-            _BatteryIndicator(level: node.batteryLevel!),
-        ],
+            // Battery if available
+            if (node.batteryLevel != null)
+              _BatteryIndicator(level: node.batteryLevel!),
+          ],
+        ),
       ),
     );
   }

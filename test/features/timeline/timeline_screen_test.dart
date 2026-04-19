@@ -2,8 +2,11 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/features/timeline/timeline_screen.dart';
+import 'package:socialmesh/providers/app_providers.dart';
+import 'package:socialmesh/providers/presence_providers.dart';
 
 void main() {
   group('TimelineEventType', () {
@@ -218,6 +221,37 @@ void main() {
         TimelineFilter.waypoints.matches(TimelineEventType.nodeJoined),
         isFalse,
       );
+    });
+  });
+
+  group('timelineEventsProvider', () {
+    test('auto-disposes after the last listener is removed', () async {
+      final container = ProviderContainer(
+        overrides: [
+          messagesProvider.overrideWithBuild((ref, notifier) => const []),
+          nodesProvider.overrideWithBuild((ref, notifier) => const {}),
+          myNodeNumProvider.overrideWithBuild((ref, notifier) => null),
+          presenceMapProvider.overrideWithBuild((ref, notifier) => const {}),
+          presenceClockProvider.overrideWith(
+            (_) =>
+                () => DateTime(2026, 4, 16),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final subscription = container.listen<List<TimelineEvent>>(
+        timelineEventsProvider,
+        (_, _) {},
+        fireImmediately: true,
+      );
+
+      expect(container.exists(timelineEventsProvider), isTrue);
+
+      subscription.close();
+      await container.pump();
+
+      expect(container.exists(timelineEventsProvider), isFalse);
     });
   });
 }

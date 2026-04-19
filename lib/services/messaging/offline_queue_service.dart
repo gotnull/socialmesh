@@ -2,8 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import '../../core/logging.dart';
 import 'dart:async';
-import 'dart:ui' show PlatformDispatcher;
-import 'package:socialmesh/l10n/app_localizations.dart';
+import 'package:socialmesh/l10n/l10n_utils.dart';
 import '../../models/mesh_models.dart';
 
 /// A pending message waiting to be sent when connection is restored
@@ -63,9 +62,18 @@ class OfflineQueueService {
   UpdateMessageCallback? _updateCallback;
   ReadyToSendCallback? _readyToSendCallback;
 
-  /// Stream controller for queue updates
-  final _queueController = StreamController<List<QueuedMessage>>.broadcast();
-  Stream<List<QueuedMessage>> get queueStream => _queueController.stream;
+  /// Stream controller for queue updates.
+  /// Lazily (re)created so the singleton survives dispose/reuse cycles
+  /// (e.g. across multiple ProviderContainer lifetimes in tests).
+  StreamController<List<QueuedMessage>>? _queueController;
+  StreamController<List<QueuedMessage>> get _ensureController {
+    if (_queueController == null || _queueController!.isClosed) {
+      _queueController = StreamController<List<QueuedMessage>>.broadcast();
+    }
+    return _queueController!;
+  }
+
+  Stream<List<QueuedMessage>> get queueStream => _ensureController.stream;
 
   /// Current queue
   List<QueuedMessage> get queue => List.unmodifiable(_queue);
@@ -114,7 +122,7 @@ class OfflineQueueService {
   /// Queue a message for sending
   void enqueue(QueuedMessage message) {
     _queue.add(message);
-    _queueController.add(List.unmodifiable(_queue));
+    _ensureController.add(List.unmodifiable(_queue));
     AppLogging.messages(
       '📤 Message queued: ${message.id}, queue size: ${_queue.length}',
     );
@@ -128,14 +136,14 @@ class OfflineQueueService {
   /// Remove a message from the queue (e.g., user cancelled)
   void remove(String messageId) {
     _queue.removeWhere((m) => m.id == messageId);
-    _queueController.add(List.unmodifiable(_queue));
+    _ensureController.add(List.unmodifiable(_queue));
     AppLogging.messages('📤 Message removed from queue: $messageId');
   }
 
   /// Clear all queued messages
   void clear() {
     _queue.clear();
-    _queueController.add(List.unmodifiable(_queue));
+    _ensureController.add(List.unmodifiable(_queue));
     AppLogging.messages('📤 Queue cleared');
   }
 
@@ -189,7 +197,7 @@ class OfflineQueueService {
 
         // Remove from queue on success
         _queue.removeAt(0);
-        _queueController.add(List.unmodifiable(_queue));
+        _ensureController.add(List.unmodifiable(_queue));
 
         AppLogging.messages(
           '📤 Queued message sent successfully: ${message.id}',
@@ -208,17 +216,15 @@ class OfflineQueueService {
           _updateCallback?.call(
             message.id,
             MessageStatus.failed,
-            errorMessage: lookupAppLocalizations(
-              PlatformDispatcher.instance.locale,
-            ).offlineQueueMaxRetries(e.toString()),
+            errorMessage: safeL10n().offlineQueueMaxRetries(e.toString()),
           );
           _queue.removeAt(0);
-          _queueController.add(List.unmodifiable(_queue));
+          _ensureController.add(List.unmodifiable(_queue));
         } else {
           // Move to end of queue for retry
           _queue.removeAt(0);
           _queue.add(message);
-          _queueController.add(List.unmodifiable(_queue));
+          _ensureController.add(List.unmodifiable(_queue));
 
           // Wait before retrying
           await Future.delayed(const Duration(seconds: 2));
@@ -234,6 +240,7 @@ class OfflineQueueService {
 
   /// Dispose resources
   void dispose() {
-    _queueController.close();
+    _queueController?.close();
+    _queueController = null;
   }
 }

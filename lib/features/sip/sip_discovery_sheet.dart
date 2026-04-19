@@ -8,7 +8,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/animated_empty_state.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
+import '../../core/widgets/nearby_person_card.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/sip_providers.dart';
 import '../../services/haptic_service.dart';
@@ -47,7 +49,7 @@ class _SipDiscoverySheetState extends ConsumerState<SipDiscoverySheet> {
     final haptics = ref.read(hapticServiceProvider);
     haptics.trigger(HapticType.light);
 
-    final outbound = discovery.buildRollcallReq();
+    final outbound = discovery.buildRollcallReq(force: true);
     if (outbound != null) {
       // Send the encoded SIP frame over the mesh transport.
       final protocol = ref.read(protocolServiceProvider);
@@ -120,35 +122,29 @@ class _SipDiscoverySheetState extends ConsumerState<SipDiscoverySheet> {
   }
 
   Widget _buildEmptyState(BuildContext context, dynamic l10n) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.radar,
-              size: 48,
-              color: Theme.of(
-                context,
-              ).colorScheme.onSurface.withValues(alpha: 0.4),
-            ),
-            const SizedBox(height: AppTheme.spacing12),
-            Text(
-              l10n.sipDiscoveryNoPeers,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: AppTheme.spacing4),
-            Text(
-              l10n.sipDiscoveryNoPeersDescription,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(
-                  context,
-                ).colorScheme.onSurface.withValues(alpha: 0.6),
-              ),
-              textAlign: TextAlign.center,
-            ),
+    final taglines = [
+      l10n.sipHubScanningTagline1 as String,
+      l10n.sipHubScanningTagline2 as String,
+      l10n.sipHubScanningTagline3 as String,
+      l10n.sipHubScanningTagline4 as String,
+    ];
+
+    return SizedBox(
+      height: 360,
+      child: AnimatedEmptyState(
+        config: AnimatedEmptyStateConfig(
+          icons: const [
+            Icons.sensors,
+            Icons.wifi_find,
+            Icons.radar,
+            Icons.people_outline,
+            Icons.explore_outlined,
+            Icons.person_search,
           ],
+          taglines: taglines,
+          titlePrefix: l10n.sipHubScanningTitlePrefix as String,
+          titleKeyword: l10n.sipHubScanningTitleKeyword as String,
+          titleSuffix: l10n.sipHubScanningTitleSuffix as String,
         ),
       ),
     );
@@ -180,61 +176,33 @@ class _PeerTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final theme = Theme.of(context);
-    final nodeHex = '0x${peer.nodeId.toRadixString(16).toUpperCase()}';
-    final deviceClassName = _deviceClassName(peer.deviceClass);
+    final nodeHex =
+        '!${peer.nodeId.toRadixString(16).toUpperCase().padLeft(4, '0')}';
+    final deviceClassName = SipPeerDetailSheet.deviceClassName(
+      context,
+      peer.deviceClass,
+    );
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: AppTheme.spacing8),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: theme.colorScheme.primaryContainer,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
+      child: NearbyPersonCard(
+        avatar: CircleAvatar(
+          radius: 24,
+          backgroundColor: context.accentColor.withValues(alpha: 0.1),
           child: Icon(
             Icons.sensors,
-            color: theme.colorScheme.onPrimaryContainer,
+            color: context.accentColor.withValues(alpha: 0.7),
             size: 20,
           ),
         ),
-        title: Text(
-          '${l10n.sipDiscoveryPeerAnonymous} $nodeHex',
-          style: theme.textTheme.bodyMedium,
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n.sipDiscoveryDeviceClass(deviceClassName),
-              style: theme.textTheme.bodySmall,
-            ),
-            Text(
-              'Features: 0x${peer.features.toRadixString(16)}',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-              ),
-            ),
-          ],
-        ),
-        trailing: const Icon(Icons.chevron_right),
+        displayName: '${l10n.sipDiscoveryPeerAnonymous} $nodeHex',
+        statusLine: l10n.sipDiscoveryDeviceClass(deviceClassName),
+        statusColor: context.accentColor,
         onTap: () {
           ref.read(hapticServiceProvider).trigger(HapticType.selection);
           SipPeerDetailSheet.show(context, peer);
         },
       ),
     );
-  }
-
-  static String _deviceClassName(int code) {
-    switch (code) {
-      case 0:
-        return 'Unknown'; // lint-allow: hardcoded-string
-      case 1:
-        return 'Phone'; // lint-allow: hardcoded-string
-      case 2:
-        return 'Tablet'; // lint-allow: hardcoded-string
-      case 3:
-        return 'Desktop'; // lint-allow: hardcoded-string
-      default:
-        return 'Type $code'; // lint-allow: hardcoded-string
-    }
   }
 }

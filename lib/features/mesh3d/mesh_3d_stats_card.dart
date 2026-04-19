@@ -4,7 +4,7 @@
 // Mesh 3D Stats Card
 //
 // A compact summary card displayed above the 3D viewport showing key mesh
-// metrics at a glance: total nodes, active count, GPS count, average SNR,
+// metrics at a glance: total nodes, online count, GPS count, average SNR,
 // and channel utilization. Follows the NodeDex _CompactStat visual pattern
 // with glass-style card background and consistent typography.
 
@@ -16,7 +16,6 @@ import '../../core/l10n/l10n_extension.dart';
 import '../../core/theme.dart';
 import '../../models/mesh_models.dart';
 import '../../models/presence_confidence.dart';
-import '../../providers/presence_providers.dart';
 
 // ---------------------------------------------------------------------------
 // Mesh3DStats — computed summary data for the stats card
@@ -28,14 +27,14 @@ import '../../providers/presence_providers.dart';
 /// down to avoid repeated iteration inside the card widget.
 class Mesh3DStats {
   final int totalNodes;
-  final int activeNodes;
+  final int onlineNodes;
   final int gpsNodes;
   final double? avgSnr;
   final double? channelUtil;
 
   const Mesh3DStats({
     required this.totalNodes,
-    required this.activeNodes,
+    required this.onlineNodes,
     required this.gpsNodes,
     this.avgSnr,
     this.channelUtil,
@@ -44,17 +43,16 @@ class Mesh3DStats {
   /// Compute stats from a node map and presence data.
   factory Mesh3DStats.fromNodes({
     required Map<int, MeshNode> nodes,
-    required Map<int, NodePresence> presenceMap,
     double? channelUtil,
   }) {
-    int active = 0;
+    int online = 0;
     int gps = 0;
     double snrSum = 0;
     int snrCount = 0;
+    final now = DateTime.now();
 
     for (final node in nodes.values) {
-      final presence = presenceConfidenceFor(presenceMap, node);
-      if (presence.isActive) active++;
+      if (PresenceCalculator.isOnline(node.lastHeard, now: now)) online++;
       if (node.latitude != null &&
           node.longitude != null &&
           node.latitude != 0 &&
@@ -69,7 +67,7 @@ class Mesh3DStats {
 
     return Mesh3DStats(
       totalNodes: nodes.length,
-      activeNodes: active,
+      onlineNodes: online,
       gpsNodes: gps,
       avgSnr: snrCount > 0 ? snrSum / snrCount : null,
       channelUtil: channelUtil,
@@ -134,8 +132,8 @@ class Mesh3DStatsCard extends StatelessWidget {
                 _separator(context),
                 _CompactStat(
                   icon: Icons.wifi,
-                  value: stats.activeNodes.toString(),
-                  label: context.l10n.mesh3dStatActive,
+                  value: stats.onlineNodes.toString(),
+                  label: context.l10n.mesh3dStatOnline,
                   color: AppTheme.successGreen,
                 ),
                 _separator(context),

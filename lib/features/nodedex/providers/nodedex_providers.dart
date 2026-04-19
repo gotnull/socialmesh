@@ -12,7 +12,7 @@ import '../../../features/nodes/node_display_name_resolver.dart';
 //         ├── nodeDexStatsProvider — aggregate statistics
 //         ├── nodeDexTraitProvider(int) — computed trait for a node
 //         ├── nodeDexSortedEntriesProvider — sorted list for UI
-//         └── nodeDexConstellationProvider — graph data for constellation view
+//         └── nodeDexConstellationProvider — historical graph data for constellation view
 //
 // The nodeDexProvider listens to nodesProvider for automatic discovery
 // tracking. When a new node appears or an existing node updates, the
@@ -22,11 +22,11 @@ import '../../../features/nodes/node_display_name_resolver.dart';
 // Cloud Sync: optional outbox-based sync via NodeDexSyncService.
 
 import 'dart:async' show Timer, unawaited;
+import 'dart:math' as math;
 
 import 'package:clock/clock.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
-import 'package:socialmesh/l10n/app_localizations.dart';
 
 import '../../../core/logging.dart';
 import '../../../models/mesh_models.dart';
@@ -37,6 +37,7 @@ import '../../../providers/signal_providers.dart';
 import '../models/import_preview.dart';
 import '../models/node_activity_event.dart';
 import '../models/nodedex_entry.dart';
+
 import '../services/nodedex_database.dart';
 import '../services/nodedex_sqlite_store.dart';
 import '../services/nodedex_sync_service.dart';
@@ -46,6 +47,10 @@ import '../services/progressive_disclosure.dart';
 import '../services/sigil_generator.dart';
 import '../services/trait_engine.dart';
 import '../services/trust_score.dart';
+import 'package:socialmesh/l10n/l10n_utils.dart';
+
+const Duration _kCoSeenRecentActivityWindow = Duration(minutes: 30);
+const double _kCoSeenMaxPlausibleDistanceMeters = 100000.0;
 
 // =============================================================================
 // Storage Provider
@@ -156,6 +161,45 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
   @visibleForTesting
   void flushCoSeenForTest() => _flushCoSeenRelationships();
 
+  /// Resolve the current modem preset value from the connected radio.
+  ///
+  /// Returns the protobuf int value (0–9) of the local radio's active
+  /// modem preset, or null if no radio is connected or config is unknown.
+  /// This is observation metadata — it tells us what *our* radio was set
+  /// to when we detected a node, not the remote node's own preset.
+  int? _resolveCurrentPreset() {
+    try {
+      final protocol = ref.read(protocolServiceProvider);
+      return protocol.currentLoraConfig?.modemPreset.value;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Resolve the current frequency offset from the connected device's LoRa config.
+  ///
+  /// Returns the offset in Hz, or null if not available. Returns null for
+  /// zero offset (no point storing the default).
+  double? _resolveCurrentFrequencyOffset() {
+    try {
+      final protocol = ref.read(protocolServiceProvider);
+      final offset = protocol.currentLoraConfig?.frequencyOffset;
+      // Only store non-zero offsets — zero is the default and not interesting.
+      if (offset == null || offset == 0.0) return null;
+      return offset;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  bool _isRecentCoSeenActivity(MeshNode node, DateTime now) {
+    final lastHeard = node.lastHeard;
+    if (lastHeard == null) return false;
+    final age = now.difference(lastHeard);
+    if (age.isNegative) return false;
+    return age <= _kCoSeenRecentActivityWindow;
+  }
+
   @override
   Map<int, NodeDexEntry> build() {
     final storeAsync = ref.watch(nodeDexStoreProvider);
@@ -212,7 +256,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
       // while NodeDex was not loaded.
       final currentNodes = ref.read(nodesProvider);
       if (currentNodes.isNotEmpty) {
-        _handleNodesUpdate({}, currentNodes);
+        _handleNodesUpdate({}, currentNodes, seedOnly: true);
       }
 
       // Start periodic co-seen relationship flush.
@@ -239,8 +283,9 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
   /// encounter records for re-seen nodes.
   void _handleNodesUpdate(
     Map<int, MeshNode> previous,
-    Map<int, MeshNode> current,
-  ) {
+    Map<int, MeshNode> current, {
+    bool seedOnly = false,
+  }) {
     if (_store == null) return;
 
     final myNodeNum = ref.read(myNodeNumProvider);
@@ -274,6 +319,15 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
       if (existing == null) {
         // New discovery: create a fresh NodeDex entry.
         final sigil = SigilGenerator.generate(nodeNum);
+        // Only attach the local radio's current preset/frequency offset when
+        // the node is actually freshly heard. Stale entries from the device's
+        // NodeDB (heard hours or days ago on some other preset) must not be
+        // tagged with whatever preset the radio happens to be on right now.
+        final freshlyHeard = !isOwnNode && _isRecentCoSeenActivity(node, now);
+        final currentPreset = freshlyHeard ? _resolveCurrentPreset() : null;
+        final currentFreqOffset = freshlyHeard
+            ? _resolveCurrentFrequencyOffset()
+            : null;
         final newEntry = NodeDexEntry.discovered(
           nodeNum: nodeNum,
           timestamp: node.firstHeard ?? now,
@@ -282,6 +336,8 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
           rssi: isOwnNode ? null : node.rssi,
           latitude: node.hasPosition ? node.latitude : null,
           longitude: node.hasPosition ? node.longitude : null,
+          observedOnPreset: currentPreset,
+          frequencyOffset: currentFreqOffset,
           sigil: sigil,
           lastKnownName: liveName,
           lastKnownHardware: node.hardwareModel,
@@ -290,11 +346,17 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
         );
 
         // Add region if we can determine one.
-        final withRegion = _addRegionFromNode(newEntry, node);
+        final withRegion = _addRegionFromNode(
+          newEntry,
+          node,
+          timestamp: node.firstHeard ?? now,
+        );
         updated[nodeNum] = withRegion;
 
-        // Only track encounters and co-seen for other nodes.
-        if (!isOwnNode) {
+        // Only track encounters and co-seen for nodes that are
+        // genuinely heard recently — stale entries from the device's
+        // node database should not inflate co-seen metrics.
+        if (!seedOnly && !isOwnNode && _isRecentCoSeenActivity(node, now)) {
           _lastEncounterTime[nodeNum] = now;
           _sessionSeenNodes.add(nodeNum);
         }
@@ -336,12 +398,34 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
         }
       } else {
         // Existing node: check if we should record a new encounter.
+        // Gate on the node being genuinely heard recently — stale
+        // entries from the device's node database should not get
+        // new encounters or update co-seen relationship timestamps.
+        final isRecentlyHeard = PresenceCalculator.isOnline(
+          node.lastHeard,
+          now: now,
+        );
+        // A packet was genuinely heard since our last tick only when the
+        // device's lastHeard has advanced. Without this, a nodesProvider
+        // refresh (e.g. triggered by a local config change such as a preset
+        // switch) would re-record encounters for every online-window node
+        // and smear the new preset across nodes that were actually heard on
+        // the previous one.
+        final prevLastHeard = previous[nodeNum]?.lastHeard;
+        final hasFreshLastHeard =
+            node.lastHeard != null &&
+            (prevLastHeard == null || node.lastHeard!.isAfter(prevLastHeard));
         final lastEncounter = _lastEncounterTime[nodeNum];
         final shouldRecord =
-            lastEncounter == null ||
-            now.difference(lastEncounter) >= _encounterCooldown;
+            !seedOnly &&
+            isRecentlyHeard &&
+            hasFreshLastHeard &&
+            (lastEncounter == null ||
+                now.difference(lastEncounter) >= _encounterCooldown);
 
         if (shouldRecord) {
+          final currentPreset = _resolveCurrentPreset();
+          final currentFreqOffset = _resolveCurrentFrequencyOffset();
           var updatedEntry = existing.recordEncounter(
             timestamp: now,
             distance: node.distance,
@@ -349,6 +433,8 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
             rssi: node.rssi,
             latitude: node.hasPosition ? node.latitude : null,
             longitude: node.hasPosition ? node.longitude : null,
+            observedOnPreset: currentPreset,
+            frequencyOffset: currentFreqOffset,
           );
 
           // Ensure sigil is generated if missing (e.g., from older data).
@@ -367,11 +453,13 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
           updatedEntry = _updateDeviceInfo(updatedEntry, node);
 
           // Update region data.
-          updatedEntry = _addRegionFromNode(updatedEntry, node);
+          updatedEntry = _addRegionFromNode(updatedEntry, node, timestamp: now);
 
           updated[nodeNum] = updatedEntry;
           _lastEncounterTime[nodeNum] = now;
-          _sessionSeenNodes.add(nodeNum);
+          if (_isRecentCoSeenActivity(node, now)) {
+            _sessionSeenNodes.add(nodeNum);
+          }
           changed = true;
 
           final hexId =
@@ -381,6 +469,44 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
             'total encounters: ${updatedEntry.encounterCount}, '
             'SNR: ${node.snr ?? "n/a"}, RSSI: ${node.rssi ?? "n/a"}',
           );
+        } else {
+          // Node didn't qualify for a new encounter (stale or within
+          // cooldown), but we should still refresh cached metadata
+          // from the live node data. Metadata updates don't inflate
+          // any metrics — they just keep the display name, hardware
+          // model, role, firmware version, and sigil current.
+          var updatedEntry = existing;
+          var metadataChanged = false;
+
+          // Backfill sigil for entries created before sigil generation.
+          if (updatedEntry.sigil == null) {
+            updatedEntry = updatedEntry.copyWith(
+              sigil: SigilGenerator.generate(nodeNum),
+            );
+            metadataChanged = true;
+          }
+
+          // Update cached name if the live node has a better one.
+          if (liveName != null && liveName != updatedEntry.lastKnownName) {
+            updatedEntry = updatedEntry.copyWith(lastKnownName: liveName);
+            metadataChanged = true;
+          }
+
+          // Cache device info from live node data.
+          final withDeviceInfo = _updateDeviceInfo(updatedEntry, node);
+          if (withDeviceInfo != updatedEntry) {
+            updatedEntry = withDeviceInfo;
+            metadataChanged = true;
+          }
+
+          // NOTE: intentionally NO _addRegionFromNode, _sessionSeenNodes,
+          // or _lastEncounterTime here — region updates and encounter
+          // tracking are only meaningful when paired with a real encounter.
+
+          if (metadataChanged) {
+            updated[nodeNum] = updatedEntry;
+            changed = true;
+          }
         }
       }
     }
@@ -450,12 +576,15 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
   ///
   /// Uses position-derived geohash prefix when available, or falls
   /// back to the LoRa region code from device configuration.
-  NodeDexEntry _addRegionFromNode(NodeDexEntry entry, MeshNode node) {
+  NodeDexEntry _addRegionFromNode(
+    NodeDexEntry entry,
+    MeshNode node, {
+    DateTime? timestamp,
+  }) {
     if (node.hasPosition && node.latitude != null && node.longitude != null) {
-      // Use a coarse geohash (3-char precision = ~78km cells) as region ID.
       final regionId = _coarseGeohash(node.latitude!, node.longitude!);
       final label = _regionLabel(node.latitude!, node.longitude!);
-      return entry.addRegion(regionId, label);
+      return entry.addRegion(regionId, label, timestamp: timestamp);
     }
     return entry;
   }
@@ -517,6 +646,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
       source = state;
     }
 
+    final flushTimestamp = clock.now();
     final nodeList = _sessionSeenNodes.toList();
     final updated = Map<int, NodeDexEntry>.from(source);
     var changed = false;
@@ -530,11 +660,11 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
         final entryB = updated[b];
 
         if (entryA != null) {
-          updated[a] = entryA.addCoSeen(b);
+          updated[a] = entryA.addCoSeen(b, timestamp: flushTimestamp);
           changed = true;
         }
         if (entryB != null) {
-          updated[b] = entryB.addCoSeen(a);
+          updated[b] = entryB.addCoSeen(a, timestamp: flushTimestamp);
           changed = true;
         }
       }
@@ -916,6 +1046,191 @@ final nodeDexEntryProvider = Provider.family<NodeDexEntry?, int>((
   return entries[nodeNum];
 });
 
+@immutable
+class NodeDexCoSeenLink {
+  final int otherNodeNum;
+  final CoSeenRelationship relationship;
+
+  const NodeDexCoSeenLink({
+    required this.otherNodeNum,
+    required this.relationship,
+  });
+}
+
+final nodeDexHistoricalCoSeenLinksProvider =
+    Provider.family<List<NodeDexCoSeenLink>, int>((ref, nodeNum) {
+      final entry = ref.watch(nodeDexEntryProvider(nodeNum));
+      if (entry == null || entry.coSeenNodes.isEmpty) return const [];
+
+      final links = <NodeDexCoSeenLink>[];
+      for (final link in entry.coSeenNodes.entries) {
+        links.add(
+          NodeDexCoSeenLink(otherNodeNum: link.key, relationship: link.value),
+        );
+      }
+
+      links.sort(_compareNodeDexCoSeenLinks);
+      return List<NodeDexCoSeenLink>.unmodifiable(links);
+    });
+
+final nodeDexRecentCoSeenLinksProvider =
+    Provider.family<List<NodeDexCoSeenLink>, int>((ref, nodeNum) {
+      final entry = ref.watch(nodeDexEntryProvider(nodeNum));
+      if (entry == null) return const [];
+
+      final historicalLinks = ref.watch(
+        nodeDexHistoricalCoSeenLinksProvider(nodeNum),
+      );
+      if (historicalLinks.isEmpty) return const [];
+
+      final entries = ref.watch(nodeDexProvider);
+      final liveNodes = ref.watch(nodesProvider);
+      final now = clock.now();
+      final selfNode = liveNodes[nodeNum];
+
+      if (!_isCoSeenNodeRecentlyActive(entry, selfNode, now)) {
+        return const [];
+      }
+
+      final links = <NodeDexCoSeenLink>[];
+      for (final link in historicalLinks) {
+        final otherNodeNum = link.otherNodeNum;
+        final relationship = link.relationship;
+        final otherEntry = entries[otherNodeNum];
+        if (otherEntry == null) continue;
+
+        final otherNode = liveNodes[otherNodeNum];
+        if (!_isCoSeenRelationshipRecent(relationship, now)) continue;
+        if (!_isCoSeenNodeRecentlyActive(otherEntry, otherNode, now)) {
+          continue;
+        }
+        if (!_isCoSeenLocallyPlausible(
+          entry,
+          selfNode,
+          otherEntry,
+          otherNode,
+          now,
+        )) {
+          continue;
+        }
+
+        links.add(
+          NodeDexCoSeenLink(
+            otherNodeNum: otherNodeNum,
+            relationship: relationship,
+          ),
+        );
+      }
+
+      links.sort(_compareNodeDexCoSeenLinks);
+      return List<NodeDexCoSeenLink>.unmodifiable(links);
+    });
+
+int _compareNodeDexCoSeenLinks(NodeDexCoSeenLink a, NodeDexCoSeenLink b) {
+  final countCompare = b.relationship.count.compareTo(a.relationship.count);
+  if (countCompare != 0) return countCompare;
+
+  final lastSeenCompare = b.relationship.lastSeen.compareTo(
+    a.relationship.lastSeen,
+  );
+  if (lastSeenCompare != 0) return lastSeenCompare;
+
+  return a.otherNodeNum.compareTo(b.otherNodeNum);
+}
+
+bool _isCoSeenRelationshipRecent(
+  CoSeenRelationship relationship,
+  DateTime now,
+) {
+  final age = now.difference(relationship.lastSeen);
+  if (age.isNegative) return false;
+  return age <= _kCoSeenRecentActivityWindow;
+}
+
+bool _isCoSeenNodeRecentlyActive(
+  NodeDexEntry entry,
+  MeshNode? liveNode,
+  DateTime now,
+) {
+  if (liveNode != null) {
+    final liveLastHeard = liveNode.lastHeard;
+    if (liveLastHeard == null) return false;
+    final age = now.difference(liveLastHeard);
+    if (age.isNegative) return false;
+    return age <= _kCoSeenRecentActivityWindow;
+  }
+
+  final entryAge = now.difference(entry.lastSeen);
+  if (entryAge.isNegative) return false;
+  return entryAge <= _kCoSeenRecentActivityWindow;
+}
+
+bool _isCoSeenLocallyPlausible(
+  NodeDexEntry entry,
+  MeshNode? liveNode,
+  NodeDexEntry otherEntry,
+  MeshNode? otherNode,
+  DateTime now,
+) {
+  final a = _resolveRecentCoSeenPosition(entry, liveNode, now);
+  final b = _resolveRecentCoSeenPosition(otherEntry, otherNode, now);
+  if (a == null || b == null) return true;
+
+  final distance = _coSeenHaversineMeters(a.$1, a.$2, b.$1, b.$2);
+  return distance <= _kCoSeenMaxPlausibleDistanceMeters;
+}
+
+(double, double)? _resolveRecentCoSeenPosition(
+  NodeDexEntry entry,
+  MeshNode? liveNode,
+  DateTime now,
+) {
+  if (liveNode != null &&
+      liveNode.hasPosition &&
+      _isMeshNodeLastHeardRecent(liveNode, now)) {
+    return (liveNode.latitude!, liveNode.longitude!);
+  }
+
+  for (final encounter in entry.encounters.reversed) {
+    if (encounter.latitude == null || encounter.longitude == null) {
+      continue;
+    }
+    final age = now.difference(encounter.timestamp);
+    if (!age.isNegative && age <= _kCoSeenRecentActivityWindow) {
+      return (encounter.latitude!, encounter.longitude!);
+    }
+  }
+
+  return null;
+}
+
+bool _isMeshNodeLastHeardRecent(MeshNode node, DateTime now) {
+  final lastHeard = node.lastHeard;
+  if (lastHeard == null) return false;
+  final age = now.difference(lastHeard);
+  if (age.isNegative) return false;
+  return age <= _kCoSeenRecentActivityWindow;
+}
+
+double _coSeenHaversineMeters(
+  double lat1,
+  double lon1,
+  double lat2,
+  double lon2,
+) {
+  const earthRadius = 6371000.0;
+  final dLat = (lat2 - lat1) * (math.pi / 180.0);
+  final dLon = (lon2 - lon1) * (math.pi / 180.0);
+  final a =
+      math.sin(dLat / 2.0) * math.sin(dLat / 2.0) +
+      math.cos(lat1 * (math.pi / 180.0)) *
+          math.cos(lat2 * (math.pi / 180.0)) *
+          math.sin(dLon / 2.0) *
+          math.sin(dLon / 2.0);
+  final c = 2.0 * math.atan2(math.sqrt(a), math.sqrt(1.0 - a));
+  return earthRadius * c;
+}
+
 /// Provider for the computed trait of a specific node.
 ///
 /// Combines NodeDex encounter history with live MeshNode telemetry
@@ -1183,7 +1498,7 @@ Future<List<NodeActivityEvent>> _buildTimeline(Ref ref, int nodeNum) async {
   if (entry != null) {
     events.addAll(_groupEncounters(entry.encounters));
 
-    final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    final l10n = safeL10n();
 
     // 2. First-seen milestone.
     events.add(
@@ -1448,6 +1763,54 @@ final nodeDexSearchProvider = NotifierProvider<NodeDexSearchNotifier, String>(
   NodeDexSearchNotifier.new,
 );
 
+/// Notifier for filtering NodeDex entries by observed radio preset.
+///
+/// State is a [Set<int>] of protobuf modem preset values. When empty,
+/// no filtering is applied (all presets shown). When non-empty, only
+/// nodes whose [lastObservedOnPreset] is in the set are shown.
+///
+/// This is an additional filter dimension that coexists with
+/// [NodeDexFilter] and search, similar to how search coexists with
+/// the main filter.
+class NodeDexRadioPresetFilterNotifier extends Notifier<Set<int>> {
+  @override
+  Set<int> build() => const {};
+
+  /// Toggle a preset value in/out of the filter set.
+  void toggle(int presetValue) {
+    if (state.contains(presetValue)) {
+      state = Set<int>.from(state)..remove(presetValue);
+    } else {
+      state = Set<int>.from(state)..add(presetValue);
+    }
+  }
+
+  /// Clear all preset filters (show all).
+  void clear() => state = const {};
+
+  /// Replace the entire filter set.
+  void setPresets(Set<int> presets) => state = Set<int>.unmodifiable(presets);
+}
+
+final nodeDexRadioPresetFilterProvider =
+    NotifierProvider<NodeDexRadioPresetFilterNotifier, Set<int>>(
+      NodeDexRadioPresetFilterNotifier.new,
+    );
+
+/// Derives the set of distinct observed radio presets across all NodeDex
+/// entries. Used to populate the radio preset filter UI with only presets
+/// that have actually been observed.
+final nodeDexObservedPresetsProvider = Provider<Set<int>>((ref) {
+  final entries = ref.watch(nodeDexProvider);
+  final presets = <int>{};
+  for (final entry in entries.values) {
+    if (entry.lastObservedOnPreset != null) {
+      presets.add(entry.lastObservedOnPreset!);
+    }
+  }
+  return presets;
+});
+
 /// Sorted and filtered list of NodeDex entries for the main screen.
 ///
 /// Combines the entries from nodeDexProvider with the current sort order,
@@ -1461,6 +1824,7 @@ final nodeDexSortedEntriesProvider = Provider<List<(NodeDexEntry, MeshNode?)>>((
   final sort = ref.watch(nodeDexSortProvider);
   final filter = ref.watch(nodeDexFilterProvider);
   final search = ref.watch(nodeDexSearchProvider).toLowerCase();
+  final radioPresetFilter = ref.watch(nodeDexRadioPresetFilterProvider);
 
   if (entries.isEmpty) return [];
 
@@ -1472,6 +1836,15 @@ final nodeDexSortedEntriesProvider = Provider<List<(NodeDexEntry, MeshNode?)>>((
 
   // Apply filter.
   paired = _applyFilter(paired, filter, ref);
+
+  // Apply radio preset filter (additional dimension).
+  if (radioPresetFilter.isNotEmpty) {
+    paired = paired.where((pair) {
+      final (entry, _) = pair;
+      return entry.lastObservedOnPreset != null &&
+          radioPresetFilter.contains(entry.lastObservedOnPreset);
+    }).toList();
+  }
 
   // Apply search.
   if (search.isNotEmpty) {
@@ -1639,12 +2012,6 @@ class ConstellationEdge {
     if (firstSeen == null || lastSeen == null) return null;
     return lastSeen!.difference(firstSeen!);
   }
-
-  /// Time since the last co-sighting.
-  Duration? get timeSinceLastSeen {
-    if (lastSeen == null) return null;
-    return DateTime.now().difference(lastSeen!);
-  }
 }
 
 /// The complete constellation graph data.
@@ -1706,9 +2073,12 @@ final nodeDexConstellationProvider = Provider<ConstellationData>((ref) {
   int maxWeight = 1;
 
   for (final entry in allEntries) {
-    for (final coSeen in entry.coSeenNodes.entries) {
-      final other = coSeen.key;
-      final relationship = coSeen.value;
+    final historicalLinks = ref.read(
+      nodeDexHistoricalCoSeenLinksProvider(entry.nodeNum),
+    );
+    for (final coSeen in historicalLinks) {
+      final other = coSeen.otherNodeNum;
+      final relationship = coSeen.relationship;
       final weight = relationship.count;
 
       // Only include edges where both nodes exist in the dex.
@@ -1945,7 +2315,7 @@ final nodeDexConstellationProvider = Provider<ConstellationData>((ref) {
             NodeDisplayNameResolver.defaultName(entry.nodeNum),
         sigil: entry.sigil,
         trait: trait.primary,
-        connectionCount: entry.coSeenCount,
+        connectionCount: entry.historicalCoSeenCount,
         x: posX[i],
         y: posY[i],
       ),

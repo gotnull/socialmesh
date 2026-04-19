@@ -119,6 +119,7 @@ class _AnimatedEmptyStateState extends State<AnimatedEmptyState>
   static const double _gyroFriction = 0.94;
   static const double _gyroMax = 12.0;
   static const double _iconSize = 48.0;
+  bool _reduceMotion = true;
 
   /// Sensor sampling period. 50ms (20Hz) is sufficient for smooth parallax
   /// tilt effects while using ~68% less CPU than the previous 16ms (62.5Hz).
@@ -133,7 +134,7 @@ class _AnimatedEmptyStateState extends State<AnimatedEmptyState>
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 3000),
-    )..repeat();
+    );
 
     _convergeController = AnimationController(
       vsync: this,
@@ -148,25 +149,6 @@ class _AnimatedEmptyStateState extends State<AnimatedEmptyState>
       vsync: this,
       duration: const Duration(milliseconds: 3000),
     )..addListener(_onFloatTick);
-    _floatController.repeat();
-
-    // Guard: CMMotionManager is unavailable on macOS / Mac Catalyst and causes
-    // NSInternalInconsistencyException when the native thunk fires into the
-    // Flutter engine from a CoreMotion background thread.
-    if (defaultTargetPlatform != TargetPlatform.macOS) {
-      _accelerometerSub =
-          accelerometerEventStream(
-            samplingPeriod: _sensorSamplingPeriod,
-          ).listen((event) {
-            _updateTilt(event.x, event.y);
-          });
-      _gyroscopeSub =
-          gyroscopeEventStream(samplingPeriod: _sensorSamplingPeriod).listen((
-            event,
-          ) {
-            _updateGyro(event.x, event.y);
-          });
-    }
 
     // Generate random floating nodes
     final random = Random();
@@ -214,6 +196,67 @@ class _AnimatedEmptyStateState extends State<AnimatedEmptyState>
     _gyroOffset = _gyroOffset * _gyroFriction;
   }
 
+  void _startSensors() {
+    if (_reduceMotion || defaultTargetPlatform == TargetPlatform.macOS) {
+      return;
+    }
+    _accelerometerSub ??=
+        accelerometerEventStream(samplingPeriod: _sensorSamplingPeriod).listen((
+          event,
+        ) {
+          _updateTilt(event.x, event.y);
+        });
+    _gyroscopeSub ??=
+        gyroscopeEventStream(samplingPeriod: _sensorSamplingPeriod).listen((
+          event,
+        ) {
+          _updateGyro(event.x, event.y);
+        });
+  }
+
+  void _stopSensors() {
+    _accelerometerSub?.cancel();
+    _accelerometerSub = null;
+    _gyroscopeSub?.cancel();
+    _gyroscopeSub = null;
+  }
+
+  void _syncMotionState({bool force = false}) {
+    final reduceMotion =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    if (!force && reduceMotion == _reduceMotion) {
+      return;
+    }
+    _reduceMotion = reduceMotion;
+    if (_reduceMotion) {
+      _pulseController.stop();
+      _pulseController.value = 0.0;
+      _floatController.stop();
+      _floatController.value = 0.0;
+      _convergeController.stop();
+      _convergeController.value = 0.0;
+      _floatTime = 0.0;
+      _tiltTarget = Offset.zero;
+      _tiltOffset = Offset.zero;
+      _gyroOffset = Offset.zero;
+      _stopSensors();
+      return;
+    }
+    if (!_pulseController.isAnimating) {
+      _pulseController.repeat();
+    }
+    if (!_floatController.isAnimating) {
+      _floatController.repeat();
+    }
+    _startSensors();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncMotionState();
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     switch (state) {
@@ -224,26 +267,12 @@ class _AnimatedEmptyStateState extends State<AnimatedEmptyState>
         // sensors_plus fires CoreMotion callbacks on a background thread;
         // if the Flutter engine tears down before the subscription is
         // cancelled the native thunk crashes with NSInternalInconsistencyException.
-        _accelerometerSub?.cancel();
-        _accelerometerSub = null;
-        _gyroscopeSub?.cancel();
-        _gyroscopeSub = null;
+        _stopSensors();
+        return;
       case AppLifecycleState.resumed:
       case AppLifecycleState.hidden:
-        if (defaultTargetPlatform != TargetPlatform.macOS) {
-          _accelerometerSub ??=
-              accelerometerEventStream(
-                samplingPeriod: _sensorSamplingPeriod,
-              ).listen((event) {
-                _updateTilt(event.x, event.y);
-              });
-          _gyroscopeSub ??=
-              gyroscopeEventStream(
-                samplingPeriod: _sensorSamplingPeriod,
-              ).listen((event) {
-                _updateGyro(event.x, event.y);
-              });
-        }
+        _startSensors();
+        return;
     }
   }
 
@@ -253,10 +282,7 @@ class _AnimatedEmptyStateState extends State<AnimatedEmptyState>
     _pulseController.dispose();
     _convergeController.dispose();
     _floatController.dispose();
-    _accelerometerSub?.cancel();
-    _accelerometerSub = null;
-    _gyroscopeSub?.cancel();
-    _gyroscopeSub = null;
+    _stopSensors();
     super.dispose();
   }
 
@@ -300,6 +326,7 @@ class _AnimatedEmptyStateState extends State<AnimatedEmptyState>
   }
 
   void _triggerConverge() {
+    if (_reduceMotion) return;
     if (_convergeController.isAnimating) return;
     _convergeController.forward(from: 0).then((_) {
       if (mounted) {
@@ -310,6 +337,7 @@ class _AnimatedEmptyStateState extends State<AnimatedEmptyState>
 
   @override
   Widget build(BuildContext context) {
+    _syncMotionState();
     final accentColor = widget.config.accentColor ?? context.accentColor;
     final hasAction = widget.config.onAction != null;
     final activityFactor = widget.config.actionEnabled ? 1.0 : 0.7;
@@ -328,58 +356,87 @@ class _AnimatedEmptyStateState extends State<AnimatedEmptyState>
                 alignment: Alignment.center,
                 children: [
                   // Breathing field
-                  AnimatedBuilder(
-                    animation: _pulseController,
-                    builder: (context, child) {
-                      final breathe = 0.9 + (_pulseController.value * 0.15);
-                      final alpha = 0.08 + (_pulseController.value * 0.08);
-                      return Transform.scale(
-                        scale: breathe,
-                        child: Container(
-                          width: 200,
-                          height: 200,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: RadialGradient(
-                              colors: [
-                                accentColor.withValues(alpha: alpha),
-                                Colors.transparent,
-                              ],
-                              stops: const [0.0, 0.7],
-                            ),
-                          ),
+                  if (_reduceMotion)
+                    Container(
+                      width: 200,
+                      height: 200,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            accentColor.withValues(alpha: 0.12),
+                            Colors.transparent,
+                          ],
+                          stops: const [0.0, 0.7],
                         ),
-                      );
-                    },
-                  ),
-                  // Pulse rings
-                  ...List.generate(3, (index) {
-                    return AnimatedBuilder(
+                      ),
+                    )
+                  else
+                    AnimatedBuilder(
                       animation: _pulseController,
                       builder: (context, child) {
-                        final delay = index * 0.33;
-                        final progress =
-                            ((_pulseController.value + delay) % 1.0);
-                        final opacity = (1.0 - progress) * 0.4;
-                        final scale = 0.3 + (progress * 0.7);
-
+                        final breathe = 0.9 + (_pulseController.value * 0.15);
+                        final alpha = 0.08 + (_pulseController.value * 0.08);
                         return Transform.scale(
-                          scale: scale,
+                          scale: breathe,
                           child: Container(
-                            width: 180,
-                            height: 180,
+                            width: 200,
+                            height: 200,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              border: Border.all(
-                                color: accentColor.withValues(alpha: opacity),
-                                width: 1.5,
+                              gradient: RadialGradient(
+                                colors: [
+                                  accentColor.withValues(alpha: alpha),
+                                  Colors.transparent,
+                                ],
+                                stops: const [0.0, 0.7],
                               ),
                             ),
                           ),
                         );
                       },
-                    );
-                  }),
+                    ),
+                  // Pulse rings
+                  if (_reduceMotion)
+                    Container(
+                      width: 180,
+                      height: 180,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: accentColor.withValues(alpha: 0.2),
+                          width: 1.5,
+                        ),
+                      ),
+                    )
+                  else
+                    ...List.generate(3, (index) {
+                      return AnimatedBuilder(
+                        animation: _pulseController,
+                        builder: (context, child) {
+                          final delay = index * 0.33;
+                          final progress =
+                              ((_pulseController.value + delay) % 1.0);
+                          final opacity = (1.0 - progress) * 0.4;
+                          final scale = 0.3 + (progress * 0.7);
+
+                          return Transform.scale(
+                            scale: scale,
+                            child: Container(
+                              width: 180,
+                              height: 180,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: accentColor.withValues(alpha: opacity),
+                                  width: 1.5,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    }),
 
                   // Center icon
                   Container(
@@ -397,7 +454,8 @@ class _AnimatedEmptyStateState extends State<AnimatedEmptyState>
                     ),
                     child: _AnimatedIconCycle(
                       icons: widget.config.icons,
-                      builder: (icon) => _buildGradientIcon(context, icon),
+                      builder: (icon) =>
+                          _buildGradientIcon(context, icon, animate: true),
                     ),
                   ),
 
@@ -587,6 +645,7 @@ class _AnimatedIconCycleState extends State<_AnimatedIconCycle>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   int _currentIndex = 0;
+  Timer? _cycleTimer;
 
   @override
   void initState() {
@@ -611,7 +670,8 @@ class _AnimatedIconCycleState extends State<_AnimatedIconCycle>
   }
 
   void _startCycling() {
-    Future.delayed(AnimatedTagline.displayDuration, () {
+    _cycleTimer?.cancel();
+    _cycleTimer = Timer(AnimatedTagline.displayDuration, () {
       if (!mounted) return;
       _cycleToNext();
     });
@@ -634,6 +694,7 @@ class _AnimatedIconCycleState extends State<_AnimatedIconCycle>
 
   @override
   void dispose() {
+    _cycleTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -675,7 +736,6 @@ class _AnimatedActionButton extends StatefulWidget {
 class _AnimatedActionButtonState extends State<_AnimatedActionButton>
     with SingleTickerProviderStateMixin {
   late AnimationController _glowController;
-
   @override
   void initState() {
     super.initState();
@@ -699,6 +759,17 @@ class _AnimatedActionButtonState extends State<_AnimatedActionButton>
         _glowController.stop();
         _glowController.value = 0;
       }
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!widget.enabled) {
+      _glowController.stop();
+      _glowController.value = 0;
+    } else {
+      _glowController.repeat(reverse: true);
     }
   }
 

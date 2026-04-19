@@ -362,10 +362,10 @@ class DeepLinkService {
     final node = MeshNode(
       nodeNum: nodeData.nodeNum!,
       longName: nodeData.longName != null
-          ? sanitizeUtf16(nodeData.longName!)
+          ? sanitizeExternalText(nodeData.longName!)
           : null,
       shortName: nodeData.shortName != null
-          ? sanitizeUtf16(nodeData.shortName!)
+          ? sanitizeExternalText(nodeData.shortName!)
           : null,
       userId: nodeData.userId,
       latitude: nodeData.latitude,

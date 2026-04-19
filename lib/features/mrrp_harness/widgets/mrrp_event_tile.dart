@@ -6,66 +6,8 @@ import 'package:flutter/services.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
+import '../../../services/protocol/sip/mrrp_traffic_event.dart';
 import '../../../services/protocol/sip/mrrp_types.dart';
-
-/// A single MRRP traffic event for the traffic console.
-class MrrpTrafficEvent {
-  final DateTime timestamp;
-  final String direction; // TX or RX
-  final MrrpMessageType msgType;
-  final int? serviceId;
-  final int? actionId;
-  final int? requestId;
-  final int? peerNodeId;
-  final int sizeBytes;
-  final MrrpStatusCode? status;
-
-  const MrrpTrafficEvent({
-    required this.timestamp,
-    required this.direction,
-    required this.msgType,
-    this.serviceId,
-    this.actionId,
-    this.requestId,
-    this.peerNodeId,
-    required this.sizeBytes,
-    this.status,
-  });
-
-  String toClipboardText() {
-    final buf = StringBuffer()
-      ..write(timestamp.toIso8601String())
-      ..write(' ') // lint-allow: hardcoded-string
-      ..write(direction)
-      ..write(' ') // lint-allow: hardcoded-string
-      ..write(msgType.name);
-    if (serviceId != null) {
-      buf.write(
-        ' svc=${MrrpServiceId.nameOf(serviceId!)}',
-      ); // lint-allow: hardcoded-string
-    }
-    if (actionId != null) {
-      buf.write(
-        ' act=0x${actionId!.toRadixString(16)}',
-      ); // lint-allow: hardcoded-string
-    }
-    if (requestId != null) {
-      buf.write(
-        ' req=0x${requestId!.toRadixString(16)}',
-      ); // lint-allow: hardcoded-string
-    }
-    if (peerNodeId != null) {
-      buf.write(
-        ' peer=0x${peerNodeId!.toRadixString(16).padLeft(8, '0')}',
-      ); // lint-allow: hardcoded-string
-    }
-    buf.write(' ${sizeBytes}B'); // lint-allow: hardcoded-string
-    if (status != null) {
-      buf.write(' status=${status!.name}'); // lint-allow: hardcoded-string
-    }
-    return buf.toString();
-  }
-}
 
 /// Tile widget showing a single traffic event in the console.
 class MrrpEventTile extends StatelessWidget {
@@ -79,91 +21,109 @@ class MrrpEventTile extends StatelessWidget {
     final isTx = event.direction == 'TX'; // lint-allow: hardcoded-string
     final dirColor = isTx ? AccentColors.teal : AccentColors.indigo;
 
-    return Material(
-      color: context.card,
-      borderRadius: BorderRadius.circular(AppTheme.radius8),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppTheme.radius8),
-        onLongPress: () {
-          Clipboard.setData(ClipboardData(text: event.toClipboardText()));
-        },
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppTheme.spacing12,
-            vertical: AppTheme.spacing8,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header: direction + type + time
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppTheme.spacing6,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: dirColor.withAlpha(25),
-                      borderRadius: BorderRadius.circular(AppTheme.radius4),
-                    ),
-                    child: Text(
-                      l10n.mrrpHarnessTrafficDirection(event.direction),
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: dirColor,
-                        fontWeight: FontWeight.w700,
+    return Container(
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+        border: Border.all(
+          color: context.border.withValues(alpha: 0.5),
+          width: 0.5,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
+          onLongPress: () {
+            Clipboard.setData(ClipboardData(text: event.toClipboardText()));
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppTheme.spacing16,
+              vertical: AppTheme.spacing12,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header: direction + type + time
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.spacing8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: dirColor.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
+                      ),
+                      child: Text(
+                        l10n.mrrpHarnessTrafficDirection(event.direction),
+                        style: TextStyle(
+                          color: dirColor,
+                          fontWeight: FontWeight.w700,
+                          fontFamily: AppTheme.fontFamily,
+                          fontSize: 11,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: AppTheme.spacing6),
-                  Text(
-                    event.msgType.name,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w600,
+                    const SizedBox(width: AppTheme.spacing8),
+                    Text(
+                      event.msgType.name,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        color: context.textPrimary,
+                      ),
                     ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    _formatTime(event.timestamp),
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: context.textTertiary,
+                    const Spacer(),
+                    Text(
+                      _formatTime(event.timestamp),
+                      style: TextStyle(
+                        fontFamily: AppTheme.fontFamily,
+                        color: context.textTertiary,
+                        fontSize: 11,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppTheme.spacing4),
+                  ],
+                ),
+                const SizedBox(height: AppTheme.spacing6),
 
-              // Details: service, action, request_id, peer, size
-              Wrap(
-                spacing: AppTheme.spacing8,
-                runSpacing: AppTheme.spacing2,
-                children: [
-                  if (event.serviceId != null)
-                    _DetailChip(label: MrrpServiceId.nameOf(event.serviceId!)),
-                  if (event.requestId != null)
+                // Details: service, action, request_id, peer, size
+                Wrap(
+                  spacing: AppTheme.spacing6,
+                  runSpacing: AppTheme.spacing4,
+                  children: [
+                    if (event.serviceId != null)
+                      _DetailChip(
+                        label: MrrpServiceId.nameOf(event.serviceId!),
+                      ),
+                    if (event.requestId != null)
+                      _DetailChip(
+                        label:
+                            'req=0x${event.requestId!.toRadixString(16)}', // lint-allow: hardcoded-string
+                      ),
+                    if (event.peerNodeId != null)
+                      _DetailChip(
+                        label:
+                            '0x${event.peerNodeId!.toRadixString(16).padLeft(8, '0').toUpperCase()}',
+                      ),
                     _DetailChip(
                       label:
-                          'req=0x${event.requestId!.toRadixString(16)}', // lint-allow: hardcoded-string
+                          '${event.sizeBytes}B', // lint-allow: hardcoded-string
                     ),
-                  if (event.peerNodeId != null)
-                    _DetailChip(
-                      label:
-                          '0x${event.peerNodeId!.toRadixString(16).padLeft(8, '0').toUpperCase()}',
-                    ),
-                  _DetailChip(
-                    label:
-                        '${event.sizeBytes}B', // lint-allow: hardcoded-string
-                  ),
-                  if (event.status != null)
-                    _DetailChip(
-                      label: event.status!.name,
-                      color: event.status == MrrpStatusCode.ok
-                          ? SemanticColors.success
-                          : SemanticColors.error,
-                    ),
-                ],
-              ),
-            ],
+                    if (event.status != null)
+                      _DetailChip(
+                        label: event.status!.name,
+                        color: event.status == MrrpStatusCode.ok
+                            ? SemanticColors.success
+                            : SemanticColors.error,
+                      ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -186,12 +146,29 @@ class _DetailChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      label,
-      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-        color: color ?? context.textSecondary,
-        fontFamily: 'monospace', // lint-allow: hardcoded-string
-        fontSize: 10,
+    final chipColor = color ?? context.textSecondary;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing6,
+        vertical: 2,
+      ),
+      decoration: BoxDecoration(
+        color: chipColor.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
+        border: Border.all(
+          color: chipColor.withValues(alpha: 0.25),
+          width: 0.5,
+        ),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: chipColor,
+          fontFamily: AppTheme.fontFamily,
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.2,
+        ),
       ),
     );
   }

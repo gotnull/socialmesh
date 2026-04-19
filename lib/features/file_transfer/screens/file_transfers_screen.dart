@@ -76,6 +76,16 @@ class _FileTransfersScreenState extends ConsumerState<FileTransfersScreen>
     final transfers = _filteredTransfers(transferState);
 
     final bodyContent = CustomScrollView(
+      // When embedded inside a TabBarView that is itself inside
+      // GlassScaffold's outer CustomScrollView, the inner scroll must:
+      //  - use ClampingScrollPhysics to avoid bounce-fighting with the
+      //    outer BouncingScrollPhysics (kGlassScrollPhysics),
+      //  - set primary: false so it doesn't compete for the
+      //    PrimaryScrollController.
+      // Without this, a short list (e.g. 1 file) causes the card to
+      // stick behind the pinned search header with no way to scroll down.
+      physics: widget.embedded ? const ClampingScrollPhysics() : null,
+      primary: !widget.embedded,
       slivers: [
         // Top padding
         const SliverToBoxAdapter(child: SizedBox(height: AppTheme.spacing8)),
@@ -708,11 +718,14 @@ String _transferStateLabel(TransferState state) => switch (state) {
   TransferState.complete => 'Complete',
   TransferState.failed => 'Failed',
   TransferState.cancelled => 'Cancelled',
+  TransferState.awaitingAccept => 'Awaiting Accept',
 };
 
 IconData _transferStateIcon(TransferState state, bool isOutbound) =>
     switch (state) {
-      TransferState.created || TransferState.offerSent => Icons.schedule,
+      TransferState.created ||
+      TransferState.offerSent ||
+      TransferState.awaitingAccept => Icons.schedule,
       TransferState.offerPending => Icons.inbox,
       TransferState.chunking => isOutbound ? Icons.upload : Icons.download,
       TransferState.waitingMissing => Icons.sync_problem,
@@ -725,6 +738,7 @@ Color _transferStateColor(BuildContext context, TransferState state) =>
     switch (state) {
       TransferState.created ||
       TransferState.offerSent ||
+      TransferState.awaitingAccept ||
       TransferState.cancelled => context.textTertiary,
       TransferState.offerPending ||
       TransferState.waitingMissing => SemanticColors.warning,

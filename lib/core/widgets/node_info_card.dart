@@ -2,14 +2,17 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/mesh_models.dart';
+import 'app_bottom_sheet.dart';
 import '../transport_path.dart';
 import '../widgets/gradient_border_container.dart';
 import '../../models/presence_confidence.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/presence_providers.dart';
 import '../../utils/snackbar.dart';
+import '../../utils/timestamp_validation.dart';
 import '../../utils/presence_utils.dart';
 import '../l10n/l10n_extension.dart';
 import '../theme.dart';
@@ -25,6 +28,12 @@ class NodeInfoCard extends ConsumerWidget {
   final double? bearingFromMe;
   final VoidCallback? onShareLocation;
   final VoidCallback? onCopyCoordinates;
+  final VoidCallback? onTraceroute;
+  final VoidCallback? onViewDetails;
+  final VoidCallback? onViewHistory;
+  final VoidCallback? onShowTrack;
+  final bool isTrackVisible;
+  final VoidCallback? onViewPositionLog;
 
   /// If true, shows a compact version without action buttons
   final bool compact;
@@ -39,6 +48,12 @@ class NodeInfoCard extends ConsumerWidget {
     this.bearingFromMe,
     this.onShareLocation,
     this.onCopyCoordinates,
+    this.onTraceroute,
+    this.onViewDetails,
+    this.onViewHistory,
+    this.onShowTrack,
+    this.isTrackVisible = false,
+    this.onViewPositionLog,
     this.compact = false,
   });
 
@@ -56,6 +71,179 @@ class NodeInfoCard extends ConsumerWidget {
     const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
     final index = ((bearing + 22.5) / 45).floor() % 8;
     return '${bearing.round()}° ${directions[index]}';
+  }
+
+  Future<void> _confirmAndExchangePositions(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    final confirmed = await AppBottomSheet.showConfirm(
+      context: context,
+      title: context.l10n.nodeInfoPositionConfirmTitle,
+      message: context.l10n.nodeInfoPositionConfirmMessage(node.displayName),
+      confirmLabel: context.l10n.actionSheetSend,
+    );
+    if (confirmed == true && context.mounted) {
+      await _exchangePositions(context, ref);
+    }
+  }
+
+  Future<void> _confirmShare(BuildContext context) async {
+    final confirmed = await AppBottomSheet.showConfirm(
+      context: context,
+      title: context.l10n.nodeInfoShareConfirmTitle,
+      message: context.l10n.nodeInfoShareConfirmMessage,
+      confirmLabel: context.l10n.nodeInfoShareLocation,
+    );
+    if (confirmed == true && context.mounted) {
+      onShareLocation?.call();
+    }
+  }
+
+  Future<void> _confirmTraceroute(BuildContext context) async {
+    final confirmed = await AppBottomSheet.showConfirm(
+      context: context,
+      title: context.l10n.nodeInfoTracerouteConfirmTitle,
+      message: context.l10n.nodeInfoTracerouteConfirmMessage(node.displayName),
+      confirmLabel: context.l10n.actionSheetSend,
+    );
+    if (confirmed == true && context.mounted) {
+      onTraceroute?.call();
+    }
+  }
+
+  void _showLegend(BuildContext context) {
+    final l10n = context.l10n;
+    final items =
+        <({IconData icon, Color? iconColor, String label, String description})>[
+          if (!isMyNode && onMessage != null) ...[
+            (
+              icon: Icons.swap_horiz,
+              iconColor: null,
+              label: l10n.nodeInfoPosition,
+              description: l10n.nodeInfoLegendPosition,
+            ),
+            (
+              icon: Icons.message,
+              iconColor: null,
+              label: l10n.nodeInfoMessage,
+              description: l10n.nodeInfoLegendMessage,
+            ),
+          ],
+          if (onShareLocation != null)
+            (
+              icon: Icons.share,
+              iconColor: null,
+              label: l10n.nodeInfoShareLocation,
+              description: l10n.nodeInfoLegendShare,
+            ),
+          if (onCopyCoordinates != null)
+            (
+              icon: Icons.copy,
+              iconColor: null,
+              label: l10n.nodeInfoCopyCoordinates,
+              description: l10n.nodeInfoLegendCopy,
+            ),
+          if (onTraceroute != null)
+            (
+              icon: Icons.route,
+              iconColor: null,
+              label: l10n.nodeInfoTraceroute,
+              description: l10n.nodeInfoLegendTraceroute,
+            ),
+          if (onViewDetails != null)
+            (
+              icon: Icons.open_in_new,
+              iconColor: null,
+              label: l10n.nodeInfoViewDetails,
+              description: l10n.nodeInfoLegendViewDetails,
+            ),
+          if (onViewHistory != null)
+            (
+              icon: Icons.history,
+              iconColor: null,
+              label: l10n.nodeInfoViewHistory,
+              description: l10n.nodeInfoLegendHistory,
+            ),
+          if (onShowTrack != null)
+            (
+              icon: Icons.polyline,
+              iconColor: null,
+              label: l10n.nodeInfoShowTrack,
+              description: l10n.nodeInfoLegendTrack,
+            ),
+          if (onViewPositionLog != null)
+            (
+              icon: Icons.timeline,
+              iconColor: null,
+              label: l10n.nodeInfoViewPositionLog,
+              description: l10n.nodeInfoLegendPositionLog,
+            ),
+        ];
+
+    AppBottomSheet.show(
+      context: context,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.nodeInfoLegendTitle,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: context.textPrimary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing16),
+          for (final item in items)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppTheme.spacing12),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: context.background,
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
+                    ),
+                    child: Center(
+                      child: Icon(
+                        item.icon,
+                        size: 18,
+                        color: item.iconColor ?? context.textSecondary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppTheme.spacing12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item.label,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: context.textPrimary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                        const SizedBox(height: AppTheme.spacing4),
+                        Text(
+                          item.description,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: context.textSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
   }
 
   Future<void> _exchangePositions(BuildContext context, WidgetRef ref) async {
@@ -85,9 +273,10 @@ class NodeInfoCard extends ConsumerWidget {
 
   String _formatLastHeard(BuildContext context, DateTime? lastHeard) {
     final l10n = context.l10n;
-    if (lastHeard == null) return l10n.commonNever;
-    final diff = DateTime.now().difference(lastHeard);
-    if (diff.inMinutes < 1) return l10n.commonJustNow;
+    final validated = TimestampValidation.validated(lastHeard);
+    if (validated == null) return l10n.commonNever;
+    final diff = DateTime.now().difference(validated);
+    if (diff.isNegative || diff.inMinutes < 1) return l10n.commonJustNow;
     if (diff.inMinutes < 60) {
       return l10n.commonMinutesAgo(diff.inMinutes);
     }
@@ -307,6 +496,24 @@ class NodeInfoCard extends ConsumerWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
+                        const SizedBox(width: AppTheme.spacing4),
+                        GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            _showLegend(context);
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(AppTheme.spacing4),
+                            child: Icon(
+                              Icons.info_outline,
+                              size: 14,
+                              color: context.textTertiary.withValues(
+                                alpha: 0.5,
+                              ),
+                            ),
+                          ),
+                        ),
                         if (isMyNode) ...[
                           const SizedBox(width: AppTheme.spacing8),
                           Container(
@@ -445,109 +652,225 @@ class NodeInfoCard extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: AppTheme.spacing12),
-          // Action buttons: all in a single row — flexible text buttons
-          // followed by fixed-size icon buttons. Flexible ensures the text
-          // buttons shrink gracefully on narrow devices (Nothing Phone,
-          // older iPhones, small Androids) without render overflow.
-          // Position and Message are hidden for our own node since they
-          // serve no purpose there.
-          Row(
+          // Action buttons wrap onto additional lines on narrow screens so
+          // trailing actions remain visible and tappable.
+          Wrap(
+            spacing: AppTheme.spacing8,
+            runSpacing: AppTheme.spacing8,
             children: [
-              if (!isMyNode && onMessage != null) ...[
-                Flexible(
+              if (!isMyNode && onMessage != null)
+                Tooltip(
+                  message: context.l10n.nodeInfoPosition,
                   child: SizedBox(
-                    height: 40,
-                    child: OutlinedButton.icon(
-                      onPressed: () => _exchangePositions(context, ref),
-                      icon: const Icon(Icons.swap_horiz, size: 18),
-                      label: Text(
-                        context.l10n.nodeInfoPosition,
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: context.accentColor,
-                        side: BorderSide(
-                          color: context.accentColor.withValues(alpha: 0.5),
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppTheme.radius8),
+                    width: 36,
+                    height: 36,
+                    child: Material(
+                      color: context.background,
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
+                      child: InkWell(
+                        onTap: () => _confirmAndExchangePositions(context, ref),
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
+                        child: Center(
+                          child: Icon(
+                            Icons.swap_horiz,
+                            size: 18,
+                            color: context.accentColor,
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: AppTheme.spacing8),
-                Flexible(
+              if (!isMyNode && onMessage != null)
+                Tooltip(
+                  message: context.l10n.nodeInfoMessage,
                   child: SizedBox(
-                    height: 40,
-                    child: ElevatedButton.icon(
-                      onPressed: onMessage,
-                      icon: const Icon(Icons.message, size: 18),
-                      label: Text(
-                        context.l10n.nodeInfoMessage,
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: context.accentColor,
-                        foregroundColor: SemanticColors.onAccent,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppTheme.radius8),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-              if (onShareLocation != null) ...[
-                if (!isMyNode && onMessage != null)
-                  const SizedBox(width: AppTheme.spacing8),
-                SizedBox(
-                  width: 36,
-                  height: 36,
-                  child: Material(
-                    color: context.background,
-                    borderRadius: BorderRadius.circular(AppTheme.radius8),
-                    child: InkWell(
-                      onTap: onShareLocation,
+                    width: 36,
+                    height: 36,
+                    child: Material(
+                      color: context.accentColor,
                       borderRadius: BorderRadius.circular(AppTheme.radius8),
-                      child: Center(
-                        child: Icon(
-                          Icons.share,
-                          size: 18,
-                          color: context.textSecondary,
+                      child: InkWell(
+                        onTap: onMessage,
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
+                        child: const Center(
+                          child: Icon(
+                            Icons.message,
+                            size: 18,
+                            color: SemanticColors.onAccent,
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
-              ],
-              if (onCopyCoordinates != null) ...[
-                if (onShareLocation != null || (!isMyNode && onMessage != null))
-                  const SizedBox(width: AppTheme.spacing8),
-                SizedBox(
-                  width: 36,
-                  height: 36,
-                  child: Material(
-                    color: context.background,
-                    borderRadius: BorderRadius.circular(AppTheme.radius8),
-                    child: InkWell(
-                      onTap: onCopyCoordinates,
+              if (onShareLocation != null)
+                Tooltip(
+                  message: context.l10n.nodeInfoShareLocation,
+                  child: SizedBox(
+                    width: 36,
+                    height: 36,
+                    child: Material(
+                      color: context.background,
                       borderRadius: BorderRadius.circular(AppTheme.radius8),
-                      child: Center(
-                        child: Icon(
-                          Icons.copy,
-                          size: 18,
-                          color: context.textSecondary,
+                      child: InkWell(
+                        onTap: () => _confirmShare(context),
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
+                        child: Center(
+                          child: Icon(
+                            Icons.share,
+                            size: 18,
+                            color: context.textSecondary,
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
-              ],
+              if (onCopyCoordinates != null)
+                Tooltip(
+                  message: context.l10n.nodeInfoCopyCoordinates,
+                  child: SizedBox(
+                    width: 36,
+                    height: 36,
+                    child: Material(
+                      color: context.background,
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
+                      child: InkWell(
+                        onTap: onCopyCoordinates,
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
+                        child: Center(
+                          child: Icon(
+                            Icons.copy,
+                            size: 18,
+                            color: context.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              if (onTraceroute != null)
+                Tooltip(
+                  message: context.l10n.nodeInfoTraceroute,
+                  child: SizedBox(
+                    width: 36,
+                    height: 36,
+                    child: Material(
+                      color: context.background,
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
+                      child: InkWell(
+                        onTap: () => _confirmTraceroute(context),
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
+                        child: Center(
+                          child: Icon(
+                            Icons.route,
+                            size: 18,
+                            color: context.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              if (onViewDetails != null)
+                Tooltip(
+                  message: context.l10n.nodeInfoViewDetails,
+                  child: SizedBox(
+                    width: 36,
+                    height: 36,
+                    child: Material(
+                      color: context.background,
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
+                      child: InkWell(
+                        onTap: onViewDetails,
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
+                        child: Center(
+                          child: Icon(
+                            Icons.open_in_new,
+                            size: 18,
+                            color: context.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              if (onViewHistory != null)
+                Tooltip(
+                  message: context.l10n.nodeInfoViewHistory,
+                  child: SizedBox(
+                    width: 36,
+                    height: 36,
+                    child: Material(
+                      color: context.background,
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
+                      child: InkWell(
+                        onTap: onViewHistory,
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
+                        child: Center(
+                          child: Icon(
+                            Icons.history,
+                            size: 18,
+                            color: context.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              if (onShowTrack != null)
+                Tooltip(
+                  message: isTrackVisible
+                      ? context.l10n.nodeInfoHideTrack
+                      : context.l10n.nodeInfoShowTrack,
+                  child: SizedBox(
+                    width: 36,
+                    height: 36,
+                    child: Material(
+                      color: isTrackVisible
+                          ? context.accentColor.withValues(alpha: 0.2)
+                          : context.background,
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
+                      child: InkWell(
+                        onTap: onShowTrack,
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
+                        child: Center(
+                          child: Icon(
+                            Icons.polyline,
+                            size: 18,
+                            color: isTrackVisible
+                                ? context.accentColor
+                                : context.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              if (onViewPositionLog != null)
+                Tooltip(
+                  message: context.l10n.nodeInfoViewPositionLog,
+                  child: SizedBox(
+                    width: 36,
+                    height: 36,
+                    child: Material(
+                      color: context.background,
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
+                      child: InkWell(
+                        onTap: onViewPositionLog,
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
+                        child: Center(
+                          child: Icon(
+                            Icons.timeline,
+                            size: 18,
+                            color: context.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         ],

@@ -13,6 +13,9 @@ import '../../../core/theme.dart';
 import '../../../utils/snackbar.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../services/file_transfer/file_transfer_engine.dart';
+import '../../../services/voice/voice_mime.dart';
+import 'archive_content_viewer.dart';
+import 'voice_attachment_card.dart';
 
 /// Displays a file content preview in a scrollable bottom sheet.
 ///
@@ -38,6 +41,21 @@ class FileContentPreview {
     final hasPath = transfer.savedFilePath != null;
     if (!hasBytes && !hasPath) return;
 
+    // ZIP archives get a dedicated viewer with entry inspection.
+    if (_isZipArchive(transfer.mimeType, transfer.filename)) {
+      if (hasBytes) {
+        ArchiveContentViewer.show(
+          context: context,
+          bytes: transfer.fileBytes!,
+          transfer: transfer,
+        );
+        return;
+      }
+      // Load from disk then show archive viewer.
+      _loadAndShowArchive(context: context, transfer: transfer);
+      return;
+    }
+
     AppBottomSheet.showScrollable<void>(
       context: context,
       title: transfer.filename,
@@ -52,6 +70,7 @@ class FileContentPreview {
           path: transfer.savedFilePath!,
           mimeType: transfer.mimeType,
           filename: transfer.filename,
+          createdAt: transfer.createdAt,
           scrollController: scrollController,
         );
       },
@@ -64,6 +83,16 @@ class FileContentPreview {
   ) {
     final mime = transfer.mimeType.toLowerCase();
     final bytes = transfer.fileBytes!;
+
+    if (VoiceMime.isVoiceMessage(mime) ||
+        VoiceMime.hasVoiceExtension(transfer.filename)) {
+      return (_) => _VoiceViewer(
+        bytes: bytes,
+        filename: transfer.filename,
+        totalBytes: transfer.totalBytes,
+        receivedAt: transfer.createdAt,
+      );
+    }
 
     if (mime.startsWith('image/')) {
       return (controller) =>
@@ -88,6 +117,67 @@ class FileContentPreview {
       bytes: bytes,
       filename: transfer.filename,
       scrollController: controller,
+    );
+  }
+
+  /// Returns `true` if the transfer is a ZIP archive.
+  static bool _isZipArchive(String mimeType, String filename) {
+    final mime = mimeType.toLowerCase();
+    if (mime == 'application/zip' || mime == 'application/x-zip-compressed') {
+      return true;
+    }
+    // Content sniffing: check extension as fallback for generic MIME types.
+    final ext = filename.toLowerCase();
+    return ext.endsWith('.zip');
+  }
+
+  /// Loads archive bytes from disk and shows the archive viewer.
+  static Future<void> _loadAndShowArchive({
+    required BuildContext context,
+    required FileTransferState transfer,
+  }) async {
+    try {
+      final bytes = await File(transfer.savedFilePath!).readAsBytes();
+      if (!context.mounted) return;
+      ArchiveContentViewer.show(
+        context: context,
+        bytes: bytes,
+        transfer: transfer,
+      );
+    } catch (_) {
+      // Fall through — file may have been deleted.
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Voice viewer
+// ---------------------------------------------------------------------------
+
+class _VoiceViewer extends StatelessWidget {
+  const _VoiceViewer({
+    required this.bytes,
+    required this.filename,
+    required this.totalBytes,
+    required this.receivedAt,
+  });
+
+  final Uint8List bytes;
+  final String filename;
+  final int totalBytes;
+  final DateTime receivedAt;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppTheme.spacing16),
+      child: VoiceAttachmentCard(
+        c2Payload: bytes,
+        cacheKey: '${filename}_$totalBytes',
+        filename: filename,
+        totalBytes: totalBytes,
+        receivedAt: receivedAt,
+      ),
     );
   }
 }
@@ -542,12 +632,14 @@ class _DiskFileLoader extends StatefulWidget {
     required this.path,
     required this.mimeType,
     required this.filename,
+    required this.createdAt,
     required this.scrollController,
   });
 
   final String path;
   final String mimeType;
   final String filename;
+  final DateTime createdAt;
   final ScrollController scrollController;
 
   @override
@@ -592,6 +684,15 @@ class _DiskFileLoaderState extends State<_DiskFileLoader> {
       );
     }
     final mime = widget.mimeType.toLowerCase();
+    if (VoiceMime.isVoiceMessage(mime) ||
+        VoiceMime.hasVoiceExtension(widget.filename)) {
+      return _VoiceViewer(
+        bytes: _bytes!,
+        filename: widget.filename,
+        totalBytes: _bytes!.length,
+        receivedAt: widget.createdAt,
+      );
+    }
     if (mime.startsWith('image/')) {
       return _ImageViewer(
         bytes: _bytes!,

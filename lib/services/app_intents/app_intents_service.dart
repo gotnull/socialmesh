@@ -30,7 +30,14 @@ class AppIntentsService {
 
   AppIntentsService(this._ref);
 
-  /// Initialize the App Intents handler
+  /// Initialize the App Intents handler.
+  ///
+  /// After registering the method-call handler, this signals "engineReady" to
+  /// the native `AppIntentsManager` so that any App Intent invocations that
+  /// arrived before the Flutter engine was running are drained from the queue.
+  /// Without this signal, intents triggered via Siri Shortcuts while the app
+  /// is killed would call `invokeMethod` on an uninitialised engine and crash
+  /// with `NSInternalInconsistencyException`.
   void setup() {
     if (_isSetup) return;
     if (!Platform.isIOS) return;
@@ -38,6 +45,15 @@ class AppIntentsService {
     _channel.setMethodCallHandler(_handleMethodCall);
     _isSetup = true;
     AppLogging.debug('AppIntentsService: Setup complete');
+
+    // Tell the native side that the Dart isolate and provider tree are live.
+    // This drains any intent invocations that were queued while the engine was
+    // still starting up (see AppIntentsManager.swift engine-readiness gate).
+    _channel.invokeMethod<void>('engineReady').catchError((Object e) {
+      // Best-effort — if the native side doesn't recognise the call (older
+      // binary, Android) this is harmless.
+      AppLogging.debug('AppIntentsService: engineReady signal failed: $e');
+    });
   }
 
   /// Check if this message was recently sent (to prevent duplicates)
@@ -112,6 +128,14 @@ class AppIntentsService {
         return _handleRunAutomation(args);
       case 'listAutomations':
         return _handleListAutomations();
+      case 'shutdownNode':
+        return _handleShutdownNode();
+      case 'restartNode':
+        return _handleRestartNode();
+      case 'disconnectNode':
+        return _handleDisconnectNode();
+      case 'sendTraceroute':
+        return _handleSendTraceroute(args);
       default:
         throw Exception('Unknown intent: $intentName');
     }
@@ -321,6 +345,51 @@ class AppIntentsService {
         .toList();
 
     return {'automations': automationList};
+  }
+
+  Future<Map<String, dynamic>?> _handleShutdownNode() async {
+    final transport = _ref.read(transportProvider);
+    if (!transport.isConnected) {
+      throw Exception('Not connected to a node');
+    }
+    final protocol = _ref.read(protocolServiceProvider);
+    await protocol.shutdown();
+    return {'sent': true};
+  }
+
+  Future<Map<String, dynamic>?> _handleRestartNode() async {
+    final transport = _ref.read(transportProvider);
+    if (!transport.isConnected) {
+      throw Exception('Not connected to a node');
+    }
+    final protocol = _ref.read(protocolServiceProvider);
+    await protocol.reboot();
+    return {'sent': true};
+  }
+
+  Future<Map<String, dynamic>?> _handleDisconnectNode() async {
+    final transport = _ref.read(transportProvider);
+    if (!transport.isConnected) {
+      throw Exception('Not connected to a node');
+    }
+    await transport.disconnect();
+    return {'disconnected': true};
+  }
+
+  Future<Map<String, dynamic>?> _handleSendTraceroute(
+    Map<Object?, Object?> args,
+  ) async {
+    final nodeNum = args['nodeNum'] as int?;
+    if (nodeNum == null) {
+      throw Exception('Missing nodeNum');
+    }
+    final transport = _ref.read(transportProvider);
+    if (!transport.isConnected) {
+      throw Exception('Not connected to a node');
+    }
+    final protocol = _ref.read(protocolServiceProvider);
+    await protocol.sendTraceroute(nodeNum);
+    return {'sent': true};
   }
 
   Future<void> _sendResult(

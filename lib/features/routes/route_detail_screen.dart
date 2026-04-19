@@ -11,6 +11,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/map_config.dart';
+import '../../core/safe_lat_lng.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
@@ -71,6 +72,7 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
 
   /// Animate camera to a specific location with smooth easing
   void _animatedMove(LatLng destLocation, double destZoom) {
+    if (!isFiniteLatLng(destLocation) || !destZoom.isFinite) return;
     _animationController?.dispose();
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 500),
@@ -173,7 +175,7 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
                 // Start/End route markers
                 if (route.locations.isNotEmpty)
                   MarkerLayer(
-                    markers: [
+                    markers: finiteMarkers([
                       // Start marker
                       Marker(
                         point: LatLng(
@@ -229,7 +231,7 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
                             ),
                           ),
                         ),
-                    ],
+                    ]),
                   ),
               ],
             )

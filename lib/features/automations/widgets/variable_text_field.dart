@@ -375,7 +375,7 @@ class VariableTextFieldState extends State<VariableTextField>
   @override
   void didUpdateWidget(VariableTextField oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.value != _controller.text) {
+    if (widget.value != _controller.text && !_hasFocus) {
       final selection = _controller.selection;
       _controller.text = widget.value;
       // Try to restore selection

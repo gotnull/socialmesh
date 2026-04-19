@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/constants.dart';
+
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
@@ -16,7 +18,6 @@ import '../../models/accessibility_preferences.dart';
 import '../../providers/accessibility_providers.dart';
 import '../../providers/locale_provider.dart';
 import '../../services/haptic_service.dart';
-import '../nodedex/atmosphere/atmosphere_provider.dart';
 
 // ---------------------------------------------------------------------------
 // Localized display names / descriptions for accessibility preference enums
@@ -138,6 +139,30 @@ extension ReduceMotionModeL10n on ReduceMotionMode {
   }
 }
 
+extension TimeFormatModeL10n on TimeFormatMode {
+  String localizedName(BuildContext context) {
+    switch (this) {
+      case TimeFormatMode.system:
+        return context.l10n.appearanceTimeFormatSystem;
+      case TimeFormatMode.twelveHour:
+        return context.l10n.appearanceTimeFormat12h;
+      case TimeFormatMode.twentyFourHour:
+        return context.l10n.appearanceTimeFormat24h;
+    }
+  }
+
+  String localizedDescription(BuildContext context) {
+    switch (this) {
+      case TimeFormatMode.system:
+        return context.l10n.appearanceTimeFormatSystemDesc;
+      case TimeFormatMode.twelveHour:
+        return context.l10n.appearanceTimeFormat12hDesc;
+      case TimeFormatMode.twentyFourHour:
+        return context.l10n.appearanceTimeFormat24hDesc;
+    }
+  }
+}
+
 /// Appearance & Accessibility settings screen
 ///
 /// Allows users to customize font, text size, density, contrast, and motion
@@ -157,7 +182,10 @@ class _AppearanceAccessibilityScreenState
   Widget build(BuildContext context) {
     final prefs = ref.watch(accessibilityPreferencesProvider);
     final hasCustomSettings = ref.watch(hasCustomAccessibilitySettingsProvider);
-    final currentLocale = ref.watch(localeProvider);
+    final showLanguageSelector = AppFeatureFlags.isLanguageSelectorEnabled;
+    final currentLocale = showLanguageSelector
+        ? ref.watch(localeProvider)
+        : null;
 
     return GlassScaffold(
       title: context.l10n.appearanceTitle,
@@ -181,18 +209,19 @@ class _AppearanceAccessibilityScreenState
 
               const SizedBox(height: AppTheme.spacing24),
 
-              // Language Section
-              _SectionHeader(
-                title: context.l10n.appearanceLanguage,
-                icon: Icons.language_rounded,
-              ),
-              const SizedBox(height: AppTheme.spacing8),
-              _LanguageSelector(
-                currentLocale: currentLocale,
-                onChanged: (locale) => _updateLocale(locale),
-              ),
-
-              const SizedBox(height: AppTheme.spacing24),
+              // Language Section (gated by feature flag)
+              if (showLanguageSelector) ...[
+                _SectionHeader(
+                  title: context.l10n.appearanceLanguage,
+                  icon: Icons.language_rounded,
+                ),
+                const SizedBox(height: AppTheme.spacing8),
+                _LanguageSelector(
+                  currentLocale: currentLocale,
+                  onChanged: (locale) => _updateLocale(locale),
+                ),
+                const SizedBox(height: AppTheme.spacing24),
+              ],
 
               // Font Mode Section
               _SectionHeader(
@@ -216,6 +245,19 @@ class _AppearanceAccessibilityScreenState
               _TextScaleSelector(
                 currentMode: prefs.textScaleMode,
                 onChanged: (mode) => _updateTextScale(mode),
+              ),
+
+              const SizedBox(height: AppTheme.spacing24),
+
+              // Time Format Section
+              _SectionHeader(
+                title: context.l10n.appearanceTimeFormat,
+                icon: Icons.schedule_rounded,
+              ),
+              const SizedBox(height: AppTheme.spacing8),
+              _TimeFormatSelector(
+                currentMode: prefs.timeFormatMode,
+                onChanged: (mode) => _updateTimeFormat(mode),
               ),
 
               const SizedBox(height: AppTheme.spacing24),
@@ -255,13 +297,6 @@ class _AppearanceAccessibilityScreenState
               _ReduceMotionToggle(
                 reduceMotion: prefs.reduceMotionMode.shouldReduceMotion,
                 onChanged: (enabled) => _updateReduceMotion(enabled),
-              ),
-
-              const SizedBox(height: AppTheme.spacing16),
-
-              // Elemental Atmosphere toggle
-              _AtmosphereToggle(
-                reduceMotionActive: prefs.reduceMotionMode.shouldReduceMotion,
               ),
 
               const SizedBox(height: AppTheme.spacing24),
@@ -314,6 +349,13 @@ class _AppearanceAccessibilityScreenState
     await notifier.setContrastMode(
       enabled ? ContrastMode.high : ContrastMode.normal,
     );
+  }
+
+  Future<void> _updateTimeFormat(TimeFormatMode mode) async {
+    HapticFeedback.selectionClick();
+    if (!mounted) return;
+    final notifier = ref.read(accessibilityPreferencesProvider.notifier);
+    await notifier.setTimeFormatMode(mode);
   }
 
   Future<void> _updateReduceMotion(bool enabled) async {
@@ -738,6 +780,86 @@ class _DensitySelector extends StatelessWidget {
   }
 }
 
+class _TimeFormatSelector extends StatelessWidget {
+  const _TimeFormatSelector({
+    required this.currentMode,
+    required this.onChanged,
+  });
+
+  final TimeFormatMode currentMode;
+  final ValueChanged<TimeFormatMode> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+        border: Border.all(color: context.border),
+      ),
+      child: Column(
+        children: TimeFormatMode.values.map((mode) {
+          final isSelected = mode == currentMode;
+          final isLast = mode == TimeFormatMode.values.last;
+
+          return Column(
+            children: [
+              InkWell(
+                onTap: () => onChanged(mode),
+                borderRadius: BorderRadius.vertical(
+                  top: mode == TimeFormatMode.values.first
+                      ? const Radius.circular(12)
+                      : Radius.zero,
+                  bottom: isLast ? const Radius.circular(12) : Radius.zero,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              mode.localizedName(context),
+                              style: Theme.of(context).textTheme.titleSmall
+                                  ?.copyWith(
+                                    fontWeight: isSelected
+                                        ? FontWeight.w600
+                                        : FontWeight.w500,
+                                  ),
+                            ),
+                            const SizedBox(height: AppTheme.spacing2),
+                            Text(
+                              mode.localizedDescription(context),
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ),
+                      Radio<TimeFormatMode>(
+                        value: mode,
+                        groupValue: currentMode,
+                        onChanged: (value) {
+                          if (value != null) onChanged(value);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              if (!isLast) Divider(height: 1, color: context.border),
+            ],
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
 /// High contrast toggle
 class _ContrastToggle extends StatelessWidget {
   const _ContrastToggle({
@@ -757,6 +879,7 @@ class _ContrastToggle extends StatelessWidget {
         border: Border.all(color: context.border),
       ),
       child: ListTile(
+        onTap: () => onChanged(!isHighContrast),
         title: Text(
           context.l10n.appearanceHighContrast,
           style: Theme.of(context).textTheme.titleSmall,
@@ -768,66 +891,6 @@ class _ContrastToggle extends StatelessWidget {
         trailing: ThemedSwitch(value: isHighContrast, onChanged: onChanged),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTheme.radius12),
-        ),
-      ),
-    );
-  }
-}
-
-/// Reduce motion toggle
-/// Toggle for the Elemental Atmosphere ambient particle effects.
-///
-/// Allows users to enable or disable ambient data-driven particle
-/// effects (rain, embers, mist, starlight) that visualize mesh
-/// activity behind NodeDex and map views. The toggle is disabled
-/// when reduce-motion is active because all particle effects are
-/// suppressed in that mode.
-class _AtmosphereToggle extends ConsumerWidget {
-  const _AtmosphereToggle({required this.reduceMotionActive});
-
-  /// Whether reduce-motion is currently active. When true, the
-  /// toggle is disabled and shows an explanatory subtitle.
-  final bool reduceMotionActive;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final atmosphereEnabled = ref.watch(atmosphereEnabledProvider);
-
-    return Card(
-      margin: EdgeInsets.zero,
-      color: context.card,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      child: ListTile(
-        title: Text(
-          context.l10n.appearanceElementalAtmosphere,
-          style: Theme.of(context).textTheme.titleSmall,
-        ),
-        subtitle: Text(
-          reduceMotionActive
-              ? context.l10n.appearanceElementalDisabled
-              : context.l10n.appearanceElementalDesc,
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-        leading: Icon(
-          Icons.auto_awesome_outlined,
-          color: reduceMotionActive
-              ? context.textTertiary
-              : atmosphereEnabled
-              ? context.accentColor
-              : context.textSecondary,
-        ),
-        trailing: ThemedSwitch(
-          value: reduceMotionActive ? false : atmosphereEnabled,
-          onChanged: reduceMotionActive
-              ? null
-              : (enabled) {
-                  HapticFeedback.selectionClick();
-                  ref
-                      .read(atmosphereEnabledProvider.notifier)
-                      .setEnabled(enabled);
-                },
         ),
       ),
     );
@@ -852,6 +915,7 @@ class _ReduceMotionToggle extends StatelessWidget {
         border: Border.all(color: context.border),
       ),
       child: ListTile(
+        onTap: () => onChanged(!reduceMotion),
         title: Text(
           context.l10n.appearanceReduceMotion,
           style: Theme.of(context).textTheme.titleSmall,

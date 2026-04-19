@@ -7,35 +7,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../core/widgets/search_filter_header.dart';
+import '../../core/widgets/status_filter_chip.dart';
+import '../../providers/mrrp_providers.dart';
 import '../../services/haptic_service.dart';
 import '../../services/protocol/sip/mrrp_types.dart';
 import 'mrrp_budget_panel_screen.dart';
 import 'widgets/mrrp_event_tile.dart';
-
-/// Maximum events to retain in the traffic console.
-const _kMaxEvents = 200;
-
-/// Provider for the traffic event stream (session-scoped).
-final mrrpTrafficEventsProvider =
-    NotifierProvider<_TrafficEventsNotifier, List<MrrpTrafficEvent>>(
-      _TrafficEventsNotifier.new,
-    );
-
-class _TrafficEventsNotifier extends Notifier<List<MrrpTrafficEvent>> {
-  @override
-  List<MrrpTrafficEvent> build() => [];
-
-  void add(MrrpTrafficEvent event) {
-    final updated = [event, ...state];
-    if (updated.length > _kMaxEvents) {
-      state = updated.sublist(0, _kMaxEvents);
-    } else {
-      state = updated;
-    }
-  }
-
-  void clear() => state = [];
-}
 
 /// Traffic Console — chronological event stream of all MRRP activity.
 class MrrpTrafficConsoleScreen extends ConsumerStatefulWidget {
@@ -48,9 +26,17 @@ class MrrpTrafficConsoleScreen extends ConsumerStatefulWidget {
 
 class _MrrpTrafficConsoleScreenState
     extends ConsumerState<MrrpTrafficConsoleScreen> {
+  final _searchController = TextEditingController();
+  String _searchQuery = '';
   int? _filterPeerId;
   MrrpMessageType? _filterType;
   int? _filterServiceId;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,10 +52,37 @@ class _MrrpTrafficConsoleScreenState
       if (_filterServiceId != null && e.serviceId != _filterServiceId) {
         return false;
       }
+      if (_searchQuery.isNotEmpty) {
+        final query = _searchQuery.toLowerCase();
+        final peerHex =
+            e.peerNodeId?.toRadixString(16).padLeft(8, '0').toLowerCase() ?? '';
+        final serviceName = MrrpServiceId.nameOf(
+          e.serviceId ?? 0,
+        ).toLowerCase();
+        final typeName = e.msgType.name.toLowerCase();
+        if (!peerHex.contains(query) &&
+            !serviceName.contains(query) &&
+            !typeName.contains(query)) {
+          return false;
+        }
+      }
       return true;
     }).toList();
 
     final isEmpty = events.isEmpty;
+
+    // Collect unique peers and services from events for dynamic chips.
+    final uniquePeers = <int>{};
+    final uniqueServices = <int>{};
+    for (final e in allEvents) {
+      if (e.peerNodeId != null) uniquePeers.add(e.peerNodeId!);
+      if (e.serviceId != null) uniqueServices.add(e.serviceId!);
+    }
+
+    final noFiltersActive =
+        _filterType == null &&
+        _filterPeerId == null &&
+        _filterServiceId == null;
 
     // lint-allow: haptic-feedback — keyboard dismissal, not interactive action
     return GestureDetector(
@@ -91,41 +104,137 @@ class _MrrpTrafficConsoleScreenState
           ),
         ],
         slivers: [
-          // Filter bar
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppTheme.spacing16,
-                vertical: AppTheme.spacing8,
-              ),
-              child: Wrap(
-                spacing: AppTheme.spacing8,
-                runSpacing: AppTheme.spacing4,
-                children: [
-                  _FilterChip(
-                    label: l10n.mrrpHarnessTrafficFilterType,
-                    isActive: _filterType != null,
-                    onTap: _cycleTypeFilter,
-                    displayValue: _filterType?.name,
+          // Pinned search + filter header (matches NodeDex/Signals pattern)
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: SearchFilterHeaderDelegate(
+              searchController: _searchController,
+              searchQuery: _searchQuery,
+              onSearchChanged: (v) => setState(() => _searchQuery = v),
+              hintText: l10n.mrrpHarnessTrafficSearchHint,
+              textScaler: MediaQuery.textScalerOf(context),
+              rebuildKey: Object.hashAll([
+                _filterType,
+                _filterPeerId,
+                _filterServiceId,
+                allEvents.length,
+              ]),
+              filterChips: [
+                // "All" chip — clears all filters
+                StatusFilterChip(
+                  label: l10n.mrrpHarnessTrafficFilterAll,
+                  icon: Icons.list,
+                  isSelected: noFiltersActive,
+                  onTap: () => setState(() {
+                    _filterType = null;
+                    _filterPeerId = null;
+                    _filterServiceId = null;
+                  }),
+                ),
+                // Individual type chips
+                StatusFilterChip(
+                  label: l10n.mrrpHarnessTrafficFilterRequest,
+                  icon: Icons.arrow_upward,
+                  isSelected: _filterType == MrrpMessageType.request,
+                  color: AccentColors.teal,
+                  onTap: () => setState(() {
+                    _filterType = _filterType == MrrpMessageType.request
+                        ? null
+                        : MrrpMessageType.request;
+                  }),
+                ),
+                StatusFilterChip(
+                  label: l10n.mrrpHarnessTrafficFilterResponse,
+                  icon: Icons.arrow_downward,
+                  isSelected: _filterType == MrrpMessageType.response,
+                  color: AccentColors.indigo,
+                  onTap: () => setState(() {
+                    _filterType = _filterType == MrrpMessageType.response
+                        ? null
+                        : MrrpMessageType.response;
+                  }),
+                ),
+                StatusFilterChip(
+                  label: l10n.mrrpHarnessTrafficFilterError,
+                  icon: Icons.error_outline,
+                  isSelected: _filterType == MrrpMessageType.error,
+                  color: AccentColors.pink,
+                  onTap: () => setState(() {
+                    _filterType = _filterType == MrrpMessageType.error
+                        ? null
+                        : MrrpMessageType.error;
+                  }),
+                ),
+                StatusFilterChip(
+                  label: l10n.mrrpHarnessTrafficFilterCancel,
+                  icon: Icons.cancel_outlined,
+                  isSelected: _filterType == MrrpMessageType.cancel,
+                  color: AccentColors.orange,
+                  onTap: () => setState(() {
+                    _filterType = _filterType == MrrpMessageType.cancel
+                        ? null
+                        : MrrpMessageType.cancel;
+                  }),
+                ),
+                StatusFilterChip(
+                  label: l10n.mrrpHarnessTrafficFilterAdvert,
+                  icon: Icons.campaign_outlined,
+                  isSelected: _filterType == MrrpMessageType.serviceAdvert,
+                  color: AccentColors.yellow,
+                  onTap: () => setState(() {
+                    _filterType = _filterType == MrrpMessageType.serviceAdvert
+                        ? null
+                        : MrrpMessageType.serviceAdvert;
+                  }),
+                ),
+                StatusFilterChip(
+                  label: l10n.mrrpHarnessTrafficFilterDirReq,
+                  icon: Icons.folder_outlined,
+                  isSelected: _filterType == MrrpMessageType.serviceDirReq,
+                  color: AccentColors.cyan,
+                  onTap: () => setState(() {
+                    _filterType = _filterType == MrrpMessageType.serviceDirReq
+                        ? null
+                        : MrrpMessageType.serviceDirReq;
+                  }),
+                ),
+                StatusFilterChip(
+                  label: l10n.mrrpHarnessTrafficFilterDirResp,
+                  icon: Icons.folder_open_outlined,
+                  isSelected: _filterType == MrrpMessageType.serviceDirResp,
+                  color: AccentColors.purple,
+                  onTap: () => setState(() {
+                    _filterType = _filterType == MrrpMessageType.serviceDirResp
+                        ? null
+                        : MrrpMessageType.serviceDirResp;
+                  }),
+                ),
+                // Dynamic peer chips from observed events
+                for (final peerId in uniquePeers.toList()..sort())
+                  StatusFilterChip(
+                    label:
+                        '0x${peerId.toRadixString(16).padLeft(8, '0').toUpperCase()}',
+                    icon: Icons.person_outline,
+                    isSelected: _filterPeerId == peerId,
+                    color: AccentColors.purple,
+                    onTap: () => setState(() {
+                      _filterPeerId = _filterPeerId == peerId ? null : peerId;
+                    }),
                   ),
-                  _FilterChip(
-                    label: l10n.mrrpHarnessTrafficFilterPeer,
-                    isActive: _filterPeerId != null,
-                    onTap: () => setState(() => _filterPeerId = null),
-                    displayValue: _filterPeerId != null
-                        ? '0x${_filterPeerId!.toRadixString(16).padLeft(8, '0').toUpperCase()}'
-                        : null,
+                // Dynamic service chips from observed events
+                for (final svcId in uniqueServices.toList()..sort())
+                  StatusFilterChip(
+                    label: MrrpServiceId.nameOf(svcId),
+                    icon: Icons.extension_outlined,
+                    isSelected: _filterServiceId == svcId,
+                    color: AccentColors.blue,
+                    onTap: () => setState(() {
+                      _filterServiceId = _filterServiceId == svcId
+                          ? null
+                          : svcId;
+                    }),
                   ),
-                  _FilterChip(
-                    label: l10n.mrrpHarnessTrafficFilterService,
-                    isActive: _filterServiceId != null,
-                    onTap: () => setState(() => _filterServiceId = null),
-                    displayValue: _filterServiceId != null
-                        ? MrrpServiceId.nameOf(_filterServiceId!)
-                        : null,
-                  ),
-                ],
-              ),
+              ],
             ),
           ),
 
@@ -180,45 +289,6 @@ class _MrrpTrafficConsoleScreenState
             ),
         ],
       ),
-    );
-  }
-
-  void _cycleTypeFilter() {
-    setState(() {
-      if (_filterType == null) {
-        _filterType = MrrpMessageType.request;
-      } else if (_filterType == MrrpMessageType.request) {
-        _filterType = MrrpMessageType.response;
-      } else if (_filterType == MrrpMessageType.response) {
-        _filterType = MrrpMessageType.error;
-      } else {
-        _filterType = null;
-      }
-    });
-  }
-}
-
-class _FilterChip extends StatelessWidget {
-  final String label;
-  final bool isActive;
-  final VoidCallback onTap;
-  final String? displayValue;
-
-  const _FilterChip({
-    required this.label,
-    required this.isActive,
-    required this.onTap,
-    this.displayValue,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ActionChip(
-      label: Text(displayValue ?? label),
-      avatar: isActive
-          ? Icon(Icons.check, size: 16, color: context.accentColor)
-          : null,
-      onPressed: onTap,
     );
   }
 }

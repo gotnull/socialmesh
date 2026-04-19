@@ -20,13 +20,17 @@ import 'package:crypto/crypto.dart';
 import '../../../core/logging.dart';
 import 'mrrp_codec.dart';
 import 'mrrp_constants.dart';
+import 'mrrp_counters.dart';
 import 'mrrp_frame.dart';
 import 'mrrp_messages_advert.dart';
 import 'mrrp_service_registry.dart';
 import 'mrrp_types.dart';
 
-/// Key for the advert cache: (nodeId, serviceId).
-typedef _AdvertCacheKey = ({int nodeId, int serviceId});
+/// Key for the advert cache: (nodeId, serviceId, instanceIdx).
+///
+/// The [instanceIdx] disambiguates multiple descriptors with the same
+/// service ID from one peer (e.g. multiple Mesh Services instances).
+typedef _AdvertCacheKey = ({int nodeId, int serviceId, int instanceIdx});
 
 /// Cached service entry from a remote peer.
 class MrrpCachedService {
@@ -58,6 +62,16 @@ class MrrpAdvertEngine {
   /// Callback when the advert cache changes.
   void Function()? onCacheChanged;
 
+  /// Instrumentation counters (optional, injected by provider layer).
+  MrrpCounters? counters;
+
+  /// Whether advertising is enabled (discoverable on mesh).
+  ///
+  /// When false, SERVICE_ADVERT broadcasts and SERVICE_DIR_RESP are
+  /// suppressed. Inbound advert caching continues. Set by the provider
+  /// layer from the mesh privacy discoverable setting.
+  bool isAdvertisingEnabled = false;
+
   /// Cache of discovered services from remote peers.
   final Map<_AdvertCacheKey, MrrpCachedService> _advertCache = {};
 
@@ -78,8 +92,11 @@ class MrrpAdvertEngine {
   }) : _registry = registry,
        _random = random ?? Random();
 
+  bool _started = false;
+
   /// Start the periodic SERVICE_ADVERT broadcast.
   void start() {
+    _started = true;
     _scheduleNextAdvert();
     AppLogging.mrrp(
       'MRRP_ADVERT: SERVICE_ADVERT scheduled, '
@@ -89,8 +106,23 @@ class MrrpAdvertEngine {
 
   /// Stop the periodic broadcast.
   void stop() {
+    _started = false;
     _advertTimer?.cancel();
     _advertTimer = null;
+  }
+
+  /// Trigger an immediate SERVICE_ADVERT broadcast outside the normal schedule.
+  ///
+  /// Called by the mesh service engine when a new instance is published so
+  /// remote peers discover it without waiting for the next timer cycle.
+  /// The periodic schedule resets after the broadcast fires.
+  ///
+  /// No-op when the engine has not been started (e.g. MRRP not yet attached).
+  Future<void> broadcastNow() async {
+    if (!_started) return;
+    _advertTimer?.cancel();
+    _advertTimer = null;
+    await _broadcastAdvert();
   }
 
   /// Dispose: stop timer and clear caches.
@@ -112,6 +144,16 @@ class MrrpAdvertEngine {
   }
 
   Future<void> _broadcastAdvert() async {
+    // Privacy gate: suppress advert when not discoverable.
+    if (!isAdvertisingEnabled) {
+      AppLogging.mrrp(
+        'MRRP_ADVERT: SERVICE_ADVERT suppressed '
+        '(advertising=false)', // lint-allow: hardcoded-string
+      );
+      _scheduleNextAdvert();
+      return;
+    }
+
     if (_registry.isEmpty) {
       _scheduleNextAdvert();
       return;
@@ -144,6 +186,7 @@ class MrrpAdvertEngine {
 
     final sent = await onSend?.call(encoded) ?? false;
     if (sent) {
+      counters?.recordServiceAdvertSent();
       AppLogging.mrrp(
         'MRRP_ADVERT: SERVICE_ADVERT broadcast, '
         '${_registry.count} services, '
@@ -190,12 +233,22 @@ class MrrpAdvertEngine {
 
   /// Handle an inbound SERVICE_DIR_REQ. Returns a SERVICE_DIR_RESP frame.
   MrrpFrame? handleServiceDirReq(MrrpFrame request, int senderNodeId) {
+    // Privacy gate: suppress directory responses when not discoverable.
+    if (!isAdvertisingEnabled) {
+      AppLogging.mrrp(
+        'MRRP_ADVERT: SERVICE_DIR_REQ from '
+        'node=0x${senderNodeId.toRadixString(16)} '
+        'suppressed (advertising=false)', // lint-allow: hardcoded-string
+      );
+      return null;
+    }
+
     AppLogging.mrrp(
       'MRRP_ADVERT: SERVICE_DIR_REQ received from '
       'node=0x${senderNodeId.toRadixString(16)}', // lint-allow: hardcoded-string
     );
 
-    final allDescriptors = _registry.getAll();
+    final allDescriptors = _registry.getAdvertDescriptors();
     final advertDescriptors = allDescriptors.map((d) {
       return MrrpAdvertDescriptor(
         serviceId: d.serviceId,
@@ -267,8 +320,20 @@ class MrrpAdvertEngine {
       _evictOldestPeer();
     }
 
+    // Remove all existing entries for this peer — a fresh advert replaces
+    // the entire set. This is essential when multiple descriptors share the
+    // same serviceId (e.g. user-created Mesh Services instances).
+    _advertCache.removeWhere((k, _) => k.nodeId == nodeId);
+
+    // Track instance index per serviceId so multiple descriptors with the
+    // same serviceId get unique cache keys.
+    final instanceCounters = <int, int>{};
+
     for (final d in descriptors) {
-      final key = (nodeId: nodeId, serviceId: d.serviceId);
+      final idx = instanceCounters[d.serviceId] ?? 0;
+      instanceCounters[d.serviceId] = idx + 1;
+
+      final key = (nodeId: nodeId, serviceId: d.serviceId, instanceIdx: idx);
       _advertCache[key] = MrrpCachedService(
         nodeId: nodeId,
         descriptor: d,
@@ -333,5 +398,28 @@ class MrrpAdvertEngine {
 
   void _purgeExpiredEntries() {
     _advertCache.removeWhere((_, v) => v.isExpired);
+
+    // Clean _lastAdvertHash for peers with no remaining cache entries.
+    final livePeers = _advertCache.keys.map((k) => k.nodeId).toSet();
+    _lastAdvertHash.removeWhere((nodeId, _) => !livePeers.contains(nodeId));
+  }
+
+  // ---------------------------------------------------------------------------
+  // Simulated peer injection (harness only)
+  // ---------------------------------------------------------------------------
+
+  /// Inject a simulated peer's services into the advert cache.
+  ///
+  /// Used by the Simulated Peer Lab to make virtual peers visible
+  /// in the peer inspector, service browser, and request composer.
+  void injectSimulatedPeer(int nodeId, List<MrrpAdvertDescriptor> descriptors) {
+    _cacheServicesFromPeer(nodeId, descriptors);
+  }
+
+  /// Remove all cached services for a simulated peer.
+  void removeSimulatedPeer(int nodeId) {
+    _advertCache.removeWhere((key, _) => key.nodeId == nodeId);
+    _lastAdvertHash.remove(nodeId);
+    onCacheChanged?.call();
   }
 }

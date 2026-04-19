@@ -18,7 +18,10 @@ import '../../utils/snackbar.dart';
 import '../../core/widgets/animations.dart';
 import '../../providers/app_providers.dart';
 import 'automation_providers.dart';
+import 'automation_summary.dart';
 import 'models/automation.dart';
+import 'models/condition_node.dart';
+import 'widgets/condition_editor.dart';
 import 'widgets/trigger_selector.dart';
 import 'widgets/action_editor.dart';
 import 'widgets/variable_text_field.dart';
@@ -30,10 +33,16 @@ class AutomationEditorScreen extends ConsumerStatefulWidget {
   /// Whether this is creating a new automation (even if automation is provided for pre-filling)
   final bool isNew;
 
+  /// When true, the editor does not persist to the repository on save.
+  /// Instead it pops with the edited [Automation] as the navigation result.
+  /// Used by the import screen's "Edit First" flow.
+  final bool draftMode;
+
   const AutomationEditorScreen({
     super.key,
     this.automation,
     this.isNew = false,
+    this.draftMode = false,
   });
 
   @override
@@ -47,6 +56,20 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
   late TextEditingController _descriptionController;
   late AutomationTrigger _trigger;
   late List<AutomationAction> _actions;
+  late List<AutomationCondition>? _conditions;
+  // Preserve branch structure and condition tree through editing (Phase 3).
+  // Phase 4: these are now authorable in the editor UI.
+  List<AutomationAction>? _thenActions;
+  List<AutomationAction>? _elseActions;
+  ConditionNode? _conditionTree;
+
+  /// Whether the user has modified conditions via the UI (Phase 4).
+  /// When true, we rebuild conditionTree from _conditions on save.
+  /// When false, we preserve the original conditionTree as-is.
+  bool _conditionsModified = false;
+
+  /// Whether the ELSE branch section is visible in the UI.
+  bool _hasElseBranch = false;
   late bool _enabled;
   bool _isSaving = false;
 
@@ -67,6 +90,17 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
       automation?.actions ??
           [const AutomationAction(type: ActionType.pushNotification)],
     );
+    _conditions = automation?.conditions != null
+        ? List<AutomationCondition>.from(automation!.conditions!)
+        : null;
+    _thenActions = automation?.thenActions != null
+        ? List<AutomationAction>.from(automation!.thenActions!)
+        : null;
+    _elseActions = automation?.elseActions != null
+        ? List<AutomationAction>.from(automation!.elseActions!)
+        : null;
+    _conditionTree = automation?.conditionTree;
+    _hasElseBranch = _elseActions != null && _elseActions!.isNotEmpty;
     _enabled = automation?.enabled ?? true;
   }
 
@@ -346,8 +380,142 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
                     onChanged: (trigger) => _updateTrigger(trigger),
                   ),
 
-                  // Flow connector: WHEN -> THEN
-                  _buildFlowConnector(context, isFirst: true),
+                  // Flow connector: WHEN -> IF
+                  _buildFlowConnector(
+                    context,
+                    isFirst: true,
+                    label: context.l10n.automationEditorIfDescription,
+                    topColor: AppTheme.warningYellow,
+                    bottomColor: AccentColors.cyan,
+                    dotColor: AccentColors.cyan,
+                  ),
+
+                  // IF (Conditions) — Phase 4
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildSectionTitle(
+                        context,
+                        context.l10n.automationEditorIf,
+                        icon: Icons.filter_alt,
+                        color: AccentColors.cyan,
+                      ),
+                      BouncyTap(
+                        onTap: _addCondition,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AccentColors.cyan.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius8,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.add,
+                                size: 16,
+                                color: AccentColors.cyan,
+                              ),
+                              const SizedBox(width: AppTheme.spacing4),
+                              Text(
+                                context.l10n.automationEditorAddCondition,
+                                style: TextStyle(
+                                  color: AccentColors.cyan,
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppTheme.spacing8),
+
+                  // Conditions list
+                  if (_conditions == null || _conditions!.isEmpty)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppTheme.spacing16,
+                        horizontal: AppTheme.spacing16,
+                      ),
+                      decoration: BoxDecoration(
+                        color: context.card,
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
+                        border: Border.all(color: context.border),
+                      ),
+                      child: Text(
+                        context.l10n.automationEditorNoConditions,
+                        style: TextStyle(
+                          color: SemanticColors.muted,
+                          fontSize: 13,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    )
+                  else ...[
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppTheme.spacing4,
+                        horizontal: AppTheme.spacing12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AccentColors.cyan.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
+                      ),
+                      child: Text(
+                        context.l10n.automationEditorConditionsAll,
+                        style: TextStyle(
+                          color: AccentColors.cyan,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spacing8),
+                    ..._conditions!.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final condition = entry.value;
+                      return Padding(
+                        padding: const EdgeInsets.only(
+                          bottom: AppTheme.spacing8,
+                        ),
+                        child: ConditionEditor(
+                          condition: condition,
+                          onChanged: (updated) {
+                            setState(() {
+                              _conditions![index] = updated;
+                              _conditionsModified = true;
+                            });
+                          },
+                          onDelete: () {
+                            setState(() {
+                              _conditions!.removeAt(index);
+                              if (_conditions!.isEmpty) _conditions = null;
+                              _conditionsModified = true;
+                            });
+                          },
+                        ),
+                      );
+                    }),
+                  ],
+
+                  // Flow connector: IF -> THEN
+                  _buildFlowConnector(
+                    context,
+                    label: context.l10n.automationEditorThenDo,
+                    topColor: AccentColors.cyan,
+                    bottomColor: AppTheme.successGreen,
+                    dotColor: AppTheme.successGreen,
+                  ),
 
                   // THEN (Actions)
                   Row(
@@ -471,10 +639,216 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
                           ),
                           // Show connector between actions (not after the last one)
                           if (index < _actions.length - 1)
-                            _buildFlowConnector(context, stepNumber: index + 2),
+                            _buildFlowConnector(
+                              context,
+                              stepNumber: index + 2,
+                              topColor: AppTheme.successGreen,
+                              bottomColor: AppTheme.successGreen,
+                              dotColor: AppTheme.successGreen,
+                            ),
                         ],
                       );
                     }),
+
+                  // ELSE section — Phase 4
+                  if (_hasElseBranch) ...[
+                    _buildFlowConnector(
+                      context,
+                      label: context.l10n.automationEditorElseDescription,
+                      topColor: AppTheme.successGreen,
+                      bottomColor: AppTheme.errorRed,
+                      dotColor: AppTheme.errorRed,
+                    ),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildSectionTitle(
+                          context,
+                          context.l10n.automationEditorElse,
+                          icon: Icons.alt_route,
+                          color: AppTheme.errorRed,
+                        ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            BouncyTap(
+                              onTap: _addElseAction,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.errorRed.withValues(
+                                    alpha: 0.2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radius8,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.add,
+                                      size: 16,
+                                      color: AppTheme.errorRed,
+                                    ),
+                                    const SizedBox(width: AppTheme.spacing4),
+                                    Text(
+                                      context.l10n.automationEditorAddAction,
+                                      style: TextStyle(
+                                        color: AppTheme.errorRed,
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: AppTheme.spacing8),
+                            BouncyTap(
+                              onTap: _removeElseBranch,
+                              child: Icon(
+                                Icons.close,
+                                size: 20,
+                                color: SemanticColors.muted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppTheme.spacing8),
+
+                    if (_elseActions == null || _elseActions!.isEmpty)
+                      BouncyTap(
+                        onTap: _addElseAction,
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                            vertical: AppTheme.spacing24,
+                            horizontal: AppTheme.spacing16,
+                          ),
+                          decoration: BoxDecoration(
+                            color: context.card,
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius12,
+                            ),
+                            border: Border.all(color: context.border),
+                          ),
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.alt_route,
+                                size: 32,
+                                color: SemanticColors.disabled,
+                              ),
+                              const SizedBox(height: AppTheme.spacing8),
+                              Text(
+                                context.l10n.automationEditorNoActions,
+                                style: TextStyle(
+                                  color: SemanticColors.disabled,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: AppTheme.spacing4),
+                              Text(
+                                context.l10n.automationEditorNoActionsHint,
+                                style: TextStyle(
+                                  color: SemanticColors.disabled,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    else
+                      ..._elseActions!.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final action = entry.value;
+                        final nodes = ref.watch(nodesProvider);
+                        final channels = ref.watch(channelsProvider);
+                        final myNodeNum = ref.watch(myNodeNumProvider);
+                        return Column(
+                          children: [
+                            ActionEditor(
+                              action: action,
+                              index: index,
+                              totalActions: _elseActions!.length,
+                              triggerType: _trigger.type,
+                              availableNodes: nodes.values.toList(),
+                              availableChannels: channels,
+                              myNodeNum: myNodeNum,
+                              onChanged: (updated) {
+                                setState(() {
+                                  _elseActions![index] = updated;
+                                });
+                              },
+                              onDelete: () =>
+                                  setState(() => _elseActions!.removeAt(index)),
+                            ),
+                            if (index < _elseActions!.length - 1)
+                              _buildFlowConnector(
+                                context,
+                                stepNumber: index + 2,
+                                topColor: AppTheme.errorRed,
+                                bottomColor: AppTheme.errorRed,
+                                dotColor: AppTheme.errorRed,
+                              ),
+                          ],
+                        );
+                      }),
+                  ] else ...[
+                    // "Add ELSE actions" button when no ELSE branch exists
+                    const SizedBox(height: AppTheme.spacing16),
+                    Center(
+                      child: BouncyTap(
+                        onTap: _enableElseBranch,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius8,
+                            ),
+                            border: Border.all(
+                              color: SemanticColors.muted.withValues(
+                                alpha: 0.3,
+                              ),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.alt_route,
+                                size: 16,
+                                color: SemanticColors.muted,
+                              ),
+                              const SizedBox(width: AppTheme.spacing8),
+                              Text(
+                                context.l10n.automationEditorAddElseActions,
+                                style: TextStyle(
+                                  color: SemanticColors.muted,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+
+                  // Summary preview — Phase 4
+                  const SizedBox(height: AppTheme.spacing24),
+                  _buildSummaryPreview(context),
 
                   const SizedBox(
                     height: AppTheme.spacing100,
@@ -584,7 +958,19 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
     BuildContext context, {
     bool isFirst = false,
     int? stepNumber,
+    String? label,
+    Color? topColor,
+    Color? bottomColor,
+    Color? dotColor,
   }) {
+    final top = topColor ?? AppTheme.successGreen;
+    final bottom = bottomColor ?? AppTheme.successGreen;
+    final dot = dotColor ?? AppTheme.successGreen;
+    final connectorLabel =
+        label ??
+        (isFirst
+            ? context.l10n.automationEditorThenDo
+            : context.l10n.automationEditorThen2);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -599,12 +985,7 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: isFirst
-                        ? [AppTheme.warningYellow, AppTheme.successGreen]
-                        : [
-                            AppTheme.successGreen.withValues(alpha: 0.6),
-                            AppTheme.successGreen,
-                          ],
+                    colors: [top.withValues(alpha: 0.6), bottom],
                   ),
                 ),
               ),
@@ -612,30 +993,22 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
                 width: 24,
                 height: 24,
                 decoration: BoxDecoration(
-                  color: isFirst
-                      ? AppTheme.successGreen.withValues(alpha: 0.2)
-                      : AppTheme.successGreen.withValues(alpha: 0.15),
+                  color: dot.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
-                  border: Border.all(color: AppTheme.successGreen, width: 2),
+                  border: Border.all(color: dot, width: 2),
                 ),
-                child: Icon(
-                  Icons.arrow_downward,
-                  size: 14,
-                  color: AppTheme.successGreen,
-                ),
+                child: Icon(Icons.arrow_downward, size: 14, color: dot),
               ),
               Container(
                 width: 2,
                 height: 16,
-                color: AppTheme.successGreen.withValues(alpha: 0.6),
+                color: bottom.withValues(alpha: 0.6),
               ),
             ],
           ),
           const SizedBox(width: AppTheme.spacing12),
           Text(
-            isFirst
-                ? context.l10n.automationEditorThenDo
-                : context.l10n.automationEditorThen2,
+            connectorLabel,
             style: TextStyle(
               color: SemanticColors.muted,
               fontSize: 12,
@@ -647,13 +1020,13 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
-                color: AppTheme.successGreen.withValues(alpha: 0.15),
+                color: dot.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(AppTheme.radius10),
               ),
               child: Text(
                 context.l10n.automationEditorStepNumber(stepNumber),
                 style: TextStyle(
-                  color: AppTheme.successGreen,
+                  color: dot,
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
                 ),
@@ -680,6 +1053,97 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
             _actions.add(AutomationAction(type: type));
           });
         },
+      ),
+    );
+  }
+
+  void _addCondition() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: context.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => _ConditionTypeSelector(
+        onSelect: (type) {
+          Navigator.pop(context);
+          setState(() {
+            _conditions ??= [];
+            _conditions!.add(AutomationCondition(type: type));
+            _conditionsModified = true;
+          });
+        },
+      ),
+    );
+  }
+
+  void _enableElseBranch() {
+    setState(() {
+      _hasElseBranch = true;
+      _elseActions ??= [];
+    });
+  }
+
+  void _removeElseBranch() {
+    setState(() {
+      _hasElseBranch = false;
+      _elseActions = null;
+    });
+  }
+
+  void _addElseAction() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: context.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => _ActionTypeSelector(
+        onSelect: (type) {
+          Navigator.pop(context);
+          setState(() {
+            _elseActions ??= [];
+            _elseActions!.add(AutomationAction(type: type));
+          });
+        },
+      ),
+    );
+  }
+
+  Widget _buildSummaryPreview(BuildContext context) {
+    // Build a temporary automation for summary generation
+    final tempAutomation = Automation(
+      name: _nameController.text.trim(),
+      trigger: _trigger,
+      actions: _actions,
+      conditions: _conditions,
+      thenActions: _actions.isNotEmpty ? _actions : null,
+      elseActions: _hasElseBranch ? _elseActions : null,
+    );
+    final summary = AutomationSummary.build(tempAutomation, context.l10n);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppTheme.spacing12),
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+        border: Border.all(color: context.border),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.auto_awesome, size: 16, color: SemanticColors.muted),
+          const SizedBox(width: AppTheme.spacing8),
+          Expanded(
+            child: Text(
+              summary,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: SemanticColors.muted,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -738,15 +1202,25 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
       return;
     }
 
-    // Validate actions
+    // Validate THEN actions (must have at least one)
     if (_actions.isEmpty) {
       showWarningSnackBar(
         context,
-        context.l10n.automationEditorValidateActions,
+        context.l10n.automationEditorValidateThenActions,
       );
       return;
     }
 
+    // Validate ELSE branch — if open, must have actions
+    if (_hasElseBranch && (_elseActions == null || _elseActions!.isEmpty)) {
+      showWarningSnackBar(
+        context,
+        context.l10n.automationEditorValidateElseActions,
+      );
+      return;
+    }
+
+    // Validate individual THEN actions
     for (int i = 0; i < _actions.length; i++) {
       final action = _actions[i];
 
@@ -779,6 +1253,38 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
       }
     }
 
+    // Validate individual ELSE actions (if present)
+    if (_hasElseBranch && _elseActions != null) {
+      for (int i = 0; i < _elseActions!.length; i++) {
+        final action = _elseActions![i];
+        final actionError = action.validate();
+        if (actionError != null) {
+          showWarningSnackBar(
+            context,
+            context.l10n.automationActionError(i + 1, actionError),
+          );
+          return;
+        }
+
+        final fieldsToValidate = <String>[
+          action.messageText ?? '',
+          action.notificationTitle ?? '',
+          action.notificationBody ?? '',
+        ];
+
+        for (final field in fieldsToValidate) {
+          final invalidVars = validateVariables(field);
+          if (invalidVars.isNotEmpty) {
+            showErrorSnackBar(
+              context,
+              context.l10n.automationEditorInvalidVars(invalidVars.join(', ')),
+            );
+            return;
+          }
+        }
+      }
+    }
+
     // Check premium before saving (new automations only)
     // Editing existing automations is always allowed to not break user's workflows
     if (!_isEditing) {
@@ -803,6 +1309,28 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
 
     final description = _descriptionController.text.trim();
 
+    // Phase 4 model construction:
+    // - conditionTree: rebuild from UI conditions if modified, else preserve original
+    // - thenActions: set to _actions when conditions or ELSE exist (branch mode)
+    // - elseActions: set when ELSE branch is active
+    // - actions: always set to _actions for backward compatibility (legacy field)
+    final hasConditions = _conditions != null && _conditions!.isNotEmpty;
+    final hasElse =
+        _hasElseBranch && _elseActions != null && _elseActions!.isNotEmpty;
+    final isBranchMode = hasConditions || hasElse;
+
+    // Determine conditionTree
+    ConditionNode? finalConditionTree;
+    if (_conditionsModified) {
+      // User edited conditions via UI — rebuild tree as flat ALL group
+      finalConditionTree = hasConditions
+          ? ConditionNode.fromLegacyConditions(_conditions)
+          : null;
+    } else {
+      // No UI edits — preserve original tree untouched
+      finalConditionTree = _conditionTree;
+    }
+
     final automation = Automation(
       id: widget.automation?.id,
       name: name,
@@ -810,6 +1338,10 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
       enabled: _enabled,
       trigger: _trigger,
       actions: _actions,
+      conditions: _conditions,
+      conditionTree: finalConditionTree,
+      thenActions: isBranchMode ? _actions : _thenActions,
+      elseActions: hasElse ? _elseActions : null,
       createdAt: widget.automation?.createdAt,
       lastTriggered: widget.automation?.lastTriggered,
       triggerCount: widget.automation?.triggerCount ?? 0,
@@ -819,6 +1351,12 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
     final automationsNotifier = ref.read(automationsProvider.notifier);
     final navigator = Navigator.of(context);
 
+    // Draft mode: return the automation without persisting (used by import staging)
+    if (widget.draftMode) {
+      navigator.pop(automation);
+      return;
+    }
+
     try {
       if (_isEditing) {
         await automationsNotifier.updateAutomation(automation);
@@ -827,7 +1365,7 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
       }
 
       if (!mounted) return;
-      navigator.pop();
+      navigator.pop(automation);
       showSuccessSnackBar(
         context,
         _isEditing
@@ -898,6 +1436,75 @@ class _ActionTypeSelector extends StatelessWidget {
                       Icon(type.icon, size: 20),
                       const SizedBox(width: AppTheme.spacing8),
                       Text(type.displayName),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+
+          SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
+        ],
+      ),
+    );
+  }
+}
+
+/// Bottom sheet for selecting condition type
+class _ConditionTypeSelector extends StatelessWidget {
+  final void Function(ConditionType type) onSelect;
+
+  const _ConditionTypeSelector({required this.onSelect});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(AppTheme.spacing16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: SemanticColors.muted,
+                borderRadius: BorderRadius.circular(AppTheme.radius2),
+              ),
+            ),
+          ),
+          Text(
+            context.l10n.automationEditorSelectConditionType,
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: AppTheme.spacing16),
+
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: ConditionType.values.map((type) {
+              return BouncyTap(
+                onTap: () => onSelect(type),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: context.card,
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
+                    border: Border.all(color: context.border),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(type.icon, size: 20, color: AccentColors.cyan),
+                      const SizedBox(width: AppTheme.spacing8),
+                      Text(type.localizedName(context.l10n)),
                     ],
                   ),
                 ),

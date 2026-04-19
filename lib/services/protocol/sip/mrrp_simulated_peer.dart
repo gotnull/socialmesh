@@ -120,19 +120,23 @@ class MrrpSimulatedPeer {
   }
 
   MrrpFrame _buildErrorResponse(MrrpFrame request, MrrpStatusCode status) {
-    // Error response with status code in first byte of payload.
-    final payload = Uint8List(1)..[0] = status.code;
     return MrrpFrame(
       versionMajor: MrrpConstants.mrrpVersionMajor,
       versionMinor: MrrpConstants.mrrpVersionMinor,
       msgType: MrrpMessageType.error,
       flags: MrrpFlags.isResponse | MrrpFlags.isError,
-      headerLen: MrrpConstants.mrrpHeaderMin,
+      headerLen: MrrpConstants.mrrpHeaderMin + 3, // TLV: status_code(1+1+1)
       requestId: request.requestId,
       serviceId: request.serviceId,
       actionId: request.actionId,
-      payloadLen: payload.length,
-      payload: payload,
+      payloadLen: 0,
+      headerExtensions: [
+        MrrpTlvEntry(
+          type: MrrpTlvType.statusCode.code,
+          value: Uint8List.fromList([status.code]),
+        ),
+      ],
+      payload: Uint8List(0),
     );
   }
 

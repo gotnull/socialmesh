@@ -13,11 +13,6 @@ import '../../providers/sip_providers.dart';
 import '../../services/protocol/sip/mrrp_counters.dart';
 import '../../services/protocol/sip/mrrp_types.dart';
 
-/// Provider for MRRP counters (session-scoped).
-final mrrpCountersProvider = Provider<MrrpCounters>((ref) {
-  return MrrpCounters();
-});
-
 /// Budget & Timing Panel — rate limiter state and protocol metrics.
 class MrrpBudgetPanelScreen extends ConsumerWidget {
   const MrrpBudgetPanelScreen({super.key});
@@ -42,27 +37,45 @@ class MrrpBudgetPanelScreen extends ConsumerWidget {
           sliver: SliverList(
             delegate: SliverChildListDelegate([
               // Budget gauge
-              Padding(
-                padding: const EdgeInsets.symmetric(
+              Container(
+                margin: const EdgeInsets.symmetric(
                   vertical: AppTheme.spacing12,
+                ),
+                padding: const EdgeInsets.all(AppTheme.spacing16),
+                decoration: BoxDecoration(
+                  color: context.card,
+                  borderRadius: BorderRadius.circular(AppTheme.radius16),
+                  border: Border.all(
+                    color: context.border.withValues(alpha: 0.5),
+                    width: 0.5,
+                  ),
                 ),
                 child: Column(
                   children: [
-                    LinearProgressIndicator(
-                      value: 1.0 - rateLimiter.usageFraction,
-                      backgroundColor: context.surface,
-                      color: rateLimiter.isBudgetHigh
-                          ? SemanticColors.error
-                          : SemanticColors.success,
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(AppTheme.radius4),
+                      child: LinearProgressIndicator(
+                        value: 1.0 - rateLimiter.usageFraction,
+                        minHeight: 6,
+                        backgroundColor: context.textPrimary.withValues(
+                          alpha: 0.06,
+                        ),
+                        color: rateLimiter.isBudgetHigh
+                            ? SemanticColors.error
+                            : SemanticColors.success,
+                      ),
                     ),
-                    const SizedBox(height: AppTheme.spacing8),
+                    const SizedBox(height: AppTheme.spacing12),
                     Text(
                       l10n.mrrpHarnessBudgetValue(
                         rateLimiter.remainingBytes,
                         rateLimiter.capacity,
                       ),
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      style: TextStyle(
+                        fontSize: 15,
                         fontWeight: FontWeight.w600,
+                        fontFamily: AppTheme.fontFamily,
+                        color: context.textPrimary,
                       ),
                     ),
                   ],
@@ -85,41 +98,55 @@ class MrrpBudgetPanelScreen extends ConsumerWidget {
         ),
         SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
-          sliver: SliverList(
-            delegate: SliverChildListDelegate([
-              _CounterRow(
-                label: l10n.mrrpHarnessCountersReqSent,
-                value: '${counters.requestsSent}',
+          sliver: SliverToBoxAdapter(
+            child: Container(
+              margin: const EdgeInsets.only(bottom: AppTheme.spacing8),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
+              decoration: BoxDecoration(
+                color: context.card,
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
+                border: Border.all(
+                  color: context.border.withValues(alpha: 0.5),
+                  width: 0.5,
+                ),
               ),
-              _CounterRow(
-                label: l10n.mrrpHarnessCountersReqRecv,
-                value: '${counters.requestsReceived}',
+              child: Column(
+                children: [
+                  _CounterRow(
+                    label: l10n.mrrpHarnessCountersReqSent,
+                    value: '${counters.requestsSent}',
+                  ),
+                  _CounterRow(
+                    label: l10n.mrrpHarnessCountersReqRecv,
+                    value: '${counters.requestsReceived}',
+                  ),
+                  _CounterRow(
+                    label: l10n.mrrpHarnessCountersRespSent,
+                    value: '${counters.responsesSent}',
+                  ),
+                  _CounterRow(
+                    label: l10n.mrrpHarnessCountersRespRecv,
+                    value: '${counters.responsesReceived}',
+                  ),
+                  _CounterRow(
+                    label: l10n.mrrpHarnessCountersDirReqSent,
+                    value: '${counters.serviceDirRequestsSent}',
+                  ),
+                  _CounterRow(
+                    label: l10n.mrrpHarnessCountersDirReqRecv,
+                    value: '${counters.serviceDirRequestsReceived}',
+                  ),
+                  _CounterRow(
+                    label: l10n.mrrpHarnessCountersDirRespSent,
+                    value: '${counters.serviceDirResponsesSent}',
+                  ),
+                  _CounterRow(
+                    label: l10n.mrrpHarnessCountersDirRespRecv,
+                    value: '${counters.serviceDirResponsesReceived}',
+                  ),
+                ],
               ),
-              _CounterRow(
-                label: l10n.mrrpHarnessCountersRespSent,
-                value: '${counters.responsesSent}',
-              ),
-              _CounterRow(
-                label: l10n.mrrpHarnessCountersRespRecv,
-                value: '${counters.responsesReceived}',
-              ),
-              _CounterRow(
-                label: l10n.mrrpHarnessCountersDirReqSent,
-                value: '${counters.serviceDirRequestsSent}',
-              ),
-              _CounterRow(
-                label: l10n.mrrpHarnessCountersDirReqRecv,
-                value: '${counters.serviceDirRequestsReceived}',
-              ),
-              _CounterRow(
-                label: l10n.mrrpHarnessCountersDirRespSent,
-                value: '${counters.serviceDirResponsesSent}',
-              ),
-              _CounterRow(
-                label: l10n.mrrpHarnessCountersDirRespRecv,
-                value: '${counters.serviceDirResponsesReceived}',
-              ),
-            ]),
+            ),
           ),
         ),
 
@@ -132,27 +159,41 @@ class MrrpBudgetPanelScreen extends ConsumerWidget {
         ),
         SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
-          sliver: SliverList(
-            delegate: SliverChildListDelegate([
-              _CounterRow(
-                label: 'TX', // lint-allow: hardcoded-string
-                value: '${counters.serviceAdvertsSent}',
-              ),
-              _CounterRow(
-                label: 'RX', // lint-allow: hardcoded-string
-                value: '${counters.serviceAdvertsReceived}',
-              ),
-              if (counters.lastAdvertSent != null)
-                _CounterRow(
-                  label: 'Last TX', // lint-allow: hardcoded-string
-                  value: _formatTime(counters.lastAdvertSent!),
+          sliver: SliverToBoxAdapter(
+            child: Container(
+              margin: const EdgeInsets.only(bottom: AppTheme.spacing8),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
+              decoration: BoxDecoration(
+                color: context.card,
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
+                border: Border.all(
+                  color: context.border.withValues(alpha: 0.5),
+                  width: 0.5,
                 ),
-              if (counters.lastAdvertReceived != null)
-                _CounterRow(
-                  label: 'Last RX', // lint-allow: hardcoded-string
-                  value: _formatTime(counters.lastAdvertReceived!),
-                ),
-            ]),
+              ),
+              child: Column(
+                children: [
+                  _CounterRow(
+                    label: 'TX', // lint-allow: hardcoded-string
+                    value: '${counters.serviceAdvertsSent}',
+                  ),
+                  _CounterRow(
+                    label: 'RX', // lint-allow: hardcoded-string
+                    value: '${counters.serviceAdvertsReceived}',
+                  ),
+                  if (counters.lastAdvertSent != null)
+                    _CounterRow(
+                      label: 'Last TX', // lint-allow: hardcoded-string
+                      value: _formatTime(counters.lastAdvertSent!),
+                    ),
+                  if (counters.lastAdvertReceived != null)
+                    _CounterRow(
+                      label: 'Last RX', // lint-allow: hardcoded-string
+                      value: _formatTime(counters.lastAdvertReceived!),
+                    ),
+                ],
+              ),
+            ),
           ),
         ),
 
@@ -165,21 +206,35 @@ class MrrpBudgetPanelScreen extends ConsumerWidget {
         ),
         SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
-          sliver: SliverList(
-            delegate: SliverChildListDelegate([
-              _CounterRow(
-                label: l10n.mrrpHarnessCountersDupReq,
-                value: '${counters.duplicateRequestsIgnored}',
+          sliver: SliverToBoxAdapter(
+            child: Container(
+              margin: const EdgeInsets.only(bottom: AppTheme.spacing8),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
+              decoration: BoxDecoration(
+                color: context.card,
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
+                border: Border.all(
+                  color: context.border.withValues(alpha: 0.5),
+                  width: 0.5,
+                ),
               ),
-              _CounterRow(
-                label: l10n.mrrpHarnessCountersDupResp,
-                value: '${counters.duplicateResponsesIgnored}',
+              child: Column(
+                children: [
+                  _CounterRow(
+                    label: l10n.mrrpHarnessCountersDupReq,
+                    value: '${counters.duplicateRequestsIgnored}',
+                  ),
+                  _CounterRow(
+                    label: l10n.mrrpHarnessCountersDupResp,
+                    value: '${counters.duplicateResponsesIgnored}',
+                  ),
+                  _CounterRow(
+                    label: l10n.mrrpHarnessCountersCachedResp,
+                    value: '${counters.cachedResponsesServed}',
+                  ),
+                ],
               ),
-              _CounterRow(
-                label: l10n.mrrpHarnessCountersCachedResp,
-                value: '${counters.cachedResponsesServed}',
-              ),
-            ]),
+            ),
           ),
         ),
 
@@ -192,33 +247,47 @@ class MrrpBudgetPanelScreen extends ConsumerWidget {
         ),
         SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
-          sliver: SliverList(
-            delegate: SliverChildListDelegate([
-              _CounterRow(
-                label: l10n.mrrpHarnessCountersErrSent,
-                value: '${counters.errorsSent}',
+          sliver: SliverToBoxAdapter(
+            child: Container(
+              margin: const EdgeInsets.only(bottom: AppTheme.spacing8),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
+              decoration: BoxDecoration(
+                color: context.card,
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
+                border: Border.all(
+                  color: context.border.withValues(alpha: 0.5),
+                  width: 0.5,
+                ),
               ),
-              _CounterRow(
-                label: l10n.mrrpHarnessCountersErrRecv,
-                value: '${counters.errorsReceived}',
+              child: Column(
+                children: [
+                  _CounterRow(
+                    label: l10n.mrrpHarnessCountersErrSent,
+                    value: '${counters.errorsSent}',
+                  ),
+                  _CounterRow(
+                    label: l10n.mrrpHarnessCountersErrRecv,
+                    value: '${counters.errorsReceived}',
+                  ),
+                  _CounterRow(
+                    label: l10n.mrrpHarnessCountersReqTimeouts,
+                    value: '${counters.requestTimeouts}',
+                  ),
+                  _CounterRow(
+                    label: l10n.mrrpHarnessCountersRespTimeouts,
+                    value: '${counters.responseTimeouts}',
+                  ),
+                  _CounterRow(
+                    label: l10n.mrrpHarnessCountersCancellations,
+                    value: '${counters.requestCancellations}',
+                  ),
+                  _CounterRow(
+                    label: l10n.mrrpHarnessCountersPayloadReject,
+                    value: '${counters.payloadTooLargeRejections}',
+                  ),
+                ],
               ),
-              _CounterRow(
-                label: l10n.mrrpHarnessCountersReqTimeouts,
-                value: '${counters.requestTimeouts}',
-              ),
-              _CounterRow(
-                label: l10n.mrrpHarnessCountersRespTimeouts,
-                value: '${counters.responseTimeouts}',
-              ),
-              _CounterRow(
-                label: l10n.mrrpHarnessCountersCancellations,
-                value: '${counters.requestCancellations}',
-              ),
-              _CounterRow(
-                label: l10n.mrrpHarnessCountersPayloadReject,
-                value: '${counters.payloadTooLargeRejections}',
-              ),
-            ]),
+            ),
           ),
         ),
 
@@ -231,19 +300,33 @@ class MrrpBudgetPanelScreen extends ConsumerWidget {
         ),
         SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
-          sliver: SliverList(
-            delegate: SliverChildListDelegate([
-              _CounterRow(
-                label: l10n.mrrpHarnessCountersHarnessActions,
-                value:
-                    '${counters.harnessActionsPerformed.values.fold(0, (a, b) => a + b)}',
+          sliver: SliverToBoxAdapter(
+            child: Container(
+              margin: const EdgeInsets.only(bottom: AppTheme.spacing8),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
+              decoration: BoxDecoration(
+                color: context.card,
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
+                border: Border.all(
+                  color: context.border.withValues(alpha: 0.5),
+                  width: 0.5,
+                ),
               ),
-              _CounterRow(
-                label: l10n.mrrpHarnessCountersSimFaults,
-                value:
-                    '${counters.simulatedFaultsInjected.values.fold(0, (a, b) => a + b)}',
+              child: Column(
+                children: [
+                  _CounterRow(
+                    label: l10n.mrrpHarnessCountersHarnessActions,
+                    value:
+                        '${counters.harnessActionsPerformed.values.fold(0, (a, b) => a + b)}',
+                  ),
+                  _CounterRow(
+                    label: l10n.mrrpHarnessCountersSimFaults,
+                    value:
+                        '${counters.simulatedFaultsInjected.values.fold(0, (a, b) => a + b)}',
+                  ),
+                ],
               ),
-            ]),
+            ),
           ),
         ),
 
@@ -292,11 +375,17 @@ class MrrpBudgetPanelScreen extends ConsumerWidget {
       rows.add(
         Padding(
           padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
-          child: Material(
-            color: context.card,
-            borderRadius: BorderRadius.circular(AppTheme.radius8),
+          child: Container(
+            decoration: BoxDecoration(
+              color: context.card,
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
+              border: Border.all(
+                color: context.border.withValues(alpha: 0.5),
+                width: 0.5,
+              ),
+            ),
             child: Padding(
-              padding: const EdgeInsets.all(AppTheme.spacing8),
+              padding: const EdgeInsets.all(AppTheme.spacing12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -357,9 +446,18 @@ class _CounterRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing2),
+      padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing4),
       child: Row(
         children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(
+              color: context.accentColor.withValues(alpha: 0.4),
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: AppTheme.spacing8),
           Text(
             label,
             style: Theme.of(
@@ -369,9 +467,11 @@ class _CounterRow extends StatelessWidget {
           const Spacer(),
           Text(
             value,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            style: TextStyle(
+              fontSize: 13,
               fontWeight: FontWeight.w600,
-              fontFamily: 'monospace', // lint-allow: hardcoded-string
+              fontFamily: AppTheme.fontFamily,
+              color: context.textPrimary,
             ),
           ),
         ],

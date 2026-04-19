@@ -5,6 +5,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_compass/flutter_compass.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -15,7 +16,9 @@ import '../../providers/countdown_providers.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/map_config.dart';
+import '../../core/safe_lat_lng.dart';
 import '../../core/theme.dart';
+import '../../core/transport.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/map_controls.dart';
@@ -26,19 +29,26 @@ import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../models/mesh_models.dart';
 import '../../models/presence_confidence.dart';
+import '../../providers/age_eligibility_provider.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/presence_providers.dart';
 import '../../providers/help_providers.dart';
 import '../../services/haptic_service.dart';
 import '../../services/share_link_service.dart';
+import '../../utils/location_privacy.dart';
 import '../../utils/presence_utils.dart';
 import '../messaging/messaging_screen.dart';
 import '../navigation/main_shell.dart';
+import '../nodes/node_detail_screen.dart';
+import '../nodes/node_display_name_resolver.dart';
+import '../telemetry/traceroute_log_screen.dart';
+import '../telemetry/position_log_screen.dart';
 import '../settings/settings_screen.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/constants.dart';
 import '../../core/logging.dart';
 import '../../core/los_analysis.dart';
+import '../../services/terrain/elevation_service.dart';
 import '../../models/telemetry_log.dart';
 import '../../providers/telemetry_providers.dart';
 import '../tak/models/tak_event.dart';
@@ -49,6 +59,7 @@ import '../tak/utils/cot_affiliation.dart';
 import '../tak/screens/tak_dashboard_screen.dart';
 import '../tak/screens/tak_event_detail_screen.dart';
 import '../tak/screens/tak_navigate_screen.dart';
+import 'terrain_profile_screen.dart';
 import '../tak/widgets/tak_map_layer.dart';
 import '../tak/widgets/tak_heading_vector_layer.dart';
 import '../tak/widgets/tak_trail_layer.dart';
@@ -88,6 +99,9 @@ class MapScreen extends ConsumerStatefulWidget {
   /// Useful for viewing a specific location without clutter.
   final bool locationOnlyMode;
 
+  /// When provided, the map shows the traceroute path as polylines.
+  final TraceRouteLog? tracerouteLog;
+
   const MapScreen({
     super.key,
     this.initialNodeNum,
@@ -95,6 +109,7 @@ class MapScreen extends ConsumerStatefulWidget {
     this.initialLongitude,
     this.initialLocationLabel,
     this.locationOnlyMode = false,
+    this.tracerouteLog,
   });
 
   @override
@@ -114,6 +129,12 @@ class _MapScreenState extends ConsumerState<MapScreen>
   bool _showRangeCircles = false;
   bool _showConnectionLines = false;
   bool _showPositionHistory = false;
+
+  /// When true in traceroute mode, only nodes part of the route are shown.
+  bool _tracerouteRouteOnly = false;
+
+  /// When set, shows only this node's position history trail on the map.
+  int? _trackNodeNum;
   bool _showTakLayer = true;
   double _connectionMaxDistance =
       15.0; // km - max distance for connection lines
@@ -137,6 +158,12 @@ class _MapScreenState extends ConsumerState<MapScreen>
   MeshNode? _measureNodeA;
   MeshNode? _measureNodeB;
 
+  // Terrain-aware measurement line segments
+  List<Polyline>? _measureTerrainPolylines;
+  TerrainLosResult? _measureTerrainResult;
+  bool _terrainFetchInProgress = false;
+  ElevationService? _elevationService;
+
   // Waypoints dropped by user
   final List<_Waypoint> _waypoints = [];
 
@@ -145,6 +172,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
   // Compass rotation
   double _mapRotation = 0.0;
+
+  // Heading-up mode (map rotates to match device compass)
+  bool _headingUpMode = false;
+  StreamSubscription<CompassEvent>? _compassSubscription;
 
   // Track last known positions for nodes (to handle GPS loss gracefully)
   final Map<int, _CachedPosition> _positionCache = {};
@@ -171,10 +202,12 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
   @override
   void dispose() {
+    _compassSubscription?.cancel();
     _animationController?.dispose();
     _mapController.dispose();
     _searchController.dispose();
     _takSearchController.dispose();
+    _elevationService = null;
     super.dispose();
   }
 
@@ -190,7 +223,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
     if (!mounted) return;
     final index = settings.mapTileStyleIndex;
     if (index >= 0 && index < MapTileStyle.values.length) {
-      safeSetState(() => _mapStyle = MapTileStyle.values[index]);
+      safeSetState(() {
+        _mapStyle = MapTileStyle.values[index];
+        _showRangeCircles = settings.mapShowRangeCircles;
+        _showConnectionLines = settings.mapShowConnectionLines;
+        _showPositionHistory = settings.mapShowPositionHistory;
+        _connectionMaxDistance = settings.mapConnectionMaxDistance;
+      });
     }
   }
 
@@ -201,8 +240,19 @@ class _MapScreenState extends ConsumerState<MapScreen>
     await settings.setMapTileStyleIndex(style.index);
   }
 
+  Future<void> _saveMapLayerSettings() async {
+    final settingsFuture = ref.read(settingsServiceProvider.future);
+    final settings = await settingsFuture;
+    if (!mounted) return;
+    await settings.setMapShowRangeCircles(_showRangeCircles);
+    await settings.setMapShowConnectionLines(_showConnectionLines);
+    await settings.setMapShowPositionHistory(_showPositionHistory);
+    await settings.setMapConnectionMaxDistance(_connectionMaxDistance);
+  }
+
   /// Animate camera to a specific location with smooth easing
   void _animatedMove(LatLng destLocation, double destZoom, {double? rotation}) {
+    if (!isFiniteLatLng(destLocation) || !destZoom.isFinite) return;
     _animationController?.dispose();
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 500),
@@ -249,6 +299,47 @@ class _MapScreenState extends ConsumerState<MapScreen>
     });
 
     _animationController!.forward();
+  }
+
+  void _enableHeadingUp() {
+    _compassSubscription?.cancel();
+    _compassSubscription = FlutterCompass.events?.listen((event) {
+      final heading = event.heading;
+      if (heading == null || !mounted) return;
+      // Skip tiny changes to reduce redraws (accounts for 360°/0° wrap)
+      final diff = ((heading - _mapRotation + 540) % 360) - 180;
+      if (diff.abs() < 1.0) return;
+      _mapController.moveAndRotate(
+        _mapController.camera.center,
+        _currentZoom,
+        heading,
+      );
+      setState(() => _mapRotation = heading);
+    });
+    if (_compassSubscription != null) {
+      setState(() => _headingUpMode = true);
+    }
+  }
+
+  void _disableHeadingUp() {
+    _compassSubscription?.cancel();
+    _compassSubscription = null;
+    setState(() => _headingUpMode = false);
+  }
+
+  void _onCompassTap() {
+    if (_headingUpMode) {
+      _disableHeadingUp();
+      _animatedMove(_mapController.camera.center, _currentZoom, rotation: 0);
+    } else if (_mapRotation.abs() > 1.0) {
+      _animatedMove(_mapController.camera.center, _currentZoom, rotation: 0);
+    } else {
+      if (FlutterCompass.events == null) {
+        showWarningSnackBar(context, context.l10n.mapCompassUnavailable);
+        return;
+      }
+      _enableHeadingUp();
+    }
   }
 
   /// Update position cache and return nodes with valid (current or cached) positions
@@ -395,11 +486,18 @@ class _MapScreenState extends ConsumerState<MapScreen>
     double lat2,
     double lng2,
   ) {
-    return const Distance().as(
-      LengthUnit.Kilometer,
-      LatLng(lat1, lng1),
-      LatLng(lat2, lng2),
-    );
+    // Vincenty formula throws on identical / near-identical points
+    if (lat1 == lat2 && lng1 == lng2) return 0.0;
+    try {
+      return const Distance().as(
+        LengthUnit.Kilometer,
+        LatLng(lat1, lng1),
+        LatLng(lat2, lng2),
+      );
+    } catch (_) {
+      // Vincenty can also fail on near-antipodal points
+      return 0.0;
+    }
   }
 
   String _formatDistance(double km) {
@@ -485,6 +583,15 @@ class _MapScreenState extends ConsumerState<MapScreen>
   }
 
   void _shareLocation(LatLng point, {String? label}) {
+    // Coarsen coordinates when the user is a confirmed minor.
+    final policy = ref.read(ageSafetyPolicyProvider);
+    final coarsened = LocationPrivacy.coarsenCoordsForPolicy(
+      point.latitude,
+      point.longitude,
+      policy,
+    );
+    final sharePoint = LatLng(coarsened.latitude, coarsened.longitude);
+
     // Get share position for iPad support
     final box = context.findRenderObject() as RenderBox?;
     final sharePositionOrigin = box != null
@@ -494,16 +601,23 @@ class _MapScreenState extends ConsumerState<MapScreen>
     ref
         .read(shareLinkServiceProvider)
         .shareLocation(
-          latitude: point.latitude,
-          longitude: point.longitude,
+          latitude: sharePoint.latitude,
+          longitude: sharePoint.longitude,
           label: label,
           sharePositionOrigin: sharePositionOrigin,
         );
   }
 
   void _copyCoordinates(LatLng point) {
-    final lat = point.latitude.toStringAsFixed(6);
-    final lng = point.longitude.toStringAsFixed(6);
+    // Coarsen coordinates when the user is a confirmed minor.
+    final policy = ref.read(ageSafetyPolicyProvider);
+    final coarsened = LocationPrivacy.coarsenCoordsForPolicy(
+      point.latitude,
+      point.longitude,
+      policy,
+    );
+    final lat = coarsened.latitude.toStringAsFixed(6);
+    final lng = coarsened.longitude.toStringAsFixed(6);
     Clipboard.setData(
       ClipboardData(text: '$lat, $lng'),
     ); // lint-allow: hardcoded-string
@@ -574,18 +688,39 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final presenceMap = ref.watch(presenceMapProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
 
-    // Load persisted position history when the trail layer is enabled
-    final positionLogs = _showPositionHistory
-        ? ref.watch(positionLogsProvider).asData?.value ?? <PositionLog>[]
-        : <PositionLog>[];
+    // Load position history — per-node when tracking, all when global toggle
+    final List<PositionLog> positionLogs;
+    if (_trackNodeNum != null) {
+      positionLogs =
+          ref.watch(nodePositionLogsProvider(_trackNodeNum!)).asData?.value ??
+          <PositionLog>[];
+    } else if (_showPositionHistory) {
+      positionLogs =
+          ref.watch(positionLogsProvider).asData?.value ?? <PositionLog>[];
+    } else {
+      positionLogs = <PositionLog>[];
+    }
 
     // Get nodes with positions (current or cached)
     final allNodesWithPosition = _getNodesWithPositions(nodes, presenceMap);
-    final nodesWithPosition = _filterNodes(
+    var nodesWithPosition = _filterNodes(
       allNodesWithPosition,
       myNodeNum,
       presenceMap,
     );
+
+    // In traceroute mode, optionally show only route-related nodes
+    if (_tracerouteRouteOnly && widget.tracerouteLog != null) {
+      final log = widget.tracerouteLog!;
+      final routeNodeNums = {
+        log.nodeNum,
+        log.targetNode,
+        ...log.hops.map((h) => h.nodeNum),
+      };
+      nodesWithPosition = nodesWithPosition
+          .where((n) => routeNodeNums.contains(n.node.nodeNum))
+          .toList();
+    }
 
     // Handle initial node centering from navigation
     if (!_initialCenteringDone && widget.initialNodeNum != null) {
@@ -629,8 +764,42 @@ class _MapScreenState extends ConsumerState<MapScreen>
     LatLng center = const LatLng(0, 0);
     double zoom = 2.0;
 
-    // In location only mode, use the provided coordinates
-    if (widget.locationOnlyMode &&
+    // Traceroute mode: fit camera to hop bounds
+    if (widget.tracerouteLog != null) {
+      final tracerouteBounds = _tracerouteBounds(
+        widget.tracerouteLog!,
+        nodes,
+        myNodeNum,
+      );
+      if (tracerouteBounds != null) {
+        final midLat =
+            (tracerouteBounds.southWest.latitude +
+                tracerouteBounds.northEast.latitude) /
+            2;
+        final midLng =
+            (tracerouteBounds.southWest.longitude +
+                tracerouteBounds.northEast.longitude) /
+            2;
+        center = LatLng(midLat, midLng);
+        // Rough zoom from bounds span — the map will refine in onMapReady
+        final latSpan =
+            tracerouteBounds.northEast.latitude -
+            tracerouteBounds.southWest.latitude;
+        final lngSpan =
+            tracerouteBounds.northEast.longitude -
+            tracerouteBounds.southWest.longitude;
+        final span = math.max(latSpan, lngSpan);
+        if (span < 0.01) {
+          zoom = 15.0;
+        } else if (span < 0.1) {
+          zoom = 12.0;
+        } else if (span < 1.0) {
+          zoom = 9.0;
+        } else {
+          zoom = 6.0;
+        }
+      }
+    } else if (widget.locationOnlyMode &&
         widget.initialLatitude != null &&
         widget.initialLongitude != null) {
       center = LatLng(widget.initialLatitude!, widget.initialLongitude!);
@@ -674,7 +843,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
         leading: canPop ? const BackButton() : const HamburgerMenuButton(),
         centerTitle: true,
         titleWidget: Text(
-          widget.locationOnlyMode
+          widget.tracerouteLog != null
+              ? context.l10n.tracerouteMapTitle
+              : widget.locationOnlyMode
               ? (widget.initialLocationLabel ?? context.l10n.mapLocationTitle)
               : context.l10n.mapScreenTitle,
           style: TextStyle(
@@ -731,6 +902,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
           AppBarOverflowMenu<String>(
             onSelected: (value) {
               switch (value) {
+                case 'traceroute_route_only':
+                  setState(() => _tracerouteRouteOnly = !_tracerouteRouteOnly);
+                  break;
                 case 'refresh':
                   _refreshPositions();
                   break;
@@ -739,27 +913,35 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   break;
                 case 'connections':
                   setState(() => _showConnectionLines = !_showConnectionLines);
+                  unawaited(_saveMapLayerSettings());
                   break;
                 case 'distance_1':
                   setState(() => _connectionMaxDistance = 1.0);
+                  unawaited(_saveMapLayerSettings());
                   break;
                 case 'distance_5':
                   setState(() => _connectionMaxDistance = 5.0);
+                  unawaited(_saveMapLayerSettings());
                   break;
                 case 'distance_10':
                   setState(() => _connectionMaxDistance = 10.0);
+                  unawaited(_saveMapLayerSettings());
                   break;
                 case 'distance_25':
                   setState(() => _connectionMaxDistance = 25.0);
+                  unawaited(_saveMapLayerSettings());
                   break;
                 case 'distance_all':
                   setState(() => _connectionMaxDistance = 100.0);
+                  unawaited(_saveMapLayerSettings());
                   break;
                 case 'range':
                   setState(() => _showRangeCircles = !_showRangeCircles);
+                  unawaited(_saveMapLayerSettings());
                   break;
                 case 'history':
                   setState(() => _showPositionHistory = !_showPositionHistory);
+                  unawaited(_saveMapLayerSettings());
                   break;
                 case 'measure':
                   setState(() {
@@ -795,6 +977,30 @@ class _MapScreenState extends ConsumerState<MapScreen>
               }
             },
             itemBuilder: (context) => [
+              // Traceroute: show route only toggle
+              if (widget.tracerouteLog != null)
+                PopupMenuItem(
+                  value: 'traceroute_route_only',
+                  child: Row(
+                    children: [
+                      Icon(
+                        _tracerouteRouteOnly
+                            ? Icons.route
+                            : Icons.route_outlined,
+                        size: 18,
+                        color: _tracerouteRouteOnly
+                            ? context.accentColor
+                            : context.textSecondary,
+                      ),
+                      SizedBox(width: AppTheme.spacing8),
+                      Text(
+                        _tracerouteRouteOnly
+                            ? context.l10n.tracerouteShowAllNodes
+                            : context.l10n.tracerouteShowRouteOnly,
+                      ),
+                    ],
+                  ),
+                ),
               // Node-related options - hide in location only mode
               if (!widget.locationOnlyMode) ...[
                 PopupMenuItem(
@@ -1127,6 +1333,16 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       ),
                       onPositionChanged: (position, hasGesture) {
                         if (hasGesture) {
+                          // Disable heading-up if user manually rotates the map
+                          if (_headingUpMode) {
+                            final rotDiff =
+                                ((position.rotation - _mapRotation + 540) %
+                                    360) -
+                                180;
+                            if (rotDiff.abs() > 1.0) {
+                              _disableHeadingUp();
+                            }
+                          }
                           setState(() {
                             _currentZoom = position.zoom;
                             _mapRotation = position.rotation;
@@ -1207,7 +1423,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
                           }).toList(),
                         ),
                       // Node trails (movement history) - hide in location only mode
-                      if (!widget.locationOnlyMode)
+                      if (!widget.locationOnlyMode &&
+                          (_showPositionHistory ||
+                              _trackNodeNum != null ||
+                              _nodeTrails.isNotEmpty))
                         PolylineLayer(
                           polylines: _buildNodeTrails(
                             nodesWithPosition,
@@ -1223,120 +1442,158 @@ class _MapScreenState extends ConsumerState<MapScreen>
                             myNodeNum,
                           ),
                         ),
-                      // Measurement line
+                      // Measurement line — terrain-colored when available
                       if (_measureStart != null && _measureEnd != null)
                         PolylineLayer(
-                          polylines: [
-                            Polyline(
-                              points: [_measureStart!, _measureEnd!],
-                              color: AppTheme.warningYellow,
-                              strokeWidth: 3,
-                              pattern: const StrokePattern.dotted(
-                                spacingFactor: 1.5,
-                              ),
+                          polylines:
+                              _measureTerrainPolylines ??
+                              [
+                                Polyline(
+                                  points: [_measureStart!, _measureEnd!],
+                                  color: AppTheme.warningYellow,
+                                  strokeWidth: 3,
+                                  pattern: const StrokePattern.dotted(
+                                    spacingFactor: 1.5,
+                                  ),
+                                ),
+                              ],
+                        ),
+                      // Traceroute route overlay
+                      if (widget.tracerouteLog != null)
+                        PolylineLayer(
+                          polylines: _buildTraceroutePolylines(
+                            widget.tracerouteLog!,
+                            nodes,
+                            myNodeNum,
+                          ),
+                        ),
+                      if (widget.tracerouteLog != null)
+                        MarkerLayer(
+                          rotate: true,
+                          markers: finiteMarkers(
+                            _buildTracerouteMarkers(
+                              widget.tracerouteLog!,
+                              nodes,
                             ),
-                          ],
+                          ),
                         ),
                       // Waypoint markers
                       MarkerLayer(
                         rotate: true,
-                        markers: _waypoints.map((w) {
-                          return Marker(
-                            point: w.position,
-                            width: 32,
-                            height: 40,
-                            child: GestureDetector(
-                              onTap: () => _showWaypointDetails(w),
-                              child: Column(
-                                children: [
-                                  Container(
-                                    width: 24,
-                                    height: 24,
-                                    decoration: BoxDecoration(
-                                      color: AppTheme.warningYellow,
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: Colors.white,
-                                        width: 2,
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withValues(
-                                            alpha: 0.3,
-                                          ),
-                                          blurRadius: 4,
+                        markers: finiteMarkers(
+                          _waypoints.map((w) {
+                            return Marker(
+                              point: w.position,
+                              width: 32,
+                              height: 40,
+                              child: GestureDetector(
+                                onTap: () => _showWaypointDetails(w),
+                                child: Column(
+                                  children: [
+                                    Container(
+                                      width: 24,
+                                      height: 24,
+                                      decoration: BoxDecoration(
+                                        color: AppTheme.warningYellow,
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: Colors.white,
+                                          width: 2,
                                         ),
-                                      ],
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withValues(
+                                              alpha: 0.3,
+                                            ),
+                                            blurRadius: 4,
+                                          ),
+                                        ],
+                                      ),
+                                      child: const Icon(
+                                        Icons.place,
+                                        size: 14,
+                                        color: Colors.white,
+                                      ),
                                     ),
-                                    child: const Icon(
-                                      Icons.place,
-                                      size: 14,
-                                      color: Colors.white,
+                                    Container(
+                                      width: 2,
+                                      height: 12,
+                                      color: AppTheme.warningYellow,
                                     ),
-                                  ),
-                                  Container(
-                                    width: 2,
-                                    height: 12,
-                                    color: AppTheme.warningYellow,
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                          );
-                        }).toList(),
+                            );
+                          }),
+                        ),
                       ),
                       // Node markers - hide in location only mode
                       if (!widget.locationOnlyMode)
                         MarkerLayer(
                           rotate: true,
-                          markers: nodesWithPosition.map((n) {
-                            final isMyNode = n.node.nodeNum == myNodeNum;
-                            final isSelected =
-                                _selectedNode?.nodeNum == n.node.nodeNum;
-                            return Marker(
-                              point: LatLng(n.latitude, n.longitude),
-                              width: isSelected ? 56 : 44,
-                              height: isSelected ? 56 : 44,
-                              child: GestureDetector(
-                                onTap: () {
-                                  HapticFeedback.selectionClick();
-                                  if (_measureMode) {
-                                    _handleMeasureNodeTap(n);
-                                  } else {
-                                    setState(() {
-                                      _selectedNode = n.node;
-                                      _selectedTakEntity = null;
-                                    });
-                                  }
-                                },
-                                onLongPress: () {
-                                  HapticFeedback.heavyImpact();
-                                  setState(() {
-                                    _measureMode = true;
-                                    _measureStart = LatLng(
-                                      n.latitude,
-                                      n.longitude,
-                                    );
-                                    _measureEnd = null;
-                                    _measureNodeA = n.node;
-                                    _measureNodeB = null;
-                                    _selectedNode = null;
-                                    _selectedTakEntity = null;
-                                  });
-                                },
-                                child: _NodeMarker(
-                                  node: n.node,
-                                  presence: presenceConfidenceFor(
-                                    presenceMap,
-                                    n.node,
-                                  ),
-                                  isMyNode: isMyNode,
-                                  isSelected: isSelected,
-                                  isStale: n.isStale,
-                                ),
-                              ),
-                            );
-                          }).toList(),
+                          markers: finiteMarkers(
+                            ([...nodesWithPosition]..sort((a, b) {
+                                  // Own node renders last = on top
+                                  final aIsMe = a.node.nodeNum == myNodeNum;
+                                  final bIsMe = b.node.nodeNum == myNodeNum;
+                                  if (aIsMe != bIsMe) return aIsMe ? 1 : -1;
+                                  return 0;
+                                }))
+                                .map((n) {
+                                  final isMyNode = n.node.nodeNum == myNodeNum;
+                                  final isSelected =
+                                      _selectedNode?.nodeNum == n.node.nodeNum;
+                                  return Marker(
+                                    point: LatLng(n.latitude, n.longitude),
+                                    width: isMyNode
+                                        ? 56
+                                        : (isSelected ? 56 : 44),
+                                    height: isMyNode
+                                        ? 56
+                                        : (isSelected ? 56 : 44),
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        HapticFeedback.selectionClick();
+                                        if (_measureMode) {
+                                          _handleMeasureNodeTap(n);
+                                        } else {
+                                          setState(() {
+                                            _selectedNode = n.node;
+                                            _selectedTakEntity = null;
+                                          });
+                                        }
+                                      },
+                                      onLongPress: () {
+                                        HapticFeedback.heavyImpact();
+                                        setState(() {
+                                          _measureMode = true;
+                                          _measureStart = LatLng(
+                                            n.latitude,
+                                            n.longitude,
+                                          );
+                                          _measureEnd = null;
+                                          _measureNodeA = n.node;
+                                          _measureNodeB = null;
+                                          _measureTerrainPolylines = null;
+                                          _measureTerrainResult = null;
+                                          _selectedNode = null;
+                                          _selectedTakEntity = null;
+                                        });
+                                      },
+                                      child: _NodeMarker(
+                                        node: n.node,
+                                        presence: presenceConfidenceFor(
+                                          presenceMap,
+                                          n.node,
+                                        ),
+                                        isMyNode: isMyNode,
+                                        isSelected: isSelected,
+                                        isStale: n.isStale,
+                                      ),
+                                    ),
+                                  );
+                                }),
+                          ),
                         ),
                       // TAK movement trails for tracked entities
                       if (_showTakLayer &&
@@ -1380,10 +1637,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
                           AppFeatureFlags.isTakGatewayEnabled)
                         _TakHeadingVectorOverlay(),
                       // Measurement markers
-                      if (_measureStart != null)
+                      if (_measureStart != null &&
+                          isFiniteLatLng(_measureStart))
                         MarkerLayer(
                           rotate: true,
-                          markers: [
+                          markers: finiteMarkers([
                             Marker(
                               point: _measureStart!,
                               width: 20,
@@ -1433,15 +1691,14 @@ class _MapScreenState extends ConsumerState<MapScreen>
                                   ),
                                 ),
                               ),
-                          ],
+                          ]),
                         ),
                       // Distance labels layer - hide in location only mode
                       if (!widget.locationOnlyMode)
                         MarkerLayer(
                           rotate: true,
-                          markers: _buildDistanceLabels(
-                            nodesWithPosition,
-                            myNodeNum,
+                          markers: finiteMarkers(
+                            _buildDistanceLabels(nodesWithPosition, myNodeNum),
                           ),
                         ),
                       // Map attribution (matches world mesh style)
@@ -1512,11 +1769,17 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         end: _measureEnd!,
                         nodeA: _measureNodeA,
                         nodeB: _measureNodeB,
+                        hasTerrainSegments:
+                            _measureTerrainPolylines != null &&
+                            _measureTerrainPolylines!.length > 1,
+                        terrainResult: _measureTerrainResult,
                         onClear: () => setState(() {
                           _measureStart = null;
                           _measureEnd = null;
                           _measureNodeA = null;
                           _measureNodeB = null;
+                          _measureTerrainPolylines = null;
+                          _measureTerrainResult = null;
                         }),
                         onShare: () => _shareLocation(
                           _measureStart!,
@@ -1537,17 +1800,24 @@ class _MapScreenState extends ConsumerState<MapScreen>
                           _measureEnd = null;
                           _measureNodeA = null;
                           _measureNodeB = null;
+                          _measureTerrainPolylines = null;
+                          _measureTerrainResult = null;
                         }),
-                        onSwap: () => setState(() {
-                          final tmpStart = _measureStart;
-                          final tmpEnd = _measureEnd;
-                          final tmpNodeA = _measureNodeA;
-                          final tmpNodeB = _measureNodeB;
-                          _measureStart = tmpEnd;
-                          _measureEnd = tmpStart;
-                          _measureNodeA = tmpNodeB;
-                          _measureNodeB = tmpNodeA;
-                        }),
+                        onSwap: () {
+                          setState(() {
+                            final tmpStart = _measureStart;
+                            final tmpEnd = _measureEnd;
+                            final tmpNodeA = _measureNodeA;
+                            final tmpNodeB = _measureNodeB;
+                            _measureStart = tmpEnd;
+                            _measureEnd = tmpStart;
+                            _measureNodeA = tmpNodeB;
+                            _measureNodeB = tmpNodeA;
+                            _measureTerrainPolylines = null;
+                            _measureTerrainResult = null;
+                          });
+                          _fetchMeasurementTerrain();
+                        },
                         onCopyCoordinates: () {
                           final a = _measureStart!;
                           final b = _measureEnd!;
@@ -1645,7 +1915,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       child: NodeInfoCard(
                         node: _selectedNode!,
                         isMyNode: _selectedNode!.nodeNum == myNodeNum,
-                        onClose: () => setState(() => _selectedNode = null),
+                        onClose: () => setState(() {
+                          _selectedNode = null;
+                          _trackNodeNum = null;
+                        }),
                         onMessage: () => _openDM(_selectedNode!),
                         distanceFromMe: _getDistanceFromMyNode(
                           _selectedNode!,
@@ -1687,6 +1960,50 @@ class _MapScreenState extends ConsumerState<MapScreen>
                               ),
                             );
                           }
+                        },
+                        onTraceroute: _selectedNode!.nodeNum != myNodeNum
+                            ? () => _sendTracerouteFromMap(_selectedNode!)
+                            : null,
+                        onViewDetails: () {
+                          final node = _selectedNode!;
+                          showNodeDetails(
+                            context,
+                            node,
+                            node.nodeNum == myNodeNum,
+                          );
+                        },
+                        onViewHistory: () {
+                          final node = _selectedNode!;
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  TraceRouteLogScreen(nodeNum: node.nodeNum),
+                            ),
+                          );
+                        },
+                        onShowTrack: _selectedNode!.hasPosition
+                            ? () {
+                                setState(() {
+                                  if (_trackNodeNum == _selectedNode!.nodeNum) {
+                                    _trackNodeNum = null;
+                                  } else {
+                                    _trackNodeNum = _selectedNode!.nodeNum;
+                                  }
+                                });
+                              }
+                            : null,
+                        isTrackVisible: _trackNodeNum == _selectedNode!.nodeNum,
+                        onViewPositionLog: () {
+                          final node = _selectedNode!;
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => PositionLogScreen(
+                                initialNodeNum: node.nodeNum,
+                              ),
+                            ),
+                          );
                         },
                       ),
                     ),
@@ -1872,6 +2189,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     minZoom: 4,
                     maxZoom: 18,
                     mapRotation: _mapRotation,
+                    isHeadingUp: _headingUpMode,
                     onZoomIn: () {
                       final newZoom = (_currentZoom + 1).clamp(4.0, 18.0);
                       _animatedMove(_mapController.camera.center, newZoom);
@@ -1885,20 +2203,17 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     onFitAll: () => _fitAllNodes(nodesWithPosition),
                     onCenterOnMe: () =>
                         _centerOnMyNode(nodesWithPosition, myNodeNum),
-                    onResetNorth: () => _animatedMove(
-                      _mapController.camera.center,
-                      _currentZoom,
-                      rotation: 0,
-                    ),
+                    onResetNorth: _onCompassTap,
                     hasMyLocation: nodesWithPosition.any(
                       (n) => n.node.nodeNum == myNodeNum,
                     ),
                     onLocationUnavailable: () {
+                      final navigator = Navigator.of(context);
                       showActionSnackBar(
                         context,
                         'No position available. Enable GPS on your device or turn on "Provide phone location" in Settings.', // lint-allow: hardcoded-string
                         actionLabel: context.l10n.actionView,
-                        onAction: () => Navigator.of(context).push(
+                        onAction: () => navigator.push(
                           MaterialPageRoute(
                             builder: (_) => const SettingsScreen(
                               initialSearchQuery: 'phone location',
@@ -1925,6 +2240,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
         _measureEnd = null;
         _measureNodeA = null;
         _measureNodeB = null;
+        _measureTerrainPolylines = null;
+        _measureTerrainResult = null;
       } else if (_measureEnd == null) {
         _measureEnd = point;
         _measureNodeB = null;
@@ -1933,9 +2250,14 @@ class _MapScreenState extends ConsumerState<MapScreen>
         _measureEnd = null;
         _measureNodeA = null;
         _measureNodeB = null;
+        _measureTerrainPolylines = null;
+        _measureTerrainResult = null;
       }
     });
     HapticFeedback.selectionClick();
+    if (_measureStart != null && _measureEnd != null) {
+      _fetchMeasurementTerrain();
+    }
   }
 
   void _handleMeasureNodeTap(_NodeWithPosition n) {
@@ -1946,6 +2268,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
         _measureEnd = null;
         _measureNodeA = n.node;
         _measureNodeB = null;
+        _measureTerrainPolylines = null;
+        _measureTerrainResult = null;
       } else if (_measureEnd == null) {
         _measureEnd = point;
         _measureNodeB = n.node;
@@ -1954,9 +2278,156 @@ class _MapScreenState extends ConsumerState<MapScreen>
         _measureEnd = null;
         _measureNodeA = n.node;
         _measureNodeB = null;
+        _measureTerrainPolylines = null;
+        _measureTerrainResult = null;
       }
     });
     HapticFeedback.selectionClick();
+    if (_measureStart != null && _measureEnd != null) {
+      _fetchMeasurementTerrain();
+    }
+  }
+
+  Future<void> _fetchMeasurementTerrain() async {
+    final start = _measureStart;
+    final end = _measureEnd;
+    if (start == null || end == null) return;
+    if (_terrainFetchInProgress) return;
+
+    _elevationService ??= ElevationService();
+    setState(() => _terrainFetchInProgress = true);
+
+    final result = await _elevationService!.fetchProfile(start, end);
+    if (!mounted) return;
+
+    // Verify measurement hasn't changed while fetching
+    if (_measureStart != start || _measureEnd != end) {
+      setState(() => _terrainFetchInProgress = false);
+      return;
+    }
+
+    switch (result) {
+      case ElevationProfileSuccess(:final samples):
+        final gpsAltA = _measureNodeA?.altitude;
+        final gpsAltB = _measureNodeB?.altitude;
+        // Fall back to terrain elevation at the endpoint when GPS altitude is
+        // unavailable (e.g. a random map point with no node attached).
+        final terrainAltA = samples.isNotEmpty
+            ? samples.first.elevationMeters?.round()
+            : null;
+        final terrainAltB = samples.isNotEmpty
+            ? samples.last.elevationMeters?.round()
+            : null;
+        final terrainResult = evaluateLosFromProfile(
+          samples: samples
+              .map(
+                (s) => (
+                  distanceMeters: s.distanceMeters,
+                  latitude: s.latitude,
+                  longitude: s.longitude,
+                  elevationMeters: s.elevationMeters,
+                ),
+              )
+              .toList(),
+          altAMeters: gpsAltA ?? terrainAltA,
+          altBMeters: gpsAltB ?? terrainAltB,
+        );
+        safeSetState(() {
+          _measureTerrainPolylines = _buildTerrainAwarePolylines(
+            samples,
+            terrainResult,
+          );
+          _measureTerrainResult = terrainResult;
+          _terrainFetchInProgress = false;
+        });
+      case ElevationProfileOffline():
+      case ElevationProfileFailure():
+        // Offline or API error — fall back to single-color line
+        safeSetState(() {
+          _measureTerrainPolylines = _buildFallbackMeasurePolylines();
+          _measureTerrainResult = null;
+          _terrainFetchInProgress = false;
+        });
+    }
+  }
+
+  List<Polyline> _buildTerrainAwarePolylines(
+    List<ElevationSample> samples,
+    TerrainLosResult terrainResult,
+  ) {
+    if (samples.length < 2) return _buildFallbackMeasurePolylines();
+
+    // If no altitude data, color segments by terrain-only (all same color)
+    if (!terrainResult.hasAltitudeData) {
+      return _buildFallbackMeasurePolylines();
+    }
+
+    final polylines = <Polyline>[];
+    for (var i = 0; i < samples.length - 1; i++) {
+      final clearance = terrainResult.perSampleClearanceMeters[i];
+      final nextClearance = terrainResult.perSampleClearanceMeters[i + 1];
+      // Use the worse clearance of the two endpoints for this segment
+      final segClearance = math.min(clearance, nextClearance);
+
+      Color segColor;
+      if (segClearance < 0) {
+        segColor = AppTheme.errorRed;
+      } else if (segClearance <
+          terrainResult.perSampleFresnelRadiusMeters[i] * 0.4) {
+        segColor = AppTheme.warningYellow;
+      } else {
+        segColor = AppTheme.successGreen;
+      }
+
+      polylines.add(
+        Polyline(
+          points: [
+            LatLng(samples[i].latitude, samples[i].longitude),
+            LatLng(samples[i + 1].latitude, samples[i + 1].longitude),
+          ],
+          color: segColor,
+          strokeWidth: 3,
+          pattern: const StrokePattern.dotted(spacingFactor: 1.5),
+        ),
+      );
+    }
+    return polylines;
+  }
+
+  List<Polyline> _buildFallbackMeasurePolylines() {
+    final start = _measureStart;
+    final end = _measureEnd;
+    if (start == null || end == null) return [];
+
+    final altA = _measureNodeA?.altitude;
+    final altB = _measureNodeB?.altitude;
+    final distanceM = const Distance().as(LengthUnit.Meter, start, end);
+
+    Color lineColor;
+    if (altA != null && altB != null) {
+      final result = evaluateLos(
+        altA: altA,
+        altB: altB,
+        distanceMeters: distanceM,
+      );
+      lineColor = switch (result.verdict) {
+        LosVerdict.clear => AppTheme.successGreen,
+        LosVerdict.marginal => AppTheme.warningYellow,
+        LosVerdict.obstructed => AppTheme.errorRed,
+        LosVerdict.unknown => AppTheme.warningYellow,
+      };
+    } else {
+      lineColor = AppTheme.warningYellow;
+    }
+
+    return [
+      Polyline(
+        points: [start, end],
+        color: lineColor,
+        strokeWidth: 3,
+        pattern: const StrokePattern.dotted(spacingFactor: 1.5),
+      ),
+    ];
   }
 
   void _showWaypointMenu(LatLng point) {
@@ -2206,7 +2677,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
   ) {
     final trails = <Polyline>[];
 
-    if (_showPositionHistory && positionLogs.isNotEmpty) {
+    if ((_showPositionHistory || _trackNodeNum != null) &&
+        positionLogs.isNotEmpty) {
       // Group persisted position logs by nodeNum
       final logsByNode = <int, List<PositionLog>>{};
       for (final log in positionLogs) {
@@ -2343,6 +2815,216 @@ class _MapScreenState extends ConsumerState<MapScreen>
     return lines;
   }
 
+  /// Build polylines for a traceroute route overlay.
+  ///
+  /// Forward hops are rendered in teal, return hops in purple. Only hops
+  /// with valid positions are included. The local device position is used
+  /// as the origin for the forward path and destination for the return path.
+  List<Polyline> _buildTraceroutePolylines(
+    TraceRouteLog log,
+    Map<int, MeshNode> nodes,
+    int? myNodeNum,
+  ) {
+    final polylines = <Polyline>[];
+
+    // Resolve local device position as the start of the forward route
+    // Prefer stored position from traceroute time
+    LatLng? localPosition;
+    if (log.originLatitude != null &&
+        log.originLongitude != null &&
+        !(log.originLatitude == 0.0 && log.originLongitude == 0.0)) {
+      localPosition = LatLng(log.originLatitude!, log.originLongitude!);
+    } else if (myNodeNum != null) {
+      final myNode = nodes[myNodeNum];
+      if (myNode != null && myNode.hasPosition) {
+        localPosition = LatLng(myNode.latitude!, myNode.longitude!);
+      }
+    }
+
+    // Resolve target node position as the end of the forward route
+    // Prefer stored position from traceroute time
+    LatLng? targetPosition;
+    if (log.targetLatitude != null &&
+        log.targetLongitude != null &&
+        !(log.targetLatitude == 0.0 && log.targetLongitude == 0.0)) {
+      targetPosition = LatLng(log.targetLatitude!, log.targetLongitude!);
+    } else {
+      final targetNode = nodes[log.targetNode];
+      if (targetNode != null && targetNode.hasPosition) {
+        targetPosition = LatLng(targetNode.latitude!, targetNode.longitude!);
+      }
+    }
+
+    LatLng? positionOf(TraceRouteHop hop) {
+      if (hop.latitude != null &&
+          hop.longitude != null &&
+          !(hop.latitude == 0.0 && hop.longitude == 0.0)) {
+        return LatLng(hop.latitude!, hop.longitude!);
+      }
+      return null;
+    }
+
+    // Forward path: local → hop1 → hop2 → ... → target
+    final forwardHops = log.hops.where((h) => !h.back).toList();
+    final forwardPoints = <LatLng>[
+      if (localPosition != null) localPosition,
+      ...forwardHops.map(positionOf).whereType<LatLng>(),
+      if (targetPosition != null) targetPosition,
+    ];
+    if (forwardPoints.length >= 2) {
+      polylines.add(
+        Polyline(
+          points: forwardPoints,
+          color: AccentColors.teal,
+          strokeWidth: 3.5,
+        ),
+      );
+    }
+
+    // Return path: target → hop1 → hop2 → ... → local
+    final returnHops = log.hops.where((h) => h.back).toList();
+    final returnPoints = <LatLng>[
+      if (targetPosition != null) targetPosition,
+      ...returnHops.map(positionOf).whereType<LatLng>(),
+      if (localPosition != null) localPosition,
+    ];
+    if (returnPoints.length >= 2) {
+      polylines.add(
+        Polyline(
+          points: returnPoints,
+          color: AccentColors.purple.withValues(alpha: 0.8),
+          strokeWidth: 3.0,
+          pattern: const StrokePattern.dotted(spacingFactor: 1.5),
+        ),
+      );
+    }
+
+    return polylines;
+  }
+
+  /// Build markers for each hop in a traceroute route overlay.
+  List<Marker> _buildTracerouteMarkers(
+    TraceRouteLog log,
+    Map<int, MeshNode> nodes,
+  ) {
+    final markers = <Marker>[];
+    final seen = <int>{};
+
+    for (final hop in log.hops) {
+      if (seen.contains(hop.nodeNum)) continue;
+      seen.add(hop.nodeNum);
+
+      if (hop.latitude == null ||
+          hop.longitude == null ||
+          (hop.latitude == 0.0 && hop.longitude == 0.0)) {
+        continue;
+      }
+
+      final node = nodes[hop.nodeNum];
+      final name =
+          node?.displayName ?? NodeDisplayNameResolver.defaultName(hop.nodeNum);
+
+      markers.add(
+        Marker(
+          point: LatLng(hop.latitude!, hop.longitude!),
+          width: 80,
+          height: 32,
+          child: Center(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.black87,
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
+                border: Border.all(
+                  color: hop.back ? AccentColors.purple : AccentColors.teal,
+                  width: 1.5,
+                ),
+              ),
+              child: Text(
+                name,
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return markers;
+  }
+
+  /// Compute the bounding box that contains all traceroute hop positions
+  /// including the local device and target node.
+  LatLngBounds? _tracerouteBounds(
+    TraceRouteLog log,
+    Map<int, MeshNode> nodes,
+    int? myNodeNum,
+  ) {
+    final points = <LatLng>[];
+
+    // Local device position – prefer stored position from traceroute time
+    if (log.originLatitude != null &&
+        log.originLongitude != null &&
+        !(log.originLatitude == 0.0 && log.originLongitude == 0.0)) {
+      points.add(LatLng(log.originLatitude!, log.originLongitude!));
+    } else if (myNodeNum != null) {
+      final myNode = nodes[myNodeNum];
+      if (myNode != null && myNode.hasPosition) {
+        points.add(LatLng(myNode.latitude!, myNode.longitude!));
+      }
+    }
+
+    // Target node position – prefer stored position from traceroute time
+    if (log.targetLatitude != null &&
+        log.targetLongitude != null &&
+        !(log.targetLatitude == 0.0 && log.targetLongitude == 0.0)) {
+      points.add(LatLng(log.targetLatitude!, log.targetLongitude!));
+    } else {
+      final target = nodes[log.targetNode];
+      if (target != null && target.hasPosition) {
+        points.add(LatLng(target.latitude!, target.longitude!));
+      }
+    }
+
+    // Hop positions
+    for (final hop in log.hops) {
+      if (hop.latitude != null &&
+          hop.longitude != null &&
+          !(hop.latitude == 0.0 && hop.longitude == 0.0)) {
+        points.add(LatLng(hop.latitude!, hop.longitude!));
+      }
+    }
+
+    if (points.length < 2) return null;
+
+    var minLat = points.first.latitude;
+    var maxLat = points.first.latitude;
+    var minLng = points.first.longitude;
+    var maxLng = points.first.longitude;
+
+    for (final p in points) {
+      if (p.latitude < minLat) minLat = p.latitude;
+      if (p.latitude > maxLat) maxLat = p.latitude;
+      if (p.longitude < minLng) minLng = p.longitude;
+      if (p.longitude > maxLng) maxLng = p.longitude;
+    }
+
+    // Add padding (10% on each side)
+    final latPad = (maxLat - minLat) * 0.1;
+    final lngPad = (maxLng - minLng) * 0.1;
+
+    return LatLngBounds(
+      LatLng(minLat - latPad, minLng - lngPad),
+      LatLng(maxLat + latPad, maxLng + lngPad),
+    );
+  }
+
   /// Build distance label markers for connections from my node
   List<Marker> _buildDistanceLabels(
     List<_NodeWithPosition> nodes,
@@ -2411,6 +3093,57 @@ class _MapScreenState extends ConsumerState<MapScreen>
     }
   }
 
+  Future<void> _sendTracerouteFromMap(MeshNode node) async {
+    final cooldownRemaining = ref
+        .read(countdownProvider.notifier)
+        .tracerouteRemaining(node.nodeNum);
+    if (cooldownRemaining > 0) {
+      showInfoSnackBar(
+        context,
+        context.l10n.nodeDetailTracerouteCooldownTooltip(cooldownRemaining),
+      );
+      return;
+    }
+
+    final connectionState = ref.read(connectionStateProvider);
+    final isConnected = connectionState.maybeWhen(
+      data: (state) => state == DeviceConnectionState.connected,
+      orElse: () => false,
+    );
+
+    if (!isConnected) {
+      showErrorSnackBar(context, context.l10n.nodeDetailTracerouteNotConnected);
+      return;
+    }
+
+    final protocol = ref.read(protocolServiceProvider);
+    final displayName = node.displayName;
+
+    try {
+      await protocol.sendTraceroute(node.nodeNum);
+
+      if (!mounted) return;
+
+      ref
+          .read(countdownProvider.notifier)
+          .startTracerouteCountdown(node.nodeNum);
+
+      if (context.mounted) {
+        showSuccessSnackBar(
+          context,
+          context.l10n.nodeDetailTracerouteSent(displayName),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        showErrorSnackBar(
+          context,
+          context.l10n.nodeDetailTracerouteError(e.toString()),
+        );
+      }
+    }
+  }
+
   void _openDM(MeshNode node) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -2465,7 +3198,7 @@ class _CachedPosition {
 Color _presenceColor(BuildContext context, PresenceConfidence confidence) {
   switch (confidence) {
     case PresenceConfidence.active:
-      return AppTheme.primaryPurple;
+      return AccentColors.green;
     case PresenceConfidence.fading:
       return AppTheme.warningYellow;
     case PresenceConfidence.stale:
@@ -2491,7 +3224,7 @@ class _NodeWithPosition {
 }
 
 /// Custom marker widget for nodes
-class _NodeMarker extends StatelessWidget {
+class _NodeMarker extends StatefulWidget {
   final MeshNode node;
   final PresenceConfidence presence;
   final bool isMyNode;
@@ -2507,29 +3240,59 @@ class _NodeMarker extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final baseColor = isMyNode
-        ? context.accentColor
-        : _presenceColor(context, presence);
-    final color = isStale ? baseColor.withValues(alpha: 0.5) : baseColor;
+  State<_NodeMarker> createState() => _NodeMarkerState();
+}
 
-    return AnimatedContainer(
+class _NodeMarkerState extends State<_NodeMarker>
+    with SingleTickerProviderStateMixin {
+  AnimationController? _pulseController;
+  Animation<double>? _pulseAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.isMyNode) {
+      _pulseController = AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 2000),
+      )..repeat();
+      _pulseAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(parent: _pulseController!, curve: Curves.easeOut),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _pulseController?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final baseColor = widget.isMyNode
+        ? context.accentColor
+        : _presenceColor(context, widget.presence);
+    final color = widget.isStale ? baseColor.withValues(alpha: 0.5) : baseColor;
+    final borderColor = widget.isSelected
+        ? Colors.white
+        : color.withValues(alpha: widget.isStale ? 0.6 : 0.9);
+
+    final marker = AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
-        color: color,
+        color: color.withValues(alpha: widget.isStale ? 0.3 : 0.7),
         shape: BoxShape.circle,
         border: Border.all(
-          color: isSelected ? Colors.white : color,
-          width: isSelected ? 3 : 2,
-          strokeAlign: isStale
-              ? BorderSide.strokeAlignOutside
-              : BorderSide.strokeAlignCenter,
+          color: borderColor,
+          width: widget.isSelected ? 3 : 2.5,
+          strokeAlign: BorderSide.strokeAlignOutside,
         ),
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: isStale ? 0.2 : 0.4),
-            blurRadius: isSelected ? 12 : 6,
-            spreadRadius: isSelected ? 2 : 0,
+            color: color.withValues(alpha: widget.isStale ? 0.2 : 0.4),
+            blurRadius: widget.isSelected ? 12 : 6,
+            spreadRadius: widget.isSelected ? 2 : 0,
           ),
         ],
       ),
@@ -2537,17 +3300,20 @@ class _NodeMarker extends StatelessWidget {
         alignment: Alignment.center,
         children: [
           Text(
-            (node.shortName?.isNotEmpty == true
-                ? node.shortName![0].toUpperCase()
-                : node.nodeNum.toRadixString(16).substring(0, 1).toUpperCase()),
+            (widget.node.shortName?.isNotEmpty == true
+                ? widget.node.shortName![0].toUpperCase()
+                : widget.node.nodeNum
+                      .toRadixString(16)
+                      .substring(0, 1)
+                      .toUpperCase()),
             style: TextStyle(
-              fontSize: isSelected ? 16 : 14,
+              fontSize: widget.isSelected ? 16 : 14,
               fontWeight: FontWeight.bold,
-              color: Colors.white.withValues(alpha: isStale ? 0.7 : 1.0),
+              color: Colors.white.withValues(alpha: widget.isStale ? 0.7 : 1.0),
             ),
           ),
           // Stale indicator (small question mark overlay)
-          if (isStale)
+          if (widget.isStale)
             Positioned(
               right: 0,
               bottom: 0,
@@ -2574,7 +3340,44 @@ class _NodeMarker extends StatelessWidget {
         ],
       ),
     );
+
+    if (!widget.isMyNode || _pulseAnimation == null) return marker;
+
+    return AnimatedBuilder(
+      animation: _pulseAnimation!,
+      builder: (context, child) {
+        final value = _pulseAnimation!.value;
+        return CustomPaint(
+          painter: _PulseRingPainter(color: color, progress: value),
+          child: child,
+        );
+      },
+      child: marker,
+    );
   }
+}
+
+class _PulseRingPainter extends CustomPainter {
+  final Color color;
+  final double progress;
+
+  _PulseRingPainter({required this.color, required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final maxRadius = size.width / 2 + 10;
+    final radius = size.width / 2 + (maxRadius - size.width / 2) * progress;
+    final paint = Paint()
+      ..color = color.withValues(alpha: 0.5 * (1.0 - progress))
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.5 * (1.0 - progress);
+    canvas.drawCircle(center, radius, paint);
+  }
+
+  @override
+  bool shouldRepaint(_PulseRingPainter oldDelegate) =>
+      oldDelegate.progress != progress;
 }
 
 /// Node list panel sliding from left
@@ -3106,6 +3909,8 @@ class _MeasurementCard extends StatefulWidget {
   final VoidCallback onExitMeasureMode;
   final VoidCallback? onSwap;
   final VoidCallback? onCopyCoordinates;
+  final bool hasTerrainSegments;
+  final TerrainLosResult? terrainResult;
 
   const _MeasurementCard({
     required this.start,
@@ -3116,6 +3921,8 @@ class _MeasurementCard extends StatefulWidget {
     required this.onShare,
     required this.onExitMeasureMode,
     this.onSwap,
+    this.hasTerrainSegments = false,
+    this.terrainResult,
     this.onCopyCoordinates,
   });
 
@@ -3210,6 +4017,24 @@ class _MeasurementCardState extends State<_MeasurementCard> {
             subtitle: context.l10n.mapLosAnalysisSubtitle,
             onTap: () => setState(() => _showLos = !_showLos),
           ),
+        BottomSheetAction(
+          icon: Icons.landscape,
+          label: context.l10n.mapTerrainProfile,
+          subtitle: context.l10n.mapTerrainProfileSubtitle,
+          onTap: () {
+            final capturedContext = context;
+            Navigator.of(capturedContext).push(
+              MaterialPageRoute<void>(
+                builder: (_) => TerrainProfileScreen(
+                  start: widget.start,
+                  end: widget.end,
+                  nodeA: widget.nodeA,
+                  nodeB: widget.nodeB,
+                ),
+              ),
+            );
+          },
+        ),
         BottomSheetAction(
           icon: Icons.share,
           label: context.l10n.mapShareMeasurement,
@@ -3435,6 +4260,11 @@ class _MeasurementCardState extends State<_MeasurementCard> {
               context.l10n.mapLongPressForActions,
               style: TextStyle(fontSize: 10, color: context.textTertiary),
             ),
+            // Terrain LOS color legend
+            if (widget.hasTerrainSegments) ...[
+              const SizedBox(height: AppTheme.spacing8),
+              _LosColorLegend(),
+            ],
             // LOS result panel (toggled from actions sheet)
             if (_showLos && hasElevation) ...[
               const SizedBox(height: AppTheme.spacing8),
@@ -3442,6 +4272,7 @@ class _MeasurementCardState extends State<_MeasurementCard> {
                 altA: altA,
                 altB: altB,
                 distanceMeters: distanceM,
+                terrainResult: widget.terrainResult,
               ),
             ],
           ],
@@ -3451,29 +4282,77 @@ class _MeasurementCardState extends State<_MeasurementCard> {
   }
 }
 
+/// Compact inline legend for terrain-aware LOS measurement line colors.
+class _LosColorLegend extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _legendDot(AppTheme.successGreen),
+        const SizedBox(width: AppTheme.spacing4),
+        Text(
+          context.l10n.mapLosLegendClear,
+          style: TextStyle(fontSize: 10, color: context.textTertiary),
+        ),
+        const SizedBox(width: AppTheme.spacing12),
+        _legendDot(AppTheme.warningYellow),
+        const SizedBox(width: AppTheme.spacing4),
+        Text(
+          context.l10n.mapLosLegendMarginal,
+          style: TextStyle(fontSize: 10, color: context.textTertiary),
+        ),
+        const SizedBox(width: AppTheme.spacing12),
+        _legendDot(AppTheme.errorRed),
+        const SizedBox(width: AppTheme.spacing4),
+        Text(
+          context.l10n.mapLosLegendObstructed,
+          style: TextStyle(fontSize: 10, color: context.textTertiary),
+        ),
+      ],
+    );
+  }
+
+  static Widget _legendDot(Color color) {
+    return Container(
+      width: 8,
+      height: 8,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+    );
+  }
+}
+
 /// Compact LOS result panel shown inside _MeasurementCard.
 class _LosResultPanel extends StatelessWidget {
   final int altA;
   final int altB;
   final double distanceMeters;
+  final TerrainLosResult? terrainResult;
 
   const _LosResultPanel({
     required this.altA,
     required this.altB,
     required this.distanceMeters,
+    this.terrainResult,
   });
 
   @override
   Widget build(BuildContext context) {
-    final result = evaluateLos(
+    final basicResult = evaluateLos(
       altA: altA,
       altB: altB,
       distanceMeters: distanceMeters,
     );
 
+    // Use terrain-based verdict when terrain data is available and has
+    // altitude information; otherwise fall back to earth-bulge-only.
+    final terrain = terrainResult;
+    final useTerrain = terrain != null && terrain.hasAltitudeData;
+    final verdict = useTerrain ? terrain.verdict : basicResult.verdict;
+
     Color verdictColor;
     IconData verdictIcon;
-    switch (result.verdict) {
+    switch (verdict) {
       case LosVerdict.clear:
         verdictColor = AppTheme.successGreen;
         verdictIcon = Icons.check_circle;
@@ -3487,6 +4366,31 @@ class _LosResultPanel extends StatelessWidget {
         verdictColor = context.textTertiary;
         verdictIcon = Icons.help_outline;
     }
+
+    // Explanation text: terrain-aware when available, earth-bulge-only otherwise
+    final explanationText = useTerrain
+        ? switch (verdict) {
+            LosVerdict.unknown => context.l10n.losExplanationNoAltitude,
+            LosVerdict.obstructed =>
+              context.l10n.terrainLosExplanationObstructed(
+                (-terrain.worstClearanceMeters!).toStringAsFixed(0),
+              ),
+            LosVerdict.marginal => context.l10n.terrainLosExplanationMarginal,
+            LosVerdict.clear => context.l10n.terrainLosExplanationClear,
+          }
+        : switch (basicResult.verdict) {
+            LosVerdict.unknown => context.l10n.losExplanationNoAltitude,
+            LosVerdict.obstructed => context.l10n.losExplanationObstructed(
+              (-basicResult.actualClearanceMeters).toStringAsFixed(0),
+            ),
+            LosVerdict.clear => context.l10n.losExplanationClear(
+              basicResult.actualClearanceMeters.toStringAsFixed(0),
+            ),
+            LosVerdict.marginal => context.l10n.losExplanationMarginal(
+              basicResult.actualClearanceMeters.toStringAsFixed(0),
+              basicResult.requiredClearanceMeters.toStringAsFixed(0),
+            ),
+          };
 
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing8),
@@ -3503,7 +4407,12 @@ class _LosResultPanel extends StatelessWidget {
               Icon(verdictIcon, size: 16, color: verdictColor),
               const SizedBox(width: AppTheme.spacing4),
               Text(
-                context.l10n.mapLosVerdict(result.verdict.label),
+                context.l10n.mapLosVerdict(switch (verdict) {
+                  LosVerdict.clear => context.l10n.losVerdictClear,
+                  LosVerdict.marginal => context.l10n.losVerdictMarginal,
+                  LosVerdict.obstructed => context.l10n.losVerdictObstructed,
+                  LosVerdict.unknown => context.l10n.losVerdictUnknown,
+                }),
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -3513,8 +4422,8 @@ class _LosResultPanel extends StatelessWidget {
               const Spacer(),
               Text(
                 context.l10n.mapLosBulgeAndFresnel(
-                  result.earthBulgeMeters.toStringAsFixed(1),
-                  result.fresnelRadiusMeters.toStringAsFixed(1),
+                  basicResult.earthBulgeMeters.toStringAsFixed(1),
+                  basicResult.fresnelRadiusMeters.toStringAsFixed(1),
                 ),
                 style: TextStyle(fontSize: 11, color: context.textTertiary),
               ),
@@ -3522,7 +4431,7 @@ class _LosResultPanel extends StatelessWidget {
           ),
           const SizedBox(height: AppTheme.spacing4),
           Text(
-            result.explanation,
+            explanationText,
             style: TextStyle(fontSize: 11, color: context.textSecondary),
           ),
         ],

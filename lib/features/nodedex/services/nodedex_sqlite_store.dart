@@ -381,6 +381,8 @@ class NodeDexSqliteStore {
         NodeDexTables.colEncLat: enc.latitude,
         NodeDexTables.colEncLon: enc.longitude,
         NodeDexTables.colEncCreatedAtMs: now,
+        NodeDexTables.colEncObservedOnPreset: enc.observedOnPreset,
+        NodeDexTables.colEncFreqOffset: enc.frequencyOffset,
       });
     }
 
@@ -466,6 +468,9 @@ class NodeDexSqliteStore {
       NodeDexTables.colSipIdentityState: entry.sipIdentityState?.name,
       NodeDexTables.colSipDisplayName: entry.sipDisplayName,
       NodeDexTables.colMrrpServiceIds: entry.mrrpServiceIds,
+      NodeDexTables.colLastObservedOnPreset: entry.lastObservedOnPreset,
+      NodeDexTables.colLastObservedFreqOffset:
+          entry.lastObservedFrequencyOffset,
     };
   }
 
@@ -586,6 +591,9 @@ class NodeDexSqliteStore {
       sipIdentityState: sipState,
       sipDisplayName: row[NodeDexTables.colSipDisplayName] as String?,
       mrrpServiceIds: row[NodeDexTables.colMrrpServiceIds] as String?,
+      lastObservedOnPreset: row[NodeDexTables.colLastObservedOnPreset] as int?,
+      lastObservedFrequencyOffset:
+          (row[NodeDexTables.colLastObservedFreqOffset] as num?)?.toDouble(),
     );
   }
 
@@ -599,6 +607,9 @@ class NodeDexSqliteStore {
       rssi: (row[NodeDexTables.colEncRssi] as num?)?.toInt(),
       latitude: (row[NodeDexTables.colEncLat] as num?)?.toDouble(),
       longitude: (row[NodeDexTables.colEncLon] as num?)?.toDouble(),
+      observedOnPreset: row[NodeDexTables.colEncObservedOnPreset] as int?,
+      frequencyOffset: (row[NodeDexTables.colEncFreqOffset] as num?)
+          ?.toDouble(),
     );
   }
 
@@ -920,6 +931,12 @@ class NodeDexSqliteStore {
     required String toState,
     required DateTime timestamp,
   }) async {
+    if (!isReady) {
+      AppLogging.storage(
+        'NodeDexSqliteStore: insertPresenceTransition skipped — database not open',
+      );
+      return;
+    }
     await _db.insert(NodeDexTables.presenceTransitions, {
       NodeDexTables.colPtNodeNum: nodeNum,
       NodeDexTables.colPtFromState: fromState,

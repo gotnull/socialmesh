@@ -38,6 +38,7 @@ import '../../../utils/location_privacy.dart';
 
 import '../../../services/signal_service.dart';
 import '../../settings/account_subscriptions_screen.dart';
+import '../../settings/settings_screen.dart';
 import '../../settings/signal_settings_screen.dart';
 import '../../../core/widgets/legal_document_sheet.dart';
 import '../../../utils/snackbar.dart';
@@ -1271,8 +1272,17 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
         kDefaultSignalLocationRadiusMeters;
     final canUseCloud = connectivity.canUseCloud && !meshOnlyDebug;
     final isDeviceConnected = connectivity.isBleConnected;
-    // Location is "acquiring" if device is connected but no position yet
-    final isAcquiringLocation = isDeviceConnected && !hasNodeLocation;
+    // Location is "acquiring" only if a position source exists:
+    // either the device has hardware GPS enabled, or the user has
+    // opted in to sharing the phone's GPS with the mesh. If neither
+    // is true, no position will ever arrive — don't spin forever.
+    final protocol = ref.watch(protocolServiceProvider);
+    final posConfig = protocol.currentPositionConfig;
+    final deviceGpsEnabled = posConfig?.gpsEnabled ?? false;
+    final phoneLocationEnabled = settings?.providePhoneLocation ?? false;
+    final canAcquirePosition = deviceGpsEnabled || phoneLocationEnabled;
+    final isAcquiringLocation =
+        isDeviceConnected && !hasNodeLocation && canAcquirePosition;
     final canSubmit =
         _hasValidContent && isDeviceConnected && !_isValidatingImage;
     final submitBlockedReason = _submitBlockedReason(isDeviceConnected);
@@ -1559,12 +1569,38 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                                                     !isAcquiringLocation
                                                 ? () {
                                                     HapticFeedback.lightImpact();
-                                                    showInfoSnackBar(
-                                                      context,
-                                                      context
-                                                          .l10n
-                                                          .signalConnectToAddLocation,
-                                                    );
+                                                    if (isDeviceConnected) {
+                                                      showActionSnackBar(
+                                                        context,
+                                                        context
+                                                            .l10n
+                                                            .signalNoDeviceLocation,
+                                                        actionLabel: context
+                                                            .l10n
+                                                            .actionView,
+                                                        onAction: () =>
+                                                            Navigator.of(
+                                                              context,
+                                                            ).push(
+                                                              MaterialPageRoute(
+                                                                builder: (_) =>
+                                                                    const SettingsScreen(
+                                                                      initialSearchQuery:
+                                                                          'phone location',
+                                                                    ),
+                                                              ),
+                                                            ),
+                                                        type: SnackBarType
+                                                            .warning,
+                                                      );
+                                                    } else {
+                                                      showInfoSnackBar(
+                                                        context,
+                                                        context
+                                                            .l10n
+                                                            .signalConnectToAddLocation,
+                                                      );
+                                                    }
                                                   }
                                                 : null,
                                           ),

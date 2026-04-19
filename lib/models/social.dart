@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../utils/text_sanitizer.dart';
 import 'user_profile.dart';
 
 /// Post visibility options
@@ -391,7 +392,7 @@ class Post {
     return Post(
       id: doc.id,
       authorId: data['authorId'] as String,
-      content: data['content'] as String? ?? '',
+      content: sanitizeExternalText(data['content'] as String? ?? ''),
       mediaUrls:
           (data['mediaUrls'] as List<dynamic>?)
               ?.map((e) => e as String)
@@ -744,7 +745,7 @@ class Comment {
       postId: data['postId'] as String,
       authorId: data['authorId'] as String,
       parentId: data['parentId'] as String?,
-      content: data['content'] as String,
+      content: sanitizeExternalText(data['content'] as String),
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       replyCount: data['replyCount'] as int? ?? 0,
       likeCount: data['likeCount'] as int? ?? 0,

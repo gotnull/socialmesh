@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/logging.dart';
 import '../../core/transport.dart';
 import '../../models/mesh_models.dart';
@@ -23,6 +24,7 @@ import 'admin_ack_tracker.dart';
 import 'admin_target.dart';
 import 'mesh_packet_builder.dart';
 import 'packet_framer.dart';
+import 'text_message_payload_budget.dart';
 import 'socialmesh/sm_capability_store.dart';
 import 'socialmesh/sm_codec.dart';
 import 'socialmesh/sm_constants.dart';
@@ -33,18 +35,24 @@ import 'socialmesh/sm_metrics.dart';
 import 'socialmesh/sm_packet_router.dart';
 import 'socialmesh/sm_presence.dart';
 import 'socialmesh/sm_signal.dart';
+import 'sip/mrrp_codec.dart';
 import 'sip/mrrp_engine.dart';
 import 'sip/sip_codec.dart';
+import 'sip/sip_constants.dart';
 import 'sip/sip_counters.dart';
 import 'sip/sip_discovery.dart';
 import 'sip/sip_dm.dart';
 import 'sip/sip_frame.dart';
 import 'sip/sip_handshake.dart';
 import 'sip/sip_identity.dart';
+import 'sip/sip_rate_limiter.dart';
 import 'sip/sip_types.dart';
+import 'overlay/overlay_link_codec.dart';
 import '../mesh_packet_dedupe_store.dart';
 import '../mesh_health/mesh_health_models.dart';
 import '../notifications/notification_service.dart';
+import '../security/stl_envelope.dart';
+import '../security/stl_middleware.dart';
 import '../../utils/text_sanitizer.dart';
 import '../../models/presence_confidence.dart';
 import '../../features/nodes/node_display_name_resolver.dart';
@@ -103,7 +111,9 @@ class MeshSignalPacket {
     final json = jsonDecode(jsonStr) as Map<String, dynamic>;
 
     // Support both compressed and full keys
-    final content = json['c'] as String? ?? json['content'] as String? ?? '';
+    final content = sanitizeExternalText(
+      json['c'] as String? ?? json['content'] as String? ?? '',
+    );
     final ttl = json['t'] as int? ?? json['ttl'] as int? ?? 60;
     final lat =
         (json['la'] as num?)?.toDouble() ?? (json['lat'] as num?)?.toDouble();
@@ -193,7 +203,7 @@ class DetectionSensorEvent {
     int senderNodeId,
     List<int> payload,
   ) {
-    final text = utf8.decode(payload);
+    final text = sanitizeExternalText(utf8.decode(payload));
     // Detection sensor format is typically "SensorName: Detected" or "SensorName: Clear"
     final parts = text.split(':');
     final sensorName = parts.isNotEmpty ? parts[0].trim() : 'Unknown Sensor';
@@ -224,10 +234,14 @@ class SmFileTransferEvent {
   final Object packet;
   final int senderNodeNum;
 
+  /// Protocol version from the wire header (bits 7-4). Defaults to 0.
+  final int version;
+
   const SmFileTransferEvent({
     required this.type,
     required this.packet,
     required this.senderNodeNum,
+    this.version = 0,
   });
 }
 
@@ -313,7 +327,7 @@ class _AdminSession {
 /// Protocol service for handling Meshtastic protocol
 class ProtocolService {
   final DeviceTransport _transport;
-  final PacketFramer _framer;
+  late final PacketFramer _framer;
 
   final StreamController<Message> _messageController;
   final StreamController<MeshNode> _nodeController;
@@ -370,12 +384,65 @@ class ProtocolService {
   final StreamController<DetectionSensorEvent> _detectionSensorEventController;
   final StreamController<TraceRouteLog> _traceRouteLogController;
   final StreamController<MeshTelemetry> _meshTelemetryController;
+  final StreamController<pb.MqttClientProxyMessage>
+  _mqttClientProxyMessageController;
+
+  /// Emitted when a config or admin message is sent to the **local** node
+  /// (not a remote target) that is expected to trigger a firmware reboot.
+  /// Consumers (e.g. the reconnect flow) use this to enter reboot
+  /// recovery mode and extend patience before pairing invalidation.
+  final StreamController<void> _localConfigWriteController;
 
   StreamSubscription<List<int>>? _dataSubscription;
   StreamSubscription<DeviceConnectionState>? _transportStateSubscription;
   Completer<void>? _configCompleter;
   Timer? _rssiTimer;
   bool _pollingConfig = false;
+
+  // --- Phased connect handshake ---
+  //
+  // The firmware replays packets that arrived while the phone app was
+  // disconnected from its internal `phoneQueue` — but only in response to a
+  // second wantConfigId following the initial one. Mirrors the two-phase
+  // `sendWantConfig` / `sendWantDatabase` sequence the official Meshtastic
+  // iOS app uses (NONCE_ONLY_CONFIG = 69420 then NONCE_ONLY_DB = 69421).
+  //
+  // See meshtastic-ios/Meshtastic/Accessory/Accessory Manager/
+  //   AccessoryManager.swift (lines 117–118, 193–252, 707–737) and
+  //   AccessoryManager+Connect.swift (Steps 3 and 5).
+  static const int _nonceInitialConfig = 69420;
+  static const int _nonceQueueDrain = 69421;
+  _HandshakePhase _handshakePhase = _HandshakePhase.idle;
+
+  /// Completes when the phase-2 `configCompleteId(69421)` arrives. The
+  /// queue-drain retry loop in `_requestQueueDrain` awaits this to decide
+  /// whether to re-send. Fresh per attempt, recreated by
+  /// `_requestQueueDrain` on every retry.
+  Completer<void>? _queueDrainCompleter;
+
+  /// Timestamp of the last data received from the transport layer.
+  ///
+  /// Updated inside [_handleDataAsync] every time the transport delivers
+  /// bytes. The RSSI polling timer checks this value to detect a stalled
+  /// notification path — if connected and configured but no data has arrived
+  /// for [_dataStaleThreshold], the protocol service asks the transport to
+  /// refresh its BLE notification subscriptions. If data flow still doesn't
+  /// resume after an additional [_dataStaleDisconnectGrace], it triggers a
+  /// disconnect so the auto-reconnect path can establish a fresh session.
+  DateTime? _lastDataReceivedAt;
+
+  /// Whether a notification refresh has already been requested in the
+  /// current stale-data episode to avoid redundant refresh calls.
+  bool _notificationRefreshRequested = false;
+
+  /// Duration after which the absence of transport data is considered stale.
+  /// Meshtastic radios emit telemetry/position every 15–900 s depending on
+  /// config. 3 minutes covers the common default cadences with margin.
+  static const Duration _dataStaleThreshold = Duration(minutes: 3);
+
+  /// Additional grace period after a notification refresh before the service
+  /// decides the receive path is truly broken and forces a disconnect.
+  static const Duration _dataStaleDisconnectGrace = Duration(seconds: 30);
 
   int? _myNodeNum;
   int _lastRssi = -90;
@@ -410,6 +477,9 @@ class ProtocolService {
   bool _configurationComplete = false;
   final MeshPacketDedupeStore _dedupeStore;
 
+  /// STL middleware for verified inbound unwrapping.
+  final StlMiddleware _stlMiddleware = StlMiddleware();
+
   // --- Position rate limiter ---
   // Prevents any caller from spamming POSITION_APP packets regardless of
   // how they reach sendPosition() / sendPositionToNode(). This is the
@@ -428,6 +498,13 @@ class ProtocolService {
   onIdentityUpdate;
 
   static const Duration _messagePacketTtl = Duration(minutes: 120);
+
+  /// Minimum plausible Unix timestamp for message timestamps.
+  /// 2020-01-01 00:00:00 UTC — any rxTime before this is treated as invalid.
+  static const int _minPlausibleEpoch = 1577836800;
+
+  /// Maximum clock drift tolerance: 1 day into the future.
+  static const int _maxFutureSlack = 86400;
 
   // Track pending messages by packet ID for delivery status updates
   final Map<int, String> _pendingMessages = {}; // packetId -> messageId
@@ -452,26 +529,143 @@ class ProtocolService {
   SipDmManager? _sipDm;
   SipCounters? _sipCounters;
 
+  /// Shared SIP rate limiter. When attached, HS_HELLO retransmits (and
+  /// any future handshake/identity sends routed through this service)
+  /// will consult + record against the byte budget rather than bypassing
+  /// it entirely.
+  SipRateLimiter? _sipRateLimiter;
+
   // --- MRRP protocol component ---
   MrrpEngine? _mrrpEngine;
+
+  // --- Startup buffers ---
+  //
+  // SIP frames and MRRP frames that arrive before the respective runtime
+  // components are attached are held here and replayed once attachment
+  // occurs. Without this buffer, every packet that arrives during the
+  // startup window (between BLE connection and the first UI screen that
+  // watches sipDiscoveryProvider / mrrpEngineProvider) is permanently
+  // lost — including SERVICE_ADVERT frames that populate Mesh Explorer.
+  //
+  // Both buffers are bounded to prevent unbounded memory growth if
+  // attachment never happens (e.g. SIP is later disabled).
+  static const int _kSipStartupBufferMax = 16;
+  final List<({pb.MeshPacket packet, Uint8List payload})> _sipStartupBuffer =
+      [];
+
+  static const int _kMrrpStartupBufferMax = 16;
+  final List<({int senderNodeId, SipFrame frame})> _mrrpStartupBuffer = [];
+
+  // Overlay v0.2 ingress hook. `null` when the overlay attachment
+  // provider has not attached yet, or when OVERLAY_LINK_ENABLED is off
+  // (the provider simply does not call [attachOverlayInbound]). Frames
+  // that sniff as v0.2 link frames are buffered here while the hook
+  // is unset so they survive the provider-init window, mirroring the
+  // MRRP startup-buffer pattern.
+  static const int _kOverlayStartupBufferMax = 16;
+  final List<({int senderNodeId, Uint8List mrrpPayload})>
+  _overlayStartupBuffer = [];
+  Future<void> Function(int senderNodeId, Uint8List mrrpPayload)?
+  _overlayInbound;
+
+  /// Cumulative count of overlay v0.2 frames discarded because the
+  /// startup buffer was full at the time of arrival. Observability
+  /// hook for "overlay traffic vanished mysteriously" diagnostics
+  /// (P2 caveat). Logged at rate-limited intervals — never per-frame.
+  int _overlayStartupBufferDrops = 0;
+
+  /// Next drop count at which an aggregate log line will fire.
+  /// Doubles each time to keep logs bounded even under sustained loss.
+  int _overlayStartupBufferNextLogAt = 1;
+
+  /// Diagnostic: total overlay v0.2 frames discarded due to a full
+  /// startup buffer since the [ProtocolService] was created.
+  int get overlayStartupBufferDrops => _overlayStartupBufferDrops;
 
   /// Attach a SipDiscovery instance so inbound SIP packets can be routed.
   ///
   /// Called from the provider layer once the discovery engine is created.
+  /// Any frames buffered during the pre-attachment startup window are
+  /// drained in a microtask after this method returns. The drain is
+  /// deferred because it may trigger MRRP callbacks that mutate other
+  /// Riverpod providers — Riverpod forbids cross-provider state changes
+  /// during a provider's synchronous initialization.
   void attachSipDiscovery(SipDiscovery? discovery) {
     _sipDiscovery = discovery;
     if (discovery != null) {
       AppLogging.sip('ProtocolService: SipDiscovery attached');
+      Future.microtask(_drainSipStartupBuffer);
     }
+  }
+
+  /// Clear both startup buffers, discarding any undelivered frames.
+  ///
+  /// Called by [start] to ensure stale frames from a prior BLE session cannot
+  /// be replayed to a new session's [SipDiscovery] or [MrrpEngine].
+  void _clearStartupBuffers() {
+    if (_sipStartupBuffer.isNotEmpty || _mrrpStartupBuffer.isNotEmpty) {
+      AppLogging.sip(
+        'SIP_STARTUP: discarding ${_sipStartupBuffer.length} SIP + '
+        '${_mrrpStartupBuffer.length} MRRP buffered frames (new session)',
+      );
+    }
+    _sipStartupBuffer.clear();
+    _mrrpStartupBuffer.clear();
+    _overlayStartupBuffer.clear();
+    _overlayStartupBufferDrops = 0;
+    _overlayStartupBufferNextLogAt = 1;
+  }
+
+  /// Drain frames buffered before [SipDiscovery] was attached.
+  void _drainSipStartupBuffer() {
+    if (_sipStartupBuffer.isEmpty) return;
+    final buffered = List.of(_sipStartupBuffer);
+    _sipStartupBuffer.clear();
+    AppLogging.sip(
+      'SIP_STARTUP: draining ${buffered.length} buffered early frame(s)',
+    );
+    for (final item in buffered) {
+      _handleSipPacket(item.packet, item.payload);
+    }
+    AppLogging.sip('SIP_STARTUP: drain complete');
   }
 
   /// Attach a SipHandshakeManager for inbound handshake frames.
   void attachSipHandshake(SipHandshakeManager? handshake) {
     _sipHandshake = handshake;
     if (handshake != null) {
+      handshake.onHelloRetransmit = (peerNodeId, frame) {
+        final encoded = SipCodec.encode(frame);
+        if (encoded == null) return;
+        // Route through the gated path so retransmits respect the SIP
+        // byte budget instead of bypassing it.
+        sendSipGated(encoded, SipMessageType.hsHello);
+      };
       AppLogging.sip('ProtocolService: SipHandshakeManager attached');
     }
   }
+
+  /// Attach the shared SIP rate limiter. Gates HS_HELLO retransmits
+  /// (and future handshake send paths) against the byte budget.
+  /// Pass `null` to detach.
+  void attachSipRateLimiter(SipRateLimiter? limiter) {
+    _sipRateLimiter = limiter;
+    if (limiter != null) {
+      AppLogging.sip('ProtocolService: SipRateLimiter attached');
+    }
+  }
+
+  /// Callback fired exactly once per successful handshake completion,
+  /// **after** the DM session is created (or deduped).
+  ///
+  /// The provider layer wires this to auto-open an overlay v0.2 link in
+  /// the background when both peers advertise overlay capability. Kept
+  /// as a narrow void callback — protocol_service must not depend on
+  /// the overlay engine directly.
+  ///
+  /// Invoked fire-and-forget. Exceptions thrown by the callback are
+  /// logged and swallowed — they MUST NOT break the SIP/DM ready path.
+  void Function(int peerNodeId)? onSipHandshakeComplete;
 
   /// Attach a SipIdentityHandler for inbound identity frames.
   void attachSipIdentity(SipIdentityHandler? identity) {
@@ -498,12 +692,84 @@ class ProtocolService {
   }
 
   /// Attach an MrrpEngine for inbound MRRP frames.
+  ///
+  /// [_mrrpEngine] is assigned synchronously so any frames arriving after
+  /// this call are handled directly. Buffered frames from the pre-attachment
+  /// window are drained in a microtask — same pattern as [attachSipDiscovery]
+  /// — because the drain triggers counter / advert-cache updates that mutate
+  /// other Riverpod providers. Riverpod forbids cross-provider state changes
+  /// during a provider's synchronous initialization.
+  ///
+  /// The critical start/attach ordering contract is preserved: [engine.start()]
+  /// must still be called before this method. The engine reference is set
+  /// synchronously, so the microtask-deferred drain processes frames on an
+  /// already-running engine. Any new frames arriving between assignment and
+  /// drain execute through [_handleMrrpPacket] directly (no buffer).
   void attachMrrpEngine(MrrpEngine? engine) {
     _mrrpEngine = engine;
     if (engine != null) {
       AppLogging.mrrp('ProtocolService: MrrpEngine attached');
+      Future.microtask(_drainMrrpStartupBuffer);
     }
   }
+
+  /// Drain MRRP frames buffered before [MrrpEngine] was attached.
+  void _drainMrrpStartupBuffer() {
+    if (_mrrpStartupBuffer.isEmpty) return;
+    final buffered = List.of(_mrrpStartupBuffer);
+    _mrrpStartupBuffer.clear();
+    AppLogging.mrrp(
+      'MRRP_STARTUP: draining ${buffered.length} buffered mrrpData frame(s)',
+    );
+    for (final item in buffered) {
+      _handleMrrpPacket(item.senderNodeId, item.frame);
+    }
+    AppLogging.mrrp('MRRP_STARTUP: drain complete');
+  }
+
+  /// Attach a handler for inbound MRRP v0.2 overlay link frames.
+  ///
+  /// The handler is the single authoritative ingress path for the
+  /// overlay. Only one handler may be attached at a time; passing
+  /// `null` detaches. The provider layer (`overlayAttachmentProvider`)
+  /// calls `attachOverlayInbound(null)` from `ref.onDispose` to null
+  /// the reference on every teardown — avoiding the class of bugs
+  /// described in the "no duplicate subscribers" P1 locked rule.
+  ///
+  /// When [handler] is attached and the startup buffer contains
+  /// frames that arrived before attach, they are drained in a
+  /// microtask to avoid cross-provider mutation during synchronous
+  /// provider init — same contract as [attachMrrpEngine].
+  void attachOverlayInbound(
+    Future<void> Function(int senderNodeId, Uint8List mrrpPayload)? handler,
+  ) {
+    _overlayInbound = handler;
+    if (handler != null) {
+      AppLogging.overlay('ProtocolService: overlay ingress attached');
+      Future.microtask(_drainOverlayStartupBuffer);
+    } else {
+      AppLogging.overlay('ProtocolService: overlay ingress detached');
+    }
+  }
+
+  /// Drain overlay frames buffered before [attachOverlayInbound].
+  Future<void> _drainOverlayStartupBuffer() async {
+    if (_overlayStartupBuffer.isEmpty) return;
+    final handler = _overlayInbound;
+    if (handler == null) return;
+    final buffered = List.of(_overlayStartupBuffer);
+    _overlayStartupBuffer.clear();
+    AppLogging.overlay(
+      'OVERLAY_STARTUP: draining ${buffered.length} buffered frame(s)',
+    );
+    for (final item in buffered) {
+      await handler(item.senderNodeId, item.mrrpPayload);
+    }
+    AppLogging.overlay('OVERLAY_STARTUP: drain complete');
+  }
+
+  /// Diagnostic: buffered overlay frames awaiting attachment.
+  int get overlayStartupBufferLength => _overlayStartupBuffer.length;
 
   /// Callback invoked when an identity claim is verified, for NodeDex bridging.
   ///
@@ -536,8 +802,7 @@ class ProtocolService {
     MeshPacketDedupeStore? dedupeStore,
     SmCapabilityStore? smCapabilityStore,
     SmFeatureFlag? smFeatureFlag,
-  }) : _framer = PacketFramer(),
-       _messageController = StreamController<Message>.broadcast(),
+  }) : _messageController = StreamController<Message>.broadcast(),
        _nodeController = StreamController<MeshNode>.broadcast(),
        _channelController = StreamController<ChannelConfig>.broadcast(),
        _errorController = StreamController<DeviceError>.broadcast(),
@@ -615,12 +880,24 @@ class ProtocolService {
            StreamController<DetectionSensorEvent>.broadcast(),
        _traceRouteLogController = StreamController<TraceRouteLog>.broadcast(),
        _meshTelemetryController = StreamController<MeshTelemetry>.broadcast(),
+       _mqttClientProxyMessageController =
+           StreamController<pb.MqttClientProxyMessage>.broadcast(),
+       _localConfigWriteController = StreamController<void>.broadcast(),
        _dedupeStore = dedupeStore ?? MeshPacketDedupeStore(),
        _smCapabilityStore = smCapabilityStore ?? SmCapabilityStore(),
        _smFeatureFlag = smFeatureFlag ?? SmFeatureFlag(),
        _smMetrics = SmMetrics(),
        _smRateLimiter = SmRateLimiter(),
-       _smIdentityRateLimiter = SmIdentityRateLimiter();
+       _smIdentityRateLimiter = SmIdentityRateLimiter() {
+    _framer = PacketFramer(
+      onAbuseDetected: () {
+        AppLogging.protocol(
+          'SECURITY: Framer abuse detected - disconnecting transport',
+        );
+        _transport.disconnect();
+      },
+    );
+  }
 
   /// Set the BLE device name for hardware model inference
   void setDeviceName(String? name) {
@@ -658,6 +935,10 @@ class ProtocolService {
   /// size, etc.) needed by [MeshHealthAnalyzer].
   Stream<MeshTelemetry> get meshTelemetryStream =>
       _meshTelemetryController.stream;
+
+  /// Emitted when a config write to the local node completes. The
+  /// reconnect flow listens to this to enter reboot recovery mode.
+  Stream<void> get localConfigWriteStream => _localConfigWriteController.stream;
 
   /// Stream of received messages
   Stream<Message> get messageStream => _messageController.stream;
@@ -761,6 +1042,35 @@ class ProtocolService {
   /// Current MQTT config
   module_pb.ModuleConfig_MQTTConfig? get currentMqttConfig =>
       _currentMqttConfig;
+
+  /// Stream of MQTT client proxy messages from the device.
+  ///
+  /// When the device has `proxyToClientEnabled = true`, it sends
+  /// outbound MQTT messages via this stream for the phone to publish
+  /// to the broker.
+  Stream<pb.MqttClientProxyMessage> get mqttClientProxyMessageStream =>
+      _mqttClientProxyMessageController.stream;
+
+  /// Sends an MQTT client proxy message to the device.
+  ///
+  /// This delivers an inbound MQTT message from the broker to the
+  /// device via `ToRadio.mqttClientProxyMessage`.
+  Future<void> sendMqttClientProxyMessage(
+    pb.MqttClientProxyMessage proxyMsg,
+  ) async {
+    if (_myNodeNum == null || !_transport.isConnected) return;
+    final toRadio = pb.ToRadio()..mqttClientProxyMessage = proxyMsg;
+    try {
+      await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+      AppLogging.mqttProxy(
+        'Sent proxy message to device (topic: ${proxyMsg.topic})',
+      );
+    } catch (e) {
+      AppLogging.mqttProxy(
+        'Failed to send proxy message (device may have disconnected): $e',
+      );
+    }
+  }
 
   /// Stream of telemetry config updates
   Stream<module_pb.ModuleConfig_TelemetryConfig> get telemetryConfigStream =>
@@ -922,6 +1232,15 @@ class ProtocolService {
     _nodes.clear();
     _myNodeNum = null;
     _configurationComplete = false;
+    _handshakePhase = _HandshakePhase.idle;
+    if (_queueDrainCompleter != null && !_queueDrainCompleter!.isCompleted) {
+      _queueDrainCompleter!.completeError('Connection reset');
+    }
+    _queueDrainCompleter = null;
+    // Discard any SIP/MRRP frames buffered from a prior BLE session.
+    // Without this, frames from Device A remain in the buffer and are
+    // replayed to Device B's SipDiscovery / MrrpEngine after reconnect.
+    _clearStartupBuffers();
 
     _configCompleter = Completer<void>();
     var waitingForConfig = false; // Track if we're past initial setup
@@ -957,6 +1276,12 @@ class ProtocolService {
 
       // Short delay to let notifications settle
       await Future.delayed(const Duration(milliseconds: 200));
+
+      // Send heartbeat to wake the device before requesting config.
+      // Follows the standard Meshtastic connection sequence (heartbeat first,
+      // then wantConfigId). Devices in low-power sleep (e.g. Heltec
+      // MeshPocket) may not process the first wantConfigId without this.
+      await _sendHeartbeat();
 
       // NOW request configuration - device will respond via notifications
       await _requestConfiguration();
@@ -1011,13 +1336,75 @@ class ProtocolService {
   void _startRssiPolling() {
     _rssiTimer?.cancel();
     _rssiPaused = false;
+    _lastDataReceivedAt = DateTime.now();
+    _notificationRefreshRequested = false;
     _rssiTimer = Timer.periodic(const Duration(seconds: 5), (_) async {
       final rssi = await _transport.readRssi();
       if (rssi != null && rssi != _lastRssi) {
         _lastRssi = rssi;
         _rssiController.add(rssi);
       }
+
+      // --- Data-flow health check ---
+      // Detect a stalled BLE notification path: the transport reports
+      // connected but no data has arrived for longer than expected.
+      _checkDataFlowHealth();
     });
+  }
+
+  /// Evaluate whether the receive path is still alive.
+  ///
+  /// Called from the RSSI polling timer every 5 seconds.  When data has
+  /// not been received for [_dataStaleThreshold] the transport is asked
+  /// to refresh its BLE notification subscription (iOS/Android can drop
+  /// these silently).  If data still does not arrive within an
+  /// additional [_dataStaleDisconnectGrace], a disconnect is forced so
+  /// the auto-reconnect path can establish a fresh session.
+  void _checkDataFlowHealth() {
+    if (!_configurationComplete || !_transport.isConnected) return;
+    if (_rssiPaused) return; // Don't fire while app is backgrounded
+
+    final lastData = _lastDataReceivedAt;
+    if (lastData == null) return;
+
+    final staleness = DateTime.now().difference(lastData);
+
+    if (staleness > _dataStaleThreshold) {
+      if (!_notificationRefreshRequested) {
+        // First escalation: refresh BLE notification subscription.
+        _notificationRefreshRequested = true;
+        AppLogging.protocol(
+          '⚠️ DATA_HEALTH: No data received for '
+          '${staleness.inSeconds}s — refreshing BLE notifications',
+        );
+        unawaited(
+          _transport.refreshNotifications().catchError((Object e) {
+            AppLogging.protocol(
+              '⚠️ DATA_HEALTH: refreshNotifications failed: $e',
+            );
+          }),
+        );
+
+        // Also send a heartbeat to provoke a device response.
+        unawaited(
+          _sendHeartbeat().catchError((Object e) {
+            AppLogging.protocol('⚠️ DATA_HEALTH: sendHeartbeat failed: $e');
+          }),
+        );
+      } else if (staleness > _dataStaleThreshold + _dataStaleDisconnectGrace) {
+        // Second escalation: refresh did not help — disconnect.
+        AppLogging.protocol(
+          '🔌 DATA_HEALTH: Still no data after notification refresh '
+          '(${staleness.inSeconds}s) — forcing disconnect',
+        );
+        _notificationRefreshRequested = false;
+        unawaited(
+          _transport.disconnect().catchError((Object e) {
+            AppLogging.protocol('⚠️ DATA_HEALTH: disconnect failed: $e');
+          }),
+        );
+      }
+    }
   }
 
   /// Whether RSSI polling is currently paused (app backgrounded).
@@ -1048,7 +1435,25 @@ class ProtocolService {
     }
   }
 
-  /// Poll for configuration data in background (non-blocking)
+  /// Drain the FROMRADIO characteristic during the two-phase connect
+  /// handshake.
+  ///
+  /// Mirrors the official iOS app's `startDrainPendingPackets()` pattern
+  /// (meshtastic-ios/Meshtastic/Accessory/Accessory Manager/AccessoryManager.swift
+  /// lines 210 and 240, and Transports/Bluetooth Low Energy/BLEConnection.swift
+  /// lines 130–169). The iOS app explicitly reads FROMRADIO after every
+  /// `wantConfigID` write because BLE NOTIFY alone is not reliable on iOS
+  /// during the quiet window between phase 1 and phase 2 — the firmware's
+  /// phase-2 response can sit in the FROMRADIO characteristic unread until
+  /// something forces a read.
+  ///
+  /// Prior behavior here terminated the poll loop the moment
+  /// `_configurationComplete` flipped (i.e. end of phase 1), which left
+  /// phase 2 relying on NOTIFY alone and produced a reliable ~180s stall
+  /// until the data-health watchdog refreshed the subscription on
+  /// T1000-E / Heltec firmware on iOS. The poll loop now continues until
+  /// the full handshake reports `complete` (or we hit the poll budget,
+  /// whichever first), matching the iOS reference behavior.
   void _pollForConfigurationAsync() {
     if (_pollingConfig) {
       AppLogging.protocol('Config poll already running, skipping');
@@ -1056,10 +1461,14 @@ class ProtocolService {
     }
     _pollingConfig = true;
     int pollCount = 0;
-    const maxPolls = 100;
+    // 250 ms × 200 ≈ 50 s total poll budget — covers both handshake phases
+    // on busy meshes. The loop also exits early when the handshake reaches
+    // `complete` or the transport disconnects.
+    const maxPolls = 200;
 
     Future.doWhile(() async {
-      if (_configurationComplete || pollCount >= maxPolls) {
+      final handshakeDone = _handshakePhase == _HandshakePhase.complete;
+      if (handshakeDone || pollCount >= maxPolls) {
         _pollingConfig = false;
         return false; // Stop polling
       }
@@ -1071,6 +1480,7 @@ class ProtocolService {
       try {
         await _transport.pollOnce();
         pollCount++;
+
         await Future.delayed(const Duration(milliseconds: 250));
       } catch (e) {
         AppLogging.protocol('Poll error: $e');
@@ -1084,12 +1494,18 @@ class ProtocolService {
     AppLogging.protocol('Stopping protocol service');
     _rssiTimer?.cancel();
     _rssiTimer = null;
+    _lastDataReceivedAt = null;
+    _notificationRefreshRequested = false;
     _transportStateSubscription?.cancel();
     _transportStateSubscription = null;
     if (_configCompleter != null && !_configCompleter!.isCompleted) {
       _configCompleter!.completeError('Service stopped');
     }
     _configCompleter = null;
+    if (_queueDrainCompleter != null && !_queueDrainCompleter!.isCompleted) {
+      _queueDrainCompleter!.completeError('Service stopped');
+    }
+    _queueDrainCompleter = null;
     if (_dataSubscription != null) {
       _dataSubscription?.cancel();
       AppLogging.protocol('DATA_SUBSCRIPTION_CANCELLED');
@@ -1097,6 +1513,7 @@ class ProtocolService {
     }
     _framer.clear();
     _configurationComplete = false;
+    _handshakePhase = _HandshakePhase.idle;
   }
 
   /// Handle incoming data from transport
@@ -1104,12 +1521,32 @@ class ProtocolService {
     unawaited(_handleDataAsync(data));
   }
 
+  /// Track consecutive protobuf parse failures for abuse detection.
+  int _consecutiveParseFailures = 0;
+
+  /// Total malformed packets received in this session.
+  int _totalMalformedPackets = 0;
+
+  /// Max consecutive parse failures before disconnecting.
+  static const int _maxConsecutiveParseFailures = 10;
+
   Future<void> _handleDataAsync(List<int> data) async {
     try {
+      _lastDataReceivedAt = DateTime.now();
+      _notificationRefreshRequested = false;
       AppLogging.protocol('Received ${data.length} bytes');
 
+      // --- SECURITY AUDIT LOGGING ---
+      if (data.length > 512) {
+        AppLogging.protocol(
+          '⚠️ PROTO SECURITY: Oversized transport data: ${data.length} bytes '
+          '(max expected=512)',
+        );
+      }
+      // --- END SECURITY AUDIT LOGGING ---
+
       if (_transport.requiresFraming) {
-        // Serial/USB: Extract packets using framer
+        // Serial/USB/TCP: Extract packets using framer
         final packets = _framer.addData(data);
 
         for (final packet in packets) {
@@ -1132,10 +1569,25 @@ class ProtocolService {
   Future<void> handleIncomingPacket(List<int> packet) =>
       _handleDataAsync(packet);
 
+  /// Test-only seam: send the initial `wantConfigId` and enter the
+  /// `awaitingInitialConfig` phase without running the full `start()`
+  /// coroutine (which waits on BLE notifications and a 30-second timeout).
+  @visibleForTesting
+  Future<void> sendInitialConfigRequestForTest() => _requestConfiguration();
+
   /// Process a complete packet
   Future<void> _processPacket(List<int> packet) async {
     try {
       AppLogging.protocol('Processing packet: ${packet.length} bytes');
+
+      // --- SECURITY AUDIT LOGGING ---
+      AppLogging.protocol(
+        'PROTO SECURITY: _processPacket(${packet.length} bytes) '
+        'consecutiveFailures=$_consecutiveParseFailures '
+        'totalMalformed=$_totalMalformedPackets '
+        'first16=${packet.take(16).map((b) => b.toRadixString(16).padLeft(2, '0')).join(' ')}',
+      );
+      // --- END SECURITY AUDIT LOGGING ---
 
       final fromRadio = pb.FromRadio.fromBuffer(packet);
 
@@ -1156,44 +1608,148 @@ class ProtocolService {
         _handleFromRadioConfig(fromRadio.config);
       } else if (fromRadio.hasMetadata()) {
         _handleFromRadioMetadata(fromRadio.metadata);
+      } else if (fromRadio.hasMqttClientProxyMessage()) {
+        AppLogging.mqttProxy(
+          'Received proxy message from device '
+          '(topic: ${fromRadio.mqttClientProxyMessage.topic})',
+        );
+        _mqttClientProxyMessageController.add(fromRadio.mqttClientProxyMessage);
       } else if (fromRadio.hasClientNotification()) {
         _handleClientNotification(fromRadio.clientNotification);
       } else if (fromRadio.hasConfigCompleteId()) {
-        AppLogging.protocol(
-          'Configuration complete! ID: ${fromRadio.configCompleteId}',
-        );
-        AppLogging.protocol(
-          'Configuration complete: ${fromRadio.configCompleteId}',
-        );
-        _configurationComplete = true;
-        if (_configCompleter != null && !_configCompleter!.isCompleted) {
-          _configCompleter!.complete();
-        }
-
-        // Log summary of all nodes and their position status
-        AppLogging.protocol('=== NODE SUMMARY AFTER CONFIG COMPLETE ===');
-        AppLogging.protocol('Total nodes: ${_nodes.length}');
-        for (final node in _nodes.values) {
-          AppLogging.protocol(
-            '  Node ${node.nodeNum}: "${node.longName}" hasPosition=${node.hasPosition}, '
-            'lat=${node.latitude}, lng=${node.longitude}',
-          );
-        }
-        AppLogging.protocol('==========================================');
-
-        // Request additional config after initial sync
-        // Using unawaited calls with error handling to prevent crashes on disconnect
-        _requestPostConfigData();
+        _handleConfigCompleteId(fromRadio.configCompleteId);
       }
     } catch (e, stack) {
+      _consecutiveParseFailures++;
+      _totalMalformedPackets++;
+      AppLogging.protocol(
+        '⚠️ PROTO SECURITY: Parse failure #$_totalMalformedPackets '
+        '(consecutive=$_consecutiveParseFailures) '
+        'packetLen=${packet.length} '
+        'error=$e',
+      );
       AppLogging.protocol('Error processing packet: $e\n$stack');
+
+      // Disconnect after sustained parse failures (abuse / garbage stream)
+      if (_consecutiveParseFailures >= _maxConsecutiveParseFailures) {
+        AppLogging.protocol(
+          'SECURITY: $_consecutiveParseFailures consecutive parse failures '
+          '- disconnecting (possible attack)',
+        );
+        _consecutiveParseFailures = 0;
+        _transport.disconnect();
+      }
     }
+  }
+
+  /// Dispatch a configCompleteId against the two-phase handshake state
+  /// machine.
+  ///
+  /// Phase-1 (`_nonceInitialConfig`) marks the configuration complete, fires
+  /// the completer (so `start()` and the UI unblock), and kicks off the
+  /// queue-drain request that triggers the firmware to deliver the rest of
+  /// the NodeDB plus any buffered packets.
+  ///
+  /// Phase-2 (`_nonceQueueDrain`) marks the handshake complete and only
+  /// THEN runs `_requestPostConfigData()`. This deferral matters: the burst
+  /// of admin/position requests in `_requestPostConfigData` competes with
+  /// the firmware's phase-2 NodeDB stream for BLE bandwidth and reliably
+  /// stalls the iOS BLE NOTIFY path on T1000-E / Heltec firmware (~180s
+  /// silence until the data-health watchdog refreshes notifications). With
+  /// the deferral, phase 2 streams cleanly and post-config setup runs
+  /// against the full NodeDB rather than just the local node.
+  ///
+  /// Defensive nonce handling: if the first phase sends back a nonce the
+  /// firmware did not echo (older builds, custom forks), we still accept it
+  /// while we're in the matching phase — log the discrepancy but proceed.
+  /// Same applies to phase 2. Without this we hard-fail on any firmware
+  /// that doesn't preserve `wantConfigId` in `configCompleteId`.
+  void _handleConfigCompleteId(int nonce) {
+    AppLogging.protocol(
+      'Handshake: configCompleteId received (nonce: $nonce, '
+      'phase: ${_handshakePhase.name})',
+    );
+
+    if (_handshakePhase == _HandshakePhase.awaitingInitialConfig) {
+      if (nonce != _nonceInitialConfig) {
+        AppLogging.protocol(
+          'Handshake: phase-1 nonce mismatch (got $nonce, expected '
+          '$_nonceInitialConfig) — proceeding defensively (firmware may not '
+          'echo wantConfigId)',
+        );
+      }
+
+      _configurationComplete = true;
+      if (_configCompleter != null && !_configCompleter!.isCompleted) {
+        _configCompleter!.complete();
+      }
+
+      AppLogging.protocol('=== NODE SUMMARY AFTER CONFIG COMPLETE ===');
+      AppLogging.protocol('Total nodes: ${_nodes.length}');
+      for (final node in _nodes.values) {
+        AppLogging.protocol(
+          '  Node ${node.nodeNum}: "${node.longName}" hasPosition=${node.hasPosition}, '
+          'lat=${node.latitude}, lng=${node.longitude}',
+        );
+      }
+      AppLogging.protocol('==========================================');
+
+      // Phase-1 done — kick off phase 2 and DO NOT run post-config setup
+      // yet. Post-config admin chatter is deferred to the phase-2 branch
+      // below so it does not contend with the NodeDB stream.
+      unawaited(_requestQueueDrain());
+      return;
+    }
+
+    if (_handshakePhase == _HandshakePhase.awaitingQueueDrain) {
+      if (nonce != _nonceQueueDrain) {
+        AppLogging.protocol(
+          'Handshake: phase-2 nonce mismatch (got $nonce, expected '
+          '$_nonceQueueDrain) — proceeding defensively',
+        );
+      }
+      _handshakePhase = _HandshakePhase.complete;
+      AppLogging.protocol(
+        'Handshake: queue drain complete — phoneQueue replay done',
+      );
+
+      // Release the retry loop in _requestQueueDrain.
+      if (_queueDrainCompleter != null && !_queueDrainCompleter!.isCompleted) {
+        _queueDrainCompleter!.complete();
+      }
+      _queueDrainCompleter = null;
+
+      // Now safe to run the post-config admin requests. The full NodeDB
+      // is in `_nodes` so position/metadata fan-outs operate on the real
+      // set rather than just the local node.
+      _requestPostConfigData();
+      return;
+    }
+
+    AppLogging.protocol(
+      'Handshake: ignoring unexpected configCompleteId '
+      '(nonce: $nonce, phase: ${_handshakePhase.name})',
+    );
   }
 
   /// Request additional configuration data after initial config sync completes.
   /// Uses staggered delays and error handling to prevent crashes if the device
   /// disconnects during the process.
   void _requestPostConfigData() {
+    // Sync phone time to device immediately after config complete.
+    // This ensures correct rxTime on subsequently received packets,
+    // which affects message timestamps, ordering, and dedup windows.
+    // The official Meshtastic Android app performs this sync on connect.
+    Future.delayed(const Duration(milliseconds: 50), () async {
+      if (!_transport.isConnected) return;
+      try {
+        await syncTime();
+        AppLogging.protocol('Time synced to device on connect');
+      } catch (e) {
+        AppLogging.protocol('Failed to sync time on connect: $e');
+      }
+    });
+
     Future.delayed(const Duration(milliseconds: 100), () async {
       if (!_transport.isConnected) return;
       try {
@@ -1310,12 +1866,12 @@ class ProtocolService {
     );
 
     // Diagnostic: trace unicast packets through the receive pipeline.
-    // This fires for any packet where `to` is not broadcast, which
-    // includes file-transfer unicast packets. Tagged fileTransfer so
-    // it appears when filtering by FILE_TRANSFER_ENABLED.
+    // This fires for any packet where `to` is not broadcast.  Tagged
+    // protocol (not fileTransfer) because it covers ALL portnums —
+    // routing, admin, text, etc. — not just file-transfer traffic.
     final isBroadcast = packet.to == 0xFFFFFFFF || packet.to == 0;
     if (!isBroadcast) {
-      AppLogging.fileTransfer(
+      AppLogging.protocol(
         'RX_PIPELINE: unicast from=${packet.from.toRadixString(16)} '
         'to=${packet.to.toRadixString(16)} id=${packet.id} '
         'hasDecoded=${packet.hasDecoded()} '
@@ -1355,6 +1911,14 @@ class ProtocolService {
       final data = packet.decoded;
 
       if (data.portnum == pn.PortNum.TEXT_MESSAGE_APP) {
+        AppLogging.messages(
+          '📨 TEXT_MESSAGE_APP received: packetId=${packet.id}, '
+          'from=${packet.from.toRadixString(16)}, '
+          'to=${packet.to.toRadixString(16)}, '
+          'channel=${packet.channel}, '
+          'payloadLen=${data.payload.length}',
+        );
+
         final key = MeshPacketKey(
           packetType: 'channel_message',
           senderNodeId: packet.from,
@@ -1365,12 +1929,16 @@ class ProtocolService {
         final seen = await _dedupeStore.hasSeen(key, ttl: _messagePacketTtl);
         if (seen) {
           AppLogging.messages(
-            '📨 Duplicate message packet ignored: packetId=${packet.id}, '
+            '📨 Packet-level dedup BLOCKED: packetId=${packet.id}, '
             'from=${packet.from.toRadixString(16)}, channel=${packet.channel}',
           );
           return;
         }
 
+        AppLogging.messages(
+          '📨 Packet-level dedup PASSED: packetId=${packet.id}, '
+          'from=${packet.from.toRadixString(16)}',
+        );
         await _dedupeStore.markSeen(key, ttl: _messagePacketTtl);
       }
 
@@ -1422,13 +1990,20 @@ class ProtocolService {
               'firstByte=${data.payload.isNotEmpty ? '0x${data.payload[0].toRadixString(16).padLeft(2, '0')}' : 'empty'}',
             );
             // Multiplex PRIVATE_APP (256) by inspecting payload magic bytes.
-            // Order: SIP (2-byte magic), file-transfer (kind nibble),
-            // fallback to signals (legacy JSON).
+            // Order: SIP (2-byte magic), STL-wrapped file-transfer,
+            // file-transfer (kind nibble), fallback to signals (legacy JSON).
             final privatePayload = Uint8List.fromList(data.payload);
             if (SipCodec.isSipPayload(privatePayload)) {
+              _logIncomingMrrpCandidatePacket(packet, privatePayload);
               _handleSipPacket(packet, privatePayload);
+            } else if (StlEnvelope.isStlWrapped(privatePayload)) {
+              unawaited(
+                _handleFileTransferOnPrivateApp(packet, privatePayload),
+              );
             } else if (SmCodec.isFileTransferPayload(privatePayload)) {
-              _handleFileTransferOnPrivateApp(packet, privatePayload);
+              unawaited(
+                _handleFileTransferOnPrivateApp(packet, privatePayload),
+              );
             } else {
               _handleSignalMessage(packet, data);
             }
@@ -1470,15 +2045,20 @@ class ProtocolService {
       final targetNode = packet.from;
 
       // Build forward-path hops (route towards destination)
+      // Snapshot each hop's GPS position from the current node table so the
+      // route can be rendered on the map even if nodes move later.
       final forwardRoute = routeDiscovery.route.toList();
       final forwardSnr = routeDiscovery.snrTowards.toList();
       final forwardHops = <TraceRouteHop>[];
       for (var i = 0; i < forwardRoute.length; i++) {
         final snrRaw = i < forwardSnr.length ? forwardSnr[i] : null;
+        final node = _nodes[forwardRoute[i]];
         forwardHops.add(
           TraceRouteHop(
             nodeNum: forwardRoute[i],
             snr: snrRaw != null ? snrRaw / 4.0 : null,
+            latitude: node != null && node.hasPosition ? node.latitude : null,
+            longitude: node != null && node.hasPosition ? node.longitude : null,
           ),
         );
       }
@@ -1489,17 +2069,41 @@ class ProtocolService {
       final backHops = <TraceRouteHop>[];
       for (var i = 0; i < backRoute.length; i++) {
         final snrRaw = i < backSnr.length ? backSnr[i] : null;
+        final node = _nodes[backRoute[i]];
         backHops.add(
           TraceRouteHop(
             nodeNum: backRoute[i],
             snr: snrRaw != null ? snrRaw / 4.0 : null,
             back: true,
+            latitude: node != null && node.hasPosition ? node.latitude : null,
+            longitude: node != null && node.hasPosition ? node.longitude : null,
           ),
         );
       }
 
       // Aggregate SNR from the received packet (already in dB)
       final rxSnr = packet.hasRxSnr() ? packet.rxSnr.toDouble() : null;
+
+      // Transport flag: true if this packet arrived via MQTT gateway
+      final mqtt = packet.hasViaMqtt() ? packet.viaMqtt : null;
+
+      // Snapshot origin (local device) position
+      double? originLat, originLon;
+      if (_myNodeNum != null) {
+        final myNode = _nodes[_myNodeNum];
+        if (myNode != null && myNode.hasPosition) {
+          originLat = myNode.latitude;
+          originLon = myNode.longitude;
+        }
+      }
+
+      // Snapshot target node position
+      double? targetLat, targetLon;
+      final targetNodeObj = _nodes[targetNode];
+      if (targetNodeObj != null && targetNodeObj.hasPosition) {
+        targetLat = targetNodeObj.latitude;
+        targetLon = targetNodeObj.longitude;
+      }
 
       final log = TraceRouteLog(
         nodeNum: targetNode,
@@ -1510,6 +2114,11 @@ class ProtocolService {
         hopsBack: backRoute.length,
         hops: [...forwardHops, ...backHops],
         snr: rxSnr,
+        viaMqtt: mqtt,
+        originLatitude: originLat,
+        originLongitude: originLon,
+        targetLatitude: targetLat,
+        targetLongitude: targetLon,
       );
 
       AppLogging.protocol(
@@ -1576,42 +2185,79 @@ class ProtocolService {
   /// (260-263) are not reliably relayed by all firmware versions when
   /// [SmFeatureFlag.shouldSendBinary] is off. The payload is decoded the
   /// same way as portnum 263 — only the transport portnum differs.
-  void _handleFileTransferOnPrivateApp(
+  Future<void> _handleFileTransferOnPrivateApp(
     pb.MeshPacket packet,
     Uint8List payload,
-  ) {
+  ) async {
     // Ignore our own packets echoed back
     if (packet.from == _myNodeNum) return;
 
-    AppLogging.fileTransfer(
-      'RX file-transfer on PRIVATE_APP from='
-      '${packet.from.toRadixString(16)} '
-      'to=${packet.to.toRadixString(16)} '
-      '${payload.length} bytes',
-    );
-
-    final decoded = SmCodec.decodeFileTransfer(payload);
-    if (decoded == null) {
+    // CRITICAL: This method is called via unawaited() from _handleMeshPacket,
+    // so any uncaught exception here escapes ALL try-catch blocks in the
+    // packet processing pipeline and surfaces as a PlatformDispatcher error.
+    // The top-level try-catch prevents that.
+    try {
       AppLogging.fileTransfer(
-        'Failed to decode file-transfer payload from '
-        '${packet.from.toRadixString(16)}',
+        'RX file-transfer on PRIVATE_APP from='
+        '${packet.from.toRadixString(16)} '
+        'to=${packet.to.toRadixString(16)} '
+        '${payload.length} bytes',
       );
-      return;
-    }
 
-    switch (decoded.type) {
-      case SmPacketType.fileOffer:
-        _handleSmFileOffer(decoded.fileOffer, packet.from);
-      case SmPacketType.fileChunk:
-        _handleSmFileChunk(decoded.fileChunk, packet.from);
-      case SmPacketType.fileNack:
-        _handleSmFileNack(decoded.fileNack, packet.from);
-      case SmPacketType.fileAck:
-        _handleSmFileAck(decoded.fileAck, packet.from);
-      case SmPacketType.presence:
-      case SmPacketType.signal:
-      case SmPacketType.identity:
-        break;
+      // STL: verify signature via fail-closed API, then strip envelope.
+      // Invalid or malformed STL packets are dropped — no fallback.
+      var innerPayload = payload;
+      if (StlEnvelope.isStlWrapped(payload)) {
+        final verified = await _stlMiddleware.verifyAndUnwrap(payload);
+        if (verified == null) {
+          AppLogging.stl(
+            'STL verification failed, dropping packet from '
+            '${packet.from.toRadixString(16)}',
+          );
+          return;
+        }
+        innerPayload = verified.payload;
+      }
+
+      final decoded = SmCodec.decodeFileTransfer(innerPayload);
+      if (decoded == null) {
+        AppLogging.fileTransfer(
+          'Failed to decode file-transfer payload from '
+          '${packet.from.toRadixString(16)}',
+        );
+        return;
+      }
+
+      switch (decoded.type) {
+        case SmPacketType.fileOffer:
+          _handleSmFileOffer(
+            decoded.fileOffer,
+            packet.from,
+            version: decoded.version,
+          );
+        case SmPacketType.fileChunk:
+          _handleSmFileChunk(decoded.fileChunk, packet.from);
+        case SmPacketType.fileNack:
+          _handleSmFileNack(decoded.fileNack, packet.from);
+        case SmPacketType.fileAck:
+          _handleSmFileAck(decoded.fileAck, packet.from);
+        case SmPacketType.sppAccept:
+          _handleSppAccept(decoded.sppAccept, packet.from);
+        case SmPacketType.sppDecline:
+          _handleSppDecline(decoded.sppDecline, packet.from);
+        case SmPacketType.sppAbort:
+          _handleSppAbort(decoded.sppAbort, packet.from);
+        case SmPacketType.presence:
+        case SmPacketType.signal:
+        case SmPacketType.identity:
+        case SmPacketType.feedPost:
+          break;
+      }
+    } catch (e, stack) {
+      AppLogging.fileTransfer(
+        '⚠️ Error handling file-transfer packet from '
+        '${packet.from.toRadixString(16)}: $e\n$stack',
+      );
     }
   }
 
@@ -1627,39 +2273,62 @@ class ProtocolService {
     // Ignore our own packets echoed back
     if (packet.from == _myNodeNum) return;
 
-    _smMetrics.recordBinaryPacketReceived();
+    // Top-level try-catch: _handleSmPacket is called synchronously from
+    // _handleMeshPacket (inside _processPacket's try-catch), but if any
+    // handler below throws, the error could escape as an uncaught platform
+    // error depending on async scheduling. Belt-and-suspenders protection.
+    try {
+      _smMetrics.recordBinaryPacketReceived();
 
-    final portnum = _extractRawPortnum(data);
-    final payload = Uint8List.fromList(data.payload);
-    final decoded = SmCodec.decode(portnum, payload);
+      final portnum = _extractRawPortnum(data);
+      final payload = Uint8List.fromList(data.payload);
+      final decoded = SmCodec.decode(portnum, payload);
 
-    if (decoded == null) {
-      _smMetrics.recordDecodeNull(portnum);
+      if (decoded == null) {
+        _smMetrics.recordDecodeNull(portnum);
+        AppLogging.protocol(
+          'SM: decode returned null for portnum=$portnum, '
+          '${payload.length} bytes from ${packet.from.toRadixString(16)}',
+        );
+        return;
+      }
+
+      // Mark sender as binary-capable
+      _smCapabilityStore.markNodeSupported(packet.from);
+
+      switch (decoded.type) {
+        case SmPacketType.presence:
+          _handleSmPresence(decoded.presence, packet.from);
+        case SmPacketType.signal:
+          _handleSmSignal(decoded.signal, packet.from, packet.id);
+        case SmPacketType.identity:
+          _handleSmIdentity(decoded.identity, packet.from);
+        case SmPacketType.fileOffer:
+          _handleSmFileOffer(
+            decoded.fileOffer,
+            packet.from,
+            version: decoded.version,
+          );
+        case SmPacketType.fileChunk:
+          _handleSmFileChunk(decoded.fileChunk, packet.from);
+        case SmPacketType.fileNack:
+          _handleSmFileNack(decoded.fileNack, packet.from);
+        case SmPacketType.fileAck:
+          _handleSmFileAck(decoded.fileAck, packet.from);
+        case SmPacketType.sppAccept:
+          _handleSppAccept(decoded.sppAccept, packet.from);
+        case SmPacketType.sppDecline:
+          _handleSppDecline(decoded.sppDecline, packet.from);
+        case SmPacketType.sppAbort:
+          _handleSppAbort(decoded.sppAbort, packet.from);
+        case SmPacketType.feedPost:
+          _handleSmFeedPost(decoded.feedPostPayload, packet.from, packet);
+      }
+    } catch (e, stack) {
       AppLogging.protocol(
-        'SM: decode returned null for portnum=$portnum, '
-        '${payload.length} bytes from ${packet.from.toRadixString(16)}',
+        '⚠️ Error handling SM packet from '
+        '${packet.from.toRadixString(16)}: $e\n$stack',
       );
-      return;
-    }
-
-    // Mark sender as binary-capable
-    _smCapabilityStore.markNodeSupported(packet.from);
-
-    switch (decoded.type) {
-      case SmPacketType.presence:
-        _handleSmPresence(decoded.presence, packet.from);
-      case SmPacketType.signal:
-        _handleSmSignal(decoded.signal, packet.from, packet.id);
-      case SmPacketType.identity:
-        _handleSmIdentity(decoded.identity, packet.from);
-      case SmPacketType.fileOffer:
-        _handleSmFileOffer(decoded.fileOffer, packet.from);
-      case SmPacketType.fileChunk:
-        _handleSmFileChunk(decoded.fileChunk, packet.from);
-      case SmPacketType.fileNack:
-        _handleSmFileNack(decoded.fileNack, packet.from);
-      case SmPacketType.fileAck:
-        _handleSmFileAck(decoded.fileAck, packet.from);
     }
   }
 
@@ -1772,18 +2441,54 @@ class ProtocolService {
   })?
   onSmIdentityUpdate;
 
+  /// Callback for SM_FEED_POST receive. Set by providers to ingest
+  /// feed posts into MeshFeedRepository without importing it here.
+  void Function({
+    required int authorNodeNum,
+    required Uint8List payload,
+    int? hopCount,
+  })?
+  onFeedPostReceived;
+
+  /// Handle incoming SM_FEED_POST.
+  void _handleSmFeedPost(
+    Uint8List payload,
+    int senderNodeNum,
+    pb.MeshPacket packet,
+  ) {
+    AppLogging.meshFeed(
+      'SM_FEED_POST from ${senderNodeNum.toRadixString(16)}: '
+      '${payload.length} bytes',
+    );
+
+    final hopCount = packet.hopStart > 0 && packet.hopLimit >= 0
+        ? packet.hopStart - packet.hopLimit
+        : null;
+
+    onFeedPostReceived?.call(
+      authorNodeNum: senderNodeNum,
+      payload: payload,
+      hopCount: hopCount,
+    );
+  }
+
   /// Handle incoming FILE_OFFER.
-  void _handleSmFileOffer(SmFileOffer offer, int senderNodeNum) {
+  void _handleSmFileOffer(
+    SmFileOffer offer,
+    int senderNodeNum, {
+    int version = 0,
+  }) {
     AppLogging.protocol(
       'SM_FILE_OFFER from ${senderNodeNum.toRadixString(16)}: '
       'file=${offer.filename}, ${offer.totalBytes} bytes, '
-      '${offer.chunkCount} chunks',
+      '${offer.chunkCount} chunks, v=$version',
     );
     _fileTransferController.add(
       SmFileTransferEvent(
         type: SmPacketType.fileOffer,
         packet: offer,
         senderNodeNum: senderNodeNum,
+        version: version,
       ),
     );
   }
@@ -1834,6 +2539,42 @@ class ProtocolService {
     );
   }
 
+  /// Handle incoming SPP_ACCEPT.
+  void _handleSppAccept(Object accept, int senderNodeNum) {
+    AppLogging.spp('SPP_ACCEPT from ${senderNodeNum.toRadixString(16)}');
+    _fileTransferController.add(
+      SmFileTransferEvent(
+        type: SmPacketType.sppAccept,
+        packet: accept,
+        senderNodeNum: senderNodeNum,
+      ),
+    );
+  }
+
+  /// Handle incoming SPP_DECLINE.
+  void _handleSppDecline(Object decline, int senderNodeNum) {
+    AppLogging.spp('SPP_DECLINE from ${senderNodeNum.toRadixString(16)}');
+    _fileTransferController.add(
+      SmFileTransferEvent(
+        type: SmPacketType.sppDecline,
+        packet: decline,
+        senderNodeNum: senderNodeNum,
+      ),
+    );
+  }
+
+  /// Handle incoming SPP_ABORT.
+  void _handleSppAbort(Object abort, int senderNodeNum) {
+    AppLogging.spp('SPP_ABORT from ${senderNodeNum.toRadixString(16)}');
+    _fileTransferController.add(
+      SmFileTransferEvent(
+        type: SmPacketType.sppAbort,
+        packet: abort,
+        senderNodeNum: senderNodeNum,
+      ),
+    );
+  }
+
   /// Handle detection sensor events (DETECTION_SENSOR_APP portnum)
   void _handleDetectionSensorMessage(pb.MeshPacket packet, pb.Data data) {
     try {
@@ -1859,7 +2600,9 @@ class ProtocolService {
   void _handleNodeStatusMessage(pb.MeshPacket packet, pb.Data data) {
     try {
       final statusMsg = pb.StatusMessage.fromBuffer(data.payload);
-      final status = statusMsg.hasStatus() ? statusMsg.status : null;
+      final status = statusMsg.hasStatus()
+          ? sanitizeExternalText(statusMsg.status)
+          : null;
 
       AppLogging.protocol(
         'RX_NODE_STATUS from=${packet.from.toRadixString(16)} '
@@ -2164,14 +2907,14 @@ class ProtocolService {
         AppLogging.protocol(
           'Received canned messages text (${messages.length} chars)',
         );
-        _cannedMessageTextController.add(messages);
+        _cannedMessageTextController.add(sanitizeExternalText(messages));
       } else if (adminMsg.hasGetRingtoneResponse()) {
         // Handle ringtone text response (RTTTL format)
         final ringtone = adminMsg.getRingtoneResponse;
         AppLogging.protocol(
           'Received ringtone text (${ringtone.length} chars)',
         );
-        _ringtoneTextController.add(ringtone);
+        _ringtoneTextController.add(sanitizeExternalText(ringtone));
       } else if (adminMsg.hasGetDeviceMetadataResponse()) {
         // Handle device metadata response - update node with firmware version
         final metadata = adminMsg.getDeviceMetadataResponse;
@@ -2212,11 +2955,14 @@ class ProtocolService {
 
           final updatedNode = existingNode.copyWith(
             firmwareVersion: metadata.firmwareVersion.isNotEmpty
-                ? metadata.firmwareVersion
+                ? sanitizeExternalText(metadata.firmwareVersion)
                 : null,
             hasWifi: metadata.hasWifi,
             hasBluetooth: metadata.hasBluetooth,
             hardwareModel: hwModelName ?? existingNode.hardwareModel,
+            hwModelId: metadata.hwModel != pb.HardwareModel.UNSET
+                ? metadata.hwModel.value
+                : existingNode.hwModelId,
           );
           _nodes[_myNodeNum!] = updatedNode;
           _nodeController.add(updatedNode);
@@ -2234,11 +2980,14 @@ class ProtocolService {
 
           final updatedRemote = remoteNode.copyWith(
             firmwareVersion: metadata.firmwareVersion.isNotEmpty
-                ? metadata.firmwareVersion
+                ? sanitizeExternalText(metadata.firmwareVersion)
                 : null,
             hasWifi: metadata.hasWifi,
             hasBluetooth: metadata.hasBluetooth,
             hardwareModel: hwModelName ?? remoteNode.hardwareModel,
+            hwModelId: metadata.hwModel != pb.HardwareModel.UNSET
+                ? metadata.hwModel.value
+                : remoteNode.hwModelId,
           );
           _nodes[packet.from] = updatedRemote;
           _nodeController.add(updatedRemote);
@@ -2269,13 +3018,17 @@ class ProtocolService {
 
           final updatedNode = existingNode.copyWith(
             longName: user.longName.isNotEmpty
-                ? user.longName
+                ? sanitizeExternalText(user.longName)
                 : existingNode.longName,
             shortName: user.shortName.isNotEmpty
-                ? user.shortName
+                ? sanitizeExternalText(user.shortName)
                 : existingNode.shortName,
             userId: user.hasId() ? user.id : existingNode.userId,
             hardwareModel: hwModel ?? existingNode.hardwareModel,
+            hwModelId:
+                user.hasHwModel() && user.hwModel != pb.HardwareModel.UNSET
+                ? user.hwModel.value
+                : existingNode.hwModelId,
             role: user.hasRole() ? user.role.name : existingNode.role,
             hasPublicKey: user.publicKey.isNotEmpty,
             lastHeard: DateTime.now(),
@@ -2306,10 +3059,10 @@ class ProtocolService {
           final newNode = MeshNode(
             nodeNum: packet.from,
             longName: user.longName.isNotEmpty
-                ? sanitizeUtf16(user.longName)
+                ? sanitizeExternalText(user.longName)
                 : null,
             shortName: user.shortName.isNotEmpty
-                ? sanitizeUtf16(user.shortName)
+                ? sanitizeExternalText(user.shortName)
                 : null,
             userId: user.hasId() ? user.id : null,
             hardwareModel: hwModel,
@@ -2408,7 +3161,7 @@ class ProtocolService {
   /// These are important messages that should be displayed to the user.
   void _handleClientNotification(pb.ClientNotification notification) {
     final levelName = notification.level.name;
-    final message = notification.message;
+    final message = sanitizeExternalText(notification.message);
 
     // Log with appropriate level
     if (notification.level == pb.LogRecord_Level.ERROR ||
@@ -2418,6 +3171,12 @@ class ProtocolService {
       AppLogging.protocol('⚠️ Client Notification [WARNING]: $message');
     } else {
       AppLogging.protocol('ℹ️ Client Notification [$levelName]: $message');
+    }
+
+    // Sanitize the protobuf message before emitting so the UI never
+    // receives malformed UTF-16 that could crash text rendering.
+    if (notification.message != message) {
+      notification.message = message;
     }
 
     // Emit to stream so UI can display to user
@@ -2456,11 +3215,14 @@ class ProtocolService {
 
       final updatedNode = existingNode.copyWith(
         firmwareVersion: metadata.firmwareVersion.isNotEmpty
-            ? metadata.firmwareVersion
+            ? sanitizeExternalText(metadata.firmwareVersion)
             : null,
         hasWifi: metadata.hasWifi,
         hasBluetooth: metadata.hasBluetooth,
         hardwareModel: hwModelName ?? existingNode.hardwareModel,
+        hwModelId: metadata.hwModel != pb.HardwareModel.UNSET
+            ? metadata.hwModel.value
+            : existingNode.hwModelId,
       );
       _nodes[_myNodeNum!] = updatedNode;
       _nodeController.add(updatedNode);
@@ -2493,7 +3255,7 @@ class ProtocolService {
   /// Handle text message
   void _handleTextMessage(pb.MeshPacket packet, pb.Data data) {
     try {
-      final text = sanitizeUtf16(
+      final text = sanitizeExternalText(
         utf8.decode(data.payload, allowMalformed: true),
       );
       AppLogging.protocol('Text message from ${packet.from}: $text');
@@ -2505,8 +3267,12 @@ class ProtocolService {
       int? senderAvatarColor;
 
       if (senderNode != null) {
-        senderLongName = senderNode.longName;
-        senderShortName = senderNode.shortName;
+        senderLongName = senderNode.longName != null
+            ? sanitizeExternalText(senderNode.longName!)
+            : null;
+        senderShortName = senderNode.shortName != null
+            ? sanitizeExternalText(senderNode.shortName!)
+            : null;
         senderAvatarColor = senderNode.avatarColor;
       }
 
@@ -2532,11 +3298,16 @@ class ProtocolService {
       // to the phone over BLE. It is never sent over-the-air. Use it as the
       // message timestamp so the chat shows when the radio actually received
       // the packet, not when the app processed it.
-      final timestamp = packet.hasRxTime() && packet.rxTime > 0
-          ? DateTime.fromMillisecondsSinceEpoch(packet.rxTime * 1000)
-          : DateTime.now();
+      //
+      // Validate that rxTime is plausible: devices without a time source
+      // (no GPS, no phone sync) may report rxTime as 0 or a small uptime
+      // value. Historical messages replayed on connect inherit whatever
+      // rxTime the device stored at original receipt — if the device had
+      // no clock then, rxTime will be invalid.
+      final timestamp = _plausibleTimestamp(packet);
 
       final message = Message(
+        id: Message.deterministicId(packetId: packet.id, fromNode: packet.from),
         from: packet.from,
         to: packet.to,
         text: text,
@@ -3045,6 +3816,38 @@ class ProtocolService {
     }
   }
 
+  /// Extract the best available timestamp from a [pb.Position] protobuf.
+  ///
+  /// Follows the standard Meshtastic timestamp fallback order:
+  ///   1. `position.timestamp` — actual GPS solution time (epoch seconds)
+  ///   2. `position.time` — phone-provided time (epoch seconds)
+  ///   3. [DateTime.now] — local processing time as final fallback
+  ///
+  /// All candidate values are validated against [_minPlausibleEpoch] and
+  /// [_maxFutureSlack] before acceptance.
+  static DateTime _positionSourceTimestamp(pb.Position position) {
+    final nowEpoch = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+
+    // Prefer GPS solution timestamp (field 7)
+    if (position.hasTimestamp() && position.timestamp > 0) {
+      final ts = position.timestamp;
+      if (ts >= _minPlausibleEpoch && ts <= nowEpoch + _maxFutureSlack) {
+        return DateTime.fromMillisecondsSinceEpoch(ts * 1000);
+      }
+    }
+
+    // Fallback to phone-provided time (field 4)
+    if (position.hasTime() && position.time > 0) {
+      final t = position.time;
+      if (t >= _minPlausibleEpoch && t <= nowEpoch + _maxFutureSlack) {
+        return DateTime.fromMillisecondsSinceEpoch(t * 1000);
+      }
+    }
+
+    // Final fallback
+    return DateTime.now();
+  }
+
   /// Handle position update
   void _handlePositionUpdate(pb.MeshPacket packet, pb.Data data) {
     try {
@@ -3058,12 +3861,28 @@ class ProtocolService {
       final hasValidPosition =
           (position.latitudeI != 0 && position.longitudeI != 0) && !isApplePark;
 
+      // Select canonical source timestamp per the standard fallback order
+      final posTime = _positionSourceTimestamp(position);
+      final String tsSource;
+      if (position.hasTimestamp() &&
+          position.timestamp > 0 &&
+          posTime.millisecondsSinceEpoch == position.timestamp * 1000) {
+        tsSource = 'gps_timestamp';
+      } else if (position.hasTime() &&
+          position.time > 0 &&
+          posTime.millisecondsSinceEpoch == position.time * 1000) {
+        tsSource = 'position_time';
+      } else {
+        tsSource = 'fallback_now';
+      }
+
       if (ProtocolDebugFlags.logPosition) {
         AppLogging.debug(
           '📍 POSITION_APP from !${packet.from.toRadixString(16)}: '
           'latI=${position.latitudeI}, lngI=${position.longitudeI}, '
           'lat=${position.latitudeI / 1e7}, lng=${position.longitudeI / 1e7}, '
-          'isApplePark=$isApplePark, valid=$hasValidPosition',
+          'isApplePark=$isApplePark, valid=$hasValidPosition, '
+          'tsSource=$tsSource, ts=$posTime',
         );
       }
 
@@ -3078,7 +3897,7 @@ class ProtocolService {
           longitude: position.longitudeI / 1e7,
           altitude: position.hasAltitude() ? position.altitude : node.altitude,
           lastHeard: DateTime.now(),
-          positionTimestamp: DateTime.now(),
+          positionTimestamp: posTime,
           // GPS extended fields
           satsInView: position.hasSatsInView()
               ? position.satsInView
@@ -3142,7 +3961,7 @@ class ProtocolService {
           viaMqtt: packet.hasViaMqtt() ? packet.viaMqtt : false,
           avatarColor: avatarColor,
           isFavorite: false,
-          positionTimestamp: DateTime.now(),
+          positionTimestamp: posTime,
           // GPS extended fields
           satsInView: position.hasSatsInView() ? position.satsInView : null,
           gpsAccuracy: position.hasGpsAccuracy()
@@ -3172,8 +3991,8 @@ class ProtocolService {
       final user = pb.User.fromBuffer(data.payload);
 
       // Sanitize node names to prevent UTF-16 crashes when rendering text
-      final longName = sanitizeUtf16(user.longName);
-      final shortName = sanitizeUtf16(user.shortName);
+      final longName = sanitizeExternalText(user.longName);
+      final shortName = sanitizeExternalText(user.shortName);
 
       AppLogging.protocol(
         '🔑 📥 Received node info from ${packet.from.toRadixString(16)}: $longName ($shortName)',
@@ -3236,6 +4055,10 @@ class ProtocolService {
             clearShortName: resolvedShortName == null,
             userId: user.hasId() ? user.id : existingNode.userId,
             hardwareModel: hwModel ?? existingNode.hardwareModel,
+            hwModelId:
+                user.hasHwModel() && user.hwModel != pb.HardwareModel.UNSET
+                ? user.hwModel.value
+                : existingNode.hwModelId,
             role: role,
             snr: packet.hasRxSnr() ? packet.rxSnr.toInt() : existingNode.snr,
             lastHeard: DateTime.now(),
@@ -3246,6 +4069,10 @@ class ProtocolService {
             shortName: shortName.isNotEmpty ? shortName : null,
             userId: user.hasId() ? user.id : null,
             hardwareModel: hwModel,
+            hwModelId:
+                user.hasHwModel() && user.hwModel != pb.HardwareModel.UNSET
+                ? user.hwModel.value
+                : null,
             role: role,
             rssi: packet.hasRxRssi() ? packet.rxRssi : null,
             snr: packet.hasRxSnr() ? packet.rxSnr.toInt() : null,
@@ -3319,12 +4146,37 @@ class ProtocolService {
       _pendingMetadata = null;
     }
 
+    // Sync phone time to device as early as possible so that any messages
+    // received by the device from this point onward carry a valid rxTime.
+    // Historical messages already stored on the device retain whatever
+    // timestamp the device had at original receipt, but this sync ensures
+    // the device's clock is correct for the remainder of the session.
+    // The post-config sync in _requestPostConfigData provides a second
+    // reliable sync point after all config data has been exchanged.
+    unawaited(
+      Future.delayed(const Duration(milliseconds: 50), () async {
+        if (!_transport.isConnected || _myNodeNum == null) return;
+        try {
+          await syncTime();
+          AppLogging.protocol('Early time sync sent after myNodeInfo');
+        } catch (e) {
+          AppLogging.protocol('Early time sync failed (non-fatal): $e');
+        }
+      }),
+    );
+
     // Request our own position after a short delay
-    Future.delayed(const Duration(milliseconds: 300), () {
-      if (_myNodeNum != null) {
-        requestPosition(_myNodeNum!);
-      }
-    });
+    unawaited(
+      Future.delayed(const Duration(milliseconds: 300), () async {
+        if (_myNodeNum != null) {
+          try {
+            await requestPosition(_myNodeNum!);
+          } catch (e) {
+            AppLogging.protocol('Position request after myNodeInfo failed: $e');
+          }
+        }
+      }),
+    );
   }
 
   /// Handle node info
@@ -3370,13 +4222,25 @@ class ProtocolService {
     // reconnection time, which is misleading.
     final DateTime deviceLastHeard;
     if (nodeInfo.hasLastHeard() && nodeInfo.lastHeard > 0) {
-      deviceLastHeard = DateTime.fromMillisecondsSinceEpoch(
-        nodeInfo.lastHeard * 1000,
-      );
-      AppLogging.protocol(
-        'NodeInfo ${nodeInfo.num}: using device lastHeard=${nodeInfo.lastHeard} '
-        '(${deviceLastHeard.toIso8601String()})',
-      );
+      final lastHeardEpoch = nodeInfo.lastHeard;
+      final nowEpoch = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+      if (lastHeardEpoch >= _minPlausibleEpoch &&
+          lastHeardEpoch <= nowEpoch + _maxFutureSlack) {
+        deviceLastHeard = DateTime.fromMillisecondsSinceEpoch(
+          lastHeardEpoch * 1000,
+        );
+        AppLogging.protocol(
+          'NodeInfo ${nodeInfo.num}: using device lastHeard=$lastHeardEpoch '
+          '(${deviceLastHeard.toIso8601String()})',
+        );
+      } else {
+        deviceLastHeard = DateTime.now();
+        final driftSeconds = lastHeardEpoch - nowEpoch;
+        AppLogging.protocol(
+          'NodeInfo ${nodeInfo.num}: implausible lastHeard=$lastHeardEpoch '
+          '(drift=${driftSeconds}s vs phone) — using phone time',
+        );
+      }
     } else {
       deviceLastHeard = DateTime.now();
       AppLogging.protocol(
@@ -3464,13 +4328,13 @@ class ProtocolService {
       // and should be replaced by null so displayName uses the proper fallback.
       final newLongName =
           nodeInfo.hasUser() && nodeInfo.user.longName.isNotEmpty
-          ? sanitizeUtf16(nodeInfo.user.longName)
+          ? sanitizeExternalText(nodeInfo.user.longName)
           : NodeDisplayNameResolver.sanitizeName(existingNode.longName) != null
           ? existingNode.longName
           : null;
       final newShortName =
           nodeInfo.hasUser() && nodeInfo.user.shortName.isNotEmpty
-          ? sanitizeUtf16(nodeInfo.user.shortName)
+          ? sanitizeExternalText(nodeInfo.user.shortName)
           : NodeDisplayNameResolver.sanitizeName(existingNode.shortName) != null
           ? existingNode.shortName
           : null;
@@ -3480,6 +4344,12 @@ class ProtocolService {
         shortName: newShortName,
         userId: userId ?? existingNode.userId,
         hardwareModel: hwModel ?? existingNode.hardwareModel,
+        hwModelId:
+            nodeInfo.hasUser() &&
+                nodeInfo.user.hasHwModel() &&
+                nodeInfo.user.hwModel != pb.HardwareModel.UNSET
+            ? nodeInfo.user.hwModel.value
+            : existingNode.hwModelId,
         latitude: hasValidPosition
             ? nodeInfo.position.latitudeI / 1e7
             : existingNode.latitude,
@@ -3500,6 +4370,7 @@ class ProtocolService {
         isMuted: nodeInfo.hasIsMuted()
             ? nodeInfo.isMuted
             : existingNode.isMuted,
+        isFavorite: nodeInfo.isFavorite,
         viaMqtt: nodeInfo.hasViaMqtt()
             ? nodeInfo.viaMqtt
             : existingNode.viaMqtt,
@@ -3511,11 +4382,11 @@ class ProtocolService {
       // Use null for empty strings to trigger fallback display logic, sanitize to prevent UTF-16 crashes
       final userLongName =
           nodeInfo.hasUser() && nodeInfo.user.longName.isNotEmpty
-          ? sanitizeUtf16(nodeInfo.user.longName)
+          ? sanitizeExternalText(nodeInfo.user.longName)
           : null;
       final userShortName =
           nodeInfo.hasUser() && nodeInfo.user.shortName.isNotEmpty
-          ? sanitizeUtf16(nodeInfo.user.shortName)
+          ? sanitizeExternalText(nodeInfo.user.shortName)
           : null;
 
       updatedNode = MeshNode(
@@ -3524,6 +4395,12 @@ class ProtocolService {
         shortName: userShortName,
         userId: userId,
         hardwareModel: hwModel,
+        hwModelId:
+            nodeInfo.hasUser() &&
+                nodeInfo.user.hasHwModel() &&
+                nodeInfo.user.hwModel != pb.HardwareModel.UNSET
+            ? nodeInfo.user.hwModel.value
+            : null,
         latitude: hasValidPosition ? nodeInfo.position.latitudeI / 1e7 : null,
         longitude: hasValidPosition ? nodeInfo.position.longitudeI / 1e7 : null,
         altitude: hasValidPosition && nodeInfo.position.hasAltitude()
@@ -3537,7 +4414,7 @@ class ProtocolService {
         firstHeard: DateTime.now(),
         role: role,
         avatarColor: avatarColor,
-        isFavorite: false,
+        isFavorite: nodeInfo.isFavorite,
         hasPublicKey: hasPublicKey,
         isMuted: nodeInfo.hasIsMuted() ? nodeInfo.isMuted : false,
         viaMqtt: nodeInfo.hasViaMqtt() ? nodeInfo.viaMqtt : false,
@@ -3551,10 +4428,10 @@ class ProtocolService {
       final user = nodeInfo.user;
       // Sanitize names for the callback as well
       final sanitizedLongName = user.longName.isNotEmpty
-          ? sanitizeUtf16(user.longName)
+          ? sanitizeExternalText(user.longName)
           : null;
       final sanitizedShortName = user.shortName.isNotEmpty
-          ? sanitizeUtf16(user.shortName)
+          ? sanitizeExternalText(user.shortName)
           : null;
       onIdentityUpdate?.call(
         nodeNum: nodeInfo.num,
@@ -3631,7 +4508,9 @@ class ProtocolService {
 
     final channelConfig = ChannelConfig(
       index: channel.index,
-      name: channel.hasSettings() ? channel.settings.name : '',
+      name: channel.hasSettings()
+          ? sanitizeExternalText(channel.settings.name)
+          : '',
       psk: channel.hasSettings() ? channel.settings.psk : [],
       uplink: channel.hasSettings() ? channel.settings.uplinkEnabled : false,
       downlink: channel.hasSettings()
@@ -3654,6 +4533,35 @@ class ProtocolService {
     }
   }
 
+  /// Send a heartbeat to wake the device's connection handler.
+  ///
+  /// Per Meshtastic protocol, a heartbeat with a random nonce keeps the
+  /// device's PhoneAPI connection alive and responsive. The official iOS
+  /// app sends this before every wantConfigId request to ensure devices
+  /// in low-power states are ready to respond.
+  Future<void> _sendHeartbeat() async {
+    try {
+      if (!_transport.isConnected) return;
+
+      // Nonce >= 2 to avoid any firmware special-casing of 0 or 1
+      final heartbeat = pb.Heartbeat()..nonce = _random.nextInt(0x7FFFFFFE) + 2;
+      final toRadio = pb.ToRadio()..heartbeat = heartbeat;
+      final bytes = toRadio.writeToBuffer();
+      final sendBytes = _transport.requiresFraming
+          ? PacketFramer.frame(bytes)
+          : bytes;
+
+      await _transport.send(sendBytes);
+      AppLogging.protocol('Heartbeat sent (nonce: ${heartbeat.nonce})');
+
+      // Brief pause to let device process the heartbeat before config request
+      await Future.delayed(const Duration(milliseconds: 100));
+    } catch (e) {
+      // Non-fatal — proceed with config request even if heartbeat fails
+      AppLogging.protocol('Heartbeat send failed (non-fatal): $e');
+    }
+  }
+
   /// Request configuration from device
   Future<void> _requestConfiguration() async {
     try {
@@ -3671,12 +4579,14 @@ class ProtocolService {
         await Future.delayed(const Duration(milliseconds: 100));
       }
 
-      // Generate a config ID to track this request
-      // The firmware will send back all config + NodeDB with positions
-      final configId = _random.nextInt(0x7FFFFFFF);
-
-      AppLogging.protocol('Requesting config with ID: $configId');
-      final toRadio = pb.ToRadio()..wantConfigId = configId;
+      // Phase 1 of the two-step handshake: request the main configuration
+      // bundle (config + NodeDB). The second phase (queue drain) is kicked
+      // off on receipt of configCompleteId; see `_requestQueueDrain`.
+      _handshakePhase = _HandshakePhase.awaitingInitialConfig;
+      AppLogging.protocol(
+        'Handshake: sending initial wantConfigId (nonce: $_nonceInitialConfig)',
+      );
+      final toRadio = pb.ToRadio()..wantConfigId = _nonceInitialConfig;
       final bytes = toRadio.writeToBuffer();
 
       // BLE uses raw protobufs, Serial/USB requires framing
@@ -3689,6 +4599,104 @@ class ProtocolService {
     } catch (e) {
       AppLogging.protocol('Error requesting configuration: $e');
     }
+  }
+
+  /// Second wantConfigId that triggers the firmware to replay packets it
+  /// buffered in its `phoneQueue` while the app was disconnected and — on
+  /// firmware versions like T1000-E 2.7.x — stream the rest of the NodeDB.
+  ///
+  /// Mirrors the iOS reference behavior (AccessoryManager+Connect.swift
+  /// Steps 4–5): send a heartbeat first to nudge iOS Core Bluetooth's
+  /// NOTIFY path, then the `wantConfigId(_nonceQueueDrain)`; wait up to
+  /// `timeoutPerAttempt` for the matching `configCompleteId`. Without the
+  /// heartbeat the NOTIFY subscription goes stale after the phase-1 burst
+  /// and the firmware's phase-2 response sits in the iOS BLE buffer for
+  /// ~180s until the data-health watchdog refreshes notifications.
+  ///
+  /// Retries up to `maxAttempts` times matching the iOS Step 5 policy
+  /// (`retryStep(attempts: 3)` with a 3-second per-step timeout).
+  Future<void> _requestQueueDrain({
+    int maxAttempts = 3,
+    Duration timeoutPerAttempt = const Duration(seconds: 3),
+  }) async {
+    _handshakePhase = _HandshakePhase.awaitingQueueDrain;
+
+    for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+      if (!_transport.isConnected) {
+        AppLogging.protocol('Cannot request queue drain: not connected');
+        return;
+      }
+
+      // Already advanced to `complete` by a stray early configCompleteId?
+      // Nothing to do.
+      if (_handshakePhase == _HandshakePhase.complete) return;
+
+      // Fresh completer per attempt; _handleConfigCompleteId completes it
+      // when phase-2 configCompleteId arrives. Capture the reference now
+      // so a stray early phase-2 ack (received during the awaits below)
+      // that nulls `_queueDrainCompleter` does not trip a null deref.
+      final completer = Completer<void>();
+      _queueDrainCompleter = completer;
+
+      try {
+        // Step 4 (iOS): heartbeat before wantConfigId. This pings the
+        // firmware BLE path and refreshes the NOTIFY subscription state
+        // so the phase-2 response is actually delivered.
+        await _sendHeartbeat();
+
+        if (!_transport.isConnected) {
+          AppLogging.protocol(
+            'Queue-drain aborted: transport dropped after heartbeat',
+          );
+          return;
+        }
+
+        // Phase-2 could already be satisfied if a stray configCompleteId
+        // arrived during the heartbeat. Short-circuit to avoid sending
+        // a pointless wantConfigId.
+        if (completer.isCompleted ||
+            _handshakePhase == _HandshakePhase.complete) {
+          return;
+        }
+
+        AppLogging.protocol(
+          'Handshake: sending queue-drain wantConfigId '
+          '(nonce: $_nonceQueueDrain, attempt $attempt/$maxAttempts)',
+        );
+        final toRadio = pb.ToRadio()..wantConfigId = _nonceQueueDrain;
+        final bytes = toRadio.writeToBuffer();
+        final sendBytes = _transport.requiresFraming
+            ? PacketFramer.frame(bytes)
+            : bytes;
+        await _transport.send(sendBytes);
+
+        // Step 5a (iOS): wait for the matching configCompleteId.
+        await completer.future.timeout(timeoutPerAttempt);
+        // Completer fired — phase-2 complete. Loop exits via this return.
+        return;
+      } on TimeoutException {
+        AppLogging.protocol(
+          'Handshake: queue-drain attempt $attempt/$maxAttempts timed out '
+          'after ${timeoutPerAttempt.inSeconds}s — retrying with fresh '
+          'heartbeat',
+        );
+        // Clear the completer so _handleConfigCompleteId doesn't complete a
+        // stale one if the firmware's laggy response finally arrives after
+        // we've given up on this attempt.
+        _queueDrainCompleter = null;
+        // Fall through to next iteration.
+      } catch (e) {
+        AppLogging.protocol('Error requesting queue drain: $e');
+        _queueDrainCompleter = null;
+        return;
+      }
+    }
+
+    AppLogging.protocol(
+      'Handshake: queue-drain exhausted $maxAttempts attempts — giving up. '
+      'Phase-2 may complete late; handshake state stays `awaitingQueueDrain` '
+      'and a stray configCompleteId(69421) will still transition to complete.',
+    );
   }
 
   /// Send a text message
@@ -3721,20 +4729,30 @@ class ProtocolService {
         );
       }
 
+      final payloadBudget = TextMessagePayloadSizer.standard(
+        replyId: replyId,
+        isEmoji: isEmoji,
+      ).measure(text);
+      if (!payloadBudget.fitsInPacket) {
+        throw TextMessagePayloadTooLargeException(payloadBudget);
+      }
+
       final packetId = _generatePacketId();
 
       final data = pb.Data()
         ..portnum = pn.PortNum.TEXT_MESSAGE_APP
-        ..payload = utf8.encode(text)
-        ..wantResponse = wantAck
-        ..emoji = isEmoji ? 1 : 0;
+        ..payload = utf8.encode(text);
 
       if (replyId != null) {
         data.replyId = replyId;
       }
+      if (isEmoji) {
+        data.emoji = 1;
+      }
 
       AppLogging.protocol(
-        '🏷️ Data fields: portnum=${data.portnum}, emoji=${data.emoji}, '
+        '🏷️ Data fields: portnum=${data.portnum}, '
+        'emoji=${data.hasEmoji() ? data.emoji : "unset"}, '
         'replyId=${data.hasReplyId() ? data.replyId : "unset"}, '
         'payloadLen=${data.payload.length}',
       );
@@ -3748,10 +4766,22 @@ class ProtocolService {
         wantAck: wantAck,
       );
 
+      AppLogging.protocol(
+        '📤 Outbound message: packetId=$packetId, '
+        'to=0x${to.toRadixString(16)}, channel=$channel, '
+        'wantAck=$wantAck, transport=radio '
+        '(hopLimit/hopStart left to firmware)',
+      );
+
       final toRadio = pb.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
 
       await _transport.send(_prepareForSend(bytes));
+
+      AppLogging.protocol(
+        '📤 Sent ${bytes.length} bytes to node via '
+        '${_transport.requiresFraming ? "USB" : "BLE"}',
+      );
 
       // Track the message for delivery status
       if (messageId != null && wantAck) {
@@ -3997,6 +5027,44 @@ class ProtocolService {
     return packetId;
   }
 
+  /// Broadcast a SM_FEED_POST (portnum 264).
+  ///
+  /// [loraPayload] is the pre-encoded wire bytes from [MeshPost.encodeForLora].
+  /// Returns the packet ID for tracking, or null if rate-limited or not connected.
+  Future<int?> sendFeedPost(Uint8List loraPayload) async {
+    if (_myNodeNum == null || !_transport.isConnected) return null;
+
+    if (!_smRateLimiter.canSend(SmPortnum.feedPost)) {
+      AppLogging.meshFeed('SM_FEED_POST rate-limited');
+      return null;
+    }
+
+    final packetId = _generatePacketId();
+
+    final data = _createDataWithPortnum(SmPortnum.feedPost, loraPayload);
+
+    final packet = MeshPacketBuilder.userPayload(
+      myNodeNum: _myNodeNum!,
+      to: 0xFFFFFFFF,
+      data: data,
+      packetId: packetId,
+    );
+
+    packet.hopLimit = SmTransport.feedPostHopLimit;
+
+    final toRadio = pb.ToRadio()..packet = packet;
+    await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+
+    _smRateLimiter.recordSend(SmPortnum.feedPost);
+
+    AppLogging.meshFeed(
+      'SM_FEED_POST broadcast: ${loraPayload.length} bytes, '
+      'packetId=$packetId',
+    );
+
+    return packetId;
+  }
+
   /// Broadcast a binary SM_PRESENCE (portnum 260).
   ///
   /// Returns the packet ID for tracking, or null if encoding or rate
@@ -4068,6 +5136,8 @@ class ProtocolService {
     );
     packet.hopLimit = 3;
 
+    _logOutgoingMrrpPacket(packet, payload);
+
     final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
 
@@ -4088,7 +5158,20 @@ class ProtocolService {
 
     final discovery = _sipDiscovery;
     if (discovery == null) {
-      AppLogging.sip('SIP_RX: no SipDiscovery attached — dropping');
+      // Buffer early frames so they are processed once SipDiscovery attaches.
+      // Without this, every packet arriving before the first SIP-aware screen
+      // opens (e.g. SIP Hub, Mesh Explorer) is permanently lost.
+      if (_sipStartupBuffer.length < _kSipStartupBufferMax) {
+        _sipStartupBuffer.add((packet: packet, payload: payload));
+        AppLogging.sip(
+          'SIP_STARTUP: buffering early frame '
+          '(${_sipStartupBuffer.length}/$_kSipStartupBufferMax)',
+        );
+      } else {
+        AppLogging.sip(
+          'SIP_STARTUP: startup buffer full — discarding early frame',
+        );
+      }
       return;
     }
 
@@ -4141,6 +5224,8 @@ class ProtocolService {
         _handleSipHandshakeResponse(senderNodeId, frame);
       case SipMessageType.hsAccept:
         _handleSipHandshakeAccept(senderNodeId, frame);
+      case SipMessageType.hsDecline:
+        _handleSipHandshakeDecline(senderNodeId, frame);
 
       // ----- SIP-1: Identity -----
       case SipMessageType.idReq:
@@ -4158,6 +5243,8 @@ class ProtocolService {
         _handleSipDmReaction(frame);
       case SipMessageType.dmDelete:
         _handleSipDmDelete(frame);
+      case SipMessageType.dmClose:
+        _handleSipDmClose(frame);
 
       // ----- SIP-0: CAP_REQ / CAP_RESP (informational) -----
       case SipMessageType.capReq:
@@ -4190,13 +5277,171 @@ class ProtocolService {
 
   /// Handle an inbound MRRP frame embedded in a SIP mrrpData packet.
   void _handleMrrpPacket(int senderNodeId, SipFrame frame) {
+    // Overlay v0.2 pre-filter. MRRP v0.2 link frames use
+    // version_minor=2 and msg_type 0x20..0x27 — none of which the
+    // MRRP v0.1 engine recognises, so a v0.1-only peer would drop
+    // them. Give the overlay first look; fall through only when this
+    // is not a v0.2 frame.
+    if (OverlayLinkCodec.isLinkFrame(frame.payload)) {
+      final handler = _overlayInbound;
+      if (handler != null) {
+        handler(senderNodeId, frame.payload);
+        return;
+      }
+      // Buffer so overlay attachment during startup doesn't lose
+      // frames. Bounded to avoid unbounded growth if the flag is off
+      // or attachment never happens.
+      if (_overlayStartupBuffer.length < _kOverlayStartupBufferMax) {
+        _overlayStartupBuffer.add((
+          senderNodeId: senderNodeId,
+          mrrpPayload: frame.payload,
+        ));
+        AppLogging.overlay(
+          'OVERLAY_STARTUP: buffering early v0.2 frame '
+          '(${_overlayStartupBuffer.length}/$_kOverlayStartupBufferMax)',
+        );
+      } else {
+        _overlayStartupBufferDrops++;
+        // Rate-limited aggregate log: fire at 1, 2, 4, 8, 16, 32…
+        // drops so operators see the signal without per-frame spam.
+        if (_overlayStartupBufferDrops >= _overlayStartupBufferNextLogAt) {
+          AppLogging.overlay(
+            'OVERLAY_STARTUP: buffer full — '
+            'total drops=$_overlayStartupBufferDrops '
+            '(unattached or flag off)',
+          );
+          _overlayStartupBufferNextLogAt *= 2;
+        }
+      }
+      return;
+    }
+
     final engine = _mrrpEngine;
     if (engine == null) {
-      AppLogging.mrrp('SIP_RX: no MrrpEngine attached — dropping mrrpData');
+      // Buffer early MRRP frames so they survive the gap between BLE connect
+      // and mrrpEngineProvider being built (when a Mesh Explorer or harness
+      // screen is first opened).
+      if (_mrrpStartupBuffer.length < _kMrrpStartupBufferMax) {
+        _mrrpStartupBuffer.add((senderNodeId: senderNodeId, frame: frame));
+        AppLogging.mrrp(
+          'MRRP_STARTUP: buffering early mrrpData frame '
+          '(${_mrrpStartupBuffer.length}/$_kMrrpStartupBufferMax)',
+        );
+      } else {
+        AppLogging.mrrp(
+          'MRRP_STARTUP: startup buffer full — discarding mrrpData frame',
+        );
+      }
       return;
     }
     engine.handleInboundFrame(senderNodeId, frame.payload);
   }
+
+  void _logIncomingMrrpCandidatePacket(
+    pb.MeshPacket packet,
+    Uint8List payload,
+  ) {
+    final sipFrame = SipCodec.decode(payload);
+    if (sipFrame == null || sipFrame.msgType != SipMessageType.mrrpData) {
+      return;
+    }
+
+    final mrrpFrame = MrrpCodec.decode(sipFrame.payload);
+    if (mrrpFrame == null) {
+      AppLogging.mrrp(
+        'MRRP_TRACE_RX_PACKET '
+        'from=0x${packet.from.toRadixString(16)} '
+        'to=0x${packet.to.toRadixString(16)} '
+        'packetId=${packet.id} '
+        'channel=${packet.channel} '
+        'port=PRIVATE_APP '
+        'decode=failed',
+      );
+      return;
+    }
+
+    AppLogging.mrrp(
+      'MRRP_TRACE_RX_PACKET '
+      'from=0x${packet.from.toRadixString(16)} '
+      'to=0x${packet.to.toRadixString(16)} '
+      'packetId=${packet.id} '
+      'channel=${packet.channel} '
+      'port=PRIVATE_APP '
+      'msgType=${mrrpFrame.msgType.name} '
+      'req_id=0x${mrrpFrame.requestId.toRadixString(16)} '
+      'service=0x${mrrpFrame.serviceId.toRadixString(16).padLeft(8, '0')} '
+      'action=0x${mrrpFrame.actionId.toRadixString(16).padLeft(4, '0')}',
+    );
+  }
+
+  void _logOutgoingMrrpPacket(pb.MeshPacket packet, Uint8List payload) {
+    final sipFrame = SipCodec.decode(payload);
+    if (sipFrame == null || sipFrame.msgType != SipMessageType.mrrpData) {
+      return;
+    }
+
+    final mrrpFrame = MrrpCodec.decode(sipFrame.payload);
+    if (mrrpFrame == null) {
+      AppLogging.mrrp(
+        'MRRP_TRACE_TX_PACKET '
+        'from=0x${packet.from.toRadixString(16)} '
+        'to=0x${packet.to.toRadixString(16)} '
+        'packetId=${packet.id} '
+        'channel=${packet.channel} '
+        'port=PRIVATE_APP '
+        'wantAck=${packet.wantAck} '
+        'hopLimit=${packet.hopLimit} '
+        'transport=${_transport.type.name} '
+        'decode=failed',
+      );
+      return;
+    }
+
+    AppLogging.mrrp(
+      'MRRP_TRACE_TX_PACKET '
+      'from=0x${packet.from.toRadixString(16)} '
+      'to=0x${packet.to.toRadixString(16)} '
+      'packetId=${packet.id} '
+      'channel=${packet.channel} '
+      'port=PRIVATE_APP '
+      'wantAck=${packet.wantAck} '
+      'hopLimit=${packet.hopLimit} '
+      'transport=${_transport.type.name} '
+      'msgType=${mrrpFrame.msgType.name} '
+      'req_id=0x${mrrpFrame.requestId.toRadixString(16)} '
+      'service=0x${mrrpFrame.serviceId.toRadixString(16).padLeft(8, '0')} '
+      'action=0x${mrrpFrame.actionId.toRadixString(16).padLeft(4, '0')}',
+    );
+  }
+
+  /// Inject a raw SIP PRIVATE_APP payload directly into the receive path.
+  ///
+  /// Intended for unit tests only. Bypasses BLE/USB framing and lets tests
+  /// drive [_handleSipPacket] without constructing a full [pb.FromRadio].
+  @visibleForTesting
+  void injectSipPacketForTest(pb.MeshPacket packet, Uint8List payload) {
+    _handleSipPacket(packet, payload);
+  }
+
+  /// Number of SIP frames currently held in the pre-attachment startup buffer.
+  ///
+  /// A non-zero value means [attachSipDiscovery] has not been called yet and
+  /// SIP packets are being buffered for later delivery. Exposed for unit tests.
+  @visibleForTesting
+  int get sipStartupBufferLength => _sipStartupBuffer.length;
+
+  /// Number of MRRP frames currently held in the pre-attachment startup buffer.
+  ///
+  /// Exposed for unit tests.
+  @visibleForTesting
+  int get mrrpStartupBufferLength => _mrrpStartupBuffer.length;
+
+  /// Clear both startup buffers, discarding all buffered frames.
+  ///
+  /// Exposed for unit tests to simulate the BLE reconnect path without
+  /// executing the full async [start] method.
+  @visibleForTesting
+  void clearStartupBuffersForTest() => _clearStartupBuffers();
 
   /// Send a SIP packet and record the TX counter.
   Future<bool> _sendSipAndCount(Uint8List payload, SipMessageType type) async {
@@ -4207,11 +5452,101 @@ class ProtocolService {
     return ok;
   }
 
-  /// Send a raw SIP payload with the given message type, recording counters.
+  /// Send a SIP packet with rate-limiter enforcement **and** TX counter
+  /// accounting.
   ///
-  /// Public wrapper of [_sendSipAndCount] for use by MRRP providers.
+  /// Use this for send paths that are **not** pre-accounted by their own
+  /// builders (handshake, identity claims — HS_HELLO, HS_CHALLENGE,
+  /// HS_RESPONSE, HS_ACCEPT, HS_DECLINE, ID_CLAIM, ID_RESP). Discovery
+  /// and DM builders record their own bytes against the limiter before
+  /// returning the encoded frame; those paths MUST continue to call
+  /// [sendSipPacket] directly (via `_sendSipAndCount`) to avoid
+  /// double-counting the budget.
+  ///
+  /// When no rate limiter has been attached (tests, early boot),
+  /// behaviour degrades gracefully to [_sendSipAndCount]. When the
+  /// limiter refuses the send, the bytes are dropped, the throttle
+  /// counter is incremented, and `false` is returned — no exceptions.
+  Future<bool> sendSipGated(Uint8List encoded, SipMessageType type) async {
+    final limiter = _sipRateLimiter;
+    if (limiter != null) {
+      if (!limiter.canSend(encoded.length)) {
+        AppLogging.sip(
+          'SIP_TX: ${type.name} suppressed '
+          '(budget insufficient for ${encoded.length}B, '
+          'remaining=${limiter.remainingBytes})',
+        );
+        _sipCounters?.recordBudgetThrottle();
+        return false;
+      }
+      limiter.recordSend(encoded.length);
+    }
+    return _sendSipAndCount(encoded, type);
+  }
+
+  /// Wrap a raw payload in a SIP frame envelope and send it on-air.
+  ///
+  /// Creates a [SipFrame] with the given [type], SIP-encodes it via
+  /// [SipCodec.encode], then transmits the wire bytes. Used by MRRP
+  /// providers to send MRRP data wrapped in the SIP framing that the
+  /// receive side ([_handleSipPacket] → [SipCodec.decode]) expects.
   Future<bool> sendSipPayload(Uint8List payload, SipMessageType type) {
-    return _sendSipAndCount(payload, type);
+    final frame = SipFrame(
+      versionMajor: SipConstants.sipVersionMajor,
+      versionMinor: SipConstants.sipVersionMinor,
+      msgType: type,
+      flags: 0,
+      headerLen: SipConstants.sipWrapperMin,
+      sessionId: 0,
+      nonce: SipCodec.generateNonce(),
+      timestampS: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      payloadLen: payload.length,
+      payload: payload,
+    );
+    final encoded = SipCodec.encode(frame);
+    if (encoded == null) return Future.value(false);
+    return _sendSipAndCount(encoded, type);
+  }
+
+  /// Accept an incoming SIP handshake request from [peerNodeId].
+  ///
+  /// Sends HS_CHALLENGE to the peer. No-ops if no pending request exists.
+  ///
+  /// **Defensive trace:** every invocation logs its originating call
+  /// site via a captured stack trace. The mandatory consent rule says
+  /// only an explicit user button tap may reach this method; if a
+  /// field log ever shows a stack frame that is not the SIP hub's
+  /// `_IncomingRequestTile` Accept button or the Mesh Explorer peer
+  /// detail sheet's `_onAccept`, that points to a consent-bypass
+  /// regression we must fix immediately.
+  Future<void> acceptSipHandshake(int peerNodeId) async {
+    final stack = StackTrace.current.toString().split('\n').take(6).join(' | ');
+    AppLogging.sip(
+      'SIP_HS: acceptSipHandshake call peer=0x${peerNodeId.toRadixString(16)} '
+      'stack=$stack',
+    );
+    final hs = _sipHandshake;
+    if (hs == null) return;
+    final challengeFrame = hs.acceptHandshake(peerNodeId);
+    if (challengeFrame == null) return;
+    final encoded = SipCodec.encode(challengeFrame);
+    if (encoded != null) {
+      await sendSipGated(encoded, SipMessageType.hsChallenge);
+    }
+  }
+
+  /// Decline an incoming SIP handshake request from [peerNodeId].
+  ///
+  /// Sends HS_DECLINE to the peer. No-ops if no pending request exists.
+  Future<void> declineSipHandshake(int peerNodeId) async {
+    final hs = _sipHandshake;
+    if (hs == null) return;
+    final declineFrame = hs.declineHandshake(peerNodeId);
+    if (declineFrame == null) return;
+    final encoded = SipCodec.encode(declineFrame);
+    if (encoded != null) {
+      await sendSipGated(encoded, SipMessageType.hsDecline);
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -4231,20 +5566,37 @@ class ProtocolService {
 
     _sipCounters?.recordHandshakeInitiated();
 
-    // Notify the user that a peer is requesting a handshake.
-    final peerName = NodeDisplayNameResolver.defaultShortName(senderNodeId);
-    NotificationService().showSipHandshakeRequestNotification(
-      peerName: peerName,
-      peerNodeId: senderNodeId,
-    );
+    // Show a notification prompting the user to respond.
+    // Gated on master + DM notification preferences + minor contact restriction.
+    () async {
+      final prefs = await SharedPreferences.getInstance();
 
-    final challengeFrame = hs.handleHello(senderNodeId, frame);
-    if (challengeFrame != null) {
-      final encoded = SipCodec.encode(challengeFrame);
-      if (encoded != null) {
-        _sendSipAndCount(encoded, SipMessageType.hsChallenge);
+      // Minor contact restriction: confirmed teen/under-13 users should not
+      // receive unsolicited handshake requests. Auto-decline silently.
+      final ageGroup = prefs.getString('age_eligibility_age_group') ?? '';
+      if (ageGroup == 'under13' || ageGroup == 'teen') {
+        AppLogging.sip(
+          'SIP_HS: suppressing incoming HS_HELLO — minor contact restriction',
+        );
+        hs.declineHandshake(senderNodeId);
+        return;
       }
-    }
+
+      if (!(prefs.getBool('notifications_enabled') ?? true)) return;
+      if (!(prefs.getBool('dm_notifications_enabled') ?? true)) return;
+      final peerName =
+          _nodes[senderNodeId]?.displayName ??
+          NodeDisplayNameResolver.defaultName(senderNodeId);
+      NotificationService().showSipHandshakeRequestNotification(
+        peerName: peerName,
+        peerNodeId: senderNodeId,
+      );
+    }();
+
+    // Queue the request for user consent — no automatic challenge response.
+    // Consent is a hard privacy boundary and is required even on the
+    // simultaneous-open yield path.
+    hs.handleHello(senderNodeId, frame);
   }
 
   void _handleSipHandshakeChallenge(int senderNodeId, SipFrame frame) {
@@ -4255,7 +5607,7 @@ class ProtocolService {
       if (responseFrame != null) {
         final encoded = SipCodec.encode(responseFrame);
         if (encoded != null) {
-          _sendSipAndCount(encoded, SipMessageType.hsResponse);
+          sendSipGated(encoded, SipMessageType.hsResponse);
         }
       }
     });
@@ -4269,7 +5621,7 @@ class ProtocolService {
       if (acceptFrame != null) {
         final encoded = SipCodec.encode(acceptFrame);
         if (encoded != null) {
-          _sendSipAndCount(encoded, SipMessageType.hsAccept);
+          sendSipGated(encoded, SipMessageType.hsAccept);
           // Responder-side: handshake complete. Auto-create DM session.
           _completeSipHandshake(senderNodeId);
         }
@@ -4290,6 +5642,26 @@ class ProtocolService {
     }
   }
 
+  void _handleSipHandshakeDecline(int senderNodeId, SipFrame frame) {
+    final hs = _sipHandshake;
+    if (hs == null) return;
+
+    hs.handleDecline(senderNodeId, frame);
+
+    () async {
+      final prefs = await SharedPreferences.getInstance();
+      if (!(prefs.getBool('notifications_enabled') ?? true)) return;
+      if (!(prefs.getBool('dm_notifications_enabled') ?? true)) return;
+      final peerName =
+          _nodes[senderNodeId]?.displayName ??
+          NodeDisplayNameResolver.defaultName(senderNodeId);
+      NotificationService().showSipHandshakeDeclinedNotification(
+        peerName: peerName,
+        peerNodeId: senderNodeId,
+      );
+    }();
+  }
+
   /// Complete a handshake: consume result, create DM session, update counters.
   void _completeSipHandshake(int peerNodeId) {
     final hs = _sipHandshake;
@@ -4301,18 +5673,32 @@ class ProtocolService {
 
     _sipCounters?.recordHandshakeCompleted();
 
-    // Prevent duplicate DM sessions with the same peer.
-    final existing = dm?.activeSessions.where(
-      (s) => s.peerNodeId == peerNodeId,
-    );
+    // Handle an existing DM session for this peer.
+    //
+    // Same tag → true duplicate (e.g. handshake state-machine re-entry
+    // during a race). Skip without creating another entry.
+    //
+    // Different tag → the peer re-handshook and installed a new
+    // session_tag on its side. Expire the prior local session(s) so
+    // the new one takes over; otherwise the peer's DMs get dropped as
+    // `unknown session` and our sends target a tag the peer discarded.
+    final existing = dm?.activeSessions
+        .where((s) => s.peerNodeId == peerNodeId)
+        .toList();
     if (existing != null && existing.isNotEmpty) {
-      AppLogging.sip(
-        'SIP: DM session already exists for '
-        'node=0x${peerNodeId.toRadixString(16)}, '
-        'existing_tag=0x${existing.first.sessionTag.toRadixString(16)}, '
-        'skipping duplicate creation',
+      final duplicateTag = existing.any(
+        (s) => s.sessionTag == result.sessionTag,
       );
-      return;
+      if (duplicateTag) {
+        AppLogging.sip(
+          'SIP: DM session already exists for '
+          'node=0x${peerNodeId.toRadixString(16)}, '
+          'existing_tag=0x${result.sessionTag.toRadixString(16)}, '
+          'skipping duplicate creation',
+        );
+        return;
+      }
+      dm?.supersedeSessionsForPeer(peerNodeId, exceptTag: result.sessionTag);
     }
 
     // Create ephemeral DM session from handshake result.
@@ -4328,12 +5714,34 @@ class ProtocolService {
       'session_tag=0x${result.sessionTag.toRadixString(16)}',
     );
 
+    // Hand off to the provider-level overlay auto-opener. Fire-and-
+    // forget: any exception is the provider's problem and must not
+    // break DM readiness.
+    final hsHook = onSipHandshakeComplete;
+    if (hsHook != null) {
+      try {
+        hsHook(peerNodeId);
+      } catch (e, st) {
+        AppLogging.sip(
+          'SIP: onSipHandshakeComplete hook threw (ignored): $e\n$st',
+        );
+      }
+    }
+
     // Fire local notification for handshake completion.
-    final peerName = NodeDisplayNameResolver.defaultShortName(peerNodeId);
-    NotificationService().showSipHandshakeCompleteNotification(
-      peerName: peerName,
-      peerNodeId: peerNodeId,
-    );
+    // Gated on master + DM notification preferences.
+    () async {
+      final prefs = await SharedPreferences.getInstance();
+      if (!(prefs.getBool('notifications_enabled') ?? true)) return;
+      if (!(prefs.getBool('dm_notifications_enabled') ?? true)) return;
+      final peerName =
+          _nodes[peerNodeId]?.displayName ??
+          NodeDisplayNameResolver.defaultName(peerNodeId);
+      NotificationService().showSipHandshakeCompleteNotification(
+        peerName: peerName,
+        peerNodeId: peerNodeId,
+      );
+    }();
   }
 
   // ---------------------------------------------------------------------------
@@ -4414,16 +5822,22 @@ class ProtocolService {
     final message = dm.handleInboundDm(frame);
     if (message != null) {
       // Fire local notification for inbound SIP DM.
+      // Gated on master + DM notification preferences.
       final session = dm.getSession(frame.sessionId);
       if (session != null) {
-        final peerName = NodeDisplayNameResolver.defaultShortName(
-          session.peerNodeId,
-        );
-        NotificationService().showSipDmNotification(
-          peerName: peerName,
-          message: message.text,
-          sessionTag: frame.sessionId,
-        );
+        () async {
+          final prefs = await SharedPreferences.getInstance();
+          if (!(prefs.getBool('notifications_enabled') ?? true)) return;
+          if (!(prefs.getBool('dm_notifications_enabled') ?? true)) return;
+          final peerName =
+              _nodes[session.peerNodeId]?.displayName ??
+              NodeDisplayNameResolver.defaultName(session.peerNodeId);
+          NotificationService().showSipDmNotification(
+            peerName: peerName,
+            message: message.text,
+            sessionTag: frame.sessionId,
+          );
+        }();
       }
     }
   }
@@ -4458,6 +5872,16 @@ class ProtocolService {
     dm.handleInboundDelete(frame);
   }
 
+  void _handleSipDmClose(SipFrame frame) {
+    final dm = _sipDm;
+    if (dm == null) {
+      AppLogging.sip('SIP_RX: no SipDmManager — dropping DM_CLOSE');
+      return;
+    }
+
+    dm.handleInboundClose(frame);
+  }
+
   /// Send a file transfer packet as broadcast on PRIVATE_APP (portnum 256).
   ///
   /// File transfers are broadcast rather than unicast because Meshtastic
@@ -4476,10 +5900,21 @@ class ProtocolService {
     int? destinationNode,
     int hopLimit = 3,
   }) async {
-    if (_myNodeNum == null || !_transport.isConnected) return false;
+    if (_myNodeNum == null || !_transport.isConnected) {
+      AppLogging.fileTransfer(
+        'sendSmFileTransferPacket BLOCKED: '
+        'myNodeNum=${_myNodeNum != null ? "set" : "NULL"}, '
+        'connected=${_transport.isConnected}',
+      );
+      return false;
+    }
 
     if (!_smRateLimiter.canSend(SmPortnum.fileTransfer)) {
-      AppLogging.protocol('SM_FILE_TRANSFER rate-limited');
+      AppLogging.fileTransfer(
+        'sendSmFileTransferPacket RATE-LIMITED '
+        '(${payload.length} bytes, '
+        'intended=${destinationNode?.toRadixString(16) ?? "broadcast"})',
+      );
       return false;
     }
 
@@ -4714,6 +6149,14 @@ class ProtocolService {
     try {
       AppLogging.protocol('Sending message to $to: $text');
 
+      final payloadBudget = TextMessagePayloadSizer.standard(
+        replyId: replyId,
+        isEmoji: isEmoji,
+      ).measure(text);
+      if (!payloadBudget.fitsInPacket) {
+        throw TextMessagePayloadTooLargeException(payloadBudget);
+      }
+
       final packetId = _generatePacketId();
 
       // Call the pre-tracking callback BEFORE sending
@@ -4724,12 +6167,13 @@ class ProtocolService {
 
       final data = pb.Data()
         ..portnum = pn.PortNum.TEXT_MESSAGE_APP
-        ..payload = utf8.encode(text)
-        ..wantResponse = wantAck
-        ..emoji = isEmoji ? 1 : 0;
+        ..payload = utf8.encode(text);
 
       if (replyId != null) {
         data.replyId = replyId;
+      }
+      if (isEmoji) {
+        data.emoji = 1;
       }
 
       final packet = MeshPacketBuilder.userPayload(
@@ -4741,10 +6185,22 @@ class ProtocolService {
         wantAck: wantAck,
       );
 
+      AppLogging.protocol(
+        '📤 Outbound message (pre-tracked): packetId=$packetId, '
+        'to=0x${to.toRadixString(16)}, channel=$channel, '
+        'wantAck=$wantAck, transport=radio '
+        '(hopLimit/hopStart left to firmware)',
+      );
+
       final toRadio = pb.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
 
       await _transport.send(_prepareForSend(bytes));
+
+      AppLogging.protocol(
+        '📤 Sent ${bytes.length} bytes to node via '
+        '${_transport.requiresFraming ? "USB" : "BLE"}',
+      );
 
       // Track the message for delivery status (internal tracking)
       if (messageId != null && wantAck) {
@@ -5138,6 +6594,24 @@ class ProtocolService {
 
     await _transport.send(_prepareForSend(bytes));
 
+    // Snapshot origin (local device) position for pending entry
+    double? originLat, originLon;
+    if (_myNodeNum != null) {
+      final myNode = _nodes[_myNodeNum];
+      if (myNode != null && myNode.hasPosition) {
+        originLat = myNode.latitude;
+        originLon = myNode.longitude;
+      }
+    }
+
+    // Snapshot target node position for pending entry
+    double? targetLat, targetLon;
+    final targetNodeObj = _nodes[nodeNum];
+    if (targetNodeObj != null && targetNodeObj.hasPosition) {
+      targetLat = targetNodeObj.latitude;
+      targetLon = targetNodeObj.longitude;
+    }
+
     // Emit a placeholder log so the UI immediately shows a pending entry
     _traceRouteLogController.add(
       TraceRouteLog(
@@ -5147,6 +6621,10 @@ class ProtocolService {
         response: false,
         hopsTowards: 0,
         hopsBack: 0,
+        originLatitude: originLat,
+        originLongitude: originLon,
+        targetLatitude: targetLat,
+        targetLongitude: targetLon,
       ),
     );
   }
@@ -5384,6 +6862,12 @@ class ProtocolService {
             AppLogging.protocol('Updated identity store with new name');
           }
         }
+
+        // Owner config writes also trigger device reboot.
+        AppLogging.protocol(
+          'setOwnerConfig: Emitting localConfigWrite — device reboot expected',
+        );
+        _localConfigWriteController.add(null);
       }
     } catch (e) {
       AppLogging.protocol('Error setting owner config: $e');
@@ -5908,6 +7392,15 @@ class ProtocolService {
 
     final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+
+    // Immediately reflect the change in the protocol-layer node cache so that
+    // any subsequent stream updates emitted for this node carry isFavorite=true.
+    // Without this, telemetry or position packets arriving before the device
+    // ACKs the admin command would re-emit the node with the stale false value,
+    // causing the stream listener in NodesNotifier to override the user's choice.
+    if (_nodes.containsKey(nodeNum)) {
+      _nodes[nodeNum] = _nodes[nodeNum]!.copyWith(isFavorite: true);
+    }
   }
 
   /// Local-only: favorites are stored in the directly-connected device's
@@ -5938,6 +7431,13 @@ class ProtocolService {
 
     final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+
+    // Immediately reflect the removal in the protocol-layer node cache so that
+    // subsequent stream updates carry isFavorite=false right away and do not
+    // re-add the node to favourites before the device ACKs the admin command.
+    if (_nodes.containsKey(nodeNum)) {
+      _nodes[nodeNum] = _nodes[nodeNum]!.copyWith(isFavorite: false);
+    }
   }
 
   /// Local-only: sets a fixed GPS position on the directly-connected device.
@@ -6066,6 +7566,35 @@ class ProtocolService {
 
     final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+  }
+
+  /// Extract a plausible [DateTime] from a mesh packet's rxTime.
+  ///
+  /// Returns the rxTime-derived timestamp when it passes validation:
+  /// - non-zero
+  /// - after [_minPlausibleEpoch] (2020-01-01)
+  /// - not more than [_maxFutureSlack] seconds into the future
+  ///
+  /// Falls back to [DateTime.now] with a diagnostic log otherwise.
+  static DateTime _plausibleTimestamp(pb.MeshPacket packet) {
+    if (packet.hasRxTime() && packet.rxTime > 0) {
+      final rxEpoch = packet.rxTime; // seconds since 1970
+      final nowEpoch = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+      if (rxEpoch >= _minPlausibleEpoch &&
+          rxEpoch <= nowEpoch + _maxFutureSlack) {
+        return DateTime.fromMillisecondsSinceEpoch(rxEpoch * 1000);
+      }
+      AppLogging.protocol(
+        'Implausible rxTime=$rxEpoch from=${packet.from} '
+        'packetId=${packet.id} — falling back to local time',
+      );
+    } else {
+      AppLogging.protocol(
+        'Missing rxTime from=${packet.from} packetId=${packet.id} '
+        '— using local time (device may lack a time source)',
+      );
+    }
+    return DateTime.now();
   }
 
   /// Local-only: set the device time to a specific Unix timestamp.
@@ -6274,6 +7803,14 @@ class ProtocolService {
     // pollute the local cache.
     if (!isRemote) {
       _applySavedConfigToCache(config);
+
+      // Notify listeners that a config write to the local node occurred.
+      // The device will reboot to apply the change, so the reconnect flow
+      // should enter recovery mode (increased patience + logical matching).
+      AppLogging.protocol(
+        'setConfig: Emitting localConfigWrite — device reboot expected',
+      );
+      _localConfigWriteController.add(null);
     }
   }
 
@@ -6759,6 +8296,12 @@ class ProtocolService {
     // the device reboots before it can send back a config response).
     if (!isRemote) {
       _applySavedModuleConfigToCache(moduleConfig);
+
+      // Module config writes also trigger device reboot.
+      AppLogging.protocol(
+        'setModuleConfig: Emitting localConfigWrite — device reboot expected',
+      );
+      _localConfigWriteController.add(null);
     }
   }
 
@@ -7550,6 +9093,9 @@ class ProtocolService {
       'heltec wireless tracker': 'Heltec Wireless Tracker',
       'heltec wireless paper': 'Heltec Wireless Paper',
       'heltec mesh node': 'Heltec Mesh Node T114',
+      'heltec meshpocket': 'Heltec MeshPocket',
+      'heltec mesh pocket': 'Heltec MeshPocket',
+      'meshpocket': 'Heltec MeshPocket',
       'heltec capsule': 'Heltec Capsule Sensor V3',
       'heltec vision master': 'Heltec Vision Master T190',
       'heltec': 'Heltec V3', // Generic Heltec fallback
@@ -7652,6 +9198,7 @@ class ProtocolService {
       'HELTEC_VISION_MASTER_E213': 'Heltec Vision Master E213',
       'HELTEC_VISION_MASTER_E290': 'Heltec Vision Master E290',
       'HELTEC_MESH_NODE_T114': 'Heltec Mesh Node T114',
+      'HELTEC_MESH_POCKET': 'Heltec MeshPocket',
       'HELTEC_HRU_3601': 'Heltec HRU-3601',
       'RAK4631': 'RAK4631',
       'RAK11200': 'RAK11200',
@@ -7717,5 +9264,16 @@ class ProtocolService {
     await _userConfigController.close();
     await _traceRouteLogController.close();
     await _meshTelemetryController.close();
+    await _mqttClientProxyMessageController.close();
+    await _localConfigWriteController.close();
   }
+}
+
+/// Phases of the two-step connect handshake. See `_nonceInitialConfig` and
+/// `_nonceQueueDrain` for the nonces exchanged in each phase.
+enum _HandshakePhase {
+  idle,
+  awaitingInitialConfig,
+  awaitingQueueDrain,
+  complete,
 }

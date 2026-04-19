@@ -5,7 +5,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../core/l10n/l10n_extension.dart';
@@ -29,11 +29,15 @@ import '../../providers/help_providers.dart';
 import '../../providers/presence_providers.dart';
 import '../../providers/social_providers.dart';
 import '../../utils/presence_utils.dart';
+import '../../utils/time_format.dart';
+import '../../utils/timestamp_validation.dart';
+import '../../utils/uptime_formatter.dart';
 import '../../core/constants.dart';
 import '../aether/providers/aether_flight_matcher_provider.dart';
 import '../aether/widgets/aether_flight_match_card.dart';
 import '../navigation/main_shell.dart';
 import 'node_detail_screen.dart';
+import 'widgets/nodes_legend_sheet.dart';
 
 class NodesScreen extends ConsumerStatefulWidget {
   const NodesScreen({super.key});
@@ -48,11 +52,32 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
   NodeFilter _activeFilter = NodeFilter.all;
   NodeSortOrder _sortOrder = NodeSortOrder.lastHeard;
   bool _showSectionHeaders = true;
+  bool _compactView = false;
   final TextEditingController _searchController = TextEditingController();
 
   /// Track node IDs that have already been seen/animated
   /// This allows new nodes to animate in while existing ones don't re-animate
   final Set<int> _seenNodeIds = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadViewMode();
+  }
+
+  Future<void> _loadViewMode() async {
+    final settings = await ref.read(settingsServiceProvider.future);
+    if (!mounted) return;
+    safeSetState(() => _compactView = settings.nodeViewModeIndex == 1);
+  }
+
+  Future<void> _toggleViewMode() async {
+    final newValue = !_compactView;
+    safeSetState(() => _compactView = newValue);
+    final settings = await ref.read(settingsServiceProvider.future);
+    if (!mounted) return;
+    await settings.setNodeViewModeIndex(newValue ? 1 : 0);
+  }
 
   @override
   void dispose() {
@@ -71,11 +96,52 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
     return presenceMap[node.nodeNum]?.confidence ?? node.presenceConfidence;
   }
 
+  /// Whether a node is **online** — heard within the Meshtastic firmware
+  /// online window (2 h).  Much broader than [PresenceConfidence.isActive]
+  /// (2 min) and matches what the device screen reports as "online".
+  bool _isOnlineNode(Map<int, NodePresence> presenceMap, MeshNode node) {
+    final presence = presenceMap[node.nodeNum];
+    if (presence != null) return presence.isOnline;
+    return PresenceCalculator.isOnline(node.lastHeard, now: DateTime.now());
+  }
+
   Duration? _lastHeardAgeForNode(
     Map<int, NodePresence> presenceMap,
     MeshNode node,
   ) {
     return presenceMap[node.nodeNum]?.timeSinceLastHeard ?? node.lastHeardAge;
+  }
+
+  Widget _buildNodeItem({
+    required MeshNode node,
+    required bool isMyNode,
+    required Map<int, NodePresence> presenceMap,
+    required bool animationsEnabled,
+  }) {
+    final presence = _presenceForNode(presenceMap, node);
+    final lastHeardAge = _lastHeardAgeForNode(presenceMap, node);
+
+    if (_compactView) {
+      return _CompactNodeTile(
+        node: node,
+        isMyNode: isMyNode,
+        presenceConfidence: presence,
+        lastHeardAge: lastHeardAge,
+        onTap: () => _showNodeDetails(context, node, isMyNode),
+      );
+    }
+
+    return _NodeCard(
+      node: node,
+      isMyNode: isMyNode,
+      presenceConfidence: presence,
+      lastHeardAge: lastHeardAge,
+      animationsEnabled: animationsEnabled,
+      onTap: () => _showNodeDetails(context, node, isMyNode),
+      onLongPress: isMyNode
+          ? () => _showNodeLongPressMenu(context, node, isMyNode)
+          : null,
+    );
   }
 
   @override
@@ -121,10 +187,10 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
     // Count nodes by filter for badges
     final allNodes = nodes.values.toList();
     final activeCount = allNodes
-        .where((n) => _presenceForNode(presenceMap, n).isActive)
+        .where((n) => _isOnlineNode(presenceMap, n))
         .length;
     final inactiveCount = allNodes
-        .where((n) => _presenceForNode(presenceMap, n).isInactive)
+        .where((n) => !_isOnlineNode(presenceMap, n))
         .length;
     final favoritesCount = allNodes.where((n) => n.isFavorite).length;
     final withPositionCount = allNodes
@@ -163,6 +229,10 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
             AppBarOverflowMenu<String>(
               onSelected: (value) {
                 switch (value) {
+                  case 'view_mode':
+                    _toggleViewMode();
+                  case 'legend':
+                    NodesLegendSheet.show(context);
                   case 'settings':
                     Navigator.pushNamed(context, '/settings');
                   case 'help':
@@ -170,6 +240,44 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
                 }
               },
               itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'view_mode',
+                  child: Row(
+                    children: [
+                      Icon(
+                        _compactView ? Icons.view_agenda : Icons.view_list,
+                        color: context.textSecondary,
+                        size: 20,
+                      ),
+                      const SizedBox(width: AppTheme.spacing12),
+                      Text(
+                        _compactView
+                            ? context.l10n.nodesScreenViewModeCards
+                            : context.l10n.nodesScreenViewModeCompact,
+                        style: TextStyle(color: context.textPrimary),
+                      ),
+                    ],
+                  ),
+                ),
+                if (_compactView)
+                  PopupMenuItem(
+                    value: 'legend',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          color: context.textSecondary,
+                          size: 20,
+                        ),
+                        const SizedBox(width: AppTheme.spacing12),
+                        Text(
+                          context.l10n.nodesScreenLegendTitle,
+                          style: TextStyle(color: context.textPrimary),
+                        ),
+                      ],
+                    ),
+                  ),
+                const PopupMenuDivider(),
                 PopupMenuItem(
                   value: 'help',
                   child: Row(
@@ -470,16 +578,11 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
               index: animIndex,
               direction: SlideDirection.left,
               enabled: animationsEnabled && isNewNode,
-              child: _NodeCard(
+              child: _buildNodeItem(
                 node: node,
                 isMyNode: isMyNode,
-                presenceConfidence: _presenceForNode(presenceMap, node),
-                lastHeardAge: _lastHeardAgeForNode(presenceMap, node),
+                presenceMap: presenceMap,
                 animationsEnabled: animationsEnabled,
-                onTap: () => _showNodeDetails(context, node, isMyNode),
-                onLongPress: isMyNode
-                    ? () => _showNodeLongPressMenu(context, node, isMyNode)
-                    : null,
               ),
             );
           }, childCount: nodesList.length),
@@ -546,16 +649,11 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
               index: animIndex,
               direction: SlideDirection.left,
               enabled: animationsEnabled && isNewNode,
-              child: _NodeCard(
+              child: _buildNodeItem(
                 node: node,
                 isMyNode: isMyNode,
-                presenceConfidence: _presenceForNode(presenceMap, node),
-                lastHeardAge: _lastHeardAgeForNode(presenceMap, node),
+                presenceMap: presenceMap,
                 animationsEnabled: animationsEnabled,
-                onTap: () => _showNodeDetails(context, node, isMyNode),
-                onLongPress: isMyNode
-                    ? () => _showNodeLongPressMenu(context, node, isMyNode)
-                    : null,
               ),
             );
           }, childCount: nonEmptySections[sectionIndex].nodes.length),
@@ -811,13 +909,9 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
       case NodeFilter.all:
         return nodes;
       case NodeFilter.active:
-        return nodes
-            .where((n) => _presenceForNode(presenceMap, n).isActive)
-            .toList();
+        return nodes.where((n) => _isOnlineNode(presenceMap, n)).toList();
       case NodeFilter.inactive:
-        return nodes
-            .where((n) => _presenceForNode(presenceMap, n).isInactive)
-            .toList();
+        return nodes.where((n) => !_isOnlineNode(presenceMap, n)).toList();
       case NodeFilter.favorites:
         return nodes.where((n) => n.isFavorite).toList();
       case NodeFilter.withPosition:
@@ -1192,8 +1286,8 @@ class _NodeCard extends StatelessWidget {
     );
   }
 
-  String _formatLastHeard(DateTime time) {
-    final dateFormat = DateFormat('dd/MM/yyyy, h:mma');
+  String _formatLastHeard(BuildContext context, DateTime time) {
+    final dateFormat = AppTimeFormat.numericDateAndTime(context);
     return dateFormat.format(time);
   }
 
@@ -1472,13 +1566,32 @@ class _NodeCard extends StatelessWidget {
                 ),
               SizedBox(height: AppTheme.spacing4),
               // Last heard
-              if (node.lastHeard != null) ...[
+              if (TimestampValidation.isPlausible(node.lastHeard)) ...[
                 Row(
                   children: [
                     Icon(Icons.check, size: 14, color: context.accentColor),
                     SizedBox(width: AppTheme.spacing6),
                     Text(
-                      _formatLastHeard(node.lastHeard!),
+                      _formatLastHeard(context, node.lastHeard!),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.textTertiary,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: AppTheme.spacing4),
+              ],
+              // Uptime
+              if (node.uptimeSeconds != null) ...[
+                Row(
+                  children: [
+                    Icon(Icons.timer, size: 14, color: context.textTertiary),
+                    SizedBox(width: AppTheme.spacing6),
+                    Text(
+                      context.l10n.nodesScreenUptimeLabel(
+                        formatUptime(node.uptimeSeconds!),
+                      ),
                       style: TextStyle(
                         fontSize: 12,
                         color: context.textTertiary,
@@ -1728,5 +1841,277 @@ class _NodeCard extends StatelessWidget {
       case PresenceConfidence.unknown:
         return context.textTertiary;
     }
+  }
+}
+
+class _CompactNodeTile extends StatelessWidget {
+  final MeshNode node;
+  final bool isMyNode;
+  final PresenceConfidence presenceConfidence;
+  final Duration? lastHeardAge;
+  final VoidCallback onTap;
+
+  const _CompactNodeTile({
+    required this.node,
+    required this.isMyNode,
+    required this.presenceConfidence,
+    required this.lastHeardAge,
+    required this.onTap,
+  });
+
+  Color _statusColor(BuildContext context) {
+    if (isMyNode) return context.accentColor;
+    switch (presenceConfidence) {
+      case PresenceConfidence.active:
+        return AccentColors.green;
+      case PresenceConfidence.fading:
+        return AppTheme.warningYellow;
+      case PresenceConfidence.stale:
+        return context.textSecondary;
+      case PresenceConfidence.unknown:
+        return context.textTertiary;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _statusColor(context);
+    final statusText = presenceStatusText(presenceConfidence, lastHeardAge);
+    final opacity = isMyNode ? 1.0 : presenceOpacity(presenceConfidence);
+    final signalBars = _calculateSignalBars(node.rssi);
+    final signalColor = _signalColor(node.rssi);
+
+    return Opacity(
+      opacity: opacity,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: AppTheme.spacing8,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Row 1: Status dot + full name (no truncation)
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: color,
+                      boxShadow: presenceConfidence.isActive
+                          ? [
+                              BoxShadow(
+                                color: color.withValues(alpha: 0.4),
+                                blurRadius: 4,
+                              ),
+                            ]
+                          : null,
+                    ),
+                  ),
+                  const SizedBox(width: AppTheme.spacing12),
+                  Expanded(
+                    child: Text(
+                      node.displayName,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: context.textPrimary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppTheme.spacing8),
+                  Icon(
+                    Icons.chevron_right,
+                    size: 16,
+                    color: context.textTertiary,
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppTheme.spacing4),
+              // Row 2: Metadata with proper spacing
+              Padding(
+                padding: const EdgeInsets.only(left: 22),
+                child: Wrap(
+                  spacing: AppTheme.spacing12,
+                  runSpacing: AppTheme.spacing4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    // Signal bars (mini)
+                    if (node.rssi != null)
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: List.generate(4, (i) {
+                          final isActive = i < signalBars;
+                          return Container(
+                            margin: const EdgeInsets.only(right: 1),
+                            width: 3,
+                            height: 6.0 + (i * 2.0),
+                            decoration: BoxDecoration(
+                              color: isActive
+                                  ? signalColor
+                                  : context.textTertiary.withValues(
+                                      alpha: 0.25,
+                                    ),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius1,
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                    // Hop count — graphical numbered dots
+                    if (node.hopCount != null)
+                      _CompactHopIndicator(hopCount: node.hopCount!),
+                    // Transport badge (RF / MQTT)
+                    Icon(
+                      node.viaMqtt ? Icons.cloud_outlined : Icons.cell_tower,
+                      size: 14,
+                      color: node.viaMqtt
+                          ? AccentColors.sky
+                          : AccentColors.emerald,
+                    ),
+                    // Battery
+                    if (node.batteryLevel != null && node.batteryLevel! <= 100)
+                      Icon(
+                        _batteryIcon(node.batteryLevel!),
+                        size: 16,
+                        color: _batteryColor(node.batteryLevel!),
+                      ),
+                    // Uptime
+                    if (node.uptimeSeconds != null)
+                      Text(
+                        context.l10n.nodesScreenUptimeLabel(
+                          formatUptime(node.uptimeSeconds!),
+                        ),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: context.textTertiary,
+                        ),
+                      ),
+                    // Status text
+                    Text(
+                      statusText,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  int _calculateSignalBars(int? rssi) {
+    if (rssi == null) return 0;
+    if (rssi >= -70) return 4;
+    if (rssi >= -80) return 3;
+    if (rssi >= -90) return 2;
+    if (rssi >= -100) return 1;
+    return 0;
+  }
+
+  Color _signalColor(int? rssi) {
+    if (rssi == null) return AppTheme.errorRed;
+    if (rssi >= -70) return AccentColors.green;
+    if (rssi >= -85) return AppTheme.warningYellow;
+    return AppTheme.errorRed;
+  }
+
+  IconData _batteryIcon(int level) {
+    if (level >= 90) return Icons.battery_full;
+    if (level >= 60) return Icons.battery_5_bar;
+    if (level >= 30) return Icons.battery_3_bar;
+    if (level >= 10) return Icons.battery_1_bar;
+    return Icons.battery_alert;
+  }
+
+  Color _batteryColor(int level) {
+    if (level >= 50) return AccentColors.green;
+    if (level >= 20) return AppTheme.warningYellow;
+    return AppTheme.errorRed;
+  }
+}
+
+/// Graphical hop-count indicator for the compact node tile.
+///
+/// Renders a row of small numbered circles (1️⃣2️⃣3️⃣…) representing the
+/// hop count. A hop count of 0 shows a single filled accent circle labelled
+/// "D" (Direct). Caps the visual at 4 dots to keep it compact.
+class _CompactHopIndicator extends StatelessWidget {
+  final int hopCount;
+
+  const _CompactHopIndicator({required this.hopCount});
+
+  @override
+  Widget build(BuildContext context) {
+    // Direct neighbour — single accent dot with "D"
+    if (hopCount == 0) {
+      return _hopDot(
+        context,
+        label: 'D', // lint-allow: hardcoded-string
+        filled: true,
+        color: AccentColors.green,
+      );
+    }
+
+    // Show up to 4 hop dots
+    final displayCount = hopCount.clamp(1, 4);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(displayCount, (i) {
+        // Colour fades from green (nearby) → yellow → orange → red (far)
+        final color = switch (i) {
+          0 => AccentColors.green,
+          1 => AppTheme.warningYellow,
+          2 => AccentColors.orange,
+          _ => AppTheme.errorRed,
+        };
+        return _hopDot(
+          context,
+          label: '${i + 1}',
+          filled: true,
+          color: color,
+        ); // lint-allow: hardcoded-string
+      }),
+    );
+  }
+
+  Widget _hopDot(
+    BuildContext context, {
+    required String label,
+    required bool filled,
+    required Color color,
+  }) {
+    return Container(
+      width: 14,
+      height: 14,
+      margin: const EdgeInsets.only(right: 2),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: filled ? color.withValues(alpha: 0.2) : Colors.transparent,
+        border: Border.all(color: color, width: 1),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 8,
+          fontWeight: FontWeight.w700,
+          color: color,
+          height: 1,
+        ),
+      ),
+    );
   }
 }

@@ -7,7 +7,6 @@ import '../../../core/theme.dart';
 import '../../../core/transport.dart';
 import '../../../providers/app_providers.dart';
 import '../../../models/presence_confidence.dart';
-import '../../../providers/presence_providers.dart';
 
 /// Network Overview Widget - Shows mesh network status at a glance
 class NetworkOverviewContent extends ConsumerWidget {
@@ -16,7 +15,7 @@ class NetworkOverviewContent extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final nodes = ref.watch(nodesProvider);
-    final presenceMap = ref.watch(presenceMapProvider);
+
     final messages = ref.watch(messagesProvider);
     final connectionState = ref.watch(connectionStateProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
@@ -28,12 +27,13 @@ class NetworkOverviewContent extends ConsumerWidget {
         false;
 
     // Calculate stats
+    final now = DateTime.now();
     final activeNodes = nodes.values
-        .where((n) => presenceConfidenceFor(presenceMap, n).isActive)
+        .where((n) => PresenceCalculator.isOnline(n.lastHeard, now: now))
         .length;
     final totalNodes = nodes.length;
     final recentMessages = messages.where((m) {
-      if (m.isEmoji) return false;
+      if (m.isCanonicalTapback) return false;
       final age = DateTime.now().difference(m.timestamp);
       return age.inHours < 1;
     }).length;

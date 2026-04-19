@@ -6,12 +6,14 @@ on:
   pull_request:
     branches: [main]
 
+permissions: read-all
+
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Scan for secrets
         run: bash ./tool/secret_scan.sh
@@ -20,7 +22,7 @@ jobs:
         run: cp .env.ci .env
 
       - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version: "3.38.9"
           channel: "stable"
@@ -43,6 +45,7 @@ jobs:
 
       - name: Run tests
         run: |
+          set -o pipefail
           # Run tests with expanded output, retry once on failure to catch flaky tests
           if ! flutter test --reporter expanded 2>&1 | tee test_output.log; then
             echo "::warning::First test run failed, retrying to check for flaky tests..."

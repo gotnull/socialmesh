@@ -65,6 +65,9 @@ class _CapturingTransport implements DeviceTransport {
   }
 
   @override
+  Future<void> refreshNotifications() async {}
+
+  @override
   Future<void> pollOnce() async {}
 
   @override

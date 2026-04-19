@@ -4,6 +4,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:socialmesh/services/payload/spp_constants.dart';
 import 'package:socialmesh/services/protocol/socialmesh/sm_file_transfer.dart';
 import 'package:socialmesh/services/protocol/socialmesh/sm_codec.dart';
 import 'package:socialmesh/services/protocol/socialmesh/sm_constants.dart';
@@ -266,6 +267,146 @@ void main() {
       limiter.recordSend(SmPortnum.fileTransfer);
       // Immediately after send, should be rate-limited
       expect(limiter.canSend(SmPortnum.fileTransfer), isFalse);
+    });
+  });
+
+  // ─── SPP v1 wire format verification ─────────────────────────────
+
+  group('SPP v1 header encoding', () {
+    test('SmFileOffer.encode produces v1 header byte 0x14', () {
+      final offer = SmFileOffer(
+        fileId: generateFileId(),
+        filename: 'test.txt',
+        mimeType: 'text/plain',
+        totalBytes: 100,
+        chunkSize: 100,
+        chunkCount: 1,
+        sha256Hash: Uint8List(32),
+        createdAt: 0,
+        expiresAt: 0,
+      );
+
+      final encoded = offer.encode()!;
+      // Header byte: (SppVersion.current << 4) | 4 = 0x14
+      expect(
+        encoded[0],
+        0x14,
+        reason: 'Offer header must be v1 (0x14), not v0 (0x04)',
+      );
+      expect(
+        encoded[0] >> 4,
+        SppVersion.current,
+        reason: 'High nibble must be SppVersion.current',
+      );
+      expect(
+        encoded[0] & 0x0F,
+        SmPacketKind.fileOffer,
+        reason: 'Low nibble must be FILE_OFFER (4)',
+      );
+    });
+
+    test('SmFileChunk.encode produces v1 header byte 0x15', () {
+      final chunk = SmFileChunk(
+        fileId: generateFileId(),
+        chunkIndex: 0,
+        chunkCount: 1,
+        payload: Uint8List.fromList([42]),
+      );
+
+      final encoded = chunk.encode()!;
+      expect(
+        encoded[0],
+        0x15,
+        reason: 'Chunk header must be v1 (0x15), not v0 (0x05)',
+      );
+      expect(encoded[0] >> 4, SppVersion.current);
+      expect(encoded[0] & 0x0F, SmPacketKind.fileChunk);
+    });
+
+    test('SmFileNack.encode produces v1 header byte 0x16', () {
+      final nack = SmFileNack(fileId: generateFileId(), missingIndexes: [0, 1]);
+
+      final encoded = nack.encode()!;
+      expect(
+        encoded[0],
+        0x16,
+        reason: 'Nack header must be v1 (0x16), not v0 (0x06)',
+      );
+      expect(encoded[0] >> 4, SppVersion.current);
+      expect(encoded[0] & 0x0F, SmPacketKind.fileNack);
+    });
+
+    test('SmFileAck.encode produces v1 header byte 0x17', () {
+      final ack = SmFileAck(
+        fileId: generateFileId(),
+        status: FileAckStatus.complete,
+      );
+
+      final encoded = ack.encode()!;
+      expect(
+        encoded[0],
+        0x17,
+        reason: 'Ack header must be v1 (0x17), not v0 (0x07)',
+      );
+      expect(encoded[0] >> 4, SppVersion.current);
+      expect(encoded[0] & 0x0F, SmPacketKind.fileAck);
+    });
+
+    test(
+      'encode→SmCodec.decodeFileTransfer round-trip preserves version=1',
+      () {
+        final offer = SmFileOffer(
+          fileId: generateFileId(),
+          filename: 'round-trip.bin',
+          mimeType: 'application/octet-stream',
+          totalBytes: 500,
+          chunkSize: 200,
+          chunkCount: 3,
+          sha256Hash: Uint8List(32),
+          createdAt: 1700000000,
+          expiresAt: 1700086400,
+        );
+
+        final encoded = offer.encode()!;
+        final packet = SmCodec.decodeFileTransfer(encoded);
+        expect(packet, isNotNull);
+        expect(
+          packet!.version,
+          1,
+          reason: 'Decoded version must be 1 (SPP v1)',
+        );
+        expect(packet.type, SmPacketType.fileOffer);
+        expect(packet.fileOffer.filename, 'round-trip.bin');
+      },
+    );
+
+    test('legacy v0 offer (header 0x04) still decodes with version=0', () {
+      // Manually construct a v0 offer by patching the first byte.
+      final offer = SmFileOffer(
+        fileId: generateFileId(),
+        filename: 'legacy.bin',
+        mimeType: 'application/octet-stream',
+        totalBytes: 100,
+        chunkSize: 100,
+        chunkCount: 1,
+        sha256Hash: Uint8List(32),
+        createdAt: 0,
+        expiresAt: 0,
+      );
+
+      final encoded = offer.encode()!;
+      // Patch header to v0.
+      encoded[0] = SmPacketKind.fileOffer; // 0x04 (version=0)
+
+      final packet = SmCodec.decodeFileTransfer(encoded);
+      expect(packet, isNotNull);
+      expect(
+        packet!.version,
+        0,
+        reason: 'Legacy v0 offer decodes with version=0',
+      );
+      expect(packet.type, SmPacketType.fileOffer);
+      expect(packet.fileOffer.filename, 'legacy.bin');
     });
   });
 }

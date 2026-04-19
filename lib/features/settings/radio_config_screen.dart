@@ -52,16 +52,62 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
   bool _okToMqtt = false;
   StreamSubscription<config_pb.Config_LoRaConfig>? _configSubscription;
 
+  // Stable controller/focus for frequency override field to avoid
+  // per-keystroke remount (matching meshtastic-ios local draft pattern).
+  late final TextEditingController _freqController;
+  late final FocusNode _freqFocusNode;
+
+  // Stable controller/focus for channel number field (same pattern).
+  late final TextEditingController _channelNumController;
+  late final FocusNode _channelNumFocusNode;
+
   @override
   void initState() {
     super.initState();
+    _freqController = TextEditingController();
+    _freqFocusNode = FocusNode();
+    _freqFocusNode.addListener(_onFreqFocusChanged);
+    _channelNumController = TextEditingController();
+    _channelNumFocusNode = FocusNode();
+    _channelNumFocusNode.addListener(_onChannelNumFocusChanged);
     _loadCurrentConfig();
   }
 
   @override
   void dispose() {
     _configSubscription?.cancel();
+    _freqFocusNode.removeListener(_onFreqFocusChanged);
+    _freqFocusNode.dispose();
+    _freqController.dispose();
+    _channelNumFocusNode.removeListener(_onChannelNumFocusChanged);
+    _channelNumFocusNode.dispose();
+    _channelNumController.dispose();
     super.dispose();
+  }
+
+  /// Commit the frequency override value when the field loses focus,
+  /// matching meshtastic-ios behavior where formatting applies on commit.
+  void _onFreqFocusChanged() {
+    if (!_freqFocusNode.hasFocus) {
+      final text = _freqController.text.trim();
+      final parsed = double.tryParse(text);
+      final value = parsed ?? 0.0;
+      setState(() => _overrideFrequency = value);
+      // Normalize the displayed text on commit
+      _freqController.text = value > 0 ? value.toStringAsFixed(3) : '';
+    }
+  }
+
+  /// Commit the channel number value when the field loses focus.
+  void _onChannelNumFocusChanged() {
+    if (!_channelNumFocusNode.hasFocus) {
+      final text = _channelNumController.text.trim();
+      final parsed = int.tryParse(text);
+      final value = parsed ?? 0;
+      setState(() => _channelNum = value);
+      // Normalize the displayed text on commit
+      _channelNumController.text = '$value';
+    }
   }
 
   void _applyConfig(config_pb.Config_LoRaConfig config) {
@@ -82,6 +128,18 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
       _ignoreMqtt = config.ignoreMqtt;
       _okToMqtt = config.configOkToMqtt;
     });
+    // Seed the frequency controller from device config,
+    // but only when the field is not actively being edited.
+    if (!_freqFocusNode.hasFocus) {
+      _freqController.text = config.overrideFrequency > 0
+          ? config.overrideFrequency.toStringAsFixed(3)
+          : '';
+    }
+    // Seed the channel number controller from device config,
+    // but only when the field is not actively being edited.
+    if (!_channelNumFocusNode.hasFocus) {
+      _channelNumController.text = '${config.channelNum}';
+    }
   }
 
   Future<void> _loadCurrentConfig() async {
@@ -124,6 +182,17 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
   }
 
   Future<void> _saveConfig() async {
+    // Commit any in-progress frequency override text before saving,
+    // in case the user taps Save while the field still has focus.
+    final freqText = _freqController.text.trim();
+    final freqParsed = double.tryParse(freqText);
+    _overrideFrequency = freqParsed ?? 0.0;
+
+    // Commit any in-progress channel number text before saving.
+    final channelNumText = _channelNumController.text.trim();
+    final channelNumParsed = int.tryParse(channelNumText);
+    _channelNum = channelNumParsed ?? 0;
+
     // Capture providers and UI dependencies before any await
     final protocol = ref.read(protocolServiceProvider);
     final target = AdminTarget.fromNullable(
@@ -619,8 +688,8 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                 width: 80,
                 child: TextFormField(
                   maxLength: 10,
-                  key: ValueKey('channelNum_$_channelNum'),
-                  initialValue: '$_channelNum',
+                  controller: _channelNumController,
+                  focusNode: _channelNumFocusNode,
                   keyboardType: TextInputType.number,
                   textAlign: TextAlign.center,
                   style: TextStyle(color: context.textPrimary),
@@ -642,10 +711,6 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                     ),
                     counterText: '',
                   ),
-                  onChanged: (value) {
-                    final parsed = int.tryParse(value);
-                    if (parsed != null) setState(() => _channelNum = parsed);
-                  },
                 ),
               ),
             ],
@@ -732,13 +797,9 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
               SizedBox(
                 width: 100,
                 child: TextFormField(
+                  controller: _freqController,
+                  focusNode: _freqFocusNode,
                   maxLength: 10,
-                  key: ValueKey(
-                    'freq_${_overrideFrequency.toStringAsFixed(3)}',
-                  ),
-                  initialValue: _overrideFrequency > 0
-                      ? _overrideFrequency.toStringAsFixed(3)
-                      : '',
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
@@ -764,14 +825,6 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                     ),
                     counterText: '',
                   ),
-                  onChanged: (value) {
-                    final parsed = double.tryParse(value);
-                    if (parsed != null) {
-                      setState(() => _overrideFrequency = parsed);
-                    } else if (value.isEmpty) {
-                      setState(() => _overrideFrequency = 0.0);
-                    }
-                  },
                 ),
               ),
             ],

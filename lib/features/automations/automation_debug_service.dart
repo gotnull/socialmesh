@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import '../../utils/share_utils.dart';
 import 'automation_repository.dart';
 import 'models/automation.dart';
+import 'models/condition_node_result.dart';
 
 /// Reasons why an automation was skipped
 enum SkipReason {
@@ -22,6 +23,58 @@ enum SkipReason {
 
   final String displayName;
   const SkipReason(this.displayName);
+}
+
+/// Which branch was selected for execution after condition evaluation.
+enum BranchSelection {
+  /// Condition passed — THEN actions execute.
+  thenBranch('then'),
+
+  /// Condition failed and ELSE actions exist — ELSE actions execute.
+  elseBranch('else'),
+
+  /// Condition failed and no ELSE actions — nothing executes.
+  none('none');
+
+  final String jsonValue;
+  const BranchSelection(this.jsonValue);
+
+  static BranchSelection fromJson(String value) => switch (value) {
+    'then' => thenBranch,
+    'else' => elseBranch,
+    _ => none,
+  };
+}
+
+/// Structured result of branch selection after condition evaluation.
+class BranchSelectionResult {
+  /// Which branch was selected.
+  final BranchSelection selection;
+
+  /// Human-readable reason for the selection.
+  final String reason;
+
+  /// The condition tree evaluation result (null when no conditions exist
+  /// or when manual bypass skipped evaluation).
+  final ConditionNodeResult? conditionTreeResult;
+
+  /// Whether condition evaluation was bypassed (e.g. manual execution).
+  final bool manualBypass;
+
+  const BranchSelectionResult({
+    required this.selection,
+    required this.reason,
+    this.conditionTreeResult,
+    this.manualBypass = false,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'selection': selection.jsonValue,
+    'reason': reason,
+    if (conditionTreeResult != null)
+      'conditionTreeResult': conditionTreeResult!.toJson(),
+    'manualBypass': manualBypass,
+  };
 }
 
 /// Result of evaluating a single condition
@@ -59,6 +112,21 @@ class AutomationEvaluation {
   final Map<String, dynamic> triggerConfig;
   final List<ConditionEvaluation>? conditionResults;
 
+  /// Structured tree evaluation result (Phase 2).
+  final ConditionNodeResult? conditionTreeResult;
+
+  /// Whether this execution was a manual bypass (skipped condition evaluation).
+  final bool manualBypass;
+
+  /// Branch selected for execution (Phase 3).
+  final BranchSelection? branchSelection;
+
+  /// Human-readable reason for the branch selection (Phase 3).
+  final String? branchReason;
+
+  /// Actions that were executed in the selected branch (Phase 3).
+  final List<String>? branchActionsExecuted;
+
   const AutomationEvaluation({
     required this.automationId,
     required this.automationName,
@@ -72,6 +140,11 @@ class AutomationEvaluation {
     this.eventData = const {},
     this.triggerConfig = const {},
     this.conditionResults,
+    this.conditionTreeResult,
+    this.manualBypass = false,
+    this.branchSelection,
+    this.branchReason,
+    this.branchActionsExecuted,
   });
 
   Map<String, dynamic> toJson() => {
@@ -90,6 +163,13 @@ class AutomationEvaluation {
     'eventData': eventData,
     'triggerConfig': triggerConfig,
     'conditionResults': conditionResults?.map((c) => c.toJson()).toList(),
+    if (conditionTreeResult != null)
+      'conditionTreeResult': conditionTreeResult!.toJson(),
+    'manualBypass': manualBypass,
+    if (branchSelection != null) 'branchSelection': branchSelection!.jsonValue,
+    if (branchReason != null) 'branchReason': branchReason,
+    if (branchActionsExecuted != null)
+      'branchActionsExecuted': branchActionsExecuted,
   };
 }
 

@@ -87,6 +87,18 @@ Future<QrShareData> _uploadAndGetShareData(
   return QrShareData(qrData: deepLink, shareUrl: shareUrl);
 }
 
+/// Sanitize an action list by removing user-specific data.
+List<Map<String, dynamic>> _sanitizeActions(List<AutomationAction> actions) {
+  return actions.map((action) {
+    final sanitizedConfig = Map<String, dynamic>.from(action.config);
+    sanitizedConfig.remove('targetNodeNum');
+    sanitizedConfig.remove('targetChannelIndex');
+    sanitizedConfig.remove('webhookUrl');
+    sanitizedConfig.remove('webhookEventName');
+    return {'type': action.type.name, 'config': sanitizedConfig};
+  }).toList();
+}
+
 /// Create export data for sharing (removes user-specific fields).
 Map<String, dynamic> _createExportData(Automation automation) {
   // Sanitize trigger config - remove user-specific data
@@ -97,14 +109,15 @@ Map<String, dynamic> _createExportData(Automation automation) {
   sanitizedTriggerConfig.remove('channelIndex');
 
   // Sanitize actions - remove user-specific data
-  final sanitizedActions = automation.actions.map((action) {
-    final sanitizedConfig = Map<String, dynamic>.from(action.config);
-    sanitizedConfig.remove('targetNodeNum');
-    sanitizedConfig.remove('targetChannelIndex');
-    sanitizedConfig.remove('webhookUrl');
-    sanitizedConfig.remove('webhookEventName');
-    return {'type': action.type.name, 'config': sanitizedConfig};
-  }).toList();
+  final sanitizedActions = _sanitizeActions(automation.actions);
+
+  // Sanitize branch action lists
+  final sanitizedThenActions = automation.thenActions != null
+      ? _sanitizeActions(automation.thenActions!)
+      : null;
+  final sanitizedElseActions = automation.elseActions != null
+      ? _sanitizeActions(automation.elseActions!)
+      : null;
 
   // Sanitize conditions - remove user-specific data
   final sanitizedConditions = automation.conditions?.map((condition) {
@@ -121,6 +134,8 @@ Map<String, dynamic> _createExportData(Automation automation) {
       'config': sanitizedTriggerConfig,
     },
     'actions': sanitizedActions,
+    if (sanitizedThenActions != null) 'thenActions': sanitizedThenActions,
+    if (sanitizedElseActions != null) 'elseActions': sanitizedElseActions,
     if (sanitizedConditions != null) 'conditions': sanitizedConditions,
   };
 }

@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/features/tak/models/tak_event.dart';
 import 'package:socialmesh/features/tak/models/tak_publish_config.dart';
 import 'package:socialmesh/features/tak/services/tak_stale_monitor.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socialmesh/services/notifications/notification_service.dart';
 
 /// Helper to create a [TakEvent] for testing.
@@ -30,6 +31,8 @@ TakEvent _event({
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('TakPublishConfig', () {
     test('default config has publishing disabled', () {
       const config = TakPublishConfig();
@@ -72,7 +75,11 @@ void main() {
   });
 
   group('TakStaleMonitor - detection logic', () {
-    test('detects stale transition for tracked entity', () {
+    setUp(() {
+      SharedPreferences.setMockInitialValues({});
+    });
+
+    test('detects stale transition for tracked entity', () async {
       final now = DateTime.now().millisecondsSinceEpoch;
 
       final staleEvent = _event(
@@ -91,6 +98,11 @@ void main() {
       // NotificationService is uninitialized in tests so notifications
       // are silently skipped, but the monitor logic still runs.
       monitor.start();
+
+      // Flush the microtask queue so the unawaited _fireNotification future
+      // (which calls SharedPreferences.getInstance()) completes within this
+      // test's zone, preventing "Binding has not yet been initialized" errors.
+      await Future<void>.delayed(Duration.zero);
 
       // The monitor detected the stale transition (internal dedup set
       // updated). We cannot capture the notification in unit tests
@@ -121,35 +133,42 @@ void main() {
       monitor.dispose();
     });
 
-    test('does not fire duplicate notification for same stale transition', () {
-      final now = DateTime.now().millisecondsSinceEpoch;
+    test(
+      'does not fire duplicate notification for same stale transition',
+      () async {
+        final now = DateTime.now().millisecondsSinceEpoch;
 
-      final staleEvent = _event(
-        uid: 'ENTITY-1',
-        callsign: 'Alpha',
-        staleUtcMs: now - 10000,
-      );
+        final staleEvent = _event(
+          uid: 'ENTITY-1',
+          callsign: 'Alpha',
+          staleUtcMs: now - 10000,
+        );
 
-      final trackedUids = {'ENTITY-1'};
-      var events = [staleEvent];
+        final trackedUids = {'ENTITY-1'};
+        var events = [staleEvent];
 
-      final monitor = TakStaleMonitor(
-        notificationService: NotificationService(),
-        getTrackedUids: () => trackedUids,
-        getEvents: () => events,
-      );
+        final monitor = TakStaleMonitor(
+          notificationService: NotificationService(),
+          getTrackedUids: () => trackedUids,
+          getEvents: () => events,
+        );
 
-      // First check runs and detects stale transition.
-      monitor.start();
-      expect(monitor.isRunning, isTrue);
+        // First check runs and detects stale transition.
+        monitor.start();
+        // Flush microtasks so the unawaited _fireNotification future completes
+        // within this test zone before we proceed.
+        await Future<void>.delayed(Duration.zero);
+        expect(monitor.isRunning, isTrue);
 
-      // Stop and restart to simulate another check cycle.
-      monitor.stop();
-      expect(monitor.isRunning, isFalse);
-      monitor.start();
-      expect(monitor.isRunning, isTrue);
-      monitor.dispose();
-    });
+        // Stop and restart to simulate another check cycle.
+        monitor.stop();
+        expect(monitor.isRunning, isFalse);
+        monitor.start();
+        await Future<void>.delayed(Duration.zero);
+        expect(monitor.isRunning, isTrue);
+        monitor.dispose();
+      },
+    );
 
     test('does not fire for active (non-stale) tracked entity', () {
       final now = DateTime.now().millisecondsSinceEpoch;

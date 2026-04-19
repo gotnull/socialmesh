@@ -41,6 +41,7 @@ import '../album/album_grid_view.dart' show buildAlbumSlivers;
 import '../album/album_providers.dart';
 import '../album/card_gallery_screen.dart';
 import '../models/nodedex_entry.dart';
+import '../models/observed_radio_preset.dart';
 import '../models/sigil_evolution.dart';
 import '../providers/nodedex_providers.dart';
 import '../services/trust_score.dart';
@@ -89,6 +90,8 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
     final currentSort = ref.watch(nodeDexSortProvider);
     final currentFilter = ref.watch(nodeDexFilterProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
+    final radioPresetFilter = ref.watch(nodeDexRadioPresetFilterProvider);
+    final observedPresets = ref.watch(nodeDexObservedPresetsProvider);
     final viewMode = ref.watch(albumViewModeProvider);
     final reduceMotion = ref.watch(reduceMotionEnabledProvider);
 
@@ -156,6 +159,8 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
                   otherEntries: otherEntries,
                   currentSort: currentSort,
                   currentFilter: currentFilter,
+                  radioPresetFilter: radioPresetFilter,
+                  observedPresets: observedPresets,
                   reduceMotion: reduceMotion,
                 ),
         ),
@@ -218,6 +223,8 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
     required List<(NodeDexEntry, MeshNode?)> otherEntries,
     required NodeDexSortOrder currentSort,
     required NodeDexFilter currentFilter,
+    required Set<int> radioPresetFilter,
+    required Set<int> observedPresets,
     required bool reduceMotion,
   }) {
     return [
@@ -254,6 +261,7 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
           rebuildKey: Object.hashAll([
             currentFilter,
             currentSort,
+            radioPresetFilter,
             stats.totalNodes,
             stats.traitDistribution,
             stats.socialTagDistribution,
@@ -370,6 +378,11 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
                   .read(nodeDexFilterProvider.notifier)
                   .setFilter(NodeDexFilter.relays),
             ),
+            if (observedPresets.isNotEmpty)
+              _RadioPresetFilterChip(
+                activePresets: radioPresetFilter,
+                availablePresets: observedPresets,
+              ),
             _NodeDexSortButton(
               sortOrder: currentSort,
               onChanged: (order) {
@@ -559,11 +572,13 @@ class _NodeDexStatsCard extends StatelessWidget {
           ),
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Explorer title — full width, never truncated
+            // Explorer title — centered
             Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(Icons.auto_awesome, size: 14, color: context.accentColor),
                 const SizedBox(width: AppTheme.spacing6),
@@ -583,30 +598,38 @@ class _NodeDexStatsCard extends StatelessWidget {
               ],
             ),
 
-            const SizedBox(height: AppTheme.spacing6),
+            const SizedBox(height: AppTheme.spacing8),
 
-            // Compact stats row — full width below the title
+            // Stats chips — full width, evenly spaced
             Row(
               children: [
-                _CompactStat(
-                  icon: Icons.hexagon_outlined,
-                  value: stats.totalNodes.toString(),
+                Expanded(
+                  child: _StatChip(
+                    icon: Icons.hexagon_outlined,
+                    value: stats.totalNodes.toString(),
+                  ),
                 ),
-                const SizedBox(width: AppTheme.spacing10),
-                _CompactStat(
-                  icon: Icons.public_outlined,
-                  value: stats.totalRegions.toString(),
+                const SizedBox(width: AppTheme.spacing6),
+                Expanded(
+                  child: _StatChip(
+                    icon: Icons.public_outlined,
+                    value: stats.totalRegions.toString(),
+                  ),
                 ),
-                const SizedBox(width: AppTheme.spacing10),
-                _CompactStat(
-                  icon: Icons.repeat,
-                  value: _compactNumber(stats.totalEncounters),
+                const SizedBox(width: AppTheme.spacing6),
+                Expanded(
+                  child: _StatChip(
+                    icon: Icons.repeat,
+                    value: _compactNumber(stats.totalEncounters),
+                  ),
                 ),
                 if (stats.longestDistance != null) ...[
-                  const SizedBox(width: AppTheme.spacing10),
-                  _CompactStat(
-                    icon: Icons.straighten,
-                    value: _formatDistance(stats.longestDistance),
+                  const SizedBox(width: AppTheme.spacing6),
+                  Expanded(
+                    child: _StatChip(
+                      icon: Icons.straighten,
+                      value: _formatDistance(stats.longestDistance),
+                    ),
                   ),
                 ],
               ],
@@ -625,36 +648,57 @@ class _NodeDexStatsCard extends StatelessWidget {
 
   String _formatDistance(double? meters) {
     if (meters == null) return '--';
-    if (meters >= 1000) {
-      return '${(meters / 1000).toStringAsFixed(1)}km';
-    }
-    return '${meters.round()}m';
+    if (meters < 1000) return '${meters.round()}m';
+    final km = meters / 1000;
+    if (km >= 100) return '${km.round()}km';
+    return '${km.toStringAsFixed(1)}km';
   }
 }
 
-class _CompactStat extends StatelessWidget {
+class _StatChip extends StatelessWidget {
   final IconData icon;
   final String value;
 
-  const _CompactStat({required this.icon, required this.value});
+  const _StatChip({required this.icon, required this.value});
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 12, color: context.textTertiary),
-        const SizedBox(width: AppTheme.spacing3),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            color: context.textPrimary,
-            fontFamily: AppTheme.fontFamily,
-          ),
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing8,
+        vertical: AppTheme.spacing4,
+      ),
+      decoration: BoxDecoration(
+        color: context.surface,
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
+        border: Border.all(
+          color: context.border.withValues(alpha: 0.4),
+          width: 0.5,
         ),
-      ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: context.textTertiary),
+          const SizedBox(width: AppTheme.spacing3),
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                value,
+                maxLines: 1,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: context.textPrimary,
+                  fontFamily: AppTheme.fontFamily,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1116,6 +1160,10 @@ class _NodeDexListTile extends ConsumerWidget {
                               _shortDistance(entry.maxDistanceSeen!),
                             ),
                           ),
+                        if (entry.lastObservedOnPreset != null)
+                          _RadioPresetChip(
+                            presetValue: entry.lastObservedOnPreset!,
+                          ),
                       ],
                     ),
 
@@ -1310,6 +1358,257 @@ class _MetricChip extends StatelessWidget {
                 letterSpacing: 0.2,
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Compact chip showing the radio preset a node was observed on.
+class _RadioPresetChip extends StatelessWidget {
+  final int presetValue;
+
+  const _RadioPresetChip({required this.presetValue});
+
+  @override
+  Widget build(BuildContext context) {
+    final preset = ObservedRadioPreset.fromProtobufValue(presetValue);
+    if (preset == null) return const SizedBox.shrink();
+
+    final color = AccentColors.emerald;
+    final label = preset.label(context.l10n);
+
+    return Tooltip(
+      message: context.l10n.nodedexObservedOnPreset(label),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(AppTheme.radius10),
+          border: Border.all(color: color.withValues(alpha: 0.35), width: 0.5),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.cell_tower, size: 11, color: color),
+            const SizedBox(width: AppTheme.spacing3),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: color,
+                fontFamily: AppTheme.fontFamily,
+                letterSpacing: 0.2,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Filter chip for the radio preset filter, shown in the filter chip row.
+///
+/// When no presets are selected, shows "Radio Preset" in the default style.
+/// When presets are selected, highlights with the count of active filters.
+/// Tapping opens a bottom sheet for multi-select preset filtering.
+class _RadioPresetFilterChip extends ConsumerWidget {
+  final Set<int> activePresets;
+  final Set<int> availablePresets;
+
+  const _RadioPresetFilterChip({
+    required this.activePresets,
+    required this.availablePresets,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isActive = activePresets.isNotEmpty;
+    final color = isActive ? AccentColors.emerald : context.textSecondary;
+
+    return GestureDetector(
+      onTap: () => _showPresetSheet(context, ref),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: isActive
+              ? AccentColors.emerald.withValues(alpha: 0.15)
+              : context.card,
+          borderRadius: BorderRadius.circular(AppTheme.radius20),
+          border: Border.all(
+            color: isActive
+                ? AccentColors.emerald.withValues(alpha: 0.5)
+                : context.border.withValues(alpha: 0.3),
+            width: isActive ? 1.0 : 0.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.cell_tower, size: 14, color: color),
+            const SizedBox(width: AppTheme.spacing4),
+            Text(
+              context.l10n.nodedexFilterRadioPreset,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                color: color,
+              ),
+            ),
+            if (isActive) ...[
+              const SizedBox(width: AppTheme.spacing5),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                decoration: BoxDecoration(
+                  color: AccentColors.emerald.withValues(alpha: 0.25),
+                  borderRadius: BorderRadius.circular(AppTheme.radius10),
+                ),
+                child: Text(
+                  activePresets.length.toString(),
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: AccentColors.emerald,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showPresetSheet(BuildContext context, WidgetRef ref) {
+    HapticFeedback.selectionClick();
+    AppBottomSheet.show(
+      context: context,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Text(
+              context.l10n.nodedexRadioPresetSheetTitle,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: context.textPrimary,
+              ),
+            ),
+          ),
+          _RadioPresetSheetContent(
+            activePresets: activePresets,
+            availablePresets: availablePresets,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Content of the radio preset filter bottom sheet.
+///
+/// Shows a list of all observed presets with checkboxes for multi-select.
+/// Includes a "Clear all" option when filters are active.
+class _RadioPresetSheetContent extends ConsumerWidget {
+  final Set<int> activePresets;
+  final Set<int> availablePresets;
+
+  const _RadioPresetSheetContent({
+    required this.activePresets,
+    required this.availablePresets,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Watch the live filter state so the sheet updates reactively.
+    final currentFilter = ref.watch(nodeDexRadioPresetFilterProvider);
+    final sorted = availablePresets.toList()..sort();
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // "All Presets" clear option
+        _PresetOption(
+          label: context.l10n.nodedexFilterRadioPresetAll,
+          icon: Icons.clear_all,
+          isSelected: currentFilter.isEmpty,
+          onTap: () {
+            HapticFeedback.selectionClick();
+            ref.read(nodeDexRadioPresetFilterProvider.notifier).clear();
+          },
+        ),
+        const Divider(height: 1),
+        // Individual preset options
+        ...sorted.map((value) {
+          final preset = ObservedRadioPreset.fromProtobufValue(value);
+          if (preset == null) return const SizedBox.shrink();
+          final isSelected = currentFilter.contains(value);
+          return _PresetOption(
+            label: preset.label(context.l10n),
+            icon: Icons.cell_tower,
+            isSelected: isSelected,
+            color: AccentColors.emerald,
+            onTap: () {
+              HapticFeedback.selectionClick();
+              ref.read(nodeDexRadioPresetFilterProvider.notifier).toggle(value);
+            },
+          );
+        }),
+        const SizedBox(height: AppTheme.spacing8),
+      ],
+    );
+  }
+}
+
+/// A single option row in the preset filter sheet.
+class _PresetOption extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool isSelected;
+  final Color? color;
+  final VoidCallback onTap;
+
+  const _PresetOption({
+    required this.label,
+    required this.icon,
+    required this.isSelected,
+    this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final activeColor = color ?? context.accentColor;
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              size: 18,
+              color: isSelected ? activeColor : context.textSecondary,
+            ),
+            const SizedBox(width: AppTheme.spacing10),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  color: isSelected ? activeColor : context.textPrimary,
+                ),
+              ),
+            ),
+            if (isSelected)
+              Icon(Icons.check_circle, size: 18, color: activeColor),
           ],
         ),
       ),

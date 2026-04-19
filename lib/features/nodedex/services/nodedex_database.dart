@@ -22,7 +22,7 @@ import '../../../core/logging.dart';
 ///
 /// Bump this when adding tables, columns, or indices.
 /// Migration logic runs in [_onUpgrade].
-const int nodedexSchemaVersion = 8;
+const int nodedexSchemaVersion = 10;
 
 /// Table and column name constants for NodeDex SQLite schema.
 abstract final class NodeDexTables {
@@ -60,6 +60,14 @@ abstract final class NodeDexTables {
 
   // -- MRRP service columns (v8) --
   static const colMrrpServiceIds = 'mrrp_service_ids';
+
+  // -- Radio preset observation columns (v9) --
+  static const colLastObservedOnPreset = 'last_observed_on_preset';
+  static const colEncObservedOnPreset = 'observed_on_preset';
+
+  // -- Frequency offset observation columns (v10) --
+  static const colLastObservedFreqOffset = 'last_observed_freq_offset';
+  static const colEncFreqOffset = 'enc_freq_offset';
 
   // -- nodedex_encounters --
   static const encounters = 'nodedex_encounters';
@@ -192,7 +200,20 @@ class NodeDexDatabase {
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
       onDowngrade: _onDowngrade,
+      onConfigure: _onConfigure,
     );
+  }
+
+  Future<void> _onConfigure(Database db) async {
+    final walResult = await db.rawQuery('PRAGMA journal_mode=WAL');
+    // Only enforce WAL for on-disk databases. In-memory databases
+    // (used in tests via _dbPathOverride) do not support WAL mode.
+    if (_dbPathOverride == null) {
+      assert(
+        walResult.isNotEmpty && walResult.first['journal_mode'] == 'wal',
+        'WAL mode not active',
+      ); // lint-allow: hardcoded-string
+    }
   }
 
   /// Create all tables and indices for a fresh database.
@@ -229,7 +250,9 @@ class NodeDexDatabase {
         ${NodeDexTables.colSipPersonaId} BLOB,
         ${NodeDexTables.colSipIdentityState} TEXT,
         ${NodeDexTables.colSipDisplayName} TEXT,
-        ${NodeDexTables.colMrrpServiceIds} TEXT
+        ${NodeDexTables.colMrrpServiceIds} TEXT,
+        ${NodeDexTables.colLastObservedOnPreset} INTEGER,             -- v9
+        ${NodeDexTables.colLastObservedFreqOffset} REAL               -- v10
       )
     ''');
     batch.execute(
@@ -255,7 +278,9 @@ class NodeDexDatabase {
         ${NodeDexTables.colEncLat} REAL,
         ${NodeDexTables.colEncLon} REAL,
         ${NodeDexTables.colEncSessionId} TEXT,
-        ${NodeDexTables.colEncCreatedAtMs} INTEGER NOT NULL
+        ${NodeDexTables.colEncCreatedAtMs} INTEGER NOT NULL,
+        ${NodeDexTables.colEncObservedOnPreset} INTEGER,              -- v9
+        ${NodeDexTables.colEncFreqOffset} REAL                        -- v10
       )
     ''');
     batch.execute(
@@ -473,6 +498,39 @@ class NodeDexDatabase {
       );
       AppLogging.storage(
         'NodeDexDatabase: v8 migration — added mrrp_service_ids column',
+      );
+    }
+    if (oldVersion < 9) {
+      // v9: Track the modem preset of the local radio when a node was
+      // observed. Stored as the protobuf Config_LoRaConfig_ModemPreset
+      // integer value (0–9). Nullable for legacy entries where the
+      // preset was not recorded.
+      await db.execute(
+        'ALTER TABLE ${NodeDexTables.entries} ' // lint-allow: hardcoded-string
+        'ADD COLUMN ${NodeDexTables.colLastObservedOnPreset} INTEGER', // lint-allow: hardcoded-string
+      );
+      await db.execute(
+        'ALTER TABLE ${NodeDexTables.encounters} ' // lint-allow: hardcoded-string
+        'ADD COLUMN ${NodeDexTables.colEncObservedOnPreset} INTEGER', // lint-allow: hardcoded-string
+      );
+      AppLogging.storage(
+        'NodeDexDatabase: v9 migration — added radio preset observation columns',
+      );
+    }
+    if (oldVersion < 10) {
+      // v10: Track the frequency offset of the local radio when a node
+      // was observed. Stored as a float (Hz). Nullable — zero offset
+      // is omitted entirely and legacy entries won't have this field.
+      await db.execute(
+        'ALTER TABLE ${NodeDexTables.entries} ' // lint-allow: hardcoded-string
+        'ADD COLUMN ${NodeDexTables.colLastObservedFreqOffset} REAL', // lint-allow: hardcoded-string
+      );
+      await db.execute(
+        'ALTER TABLE ${NodeDexTables.encounters} ' // lint-allow: hardcoded-string
+        'ADD COLUMN ${NodeDexTables.colEncFreqOffset} REAL', // lint-allow: hardcoded-string
+      );
+      AppLogging.storage(
+        'NodeDexDatabase: v10 migration — added frequency offset columns',
       );
     }
   }

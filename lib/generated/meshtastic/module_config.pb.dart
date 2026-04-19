@@ -14,6 +14,7 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
+import 'atak.pbenum.dart' as $0;
 import 'module_config.pbenum.dart';
 
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
@@ -2582,6 +2583,82 @@ class ModuleConfig_StatusMessageConfig extends $pb.GeneratedMessage {
   void clearNodeStatus() => $_clearField(1);
 }
 
+///
+///  TAK team/role configuration
+class ModuleConfig_TAKConfig extends $pb.GeneratedMessage {
+  factory ModuleConfig_TAKConfig({
+    $0.Team? team,
+    $0.MemberRole? role,
+  }) {
+    final result = create();
+    if (team != null) result.team = team;
+    if (role != null) result.role = role;
+    return result;
+  }
+
+  ModuleConfig_TAKConfig._();
+
+  factory ModuleConfig_TAKConfig.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ModuleConfig_TAKConfig.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ModuleConfig.TAKConfig',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aE<$0.Team>(1, _omitFieldNames ? '' : 'team', enumValues: $0.Team.values)
+    ..aE<$0.MemberRole>(2, _omitFieldNames ? '' : 'role',
+        enumValues: $0.MemberRole.values)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ModuleConfig_TAKConfig clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ModuleConfig_TAKConfig copyWith(
+          void Function(ModuleConfig_TAKConfig) updates) =>
+      super.copyWith((message) => updates(message as ModuleConfig_TAKConfig))
+          as ModuleConfig_TAKConfig;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ModuleConfig_TAKConfig create() => ModuleConfig_TAKConfig._();
+  @$core.override
+  ModuleConfig_TAKConfig createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ModuleConfig_TAKConfig getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ModuleConfig_TAKConfig>(create);
+  static ModuleConfig_TAKConfig? _defaultInstance;
+
+  ///
+  ///  Team color.
+  ///  Default Unspecifed_Color -> firmware uses Cyan
+  @$pb.TagNumber(1)
+  $0.Team get team => $_getN(0);
+  @$pb.TagNumber(1)
+  set team($0.Team value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasTeam() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearTeam() => $_clearField(1);
+
+  ///
+  ///  Member role.
+  ///  Default Unspecifed -> firmware uses TeamMember
+  @$pb.TagNumber(2)
+  $0.MemberRole get role => $_getN(1);
+  @$pb.TagNumber(2)
+  set role($0.MemberRole value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasRole() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearRole() => $_clearField(2);
+}
+
 enum ModuleConfig_PayloadVariant {
   mqtt,
   serial,
@@ -2598,6 +2675,7 @@ enum ModuleConfig_PayloadVariant {
   paxcounter,
   statusmessage,
   trafficManagement,
+  tak,
   notSet
 }
 
@@ -2620,6 +2698,7 @@ class ModuleConfig extends $pb.GeneratedMessage {
     ModuleConfig_PaxcounterConfig? paxcounter,
     ModuleConfig_StatusMessageConfig? statusmessage,
     ModuleConfig_TrafficManagementConfig? trafficManagement,
+    ModuleConfig_TAKConfig? tak,
   }) {
     final result = create();
     if (mqtt != null) result.mqtt = mqtt;
@@ -2638,6 +2717,7 @@ class ModuleConfig extends $pb.GeneratedMessage {
     if (paxcounter != null) result.paxcounter = paxcounter;
     if (statusmessage != null) result.statusmessage = statusmessage;
     if (trafficManagement != null) result.trafficManagement = trafficManagement;
+    if (tak != null) result.tak = tak;
     return result;
   }
 
@@ -2667,13 +2747,14 @@ class ModuleConfig extends $pb.GeneratedMessage {
     13: ModuleConfig_PayloadVariant.paxcounter,
     14: ModuleConfig_PayloadVariant.statusmessage,
     15: ModuleConfig_PayloadVariant.trafficManagement,
+    16: ModuleConfig_PayloadVariant.tak,
     0: ModuleConfig_PayloadVariant.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'ModuleConfig',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
       createEmptyInstance: create)
-    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15])
+    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
     ..aOM<ModuleConfig_MQTTConfig>(1, _omitFieldNames ? '' : 'mqtt',
         subBuilder: ModuleConfig_MQTTConfig.create)
     ..aOM<ModuleConfig_SerialConfig>(2, _omitFieldNames ? '' : 'serial',
@@ -2714,6 +2795,8 @@ class ModuleConfig extends $pb.GeneratedMessage {
     ..aOM<ModuleConfig_TrafficManagementConfig>(
         15, _omitFieldNames ? '' : 'trafficManagement',
         subBuilder: ModuleConfig_TrafficManagementConfig.create)
+    ..aOM<ModuleConfig_TAKConfig>(16, _omitFieldNames ? '' : 'tak',
+        subBuilder: ModuleConfig_TAKConfig.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2750,6 +2833,7 @@ class ModuleConfig extends $pb.GeneratedMessage {
   @$pb.TagNumber(13)
   @$pb.TagNumber(14)
   @$pb.TagNumber(15)
+  @$pb.TagNumber(16)
   ModuleConfig_PayloadVariant whichPayloadVariant() =>
       _ModuleConfig_PayloadVariantByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
@@ -2767,6 +2851,7 @@ class ModuleConfig extends $pb.GeneratedMessage {
   @$pb.TagNumber(13)
   @$pb.TagNumber(14)
   @$pb.TagNumber(15)
+  @$pb.TagNumber(16)
   void clearPayloadVariant() => $_clearField($_whichOneof(0));
 
   ///
@@ -2974,6 +3059,19 @@ class ModuleConfig extends $pb.GeneratedMessage {
   @$pb.TagNumber(15)
   ModuleConfig_TrafficManagementConfig ensureTrafficManagement() =>
       $_ensure(14);
+
+  ///
+  ///  TAK team/role configuration for TAK_TRACKER
+  @$pb.TagNumber(16)
+  ModuleConfig_TAKConfig get tak => $_getN(15);
+  @$pb.TagNumber(16)
+  set tak(ModuleConfig_TAKConfig value) => $_setField(16, value);
+  @$pb.TagNumber(16)
+  $core.bool hasTak() => $_has(15);
+  @$pb.TagNumber(16)
+  void clearTak() => $_clearField(16);
+  @$pb.TagNumber(16)
+  ModuleConfig_TAKConfig ensureTak() => $_ensure(15);
 }
 
 ///

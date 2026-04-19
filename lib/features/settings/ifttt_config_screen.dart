@@ -10,8 +10,8 @@ import '../../core/widgets/glass_scaffold.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:latlong2/latlong.dart';
 import '../../core/map_config.dart';
+import '../../core/safe_lat_lng.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/mesh_map_widget.dart';
 import '../../core/widgets/premium_gating.dart';
@@ -977,8 +977,9 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
                     final radius =
                         double.tryParse(_geofenceRadiusController.text) ??
                         1000.0;
+                    final point = safeLatLng(lat, lon);
 
-                    if (lat != null && lon != null) {
+                    if (point != null) {
                       return Column(
                         children: [
                           ClipRRect(
@@ -990,7 +991,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
                               child: IgnorePointer(
                                 child: MeshMapWidget(
                                   mapStyle: _mapStyle,
-                                  initialCenter: LatLng(lat, lon),
+                                  initialCenter: point,
                                   initialZoom: _calculateZoomForRadius(radius),
                                   interactive: false,
                                   animateTiles: false,
@@ -998,7 +999,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
                                     CircleLayer(
                                       circles: [
                                         CircleMarker(
-                                          point: LatLng(lat, lon),
+                                          point: point,
                                           radius: radius,
                                           useRadiusInMeter: true,
                                           color: context.accentColor.withAlpha(
@@ -1012,7 +1013,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
                                     MarkerLayer(
                                       markers: [
                                         Marker(
-                                          point: LatLng(lat, lon),
+                                          point: point,
                                           width: 24,
                                           height: 24,
                                           child: Container(

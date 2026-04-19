@@ -50,6 +50,9 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
   // Selected deep link (optional)
   _DeepLink? _selectedDeepLink;
 
+  // Target platform for the broadcast
+  _TargetPlatform _selectedPlatform = _TargetPlatform.all;
+
   static const int _maxTitleLength = 100;
   static const int _maxBodyLength = 500;
   static const int _countdownSeconds = 5;
@@ -171,6 +174,7 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
         'body': body,
         if (deepLink.isNotEmpty) 'deepLink': deepLink,
         'icon': _selectedIcon.fcmValue,
+        'targetPlatform': _selectedPlatform.fcmValue,
         if (testOnly) 'testOnly': true,
       };
       AppLogging.app('[Broadcast] Payload: $payload');
@@ -280,6 +284,7 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
     safeSetState(() {
       _selectedIcon = _NotificationIcon.announcement;
       _selectedDeepLink = null;
+      _selectedPlatform = _TargetPlatform.all;
     });
     _titleController.text = _selectedIcon.defaultTitleL10n(context);
     _bodyController.text = _selectedIcon.defaultBodyL10n(context);
@@ -513,10 +518,56 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
 
                     const SizedBox(height: AppTheme.spacing16),
 
+                    // Platform target selector
+                    Text(
+                      context.l10n.adminBroadcastPlatformLabel,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: context.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spacing4),
+                    Text(
+                      context.l10n.adminBroadcastPlatformHelper,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.textTertiary,
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spacing8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: SegmentedButton<_TargetPlatform>(
+                        segments: [
+                          for (final platform in _TargetPlatform.values)
+                            ButtonSegment<_TargetPlatform>(
+                              value: platform,
+                              label: Text(platform.labelL10n(context)),
+                              icon: Icon(platform.icon),
+                            ),
+                        ],
+                        selected: {_selectedPlatform},
+                        onSelectionChanged: canInteract
+                            ? (selected) {
+                                ref
+                                    .read(hapticServiceProvider)
+                                    .trigger(HapticType.selection);
+                                safeSetState(
+                                  () => _selectedPlatform = selected.first,
+                                );
+                              }
+                            : null,
+                      ),
+                    ),
+
+                    const SizedBox(height: AppTheme.spacing16),
+
                     // Clear form button
                     if (_titleController.text.isNotEmpty ||
                         _bodyController.text.isNotEmpty ||
-                        _selectedDeepLink != null)
+                        _selectedDeepLink != null ||
+                        _selectedPlatform != _TargetPlatform.all)
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton.icon(
@@ -927,6 +978,38 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
 
 /// Available notification icons
 enum _NotificationIconCategory { general, social, premium }
+
+/// Target platform for broadcast push notifications.
+///
+/// The selected value is sent as `targetPlatform` in the Cloud Function
+/// payload. The CF should route to the corresponding FCM topic:
+/// - [all]     → `announcements`          (all devices)
+/// - [android] → `announcements_android`  (Android devices only)
+/// - [ios]     → `announcements_ios`       (iOS devices only)
+enum _TargetPlatform {
+  all,
+  android,
+  ios;
+
+  /// Value sent in the Cloud Function payload.
+  String get fcmValue => name;
+
+  String labelL10n(BuildContext context) {
+    return switch (this) {
+      all => context.l10n.adminBroadcastPlatformAll,
+      android => context.l10n.adminBroadcastPlatformAndroid,
+      ios => context.l10n.adminBroadcastPlatformIos,
+    };
+  }
+
+  IconData get icon {
+    return switch (this) {
+      all => Icons.devices,
+      android => Icons.android,
+      ios => Icons.apple,
+    };
+  }
+}
 
 enum _NotificationIcon {
   // === GENERAL ===

@@ -153,6 +153,9 @@ abstract final class MrrpServiceId {
   /// board.v1 — short mesh bulletin posts.
   static const int boardV1 = 0x00000003;
 
+  /// incident.v1 — structured incident/emergency reporting.
+  static const int incidentV1 = 0x00000004;
+
   /// echo.test — harness-only echo service.
   static const int echoTest = 0xFFFF0001;
 
@@ -165,6 +168,8 @@ abstract final class MrrpServiceId {
         return 'profile.v1'; // lint-allow: hardcoded-string
       case boardV1:
         return 'board.v1'; // lint-allow: hardcoded-string
+      case incidentV1:
+        return 'incident.v1'; // lint-allow: hardcoded-string
       case echoTest:
         return 'echo.test'; // lint-allow: hardcoded-string
       default:

@@ -12,15 +12,18 @@ class LegalConstants {
 
   /// Current Terms of Service version (matches "Last Updated" on website).
   /// Bump this value when Terms content changes materially.
-  static const String termsVersion = '2026-02-23';
+  static const String termsVersion = '2026-03-10';
 
   /// Current Privacy Policy version (matches "Last Updated" on website).
   /// Bump this value when Privacy Policy content changes materially.
-  static const String privacyVersion = '2026-02-23';
+  static const String privacyVersion = '2026-03-10';
 
   /// Age eligibility policy version. Increment to force re-confirmation
   /// from all users (e.g. when the minimum age or legal posture changes).
-  static const int ageEligibilityPolicyVersion = 2;
+  ///
+  /// Version 3: raised minimum age to 18, added age-group selection and
+  /// safe-defaults capability layer (Brazil Digital ECA, Lei 15.211/2025).
+  static const int ageEligibilityPolicyVersion = 3;
 
   // ---------------------------------------------------------------------------
   // SharedPreferences keys
@@ -51,6 +54,12 @@ class LegalConstants {
   /// Policy version at the time of age eligibility confirmation.
   static const String ageEligibilityPolicyVersionKey =
       'age_eligibility_policy_version';
+
+  /// Age group selected at eligibility confirmation (e.g. "adult", "teen").
+  static const String ageEligibilityAgeGroupKey = 'age_eligibility_age_group';
+
+  /// Source of the age signal (e.g. "selfAttestation", "playAgeSignals").
+  static const String ageEligibilityAgeSourceKey = 'age_eligibility_age_source';
 
   // ---------------------------------------------------------------------------
   // HTML section anchors (must match id= attributes in terms-of-service.html)

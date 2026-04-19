@@ -15,18 +15,20 @@ on:
       - "scripts/check_translation_coverage.py"
   workflow_dispatch:
 
+permissions: read-all
+
 jobs:
   validate-translations:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Create .env for CI
         run: cp .env.ci .env
 
       - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version: "3.38.9"
           channel: "stable"
@@ -159,7 +161,7 @@ jobs:
 
       - name: Upload coverage report
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: translation-status
           path: TRANSLATION_STATUS.md

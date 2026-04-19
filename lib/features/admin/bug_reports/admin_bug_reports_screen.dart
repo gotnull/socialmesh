@@ -6,7 +6,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+
+import '../../../utils/time_format.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
@@ -273,7 +274,12 @@ class _AdminBugReportsScreenState extends ConsumerState<AdminBugReportsScreen>
         if (report.hasUnreadUserReplies) {
           ref
               .read(adminBugReportRepositoryProvider)
-              .markUserResponsesAsRead(report.id);
+              .markUserResponsesAsRead(report.id)
+              .whenComplete(() {
+                if (mounted) {
+                  ref.invalidate(adminBugReportsProvider);
+                }
+              });
         }
       }
     });
@@ -419,7 +425,7 @@ class _ReportCard extends StatelessWidget {
     if (diff.inDays < 7) {
       return context.l10n.adminBugReportsTimeDays(diff.inDays);
     }
-    return DateFormat('d MMM y, HH:mm').format(date);
+    return AppTimeFormat.withDatePrefix(context, 'd MMM y,').format(date);
   }
 
   @override
@@ -494,7 +500,8 @@ class _ReportCard extends StatelessWidget {
                                   text:
                                       'v${report.appVersion}${report.buildNumber != null ? ' (${report.buildNumber})' : ''}',
                                 ),
-                              if (report.responses.isNotEmpty)
+                              if (report.responsesLoaded &&
+                                  report.responses.isNotEmpty)
                                 _MetaChip(
                                   icon: Icons.chat_bubble_outline,
                                   text: '${report.responses.length}',
@@ -646,7 +653,21 @@ class _ReportCard extends StatelessWidget {
               ),
 
               // Conversation thread
-              if (report.responses.isNotEmpty)
+              if (!report.responsesLoaded)
+                _Section(
+                  label: context.l10n.adminBugReportsSectionConversation,
+                  child: Center(
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: context.accentColor,
+                      ),
+                    ),
+                  ),
+                )
+              else if (report.responses.isNotEmpty)
                 _Section(
                   label: context.l10n.adminBugReportsSectionConversation,
                   child: Column(
@@ -853,7 +874,7 @@ class _ThreadBubble extends StatelessWidget {
     if (diff.inDays < 7) {
       return context.l10n.adminBugReportsTimeDays(diff.inDays);
     }
-    return DateFormat('d MMM, HH:mm').format(date);
+    return AppTimeFormat.withDatePrefix(context, 'd MMM,').format(date);
   }
 }
 

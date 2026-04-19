@@ -11,6 +11,7 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../providers/app_providers.dart';
 import '../../../services/file_transfer/file_transfer_engine.dart';
+import '../../../services/voice/voice_mime.dart';
 import '../../nodes/node_display_name_resolver.dart';
 
 /// A card widget for displaying a file transfer (sending or receiving).
@@ -45,17 +46,32 @@ class FileTransferCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final statusColor = _statusColor(context);
     return BouncyTap(
       onTap: onTap,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           color: context.card,
           borderRadius: BorderRadius.circular(AppTheme.radius16),
           border: Border.all(
-            color: context.border.withValues(alpha: 0.15),
-            width: 0.5,
+            color: transfer.state == TransferState.offerPending
+                ? AccentColors.orange.withValues(alpha: 0.4)
+                : transfer.isActive
+                ? statusColor.withValues(alpha: 0.35)
+                : context.border.withValues(alpha: 0.15),
+            width: transfer.isActive ? 1.0 : 0.5,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: transfer.isActive
+                  ? statusColor.withValues(alpha: 0.08)
+                  : Colors.transparent,
+              blurRadius: 14,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: compact
             ? Padding(
@@ -95,7 +111,7 @@ class FileTransferCard extends ConsumerWidget {
               ),
               const SizedBox(height: AppTheme.spacing2),
               Text(
-                _statusText,
+                _statusText(context),
                 style: TextStyle(color: _statusColor(context), fontSize: 11),
               ),
             ],
@@ -137,13 +153,62 @@ class FileTransferCard extends ConsumerWidget {
       );
     }
 
-    final metaText = _buildMetadataText(nodeName);
+    final metaText = _buildMetadataText(context, nodeName);
     final statusColor = _statusColor(context);
     final chunkSize = _formatBytes(transfer.chunkSize);
+    final isVoice =
+        VoiceMime.isVoiceMessage(transfer.mimeType) ||
+        VoiceMime.hasVoiceExtension(transfer.filename);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // ── Accept / Decline banner (SIP-style, offerPending only) ──
+        if (transfer.state == TransferState.offerPending &&
+            (onAccept != null || onReject != null)) ...[
+          Row(
+            children: [
+              if (onAccept != null)
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: onAccept,
+                    icon: const Icon(Icons.check, size: 16),
+                    label: Text(context.l10n.fileTransferActionAccept),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AccentColors.green,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size.fromHeight(36),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.spacing12,
+                      ),
+                    ),
+                  ),
+                ),
+              if (onAccept != null && onReject != null)
+                const SizedBox(width: AppTheme.spacing8),
+              if (onReject != null)
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: onReject,
+                    icon: const Icon(Icons.close, size: 16),
+                    label: Text(context.l10n.fileTransferActionReject),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AccentColors.red,
+                      side: BorderSide(
+                        color: AccentColors.red.withValues(alpha: 0.6),
+                      ),
+                      minimumSize: const Size.fromHeight(36),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.spacing12,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spacing12),
+        ],
+
         // ── Header row: icon + filename + subtitle + direction badge ──
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -182,20 +247,23 @@ class FileTransferCard extends ConsumerWidget {
 
         const SizedBox(height: AppTheme.spacing10),
 
-        // ── Metric chips: status, mime, chunks, chunk size ──
+        // ── Metric chips: status, voice/mime, chunks, chunk size ──
         Wrap(
           spacing: AppTheme.spacing6,
           runSpacing: AppTheme.spacing6,
           children: [
             _StatusChip(
               icon: _statusIcon,
-              label: _statusText,
+              label: _statusText(context),
               color: statusColor,
             ),
-            _MetricChip(
-              icon: Icons.description_outlined,
-              value: transfer.mimeType,
-            ),
+            if (isVoice)
+              _VoiceMediaChip()
+            else
+              _MetricChip(
+                icon: Icons.description_outlined,
+                value: transfer.mimeType,
+              ),
             if (transfer.isActive)
               _MetricChip(
                 icon: Icons.grid_view,
@@ -218,16 +286,23 @@ class FileTransferCard extends ConsumerWidget {
           ],
         ),
 
-        // ── Progress bar (active transfers only) ──
+        // ── Animated progress bar (active transfers only) ──
         if (transfer.isActive) ...[
           const SizedBox(height: AppTheme.spacing10),
-          _TransferProgressBar(progress: transfer.progress, color: statusColor),
+          _AnimatedTransferProgress(
+            progress: transfer.progress,
+            color: statusColor,
+            state: transfer.state,
+          ),
         ],
 
         // ── Timestamp row (NodeDex discovery-age style) ──
         const SizedBox(height: AppTheme.spacing8),
         _TimestampRow(
-          label: _relativeTime(transfer.completedAt ?? transfer.createdAt),
+          label: _relativeTime(
+            context,
+            transfer.completedAt ?? transfer.createdAt,
+          ),
         ),
 
         // ── Action buttons ──
@@ -268,50 +343,52 @@ class FileTransferCard extends ConsumerWidget {
       onDelete != null ||
       onInfo != null;
 
-  String get _statusText {
+  String _statusText(BuildContext context) {
     switch (transfer.state) {
       case TransferState.created:
-        return 'Preparing...';
+        return context.l10n.fileTransferStatusPreparing;
       case TransferState.offerSent:
-        return 'Offer sent, waiting...';
+        return context.l10n.fileTransferStatusOfferSent;
       case TransferState.offerPending:
-        return 'Incoming file — tap to review';
+        return context.l10n.fileTransferStatusOfferPending;
       case TransferState.chunking:
         final pct = (transfer.progress * 100).toStringAsFixed(0);
         return transfer.direction == TransferDirection.outbound
-            ? 'Sending $pct%'
-            : 'Receiving $pct%';
+            ? context.l10n.fileTransferStatusSending(pct)
+            : context.l10n.fileTransferStatusReceiving(pct);
       case TransferState.waitingMissing:
-        return 'Recovering missing chunks...';
+        return context.l10n.fileTransferStatusRecovering;
       case TransferState.complete:
-        return 'Complete';
+        return context.l10n.fileTransferStatusComplete;
       case TransferState.failed:
-        return _failReasonText;
+        return _failReasonText(context);
       case TransferState.cancelled:
-        return 'Cancelled';
+        return context.l10n.fileTransferStatusCancelled;
+      case TransferState.awaitingAccept:
+        return context.l10n.fileTransferStatusAwaitingAccept;
     }
   }
 
-  String get _failReasonText {
+  String _failReasonText(BuildContext context) {
     switch (transfer.failReason) {
       case TransferFailReason.oversized:
-        return 'File too large for mesh transfer';
+        return context.l10n.fileTransferFailReasonOversized;
       case TransferFailReason.timeout:
-        return 'Transfer timed out';
+        return context.l10n.fileTransferFailReasonTimeout;
       case TransferFailReason.invalid:
-        return 'Invalid data received';
+        return context.l10n.fileTransferFailReasonInvalid;
       case TransferFailReason.userCancelled:
-        return 'Cancelled';
+        return context.l10n.fileTransferStatusCancelled;
       case TransferFailReason.rateLimited:
-        return 'Rate limited — try again later';
+        return context.l10n.fileTransferFailReasonRateLimited;
       case TransferFailReason.hashMismatch:
-        return 'File verification failed';
+        return context.l10n.fileTransferFailReasonHashMismatch;
       case TransferFailReason.maxRetries:
-        return 'Max retries exceeded';
+        return context.l10n.fileTransferFailReasonMaxRetries;
       case TransferFailReason.expired:
-        return 'Transfer expired';
+        return context.l10n.fileTransferFailReasonExpired;
       case null:
-        return 'Failed';
+        return context.l10n.fileTransferStatusFailed;
     }
   }
 
@@ -319,6 +396,7 @@ class FileTransferCard extends ConsumerWidget {
     switch (transfer.state) {
       case TransferState.created:
       case TransferState.offerSent:
+      case TransferState.awaitingAccept:
         return Icons.schedule;
       case TransferState.offerPending:
         return Icons.inbox;
@@ -341,6 +419,7 @@ class FileTransferCard extends ConsumerWidget {
     switch (transfer.state) {
       case TransferState.created:
       case TransferState.offerSent:
+      case TransferState.awaitingAccept:
         return context.textTertiary;
       case TransferState.offerPending:
         return SemanticColors.warning;
@@ -365,28 +444,45 @@ class FileTransferCard extends ConsumerWidget {
     return '${kb.toStringAsFixed(1)} KB';
   }
 
-  String _relativeTime(DateTime dt) {
+  String _relativeTime(BuildContext context, DateTime dt) {
     final diff = DateTime.now().difference(dt);
-    if (diff.inSeconds < 60) return 'just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    if (diff.inDays < 7) return '${diff.inDays}d ago';
-    return '${dt.month}/${dt.day}';
+    if (diff.inSeconds < 60) return context.l10n.fileTransferTimeJustNow;
+    if (diff.inMinutes < 60) {
+      return context.l10n.fileTransferTimeMinutesAgo(diff.inMinutes);
+    }
+    if (diff.inHours < 24) {
+      return context.l10n.fileTransferTimeHoursAgo(diff.inHours);
+    }
+    if (diff.inDays < 7) {
+      return context.l10n.fileTransferTimeDaysAgo(diff.inDays);
+    }
+    return context.l10n.fileTransferTimeDate(
+      dt.month.toString(),
+      dt.day.toString(),
+    );
   }
 
-  String _buildMetadataText(String? nodeName) {
+  String _buildMetadataText(BuildContext context, String? nodeName) {
     final parts = <String>[_fileSizeText];
     if (transfer.direction == TransferDirection.outbound) {
       if (nodeName != null) {
-        parts.add('to $nodeName');
+        parts.add(context.l10n.fileTransferMetaNodeTo(nodeName));
       } else if (transfer.targetNodeNum != null) {
-        parts.add('to !${transfer.targetNodeNum!.toRadixString(16)}');
+        parts.add(
+          context.l10n.fileTransferMetaNodeTo(
+            '!${transfer.targetNodeNum!.toRadixString(16)}',
+          ),
+        );
       }
     } else {
       if (nodeName != null) {
-        parts.add('from $nodeName');
+        parts.add(context.l10n.fileTransferMetaNodeFrom(nodeName));
       } else if (transfer.sourceNodeNum != null) {
-        parts.add('from !${transfer.sourceNodeNum!.toRadixString(16)}');
+        parts.add(
+          context.l10n.fileTransferMetaNodeFrom(
+            '!${transfer.sourceNodeNum!.toRadixString(16)}',
+          ),
+        );
       }
     }
     return parts.join(' · ');
@@ -679,24 +775,166 @@ class _TimestampRow extends StatelessWidget {
 }
 
 // -----------------------------------------------------------------------------
+// Animated progress bar – smooth interpolation between chunk updates
+// -----------------------------------------------------------------------------
+
+/// Wraps [_TransferProgressBar] with smooth interpolated progress animation.
+///
+/// When [progress] changes (e.g. a new chunk arrives), the bar animates from
+/// the current displayed position to the new target using [Curves.easeOut].
+/// This removes the janky per-chunk step jumps without sacrificing accuracy —
+/// the animation always lands on the real reported value.
+class _AnimatedTransferProgress extends StatefulWidget {
+  const _AnimatedTransferProgress({
+    required this.progress,
+    required this.color,
+    required this.state,
+  });
+
+  final double progress;
+  final Color color;
+  final TransferState state;
+
+  @override
+  State<_AnimatedTransferProgress> createState() =>
+      _AnimatedTransferProgressState();
+}
+
+class _AnimatedTransferProgressState extends State<_AnimatedTransferProgress>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final CurvedAnimation _curved;
+
+  // Tracks the visual start / end for each interpolation segment.
+  double _fromProgress = 0;
+  double _toProgress = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _fromProgress = widget.progress;
+    _toProgress = widget.progress;
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 350),
+    );
+    _curved = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
+  }
+
+  @override
+  void didUpdateWidget(_AnimatedTransferProgress old) {
+    super.didUpdateWidget(old);
+    if (widget.progress != old.progress) {
+      // Begin the new segment from the current visual position so rapid
+      // consecutive updates feel smooth rather than re-starting from 0.
+      _fromProgress = _currentProgress;
+      _toProgress = widget.progress;
+      _controller.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _curved.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  double get _currentProgress {
+    return _fromProgress + (_toProgress - _fromProgress) * _curved.value;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) => _TransferProgressBar(
+        progress: _currentProgress,
+        color: widget.color,
+        state: widget.state,
+      ),
+    );
+  }
+}
+
+// -----------------------------------------------------------------------------
 // Progress bar
 // -----------------------------------------------------------------------------
 
 class _TransferProgressBar extends StatelessWidget {
-  const _TransferProgressBar({required this.progress, required this.color});
+  const _TransferProgressBar({
+    required this.progress,
+    required this.color,
+    required this.state,
+  });
 
   final double progress;
   final Color color;
+  final TransferState state;
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(AppTheme.radius4),
-      child: LinearProgressIndicator(
-        value: progress,
-        minHeight: 4,
-        backgroundColor: context.border.withValues(alpha: 0.3),
-        valueColor: AlwaysStoppedAnimation(color),
+    // During NACK recovery show an indeterminate indicator to accurately
+    // convey "working but unknown completion time".
+    final isIndeterminate = state == TransferState.waitingMissing;
+    return Container(
+      height: 6,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppTheme.radius3),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.22),
+            blurRadius: 6,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppTheme.radius3),
+        child: LinearProgressIndicator(
+          value: isIndeterminate ? null : progress,
+          minHeight: 6,
+          backgroundColor: context.border.withValues(alpha: 0.3),
+          valueColor: AlwaysStoppedAnimation(color),
+        ),
+      ),
+    );
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Voice media badge chip
+// -----------------------------------------------------------------------------
+
+/// A specialised chip that visually identifies a transfer as a voice/audio
+/// message, replacing the generic MIME-type chip for codec2 files.
+class _VoiceMediaChip extends StatelessWidget {
+  const _VoiceMediaChip();
+
+  @override
+  Widget build(BuildContext context) {
+    const color = AccentColors.cyan;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(AppTheme.radius10),
+        border: Border.all(color: color.withValues(alpha: 0.30), width: 0.5),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.mic, size: 11, color: color),
+          const SizedBox(width: AppTheme.spacing4),
+          Text(
+            context.l10n.fileTransferVoiceBadge,
+            style: const TextStyle(
+              color: color,
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -765,26 +1003,8 @@ class _ActionRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        // Pending offer: accept / reject
-        if (transfer.state == TransferState.offerPending) ...[
-          if (onReject != null)
-            _ActionButton(
-              label: context.l10n.fileTransferActionReject,
-              icon: Icons.close,
-              color: SemanticColors.error,
-              onTap: onReject!,
-            ),
-          if (onAccept != null) ...[
-            const SizedBox(width: AppTheme.spacing8),
-            _ActionButton(
-              label: context.l10n.fileTransferActionAccept,
-              icon: Icons.check,
-              color: SemanticColors.success,
-              onTap: onAccept!,
-            ),
-          ],
-        ],
-        // Active transfer: cancel
+        // Active transfer: cancel (but not for offerPending — those use
+        // the top-of-card Accept/Decline banner instead).
         if (transfer.isActive &&
             transfer.state != TransferState.offerPending &&
             onCancel != null)

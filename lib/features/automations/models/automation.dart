@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../l10n/app_localizations.dart';
+import 'condition_node.dart';
 
 /// Core automation model
 class Automation {
@@ -14,6 +15,13 @@ class Automation {
   final AutomationTrigger trigger;
   final List<AutomationAction> actions;
   final List<AutomationCondition>? conditions;
+  final ConditionNode? conditionTree;
+
+  /// Branch-aware action lists (Phase 3).
+  /// When set, these override the legacy [actions] list for runtime execution.
+  final List<AutomationAction>? thenActions;
+  final List<AutomationAction>? elseActions;
+
   final DateTime createdAt;
   final DateTime? lastTriggered;
   final int triggerCount;
@@ -26,11 +34,41 @@ class Automation {
     required this.trigger,
     required this.actions,
     this.conditions,
+    this.conditionTree,
+    this.thenActions,
+    this.elseActions,
     DateTime? createdAt,
     this.lastTriggered,
     this.triggerCount = 0,
   }) : id = id ?? const Uuid().v4(),
        createdAt = createdAt ?? DateTime.now();
+
+  /// Returns the effective condition tree for runtime evaluation.
+  ///
+  /// If [conditionTree] is explicitly set, returns it. Otherwise lifts
+  /// the legacy [conditions] list into an ALL group. Returns `null` when
+  /// there are no conditions at all.
+  ConditionNode? get effectiveConditionTree =>
+      conditionTree ?? ConditionNode.fromLegacyConditions(conditions);
+
+  /// Returns the effective THEN action list for runtime execution.
+  ///
+  /// If [thenActions] is explicitly set, returns it. Otherwise falls back
+  /// to the legacy [actions] list. This ensures backward compatibility:
+  /// existing automations with only [actions] behave as THEN-only automations.
+  List<AutomationAction> get effectiveThenActions => thenActions ?? actions;
+
+  /// Returns the effective ELSE action list for runtime execution.
+  ///
+  /// Returns [elseActions] when set and non-empty, otherwise `null`.
+  /// A `null` result means no ELSE branch exists — the automation is
+  /// THEN-only (or legacy linear).
+  List<AutomationAction>? get effectiveElseActions =>
+      (elseActions != null && elseActions!.isNotEmpty) ? elseActions : null;
+
+  /// Whether this automation has branch structure (THEN/ELSE).
+  bool get hasBranchStructure =>
+      thenActions != null || effectiveElseActions != null;
 
   Automation copyWith({
     String? id,
@@ -40,6 +78,9 @@ class Automation {
     AutomationTrigger? trigger,
     List<AutomationAction>? actions,
     List<AutomationCondition>? conditions,
+    ConditionNode? conditionTree,
+    List<AutomationAction>? thenActions,
+    List<AutomationAction>? elseActions,
     DateTime? createdAt,
     DateTime? lastTriggered,
     int? triggerCount,
@@ -52,6 +93,9 @@ class Automation {
       trigger: trigger ?? this.trigger,
       actions: actions ?? this.actions,
       conditions: conditions ?? this.conditions,
+      conditionTree: conditionTree ?? this.conditionTree,
+      thenActions: thenActions ?? this.thenActions,
+      elseActions: elseActions ?? this.elseActions,
       createdAt: createdAt ?? this.createdAt,
       lastTriggered: lastTriggered ?? this.lastTriggered,
       triggerCount: triggerCount ?? this.triggerCount,
@@ -65,13 +109,22 @@ class Automation {
     'enabled': enabled,
     'trigger': trigger.toJson(),
     'actions': actions.map((a) => a.toJson()).toList(),
+    // Legacy flat conditions — always written for backward compatibility.
     'conditions': conditions?.map((c) => c.toJson()).toList(),
+    // Typed condition tree — written when explicitly set.
+    if (conditionTree != null) 'conditionTree': conditionTree!.toJson(),
+    // Branch-aware action lists — written when explicitly set.
+    if (thenActions != null)
+      'thenActions': thenActions!.map((a) => a.toJson()).toList(),
+    if (elseActions != null)
+      'elseActions': elseActions!.map((a) => a.toJson()).toList(),
     'createdAt': createdAt.toIso8601String(),
     'lastTriggered': lastTriggered?.toIso8601String(),
     'triggerCount': triggerCount,
   };
 
   factory Automation.fromJson(Map<String, dynamic> json) {
+    final treeJson = json['conditionTree'] as Map<String, dynamic>?;
     return Automation(
       id: json['id'] as String,
       name: json['name'] as String,
@@ -85,6 +138,13 @@ class Automation {
           .toList(),
       conditions: (json['conditions'] as List?)
           ?.map((c) => AutomationCondition.fromJson(c as Map<String, dynamic>))
+          .toList(),
+      conditionTree: treeJson != null ? ConditionNode.fromJson(treeJson) : null,
+      thenActions: (json['thenActions'] as List?)
+          ?.map((a) => AutomationAction.fromJson(a as Map<String, dynamic>))
+          .toList(),
+      elseActions: (json['elseActions'] as List?)
+          ?.map((a) => AutomationAction.fromJson(a as Map<String, dynamic>))
           .toList(),
       createdAt: DateTime.parse(json['createdAt'] as String),
       lastTriggered: json['lastTriggered'] != null
@@ -973,9 +1033,22 @@ class AutomationLogEntry {
   final DateTime timestamp;
   final bool success;
   final String? triggerDetails;
+  final String? triggerEventType;
+  final String? triggerNodeName;
+  final int? triggerBatteryLevel;
+  final String? triggerMessageText;
   final List<String> actionsExecuted;
   final List<ActionResult>? actionResults;
   final String? errorMessage;
+
+  /// Phase 5: Which branch was selected (null for legacy entries).
+  final String? branchSelection;
+
+  /// Phase 5: Whether this was a manual execution that bypassed conditions.
+  final bool manualBypass;
+
+  /// Phase 5: Pre-computed human-readable condition summary.
+  final String? conditionSummary;
 
   AutomationLogEntry({
     required this.automationId,
@@ -983,9 +1056,16 @@ class AutomationLogEntry {
     required this.timestamp,
     required this.success,
     this.triggerDetails,
+    this.triggerEventType,
+    this.triggerNodeName,
+    this.triggerBatteryLevel,
+    this.triggerMessageText,
     required this.actionsExecuted,
     this.actionResults,
     this.errorMessage,
+    this.branchSelection,
+    this.manualBypass = false,
+    this.conditionSummary,
   });
 
   /// Returns count of successful actions
@@ -1005,9 +1085,16 @@ class AutomationLogEntry {
     'timestamp': timestamp.toIso8601String(),
     'success': success,
     'triggerDetails': triggerDetails,
+    'triggerEventType': triggerEventType,
+    'triggerNodeName': triggerNodeName,
+    'triggerBatteryLevel': triggerBatteryLevel,
+    'triggerMessageText': triggerMessageText,
     'actionsExecuted': actionsExecuted,
     'actionResults': actionResults?.map((r) => r.toJson()).toList(),
     'errorMessage': errorMessage,
+    if (branchSelection != null) 'branchSelection': branchSelection,
+    if (manualBypass) 'manualBypass': manualBypass,
+    if (conditionSummary != null) 'conditionSummary': conditionSummary,
   };
 
   factory AutomationLogEntry.fromJson(Map<String, dynamic> json) {
@@ -1017,11 +1104,18 @@ class AutomationLogEntry {
       timestamp: DateTime.parse(json['timestamp'] as String),
       success: json['success'] as bool,
       triggerDetails: json['triggerDetails'] as String?,
+      triggerEventType: json['triggerEventType'] as String?,
+      triggerNodeName: json['triggerNodeName'] as String?,
+      triggerBatteryLevel: json['triggerBatteryLevel'] as int?,
+      triggerMessageText: json['triggerMessageText'] as String?,
       actionsExecuted: (json['actionsExecuted'] as List).cast<String>(),
       actionResults: (json['actionResults'] as List?)
           ?.map((r) => ActionResult.fromJson(r as Map<String, dynamic>))
           .toList(),
       errorMessage: json['errorMessage'] as String?,
+      branchSelection: json['branchSelection'] as String?,
+      manualBypass: json['manualBypass'] as bool? ?? false,
+      conditionSummary: json['conditionSummary'] as String?,
     );
   }
 }

@@ -1,0 +1,52 @@
+Socialmesh Interaction Protocol (SIP) and
+Mesh Request-Response Protocol (MRRP)
+----------------------------------------------------------------------
+
+PROTOCOL SPECIFICATION LICENSE
+The SIP and MRRP protocol specifications — including wire formats, byte
+layouts, constant tables, service identifiers, and test vectors — are
+published under the Apache License, Version 2.0. This grants any
+implementor the right to build independent, compatible implementations
+without open-sourcing their own code.
+
+  SPDX-License-Identifier: Apache-2.0
+  Copyright (C) 2025-2026 gotnull (developer@socialmesh.app)
+
+  Full text: licenses/APACHE-2.0 (repository root)
+  Canonical specs:
+    docs/sip/SIP_V0_1.md
+    docs/sip/MRRP_V0_1.md
+    docs/sip/MRRP_SERVICES_V0_1.md
+    docs/sip/AMBIENT_IDENTITY_V0_1.md
+    docs/sip/MESH_SIGNALS_V0_1.md
+
+DART IMPLEMENTATION LICENSE
+The Dart source files in this directory (*.dart) are part of the
+Socialmesh application and are subject to the GNU General Public
+License, version 3 or later (GPL-3.0-or-later), as declared by the
+SPDX header present in every source file.
+
+  SPDX-License-Identifier: GPL-3.0-or-later
+  Copyright (C) 2025-2026 gotnull (developer@socialmesh.app)
+
+  Full text: LICENSE (repository root)
+
+RATIONALE
+The GPL-3.0-or-later implementation in this directory imports from
+lib/core/ and lib/generated/meshtastic/ (GPL-3.0-only). Under GPL
+section 5, any work that incorporates GPL code must itself be
+distributed under the GPL. The Apache-2.0 grant above covers only the
+protocol design — it does not override the GPL terms that apply to
+this compiled Dart implementation.
+
+In plain terms:
+  - You MAY implement SIP/MRRP in your own project under Apache-2.0.
+  - You MAY NOT copy, fork, or redistribute the Dart files in this
+    directory under a non-GPL license.
+
+MESHTASTIC DEPENDENCY NOTE
+SIP frames are transported over Meshtastic radio packets. The
+Meshtastic protobuf integration (lib/generated/meshtastic/) is
+GPL-3.0-only per upstream (https://github.com/meshtastic/protobufs).
+This creates a GPL-3.0-only floor for any combined binary that
+includes both layers.

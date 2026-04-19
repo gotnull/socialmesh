@@ -1,0 +1,702 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no"
+    />
+    <title>3D Terrain Profile</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: transparent;
+        touch-action: none;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+      canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+        touch-action: none;
+      }
+      #reset-btn {
+        position: fixed;
+        top: 8px;
+        right: 8px;
+        width: 32px;
+        height: 32px;
+        background: rgba(10, 20, 30, 0.65);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: 1px solid rgba(100, 200, 255, 0.2);
+        border-radius: 8px;
+        color: rgba(100, 200, 255, 0.8);
+        font-size: 16px;
+        cursor: pointer;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
+      }
+      #reset-btn:active {
+        background: rgba(100, 200, 255, 0.2);
+      }
+      #hint {
+        position: fixed;
+        bottom: 8px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-family: -apple-system, sans-serif;
+        font-size: 10px;
+        color: rgba(255, 255, 255, 0.25);
+        pointer-events: none;
+        z-index: 10;
+        transition: opacity 1s;
+      }
+    </style>
+  </head>
+  <body>
+    <button id="reset-btn" title="Reset view">&#8634;</button>
+    <div id="hint">Drag to orbit · Pinch to zoom</div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script>
+      (function () {
+        "use strict";
+
+        var scene, camera, renderer, controls, pivotGroup, hintEl;
+
+        // Match AccentColors.lime (0x84CC16) and ChartColors.gradientGreen (0x4CAF50)
+        var C = {
+          terrainLine: 0x84cc16, // AccentColors.lime — crest line
+          terrainTop: 0x4caf50, // ChartColors.gradientGreen — surface top
+          terrainBase: 0x1b5e20, // Dark green — base/sides
+          gridMain: 0x1a3040,
+          gridSub: 0x0d1820,
+          losOk: 0x22c55e, // AppTheme.successGreen
+          losMarg: 0xeab308, // AppTheme.warningYellow
+          losObstr: 0xef4444, // AppTheme.errorRed
+          losUnknown: 0x64748b, // AccentColors.slate
+          endpointA: 0xeab308, // Yellow
+          endpointB: 0x60a5fa, // Blue
+          fog: 0x080c12,
+        };
+
+        function init() {
+          scene = new THREE.Scene();
+          scene.fog = new THREE.FogExp2(C.fog, 0.06);
+
+          camera = new THREE.PerspectiveCamera(
+            45,
+            window.innerWidth / window.innerHeight,
+            0.01,
+            200,
+          );
+          camera.position.set(0, 1.8, 3.2);
+
+          renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+          renderer.setSize(window.innerWidth, window.innerHeight);
+          renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+          renderer.setClearColor(0x000000, 0);
+          renderer.outputEncoding = THREE.sRGBEncoding;
+          document.body.appendChild(renderer.domElement);
+
+          controls = new THREE.OrbitControls(camera, renderer.domElement);
+          controls.enableDamping = true;
+          controls.dampingFactor = 0.12;
+          controls.rotateSpeed = 0.6;
+          controls.zoomSpeed = 0.8;
+          controls.panSpeed = 0.5;
+          controls.minDistance = 0.8;
+          controls.maxDistance = 12;
+          controls.maxPolarAngle = Math.PI * 0.48;
+          controls.minPolarAngle = 0.05;
+          controls.target.set(0, 0.3, 0);
+          controls.enablePan = true;
+          controls.touches = {
+            ONE: THREE.TOUCH.ROTATE,
+            TWO: THREE.TOUCH.DOLLY_PAN,
+          };
+          controls.update();
+
+          scene.add(new THREE.HemisphereLight(0xccddee, 0x223322, 0.6));
+          var key = new THREE.DirectionalLight(0xffffff, 0.9);
+          key.position.set(2, 3, 1.5);
+          scene.add(key);
+          var fill = new THREE.DirectionalLight(0x4488cc, 0.3);
+          fill.position.set(-2, 1, -1);
+          scene.add(fill);
+
+          pivotGroup = new THREE.Group();
+          scene.add(pivotGroup);
+
+          hintEl = document.getElementById("hint");
+          window.addEventListener("resize", onResize);
+          document
+            .getElementById("reset-btn")
+            .addEventListener("click", resetCamera);
+
+          var hintShown = true;
+          controls.addEventListener("start", function () {
+            if (hintShown) {
+              hintEl.style.opacity = "0";
+              hintShown = false;
+            }
+          });
+
+          animate();
+          if (window.flutter_inappwebview) {
+            window.flutter_inappwebview.callHandler("onTerrainReady");
+          }
+        }
+
+        window.setTerrainData = function (data) {
+          clearScene();
+          if (!data || !data.samples || data.samples.length < 2) return;
+
+          var samples = data.samples;
+          var n = samples.length;
+          var totalDist = data.totalDistKm || samples[n - 1].dist / 1000;
+
+          var elevs = samples.map(function (s) {
+            return s.elev || 0;
+          });
+          var minE = Math.min.apply(null, elevs);
+          var maxE = Math.max.apply(null, elevs);
+
+          if (data.los) {
+            if (data.los.losLine) {
+              for (var i = 0; i < data.los.losLine.length; i++) {
+                if (data.los.losLine[i] < minE) minE = data.los.losLine[i];
+                if (data.los.losLine[i] > maxE) maxE = data.los.losLine[i];
+              }
+            }
+            if (data.los.fresnelTop) {
+              for (var j = 0; j < data.los.fresnelTop.length; j++) {
+                if (data.los.fresnelTop[j] > maxE)
+                  maxE = data.los.fresnelTop[j];
+              }
+            }
+            if (data.los.fresnelBot) {
+              for (var k = 0; k < data.los.fresnelBot.length; k++) {
+                if (data.los.fresnelBot[k] < minE)
+                  minE = data.los.fresnelBot[k];
+              }
+            }
+          }
+
+          var elevRange = Math.max(maxE - minE, 10);
+          var xExtent = 2.4;
+          var zExtent = 0.12;
+          var yMax = 1.2;
+          var xScale = xExtent / totalDist;
+          var yScale = yMax / elevRange;
+          var halfX = xExtent / 2;
+          var halfZ = zExtent / 2;
+          var baseY = 0; // ground level — no gap
+
+          var zDivs = 3;
+          var geo = new THREE.BufferGeometry();
+          var verts = [];
+          var cols = [];
+          var idxs = [];
+
+          var cTop = new THREE.Color(C.terrainTop);
+          var cBase = new THREE.Color(C.terrainBase);
+
+          // Terrain-only range for colour ramp
+          var tMin = Math.min.apply(null, elevs);
+          var tMax = Math.max.apply(null, elevs);
+          var tRange = Math.max(tMax - tMin, 1);
+
+          // Top surface: n cols x (zDivs+1) rows
+          for (var zi = 0; zi <= zDivs; zi++) {
+            var zFrac = zi / zDivs;
+            var z = -halfZ + zFrac * zExtent;
+            for (var xi = 0; xi < n; xi++) {
+              var x = (samples[xi].dist / 1000) * xScale - halfX;
+              var h = (elevs[xi] - minE) * yScale;
+              var edgeFactor = 1.0 - Math.pow(2.0 * zFrac - 1.0, 2) * 0.06;
+              verts.push(x, h * edgeFactor, z);
+              var t = (elevs[xi] - tMin) / tRange;
+              var c = cBase.clone().lerp(cTop, t);
+              var dim = 0.65 + 0.35 * edgeFactor;
+              cols.push(c.r * dim, c.g * dim, c.b * dim);
+            }
+          }
+
+          // Top surface indices
+          for (var zi2 = 0; zi2 < zDivs; zi2++) {
+            for (var xi2 = 0; xi2 < n - 1; xi2++) {
+              var a0 = zi2 * n + xi2,
+                b0 = a0 + 1;
+              var c0 = (zi2 + 1) * n + xi2,
+                d0 = c0 + 1;
+              idxs.push(a0, c0, b0, b0, c0, d0);
+            }
+          }
+
+          // Front face: each sample creates 2 verts (top at surface, bottom at baseY)
+          var fStart = verts.length / 3;
+          for (var fi = 0; fi < n; fi++) {
+            var ftx = verts[fi * 3];
+            var fty = verts[fi * 3 + 1];
+            var ftz = verts[fi * 3 + 2];
+            verts.push(ftx, fty, ftz);
+            var ft = (elevs[fi] - tMin) / tRange;
+            var fc = cBase.clone().lerp(cTop, ft * 0.5);
+            cols.push(fc.r * 0.6, fc.g * 0.6, fc.b * 0.6);
+            verts.push(ftx, baseY, ftz);
+            cols.push(cBase.r * 0.3, cBase.g * 0.3, cBase.b * 0.3);
+          }
+          for (var fi2 = 0; fi2 < n - 1; fi2++) {
+            var w = fStart + fi2 * 2;
+            idxs.push(w, w + 1, w + 2, w + 1, w + 3, w + 2);
+          }
+
+          var bStart = verts.length / 3;
+          for (var bi = 0; bi < n; bi++) {
+            var bIdx = zDivs * n + bi;
+            var btx = verts[bIdx * 3];
+            var bty = verts[bIdx * 3 + 1];
+            var btz = verts[bIdx * 3 + 2];
+            verts.push(btx, bty, btz);
+            var bt = (elevs[bi] - tMin) / tRange;
+            var bc = cBase.clone().lerp(cTop, bt * 0.5);
+            cols.push(bc.r * 0.6, bc.g * 0.6, bc.b * 0.6);
+            verts.push(btx, baseY, btz);
+            cols.push(cBase.r * 0.3, cBase.g * 0.3, cBase.b * 0.3);
+          }
+          for (var bi2 = 0; bi2 < n - 1; bi2++) {
+            var w2 = bStart + bi2 * 2;
+            idxs.push(w2, w2 + 2, w2 + 1, w2 + 1, w2 + 2, w2 + 3);
+          }
+
+          var lStart = verts.length / 3;
+          for (var lzi = 0; lzi <= zDivs; lzi++) {
+            var lIdx = lzi * n; // first column
+            verts.push(
+              verts[lIdx * 3],
+              verts[lIdx * 3 + 1],
+              verts[lIdx * 3 + 2],
+            );
+            cols.push(cBase.r * 0.5, cBase.g * 0.5, cBase.b * 0.5);
+            verts.push(verts[lIdx * 3], baseY, verts[lIdx * 3 + 2]);
+            cols.push(cBase.r * 0.25, cBase.g * 0.25, cBase.b * 0.25);
+          }
+          for (var lzi2 = 0; lzi2 < zDivs; lzi2++) {
+            var w3 = lStart + lzi2 * 2;
+            idxs.push(w3, w3 + 1, w3 + 2, w3 + 1, w3 + 3, w3 + 2);
+          }
+
+          var rStart = verts.length / 3;
+          for (var rzi = 0; rzi <= zDivs; rzi++) {
+            var rIdx = rzi * n + (n - 1); // last column
+            verts.push(
+              verts[rIdx * 3],
+              verts[rIdx * 3 + 1],
+              verts[rIdx * 3 + 2],
+            );
+            cols.push(cBase.r * 0.5, cBase.g * 0.5, cBase.b * 0.5);
+            verts.push(verts[rIdx * 3], baseY, verts[rIdx * 3 + 2]);
+            cols.push(cBase.r * 0.25, cBase.g * 0.25, cBase.b * 0.25);
+          }
+          for (var rzi2 = 0; rzi2 < zDivs; rzi2++) {
+            var w4 = rStart + rzi2 * 2;
+            idxs.push(w4, w4 + 2, w4 + 1, w4 + 1, w4 + 2, w4 + 3);
+          }
+
+          var capStart = verts.length / 3;
+          var x0 = -halfX;
+          var x1 = (samples[n - 1].dist / 1000) * xScale - halfX;
+          verts.push(x0, baseY, -halfZ);
+          cols.push(cBase.r * 0.2, cBase.g * 0.2, cBase.b * 0.2);
+          verts.push(x1, baseY, -halfZ);
+          cols.push(cBase.r * 0.2, cBase.g * 0.2, cBase.b * 0.2);
+          verts.push(x1, baseY, halfZ);
+          cols.push(cBase.r * 0.2, cBase.g * 0.2, cBase.b * 0.2);
+          verts.push(x0, baseY, halfZ);
+          cols.push(cBase.r * 0.2, cBase.g * 0.2, cBase.b * 0.2);
+          idxs.push(
+            capStart,
+            capStart + 2,
+            capStart + 1,
+            capStart,
+            capStart + 3,
+            capStart + 2,
+          );
+
+          geo.setAttribute(
+            "position",
+            new THREE.Float32BufferAttribute(verts, 3),
+          );
+          geo.setAttribute("color", new THREE.Float32BufferAttribute(cols, 3));
+          geo.setIndex(idxs);
+          geo.computeVertexNormals();
+
+          pivotGroup.add(
+            new THREE.Mesh(
+              geo,
+              new THREE.MeshStandardMaterial({
+                vertexColors: true,
+                side: THREE.DoubleSide,
+                roughness: 0.6,
+                metalness: 0.05,
+              }),
+            ),
+          );
+
+          var lineV = [];
+          var midZi = Math.floor(zDivs / 2);
+          for (var cli = 0; cli < n; cli++) {
+            var cvi = midZi * n + cli;
+            lineV.push(
+              verts[cvi * 3],
+              verts[cvi * 3 + 1] + 0.003,
+              verts[cvi * 3 + 2],
+            );
+          }
+          var lineGeo = new THREE.BufferGeometry();
+          lineGeo.setAttribute(
+            "position",
+            new THREE.Float32BufferAttribute(lineV, 3),
+          );
+          pivotGroup.add(
+            new THREE.Line(
+              lineGeo,
+              new THREE.LineBasicMaterial({
+                color: C.terrainLine,
+                transparent: true,
+                opacity: 0.8,
+              }),
+            ),
+          );
+
+          var groundGeo = new THREE.PlaneGeometry(4, 4);
+          groundGeo.rotateX(-Math.PI / 2);
+          var ground = new THREE.Mesh(
+            groundGeo,
+            new THREE.MeshStandardMaterial({
+              color: C.fog,
+              roughness: 1,
+              metalness: 0,
+              transparent: true,
+              opacity: 0.35,
+            }),
+          );
+          ground.position.y = baseY - 0.001;
+          pivotGroup.add(ground);
+
+          var grid = new THREE.GridHelper(3, 20, C.gridMain, C.gridSub);
+          grid.position.y = baseY;
+          grid.material.transparent = true;
+          grid.material.opacity = 0.25;
+          pivotGroup.add(grid);
+
+          addMarker(
+            -halfX,
+            (elevs[0] - minE) * yScale,
+            0,
+            C.endpointA,
+            baseY,
+            data.labelA || "A",
+          );
+          addMarker(
+            (samples[n - 1].dist / 1000) * xScale - halfX,
+            (elevs[n - 1] - minE) * yScale,
+            0,
+            C.endpointB,
+            baseY,
+            data.labelB || "B",
+          );
+
+          // Axis ticks + labels
+          addAxisLabels(
+            halfX,
+            xScale,
+            yScale,
+            baseY,
+            minE,
+            elevRange,
+            totalDist,
+          );
+
+          if (data.los && data.los.losLine && data.los.losLine.length > 0) {
+            var verdict = data.los.verdict || "unknown";
+            var lc =
+              verdict === "clear"
+                ? C.losOk
+                : verdict === "marginal"
+                  ? C.losMarg
+                  : verdict === "obstructed"
+                    ? C.losObstr
+                    : C.losUnknown;
+
+            var losPoints = [];
+            for (var li = 0; li < data.los.losLine.length && li < n; li++) {
+              var lx = (samples[li].dist / 1000) * xScale - halfX;
+              var ly = (data.los.losLine[li] - minE) * yScale;
+              losPoints.push(new THREE.Vector3(lx, ly, 0));
+            }
+            if (losPoints.length >= 2) {
+              // Dashed line (matching 2D chart dashArray [6,3])
+              var losGeo = new THREE.BufferGeometry().setFromPoints(losPoints);
+              var losMat = new THREE.LineDashedMaterial({
+                color: lc,
+                transparent: true,
+                opacity: 0.9,
+                dashSize: 0.06,
+                gapSize: 0.03,
+              });
+              var losLine = new THREE.Line(losGeo, losMat);
+              losLine.computeLineDistances();
+              pivotGroup.add(losLine);
+              // Glow tube
+              var curve = new THREE.CatmullRomCurve3(losPoints, false);
+              var tubeGeo = new THREE.TubeGeometry(
+                curve,
+                Math.max(losPoints.length, 20),
+                0.01,
+                6,
+                false,
+              );
+              pivotGroup.add(
+                new THREE.Mesh(
+                  tubeGeo,
+                  new THREE.MeshBasicMaterial({
+                    color: lc,
+                    transparent: true,
+                    opacity: 0.15,
+                    depthWrite: false,
+                  }),
+                ),
+              );
+            }
+
+            if (data.los.fresnelTop && data.los.fresnelBot) {
+              var fCount = Math.min(data.los.fresnelTop.length, n);
+              var topPts = [],
+                botPts = [];
+              for (var fri = 0; fri < fCount; fri++) {
+                var fx = (samples[fri].dist / 1000) * xScale - halfX;
+                var fyt = (data.los.fresnelTop[fri] - minE) * yScale;
+                var fyb = (data.los.fresnelBot[fri] - minE) * yScale;
+                topPts.push(new THREE.Vector3(fx, fyt, 0));
+                botPts.push(new THREE.Vector3(fx, fyb, 0));
+              }
+              var topGeo = new THREE.BufferGeometry().setFromPoints(topPts);
+              var botGeo = new THREE.BufferGeometry().setFromPoints(botPts);
+              var fresnelMat = new THREE.LineDashedMaterial({
+                color: lc,
+                transparent: true,
+                opacity: 0.45,
+                dashSize: 0.04,
+                gapSize: 0.02,
+              });
+              var topLine = new THREE.Line(topGeo, fresnelMat);
+              topLine.computeLineDistances();
+              var botLine = new THREE.Line(botGeo, fresnelMat.clone());
+              botLine.computeLineDistances();
+              pivotGroup.add(topLine);
+              pivotGroup.add(botLine);
+            }
+          }
+
+          resetCamera();
+        };
+
+        function addMarker(x, y, z, color, baseY, label) {
+          var h = Math.max(y - baseY, 0.03);
+          var pole = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.004, 0.004, h, 6),
+            new THREE.MeshBasicMaterial({
+              color: color,
+              transparent: true,
+              opacity: 0.4,
+            }),
+          );
+          pole.position.set(x, baseY + h / 2, z);
+          pivotGroup.add(pole);
+
+          var sphere = new THREE.Mesh(
+            new THREE.SphereGeometry(0.022, 12, 8),
+            new THREE.MeshStandardMaterial({
+              color: color,
+              emissive: color,
+              emissiveIntensity: 0.5,
+              roughness: 0.3,
+              metalness: 0.1,
+            }),
+          );
+          sphere.position.set(x, y + 0.02, z);
+          pivotGroup.add(sphere);
+
+          var halo = new THREE.Mesh(
+            new THREE.SphereGeometry(0.04, 8, 6),
+            new THREE.MeshBasicMaterial({
+              color: color,
+              transparent: true,
+              opacity: 0.1,
+              depthWrite: false,
+            }),
+          );
+          halo.position.set(x, y + 0.02, z);
+          pivotGroup.add(halo);
+
+          // Text label above marker
+          if (label) {
+            var sprite = makeTextSprite(label, color);
+            sprite.position.set(x, y + 0.08, z);
+            pivotGroup.add(sprite);
+          }
+        }
+
+        // Canvas-based text sprite for labels
+        function makeTextSprite(text, color, fontSize) {
+          fontSize = fontSize || 48;
+          var canvas = document.createElement("canvas");
+          var ctx = canvas.getContext("2d");
+          ctx.font = "bold " + fontSize + "px -apple-system, sans-serif";
+          var tw = ctx.measureText(text).width;
+          canvas.width = Math.ceil(tw) + 16;
+          canvas.height = fontSize + 16;
+          ctx.font = "bold " + fontSize + "px -apple-system, sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          var c3 = new THREE.Color(color);
+          var r = Math.round(c3.r * 255);
+          var g = Math.round(c3.g * 255);
+          var b = Math.round(c3.b * 255);
+          ctx.fillStyle = "rgba(" + r + "," + g + "," + b + ",0.9)";
+          ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+          var tex = new THREE.CanvasTexture(canvas);
+          tex.minFilter = THREE.LinearFilter;
+          var mat = new THREE.SpriteMaterial({
+            map: tex,
+            transparent: true,
+            depthWrite: false,
+            sizeAttenuation: true,
+          });
+          var sprite = new THREE.Sprite(mat);
+          sprite.scale.set(canvas.width / 400, canvas.height / 400, 1);
+          return sprite;
+        }
+
+        // Nice axis interval (same logic as 2D chart)
+        function niceInterval(range, targetDivs) {
+          if (range <= 0) return 1;
+          var raw = range / targetDivs;
+          var mag = Math.pow(10, Math.floor(Math.log10(raw)));
+          var norm = raw / mag;
+          var nice = norm < 1.5 ? 1 : norm < 3 ? 2 : norm < 7 ? 5 : 10;
+          return nice * mag;
+        }
+
+        // Add elevation + distance axis ticks along the front face
+        function addAxisLabels(
+          halfX,
+          xScale,
+          yScale,
+          baseY,
+          minE,
+          elevRange,
+          totalDist,
+        ) {
+          var labelColor = 0x607080;
+          var lineColor = 0x304050;
+
+          // Y axis (elevation) — ticks along left edge
+          var yInterval = niceInterval(elevRange, 4);
+          var firstY = Math.ceil(minE / yInterval) * yInterval;
+          for (var elev = firstY; elev <= minE + elevRange; elev += yInterval) {
+            var y = (elev - minE) * yScale;
+            var label = Math.round(elev) + "m";
+            var sprite = makeTextSprite(label, labelColor, 32);
+            sprite.position.set(-halfX - 0.12, y, -0.06);
+            pivotGroup.add(sprite);
+
+            // Faint horizontal gridline
+            var pts = [
+              new THREE.Vector3(-halfX, y, -0.06),
+              new THREE.Vector3(halfX, y, -0.06),
+            ];
+            var lg = new THREE.BufferGeometry().setFromPoints(pts);
+            pivotGroup.add(
+              new THREE.Line(
+                lg,
+                new THREE.LineBasicMaterial({
+                  color: lineColor,
+                  transparent: true,
+                  opacity: 0.2,
+                }),
+              ),
+            );
+          }
+
+          // X axis (distance) — ticks along bottom front edge
+          var xInterval = niceInterval(totalDist, 4);
+          for (var dist = 0; dist <= totalDist; dist += xInterval) {
+            var x = dist * xScale - halfX;
+            var label =
+              totalDist >= 10 ? Math.round(dist) + "" : dist.toFixed(1);
+            var sprite2 = makeTextSprite(label, labelColor, 32);
+            sprite2.position.set(x, baseY - 0.06, -0.06);
+            pivotGroup.add(sprite2);
+          }
+          // "km" unit at end
+          var kmSprite = makeTextSprite("km", labelColor, 28);
+          kmSprite.position.set(halfX + 0.08, baseY - 0.06, -0.06);
+          pivotGroup.add(kmSprite);
+        }
+
+        function clearScene() {
+          if (!pivotGroup) return;
+          while (pivotGroup.children.length > 0) {
+            var obj = pivotGroup.children[0];
+            if (obj.geometry) obj.geometry.dispose();
+            if (obj.material) {
+              if (Array.isArray(obj.material))
+                obj.material.forEach(function (m) {
+                  m.dispose();
+                });
+              else obj.material.dispose();
+            }
+            pivotGroup.remove(obj);
+          }
+        }
+
+        function resetCamera() {
+          controls.target.set(0, 0.3, 0);
+          camera.position.set(0, 1.8, 3.2);
+          controls.update();
+        }
+
+        function animate() {
+          requestAnimationFrame(animate);
+          controls.update();
+          renderer.render(scene, camera);
+        }
+
+        function onResize() {
+          camera.aspect = window.innerWidth / window.innerHeight;
+          camera.updateProjectionMatrix();
+          renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        init();
+      })();
+    </script>
+  </body>
+</html>

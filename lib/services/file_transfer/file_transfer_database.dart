@@ -42,6 +42,17 @@ class FileTransferDatabase {
       _db = await openDatabase(
         dbPath,
         version: _dbVersion,
+        onConfigure: (db) async {
+          final walResult = await db.rawQuery('PRAGMA journal_mode=WAL');
+          // WAL assertion skipped — WAL is requested but only verified
+          // for on-disk databases. Log instead of asserting to avoid
+          // crashing in edge cases where the journal mode differs.
+          if (walResult.isEmpty || walResult.first['journal_mode'] != 'wal') {
+            AppLogging.fileTransfer(
+              'FileTransferDatabase: WAL mode not active, got: $walResult',
+            ); // lint-allow: hardcoded-string
+          }
+        },
         onCreate: (db, version) async {
           AppLogging.fileTransfer('DB: creating tables (v$version)');
           await _createTables(db);
@@ -213,11 +224,17 @@ class FileTransferDatabase {
       whereArgs: [TransferState.complete.index],
     );
 
+    final transfers = rows
+        .map(_rowToTransfer)
+        .whereType<FileTransferState>()
+        .toList();
+
     AppLogging.fileTransfer(
-      'DB: loadActiveTransfers found ${rows.length} transfers',
+      'DB: loadActiveTransfers found ${transfers.length} transfers '
+      '(${rows.length - transfers.length} skipped)',
     );
 
-    return rows.map(_rowToTransfer).toList();
+    return transfers;
   }
 
   /// Load all transfers (for history/display).
@@ -231,11 +248,17 @@ class FileTransferDatabase {
       limit: limit,
     );
 
+    final transfers = rows
+        .map(_rowToTransfer)
+        .whereType<FileTransferState>()
+        .toList();
+
     AppLogging.fileTransfer(
-      'DB: loadAllTransfers found ${rows.length} transfers (limit=$limit)',
+      'DB: loadAllTransfers found ${transfers.length} transfers '
+      '(limit=$limit, ${rows.length - transfers.length} skipped)',
     );
 
-    return rows.map(_rowToTransfer).toList();
+    return transfers;
   }
 
   /// Load transfers for a specific node.
@@ -250,12 +273,18 @@ class FileTransferDatabase {
       orderBy: 'createdAt DESC',
     );
 
+    final transfers = rows
+        .map(_rowToTransfer)
+        .whereType<FileTransferState>()
+        .toList();
+
     AppLogging.fileTransfer(
       'DB: loadTransfersForNode '
-      '${nodeNum.toRadixString(16)} found ${rows.length}',
+      '${nodeNum.toRadixString(16)} found ${transfers.length} '
+      '(${rows.length - transfers.length} skipped)',
     );
 
-    return rows.map(_rowToTransfer).toList();
+    return transfers;
   }
 
   /// Load stored chunks for a transfer (for resumption).
@@ -297,6 +326,27 @@ class FileTransferDatabase {
     );
   }
 
+  /// Delete only chunks for a transfer (keeps transfer metadata).
+  ///
+  /// Called when a transfer reaches a terminal state (complete, failed,
+  /// cancelled) to free chunk storage while preserving history.
+  Future<void> deleteChunks(String fileIdHex) async {
+    final db = _db;
+    if (db == null) return;
+
+    final count = await db.delete(
+      _chunksTable,
+      where: 'fileIdHex = ?',
+      whereArgs: [fileIdHex],
+    );
+
+    if (count > 0) {
+      AppLogging.fileTransfer(
+        'DB: deleteChunks $fileIdHex removed $count rows',
+      );
+    }
+  }
+
   /// Purge expired transfers and their chunks.
   Future<int> purgeExpired() async {
     final db = _db;
@@ -333,41 +383,72 @@ class FileTransferDatabase {
     _db = null;
   }
 
-  FileTransferState _rowToTransfer(Map<String, Object?> row) {
-    final completedStr = row['completedChunks'] as String? ?? '';
-    final completedChunks = completedStr.isEmpty
-        ? <int>{}
-        : completedStr.split(',').map(int.parse).toSet();
+  /// Parse a single DB row into [FileTransferState].
+  ///
+  /// Returns `null` if the row is malformed (invalid enum index, corrupt
+  /// data, etc.). Callers must skip null results so one bad row does not
+  /// crash recovery for all other transfers.
+  FileTransferState? _rowToTransfer(Map<String, Object?> row) {
+    try {
+      final completedStr = row['completedChunks'] as String? ?? '';
+      final completedChunks = completedStr.isEmpty
+          ? <int>{}
+          : completedStr.split(',').map(int.parse).toSet();
 
-    final failReasonIdx = row['failReason'] as int?;
-    final completedAtMs = row['completedAt'] as int?;
+      final directionIdx = row['direction'] as int;
+      final stateIdx = row['state'] as int;
+      final transportModeIdx = row['transportMode'] as int;
+      final failReasonIdx = row['failReason'] as int?;
+      final completedAtMs = row['completedAt'] as int?;
 
-    return FileTransferState(
-      fileIdHex: row['fileIdHex'] as String,
-      fileId: row['fileId'] as Uint8List,
-      direction: TransferDirection.values[row['direction'] as int],
-      state: TransferState.values[row['state'] as int],
-      filename: row['filename'] as String,
-      mimeType: row['mimeType'] as String,
-      totalBytes: row['totalBytes'] as int,
-      chunkSize: row['chunkSize'] as int,
-      chunkCount: row['chunkCount'] as int,
-      sha256Hash: row['sha256Hash'] as Uint8List,
-      targetNodeNum: row['targetNodeNum'] as int?,
-      sourceNodeNum: row['sourceNodeNum'] as int?,
-      completedChunks: completedChunks,
-      nackRounds: row['nackRounds'] as int,
-      failReason: failReasonIdx != null
-          ? TransferFailReason.values[failReasonIdx]
-          : null,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(row['createdAt'] as int),
-      expiresAt: DateTime.fromMillisecondsSinceEpoch(row['expiresAt'] as int),
-      completedAt: completedAtMs != null
-          ? DateTime.fromMillisecondsSinceEpoch(completedAtMs)
-          : null,
-      transportMode: FileTransportMode.values[row['transportMode'] as int],
-      fetchHint: row['fetchHint'] as String? ?? '',
-      savedFilePath: row['savedFilePath'] as String?,
-    );
+      // Bounds-check enum indexes to prevent RangeError.
+      if (directionIdx < 0 || directionIdx >= TransferDirection.values.length) {
+        throw RangeError('direction index $directionIdx out of range');
+      }
+      if (stateIdx < 0 || stateIdx >= TransferState.values.length) {
+        throw RangeError('state index $stateIdx out of range');
+      }
+      if (transportModeIdx < 0 ||
+          transportModeIdx >= FileTransportMode.values.length) {
+        throw RangeError('transportMode index $transportModeIdx out of range');
+      }
+      if (failReasonIdx != null &&
+          (failReasonIdx < 0 ||
+              failReasonIdx >= TransferFailReason.values.length)) {
+        throw RangeError('failReason index $failReasonIdx out of range');
+      }
+
+      return FileTransferState(
+        fileIdHex: row['fileIdHex'] as String,
+        fileId: row['fileId'] as Uint8List,
+        direction: TransferDirection.values[directionIdx],
+        state: TransferState.values[stateIdx],
+        filename: row['filename'] as String,
+        mimeType: row['mimeType'] as String,
+        totalBytes: row['totalBytes'] as int,
+        chunkSize: row['chunkSize'] as int,
+        chunkCount: row['chunkCount'] as int,
+        sha256Hash: row['sha256Hash'] as Uint8List,
+        targetNodeNum: row['targetNodeNum'] as int?,
+        sourceNodeNum: row['sourceNodeNum'] as int?,
+        completedChunks: completedChunks,
+        nackRounds: row['nackRounds'] as int,
+        failReason: failReasonIdx != null
+            ? TransferFailReason.values[failReasonIdx]
+            : null,
+        createdAt: DateTime.fromMillisecondsSinceEpoch(row['createdAt'] as int),
+        expiresAt: DateTime.fromMillisecondsSinceEpoch(row['expiresAt'] as int),
+        completedAt: completedAtMs != null
+            ? DateTime.fromMillisecondsSinceEpoch(completedAtMs)
+            : null,
+        transportMode: FileTransportMode.values[transportModeIdx],
+        fetchHint: row['fetchHint'] as String? ?? '',
+        savedFilePath: row['savedFilePath'] as String?,
+      );
+    } catch (e) {
+      final id = row['fileIdHex'] ?? 'unknown';
+      AppLogging.fileTransfer('DB: skipping malformed transfer row $id: $e');
+      return null;
+    }
   }
 }

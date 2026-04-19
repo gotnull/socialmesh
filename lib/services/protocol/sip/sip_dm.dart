@@ -254,6 +254,13 @@ class SipDmManager {
     return session;
   }
 
+  /// Returns true if the session exists and has been explicitly closed
+  /// (by either peer sending DM_CLOSE).
+  bool isSessionClosed(int sessionTag) {
+    final session = _sessions[sessionTag];
+    return session?.status == SipDmSessionStatus.closed;
+  }
+
   /// Get all active (non-expired) sessions.
   List<SipDmSession> get activeSessions {
     _cleanExpired();
@@ -297,19 +304,94 @@ class SipDmManager {
     return true;
   }
 
-  /// Close a session explicitly.
+  /// Locally expire every active session for [peerNodeId] whose tag
+  /// differs from [exceptTag]. Used when a fresh handshake completes
+  /// and its `session_tag` supersedes a prior session for the same
+  /// peer.
   ///
-  /// Returns false if session not found.
-  bool closeSession(int sessionTag) {
+  /// No DM_CLOSE frame is emitted — the peer has already installed the
+  /// new tag on its side, so a close would be wasted airtime and could
+  /// race against the new session. Message history persisted elsewhere
+  /// is untouched; only in-memory session entries are expired.
+  ///
+  /// Returns the number of sessions that were superseded.
+  int supersedeSessionsForPeer(int peerNodeId, {required int exceptTag}) {
+    final toRemove = _sessions.values
+        .where(
+          (s) =>
+              s.peerNodeId == peerNodeId &&
+              s.status == SipDmSessionStatus.active &&
+              s.sessionTag != exceptTag,
+        )
+        .map((s) => s.sessionTag)
+        .toList();
+    if (toRemove.isEmpty) return 0;
+    for (final tag in toRemove) {
+      _expireSession(tag);
+    }
+    AppLogging.sip(
+      'SIP_DM: superseded ${toRemove.length} prior session(s) for '
+      'peer=0x${peerNodeId.toRadixString(16)}, '
+      'new_tag=0x${exceptTag.toRadixString(16)}',
+    );
+    onStateChanged?.call();
+    return toRemove.length;
+  }
+
+  /// Close a session explicitly and build a DM_CLOSE frame to notify the peer.
+  ///
+  /// Returns the encoded frame bytes to transmit, or null if the session was
+  /// not found or rate-limited.
+  Uint8List? closeSession(int sessionTag) {
     final session = _sessions[sessionTag];
-    if (session == null) return false;
+    if (session == null) return null;
 
     session.status = SipDmSessionStatus.closed;
     AppLogging.sip(
       'SIP_DM: session closed, tag=0x${sessionTag.toRadixString(16)}',
     );
+
+    // Build the DM_CLOSE frame (header-only, no payload).
+    const frameSize = SipConstants.sipWrapperMin;
+    Uint8List? encoded;
+    if (_rateLimiter.canSend(frameSize)) {
+      _rateLimiter.recordSend(frameSize);
+      final frame = SipFrame(
+        versionMajor: SipConstants.sipVersionMajor,
+        versionMinor: SipConstants.sipVersionMinor,
+        msgType: SipMessageType.dmClose,
+        flags: 0,
+        headerLen: SipConstants.sipWrapperMin,
+        sessionId: sessionTag,
+        nonce: SipCodec.generateNonce(),
+        timestampS: _clock() ~/ 1000,
+        payloadLen: 0,
+        payload: Uint8List(0),
+      );
+      encoded = SipCodec.encode(frame);
+    }
+
     onStateChanged?.call();
-    return true;
+    return encoded;
+  }
+
+  /// Handle an inbound DM_CLOSE frame from the peer.
+  ///
+  /// Marks the local session as closed and fires [onStateChanged] so the UI
+  /// can navigate back.
+  void handleInboundClose(SipFrame frame) {
+    if (frame.msgType != SipMessageType.dmClose) return;
+
+    final sessionTag = frame.sessionId;
+    final session = _sessions[sessionTag];
+    if (session == null) return;
+
+    session.status = SipDmSessionStatus.closed;
+    AppLogging.sip(
+      'SIP_DM: <- CLOSE from peer, '
+      'session=0x${sessionTag.toRadixString(16)}',
+    );
+    onStateChanged?.call();
   }
 
   // ---------------------------------------------------------------------------

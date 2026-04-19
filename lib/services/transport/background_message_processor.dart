@@ -311,6 +311,32 @@ class BackgroundMessageProcessor {
   /// Dedup TTL matching the foreground ProtocolService (120 min).
   static const Duration _messageDeduplicateTtl = Duration(minutes: 120);
 
+  /// Minimum plausible Unix epoch (2020-01-01) — matches ProtocolService.
+  static const int _minPlausibleEpoch = 1577836800;
+
+  /// Maximum future tolerance: 1 day — matches ProtocolService.
+  static const int _maxFutureSlack = 86400;
+
+  /// Validate rxTime and return a plausible [DateTime].
+  ///
+  /// Mirrors [ProtocolService._plausibleTimestamp] so foreground and
+  /// background paths produce identical timestamps for the same packet.
+  static DateTime _plausibleTimestamp(pb.MeshPacket packet) {
+    if (packet.hasRxTime() && packet.rxTime > 0) {
+      final rxEpoch = packet.rxTime;
+      final nowEpoch = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+      if (rxEpoch >= _minPlausibleEpoch &&
+          rxEpoch <= nowEpoch + _maxFutureSlack) {
+        return DateTime.fromMillisecondsSinceEpoch(rxEpoch * 1000);
+      }
+      AppLogging.ble(
+        'BackgroundMessageProcessor: implausible rxTime=$rxEpoch '
+        'from=${packet.from} — falling back to local time',
+      );
+    }
+    return DateTime.now();
+  }
+
   Future<void> _handleTextMessage(pb.MeshPacket packet, pb.Data data) async {
     // ---- Deduplication via packet dedupe store --------------------------
     final dedupeKey = MeshPacketKey(
@@ -335,7 +361,9 @@ class BackgroundMessageProcessor {
     }
 
     // ---- Decode text ---------------------------------------------------
-    final text = sanitizeUtf16(utf8.decode(data.payload, allowMalformed: true));
+    final text = sanitizeExternalText(
+      utf8.decode(data.payload, allowMalformed: true),
+    );
     if (text.isEmpty) return;
 
     // ---- Resolve sender identity from NodeDex --------------------------
@@ -347,16 +375,29 @@ class BackgroundMessageProcessor {
     }
 
     // ---- Create Message ------------------------------------------------
+    // Use rxTime from the radio firmware (same as foreground path) so
+    // timestamps are consistent regardless of which path processed the
+    // message. rxTime is when the radio actually received the packet.
+    //
+    // Validate plausibility: devices without a time source may report 0
+    // or a small uptime value. Reject anything before 2020-01-01 or more
+    // than 1 day into the future.
+    final timestamp = _plausibleTimestamp(packet);
+
     final message = Message(
+      id: Message.deterministicId(packetId: packet.id, fromNode: packet.from),
       from: packet.from,
       to: packet.to,
       text: text,
+      timestamp: timestamp,
       channel: packet.channel,
       received: true,
-      source: MessageSource.unknown,
+      source: data.emoji != 0 ? MessageSource.tapback : MessageSource.unknown,
       packetId: packet.id,
       senderLongName: senderLongName,
       senderShortName: senderShortName,
+      replyId: data.replyId != 0 ? data.replyId : null,
+      isEmoji: data.emoji != 0,
     );
 
     // ---- Persist to MessageDatabase ------------------------------------
@@ -385,12 +426,12 @@ class BackgroundMessageProcessor {
 
   /// SharedPreferences keys for notification toggles.
   ///
-  /// The processor checks the global (foreground) master toggle first, then
-  /// the background-specific toggle from the Background Connection Settings
-  /// screen (W3.1). Both must be true for a notification to fire.
+  /// The processor checks the same notification preferences as the foreground
+  /// path: master toggle, per-type toggle, and per-channel mute.
   static const String _kMasterToggle = 'notifications_enabled';
-  static const String _kBgDmToggle = 'bg_notify_messages';
-  static const String _kBgChannelToggle = 'bg_notify_channels';
+  static const String _kChannelToggle = 'channel_notifications_enabled';
+  static const String _kDmToggle = 'dm_notifications_enabled';
+  static const String _kMutedChannels = 'muted_channel_indices';
 
   /// Fire a local notification for a received text message.
   ///
@@ -411,12 +452,35 @@ class BackgroundMessageProcessor {
       // Master toggle.
       if (!(prefs.getBool(_kMasterToggle) ?? true)) return;
 
-      final isChannelMessage = message.channel != null && message.channel! > 0;
+      // Respect per-channel mute (same SharedPreferences key used by
+      // MutedChannelsNotifier on the foreground side).
+      if (message.channel != null) {
+        final mutedRaw = prefs.getStringList(_kMutedChannels);
+        if (mutedRaw != null) {
+          final mutedSet = mutedRaw
+              .map((s) => int.tryParse(s))
+              .whereType<int>()
+              .toSet();
+          if (mutedSet.contains(message.channel)) {
+            AppLogging.ble(
+              'BackgroundMessageProcessor: channel ${message.channel} is '
+              'muted, skipping notification',
+            );
+            return;
+          }
+        }
+      }
 
+      // Channel messages are broadcasts (to == 0xFFFFFFFF). This includes
+      // Primary Channel (index 0) which was previously excluded by the
+      // `channel > 0` heuristic.
+      final isChannelMessage = message.isBroadcast;
+
+      // Per-type notification toggle from Settings → Notifications.
       if (isChannelMessage) {
-        if (!(prefs.getBool(_kBgChannelToggle) ?? true)) return;
+        if (!(prefs.getBool(_kChannelToggle) ?? true)) return;
       } else {
-        if (!(prefs.getBool(_kBgDmToggle) ?? true)) return;
+        if (!(prefs.getBool(_kDmToggle) ?? true)) return;
       }
 
       final ns = NotificationService();
@@ -427,14 +491,17 @@ class BackgroundMessageProcessor {
         // Channel names are not available in the background (stored in
         // ProtocolService, a provider-bound object). Use "Channel N" as
         // a best-effort label.
-        final channelName = 'Channel ${message.channel}';
+        final channelIndex = message.channel ?? 0;
+        final channelName =
+            'Channel $channelIndex'; // lint-allow: hardcoded-string
         await ns.showChannelMessageNotification(
           senderName: displayName,
           senderShortName: senderShortName,
           channelName: channelName,
           message: message.text,
-          channelIndex: message.channel!,
+          channelIndex: channelIndex,
           fromNodeNum: message.from,
+          replyPacketId: message.packetId,
         );
       } else {
         await ns.showNewMessageNotification(
@@ -442,6 +509,7 @@ class BackgroundMessageProcessor {
           senderShortName: senderShortName,
           message: message.text,
           fromNodeNum: message.from,
+          replyPacketId: message.packetId,
         );
       }
 

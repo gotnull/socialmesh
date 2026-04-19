@@ -71,6 +71,19 @@ class SipHsResponse {
   });
 }
 
+/// Decoded HS_DECLINE payload.
+///
+/// Wire format: echoed_client_nonce(16) + reason(1) = 17 bytes.
+class SipHsDecline {
+  /// 16-byte client nonce echoed from the original HS_HELLO, for correlation.
+  final Uint8List echoedClientNonce;
+
+  /// Decline reason: 0x00 = user declined, 0x01 = busy, 0xFF = unspecified.
+  final int reason;
+
+  const SipHsDecline({required this.echoedClientNonce, required this.reason});
+}
+
 /// Decoded HS_ACCEPT payload.
 class SipHsAccept {
   /// 4-byte session tag.
@@ -215,6 +228,33 @@ abstract final class SipHsMessages {
       sessionTag: bd.getUint32(0, Endian.little),
       dmTtlS: bd.getUint32(4, Endian.little),
       flags: bd.getUint8(8),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // HS_DECLINE: echoed_client_nonce(16) + reason(1) = 17
+  // ---------------------------------------------------------------------------
+
+  /// Encode an HS_DECLINE payload (17 bytes).
+  static Uint8List encodeDecline(SipHsDecline decline) {
+    final data = Uint8List(17);
+    data.setRange(0, 16, decline.echoedClientNonce);
+    data[16] = decline.reason;
+    return data;
+  }
+
+  /// Decode an HS_DECLINE payload. Returns null on invalid data.
+  static SipHsDecline? decodeDecline(Uint8List payload) {
+    if (payload.length < 17) {
+      AppLogging.sip(
+        'SIP_HS: HS_DECLINE decode failed: payload too short '
+        '(${payload.length} < 17)',
+      );
+      return null;
+    }
+    return SipHsDecline(
+      echoedClientNonce: Uint8List.fromList(payload.sublist(0, 16)),
+      reason: payload[16],
     );
   }
 

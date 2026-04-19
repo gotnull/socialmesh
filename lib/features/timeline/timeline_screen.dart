@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: haptic-feedback — GestureDetector onTap is for keyboard dismissal, not user interaction
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -11,11 +10,13 @@ import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/search_filter_header.dart';
 import '../../core/widgets/status_filter_chip.dart';
-
 import '../../models/mesh_models.dart';
 import '../../models/presence_confidence.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/presence_providers.dart';
+import '../../services/haptic_service.dart';
+import '../messaging/messaging_screen.dart';
+import '../nodes/node_detail_screen.dart';
 
 /// Types of events that can appear in the timeline
 enum TimelineEventType {
@@ -85,7 +86,7 @@ class TimelineEvent {
 }
 
 /// Provider that aggregates all mesh events into a timeline
-final timelineEventsProvider = Provider<List<TimelineEvent>>((ref) {
+final timelineEventsProvider = Provider.autoDispose<List<TimelineEvent>>((ref) {
   final messages = ref.watch(messagesProvider);
   final nodes = ref.watch(nodesProvider);
   final myNodeNum = ref.watch(myNodeNumProvider);
@@ -97,7 +98,7 @@ final timelineEventsProvider = Provider<List<TimelineEvent>>((ref) {
   // Add message events
   for (final message in messages) {
     // Skip tapback emoji reactions — they are metadata, not messages
-    if (message.isEmoji) continue;
+    if (message.isCanonicalTapback) continue;
     final fromNode = nodes[message.from];
     final toNode = nodes[message.to];
 
@@ -138,6 +139,11 @@ final timelineEventsProvider = Provider<List<TimelineEvent>>((ref) {
           'messageId': message.id,
           'channel': message.channel,
           'status': message.status.name,
+          'from': message.from,
+          'to': message.to,
+          'isBroadcast': isBroadcast,
+          'fromName': fromName,
+          'toName': toName,
         },
       ),
     );
@@ -603,7 +609,82 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
     return slivers;
   }
 
+  void _onEventTap(TimelineEvent event) {
+    final nodes = ref.read(nodesProvider);
+    final myNodeNum = ref.read(myNodeNumProvider);
+
+    switch (event.type) {
+      case TimelineEventType.message:
+        final isBroadcast = event.metadata?['isBroadcast'] as bool? ?? true;
+        final from = event.metadata?['from'] as int?;
+        final to = event.metadata?['to'] as int?;
+        final channel = event.metadata?['channel'] as int? ?? 0;
+        if (isBroadcast) {
+          // Navigate to channel chat
+          ref.haptics.buttonTap();
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ChatScreen(
+                type: ConversationType.channel,
+                channelIndex: channel,
+                title: context.l10n.timelineFilterMessages,
+              ),
+            ),
+          );
+        } else {
+          // Navigate to DM with the other party
+          final otherNodeNum = (from == myNodeNum) ? to : from;
+          if (otherNodeNum != null) {
+            final otherNode = nodes[otherNodeNum];
+            ref.haptics.buttonTap();
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ChatScreen(
+                  type: ConversationType.directMessage,
+                  nodeNum: otherNodeNum,
+                  title: otherNode?.displayName ?? _formatNodeId(otherNodeNum),
+                  avatarColor: otherNode?.avatarColor,
+                ),
+              ),
+            );
+          }
+        }
+      case TimelineEventType.nodeJoined:
+      case TimelineEventType.nodeLeft:
+      case TimelineEventType.signalChange:
+      case TimelineEventType.waypoint:
+        final nodeNum = event.nodeNum;
+        if (nodeNum != null) {
+          final node = nodes[nodeNum];
+          if (node != null) {
+            ref.haptics.buttonTap();
+            showNodeDetails(context, node, nodeNum == myNodeNum);
+          }
+        }
+      case TimelineEventType.channelActivity:
+        break;
+    }
+  }
+
+  /// Whether this event has a navigation target when tapped.
+  bool _isEventNavigable(TimelineEvent event) {
+    switch (event.type) {
+      case TimelineEventType.message:
+        return true;
+      case TimelineEventType.nodeJoined:
+      case TimelineEventType.nodeLeft:
+      case TimelineEventType.signalChange:
+      case TimelineEventType.waypoint:
+        return event.nodeNum != null;
+      case TimelineEventType.channelActivity:
+        return false;
+    }
+  }
+
   Widget _buildEventCard(ThemeData theme, TimelineEvent event) {
+    final navigable = _isEventNavigable(event);
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -631,46 +712,45 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
           const SizedBox(width: AppTheme.spacing12),
           // Event content
           Expanded(
-            child: Container(
-              padding: const EdgeInsets.all(AppTheme.spacing12),
-              decoration: BoxDecoration(
-                color: context.surface,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: navigable ? () => _onEventTap(event) : null,
                 borderRadius: BorderRadius.circular(AppTheme.radius12),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+                child: Ink(
+                  padding: const EdgeInsets.all(AppTheme.spacing12),
+                  decoration: BoxDecoration(
+                    color: context.surface,
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Text(
-                          _localizedEventTitle(event),
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: context.textPrimary,
-                            fontWeight: FontWeight.w500,
+                      Row(
+                        children: [
+                          Expanded(child: _buildEventTitleRich(theme, event)),
+                          Text(
+                            _formatTime(event.timestamp),
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: context.textTertiary,
+                            ),
                           ),
-                        ),
+                        ],
                       ),
-                      Text(
-                        _formatTime(event.timestamp),
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: context.textTertiary,
+                      if (event.subtitle != null) ...[
+                        const SizedBox(height: AppTheme.spacing4),
+                        Text(
+                          _localizedEventSubtitle(event) ?? event.subtitle!,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: context.textSecondary,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
+                      ],
                     ],
                   ),
-                  if (event.subtitle != null) ...[
-                    const SizedBox(height: AppTheme.spacing4),
-                    Text(
-                      _localizedEventSubtitle(event) ?? event.subtitle!,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: context.textSecondary,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ],
+                ),
               ),
             ),
           ),
@@ -691,6 +771,42 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
       default:
         return event.title;
     }
+  }
+
+  /// Builds the event title with the node name highlighted in accent color
+  /// when the event is navigable.
+  Widget _buildEventTitleRich(ThemeData theme, TimelineEvent event) {
+    final title = _localizedEventTitle(event);
+    final name = event.nodeName;
+    final navigable = _isEventNavigable(event);
+    final baseStyle = theme.textTheme.bodyMedium?.copyWith(
+      color: context.textPrimary,
+      fontWeight: FontWeight.w500,
+    );
+
+    // Only highlight if the event has a text node name (not just an icon/emoji)
+    // and the name actually appears in the title.
+    if (name != null && name.isNotEmpty && navigable && title.contains(name)) {
+      final nameIndex = title.indexOf(name);
+      final before = title.substring(0, nameIndex);
+      final after = title.substring(nameIndex + name.length);
+
+      return Text.rich(
+        TextSpan(
+          style: baseStyle,
+          children: [
+            if (before.isNotEmpty) TextSpan(text: before),
+            TextSpan(
+              text: name,
+              style: TextStyle(color: AccentColors.cyan),
+            ),
+            if (after.isNotEmpty) TextSpan(text: after),
+          ],
+        ),
+      );
+    }
+
+    return Text(title, style: baseStyle);
   }
 
   String? _localizedEventSubtitle(TimelineEvent event) {

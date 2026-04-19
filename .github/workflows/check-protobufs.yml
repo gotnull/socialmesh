@@ -3,8 +3,8 @@ name: Check Protobuf Updates
 on:
   schedule:
     # Run every Monday at 9am UTC
-    - cron: '0 9 * * 1'
-  workflow_dispatch:  # Allow manual trigger
+    - cron: "0 9 * * 1"
+  workflow_dispatch: # Allow manual trigger
 
 jobs:
   check-protobuf-updates:
@@ -12,11 +12,11 @@ jobs:
     permissions:
       contents: read
       issues: write
-    
+
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
-      
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
       - name: Get current protobuf version
         id: current
         run: |
@@ -27,20 +27,23 @@ jobs:
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Current protobuf version: $VERSION"
-      
+
       - name: Get latest Meshtastic protobuf version
         id: latest
         run: |
           LATEST=$(curl -s https://api.github.com/repos/meshtastic/protobufs/releases/latest | jq -r .tag_name)
           echo "version=$LATEST" >> $GITHUB_OUTPUT
           echo "Latest protobuf version: $LATEST"
-      
+
       - name: Compare versions
         id: compare
+        env:
+          CURRENT_VERSION: ${{ steps.current.outputs.version }}
+          LATEST_VERSION: ${{ steps.latest.outputs.version }}
         run: |
-          CURRENT="${{ steps.current.outputs.version }}"
-          LATEST="${{ steps.latest.outputs.version }}"
-          
+          CURRENT="$CURRENT_VERSION"
+          LATEST="$LATEST_VERSION"
+
           if [ "$CURRENT" = "$LATEST" ]; then
             echo "needs_update=false" >> $GITHUB_OUTPUT
             echo "Protobufs are up to date ($CURRENT)"
@@ -48,23 +51,24 @@ jobs:
             echo "needs_update=true" >> $GITHUB_OUTPUT
             echo "Protobuf update available: $CURRENT → $LATEST"
           fi
-      
+
       - name: Check for existing issue
         id: existing
         if: steps.compare.outputs.needs_update == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LATEST_VERSION: ${{ steps.latest.outputs.version }}
         run: |
-          LATEST="${{ steps.latest.outputs.version }}"
+          LATEST="$LATEST_VERSION"
           EXISTING=$(gh issue list --label "protobuf-update" --state open --json number,title --jq ".[] | select(.title | contains(\"$LATEST\")) | .number")
-          
+
           if [ -n "$EXISTING" ]; then
             echo "exists=true" >> $GITHUB_OUTPUT
             echo "Issue #$EXISTING already exists for version $LATEST"
           else
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: Create issue for update
         if: steps.compare.outputs.needs_update == 'true' && steps.existing.outputs.exists == 'false'
         env:
@@ -74,7 +78,7 @@ jobs:
         run: |
           # Create label if it doesn't exist
           gh label create "protobuf-update" --description "Protobuf version update available" --color "0366d6" 2>/dev/null || true
-          
+
           cat << 'EOF' > /tmp/issue_body.md
           ## Protobuf Update Available
 
@@ -110,31 +114,36 @@ jobs:
           - [ ] Review generated Dart code changes
           - [ ] Test with a physical Meshtastic device
           - [ ] Update any app code affected by protobuf changes
+          - [ ] Run `flutter test test/services/firmware/hardware_architecture_test.dart` — if new HardwareModel values were added, update `_hwModelToArchitecture` in `lib/services/firmware/hardware_architecture.dart`
           - [ ] Commit and push changes
 
           ---
           *This issue was automatically created by the protobuf update checker.*
           EOF
-          
+
           # Replace placeholders with actual values
           sed -i "s/CURRENT_PLACEHOLDER/$CURRENT_VERSION/g" /tmp/issue_body.md
           sed -i "s/LATEST_PLACEHOLDER/$LATEST_VERSION/g" /tmp/issue_body.md
-          
+
           gh issue create \
             --title "Update Meshtastic Protobufs to $LATEST_VERSION" \
             --label "protobuf-update,enhancement" \
             --body-file /tmp/issue_body.md
-      
+
       - name: Summary
+        env:
+          CURRENT_VERSION: ${{ steps.current.outputs.version }}
+          LATEST_VERSION: ${{ steps.latest.outputs.version }}
+          NEEDS_UPDATE: ${{ steps.compare.outputs.needs_update }}
         run: |
           echo "## Protobuf Version Check" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| | Version |" >> $GITHUB_STEP_SUMMARY
           echo "|---|---|" >> $GITHUB_STEP_SUMMARY
-          echo "| Current | \`${{ steps.current.outputs.version }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| Latest | \`${{ steps.latest.outputs.version }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Current | \`$CURRENT_VERSION\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Latest | \`$LATEST_VERSION\` |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ steps.compare.outputs.needs_update }}" = "true" ]; then
+          if [ "$NEEDS_UPDATE" = "true" ]; then
             echo "**Update available!**" >> $GITHUB_STEP_SUMMARY
           else
             echo "**Up to date**" >> $GITHUB_STEP_SUMMARY

@@ -5,6 +5,17 @@ import '../../../models/mesh_models.dart';
 import '../../../models/presence_confidence.dart';
 import '../models/widget_schema.dart';
 
+/// Sentinel keys for distribution chart special categories.
+/// These are canonical English keys used in the data layer; the renderer
+/// localizes them via l10n before display.
+class DistributionKeys {
+  static const String unknown = 'Unknown';
+  static const String other = 'Other';
+
+  /// Default maximum visible rows before overflow is merged into "Other".
+  static const int defaultMaxItems = 8;
+}
+
 /// Available data binding categories
 enum BindingCategory {
   node, // Node-specific data
@@ -572,17 +583,17 @@ class BindingRegistry {
     ),
     BindingDefinition(
       path: 'network.activeCount',
-      label: 'Active Mesh Nodes', // lint-allow: hardcoded-string
-      description: 'Nodes heard recently', // lint-allow: hardcoded-string
+      label: 'Online Mesh Nodes', // lint-allow: hardcoded-string
+      description: 'Nodes heard within 2 hours', // lint-allow: hardcoded-string
       category: BindingCategory.network,
       valueType: int,
     ),
     // Back-compat alias for older widgets
     BindingDefinition(
       path: 'network.onlineNodes',
-      label: 'Active Mesh Nodes (legacy)', // lint-allow: hardcoded-string
+      label: 'Online Mesh Nodes (legacy)', // lint-allow: hardcoded-string
       description:
-          'Alias for active node count (back-compat)', // lint-allow: hardcoded-string
+          'Alias for online node count (back-compat)', // lint-allow: hardcoded-string
       category: BindingCategory.network,
       valueType: int,
     ),
@@ -592,6 +603,22 @@ class BindingRegistry {
       description: 'Number of unread messages', // lint-allow: hardcoded-string
       category: BindingCategory.messaging,
       valueType: int,
+    ),
+    BindingDefinition(
+      path: 'network.hardwareModelDistribution',
+      label: 'Hardware Model Distribution', // lint-allow: hardcoded-string
+      description:
+          'Node count grouped by hardware model', // lint-allow: hardcoded-string
+      category: BindingCategory.network,
+      valueType: Map<String, int>,
+    ),
+    BindingDefinition(
+      path: 'network.roleDistribution',
+      label: 'Role Distribution', // lint-allow: hardcoded-string
+      description:
+          'Node count grouped by device role', // lint-allow: hardcoded-string
+      category: BindingCategory.network,
+      valueType: Map<String, int>,
     ),
     BindingDefinition(
       path: 'messaging.recentCount',
@@ -783,6 +810,9 @@ class BindingRegistry {
       'network.activeCount' => l10n.widgetBuilderBindingActiveMeshNodes,
       'network.onlineNodes' => l10n.widgetBuilderBindingActiveMeshNodesLegacy,
       'network.unreadMessages' => l10n.widgetBuilderBindingUnreadMessages,
+      'network.hardwareModelDistribution' =>
+        l10n.widgetBuilderBindingHardwareModelDistribution,
+      'network.roleDistribution' => l10n.widgetBuilderBindingRoleDistribution,
       'messaging.recentCount' => l10n.widgetBuilderBindingRecentMessages,
       'node.displayName' => l10n.widgetBuilderBindingDisplayName,
       'node.hopCount' => l10n.widgetBuilderBindingHopCount,
@@ -858,6 +888,10 @@ class BindingRegistry {
       'network.onlineNodes' =>
         l10n.widgetBuilderBindingActiveMeshNodesLegacyDesc,
       'network.unreadMessages' => l10n.widgetBuilderBindingUnreadMessagesDesc,
+      'network.hardwareModelDistribution' =>
+        l10n.widgetBuilderBindingHardwareModelDistributionDesc,
+      'network.roleDistribution' =>
+        l10n.widgetBuilderBindingRoleDistributionDesc,
       'messaging.recentCount' => l10n.widgetBuilderBindingRecentMessagesDesc,
       'node.displayName' => l10n.widgetBuilderBindingDisplayNameDesc,
       'node.hopCount' => l10n.widgetBuilderBindingHopCountDesc,
@@ -1158,6 +1192,22 @@ class DataBindingEngine {
         return 5;
       case 'network.activeCount':
         return 3;
+      case 'network.hardwareModelDistribution':
+        return <String, int>{
+          'T-Echo': 5,
+          'Heltec V3': 10,
+          'T1000-E': 8,
+          'RAK4631': 4,
+          'T-Beam': 3,
+        };
+      case 'network.roleDistribution':
+        return <String, int>{
+          'CLIENT': 15,
+          'CLIENT_MUTE': 6,
+          'ROUTER': 4,
+          'ROUTER_CLIENT': 3,
+          'REPEATER': 2,
+        };
 
       // Messages
       case 'messages.count':
@@ -1242,7 +1292,7 @@ class DataBindingEngine {
       case 'presenceConfidence':
         return node.presenceConfidence.name;
       case 'isOnline': // Back-compat for older widgets
-        return node.presenceConfidence.isActive;
+        return PresenceCalculator.isOnline(node.lastHeard, now: DateTime.now());
       case 'isFavorite':
         return node.isFavorite;
       case 'lastHeard':
@@ -1386,17 +1436,121 @@ class DataBindingEngine {
       case 'activeCount':
         final nodes = _allNodes;
         if (nodes == null) return 0;
-        return nodes.values.where((n) => n.presenceConfidence.isActive).length;
+        final now = DateTime.now();
+        return nodes.values
+            .where((n) => PresenceCalculator.isOnline(n.lastHeard, now: now))
+            .length;
       case 'onlineNodes': // Back-compat for older widgets
         final nodes = _allNodes;
         if (nodes == null) return 0;
-        return nodes.values.where((n) => n.presenceConfidence.isActive).length;
+        final nowLegacy = DateTime.now();
+        return nodes.values
+            .where(
+              (n) => PresenceCalculator.isOnline(n.lastHeard, now: nowLegacy),
+            )
+            .length;
       case 'unreadMessages':
         // This would need to be tracked elsewhere
         return 0;
+      case 'hardwareModelDistribution':
+        final nodes = _allNodes;
+        if (nodes == null || nodes.isEmpty) return <String, int>{};
+        final counts = <String, int>{};
+        for (final node in nodes.values) {
+          final model = node.hardwareModel;
+          final key = (model == null || model.isEmpty)
+              ? DistributionKeys.unknown
+              : model;
+          counts[key] = (counts[key] ?? 0) + 1;
+        }
+        return _sortAndTruncateDistribution(counts);
+      case 'roleDistribution':
+        final nodes = _allNodes;
+        if (nodes == null || nodes.isEmpty) return <String, int>{};
+        final counts = <String, int>{};
+        for (final node in nodes.values) {
+          final role = node.role;
+          final key = (role == null || role.isEmpty)
+              ? DistributionKeys.unknown
+              : role;
+          counts[key] = (counts[key] ?? 0) + 1;
+        }
+        return _sortAndTruncateDistribution(counts);
       default:
         return null;
     }
+  }
+
+  /// Sort distribution data deterministically and truncate to max items.
+  ///
+  /// Sorting: count descending → label ascending (case-insensitive).
+  /// "Unknown" and "Other" always sort after real categories.
+  /// If more than [DistributionKeys.defaultMaxItems] categories exist,
+  /// the lowest-ranked are merged into an "Other" bucket.
+  Map<String, int> _sortAndTruncateDistribution(
+    Map<String, int> counts, {
+    int maxItems = DistributionKeys.defaultMaxItems,
+  }) {
+    if (counts.isEmpty) return counts;
+
+    // Sort entries: count desc, then label asc (case-insensitive),
+    // with Unknown/Other pinned to the end.
+    final sorted = counts.entries.toList()..sort(_compareDistributionEntries);
+
+    // No truncation needed if within limit.
+    if (maxItems <= 0 || sorted.length <= maxItems) {
+      return Map.fromEntries(sorted);
+    }
+
+    // Keep top (maxItems - 1) entries + merge the rest into "Other".
+    // If "Unknown" is in the overflow, preserve it separately.
+    final visible = sorted.sublist(0, maxItems - 1);
+    final overflow = sorted.sublist(maxItems - 1);
+
+    // Pull Unknown out of overflow if present — it should stay visible.
+    MapEntry<String, int>? unknownEntry;
+    var otherTotal = 0;
+    for (final entry in overflow) {
+      if (entry.key == DistributionKeys.unknown) {
+        unknownEntry = entry;
+      } else {
+        otherTotal += entry.value;
+      }
+    }
+
+    final result = Map.fromEntries(visible);
+    if (otherTotal > 0) {
+      result[DistributionKeys.other] = otherTotal;
+    }
+    if (unknownEntry != null) {
+      result[unknownEntry.key] = unknownEntry.value;
+    }
+    return result;
+  }
+
+  /// Distribution entry comparator: count desc → label asc (case-insensitive).
+  /// "Unknown" and "Other" sort after everything else.
+  static int _compareDistributionEntries(
+    MapEntry<String, int> a,
+    MapEntry<String, int> b,
+  ) {
+    // Pin Unknown and Other to the bottom.
+    final aSpecial = _distributionSortWeight(a.key);
+    final bSpecial = _distributionSortWeight(b.key);
+    if (aSpecial != bSpecial) return aSpecial.compareTo(bSpecial);
+
+    // Primary: count descending.
+    final cmp = b.value.compareTo(a.value);
+    if (cmp != 0) return cmp;
+
+    // Secondary: label ascending, case-insensitive.
+    return a.key.toLowerCase().compareTo(b.key.toLowerCase());
+  }
+
+  static int _distributionSortWeight(String key) {
+    if (key == DistributionKeys.other) return 1;
+    if (key == DistributionKeys.unknown) return 2;
+    return 0;
   }
 
   /// Apply transformation to a value

@@ -36,6 +36,17 @@ class RouteStorageService {
       onCreate: (db, version) async {
         await _createTables(db);
       },
+      onConfigure: (db) async {
+        final walResult = await db.rawQuery('PRAGMA journal_mode=WAL');
+        // Only enforce WAL for on-disk databases. In-memory databases
+        // (used in tests via _testDbPath) do not support WAL mode.
+        if (_testDbPath == null) {
+          assert(
+            walResult.isNotEmpty && walResult.first['journal_mode'] == 'wal',
+            'WAL mode not active',
+          ); // lint-allow: hardcoded-string
+        }
+      },
     );
   }
 

@@ -34,6 +34,7 @@ import 'core/l10n/l10n_extension.dart';
 import 'core/logging.dart';
 import 'core/safety/error_handler.dart';
 import 'core/safety/lifecycle_mixin.dart';
+import 'features/debug/app_log_screen.dart' as app_log;
 import 'core/widgets/connecting_content.dart';
 import 'core/widgets/gradient_border_container.dart';
 import 'core/routing/route_guard.dart';
@@ -133,6 +134,19 @@ Future<void> main() async {
   // Load environment variables
   await dotenv.load(fileName: '.env');
 
+  // Bridge category-based console logging into the in-app log viewer.
+  // Categories that call _appLogSink (currently mqttProxy) will appear
+  // in the AppLogScreen for support visibility.
+  AppLogging.setAppLogSink((level, source, message) {
+    const levels = [
+      app_log.LogLevel.debug,
+      app_log.LogLevel.info,
+      app_log.LogLevel.warning,
+      app_log.LogLevel.error,
+    ];
+    app_log.AppLogger().log(levels[level.clamp(0, 3)], source, message);
+  });
+
   FlutterBluePlus.setLogLevel(LogLevel.none);
 
   // Initialize Android foreground service configuration for background BLE.
@@ -173,7 +187,13 @@ Future<void> main() async {
 
   // Ancillary services (Firestore settings, Analytics, Push, etc.)
   // run in background — they must never block app startup or sign-in.
-  _initializeFirebaseServices();
+  // The catchError guard prevents any escaping async error from surfacing
+  // as a PlatformDispatcher error (the "_handlePlatformError" spike).
+  unawaited(
+    _initializeFirebaseServices().catchError((Object e, StackTrace st) {
+      AppLogging.debug('⚠️ _initializeFirebaseServices failed (non-fatal): $e');
+    }),
+  );
 
   runApp(const ProviderScope(child: SocialmeshApp()));
 }
@@ -458,6 +478,10 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       // Resume RSSI polling and GPS location updates (paused on background).
       _resumeProtocolPolling();
       _resumeLocationUpdates();
+      // Clear the app icon badge whenever the user brings the app to the
+      // foreground — they are now actively using it and any unread count
+      // shown on the icon is stale.
+      NotificationService().clearBadge();
     } else if (state == AppLifecycleState.paused) {
       // Only trigger background handoff when the app is *truly* paused
       // (i.e. no longer visible). `inactive` (notification shade, system
@@ -563,7 +587,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       final bridgeAsync = ref.read(schedulerBridgeInitProvider);
       if (bridgeAsync.hasValue) {
         final bridge = bridgeAsync.value!;
-        bridge.processOnResume();
+        unawaited(bridge.processOnResume());
         AppLogging.automations('Processed scheduled automations on resume');
       }
     } catch (e) {
@@ -1091,8 +1115,24 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
           AppLogging.connection(
             '📱 RECONNECT ON RESUME: BLE connected, starting protocol...',
           );
-          // Clear all previous device data before starting new connection
-          await clearDeviceDataBeforeConnect(ref);
+          // Clear all previous device data before starting new connection.
+          // Pass previous + new IDs so node data is auto-cleared if this
+          // resume happens to land on a different physical device than
+          // was last connected (rare on this auto-reconnect path, but
+          // harmless when they match).
+          String? previousDeviceId;
+          try {
+            final settings = await ref.read(settingsServiceProvider.future);
+            if (mounted) previousDeviceId = settings.lastDeviceId;
+          } catch (_) {
+            previousDeviceId = null;
+          }
+          if (!mounted) return;
+          await clearDeviceDataBeforeConnect(
+            ref,
+            previousDeviceId: previousDeviceId,
+            newDeviceId: foundDevice.id,
+          );
 
           if (!mounted) return;
           final protocol = ref.read(protocolServiceProvider);
@@ -1159,17 +1199,41 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       final service = await ref.read(subscriptionServiceProvider.future);
       AppLogging.debug('💰 RevenueCat initialized');
 
-      // If user is already signed in, sync RevenueCat with Firebase UID
+      // Deterministic bootstrap sequence (Play Billing 8 / RC 10.x):
+      //   1. configure                — done by service.initialize() above
+      //   2. syncPurchases (anonymous)— merge any store-held tokens into RC
+      //   3. logIn(firebaseUid)       — alias anonymous → identified
+      //   4. syncPurchases (identified)— attach receipt under the UID alias
+      //   5. refreshPurchases         — explicit deterministic state pull
+      // Anonymous users only need step 2.
       final firebaseUser = FirebaseAuth.instance.currentUser;
+      AppLogging.subscriptions(
+        '💰 [Bootstrap] firebaseUser=${firebaseUser?.uid ?? "(anonymous)"}',
+      );
+
+      AppLogging.subscriptions(
+        '💰 [Bootstrap] step 2: pre-login syncPurchases',
+      );
+      await service.syncPurchases();
+
       if (firebaseUser != null) {
         AppLogging.subscriptions(
-          '💰 User already signed in, syncing RevenueCat with Firebase UID...',
+          '💰 [Bootstrap] step 3: logIn(${firebaseUser.uid})',
         );
         await service.logIn(firebaseUser.uid);
-        AppLogging.subscriptions('💰 RevenueCat synced with Firebase UID');
-      }
 
-      // Initialize cloud sync entitlement service
+        AppLogging.subscriptions(
+          '💰 [Bootstrap] step 4: post-login syncPurchases',
+        );
+        await service.syncPurchases();
+
+        AppLogging.subscriptions('💰 [Bootstrap] step 5: refreshPurchases');
+        await service.refreshPurchases();
+      }
+      AppLogging.subscriptions('💰 [Bootstrap] complete');
+
+      // Initialize cloud sync entitlement service AFTER purchases are
+      // bootstrapped so its initial RC read sees the freshly-synced state.
       if (!mounted) return;
       final cloudSyncService = ref.read(cloudSyncEntitlementServiceProvider);
       await cloudSyncService.initialize();
@@ -1629,12 +1693,47 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
         title: 'Socialmesh', // lint-allow: hardcoded-string
         debugShowCheckedModeBanner: false,
         navigatorKey: navigatorKey,
+        builder: (context, child) {
+          // Clamp Dynamic Type / text scale to prevent layout overflow
+          // on devices with large accessibility text settings.
+          final mediaQuery = MediaQuery.of(context);
+          final clampedTextScaler = mediaQuery.textScaler.clamp(
+            maxScaleFactor: 1.3,
+          );
+          final disableAnimations =
+              mediaQuery.disableAnimations ||
+              accessibilityPrefs.reduceMotionMode.shouldReduceMotion;
+          return MediaQuery(
+            data: mediaQuery.copyWith(
+              textScaler: clampedTextScaler,
+              disableAnimations: disableAnimations,
+            ),
+            child: child!,
+          );
+        },
         theme: lightTheme,
         darkTheme: darkTheme,
         themeMode: themeMode,
         locale: ref.watch(localeProvider),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
+        localeListResolutionCallback: (locales, supportedLocales) {
+          // Flutter's default resolution can pass unsupported locales (e.g.
+          // ro_RO) to the AppLocalizations delegate, which throws a
+          // FlutterError. Resolve manually: prefer first device locale whose
+          // language code matches a supported locale, otherwise fall back to
+          // the first supported locale (English).
+          if (locales != null) {
+            for (final locale in locales) {
+              for (final supported in supportedLocales) {
+                if (supported.languageCode == locale.languageCode) {
+                  return supported;
+                }
+              }
+            }
+          }
+          return supportedLocales.first;
+        },
         navigatorObservers: [
           _KeyboardDismissObserver(),
           _DelegatingAnalyticsObserver(ref),
@@ -2896,79 +2995,83 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
 
     // Determine status info based on current state
     final statusInfo = _getStatusInfo(autoReconnectState, connectionState);
+    final mediaQuery = MediaQuery.of(context);
 
-    return Scaffold(
-      backgroundColor: context.background,
-      extendBodyBehindAppBar: true,
-      body: Stack(
-        children: [
-          // Apple TV style angled grid of discovered nodes - BEHIND EVERYTHING
-          if (discoveredNodes.isNotEmpty)
-            Positioned.fill(
-              child: _AppleTVAngledGrid(
-                entries: discoveredNodes.take(20).toList(),
-                onDismiss: (id) {
-                  ref
-                      .read(discoveredNodesQueueProvider.notifier)
-                      .removeNode(id);
-                },
+    return MediaQuery(
+      data: mediaQuery.copyWith(disableAnimations: false),
+      child: Scaffold(
+        backgroundColor: context.background,
+        extendBodyBehindAppBar: true,
+        body: Stack(
+          children: [
+            // Apple TV style angled grid of discovered nodes - BEHIND EVERYTHING
+            if (discoveredNodes.isNotEmpty)
+              Positioned.fill(
+                child: _AppleTVAngledGrid(
+                  entries: discoveredNodes.take(20).toList(),
+                  onDismiss: (id) {
+                    ref
+                        .read(discoveredNodesQueueProvider.notifier)
+                        .removeNode(id);
+                  },
+                ),
+              ),
+            // Random intro animation as background - replaces floating icons
+            // Positioned.fill(child: _buildRandomBackground()),
+            // Beautiful parallax floating icons background - full screen
+            const Positioned.fill(child: ConnectingAnimationBackground()),
+            // Content with SafeArea
+            SafeArea(
+              child: Center(
+                child: ConnectingContent(
+                  statusInfo: statusInfo,
+                  showMeshNode: true, // Show mesh node on splash
+                  pulseAnimation: _pulseAnimation,
+                ),
               ),
             ),
-          // Random intro animation as background - replaces floating icons
-          // Positioned.fill(child: _buildRandomBackground()),
-          // Beautiful parallax floating icons background - full screen
-          const Positioned.fill(child: ConnectingAnimationBackground()),
-          // Content with SafeArea
-          SafeArea(
-            child: Center(
-              child: ConnectingContent(
-                statusInfo: statusInfo,
-                showMeshNode: true, // Show mesh node on splash
-                pulseAnimation: _pulseAnimation,
-              ),
-            ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: Consumer(
-        builder: (context, ref, child) {
-          final appVersionAsync = ref.watch(appVersionProvider);
-          final versionText = appVersionAsync.when(
-            data: (version) =>
-                'Socialmesh v$version', // lint-allow: hardcoded-string
-            loading: () => 'Socialmesh',
-            error: (_, _) => 'Socialmesh',
-          );
+          ],
+        ),
+        bottomNavigationBar: Consumer(
+          builder: (context, ref, child) {
+            final appVersionAsync = ref.watch(appVersionProvider);
+            final versionText = appVersionAsync.when(
+              data: (version) =>
+                  'Socialmesh v$version', // lint-allow: hardcoded-string
+              loading: () => 'Socialmesh',
+              error: (_, _) => 'Socialmesh',
+            );
 
-          return Container(
-            color: context.background,
-            padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 16),
-            child: SafeArea(
-              top: false,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    versionText,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: context.textTertiary,
-                      fontWeight: FontWeight.w500,
+            return Container(
+              color: context.background,
+              padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 16),
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      versionText,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.textTertiary,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: AppTheme.spacing2),
-                  Text(
-                    '© 2026 Socialmesh. All rights reserved.',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: context.textTertiary.withValues(alpha: 0.7),
+                    const SizedBox(height: AppTheme.spacing2),
+                    Text(
+                      '© 2026 Socialmesh. All rights reserved.',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: context.textTertiary.withValues(alpha: 0.7),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }

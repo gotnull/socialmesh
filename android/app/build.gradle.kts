@@ -36,6 +36,7 @@ android {
     externalNativeBuild {
         cmake {
             version = "3.22.1"
+            path = file("src/main/jni/CMakeLists.txt")
         }
     }
 
@@ -59,6 +60,14 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        ndk {
+            abiFilters += listOf("arm64-v8a", "armeabi-v7a")
+        }
+        externalNativeBuild {
+            cmake {
+                cFlags("-O2 -fPIC -std=gnu11")
+            }
+        }
     }
 
     buildTypes {
@@ -82,4 +91,6 @@ dependencies {
     implementation("com.google.firebase:firebase-messaging:23.4.0")
     // Nothing Phone 3 GlyphMatrix SDK
     implementation(files("libs/glyph-matrix-sdk-1.0.aar"))
+    // Edge-to-edge support (Android 15 / SDK 35 requirement)
+    implementation("androidx.activity:activity-ktx:1.10.1")
 }

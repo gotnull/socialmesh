@@ -41,6 +41,16 @@ class BleTransport implements DeviceTransport {
 
   DeviceConnectionState _state = DeviceConnectionState.disconnected;
 
+  /// Timestamp of the last fromNum notification received.
+  /// Used by the protocol-layer health check to detect a stalled
+  /// notification path (iOS/Android can silently drop BLE subscriptions
+  /// while the GATT connection remains alive).
+  DateTime? _lastNotificationAt;
+
+  /// When the last fromNum notification was received, or `null` if none
+  /// has been received in this session.
+  DateTime? get lastNotificationAt => _lastNotificationAt;
+
   /// Name of the currently-connected device, used for the foreground
   /// service notification and logging.
   String _connectedDeviceName = '';
@@ -452,21 +462,25 @@ class BleTransport implements DeviceTransport {
 
       // Now request MTU after connection is proven stable
       // Request MTU size 512 per Meshtastic docs with retry logic
-      for (var attempt = 1; attempt <= 3; attempt++) {
-        try {
-          await _device!.requestMtu(512);
-          AppLogging.ble('✓ MTU request successful');
-          break;
-        } catch (e) {
-          AppLogging.ble('⚠️ MTU request attempt $attempt/3 failed: $e');
-          if (attempt == 3) {
-            // After 3 attempts, continue anyway - some devices don't support MTU negotiation
-            AppLogging.ble('⚠️ Proceeding without MTU negotiation');
-          } else {
-            // Wait before retrying, check if still connected
-            await Future.delayed(const Duration(milliseconds: 300));
-            if (!_device!.isConnected) {
-              throw Exception('Device disconnected during MTU negotiation');
+      // iOS handles MTU negotiation automatically via CoreBluetooth —
+      // calling requestMtu on iOS always fails with fbp-code: 2.
+      if (defaultTargetPlatform != TargetPlatform.iOS) {
+        for (var attempt = 1; attempt <= 3; attempt++) {
+          try {
+            await _device!.requestMtu(512);
+            AppLogging.ble('✓ MTU request successful');
+            break;
+          } catch (e) {
+            AppLogging.ble('⚠️ MTU request attempt $attempt/3 failed: $e');
+            if (attempt == 3) {
+              // After 3 attempts, continue anyway - some devices don't support MTU negotiation
+              AppLogging.ble('⚠️ Proceeding without MTU negotiation');
+            } else {
+              // Wait before retrying, check if still connected
+              await Future.delayed(const Duration(milliseconds: 300));
+              if (!_device!.isConnected) {
+                throw Exception('Device disconnected during MTU negotiation');
+              }
             }
           }
         }
@@ -619,7 +633,10 @@ class BleTransport implements DeviceTransport {
       for (final char in deviceInfoService.characteristics) {
         try {
           final data = await char.read();
-          final value = String.fromCharCodes(data).trim();
+          // Strip whitespace and embedded quotes — some devices (e.g. Heltec
+          // MeshPocket) return model number as '"1.0"' with literal quote
+          // bytes in the BLE characteristic value.
+          final value = String.fromCharCodes(data).trim().replaceAll('"', '');
           AppLogging.ble('Device Info ${char.uuid}: "$value" (raw: $data)');
 
           final uuid = char.uuid.toString().toLowerCase();
@@ -671,13 +688,24 @@ class BleTransport implements DeviceTransport {
         return;
       }
 
-      await _fromNumCharacteristic!.setNotifyValue(true);
+      await _fromNumCharacteristic!
+          .setNotifyValue(true)
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () {
+              AppLogging.ble(
+                '⚠️ setNotifyValue timed out after 10s, continuing...',
+              );
+              return false;
+            },
+          );
       AppLogging.ble('BLE_NOTIFY_SUBSCRIBED fromNum');
 
       _fromNumSubscription = _fromNumCharacteristic!.lastValueStream.listen(
         (value) async {
           // fromNum value is just a counter - read fromRadio regardless
           if (_rxCharacteristic != null) {
+            _lastNotificationAt = DateTime.now();
             AppLogging.ble('fromNum notified, reading fromRadio');
             try {
               // Read from fromRadio until empty
@@ -710,6 +738,16 @@ class BleTransport implements DeviceTransport {
             _updateState(DeviceConnectionState.error);
           }
         },
+        onDone: () {
+          AppLogging.ble(
+            '⚠️ fromNum notification stream completed — '
+            'BLE subscription lost while connection may still be alive',
+          );
+          // Treat a closed notification stream as a disconnect so the
+          // auto-reconnect path fires. The BLE GATT connection may still
+          // be alive, but without notifications we cannot receive data.
+          _updateState(DeviceConnectionState.disconnected);
+        },
       );
       AppLogging.ble('fromNum notifications enabled');
 
@@ -724,6 +762,98 @@ class BleTransport implements DeviceTransport {
         _updateState(DeviceConnectionState.error);
         rethrow;
       }
+    }
+  }
+
+  @override
+  Future<void> refreshNotifications() async {
+    if (_fromNumCharacteristic == null) {
+      AppLogging.ble('refreshNotifications: no fromNum characteristic');
+      return;
+    }
+    if (_state != DeviceConnectionState.connected) {
+      AppLogging.ble('refreshNotifications: not connected, skipping');
+      return;
+    }
+
+    AppLogging.ble('🔄 Refreshing fromNum notification subscription');
+    try {
+      // Cancel the existing listener before re-subscribing.
+      await _fromNumSubscription?.cancel();
+      _fromNumSubscription = null;
+
+      // Re-enable BLE-level notification on the fromNum characteristic.
+      // This is the key recovery step: on iOS/Android the OS can silently
+      // drop a GATT subscription while the connection stays alive.
+      await _fromNumCharacteristic!
+          .setNotifyValue(true)
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () {
+              AppLogging.ble(
+                '⚠️ refreshNotifications: setNotifyValue timed out',
+              );
+              return false;
+            },
+          );
+
+      // Re-attach the data-read listener (same logic as enableNotifications).
+      _fromNumSubscription = _fromNumCharacteristic!.lastValueStream.listen(
+        (value) async {
+          if (_rxCharacteristic != null) {
+            _lastNotificationAt = DateTime.now();
+            AppLogging.ble('fromNum notified, reading fromRadio');
+            try {
+              while (true) {
+                final data = await _rxCharacteristic!.read();
+                if (data.isEmpty) break;
+                AppLogging.ble(
+                  'BLE_RX_RAW len=${data.length} ts=${DateTime.now().toIso8601String()}',
+                );
+                AppLogging.ble('Read ${data.length} bytes from fromRadio');
+                _dataController.add(data);
+              }
+            } catch (e) {
+              AppLogging.ble('⚠️ Error reading fromRadio: $e');
+              if (_isAuthenticationError(e)) {
+                _updateState(DeviceConnectionState.error);
+              }
+            }
+          }
+        },
+        onError: (error) {
+          AppLogging.ble('⚠️ fromNum error: $error');
+          if (_isAuthenticationError(error)) {
+            _updateState(DeviceConnectionState.error);
+          }
+        },
+        onDone: () {
+          AppLogging.ble(
+            '⚠️ fromNum notification stream completed — '
+            'BLE subscription lost while connection may still be alive',
+          );
+          _updateState(DeviceConnectionState.disconnected);
+        },
+      );
+
+      AppLogging.ble('🔄 fromNum notifications refreshed');
+
+      // After re-subscribing, do one drain of fromRadio in case data
+      // accumulated while the subscription was dead.
+      if (_rxCharacteristic != null) {
+        try {
+          while (true) {
+            final data = await _rxCharacteristic!.read();
+            if (data.isEmpty) break;
+            _lastNotificationAt = DateTime.now();
+            _dataController.add(data);
+          }
+        } catch (e) {
+          AppLogging.ble('⚠️ Error draining fromRadio after refresh: $e');
+        }
+      }
+    } catch (e) {
+      AppLogging.ble('⚠️ refreshNotifications failed: $e');
     }
   }
 
@@ -878,6 +1008,7 @@ class BleTransport implements DeviceTransport {
       _fromNumSubscription = null;
       _logRadioSubscription = null;
       _consecutiveAuthErrors = 0;
+      _lastNotificationAt = null;
 
       // Stop the Android foreground service on disconnect.
       await BackgroundBleService.instance.stop();

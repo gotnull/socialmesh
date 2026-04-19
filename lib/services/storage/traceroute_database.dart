@@ -4,7 +4,7 @@
 // Traceroute Database — SQLite schema and lifecycle management.
 //
 // Database: traceroute_history.db
-// Schema version: 1
+// Schema version: 4
 //
 // Tables:
 //   - traceroute_runs: each traceroute attempt (pending or completed)
@@ -23,7 +23,7 @@ import '../../core/logging.dart';
 ///
 /// Bump this when adding tables, columns, or indices.
 /// Migration logic runs in [_onUpgrade].
-const int tracerouteSchemaVersion = 1;
+const int tracerouteSchemaVersion = 4;
 
 /// Table and column name constants for Traceroute SQLite schema.
 abstract final class TracerouteTables {
@@ -37,6 +37,11 @@ abstract final class TracerouteTables {
   static const colReturnHops = 'return_hops';
   static const colResponseReceived = 'response_received';
   static const colSnr = 'snr';
+  static const colViaMqtt = 'via_mqtt';
+  static const colOriginLatitude = 'origin_latitude';
+  static const colOriginLongitude = 'origin_longitude';
+  static const colTargetLatitude = 'target_latitude';
+  static const colTargetLongitude = 'target_longitude';
 
   // -- traceroute_hops --
   static const hops = 'traceroute_hops';
@@ -47,6 +52,8 @@ abstract final class TracerouteTables {
   static const colHopSnr = 'snr';
   static const colRssi = 'rssi';
   static const colDirection = 'direction';
+  static const colLatitude = 'latitude';
+  static const colLongitude = 'longitude';
 
   /// Status values for traceroute_runs.status
   static const statusPending = 'pending';
@@ -142,8 +149,17 @@ class TracerouteDatabase {
     );
   }
 
-  /// Enable foreign keys before any other operations.
+  /// Enable WAL mode and foreign keys before any other operations.
   Future<void> _onConfigure(Database db) async {
+    final walResult = await db.rawQuery('PRAGMA journal_mode=WAL');
+    // Only enforce WAL for on-disk databases. In-memory databases
+    // (used in tests via _dbPathOverride) do not support WAL mode.
+    if (_dbPathOverride == null) {
+      assert(
+        walResult.isNotEmpty && walResult.first['journal_mode'] == 'wal',
+        'WAL mode not active',
+      ); // lint-allow: hardcoded-string
+    }
     await db.execute('PRAGMA foreign_keys = ON');
   }
 
@@ -161,7 +177,12 @@ class TracerouteDatabase {
         ${TracerouteTables.colForwardHops} INTEGER,
         ${TracerouteTables.colReturnHops} INTEGER,
         ${TracerouteTables.colResponseReceived} INTEGER NOT NULL DEFAULT 0,
-        ${TracerouteTables.colSnr} REAL
+        ${TracerouteTables.colSnr} REAL,
+        ${TracerouteTables.colViaMqtt} INTEGER,
+        ${TracerouteTables.colOriginLatitude} REAL,
+        ${TracerouteTables.colOriginLongitude} REAL,
+        ${TracerouteTables.colTargetLatitude} REAL,
+        ${TracerouteTables.colTargetLongitude} REAL
       )
     ''');
 
@@ -187,6 +208,8 @@ class TracerouteDatabase {
         ${TracerouteTables.colHopSnr} REAL,
         ${TracerouteTables.colRssi} INTEGER,
         ${TracerouteTables.colDirection} TEXT NOT NULL,
+        ${TracerouteTables.colLatitude} REAL,
+        ${TracerouteTables.colLongitude} REAL,
         FOREIGN KEY(${TracerouteTables.colRunId}) REFERENCES ${TracerouteTables.runs}(${TracerouteTables.colId}) ON DELETE CASCADE
       )
     ''');
@@ -213,6 +236,40 @@ class TracerouteDatabase {
 
     // Future migrations go here:
     // if (oldVersion < 2) { ... }
+    if (oldVersion < 2) {
+      await db.execute(
+        'ALTER TABLE ${TracerouteTables.runs} '
+        'ADD COLUMN ${TracerouteTables.colViaMqtt} INTEGER', // lint-allow: hardcoded-string
+      );
+    }
+    if (oldVersion < 3) {
+      await db.execute(
+        'ALTER TABLE ${TracerouteTables.hops} '
+        'ADD COLUMN ${TracerouteTables.colLatitude} REAL', // lint-allow: hardcoded-string
+      );
+      await db.execute(
+        'ALTER TABLE ${TracerouteTables.hops} '
+        'ADD COLUMN ${TracerouteTables.colLongitude} REAL', // lint-allow: hardcoded-string
+      );
+    }
+    if (oldVersion < 4) {
+      await db.execute(
+        'ALTER TABLE ${TracerouteTables.runs} '
+        'ADD COLUMN ${TracerouteTables.colOriginLatitude} REAL', // lint-allow: hardcoded-string
+      );
+      await db.execute(
+        'ALTER TABLE ${TracerouteTables.runs} '
+        'ADD COLUMN ${TracerouteTables.colOriginLongitude} REAL', // lint-allow: hardcoded-string
+      );
+      await db.execute(
+        'ALTER TABLE ${TracerouteTables.runs} '
+        'ADD COLUMN ${TracerouteTables.colTargetLatitude} REAL', // lint-allow: hardcoded-string
+      );
+      await db.execute(
+        'ALTER TABLE ${TracerouteTables.runs} '
+        'ADD COLUMN ${TracerouteTables.colTargetLongitude} REAL', // lint-allow: hardcoded-string
+      );
+    }
   }
 
   /// Handle downgrades by recreating.

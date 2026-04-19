@@ -262,6 +262,55 @@ void main() {
 
       expect(repository.log, isEmpty);
     });
+
+    test('clearLog persists to SharedPreferences', () async {
+      await repository.addLogEntry(
+        AutomationLogEntry(
+          automationId: 'auto-1',
+          automationName: 'Persist Clear',
+          timestamp: DateTime.now(),
+          success: true,
+          actionsExecuted: [],
+        ),
+      );
+      expect(repository.log, isNotEmpty);
+
+      await repository.clearLog();
+
+      // Verify persistence by creating a new repo
+      final repo2 = AutomationRepository();
+      await repo2.init();
+      expect(repo2.log, isEmpty);
+    });
+
+    test('clearLog on empty state is safe', () async {
+      expect(repository.log, isEmpty);
+
+      // Should complete without error
+      await repository.clearLog();
+
+      expect(repository.log, isEmpty);
+    });
+
+    test('clearLog notifies listeners', () async {
+      await repository.addLogEntry(
+        AutomationLogEntry(
+          automationId: 'auto-1',
+          automationName: 'Notify Test',
+          timestamp: DateTime.now(),
+          success: true,
+          actionsExecuted: [],
+        ),
+      );
+
+      var notified = false;
+      repository.addListener(() => notified = true);
+
+      await repository.clearLog();
+
+      expect(notified, isTrue);
+      repository.removeListener(() {});
+    });
   });
 
   group('AutomationRepository - Persistence', () {

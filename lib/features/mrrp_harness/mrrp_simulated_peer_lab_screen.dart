@@ -1,63 +1,25 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/animations.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../providers/mrrp_providers.dart';
 import '../../services/haptic_service.dart';
+import '../../services/protocol/sip/mrrp_constants.dart';
+import '../../services/protocol/sip/mrrp_messages_advert.dart';
 import '../../services/protocol/sip/mrrp_simulated_peer.dart';
 import '../../services/protocol/sip/mrrp_types.dart';
 
 /// Maximum simultaneous simulated peers.
 const _kMaxSimPeers = 4;
-
-/// Provider for the simulated peer list (session-scoped, not persisted).
-final _simPeersProvider =
-    NotifierProvider<_SimPeersNotifier, List<MrrpSimulatedPeer>>(
-      _SimPeersNotifier.new,
-    );
-
-class _SimPeersNotifier extends Notifier<List<MrrpSimulatedPeer>> {
-  int _nextIndex = 1;
-
-  @override
-  List<MrrpSimulatedPeer> build() => [];
-
-  void add(MrrpSimulatedPeer peer) {
-    state = [...state, peer];
-  }
-
-  void remove(String simId) {
-    state = state.where((p) => p.simId != simId).toList();
-  }
-
-  void updateMode(String simId, SimResponseMode mode) {
-    state = [
-      for (final p in state)
-        if (p.simId == simId) ...[p..mode = mode] else p,
-    ];
-  }
-
-  void updateDelay(String simId, int seconds) {
-    state = [
-      for (final p in state)
-        if (p.simId == simId) ...[p..delaySeconds = seconds] else p,
-    ];
-  }
-
-  void updateErrorStatus(String simId, MrrpStatusCode status) {
-    state = [
-      for (final p in state)
-        if (p.simId == simId) ...[p..errorStatus = status] else p,
-    ];
-  }
-
-  int allocateIndex() => _nextIndex++;
-}
 
 /// Simulated Peer Lab — create and manage virtual MRRP peers.
 class MrrpSimulatedPeerLabScreen extends ConsumerWidget {
@@ -66,7 +28,7 @@ class MrrpSimulatedPeerLabScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final simPeers = ref.watch(_simPeersProvider);
+    final simPeers = ref.watch(mrrpSimPeersProvider);
     final canCreate = simPeers.length < _kMaxSimPeers;
 
     // lint-allow: haptic-feedback — keyboard dismissal, not interactive action
@@ -131,6 +93,47 @@ class MrrpSimulatedPeerLabScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
+                // Info card
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.spacing16,
+                  ),
+                  sliver: SliverToBoxAdapter(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: context.accentColor.withAlpha(20),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
+                        border: Border.all(
+                          color: context.accentColor.withAlpha(50),
+                        ),
+                      ),
+                      padding: const EdgeInsets.all(AppTheme.spacing16),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            color: context.accentColor,
+                            size: 20,
+                          ),
+                          const SizedBox(width: AppTheme.spacing12),
+                          Expanded(
+                            child: Text(
+                              l10n.mrrpHarnessSimLabInfoText,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: context.textSecondary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SliverPadding(
+                  padding: EdgeInsets.only(bottom: AppTheme.spacing32),
+                ),
               ],
       ),
     );
@@ -139,7 +142,7 @@ class MrrpSimulatedPeerLabScreen extends ConsumerWidget {
   void _createSimPeer(BuildContext context, WidgetRef ref) {
     ref.read(hapticServiceProvider).trigger(HapticType.medium);
 
-    final notifier = ref.read(_simPeersProvider.notifier);
+    final notifier = ref.read(mrrpSimPeersProvider.notifier);
     final index = notifier.allocateIndex();
     final simId = 'SIM-$index'; // lint-allow: hardcoded-string
     final nodeId = MrrpSimulatedPeer.generateNodeId(index);
@@ -151,6 +154,24 @@ class MrrpSimulatedPeerLabScreen extends ConsumerWidget {
     );
 
     notifier.add(peer);
+
+    // Inject into advert cache so peer inspector and composer see it.
+    final advertEngine = ref.read(mrrpAdvertEngineProvider);
+    if (advertEngine != null) {
+      advertEngine.injectSimulatedPeer(nodeId, [
+        MrrpAdvertDescriptor(
+          serviceId: MrrpServiceId.echoTest,
+          serviceType: MrrpServiceType.test,
+          versionMajor: MrrpConstants.mrrpVersionMajor,
+          versionMinor: MrrpConstants.mrrpVersionMinor,
+          serviceFlags:
+              MrrpServiceFlags.supportsRequest |
+              MrrpServiceFlags.supportsResponse |
+              MrrpServiceFlags.testOnly,
+          metadata: Uint8List(0),
+        ),
+      ]);
+    }
 
     AppLogging.mrrpHarness(
       'MRRP_SIM: created peer $simId '
@@ -174,18 +195,36 @@ class _SimPeerCard extends ConsumerWidget {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AppTheme.spacing12),
-      child: Material(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
+      child: Container(
+        decoration: BoxDecoration(
+          color: context.card,
+          borderRadius: BorderRadius.circular(AppTheme.radius16),
+          border: Border.all(
+            color: context.border.withValues(alpha: 0.5),
+            width: 0.5,
+          ),
+        ),
         child: Padding(
-          padding: const EdgeInsets.all(AppTheme.spacing12),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header
               Row(
                 children: [
-                  Icon(Icons.smart_toy, size: 24, color: AccentColors.purple),
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: AccentColors.purple.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
+                    ),
+                    child: Icon(
+                      Icons.smart_toy,
+                      size: 20,
+                      color: AccentColors.purple,
+                    ),
+                  ),
                   const SizedBox(width: AppTheme.spacing8),
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -207,8 +246,11 @@ class _SimPeerCard extends ConsumerWidget {
                   const SizedBox(width: AppTheme.spacing8),
                   Text(
                     '${peer.simId} ($nodeHex)', // lint-allow: hardcoded-string
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    style: TextStyle(
+                      fontSize: 14,
                       fontWeight: FontWeight.w600,
+                      fontFamily: AppTheme.fontFamily,
+                      color: context.textPrimary,
                     ),
                   ),
                   const Spacer(),
@@ -222,107 +264,131 @@ class _SimPeerCard extends ConsumerWidget {
                       ref
                           .read(hapticServiceProvider)
                           .trigger(HapticType.medium);
-                      ref.read(_simPeersProvider.notifier).remove(peer.simId);
+                      // Remove from advert cache first.
+                      ref
+                          .read(mrrpAdvertEngineProvider)
+                          ?.removeSimulatedPeer(peer.nodeId);
+                      ref
+                          .read(mrrpSimPeersProvider.notifier)
+                          .remove(peer.simId);
                     },
                   ),
                 ],
               ),
-              const Divider(height: AppTheme.spacing16),
+              const Divider(
+                height: AppTheme.spacing24,
+                color: Color(0x33FFFFFF),
+              ),
 
               // Services
-              Text(
-                l10n.mrrpHarnessSimServices,
-                style: Theme.of(
-                  context,
-                ).textTheme.labelMedium?.copyWith(color: context.textSecondary),
-              ),
+              _SimSectionLabel(label: l10n.mrrpHarnessSimServices),
               const SizedBox(height: AppTheme.spacing4),
               Wrap(
                 spacing: AppTheme.spacing4,
                 children: peer.serviceIds.map((id) {
-                  return Chip(
-                    label: Text(MrrpServiceId.nameOf(id)),
-                    visualDensity: VisualDensity.compact,
+                  return Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spacing8,
+                      vertical: AppTheme.spacing2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: context.textPrimary.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
+                      border: Border.all(
+                        color: context.border.withValues(alpha: 0.3),
+                        width: 0.5,
+                      ),
+                    ),
+                    child: Text(
+                      MrrpServiceId.nameOf(id),
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        fontFamily: AppTheme.fontFamily,
+                        color: context.textSecondary,
+                      ),
+                    ),
                   );
                 }).toList(),
               ),
               const SizedBox(height: AppTheme.spacing12),
 
               // Response mode
-              Text(
-                l10n.mrrpHarnessSimResponseMode,
-                style: Theme.of(
-                  context,
-                ).textTheme.labelMedium?.copyWith(color: context.textSecondary),
-              ),
-              const SizedBox(height: AppTheme.spacing4),
-              SegmentedButton<SimResponseMode>(
-                segments: [
-                  ButtonSegment(
-                    value: SimResponseMode.normal,
-                    label: Text(l10n.mrrpHarnessSimModeNormal),
-                  ),
-                  ButtonSegment(
-                    value: SimResponseMode.delayed,
-                    label: Text(l10n.mrrpHarnessSimModeDelayed),
-                  ),
-                  ButtonSegment(
-                    value: SimResponseMode.error,
-                    label: Text(l10n.mrrpHarnessSimModeError),
-                  ),
-                ],
-                selected: {peer.mode},
-                onSelectionChanged: (v) {
-                  ref.read(hapticServiceProvider).trigger(HapticType.light);
-                  ref
-                      .read(_simPeersProvider.notifier)
-                      .updateMode(peer.simId, v.first);
-                },
-              ),
-              const SizedBox(height: AppTheme.spacing4),
-              SegmentedButton<SimResponseMode>(
-                segments: [
-                  ButtonSegment(
-                    value: SimResponseMode.timeout,
-                    label: Text(l10n.mrrpHarnessSimModeTimeout),
-                  ),
-                  ButtonSegment(
-                    value: SimResponseMode.duplicate,
-                    label: Text(l10n.mrrpHarnessSimModeDuplicate),
-                  ),
-                  ButtonSegment(
-                    value: SimResponseMode.malformed,
-                    label: Text(l10n.mrrpHarnessSimModeMalformed),
-                  ),
-                ],
-                selected: {peer.mode},
-                onSelectionChanged: (v) {
-                  ref.read(hapticServiceProvider).trigger(HapticType.light);
-                  ref
-                      .read(_simPeersProvider.notifier)
-                      .updateMode(peer.simId, v.first);
-                },
+              _SimSectionLabel(label: l10n.mrrpHarnessSimResponseMode),
+              const SizedBox(height: AppTheme.spacing8),
+              Wrap(
+                spacing: AppTheme.spacing8,
+                runSpacing: AppTheme.spacing8,
+                children: SimResponseMode.values.map((mode) {
+                  final isSelected = mode == peer.mode;
+                  final label = switch (mode) {
+                    SimResponseMode.normal => l10n.mrrpHarnessSimModeNormal,
+                    SimResponseMode.delayed => l10n.mrrpHarnessSimModeDelayed,
+                    SimResponseMode.error => l10n.mrrpHarnessSimModeError,
+                    SimResponseMode.timeout => l10n.mrrpHarnessSimModeTimeout,
+                    SimResponseMode.duplicate =>
+                      l10n.mrrpHarnessSimModeDuplicate,
+                    SimResponseMode.malformed =>
+                      l10n.mrrpHarnessSimModeMalformed,
+                  };
+                  return BouncyTap(
+                    onTap: () {
+                      ref.read(hapticServiceProvider).trigger(HapticType.light);
+                      ref
+                          .read(mrrpSimPeersProvider.notifier)
+                          .updateMode(peer.simId, mode);
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.spacing12,
+                        vertical: AppTheme.spacing8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? context.accentColor.withValues(alpha: 0.15)
+                            : context.card,
+                        borderRadius: BorderRadius.circular(AppTheme.radius20),
+                        border: Border.all(
+                          color: isSelected
+                              ? context.accentColor
+                              : context.border.withValues(alpha: 0.5),
+                          width: isSelected ? 2 : 1,
+                        ),
+                      ),
+                      child: Text(
+                        label,
+                        style: TextStyle(
+                          color: isSelected
+                              ? context.accentColor
+                              : context.textSecondary,
+                          fontSize: 13,
+                          fontWeight: isSelected
+                              ? FontWeight.w600
+                              : FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
               ),
 
               // Delay (when delayed mode)
               if (peer.mode == SimResponseMode.delayed) ...[
-                const SizedBox(height: AppTheme.spacing8),
-                Text(
-                  l10n.mrrpHarnessSimDelay,
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: context.textSecondary,
-                  ),
-                ),
+                const SizedBox(height: AppTheme.spacing12),
+                _SimSectionLabel(label: l10n.mrrpHarnessSimDelay),
+                const SizedBox(height: AppTheme.spacing4),
                 Slider(
                   value: peer.delaySeconds.toDouble(),
                   min: 1,
                   max: 10,
                   divisions: 9,
+                  activeColor: context.accentColor,
                   label:
                       '${peer.delaySeconds}s', // lint-allow: hardcoded-string
                   onChanged: (v) {
                     ref
-                        .read(_simPeersProvider.notifier)
+                        .read(mrrpSimPeersProvider.notifier)
                         .updateDelay(peer.simId, v.round());
                   },
                 ),
@@ -330,45 +396,76 @@ class _SimPeerCard extends ConsumerWidget {
 
               // Error code (when error mode)
               if (peer.mode == SimResponseMode.error) ...[
+                const SizedBox(height: AppTheme.spacing12),
+                _SimSectionLabel(label: l10n.mrrpHarnessSimErrorCode),
                 const SizedBox(height: AppTheme.spacing8),
-                Text(
-                  l10n.mrrpHarnessSimErrorCode,
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: context.textSecondary,
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.spacing12,
+                    vertical: AppTheme.spacing4,
                   ),
-                ),
-                const SizedBox(height: AppTheme.spacing4),
-                DropdownButton<MrrpStatusCode>(
-                  value: peer.errorStatus,
-                  isExpanded: true,
-                  items:
-                      <MrrpStatusCode>[
-                            MrrpStatusCode.busy,
-                            MrrpStatusCode.notFound,
-                            MrrpStatusCode.unsupported,
-                            MrrpStatusCode.invalid,
-                            MrrpStatusCode.internal,
-                          ]
-                          .map(
-                            (code) => DropdownMenuItem<MrrpStatusCode>(
-                              value: code,
-                              child: Text(
-                                '${code.name} (${code.code})', // lint-allow: hardcoded-string
-                              ),
-                            ),
-                          )
-                          .toList(),
-                  onChanged: (v) {
-                    if (v == null) return;
-                    ref
-                        .read(_simPeersProvider.notifier)
-                        .updateErrorStatus(peer.simId, v);
-                  },
+                  decoration: BoxDecoration(
+                    color: context.background,
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
+                    border: Border.all(color: context.border),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<MrrpStatusCode>(
+                      value: peer.errorStatus,
+                      isExpanded: true,
+                      dropdownColor: context.card,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: context.textPrimary,
+                      ),
+                      items:
+                          <MrrpStatusCode>[
+                                MrrpStatusCode.busy,
+                                MrrpStatusCode.notFound,
+                                MrrpStatusCode.unsupported,
+                                MrrpStatusCode.invalid,
+                                MrrpStatusCode.internal,
+                              ]
+                              .map(
+                                (code) => DropdownMenuItem<MrrpStatusCode>(
+                                  value: code,
+                                  child: Text(
+                                    '${code.name} (${code.code})', // lint-allow: hardcoded-string
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                      onChanged: (v) {
+                        if (v == null) return;
+                        ref
+                            .read(mrrpSimPeersProvider.notifier)
+                            .updateErrorStatus(peer.simId, v);
+                      },
+                    ),
+                  ),
                 ),
               ],
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _SimSectionLabel extends StatelessWidget {
+  final String label;
+  const _SimSectionLabel({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      label.toUpperCase(),
+      style: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.bold,
+        color: context.textTertiary,
+        letterSpacing: 1.2,
       ),
     );
   }

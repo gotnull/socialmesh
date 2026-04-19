@@ -35,6 +35,7 @@ class _AnimatedGoldButtonState extends State<AnimatedGoldButton>
   final Random _random = Random();
   Timer? _sparkleTimer;
   final List<_Sparkle> _sparkles = [];
+  bool _reduceMotion = false;
 
   @override
   void initState() {
@@ -59,6 +60,12 @@ class _AnimatedGoldButtonState extends State<AnimatedGoldButton>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncReduceMotion(MediaQuery.maybeOf(context)?.disableAnimations ?? false);
+  }
+
+  @override
   void dispose() {
     _sparkleTimer?.cancel();
     _shimmerController.dispose();
@@ -67,10 +74,11 @@ class _AnimatedGoldButtonState extends State<AnimatedGoldButton>
   }
 
   void _scheduleNextSparkle() {
+    if (_reduceMotion) return;
     final delay = Duration(milliseconds: 1500 + _random.nextInt(2500));
     _sparkleTimer?.cancel();
     _sparkleTimer = Timer(delay, () {
-      if (mounted) {
+      if (mounted && !_reduceMotion) {
         _triggerSparkles();
         _scheduleNextSparkle();
       }
@@ -78,6 +86,7 @@ class _AnimatedGoldButtonState extends State<AnimatedGoldButton>
   }
 
   void _triggerSparkles() {
+    if (_reduceMotion) return;
     setState(() {
       _sparkles.clear();
       final count = 3 + _random.nextInt(4);
@@ -98,8 +107,61 @@ class _AnimatedGoldButtonState extends State<AnimatedGoldButton>
     _sparkleController.forward(from: 0);
   }
 
+  void _syncReduceMotion(bool reduceMotion) {
+    if (reduceMotion == _reduceMotion) return;
+    _reduceMotion = reduceMotion;
+    _sparkleTimer?.cancel();
+    if (_reduceMotion) {
+      _shimmerController.stop();
+      _sparkleController.stop();
+      if (_sparkles.isNotEmpty) {
+        setState(_sparkles.clear);
+      }
+      return;
+    }
+    _shimmerController.repeat(reverse: true);
+    _scheduleNextSparkle();
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_reduceMotion) {
+      return GestureDetector(
+        onTap: widget.isLoading ? null : widget.onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AccentColors.goldBrown,
+                AccentColors.goldDarkGoldenrod,
+                AccentColors.goldMetallic,
+                AccentColors.goldDarkYellow,
+              ],
+            ),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
+            boxShadow: [
+              BoxShadow(
+                color: AccentColors.goldBrown.withValues(alpha: 0.5),
+                blurRadius: 8,
+                spreadRadius: 0,
+              ),
+            ],
+          ),
+          child: Text(
+            widget.isLoading ? 'Loading...' : widget.text,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF4A3000),
+            ),
+          ),
+        ),
+      );
+    }
     return GestureDetector(
       onTap: widget.isLoading ? null : widget.onTap,
       child: Stack(
@@ -114,6 +176,7 @@ class _AnimatedGoldButtonState extends State<AnimatedGoldButton>
                   horizontal: 28,
                   vertical: 14,
                 ),
+                alignment: Alignment.center,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment(-1 + _shimmerAnimation.value, -1),
@@ -295,6 +358,7 @@ class _AnimatedGoldIconButtonState extends State<AnimatedGoldIconButton>
   final Random _random = Random();
   Timer? _sparkleTimer;
   final List<_Sparkle> _sparkles = [];
+  bool _reduceMotion = false;
 
   @override
   void initState() {
@@ -319,6 +383,12 @@ class _AnimatedGoldIconButtonState extends State<AnimatedGoldIconButton>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncReduceMotion(MediaQuery.maybeOf(context)?.disableAnimations ?? false);
+  }
+
+  @override
   void dispose() {
     _sparkleTimer?.cancel();
     _shimmerController.dispose();
@@ -327,10 +397,11 @@ class _AnimatedGoldIconButtonState extends State<AnimatedGoldIconButton>
   }
 
   void _scheduleNextSparkle() {
+    if (_reduceMotion) return;
     final delay = Duration(milliseconds: 1500 + _random.nextInt(2500));
     _sparkleTimer?.cancel();
     _sparkleTimer = Timer(delay, () {
-      if (mounted) {
+      if (mounted && !_reduceMotion) {
         _triggerSparkles();
         _scheduleNextSparkle();
       }
@@ -338,6 +409,7 @@ class _AnimatedGoldIconButtonState extends State<AnimatedGoldIconButton>
   }
 
   void _triggerSparkles() {
+    if (_reduceMotion) return;
     setState(() {
       _sparkles.clear();
       final count = 3 + _random.nextInt(4);
@@ -358,8 +430,69 @@ class _AnimatedGoldIconButtonState extends State<AnimatedGoldIconButton>
     _sparkleController.forward(from: 0);
   }
 
+  void _syncReduceMotion(bool reduceMotion) {
+    if (reduceMotion == _reduceMotion) return;
+    _reduceMotion = reduceMotion;
+    _sparkleTimer?.cancel();
+    if (_reduceMotion) {
+      _shimmerController.stop();
+      _sparkleController.stop();
+      if (_sparkles.isNotEmpty) {
+        setState(_sparkles.clear);
+      }
+      return;
+    }
+    _shimmerController.repeat(reverse: true);
+    _scheduleNextSparkle();
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_reduceMotion) {
+      return SizedBox(
+        width: 48,
+        height: 48,
+        child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AccentColors.goldBrown,
+                    AccentColors.goldDarkGoldenrod,
+                    AccentColors.goldMetallic,
+                    AccentColors.goldDarkYellow,
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(AppTheme.radius18),
+                boxShadow: [
+                  BoxShadow(
+                    color: AccentColors.goldBrown.withValues(alpha: 0.4),
+                    blurRadius: 8,
+                    spreadRadius: 0,
+                  ),
+                ],
+              ),
+            ),
+            IconButton(
+              icon: Icon(
+                widget.icon,
+                color: const Color(0xFF4A3000),
+                size: widget.size,
+              ),
+              tooltip: widget.tooltip,
+              onPressed: widget.onPressed,
+            ),
+          ],
+        ),
+      );
+    }
     return SizedBox(
       width: 48, // Standard IconButton tap target
       height: 48,

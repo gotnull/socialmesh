@@ -16,6 +16,7 @@ void main() {
         expect(prefs.densityMode, DensityMode.comfortable);
         expect(prefs.contrastMode, ContrastMode.normal);
         expect(prefs.reduceMotionMode, ReduceMotionMode.off);
+        expect(prefs.timeFormatMode, TimeFormatMode.system);
       });
 
       test('default constructor matches defaults constant', () {
@@ -56,6 +57,7 @@ void main() {
           densityMode: DensityMode.largeTouch,
           contrastMode: ContrastMode.high,
           reduceMotionMode: ReduceMotionMode.on,
+          timeFormatMode: TimeFormatMode.twentyFourHour,
         );
 
         expect(modified.fontMode, FontMode.system);
@@ -63,6 +65,7 @@ void main() {
         expect(modified.densityMode, DensityMode.largeTouch);
         expect(modified.contrastMode, ContrastMode.high);
         expect(modified.reduceMotionMode, ReduceMotionMode.on);
+        expect(modified.timeFormatMode, TimeFormatMode.twentyFourHour);
       });
     });
 
@@ -101,6 +104,13 @@ void main() {
         );
         expect(prefs.hasCustomSettings, true);
       });
+
+      test('returns true when timeFormatMode is changed', () {
+        final prefs = AccessibilityPreferences.defaults.copyWith(
+          timeFormatMode: TimeFormatMode.twelveHour,
+        );
+        expect(prefs.hasCustomSettings, true);
+      });
     });
 
     group('serialization', () {
@@ -111,6 +121,7 @@ void main() {
           densityMode: DensityMode.largeTouch,
           contrastMode: ContrastMode.high,
           reduceMotionMode: ReduceMotionMode.on,
+          timeFormatMode: TimeFormatMode.twentyFourHour,
         );
 
         final json = prefs.toJson();
@@ -120,7 +131,8 @@ void main() {
         expect(json['densityMode'], 'largeTouch');
         expect(json['contrastMode'], 'high');
         expect(json['reduceMotionMode'], 'on');
-        expect(json['version'], 1);
+        expect(json['timeFormatMode'], 'twentyFourHour');
+        expect(json['version'], 2);
       });
 
       test('toJsonString produces valid JSON', () {
@@ -147,6 +159,7 @@ void main() {
         expect(prefs.densityMode, DensityMode.compact);
         expect(prefs.contrastMode, ContrastMode.high);
         expect(prefs.reduceMotionMode, ReduceMotionMode.on);
+        expect(prefs.timeFormatMode, TimeFormatMode.system);
       });
 
       test('fromJsonString deserializes correctly', () {
@@ -171,6 +184,7 @@ void main() {
           densityMode: DensityMode.largeTouch,
           contrastMode: ContrastMode.high,
           reduceMotionMode: ReduceMotionMode.on,
+          timeFormatMode: TimeFormatMode.twelveHour,
         );
 
         final jsonString = original.toJsonString();
@@ -181,6 +195,7 @@ void main() {
         expect(restored.densityMode, original.densityMode);
         expect(restored.contrastMode, original.contrastMode);
         expect(restored.reduceMotionMode, original.reduceMotionMode);
+        expect(restored.timeFormatMode, original.timeFormatMode);
       });
     });
 
@@ -209,6 +224,7 @@ void main() {
         expect(prefs.densityMode, DensityMode.comfortable);
         expect(prefs.contrastMode, ContrastMode.normal);
         expect(prefs.reduceMotionMode, ReduceMotionMode.off);
+        expect(prefs.timeFormatMode, TimeFormatMode.system);
       });
 
       test('fromJson uses defaults for invalid enum values', () {
@@ -218,7 +234,8 @@ void main() {
           'densityMode': 'nonexistent',
           'contrastMode': 'bad',
           'reduceMotionMode': 'wrong',
-          'version': 1,
+          'timeFormatMode': 'invalid',
+          'version': 2,
         };
 
         final prefs = AccessibilityPreferences.fromJson(json);
@@ -228,6 +245,7 @@ void main() {
         expect(prefs.densityMode, DensityMode.comfortable);
         expect(prefs.contrastMode, ContrastMode.normal);
         expect(prefs.reduceMotionMode, ReduceMotionMode.off);
+        expect(prefs.timeFormatMode, TimeFormatMode.system);
       });
 
       test('fromJson handles null values gracefully', () {
@@ -237,7 +255,8 @@ void main() {
           'densityMode': null,
           'contrastMode': null,
           'reduceMotionMode': null,
-          'version': 1,
+          'timeFormatMode': null,
+          'version': 2,
         };
 
         final prefs = AccessibilityPreferences.fromJson(json);
@@ -247,6 +266,7 @@ void main() {
         expect(prefs.densityMode, DensityMode.comfortable);
         expect(prefs.contrastMode, ContrastMode.normal);
         expect(prefs.reduceMotionMode, ReduceMotionMode.off);
+        expect(prefs.timeFormatMode, TimeFormatMode.system);
       });
     });
 
@@ -386,6 +406,30 @@ void main() {
     test('durationMultiplier returns correct values', () {
       expect(ReduceMotionMode.off.durationMultiplier, 1.0);
       expect(ReduceMotionMode.on.durationMultiplier, 0.0);
+    });
+  });
+
+  group('TimeFormatMode', () {
+    test('all values have display names', () {
+      for (final mode in TimeFormatMode.values) {
+        expect(mode.displayName, isNotEmpty);
+      }
+    });
+
+    test('all values have descriptions', () {
+      for (final mode in TimeFormatMode.values) {
+        expect(mode.description, isNotEmpty);
+      }
+    });
+
+    test('has expected number of values', () {
+      expect(TimeFormatMode.values.length, 3);
+    });
+
+    test('enum values match expected names', () {
+      expect(TimeFormatMode.system.name, 'system');
+      expect(TimeFormatMode.twelveHour.name, 'twelveHour');
+      expect(TimeFormatMode.twentyFourHour.name, 'twentyFourHour');
     });
   });
 }

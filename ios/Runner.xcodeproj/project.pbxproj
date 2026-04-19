@@ -19,6 +19,10 @@
 		AI0001012024120800000001 /* AppIntentErrors.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI0001012024120800000010 /* AppIntentErrors.swift */; };
 		AI00010120241208000000010 /* ShortcutsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI00010120241208000000100 /* ShortcutsProvider.swift */; };
 		AI00010120241208000000011 /* RunAutomationIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI00010120241208000000110 /* RunAutomationIntent.swift */; };
+		AI00010120241208000000012 /* ShutDownNodeIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI00010120241208000000120 /* ShutDownNodeIntent.swift */; };
+		AI00010120241208000000013 /* RestartNodeIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI00010120241208000000130 /* RestartNodeIntent.swift */; };
+		AI00010120241208000000014 /* DisconnectNodeIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI00010120241208000000140 /* DisconnectNodeIntent.swift */; };
+		AI00010120241208000000015 /* TracerouteIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI00010120241208000000150 /* TracerouteIntent.swift */; };
 		AI0001012024120800000002 /* AppIntentsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI0001012024120800000020 /* AppIntentsManager.swift */; };
 		AI0001012024120800000003 /* SendMessageIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI0001012024120800000030 /* SendMessageIntent.swift */; };
 		AI0001012024120800000004 /* SendChannelMessageIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI0001012024120800000040 /* SendChannelMessageIntent.swift */; };
@@ -34,6 +38,7 @@
 		D5C1D636C7F2A568A037C3D0 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = BEFF18A377E3CA3D364CF1AB /* GoogleService-Info.plist */; };
 		NSE001012026011200000001 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = NSE001012026011200000010 /* NotificationService.swift */; };
 		NSE001012026011200000002 /* NotificationServiceExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = NSE001012026011200000020 /* NotificationServiceExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		C2C0DEC220260313000000F2 /* Codec2Symbols.c in Sources */ = {isa = PBXBuildFile; fileRef = C2C0DEC220260313000000F1 /* Codec2Symbols.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -94,6 +99,10 @@
 		AI0001012024120800000010 /* AppIntentErrors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIntentErrors.swift; sourceTree = "<group>"; };
 		AI00010120241208000000100 /* ShortcutsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutsProvider.swift; sourceTree = "<group>"; };
 		AI00010120241208000000110 /* RunAutomationIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunAutomationIntent.swift; sourceTree = "<group>"; };
+		AI00010120241208000000120 /* ShutDownNodeIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShutDownNodeIntent.swift; sourceTree = "<group>"; };
+		AI00010120241208000000130 /* RestartNodeIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestartNodeIntent.swift; sourceTree = "<group>"; };
+		AI00010120241208000000140 /* DisconnectNodeIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisconnectNodeIntent.swift; sourceTree = "<group>"; };
+		AI00010120241208000000150 /* TracerouteIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TracerouteIntent.swift; sourceTree = "<group>"; };
 		AI0001012024120800000020 /* AppIntentsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIntentsManager.swift; sourceTree = "<group>"; };
 		AI0001012024120800000030 /* SendMessageIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendMessageIntent.swift; sourceTree = "<group>"; };
 		AI0001012024120800000040 /* SendChannelMessageIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendChannelMessageIntent.swift; sourceTree = "<group>"; };
@@ -117,6 +126,7 @@
 		NSE001012026011200000011 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		NSE001012026011200000012 /* NotificationServiceExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NotificationServiceExtension.entitlements; sourceTree = "<group>"; };
 		NSE001012026011200000020 /* NotificationServiceExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = NotificationServiceExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		C2C0DEC220260313000000F1 /* Codec2Symbols.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Codec2Symbols.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -240,6 +250,7 @@
 				1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */,
 				74858FAE1ED2DC5600515810 /* AppDelegate.swift */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
+				C2C0DEC220260313000000F1 /* Codec2Symbols.c */,
 			);
 			path = Runner;
 			sourceTree = "<group>";
@@ -271,6 +282,10 @@
 				AI0001012024120800000090 /* OpenMessagesIntent.swift */,
 				AI00010120241208000000100 /* ShortcutsProvider.swift */,
 				AI00010120241208000000110 /* RunAutomationIntent.swift */,
+				AI00010120241208000000120 /* ShutDownNodeIntent.swift */,
+				AI00010120241208000000130 /* RestartNodeIntent.swift */,
+				AI00010120241208000000140 /* DisconnectNodeIntent.swift */,
+				AI00010120241208000000150 /* TracerouteIntent.swift */,
 			);
 			path = AppIntents;
 			sourceTree = "<group>";
@@ -610,6 +625,7 @@
 			files = (
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
+				C2C0DEC220260313000000F2 /* Codec2Symbols.c in Sources */,
 				AI0001012024120800000001 /* AppIntentErrors.swift in Sources */,
 				AI0001012024120800000002 /* AppIntentsManager.swift in Sources */,
 				AI0001012024120800000003 /* SendMessageIntent.swift in Sources */,
@@ -621,6 +637,10 @@
 				AI0001012024120800000009 /* OpenMessagesIntent.swift in Sources */,
 				AI00010120241208000000010 /* ShortcutsProvider.swift in Sources */,
 				AI00010120241208000000011 /* RunAutomationIntent.swift in Sources */,
+				AI00010120241208000000012 /* ShutDownNodeIntent.swift in Sources */,
+				AI00010120241208000000013 /* RestartNodeIntent.swift in Sources */,
+				AI00010120241208000000014 /* DisconnectNodeIntent.swift in Sources */,
+				AI00010120241208000000015 /* TracerouteIntent.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -734,7 +754,7 @@
 				DEVELOPMENT_TEAM = U336GVDWCE;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.social-networking";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -743,6 +763,12 @@
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
+				);
+				"OTHER_LDFLAGS[sdk=iphoneos*]" = (
+					"$(inherited)",
+					"-ObjC",
+					"-force_load",
+					"$(PROJECT_DIR)/codec2/lib/libcodec2_ios.a",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.gotnull.socialmesh;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -938,7 +964,7 @@
 				DEVELOPMENT_TEAM = U336GVDWCE;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.social-networking";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -947,6 +973,12 @@
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
+				);
+				"OTHER_LDFLAGS[sdk=iphoneos*]" = (
+					"$(inherited)",
+					"-ObjC",
+					"-force_load",
+					"$(PROJECT_DIR)/codec2/lib/libcodec2_ios.a",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.gotnull.socialmesh;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -976,7 +1008,7 @@
 				DEVELOPMENT_TEAM = U336GVDWCE;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.social-networking";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -985,6 +1017,12 @@
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
+				);
+				"OTHER_LDFLAGS[sdk=iphoneos*]" = (
+					"$(inherited)",
+					"-ObjC",
+					"-force_load",
+					"$(PROJECT_DIR)/codec2/lib/libcodec2_ios.a",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.gotnull.socialmesh;
 				PRODUCT_NAME = "$(TARGET_NAME)";

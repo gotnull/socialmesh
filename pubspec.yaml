@@ -2,7 +2,7 @@ name: socialmesh
 description: "A mesh radio companion app for Meshtastic. Connect over BLE or USB, message off-grid, map your nodes, and explore the mesh — no internet required."
 publish_to: "none"
 
-version: 1.20.0+129
+version: 1.33.0+162
 
 environment:
   sdk: ^3.10.0
@@ -19,6 +19,7 @@ dependencies:
 
   # BLE Communication
   flutter_blue_plus: ^2.2.1
+  nordic_dfu: ^7.1.2
 
   # USB Serial Communication
   usb_serial: ^0.5.2
@@ -27,15 +28,19 @@ dependencies:
   protobuf: ^6.0.0
   fixnum: ^1.1.0
 
+  # MQTT Client (for device client proxy mode)
+  mqtt_client: ^10.6.0
+  typed_data: ^1.4.0
+
   # Storage
   flutter_secure_storage: ^10.0.0
-  shared_preferences: ^2.5.4
+  shared_preferences: ^2.5.5
   sqflite: ^2.3.3
   path_provider: ^2.1.4
   path: ^1.9.0
-  file_picker: ^10.3.10
+  file_picker: ^11.0.2
   image_picker: ^1.1.2
-  photo_manager: ^3.6.3
+  photo_manager: ^3.9.0
 
   # QR Code
   mobile_scanner: ^7.2.0
@@ -44,52 +49,57 @@ dependencies:
   flutter_markdown: ^0.7.6
 
   # UI/UX
-  cupertino_icons: ^1.0.8
-  flutter_map: ^8.2.2
+  cupertino_icons: ^1.0.9
+  flutter_compass: ^0.8.1
+  flutter_map: ^8.3.0
+  infinite_calendar_view: ^2.11.3
   latlong2: ^0.9.1
   intl: ^0.20.2
   collection: ^1.18.0
   geolocator: ^14.0.2
   geocoding: ^4.0.0
-  share_plus: ^12.0.1
+  share_plus: ^12.0.2
   social_media_buttons: ^1.0.0
   sticker_view: ^0.0.4
 
   # Utilities
   archive: ^4.0.9
   clock: ^1.1.1
-  logger: ^2.5.0
+  logger: ^2.7.0
   uuid: ^4.5.3
+  xml: ^6.6.1
   permission_handler: ^12.0.1
   image: ^4.8.0
   sensors_plus: ^7.0.0
-  fl_chart: ^1.1.1
+  fl_chart: ^1.2.0
   url_launcher: ^6.3.1
-  connectivity_plus: ^7.0.0
+  connectivity_plus: ^7.1.1
   http: ^1.2.2
   flutter_dotenv: ^6.0.0
   flutter_local_notifications: ^20.1.0
   just_audio: ^0.10.5
+  record: ^6.0.0
   live_activities: ^2.4.7
-  package_info_plus: ^9.0.0
-  device_info_plus: ^11.2.0
+  package_info_plus: ^9.0.1
+  device_info_plus: ^12.4.0
 
   # In-App Purchases (RevenueCat)
-  purchases_flutter: ^9.13.0
+  purchases_flutter: ^10.0.0
 
   # Animations
-  animations: ^2.1.1
+  animations: ^2.1.2
   skeletonizer: ^2.1.3
-  lottie: ^3.3.1
+  lottie: ^3.3.3
+  scrollable_positioned_list: ^0.3.8
   flutter_map_marker_cluster: ^8.2.2
-  firebase_crashlytics: ^5.0.5
+  firebase_crashlytics: ^5.1.0
   firebase_core: ^4.5.0
-  firebase_analytics: ^12.1.3
-  firebase_auth: ^6.2.0
+  firebase_analytics: ^12.2.0
+  firebase_auth: ^6.3.0
   firebase_storage: ^13.1.0
-  firebase_messaging: ^16.0.4
+  firebase_messaging: ^16.1.3
   characters: ^1.4.0
-  cloud_firestore: ^6.1.3
+  cloud_firestore: ^6.2.0
   cloud_functions: ^6.0.7
   google_sign_in: ^7.2.0
   sign_in_with_apple: ^7.0.1
@@ -99,9 +109,13 @@ dependencies:
   ditredi: ^2.0.2
   vector_math: ^2.2.0
   cryptography: ^2.9.0
+  pointycastle: ^4.0.0
 
   # Camera for AR
   camera: ^0.12.0
+
+  # Video streaming (HLS playback)
+  video_player: ^2.9.2
 
   # Deep linking
   app_links: ^7.0.0
@@ -110,16 +124,19 @@ dependencies:
 
   # Background scheduling
   workmanager: ^0.9.0
-  background_fetch: ^1.3.7
+  background_fetch: ^1.6.1
   timezone: ^0.10.0
 
   # Background BLE foreground service (Android)
-  flutter_foreground_task: ^9.2.0
+  flutter_foreground_task: ^9.2.2
 
   # In-app review
   in_app_review: ^2.0.10
   pretty_qr_code: ^3.6.0
   emoji_picker_flutter: ^4.4.0
+  ffi: ^2.2.0
+  flutter_image_compress: ^2.4.0
+  bonsoir: ^6.0.2
 
 dev_dependencies:
   flutter_test:
@@ -132,7 +149,7 @@ dev_dependencies:
   flutter_launcher_icons: ^0.14.3
 
   # Code generation (3.x to match riverpod 3.x)
-  build_runner: ^2.4.13
+  build_runner: ^2.13.1
   riverpod_generator: ^4.0.0+1
   json_serializable: ^6.9.5
 
@@ -171,6 +188,7 @@ flutter:
     - assets/lottie/
     - assets/models/
     - assets/globe/
+    - assets/terrain/
     - assets/meshtastic_powered_landscape.png
 
   # An image asset can refer to one or more resolution-specific "variants", see

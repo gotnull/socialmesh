@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-import 'dart:ui' show PlatformDispatcher;
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:socialmesh/l10n/app_localizations.dart';
 import '../../providers/connection_providers.dart';
+import 'package:socialmesh/l10n/l10n_utils.dart';
 
 /// Result type for command execution
 sealed class CommandResult<T> {
@@ -36,7 +34,7 @@ class CommandError {
   });
 
   factory CommandError.deviceNotConnected() {
-    final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    final l10n = safeL10n();
     return CommandError(
       type: CommandErrorType.deviceNotConnected,
       message: 'Device not connected', // lint-allow: hardcoded-string
@@ -46,7 +44,7 @@ class CommandError {
   }
 
   factory CommandError.protocolNotReady() {
-    final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    final l10n = safeL10n();
     return CommandError(
       type: CommandErrorType.protocolNotReady,
       message: 'Protocol not configured', // lint-allow: hardcoded-string
@@ -56,7 +54,7 @@ class CommandError {
   }
 
   factory CommandError.networkUnavailable() {
-    final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    final l10n = safeL10n();
     return CommandError(
       type: CommandErrorType.networkUnavailable,
       message: 'Network unavailable', // lint-allow: hardcoded-string

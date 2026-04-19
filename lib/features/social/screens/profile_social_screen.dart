@@ -1675,7 +1675,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
     final profileNotifier = ref.read(userProfileProvider.notifier);
     final userId = widget.userId;
 
-    final result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFiles(
       type: FileType.image,
       allowMultiple: false,
     );

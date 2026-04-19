@@ -1949,7 +1949,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
 
     FilePickerResult? result;
     try {
-      result = await FilePicker.platform.pickFiles(
+      result = await FilePicker.pickFiles(
         type: FileType.image,
         allowMultiple: false,
       );
@@ -1976,9 +1976,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
       try {
         final file = File(path);
         await notifier.saveAvatarFromFile(file);
-        // Force refresh - safe because invalidate works even after dispose
         if (mounted) {
-          ref.invalidate(userProfileProvider);
           safeSetState(() => _hasChanges = true);
           safeShowSnackBar(context.l10n.profileAvatarUpdated);
         }
@@ -2024,7 +2022,6 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
     try {
       await notifier.deleteAvatar();
       if (mounted) {
-        ref.invalidate(userProfileProvider);
         safeSetState(() => _hasChanges = true);
         safeShowSnackBar(context.l10n.profileAvatarRemoved);
       }
@@ -2053,7 +2050,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
 
     FilePickerResult? result;
     try {
-      result = await FilePicker.platform.pickFiles(
+      result = await FilePicker.pickFiles(
         type: FileType.image,
         allowMultiple: false,
       );
@@ -2081,7 +2078,6 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
         final file = File(path);
         await notifier.saveBannerFromFile(file);
         if (mounted) {
-          ref.invalidate(userProfileProvider);
           safeSetState(() => _hasChanges = true);
           safeShowSnackBar(context.l10n.profileBannerUpdated);
         }
@@ -2127,7 +2123,6 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
     try {
       await notifier.deleteBanner();
       if (mounted) {
-        ref.invalidate(userProfileProvider);
         safeSetState(() => _hasChanges = true);
         safeShowSnackBar(context.l10n.profileBannerRemoved);
       }

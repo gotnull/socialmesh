@@ -21,8 +21,17 @@ abstract final class SmPortnum {
   /// File transfer packets (offer, chunk, nack, ack).
   static const int fileTransfer = 263;
 
+  /// Mesh feed post broadcast.
+  static const int feedPost = 264;
+
   /// All Socialmesh portnums for capability detection.
-  static const Set<int> all = {presence, signal, identity, fileTransfer};
+  static const Set<int> all = {
+    presence,
+    signal,
+    identity,
+    fileTransfer,
+    feedPost,
+  };
 
   /// Returns true if the portnum is a Socialmesh extension portnum.
   static bool isSocialmesh(int portnum) => all.contains(portnum);
@@ -34,7 +43,8 @@ abstract final class SmVersion {
   static const int current = 0;
 
   /// Maximum supported version for forward compatibility.
-  static const int maxSupported = 0;
+  /// Bumped to 1 to accept SPP v1 file-transfer packets (kinds 4–7).
+  static const int maxSupported = 1;
 }
 
 /// Packet kind values (low nibble of hdr0). Globally unique across portnums.
@@ -59,6 +69,18 @@ abstract final class SmPacketKind {
 
   /// SM_FILE_ACK.
   static const int fileAck = 7;
+
+  /// SPP_ACCEPT (SPP v1 negotiation).
+  static const int sppAccept = 8;
+
+  /// SPP_DECLINE (SPP v1 negotiation).
+  static const int sppDecline = 9;
+
+  /// SPP_ABORT (SPP v1 cancel).
+  static const int sppAbort = 0x0A;
+
+  /// SM_FEED_POST — mesh feed post broadcast.
+  static const int feedPost = 0x0B;
 }
 
 /// Rate limiting intervals for each packet type.
@@ -98,6 +120,28 @@ abstract final class SmRateLimit {
 
   /// Maximum NACK retransmission rounds.
   static const int maxNackRounds = 3;
+
+  /// Inactivity timeout for inbound chunk reception.
+  ///
+  /// If no new chunk arrives within this duration while the transfer
+  /// still has missing chunks, the receiver automatically sends a NACK
+  /// to request retransmission. Set to 5× the chunk interval to account
+  /// for mesh propagation delays on multi-hop paths.
+  static const Duration chunkInactivityTimeout = Duration(seconds: 10);
+
+  /// How long the sender waits for receiver ACK after sending all chunks.
+  ///
+  /// After the sender finishes transmitting every chunk, the transfer
+  /// remains active to service late NACKs. If neither an ACK nor a NACK
+  /// arrives within this window, the sender marks the transfer complete
+  /// as a safety valve (receiver may have completed with lost ACK, or
+  /// may be unreachable). Must be long enough for the receiver to detect
+  /// missing chunks and exhaust its NACK rounds:
+  /// [chunkInactivityTimeout] × [maxNackRounds] + margin.
+  static const Duration senderCompletionTimeout = Duration(seconds: 60);
+
+  /// Minimum interval between mesh feed post broadcasts.
+  static const Duration feedPostInterval = Duration(minutes: 5);
 }
 
 /// Transport parameters for each packet type.
@@ -119,6 +163,9 @@ abstract final class SmTransport {
 
   /// Hop limit for file transfer packets.
   static const int fileTransferHopLimit = 3;
+
+  /// Hop limit for mesh feed post broadcasts.
+  static const int feedPostHopLimit = 3;
 }
 
 /// Maximum payload sizes for validation.
@@ -135,6 +182,9 @@ abstract final class SmPayloadLimit {
   /// regulatory constraints. All SM packets enforce hard content caps well
   /// below this ceiling (presence: 63 B, signal: 140 B content).
   static const int loraMtu = 237;
+
+  /// Maximum mesh feed post content length in bytes.
+  static const int feedPostContentMaxBytes = 200;
 }
 
 /// Hard limits for file transfers to prevent mesh pollution.
@@ -146,6 +196,10 @@ abstract final class SmFileTransferLimits {
   /// 23 bytes header overhead (1 header + 16 fileId + 2 index + 2 count + 2 len)
   /// → ~200 bytes usable payload per chunk.
   static const int defaultChunkSize = 200;
+
+  /// Wire overhead per SPP file chunk in bytes:
+  /// 1 header + 16 fileId + 2 chunkIndex + 2 chunkCount + 2 bytesLen = 23.
+  static const int chunkHeaderOverhead = 23;
 
   /// Maximum number of missing chunk indexes in a NACK.
   static const int maxNackIndexes = 16;

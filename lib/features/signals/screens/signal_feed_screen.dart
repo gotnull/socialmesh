@@ -31,7 +31,6 @@ import '../../../providers/signal_bookmark_provider.dart';
 import '../../../providers/signal_providers.dart';
 import '../../../providers/social_providers.dart';
 import '../../../utils/snackbar.dart';
-import '../../navigation/main_shell.dart';
 import '../../nodedex/screens/nodedex_detail_screen.dart';
 import '../../nodedex/widgets/sigil_painter.dart';
 import '../../settings/settings_screen.dart';
@@ -370,8 +369,6 @@ class _SignalFeedScreenState extends ConsumerState<SignalFeedScreen>
           resizeToAvoidBottomInset: false,
           title:
               '${context.l10n.signalsFeedTitle}${allCount > 0 ? ' ($allCount)' : ''}',
-
-          leading: const HamburgerMenuButton(),
           actions: [
             // Go Active button
             Padding(
@@ -806,7 +803,13 @@ class _SignalFeedScreenState extends ConsumerState<SignalFeedScreen>
       color: context.accentColor,
       child: CustomScrollView(
         controller: _scrollController,
-        physics: const AlwaysScrollableScrollPhysics(),
+        // Nested inside SliverFillRemaining within GlassScaffold's outer
+        // CustomScrollView. Chain AlwaysScrollableScrollPhysics (needed by
+        // RefreshIndicator) with ClampingScrollPhysics parent to avoid
+        // bounce-fighting with the outer BouncingScrollPhysics.
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: ClampingScrollPhysics(),
+        ),
         slivers: [
           // Active count badge header
           if (signals.isNotEmpty)
@@ -1019,7 +1022,13 @@ class _SignalFeedScreenState extends ConsumerState<SignalFeedScreen>
       color: context.accentColor,
       child: CustomScrollView(
         controller: _scrollController,
-        physics: const AlwaysScrollableScrollPhysics(),
+        // Nested inside SliverFillRemaining within GlassScaffold's outer
+        // CustomScrollView. Chain AlwaysScrollableScrollPhysics (needed by
+        // RefreshIndicator) with ClampingScrollPhysics parent to avoid
+        // bounce-fighting with the outer BouncingScrollPhysics.
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: ClampingScrollPhysics(),
+        ),
         slivers: [
           // Active count badge header
           if (signals.isNotEmpty)

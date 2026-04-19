@@ -216,6 +216,7 @@ void main() {
     setUp(() {
       registry = MrrpServiceRegistry();
       engine = MrrpAdvertEngine(registry: registry, random: Random(42));
+      engine.isAdvertisingEnabled = true;
     });
 
     tearDown(() {

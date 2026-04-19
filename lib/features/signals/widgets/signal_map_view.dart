@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/map_config.dart';
+import '../../../core/safe_lat_lng.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/gradient_border_container.dart';
@@ -162,31 +163,33 @@ class _SignalMapViewState extends ConsumerState<SignalMapView>
               evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
             ),
             MarkerLayer(
-              markers: _signalsWithLocation.map((signal) {
-                final isSelected = _selectedSignal?.id == signal.id;
-                final markerSize = isSelected ? 48.0 : 36.0;
+              markers: finiteMarkers(
+                _signalsWithLocation.map((signal) {
+                  final isSelected = _selectedSignal?.id == signal.id;
+                  final markerSize = isSelected ? 48.0 : 36.0;
 
-                return Marker(
-                  point: LatLng(
-                    signal.location!.latitude,
-                    signal.location!.longitude,
-                  ),
-                  width: markerSize,
-                  height: markerSize,
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _selectedSignal = signal;
-                      });
-                    },
-                    child: SignalMapMarker(
-                      signal: signal,
-                      size: markerSize,
-                      isSelected: isSelected,
+                  return Marker(
+                    point: LatLng(
+                      signal.location!.latitude,
+                      signal.location!.longitude,
                     ),
-                  ),
-                );
-              }).toList(),
+                    width: markerSize,
+                    height: markerSize,
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _selectedSignal = signal;
+                        });
+                      },
+                      child: SignalMapMarker(
+                        signal: signal,
+                        size: markerSize,
+                        isSelected: isSelected,
+                      ),
+                    ),
+                  );
+                }),
+              ),
             ),
             // Map attribution (matches world mesh style)
             Positioned(

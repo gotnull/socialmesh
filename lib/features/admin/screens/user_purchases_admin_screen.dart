@@ -321,6 +321,15 @@ class _UserPurchasesAdminScreenState
             createdAt:
                 (userData['created_at'] as Timestamp?)?.toDate() ??
                 (profileData?['createdAt'] as Timestamp?)?.toDate(),
+            countryCode: entData?['country_code'] as String?,
+            currency: entData?['currency'] as String?,
+            priceUsd: (entData?['price_usd'] as num?)?.toDouble(),
+            priceLocal: (entData?['price_local'] as num?)?.toDouble(),
+            taxPercentage: (entData?['tax_percentage'] as num?)?.toDouble(),
+            commissionPercentage: (entData?['commission_percentage'] as num?)
+                ?.toDouble(),
+            offerCode: entData?['offer_code'] as String?,
+            isFamilyShare: entData?['is_family_share'] as bool? ?? false,
           ),
         );
       }
@@ -403,6 +412,15 @@ class _UserPurchasesAdminScreenState
               createdAt: (entData['created_at'] as Timestamp?)?.toDate(),
               isAnonymous: entUserId.startsWith(r'$RCAnonymousID'),
               isDeleted: !entUserId.startsWith(r'$RCAnonymousID'),
+              countryCode: entData['country_code'] as String?,
+              currency: entData['currency'] as String?,
+              priceUsd: (entData['price_usd'] as num?)?.toDouble(),
+              priceLocal: (entData['price_local'] as num?)?.toDouble(),
+              taxPercentage: (entData['tax_percentage'] as num?)?.toDouble(),
+              commissionPercentage: (entData['commission_percentage'] as num?)
+                  ?.toDouble(),
+              offerCode: entData['offer_code'] as String?,
+              isFamilyShare: entData['is_family_share'] as bool? ?? false,
             ),
           );
         }
@@ -959,6 +977,13 @@ class _UserTile extends StatelessWidget {
                       children: [
                         Row(
                           children: [
+                            if (user.countryFlag != null) ...[
+                              Text(
+                                user.countryFlag!,
+                                style: const TextStyle(fontSize: 18),
+                              ),
+                              const SizedBox(width: AppTheme.spacing6),
+                            ],
                             Flexible(
                               child: Text(
                                 user.displayName ??
@@ -971,6 +996,29 @@ class _UserTile extends StatelessWidget {
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
+                            if (user.countryCode != null) ...[
+                              const SizedBox(width: AppTheme.spacing6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.blueGrey.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radius4,
+                                  ),
+                                ),
+                                child: Text(
+                                  user.countryCode!,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: context.textSecondary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
                             if (user.isAnonymous) ...[
                               const SizedBox(width: AppTheme.spacing6),
                               Container(
@@ -1307,6 +1355,72 @@ class _UserDetailSheet extends StatelessWidget {
                           value: dateFormat.format(user.createdAt!),
                         ),
 
+                      // Country / currency / pricing section
+                      if (user.countryCode != null ||
+                          user.currency != null) ...[
+                        const SizedBox(height: AppTheme.spacing24),
+                        _SectionHeader(
+                          title:
+                              context.l10n.adminPurchasesSectionRegionPricing,
+                        ),
+                        if (user.countryCode != null)
+                          _InfoTile(
+                            icon: Icons.public,
+                            label: context.l10n.adminPurchasesCountry,
+                            value:
+                                '${user.countryFlag ?? ''} ${user.countryCode!}',
+                          ),
+                        if (user.currency != null)
+                          _InfoTile(
+                            icon: Icons.currency_exchange,
+                            label: context.l10n.adminPurchasesCurrency,
+                            value: user.currency!,
+                          ),
+                        if (user.priceLocal != null && user.currency != null)
+                          _InfoTile(
+                            icon: Icons.local_offer,
+                            label: context.l10n.adminPurchasesPriceLocal,
+                            value:
+                                '${user.currency!} ${user.priceLocal!.toStringAsFixed(2)}',
+                          ),
+                        if (user.priceUsd != null)
+                          _InfoTile(
+                            icon: Icons.attach_money,
+                            label: context.l10n.adminPurchasesPriceUsd,
+                            value: context.l10n.adminPurchasesUsdValue(
+                              user.priceUsd!.toStringAsFixed(2),
+                            ),
+                          ),
+                        if (user.taxPercentage != null)
+                          _InfoTile(
+                            icon: Icons.receipt,
+                            label: context.l10n.adminPurchasesTax,
+                            value:
+                                '${(user.taxPercentage! * 100).toStringAsFixed(1)}%',
+                          ),
+                        if (user.commissionPercentage != null)
+                          _InfoTile(
+                            icon: Icons.store,
+                            label: context.l10n.adminPurchasesStoreCommission,
+                            value:
+                                '${(user.commissionPercentage! * 100).toStringAsFixed(1)}%',
+                          ),
+                        if (user.offerCode != null)
+                          _InfoTile(
+                            icon: Icons.discount,
+                            label: context.l10n.adminPurchasesOfferCode,
+                            value: user.offerCode!,
+                            onCopy: () =>
+                                _copyToClipboard(context, user.offerCode!),
+                          ),
+                        if (user.isFamilyShare)
+                          _InfoTile(
+                            icon: Icons.family_restroom,
+                            label: context.l10n.adminPurchasesFamilyShare,
+                            value: context.l10n.adminPurchasesYes,
+                          ),
+                      ],
+
                       const SizedBox(height: AppTheme.spacing24),
 
                       // Purchases section
@@ -1642,6 +1756,14 @@ class _UserWithPurchases {
   final DateTime? createdAt;
   final bool isAnonymous;
   final bool isDeleted;
+  final String? countryCode;
+  final String? currency;
+  final double? priceUsd;
+  final double? priceLocal;
+  final double? taxPercentage;
+  final double? commissionPercentage;
+  final String? offerCode;
+  final bool isFamilyShare;
 
   _UserWithPurchases({
     required this.userId,
@@ -1653,7 +1775,23 @@ class _UserWithPurchases {
     this.createdAt,
     this.isAnonymous = false,
     this.isDeleted = false,
+    this.countryCode,
+    this.currency,
+    this.priceUsd,
+    this.priceLocal,
+    this.taxPercentage,
+    this.commissionPercentage,
+    this.offerCode,
+    this.isFamilyShare = false,
   });
+
+  /// Country flag emoji from ISO 3166 country code.
+  String? get countryFlag {
+    if (countryCode == null || countryCode!.length != 2) return null;
+    return String.fromCharCodes(
+      countryCode!.toUpperCase().codeUnits.map((c) => 0x1F1E6 + c - 65),
+    );
+  }
 }
 
 class _Purchase {

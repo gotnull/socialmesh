@@ -15,10 +15,12 @@ import '../../../core/logging.dart';
 import 'mrrp_advert_engine.dart';
 import 'mrrp_codec.dart';
 import 'mrrp_constants.dart';
+import 'mrrp_counters.dart';
 import 'mrrp_dedup_cache.dart';
 import 'mrrp_dispatcher.dart';
 import 'mrrp_frame.dart';
 import 'mrrp_service_registry.dart';
+import 'mrrp_traffic_event.dart';
 import 'mrrp_types.dart';
 
 /// Callback to send an MRRP frame encoded inside a SIP mrrpData payload.
@@ -31,6 +33,22 @@ class MrrpEngine {
   final MrrpDispatcher dispatcher;
   final MrrpDedupCache dedupCache;
   final MrrpSendCallback? onSend;
+
+  /// Instrumentation counters (optional, injected by provider layer).
+  MrrpCounters? counters;
+
+  /// Callback for traffic event reporting to the harness console.
+  void Function(MrrpTrafficEvent event)? onTrafficEvent;
+
+  /// Whether the engine accepts inbound MRRP REQUEST frames.
+  ///
+  /// When `false` (default), inbound requests are silently dropped — the
+  /// device is "hidden" and does not respond to direct service requests.
+  /// Wired from the mesh privacy "discoverable" toggle via the provider layer.
+  bool isServicingEnabled = false;
+
+  /// Per-sender inbound request timestamps for rate limiting.
+  final Map<int, List<DateTime>> _inboundRequestTimestamps = {};
 
   bool _running = false;
 
@@ -77,6 +95,7 @@ class MrrpEngine {
     advertEngine.dispose();
     dispatcher.dispose();
     dedupCache.clear();
+    _inboundRequestTimestamps.clear();
   }
 
   // ---------------------------------------------------------------------------
@@ -128,22 +147,83 @@ class MrrpEngine {
       'service=${frame.serviceName}', // lint-allow: hardcoded-string
     );
 
-    _routeFrame(frame, senderNodeId);
+    if (frame.msgType == MrrpMessageType.response ||
+        frame.msgType == MrrpMessageType.error) {
+      AppLogging.mrrp(
+        'MRRP_TRACE_RESP_DECODED '
+        'sender=0x${senderNodeId.toRadixString(16)} '
+        'req_id=0x${frame.requestId.toRadixString(16)} '
+        'service=0x${frame.serviceId.toRadixString(16).padLeft(8, '0')} '
+        'action=0x${frame.actionId.toRadixString(16).padLeft(4, '0')} '
+        'msgType=${frame.msgType.name} '
+        'flags=0x${frame.flags.toRadixString(16)} '
+        'payload=${frame.payload.length}B',
+      );
+    }
+
+    _routeFrame(frame, senderNodeId, sipPayload.length);
   }
 
-  void _routeFrame(MrrpFrame frame, int senderNodeId) {
+  /// Record a traffic event for the harness console.
+  void _recordTraffic(
+    String direction,
+    MrrpFrame frame, {
+    int? peerNodeId,
+    required int sizeBytes,
+    MrrpStatusCode? status,
+  }) {
+    onTrafficEvent?.call(
+      MrrpTrafficEvent(
+        timestamp: DateTime.now(),
+        direction: direction,
+        msgType: frame.msgType,
+        serviceId: frame.serviceId != 0 ? frame.serviceId : null,
+        actionId: frame.actionId != 0 ? frame.actionId : null,
+        requestId: frame.requestId != 0 ? frame.requestId : null,
+        peerNodeId: peerNodeId,
+        sizeBytes: sizeBytes,
+        status: status,
+      ),
+    );
+  }
+
+  void _routeFrame(MrrpFrame frame, int senderNodeId, int frameSizeBytes) {
+    // Record inbound traffic event.
+    _recordTraffic(
+      'RX', // lint-allow: hardcoded-string
+      frame,
+      peerNodeId: senderNodeId,
+      sizeBytes: frameSizeBytes,
+    );
+
     switch (frame.msgType) {
       case MrrpMessageType.serviceAdvert:
+        counters?.recordServiceAdvertReceived();
         advertEngine.handleServiceAdvert(frame, senderNodeId);
 
       case MrrpMessageType.serviceDirReq:
+        counters?.recordServiceDirRequestReceived();
         _handleServiceDirReq(frame, senderNodeId);
 
       case MrrpMessageType.serviceDirResp:
+        counters?.recordServiceDirResponseReceived();
         advertEngine.handleServiceDirResp(frame, senderNodeId);
 
       case MrrpMessageType.request:
-        _handleInboundRequest(frame, senderNodeId);
+        if (_isInboundRequestThrottled(senderNodeId)) {
+          counters?.recordBudgetThrottle();
+          return;
+        }
+        _handleInboundRequest(frame, senderNodeId).catchError((
+          Object error,
+          StackTrace stack,
+        ) {
+          AppLogging.mrrp(
+            'MRRP_ENGINE: unhandled error in request handler '
+            'req_id=0x${frame.requestId.toRadixString(16)}: '
+            '$error', // lint-allow: hardcoded-string
+          );
+        });
 
       case MrrpMessageType.response:
         _handleInboundResponse(frame);
@@ -163,12 +243,45 @@ class MrrpEngine {
   }
 
   // ---------------------------------------------------------------------------
+  // Inbound per-sender rate limiting
+  // ---------------------------------------------------------------------------
+
+  /// Returns true if [senderNodeId] has exceeded the inbound request rate
+  /// limit (max N requests per 60 seconds). Records the timestamp if allowed.
+  bool _isInboundRequestThrottled(int senderNodeId) {
+    final now = DateTime.now();
+    final cutoff = now.subtract(const Duration(seconds: 60));
+
+    final timestamps = _inboundRequestTimestamps[senderNodeId];
+    if (timestamps != null) {
+      timestamps.removeWhere((t) => t.isBefore(cutoff));
+      if (timestamps.length >=
+          MrrpConstants.mrrpMaxInboundRequestsPerSenderPer60s) {
+        AppLogging.mrrp(
+          'MRRP_ENGINE: inbound request throttled for '
+          'peer=0x${senderNodeId.toRadixString(16)}', // lint-allow: hardcoded-string
+        );
+        return true;
+      }
+      timestamps.add(now);
+    } else {
+      _inboundRequestTimestamps[senderNodeId] = [now];
+    }
+
+    // Prune senders with no recent timestamps.
+    _inboundRequestTimestamps.removeWhere((_, ts) => ts.isEmpty);
+
+    return false;
+  }
+
+  // ---------------------------------------------------------------------------
   // Service directory
   // ---------------------------------------------------------------------------
 
   void _handleServiceDirReq(MrrpFrame frame, int senderNodeId) {
     final responseFrame = advertEngine.handleServiceDirReq(frame, senderNodeId);
     if (responseFrame != null) {
+      counters?.recordServiceDirResponseSent();
       _sendFrame(responseFrame);
     }
   }
@@ -178,12 +291,23 @@ class MrrpEngine {
   // ---------------------------------------------------------------------------
 
   Future<void> _handleInboundRequest(MrrpFrame frame, int senderNodeId) async {
+    // Privacy gate: reject all inbound requests when not discoverable.
+    if (!isServicingEnabled) {
+      AppLogging.mrrp(
+        'MRRP_ENGINE: inbound REQUEST dropped — '
+        'servicing disabled (discoverable=off)', // lint-allow: hardcoded-string
+      );
+      return;
+    }
+
     final dedupKey = buildDedupKey(frame, senderNodeId);
 
     if (dedupCache.isDuplicate(dedupKey)) {
       // Duplicate request — check for cached response to replay.
+      counters?.recordDuplicateRequestIgnored();
       final cachedResponse = dedupCache.checkAndRecordRequest(dedupKey);
       if (cachedResponse != null) {
+        counters?.recordCachedResponseServed();
         _sendFrame(cachedResponse);
       }
       return;
@@ -204,6 +328,14 @@ class MrrpEngine {
   void _handleInboundResponse(MrrpFrame frame) {
     if (!dedupCache.checkAndRecordResponse(frame.requestId)) {
       // Duplicate response — suppress.
+      AppLogging.mrrp(
+        'MRRP_TRACE_RESP_REJECT '
+        'req_id=0x${frame.requestId.toRadixString(16)} '
+        'reason=duplicate_response '
+        'service=0x${frame.serviceId.toRadixString(16).padLeft(8, '0')} '
+        'action=0x${frame.actionId.toRadixString(16).padLeft(4, '0')}',
+      );
+      counters?.recordDuplicateResponseIgnored();
       return;
     }
     dispatcher.handleResponse(frame);
@@ -228,6 +360,13 @@ class MrrpEngine {
       '${frame.payloadLen}B payload, ${encoded.length}B total', // lint-allow: hardcoded-string
     );
 
+    // Record outbound traffic event.
+    _recordTraffic(
+      'TX', // lint-allow: hardcoded-string
+      frame,
+      sizeBytes: encoded.length,
+    );
+
     final send = onSend;
     if (send == null) {
       AppLogging.mrrp(
@@ -237,7 +376,19 @@ class MrrpEngine {
       return false;
     }
 
-    return send(encoded);
+    final sent = await send(encoded);
+
+    AppLogging.mrrp(
+      'MRRP_TRACE_TX_SUBMITTED '
+      'msgType=${frame.msgType.name} '
+      'req_id=0x${frame.requestId.toRadixString(16)} '
+      'service=0x${frame.serviceId.toRadixString(16).padLeft(8, '0')} '
+      'action=0x${frame.actionId.toRadixString(16).padLeft(4, '0')} '
+      'via=sip/private_app '
+      'result=$sent',
+    );
+
+    return sent;
   }
 
   /// Send an outbound REQUEST frame. Returns the result future.

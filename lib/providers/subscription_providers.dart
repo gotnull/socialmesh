@@ -155,8 +155,8 @@ final hasAllPremiumFeaturesProvider = Provider<bool>((ref) {
     return true;
   }
 
-  // Check if user owns all individual packs
-  for (final purchase in OneTimePurchases.allIndividualPurchases) {
+  // Check if user owns all bundled packs (including Translation Pack)
+  for (final purchase in OneTimePurchases.completePackPurchases) {
     if (!state.hasPurchased(purchase.productId)) {
       return false;
     }
@@ -317,25 +317,12 @@ Future<bool> restorePurchases(WidgetRef ref) async {
       );
       await service.refreshPurchases();
 
-      // Sync purchases to Firestore via Cloud Function
-      // This ensures the admin panel can see the purchases
-      AppLogging.subscriptions(
-        '💳 [RestorePurchases] Syncing purchases to Firestore...',
-      );
-      try {
-        final callable = FirebaseFunctions.instance.httpsCallable(
-          'syncPurchasesToFirestore',
-        );
-        final result = await callable.call<Map<String, dynamic>>();
-        AppLogging.subscriptions(
-          '💳 [RestorePurchases] Firestore sync result: ${result.data}',
-        );
-      } catch (syncError) {
-        // Don't fail the restore if Firestore sync fails
-        AppLogging.subscriptions(
-          '💳 [RestorePurchases] ⚠️ Firestore sync failed (non-fatal): $syncError',
-        );
-      }
+      // Mirror purchases into Firestore so the admin panel and the
+      // cloud-sync entitlement service see them. Non-fatal: a failure here
+      // MUST NOT revoke RC-backed access (RC is the source of truth).
+      // The result is logged with a stable MIRROR_SYNC_FAILED prefix on
+      // failure so it is observable without crashing the restore flow.
+      await _syncPurchasesToFirestoreSafe('RestorePurchases');
     } else {
       AppLogging.subscriptions(
         '💳 [RestorePurchases] No Firebase user signed in (restore still works via store account)',
@@ -415,6 +402,67 @@ Future<bool> restorePurchases(WidgetRef ref) async {
   }
 }
 
+/// Result of a syncPurchasesToFirestore Cloud Function call.
+///
+/// The mirror is intentionally a soft dependency: a failure here MUST NOT
+/// revoke RC-backed access. Callers ignore [success] for the purposes of
+/// reporting restore success to the user — RevenueCat is the source of
+/// truth — but the result is logged with a stable `MIRROR_SYNC_FAILED`
+/// prefix so failures are observable in logs and Crashlytics, and tests
+/// can assert behavior deterministically.
+class FirestoreMirrorSyncResult {
+  final bool success;
+  final Object? error;
+  final String? statusFromBackend;
+
+  const FirestoreMirrorSyncResult({
+    required this.success,
+    this.error,
+    this.statusFromBackend,
+  });
+}
+
+/// Best-effort callable to mirror RC purchases into Firestore. Never throws.
+///
+/// Failures are logged with a stable prefix (`MIRROR_SYNC_FAILED`) so they
+/// are greppable in logs and queryable in Crashlytics. The caller decides
+/// whether to surface the failure to the user; restore-success accounting
+/// must stay independent of the mirror sync (RC truth wins).
+Future<FirestoreMirrorSyncResult> _syncPurchasesToFirestoreSafe(
+  String callerTag,
+) async {
+  AppLogging.subscriptions(
+    '💳 [$callerTag] Mirror sync — calling syncPurchasesToFirestore...',
+  );
+  try {
+    final callable = FirebaseFunctions.instance.httpsCallable(
+      'syncPurchasesToFirestore',
+    );
+    final result = await callable.call<Map<String, dynamic>>();
+    final data = result.data;
+    final status = data['status']?.toString();
+    AppLogging.subscriptions(
+      '💳 [$callerTag] Mirror sync OK — status=$status data=$data',
+    );
+    return FirestoreMirrorSyncResult(success: true, statusFromBackend: status);
+  } catch (syncError, stackTrace) {
+    // Stable greppable prefix. Do NOT change without updating downstream
+    // log queries / Crashlytics filters.
+    AppLogging.subscriptions(
+      '💳 [$callerTag] MIRROR_SYNC_FAILED — '
+      'type=${syncError.runtimeType} error=$syncError',
+    );
+    AppLogging.subscriptions(
+      '💳 [$callerTag] MIRROR_SYNC_FAILED stack: $stackTrace',
+    );
+    AppLogging.subscriptions(
+      '💳 [$callerTag] MIRROR_SYNC_FAILED is non-fatal — RC entitlements are '
+      'unaffected. The mirror will retry on next foreground/restore.',
+    );
+    return FirestoreMirrorSyncResult(success: false, error: syncError);
+  }
+}
+
 /// Sync RevenueCat with Firebase Auth
 /// Call this when the user signs in to Firebase to ensure purchases are properly tracked
 Future<bool> syncRevenueCatWithFirebase(WidgetRef ref) async {
@@ -457,23 +505,9 @@ Future<bool> syncRevenueCatWithFirebase(WidgetRef ref) async {
         );
       }
 
-      // Sync purchases to Firestore via Cloud Function
-      AppLogging.subscriptions(
-        '💳 [SyncRevenueCat] Syncing purchases to Firestore...',
-      );
-      try {
-        final callable = FirebaseFunctions.instance.httpsCallable(
-          'syncPurchasesToFirestore',
-        );
-        final result = await callable.call<Map<String, dynamic>>();
-        AppLogging.subscriptions(
-          '💳 [SyncRevenueCat] Firestore sync result: ${result.data}',
-        );
-      } catch (syncError) {
-        AppLogging.subscriptions(
-          '💳 [SyncRevenueCat] ⚠️ Firestore sync failed (non-fatal): $syncError',
-        );
-      }
+      // Mirror purchases into Firestore. See _syncPurchasesToFirestoreSafe
+      // for failure semantics — failures are observable but never fatal.
+      await _syncPurchasesToFirestoreSafe('SyncRevenueCat');
 
       AppLogging.subscriptions('💳 [SyncRevenueCat] ✅ Sync complete');
     }

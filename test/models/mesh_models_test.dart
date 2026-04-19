@@ -8,11 +8,13 @@ import 'package:socialmesh/models/presence_confidence.dart';
 void main() {
   group('MessageStatus', () {
     test('has all expected values', () {
-      expect(MessageStatus.values.length, 4);
+      expect(MessageStatus.values.length, 6);
       expect(MessageStatus.values, contains(MessageStatus.pending));
       expect(MessageStatus.values, contains(MessageStatus.sent));
       expect(MessageStatus.values, contains(MessageStatus.delivered));
       expect(MessageStatus.values, contains(MessageStatus.failed));
+      expect(MessageStatus.values, contains(MessageStatus.unconfirmed));
+      expect(MessageStatus.values, contains(MessageStatus.retrying));
     });
   });
 

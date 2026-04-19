@@ -8,12 +8,10 @@ import '../core/logging.dart';
 import '../models/mesh_models.dart';
 import '../models/telemetry_log.dart';
 import '../models/route.dart';
-import '../models/tapback.dart';
 import '../services/storage/telemetry_database.dart';
 import '../services/storage/traceroute_database.dart';
 import '../services/storage/traceroute_repository.dart';
 import '../services/storage/route_storage_service.dart';
-import '../services/storage/tapback_storage_service.dart';
 import '../services/protocol/protocol_service.dart';
 import 'app_providers.dart';
 
@@ -38,17 +36,6 @@ final routeStorageProvider = FutureProvider<RouteStorageService>((ref) async {
   await service.init();
   // Auto-prune routes older than 365 days on startup
   await service.pruneExpiredRoutes();
-  return service;
-});
-
-// Tapback storage service
-final tapbackStorageProvider = FutureProvider<TapbackStorageService>((
-  ref,
-) async {
-  final prefs = await ref.watch(sharedPreferencesProvider.future);
-  final service = TapbackStorageService(prefs);
-  // One-time cleanup of duplicates that accumulated before the write guard
-  await service.purgeExistingDuplicates();
   return service;
 });
 
@@ -441,73 +428,6 @@ final activeRouteProvider = NotifierProvider<ActiveRouteNotifier, Route?>(
   ActiveRouteNotifier.new,
 );
 
-// ============ Tapback Providers ============
-
-/// Get tapbacks for a specific message
-final messageTapbacksProvider =
-    FutureProvider.family<List<MessageTapback>, String>((ref, messageId) async {
-      final storage = await ref.watch(tapbackStorageProvider.future);
-      return storage.getTapbacksForMessage(messageId);
-    });
-
-/// Tapback actions notifier
-class TapbackActionsNotifier extends Notifier<void> {
-  @override
-  void build() {
-    return;
-  }
-
-  TapbackStorageService? get _storage => ref.read(tapbackStorageProvider).value;
-  ProtocolService get _protocol => ref.read(protocolServiceProvider);
-
-  /// Add a tapback reaction to a message
-  Future<void> addTapback({
-    required String messageId,
-    required int fromNodeNum,
-    required TapbackType type,
-    int? toNodeNum,
-  }) async {
-    if (_storage == null) return;
-
-    final tapback = MessageTapback(
-      messageId: messageId,
-      fromNodeNum: fromNodeNum,
-      emoji: type.emoji,
-    );
-    await _storage!.addTapback(tapback);
-
-    // Send tapback as emoji message to the original sender
-    if (toNodeNum != null) {
-      try {
-        await _protocol.sendMessage(
-          text: type.emoji,
-          to: toNodeNum,
-          wantAck: true,
-          source: MessageSource.tapback,
-        );
-        AppLogging.liveActivity(
-          'Sent tapback ${type.emoji} to node $toNodeNum',
-        );
-      } catch (e) {
-        AppLogging.liveActivity('Failed to send tapback: $e');
-      }
-    }
-  }
-
-  /// Remove a tapback reaction
-  Future<void> removeTapback({
-    required String messageId,
-    required int fromNodeNum,
-  }) async {
-    if (_storage == null) return;
-    await _storage!.removeTapback(messageId, fromNodeNum);
-  }
-}
-
-final tapbackActionsProvider = NotifierProvider<TapbackActionsNotifier, void>(
-  TapbackActionsNotifier.new,
-);
-
 // ============ Telemetry Auto-Logging ============
 
 /// Fingerprint of the last logged device metrics for a given node.
@@ -666,6 +586,10 @@ class _AirQualityFingerprint {
 }
 
 /// Fingerprint of the last logged position for a given node.
+///
+/// Uses distance-based deduplication following standard Meshtastic behaviour:
+/// positions within [_dedupeDistanceMeters] of the last logged position
+/// are considered duplicates and silently dropped.
 class _PositionFingerprint {
   final double latitude;
   final double longitude;
@@ -679,11 +603,44 @@ class _PositionFingerprint {
     this.satsInView,
   });
 
-  bool matches(MeshNode node) =>
-      latitude == node.latitude &&
-      longitude == node.longitude &&
-      altitude == node.altitude &&
-      satsInView == node.satsInView;
+  /// Distance threshold in meters below which two positions are considered
+  /// duplicates (9 m threshold per the standard Meshtastic implementation).
+  static const double _dedupeDistanceMeters = 9.0;
+
+  /// Returns `true` when [node] is within the dedupe distance of this
+  /// fingerprint — i.e. the new position should be **skipped**.
+  bool isNearDuplicate(MeshNode node) {
+    if (node.latitude == null || node.longitude == null) return false;
+    return _haversineMeters(
+          latitude,
+          longitude,
+          node.latitude!,
+          node.longitude!,
+        ) <
+        _dedupeDistanceMeters;
+  }
+
+  /// Haversine distance in meters between two WGS-84 coordinates.
+  static double _haversineMeters(
+    double lat1,
+    double lon1,
+    double lat2,
+    double lon2,
+  ) {
+    const earthRadius = 6371000.0; // metres
+    final dLat = _toRadians(lat2 - lat1);
+    final dLon = _toRadians(lon2 - lon1);
+    final a =
+        math.sin(dLat / 2) * math.sin(dLat / 2) +
+        math.cos(_toRadians(lat1)) *
+            math.cos(_toRadians(lat2)) *
+            math.sin(dLon / 2) *
+            math.sin(dLon / 2);
+    final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+    return earthRadius * c;
+  }
+
+  static double _toRadians(double degrees) => degrees * math.pi / 180;
 }
 
 /// Telemetry logger that automatically saves telemetry to storage when received.
@@ -710,18 +667,21 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
       _nodeSubscription?.cancel();
       _traceRouteSubscription?.cancel();
     });
+    // Watch both storage AND protocol service so that when the protocol
+    // service is recreated (BLE reconnect, transport change) we re-subscribe
+    // to the new stream controllers. Without this, subscriptions remain on
+    // the old (closed) streams and new telemetry events are silently lost.
     final storageAsync = ref.watch(telemetryStorageProvider);
+    final protocol = ref.watch(protocolServiceProvider);
     final storage = storageAsync.value;
     if (storage != null) {
-      _startLogging(storage);
+      _startLogging(storage, protocol);
       return true;
     }
     return false;
   }
 
-  ProtocolService get _protocol => ref.read(protocolServiceProvider);
-
-  void _startLogging(TelemetryDatabase storage) {
+  void _startLogging(TelemetryDatabase storage, ProtocolService protocol) {
     // Cancel any existing subscriptions first
     _nodeSubscription?.cancel();
     _traceRouteSubscription?.cancel();
@@ -729,7 +689,7 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
     // Listen to traceroute events and persist them to SQLite.
     // Outbound requests arrive with response == false (placeholder).
     // Inbound responses arrive with response == true and replace the placeholder.
-    _traceRouteSubscription = _protocol.traceRouteLogStream.listen((log) async {
+    _traceRouteSubscription = protocol.traceRouteLogStream.listen((log) async {
       try {
         final repo = await ref.read(tracerouteRepositoryProvider.future);
         if (log.response) {
@@ -749,57 +709,39 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
     // lastHeard, telemetry, etc.). To avoid writing duplicate rows when
     // the actual metric values have not changed, each metric type keeps
     // a per-node fingerprint of the last logged values.
-    _nodeSubscription = _protocol.nodeStream.listen((node) async {
-      final id = node.nodeNum;
+    _nodeSubscription = protocol.nodeStream.listen((node) async {
+      try {
+        final id = node.nodeNum;
 
-      // Log device metrics only when values actually change
-      if (node.batteryLevel != null || node.voltage != null) {
-        final cached = _lastDevice[id];
-        if (cached == null || !cached.matches(node)) {
-          _lastDevice[id] = _DeviceMetricsFingerprint(
-            batteryLevel: node.batteryLevel,
-            voltage: node.voltage,
-            channelUtilization: node.channelUtilization,
-            airUtilTx: node.airUtilTx,
-            uptimeSeconds: node.uptimeSeconds,
-          );
-          await storage.addDeviceMetrics(
-            DeviceMetricsLog(
-              nodeNum: id,
+        // Log device metrics only when values actually change
+        if (node.batteryLevel != null || node.voltage != null) {
+          final cached = _lastDevice[id];
+          if (cached == null || !cached.matches(node)) {
+            _lastDevice[id] = _DeviceMetricsFingerprint(
               batteryLevel: node.batteryLevel,
               voltage: node.voltage,
               channelUtilization: node.channelUtilization,
               airUtilTx: node.airUtilTx,
               uptimeSeconds: node.uptimeSeconds,
-            ),
-          );
+            );
+            await storage.addDeviceMetrics(
+              DeviceMetricsLog(
+                nodeNum: id,
+                batteryLevel: node.batteryLevel,
+                voltage: node.voltage,
+                channelUtilization: node.channelUtilization,
+                airUtilTx: node.airUtilTx,
+                uptimeSeconds: node.uptimeSeconds,
+              ),
+            );
+          }
         }
-      }
 
-      // Log environment metrics only when values actually change
-      if (node.temperature != null || node.humidity != null) {
-        final cached = _lastEnv[id];
-        if (cached == null || !cached.matches(node)) {
-          _lastEnv[id] = _EnvMetricsFingerprint(
-            temperature: node.temperature,
-            humidity: node.humidity,
-            barometricPressure: node.barometricPressure,
-            gasResistance: node.gasResistance,
-            iaq: node.iaq,
-            lux: node.lux,
-            whiteLux: node.whiteLux,
-            uvLux: node.uvLux,
-            windDirection: node.windDirection,
-            windSpeed: node.windSpeed,
-            windGust: node.windGust,
-            rainfall1h: node.rainfall1h,
-            rainfall24h: node.rainfall24h,
-            soilMoisture: node.soilMoisture,
-            soilTemperature: node.soilTemperature,
-          );
-          await storage.addEnvironmentMetrics(
-            EnvironmentMetricsLog(
-              nodeNum: id,
+        // Log environment metrics only when values actually change
+        if (node.temperature != null || node.humidity != null) {
+          final cached = _lastEnv[id];
+          if (cached == null || !cached.matches(node)) {
+            _lastEnv[id] = _EnvMetricsFingerprint(
               temperature: node.temperature,
               humidity: node.humidity,
               barometricPressure: node.barometricPressure,
@@ -815,63 +757,65 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
               rainfall24h: node.rainfall24h,
               soilMoisture: node.soilMoisture,
               soilTemperature: node.soilTemperature,
-            ),
-          );
+            );
+            await storage.addEnvironmentMetrics(
+              EnvironmentMetricsLog(
+                nodeNum: id,
+                temperature: node.temperature,
+                humidity: node.humidity,
+                barometricPressure: node.barometricPressure,
+                gasResistance: node.gasResistance,
+                iaq: node.iaq,
+                lux: node.lux,
+                whiteLux: node.whiteLux,
+                uvLux: node.uvLux,
+                windDirection: node.windDirection,
+                windSpeed: node.windSpeed,
+                windGust: node.windGust,
+                rainfall1h: node.rainfall1h,
+                rainfall24h: node.rainfall24h,
+                soilMoisture: node.soilMoisture,
+                soilTemperature: node.soilTemperature,
+              ),
+            );
+          }
         }
-      }
 
-      // Log power metrics only when values actually change
-      if (node.ch1Voltage != null ||
-          node.ch2Voltage != null ||
-          node.ch3Voltage != null) {
-        final cached = _lastPower[id];
-        if (cached == null || !cached.matches(node)) {
-          _lastPower[id] = _PowerMetricsFingerprint(
-            ch1Voltage: node.ch1Voltage,
-            ch1Current: node.ch1Current,
-            ch2Voltage: node.ch2Voltage,
-            ch2Current: node.ch2Current,
-            ch3Voltage: node.ch3Voltage,
-            ch3Current: node.ch3Current,
-          );
-          await storage.addPowerMetrics(
-            PowerMetricsLog(
-              nodeNum: id,
+        // Log power metrics only when values actually change
+        if (node.ch1Voltage != null ||
+            node.ch2Voltage != null ||
+            node.ch3Voltage != null) {
+          final cached = _lastPower[id];
+          if (cached == null || !cached.matches(node)) {
+            _lastPower[id] = _PowerMetricsFingerprint(
               ch1Voltage: node.ch1Voltage,
               ch1Current: node.ch1Current,
               ch2Voltage: node.ch2Voltage,
               ch2Current: node.ch2Current,
               ch3Voltage: node.ch3Voltage,
               ch3Current: node.ch3Current,
-            ),
-          );
+            );
+            await storage.addPowerMetrics(
+              PowerMetricsLog(
+                nodeNum: id,
+                ch1Voltage: node.ch1Voltage,
+                ch1Current: node.ch1Current,
+                ch2Voltage: node.ch2Voltage,
+                ch2Current: node.ch2Current,
+                ch3Voltage: node.ch3Voltage,
+                ch3Current: node.ch3Current,
+              ),
+            );
+          }
         }
-      }
 
-      // Log air quality only when values actually change
-      if (node.pm10Standard != null ||
-          node.pm25Standard != null ||
-          node.co2 != null) {
-        final cached = _lastAirQuality[id];
-        if (cached == null || !cached.matches(node)) {
-          _lastAirQuality[id] = _AirQualityFingerprint(
-            pm10Standard: node.pm10Standard,
-            pm25Standard: node.pm25Standard,
-            pm100Standard: node.pm100Standard,
-            pm10Environmental: node.pm10Environmental,
-            pm25Environmental: node.pm25Environmental,
-            pm100Environmental: node.pm100Environmental,
-            particles03um: node.particles03um,
-            particles05um: node.particles05um,
-            particles10um: node.particles10um,
-            particles25um: node.particles25um,
-            particles50um: node.particles50um,
-            particles100um: node.particles100um,
-            co2: node.co2,
-          );
-          await storage.addAirQualityMetrics(
-            AirQualityMetricsLog(
-              nodeNum: id,
+        // Log air quality only when values actually change
+        if (node.pm10Standard != null ||
+            node.pm25Standard != null ||
+            node.co2 != null) {
+          final cached = _lastAirQuality[id];
+          if (cached == null || !cached.matches(node)) {
+            _lastAirQuality[id] = _AirQualityFingerprint(
               pm10Standard: node.pm10Standard,
               pm25Standard: node.pm25Standard,
               pm100Standard: node.pm100Standard,
@@ -885,31 +829,103 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
               particles50um: node.particles50um,
               particles100um: node.particles100um,
               co2: node.co2,
-            ),
-          );
+            );
+            await storage.addAirQualityMetrics(
+              AirQualityMetricsLog(
+                nodeNum: id,
+                pm10Standard: node.pm10Standard,
+                pm25Standard: node.pm25Standard,
+                pm100Standard: node.pm100Standard,
+                pm10Environmental: node.pm10Environmental,
+                pm25Environmental: node.pm25Environmental,
+                pm100Environmental: node.pm100Environmental,
+                particles03um: node.particles03um,
+                particles05um: node.particles05um,
+                particles10um: node.particles10um,
+                particles25um: node.particles25um,
+                particles50um: node.particles50um,
+                particles100um: node.particles100um,
+                co2: node.co2,
+              ),
+            );
+          }
         }
-      }
 
-      // Log position only when values actually change
-      if (node.hasPosition) {
-        final cached = _lastPosition[id];
-        if (cached == null || !cached.matches(node)) {
-          _lastPosition[id] = _PositionFingerprint(
-            latitude: node.latitude!,
-            longitude: node.longitude!,
-            altitude: node.altitude,
-            satsInView: node.satsInView,
-          );
-          await storage.addPositionLog(
-            PositionLog(
-              nodeNum: id,
+        // Log position with distance-based dedupe and precision filtering.
+        //
+        // Follows standard Meshtastic companion app behaviour:
+        //   - High precision (bits 32 or 0/null): dedupe within 9 m of last
+        //     logged position; store full trail.
+        //   - Low precision (bits 12-15 etc): clear history for this node and
+        //     store only the latest position (reduced-accuracy ring, no trail).
+        if (node.hasPosition) {
+          final bits = node.precisionBits;
+          final isHighPrecision = bits == null || bits == 0 || bits == 32;
+
+          if (isHighPrecision) {
+            // High-precision: distance-based dedupe
+            final cached = _lastPosition[id];
+            if (cached != null && cached.isNearDuplicate(node)) {
+              // Within 9 m — skip (no new row)
+            } else {
+              _lastPosition[id] = _PositionFingerprint(
+                latitude: node.latitude!,
+                longitude: node.longitude!,
+                altitude: node.altitude,
+                satsInView: node.satsInView,
+              );
+              AppLogging.storage(
+                'PositionLog: Stored node !${id.toRadixString(16)} '
+                'lat=${node.latitude}, lng=${node.longitude}, '
+                'alt=${node.altitude}, sats=${node.satsInView}, '
+                'precision=high(${bits ?? 'null'})',
+              );
+              await storage.addPositionLog(
+                PositionLog(
+                  nodeNum: id,
+                  timestamp: node.positionTimestamp,
+                  latitude: node.latitude!,
+                  longitude: node.longitude!,
+                  altitude: node.altitude,
+                  satsInView: node.satsInView,
+                  speed: node.groundSpeed?.toInt(),
+                  heading: node.groundTrack?.toInt(),
+                  precisionBits: node.precisionBits,
+                ),
+              );
+            }
+          } else {
+            // Low-precision: clear history, keep only latest.
+            // Clear history and keep only the latest reading.
+            _lastPosition[id] = _PositionFingerprint(
               latitude: node.latitude!,
               longitude: node.longitude!,
               altitude: node.altitude,
               satsInView: node.satsInView,
-            ),
-          );
+            );
+            AppLogging.storage(
+              'PositionLog: Low-precision replace node !${id.toRadixString(16)} '
+              'lat=${node.latitude}, lng=${node.longitude}, '
+              'precision=low($bits) — clearing history',
+            );
+            await storage.clearPositionLogsForNode(id);
+            await storage.addPositionLog(
+              PositionLog(
+                nodeNum: id,
+                timestamp: node.positionTimestamp,
+                latitude: node.latitude!,
+                longitude: node.longitude!,
+                altitude: node.altitude,
+                satsInView: node.satsInView,
+                speed: node.groundSpeed?.toInt(),
+                heading: node.groundTrack?.toInt(),
+                precisionBits: node.precisionBits,
+              ),
+            );
+          }
         }
+      } catch (e) {
+        AppLogging.storage('TelemetryLogger: node metrics write failed: $e');
       }
     });
   }

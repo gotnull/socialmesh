@@ -5,6 +5,7 @@ import 'dart:collection';
 import 'dart:math' as math;
 
 import 'package:collection/collection.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -16,6 +17,7 @@ import '../core/safety/error_handler.dart';
 import '../core/transport.dart';
 import '../dev/demo/demo.dart';
 import '../services/transport/ble_transport.dart';
+import '../services/transport/network_transport.dart';
 import '../services/transport/usb_transport.dart';
 import '../services/protocol/protocol_service.dart';
 import '../services/storage/storage_service.dart';
@@ -41,7 +43,6 @@ import '../features/widget_builder/widget_sync_providers.dart';
 import 'cloud_sync_entitlement_providers.dart';
 import '../core/auth/claims_provider.dart';
 import '../models/mesh_models.dart';
-import '../models/tapback.dart';
 import '../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import '../generated/meshtastic/mesh.pb.dart' as mesh_pb;
 import 'meshcore_providers.dart';
@@ -50,6 +51,11 @@ import 'telemetry_providers.dart';
 import 'connection_providers.dart';
 import 'age_eligibility_provider.dart';
 import 'file_transfer_providers.dart';
+import 'mqtt_client_proxy_providers.dart';
+import 'muted_channels_provider.dart';
+import '../services/messaging/dm_retry_coordinator.dart';
+import '../features/settings/background_connection_screen.dart'
+    show kLiveActivityEnabled;
 
 // App initialization state - purely about app lifecycle, NOT device connection
 // Device connection is handled separately by DeviceConnectionNotifier in connection_providers.dart
@@ -349,6 +355,16 @@ class AppInitNotifier extends Notifier<AppInitState> {
     } catch (e) {
       AppLogging.debug('Background device connection init error: $e');
     }
+
+    // MQTT client proxy: eagerly activate so it starts relaying when
+    // the device sends an MQTT config with proxyToClientEnabled=true.
+    try {
+      ref.read(mqttClientProxyForwarderProvider);
+      ref.read(mqttClientProxyAutoConnectProvider);
+      AppLogging.mqttProxy('Client proxy providers activated');
+    } catch (e) {
+      AppLogging.mqttProxy('Client proxy activation failed: $e');
+    }
   }
 }
 
@@ -534,6 +550,10 @@ final premiumFeatureGateProvider = Provider.family<bool, String>((
   ref,
   featureKey,
 ) {
+  // Translation Pack is sold separately (not part of Complete Pack) —
+  // it uses a standard price badge, not the "Try It" upsell flow.
+  if (featureKey == 'translation') return false;
+
   // Watch refresh trigger to rebuild when Firestore syncs new values
   ref.watch(premiumGatedFeaturesRefreshProvider);
 
@@ -743,6 +763,25 @@ final transportTypeProvider =
       TransportTypeNotifier.new,
     );
 
+/// The active [NetworkTransport] host:port, set before switching
+/// [transportTypeProvider] to [TransportType.network].
+class _NetworkHostNotifier extends Notifier<String> {
+  @override
+  String build() => '';
+  void set(String host) => state = host;
+}
+
+class _NetworkPortNotifier extends Notifier<int> {
+  @override
+  int build() => kMeshtasticDefaultPort;
+  void set(int port) => state = port;
+}
+
+final networkTransportHostProvider =
+    NotifierProvider<_NetworkHostNotifier, String>(_NetworkHostNotifier.new);
+final networkTransportPortProvider =
+    NotifierProvider<_NetworkPortNotifier, int>(_NetworkPortNotifier.new);
+
 final transportProvider = Provider<DeviceTransport>((ref) {
   final type = ref.watch(transportTypeProvider);
 
@@ -751,6 +790,10 @@ final transportProvider = Provider<DeviceTransport>((ref) {
       return BleTransport();
     case TransportType.usb:
       return UsbTransport();
+    case TransportType.network:
+      final host = ref.watch(networkTransportHostProvider);
+      final port = ref.watch(networkTransportPortProvider);
+      return NetworkTransport(host: host, port: port);
   }
 });
 
@@ -1285,14 +1328,136 @@ final userDisconnectedProvider =
       UserDisconnectedNotifier.new,
     );
 
+/// Tracks when a config/admin write has been sent to the local node,
+/// which is expected to trigger a firmware reboot. This flag is consumed
+/// by the auto-reconnect flow to:
+///   1. Increase patience before pairing invalidation (reboot + SSL cert
+///      gen can take 30–120s on ESP32).
+///   2. Enable logical device matching (BLE UUID may change on reboot).
+///
+/// Set by the protocol service stream listener. Cleared automatically
+/// after a successful reconnect or when the reconnect flow gives up.
+class RebootExpectedNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void setRebootExpected(bool value) {
+    AppLogging.connection(
+      '🔄 RebootExpectedNotifier: setRebootExpected($value)',
+    );
+    state = value;
+  }
+}
+
+final rebootExpectedProvider = NotifierProvider<RebootExpectedNotifier, bool>(
+  RebootExpectedNotifier.new,
+);
+
+/// True when the connect target is a different physical device than the
+/// last one we connected to. Both IDs must be present and non-equal; if
+/// either is null we treat it as a fresh / first connect and let the
+/// caller's explicit `clearNodeData` decision stand.
+@visibleForTesting
+bool isDeviceSwitchForTest(String? previousDeviceId, String? newDeviceId) =>
+    _isDeviceSwitch(previousDeviceId, newDeviceId);
+
+bool _isDeviceSwitch(String? previousDeviceId, String? newDeviceId) {
+  if (previousDeviceId == null || newDeviceId == null) return false;
+  return previousDeviceId != newDeviceId;
+}
+
+/// Classifies whether connecting to a device whose raw BLE UUID differs
+/// from the last-persisted one is actually a **transport rebind** of the
+/// same physical radio (BLE peripheral UUID rotated — common on ESP32 /
+/// nRF hardware) rather than a genuine switch to a different radio.
+///
+/// Logical identity is derived from stable Meshtastic identifiers that
+/// survive BLE UUID rotation:
+///   * `lastMyNodeNum`  — firmware node number; its last 4 hex digits
+///                        appear as the suffix in default Meshtastic BLE
+///                        names (`Meshtastic_XXXX`). Strongest signal.
+///   * `lastDeviceName` — full advertised BLE name. Medium signal; used
+///                        when the node-number suffix check is unavailable
+///                        or the name has been customised.
+///
+/// Returns `true` only when we have positive evidence of rebind. When we
+/// can't tell, returns `false` and the caller falls back to the existing
+/// raw-UUID `_isDeviceSwitch` comparison (conservative: clears on
+/// mismatch). Uses [bleNameMatchesNodeNum] so the suffix semantics stay
+/// identical to [_tryLogicalDeviceMatch].
+bool isLogicalTransportRebind({
+  required String newDeviceName,
+  required String newDeviceId,
+  required String? previousDeviceId,
+  required int? lastMyNodeNum,
+  required String? lastDeviceName,
+}) {
+  // No prior connection — nothing to rebind to.
+  if (previousDeviceId == null) return false;
+  // Raw ID already matches — not a rebind, just a normal reconnect. The
+  // caller's `_isDeviceSwitch` check will also return false here.
+  if (newDeviceId == previousDeviceId) return false;
+
+  // Strong: BLE name carries the prior node number suffix.
+  if (lastMyNodeNum != null) {
+    final fullHex = lastMyNodeNum.toRadixString(16).padLeft(4, '0');
+    final suffix = fullHex.substring(fullHex.length - 4);
+    if (bleNameMatchesNodeNum(newDeviceName, suffix)) return true;
+  }
+
+  // Medium: advertised name exactly matches the prior device name.
+  if (lastDeviceName != null &&
+      lastDeviceName.isNotEmpty &&
+      newDeviceName == lastDeviceName) {
+    return true;
+  }
+
+  return false;
+}
+
 /// Helper function to clear all device-specific data before connecting to a (potentially different) device.
 /// This follows the Meshtastic iOS approach of always fetching fresh data from the device.
 /// Should be called BEFORE protocol.start() in all connection paths.
-Future<void> clearDeviceDataBeforeConnect(WidgetRef ref) async {
+///
+/// When both [previousDeviceId] and [newDeviceId] are non-null AND differ,
+/// node data is auto-cleared regardless of [clearNodeData]. This prevents
+/// the cross-device leak where `NodeStorageService` (a single SQLite store
+/// that is NOT scoped per radio) loads every node identity ever seen into
+/// the UI, making every device appear to have the same node count (the
+/// historical union, not the device's actual NodeDB).
+///
+/// Pass [isTransportRebind] as `true` when the caller has already
+/// determined (e.g. via `_tryLogicalDeviceMatch` or [isLogicalRebindForTest])
+/// that the new BLE UUID belongs to the SAME physical radio as the last
+/// one — BLE peripheral UUIDs rotate on ESP32 / nRF hardware. When true,
+/// the raw-UUID mismatch auto-clear is suppressed so we do not wipe the
+/// user's NodeDB on a same-radio reconnect.
+Future<void> clearDeviceDataBeforeConnect(
+  WidgetRef ref, {
+  bool clearNodeData = false,
+  String? previousDeviceId,
+  String? newDeviceId,
+  bool isTransportRebind = false,
+}) async {
+  final isDeviceSwitch = _isDeviceSwitch(previousDeviceId, newDeviceId);
+  if (isDeviceSwitch && isTransportRebind) {
+    AppLogging.app(
+      '🔁 Transport rebind ($previousDeviceId -> $newDeviceId) — same '
+      'physical radio under a new BLE UUID; suppressing device-switch '
+      'auto-clear so cached node data is preserved',
+    );
+  } else if (isDeviceSwitch && !clearNodeData) {
+    AppLogging.app(
+      '🔁 Device switch detected ($previousDeviceId -> $newDeviceId) — '
+      'forcing node data clear so the new device\'s NodeDB does not get '
+      'unioned with the prior device\'s persisted nodes',
+    );
+    clearNodeData = true;
+  }
   final messageCount = ref.read(messagesProvider).length;
   AppLogging.app(
     '🧹 Clearing device data before new connection '
-    '(preserving $messageCount messages)...',
+    '(preserving $messageCount messages${clearNodeData ? '' : ' and nodes'})...',
   );
 
   // Messages are intentionally NOT cleared here. They must survive
@@ -1302,9 +1467,16 @@ Future<void> clearDeviceDataBeforeConnect(WidgetRef ref) async {
   // signature) already prevents duplicates when the device re-sends
   // messages after reconnection.
 
-  // Clear in-memory device state (nodes, channels) — these are re-fetched
-  // from the device on every connection.
-  ref.read(nodesProvider.notifier).clearNodes();
+  // Nodes are intentionally NOT cleared here by default. Like messages,
+  // they must survive reconnections so that previously discovered mesh
+  // nodes (which may exceed the device's limited NodeDB capacity of ~80)
+  // are not lost. The merge logic in NodesNotifier handles deduplication
+  // by nodeNum when the device re-sends its NodeDB after reconnection.
+  // Pass clearNodeData: true only when switching to a new device or
+  // explicitly forgetting the current one.
+  if (clearNodeData) {
+    ref.read(nodesProvider.notifier).clearNodes();
+  }
   ref.read(channelsProvider.notifier).clearChannels();
 
   // Reset new-nodes badge counter so it doesn't accumulate across reconnections.
@@ -1316,12 +1488,14 @@ Future<void> clearDeviceDataBeforeConnect(WidgetRef ref) async {
   // (files deleted, WAL/SHM journals stale). A failure here must never
   // prevent the user from reconnecting to a device.
 
-  // Clear persistent node storage (nodes come fresh from device)
-  try {
-    final nodeStorage = await ref.read(nodeStorageProvider.future);
-    await nodeStorage.clearNodes();
-  } catch (e) {
-    AppLogging.app('⚠️ clearDeviceData: nodeStorage.clearNodes failed: $e');
+  // Clear persistent node storage only when switching devices
+  if (clearNodeData) {
+    try {
+      final nodeStorage = await ref.read(nodeStorageProvider.future);
+      await nodeStorage.clearNodes();
+    } catch (e) {
+      AppLogging.app('⚠️ clearDeviceData: nodeStorage.clearNodes failed: $e');
+    }
   }
 
   // Clear telemetry data (device metrics, environment metrics, positions, etc.)
@@ -1342,15 +1516,40 @@ Future<void> clearDeviceDataBeforeConnect(WidgetRef ref) async {
     );
   }
 
-  AppLogging.app('✅ Device data cleared - ready for fresh data from device');
+  AppLogging.app(
+    '✅ Device data cleared (nodes ${clearNodeData ? 'cleared' : 'preserved'}) - ready for fresh data from device',
+  );
 }
 
-/// Ref-based version for use in providers (non-widget contexts)
-Future<void> clearDeviceDataBeforeConnectRef(Ref ref) async {
+/// Ref-based version for use in providers (non-widget contexts).
+/// See [clearDeviceDataBeforeConnect] for the device-switch auto-clear
+/// and [isTransportRebind] semantics — they apply identically here.
+Future<void> clearDeviceDataBeforeConnectRef(
+  Ref ref, {
+  bool clearNodeData = false,
+  String? previousDeviceId,
+  String? newDeviceId,
+  bool isTransportRebind = false,
+}) async {
+  final isDeviceSwitch = _isDeviceSwitch(previousDeviceId, newDeviceId);
+  if (isDeviceSwitch && isTransportRebind) {
+    AppLogging.app(
+      '🔁 Transport rebind ($previousDeviceId -> $newDeviceId) — same '
+      'physical radio under a new BLE UUID; suppressing device-switch '
+      'auto-clear so cached node data is preserved',
+    );
+  } else if (isDeviceSwitch && !clearNodeData) {
+    AppLogging.app(
+      '🔁 Device switch detected ($previousDeviceId -> $newDeviceId) — '
+      'forcing node data clear so the new device\'s NodeDB does not get '
+      'unioned with the prior device\'s persisted nodes',
+    );
+    clearNodeData = true;
+  }
   final messageCount = ref.read(messagesProvider).length;
   AppLogging.app(
     '🧹 Clearing device data before new connection '
-    '(preserving $messageCount messages)...',
+    '(preserving $messageCount messages${clearNodeData ? '' : ' and nodes'})...',
   );
 
   // Messages are intentionally NOT cleared here. They must survive
@@ -1360,9 +1559,16 @@ Future<void> clearDeviceDataBeforeConnectRef(Ref ref) async {
   // signature) already prevents duplicates when the device re-sends
   // messages after reconnection.
 
-  // Clear in-memory device state (nodes, channels) — these are re-fetched
-  // from the device on every connection.
-  ref.read(nodesProvider.notifier).clearNodes();
+  // Nodes are intentionally NOT cleared here by default. Like messages,
+  // they must survive reconnections so that previously discovered mesh
+  // nodes (which may exceed the device's limited NodeDB capacity of ~80)
+  // are not lost. The merge logic in NodesNotifier handles deduplication
+  // by nodeNum when the device re-sends its NodeDB after reconnection.
+  // Pass clearNodeData: true only when switching to a new device or
+  // explicitly forgetting the current one.
+  if (clearNodeData) {
+    ref.read(nodesProvider.notifier).clearNodes();
+  }
   ref.read(channelsProvider.notifier).clearChannels();
 
   // Reset new-nodes badge counter so it doesn't accumulate across reconnections.
@@ -1373,12 +1579,14 @@ Future<void> clearDeviceDataBeforeConnectRef(Ref ref) async {
   // (files deleted, WAL/SHM journals stale). A failure here must never
   // prevent the user from reconnecting to a device.
 
-  // Clear persistent node storage (nodes come fresh from device)
-  try {
-    final nodeStorage = await ref.read(nodeStorageProvider.future);
-    await nodeStorage.clearNodes();
-  } catch (e) {
-    AppLogging.app('⚠️ clearDeviceData: nodeStorage.clearNodes failed: $e');
+  // Clear persistent node storage only when switching devices
+  if (clearNodeData) {
+    try {
+      final nodeStorage = await ref.read(nodeStorageProvider.future);
+      await nodeStorage.clearNodes();
+    } catch (e) {
+      AppLogging.app('⚠️ clearDeviceData: nodeStorage.clearNodes failed: $e');
+    }
   }
 
   // Clear telemetry data (device metrics, environment metrics, positions, etc.)
@@ -1399,7 +1607,9 @@ Future<void> clearDeviceDataBeforeConnectRef(Ref ref) async {
     );
   }
 
-  AppLogging.app('✅ Device data cleared - ready for fresh data from device');
+  AppLogging.app(
+    '✅ Device data cleared (nodes ${clearNodeData ? 'cleared' : 'preserved'}) - ready for fresh data from device',
+  );
 }
 
 // Store the last known device ID for reconnection attempts
@@ -1585,6 +1795,29 @@ final bluetoothStateListenerProvider = Provider<void>((ref) {
 final autoReconnectManagerProvider = Provider<void>((ref) {
   AppLogging.connection('AUTO-RECONNECT MANAGER INITIALIZED');
 
+  // Listen for config writes to the local node. These trigger firmware
+  // reboot, so we enter recovery mode (increased patience + logical
+  // matching) before the BLE disconnect event even arrives.
+  StreamSubscription<void>? configWriteSub;
+  void setupConfigWriteListener() {
+    configWriteSub?.cancel();
+    try {
+      final protocol = ref.read(protocolServiceProvider);
+      configWriteSub = protocol.localConfigWriteStream.listen((_) {
+        AppLogging.connection(
+          '🔄 Config write to local node detected — entering reboot recovery mode',
+        );
+        ref.read(rebootExpectedProvider.notifier).setRebootExpected(true);
+      });
+    } catch (_) {
+      // Protocol service may not be initialized yet — that's fine,
+      // the listener will be set up on next connection.
+    }
+  }
+
+  setupConfigWriteListener();
+  ref.onDispose(() => configWriteSub?.cancel());
+
   // Track the last connected device ID when we connect
   ref.listen<DeviceInfo?>(connectedDeviceProvider, (previous, next) {
     AppLogging.debug(
@@ -1593,6 +1826,12 @@ final autoReconnectManagerProvider = Provider<void>((ref) {
     if (next != null) {
       AppLogging.connection('Storing device ID for reconnect: ${next.id}');
       ref.read(_lastConnectedDeviceIdProvider.notifier).setId(next.id);
+      // Clear reboot-expected flag on successful connect — the reboot
+      // cycle is complete and the new connection is established.
+      ref.read(rebootExpectedProvider.notifier).setRebootExpected(false);
+      // Re-subscribe to config writes on new connection (protocol service
+      // may have been recreated).
+      setupConfigWriteListener();
     }
   });
 
@@ -1717,9 +1956,19 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
       return;
     }
 
-    // Wait for device to reboot (Meshtastic devices take ~8-15 seconds)
-    AppLogging.connection('Waiting 10s for device to reboot...');
-    await Future.delayed(const Duration(seconds: 10));
+    // Wait for device to reboot (Meshtastic devices take ~8-15 seconds).
+    // ESP32 devices performing SSL certificate generation after WiFi/network
+    // config changes take significantly longer (60-120s), so we extend
+    // the initial delay during reboot recovery to avoid premature scans.
+    final rebootExpected = ref.read(rebootExpectedProvider);
+    final initialDelay = rebootExpected
+        ? const Duration(seconds: 20)
+        : const Duration(seconds: 10);
+    AppLogging.connection(
+      'Waiting ${initialDelay.inSeconds}s for device to reboot '
+      '(rebootExpected=$rebootExpected)...',
+    );
+    await Future.delayed(initialDelay);
 
     // CRITICAL: Check again after delay - user may have disconnected while waiting
     if (ref.read(userDisconnectedProvider)) {
@@ -1892,6 +2141,11 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
         // Meshtastic service UUID
         const serviceUuid = '6ba1b218-15a8-461f-9fa8-5dcae273eafd';
 
+        // Collect ALL Meshtastic candidates for logical matching.
+        // If the exact BLE ID is not found (e.g. ESP32 changed UUID
+        // after reboot), we attempt to match by node identity.
+        final allCandidates = <String, DeviceInfo>{};
+
         // Start scan with 15 second timeout
         await FlutterBluePlus.startScan(
           timeout: const Duration(seconds: 15),
@@ -1909,17 +2163,22 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
                 'Found device: $foundId (looking for $deviceId)',
               );
 
+              final deviceInfo = DeviceInfo(
+                id: foundId,
+                name: r.device.platformName.isNotEmpty
+                    ? r.device.platformName
+                    : 'Meshtastic Device',
+                type: TransportType.ble,
+                address: foundId,
+                rssi: r.rssi,
+              );
+
+              // Track all Meshtastic candidates by BLE ID
+              allCandidates[foundId] = deviceInfo;
+
+              // Fast path: exact BLE ID match
               if (foundId == deviceId && !completer.isCompleted) {
-                AppLogging.connection('✓ Target device found!');
-                final deviceInfo = DeviceInfo(
-                  id: foundId,
-                  name: r.device.platformName.isNotEmpty
-                      ? r.device.platformName
-                      : 'Meshtastic Device',
-                  type: TransportType.ble,
-                  address: foundId,
-                  rssi: r.rssi,
-                );
+                AppLogging.connection('✓ Target device found (exact BLE ID)!');
                 completer.complete(deviceInfo);
               }
             }
@@ -1955,6 +2214,21 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
         await FlutterBluePlus.stopScan();
         subscription.cancel();
         AppLogging.connection('Cleanup done');
+
+        // ── Logical matching fallback ──
+        // If exact BLE ID was not found but other Meshtastic devices
+        // were discovered, attempt to match by node identity. Meshtastic
+        // BLE names follow the pattern "Meshtastic_XXXX" where XXXX is
+        // the last 4 hex digits of the node number. This is stable
+        // across reboots even when the BLE peripheral UUID changes
+        // (common on ESP32 devices).
+        if (foundDevice == null && allCandidates.isNotEmpty) {
+          foundDevice = _tryLogicalDeviceMatch(
+            ref,
+            allCandidates: allCandidates,
+            previousDeviceId: deviceId,
+          );
+        }
       } catch (e, stack) {
         AppLogging.connection('Scan error: $e');
         AppLogging.connection('Stack: $stack');
@@ -1997,6 +2271,23 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
         }
 
         AppLogging.connection('Device found! Connecting...');
+
+        // If this device was matched via logical identity (not exact BLE
+        // ID), update the persisted transport identity so future fast-path
+        // reconnects use the new BLE UUID.
+        final isTransportRebind = foundDevice.id != deviceId;
+        if (isTransportRebind) {
+          AppLogging.connection(
+            '🔄 TRANSPORT REBIND: BLE ID changed $deviceId → ${foundDevice.id} '
+            '(logical match by name: ${foundDevice.name})',
+          );
+          // Update in-memory last-connected ID so subsequent loop
+          // iterations and abort-checks use the correct value.
+          ref
+              .read(_lastConnectedDeviceIdProvider.notifier)
+              .setId(foundDevice.id);
+        }
+
         ref
             .read(autoReconnectStateProvider.notifier)
             .setState(AutoReconnectState.connecting);
@@ -2047,8 +2338,52 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
           // Restart protocol service
           AppLogging.connection('Starting protocol service...');
 
-          // Clear all previous device data before starting new connection
-          await clearDeviceDataBeforeConnectRef(ref);
+          // Clear all previous device data before starting new connection.
+          // Pass previous + new IDs so node data is auto-cleared if this
+          // is a different physical device than was last connected.
+          // When this is a transport rebind (same physical radio, BLE UUID
+          // rotated), we signal the helper to suppress the auto-clear —
+          // the wipe fires on raw UUID inequality alone and would otherwise
+          // destroy cached NodeDB on every ESP32/nRF UUID rotation.
+          String? previousDeviceId;
+          try {
+            final settings = await ref.read(settingsServiceProvider.future);
+            previousDeviceId = settings.lastDeviceId;
+
+            // On a transport rebind, persist the new BLE UUID BEFORE the
+            // clear runs so future reconnects don't keep comparing against
+            // a stale persisted id and re-classifying the same radio as a
+            // new device. The helper's `isTransportRebind` already
+            // suppresses the wipe for this attempt; this alignment ensures
+            // it stays aligned across subsequent reconnects even if the
+            // later `setLastDevice` call (after protocol start) is never
+            // reached (e.g. the protocol start fails after this point).
+            if (isTransportRebind) {
+              AppLogging.connection(
+                '🔄 REBIND PERSIST (pre-clear): '
+                '$previousDeviceId → ${foundDevice.id}',
+              );
+              await settings.setLastDevice(
+                foundDevice.id,
+                foundDevice.type.name,
+                deviceName: foundDevice.name,
+              );
+            }
+          } catch (_) {
+            previousDeviceId = null;
+          }
+          AppLogging.connection(
+            '🧮 SWITCH CLASSIFY (_performReconnect): '
+            'previousDeviceId=$previousDeviceId '
+            'newDeviceId=${foundDevice.id} '
+            'isTransportRebind=$isTransportRebind',
+          );
+          await clearDeviceDataBeforeConnectRef(
+            ref,
+            previousDeviceId: previousDeviceId,
+            newDeviceId: foundDevice.id,
+            isTransportRebind: isTransportRebind,
+          );
 
           final protocol = ref.read(protocolServiceProvider);
 
@@ -2088,6 +2423,21 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
 
           // Final check - if we're still connected, declare success
           if (transport.state == DeviceConnectionState.connected) {
+            // Persist updated transport identity if BLE UUID changed
+            if (isTransportRebind) {
+              AppLogging.connection(
+                '🔄 REBIND COMPLETE: Persisting new BLE ID ${foundDevice.id}',
+              );
+              final rebindSettings = await ref.read(
+                settingsServiceProvider.future,
+              );
+              await rebindSettings.setLastDevice(
+                foundDevice.id,
+                foundDevice.type.name,
+                deviceName: foundDevice.name,
+              );
+            }
+
             ref
                 .read(autoReconnectStateProvider.notifier)
                 .setState(AutoReconnectState.success);
@@ -2140,11 +2490,26 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
         AppLogging.connection(
           'Device not found in attempt $attempt, waiting 5s...',
         );
-        final invalidated = await ref
-            .read(deviceConnectionProvider.notifier)
-            .reportMissingSavedDevice();
-        if (invalidated) {
-          return;
+
+        // During reboot recovery, do NOT report missing device — the
+        // node is expected to be offline while regenerating its SSL
+        // certificate and restarting. Without this guard,
+        // reportMissingSavedDevice() fires invalidation after just 3
+        // misses, dumping the user to the scanner screen even though
+        // the scan loop has 8 retries specifically to handle slow reboots.
+        final rebootRecovery = ref.read(rebootExpectedProvider);
+        if (!rebootRecovery) {
+          final invalidated = await ref
+              .read(deviceConnectionProvider.notifier)
+              .reportMissingSavedDevice();
+          if (invalidated) {
+            return;
+          }
+        } else {
+          AppLogging.connection(
+            '🔄 Reboot recovery active — skipping invalidation check '
+            '(attempt $attempt/$maxRetries)',
+          );
         }
         if (attempt < maxRetries) {
           // Wait longer before next retry - device may still be rebooting
@@ -2155,6 +2520,8 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
 
     // All retries exhausted
     AppLogging.connection('❌ Failed to reconnect after $maxRetries attempts');
+    // Clear reboot recovery flag — we gave it our best shot.
+    ref.read(rebootExpectedProvider.notifier).setRebootExpected(false);
     ref
         .read(autoReconnectStateProvider.notifier)
         .setState(AutoReconnectState.failed);
@@ -2172,6 +2539,135 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
         .read(autoReconnectStateProvider.notifier)
         .setState(AutoReconnectState.idle);
   }
+}
+
+/// Attempts to match a Meshtastic device by logical identity when the
+/// exact BLE peripheral UUID is not found (e.g. after ESP32 reboot that
+/// changes the BLE MAC address).
+///
+/// Meshtastic BLE advertisements use the name pattern "Meshtastic_XXXX"
+/// (or custom short name variants like "WIS_XXXX") where the last 4
+/// characters are the hex representation of the lower 16 bits of the
+/// node number. This suffix is derived from the node number stored in
+/// flash and is stable across reboots.
+///
+/// Matching tiers:
+///   Strong — BLE name suffix matches the last 4 hex digits of
+///            `lastMyNodeNum` (persisted from the previous session).
+///   Medium — BLE advertised name exactly matches `lastDeviceName`.
+///   Weak   — any single Meshtastic device (never auto-matched).
+///
+/// Only strong matches are used for automatic rebind. Medium matches
+/// are logged but not auto-bound (future: could present a chooser).
+DeviceInfo? _tryLogicalDeviceMatch(
+  Ref ref, {
+  required Map<String, DeviceInfo> allCandidates,
+  required String previousDeviceId,
+}) {
+  final settings = ref.read(settingsServiceProvider).value;
+  if (settings == null) return null;
+
+  final lastNodeNum = settings.lastMyNodeNum;
+  final lastDeviceName = settings.lastDeviceName;
+
+  AppLogging.connection(
+    '🔍 LOGICAL MATCH: Trying to match ${allCandidates.length} '
+    'candidate(s) — lastNodeNum=${lastNodeNum != null ? lastNodeNum.toRadixString(16) : "null"}, '
+    'lastDeviceName=$lastDeviceName, previousBleId=$previousDeviceId',
+  );
+
+  // Log all candidates for diagnostics
+  for (final entry in allCandidates.entries) {
+    AppLogging.connection(
+      '🔍 LOGICAL MATCH: Candidate bleId=${entry.key}, '
+      'name=${entry.value.name}',
+    );
+  }
+
+  // ── Strong match: node number suffix in BLE name ──
+  if (lastNodeNum != null) {
+    final expectedSuffix = lastNodeNum
+        .toRadixString(16)
+        .padLeft(4, '0')
+        .substring(lastNodeNum.toRadixString(16).padLeft(4, '0').length - 4);
+
+    final strongMatches = allCandidates.values.where((device) {
+      return bleNameMatchesNodeNum(device.name, expectedSuffix);
+    }).toList();
+
+    if (strongMatches.length == 1) {
+      final match = strongMatches.first;
+      AppLogging.connection(
+        '🔍 LOGICAL MATCH: ✅ STRONG match found! '
+        'name=${match.name} bleId=${match.id} '
+        '(suffix=$expectedSuffix matches nodeNum=${lastNodeNum.toRadixString(16)})',
+      );
+      return match;
+    }
+
+    if (strongMatches.length > 1) {
+      AppLogging.connection(
+        '🔍 LOGICAL MATCH: ⚠️ Multiple strong matches '
+        '(${strongMatches.length}) — ambiguous, not auto-binding. '
+        'Names: ${strongMatches.map((d) => d.name).join(", ")}',
+      );
+      // Ambiguous: multiple devices with the same node number suffix.
+      // This is very unlikely but possible with cloned devices.
+      return null;
+    }
+
+    AppLogging.connection(
+      '🔍 LOGICAL MATCH: No strong match by nodeNum suffix ($expectedSuffix)',
+    );
+  }
+
+  // ── Medium match: exact advertised name ──
+  if (lastDeviceName != null && lastDeviceName.isNotEmpty) {
+    final nameMatches = allCandidates.values.where((device) {
+      return device.name == lastDeviceName;
+    }).toList();
+
+    if (nameMatches.length == 1) {
+      final match = nameMatches.first;
+      AppLogging.connection(
+        '🔍 LOGICAL MATCH: 🟡 MEDIUM match by name="${match.name}" '
+        'bleId=${match.id} — name matches lastDeviceName. '
+        'Auto-binding (single candidate with exact name).',
+      );
+      // Single device with exact same name — safe to rebind.
+      // This handles cases where lastMyNodeNum was cleared or unknown
+      // but the device name is distinctive enough.
+      return match;
+    }
+
+    if (nameMatches.isNotEmpty) {
+      AppLogging.connection(
+        '🔍 LOGICAL MATCH: 🟡 ${nameMatches.length} name matches '
+        'for "$lastDeviceName" — ambiguous, not auto-binding',
+      );
+    }
+  }
+
+  AppLogging.connection(
+    '🔍 LOGICAL MATCH: ❌ No safe logical match found among '
+    '${allCandidates.length} candidate(s)',
+  );
+  return null;
+}
+
+/// Returns `true` if [bleName] ends with the 4-hex suffix [expectedSuffix].
+///
+/// Meshtastic default names are "Meshtastic_XXXX". Custom short names
+/// follow similar patterns. We check case-insensitively whether the
+/// portion after the last underscore matches.
+@visibleForTesting
+bool bleNameMatchesNodeNum(String bleName, String expectedSuffix) {
+  final underscoreIndex = bleName.lastIndexOf('_');
+  if (underscoreIndex < 0 || underscoreIndex >= bleName.length - 1) {
+    return false;
+  }
+  final nameSuffix = bleName.substring(underscoreIndex + 1).toLowerCase();
+  return nameSuffix == expectedSuffix.toLowerCase();
 }
 
 // Current RSSI stream from protocol service
@@ -2207,7 +2703,11 @@ final pushNotificationServiceProvider = Provider<PushNotificationService>((
 
 final meshPacketDedupeStoreProvider = Provider<MeshPacketDedupeStore>((ref) {
   final store = MeshPacketDedupeStore();
-  unawaited(store.init());
+  unawaited(
+    store.init().catchError((Object e) {
+      AppLogging.protocol('MeshPacketDedupeStore init failed (non-fatal): $e');
+    }),
+  );
   ref.onDispose(() {
     store.dispose();
   });
@@ -2242,22 +2742,29 @@ final protocolServiceProvider = Provider<ProtocolService>((ref) {
     '🟢 ProtocolService provider created - instance: ${service.hashCode}',
   );
 
-  // Set up notification reaction callback to send emoji DMs
-  NotificationService().onReactionSelected =
-      (int toNodeNum, String emoji) async {
-        try {
-          AppLogging.app('Sending reaction "$emoji" to node $toNodeNum');
-          await service.sendMessage(
-            text: emoji,
-            to: toNodeNum,
-            wantAck: true,
-            source: MessageSource.reaction,
-          );
-          AppLogging.app('Reaction sent successfully');
-        } catch (e) {
-          AppLogging.app('Failed to send reaction: $e');
-        }
-      };
+  // Set up notification reaction callback to send true tapbacks.
+  NotificationService()
+      .onReactionSelected = (MessageReactionTarget target, String emoji) async {
+    try {
+      final toNodeNum = target.isChannelMessage ? 0xFFFFFFFF : target.toNodeNum;
+      AppLogging.app(
+        'Sending reaction "$emoji" to node $toNodeNum '
+        '(channel=${target.channelIndex}, replyPacketId=${target.replyPacketId})',
+      );
+      await service.sendMessage(
+        text: emoji,
+        to: toNodeNum,
+        channel: target.channelIndex ?? 0,
+        wantAck: !target.isChannelMessage,
+        source: MessageSource.reaction,
+        replyId: target.replyPacketId,
+        isEmoji: true,
+      );
+      AppLogging.app('Reaction sent successfully');
+    } catch (e) {
+      AppLogging.app('Failed to send reaction: $e');
+    }
+  };
 
   // Keep the service alive for the lifetime of the app
   ref.onDispose(() {
@@ -2314,7 +2821,7 @@ final phonePositionGovernorProvider = Provider<PhonePositionGovernor>((ref) {
 // Like iOS Meshtastic app, sends phone GPS coordinates to mesh
 // when device doesn't have its own GPS hardware.
 // Gated by SettingsService.providePhoneLocation (default: false),
-// matching meshtastic-ios UserDefaults.provideLocation behaviour.
+// matching the standard Meshtastic companion app behaviour (opt-in, default off).
 // All publishes route through PhonePositionGovernor for rate limiting.
 final locationServiceProvider = Provider<LocationService>((ref) {
   final protocol = ref.watch(protocolServiceProvider);
@@ -2324,8 +2831,8 @@ final locationServiceProvider = Provider<LocationService>((ref) {
     isLocationSharingEnabled: () {
       // Read from cached settings synchronously. The callback is
       // evaluated on every 30-second tick inside LocationService,
-      // mirroring the meshtastic-ios pattern where
-      // `UserDefaults.provideLocation` is checked inside the loop.
+      // mirroring the standard Meshtastic companion app pattern where
+      // the location-sharing preference is checked on every tick.
       return _cachedSettingsService?.providePhoneLocation ?? false;
     },
     governor: governor,
@@ -2415,17 +2922,26 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
       current,
     ) {
       current.whenData((connectionState) async {
-        // Skip for MeshCore devices - they use ConnectionCoordinator state
-        final settings = await ref.read(settingsServiceProvider.future);
-        if (settings.lastDeviceProtocol == 'meshcore') {
-          return;
-        }
+        try {
+          // Skip for MeshCore devices - they use ConnectionCoordinator state
+          final settings = await ref.read(settingsServiceProvider.future);
+          if (!ref.mounted) return;
+          if (settings.lastDeviceProtocol == 'meshcore') {
+            return;
+          }
 
-        if (connectionState == DeviceConnectionState.connected && !state) {
-          _startLiveActivity();
-        } else if (connectionState == DeviceConnectionState.disconnected &&
-            state) {
-          _endLiveActivity();
+          if (connectionState == DeviceConnectionState.connected && !state) {
+            _startLiveActivity();
+          } else if (connectionState == DeviceConnectionState.disconnected &&
+              state) {
+            _endLiveActivity();
+          }
+        } catch (e) {
+          // Provider may have been disposed during the async gap —
+          // swallow the error to prevent ProviderElement._notifyListeners crash.
+          AppLogging.debug(
+            'LiveActivityManager: ignoring error in listener: $e',
+          );
         }
       });
     }, fireImmediately: true);
@@ -2443,6 +2959,16 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
   }
 
   Future<void> _startLiveActivity() async {
+    // Respect the user's in-app Live Activity preference.
+    final prefs = await SharedPreferences.getInstance();
+    final enabled = prefs.getBool(kLiveActivityEnabled) ?? true;
+    if (!enabled) {
+      AppLogging.debug(
+        '📱 Live Activity disabled by user preference — skipping',
+      );
+      return;
+    }
+
     final connectedDevice = ref.read(connectedDeviceProvider);
     final myNodeNum = ref.read(myNodeNumProvider);
     final nodes = ref.read(nodesProvider);
@@ -2624,12 +3150,7 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
   int _activeNodeCount(Map<int, MeshNode> nodes) {
     final now = DateTime.now();
     return nodes.values
-        .where(
-          (node) => PresenceCalculator.fromLastHeard(
-            node.lastHeard,
-            now: now,
-          ).isActive,
-        )
+        .where((node) => PresenceCalculator.isOnline(node.lastHeard, now: now))
         .length;
   }
 
@@ -2662,6 +3183,11 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
     }
     return null;
   }
+
+  /// Ends the current Live Activity immediately.
+  ///
+  /// Called when the user disables the Live Activity toggle in settings.
+  Future<void> endLiveActivity() => _endLiveActivity();
 
   Future<void> _endLiveActivity() async {
     _channelUtilSubscription?.cancel();
@@ -2714,6 +3240,26 @@ class MessagesNotifier extends Notifier<List<Message>> {
   /// _loadFromStorage() has finished before adding messages.
   final Completer<void> _storageLoadCompleter = Completer<void>();
 
+  /// Track the protocol instance we are currently subscribed to so that
+  /// [build] re-runs (triggered by [messageStorageProvider] resolution)
+  /// do not cancel in-flight stream subscriptions unnecessarily.
+  ///
+  /// ## Invariant (CRITICAL — do not break)
+  ///
+  /// This field and all `StreamSubscription` fields (`_messageSubscription`,
+  /// `_deliverySubscription`, `_pushSubscription`) MUST be set to `null` in
+  /// [ref.onDispose]. The skip-guard in [_subscribeToStreams] checks
+  /// `_messageSubscription != null` to decide whether to re-subscribe.
+  /// A cancelled-but-non-null subscription fools the guard into thinking
+  /// we are still listening, permanently killing incoming message
+  /// processing on broadcast streams (which do not buffer).
+  ///
+  /// Bug history: commit `78b6a52b` (8 Apr 2026) added the skip-guard
+  /// without nulling in dispose → all incoming messages silently dropped
+  /// after the first `build()` re-run. Fixed in `7bc1dc8e` (9 Apr 2026).
+  /// See `/memories/repo/messages-stream-subscription-bug.md`.
+  ProtocolService? _subscribedProtocol;
+
   /// Await this in tests to ensure the initial storage load has completed.
   Future<void> get storageReady => _storageLoadCompleter.future;
 
@@ -2721,6 +3267,17 @@ class MessagesNotifier extends Notifier<List<Message>> {
   List<Message> build() {
     final storageAsync = ref.watch(messageStorageProvider);
     _storage = storageAsync.value;
+
+    // If storage failed to initialize, log the error and ensure the
+    // completer is unblocked so messages can still flow (in-memory only).
+    if (storageAsync.hasError) {
+      AppLogging.messages(
+        '❌ messageStorageProvider failed: ${storageAsync.error}',
+      );
+      if (!_storageLoadCompleter.isCompleted) {
+        _storageLoadCompleter.complete();
+      }
+    }
 
     // Use ref.listen for protocol changes instead of ref.watch.
     // ref.watch would cause build() to re-run on every reconnect,
@@ -2733,19 +3290,55 @@ class MessagesNotifier extends Notifier<List<Message>> {
       _subscribeToStreams(next);
     });
 
-    // Set up disposal for stream subscriptions
+    // Set up disposal for stream subscriptions.
+    //
+    // CRITICAL — MUST null every reference after cancelling.
+    //
+    // Riverpod calls ref.onDispose() between build() cycles (e.g. when
+    // messageStorageProvider transitions AsyncLoading → AsyncData).  The
+    // next build() calls _subscribeToStreams(), whose skip-guard checks
+    // `_messageSubscription != null`.  If we cancel without nulling, the
+    // guard sees a non-null *cancelled* subscription and skips, leaving
+    // the broadcast stream listener permanently dead.  Broadcast streams
+    // do NOT buffer — missed events are lost forever.
+    //
+    // This exact bug shipped in 78b6a52b (8 Apr 2026) and silently broke
+    // ALL incoming message processing (no UI, no notifications, no DB
+    // persistence) until fixed in 7bc1dc8e (9 Apr 2026).
+    //
+    // Rule: if you add a skip-guard that checks `!= null`, the matching
+    // dispose/cancel MUST set the reference to null.  Always.
     ref.onDispose(() {
+      AppLogging.messages('📨 ref.onDispose: cancelling stream subscriptions');
       _messageSubscription?.cancel();
+      _messageSubscription = null;
       _deliverySubscription?.cancel();
+      _deliverySubscription = null;
       _pushSubscription?.cancel();
+      _pushSubscription = null;
+      _subscribedProtocol = null;
     });
 
     // Subscribe to current protocol streams
     final protocol = ref.read(protocolServiceProvider);
     _subscribeToStreams(protocol);
 
-    // Load persisted messages asynchronously
-    _loadFromStorage();
+    // Load persisted messages asynchronously.
+    // Wrapped in error handler to ensure _storageLoadCompleter always
+    // completes — an unhandled exception here would permanently block
+    // every incoming message that awaits the completer.
+    _loadFromStorage().catchError((Object e, StackTrace s) {
+      AppLogging.messages('❌ _loadFromStorage failed: $e\n$s');
+      if (!_storageLoadCompleter.isCompleted) {
+        _storageLoadCompleter.complete();
+      }
+    });
+
+    // Ensure the retry coordinator is running.  We use ref.read()
+    // instead of ref.watch() to avoid a circular dependency:
+    // messagesProvider → dmRetryCoordinatorProvider → messagesProvider.
+    // The coordinator stays alive via ref.keepAlive() in its own provider.
+    ref.read(dmRetryCoordinatorProvider);
 
     return [];
   }
@@ -2761,9 +3354,16 @@ class MessagesNotifier extends Notifier<List<Message>> {
       return;
     }
     if (_storage == null) {
-      if (!_storageLoadCompleter.isCompleted) {
-        _storageLoadCompleter.complete();
-      }
+      AppLogging.messages(
+        '📨 _loadFromStorage: storage is null — completer NOT completed '
+        '(waiting for messageStorageProvider to resolve)',
+      );
+      // Do NOT complete the completer when storage is unavailable.
+      // Stream listeners must wait until storage has actually loaded
+      // to prevent a race where messages arrive via BLE, get added to
+      // state, and are then overwritten by _loadFromStorage setting
+      // state = savedMessages (which may not include the just-arrived
+      // messages because the DB query started before the save).
       return;
     }
 
@@ -2797,22 +3397,27 @@ class MessagesNotifier extends Notifier<List<Message>> {
     _storageLoaded = true;
 
     if (savedMessages.isNotEmpty) {
-      // Exclude tapback emoji reactions from the message state.
-      // They are tracked separately via TapbackStorageService and would
-      // otherwise pollute the message list even though the UI filters
-      // them.  This matches the Meshtastic Android architecture where
-      // reactions live in a separate `reactions` table.
+      // Keep canonical tapbacks in SQLite as raw messages, but exclude them
+      // from the visible message state. The timeline/domain layer groups
+      // them back under their parent by replyId.
       final regularMessages = savedMessages.where((m) {
-        // Filter messages with the is_emoji flag set in the database.
-        if (m.isEmoji) return false;
-        // Content-based fallback: a single-emoji text with a replyId is
-        // almost certainly a tapback that wasn't flagged (e.g. stored
-        // before the v3 migration ran).  This matches the Meshtastic
-        // Android approach of never putting reactions in the message list.
-        if (m.replyId != null && _looksLikeEmoji(m.text)) return false;
+        if (m.isCanonicalTapback) return false;
         return true;
       }).toList();
-      state = regularMessages;
+      // Reset any messages stuck in the retrying state from a previous
+      // session (the app was killed while a retry was in flight).
+      // This is done here rather than in DmRetryCoordinator.start()
+      // because at start time, messagesProvider may not have loaded yet.
+      final resetMessages = regularMessages.map((m) {
+        if (m.status == MessageStatus.retrying) {
+          AppLogging.messages(
+            'MessagesNotifier: reset stale retrying → unconfirmed: ${m.id}',
+          );
+          return m.copyWith(status: MessageStatus.unconfirmed);
+        }
+        return m;
+      }).toList();
+      state = resetMessages;
       AppLogging.messages(
         'Loaded ${regularMessages.length} messages from storage '
         '(${savedMessages.length - regularMessages.length} tapbacks excluded)',
@@ -2835,10 +3440,47 @@ class MessagesNotifier extends Notifier<List<Message>> {
   }
 
   /// Subscribe to protocol message and delivery streams.
-  /// Cancels any previous subscriptions before creating new ones
-  /// so that protocol changes (reconnect) simply re-wire streams
-  /// without resetting in-memory message state.
+  ///
+  /// Cancels any previous subscriptions before creating new ones so that
+  /// protocol changes (reconnect) simply re-wire streams without resetting
+  /// in-memory message state.
+  ///
+  /// ## Skip-guard contract
+  ///
+  /// The guard below skips re-subscription when the protocol instance has
+  /// not changed AND the subscription reference is non-null (meaning it
+  /// was not disposed).  This relies on [ref.onDispose] nulling
+  /// `_messageSubscription` and `_subscribedProtocol` — see the dispose
+  /// block in [build] and the doc comment on [_subscribedProtocol] for
+  /// why this invariant matters.
+  ///
+  /// **If you modify the guard condition, verify that the dispose block
+  /// still nulls every field the guard reads.**
   void _subscribeToStreams(ProtocolService protocol) {
+    // Skip re-subscription if we are already listening to this exact
+    // protocol instance.  This prevents build() re-runs (caused by
+    // messageStorageProvider async resolution) from cancelling an
+    // in-flight subscription that has messages queued while waiting
+    // for _storageLoadCompleter.
+    //
+    // SAFETY: this guard works ONLY because ref.onDispose nulls
+    // _messageSubscription.  A cancelled-but-non-null subscription
+    // would fool this check and permanently kill message processing.
+    if (identical(protocol, _subscribedProtocol) &&
+        _messageSubscription != null) {
+      AppLogging.messages(
+        '📨 _subscribeToStreams: skipping — same protocol instance '
+        '(hash=${protocol.hashCode}), subscription active',
+      );
+      return;
+    }
+    AppLogging.messages(
+      '📨 _subscribeToStreams: subscribing to protocol hash=${protocol.hashCode}, '
+      'previousHash=${_subscribedProtocol?.hashCode}, '
+      'hadSubscription=${_messageSubscription != null}',
+    );
+    _subscribedProtocol = protocol;
+
     // Cancel previous subscriptions
     _messageSubscription?.cancel();
     _deliverySubscription?.cancel();
@@ -2847,6 +3489,11 @@ class MessagesNotifier extends Notifier<List<Message>> {
     // Listen for new messages
     _messageSubscription = protocol.messageStream.listen((message) async {
       if (!ref.mounted) return;
+
+      AppLogging.messages(
+        '📨 Stream received message id=${message.id}, '
+        'storageCompleterDone=${_storageLoadCompleter.isCompleted}',
+      );
 
       // Wait for persisted messages to load before processing incoming
       // messages. Without this, early BLE packets could arrive while
@@ -2865,14 +3512,12 @@ class MessagesNotifier extends Notifier<List<Message>> {
         // add them to the main message list (matches Meshtastic Android
         // which stores reactions in a separate table).
         // Sent tapback reactions: route to tapback storage only.
-        final sentIsTapback =
-            (message.isEmoji && message.replyId != null) ||
-            (message.replyId != null && _looksLikeEmoji(message.text));
+        final sentIsTapback = message.isCanonicalTapback;
         if (sentIsTapback) {
           AppLogging.messages(
-            '🏷️ Sent tapback — skipping message state, storing as reaction only',
+            '🏷️ Sent tapback — persisting hidden reaction row only',
           );
-          _recordMessageSignature(message);
+          await _persistHiddenTapback(message);
           return;
         }
 
@@ -2912,28 +3557,25 @@ class MessagesNotifier extends Notifier<List<Message>> {
         return;
       }
 
-      // Incoming tapback reactions: route to tapback storage only, never
-      // add them to the main message list. This matches the official
-      // Meshtastic Android app which stores reactions in a separate
-      // `reactions` table and never inserts them into the `packet` table.
-      // Also catch messages where the protobuf emoji flag was not set
-      // but the content is clearly a single emoji with a replyId.
-      final isTapback =
-          (message.isEmoji && message.replyId != null) ||
-          (message.replyId != null && _looksLikeEmoji(message.text));
+      // Canonical tapbacks stay in SQLite but never become standalone chat
+      // bubbles. Only trust explicit protobuf tapbacks: isEmoji + replyId.
+      final isTapback = message.isCanonicalTapback;
       if (isTapback) {
         AppLogging.messages(
-          '🏷️ Incoming tapback detected — routing to _storeIncomingTapback '
+          '🏷️ Incoming tapback detected — persisting hidden reaction row '
           '(not adding to message state, isEmoji=${message.isEmoji}, '
-          'contentMatch=${_looksLikeEmoji(message.text)})',
+          'replyId=${message.replyId})',
         );
-        _recordMessageSignature(message);
-        _notifyNewMessage(message);
-        _storeIncomingTapback(message);
+        await _persistHiddenTapback(message);
         return;
       }
 
       _addMessageToState(message);
+      AppLogging.messages(
+        '📨 _addMessageToState DONE: id=${message.id}, '
+        'channel=${message.channel}, isBroadcast=${message.isBroadcast}, '
+        'stateSize=${state.length}',
+      );
       _notifyNewMessage(message);
     });
 
@@ -2979,6 +3621,11 @@ class MessagesNotifier extends Notifier<List<Message>> {
       return;
     }
 
+    if (message.isCanonicalTapback) {
+      AppLogging.app('Skipping notification for canonical tapback');
+      return;
+    }
+
     // Check master notification toggle
     final settingsAsync = ref.read(settingsServiceProvider);
     final settings = settingsAsync.value;
@@ -2991,6 +3638,17 @@ class MessagesNotifier extends Notifier<List<Message>> {
       return;
     }
 
+    // Suppress notification if the user has muted this channel.
+    if (message.channel != null) {
+      final mutedChannels = ref.read(mutedChannelsProvider);
+      if (mutedChannels.contains(message.channel)) {
+        AppLogging.app(
+          'Channel ${message.channel} is muted, skipping notification',
+        );
+        return;
+      }
+    }
+
     // Get sender name - prefer node lookup, fallback to message's cached sender info
     final nodes = ref.read(nodesProvider);
     final senderNode = nodes[message.from];
@@ -2998,13 +3656,13 @@ class MessagesNotifier extends Notifier<List<Message>> {
     final senderShortName = senderNode?.shortName ?? message.senderShortName;
     AppLogging.app('Sender: $senderName');
 
-    // For tapback reactions, show a friendlier notification body
-    final notificationBody = message.isEmoji
-        ? '$senderName reacted ${message.text}'
-        : message.text;
+    final notificationBody = message.text;
 
-    // Check if it's a channel message or direct message
-    final isChannelMessage = message.channel != null && message.channel! > 0;
+    // Check if it's a channel message (broadcast) or direct message.
+    // Use isBroadcast — the `to` field — as the discriminator. The channel
+    // index alone is not sufficient because both DMs and broadcasts on the
+    // Primary Channel have channel == 0.
+    final isChannelMessage = message.isBroadcast;
     AppLogging.debug(
       '🔔 Is channel message: $isChannelMessage (channel: ${message.channel})',
     );
@@ -3048,13 +3706,14 @@ class MessagesNotifier extends Notifier<List<Message>> {
             senderShortName: senderShortName,
             message: notificationBody,
             fromNodeNum: message.from,
-            channelIndex: isChannelMessage ? message.channel : null,
+            replyPacketId: message.packetId,
+            channelIndex: isChannelMessage ? (message.channel ?? 0) : null,
             channelName: channelName,
           ),
         );
 
-    // Tapback reactions should not trigger automations or IFTTT webhooks
-    if (message.isEmoji) return;
+    // Canonical tapbacks are metadata, not standalone message events.
+    if (message.isCanonicalTapback) return;
 
     // Trigger IFTTT webhook for message received
     _triggerIftttForMessage(message, senderName, isChannelMessage);
@@ -3166,11 +3825,23 @@ class MessagesNotifier extends Notifier<List<Message>> {
       return;
     }
 
-    final updatedMessage = message.copyWith(
-      status: update.isSuccess ? MessageStatus.delivered : MessageStatus.failed,
-      routingError: update.error,
-      errorMessage: update.error?.message,
-    );
+    Message updatedMessage;
+    if (update.isSuccess) {
+      // Confirmed — clear all retry state; the message is delivered.
+      updatedMessage = message.copyWith(
+        status: MessageStatus.delivered,
+        autoRetryEnabled: false,
+        retryCount: 0,
+        acked: true,
+        clearLastAttemptAt: true,
+      );
+    } else {
+      updatedMessage = message.copyWith(
+        status: MessageStatus.failed,
+        routingError: update.error,
+        errorMessage: update.error?.message,
+      );
+    }
 
     state = [
       ...state.sublist(0, messageIndex),
@@ -3198,15 +3869,33 @@ class MessagesNotifier extends Notifier<List<Message>> {
     );
   }
 
+  /// Remove a packet from the delivery-tracking map.
+  ///
+  /// Called before a resend so that a late delivery failure for the
+  /// *previous* packet ID cannot incorrectly overwrite the new in-flight
+  /// state.
+  void untrackPacket(int packetId) {
+    _packetToMessageId.remove(packetId);
+    AppLogging.debug('📨 Untracked stale packet $packetId');
+  }
+
   void addMessage(Message message) {
     if (_isDuplicateMessage(message)) {
       AppLogging.messages('📨 Duplicate message ignored: id=${message.id}');
       return;
     }
 
+    if (message.isCanonicalTapback) {
+      AppLogging.messages(
+        '🏷️ addMessage: persisting canonical tapback id=${message.id}',
+      );
+      unawaited(_persistHiddenTapback(message));
+      return;
+    }
+
     String convKey;
-    if (message.channel != null && message.channel! > 0) {
-      convKey = 'channel:${message.channel}';
+    if (message.isBroadcast) {
+      convKey = 'channel:${message.channel ?? 0}';
     } else {
       final other = message.from == ref.read(myNodeNumProvider)
           ? message.to
@@ -3224,29 +3913,42 @@ class MessagesNotifier extends Notifier<List<Message>> {
   bool _isDuplicateMessage(Message message) {
     // Layer 1: Exact message ID match
     if (message.id.isNotEmpty && state.any((m) => m.id == message.id)) {
+      AppLogging.messages('📨 Dedup Layer 1 (ID match): id=${message.id}');
       return true;
     }
     // Layer 2: Packet ID match
     if (message.packetId != null &&
         state.any((m) => m.packetId == message.packetId)) {
+      AppLogging.messages(
+        '📨 Dedup Layer 2 (packetId match): packetId=${message.packetId}',
+      );
       return true;
     }
     // Layer 3: Recent signature (short sliding window for rapid-fire)
     final signature = _messageSignature(message);
     if (_recentMessageSignatures.containsKey(signature)) {
+      AppLogging.messages(
+        '📨 Dedup Layer 3 (signature match): from=${message.from}',
+      );
       return true;
     }
     // Layer 4: Content-fingerprint match against full state.
     // Catches push-to-device replays where the push-delivered message has a
     // deterministic SHA1 id and the device-delivered copy has a random UUID,
     // so layers 1-3 miss it once the signature window expires.
-    if (_isContentDuplicate(message)) {
+    // Skip for user-sent messages — the user deliberately resending the same
+    // text is intentional, not a duplicate.
+    if (!message.sent && _isContentDuplicate(message)) {
       AppLogging.messages(
-        '📨 Content-dedupe caught duplicate: from=${message.from}, '
+        '📨 Dedup Layer 4 (content match): from=${message.from}, '
         'channel=${message.channel}, text="${message.text.substring(0, message.text.length.clamp(0, 20))}"',
       );
       return true;
     }
+    AppLogging.messages(
+      '📨 Dedup passed all layers: id=${message.id}, '
+      'packetId=${message.packetId}, stateSize=${state.length}',
+    );
     return false;
   }
 
@@ -3254,24 +3956,26 @@ class MessagesNotifier extends Notifier<List<Message>> {
   /// channel as an existing message in state whose timestamp is within
   /// [_contentDedupeWindow].
   ///
-  /// For channel messages, the `to` field is NOT compared because push
-  /// notifications may use the local node num as the recipient while the
-  /// actual mesh packet uses the broadcast address (0xFFFFFFFF).
+  /// For messages on non-null channels, the `to` field is NOT compared
+  /// because push notifications may use the local node num as the
+  /// recipient while the actual mesh packet uses the broadcast address
+  /// (0xFFFFFFFF). For DMs (channel is null), the `to` comparison is
+  /// applied to prevent false matches between different conversations.
   bool _isContentDuplicate(Message message) {
     for (final m in state) {
       if (m.from != message.from) continue;
       if (m.text != message.text) continue;
-      // Treat null and 0 as equivalent (primary channel)
-      final mCh = (m.channel == null || m.channel == 0) ? 0 : m.channel;
-      final msgCh = (message.channel == null || message.channel == 0)
-          ? 0
-          : message.channel;
+      // Normalize channels: treat null as -1 so that null != 0 (Primary
+      // Channel) — they are semantically different (unknown vs index 0).
+      final mCh = m.channel ?? -1;
+      final msgCh = message.channel ?? -1;
       if (mCh != msgCh) continue;
-      // For DM messages (channel 0 / null), also compare the recipient.
-      // For channel messages, skip the `to` comparison — push notifications
-      // may set `to` to the local node num while the mesh packet uses
-      // 0xFFFFFFFF (broadcast).
-      if (mCh == 0 && m.to != message.to) continue;
+      // For DM messages (channel is null / -1), also compare the recipient
+      // to prevent DMs to different nodes from being falsely deduped.
+      // For channel messages (channel >= 0), skip the `to` comparison —
+      // push notifications may set `to` to the local node num while the
+      // mesh packet uses 0xFFFFFFFF (broadcast).
+      if (mCh < 0 && m.to != message.to) continue;
       final diff = m.timestamp.difference(message.timestamp).abs();
       if (diff <= _contentDedupeWindow) {
         return true;
@@ -3286,98 +3990,15 @@ class MessagesNotifier extends Notifier<List<Message>> {
     _recordMessageSignature(message);
   }
 
-  /// Store an incoming tapback reaction linked to the original message.
-  ///
-  /// Maps the incoming emoji text to a [TapbackType] and finds the original
-  /// message by packet ID (replyId). The [MessageTapback] record is stored
-  /// via [TapbackStorageService] so that [TapbackDisplay] can render it.
-  void _storeIncomingTapback(Message message) {
-    final emoji = message.text.trim();
-    AppLogging.messages(
-      '🏷️ _storeIncomingTapback: emoji="$emoji", '
-      'from=${message.from}, replyId=${message.replyId}, '
-      'isEmoji=${message.isEmoji}',
-    );
-
-    if (emoji.isEmpty) {
-      AppLogging.messages('🏷️ _storeIncomingTapback ABORT: empty emoji text');
-      return;
-    }
-
-    // Find the original message by packetId matching the replyId
-    final allPacketIds = state
-        .where((m) => m.packetId != null)
-        .map((m) => m.packetId)
-        .toList();
-    AppLogging.messages(
-      '🏷️ _storeIncomingTapback: looking for packetId=${message.replyId} '
-      'in ${allPacketIds.length} messages with packetIds',
-    );
-
-    final originalMessage = state.firstWhereOrNull(
-      (m) => m.packetId == message.replyId,
-    );
-
-    if (originalMessage == null) {
-      AppLogging.messages(
-        '🏷️ _storeIncomingTapback ABORT: no message found with '
-        'packetId=${message.replyId}. '
-        'Available packetIds: ${allPacketIds.take(20).toList()}',
-      );
-      return;
-    }
-
-    AppLogging.messages(
-      '🏷️ _storeIncomingTapback: found original message '
-      'id=${originalMessage.id}, text="${originalMessage.text.length > 30 ? originalMessage.text.substring(0, 30) : originalMessage.text}"',
-    );
-
-    final tapback = MessageTapback(
-      messageId: originalMessage.id,
-      fromNodeNum: message.from,
-      emoji: emoji,
-    );
-
-    // Store asynchronously — fire and forget
-    final storage = ref.read(tapbackStorageProvider).value;
-    AppLogging.messages(
-      '🏷️ _storeIncomingTapback: storage=${storage != null ? "available" : "NULL"}',
-    );
-    if (storage != null) {
-      storage.addTapback(tapback).then((_) {
-        AppLogging.messages(
-          '🏷️ _storeIncomingTapback SUCCESS: stored $emoji from '
-          '${message.from} on message ${originalMessage.id}',
-        );
-        // Invalidate the tapbacks provider so widgets rebuild
-        ref.invalidate(messageTapbacksProvider(originalMessage.id));
-        AppLogging.messages(
-          '🏷️ _storeIncomingTapback: invalidated messageTapbacksProvider '
-          'for ${originalMessage.id}',
-        );
-      });
-    } else {
-      AppLogging.messages(
-        '🏷️ _storeIncomingTapback ABORT: TapbackStorageService not available',
-      );
-    }
-  }
-
-  /// Returns true if [text] looks like a single emoji (no ASCII letters
-  /// or digits, at most a few code points).  Used as a content-based
-  /// fallback to identify tapback messages that lack the is_emoji flag.
-  static bool _looksLikeEmoji(String text) {
-    if (text.isEmpty) return false;
-    // Tapback emojis are short: a single emoji grapheme is at most ~8
-    // UTF-16 code units (flag sequences, family ZWJ, etc.).
-    if (text.length > 8) return false;
-    // Every rune must be non-ASCII (emoji characters are > 127).
-    return text.runes.every((r) => r > 127);
+  Future<void> _persistHiddenTapback(Message message) async {
+    await _storage?.saveMessage(message);
+    _recordMessageSignature(message);
+    ref.read(messageTimelineEpochProvider.notifier).bump();
   }
 
   String _messageSignature(Message message) {
-    final target = message.channel != null && message.channel! > 0
-        ? 'channel:${message.channel}' // lint-allow: hardcoded-string
+    final target = message.isBroadcast
+        ? 'channel:${message.channel ?? 0}' // lint-allow: hardcoded-string
         : 'dm:${message.from == ref.read(myNodeNumProvider) ? message.to : message.from}';
     return '$target|${message.text}|${message.timestamp.millisecondsSinceEpoch}';
   }
@@ -3393,6 +4014,19 @@ class MessagesNotifier extends Notifier<List<Message>> {
   }
 
   void updateMessage(String messageId, Message updatedMessage) {
+    // Guard: never regress from delivered — a late status update
+    // (e.g. pending→sent arriving after ACK already set delivered)
+    // must not overwrite the terminal delivered state.
+    if (updatedMessage.status != MessageStatus.delivered) {
+      final current = state.firstWhereOrNull((m) => m.id == messageId);
+      if (current != null && current.status == MessageStatus.delivered) {
+        AppLogging.debug(
+          '📨 ⏭️ Skipping update that would downgrade delivered '
+          'message: $messageId (attempted ${updatedMessage.status.name})',
+        );
+        return;
+      }
+    }
     state = state.map((m) => m.id == messageId ? updatedMessage : m).toList();
     _storage?.saveMessage(updatedMessage);
   }
@@ -3486,6 +4120,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
       );
       var added = 0;
       for (final m in messages) {
+        if (m.isCanonicalTapback) continue;
         if (!state.any((s) => s.id == m.id)) {
           state = [...state, m];
           added++;
@@ -3513,6 +4148,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
     final total = all.length;
     var inserted = 0;
     for (final m in all) {
+      if (m.isCanonicalTapback) continue;
       if (!state.any((s) => s.id == m.id)) {
         state = [...state, m];
         inserted++;
@@ -3539,6 +4175,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
     var inserted = 0;
     for (final m in all) {
       if (!backgroundIds.contains(m.id)) continue;
+      if (m.isCanonicalTapback) continue;
       // ID-based dedup
       if (state.any((s) => s.id == m.id)) continue;
       // Content-based dedup (same sender, text, channel within 60 s)
@@ -3565,6 +4202,39 @@ class MessagesNotifier extends Notifier<List<Message>> {
 final messagesProvider = NotifierProvider<MessagesNotifier, List<Message>>(
   MessagesNotifier.new,
 );
+
+class MessageTimelineEpochNotifier extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  void bump() {
+    state++;
+  }
+}
+
+final messageTimelineEpochProvider =
+    NotifierProvider<MessageTimelineEpochNotifier, int>(
+      MessageTimelineEpochNotifier.new,
+    );
+
+/// Bounded DM resend and auto-retry coordinator.
+///
+/// Kept alive by [MessagesNotifier] which watches this provider in its
+/// [build] method, so the coordinator runs for the full lifetime of the
+/// messages provider — even when no conversation screen is open.
+///
+/// The coordinator is foreground-only: the internal [Timer] only fires
+/// while the app process is active.  On app restart the coordinator will
+/// reset any messages stuck in [MessageStatus.retrying] back to
+/// [MessageStatus.unconfirmed] so that auto-retry can resume from the
+/// next tick if still within the expiry window and attempt limit.
+final dmRetryCoordinatorProvider = Provider<DmRetryCoordinator>((ref) {
+  ref.keepAlive();
+  final coordinator = DmRetryCoordinator(ref);
+  coordinator.start();
+  ref.onDispose(coordinator.dispose);
+  return coordinator;
+});
 
 // Nodes
 class NodesNotifier extends Notifier<Map<int, MeshNode>> {
@@ -3760,24 +4430,23 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
   }
 
   Future<void> _init(ProtocolService protocol) async {
-    // Demo mode: seed sample nodes if enabled and storage is empty
-    if (DemoConfig.isEnabled && _storage != null) {
-      final existing = await _storage!.loadNodes();
-      if (existing.isEmpty) {
-        AppLogging.debug('${DemoConfig.modeLabel} Seeding demo nodes');
-        state = {for (final node in DemoData.sampleNodes) node.nodeNum: node};
-        return;
-      }
-    }
-
-    // Get persisted favorites/ignored from DeviceFavoritesService
-    final favoritesSet = _deviceFavorites?.favorites ?? <int>{};
+    // isIgnored is still managed by DeviceFavoritesService (protocol service
+    // does not read it from NodeInfo yet). isFavorite follows the iOS pattern:
+    // it lives directly on the persisted MeshNode record and is updated from
+    // NodeInfo packets — no separate cache layer.
     final ignoredSet = _deviceFavorites?.ignored ?? <int>{};
     final identities = ref.read(nodeIdentityProvider);
+
+    // When _storage is null the entire method body runs synchronously
+    // (no awaits) before build() returns, so `state` is not yet
+    // initialised.  Track whether we hit an await so the protocol-merge
+    // below can safely read `state` only when it is readable.
+    var stateReadable = false;
 
     // Load persisted nodes (with their positions) first
     if (_storage != null) {
       final savedNodes = await _storage!.loadNodes();
+      if (!ref.mounted) return;
       if (savedNodes.isNotEmpty) {
         AppLogging.nodes('Loaded ${savedNodes.length} nodes from storage');
         final nodeMap = <int, MeshNode>{};
@@ -3788,11 +4457,10 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
             node = sanitized;
             _scheduleSave(node);
           }
-          // Apply persisted favorites/ignored status from DeviceFavoritesService
-          node = node.copyWith(
-            isFavorite: favoritesSet.contains(node.nodeNum),
-            isIgnored: ignoredSet.contains(node.nodeNum),
-          );
+          // isFavorite: trust the value persisted on the MeshNode itself (iOS
+          // CoreData pattern). isIgnored still comes from DeviceFavoritesService
+          // because the protocol service doesn't read it from NodeInfo yet.
+          node = node.copyWith(isIgnored: ignoredSet.contains(node.nodeNum));
           node = _mergeIdentity(node, identities[node.nodeNum]);
           nodeMap[node.nodeNum] = node;
           if (node.hasPosition) {
@@ -3804,14 +4472,30 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
         }
         state = nodeMap;
       }
+      // We hit at least one await (_storage!.loadNodes()), so build()
+      // has returned and `state` is now safe to read.
+      stateReadable = true;
     }
 
     // Then merge with existing nodes from protocol service
     // Protocol nodes take precedence but preserve stored positions if new nodes don't have them
     final protocolNodes = Map<int, MeshNode>.from(protocol.nodes);
+
+    // NOTE: No replaceAllFavorites / favorites-cache sync here.
+    // Following the iOS CoreData pattern, isFavorite lives directly on the
+    // MeshNode record. The stored node already carries the correct value from
+    // the previous session; incoming NodeInfo packets update it via the stream
+    // listener below. There is no separate "favorites sidecar" to reconcile.
+
+    // After a storage await, state may contain nodes added by
+    // addOrUpdateNode() during the async gap — use it.  On the
+    // synchronous path (_storage == null) state is uninitialised,
+    // so start from an empty map.
+    final baseNodes = stateReadable ? state : <int, MeshNode>{};
+    final updatedState = Map<int, MeshNode>.from(baseNodes);
     for (final entry in protocolNodes.entries) {
       var node = entry.value;
-      final existing = state[entry.key];
+      final existing = baseNodes[entry.key];
       if (existing != null) {
         // Preserve stored properties that don't come from protocol
         node = node.copyWith(
@@ -3819,13 +4503,21 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
           latitude: node.hasPosition ? node.latitude : existing.latitude,
           longitude: node.hasPosition ? node.longitude : existing.longitude,
           altitude: node.hasPosition ? node.altitude : existing.altitude,
-          // Always preserve user preferences from DeviceFavoritesService
-          isFavorite: favoritesSet.contains(node.nodeNum),
+          // isFavorite: OR the protocol value with the stored value.
+          // Protocol preserves isFavorite via copyWith for non-NodeInfo packets
+          // (position, telemetry), and sets it from nodeInfo.isFavorite for
+          // NodeInfo packets. OR-ing ensures a stored favourite is not lost
+          // when the protocol snapshot was built from a placeholder node
+          // (hardcoded false) whose NodeInfo hasn't arrived yet.
+          isFavorite: node.isFavorite || existing.isFavorite,
+          // isIgnored still comes from DeviceFavoritesService (protocol
+          // service does not read isIgnored from NodeInfo yet).
           isIgnored: ignoredSet.contains(node.nodeNum),
           // Preserve stored telemetry that protocol nodes from the
           // initial NodeDB dump don't carry. These fields arrive via
           // later telemetry packets; without this the stored last-known
           // values are clobbered with null on every reconnect.
+          batteryLevel: node.batteryLevel ?? existing.batteryLevel,
           temperature: node.temperature ?? existing.temperature,
           humidity: node.humidity ?? existing.humidity,
           voltage: node.voltage ?? existing.voltage,
@@ -3898,17 +4590,17 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
           precisionBits: node.precisionBits ?? existing.precisionBits,
         );
       } else {
-        // New node - apply favorites/ignored from service
-        node = node.copyWith(
-          isFavorite: favoritesSet.contains(node.nodeNum),
-          isIgnored: ignoredSet.contains(node.nodeNum),
-        );
+        // New node — isFavorite comes from the protocol node directly
+        // (set by NodeInfo or hardcoded false for placeholders).
+        // isIgnored comes from DeviceFavoritesService.
+        node = node.copyWith(isIgnored: ignoredSet.contains(node.nodeNum));
       }
       node = _stripBleNamesIfNeeded(node);
       node = _mergeIdentity(node, identities[node.nodeNum]);
-      state = {...state, entry.key: node};
+      updatedState[entry.key] = node;
       _logFallbackIfNeeded(node);
     }
+    state = updatedState;
 
     // Compute distances now that all nodes (including myNode) are loaded.
     final myNodeNum = ref.read(myNodeNumProvider);
@@ -3925,8 +4617,8 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
       final isNewNode = !state.containsKey(node.nodeNum);
       final existing = state[node.nodeNum];
 
-      // Get latest favorites/ignored status
-      final currentFavorites = _deviceFavorites?.favorites ?? <int>{};
+      // isIgnored is still managed by DeviceFavoritesService (protocol
+      // service does not read it from NodeInfo yet).
       final currentIgnored = _deviceFavorites?.ignored ?? <int>{};
 
       if (existing != null) {
@@ -3934,23 +4626,46 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
         // The protocol service emits MeshNode via copyWith, so fields
         // already on the node are preserved. But position and user
         // preferences need explicit merging.
+        //
+        // Telemetry fields (battery, voltage, etc.) are also preserved
+        // from existing when the incoming node lacks them. While the
+        // protocol's _nodes map usually carries these via copyWith,
+        // timing windows during _init re-invocations or placeholder
+        // emissions can produce nodes without telemetry. Without this
+        // preservation, battery stats become stale and only recover
+        // on reconnect (which re-populates _nodes from scratch).
         node = node.copyWith(
           // Preserve position if new node doesn't have one
           latitude: node.hasPosition ? node.latitude : existing.latitude,
           longitude: node.hasPosition ? node.longitude : existing.longitude,
           altitude: node.hasPosition ? node.altitude : existing.altitude,
-          // Always preserve user preferences from DeviceFavoritesService
-          isFavorite: currentFavorites.contains(node.nodeNum),
+          // iOS CoreData pattern: isFavorite lives on the node record.
+          // Protocol preserves it via copyWith for non-NodeInfo packets
+          // and sets it from nodeInfo.isFavorite for NodeInfo packets.
+          // OR with existing prevents a placeholder node (hardcoded false)
+          // from clobbering a stored favourite whose NodeInfo hasn't
+          // arrived yet. Explicit user unfavourite goes through
+          // addOrUpdateNode(isFavorite: false), bypassing this listener.
+          isFavorite: node.isFavorite || existing.isFavorite,
           isIgnored: currentIgnored.contains(node.nodeNum),
           // Preserve firstHeard — always keep the earliest value
           firstHeard: existing.firstHeard ?? node.firstHeard,
+          // Preserve telemetry from existing state when incoming node
+          // lacks it (e.g. placeholder emissions, _updateNodeLastHeard
+          // before _handleTelemetry on the same packet, or _init race
+          // conditions during provider stabilization).
+          batteryLevel: node.batteryLevel ?? existing.batteryLevel,
+          voltage: node.voltage ?? existing.voltage,
+          channelUtilization:
+              node.channelUtilization ?? existing.channelUtilization,
+          airUtilTx: node.airUtilTx ?? existing.airUtilTx,
+          uptimeSeconds: node.uptimeSeconds ?? existing.uptimeSeconds,
+          temperature: node.temperature ?? existing.temperature,
+          humidity: node.humidity ?? existing.humidity,
         );
       } else {
-        // New node - apply favorites/ignored from service
-        node = node.copyWith(
-          isFavorite: currentFavorites.contains(node.nodeNum),
-          isIgnored: currentIgnored.contains(node.nodeNum),
-        );
+        // New node — isFavorite comes from protocol directly.
+        node = node.copyWith(isIgnored: currentIgnored.contains(node.nodeNum));
       }
 
       node = _stripBleNamesIfNeeded(node);
@@ -4287,7 +5002,13 @@ final unreadMessagesCountProvider = Provider<int>((ref) {
   if (myNodeNum == null) return 0;
 
   return messages
-      .where((m) => !m.isEmoji && m.received && m.from != myNodeNum && !m.read)
+      .where(
+        (m) =>
+            !m.isCanonicalTapback &&
+            m.received &&
+            m.from != myNodeNum &&
+            !m.read,
+      )
       .length;
 });
 
@@ -4307,7 +5028,7 @@ final unreadDmCountProvider = Provider<int>((ref) {
   return messages
       .where(
         (m) =>
-            !m.isEmoji &&
+            !m.isCanonicalTapback &&
             m.received &&
             m.from != myNodeNum &&
             !m.read &&
@@ -4352,7 +5073,7 @@ final channelUnreadCountsProvider = Provider<Map<int, int>>((ref) {
   final counts = <int, int>{};
   for (final m in messages) {
     // Skip tapback emoji reactions — they are metadata, not messages
-    if (m.isEmoji) continue;
+    if (m.isCanonicalTapback) continue;
     if (m.received && m.from != myNodeNum && !m.read && m.isBroadcast) {
       final ch = m.channel ?? 0;
       counts[ch] = (counts[ch] ?? 0) + 1;
@@ -4538,11 +5259,17 @@ class NodeDiscoveryCooldownNotifier
         final playSound = settings.notificationSoundEnabled;
         final vibrate = settings.notificationVibrationEnabled;
 
-        await NotificationService().showBatchedNodesNotification(
-          nodes: nodes,
-          playSound: playSound,
-          vibrate: vibrate,
-        );
+        try {
+          await NotificationService().showBatchedNodesNotification(
+            nodes: nodes,
+            playSound: playSound,
+            vibrate: vibrate,
+          );
+        } catch (e) {
+          AppLogging.notifications(
+            '🔔 Error showing batched node notification: $e',
+          );
+        }
       }
     }
 
@@ -4974,6 +5701,10 @@ final offlineQueueProvider = Provider<OfflineQueueService>((ref) {
   final service = OfflineQueueService();
   final protocol = ref.watch(protocolServiceProvider);
 
+  ref.onDispose(() {
+    service.dispose();
+  });
+
   // Initialize with send callback that uses pre-tracking
   service.initialize(
     sendCallback:
@@ -5197,50 +5928,89 @@ class NotificationBatchNotifier extends Notifier<NotificationBatchState> {
     final settings = settingsAsync.value;
     final playSound = settings?.notificationSoundEnabled ?? true;
     final vibrate = settings?.notificationVibrationEnabled ?? true;
+    final masterEnabled = settings?.notificationsEnabled ?? true;
+    final channelEnabled = settings?.channelMessageNotificationsEnabled ?? true;
+    final dmEnabled = settings?.directMessageNotificationsEnabled ?? true;
+
+    // If master notifications toggle is off, skip everything
+    if (!masterEnabled) {
+      AppLogging.notifications(
+        '🔔 Master notifications disabled, skipping flush',
+      );
+      return;
+    }
+
+    // Re-check category settings — they may have changed since enqueue
+    final filteredMessages = messages.where((msg) {
+      if (msg.isChannelMessage) return channelEnabled;
+      return dmEnabled;
+    }).toList();
+
+    if (filteredMessages.length < messages.length) {
+      final channelFiltered = messages
+          .where((m) => m.isChannelMessage && !channelEnabled)
+          .length;
+      final dmFiltered = messages
+          .where((m) => !m.isChannelMessage && !dmEnabled)
+          .length;
+      AppLogging.notifications(
+        '🔔 Filtered $channelFiltered channel and $dmFiltered DM notifications (settings changed since queue)',
+      );
+    }
+
+    if (filteredMessages.isEmpty && nodes.isEmpty) return;
 
     final notificationService = NotificationService();
 
     // Show batched notifications
-    if (messages.length == 1) {
-      // Single message - show regular notification
-      final msg = messages.first;
-      if (msg.isChannelMessage) {
-        await notificationService.showChannelMessageNotification(
-          senderName: msg.senderName,
-          senderShortName: msg.senderShortName,
-          channelName: msg.channelName ?? 'Channel',
-          message: msg.message,
-          channelIndex: msg.channelIndex!,
-          fromNodeNum: msg.fromNodeNum,
-          playSound: playSound,
-          vibrate: vibrate,
-        );
-      } else {
-        await notificationService.showNewMessageNotification(
-          senderName: msg.senderName,
-          senderShortName: msg.senderShortName,
-          message: msg.message,
-          fromNodeNum: msg.fromNodeNum,
+    try {
+      if (filteredMessages.length == 1) {
+        // Single message - show regular notification
+        final msg = filteredMessages.first;
+        if (msg.isChannelMessage) {
+          await notificationService.showChannelMessageNotification(
+            senderName: msg.senderName,
+            senderShortName: msg.senderShortName,
+            channelName: msg.channelName ?? 'Channel',
+            message: msg.message,
+            channelIndex: msg.channelIndex!,
+            fromNodeNum: msg.fromNodeNum,
+            replyPacketId: msg.replyPacketId,
+            playSound: playSound,
+            vibrate: vibrate,
+          );
+        } else {
+          await notificationService.showNewMessageNotification(
+            senderName: msg.senderName,
+            senderShortName: msg.senderShortName,
+            message: msg.message,
+            fromNodeNum: msg.fromNodeNum,
+            replyPacketId: msg.replyPacketId,
+            playSound: playSound,
+            vibrate: vibrate,
+          );
+        }
+      } else if (filteredMessages.isNotEmpty) {
+        // Multiple messages - show batched
+        await notificationService.showBatchedMessagesNotification(
+          messages: filteredMessages,
           playSound: playSound,
           vibrate: vibrate,
         );
       }
-    } else if (messages.isNotEmpty) {
-      // Multiple messages - show batched
-      await notificationService.showBatchedMessagesNotification(
-        messages: messages,
-        playSound: playSound,
-        vibrate: vibrate,
-      );
-    }
 
-    if (nodes.isNotEmpty) {
-      // Nodes - batched handles single vs multiple internally
-      await notificationService.showBatchedNodesNotification(
-        nodes: nodes,
-        playSound: playSound,
-        vibrate: vibrate,
-      );
+      if (nodes.isNotEmpty) {
+        // Nodes - batched handles single vs multiple internally
+        await notificationService.showBatchedNodesNotification(
+          nodes: nodes,
+          playSound: playSound,
+          vibrate: vibrate,
+        );
+      }
+    } catch (e) {
+      // Platform channel errors from the notification plugin are non-critical.
+      // Log and swallow so they don't propagate as unhandled exceptions.
+      AppLogging.notifications('🔔 Error showing batched notification: $e');
     }
   }
 

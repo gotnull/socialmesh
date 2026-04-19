@@ -9,7 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+import '../../utils/time_format.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/theme.dart';
@@ -232,7 +232,7 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen>
     final routesNotifier = ref.read(routesProvider.notifier);
 
     try {
-      final result = await FilePicker.platform.pickFiles(
+      final result = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['gpx'],
         withData: true,
@@ -476,7 +476,7 @@ class _RouteCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateFormat = DateFormat('MMM d, yyyy • h:mm a');
+    final dateFormat = AppTimeFormat.fullDateBulletTime(context);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),

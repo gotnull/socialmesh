@@ -87,6 +87,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
 
   // Step 2: Name
   final _nameController = TextEditingController();
+  final _nameFocusNode = FocusNode();
+  final _outerScrollController = ScrollController();
 
   // Step 3: Data selection (or Actions for Quick Actions template)
   final Set<String> _selectedBindings = {};
@@ -168,6 +170,25 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
     _currentStep = isEditing ? 1 : 0;
     _pageController = PageController(initialPage: _currentStep);
     _initFromSchema();
+
+    // When the name field gains focus, scroll the outer CustomScrollView
+    // so the live preview is pushed off-screen. On smaller iPhones the preview
+    // eats so much vertical space that the keyboard overlaps the text field.
+    _nameFocusNode.addListener(_scrollToNameField);
+  }
+
+  void _scrollToNameField() {
+    if (!_outerScrollController.hasClients) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _outerScrollController.animateTo(
+        _nameFocusNode.hasFocus
+            ? _outerScrollController.position.maxScrollExtent
+            : 0.0,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
+    });
   }
 
   void _initFromSchema() {
@@ -221,6 +242,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
       );
     } else if (tags.contains('graph')) {
       templateFromTags = _getTemplates().firstWhere((t) => t.id == 'graph');
+    } else if (tags.contains('distribution')) {
+      templateFromTags = _getTemplates().firstWhere(
+        (t) => t.id == 'distribution',
+      );
     }
 
     if (templateFromTags != null) {
@@ -293,6 +318,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
   _WidgetTemplate? _detectTemplateFromStructure(ElementSchema root) {
     final templates = _getTemplates();
     bool hasChart = false;
+    bool hasDistributionChart = false;
     bool hasRadialGauge =
         false; // Radial/arc/battery/signal gauges = gauge template
     bool hasLinearGauge = false; // Linear gauges = status template
@@ -301,8 +327,13 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
 
     void scanElement(ElementSchema element) {
       if (element.type == ElementType.chart) {
-        hasChart = true;
-        AppLogging.widgets('Wizard: Found chart element');
+        if (element.chartType == ChartType.distribution) {
+          hasDistributionChart = true;
+          AppLogging.widgets('Wizard: Found distribution chart element');
+        } else {
+          hasChart = true;
+          AppLogging.widgets('Wizard: Found chart element');
+        }
       }
       if (element.type == ElementType.gauge) {
         // CRITICAL: Distinguish between gauge types
@@ -332,14 +363,19 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
     scanElement(root);
 
     AppLogging.widgets(
-      'Wizard: Structure detection - chart=$hasChart, radialGauge=$hasRadialGauge, '
-      'linearGauge=$hasLinearGauge, map=$hasMap, action=$hasAction, '
-      'bindings=${_selectedBindings.length}',
+      'Wizard: Structure detection - chart=$hasChart, distributionChart=$hasDistributionChart, '
+      'radialGauge=$hasRadialGauge, linearGauge=$hasLinearGauge, map=$hasMap, '
+      'action=$hasAction, bindings=${_selectedBindings.length}',
     );
 
     // Determine template based on detected elements
     // Order matters - more specific detections first
-    if (hasChart) {
+    if (hasDistributionChart) {
+      AppLogging.widgets(
+        'Wizard: Detected as DISTRIBUTION template (has distribution chart)',
+      );
+      return templates.firstWhere((t) => t.id == 'distribution');
+    } else if (hasChart) {
       AppLogging.widgets('Wizard: Detected as GRAPH template (has chart)');
       return templates.firstWhere((t) => t.id == 'graph');
     } else if (hasRadialGauge) {
@@ -873,67 +909,73 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
   void dispose() {
     _pageController.dispose();
     _nameController.dispose();
+    _nameFocusNode.dispose();
+    _outerScrollController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.initialSchema != null;
-    return GlassScaffold(
-      title: _steps[_currentStep].title,
-      leading: _currentStep > 0
-          ? IconButton(
-              icon: Icon(Icons.arrow_back, color: context.accentColor),
-              onPressed: _goBack,
-            )
-          : null,
-      actions: [
-        IconButton(icon: const Icon(Icons.close), onPressed: _handleClose),
-      ],
-      slivers: [
-        // Progress indicator
-        SliverToBoxAdapter(child: _buildProgressIndicator()),
-        // Step subtitle
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-            child: Text(
-              _steps[_currentStep].subtitle,
-              style: TextStyle(color: context.textSecondary, fontSize: 14),
-              textAlign: TextAlign.center,
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: GlassScaffold(
+        controller: _outerScrollController,
+        title: _steps[_currentStep].title,
+        leading: _currentStep > 0
+            ? IconButton(
+                icon: Icon(Icons.arrow_back, color: context.accentColor),
+                onPressed: _goBack,
+              )
+            : null,
+        actions: [
+          IconButton(icon: const Icon(Icons.close), onPressed: _handleClose),
+        ],
+        slivers: [
+          // Progress indicator
+          SliverToBoxAdapter(child: _buildProgressIndicator()),
+          // Step subtitle
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+              child: Text(
+                _steps[_currentStep].subtitle,
+                style: TextStyle(color: context.textSecondary, fontSize: 14),
+                textAlign: TextAlign.center,
+              ),
             ),
           ),
-        ),
-        // Live preview (shown after step 1)
-        if (_currentStep > 0)
-          SliverToBoxAdapter(child: _buildLivePreviewPanel()),
-        // Page content + Bottom actions
-        SliverFillRemaining(
-          hasScrollBody: true,
-          child: Column(
-            children: [
-              Expanded(
-                child: PageView(
-                  controller: _pageController,
-                  physics: const NeverScrollableScrollPhysics(),
-                  onPageChanged: (index) =>
-                      setState(() => _currentStep = index),
-                  children: [
-                    _buildTemplateStep(),
-                    _buildNameStep(),
-                    _selectedTemplate?.id == 'actions'
-                        ? _buildActionsStep()
-                        : _buildDataStep(),
-                    _buildAppearanceStep(),
-                  ],
+          // Live preview (shown after step 1)
+          if (_currentStep > 0)
+            SliverToBoxAdapter(child: _buildLivePreviewPanel()),
+          // Page content + Bottom actions
+          SliverFillRemaining(
+            hasScrollBody: true,
+            child: Column(
+              children: [
+                Expanded(
+                  child: PageView(
+                    controller: _pageController,
+                    physics: const NeverScrollableScrollPhysics(),
+                    onPageChanged: (index) =>
+                        setState(() => _currentStep = index),
+                    children: [
+                      _buildTemplateStep(),
+                      _buildNameStep(),
+                      _selectedTemplate?.id == 'actions'
+                          ? _buildActionsStep()
+                          : _buildDataStep(),
+                      _buildAppearanceStep(),
+                    ],
+                  ),
                 ),
-              ),
-              // Bottom actions
-              _buildBottomActions(isEditing),
-            ],
+                // Bottom actions
+                _buildBottomActions(isEditing),
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -1274,6 +1316,17 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
         suggestedBindings: ['node.rssi', 'node.snr'],
       ),
       _WidgetTemplate(
+        id: 'distribution',
+        name: context.l10n.widgetBuilderDistributionTemplate,
+        description: context.l10n.widgetBuilderDistributionTemplateDesc,
+        icon: Icons.bar_chart,
+        color: ChartColors.cyan,
+        suggestedBindings: [
+          'network.hardwareModelDistribution',
+          'network.roleDistribution',
+        ],
+      ),
+      _WidgetTemplate(
         id: 'blank',
         name: 'Start from Scratch',
         description:
@@ -1305,6 +1358,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
         TextField(
           maxLength: 100,
           controller: _nameController,
+          focusNode: _nameFocusNode,
           style: TextStyle(color: context.textPrimary, fontSize: 16),
           decoration: InputDecoration(
             hintText: context.l10n.widgetBuilderNameHint,
@@ -1517,6 +1571,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
       'gauge' => 3, // Gauge shows up to 3 values horizontally
       'graph' => 2, // Graph can show up to 2 data series stacked vertically
       'info' => 4, // Info cards are text-focused
+      'distribution' => 1, // One distribution at a time (hardware OR role)
       _ => 6, // Default
     };
   }
@@ -1636,6 +1691,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
     // For gauge and graph widgets, only show numeric types
     final isGaugeWidget = _selectedTemplate?.id == 'gauge';
     final isGraphWidget = _selectedTemplate?.id == 'graph';
+    final isDistributionWidget = _selectedTemplate?.id == 'distribution';
     final numericOnly = isGaugeWidget || isGraphWidget;
 
     // Track labels to filter out aliases (device.* that duplicate node.* bindings)
@@ -1646,6 +1702,12 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
         // Filter by value type for gauge/graph widgets - only numeric
         if (numericOnly) {
           if (binding.valueType != int && binding.valueType != double) {
+            continue;
+          }
+        }
+        // Distribution widgets only show Map<String, int> bindings
+        if (isDistributionWidget) {
+          if (binding.valueType != Map<String, int>) {
             continue;
           }
         }
@@ -1852,6 +1914,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
     final isActionsTemplate = _selectedTemplate?.id == 'actions';
     final isGraphTemplate = _selectedTemplate?.id == 'graph';
     final isGaugeTemplate = _selectedTemplate?.id == 'gauge';
+    final isDistributionTemplate = _selectedTemplate?.id == 'distribution';
     final isEnvironmentTemplate = _selectedTemplate?.id == 'environment';
     final isLocationTemplate = _selectedTemplate?.id == 'location';
     // Hide accent color for:
@@ -1896,7 +1959,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
         ],
         // Layout style (only for data widgets, not actions, graphs, or gauges)
         // Gauge widgets don't need layout options as they have a fixed layout
-        if (!isActionsTemplate && !isGraphTemplate && !isGaugeTemplate) ...[
+        if (!isActionsTemplate &&
+            !isGraphTemplate &&
+            !isGaugeTemplate &&
+            !isDistributionTemplate) ...[
           Text(
             'Layout',
             style: TextStyle(
@@ -4239,11 +4305,19 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
             _selectedTemplate?.name ??
             'My Widget'; // lint-allow: hardcoded-string
       }
-      // Pre-select suggested bindings (only for new widgets)
-      if (_currentStep == 1 &&
+      // Pre-select suggested bindings when leaving template step
+      // (so the Name step already has live preview data)
+      if (_currentStep == 0 &&
           _selectedTemplate != null &&
-          widget.initialSchema == null) {
-        _selectedBindings.addAll(_selectedTemplate!.suggestedBindings);
+          widget.initialSchema == null &&
+          _selectedBindings.isEmpty) {
+        // For distribution, only add the first suggested binding
+        final suggested = _selectedTemplate!.suggestedBindings;
+        if (_selectedTemplate!.id == 'distribution' && suggested.isNotEmpty) {
+          _selectedBindings.add(suggested.first);
+        } else {
+          _selectedBindings.addAll(suggested);
+        }
       }
 
       _pageController.nextPage(
@@ -4750,6 +4824,14 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
         style: const StyleSchema(padding: 12, spacing: 4),
         children: children,
       );
+    } else if (_selectedTemplate?.id == 'distribution') {
+      // Distribution template: column layout for the distribution chart
+      AppLogging.widgets('[SCHEMA_BUILD] Using DISTRIBUTION layout (column)');
+      root = ElementSchema(
+        type: ElementType.column,
+        style: const StyleSchema(padding: 12, spacing: 8),
+        children: children,
+      );
     } else if (_layoutStyle == _LayoutStyle.horizontal) {
       AppLogging.widgets(
         '[SCHEMA_BUILD] Using HORIZONTAL layout, children: ${children.length}',
@@ -4911,6 +4993,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
     return switch (_selectedTemplate?.id) {
       'gauge' => _buildGaugeElements(name),
       'graph' => _buildGraphElements(name),
+      'distribution' => _buildDistributionElements(name),
       'info' => _buildInfoCardElements(name),
       'location' => _buildLocationElements(name),
       'environment' => _buildEnvironmentElements(name),
@@ -5095,6 +5178,37 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
           crossAxisAlignment: CrossAxisAlignmentOption.center,
         ),
         children: gaugeColumns,
+      ),
+    ];
+  }
+
+  /// Distribution: Horizontal bar chart from `Map<String, int>` binding
+  List<ElementSchema> _buildDistributionElements(String name) {
+    AppLogging.widgets('[DISTRIBUTION] === _buildDistributionElements ===');
+    AppLogging.widgets('[DISTRIBUTION] _selectedBindings=$_selectedBindings');
+
+    if (_selectedBindings.isEmpty) {
+      return [
+        ElementSchema(
+          type: ElementType.text,
+          text: 'Select a distribution binding', // lint-allow: hardcoded-string
+          style: StyleSchema(
+            textColor: _colorToHex(context.textSecondary),
+            fontSize: 13,
+          ),
+        ),
+      ];
+    }
+
+    // Distribution uses a single binding (the first one)
+    final bindingPath = _selectedBindings.first;
+    AppLogging.widgets('[DISTRIBUTION] Using binding: $bindingPath');
+
+    return [
+      ElementSchema(
+        type: ElementType.chart,
+        chartType: ChartType.distribution,
+        binding: BindingSchema(path: bindingPath),
       ),
     ];
   }

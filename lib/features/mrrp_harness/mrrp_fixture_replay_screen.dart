@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/animations.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/section_header.dart';
 import '../../services/haptic_service.dart';
@@ -519,8 +520,8 @@ class MrrpFixtureReplayScreen extends ConsumerStatefulWidget {
 
 class _MrrpFixtureReplayScreenState
     extends ConsumerState<MrrpFixtureReplayScreen> {
-  final List<FixtureReplayResult> _vectorResults = [];
-  final List<FixtureReplayResult> _fuzzResults = [];
+  final Map<int, FixtureReplayResult> _vectorResults = {};
+  final Map<int, FixtureReplayResult> _fuzzResults = {};
 
   void _replaySingleVector(int index) {
     final fixture = _testVectors[index];
@@ -558,17 +559,7 @@ class _MrrpFixtureReplayScreenState
     );
 
     setState(() {
-      if (index < _vectorResults.length) {
-        _vectorResults[index] = result;
-      } else {
-        // Pad if needed
-        while (_vectorResults.length < index) {
-          _vectorResults.add(
-            FixtureReplayResult(name: '', decodeSuccess: false),
-          );
-        }
-        _vectorResults.add(result);
-      }
+      _vectorResults[index] = result;
     });
   }
 
@@ -608,14 +599,7 @@ class _MrrpFixtureReplayScreenState
     );
 
     setState(() {
-      if (index < _fuzzResults.length) {
-        _fuzzResults[index] = result;
-      } else {
-        while (_fuzzResults.length < index) {
-          _fuzzResults.add(FixtureReplayResult(name: '', decodeSuccess: false));
-        }
-        _fuzzResults.add(result);
-      }
+      _fuzzResults[index] = result;
     });
   }
 
@@ -642,12 +626,14 @@ class _MrrpFixtureReplayScreenState
     );
 
     setState(() {
-      _vectorResults
-        ..clear()
-        ..addAll(vectorResults);
-      _fuzzResults
-        ..clear()
-        ..addAll(fuzzResults);
+      _vectorResults.clear();
+      for (var i = 0; i < vectorResults.length; i++) {
+        _vectorResults[i] = vectorResults[i];
+      }
+      _fuzzResults.clear();
+      for (var i = 0; i < fuzzResults.length; i++) {
+        _fuzzResults[i] = fuzzResults[i];
+      }
     });
   }
 
@@ -735,7 +721,7 @@ class _MrrpFixtureReplayScreenState
   Widget build(BuildContext context) {
     final l10n = context.l10n;
 
-    final allResults = [..._vectorResults, ..._fuzzResults];
+    final allResults = [..._vectorResults.values, ..._fuzzResults.values];
     final hasResults = allResults.isNotEmpty;
     final passed = allResults.where((r) => r.passed).length;
     final total = allResults.length;
@@ -764,7 +750,15 @@ class _MrrpFixtureReplayScreenState
                   color: passed == total
                       ? SemanticColors.success.withValues(alpha: 0.15)
                       : SemanticColors.error.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(AppTheme.radius8),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
+                  border: Border.all(
+                    color:
+                        (passed == total
+                                ? SemanticColors.success
+                                : SemanticColors.error)
+                            .withValues(alpha: 0.3),
+                    width: 0.5,
+                  ),
                 ),
                 child: Text(
                   l10n.mrrpHarnessFixtureSummary(passed, total),
@@ -793,9 +787,7 @@ class _MrrpFixtureReplayScreenState
           sliver: SliverList(
             delegate: SliverChildBuilderDelegate((context, index) {
               final fixture = _testVectors[index];
-              final result = index < _vectorResults.length
-                  ? _vectorResults[index]
-                  : null;
+              final result = _vectorResults[index];
 
               if (result != null) {
                 return MrrpFixtureResultTile(result: result);
@@ -823,9 +815,7 @@ class _MrrpFixtureReplayScreenState
           sliver: SliverList(
             delegate: SliverChildBuilderDelegate((context, index) {
               final fixture = _fuzzCases[index];
-              final result = index < _fuzzResults.length
-                  ? _fuzzResults[index]
-                  : null;
+              final result = _fuzzResults[index];
 
               if (result != null) {
                 return MrrpFixtureResultTile(result: result);
@@ -867,20 +857,33 @@ class _UnplayedFixtureTile extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
-      child: Material(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius8),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(AppTheme.radius8),
-          onTap: onReplay,
+      child: BouncyTap(
+        onTap: onReplay,
+        child: Container(
+          decoration: BoxDecoration(
+            color: context.card,
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
+            border: Border.all(
+              color: context.border.withValues(alpha: 0.5),
+              width: 0.5,
+            ),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(AppTheme.spacing12),
             child: Row(
               children: [
-                Icon(
-                  Icons.play_circle_outline,
-                  size: 20,
-                  color: context.accentColor,
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: context.accentColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
+                  ),
+                  child: Icon(
+                    Icons.play_circle_outline,
+                    size: 18,
+                    color: context.accentColor,
+                  ),
                 ),
                 const SizedBox(width: AppTheme.spacing8),
                 Expanded(
@@ -889,8 +892,11 @@ class _UnplayedFixtureTile extends StatelessWidget {
                     children: [
                       Text(
                         name,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        style: TextStyle(
+                          fontSize: 14,
                           fontWeight: FontWeight.w600,
+                          fontFamily: AppTheme.fontFamily,
+                          color: context.textPrimary,
                         ),
                       ),
                       Text(

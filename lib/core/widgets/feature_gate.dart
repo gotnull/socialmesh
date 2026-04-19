@@ -100,11 +100,12 @@ class FeatureGate extends ConsumerWidget {
         'This feature is currently unavailable'; // lint-allow: hardcoded-string
 
     final l10n = context.l10n;
+    final navigator = Navigator.of(context);
     showActionSnackBar(
       context,
       reason,
       actionLabel: l10n.actionConnect,
-      onAction: () => Navigator.of(context).pushNamed('/scanner'),
+      onAction: () => navigator.pushNamed('/scanner'),
       type: SnackBarType.warning,
       duration: const Duration(seconds: 2),
     );
@@ -257,11 +258,12 @@ class CommandButton extends ConsumerWidget {
 
   void _showDisconnectedMessage(BuildContext context) {
     final l10n = context.l10n;
+    final navigator = Navigator.of(context);
     showActionSnackBar(
       context,
       'Connect device to use this feature', // lint-allow: hardcoded-string
       actionLabel: l10n.actionConnect,
-      onAction: () => Navigator.of(context).pushNamed('/scanner'),
+      onAction: () => navigator.pushNamed('/scanner'),
       type: SnackBarType.warning,
     );
   }

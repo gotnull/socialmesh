@@ -74,6 +74,19 @@ class _RestorePurchasesButtonState extends ConsumerState<RestorePurchasesButton>
       if (!mounted) return;
     }
 
+    // Check whether the underlying service hit PaymentPendingError during
+    // this restore — the store may have a receipt the user thinks of as a
+    // valid purchase but RevenueCat has not yet accepted. Surface a helpful
+    // message instead of the misleading "no purchases found" fallback.
+    bool hadPendingPayment = false;
+    try {
+      final service = await ref.read(subscriptionServiceProvider.future);
+      hadPendingPayment = service.lastRestoreHadPendingPayment;
+    } on Object {
+      // ref may be disposed or the provider unavailable — fall through
+      // with hadPendingPayment = false.
+    }
+
     // Post-frame callbacks avoid BuildContext use across async gaps
     safePostFrame(() {
       if (success && restoredNew) {
@@ -82,6 +95,12 @@ class _RestorePurchasesButtonState extends ConsumerState<RestorePurchasesButton>
       } else if (success) {
         // Purchases exist but none were new
         showInfoSnackBar(context, context.l10n.restorePurchasesAlreadyActive);
+      } else if (hadPendingPayment) {
+        // Store has a pending receipt — explain rather than say "none".
+        AppLogging.subscriptions(
+          '[RestorePurchases] Showing pending-payment message to user',
+        );
+        showInfoSnackBar(context, context.l10n.restorePurchasesPending);
       } else {
         // No purchases found at all
         showInfoSnackBar(context, context.l10n.restorePurchasesNone);

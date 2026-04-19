@@ -276,6 +276,9 @@ class _TestTransport implements DeviceTransport {
   Future<void> enableNotifications() async {}
 
   @override
+  Future<void> refreshNotifications() async {}
+
+  @override
   Future<void> pollOnce() async {}
 
   @override
