@@ -9528,6 +9528,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get nodedexDeviceTitle => 'Dispositivo';
 
   @override
+  String get nodedexMrrpServicesTitle => 'MRRP Services';
+
+  @override
   String get nodedexDiscoveryTitle => 'Descoberta';
 
   @override
@@ -30617,4 +30620,454 @@ class AppLocalizationsPt extends AppLocalizations {
   String notificationSipHandshakeRequestBody(String peerName) {
     return '$peerName wants to start an ephemeral DM session.';
   }
+
+  @override
+  String get mrrpHarnessTitle => 'Protocol Harness';
+
+  @override
+  String get mrrpHarnessDrawerLabel => 'Protocol Harness';
+
+  @override
+  String get mrrpHarnessStatusSip => 'SIP';
+
+  @override
+  String get mrrpHarnessStatusMrrp => 'MRRP';
+
+  @override
+  String get mrrpHarnessStatusEnabled => 'Enabled';
+
+  @override
+  String get mrrpHarnessStatusDisabled => 'Disabled';
+
+  @override
+  String get mrrpHarnessRadioState => 'Radio';
+
+  @override
+  String get mrrpHarnessRadioConnected => 'Connected';
+
+  @override
+  String get mrrpHarnessRadioDisconnected => 'Disconnected';
+
+  @override
+  String get mrrpHarnessChannel => 'Channel';
+
+  @override
+  String get mrrpHarnessChannelNone => 'No channel';
+
+  @override
+  String get mrrpHarnessSipPeers => 'SIP Peers';
+
+  @override
+  String get mrrpHarnessMrrpServices => 'MRRP Services';
+
+  @override
+  String get mrrpHarnessBudget => 'Budget';
+
+  @override
+  String mrrpHarnessBudgetValue(int remaining, int capacity) {
+    return '$remaining/$capacity bytes';
+  }
+
+  @override
+  String get mrrpHarnessScanPeers => 'Scan for Peers';
+
+  @override
+  String get mrrpHarnessBrowseServices => 'Browse Services';
+
+  @override
+  String get mrrpHarnessOpenComposer => 'Open Composer';
+
+  @override
+  String get mrrpHarnessOpenTraffic => 'Traffic Console';
+
+  @override
+  String get mrrpHarnessSectionStatus => 'Protocol Status';
+
+  @override
+  String get mrrpHarnessSectionActions => 'Quick Actions';
+
+  @override
+  String get mrrpHarnessPeerInspectorTitle => 'Peer Inspector';
+
+  @override
+  String mrrpHarnessPeerServices(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'services',
+      one: 'service',
+    );
+    return '$count $_temp0';
+  }
+
+  @override
+  String mrrpHarnessPeerLastAdvert(String time) {
+    return 'Last advert: $time';
+  }
+
+  @override
+  String get mrrpHarnessRefreshDirectory => 'Refresh Directory';
+
+  @override
+  String get mrrpHarnessServiceBrowserTitle => 'Service Browser';
+
+  @override
+  String mrrpHarnessServiceVersion(int major, int minor) {
+    return 'v$major.$minor';
+  }
+
+  @override
+  String mrrpHarnessServiceFlags(String flags) {
+    return 'Flags: $flags';
+  }
+
+  @override
+  String get mrrpHarnessRawHex => 'Raw hex';
+
+  @override
+  String get mrrpHarnessComposerTitle => 'Request Composer';
+
+  @override
+  String get mrrpHarnessSelectPeer => 'Select peer';
+
+  @override
+  String get mrrpHarnessSelectService => 'Select service';
+
+  @override
+  String get mrrpHarnessSelectAction => 'Select action';
+
+  @override
+  String get mrrpHarnessPayloadPreset => 'Payload preset';
+
+  @override
+  String get mrrpHarnessPayloadRawHex => 'Raw hex payload';
+
+  @override
+  String get mrrpHarnessRequestTtl => 'Request TTL';
+
+  @override
+  String mrrpHarnessEncodedSize(int size) {
+    return '$size bytes encoded';
+  }
+
+  @override
+  String get mrrpHarnessSend => 'Send';
+
+  @override
+  String get mrrpHarnessResponseTitle => 'Response';
+
+  @override
+  String get mrrpHarnessResponsePending => 'Waiting for response…';
+
+  @override
+  String get mrrpHarnessResponseTimeout => 'Request timed out';
+
+  @override
+  String mrrpHarnessResponseStatus(String status) {
+    return 'Status: $status';
+  }
+
+  @override
+  String mrrpHarnessResponseLatency(int ms) {
+    return 'Latency: ${ms}ms';
+  }
+
+  @override
+  String get mrrpHarnessResponseDuplicate => 'Duplicate response';
+
+  @override
+  String get mrrpHarnessResponseCached => 'Cached response';
+
+  @override
+  String get mrrpHarnessSimLabTitle => 'Simulated Peer Lab';
+
+  @override
+  String get mrrpHarnessSimCreate => 'Create Simulated Peer';
+
+  @override
+  String get mrrpHarnessSimBadge => 'SIM';
+
+  @override
+  String get mrrpHarnessSimResponseMode => 'Response mode';
+
+  @override
+  String get mrrpHarnessSimModeNormal => 'Normal';
+
+  @override
+  String get mrrpHarnessSimModeDelayed => 'Delayed';
+
+  @override
+  String get mrrpHarnessSimModeError => 'Error';
+
+  @override
+  String get mrrpHarnessSimModeTimeout => 'Timeout';
+
+  @override
+  String get mrrpHarnessSimModeDuplicate => 'Duplicate';
+
+  @override
+  String get mrrpHarnessSimModeMalformed => 'Malformed';
+
+  @override
+  String get mrrpHarnessSimMaxPeers => 'Maximum 4 simulated peers';
+
+  @override
+  String get mrrpHarnessSimDeleteConfirm => 'Delete simulated peer?';
+
+  @override
+  String get mrrpHarnessSimServices => 'Services';
+
+  @override
+  String get mrrpHarnessSimDelay => 'Delay (seconds)';
+
+  @override
+  String get mrrpHarnessSimErrorCode => 'Error status code';
+
+  @override
+  String get mrrpHarnessTrafficTitle => 'Traffic Console';
+
+  @override
+  String get mrrpHarnessTrafficEmpty => 'No MRRP traffic yet';
+
+  @override
+  String get mrrpHarnessTrafficEmptyDescription =>
+      'MRRP events will appear here as traffic flows.';
+
+  @override
+  String get mrrpHarnessTrafficFilterPeer => 'Filter by peer';
+
+  @override
+  String get mrrpHarnessTrafficFilterType => 'Filter by type';
+
+  @override
+  String get mrrpHarnessTrafficFilterService => 'Filter by service';
+
+  @override
+  String get mrrpHarnessTrafficCopy => 'Copy event';
+
+  @override
+  String get mrrpHarnessTrafficExport => 'Export events';
+
+  @override
+  String mrrpHarnessTrafficDirection(String direction) {
+    return '$direction';
+  }
+
+  @override
+  String get mrrpHarnessBudgetTitle => 'Budget & Timing';
+
+  @override
+  String get mrrpHarnessBudgetRemaining => 'Remaining budget';
+
+  @override
+  String get mrrpHarnessBudgetBlocked => 'Sends blocked';
+
+  @override
+  String get mrrpHarnessBudgetDedupHits => 'Dedup hits';
+
+  @override
+  String get mrrpHarnessBudgetTimeouts => 'Timeouts';
+
+  @override
+  String get mrrpHarnessBudgetAdvertCadence => 'Advert cadence';
+
+  @override
+  String get mrrpHarnessBudgetLatency => 'Latency';
+
+  @override
+  String get mrrpHarnessNoPeers => 'No MRRP peers discovered';
+
+  @override
+  String get mrrpHarnessNoPeersDescription =>
+      'MRRP-capable peers will appear here when discovered.';
+
+  @override
+  String get mrrpHarnessNoServices => 'No services';
+
+  @override
+  String get mrrpHarnessTestRequest => 'Test Request';
+
+  @override
+  String get mrrpHarnessOpenSimLab => 'Simulated Peers';
+
+  @override
+  String get mrrpHarnessOpenFixtures => 'Fixture Replay';
+
+  @override
+  String get mrrpHarnessFixtureTitle => 'Fixture Replay';
+
+  @override
+  String get mrrpHarnessFixtureVectors => 'Test Vectors';
+
+  @override
+  String get mrrpHarnessFixtureFuzz => 'Fuzz Cases';
+
+  @override
+  String get mrrpHarnessFixtureReplay => 'Replay';
+
+  @override
+  String get mrrpHarnessFixtureReplayAll => 'Replay All';
+
+  @override
+  String get mrrpHarnessFixturePass => 'PASS';
+
+  @override
+  String get mrrpHarnessFixtureFail => 'FAIL';
+
+  @override
+  String get mrrpHarnessFixtureDecodeNull => 'Decode returned null';
+
+  @override
+  String get mrrpHarnessFixtureDecodeOk => 'Decode OK';
+
+  @override
+  String get mrrpHarnessFixtureExpected => 'Expected';
+
+  @override
+  String get mrrpHarnessFixtureActual => 'Actual';
+
+  @override
+  String mrrpHarnessFixtureSummary(int passed, int total) {
+    return '$passed/$total passed';
+  }
+
+  @override
+  String mrrpHarnessFixtureBytes(int count) {
+    return '$count bytes';
+  }
+
+  @override
+  String mrrpHarnessFixtureFieldsMatch(int matched, int total) {
+    return '$matched/$total fields match';
+  }
+
+  @override
+  String get mrrpHarnessFixtureRejected => 'Rejected (expected)';
+
+  @override
+  String get mrrpHarnessFixtureNotRejected => 'Not rejected (unexpected)';
+
+  @override
+  String get mrrpHarnessFixtureEmpty => 'No fixtures available';
+
+  @override
+  String get mrrpHarnessOpenQaRunner => 'QA Scenarios';
+
+  @override
+  String get mrrpHarnessQaTitle => 'QA Scenario Runner';
+
+  @override
+  String get mrrpHarnessQaScenarios => 'Scenarios';
+
+  @override
+  String get mrrpHarnessQaRunAll => 'Run All';
+
+  @override
+  String mrrpHarnessQaSteps(int count) {
+    return '$count steps';
+  }
+
+  @override
+  String get mrrpHarnessQaRunScenario => 'Run';
+
+  @override
+  String get mrrpHarnessQaStepPass => 'PASS';
+
+  @override
+  String get mrrpHarnessQaStepFail => 'FAIL';
+
+  @override
+  String get mrrpHarnessQaStepPending => 'Pending';
+
+  @override
+  String get mrrpHarnessQaScenarioPass => 'PASSED';
+
+  @override
+  String get mrrpHarnessQaScenarioFail => 'FAILED';
+
+  @override
+  String mrrpHarnessQaSummary(int passed, int total) {
+    return '$passed/$total scenarios passed';
+  }
+
+  @override
+  String get mrrpHarnessQaEmpty => 'No scenarios defined';
+
+  @override
+  String get mrrpHarnessQaRunning => 'Running...';
+
+  @override
+  String get mrrpHarnessQaExpected => 'Expected';
+
+  @override
+  String get mrrpHarnessQaActual => 'Actual';
+
+  @override
+  String get mrrpHarnessCountersSectionTraffic => 'Traffic Counters';
+
+  @override
+  String get mrrpHarnessCountersSectionDedup => 'Dedup & Cache';
+
+  @override
+  String get mrrpHarnessCountersSectionErrors => 'Errors & Rejections';
+
+  @override
+  String get mrrpHarnessCountersSectionHarness => 'Harness Activity';
+
+  @override
+  String get mrrpHarnessCountersReqSent => 'Requests Sent';
+
+  @override
+  String get mrrpHarnessCountersReqRecv => 'Requests Received';
+
+  @override
+  String get mrrpHarnessCountersRespSent => 'Responses Sent';
+
+  @override
+  String get mrrpHarnessCountersRespRecv => 'Responses Received';
+
+  @override
+  String get mrrpHarnessCountersDirReqSent => 'Dir Requests Sent';
+
+  @override
+  String get mrrpHarnessCountersDirReqRecv => 'Dir Requests Received';
+
+  @override
+  String get mrrpHarnessCountersDirRespSent => 'Dir Responses Sent';
+
+  @override
+  String get mrrpHarnessCountersDirRespRecv => 'Dir Responses Received';
+
+  @override
+  String get mrrpHarnessCountersDupReq => 'Duplicate Requests Ignored';
+
+  @override
+  String get mrrpHarnessCountersDupResp => 'Duplicate Responses Ignored';
+
+  @override
+  String get mrrpHarnessCountersCachedResp => 'Cached Responses Served';
+
+  @override
+  String get mrrpHarnessCountersReqTimeouts => 'Request Timeouts';
+
+  @override
+  String get mrrpHarnessCountersRespTimeouts => 'Response Timeouts';
+
+  @override
+  String get mrrpHarnessCountersCancellations => 'Cancellations';
+
+  @override
+  String get mrrpHarnessCountersErrSent => 'Errors Sent';
+
+  @override
+  String get mrrpHarnessCountersErrRecv => 'Errors Received';
+
+  @override
+  String get mrrpHarnessCountersPayloadReject => 'Payload Too Large';
+
+  @override
+  String get mrrpHarnessCountersHarnessActions => 'Harness Actions';
+
+  @override
+  String get mrrpHarnessCountersSimFaults => 'Simulated Faults';
 }

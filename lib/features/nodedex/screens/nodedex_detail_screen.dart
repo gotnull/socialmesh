@@ -41,6 +41,8 @@ import '../../../providers/app_providers.dart';
 
 import '../../nodes/node_display_name_resolver.dart';
 
+import '../../../services/protocol/sip/mrrp_types.dart';
+
 import '../models/nodedex_entry.dart';
 import '../models/sigil_evolution.dart';
 import '../providers/nodedex_providers.dart';
@@ -333,10 +335,20 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
               ),
             ),
 
+          // MRRP services (from SERVICE_ADVERT)
+          if (entry.mrrpServiceIds != null && entry.mrrpServiceIds!.isNotEmpty)
+            SliverToBoxAdapter(
+              child: _DetailEntrance(
+                index: 10,
+                reduceMotion: reduceMotion,
+                child: _MrrpServicesCard(entry: entry),
+              ),
+            ),
+
           // Social tag
           SliverToBoxAdapter(
             child: _DetailEntrance(
-              index: 10,
+              index: 11,
               reduceMotion: reduceMotion,
               child: _SocialTagCard(
                 entry: entry,
@@ -348,7 +360,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
           // User note
           SliverToBoxAdapter(
             child: _DetailEntrance(
-              index: 11,
+              index: 12,
               reduceMotion: reduceMotion,
               child: _UserNoteCard(
                 entry: entry,
@@ -377,7 +389,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
           if (entry.seenRegions.isNotEmpty)
             SliverToBoxAdapter(
               child: _DetailEntrance(
-                index: 12,
+                index: 13,
                 reduceMotion: reduceMotion,
                 child: _RegionHistoryCard(entry: entry),
               ),
@@ -387,7 +399,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
           if (entry.encounters.isNotEmpty)
             SliverToBoxAdapter(
               child: _DetailEntrance(
-                index: 13,
+                index: 14,
                 reduceMotion: reduceMotion,
                 child: _EncounterActivityCard(entry: entry),
               ),
@@ -2898,6 +2910,43 @@ class _DeviceInfoCard extends StatelessWidget {
     }
     final mins = seconds ~/ 60;
     return '${mins}m';
+  }
+}
+
+/// Card showing MRRP services advertised by a peer.
+class _MrrpServicesCard extends StatelessWidget {
+  final NodeDexEntry entry;
+
+  const _MrrpServicesCard({required this.entry});
+
+  @override
+  Widget build(BuildContext context) {
+    final ids = entry.mrrpServiceIds;
+    if (ids == null || ids.isEmpty) return const SizedBox.shrink();
+
+    final serviceIds = ids
+        .split(',') // lint-allow: hardcoded-string
+        .map((s) => int.tryParse(s.trim()))
+        .whereType<int>()
+        .toList();
+
+    if (serviceIds.isEmpty) return const SizedBox.shrink();
+
+    return _CardContainer(
+      title: context.l10n.nodedexMrrpServicesTitle,
+      icon: Icons.hub_outlined,
+      child: Column(
+        children: [
+          for (final id in serviceIds)
+            _InfoRow(
+              label: MrrpServiceId.nameOf(id),
+              value:
+                  '0x${id.toRadixString(16).padLeft(8, '0')}', // lint-allow: hardcoded-string
+              icon: Icons.miscellaneous_services_outlined,
+            ),
+        ],
+      ),
+    );
   }
 }
 

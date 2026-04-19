@@ -47,6 +47,8 @@ class SmFeatureFlag {
   bool _smBinaryEnabled;
   bool _legacyCompatibilityMode;
   bool _sipEnabled;
+  bool _mrrpEnabled;
+  bool _mrrpHarnessEnabled;
 
   /// Creates feature flags.
   ///
@@ -58,11 +60,16 @@ class SmFeatureFlag {
     bool? smBinaryEnabled,
     bool? legacyCompatibilityMode,
     bool? sipEnabled,
+    bool? mrrpEnabled,
+    bool? mrrpHarnessEnabled,
   }) : _smBinaryEnabled =
            smBinaryEnabled ?? _parseBoolEnv('SM_BINARY_ENABLED') ?? false,
        _legacyCompatibilityMode =
            legacyCompatibilityMode ?? _parseBoolEnv('SM_LEGACY_COMPAT') ?? true,
-       _sipEnabled = sipEnabled ?? _parseBoolEnv('SIP_ENABLED') ?? false;
+       _sipEnabled = sipEnabled ?? _parseBoolEnv('SIP_ENABLED') ?? false,
+       _mrrpEnabled = mrrpEnabled ?? _parseBoolEnv('MRRP_ENABLED') ?? false,
+       _mrrpHarnessEnabled =
+           mrrpHarnessEnabled ?? _parseBoolEnv('MRRP_HARNESS_ENABLED') ?? false;
 
   /// Whether to send binary-encoded SM packets.
   /// Default: false (safe-by-default).
@@ -110,7 +117,28 @@ class SmFeatureFlag {
   /// Set SIP enabled state.
   void setSipEnabled(bool value) => _sipEnabled = value;
 
+  /// Whether the Mesh Request/Response Protocol (MRRP) is enabled.
+  ///
+  /// Requires [sipEnabled] to be true. When enabled, the app registers
+  /// MRRP services, broadcasts service advertisements, and handles
+  /// request/response frames over SIP sessions.
+  /// Default: false.
+  bool get mrrpEnabled => _mrrpEnabled && _sipEnabled;
+
+  /// Set MRRP enabled state.
+  void setMrrpEnabled(bool value) => _mrrpEnabled = value;
+
+  /// Whether the MRRP protocol harness UI is enabled.
+  ///
+  /// Requires [mrrpEnabled] to be true. When enabled, the harness
+  /// screens are accessible for live testing, simulation, and QA.
+  /// Default: false.
+  bool get mrrpHarnessEnabled => _mrrpHarnessEnabled && mrrpEnabled;
+
+  /// Set MRRP harness enabled state.
+  void setMrrpHarnessEnabled(bool value) => _mrrpHarnessEnabled = value;
+
   @override
   String toString() =>
-      'SmFeatureFlag(binary=$_smBinaryEnabled, legacyCompat=$_legacyCompatibilityMode, sip=$_sipEnabled)';
+      'SmFeatureFlag(binary=$_smBinaryEnabled, legacyCompat=$_legacyCompatibilityMode, sip=$_sipEnabled, mrrp=$_mrrpEnabled, mrrpHarness=$_mrrpHarnessEnabled)';
 }

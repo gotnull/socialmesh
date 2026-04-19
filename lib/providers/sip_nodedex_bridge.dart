@@ -180,9 +180,34 @@ abstract final class SipNodeDexBridge {
         clearSipPersonaId: true,
         clearSipIdentityState: true,
         clearSipDisplayName: true,
+        clearMrrpServiceIds: true,
         sigil: SigilGenerator.generate(entry.nodeNum),
       ),
       sigilChanged: true,
+      stateChanged: true,
+    );
+  }
+
+  /// Apply discovered MRRP service IDs from a SERVICE_ADVERT frame.
+  ///
+  /// Stores service IDs as a comma-separated string of decimal values.
+  /// No-op if the service IDs are unchanged.
+  static SipNodeDexUpdate applyMrrpServices({
+    required NodeDexEntry entry,
+    required List<int> serviceIds,
+  }) {
+    final sorted = List<int>.from(serviceIds)..sort();
+    final csv = sorted.join(','); // lint-allow: hardcoded-string
+    if (entry.mrrpServiceIds == csv) {
+      return SipNodeDexUpdate(entry: entry);
+    }
+
+    AppLogging.sip(
+      'SIP_NODEDEX: MRRP services for node=${_hex(entry.nodeNum)}: $csv', // lint-allow: hardcoded-string
+    );
+
+    return SipNodeDexUpdate(
+      entry: entry.copyWith(mrrpServiceIds: csv),
       stateChanged: true,
     );
   }
@@ -287,6 +312,29 @@ void sipBridgeUpdateState({
   final result = SipNodeDexBridge.updateIdentityState(
     entry: existing,
     newState: newState,
+  );
+
+  if (result.stateChanged) {
+    ref.read(nodeDexProvider.notifier).applySipUpdate(result.entry);
+  }
+}
+
+/// Writes discovered MRRP service IDs to the NodeDex entry for a peer.
+///
+/// Called when a SERVICE_ADVERT frame is received. The entry must already
+/// exist in NodeDex; if it does not, this is a no-op.
+void sipBridgeApplyMrrpServices({
+  required Ref ref,
+  required int nodeId,
+  required List<int> serviceIds,
+}) {
+  final entries = ref.read(nodeDexProvider);
+  final existing = entries[nodeId];
+  if (existing == null) return;
+
+  final result = SipNodeDexBridge.applyMrrpServices(
+    entry: existing,
+    serviceIds: serviceIds,
   );
 
   if (result.stateChanged) {

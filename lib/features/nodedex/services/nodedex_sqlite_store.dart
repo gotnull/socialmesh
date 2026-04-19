@@ -465,6 +465,7 @@ class NodeDexSqliteStore {
       NodeDexTables.colSipPersonaId: entry.sipPersonaId,
       NodeDexTables.colSipIdentityState: entry.sipIdentityState?.name,
       NodeDexTables.colSipDisplayName: entry.sipDisplayName,
+      NodeDexTables.colMrrpServiceIds: entry.mrrpServiceIds,
     };
   }
 
@@ -584,6 +585,7 @@ class NodeDexSqliteStore {
           : null,
       sipIdentityState: sipState,
       sipDisplayName: row[NodeDexTables.colSipDisplayName] as String?,
+      mrrpServiceIds: row[NodeDexTables.colMrrpServiceIds] as String?,
     );
   }
 

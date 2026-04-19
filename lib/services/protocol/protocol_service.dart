@@ -33,6 +33,7 @@ import 'socialmesh/sm_metrics.dart';
 import 'socialmesh/sm_packet_router.dart';
 import 'socialmesh/sm_presence.dart';
 import 'socialmesh/sm_signal.dart';
+import 'sip/mrrp_engine.dart';
 import 'sip/sip_codec.dart';
 import 'sip/sip_counters.dart';
 import 'sip/sip_discovery.dart';
@@ -451,6 +452,9 @@ class ProtocolService {
   SipDmManager? _sipDm;
   SipCounters? _sipCounters;
 
+  // --- MRRP protocol component ---
+  MrrpEngine? _mrrpEngine;
+
   /// Attach a SipDiscovery instance so inbound SIP packets can be routed.
   ///
   /// Called from the provider layer once the discovery engine is created.
@@ -490,6 +494,14 @@ class ProtocolService {
     _sipCounters = counters;
     if (counters != null) {
       AppLogging.sip('ProtocolService: SipCounters attached');
+    }
+  }
+
+  /// Attach an MrrpEngine for inbound MRRP frames.
+  void attachMrrpEngine(MrrpEngine? engine) {
+    _mrrpEngine = engine;
+    if (engine != null) {
+      AppLogging.mrrp('ProtocolService: MrrpEngine attached');
     }
   }
 
@@ -4164,12 +4176,26 @@ class ProtocolService {
           '— deferred in v0.1, ignoring',
         );
 
+      // ----- MRRP -----
+      case SipMessageType.mrrpData:
+        _handleMrrpPacket(senderNodeId, frame);
+
       case SipMessageType.error:
         AppLogging.sip(
           'SIP_RX: ERROR frame from '
           '0x${senderNodeId.toRadixString(16)}',
         );
     }
+  }
+
+  /// Handle an inbound MRRP frame embedded in a SIP mrrpData packet.
+  void _handleMrrpPacket(int senderNodeId, SipFrame frame) {
+    final engine = _mrrpEngine;
+    if (engine == null) {
+      AppLogging.mrrp('SIP_RX: no MrrpEngine attached — dropping mrrpData');
+      return;
+    }
+    engine.handleInboundFrame(senderNodeId, frame.payload);
   }
 
   /// Send a SIP packet and record the TX counter.
@@ -4179,6 +4205,13 @@ class ProtocolService {
       _sipCounters?.recordTx(type, payload.length);
     }
     return ok;
+  }
+
+  /// Send a raw SIP payload with the given message type, recording counters.
+  ///
+  /// Public wrapper of [_sendSipAndCount] for use by MRRP providers.
+  Future<bool> sendSipPayload(Uint8List payload, SipMessageType type) {
+    return _sendSipAndCount(payload, type);
   }
 
   // ---------------------------------------------------------------------------

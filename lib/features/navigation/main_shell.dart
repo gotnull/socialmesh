@@ -66,6 +66,7 @@ import '../aether/providers/aether_flight_lifecycle_provider.dart';
 import '../aether/widgets/aether_flight_detected_overlay.dart';
 // import '../global_layer/screens/global_layer_hub_screen.dart';
 import '../sip/sip_hub_screen.dart';
+import '../mrrp_harness/mrrp_harness_home_screen.dart';
 import '../tak/screens/tak_screen.dart';
 import '../../providers/activity_providers.dart';
 import '../../providers/whats_new_providers.dart';
@@ -490,6 +491,14 @@ class _MainShellState extends ConsumerState<MainShell> {
         iconColor: AccentColors.teal,
         requiresConnection: true,
         whatsNewBadgeKey: 'sip',
+      ),
+    if (AppFeatureFlags.isMrrpHarnessEnabled && AppFeatureFlags.isMrrpEnabled)
+      DrawerMenuItem(
+        icon: Icons.hub,
+        label: l10n.mrrpHarnessDrawerLabel,
+        screen: const MrrpHarnessHomeScreen(),
+        iconColor: AccentColors.purple,
+        requiresConnection: true,
       ),
 
     // Advanced section — deep mesh analysis and diagnostics
