@@ -1416,23 +1416,46 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
 
       state = state.copyWith(state: DevicePairingState.configuring);
 
-      // Capture the previously-saved device id BEFORE clearing so the
-      // helper can detect a device switch and force a node-data clear.
-      // (settings.lastDeviceId is unchanged at this point since this path
-      // does not call setLastDevice before the clear.)
+      // Capture the previously-saved device id + logical identity BEFORE
+      // clearing so the helper can distinguish true device switch from
+      // transport rebind (same physical radio, rotated BLE UUID). A raw
+      // UUID mismatch alone is not a switch — ESP32/nRF peripherals
+      // rotate their advertised UUID and we must not wipe NodeDB in that
+      // case. (settings.lastDeviceId is unchanged at this point since
+      // this path does not call setLastDevice before the clear.)
       String? previousDeviceId;
+      int? lastMyNodeNum;
+      String? lastDeviceName;
       try {
         final settings = await ref.read(settingsServiceProvider.future);
         previousDeviceId = settings.lastDeviceId;
+        lastMyNodeNum = settings.lastMyNodeNum;
+        lastDeviceName = settings.lastDeviceName;
       } catch (_) {
         previousDeviceId = null;
       }
+      final isTransportRebind = isLogicalTransportRebind(
+        newDeviceName: device.name,
+        newDeviceId: device.id,
+        previousDeviceId: previousDeviceId,
+        lastMyNodeNum: lastMyNodeNum,
+        lastDeviceName: lastDeviceName,
+      );
+      AppLogging.connection(
+        '🧮 SWITCH CLASSIFY (connection_providers): '
+        'previousDeviceId=$previousDeviceId '
+        'newDeviceId=${device.id} '
+        'lastMyNodeNum=${lastMyNodeNum?.toRadixString(16)} '
+        'lastDeviceName=$lastDeviceName '
+        'isTransportRebind=$isTransportRebind',
+      );
 
       // Clear previous device data
       await clearDeviceDataBeforeConnectRef(
         ref,
         previousDeviceId: previousDeviceId,
         newDeviceId: device.id,
+        isTransportRebind: isTransportRebind,
       );
 
       // Start protocol service

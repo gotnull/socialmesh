@@ -1139,14 +1139,34 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
       connectedDeviceNotifier.setState(device);
 
-      // Capture the previously-saved device id BEFORE setLastDevice
-      // overwrites it. clearDeviceDataBeforeConnect uses this to detect a
-      // device switch and force a node-data clear so the new device's
-      // NodeDB does not get unioned with the prior device's persisted
-      // nodes (the bug that made every device appear to share the same
-      // node count).
+      // Capture the previously-saved device id + logical identity BEFORE
+      // setLastDevice overwrites it. clearDeviceDataBeforeConnect uses
+      // these to distinguish:
+      //   * true device switch → wipe cached NodeDB so the new device's
+      //     nodes don't get unioned with the old one's
+      //   * transport rebind (same physical radio, BLE UUID rotated on
+      //     ESP32/nRF) → preserve cached NodeDB
+      // Without the rebind check we wipe the user's own-node metadata
+      // every time a BLE peripheral rotates its UUID.
       final settingsService = settingsAsync.value;
       final previousDeviceId = settingsService?.lastDeviceId;
+      final lastMyNodeNum = settingsService?.lastMyNodeNum;
+      final lastDeviceName = settingsService?.lastDeviceName;
+      final isTransportRebind = isLogicalTransportRebind(
+        newDeviceName: device.name,
+        newDeviceId: device.id,
+        previousDeviceId: previousDeviceId,
+        lastMyNodeNum: lastMyNodeNum,
+        lastDeviceName: lastDeviceName,
+      );
+      AppLogging.connection(
+        '🧮 SWITCH CLASSIFY (scanner): '
+        'previousDeviceId=$previousDeviceId '
+        'newDeviceId=${device.id} '
+        'lastMyNodeNum=${lastMyNodeNum?.toRadixString(16)} '
+        'lastDeviceName=$lastDeviceName '
+        'isTransportRebind=$isTransportRebind',
+      );
 
       // Save device for auto-reconnect (with protocol for future reconnect routing)
       if (settingsService != null) {
@@ -1165,11 +1185,13 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
       // Clear all previous device data before starting new connection.
       // Pass previous + new IDs so the helper can auto-clear node data on
-      // device switch.
+      // a real device switch, but suppress the auto-clear on a transport
+      // rebind (same radio, rotated BLE UUID).
       await clearDeviceDataBeforeConnect(
         ref,
         previousDeviceId: previousDeviceId,
         newDeviceId: device.id,
+        isTransportRebind: isTransportRebind,
       );
 
       // Start protocol service and wait for configuration

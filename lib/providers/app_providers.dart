@@ -1366,6 +1366,55 @@ bool _isDeviceSwitch(String? previousDeviceId, String? newDeviceId) {
   return previousDeviceId != newDeviceId;
 }
 
+/// Classifies whether connecting to a device whose raw BLE UUID differs
+/// from the last-persisted one is actually a **transport rebind** of the
+/// same physical radio (BLE peripheral UUID rotated — common on ESP32 /
+/// nRF hardware) rather than a genuine switch to a different radio.
+///
+/// Logical identity is derived from stable Meshtastic identifiers that
+/// survive BLE UUID rotation:
+///   * `lastMyNodeNum`  — firmware node number; its last 4 hex digits
+///                        appear as the suffix in default Meshtastic BLE
+///                        names (`Meshtastic_XXXX`). Strongest signal.
+///   * `lastDeviceName` — full advertised BLE name. Medium signal; used
+///                        when the node-number suffix check is unavailable
+///                        or the name has been customised.
+///
+/// Returns `true` only when we have positive evidence of rebind. When we
+/// can't tell, returns `false` and the caller falls back to the existing
+/// raw-UUID `_isDeviceSwitch` comparison (conservative: clears on
+/// mismatch). Uses [bleNameMatchesNodeNum] so the suffix semantics stay
+/// identical to [_tryLogicalDeviceMatch].
+bool isLogicalTransportRebind({
+  required String newDeviceName,
+  required String newDeviceId,
+  required String? previousDeviceId,
+  required int? lastMyNodeNum,
+  required String? lastDeviceName,
+}) {
+  // No prior connection — nothing to rebind to.
+  if (previousDeviceId == null) return false;
+  // Raw ID already matches — not a rebind, just a normal reconnect. The
+  // caller's `_isDeviceSwitch` check will also return false here.
+  if (newDeviceId == previousDeviceId) return false;
+
+  // Strong: BLE name carries the prior node number suffix.
+  if (lastMyNodeNum != null) {
+    final fullHex = lastMyNodeNum.toRadixString(16).padLeft(4, '0');
+    final suffix = fullHex.substring(fullHex.length - 4);
+    if (bleNameMatchesNodeNum(newDeviceName, suffix)) return true;
+  }
+
+  // Medium: advertised name exactly matches the prior device name.
+  if (lastDeviceName != null &&
+      lastDeviceName.isNotEmpty &&
+      newDeviceName == lastDeviceName) {
+    return true;
+  }
+
+  return false;
+}
+
 /// Helper function to clear all device-specific data before connecting to a (potentially different) device.
 /// This follows the Meshtastic iOS approach of always fetching fresh data from the device.
 /// Should be called BEFORE protocol.start() in all connection paths.
@@ -1376,14 +1425,28 @@ bool _isDeviceSwitch(String? previousDeviceId, String? newDeviceId) {
 /// that is NOT scoped per radio) loads every node identity ever seen into
 /// the UI, making every device appear to have the same node count (the
 /// historical union, not the device's actual NodeDB).
+///
+/// Pass [isTransportRebind] as `true` when the caller has already
+/// determined (e.g. via `_tryLogicalDeviceMatch` or [isLogicalRebindForTest])
+/// that the new BLE UUID belongs to the SAME physical radio as the last
+/// one — BLE peripheral UUIDs rotate on ESP32 / nRF hardware. When true,
+/// the raw-UUID mismatch auto-clear is suppressed so we do not wipe the
+/// user's NodeDB on a same-radio reconnect.
 Future<void> clearDeviceDataBeforeConnect(
   WidgetRef ref, {
   bool clearNodeData = false,
   String? previousDeviceId,
   String? newDeviceId,
+  bool isTransportRebind = false,
 }) async {
   final isDeviceSwitch = _isDeviceSwitch(previousDeviceId, newDeviceId);
-  if (isDeviceSwitch && !clearNodeData) {
+  if (isDeviceSwitch && isTransportRebind) {
+    AppLogging.app(
+      '🔁 Transport rebind ($previousDeviceId -> $newDeviceId) — same '
+      'physical radio under a new BLE UUID; suppressing device-switch '
+      'auto-clear so cached node data is preserved',
+    );
+  } else if (isDeviceSwitch && !clearNodeData) {
     AppLogging.app(
       '🔁 Device switch detected ($previousDeviceId -> $newDeviceId) — '
       'forcing node data clear so the new device\'s NodeDB does not get '
@@ -1460,15 +1523,22 @@ Future<void> clearDeviceDataBeforeConnect(
 
 /// Ref-based version for use in providers (non-widget contexts).
 /// See [clearDeviceDataBeforeConnect] for the device-switch auto-clear
-/// semantics — they apply identically here.
+/// and [isTransportRebind] semantics — they apply identically here.
 Future<void> clearDeviceDataBeforeConnectRef(
   Ref ref, {
   bool clearNodeData = false,
   String? previousDeviceId,
   String? newDeviceId,
+  bool isTransportRebind = false,
 }) async {
   final isDeviceSwitch = _isDeviceSwitch(previousDeviceId, newDeviceId);
-  if (isDeviceSwitch && !clearNodeData) {
+  if (isDeviceSwitch && isTransportRebind) {
+    AppLogging.app(
+      '🔁 Transport rebind ($previousDeviceId -> $newDeviceId) — same '
+      'physical radio under a new BLE UUID; suppressing device-switch '
+      'auto-clear so cached node data is preserved',
+    );
+  } else if (isDeviceSwitch && !clearNodeData) {
     AppLogging.app(
       '🔁 Device switch detected ($previousDeviceId -> $newDeviceId) — '
       'forcing node data clear so the new device\'s NodeDB does not get '
@@ -2271,17 +2341,48 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
           // Clear all previous device data before starting new connection.
           // Pass previous + new IDs so node data is auto-cleared if this
           // is a different physical device than was last connected.
+          // When this is a transport rebind (same physical radio, BLE UUID
+          // rotated), we signal the helper to suppress the auto-clear —
+          // the wipe fires on raw UUID inequality alone and would otherwise
+          // destroy cached NodeDB on every ESP32/nRF UUID rotation.
           String? previousDeviceId;
           try {
             final settings = await ref.read(settingsServiceProvider.future);
             previousDeviceId = settings.lastDeviceId;
+
+            // On a transport rebind, persist the new BLE UUID BEFORE the
+            // clear runs so future reconnects don't keep comparing against
+            // a stale persisted id and re-classifying the same radio as a
+            // new device. The helper's `isTransportRebind` already
+            // suppresses the wipe for this attempt; this alignment ensures
+            // it stays aligned across subsequent reconnects even if the
+            // later `setLastDevice` call (after protocol start) is never
+            // reached (e.g. the protocol start fails after this point).
+            if (isTransportRebind) {
+              AppLogging.connection(
+                '🔄 REBIND PERSIST (pre-clear): '
+                '$previousDeviceId → ${foundDevice.id}',
+              );
+              await settings.setLastDevice(
+                foundDevice.id,
+                foundDevice.type.name,
+                deviceName: foundDevice.name,
+              );
+            }
           } catch (_) {
             previousDeviceId = null;
           }
+          AppLogging.connection(
+            '🧮 SWITCH CLASSIFY (_performReconnect): '
+            'previousDeviceId=$previousDeviceId '
+            'newDeviceId=${foundDevice.id} '
+            'isTransportRebind=$isTransportRebind',
+          );
           await clearDeviceDataBeforeConnectRef(
             ref,
             previousDeviceId: previousDeviceId,
             newDeviceId: foundDevice.id,
+            isTransportRebind: isTransportRebind,
           );
 
           final protocol = ref.read(protocolServiceProvider);
