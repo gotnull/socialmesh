@@ -3,13 +3,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/logging.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../providers/social_providers.dart';
+import '../../../utils/email_launcher.dart';
 import '../../../utils/snackbar.dart';
 
 /// Full-screen blocking overlay for suspended users.
@@ -99,18 +99,13 @@ class _SuspensionNotice extends StatelessWidget {
     }
   }
 
-  Future<void> _contactSupport() async {
-    // Use Uri.encodeFull to avoid + encoding for spaces
-    const subject = 'Account Suspension Appeal';
-    const body =
-        'Hi,\n\nI would like to appeal my account suspension.\n\nPlease review my case.\n\nThank you.';
-    final uri = Uri.parse(
-      'mailto:support@socialmesh.app?subject=${Uri.encodeComponent(subject)}&body=${Uri.encodeComponent(body)}',
+  Future<void> _contactSupport(BuildContext context) async {
+    await launchEmailCompose(
+      context: context,
+      to: 'support@socialmesh.app',
+      subject: context.l10n.socialSuspendedAppealSubject,
+      body: context.l10n.socialSuspendedAppealBody,
     );
-
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    }
   }
 
   @override
@@ -334,7 +329,7 @@ class _SuspensionNotice extends StatelessWidget {
 
                   // Contact support button
                   BouncyTap(
-                    onTap: _contactSupport,
+                    onTap: () => _contactSupport(context),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 32,

@@ -2,7 +2,7 @@ name: socialmesh
 description: "A mesh radio companion app for Meshtastic. Connect over BLE or USB, message off-grid, map your nodes, and explore the mesh — no internet required."
 publish_to: "none"
 
-version: 1.33.0+162
+version: 1.34.0+163
 
 environment:
   sdk: ^3.10.0
@@ -73,6 +73,7 @@ dependencies:
   sensors_plus: ^7.0.0
   fl_chart: ^1.2.0
   url_launcher: ^6.3.1
+  open_mail_launcher: ^0.1.2
   connectivity_plus: ^7.1.1
   http: ^1.2.2
   flutter_dotenv: ^6.0.0
@@ -186,6 +187,7 @@ flutter:
     - assets/help/network/
     - assets/help/safety/
     - assets/lottie/
+    - assets/email_apps/
     - assets/models/
     - assets/globe/
     - assets/terrain/

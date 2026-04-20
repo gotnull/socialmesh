@@ -5,7 +5,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
@@ -19,7 +18,7 @@ import '../../../core/widgets/search_filter_header.dart';
 import '../../../core/widgets/status_filter_chip.dart';
 import '../../../providers/connectivity_providers.dart';
 import '../../../providers/help_providers.dart';
-import '../../../utils/snackbar.dart';
+import '../../../utils/email_launcher.dart';
 import '../models/shop_models.dart';
 import '../providers/device_shop_providers.dart';
 import '../widgets/device_shop_components.dart';
@@ -429,8 +428,6 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
                 borderRadius: AppTheme.radius20,
                 borderWidth: 1.4,
                 accentOpacity: 0.4,
-                enableDepthBlend: true,
-                depthBlendOpacity: 0.08,
                 padding: const EdgeInsets.all(AppTheme.spacing20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1044,11 +1041,11 @@ class _PartnersSection extends ConsumerWidget {
             SizedBox(
               height: 118,
               child: EdgeFade.end(
-                fadeSize: 32,
+                fadeSize: 56,
                 fadeColor: context.background,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.only(left: 16, right: 48),
                   itemCount: partners.length,
                   itemBuilder: (context, index) {
                     return _PartnerCard(seller: partners[index]);
@@ -1337,23 +1334,12 @@ class _BecomeSellerSection extends StatelessWidget {
   }
 
   void _contactSocialmesh(BuildContext context) async {
-    final subject = Uri.encodeComponent(
-      context.l10n.deviceShopContactEmailSubject,
+    await launchEmailCompose(
+      context: context,
+      to: 'support@socialmesh.app',
+      subject: context.l10n.deviceShopContactEmailSubject,
+      body: context.l10n.deviceShopContactEmailBody,
     );
-    final body = Uri.encodeComponent(context.l10n.deviceShopContactEmailBody);
-    final path = 'support@socialmesh.app';
-    final mailtoUri = Uri.parse('mailto:$path?subject=$subject&body=$body');
-
-    // Try to open with system email app selection
-    try {
-      if (await canLaunchUrl(mailtoUri)) {
-        await launchUrl(mailtoUri, mode: LaunchMode.externalApplication);
-      }
-    } catch (e) {
-      if (context.mounted) {
-        showErrorSnackBar(context, 'Unable to open email client');
-      }
-    }
   }
 }
 
@@ -1450,18 +1436,18 @@ class _ProductSection extends StatelessWidget {
         SizedBox(
           height: 316,
           child: EdgeFade.end(
-            fadeSize: 32,
+            fadeSize: 56,
             fadeColor: context.background,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.only(left: 16, right: 48),
               itemCount: visibleProducts.length,
               itemBuilder: (context, index) {
                 return Padding(
                   padding: const EdgeInsets.only(right: AppTheme.spacing12),
                   child: ProductCard(
                     product: visibleProducts[index],
-                    width: 196,
+                    width: 172,
                     highlightColor: highlightColor,
                   ),
                 );

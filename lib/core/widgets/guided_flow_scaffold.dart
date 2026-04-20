@@ -185,14 +185,19 @@ class _StepDot extends StatelessWidget {
         ? step.color
         : context.textTertiary.withValues(alpha: 0.4);
 
+    // Fixed-size dot so Next/Back never reflows the step indicator row.
+    // Active/inactive/completed state is expressed by background alpha,
+    // border weight, and font weight — NOT by width/height deltas. The
+    // earlier 28px ↔ 36px swing (and the nested 12px ↔ 16px icon swing)
+    // caused the entire screen below to jump on step transitions.
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         AnimatedContainer(
           duration: const Duration(milliseconds: 250),
           curve: Curves.easeOutCubic,
-          width: isActive ? 36 : 28,
-          height: isActive ? 36 : 28,
+          width: 32,
+          height: 32,
           decoration: BoxDecoration(
             color: isActive
                 ? color.withValues(alpha: 0.15)
@@ -205,7 +210,7 @@ class _StepDot extends StatelessWidget {
           child: Center(
             child: isCompleted
                 ? Icon(Icons.check, size: 14, color: color)
-                : Icon(step.icon, size: isActive ? 16 : 12, color: color),
+                : Icon(step.icon, size: 14, color: color),
           ),
         ),
         const SizedBox(height: AppTheme.spacing4),

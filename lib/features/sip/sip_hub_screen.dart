@@ -50,6 +50,9 @@ import '../../core/widgets/animated_empty_state.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../mrrp_harness/mrrp_harness_home_screen.dart';
 import 'sip_dm_screen.dart';
+import 'sip_peer_detail_sheet.dart';
+import 'widgets/peer_service_preview_row.dart';
+import 'widgets/sip_hub_your_services_section.dart';
 
 /// SIP Hub — discover nearby Socialmesh peers, handshake, and chat.
 ///
@@ -222,10 +225,20 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
     if (currentState == SipHandshakeState.pendingApproval) {
       return;
     }
+    // Accepted but no DM session yet — open the peer detail sheet so
+    // the user can review capabilities / advertised services and start
+    // a conversation on their own terms.
+    if (currentState == SipHandshakeState.accepted) {
+      SipPeerDetailSheet.show(localContext, peer);
+      return;
+    }
     if (currentState != SipHandshakeState.idle &&
         currentState != SipHandshakeState.declined &&
         currentState != SipHandshakeState.failed &&
         currentState != SipHandshakeState.timedOut) {
+      // In-progress states — don't interrupt. Show detail sheet so the
+      // user can see what's happening and the status chip in context.
+      SipPeerDetailSheet.show(localContext, peer);
       return;
     }
 
@@ -502,6 +515,11 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
           ),
         ),
       ],
+
+      // Your Services — local service instances + Create CTA. Always
+      // rendered so the Create affordance is discoverable even when the
+      // user has no services yet.
+      ...buildYourServicesSlivers(context, ref),
 
       // Active conversations (shown after pending requests)
       if (sessions.isNotEmpty) ...[
@@ -874,6 +892,9 @@ class _PeerTileState extends ConsumerState<_PeerTile>
                           _LastSeenChip(lastSeenMs: widget.peer.lastSeenMs),
                         ],
                       ),
+                      // Advertised services preview — empty-collapses
+                      // when the peer has no public MRRP adverts yet.
+                      PeerServicePreviewRow(peerNodeId: widget.peer.nodeId),
                     ],
                   ),
                 ),
