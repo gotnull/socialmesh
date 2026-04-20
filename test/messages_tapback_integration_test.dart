@@ -146,6 +146,26 @@ Future<void> _settle() async {
   await Future<void>.delayed(const Duration(milliseconds: 20));
 }
 
+Future<void> _waitForMessagePersisted(
+  MessageDatabase storage,
+  String messageId, {
+  int nodeA = 10,
+  int nodeB = 20,
+  Duration timeout = const Duration(seconds: 2),
+}) async {
+  final deadline = DateTime.now().add(timeout);
+  while (DateTime.now().isBefore(deadline)) {
+    final stored = await storage.loadConversation(
+      MessageDatabase.conversationKeyFromParams(nodeA: nodeA, nodeB: nodeB),
+    );
+    if (stored.any((message) => message.id == messageId)) return;
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+  }
+  throw StateError(
+    'Message $messageId not persisted within ${timeout.inMilliseconds}ms',
+  );
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -180,7 +200,7 @@ void main() {
           isEmoji: true,
         ),
       );
-      await _settle();
+      await _waitForMessagePersisted(h.storage, 'tapback');
 
       final state = h.container.read(messagesProvider);
       expect(state.map((message) => message.id), ['parent']);
@@ -223,7 +243,7 @@ void main() {
           isEmoji: true,
         ),
       );
-      await _settle();
+      await _waitForMessagePersisted(first.storage, 'tapback');
       first.container.dispose();
 
       final second = await _createHarness(
@@ -294,6 +314,7 @@ void main() {
       );
       h.protocol.emit(tapback);
       h.protocol.emit(tapback);
+      await _waitForMessagePersisted(h.storage, 'tapback');
       await _settle();
 
       final rows = await _loadDmRows(h.storage);
