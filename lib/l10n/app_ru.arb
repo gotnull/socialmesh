@@ -89,7 +89,7 @@
     "adminProductsVendorVerifiedTitle": "Характеристики подтверждены поставщиком",
     "adminProductsWeightHint": "напр., 50g",
     "adminProductsWeightLabel": "Вес",
-    "adminProductsWifi": "WiFi",
+    "adminProductsWifi": "Wi-Fi",
     "adminSellersActivate": "Активировать",
     "adminSellersActive": "Активный",
     "adminSellersActiveSubtitle": "Продавец виден в магазине",
@@ -1527,7 +1527,7 @@
     "deviceSheetBatteryRefreshFailed": "Ошибка",
     "deviceSheetBatteryRefreshIdle": "Получить уровень заряда с устройства",
     "deviceSheetBatteryRefreshResult": "{percent}%{millivolts}",
-    "deviceSheetBluetoothLe": "Bluetooth LE",
+    "deviceSheetBluetoothLe": "BLE",
     "deviceSheetCharging": "Зарядка",
     "deviceSheetConnected": "Подключено",
     "deviceSheetConnecting": "Подключение...",
@@ -1971,7 +1971,7 @@
             }
         }
     },
-    "fileTransferTimeDate": "{month}/{day}",
+    "fileTransferTimeDate": "{day}.{month}",
     "@fileTransferTimeDate": {
         "description": "Transfer card date for transfers older than one week",
         "placeholders": {
@@ -2327,7 +2327,7 @@
     "firmwareUpdateUpToDate": "Актуальная версия",
     "firmwareUpdateUptime": "Время работы",
     "firmwareUpdateVisitWebsite": "Посетите сайт Meshtastic для получения последней прошивки.",
-    "firmwareUpdateWifi": "WiFi",
+    "firmwareUpdateWifi": "Wi‑Fi",
     "firmwareDfuDownloading": "Загрузка прошивки…",
     "@firmwareDfuDownloading": {
         "description": "DFU status: downloading firmware archive"
@@ -2418,7 +2418,7 @@
     "@firmwareUpdateMethodInApp": {
         "description": "Label for the in-app DFU update method"
     },
-    "firmwareUpdateMethodWebFlasher": "Web Flasher",
+    "firmwareUpdateMethodWebFlasher": "Веб-прошивальщик",
     "@firmwareUpdateMethodWebFlasher": {
         "description": "Label for the web flasher update method"
     },
@@ -2963,7 +2963,7 @@
     "meshcoreChannelCodeCopied": "Код канала скопирован",
     "meshcoreChannelCreated": "Канал «{channelName}» создан",
     "meshcoreChannelNameHint": "Название канала",
-    "meshcoreChannelNameHintGeneral": "general",
+    "meshcoreChannelNameHintGeneral": "общий",
     "meshcoreChannelNameHintHashtag": "например, general",
     "meshcoreChannelNameLabel": "Название канала",
     "meshcoreChannelPskCopied": "PSK канала скопирован",
@@ -3738,7 +3738,7 @@
     "@nodeboardVisibilityPrivate": {
         "description": "Visibility option: private."
     },
-    "nodeboardSysop": "SysOp",
+    "nodeboardSysop": "Сисоп",
     "@nodeboardSysop": {
         "description": "Label for sysop role."
     },
@@ -4059,7 +4059,7 @@
     "nodeComparisonSectionStatus": "Статус",
     "nodeComparisonTitle": "Сравнение нод",
     "nodeComparisonUnknown": "Неизвестно",
-    "nodeComparisonVs": "VS",
+    "nodeComparisonVs": "против",
     "nodeComparisonYes": "Да",
     "nodeDetailAddToFavoritesTooltip": "Добавить в избранное",
     "nodeDetailAddedToFavorites": "{name} добавлен в избранное",
@@ -4989,7 +4989,7 @@
     "onboardingWelcomeTitle": "Добро пожаловать в Socialmesh",
     "onboardingWidgetBattery": "Батарея",
     "onboardingWidgetDashboard": "Панель",
-    "onboardingWidgetLiveBadge": "LIVE",
+    "onboardingWidgetLiveBadge": "В ЭФИРЕ",
     "onboardingWidgetNodesOnline": "Нод онлайн",
     "onboardingWidgetSnrDb": "SNR dB",
     "paxCounterAboutSubtitle": "PAX Counter пассивно прослушивает WiFi- и Bluetooth-зондирующие запросы от ближайших устройств. MAC-адреса и персональные данные не сохраняются.",
@@ -5123,7 +5123,7 @@
     "productDetailWebviewOffline": "Для отображения этого контента требуется подключение к интернету. Проверьте подключение и повторите попытку.",
     "productDetailWeeksAgo": "{count} нед. назад",
     "productDetailWeight": "Вес",
-    "productDetailWifi": "WiFi",
+    "productDetailWifi": "Wi‑Fi",
     "productDetailWriteReview": "Написать отзыв",
     "productDetailWriteReviewTitle": "Написать отзыв",
     "productDetailYearsAgo": "{count} лет назад",
@@ -5157,7 +5157,7 @@
     "profileEditButton": "Редактировать профиль",
     "profileEditSheetTitle": "Редактировать профиль",
     "profileEditTooltip": "Редактировать профиль",
-    "profileEmailLabel": "Email",
+    "profileEmailLabel": "Эл. почта",
     "profileErrorWithMessage": "Ошибка: {message}",
     "profileGitHubHint": "username",
     "profileGitHubLabel": "GitHub",
@@ -5202,11 +5202,11 @@
     "profileTelegramLabel": "Telegram",
     "profileTitle": "Профиль",
     "profileTwitterHint": "username",
-    "profileTwitterLabel": "Twitter / X",
+    "profileTwitterLabel": "Твиттер / X",
     "profileUidLabel": "UID",
     "profileUrlInvalid": "Пожалуйста, введите корректный URL",
     "profileUrlMustStartHttp": "URL должен начинаться с http:// или https://",
-    "profileWebsiteHint": "https://example.com",
+    "profileWebsiteHint": "https://example.ru",
     "profileWebsiteLabel": "Веб-сайт",
     "qrScannerAddNodeConfirm": "Добавить ноду",
     "qrScannerAddNodePrompt": "Добавить «{name}» в отслеживаемые ноды?",
@@ -5435,7 +5435,7 @@
     "scannerConnectionTimedOut": "Время подключения истекло. Возможно, устройство вне зоны действия, выключено или подключено к другому телефону.",
     "scannerCopyright": "© 2026 Socialmesh. Все права защищены.",
     "scannerDetailAddress": "Адрес",
-    "scannerDetailBluetoothLowEnergy": "Bluetooth Low Energy",
+    "scannerDetailBluetoothLowEnergy": "BLE",
     "scannerDetailConnectionType": "Тип подключения",
     "scannerDetailDeviceName": "Имя устройства",
     "scannerDetailManufacturerData": "Данные производителя",
@@ -5489,7 +5489,7 @@
     "sellerProfileCodeCopied": "Код скопирован в буфер обмена",
     "sellerProfileContactShipping": "Контакты и доставка",
     "sellerProfileDiscountExclusive": "Эксклюзивный код скидки для пользователей Socialmesh",
-    "sellerProfileEmail": "Email",
+    "sellerProfileEmail": "Эл. почта",
     "sellerProfileErrorLoading": "Ошибка загрузки продавца",
     "sellerProfileFoundedStat": "Основан",
     "sellerProfileGoBack": "Назад",
@@ -5996,7 +5996,7 @@
     "signalFilterHidden": "Скрытые",
     "signalFilterLocation": "Местоположение",
     "signalFilterMedia": "Медиа",
-    "signalFilterMesh": "Mesh",
+    "signalFilterMesh": "Сеть Mesh",
     "signalFilterNearby": "Рядом",
     "signalFilterReplies": "Ответы",
     "signalFilterSaved": "Сохранённые",
@@ -6048,7 +6048,7 @@
     "signalOfflineCloudUnavailable": "Автономный режим: изображения и облачные функции недоступны.",
     "signalOnMapCount": "{count, plural, =1{1 на карте} few{{count} на карте} many{{count} на карте} other{{count} на карте}}",
     "signalOriginCloud": "Облако",
-    "signalOriginMesh": "Mesh",
+    "signalOriginMesh": "Сеть Mesh",
     "signalPeopleActiveCount": "{count, plural, =1{1 активный пользователь} few{{count} активных пользователя} many{{count} активных пользователей} other{{count} активного пользователя}}",
     "signalProcessingImage": "Обработка изображения...",
     "signalProfile": "Профиль",
@@ -6590,8 +6590,8 @@
     "takCompassSE": "ЮВ",
     "takCompassSW": "ЮЗ",
     "takCompassW": "З",
-    "takCotTypeAtom": "Atom",
-    "takCotTypeBits": "Bits",
+    "takCotTypeAtom": "Атом",
+    "takCotTypeBits": "Биты",
     "takCotTypeFriendly": "Дружественный",
     "takCotTypeHostile": "Враждебный",
     "takCotTypeNeutral": "Нейтральный",
@@ -6880,7 +6880,7 @@
     "telemetryPaxNoData": "Данные PAX ещё не записаны",
     "telemetryPaxTitle": "Журнал PAX-счётчика",
     "telemetryPaxUptime": "Время работы: {uptime}",
-    "telemetryPaxWifi": "WiFi",
+    "telemetryPaxWifi": "Wi‑Fi",
     "telemetryPositionAllNodesDescription": "Показать местоположения всех нод",
     "telemetryPositionAllNodesOption": "Все ноды",
     "telemetryPositionClearLabel": "Очистить",
@@ -7560,7 +7560,7 @@
     "worldMeshLosAnalysis": "Анализ прямой видимости",
     "worldMeshLosBulgeAndFresnel": "Выпуклость: {bulge} м · F1: {fresnel} м",
     "worldMeshLosSubtitle": "Проверка кривизны Земли и зоны Френеля",
-    "worldMeshLosVerdict": "LOS: {verdict}",
+    "worldMeshLosVerdict": "Прямая видимость: {verdict}",
     "worldMeshMapStyleDark": "Тёмная карта",
     "worldMeshMapStyleLight": "Светлая карта",
     "worldMeshMapStyleSatellite": "Спутник",
@@ -7653,7 +7653,7 @@
     "legalDocumentPrivacyPolicy": "Политика конфиденциальности",
     "legalDocumentHelpAndSupport": "Помощь и поддержка",
     "legalDocumentDocumentation": "Документация",
-    "legalDocumentFaq": "FAQ",
+    "legalDocumentFaq": "ЧаВо",
     "legalDocumentDeleteAccount": "Удалить аккаунт",
     "legalDocumentUnableToLoad": "Не удалось загрузить страницу",
     "legalDocumentRequiresInternet": "Для этого содержимого требуется подключение к Интернету. Проверьте подключение и попробуйте снова.",
@@ -8657,7 +8657,7 @@
     "adminPostsDeleteFilteredMessage": "Удалить отфильтрованные ({filtered}) или все ({total}) сигналы.",
     "adminPostsDeleteAllMessage": "Удалить все {total} сигналов.",
     "adminPostsDeleteWarning": "Это действие нельзя отменить. Введите DELETE для подтверждения.",
-    "adminPostsDeleteHint": "DELETE",
+    "adminPostsDeleteHint": "УДАЛИТЬ",
     "adminPostsNoText": "(без текста)",
     "adminPostsAuthor": "Автор {authorId}",
     "adminPostsStats": "Комментарии {comments} · Лайки {likes}",
@@ -8685,7 +8685,7 @@
     "bgConnNotificationStyle": "Стиль уведомления",
     "bgConnStyleMinimalDesc": "Показывает «Подключено к [устройство]»",
     "bgConnStyleDetailedDesc": "Показывает статус подключения с количеством нод и временем последнего сообщения",
-    "bgConnSectionLiveActivity": "LIVE ACTIVITY",
+    "bgConnSectionLiveActivity": "Live Activity",
     "@bgConnSectionLiveActivity": {
         "description": "Section header for iOS Live Activity / Dynamic Island settings"
     },
@@ -9010,13 +9010,13 @@
     "networkConfigSaveFailed": "Не удалось сохранить: {error}",
     "networkConfigTitle": "Сеть",
     "networkConfigSave": "Сохранить",
-    "networkConfigSectionWifi": "WI-FI",
+    "networkConfigSectionWifi": "Wi-Fi",
     "networkConfigNoWifiWarning": "Это устройство не имеет оборудования WiFi. Включение WiFi сделает устройство недоступным через Bluetooth.",
     "networkConfigWifiEnabled": "WiFi включён",
     "networkConfigWifiEnabledSubtitle": "Подключиться к сети WiFi",
     "networkConfigSsid": "Имя сети (SSID)",
     "networkConfigPassword": "Пароль",
-    "networkConfigSectionEthernet": "ETHERNET",
+    "networkConfigSectionEthernet": "Ethernet",
     "networkConfigEthernetEnabled": "Ethernet включён",
     "networkConfigEthernetEnabledSubtitle": "Использовать проводное подключение Ethernet",
     "networkConfigSectionIpAddress": "IP-АДРЕС",
@@ -9959,7 +9959,7 @@
     "adminBroadcastDefBodyIfttt": "Подключите Socialmesh к любимым сервисам через IFTTT.",
     "adminBroadcastDeepLinkCatCore": "ОСНОВНОЕ",
     "adminBroadcastDeepLinkCatSocial": "СОЦИАЛЬНОЕ",
-    "adminBroadcastDeepLinkCatMesh": "MESH",
+    "adminBroadcastDeepLinkCatMesh": "СЕТЬ MESH",
     "adminBroadcastDeepLinkCatPremium": "ПРЕМИУМ",
     "adminBroadcastLinkSettings": "Настройки",
     "adminBroadcastLinkAccount": "Аккаунт и подписки",
@@ -10044,8 +10044,8 @@
     "adminPurchasesAnonRcUser": "Анонимный пользователь RevenueCat",
     "adminPurchasesFallbackCloudSync": "Облачная синхронизация",
     "adminPurchasesSectionIds": "Идентификаторы",
-    "adminPurchasesFirebaseUid": "Firebase UID",
-    "adminPurchasesRevenueCatId": "RevenueCat ID",
+    "adminPurchasesFirebaseUid": "UID Firebase",
+    "adminPurchasesRevenueCatId": "ID RevenueCat",
     "adminPurchasesMemberSince": "Участник с",
     "adminPurchasesSectionRegionPricing": "Регион и цены",
     "@adminPurchasesSectionRegionPricing": {
@@ -10256,8 +10256,8 @@
     "globalLayerHoursAgo": "{hours}ч назад",
     "globalLayerDaysAgo": "{days}д назад",
     "globalLayerSecondsAgo": "{seconds}с назад",
-    "globalLayerDateFormat": "{day}/{month}/{year}",
-    "globalLayerShortDateFormat": "{month}/{day}",
+    "globalLayerDateFormat": "{day}.{month}.{year}",
+    "globalLayerShortDateFormat": "{day}.{month}",
     "globalLayerHealthHeader": "Состояние",
     "globalLayerHealthy": "Исправен",
     "globalLayerUnhealthy": "Неисправен",
@@ -10327,7 +10327,7 @@
     "dashboardHealthSignal": "Сигнал",
     "dashboardHelp": "Справка",
     "dashboardLastHour": "Последний час",
-    "dashboardLive": "LIVE",
+    "dashboardLive": "В ЭФИРЕ",
     "dashboardNoChannelsConfigured": "Каналы не настроены",
     "dashboardNoMessagesYet": "Сообщений пока нет",
     "dashboardNoNearbyNodes": "Ближайшие ноды не обнаружены",
@@ -11280,7 +11280,7 @@
     "mqttBrokerMeshtasticName": "Meshtastic (официальный)",
     "mqttBrokerMeshtasticDescription": "Стандартный MQTT-сервер Meshtastic. Подключает вас к общемировой сети. Учётная запись не требуется.",
     "mqttBrokerMeshtasticNote": "Публичные учётные данные используются всеми пользователями Meshtastic.",
-    "mqttBrokerMosquittoName": "Mosquitto Test",
+    "mqttBrokerMosquittoName": "Тестовый Mosquitto",
     "mqttBrokerMosquittoDescription": "Бесплатный тестовый MQTT-сервер от проекта Eclipse Mosquitto. Для проверки настроек перед подключением к рабочему серверу.",
     "mqttBrokerMosquittoNote": "Тестовый сервер — не для полноценного использования. Возможны перебои.",
     "mqttBrokerCustomName": "Пользовательский MQTT-сервер",
@@ -12623,11 +12623,11 @@
     "@mrrpHarnessCountersSimFaults": {
         "description": "Counter label: simulated faults injected."
     },
-    "meshExplorerTitle": "Mesh Explorer",
+    "meshExplorerTitle": "Обозреватель Mesh",
     "@meshExplorerTitle": {
         "description": "Title for the Mesh Explorer screen."
     },
-    "meshExplorerDrawerLabel": "Mesh Explorer",
+    "meshExplorerDrawerLabel": "Обозреватель Mesh",
     "@meshExplorerDrawerLabel": {
         "description": "Drawer menu label for Mesh Explorer."
     },
@@ -12701,7 +12701,7 @@
     "@meshExplorerHelp": {
         "description": "Help overflow menu item label for the Mesh Explorer screen."
     },
-    "helpMeshExplorerOverviewTitle": "Mesh Explorer",
+    "helpMeshExplorerOverviewTitle": "Обозреватель Mesh",
     "@helpMeshExplorerOverviewTitle": {
         "description": "Help topic title for the Mesh Explorer screen."
     },
@@ -13036,7 +13036,7 @@
     "@meshExplorerCardOpen": {
         "description": "Audience badge for open/public services."
     },
-    "meshExplorerCardLive": "LIVE",
+    "meshExplorerCardLive": "В ЭФИРЕ",
     "@meshExplorerCardLive": {
         "description": "Badge indicating a service is currently live."
     },
@@ -13673,7 +13673,7 @@
     "@meshGamesYouLabel": {
         "description": "Label for the local player in a game."
     },
-    "meshGamesVsSeparator": "vs",
+    "meshGamesVsSeparator": "против",
     "@meshGamesVsSeparator": {
         "description": "Separator shown between the local player and opponent (e.g. 'You vs Opponent')."
     },
@@ -14444,11 +14444,11 @@
             }
         }
     },
-    "takBridgePacketsInbound": "Mesh → TAK",
+    "takBridgePacketsInbound": "Сеть Mesh → TAK",
     "@takBridgePacketsInbound": {
         "description": "Label for the inbound packet counter (mesh to TAK)"
     },
-    "takBridgePacketsOutbound": "TAK → Mesh",
+    "takBridgePacketsOutbound": "TAK → сеть Mesh",
     "@takBridgePacketsOutbound": {
         "description": "Label for the outbound packet counter (TAK to mesh)"
     },
@@ -14505,7 +14505,7 @@
     "@takIdentityOverrideHint": {
         "description": "Hint text for the callsign override text field"
     },
-    "takScreenBridgeOnlyTitle": "TAK Mesh Bridge",
+    "takScreenBridgeOnlyTitle": "Mesh-мост TAK",
     "@takScreenBridgeOnlyTitle": {
         "description": "Title shown on TAK screen when only the mesh bridge feature is enabled"
     },
