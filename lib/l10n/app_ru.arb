@@ -8842,7 +8842,7 @@
     "radioConfigPresetShortFastDesc": "Малый радиус, максимальная скорость",
     "radioConfigPresetShortSlow": "Ближний медленный",
     "radioConfigPresetShortSlowDesc": "Малый радиус, надёжно",
-    "radioConfigPresetShortTurbo": "Ближний турбо",
+    "radioConfigPresetShortTurbo": "Short Turbo",
     "@radioConfigPresetShortTurbo": {
         "description": "Modem preset label: short range, turbo data rate"
     },
@@ -8850,7 +8850,7 @@
     "@radioConfigPresetShortTurboDesc": {
         "description": "Description for short turbo modem preset"
     },
-    "radioConfigPresetLongTurbo": "Дальний турбо",
+    "radioConfigPresetLongTurbo": "Long Turbo",
     "@radioConfigPresetLongTurbo": {
         "description": "Modem preset label: long range, turbo data rate"
     },
@@ -14651,19 +14651,19 @@
     "@networkSectionTitle": {
         "description": "Tab title for network transport in scanner screen"
     },
-    "networkSavedEndpoints": "Сохранённые конечные точки",
+    "networkSavedEndpoints": "Сохранённые адреса",
     "@networkSavedEndpoints": {
         "description": "Section header for saved network endpoints list"
     },
-    "networkNoSavedEndpoints": "Нет сохранённых конечных точек",
+    "networkNoSavedEndpoints": "Нет сохранённых адресов",
     "@networkNoSavedEndpoints": {
         "description": "Empty state headline when no network endpoints are saved"
     },
-    "networkNoSavedEndpointsDescription": "Добавьте конечную точку для подключения к устройству Meshtastic по сети.",
+    "networkNoSavedEndpointsDescription": "Добавьте адрес для подключения к устройству Meshtastic по сети.",
     "@networkNoSavedEndpointsDescription": {
         "description": "Empty state description for no saved endpoints"
     },
-    "networkAddEndpoint": "Добавить конечную точку",
+    "networkAddEndpoint": "Добавить адрес",
     "@networkAddEndpoint": {
         "description": "Button label to add a new network endpoint"
     },
@@ -14725,11 +14725,11 @@
     "@networkPortInvalid": {
         "description": "Validation error for invalid port number"
     },
-    "networkDeleteEndpoint": "Удалить конечную точку",
+    "networkDeleteEndpoint": "Удалить адрес",
     "@networkDeleteEndpoint": {
         "description": "Button label to delete a saved network endpoint"
     },
-    "networkDeleteEndpointConfirm": "Удалить {address} из сохранённых конечных точек?",
+    "networkDeleteEndpointConfirm": "Удалить {address} из сохранённых адресов?",
     "@networkDeleteEndpointConfirm": {
         "description": "Confirmation message for deleting a saved endpoint",
         "placeholders": {
@@ -14779,11 +14779,11 @@
     "@mdnsScanning": {
         "description": "Status text shown while mDNS discovery is actively scanning"
     },
-    "settingsNetworkEndpointsTitle": "Сетевые конечные точки",
+    "settingsNetworkEndpointsTitle": "Сетевые подключения",
     "@settingsNetworkEndpointsTitle": {
         "description": "Title for the network endpoints settings screen"
     },
-    "settingsTileNetworkEndpointsTitle": "Сетевые точки подключения",
+    "settingsTileNetworkEndpointsTitle": "Сетевые подключения",
     "@settingsTileNetworkEndpointsTitle": {
         "description": "Settings tile title for network endpoints"
     },
