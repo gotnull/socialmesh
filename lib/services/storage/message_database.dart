@@ -26,7 +26,7 @@ class MessageDatabase {
   static const _dbName = 'messages.db';
   static const _tableName = 'messages';
   static const _readPositionsTableName = 'conversation_read_positions';
-  static const _dbVersion = 9;
+  static const _dbVersion = 10;
 
   /// Maximum messages retained per conversation (DM or channel).
   static const int maxMessagesPerConversation = 500;
@@ -227,6 +227,24 @@ class MessageDatabase {
             'v9 migration: created conversation read positions table',
           );
         }
+        if (oldVersion < 10) {
+          // Nullable column — legacy rows load as realAck=null (unknown),
+          // which the UI renders identically to the previous "delivered"
+          // state to avoid rewriting historical certainty.
+          final existingColumns = (await db.rawQuery(
+            'PRAGMA table_info($_tableName)', // lint-allow: hardcoded-string
+          )).map((r) => r['name'] as String).toSet();
+          if (!existingColumns.contains('real_ack')) {
+            await db.execute(
+              'ALTER TABLE $_tableName ADD COLUMN real_ack INTEGER', // lint-allow: hardcoded-string
+            );
+            AppLogging.storage('v10 migration: added real_ack column');
+          } else {
+            AppLogging.storage(
+              'v10 migration: real_ack already exists, skipping',
+            );
+          }
+        }
       },
     );
 
@@ -256,6 +274,7 @@ class MessageDatabase {
         sent INTEGER NOT NULL DEFAULT 0,
         received INTEGER NOT NULL DEFAULT 0,
         acked INTEGER NOT NULL DEFAULT 0,
+        real_ack INTEGER,
         status TEXT NOT NULL DEFAULT 'sent',
         error_message TEXT,
         routing_error TEXT,
@@ -657,6 +676,7 @@ class MessageDatabase {
       'sent': message.sent ? 1 : 0,
       'received': message.received ? 1 : 0,
       'acked': message.acked ? 1 : 0,
+      'real_ack': message.realAck == null ? null : (message.realAck! ? 1 : 0),
       'status': message.status.name,
       'error_message': message.errorMessage,
       'routing_error': message.routingError?.name,
@@ -697,6 +717,7 @@ class MessageDatabase {
       sent: (row['sent'] as int) == 1,
       received: (row['received'] as int) == 1,
       acked: (row['acked'] as int) == 1,
+      realAck: row['real_ack'] == null ? null : (row['real_ack'] as int) == 1,
       status: _parseMessageStatus(row['status'] as String?),
       errorMessage: row['error_message'] as String?,
       routingError: _parseRoutingError(row['routing_error'] as String?),

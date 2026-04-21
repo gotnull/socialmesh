@@ -15079,11 +15079,17 @@ abstract class AppLocalizations {
   /// **'Search emoji…'**
   String get messageContextMenuSearchEmoji;
 
-  /// Delivery status text for a message that has been acknowledged.
+  /// Delivery status text for a message that has been acknowledged by the intended recipient.
   ///
   /// In en, this message translates to:
   /// **'Delivered ✔️'**
   String get messageContextMenuStatusDelivered;
+
+  /// Delivery status text for a DM that was acknowledged only by an intermediate mesh node (implicit ack), not by the intended recipient.
+  ///
+  /// In en, this message translates to:
+  /// **'Acknowledged by another node'**
+  String get messageContextMenuStatusDeliveredRelayOnly;
 
   /// Delivery status text for a message that failed to send.
   ///

@@ -3445,11 +3445,23 @@ class ProtocolService {
         _pendingMessages.remove(requestId);
       }
 
+      // Classify the ack strength, mirroring meshtastic-ios `realACK`.
+      // An implicit mesh ack is the firmware's self-addressed Routing packet
+      // generated when the radio hears its own packet being rebroadcast
+      // (packet.from == packet.to). An explicit recipient ack comes from the
+      // DM peer (packet.from != packet.to). Only meaningful when delivered.
+      final realAck = delivered && packet.from != packet.to;
+      AppLogging.messages(
+        '🛰️ Ack classified: requestId=$requestId delivered=$delivered '
+        'realAck=$realAck from=${packet.from} to=${packet.to}',
+      );
+
       // Emit delivery update
       final update = MessageDeliveryUpdate(
         packetId: requestId,
         delivered: delivered,
         error: delivered ? null : routingError,
+        realAck: realAck,
       );
       _deliveryController.add(update);
 

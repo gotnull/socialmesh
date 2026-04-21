@@ -3517,6 +3517,18 @@ final liveActivityManagerProvider =
 // Messages with persistence
 class MessagesNotifier extends Notifier<List<Message>> {
   final Map<int, String> _packetToMessageId = {};
+
+  /// When an outbound DM receives an implicit mesh ack (realAck=false) we
+  /// intentionally keep its entry in [_packetToMessageId] so a later explicit
+  /// recipient ack can upgrade `realAck` false → true. Firmware retransmit
+  /// windows and duty-cycle delays can stretch the gap between the two acks
+  /// to tens of seconds. After [_implicitAckUpgradeWindow] has elapsed,
+  /// subsequent explicit acks are vanishingly rare — we drop the entry to
+  /// bound memory. Late-arriving explicit acks after eviction land in the
+  /// "untracked packet" log branch, which is safe (the message stays
+  /// delivered with `realAck=false`).
+  final Map<int, DateTime> _implicitAckedAt = {};
+  static const Duration _implicitAckUpgradeWindow = Duration(minutes: 5);
   final LinkedHashMap<String, DateTime> _recentMessageSignatures =
       LinkedHashMap();
   static const Duration _duplicateSignatureWindow = Duration(seconds: 5);
@@ -4095,6 +4107,11 @@ class MessagesNotifier extends Notifier<List<Message>> {
       '📨 Currently tracking packets: ${_packetToMessageId.keys.toList()}',
     );
 
+    // Drop tracking entries that have lingered past the window in which an
+    // explicit recipient ack can still usefully upgrade realAck. Runs
+    // lazily on each delivery event — no timer, no extra subscriptions.
+    _sweepExpiredImplicitAcks();
+
     final messageId = _packetToMessageId[update.packetId];
     if (messageId == null) {
       // Protocol-internal packets (position requests, admin ops) generate
@@ -4116,23 +4133,51 @@ class MessagesNotifier extends Notifier<List<Message>> {
 
     final message = state[messageIndex];
 
-    // If message is already delivered, ignore subsequent updates (especially failures)
-    // This handles the case where we get ACK followed by a timeout/error packet
+    // DM-only gate for realAck, mirroring meshtastic-ios (`toUser != nil`).
+    // Broadcast/channel messages cannot carry a meaningful "recipient"
+    // acknowledgement — any raw realAck signal on a broadcast is discarded
+    // here as defence in depth, even though broadcast sends normally use
+    // wantAck=false and therefore never enter _packetToMessageId.
+    final rawRealAck = update.realAck && message.isDirect;
+
+    // If message is already delivered, ignore subsequent updates (especially
+    // failures — this handles the case where we get ACK followed by a
+    // timeout/error packet). The one exception is a weak→strong ack upgrade:
+    // an implicit mesh ack (realAck == false) can legitimately be superseded
+    // by a later explicit recipient ack (realAck == true). Never downgrade.
     if (message.status == MessageStatus.delivered) {
-      AppLogging.debug(
-        '📨 ⏭️ Ignoring update for already-delivered message: $messageId',
+      final canUpgrade =
+          update.isSuccess && rawRealAck && message.realAck != true;
+      if (!canUpgrade) {
+        AppLogging.debug(
+          '📨 ⏭️ Ignoring update for already-delivered message: $messageId',
+        );
+        return;
+      }
+      AppLogging.messages(
+        '🛰️ Upgrading $messageId realAck ${message.realAck} → true '
+        '(explicit recipient ack superseded earlier implicit ack)',
       );
-      return;
     }
 
     Message updatedMessage;
     if (update.isSuccess) {
       // Confirmed — clear all retry state; the message is delivered.
+      // realAck is forward-only: true wins over false/null; false does not
+      // overwrite an earlier true. Broadcasts cannot gain realAck=true.
+      final nextRealAck = !message.isDirect
+          ? message.realAck
+          : (message.realAck == true ? true : rawRealAck);
+      AppLogging.messages(
+        '🛰️ $messageId → delivered (realAck=$nextRealAck, '
+        'direct=${message.isDirect}, packetId=${update.packetId})',
+      );
       updatedMessage = message.copyWith(
         status: MessageStatus.delivered,
         autoRetryEnabled: false,
         retryCount: 0,
         acked: true,
+        realAck: nextRealAck,
         clearLastAttemptAt: true,
       );
     } else {
@@ -4150,10 +4195,23 @@ class MessagesNotifier extends Notifier<List<Message>> {
     ];
     _storage?.saveMessage(updatedMessage);
 
-    // Stop tracking after successful delivery to ignore future error packets
-    if (update.isSuccess) {
+    // Stop tracking after successful delivery so future error packets cannot
+    // regress the state. For DMs acked only by a relay (implicit mesh ack),
+    // stay tracked so a later explicit recipient ack can upgrade realAck
+    // false → true, bounded by _implicitAckUpgradeWindow via the lazy sweep
+    // above. The already-delivered guard still blocks failures either way.
+    if (update.isSuccess && rawRealAck) {
       _packetToMessageId.remove(update.packetId);
+      _implicitAckedAt.remove(update.packetId);
       AppLogging.debug('📨 ✅ Message delivered, stopped tracking: $messageId');
+    } else if (update.isSuccess) {
+      // Implicit ack (or a non-DM success) — record the timestamp so we can
+      // evict the tracking entry if no explicit ack ever follows. Overwrites
+      // any prior stamp so a duplicate implicit ack refreshes the window.
+      _implicitAckedAt[update.packetId] = DateTime.now();
+      AppLogging.debug(
+        '📨 📶 Implicit mesh ack for $messageId — awaiting explicit recipient ack',
+      );
     } else {
       AppLogging.debug(
         '📨 ❌ Message failed: $messageId - ${update.error?.message}',
@@ -4163,11 +4221,44 @@ class MessagesNotifier extends Notifier<List<Message>> {
 
   void trackPacket(int packetId, String messageId) {
     _packetToMessageId[packetId] = messageId;
+    // Fresh tracking — drop any stale implicit-ack timestamp carried over
+    // from a reused packet id in the unlikely event of wraparound.
+    _implicitAckedAt.remove(packetId);
     AppLogging.debug('📨 Tracking packet $packetId -> message $messageId');
     AppLogging.debug(
       '📨 Current tracked packets: ${_packetToMessageId.keys.toList()}',
     );
   }
+
+  /// Evict tracking entries for packets that received an implicit mesh ack
+  /// but never a follow-up explicit recipient ack. Called lazily from
+  /// [_handleDeliveryUpdate] so we pay nothing outside the routing path.
+  /// Visible for testing.
+  void _sweepExpiredImplicitAcks({DateTime? now}) {
+    if (_implicitAckedAt.isEmpty) return;
+    final cutoff = (now ?? DateTime.now()).subtract(_implicitAckUpgradeWindow);
+    final expired = <int>[];
+    for (final entry in _implicitAckedAt.entries) {
+      if (entry.value.isBefore(cutoff)) {
+        expired.add(entry.key);
+      }
+    }
+    if (expired.isEmpty) return;
+    for (final pid in expired) {
+      _packetToMessageId.remove(pid);
+      _implicitAckedAt.remove(pid);
+    }
+    AppLogging.messages(
+      '🧹 Swept ${expired.length} stale implicit-ack tracking entries '
+      '(no explicit recipient ack within '
+      '${_implicitAckUpgradeWindow.inMinutes}m): $expired',
+    );
+  }
+
+  /// Test-only hook to force the sweep with a provided clock.
+  @visibleForTesting
+  void debugSweepExpiredImplicitAcks({required DateTime now}) =>
+      _sweepExpiredImplicitAcks(now: now);
 
   /// Remove a packet from the delivery-tracking map.
   ///
@@ -4176,6 +4267,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
   /// state.
   void untrackPacket(int packetId) {
     _packetToMessageId.remove(packetId);
+    _implicitAckedAt.remove(packetId);
     AppLogging.debug('📨 Untracked stale packet $packetId');
   }
 

@@ -8545,6 +8545,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get messageContextMenuStatusDelivered => 'Consegnato ✔️';
 
   @override
+  String get messageContextMenuStatusDeliveredRelayOnly =>
+      'Acknowledged by another node';
+
+  @override
   String messageContextMenuStatusFailed(String error) {
     return 'Fallito: $error';
   }

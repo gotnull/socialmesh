@@ -11427,7 +11427,11 @@
     },
     "messageContextMenuStatusDelivered": "Delivered ✔️",
     "@messageContextMenuStatusDelivered": {
-        "description": "Delivery status text for a message that has been acknowledged."
+        "description": "Delivery status text for a message that has been acknowledged by the intended recipient."
+    },
+    "messageContextMenuStatusDeliveredRelayOnly": "Acknowledged by another node",
+    "@messageContextMenuStatusDeliveredRelayOnly": {
+        "description": "Delivery status text for a DM that was acknowledged only by an intermediate mesh node (implicit ack), not by the intended recipient."
     },
     "messageContextMenuStatusFailed": "Failed: {error}",
     "@messageContextMenuStatusFailed": {

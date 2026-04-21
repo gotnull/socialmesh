@@ -2957,6 +2957,11 @@ class _MessageBubble extends ConsumerWidget {
     final isRetrying = message.isRetrying;
     final isPending = message.isPending;
     final isDelivered = message.status == MessageStatus.delivered;
+    // Explicit recipient ack — renders with the double-check indicator.
+    // Legacy rows (realAck == null) are treated as explicit to preserve the
+    // pre-migration presentation; only a known-implicit ack (false) downgrades
+    // the visual to a single check.
+    final isExplicitlyAcked = isDelivered && message.realAck != false;
     final sourceBadge = _buildSourceBadge(context);
 
     // Translation state for this message
@@ -3087,7 +3092,9 @@ class _MessageBubble extends ConsumerWidget {
                               if (!isPending && !isFailed && !isQueued) ...[
                                 const SizedBox(width: AppTheme.spacing4),
                                 Icon(
-                                  isDelivered ? Icons.done_all : Icons.done,
+                                  isExplicitlyAcked
+                                      ? Icons.done_all
+                                      : Icons.done,
                                   size: 14,
                                   color: Colors.white.withValues(alpha: 0.7),
                                 ),
