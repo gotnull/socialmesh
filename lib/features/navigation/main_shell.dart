@@ -303,10 +303,6 @@ void navigateFromDrawer(BuildContext context, Widget screen) {
 // feed screen to focus a specific signal without pushing additional routes.
 final GlobalKey signalFeedScreenKey = GlobalKey();
 
-/// Global key for the bottom navigation bar so utilities (e.g., snackbars)
-/// can measure its runtime height instead of hardcoding offsets.
-final GlobalKey mainShellBottomNavKey = GlobalKey();
-
 class MainShell extends ConsumerStatefulWidget {
   const MainShell({super.key});
 
@@ -1450,7 +1446,6 @@ class _MainShellState extends ConsumerState<MainShell> {
           // without obstructing app bar content (search fields, filters, etc.).
           if (ref.watch(hasActiveCountdownsProvider)) const CountdownBanner(),
           Container(
-            key: mainShellBottomNavKey,
             decoration: BoxDecoration(
               color: theme.scaffoldBackgroundColor,
               border: Border(

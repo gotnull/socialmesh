@@ -295,15 +295,15 @@ void main() {
       );
 
       final csv = await db.exportPositionLogsCsv(42);
-      // CSV uses toIso8601String() which may be local time — verify
-      // the underlying epoch round-trips correctly via the stored logs.
+      // CSV export normalises timestamps to UTC ISO-8601 for unambiguous,
+      // timezone-independent output — verify the underlying epoch round-trips
+      // and the CSV carries the UTC-formatted representation.
       final logs = await db.getPositionLogs(42);
       expect(
         logs.first.timestamp.millisecondsSinceEpoch,
         ts.millisecondsSinceEpoch,
       );
-      // Verify CSV contains the formatted timestamp from the log.
-      expect(csv, contains(logs.first.timestamp.toIso8601String()));
+      expect(csv, contains(logs.first.timestamp.toUtc().toIso8601String()));
     });
   });
 }
