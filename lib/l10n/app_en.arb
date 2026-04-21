@@ -47648,5 +47648,218 @@
     "meshFeedEmptyFilterDescription": "Try changing the filter to see more posts.",
     "@meshFeedEmptyFilterDescription": {
         "description": "Description shown when no posts match the active filter."
+    },
+    "petDrawerLabel": "Node Pet",
+    "@petDrawerLabel": {
+        "description": "Drawer / navigation rail label for the Node Pet feature."
+    },
+    "petScreenTitle": "Node Pet",
+    "@petScreenTitle": {
+        "description": "App bar title on the Pet home screen."
+    },
+    "petActionCharge": "Charge",
+    "@petActionCharge": {
+        "description": "Primary action label — replenishes the pet's energy."
+    },
+    "petActionSurge": "Surge",
+    "@petActionSurge": {
+        "description": "Secondary action label — hold-to-surge charges faster but raises instability."
+    },
+    "petActionResonate": "Resonate",
+    "@petActionResonate": {
+        "description": "Action label — brief premium interaction that raises mood."
+    },
+    "petActionStabilise": "Stabilise",
+    "@petActionStabilise": {
+        "description": "Action label — clears a distortion artefact (hygiene analogue)."
+    },
+    "petActionSync": "Sync",
+    "@petActionSync": {
+        "description": "Action label — corrects the pet during a discipline moment."
+    },
+    "petActionPurge": "Purge",
+    "@petActionPurge": {
+        "description": "Action label — medicine analogue; only valid while the pet is sick."
+    },
+    "petActionDim": "Dim",
+    "@petActionDim": {
+        "description": "Action label — puts the pet to sleep during the sleep window."
+    },
+    "petActionInspect": "Inspect",
+    "@petActionInspect": {
+        "description": "Action label — opens a sheet with detailed pet stats."
+    },
+    "petActionReSigil": "Re-sigil",
+    "@petActionReSigil": {
+        "description": "Action label — restart a dormant pet from a fresh sigil seed."
+    },
+    "petStageEgg": "Egg",
+    "@petStageEgg": {
+        "description": "Life-cycle stage name."
+    },
+    "petStageJuvenile": "Juvenile",
+    "@petStageJuvenile": {
+        "description": "Life-cycle stage name."
+    },
+    "petStageAdolescent": "Adolescent",
+    "@petStageAdolescent": {
+        "description": "Life-cycle stage name."
+    },
+    "petStageAdult": "Adult",
+    "@petStageAdult": {
+        "description": "Life-cycle stage name."
+    },
+    "petStageElder": "Elder",
+    "@petStageElder": {
+        "description": "Life-cycle stage name."
+    },
+    "petStageDormant": "Dormant",
+    "@petStageDormant": {
+        "description": "Life-cycle stage name."
+    },
+    "petBranchUnborn": "Unborn",
+    "@petBranchUnborn": {
+        "description": "Evolution branch name — pre-hatch placeholder."
+    },
+    "petBranchLuminous": "Luminous",
+    "@petBranchLuminous": {
+        "description": "Evolution branch name — pristine-care adult form."
+    },
+    "petBranchSteady": "Steady",
+    "@petBranchSteady": {
+        "description": "Evolution branch name — moderate-care adult form."
+    },
+    "petBranchVolatile": "Volatile",
+    "@petBranchVolatile": {
+        "description": "Evolution branch name — high-surge adult form."
+    },
+    "petBranchDimmed": "Dimmed",
+    "@petBranchDimmed": {
+        "description": "Evolution branch name — neglect-path adult form."
+    },
+    "petStatEnergy": "Energy",
+    "@petStatEnergy": {
+        "description": "Visible stat label."
+    },
+    "petStatMood": "Mood",
+    "@petStatMood": {
+        "description": "Visible stat label."
+    },
+    "petStatStability": "Stability",
+    "@petStatStability": {
+        "description": "Visible stat label."
+    },
+    "petMoodContent": "Content",
+    "@petMoodContent": {
+        "description": "Mood class name shown under the creature."
+    },
+    "petMoodHungry": "Low energy",
+    "@petMoodHungry": {
+        "description": "Mood class name shown under the creature."
+    },
+    "petMoodSad": "Low mood",
+    "@petMoodSad": {
+        "description": "Mood class name shown under the creature."
+    },
+    "petMoodSick": "Unwell",
+    "@petMoodSick": {
+        "description": "Mood class name shown under the creature."
+    },
+    "petMoodSleeping": "Sleeping",
+    "@petMoodSleeping": {
+        "description": "Mood class name shown under the creature."
+    },
+    "petMoodCalling": "Calling",
+    "@petMoodCalling": {
+        "description": "Mood class name shown under the creature."
+    },
+    "petNoOwnerTitle": "No paired node",
+    "@petNoOwnerTitle": {
+        "description": "Empty-state title when the device has no mesh node identity yet."
+    },
+    "petNoOwnerDescription": "Connect a Meshtastic or MeshCore device to bind a pet to your node.",
+    "@petNoOwnerDescription": {
+        "description": "Empty-state description when the device has no mesh node identity yet."
+    },
+    "petAgeDaysLabel": "{count, plural, =0{Today} =1{1 day old} other{{count} days old}}",
+    "@petAgeDaysLabel": {
+        "description": "Age label shown near the stage/branch header.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "petCallBannerHungry": "Low on energy — Charge or Surge to answer.",
+    "@petCallBannerHungry": {
+        "description": "Attention call banner copy."
+    },
+    "petCallBannerLonely": "Wants attention — Resonate to answer.",
+    "@petCallBannerLonely": {
+        "description": "Attention call banner copy."
+    },
+    "petCallBannerSick": "Feeling unwell — Purge to answer.",
+    "@petCallBannerSick": {
+        "description": "Attention call banner copy."
+    },
+    "petCallBannerHygiene": "Field is unstable — Stabilise to clear.",
+    "@petCallBannerHygiene": {
+        "description": "Attention call banner copy."
+    },
+    "petCallBannerBedtime": "It's almost time to rest — Dim to answer.",
+    "@petCallBannerBedtime": {
+        "description": "Attention call banner copy."
+    },
+    "petCallBannerBoredom": "Restless — Resonate to answer.",
+    "@petCallBannerBoredom": {
+        "description": "Attention call banner copy."
+    },
+    "petInspectTitle": "Inspect",
+    "@petInspectTitle": {
+        "description": "Title of the Inspect bottom sheet."
+    },
+    "petInspectSectionIdentity": "Identity",
+    "@petInspectSectionIdentity": {
+        "description": "Inspect sheet section — identity block."
+    },
+    "petInspectSectionStats": "Stats",
+    "@petInspectSectionStats": {
+        "description": "Inspect sheet section — visible stats block."
+    },
+    "petInspectSectionRecent": "Recent",
+    "@petInspectSectionRecent": {
+        "description": "Inspect sheet section — recent events block."
+    },
+    "petInspectRowDnaSeed": "DNA seed",
+    "@petInspectRowDnaSeed": {
+        "description": "Inspect row label — shows the deterministic seed (hex)."
+    },
+    "petInspectRowOwnerNode": "Owner node",
+    "@petInspectRowOwnerNode": {
+        "description": "Inspect row label — shows the owning node number."
+    },
+    "petInspectRowStage": "Stage",
+    "@petInspectRowStage": {
+        "description": "Inspect row label — current life-cycle stage."
+    },
+    "petInspectRowBranch": "Branch",
+    "@petInspectRowBranch": {
+        "description": "Inspect row label — current evolution branch."
+    },
+    "petInspectRowHatched": "Hatched",
+    "@petInspectRowHatched": {
+        "description": "Inspect row label — hatch timestamp."
+    },
+    "petInspectDeviceLocalNote": "Pet state currently stays on this device. Cross-device migration is coming later.",
+    "@petInspectDeviceLocalNote": {
+        "description": "Footer note clarifying the v1 local-first constraint."
+    },
+    "petDormantTitle": "The sigil has gone quiet",
+    "@petDormantTitle": {
+        "description": "Dormant-state headline on the Pet home screen."
+    },
+    "petDormantDescription": "Begin a new lineage — your next pet inherits a fresh seed tied to this node.",
+    "@petDormantDescription": {
+        "description": "Dormant-state description."
     }
 }
