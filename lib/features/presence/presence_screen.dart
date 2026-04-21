@@ -1000,34 +1000,28 @@ class _EncounterRow extends StatelessWidget {
     final theme = Theme.of(context);
     final now = DateTime.now();
 
-    return Row(
+    final tertiaryStyle = theme.textTheme.bodySmall?.copyWith(
+      color: context.textTertiary,
+    );
+
+    return Wrap(
+      spacing: AppTheme.spacing6,
+      runSpacing: AppTheme.spacing4,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        Icon(
-          encounter.isFamiliar ? Icons.people : Icons.person_outline,
-          size: 12,
-          color: context.textTertiary,
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              encounter.isFamiliar ? Icons.people : Icons.person_outline,
+              size: 12,
+              color: context.textTertiary,
+            ),
+            const SizedBox(width: AppTheme.spacing4),
+            Text(encounter.encounterSummary, style: tertiaryStyle),
+          ],
         ),
-        const SizedBox(width: AppTheme.spacing4),
-        Text(
-          encounter.encounterSummary,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: context.textTertiary,
-          ),
-        ),
-        const SizedBox(width: AppTheme.spacing6),
-        Text(
-          '·',
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: context.textTertiary,
-          ),
-        ),
-        const SizedBox(width: AppTheme.spacing6),
-        Text(
-          encounter.relationshipAgeText(now),
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: context.textTertiary,
-          ),
-        ),
+        Text('· ${encounter.relationshipAgeText(now)}', style: tertiaryStyle),
       ],
     );
   }
