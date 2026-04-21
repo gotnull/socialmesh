@@ -10382,6 +10382,72 @@ abstract class AppLocalizations {
   /// **'In-App Update'**
   String get firmwareUpdateMethodInApp;
 
+  /// Section header above the device info table on the Firmware Update screen
+  ///
+  /// In en, this message translates to:
+  /// **'Device Info'**
+  String get firmwareUpdateSectionDeviceInfo;
+
+  /// Title of the bottom sheet that explains the available firmware update methods
+  ///
+  /// In en, this message translates to:
+  /// **'How your device updates'**
+  String get firmwareMethodInfoTitle;
+
+  /// Heading for the in-app Nordic DFU update method explanation
+  ///
+  /// In en, this message translates to:
+  /// **'In-App Update (Bluetooth DFU)'**
+  String get firmwareMethodInfoBleHeading;
+
+  /// Body text explaining the in-app Nordic DFU update flow
+  ///
+  /// In en, this message translates to:
+  /// **'Your device uses Nordic Device Firmware Update over Bluetooth. When a new release is available, tap Start Update and the app downloads the firmware, reboots the device into bootloader mode, and flashes it wirelessly. Keep the device nearby and plugged in until the transfer finishes.'**
+  String get firmwareMethodInfoBleBody;
+
+  /// Heading for the web-flasher update method explanation
+  ///
+  /// In en, this message translates to:
+  /// **'Web Flasher (USB)'**
+  String get firmwareMethodInfoWebHeading;
+
+  /// Body text explaining the web-flasher update flow
+  ///
+  /// In en, this message translates to:
+  /// **'This chipset flashes over USB using the Meshtastic Web Flasher. Connect the device with a data-capable USB cable and open the Web Flasher in Chrome or Edge on a desktop browser. In-app wireless updates are not supported on this architecture.'**
+  String get firmwareMethodInfoWebBody;
+
+  /// Heading for the MTools BLE alternative section shown on Nordic devices
+  ///
+  /// In en, this message translates to:
+  /// **'Alternative: MTools BLE'**
+  String get firmwareMethodInfoMtoolsHeading;
+
+  /// Body text explaining the MTools BLE alternative for Nordic devices
+  ///
+  /// In en, this message translates to:
+  /// **'MTools BLE is a third-party iOS/Android app that also performs Nordic DFU over Bluetooth. Use it if the in-app updater fails or if you prefer its workflow. Tapping the button below opens your app store to install MTools BLE and copies the firmware download URL to your clipboard.'**
+  String get firmwareMethodInfoMtoolsBody;
+
+  /// Button label that opens the MTools BLE store listing and copies the firmware URL
+  ///
+  /// In en, this message translates to:
+  /// **'Install MTools BLE & copy firmware URL'**
+  String get firmwareMethodInfoMtoolsAction;
+
+  /// Warning shown when the Nordic firmware asset cannot be located for the current device
+  ///
+  /// In en, this message translates to:
+  /// **'No firmware asset is available for this device yet. Pull to refresh and try again.'**
+  String get firmwareMethodInfoMtoolsNoAsset;
+
+  /// Confirmation snackbar shown after copying the firmware URL for MTools BLE
+  ///
+  /// In en, this message translates to:
+  /// **'Firmware URL copied to clipboard'**
+  String get firmwareMethodInfoUrlCopied;
+
   /// Label for the web flasher update method
   ///
   /// In en, this message translates to:
@@ -15079,11 +15145,17 @@ abstract class AppLocalizations {
   /// **'Search emoji…'**
   String get messageContextMenuSearchEmoji;
 
-  /// Delivery status text for a message that has been acknowledged.
+  /// Delivery status text for a message that has been acknowledged by the intended recipient.
   ///
   /// In en, this message translates to:
   /// **'Delivered ✔️'**
   String get messageContextMenuStatusDelivered;
+
+  /// Delivery status text for a DM that was acknowledged only by an intermediate mesh node (implicit ack), not by the intended recipient.
+  ///
+  /// In en, this message translates to:
+  /// **'Acknowledged by another node'**
+  String get messageContextMenuStatusDeliveredRelayOnly;
 
   /// Delivery status text for a message that failed to send.
   ///
@@ -16399,6 +16471,12 @@ abstract class AppLocalizations {
   /// **'TAK Map'**
   String get navigationTakMap;
 
+  /// Label for the Telemetry drawer item that opens the telemetry hub screen (device metrics, environment, air quality, position, traceroute, PAX, detection sensor, routes).
+  ///
+  /// In en, this message translates to:
+  /// **'Telemetry'**
+  String get navigationTelemetry;
+
   /// Label for the Theme Pack premium drawer item.
   ///
   /// In en, this message translates to:
@@ -17622,6 +17700,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Radio'**
   String get nodeDetailSectionRadio;
+
+  /// Section title on node details for the list of per-node telemetry log screens (device metrics, environment, air quality, position history, traceroute, PAX, detection sensor).
+  ///
+  /// In en, this message translates to:
+  /// **'Telemetry'**
+  String get nodeDetailSectionTelemetry;
 
   /// Section title for traffic management info.
   ///
@@ -33167,6 +33251,36 @@ abstract class AppLocalizations {
   /// **'Temperature'**
   String get telemetryEnvironmentLegendTemperature;
 
+  /// Chart legend label for barometric pressure series.
+  ///
+  /// In en, this message translates to:
+  /// **'Pressure'**
+  String get telemetryEnvironmentLegendPressure;
+
+  /// Chart legend label for gas resistance series.
+  ///
+  /// In en, this message translates to:
+  /// **'Gas'**
+  String get telemetryEnvironmentLegendGas;
+
+  /// Chart legend label for indoor air quality series.
+  ///
+  /// In en, this message translates to:
+  /// **'IAQ'**
+  String get telemetryEnvironmentLegendIaq;
+
+  /// Chart legend label for ambient light (lux) series.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get telemetryEnvironmentLegendLight;
+
+  /// Chart legend label for wind speed series.
+  ///
+  /// In en, this message translates to:
+  /// **'Wind'**
+  String get telemetryEnvironmentLegendWind;
+
   /// Empty-state headline when no environment metrics exist.
   ///
   /// In en, this message translates to:
@@ -33220,6 +33334,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Help'**
   String get telemetryHelp;
+
+  /// Subtitle shown at the top of the Telemetry hub screen summarising the telemetry categories it contains.
+  ///
+  /// In en, this message translates to:
+  /// **'Device, environment, air quality, position and sensor logs'**
+  String get telemetryHubSubtitle;
+
+  /// App bar title for the Telemetry hub screen opened from the Tools drawer section.
+  ///
+  /// In en, this message translates to:
+  /// **'Telemetry'**
+  String get telemetryHubTitle;
 
   /// Empty-state subtitle when no telemetry has been received yet.
   ///

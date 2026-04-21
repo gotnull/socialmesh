@@ -656,7 +656,7 @@ class TelemetryDatabase {
     );
     for (final log in logs) {
       buffer.writeln(
-        '${log.timestamp.toIso8601String()},${log.batteryLevel ?? ''},'
+        '${log.timestamp.toUtc().toIso8601String()},${log.batteryLevel ?? ''},'
         '${log.voltage ?? ''},${log.channelUtilization ?? ''},'
         '${log.airUtilTx ?? ''},${log.uptimeSeconds ?? ''}',
       );
@@ -674,7 +674,7 @@ class TelemetryDatabase {
     );
     for (final log in logs) {
       buffer.writeln(
-        '${log.timestamp.toIso8601String()},${log.temperature ?? ''},'
+        '${log.timestamp.toUtc().toIso8601String()},${log.temperature ?? ''},'
         '${log.relativeHumidity ?? ''},${log.barometricPressure ?? ''},'
         '${log.gasResistance ?? ''},${log.iaq ?? ''},${log.lux ?? ''},'
         '${log.uvLux ?? ''},${log.whiteLux ?? ''},'
@@ -694,7 +694,7 @@ class TelemetryDatabase {
     );
     for (final log in logs) {
       buffer.writeln(
-        '${log.timestamp.toIso8601String()},${log.latitude},'
+        '${log.timestamp.toUtc().toIso8601String()},${log.latitude},'
         '${log.longitude},${log.altitude ?? ''},${log.heading ?? ''},'
         '${log.speed ?? ''},${log.satsInView ?? ''}',
       );

@@ -41,6 +41,12 @@ class _FakeTransport implements DeviceTransport {
   @override
   bool get requiresFraming => false;
 
+  @override
+  bool get requiresWakeSequence => false;
+
+  @override
+  TransportReconnectMode get reconnectMode => TransportReconnectMode.scanBased;
+
   void emitData(List<int> data) => _dataController.add(data);
 
   @override

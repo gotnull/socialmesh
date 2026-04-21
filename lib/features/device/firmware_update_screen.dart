@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
+import 'dart:io';
+
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
@@ -11,13 +13,17 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../core/widgets/info_table.dart';
 import '../../core/widgets/loading_indicator.dart';
+import '../../core/widgets/section_header.dart';
 import '../../core/widgets/status_banner.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/firmware_providers.dart';
+import '../../services/firmware/firmware_api_service.dart';
 import '../../services/firmware/firmware_models.dart';
 import '../../services/firmware/hardware_architecture.dart';
 import '../../services/haptic_service.dart';
+import '../../utils/snackbar.dart';
 
 class FirmwareUpdateScreen extends ConsumerStatefulWidget {
   const FirmwareUpdateScreen({super.key});
@@ -58,14 +64,22 @@ class _FirmwareUpdateScreenState extends ConsumerState<FirmwareUpdateScreen>
           sliver: SliverList(
             delegate: SliverChildListDelegate([
               // Current Version Card
-              _buildSectionHeader(
-                context,
-                context.l10n.firmwareUpdateSectionCurrentVersion,
+              SectionTitle(
+                title: context.l10n.firmwareUpdateSectionCurrentVersion,
               ),
               _buildCurrentVersionCard(context, currentVersion),
               const SizedBox(height: AppTheme.spacing16),
 
               // Device Info
+              SectionTitle(
+                title: context.l10n.firmwareUpdateSectionDeviceInfo,
+                helpSheetBuilder: (_) => _UpdateMethodInfoSheet(
+                  architecture: architecture,
+                  release: firmwareAsync.value,
+                  onMtoolsTap: () =>
+                      _launchMtoolsBle(architecture, firmwareAsync.value),
+                ),
+              ),
               _buildDeviceInfoCard(context, myNode, architecture),
               const SizedBox(height: AppTheme.spacing24),
 
@@ -76,9 +90,8 @@ class _FirmwareUpdateScreenState extends ConsumerState<FirmwareUpdateScreen>
               ],
 
               // Update Check
-              _buildSectionHeader(
-                context,
-                context.l10n.firmwareUpdateSectionAvailableUpdate,
+              SectionTitle(
+                title: context.l10n.firmwareUpdateSectionAvailableUpdate,
               ),
               _buildUpdateCheckSection(
                 context,
@@ -92,9 +105,8 @@ class _FirmwareUpdateScreenState extends ConsumerState<FirmwareUpdateScreen>
               const SizedBox(height: AppTheme.spacing24),
 
               // Update Instructions
-              _buildSectionHeader(
-                context,
-                context.l10n.firmwareUpdateSectionHowToUpdate,
+              SectionTitle(
+                title: context.l10n.firmwareUpdateSectionHowToUpdate,
               ),
               _buildInstructionsCard(context),
 
@@ -138,20 +150,6 @@ class _FirmwareUpdateScreenState extends ConsumerState<FirmwareUpdateScreen>
   // ---------------------------------------------------------------------------
   // Section builders
   // ---------------------------------------------------------------------------
-
-  Widget _buildSectionHeader(BuildContext context, String title) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4, bottom: 8),
-      child: Text(
-        title,
-        style: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-          color: context.textSecondary,
-        ),
-      ),
-    );
-  }
 
   Widget _buildCurrentVersionCard(BuildContext context, String currentVersion) {
     return Container(
@@ -204,72 +202,50 @@ class _FirmwareUpdateScreenState extends ConsumerState<FirmwareUpdateScreen>
     DeviceArchitecture architecture,
   ) {
     final l10n = context.l10n;
-    return Container(
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-        border: Border.all(color: context.border),
-      ),
-      child: Column(
-        children: [
-          _buildInfoRow(
-            icon: Icons.developer_board,
-            label: l10n.firmwareUpdateHardware,
-            value: myNode?.hardwareModel ?? l10n.firmwareUpdateUnknown,
-            context: context,
+    return InfoTable(
+      rows: [
+        InfoTableRow(
+          icon: Icons.developer_board,
+          label: l10n.firmwareUpdateHardware,
+          value: myNode?.hardwareModel ?? l10n.firmwareUpdateUnknown,
+        ),
+        InfoTableRow(
+          icon: Icons.memory,
+          label: l10n.firmwareArchitecture,
+          value: _architectureDisplayName(context, architecture),
+        ),
+        InfoTableRow(
+          icon: Icons.system_update,
+          label: l10n.firmwareUpdateMethod,
+          value: architecture.supportsNordicDfu
+              ? l10n.firmwareUpdateMethodInApp
+              : l10n.firmwareUpdateMethodWebFlasher,
+        ),
+        InfoTableRow(
+          icon: Icons.tag,
+          label: l10n.firmwareUpdateNodeId,
+          value: myNode?.nodeNum.toString() ?? l10n.firmwareUpdateUnknown,
+        ),
+        InfoTableRow(
+          icon: Icons.schedule,
+          label: l10n.firmwareUpdateUptime,
+          value: myNode?.uptimeSeconds != null
+              ? _formatUptime(myNode!.uptimeSeconds!)
+              : l10n.firmwareUpdateUnknown,
+        ),
+        if (myNode?.hasWifi == true)
+          InfoTableRow(
+            icon: Icons.wifi,
+            label: l10n.firmwareUpdateWifi,
+            value: l10n.firmwareUpdateSupported,
           ),
-          _buildDivider(context),
-          _buildInfoRow(
-            icon: Icons.memory,
-            label: l10n.firmwareArchitecture,
-            value: _architectureDisplayName(context, architecture),
-            context: context,
+        if (myNode?.hasBluetooth == true)
+          InfoTableRow(
+            icon: Icons.bluetooth,
+            label: l10n.firmwareUpdateBluetooth,
+            value: l10n.firmwareUpdateSupported,
           ),
-          _buildDivider(context),
-          _buildInfoRow(
-            icon: Icons.system_update,
-            label: l10n.firmwareUpdateMethod,
-            value: architecture.supportsNordicDfu
-                ? l10n.firmwareUpdateMethodInApp
-                : l10n.firmwareUpdateMethodWebFlasher,
-            context: context,
-          ),
-          _buildDivider(context),
-          _buildInfoRow(
-            icon: Icons.tag,
-            label: l10n.firmwareUpdateNodeId,
-            value: myNode?.nodeNum.toString() ?? l10n.firmwareUpdateUnknown,
-            context: context,
-          ),
-          _buildDivider(context),
-          _buildInfoRow(
-            icon: Icons.schedule,
-            label: l10n.firmwareUpdateUptime,
-            value: myNode?.uptimeSeconds != null
-                ? _formatUptime(myNode!.uptimeSeconds!)
-                : l10n.firmwareUpdateUnknown,
-            context: context,
-          ),
-          if (myNode?.hasWifi == true) ...[
-            _buildDivider(context),
-            _buildInfoRow(
-              icon: Icons.wifi,
-              label: l10n.firmwareUpdateWifi,
-              value: l10n.firmwareUpdateSupported,
-              context: context,
-            ),
-          ],
-          if (myNode?.hasBluetooth == true) ...[
-            _buildDivider(context),
-            _buildInfoRow(
-              icon: Icons.bluetooth,
-              label: l10n.firmwareUpdateBluetooth,
-              value: l10n.firmwareUpdateSupported,
-              context: context,
-            ),
-          ],
-        ],
-      ),
+      ],
     );
   }
 
@@ -771,53 +747,6 @@ class _FirmwareUpdateScreenState extends ConsumerState<FirmwareUpdateScreen>
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // Shared widgets
-  // ---------------------------------------------------------------------------
-
-  Widget _buildInfoRow({
-    required IconData icon,
-    required String label,
-    required String value,
-    required BuildContext context,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      child: Row(
-        children: [
-          Icon(icon, color: context.accentColor, size: 20),
-          SizedBox(width: AppTheme.spacing12),
-          Text(
-            label,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: context.textSecondary),
-          ),
-          const Spacer(),
-          Flexible(
-            child: Text(
-              value,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: context.textPrimary,
-              ),
-              textAlign: TextAlign.end,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDivider(BuildContext context) {
-    return Container(
-      height: 1,
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      color: context.border.withValues(alpha: 0.3),
-    );
-  }
-
   Widget _buildStep(int number, String text, BuildContext context) {
     return Row(
       children: [
@@ -996,5 +925,157 @@ class _FirmwareUpdateScreenState extends ConsumerState<FirmwareUpdateScreen>
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
+  }
+
+  Future<void> _launchMtoolsBle(
+    DeviceArchitecture architecture,
+    FirmwareRelease? release,
+  ) async {
+    final l10n = context.l10n;
+
+    final asset = release == null
+        ? null
+        : FirmwareApiService().findArchitectureAsset(release, architecture);
+
+    if (asset == null) {
+      showInfoSnackBar(context, l10n.firmwareMethodInfoMtoolsNoAsset);
+      return;
+    }
+
+    await Clipboard.setData(ClipboardData(text: asset.downloadUrl));
+    if (!mounted) return;
+    showSuccessSnackBar(context, l10n.firmwareMethodInfoUrlCopied);
+
+    final storeUri = Uri.parse(
+      Platform.isIOS
+          ? 'https://apps.apple.com/search?term=mtools+ble'
+          : 'https://play.google.com/store/search?q=mtools+ble&c=apps',
+    );
+    if (await canLaunchUrl(storeUri)) {
+      await launchUrl(storeUri, mode: LaunchMode.externalApplication);
+    }
+  }
+}
+
+class _UpdateMethodInfoSheet extends StatelessWidget {
+  final DeviceArchitecture architecture;
+  final FirmwareRelease? release;
+  final VoidCallback onMtoolsTap;
+
+  const _UpdateMethodInfoSheet({
+    required this.architecture,
+    required this.release,
+    required this.onMtoolsTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final isNordic = architecture.supportsNordicDfu;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppTheme.spacing20,
+        AppTheme.spacing8,
+        AppTheme.spacing20,
+        AppTheme.spacing24,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.lightbulb_outline,
+                size: 18,
+                color: context.accentColor,
+              ),
+              const SizedBox(width: AppTheme.spacing8),
+              Expanded(
+                child: Text(
+                  l10n.firmwareMethodInfoTitle,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: context.textPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spacing16),
+          _MethodBlock(
+            heading: isNordic
+                ? l10n.firmwareMethodInfoBleHeading
+                : l10n.firmwareMethodInfoWebHeading,
+            body: isNordic
+                ? l10n.firmwareMethodInfoBleBody
+                : l10n.firmwareMethodInfoWebBody,
+          ),
+          if (isNordic) ...[
+            const SizedBox(height: AppTheme.spacing20),
+            _MethodBlock(
+              heading: l10n.firmwareMethodInfoMtoolsHeading,
+              body: l10n.firmwareMethodInfoMtoolsBody,
+            ),
+            const SizedBox(height: AppTheme.spacing12),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  onMtoolsTap();
+                },
+                icon: const Icon(Icons.open_in_new, size: 18),
+                label: Text(l10n.firmwareMethodInfoMtoolsAction),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: context.accentColor,
+                  side: BorderSide(color: context.accentColor),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: AppTheme.spacing12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radius10),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _MethodBlock extends StatelessWidget {
+  final String heading;
+  final String body;
+
+  const _MethodBlock({required this.heading, required this.body});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          heading,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: context.textPrimary,
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacing6),
+        Text(
+          body,
+          style: TextStyle(
+            fontSize: 13,
+            height: 1.45,
+            color: context.textSecondary,
+          ),
+        ),
+      ],
+    );
   }
 }

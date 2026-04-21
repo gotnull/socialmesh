@@ -7837,6 +7837,50 @@
     "@firmwareUpdateMethodInApp": {
         "description": "Label for the in-app DFU update method"
     },
+    "firmwareUpdateSectionDeviceInfo": "Device Info",
+    "@firmwareUpdateSectionDeviceInfo": {
+        "description": "Section header above the device info table on the Firmware Update screen"
+    },
+    "firmwareMethodInfoTitle": "How your device updates",
+    "@firmwareMethodInfoTitle": {
+        "description": "Title of the bottom sheet that explains the available firmware update methods"
+    },
+    "firmwareMethodInfoBleHeading": "In-App Update (Bluetooth DFU)",
+    "@firmwareMethodInfoBleHeading": {
+        "description": "Heading for the in-app Nordic DFU update method explanation"
+    },
+    "firmwareMethodInfoBleBody": "Your device uses Nordic Device Firmware Update over Bluetooth. When a new release is available, tap Start Update and the app downloads the firmware, reboots the device into bootloader mode, and flashes it wirelessly. Keep the device nearby and plugged in until the transfer finishes.",
+    "@firmwareMethodInfoBleBody": {
+        "description": "Body text explaining the in-app Nordic DFU update flow"
+    },
+    "firmwareMethodInfoWebHeading": "Web Flasher (USB)",
+    "@firmwareMethodInfoWebHeading": {
+        "description": "Heading for the web-flasher update method explanation"
+    },
+    "firmwareMethodInfoWebBody": "This chipset flashes over USB using the Meshtastic Web Flasher. Connect the device with a data-capable USB cable and open the Web Flasher in Chrome or Edge on a desktop browser. In-app wireless updates are not supported on this architecture.",
+    "@firmwareMethodInfoWebBody": {
+        "description": "Body text explaining the web-flasher update flow"
+    },
+    "firmwareMethodInfoMtoolsHeading": "Alternative: MTools BLE",
+    "@firmwareMethodInfoMtoolsHeading": {
+        "description": "Heading for the MTools BLE alternative section shown on Nordic devices"
+    },
+    "firmwareMethodInfoMtoolsBody": "MTools BLE is a third-party iOS/Android app that also performs Nordic DFU over Bluetooth. Use it if the in-app updater fails or if you prefer its workflow. Tapping the button below opens your app store to install MTools BLE and copies the firmware download URL to your clipboard.",
+    "@firmwareMethodInfoMtoolsBody": {
+        "description": "Body text explaining the MTools BLE alternative for Nordic devices"
+    },
+    "firmwareMethodInfoMtoolsAction": "Install MTools BLE & copy firmware URL",
+    "@firmwareMethodInfoMtoolsAction": {
+        "description": "Button label that opens the MTools BLE store listing and copies the firmware URL"
+    },
+    "firmwareMethodInfoMtoolsNoAsset": "No firmware asset is available for this device yet. Pull to refresh and try again.",
+    "@firmwareMethodInfoMtoolsNoAsset": {
+        "description": "Warning shown when the Nordic firmware asset cannot be located for the current device"
+    },
+    "firmwareMethodInfoUrlCopied": "Firmware URL copied to clipboard",
+    "@firmwareMethodInfoUrlCopied": {
+        "description": "Confirmation snackbar shown after copying the firmware URL for MTools BLE"
+    },
     "firmwareUpdateMethodWebFlasher": "Web Flasher",
     "@firmwareUpdateMethodWebFlasher": {
         "description": "Label for the web flasher update method"
@@ -11427,7 +11471,11 @@
     },
     "messageContextMenuStatusDelivered": "Delivered ✔️",
     "@messageContextMenuStatusDelivered": {
-        "description": "Delivery status text for a message that has been acknowledged."
+        "description": "Delivery status text for a message that has been acknowledged by the intended recipient."
+    },
+    "messageContextMenuStatusDeliveredRelayOnly": "Acknowledged by another node",
+    "@messageContextMenuStatusDeliveredRelayOnly": {
+        "description": "Delivery status text for a DM that was acknowledged only by an intermediate mesh node (implicit ack), not by the intended recipient."
     },
     "messageContextMenuStatusFailed": "Failed: {error}",
     "@messageContextMenuStatusFailed": {
@@ -12496,6 +12544,10 @@
     "@navigationTakMap": {
         "description": "Label for the TAK Map drawer item."
     },
+    "navigationTelemetry": "Telemetry",
+    "@navigationTelemetry": {
+        "description": "Label for the Telemetry drawer item that opens the telemetry hub screen (device metrics, environment, air quality, position, traceroute, PAX, detection sensor, routes)."
+    },
     "navigationThemePack": "Theme Pack",
     "@navigationThemePack": {
         "description": "Label for the Theme Pack premium drawer item."
@@ -13529,6 +13581,10 @@
     "nodeDetailSectionRadio": "Radio",
     "@nodeDetailSectionRadio": {
         "description": "Section title for radio info."
+    },
+    "nodeDetailSectionTelemetry": "Telemetry",
+    "@nodeDetailSectionTelemetry": {
+        "description": "Section title on node details for the list of per-node telemetry log screens (device metrics, environment, air quality, position history, traceroute, PAX, detection sensor)."
     },
     "nodeDetailSectionTraffic": "Traffic Management",
     "@nodeDetailSectionTraffic": {
@@ -25966,6 +26022,26 @@
     "@telemetryEnvironmentLegendTemperature": {
         "description": "Chart legend label for temperature series."
     },
+    "telemetryEnvironmentLegendPressure": "Pressure",
+    "@telemetryEnvironmentLegendPressure": {
+        "description": "Chart legend label for barometric pressure series."
+    },
+    "telemetryEnvironmentLegendGas": "Gas",
+    "@telemetryEnvironmentLegendGas": {
+        "description": "Chart legend label for gas resistance series."
+    },
+    "telemetryEnvironmentLegendIaq": "IAQ",
+    "@telemetryEnvironmentLegendIaq": {
+        "description": "Chart legend label for indoor air quality series."
+    },
+    "telemetryEnvironmentLegendLight": "Light",
+    "@telemetryEnvironmentLegendLight": {
+        "description": "Chart legend label for ambient light (lux) series."
+    },
+    "telemetryEnvironmentLegendWind": "Wind",
+    "@telemetryEnvironmentLegendWind": {
+        "description": "Chart legend label for wind speed series."
+    },
     "telemetryEnvironmentNoMetrics": "No environment metrics yet",
     "@telemetryEnvironmentNoMetrics": {
         "description": "Empty-state headline when no environment metrics exist."
@@ -26016,6 +26092,14 @@
     "telemetryHelp": "Help",
     "@telemetryHelp": {
         "description": "Menu item label for opening help."
+    },
+    "telemetryHubSubtitle": "Device, environment, air quality, position and sensor logs",
+    "@telemetryHubSubtitle": {
+        "description": "Subtitle shown at the top of the Telemetry hub screen summarising the telemetry categories it contains."
+    },
+    "telemetryHubTitle": "Telemetry",
+    "@telemetryHubTitle": {
+        "description": "App bar title for the Telemetry hub screen opened from the Tools drawer section."
     },
     "telemetryMetricsWillAppear": "Metrics will appear when your device reports telemetry",
     "@telemetryMetricsWillAppear": {

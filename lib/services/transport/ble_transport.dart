@@ -101,6 +101,12 @@ class BleTransport implements DeviceTransport {
   bool get requiresFraming => false; // BLE uses raw protobufs, no framing
 
   @override
+  bool get requiresWakeSequence => false;
+
+  @override
+  TransportReconnectMode get reconnectMode => TransportReconnectMode.scanBased;
+
+  @override
   DeviceConnectionState get state => _state;
 
   @override

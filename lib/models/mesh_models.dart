@@ -113,6 +113,21 @@ class Message {
   final bool sent;
   final bool received;
   final bool acked;
+
+  /// Strength of the acknowledgement for DM outgoing messages, mirroring the
+  /// official Meshtastic companion app's `realACK` distinction.
+  ///
+  /// - `null`: unknown / legacy — row was written before the column existed,
+  ///   or the message has not yet received any ack.
+  /// - `false`: an implicit mesh ack was received (proof that *some* node on
+  ///   the mesh observed the packet, but not that the intended recipient
+  ///   processed it). Presented as a weaker "acknowledged by another node"
+  ///   state in the UI.
+  /// - `true`: an explicit ack was received from the intended DM recipient
+  ///   (the authoritative delivery confirmation).
+  ///
+  /// Forward-only — the provider layer never downgrades `true → false`.
+  final bool? realAck;
   final MessageStatus status;
   final String? errorMessage;
   final RoutingError? routingError;
@@ -179,6 +194,7 @@ class Message {
     this.sent = false,
     this.received = false,
     this.acked = false,
+    this.realAck,
     this.status = MessageStatus.sent,
     this.errorMessage,
     this.routingError,
@@ -211,6 +227,8 @@ class Message {
     bool? sent,
     bool? received,
     bool? acked,
+    bool? realAck,
+    bool clearRealAck = false,
     MessageStatus? status,
     String? errorMessage,
     RoutingError? routingError,
@@ -243,6 +261,7 @@ class Message {
       sent: sent ?? this.sent,
       received: received ?? this.received,
       acked: acked ?? this.acked,
+      realAck: clearRealAck ? null : realAck ?? this.realAck,
       status: status ?? this.status,
       errorMessage: errorMessage ?? this.errorMessage,
       routingError: routingError ?? this.routingError,
@@ -340,10 +359,17 @@ class MessageDeliveryUpdate {
   final bool delivered;
   final RoutingError? error;
 
+  /// Whether the ack was an explicit reply from the intended recipient
+  /// (`true`) or an implicit mesh ack (`false`). Meaningful only when
+  /// [delivered] is true; ignored on failure. Mirrors `realACK` in the
+  /// official Meshtastic iOS companion app.
+  final bool realAck;
+
   MessageDeliveryUpdate({
     required this.packetId,
     required this.delivered,
     this.error,
+    this.realAck = false,
   });
 
   bool get isSuccess =>

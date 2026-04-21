@@ -25,6 +25,13 @@ PUBLIC_REPO="$(cd "$SCRIPT_DIR/.." && pwd)"
 PRIVATE_REPO="${PRIVATE_REPO:-$(cd "$PUBLIC_REPO/.." && pwd)/socialmesh-private}"
 PRIVATE_REMOTE="https://github.com/gotnull/socialmesh-private.git"
 
+# Claude Code auto-memory for this project lives outside the repo at a path
+# derived from the project's absolute path. Synced so memories survive machine
+# loss. Lands in the private repo under .claude-memory/ (distinct from the
+# repo-level .claude/ dir that's already in SYNC_DIRS).
+CLAUDE_MEMORY_LOCAL="$HOME/.claude/projects/${PUBLIC_REPO//\//-}/memory"
+CLAUDE_MEMORY_REMOTE="$PRIVATE_REPO/.claude-memory"
+
 # Directories to sync (relative to repo root)
 SYNC_DIRS=(
   .github
@@ -378,6 +385,16 @@ cmd_push() {
     fi
   done
 
+  # Sync Claude Code auto-memory (lives outside the repo)
+  if [ -d "$CLAUDE_MEMORY_LOCAL" ]; then
+    mkdir -p "$CLAUDE_MEMORY_REMOTE"
+    # shellcheck disable=SC2086
+    rsync -a --delete $excludes "$CLAUDE_MEMORY_LOCAL/" "$CLAUDE_MEMORY_REMOTE/"
+    ok "  .claude-memory/ (from $CLAUDE_MEMORY_LOCAL)"
+  else
+    warn "  .claude-memory/ (local source $CLAUDE_MEMORY_LOCAL not found, skipping)"
+  fi
+
   # ---------------------------------------------------------------------------
   # Auto-deploy changed hosting targets
   # ---------------------------------------------------------------------------
@@ -492,6 +509,16 @@ cmd_pull() {
     fi
   done
 
+  # Restore Claude Code auto-memory (lives outside the repo)
+  if [ -d "$CLAUDE_MEMORY_REMOTE" ]; then
+    mkdir -p "$CLAUDE_MEMORY_LOCAL"
+    # shellcheck disable=SC2086
+    rsync -a $excludes "$CLAUDE_MEMORY_REMOTE/" "$CLAUDE_MEMORY_LOCAL/"
+    ok "  .claude-memory/ (to $CLAUDE_MEMORY_LOCAL)"
+  else
+    warn "  .claude-memory/ (not in private repo, skipping)"
+  fi
+
   # Auto-configure git hooks if the hooks directory was pulled
   if [ -d "$PUBLIC_REPO/scripts/hooks" ] && [ -f "$PUBLIC_REPO/scripts/hooks/pre-commit" ]; then
     local current_hooks_path
@@ -543,6 +570,16 @@ cmd_status() {
       echo -e "  ${YELLOW}$file${NC}  (missing)"
     fi
   done
+
+  echo ""
+  echo "External (Claude Code auto-memory):"
+  if [ -d "$CLAUDE_MEMORY_LOCAL" ]; then
+    local mem_count
+    mem_count=$(find "$CLAUDE_MEMORY_LOCAL" -type f -not -name ".DS_Store" | wc -l | tr -d ' ')
+    echo -e "  ${GREEN}.claude-memory/${NC}  ($mem_count files, from $CLAUDE_MEMORY_LOCAL)"
+  else
+    echo -e "  ${YELLOW}.claude-memory/${NC}  (local source missing: $CLAUDE_MEMORY_LOCAL)"
+  fi
 
   # Show pending hosting changes if private repo exists
   if [ -d "$PRIVATE_REPO/.git" ]; then

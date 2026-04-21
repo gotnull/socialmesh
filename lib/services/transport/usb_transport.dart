@@ -28,6 +28,12 @@ class UsbTransport implements DeviceTransport {
   bool get requiresFraming => true; // USB Serial requires packet framing
 
   @override
+  bool get requiresWakeSequence => true; // Serial UART needs the 0xC3 wake preamble
+
+  @override
+  TransportReconnectMode get reconnectMode => TransportReconnectMode.scanBased;
+
+  @override
   DeviceConnectionState get state => _state;
 
   @override

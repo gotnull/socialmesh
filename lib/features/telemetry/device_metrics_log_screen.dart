@@ -54,7 +54,9 @@ enum _MetricFilter {
 /// left 0–100 % axis; voltage uses the right axis.
 /// Date-range filtering via app bar actions.
 class DeviceMetricsLogScreen extends ConsumerStatefulWidget {
-  const DeviceMetricsLogScreen({super.key});
+  final int? nodeNum;
+
+  const DeviceMetricsLogScreen({super.key, this.nodeNum});
 
   @override
   ConsumerState<DeviceMetricsLogScreen> createState() =>
@@ -199,8 +201,15 @@ class _DeviceMetricsLogScreenState extends ConsumerState<DeviceMetricsLogScreen>
 
   @override
   Widget build(BuildContext context) {
-    final logsAsync = ref.watch(deviceMetricsLogsProvider);
+    final scopedNodeNum = widget.nodeNum;
+    final logsAsync = scopedNodeNum != null
+        ? ref.watch(nodeDeviceMetricsLogsProvider(scopedNodeNum))
+        : ref.watch(deviceMetricsLogsProvider);
     final nodes = ref.watch(nodesProvider);
+    final scopedNodeName = scopedNodeNum != null
+        ? (nodes[scopedNodeNum]?.displayName ??
+              '!${scopedNodeNum.toRadixString(16).toUpperCase()}')
+        : null;
 
     return GestureDetector(
       onTap: _dismissKeyboard,
@@ -256,6 +265,27 @@ class _DeviceMetricsLogScreenState extends ConsumerState<DeviceMetricsLogScreen>
               const SliverToBoxAdapter(
                 child: SizedBox(height: AppTheme.spacing8),
               ),
+
+              // Scoped node name subtitle — only when filtering by a single node
+              if (scopedNodeName != null)
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppTheme.spacing16,
+                    0,
+                    AppTheme.spacing16,
+                    AppTheme.spacing8,
+                  ),
+                  sliver: SliverToBoxAdapter(
+                    child: Text(
+                      scopedNodeName,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: context.textSecondary,
+                      ),
+                    ),
+                  ),
+                ),
 
               // Pinned search + filter chips
               SliverPersistentHeader(

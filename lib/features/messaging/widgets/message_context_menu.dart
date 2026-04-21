@@ -464,6 +464,12 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
       case MessageStatus.sent:
         return context.l10n.messageContextMenuStatusSent;
       case MessageStatus.delivered:
+        // An implicit mesh ack (realAck == false) means a relay observed the
+        // packet but the intended recipient hasn't confirmed. Legacy rows
+        // (null) stay on the stronger label to avoid rewriting history.
+        if (widget.message.realAck == false) {
+          return context.l10n.messageContextMenuStatusDeliveredRelayOnly;
+        }
         return context.l10n.messageContextMenuStatusDelivered;
       case MessageStatus.failed:
         return context.l10n.messageContextMenuStatusFailed(

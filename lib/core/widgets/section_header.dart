@@ -4,8 +4,96 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
 import '../theme.dart';
+import 'app_bottom_sheet.dart';
 import 'edge_fade.dart';
+
+/// Canonical sub-section title used above cards, tables, and form groups
+/// (the "CONNECTION DETAILS" / "QUICK ACTIONS" / "CURRENT VERSION" style).
+///
+/// When [helpSheetBuilder] is provided, a small (i) icon is rendered on
+/// the same header line, immediately after the title — never inside the
+/// card or table below. Tapping it opens an [AppBottomSheet] whose child
+/// is the result of calling the builder. This mirrors NodeDex's
+/// `_SectionInfoButton` pattern — the widget owns the sheet, callers just
+/// declare what goes inside.
+///
+/// Do not use this for sticky sliver list headers — use [SectionHeader]
+/// for those.
+///
+/// Usage:
+/// ```dart
+/// SectionTitle(
+///   title: context.l10n.firmwareUpdateSectionDeviceInfo,
+///   helpSheetBuilder: (ctx) => const _UpdateMethodInfoSheet(),
+/// ),
+/// const SizedBox(height: AppTheme.spacing12),
+/// InfoTable(rows: [...]),
+/// ```
+class SectionTitle extends StatelessWidget {
+  final String title;
+  final IconData? leadingIcon;
+  final WidgetBuilder? helpSheetBuilder;
+  final Widget? trailing;
+
+  const SectionTitle({
+    super.key,
+    required this.title,
+    this.leadingIcon,
+    this.helpSheetBuilder,
+    this.trailing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
+      child: Row(
+        children: [
+          if (leadingIcon != null) ...[
+            Icon(leadingIcon, size: 14, color: context.textTertiary),
+            const SizedBox(width: AppTheme.spacing8),
+          ],
+          Flexible(
+            child: Text(
+              title.toUpperCase(),
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: context.textTertiary,
+                letterSpacing: 1,
+              ),
+            ),
+          ),
+          if (helpSheetBuilder != null) ...[
+            const SizedBox(width: AppTheme.spacing4),
+            GestureDetector(
+              onTap: () {
+                HapticFeedback.selectionClick();
+                AppBottomSheet.show<void>(
+                  context: context,
+                  child: Builder(builder: helpSheetBuilder!),
+                );
+              },
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: const EdgeInsets.all(AppTheme.spacing4),
+                child: Icon(
+                  Icons.info_outline,
+                  size: 14,
+                  color: context.textTertiary.withValues(alpha: 0.6),
+                ),
+              ),
+            ),
+          ],
+          if (trailing != null) ...[const Spacer(), trailing!],
+        ],
+      ),
+    );
+  }
+}
 
 /// Shared section header widget used in list views with grouping
 class SectionHeader extends StatelessWidget {
