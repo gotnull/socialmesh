@@ -3520,15 +3520,19 @@ class MessagesNotifier extends Notifier<List<Message>> {
 
   /// When an outbound DM receives an implicit mesh ack (realAck=false) we
   /// intentionally keep its entry in [_packetToMessageId] so a later explicit
-  /// recipient ack can upgrade `realAck` false → true. Firmware retransmit
-  /// windows and duty-cycle delays can stretch the gap between the two acks
-  /// to tens of seconds. After [_implicitAckUpgradeWindow] has elapsed,
-  /// subsequent explicit acks are vanishingly rare — we drop the entry to
-  /// bound memory. Late-arriving explicit acks after eviction land in the
-  /// "untracked packet" log branch, which is safe (the message stays
-  /// delivered with `realAck=false`).
+  /// recipient ack can upgrade `realAck` false → true.
+  ///
+  /// [_ackUpgradeWindow] is a *UX-bound truth window*, not a protocol-derived
+  /// bound — the mesh protocol does not guarantee an explicit ack will arrive
+  /// in any particular interval (long multi-hop paths, heavy duty-cycle
+  /// restrictions in EU868/AU915, or sleeping/intermittent nodes can
+  /// theoretically delay an explicit ack by several minutes). The window
+  /// encodes how long the app still cares about upgrading certainty before
+  /// the user has moved on. Late-arriving explicit acks after eviction land
+  /// in the "untracked packet" log branch — safe; the message stays
+  /// delivered with `realAck=false`.
   final Map<int, DateTime> _implicitAckedAt = {};
-  static const Duration _implicitAckUpgradeWindow = Duration(minutes: 5);
+  static const Duration _ackUpgradeWindow = Duration(minutes: 5);
   final LinkedHashMap<String, DateTime> _recentMessageSignatures =
       LinkedHashMap();
   static const Duration _duplicateSignatureWindow = Duration(seconds: 5);
@@ -4236,7 +4240,8 @@ class MessagesNotifier extends Notifier<List<Message>> {
   /// Visible for testing.
   void _sweepExpiredImplicitAcks({DateTime? now}) {
     if (_implicitAckedAt.isEmpty) return;
-    final cutoff = (now ?? DateTime.now()).subtract(_implicitAckUpgradeWindow);
+    final wallNow = now ?? DateTime.now();
+    final cutoff = wallNow.subtract(_ackUpgradeWindow);
     final expired = <int>[];
     for (final entry in _implicitAckedAt.entries) {
       if (entry.value.isBefore(cutoff)) {
@@ -4245,14 +4250,15 @@ class MessagesNotifier extends Notifier<List<Message>> {
     }
     if (expired.isEmpty) return;
     for (final pid in expired) {
+      final stamp = _implicitAckedAt[pid];
+      final age = stamp == null ? null : wallNow.difference(stamp);
       _packetToMessageId.remove(pid);
       _implicitAckedAt.remove(pid);
+      AppLogging.messages(
+        '🧹 ACK TRACK EXPIRE packetId=$pid age=${age?.inSeconds}s '
+        '(window=${_ackUpgradeWindow.inMinutes}m)',
+      );
     }
-    AppLogging.messages(
-      '🧹 Swept ${expired.length} stale implicit-ack tracking entries '
-      '(no explicit recipient ack within '
-      '${_implicitAckUpgradeWindow.inMinutes}m): $expired',
-    );
   }
 
   /// Test-only hook to force the sweep with a provided clock.
