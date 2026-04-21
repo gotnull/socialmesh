@@ -1293,16 +1293,57 @@ class ProtocolService {
       // Now we're waiting for config - enable the listener to complete on error
       waitingForConfig = true;
 
-      // Wait for config to complete with timeout
+      // Wait for config to complete with timeout.
+      //
+      // Transport-aware early recovery: TCP sessions have a different
+      // failure profile than BLE. NOTIFY-style flakiness does not exist
+      // on a raw TCP socket — if bytes do not arrive it is almost always
+      // because the firmware missed the first `wantConfigId` (common
+      // after a remote reboot). Rather than consume the full 30s wait,
+      // fire a single early retry so the user is not staring at a blank
+      // configuring screen for half a minute. BLE/USB keep their
+      // original single-shot behavior; the existing data-flow watchdog
+      // handles stalled NOTIFY paths separately.
       AppLogging.protocol('Protocol: Waiting for configCompleteId...');
-      await _configCompleter!.future.timeout(
-        const Duration(seconds: 30),
-        onTimeout: () {
-          throw TimeoutException(
-            'Configuration timed out waiting for device response',
+      const totalTimeout = Duration(seconds: 30);
+      const earlyRetryWindow = Duration(seconds: 8);
+      Timer? earlyRetryTimer;
+      if (_transport.reconnectMode == TransportReconnectMode.directEndpoint) {
+        earlyRetryTimer = Timer(earlyRetryWindow, () async {
+          // Idempotence: (1) completer nulled/completed means either
+          // success or stop()/error has already settled the wait — skip.
+          // (2) transport not connected means the socket already died
+          // and there is nothing to retry on.
+          final completer = _configCompleter;
+          if (completer == null || completer.isCompleted) return;
+          if (!_transport.isConnected) return;
+          AppLogging.protocol(
+            'HANDSHAKE: phase-1 not observed within '
+            '${earlyRetryWindow.inSeconds}s on '
+            '${_transport.type.name} — resending wantConfigId once '
+            '(bounded retry, not a handshake restart)',
           );
-        },
-      );
+          try {
+            await _requestConfiguration();
+          } catch (e) {
+            AppLogging.protocol(
+              'HANDSHAKE: early phase-1 retry send failed — $e',
+            );
+          }
+        });
+      }
+      try {
+        await _configCompleter!.future.timeout(
+          totalTimeout,
+          onTimeout: () {
+            throw TimeoutException(
+              'Configuration timed out waiting for device response',
+            );
+          },
+        );
+      } finally {
+        earlyRetryTimer?.cancel();
+      }
       AppLogging.debug('✅ Protocol: Configuration was received');
     } catch (e, st) {
       AppLogging.debug('❌ Protocol: Configuration failed: $e');
@@ -4570,10 +4611,19 @@ class ProtocolService {
         return;
       }
 
-      AppLogging.protocol('Requesting device configuration');
+      AppLogging.protocol(
+        'Requesting device configuration '
+        '(transport=${_transport.type.name}, '
+        'wake=${_transport.requiresWakeSequence}, '
+        'framed=${_transport.requiresFraming})',
+      );
 
-      // Wake device by sending START2 bytes (only for serial/USB)
-      if (_transport.requiresFraming) {
+      // Wake device by sending START2 bytes. This is serial-UART-specific
+      // (USB CP210x/CH34x): the UART buffer drops leading bytes until it
+      // locks onto the frame preamble. TCP and BLE have no such buffer,
+      // so we must not emit these bytes there — the firmware's PhoneAPI
+      // treats them as a malformed framed packet.
+      if (_transport.requiresWakeSequence) {
         final wakeBytes = List<int>.filled(32, 0xC3); // 32 START2 bytes
         await _transport.send(Uint8List.fromList(wakeBytes));
         await Future.delayed(const Duration(milliseconds: 100));

@@ -80,6 +80,12 @@ class _FakeTransport implements DeviceTransport {
   bool get requiresFraming => false;
 
   @override
+  bool get requiresWakeSequence => false;
+
+  @override
+  TransportReconnectMode get reconnectMode => TransportReconnectMode.scanBased;
+
+  @override
   Stream<DeviceConnectionState> get stateStream => const Stream.empty();
 
   @override

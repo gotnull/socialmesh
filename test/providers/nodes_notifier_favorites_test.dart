@@ -52,6 +52,12 @@ class _FakeTransport implements DeviceTransport {
   bool get requiresFraming => false;
 
   @override
+  bool get requiresWakeSequence => false;
+
+  @override
+  TransportReconnectMode get reconnectMode => TransportReconnectMode.scanBased;
+
+  @override
   DeviceConnectionState get state => DeviceConnectionState.disconnected;
 
   @override
@@ -663,6 +669,12 @@ class _ConnectedFakeTransport implements DeviceTransport {
 
   @override
   bool get requiresFraming => false;
+
+  @override
+  bool get requiresWakeSequence => false;
+
+  @override
+  TransportReconnectMode get reconnectMode => TransportReconnectMode.scanBased;
 
   @override
   DeviceConnectionState get state => DeviceConnectionState.connected;

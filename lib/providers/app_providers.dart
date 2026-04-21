@@ -1777,6 +1777,20 @@ final bluetoothStateListenerProvider = Provider<void>((ref) {
           return;
         }
 
+        // If the active transport is network, Bluetooth coming back on
+        // is irrelevant — do not restart a BLE scan loop behind the
+        // user's back. The network reconnect path is driven by the
+        // autoReconnectManagerProvider listener on transport state.
+        final dispatchTransport = ref.read(transportProvider);
+        if (dispatchTransport.reconnectMode ==
+            TransportReconnectMode.directEndpoint) {
+          AppLogging.connection(
+            '🔵 Bluetooth ON but active transport is '
+            '${dispatchTransport.type.name} — skipping BLE reconnect',
+          );
+          return;
+        }
+
         AppLogging.connection(
           '🔵 Bluetooth ON - starting reconnect for device: $lastDeviceId',
         );
@@ -1785,7 +1799,7 @@ final bluetoothStateListenerProvider = Provider<void>((ref) {
             .read(autoReconnectStateProvider.notifier)
             .setState(AutoReconnectState.scanning);
 
-        _performReconnect(ref, lastDeviceId);
+        _dispatchReconnect(ref, lastDeviceId);
       });
     }
   });
@@ -1931,14 +1945,300 @@ final autoReconnectManagerProvider = Provider<void>((ref) {
             .read(autoReconnectStateProvider.notifier)
             .setState(AutoReconnectState.scanning);
 
-        // Run reconnect in a separate async function to avoid listener issues
-        _performReconnect(ref, lastDeviceId);
+        // Run reconnect via strategy dispatch (BLE scan vs TCP endpoint).
+        _dispatchReconnect(ref, lastDeviceId);
       } else {
         AppLogging.connection('NOT attempting reconnect - conditions not met');
       }
     });
   });
 });
+
+/// Dispatch reconnection to the strategy that matches the active transport.
+///
+/// BLE → scan-based `_performReconnect` (existing BLE flow).
+/// Network → direct-endpoint `_performNetworkReconnect` (no BLE scanning).
+/// USB is scan-based via the existing path.
+///
+/// Kept as a single call-site helper so neither path can race the other
+/// — a previous regression reset `transportTypeProvider` back to BLE on
+/// disconnect which caused network peers to silently fall into a BLE
+/// scan loop. See `DeviceConnectionNotifier._handleDisconnect` for the
+/// transport-type preservation rule.
+void _dispatchReconnect(Ref ref, String deviceId) {
+  final transport = ref.read(transportProvider);
+  switch (transport.reconnectMode) {
+    case TransportReconnectMode.directEndpoint:
+      AppLogging.connection(
+        '🔄 _dispatchReconnect: transport=${transport.type.name} → '
+        'network endpoint reconnect',
+      );
+      _performNetworkReconnect(ref, deviceId);
+      return;
+    case TransportReconnectMode.scanBased:
+      _performReconnect(ref, deviceId);
+      return;
+  }
+}
+
+/// Parse a `tcp:host:port` deviceId (the identity format produced by
+/// `NetworkConnectionSection` and `MdnsDiscoverySection`) into endpoint
+/// components. Returns `null` if the id is not a network endpoint id.
+@visibleForTesting
+({String host, int port})? parseNetworkEndpointIdForTest(String deviceId) =>
+    _parseNetworkEndpointId(deviceId);
+
+({String host, int port})? _parseNetworkEndpointId(String deviceId) {
+  // Normalize before parsing so `TCP:Node.Local:4403 ` and
+  // `tcp:node.local:4403` collapse to the same reconnect key.
+  // Hostnames are case-insensitive per RFC 4343.
+  final trimmed = deviceId.trim();
+  if (!trimmed.toLowerCase().startsWith('tcp:')) return null;
+  final rest = trimmed.substring(4);
+  if (rest.isEmpty) return null;
+
+  String host;
+  String portStr;
+
+  // IPv6-bracketed form: `tcp:[::1]:4403`. Current UI does not emit this
+  // shape but the parser accepts it so a future IPv6 discovery path
+  // cannot silently produce an unreconnectable endpoint id.
+  if (rest.startsWith('[')) {
+    final close = rest.indexOf(']');
+    if (close < 0) return null;
+    host = rest.substring(1, close);
+    if (close + 1 >= rest.length || rest[close + 1] != ':') return null;
+    portStr = rest.substring(close + 2);
+  } else {
+    final lastColon = rest.lastIndexOf(':');
+    if (lastColon <= 0 || lastColon == rest.length - 1) return null;
+    host = rest.substring(0, lastColon);
+    portStr = rest.substring(lastColon + 1);
+  }
+
+  host = host.trim().toLowerCase();
+  if (host.isEmpty) return null;
+
+  final port = int.tryParse(portStr);
+  if (port == null || port <= 0 || port > 65535) return null;
+  return (host: host, port: port);
+}
+
+/// Single in-flight network reconnect sentinel.
+///
+/// `_dispatchReconnect`'s callers already check `autoReconnectState` to
+/// gate entry, but several lifecycle paths can race: transport
+/// disconnect listener, connectivity-restored listener, BLE-on listener
+/// (guarded for network), app-resume. A stuck state transition between
+/// those guards — e.g. state still `scanning` from a previous run that
+/// got abandoned mid-async — would let two callers both land in
+/// `_performNetworkReconnect` and each call `transport.connect(...)`.
+/// A single bool locked for the lifetime of the retry loop is cheap
+/// belt-and-suspenders that fails closed regardless of state.
+bool _networkReconnectInFlight = false;
+
+@visibleForTesting
+bool get networkReconnectInFlightForTest => _networkReconnectInFlight;
+
+/// Direct-endpoint reconnect for TCP/network transport.
+///
+/// The BLE `_performReconnect` loop scans for BLE peripherals, which is
+/// meaningless for a TCP peer. Network reconnect is an address-based
+/// `connect()` with bounded backoff — no scanning, no logical matching,
+/// no BLE cleanup.
+///
+/// Invariants:
+/// - Uses the active `transportProvider` (already the NetworkTransport
+///   because disconnect no longer resets `transportTypeProvider`).
+/// - Does NOT kick off any BLE scans or listeners.
+/// - Yields immediately if the user manually disconnected or started a
+///   manual connection elsewhere (same guards as BLE path).
+/// - At most one loop runs at a time (`_networkReconnectInFlight`).
+/// - Bounded attempts so a dead endpoint does not burn battery forever.
+///
+/// Log tags: all lines prefixed `NET RECONNECT` so real-world failures
+/// can be reconstructed by grepping a single token.
+Future<void> _performNetworkReconnect(Ref ref, String deviceId) async {
+  if (_networkReconnectInFlight) {
+    AppLogging.connection(
+      'NET RECONNECT: skipped — another reconnect loop is already active',
+    );
+    return;
+  }
+  _networkReconnectInFlight = true;
+  try {
+    await _runNetworkReconnect(ref, deviceId);
+  } finally {
+    _networkReconnectInFlight = false;
+  }
+}
+
+Future<void> _runNetworkReconnect(Ref ref, String deviceId) async {
+  AppLogging.connection('NET RECONNECT: start for endpoint "$deviceId"');
+
+  final endpoint = _parseNetworkEndpointId(deviceId);
+  if (endpoint == null) {
+    AppLogging.connection(
+      'NET RECONNECT: abandoned — deviceId "$deviceId" is not a '
+      'tcp:host:port endpoint',
+    );
+    ref
+        .read(autoReconnectStateProvider.notifier)
+        .setState(AutoReconnectState.idle);
+    return;
+  }
+
+  if (ref.read(userDisconnectedProvider)) {
+    AppLogging.connection(
+      'NET RECONNECT: abandoned — user manually disconnected',
+    );
+    ref
+        .read(autoReconnectStateProvider.notifier)
+        .setState(AutoReconnectState.idle);
+    return;
+  }
+
+  final settings = await ref.read(settingsServiceProvider.future);
+  if (!settings.autoReconnect) {
+    AppLogging.connection(
+      'NET RECONNECT: abandoned — auto-reconnect disabled in settings',
+    );
+    ref
+        .read(autoReconnectStateProvider.notifier)
+        .setState(AutoReconnectState.idle);
+    return;
+  }
+
+  // Keep the network endpoint pinned on the transport providers so the
+  // provider factory rebuilds the NetworkTransport against the same
+  // address we are about to reconnect to.
+  ref.read(networkTransportHostProvider.notifier).set(endpoint.host);
+  ref.read(networkTransportPortProvider.notifier).set(endpoint.port);
+
+  const maxAttempts = 5;
+  const baseDelay = Duration(seconds: 2);
+
+  for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+    if (ref.read(userDisconnectedProvider)) {
+      AppLogging.connection(
+        'NET RECONNECT: abandoned in loop — user manually disconnected',
+      );
+      ref
+          .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.idle);
+      return;
+    }
+    final loopAutoState = ref.read(autoReconnectStateProvider);
+    if (loopAutoState == AutoReconnectState.manualConnecting) {
+      AppLogging.connection(
+        'NET RECONNECT: abandoned — user is manually connecting',
+      );
+      return;
+    }
+
+    final transport = ref.read(transportProvider);
+    // Defensive: if the transport type was explicitly switched away from
+    // network by the user while we were retrying, abort rather than
+    // fight their choice.
+    if (transport.type != TransportType.network) {
+      AppLogging.connection(
+        'NET RECONNECT: abandoned — transport switched to '
+        '${transport.type.name}',
+      );
+      ref
+          .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.idle);
+      return;
+    }
+    if (transport.state == DeviceConnectionState.connected ||
+        transport.state == DeviceConnectionState.connecting) {
+      AppLogging.connection(
+        'NET RECONNECT: abandoned — transport already '
+        '${transport.state.name}',
+      );
+      return;
+    }
+
+    AppLogging.connection(
+      'NET RECONNECT: attempt $attempt/$maxAttempts to '
+      '${endpoint.host}:${endpoint.port}',
+    );
+    ref
+        .read(autoReconnectStateProvider.notifier)
+        .setState(AutoReconnectState.connecting);
+
+    final deviceInfo = DeviceInfo(
+      id: deviceId,
+      name: deviceId,
+      type: TransportType.network,
+      address: '${endpoint.host}:${endpoint.port}',
+    );
+
+    try {
+      await transport.connect(deviceInfo);
+      if (transport.state != DeviceConnectionState.connected) {
+        throw Exception('TCP connect did not reach connected state');
+      }
+      AppLogging.connection(
+        'NET RECONNECT: transport connected to '
+        '${endpoint.host}:${endpoint.port} — starting protocol handshake',
+      );
+
+      ref.read(connectedDeviceProvider.notifier).setState(deviceInfo);
+
+      final protocol = ref.read(protocolServiceProvider);
+      protocol.setDeviceName(deviceInfo.name);
+      protocol.setBleModelNumber(transport.bleModelNumber);
+      protocol.setBleManufacturerName(transport.bleManufacturerName);
+
+      await protocol.start();
+
+      if (transport.state != DeviceConnectionState.connected) {
+        throw Exception('Connection dropped before protocol start completed');
+      }
+
+      final locationService = ref.read(locationServiceProvider);
+      await locationService.startLocationUpdates();
+
+      ref
+          .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.success);
+      AppLogging.connection(
+        'NET RECONNECT: success — handshake complete on '
+        '${endpoint.host}:${endpoint.port}',
+      );
+      await Future.delayed(const Duration(milliseconds: 500));
+      ref
+          .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.idle);
+      return;
+    } catch (e) {
+      AppLogging.connection(
+        'NET RECONNECT: attempt $attempt/$maxAttempts failed — $e',
+      );
+      // Ensure any half-open socket is released before the next attempt
+      // so the retry sees a clean transport state.
+      try {
+        await transport.disconnect();
+      } catch (_) {}
+      if (attempt < maxAttempts) {
+        final delay = baseDelay * attempt;
+        AppLogging.connection('NET RECONNECT: retrying in ${delay.inSeconds}s');
+        await Future.delayed(delay);
+        ref
+            .read(autoReconnectStateProvider.notifier)
+            .setState(AutoReconnectState.scanning);
+      }
+    }
+  }
+
+  AppLogging.connection(
+    'NET RECONNECT: exhausted $maxAttempts attempts — giving up',
+  );
+  ref
+      .read(autoReconnectStateProvider.notifier)
+      .setState(AutoReconnectState.failed);
+}
 
 /// Performs the actual reconnection logic
 Future<void> _performReconnect(Ref ref, String deviceId) async {

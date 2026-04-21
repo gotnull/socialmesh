@@ -192,6 +192,131 @@ void main() {
     },
   );
 
+  test('transport type is preserved across unexpected disconnect '
+      '(network must NOT be silently reset to ble)', () async {
+    final s = SettingsService();
+    await s.init();
+
+    final testTransport = _TestTransport();
+
+    final messageStorage = MessageDatabase(testDbPath: _uniqueTestDbPath());
+    await messageStorage.init();
+    final nodeStorage = NodeStorageService();
+    await nodeStorage.init();
+    final telemetryStorage = TelemetryDatabase(
+      testDbPath: _uniqueTelemDbPath(),
+    );
+    await telemetryStorage.init();
+    final routeStorage = RouteStorageService(testDbPath: inMemoryDatabasePath);
+    await routeStorage.init();
+
+    final container = ProviderContainer(
+      overrides: [
+        transportProvider.overrideWithValue(testTransport),
+        meshPacketDedupeStoreProvider.overrideWithValue(
+          MeshPacketDedupeStore(dbPathOverride: ':memory:'),
+        ),
+        settingsServiceProvider.overrideWithValue(AsyncValue.data(s)),
+        messageStorageProvider.overrideWithValue(
+          AsyncValue.data(messageStorage),
+        ),
+        nodeStorageProvider.overrideWithValue(AsyncValue.data(nodeStorage)),
+        telemetryStorageProvider.overrideWithValue(
+          AsyncValue.data(telemetryStorage),
+        ),
+        routeStorageProvider.overrideWithValue(AsyncValue.data(routeStorage)),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    // Simulate the user connecting via the network section:
+    // transport type is flipped to network before connect happens.
+    container
+        .read(transportTypeProvider.notifier)
+        .setType(TransportType.network);
+
+    final notifier = container.read(deviceConnectionProvider.notifier);
+    final deviceInfo = DeviceInfo(
+      id: 'tcp:10.0.0.5:4403',
+      name: '10.0.0.5:4403',
+      type: TransportType.network,
+    );
+    notifier.markAsPaired(deviceInfo, 0xA1B2C3D4);
+
+    expect(notifier.state.state, DevicePairingState.connected);
+    expect(container.read(transportTypeProvider), TransportType.network);
+
+    // Simulate an unexpected transport disconnect.
+    testTransport.simulateDisconnect();
+    await Future.delayed(const Duration(milliseconds: 50));
+
+    expect(
+      container.read(transportTypeProvider),
+      TransportType.network,
+      reason:
+          'Disconnect must NOT silently revert the user-chosen transport '
+          'to BLE — that was the bug in issue #102 that forced network '
+          'reconnect back into a BLE scan loop.',
+    );
+  });
+
+  test('transport type is preserved across manual disconnect', () async {
+    final s = SettingsService();
+    await s.init();
+
+    final testTransport = _TestTransport();
+
+    final messageStorage = MessageDatabase(testDbPath: _uniqueTestDbPath());
+    await messageStorage.init();
+    final nodeStorage = NodeStorageService();
+    await nodeStorage.init();
+    final telemetryStorage = TelemetryDatabase(
+      testDbPath: _uniqueTelemDbPath(),
+    );
+    await telemetryStorage.init();
+    final routeStorage = RouteStorageService(testDbPath: inMemoryDatabasePath);
+    await routeStorage.init();
+
+    final container = ProviderContainer(
+      overrides: [
+        transportProvider.overrideWithValue(testTransport),
+        meshPacketDedupeStoreProvider.overrideWithValue(
+          MeshPacketDedupeStore(dbPathOverride: ':memory:'),
+        ),
+        settingsServiceProvider.overrideWithValue(AsyncValue.data(s)),
+        messageStorageProvider.overrideWithValue(
+          AsyncValue.data(messageStorage),
+        ),
+        nodeStorageProvider.overrideWithValue(AsyncValue.data(nodeStorage)),
+        telemetryStorageProvider.overrideWithValue(
+          AsyncValue.data(telemetryStorage),
+        ),
+        routeStorageProvider.overrideWithValue(AsyncValue.data(routeStorage)),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    container
+        .read(transportTypeProvider.notifier)
+        .setType(TransportType.network);
+
+    final notifier = container.read(deviceConnectionProvider.notifier);
+    final deviceInfo = DeviceInfo(
+      id: 'tcp:10.0.0.5:4403',
+      name: '10.0.0.5:4403',
+      type: TransportType.network,
+    );
+    notifier.markAsPaired(deviceInfo, 0xA1B2C3D4);
+
+    await notifier.disconnect();
+
+    expect(
+      container.read(transportTypeProvider),
+      TransportType.network,
+      reason: 'Manual disconnect must preserve user-chosen transport type',
+    );
+  });
+
   test('pairing invalidation detection matches apple peer reset errors', () {
     expect(
       isPairingInvalidationError(
@@ -230,6 +355,12 @@ class _TestTransport implements DeviceTransport {
 
   @override
   bool get requiresFraming => false;
+
+  @override
+  bool get requiresWakeSequence => false;
+
+  @override
+  TransportReconnectMode get reconnectMode => TransportReconnectMode.scanBased;
 
   @override
   DeviceConnectionState get state => _state;

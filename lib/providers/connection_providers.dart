@@ -783,6 +783,22 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       return;
     }
 
+    // Network/TCP transport reconnect is endpoint-based, not scan-based.
+    // The BLE scan loop below is meaningless for a TCP peer and would
+    // also short-circuit on `Bluetooth is off` even when the user has
+    // no intention of using BLE. Defer to autoReconnectManagerProvider's
+    // listener on transport state, which calls _performNetworkReconnect.
+    if (ref.read(transportProvider).reconnectMode ==
+        TransportReconnectMode.directEndpoint) {
+      AppLogging.connection(
+        '🔌 startBackgroundConnection: transport reconnect mode is '
+        'directEndpoint — skipping BLE scan path, deferring to network '
+        'reconnect flow',
+      );
+      _backgroundScanInProgress = false;
+      return;
+    }
+
     // Check Bluetooth state first
     final btState = await FlutterBluePlus.adapterState.first;
     if (btState != BluetoothAdapterState.on) {
@@ -1626,16 +1642,13 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       reason: reason,
     );
 
-    // Reset transport type to BLE so the scanner resumes BLE scanning.
-    // Without this, transportTypeProvider stays stuck on network after
-    // a TCP disconnect and the scanner shows zero BLE devices.
-    if (ref.read(transportTypeProvider) == TransportType.network) {
-      ref.read(transportTypeProvider.notifier).setType(TransportType.ble);
-      AppLogging.connection(
-        '🔌 _handleDisconnect: Reset transport type to BLE',
-      );
-    }
-
+    // Preserve the user's chosen transport type across disconnect.
+    // Previous behavior forced network → ble on disconnect to resume BLE
+    // scanning, but that silently erased the user's intent and broke TCP
+    // continuity: reconnect logic would then scan for BLE devices of a
+    // node the user connected to over the network. Transport changes
+    // must be explicit user actions (Scanner UI / Network section) —
+    // never an implicit side effect of disconnect cleanup.
     ref.read(connectedDeviceProvider.notifier).setState(null);
 
     // If user disconnected, don't trigger any auto-reconnect behavior
@@ -1711,11 +1724,10 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     await transport.disconnect();
     AppLogging.connection('🔌 disconnect(): Transport disconnected');
 
-    // Reset transport type to BLE so the scanner resumes BLE scanning.
-    if (ref.read(transportTypeProvider) == TransportType.network) {
-      ref.read(transportTypeProvider.notifier).setType(TransportType.ble);
-      AppLogging.connection('🔌 disconnect(): Reset transport type to BLE');
-    }
+    // Preserve the user's chosen transport type across manual disconnect.
+    // See `_handleDisconnect` for the full rationale — transport changes
+    // must be explicit user actions (Scanner UI), not disconnect side
+    // effects.
 
     state = state.copyWith(
       state: DevicePairingState.disconnected,

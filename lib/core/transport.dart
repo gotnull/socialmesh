@@ -51,6 +51,13 @@ enum DeviceConnectionState {
   error,
 }
 
+/// How this transport is re-established after an unexpected disconnect.
+///
+/// `scanBased` transports (BLE) have to rediscover the peer via an OS scan
+/// before they can connect. `directEndpoint` transports (TCP/network) have
+/// an address-like identity (host:port) and reconnect directly to it.
+enum TransportReconnectMode { scanBased, directEndpoint }
+
 /// Abstract transport interface
 abstract class DeviceTransport {
   /// Get the transport type
@@ -58,8 +65,21 @@ abstract class DeviceTransport {
 
   /// Whether this transport requires packet framing
   /// BLE does NOT require framing (raw protobufs)
-  /// Serial/USB DOES require framing (0x94, 0xC3, length, payload)
+  /// Serial/USB/Network DO require framing (0x94, 0xC3, length, payload)
   bool get requiresFraming;
+
+  /// Whether this transport needs the 32-byte `0xC3` wake preamble sent
+  /// ahead of the first `wantConfigId`. This is a serial-link quirk —
+  /// framed traffic alone does NOT imply the device needs waking.
+  ///
+  /// BLE: false (no serial link beneath)
+  /// USB: true (CP210x/CH34x UART on the other side)
+  /// Network/TCP: false (firmware-side PhoneAPI, not a UART)
+  bool get requiresWakeSequence => false;
+
+  /// How this transport recovers from disconnect — used by the reconnect
+  /// coordinator to pick scan-based vs direct-endpoint reconnect logic.
+  TransportReconnectMode get reconnectMode => TransportReconnectMode.scanBased;
 
   /// Current connection state
   DeviceConnectionState get state;

@@ -47,6 +47,13 @@ class NetworkTransport implements DeviceTransport {
   bool get requiresFraming => true;
 
   @override
+  bool get requiresWakeSequence => false; // TCP talks to PhoneAPI directly; no UART to wake.
+
+  @override
+  TransportReconnectMode get reconnectMode =>
+      TransportReconnectMode.directEndpoint;
+
+  @override
   DeviceConnectionState get state => _state;
 
   @override
