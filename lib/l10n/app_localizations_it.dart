@@ -5920,6 +5920,44 @@ class AppLocalizationsIt extends AppLocalizations {
   String get firmwareUpdateMethodInApp => 'In-App Update';
 
   @override
+  String get firmwareUpdateSectionDeviceInfo => 'Device Info';
+
+  @override
+  String get firmwareMethodInfoTitle => 'How your device updates';
+
+  @override
+  String get firmwareMethodInfoBleHeading => 'In-App Update (Bluetooth DFU)';
+
+  @override
+  String get firmwareMethodInfoBleBody =>
+      'Your device uses Nordic Device Firmware Update over Bluetooth. When a new release is available, tap Start Update and the app downloads the firmware, reboots the device into bootloader mode, and flashes it wirelessly. Keep the device nearby and plugged in until the transfer finishes.';
+
+  @override
+  String get firmwareMethodInfoWebHeading => 'Web Flasher (USB)';
+
+  @override
+  String get firmwareMethodInfoWebBody =>
+      'This chipset flashes over USB using the Meshtastic Web Flasher. Connect the device with a data-capable USB cable and open the Web Flasher in Chrome or Edge on a desktop browser. In-app wireless updates are not supported on this architecture.';
+
+  @override
+  String get firmwareMethodInfoMtoolsHeading => 'Alternative: MTools BLE';
+
+  @override
+  String get firmwareMethodInfoMtoolsBody =>
+      'MTools BLE is a third-party iOS/Android app that also performs Nordic DFU over Bluetooth. Use it if the in-app updater fails or if you prefer its workflow. Tapping the button below opens your app store to install MTools BLE and copies the firmware download URL to your clipboard.';
+
+  @override
+  String get firmwareMethodInfoMtoolsAction =>
+      'Install MTools BLE & copy firmware URL';
+
+  @override
+  String get firmwareMethodInfoMtoolsNoAsset =>
+      'No firmware asset is available for this device yet. Pull to refresh and try again.';
+
+  @override
+  String get firmwareMethodInfoUrlCopied => 'Firmware URL copied to clipboard';
+
+  @override
   String get firmwareUpdateMethodWebFlasher => 'Web Flasher';
 
   @override
@@ -9300,6 +9338,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get navigationTakMap => 'Mappa TAK';
 
   @override
+  String get navigationTelemetry => 'Telemetry';
+
+  @override
   String get navigationThemePack => 'Pacchetto Tema';
 
   @override
@@ -10007,6 +10048,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get nodeDetailSectionRadio => 'Radio';
+
+  @override
+  String get nodeDetailSectionTelemetry => 'Telemetry';
 
   @override
   String get nodeDetailSectionTraffic => 'Gestione traffico';
@@ -19055,6 +19099,21 @@ class AppLocalizationsIt extends AppLocalizations {
   String get telemetryEnvironmentLegendTemperature => 'Temperatura';
 
   @override
+  String get telemetryEnvironmentLegendPressure => 'Pressure';
+
+  @override
+  String get telemetryEnvironmentLegendGas => 'Gas';
+
+  @override
+  String get telemetryEnvironmentLegendIaq => 'IAQ';
+
+  @override
+  String get telemetryEnvironmentLegendLight => 'Light';
+
+  @override
+  String get telemetryEnvironmentLegendWind => 'Wind';
+
+  @override
   String get telemetryEnvironmentNoMetrics => 'Nessuna metrica ambientale';
 
   @override
@@ -19086,6 +19145,13 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get telemetryHelp => 'Aiuto';
+
+  @override
+  String get telemetryHubSubtitle =>
+      'Device, environment, air quality, position and sensor logs';
+
+  @override
+  String get telemetryHubTitle => 'Telemetry';
 
   @override
   String get telemetryMetricsWillAppear =>

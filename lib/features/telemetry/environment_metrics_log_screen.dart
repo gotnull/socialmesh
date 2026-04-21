@@ -52,7 +52,9 @@ enum _MetricFilter {
 /// GlassScaffold → pinned SearchFilterHeaderDelegate → SliverList.
 /// Date-range filtering via app bar actions.
 class EnvironmentMetricsLogScreen extends ConsumerStatefulWidget {
-  const EnvironmentMetricsLogScreen({super.key});
+  final int? nodeNum;
+
+  const EnvironmentMetricsLogScreen({super.key, this.nodeNum});
 
   @override
   ConsumerState<EnvironmentMetricsLogScreen> createState() =>
@@ -158,6 +160,48 @@ class _EnvironmentMetricsLogScreenState
     };
   }
 
+  List<Widget> _legendItemsFor(
+    BuildContext context,
+    _MetricFilter filter,
+    List<EnvironmentMetricsLog> filtered,
+  ) {
+    final l10n = context.l10n;
+    if (filter == _MetricFilter.all) {
+      return [
+        if (filtered.any((l) => l.temperature != null))
+          _LegendItem(
+            color: AppTheme.errorRed,
+            label: l10n.telemetryEnvironmentLegendTemperature,
+          ),
+        if (filtered.any((l) => l.humidity != null))
+          _LegendItem(
+            color: AccentColors.cyan,
+            label: l10n.telemetryEnvironmentLegendHumidity,
+          ),
+      ];
+    }
+    return [
+      _LegendItem(
+        color: _colorForFilter(filter) ?? context.accentColor,
+        label: _legendLabelFor(context, filter),
+      ),
+    ];
+  }
+
+  String _legendLabelFor(BuildContext context, _MetricFilter filter) {
+    final l10n = context.l10n;
+    return switch (filter) {
+      _MetricFilter.all => '',
+      _MetricFilter.temperature => l10n.telemetryEnvironmentLegendTemperature,
+      _MetricFilter.humidity => l10n.telemetryEnvironmentLegendHumidity,
+      _MetricFilter.pressure => l10n.telemetryEnvironmentLegendPressure,
+      _MetricFilter.gas => l10n.telemetryEnvironmentLegendGas,
+      _MetricFilter.iaq => l10n.telemetryEnvironmentLegendIaq,
+      _MetricFilter.light => l10n.telemetryEnvironmentLegendLight,
+      _MetricFilter.wind => l10n.telemetryEnvironmentLegendWind,
+    };
+  }
+
   Color? _colorForFilter(_MetricFilter filter) {
     return switch (filter) {
       _MetricFilter.all => null,
@@ -207,8 +251,15 @@ class _EnvironmentMetricsLogScreenState
 
   @override
   Widget build(BuildContext context) {
-    final logsAsync = ref.watch(environmentMetricsLogsProvider);
+    final scopedNodeNum = widget.nodeNum;
+    final logsAsync = scopedNodeNum != null
+        ? ref.watch(nodeEnvironmentMetricsLogsProvider(scopedNodeNum))
+        : ref.watch(environmentMetricsLogsProvider);
     final nodes = ref.watch(nodesProvider);
+    final scopedNodeName = scopedNodeNum != null
+        ? (nodes[scopedNodeNum]?.displayName ??
+              '!${scopedNodeNum.toRadixString(16).toUpperCase()}')
+        : null;
 
     return GestureDetector(
       onTap: _dismissKeyboard,
@@ -265,6 +316,27 @@ class _EnvironmentMetricsLogScreenState
                 child: SizedBox(height: AppTheme.spacing8),
               ),
 
+              // Scoped node name subtitle — only when filtering by a single node
+              if (scopedNodeName != null)
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppTheme.spacing16,
+                    0,
+                    AppTheme.spacing16,
+                    AppTheme.spacing8,
+                  ),
+                  sliver: SliverToBoxAdapter(
+                    child: Text(
+                      scopedNodeName,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: context.textSecondary,
+                      ),
+                    ),
+                  ),
+                ),
+
               // Pinned search + filter chips
               SliverPersistentHeader(
                 pinned: true,
@@ -315,21 +387,7 @@ class _EnvironmentMetricsLogScreenState
                 SliverPersistentHeader(
                   pinned: true,
                   delegate: _ChartLegendHeaderDelegate(
-                    items: [
-                      if (filtered.any((l) => l.temperature != null))
-                        _LegendItem(
-                          color: AppTheme.errorRed,
-                          label: context
-                              .l10n
-                              .telemetryEnvironmentLegendTemperature,
-                        ),
-                      if (filtered.any((l) => l.humidity != null))
-                        _LegendItem(
-                          color: AccentColors.cyan,
-                          label:
-                              context.l10n.telemetryEnvironmentLegendHumidity,
-                        ),
-                    ],
+                    items: _legendItemsFor(context, _activeFilter, filtered),
                     readingsCount: filtered.length,
                   ),
                 ),
@@ -338,7 +396,10 @@ class _EnvironmentMetricsLogScreenState
               // Android BaseMetricScreen / iOS EnvironmentMetricsLog).
               if (filtered.length >= 2)
                 SliverToBoxAdapter(
-                  child: _EnvironmentMetricsChart(logs: filtered),
+                  child: _EnvironmentMetricsChart(
+                    logs: filtered,
+                    activeFilter: _activeFilter,
+                  ),
                 ),
 
               // Content — empty state or list
@@ -591,8 +652,12 @@ class _EnvironmentMetricsCard extends StatelessWidget {
 
 class _EnvironmentMetricsChart extends StatelessWidget {
   final List<EnvironmentMetricsLog> logs;
+  final _MetricFilter activeFilter;
 
-  const _EnvironmentMetricsChart({required this.logs});
+  const _EnvironmentMetricsChart({
+    required this.logs,
+    required this.activeFilter,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -600,10 +665,14 @@ class _EnvironmentMetricsChart extends StatelessWidget {
     final sorted = List<EnvironmentMetricsLog>.from(logs)
       ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
 
-    // Build per-metric spot lists.
-    // Left axis: temperature (°C). Right axis: humidity (%).
-    // Pressure is excluded from chart — range (e.g. 1000–1030 hPa) would
-    // compress the other lines. Shown only in cards.
+    if (activeFilter != _MetricFilter.all) {
+      return _buildSingleMetricChart(context, sorted, activeFilter);
+    }
+
+    // Overlay mode ("All" filter): temperature (left °C axis) +
+    // humidity (right % axis), both normalised into a shared 0–100 range.
+    // Pressure and other metrics are excluded — their ranges compress the
+    // two lines. They render in the cards below instead.
     final tempSpots = <FlSpot>[];
     final humiditySpots = <FlSpot>[];
     double tMin = double.infinity;
@@ -773,6 +842,196 @@ class _EnvironmentMetricsChart extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildSingleMetricChart(
+    BuildContext context,
+    List<EnvironmentMetricsLog> sorted,
+    _MetricFilter filter,
+  ) {
+    final spots = <FlSpot>[];
+    double yMin = double.infinity;
+    double yMax = double.negativeInfinity;
+    for (int i = 0; i < sorted.length; i++) {
+      final v = _valueOf(filter, sorted[i]);
+      if (v == null) continue;
+      spots.add(FlSpot(i.toDouble(), v));
+      yMin = math.min(yMin, v);
+      yMax = math.max(yMax, v);
+    }
+
+    if (spots.length < 2) return const SizedBox.shrink();
+
+    final color = _chartColorForFilter(filter);
+    // Pad the Y axis a little so the peaks/valleys don't hug the edges.
+    final range = yMax - yMin;
+    final pad = range == 0 ? math.max(yMax.abs() * 0.05, 1.0) : range * 0.15;
+    final axisMin = yMin - pad;
+    final axisMax = yMax + pad;
+    final axisRange = axisMax - axisMin;
+    final interval = axisRange <= 0 ? 1.0 : axisRange / 4;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            height: 200,
+            child: LineChart(
+              LineChartData(
+                minY: axisMin,
+                maxY: axisMax,
+                lineBarsData: [_line(spots, color, true)],
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  horizontalInterval: interval,
+                  getDrawingHorizontalLine: (_) => FlLine(
+                    color: context.border.withValues(alpha: 0.3),
+                    strokeWidth: 1,
+                  ),
+                ),
+                borderData: FlBorderData(show: false),
+                titlesData: FlTitlesData(
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 56,
+                      interval: interval,
+                      getTitlesWidget: (value, _) => Text(
+                        _formatAxisValue(filter, value),
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: color.withValues(alpha: 0.7),
+                        ),
+                      ),
+                    ),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 28,
+                      interval: math.max(1, sorted.length / 5),
+                      getTitlesWidget: (value, _) {
+                        final idx = value.toInt();
+                        if (idx < 0 || idx >= sorted.length) {
+                          return const SizedBox.shrink();
+                        }
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: Text(
+                            AppTimeFormat.timeOnly(
+                              context,
+                            ).format(sorted[idx].timestamp),
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: context.textTertiary,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                lineTouchData: LineTouchData(
+                  touchTooltipData: LineTouchTooltipData(
+                    maxContentWidth: 180,
+                    getTooltipColor: (_) => context.card,
+                    getTooltipItems: (spotsIn) => spotsIn.map((spot) {
+                      final idx = spot.x.toInt().clamp(0, sorted.length - 1);
+                      final log = sorted[idx];
+                      return LineTooltipItem(
+                        '${_formatTooltipValue(filter, spot.y)}\n${AppTimeFormat.withDatePrefix(context, 'MMM d').format(log.timestamp)}',
+                        TextStyle(
+                          color: color,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing8),
+        ],
+      ),
+    );
+  }
+
+  static double? _valueOf(_MetricFilter filter, EnvironmentMetricsLog log) {
+    return switch (filter) {
+      _MetricFilter.all => null,
+      _MetricFilter.temperature => log.temperature,
+      _MetricFilter.humidity => log.humidity,
+      _MetricFilter.pressure => log.barometricPressure,
+      _MetricFilter.gas => log.gasResistance,
+      _MetricFilter.iaq => log.iaq?.toDouble(),
+      _MetricFilter.light => log.lux,
+      _MetricFilter.wind => log.windSpeed,
+    };
+  }
+
+  static Color _chartColorForFilter(_MetricFilter filter) {
+    return switch (filter) {
+      _MetricFilter.all => AppTheme.errorRed,
+      _MetricFilter.temperature => AppTheme.errorRed,
+      _MetricFilter.humidity => AccentColors.cyan,
+      _MetricFilter.pressure => AppTheme.primaryPurple,
+      _MetricFilter.gas => AccentColors.green,
+      _MetricFilter.iaq => AccentColors.lime,
+      _MetricFilter.light => AppTheme.warningYellow,
+      _MetricFilter.wind => AppTheme.primaryBlue,
+    };
+  }
+
+  static String _formatAxisValue(_MetricFilter filter, double value) {
+    return switch (filter) {
+      _MetricFilter.temperature => '${value.toStringAsFixed(0)}°C',
+      _MetricFilter.humidity => '${value.toStringAsFixed(0)}%',
+      _MetricFilter.pressure => '${value.toStringAsFixed(0)} hPa',
+      _MetricFilter.gas => _formatLargeNumber(value, unit: 'Ω'),
+      _MetricFilter.iaq => value.toStringAsFixed(0),
+      _MetricFilter.light => _formatLargeNumber(value, unit: 'lx'),
+      _MetricFilter.wind => '${value.toStringAsFixed(1)} m/s',
+      _MetricFilter.all => value.toStringAsFixed(0),
+    };
+  }
+
+  static String _formatTooltipValue(_MetricFilter filter, double value) {
+    return switch (filter) {
+      _MetricFilter.temperature => '${value.toStringAsFixed(1)}°C',
+      _MetricFilter.humidity => '${value.toStringAsFixed(1)}%',
+      _MetricFilter.pressure => '${value.toStringAsFixed(1)} hPa',
+      _MetricFilter.gas => _formatLargeNumber(value, unit: 'Ω', decimals: 2),
+      _MetricFilter.iaq => value.toStringAsFixed(0),
+      _MetricFilter.light => _formatLargeNumber(value, unit: 'lx', decimals: 1),
+      _MetricFilter.wind => '${value.toStringAsFixed(1)} m/s',
+      _MetricFilter.all => value.toStringAsFixed(1),
+    };
+  }
+
+  static String _formatLargeNumber(
+    double value, {
+    required String unit,
+    int decimals = 0,
+  }) {
+    final abs = value.abs();
+    if (abs >= 1e6) {
+      return '${(value / 1e6).toStringAsFixed(decimals == 0 ? 1 : decimals)}M $unit';
+    }
+    if (abs >= 1e3) {
+      return '${(value / 1e3).toStringAsFixed(decimals == 0 ? 1 : decimals)}k $unit';
+    }
+    return '${value.toStringAsFixed(decimals)} $unit';
   }
 
   /// Builds a [LineChartBarData] for a metric series.

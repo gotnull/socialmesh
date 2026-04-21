@@ -20,8 +20,10 @@ import 'package:sensors_plus/sensors_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/logging.dart';
+import '../core/transport.dart';
 import '../core/navigation.dart';
 import '../features/feedback/report_bug_sheet.dart';
+import '../models/mesh_models.dart';
 import '../providers/app_providers.dart';
 import '../providers/connection_providers.dart';
 import '../providers/connectivity_providers.dart';
@@ -339,6 +341,12 @@ class BugReportService with WidgetsBindingObserver {
           'lastConnectedAt': deviceConnection.lastConnectedAt
               ?.toIso8601String(),
         };
+
+        context['connectedMeshDevice'] = _buildConnectedMeshDeviceContext(
+          settingsLastDeviceId: settings.lastDeviceId,
+          settingsLastDeviceName: settings.lastDeviceName,
+          settingsLastDeviceProtocol: settings.lastDeviceProtocol,
+        );
       } catch (e) {
         context['deviceConnection'] = {'error': e.toString()};
       }
@@ -357,6 +365,49 @@ class BugReportService with WidgetsBindingObserver {
     }
 
     return context;
+  }
+
+  Map<String, dynamic> _buildConnectedMeshDeviceContext({
+    required String? settingsLastDeviceId,
+    required String? settingsLastDeviceName,
+    required String? settingsLastDeviceProtocol,
+  }) {
+    final deviceConnection = ref.read(deviceConnectionProvider);
+    final connectedDevice = ref.read(connectedDeviceProvider);
+    final myNodeNum = ref.read(myNodeNumProvider);
+    final nodes = ref.read(nodesProvider);
+
+    final MeshNode? myNode = myNodeNum != null ? nodes[myNodeNum] : null;
+    final DeviceInfo? activeDevice = connectedDevice ?? deviceConnection.device;
+
+    return {
+      'capturedAt': DateTime.now().toUtc().toIso8601String(),
+      'isConnected': deviceConnection.isConnected,
+      'connectionState': deviceConnection.state.name,
+      'disconnectReason': deviceConnection.reason.name,
+      'transport':
+          settingsLastDeviceProtocol ?? activeDevice?.type.name ?? 'unknown',
+      'deviceId': activeDevice?.id ?? settingsLastDeviceId,
+      'deviceName': activeDevice?.name ?? settingsLastDeviceName,
+      'myNodeNum': myNodeNum,
+      'myNodeHex': myNodeNum?.toRadixString(16).toUpperCase(),
+      'nodeLongName': myNode?.longName,
+      'nodeShortName': myNode?.shortName,
+      'userId': myNode?.userId,
+      'hardwareModel': myNode?.hardwareModel,
+      'hardwareModelId': myNode?.hwModelId,
+      'role': myNode?.role,
+      'firmwareVersion': myNode?.firmwareVersion,
+      'batteryLevel': myNode?.batteryLevel,
+      'hasBluetooth': myNode?.hasBluetooth,
+      'hasWifi': myNode?.hasWifi,
+      'channelUtilization': myNode?.channelUtilization,
+      'airUtilTx': myNode?.airUtilTx,
+      'uptimeSeconds': myNode?.uptimeSeconds,
+      'lastHeard': myNode?.lastHeard?.toIso8601String(),
+      'lastConnectedAt': deviceConnection.lastConnectedAt?.toIso8601String(),
+      'reconnectAttempts': deviceConnection.reconnectAttempts,
+    };
   }
 
   // ---------------------------------------------------------------------------

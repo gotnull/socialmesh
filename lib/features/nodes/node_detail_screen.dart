@@ -38,6 +38,12 @@ import '../nodedex/screens/nodedex_detail_screen.dart';
 import '../nodedex/services/sigil_generator.dart';
 import '../nodedex/services/trait_engine.dart';
 import '../nodedex/widgets/sigil_card_sheet.dart';
+import '../telemetry/air_quality_log_screen.dart';
+import '../telemetry/detection_sensor_log_screen.dart';
+import '../telemetry/device_metrics_log_screen.dart';
+import '../telemetry/environment_metrics_log_screen.dart';
+import '../telemetry/pax_counter_log_screen.dart';
+import '../telemetry/position_log_screen.dart';
 import '../telemetry/traceroute_log_screen.dart';
 
 /// Navigates to the node detail screen. Can be called from any screen.
@@ -1053,6 +1059,159 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
     );
   }
 
+  /// Telemetry history section: links to per-node log screens for every
+  /// telemetry category that has recorded data for this node.
+  ///
+  /// Hides categories with no recorded data so the section stays compact —
+  /// an empty air-quality entry on a battery-only node would be noise.
+  /// Returns [SizedBox.shrink] when the node has no telemetry at all.
+  Widget _buildTelemetrySection(BuildContext context, MeshNode node) {
+    final l10n = context.l10n;
+    final nodeNum = node.nodeNum;
+
+    final hasDevice =
+        ref.watch(nodeDeviceMetricsLogsProvider(nodeNum)).value?.isNotEmpty ??
+        false;
+    final hasEnv =
+        ref
+            .watch(nodeEnvironmentMetricsLogsProvider(nodeNum))
+            .value
+            ?.isNotEmpty ??
+        false;
+    final hasAir =
+        ref
+            .watch(nodeAirQualityMetricsLogsProvider(nodeNum))
+            .value
+            ?.isNotEmpty ??
+        false;
+    final hasPosition =
+        ref.watch(nodePositionLogsProvider(nodeNum)).value?.isNotEmpty ?? false;
+    final hasTraceroute =
+        ref.watch(nodeTraceRouteLogsProvider(nodeNum)).value?.isNotEmpty ??
+        false;
+    final hasPax =
+        ref.watch(nodePaxCounterLogsProvider(nodeNum)).value?.isNotEmpty ??
+        false;
+    final hasDetection =
+        ref.watch(nodeDetectionSensorLogsProvider(nodeNum)).value?.isNotEmpty ??
+        false;
+
+    final tiles = <Widget>[
+      if (hasDevice)
+        _TelemetryNavTile(
+          icon: Icons.battery_charging_full,
+          label: l10n.settingsTileDeviceMetricsTitle,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute<void>(
+              builder: (_) => DeviceMetricsLogScreen(nodeNum: nodeNum),
+            ),
+          ),
+        ),
+      if (hasEnv)
+        _TelemetryNavTile(
+          icon: Icons.thermostat,
+          label: l10n.settingsTileEnvironmentMetricsTitle,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute<void>(
+              builder: (_) => EnvironmentMetricsLogScreen(nodeNum: nodeNum),
+            ),
+          ),
+        ),
+      if (hasAir)
+        _TelemetryNavTile(
+          icon: Icons.air,
+          label: l10n.settingsTileAirQualityTitle,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute<void>(
+              builder: (_) => AirQualityLogScreen(nodeNum: nodeNum),
+            ),
+          ),
+        ),
+      if (hasPosition)
+        _TelemetryNavTile(
+          icon: Icons.location_on_outlined,
+          label: l10n.settingsTilePositionHistoryTitle,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute<void>(
+              builder: (_) => PositionLogScreen(initialNodeNum: nodeNum),
+            ),
+          ),
+        ),
+      if (hasTraceroute)
+        _TelemetryNavTile(
+          icon: Icons.timeline,
+          label: l10n.settingsTileTracerouteHistoryTitle,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute<void>(
+              builder: (_) => TraceRouteLogScreen(nodeNum: nodeNum),
+            ),
+          ),
+        ),
+      if (hasPax)
+        _TelemetryNavTile(
+          icon: Icons.people_alt_outlined,
+          label: l10n.settingsTilePaxCounterLogsTitle,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute<void>(
+              builder: (_) => PaxCounterLogScreen(nodeNum: nodeNum),
+            ),
+          ),
+        ),
+      if (hasDetection)
+        _TelemetryNavTile(
+          icon: Icons.sensors,
+          label: l10n.settingsTileDetectionSensorLogsTitle,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute<void>(
+              builder: (_) => DetectionSensorLogScreen(nodeNum: nodeNum),
+            ),
+          ),
+        ),
+    ];
+
+    if (tiles.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.insights, size: 16, color: context.accentColor),
+              const SizedBox(width: AppTheme.spacing8),
+              Text(
+                l10n.nodeDetailSectionTelemetry.toUpperCase(),
+                style: TextStyle(
+                  color: context.textTertiary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spacing10),
+          Container(
+            decoration: BoxDecoration(
+              color: context.card,
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Column(children: tiles),
+          ),
+        ],
+      ),
+    );
+  }
+
   /// Network stats section: packets, node counts.
   Widget _buildNetworkStatsCard(BuildContext context, MeshNode node) {
     return _buildInfoSection(
@@ -1537,6 +1696,9 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
         // ── Device metrics card ──
         SliverToBoxAdapter(child: _buildDeviceMetricsCard(context, node)),
 
+        // ── Telemetry history links (per-node log screens) ──
+        SliverToBoxAdapter(child: _buildTelemetrySection(context, node)),
+
         // ── Network stats card ──
         SliverToBoxAdapter(child: _buildNetworkStatsCard(context, node)),
 
@@ -1580,6 +1742,48 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
 }
 
 // ─────────────────────── small widgets ───────────────────────
+
+class _TelemetryNavTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _TelemetryNavTile({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppTheme.spacing16,
+          vertical: 12,
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 20, color: context.textSecondary),
+            const SizedBox(width: AppTheme.spacing12),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: context.textPrimary,
+                ),
+              ),
+            ),
+            Icon(Icons.chevron_right, size: 18, color: context.textTertiary),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class _ActionIconButton extends StatelessWidget {
   final bool isLoading;

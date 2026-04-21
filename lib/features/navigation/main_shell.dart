@@ -38,6 +38,7 @@ import '../device/device_sheet.dart';
 import '../device/region_selection_screen.dart';
 import '../timeline/timeline_screen.dart';
 import '../routes/routes_screen.dart';
+import '../telemetry/telemetry_hub_screen.dart';
 import '../automations/automations_screen.dart';
 import '../settings/settings_screen.dart';
 import '../settings/theme_settings_screen.dart';
@@ -460,12 +461,19 @@ class _MainShellState extends ConsumerState<MainShell> {
     ),
 
     // Tools section — operational capabilities
+    DrawerMenuItem(
+      icon: Icons.insights_outlined,
+      label: l10n.navigationTelemetry,
+      screen: const TelemetryHubScreen(),
+      sectionHeader: l10n.navigationSectionTools,
+      iconColor: AccentColors.green,
+      requiresConnection: false,
+    ),
     if (AppFeatureFlags.isDeviceShopEnabled)
       DrawerMenuItem(
         icon: Icons.storefront_outlined,
         label: l10n.deviceShopTitle,
         screen: const DeviceShopScreen(),
-        sectionHeader: l10n.navigationSectionTools,
         iconColor: AccentColors.cyan,
         requiresConnection: false,
       ),
@@ -474,9 +482,6 @@ class _MainShellState extends ConsumerState<MainShell> {
         icon: Icons.swap_vert,
         label: l10n.navigationFileTransfers,
         screen: const FileTransfersContainerScreen(),
-        sectionHeader: AppFeatureFlags.isDeviceShopEnabled
-            ? null
-            : l10n.navigationSectionTools,
         iconColor: AccentColors.cyan,
         requiresConnection: true,
         whatsNewBadgeKey: 'file_transfers',
@@ -486,12 +491,6 @@ class _MainShellState extends ConsumerState<MainShell> {
         icon: Icons.flight_takeoff_outlined,
         label: l10n.navigationAether,
         screen: const AetherScreen(),
-        // Only set section header when earlier tools are hidden
-        sectionHeader:
-            AppFeatureFlags.isDeviceShopEnabled ||
-                AppFeatureFlags.isFileTransferEnabled
-            ? null
-            : l10n.navigationSectionTools,
         iconColor: AccentColors.sky,
         requiresConnection: false,
         whatsNewBadgeKey: 'aether',
@@ -502,13 +501,6 @@ class _MainShellState extends ConsumerState<MainShell> {
         icon: Icons.gps_fixed,
         label: l10n.navigationTakGateway,
         screen: const TakScreen(),
-        // Only set section header when earlier tools are hidden
-        sectionHeader:
-            !AppFeatureFlags.isDeviceShopEnabled &&
-                !AppFeatureFlags.isFileTransferEnabled &&
-                !AppFeatureFlags.isAetherEnabled
-            ? l10n.navigationSectionTools
-            : null,
         iconColor: AccentColors.orange,
         requiresConnection: false,
         whatsNewBadgeKey: 'tak',
@@ -528,15 +520,6 @@ class _MainShellState extends ConsumerState<MainShell> {
         icon: Icons.wifi_tethering,
         label: l10n.sipBadgeLabel,
         screen: const SipHubScreen(),
-        // Only set section header when earlier tools are hidden
-        sectionHeader:
-            !AppFeatureFlags.isDeviceShopEnabled &&
-                !AppFeatureFlags.isFileTransferEnabled &&
-                !AppFeatureFlags.isAetherEnabled &&
-                !AppFeatureFlags.isTakGatewayEnabled &&
-                !AppFeatureFlags.isTakMeshBridgeEnabled
-            ? l10n.navigationSectionTools
-            : null,
         iconColor: AccentColors.teal,
         requiresConnection: true,
         whatsNewBadgeKey: 'sip',
