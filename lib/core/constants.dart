@@ -526,6 +526,18 @@ class AppFeatureFlags {
     }
   }
 
+  /// Whether the Node Pet (procedural sigil creature) feature is enabled.
+  /// Set `PET_ENABLED=true` in `.env` to enable.
+  /// Default: false — owner pet UI is hidden behind the flag.
+  static bool get isPetEnabled {
+    try {
+      final raw = dotenv.env['PET_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Whether the Mesh Feed (store-and-forward content feed) is enabled.
   /// Set `MESH_FEED_ENABLED=true` in `.env` to enable.
   /// Default: false — mesh feed UI is hidden until ready for release.

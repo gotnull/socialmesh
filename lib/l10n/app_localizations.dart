@@ -62463,6 +62463,318 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Try changing the filter to see more posts.'**
   String get meshFeedEmptyFilterDescription;
+
+  /// Drawer / navigation rail label for the Node Pet feature.
+  ///
+  /// In en, this message translates to:
+  /// **'Node Pet'**
+  String get petDrawerLabel;
+
+  /// App bar title on the Pet home screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Node Pet'**
+  String get petScreenTitle;
+
+  /// Primary action label — replenishes the pet's energy.
+  ///
+  /// In en, this message translates to:
+  /// **'Charge'**
+  String get petActionCharge;
+
+  /// Secondary action label — hold-to-surge charges faster but raises instability.
+  ///
+  /// In en, this message translates to:
+  /// **'Surge'**
+  String get petActionSurge;
+
+  /// Action label — brief premium interaction that raises mood.
+  ///
+  /// In en, this message translates to:
+  /// **'Resonate'**
+  String get petActionResonate;
+
+  /// Action label — clears a distortion artefact (hygiene analogue).
+  ///
+  /// In en, this message translates to:
+  /// **'Stabilise'**
+  String get petActionStabilise;
+
+  /// Action label — corrects the pet during a discipline moment.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync'**
+  String get petActionSync;
+
+  /// Action label — medicine analogue; only valid while the pet is sick.
+  ///
+  /// In en, this message translates to:
+  /// **'Purge'**
+  String get petActionPurge;
+
+  /// Action label — puts the pet to sleep during the sleep window.
+  ///
+  /// In en, this message translates to:
+  /// **'Dim'**
+  String get petActionDim;
+
+  /// Action label — opens a sheet with detailed pet stats.
+  ///
+  /// In en, this message translates to:
+  /// **'Inspect'**
+  String get petActionInspect;
+
+  /// Action label — restart a dormant pet from a fresh sigil seed.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-sigil'**
+  String get petActionReSigil;
+
+  /// Life-cycle stage name.
+  ///
+  /// In en, this message translates to:
+  /// **'Egg'**
+  String get petStageEgg;
+
+  /// Life-cycle stage name.
+  ///
+  /// In en, this message translates to:
+  /// **'Juvenile'**
+  String get petStageJuvenile;
+
+  /// Life-cycle stage name.
+  ///
+  /// In en, this message translates to:
+  /// **'Adolescent'**
+  String get petStageAdolescent;
+
+  /// Life-cycle stage name.
+  ///
+  /// In en, this message translates to:
+  /// **'Adult'**
+  String get petStageAdult;
+
+  /// Life-cycle stage name.
+  ///
+  /// In en, this message translates to:
+  /// **'Elder'**
+  String get petStageElder;
+
+  /// Life-cycle stage name.
+  ///
+  /// In en, this message translates to:
+  /// **'Dormant'**
+  String get petStageDormant;
+
+  /// Evolution branch name — pre-hatch placeholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Unborn'**
+  String get petBranchUnborn;
+
+  /// Evolution branch name — pristine-care adult form.
+  ///
+  /// In en, this message translates to:
+  /// **'Luminous'**
+  String get petBranchLuminous;
+
+  /// Evolution branch name — moderate-care adult form.
+  ///
+  /// In en, this message translates to:
+  /// **'Steady'**
+  String get petBranchSteady;
+
+  /// Evolution branch name — high-surge adult form.
+  ///
+  /// In en, this message translates to:
+  /// **'Volatile'**
+  String get petBranchVolatile;
+
+  /// Evolution branch name — neglect-path adult form.
+  ///
+  /// In en, this message translates to:
+  /// **'Dimmed'**
+  String get petBranchDimmed;
+
+  /// Visible stat label.
+  ///
+  /// In en, this message translates to:
+  /// **'Energy'**
+  String get petStatEnergy;
+
+  /// Visible stat label.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood'**
+  String get petStatMood;
+
+  /// Visible stat label.
+  ///
+  /// In en, this message translates to:
+  /// **'Stability'**
+  String get petStatStability;
+
+  /// Mood class name shown under the creature.
+  ///
+  /// In en, this message translates to:
+  /// **'Content'**
+  String get petMoodContent;
+
+  /// Mood class name shown under the creature.
+  ///
+  /// In en, this message translates to:
+  /// **'Low energy'**
+  String get petMoodHungry;
+
+  /// Mood class name shown under the creature.
+  ///
+  /// In en, this message translates to:
+  /// **'Low mood'**
+  String get petMoodSad;
+
+  /// Mood class name shown under the creature.
+  ///
+  /// In en, this message translates to:
+  /// **'Unwell'**
+  String get petMoodSick;
+
+  /// Mood class name shown under the creature.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleeping'**
+  String get petMoodSleeping;
+
+  /// Mood class name shown under the creature.
+  ///
+  /// In en, this message translates to:
+  /// **'Calling'**
+  String get petMoodCalling;
+
+  /// Empty-state title when the device has no mesh node identity yet.
+  ///
+  /// In en, this message translates to:
+  /// **'No paired node'**
+  String get petNoOwnerTitle;
+
+  /// Empty-state description when the device has no mesh node identity yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect a Meshtastic or MeshCore device to bind a pet to your node.'**
+  String get petNoOwnerDescription;
+
+  /// Age label shown near the stage/branch header.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Today} =1{1 day old} other{{count} days old}}'**
+  String petAgeDaysLabel(int count);
+
+  /// Attention call banner copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Low on energy — Charge or Surge to answer.'**
+  String get petCallBannerHungry;
+
+  /// Attention call banner copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Wants attention — Resonate to answer.'**
+  String get petCallBannerLonely;
+
+  /// Attention call banner copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Feeling unwell — Purge to answer.'**
+  String get petCallBannerSick;
+
+  /// Attention call banner copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Field is unstable — Stabilise to clear.'**
+  String get petCallBannerHygiene;
+
+  /// Attention call banner copy.
+  ///
+  /// In en, this message translates to:
+  /// **'It\'s almost time to rest — Dim to answer.'**
+  String get petCallBannerBedtime;
+
+  /// Attention call banner copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Restless — Resonate to answer.'**
+  String get petCallBannerBoredom;
+
+  /// Title of the Inspect bottom sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Inspect'**
+  String get petInspectTitle;
+
+  /// Inspect sheet section — identity block.
+  ///
+  /// In en, this message translates to:
+  /// **'Identity'**
+  String get petInspectSectionIdentity;
+
+  /// Inspect sheet section — visible stats block.
+  ///
+  /// In en, this message translates to:
+  /// **'Stats'**
+  String get petInspectSectionStats;
+
+  /// Inspect sheet section — recent events block.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent'**
+  String get petInspectSectionRecent;
+
+  /// Inspect row label — shows the deterministic seed (hex).
+  ///
+  /// In en, this message translates to:
+  /// **'DNA seed'**
+  String get petInspectRowDnaSeed;
+
+  /// Inspect row label — shows the owning node number.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner node'**
+  String get petInspectRowOwnerNode;
+
+  /// Inspect row label — current life-cycle stage.
+  ///
+  /// In en, this message translates to:
+  /// **'Stage'**
+  String get petInspectRowStage;
+
+  /// Inspect row label — current evolution branch.
+  ///
+  /// In en, this message translates to:
+  /// **'Branch'**
+  String get petInspectRowBranch;
+
+  /// Inspect row label — hatch timestamp.
+  ///
+  /// In en, this message translates to:
+  /// **'Hatched'**
+  String get petInspectRowHatched;
+
+  /// Footer note clarifying the v1 local-first constraint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pet state currently stays on this device. Cross-device migration is coming later.'**
+  String get petInspectDeviceLocalNote;
+
+  /// Dormant-state headline on the Pet home screen.
+  ///
+  /// In en, this message translates to:
+  /// **'The sigil has gone quiet'**
+  String get petDormantTitle;
+
+  /// Dormant-state description.
+  ///
+  /// In en, this message translates to:
+  /// **'Begin a new lineage — your next pet inherits a fresh seed tied to this node.'**
+  String get petDormantDescription;
 }
 
 class _AppLocalizationsDelegate

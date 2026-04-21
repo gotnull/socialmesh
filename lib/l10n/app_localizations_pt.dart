@@ -35802,4 +35802,174 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get meshFeedEmptyFilterDescription =>
       'Try changing the filter to see more posts.';
+
+  @override
+  String get petDrawerLabel => 'Node Pet';
+
+  @override
+  String get petScreenTitle => 'Node Pet';
+
+  @override
+  String get petActionCharge => 'Charge';
+
+  @override
+  String get petActionSurge => 'Surge';
+
+  @override
+  String get petActionResonate => 'Resonate';
+
+  @override
+  String get petActionStabilise => 'Stabilise';
+
+  @override
+  String get petActionSync => 'Sync';
+
+  @override
+  String get petActionPurge => 'Purge';
+
+  @override
+  String get petActionDim => 'Dim';
+
+  @override
+  String get petActionInspect => 'Inspect';
+
+  @override
+  String get petActionReSigil => 'Re-sigil';
+
+  @override
+  String get petStageEgg => 'Egg';
+
+  @override
+  String get petStageJuvenile => 'Juvenile';
+
+  @override
+  String get petStageAdolescent => 'Adolescent';
+
+  @override
+  String get petStageAdult => 'Adult';
+
+  @override
+  String get petStageElder => 'Elder';
+
+  @override
+  String get petStageDormant => 'Dormant';
+
+  @override
+  String get petBranchUnborn => 'Unborn';
+
+  @override
+  String get petBranchLuminous => 'Luminous';
+
+  @override
+  String get petBranchSteady => 'Steady';
+
+  @override
+  String get petBranchVolatile => 'Volatile';
+
+  @override
+  String get petBranchDimmed => 'Dimmed';
+
+  @override
+  String get petStatEnergy => 'Energy';
+
+  @override
+  String get petStatMood => 'Mood';
+
+  @override
+  String get petStatStability => 'Stability';
+
+  @override
+  String get petMoodContent => 'Content';
+
+  @override
+  String get petMoodHungry => 'Low energy';
+
+  @override
+  String get petMoodSad => 'Low mood';
+
+  @override
+  String get petMoodSick => 'Unwell';
+
+  @override
+  String get petMoodSleeping => 'Sleeping';
+
+  @override
+  String get petMoodCalling => 'Calling';
+
+  @override
+  String get petNoOwnerTitle => 'No paired node';
+
+  @override
+  String get petNoOwnerDescription =>
+      'Connect a Meshtastic or MeshCore device to bind a pet to your node.';
+
+  @override
+  String petAgeDaysLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days old',
+      one: '1 day old',
+      zero: 'Today',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get petCallBannerHungry =>
+      'Low on energy — Charge or Surge to answer.';
+
+  @override
+  String get petCallBannerLonely => 'Wants attention — Resonate to answer.';
+
+  @override
+  String get petCallBannerSick => 'Feeling unwell — Purge to answer.';
+
+  @override
+  String get petCallBannerHygiene => 'Field is unstable — Stabilise to clear.';
+
+  @override
+  String get petCallBannerBedtime =>
+      'It\'s almost time to rest — Dim to answer.';
+
+  @override
+  String get petCallBannerBoredom => 'Restless — Resonate to answer.';
+
+  @override
+  String get petInspectTitle => 'Inspect';
+
+  @override
+  String get petInspectSectionIdentity => 'Identity';
+
+  @override
+  String get petInspectSectionStats => 'Stats';
+
+  @override
+  String get petInspectSectionRecent => 'Recent';
+
+  @override
+  String get petInspectRowDnaSeed => 'DNA seed';
+
+  @override
+  String get petInspectRowOwnerNode => 'Owner node';
+
+  @override
+  String get petInspectRowStage => 'Stage';
+
+  @override
+  String get petInspectRowBranch => 'Branch';
+
+  @override
+  String get petInspectRowHatched => 'Hatched';
+
+  @override
+  String get petInspectDeviceLocalNote =>
+      'Pet state currently stays on this device. Cross-device migration is coming later.';
+
+  @override
+  String get petDormantTitle => 'The sigil has gone quiet';
+
+  @override
+  String get petDormantDescription =>
+      'Begin a new lineage — your next pet inherits a fresh seed tied to this node.';
 }
