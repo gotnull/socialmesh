@@ -36132,6 +36132,21 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get petLiveStateActive => 'Active';
+
+  @override
+  String get petLiveStateCalm => 'Calm';
+
+  @override
+  String get petLiveStateIdle => 'Idle';
+
+  @override
+  String get petLiveStateSleepy => 'Sleepy';
+
+  @override
+  String get petLiveStateDormant => 'Dormant';
+
+  @override
   String get petHatchBannerTitle => 'Hatched';
 
   @override

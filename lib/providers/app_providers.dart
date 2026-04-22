@@ -5593,6 +5593,22 @@ final nodesProvider = NotifierProvider<NodesNotifier, Map<int, MeshNode>>(
   NodesNotifier.new,
 );
 
+/// Cross-feature selector for a single peer's last-heard timestamp.
+///
+/// Exists so features outside `lib/features/nodes/` (e.g. NodePet's
+/// peer live-state derivation) can observe peer presence freshness
+/// without importing another feature module — the module boundary
+/// rule forbids `features/pet/` from importing `features/nodedex/`
+/// or `features/nodes/`, and `lib/providers/` is the sanctioned
+/// shared root.
+///
+/// Returns null when the node is not yet in the nodes map. Consumers
+/// treat null as "never seen" — rendered as the [PeerPetLiveBand.unknown]
+/// band downstream.
+final peerLastSeenProvider = Provider.family<DateTime?, int>((ref, nodeNum) {
+  return ref.watch(nodesProvider)[nodeNum]?.lastHeard;
+});
+
 // Channels
 class ChannelsNotifier extends Notifier<List<ChannelConfig>> {
   StreamSubscription<ChannelConfig>? _channelSubscription;

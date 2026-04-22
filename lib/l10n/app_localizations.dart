@@ -63046,6 +63046,36 @@ abstract class AppLocalizations {
   /// **'Observed {age} ago'**
   String petCompanionObservedRelative(String age);
 
+  /// Smoothed peer pet live-state label when the peer is currently on the mesh (last-seen under a minute).
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get petLiveStateActive;
+
+  /// Smoothed peer pet live-state label when the peer has been seen recently but not in the last minute (last-seen under 5 minutes).
+  ///
+  /// In en, this message translates to:
+  /// **'Calm'**
+  String get petLiveStateCalm;
+
+  /// Smoothed peer pet live-state label when the peer has not been seen for a while (last-seen under 30 minutes).
+  ///
+  /// In en, this message translates to:
+  /// **'Idle'**
+  String get petLiveStateIdle;
+
+  /// Smoothed peer pet live-state label when the peer's pet is in its sleep window.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleepy'**
+  String get petLiveStateSleepy;
+
+  /// Smoothed peer pet live-state label when the peer's pet has reached its terminal dormant stage.
+  ///
+  /// In en, this message translates to:
+  /// **'Dormant'**
+  String get petLiveStateDormant;
+
   /// Non-blocking banner title after the egg hatches.
   ///
   /// In en, this message translates to:

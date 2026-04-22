@@ -48047,6 +48047,26 @@
             }
         }
     },
+    "petLiveStateActive": "Active",
+    "@petLiveStateActive": {
+        "description": "Smoothed peer pet live-state label when the peer is currently on the mesh (last-seen under a minute)."
+    },
+    "petLiveStateCalm": "Calm",
+    "@petLiveStateCalm": {
+        "description": "Smoothed peer pet live-state label when the peer has been seen recently but not in the last minute (last-seen under 5 minutes)."
+    },
+    "petLiveStateIdle": "Idle",
+    "@petLiveStateIdle": {
+        "description": "Smoothed peer pet live-state label when the peer has not been seen for a while (last-seen under 30 minutes)."
+    },
+    "petLiveStateSleepy": "Sleepy",
+    "@petLiveStateSleepy": {
+        "description": "Smoothed peer pet live-state label when the peer's pet is in its sleep window."
+    },
+    "petLiveStateDormant": "Dormant",
+    "@petLiveStateDormant": {
+        "description": "Smoothed peer pet live-state label when the peer's pet has reached its terminal dormant stage."
+    },
     "petHatchBannerTitle": "Hatched",
     "@petHatchBannerTitle": {
         "description": "Non-blocking banner title after the egg hatches."

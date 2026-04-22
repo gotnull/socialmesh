@@ -34,6 +34,31 @@ string). Any missing input causes the widget to stay on the
 | `buoyancy` | 0..1 | Idle-drift amplitude scalar |
 | `auraIntensity` | 0..1 | Branch-aura brightness scalar |
 
+### Optional number inputs (eye tracking)
+
+These are best-effort — the home hero mounts the full state machine
+even if they're missing, logs once via `AppLogging.pet(...)`, and keeps
+eyes in the idle-forward pose. The mapping policy lives in
+`lib/features/pet/services/pet_look_target.dart` (widget-level only —
+raw pointer coordinates never cross into the Rive layer).
+
+| Name | Range | Semantics |
+|---|---|---|
+| `lookX` | 0..100 | Eye horizontal gaze. 50 = look forward; 0 = fully left; 100 = fully right. Designer should route to pupil/iris X offset with a deadzone around 50 for "forward". |
+| `lookY` | 0..100 | Eye vertical gaze. 50 = look forward; 0 = fully up; 100 = fully down. |
+
+Behaviour rules enforced by the widget:
+
+- **content** — full 0..100 range follows the local pointer, smoothly eased.
+- **calling** — slightly stronger range (more alert).
+- **sick** — reduced range + slower ease (sluggish).
+- **sleeping** / **dormant** — tracking suppressed, target held at 50/50.
+- On pointer release / hover exit, eyes ease back to 50/50.
+
+Blink cadence is authored inside the state machine (not driven from
+Dart) — natural idle timing in the content/calling/sick states,
+closed-eye pose when `isAsleep` is `true` or `stageIndex == 5` (dormant).
+
 ### Bool inputs
 
 | Name | Semantics |

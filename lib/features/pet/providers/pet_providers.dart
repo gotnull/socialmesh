@@ -23,13 +23,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/constants.dart';
 import '../../../core/logging.dart';
 import '../../../providers/app_lifecycle_provider.dart';
-import '../../../providers/app_providers.dart' show myNodeNumProvider;
+import '../../../providers/app_providers.dart'
+    show myNodeNumProvider, peerLastSeenProvider;
 import '../../../providers/mrrp_providers.dart';
+import '../models/peer_pet_live_state.dart';
 import '../models/pet_action_result.dart';
 import '../models/pet_config.dart';
 import '../models/pet_enums.dart';
 import '../models/pet_public_state.dart';
 import '../models/pet_state.dart';
+import '../services/peer_pet_live_state_mapper.dart';
 import '../services/pet_animation_tracker.dart';
 import '../services/pet_care_engine.dart';
 import '../services/pet_notification_dispatcher.dart';
@@ -443,3 +446,204 @@ final petNotificationBridgeProvider = Provider<void>((ref) {
     );
   });
 });
+
+// ---------------------------------------------------------------------------
+// Peer pet live-state layer — smoothed display band derived from remote cache
+// + peer presence freshness. No persistence; the Notifier rebuilds from its
+// two inputs whenever either changes.
+// ---------------------------------------------------------------------------
+
+/// Injected mapper. Swap via override in tests to shorten the cooldown.
+final peerPetLiveStateMapperProvider = Provider<PeerPetLiveStateMapper>((ref) {
+  return const PeerPetLiveStateMapper();
+});
+
+/// Injectable clock — tests override to a fake.
+final peerPetClockProvider = Provider<DateTime Function()>((ref) {
+  return DateTime.now;
+});
+
+/// Sync-derived view of the per-peer remote pet observation — the
+/// AsyncValue unwrapped to `T?` so consumers don't have to branch on
+/// loading/error every frame. Exists as a separate provider so tests
+/// can override a plain value without wrestling with FutureProvider
+/// override semantics, and so [PeerPetLiveStateController] can depend
+/// on a pure synchronous input.
+final peerPetObservationProvider = Provider.family<RemotePetObservation?, int>((
+  ref,
+  nodeNum,
+) {
+  return ref.watch(remotePetProvider(nodeNum)).value;
+});
+
+/// Smoothed live band for a peer, derived from:
+///   * `remotePetProvider(nodeNum)` — decoded public state + observedAt
+///   * `peerLastSeenProvider(nodeNum)` — presence freshness from nodes map
+///
+/// Asymmetric transition rules (see [PeerPetLiveStateMapper] docs):
+/// upgrades and wire-authoritative low-energy entries are immediate;
+/// downgrades, lateral-to-unknown, and sleepy/dormant exits go through
+/// a 15s cooldown. Timers are strictly single-shot — scheduling a new
+/// one always cancels the previous one, so rapid-fire signal updates
+/// cannot accumulate pending transitions.
+class PeerPetLiveStateController extends Notifier<PeerPetLiveState> {
+  PeerPetLiveStateController(this.nodeNum);
+
+  final int nodeNum;
+
+  Timer? _cooldownTimer;
+  PeerPetLiveBand? _pendingBand;
+  DateTime? _pendingSince;
+
+  /// The last value this Notifier returned from [build]. Tracks the
+  /// "current band" across rebuilds triggered by `ref.watch` — the
+  /// framework-visible `state` is refreshed only when we emit, so we
+  /// also need a local cache of our own returned value to detect
+  /// true band transitions (vs. meaningless rebuilds).
+  PeerPetLiveState? _lastReturned;
+
+  @override
+  PeerPetLiveState build() {
+    ref.onDispose(_cancelTimer);
+
+    // ref.watch drives rebuilds whenever either input changes. The
+    // Notifier instance is preserved, so `_cooldownTimer`, `_pendingBand`,
+    // and `_pendingSince` all survive rebuilds. We read the observation
+    // through [peerPetObservationProvider] (sync-derived) rather than
+    // the FutureProvider directly — this removes an AsyncValue branch
+    // per frame and makes the input cleanly overridable in tests.
+    final observation = ref.watch(peerPetObservationProvider(nodeNum));
+    final lastSeen = ref.watch(peerLastSeenProvider(nodeNum));
+
+    final now = ref.read(peerPetClockProvider)();
+    final mapper = ref.read(peerPetLiveStateMapperProvider);
+
+    final signal = PeerPresenceSignal(
+      sinceLastSeen: lastSeen == null ? null : now.difference(lastSeen),
+      sinceObserved: observation == null
+          ? null
+          : now.difference(observation.observedAt),
+      isAsleepOnWire: observation?.state.isAsleep ?? false,
+      isDormantOnWire: observation?.state.stage == PetStage.dormant,
+    );
+    final raw = mapper.resolveRaw(signal);
+
+    final prior = _lastReturned;
+    final currentBand = prior?.band ?? PeerPetLiveBand.unknown;
+
+    final decision = mapper.smooth(
+      current: currentBand,
+      incoming: raw,
+      pendingBand: _pendingBand,
+      pendingSince: _pendingSince,
+      signal: signal,
+      now: now,
+    );
+
+    final next = _applyDecision(decision, now, prior: prior);
+    _lastReturned = next;
+    return next;
+  }
+
+  /// Called when the cooldown timer fires. Runs outside of `build()`,
+  /// so we drive state via direct assignment. If a newer input has
+  /// arrived since scheduling, the rebuild path will already have
+  /// handled it — we only commit when the pending band still matches
+  /// what the latest signal says.
+  void _onCooldownFire() {
+    final now = ref.read(peerPetClockProvider)();
+    final observation = ref.read(peerPetObservationProvider(nodeNum));
+    final lastSeen = ref.read(peerLastSeenProvider(nodeNum));
+    final mapper = ref.read(peerPetLiveStateMapperProvider);
+
+    final signal = PeerPresenceSignal(
+      sinceLastSeen: lastSeen == null ? null : now.difference(lastSeen),
+      sinceObserved: observation == null
+          ? null
+          : now.difference(observation.observedAt),
+      isAsleepOnWire: observation?.state.isAsleep ?? false,
+      isDormantOnWire: observation?.state.stage == PetStage.dormant,
+    );
+    final raw = mapper.resolveRaw(signal);
+
+    if (_pendingBand == null || raw != _pendingBand) {
+      _pendingBand = null;
+      _pendingSince = null;
+      _cooldownTimer = null;
+      return;
+    }
+
+    final decision = mapper.smooth(
+      current: state.band,
+      incoming: raw,
+      pendingBand: _pendingBand,
+      pendingSince: _pendingSince,
+      signal: signal,
+      now: now,
+    );
+
+    final next = _applyDecision(decision, now, prior: state);
+    if (!identical(next, state)) {
+      _lastReturned = next;
+      state = next;
+    }
+  }
+
+  /// Apply [decision] to pending/timer bookkeeping and return the
+  /// Notifier's next state value. Returns [prior] unchanged (same
+  /// reference) when the decision would not change the band — callers
+  /// compare with `identical` to decide whether to emit.
+  PeerPetLiveState _applyDecision(
+    PeerPetSmoothingDecision decision,
+    DateTime now, {
+    required PeerPetLiveState? prior,
+  }) {
+    // Pending-band bookkeeping — only reset the clock when the band
+    // actually changes; otherwise repeated builds with the same pending
+    // band would reset the cooldown and it would never expire.
+    if (decision.pendingBand == null) {
+      _pendingBand = null;
+      _pendingSince = null;
+    } else if (_pendingBand != decision.pendingBand) {
+      _pendingBand = decision.pendingBand;
+      _pendingSince = now;
+    }
+
+    // Timer discipline: always cancel before scheduling.
+    _cancelTimer();
+    final fireAt = decision.fireAt;
+    if (fireAt != null && decision.pendingBand != null) {
+      final remaining = fireAt.difference(now);
+      final delay = remaining.isNegative ? Duration.zero : remaining;
+      _cooldownTimer = Timer(delay, _onCooldownFire);
+    }
+
+    final emit = decision.emit;
+    if (emit == null) {
+      // No change — preserve reference so Riverpod's equality check
+      // suppresses the rebuild.
+      return prior ?? PeerPetLiveState.initial(now);
+    }
+    if (prior != null && emit == prior.band) {
+      // Band unchanged — same reference, no emission.
+      return prior;
+    }
+    if (prior != null) {
+      AppLogging.pet(
+        'PeerPetLiveState: node=$nodeNum '
+        '${prior.band.name} -> ${emit.name}',
+      );
+    }
+    return PeerPetLiveState(band: emit, emittedAt: now);
+  }
+
+  void _cancelTimer() {
+    _cooldownTimer?.cancel();
+    _cooldownTimer = null;
+  }
+}
+
+final peerPetLiveStateProvider =
+    NotifierProvider.family<PeerPetLiveStateController, PeerPetLiveState, int>(
+      PeerPetLiveStateController.new,
+    );
