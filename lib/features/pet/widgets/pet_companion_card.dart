@@ -19,6 +19,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/logging.dart';
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/pet_enums.dart';
@@ -39,7 +40,8 @@ class PetCompanionContent extends ConsumerStatefulWidget {
       _PetCompanionContentState();
 }
 
-class _PetCompanionContentState extends ConsumerState<PetCompanionContent> {
+class _PetCompanionContentState extends ConsumerState<PetCompanionContent>
+    with LifecycleSafeMixin<PetCompanionContent> {
   bool _fetchScheduled = false;
 
   @override

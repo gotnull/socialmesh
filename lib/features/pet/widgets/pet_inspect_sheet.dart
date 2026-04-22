@@ -14,7 +14,12 @@ import '../providers/pet_providers.dart';
 
 /// Inspect sheet — the "status" screen for the pet. Read-only.
 class PetInspectSheet extends ConsumerWidget {
-  const PetInspectSheet({super.key});
+  /// Provided by `AppBottomSheet.showScrollable`'s builder — wired to
+  /// the internal ListView so drag gestures coordinate with scroll
+  /// position.
+  final ScrollController? scrollController;
+
+  const PetInspectSheet({super.key, this.scrollController});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -35,8 +40,7 @@ class PetInspectSheet extends ConsumerWidget {
     }
     final ageDays = state.ageInDaysAt(DateTime.now());
     return ListView(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
+      controller: scrollController,
       padding: const EdgeInsets.only(top: AppTheme.spacing8),
       children: [
         Text(
@@ -76,6 +80,13 @@ class PetInspectSheet extends ConsumerWidget {
               label: l10n.petInspectRowHatched,
               value: l10n.petAgeDaysLabel(ageDays),
               icon: Icons.schedule_outlined,
+            ),
+            InfoTableRow(
+              label: l10n.petInspectRowInStage,
+              value: _elapsedLabel(
+                DateTime.now().difference(state.stageStartedAt),
+              ),
+              icon: Icons.timer_outlined,
             ),
           ],
         ),
@@ -179,6 +190,31 @@ String _relativeTime(DateTime at, AppLocalizations l10n) {
   if (diff.inHours < 1) return l10n.commonMinutesAgo(diff.inMinutes);
   if (diff.inDays < 1) return l10n.commonHoursAgo(diff.inHours);
   return l10n.commonDaysAgo(diff.inDays);
+}
+
+/// Compact elapsed-duration label for the "In stage" row. Differs from
+/// [_relativeTime] in that it has no "ago" suffix — this is a forward-
+/// reading elapsed counter, not a past-tense timestamp.
+///
+///   < 1 m  → "<1m"
+///   < 1 h  → "12m"
+///   < 1 d  → "2h 15m"  (minutes only shown when > 0)
+///   ≥ 1 d  → "3d 4h"   (hours only shown when > 0)
+String _elapsedLabel(Duration d) {
+  if (d.isNegative || d.inMinutes < 1) {
+    return '<1m'; // lint-allow: hardcoded-string
+  }
+  if (d.inHours < 1) return '${d.inMinutes}m'; // lint-allow: hardcoded-string
+  if (d.inDays < 1) {
+    final h = d.inHours;
+    final m = d.inMinutes - h * 60;
+    return m > 0 ? '${h}h ${m}m' : '${h}h'; // lint-allow: hardcoded-string
+  }
+  final days = d.inDays;
+  final hours = d.inHours - days * 24;
+  return hours > 0
+      ? '${days}d ${hours}h'
+      : '${days}d'; // lint-allow: hardcoded-string
 }
 
 String _eventLabel(CareEventKind kind, AppLocalizations l10n) {

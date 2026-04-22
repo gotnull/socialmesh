@@ -47874,6 +47874,62 @@
     "@petInspectRowHatched": {
         "description": "Inspect row label — hatch timestamp."
     },
+    "petInspectRowInStage": "In stage",
+    "@petInspectRowInStage": {
+        "description": "Inspect row label — elapsed time since the pet entered the current stage."
+    },
+    "petDnaViewerTitle": "DNA Blueprint",
+    "@petDnaViewerTitle": {
+        "description": "Title for the dedicated DNA Viewer sheet — shows the structural genome derived from the pet's dnaSeed."
+    },
+    "petDnaViewerOpenAction": "View DNA blueprint",
+    "@petDnaViewerOpenAction": {
+        "description": "Label for the affordance on the pet home screen that opens the DNA Viewer."
+    },
+    "petDnaSectionIdentity": "Identity",
+    "@petDnaSectionIdentity": {
+        "description": "DNA Viewer section header — identity block (seed, stage, branch)."
+    },
+    "petDnaSectionDecoded": "Decoded traits",
+    "@petDnaSectionDecoded": {
+        "description": "DNA Viewer section header — structural trait breakdown."
+    },
+    "petDnaTraitSymmetry": "Symmetry",
+    "@petDnaTraitSymmetry": {
+        "description": "DNA Viewer decoded trait — core polygon symmetry class."
+    },
+    "petDnaTraitOrbitals": "Orbital complexity",
+    "@petDnaTraitOrbitals": {
+        "description": "DNA Viewer decoded trait — petal/orbital count."
+    },
+    "petDnaTraitResonance": "Resonance",
+    "@petDnaTraitResonance": {
+        "description": "DNA Viewer decoded trait — twist cycles."
+    },
+    "petDnaTraitStrands": "Strand configuration",
+    "@petDnaTraitStrands": {
+        "description": "DNA Viewer decoded trait — strand count (Monad / Dyad / Triad)."
+    },
+    "petDnaTraitVolatility": "Volatility markers",
+    "@petDnaTraitVolatility": {
+        "description": "DNA Viewer decoded trait — number of broken strand segments."
+    },
+    "petDnaTraitAnomaly": "Anomaly",
+    "@petDnaTraitAnomaly": {
+        "description": "DNA Viewer decoded trait — anomaly bit flag."
+    },
+    "petDnaTraitSignatureRotation": "Signature rotation",
+    "@petDnaTraitSignatureRotation": {
+        "description": "DNA Viewer decoded trait — seed-derived body rotation angle in degrees."
+    },
+    "petDnaAnomalyPresent": "Present",
+    "@petDnaAnomalyPresent": {
+        "description": "DNA Viewer anomaly trait value when the anomaly bit is set."
+    },
+    "petDnaAnomalyAbsent": "Stable",
+    "@petDnaAnomalyAbsent": {
+        "description": "DNA Viewer anomaly trait value when the anomaly bit is unset."
+    },
     "petInspectDeviceLocalNote": "Pet state currently stays on this device. Cross-device migration is coming later.",
     "@petInspectDeviceLocalNote": {
         "description": "Footer note clarifying the v1 local-first constraint."

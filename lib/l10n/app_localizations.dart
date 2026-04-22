@@ -62794,6 +62794,90 @@ abstract class AppLocalizations {
   /// **'Hatched'**
   String get petInspectRowHatched;
 
+  /// Inspect row label — elapsed time since the pet entered the current stage.
+  ///
+  /// In en, this message translates to:
+  /// **'In stage'**
+  String get petInspectRowInStage;
+
+  /// Title for the dedicated DNA Viewer sheet — shows the structural genome derived from the pet's dnaSeed.
+  ///
+  /// In en, this message translates to:
+  /// **'DNA Blueprint'**
+  String get petDnaViewerTitle;
+
+  /// Label for the affordance on the pet home screen that opens the DNA Viewer.
+  ///
+  /// In en, this message translates to:
+  /// **'View DNA blueprint'**
+  String get petDnaViewerOpenAction;
+
+  /// DNA Viewer section header — identity block (seed, stage, branch).
+  ///
+  /// In en, this message translates to:
+  /// **'Identity'**
+  String get petDnaSectionIdentity;
+
+  /// DNA Viewer section header — structural trait breakdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Decoded traits'**
+  String get petDnaSectionDecoded;
+
+  /// DNA Viewer decoded trait — core polygon symmetry class.
+  ///
+  /// In en, this message translates to:
+  /// **'Symmetry'**
+  String get petDnaTraitSymmetry;
+
+  /// DNA Viewer decoded trait — petal/orbital count.
+  ///
+  /// In en, this message translates to:
+  /// **'Orbital complexity'**
+  String get petDnaTraitOrbitals;
+
+  /// DNA Viewer decoded trait — twist cycles.
+  ///
+  /// In en, this message translates to:
+  /// **'Resonance'**
+  String get petDnaTraitResonance;
+
+  /// DNA Viewer decoded trait — strand count (Monad / Dyad / Triad).
+  ///
+  /// In en, this message translates to:
+  /// **'Strand configuration'**
+  String get petDnaTraitStrands;
+
+  /// DNA Viewer decoded trait — number of broken strand segments.
+  ///
+  /// In en, this message translates to:
+  /// **'Volatility markers'**
+  String get petDnaTraitVolatility;
+
+  /// DNA Viewer decoded trait — anomaly bit flag.
+  ///
+  /// In en, this message translates to:
+  /// **'Anomaly'**
+  String get petDnaTraitAnomaly;
+
+  /// DNA Viewer decoded trait — seed-derived body rotation angle in degrees.
+  ///
+  /// In en, this message translates to:
+  /// **'Signature rotation'**
+  String get petDnaTraitSignatureRotation;
+
+  /// DNA Viewer anomaly trait value when the anomaly bit is set.
+  ///
+  /// In en, this message translates to:
+  /// **'Present'**
+  String get petDnaAnomalyPresent;
+
+  /// DNA Viewer anomaly trait value when the anomaly bit is unset.
+  ///
+  /// In en, this message translates to:
+  /// **'Stable'**
+  String get petDnaAnomalyAbsent;
+
   /// Footer note clarifying the v1 local-first constraint.
   ///
   /// In en, this message translates to:

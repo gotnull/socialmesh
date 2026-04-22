@@ -95,17 +95,6 @@ void main() {
   });
 
   group('PetSigilGeometry — determinism', () {
-    setUp(() {
-      // Each test starts with a clean cache so hit/miss assertions
-      // aren't polluted by prior runs.
-      // ignore: invalid_use_of_visible_for_testing_member
-      // (the @visibleForTesting helper on the cache is intentionally
-      // accessible here.)
-      // Reach into the singleton via the public forIdentity path —
-      // actual cache state inspection happens inside the cache tests
-      // below.
-    });
-
     test('same (seed, stage, branch) yields equal render keys', () {
       final a = PetSigilGeometry.forIdentity(
         dnaSeed: _seedA,

@@ -35,8 +35,12 @@ import '../models/pet_enums.dart';
 import '../models/pet_state.dart';
 import '../providers/pet_providers.dart';
 import '../services/pet_animation_tracker.dart';
+import '../../../core/constants.dart' show AppFeatureFlags;
+import '../services/pet_rive_adapter.dart';
 import '../widgets/pet_action_button.dart';
+import '../widgets/pet_creature_rive.dart';
 import '../widgets/pet_hatch_overlay.dart';
+import '../widgets/pet_dna_viewer_sheet.dart';
 import '../widgets/pet_inspect_sheet.dart';
 import '../widgets/pet_sigil_painter.dart';
 import '../widgets/pet_stat_pip_row.dart';
@@ -495,21 +499,44 @@ class _PetBodyState extends ConsumerState<_PetBody>
                         scale: _bounceScale.value,
                         child: child,
                       ),
-                      child: PetCreature(
-                        dnaSeed: state.dnaSeed,
-                        stage: state.stage,
-                        branch: state.branch,
-                        mood: mood,
-                        isAsleep: state.isAsleep,
-                        isSick: state.isSick,
-                        isCalling: state.activeCall != null,
-                        hygieneArtefactCount: state.hygieneArtefacts.length,
-                        size: maxCreature.toDouble(),
-                        energy: state.energy,
-                        moodStat: state.mood,
-                        stability: state.stability,
-                        statMax: statMax,
-                      ),
+                      child: AppFeatureFlags.isPetRiveEnabled
+                          ? PetCreatureRive(
+                              dnaSeed: state.dnaSeed,
+                              stage: state.stage,
+                              branch: state.branch,
+                              mood: mood,
+                              isAsleep: state.isAsleep,
+                              isSick: state.isSick,
+                              isCalling: state.activeCall != null,
+                              hygieneArtefactCount:
+                                  state.hygieneArtefacts.length,
+                              size: maxCreature.toDouble(),
+                              energy: state.energy,
+                              moodStat: state.mood,
+                              stability: state.stability,
+                              statMax: statMax,
+                              riveInputs: const PetRiveAdapter().buildInputs(
+                                state: state,
+                                derivedMood: mood,
+                                config: ref.read(petConfigProvider),
+                              ),
+                            )
+                          : PetCreature(
+                              dnaSeed: state.dnaSeed,
+                              stage: state.stage,
+                              branch: state.branch,
+                              mood: mood,
+                              isAsleep: state.isAsleep,
+                              isSick: state.isSick,
+                              isCalling: state.activeCall != null,
+                              hygieneArtefactCount:
+                                  state.hygieneArtefacts.length,
+                              size: maxCreature.toDouble(),
+                              energy: state.energy,
+                              moodStat: state.mood,
+                              stability: state.stability,
+                              statMax: statMax,
+                            ),
                     ),
                     if (_hatchOverlayActive)
                       PetHatchOverlay(
@@ -552,6 +579,8 @@ class _PetBodyState extends ConsumerState<_PetBody>
                   fontFamily: AppTheme.fontFamily,
                 ),
               ),
+              const SizedBox(height: AppTheme.spacing12),
+              _DnaSeedChip(state: state),
             ],
           ),
         );
@@ -570,6 +599,69 @@ class _PetBodyState extends ConsumerState<_PetBody>
       physics: const NeverScrollableScrollPhysics(),
       body: scrollBody,
       bottomNavigationBar: bottomCluster,
+    );
+  }
+}
+
+/// Tappable DNA-seed affordance shown below the creature's mood label.
+/// Opens the dedicated [PetDnaViewerSheet] — the pet renderer itself
+/// intentionally does NOT carry an inline helix; structural inspection
+/// lives in the viewer.
+class _DnaSeedChip extends StatelessWidget {
+  final PetState state;
+  const _DnaSeedChip({required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final hex = '0x${state.dnaSeed.toRadixString(16).padLeft(8, '0')}';
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => AppBottomSheet.showScrollable<void>(
+          context: context,
+          initialChildSize: 0.9,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          builder: (controller) =>
+              PetDnaViewerSheet(scrollController: controller),
+        ),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppTheme.spacing12,
+            vertical: AppTheme.spacing6,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.fingerprint, size: 14, color: context.textTertiary),
+              const SizedBox(width: AppTheme.spacing6),
+              Text(
+                hex,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: context.textSecondary,
+                  letterSpacing: 0.8,
+                  fontFamily: AppTheme.fontFamily,
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing4),
+              Text(
+                l10n.petDnaViewerOpenAction,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: context.textTertiary,
+                  fontFamily: AppTheme.fontFamily,
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing4),
+              Icon(Icons.chevron_right, size: 14, color: context.textTertiary),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -987,7 +1079,13 @@ class _ActionBar extends ConsumerWidget {
   }
 
   void _openInspect(BuildContext context) {
-    AppBottomSheet.show<void>(context: context, child: const PetInspectSheet());
+    AppBottomSheet.showScrollable<void>(
+      context: context,
+      initialChildSize: 0.9,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      builder: (controller) => PetInspectSheet(scrollController: controller),
+    );
   }
 }
 

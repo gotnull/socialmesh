@@ -35657,6 +35657,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String get petInspectRowHatched => 'Hatched';
 
   @override
+  String get petInspectRowInStage => 'In stage';
+
+  @override
+  String get petDnaViewerTitle => 'DNA Blueprint';
+
+  @override
+  String get petDnaViewerOpenAction => 'View DNA blueprint';
+
+  @override
+  String get petDnaSectionIdentity => 'Identity';
+
+  @override
+  String get petDnaSectionDecoded => 'Decoded traits';
+
+  @override
+  String get petDnaTraitSymmetry => 'Symmetry';
+
+  @override
+  String get petDnaTraitOrbitals => 'Orbital complexity';
+
+  @override
+  String get petDnaTraitResonance => 'Resonance';
+
+  @override
+  String get petDnaTraitStrands => 'Strand configuration';
+
+  @override
+  String get petDnaTraitVolatility => 'Volatility markers';
+
+  @override
+  String get petDnaTraitAnomaly => 'Anomaly';
+
+  @override
+  String get petDnaTraitSignatureRotation => 'Signature rotation';
+
+  @override
+  String get petDnaAnomalyPresent => 'Present';
+
+  @override
+  String get petDnaAnomalyAbsent => 'Stable';
+
+  @override
   String get petInspectDeviceLocalNote =>
       'Pet state currently stays on this device. Cross-device migration is coming later.';
 

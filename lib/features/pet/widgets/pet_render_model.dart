@@ -68,6 +68,96 @@ class PetRenderPalette {
   int get hashCode => Object.hash(primary, accent, petal);
 }
 
+/// Presence level of the ceremonial helix trait for a given identity.
+///   - [none]: no helix drawn (egg stage, or dnaSeed roll said no).
+///   - [hint]: very faint, simplified; used for juvenile stage so the
+///     trait is visible but not the focus.
+///   - [full]: full spec expression (adolescent+).
+enum PetHelixPresence { none, hint, full }
+
+/// Deterministic spec for the creature's double-helix trait. Derived
+/// once from `(dnaSeed, stage, branch)` inside the geometry cache; the
+/// painter reads it without doing any seed/trig work per frame.
+///
+/// The helix is NOT a universal feature — [enabled] gates roughly 55 %
+/// of dnaSeeds in. When disabled, presence is always [PetHelixPresence.none]
+/// and the painter skips the layer outright.
+@immutable
+class PetHelixSpec {
+  /// Whether this identity expresses a helix at all.
+  final bool enabled;
+
+  /// [none] / [hint] / [full] — combines the seed-level [enabled] with
+  /// stage-level visibility rules.
+  final PetHelixPresence presence;
+
+  /// 1, 2, or 3 strands. 2 is the common form; 1 and 3 are rare
+  /// anomalies seeded by the dnaSeed.
+  final int strandCount;
+
+  /// Strand orbit radius as a fraction of canvas minSide.
+  final double radiusFactor;
+
+  /// Total vertical span as a fraction of canvas minSide (centred on
+  /// the body centre).
+  final double verticalSpanFactor;
+
+  /// Points sampled along each strand. Bounded small for paint cost.
+  final int segmentCount;
+
+  /// Number of full rotations the strand phase completes over the
+  /// vertical span. Integer so the strand closes cleanly at the ends
+  /// (sine / cosine wrap at 2π·integer).
+  final int twistCycles;
+
+  /// Subtle per-point radial perturbation in [0, ~0.08 of radius].
+  final double wobbleAmount;
+
+  /// Base angular offset of strand 0, derived from the dnaSeed.
+  final double baseAngle;
+
+  /// Seed bitmask of segments skipped from drawing — gives a
+  /// deterministic "broken" / discontinuous look for volatile / sick
+  /// expressions. Bit `i` set means segment starting at point `i` is
+  /// hidden.
+  final int brokennessMask;
+
+  /// Cross-link rung count between the two strands. Only populated
+  /// when `strandCount == 2` (1 and 3 strand anomalies have no rungs).
+  /// Rungs are THE readability win — without them the helix reads as
+  /// orbit lines.
+  final int rungCount;
+
+  const PetHelixSpec._({
+    required this.enabled,
+    required this.presence,
+    required this.strandCount,
+    required this.radiusFactor,
+    required this.verticalSpanFactor,
+    required this.segmentCount,
+    required this.twistCycles,
+    required this.wobbleAmount,
+    required this.baseAngle,
+    required this.brokennessMask,
+    required this.rungCount,
+  });
+
+  /// Disabled spec — painter skips the layer when it reads this.
+  static const PetHelixSpec disabled = PetHelixSpec._(
+    enabled: false,
+    presence: PetHelixPresence.none,
+    strandCount: 0,
+    radiusFactor: 0,
+    verticalSpanFactor: 0,
+    segmentCount: 0,
+    twistCycles: 0,
+    wobbleAmount: 0,
+    baseAngle: 0,
+    brokennessMask: 0,
+    rungCount: 0,
+  );
+}
+
 /// Precomputed deterministic geometry for a pet. Keyed by
 /// `(dnaSeed, stage, branch)`. Contains everything the painter needs to
 /// render a creature without redoing bit-mix / trig work each frame.
@@ -91,6 +181,10 @@ class PetSigilGeometry {
 
   final PetRenderPalette palette;
 
+  /// Seed-derived ceremonial double-helix trait — rare, deterministic,
+  /// threaded through the creature's space. See [PetHelixSpec] + §9.12.
+  final PetHelixSpec helix;
+
   const PetSigilGeometry._({
     required this.dnaSeed,
     required this.stage,
@@ -101,6 +195,7 @@ class PetSigilGeometry {
     required this.coreVertexCount,
     required this.petalCount,
     required this.palette,
+    required this.helix,
   });
 
   /// Build (or fetch from cache) the geometry for the given identity.
@@ -329,6 +424,11 @@ class _PetGeometryCache {
     );
 
     final palette = _buildPalette(dnaSeed: dnaSeed, branch: branch);
+    final helix = _buildHelixSpec(
+      dnaSeed: dnaSeed,
+      stage: stage,
+      branch: branch,
+    );
 
     return PetSigilGeometry._(
       dnaSeed: dnaSeed,
@@ -340,6 +440,162 @@ class _PetGeometryCache {
       coreVertexCount: coreVertexCount,
       petalCount: petalCount,
       palette: palette,
+      helix: helix,
+    );
+  }
+
+  /// Seed- and identity-derived helix spec. Rules:
+  ///   - egg stage: always [PetHelixSpec.disabled] — no helix in shell.
+  ///   - unborn branch: same.
+  ///   - dnaSeed bit 23 is the coarse presence roll (~50%). When unset,
+  ///     no helix regardless of branch / stage (preserves rarity).
+  ///   - juvenile: enabled → [PetHelixPresence.hint] (half segments,
+  ///     low alpha in the painter).
+  ///   - adolescent+: enabled → [PetHelixPresence.full].
+  ///
+  /// Branch influences style (strand count, radius, brokenness), not
+  /// whether the helix exists.
+  PetHelixSpec _buildHelixSpec({
+    required int dnaSeed,
+    required PetStage stage,
+    required PetBranch branch,
+  }) {
+    if (stage == PetStage.egg) return PetHelixSpec.disabled;
+    if (branch == PetBranch.unborn) return PetHelixSpec.disabled;
+
+    // ~50 % presence gate — keeps the helix feeling special.
+    final hasHelix = ((dnaSeed >> 23) & 0x01) == 1;
+    if (!hasHelix) return PetHelixSpec.disabled;
+
+    final presence = stage == PetStage.juvenile
+        ? PetHelixPresence.hint
+        : PetHelixPresence.full;
+
+    // Strand count: 2 is common, 3 is rare (≈1/16), 1 is an anomaly
+    // (≈1/16). Volatile branch biases toward 1 or 3 for instability.
+    final strandRoll = (dnaSeed >> 27) & 0x0F;
+    int strandCount;
+    if (branch == PetBranch.volatile) {
+      strandCount = (strandRoll < 3) ? 3 : (strandRoll > 13 ? 1 : 2);
+    } else {
+      strandCount = (strandRoll == 0) ? 3 : (strandRoll == 1 ? 1 : 2);
+    }
+
+    // Radius scales with branch identity. All values wrap well outside
+    // the body silhouette (body baseRadius is 0.28·minSide) so the
+    // helix reads as a primary visual feature, not an inner decoration.
+    // Dimmed collapses slightly inward (but stays ≥ 0.32 so it's still
+    // a visible helix); luminous reaches furthest; steady average;
+    // volatile erratic.
+    final radiusJitter = ((dnaSeed >> 5) & 0x1F) / 31.0; // 0..1
+    double radiusFactor;
+    switch (branch) {
+      case PetBranch.luminous:
+        radiusFactor = 0.38 + 0.04 * radiusJitter; // 0.38..0.42
+        break;
+      case PetBranch.steady:
+        radiusFactor = 0.36 + 0.04 * radiusJitter; // 0.36..0.40
+        break;
+      case PetBranch.volatile:
+        radiusFactor = 0.34 + 0.08 * radiusJitter; // 0.34..0.42
+        break;
+      case PetBranch.dimmed:
+        radiusFactor = 0.32 + 0.03 * radiusJitter; // 0.32..0.35 (collapsed)
+        break;
+      case PetBranch.unborn:
+        radiusFactor = 0.36;
+        break;
+    }
+
+    // Vertical span — helix is sized so it clearly exceeds the body
+    // (body diameter ≈ 0.56·minSide) and reads as a tall structural
+    // wrap. Extends from above the head to below the lower body.
+    double verticalSpanFactor;
+    switch (stage) {
+      case PetStage.elder:
+        verticalSpanFactor = 0.95; // ceremonial extension
+        break;
+      case PetStage.dormant:
+        verticalSpanFactor = 0.60; // fossilised remnant
+        break;
+      case PetStage.juvenile:
+        verticalSpanFactor = 0.70; // hint — shorter
+        break;
+      default:
+        verticalSpanFactor = 0.85; // adolescent / adult default
+    }
+
+    const segmentCount = 14;
+    // Integer twistCycles keeps strand endpoints wrap-continuous.
+    // Seed picks 2 or 3 cycles; volatile tips toward 3 for tension.
+    final twistRoll = (dnaSeed >> 11) & 0x01;
+    final twistCycles = (branch == PetBranch.volatile)
+        ? (twistRoll == 0 ? 3 : 2)
+        : (twistRoll == 0 ? 2 : 3);
+
+    // Wobble radial perturbation. Volatile > steady > luminous ≈ dimmed.
+    double wobbleAmount;
+    switch (branch) {
+      case PetBranch.volatile:
+        wobbleAmount = 0.06;
+        break;
+      case PetBranch.steady:
+        wobbleAmount = 0.035;
+        break;
+      case PetBranch.luminous:
+        wobbleAmount = 0.02;
+        break;
+      case PetBranch.dimmed:
+        wobbleAmount = 0.025;
+        break;
+      case PetBranch.unborn:
+        wobbleAmount = 0.0;
+        break;
+    }
+
+    final baseAngle = ((dnaSeed >> 19) & 0xFF) / 255.0 * math.pi * 2;
+
+    // Brokenness: fractured segments. Volatile high, dimmed medium,
+    // others clean. Mask is drawn from the seed so it's stable.
+    int brokennessMask;
+    final maskSource = dnaSeed ^ (dnaSeed >> 7);
+    switch (branch) {
+      case PetBranch.volatile:
+        // Mask covers segmentCount bits; keep roughly 25 % broken.
+        brokennessMask = maskSource & 0x1555 & ((1 << segmentCount) - 1);
+        break;
+      case PetBranch.dimmed:
+        brokennessMask = maskSource & 0x0441 & ((1 << segmentCount) - 1);
+        break;
+      default:
+        brokennessMask = 0;
+    }
+
+    // Rung count — cross-links between strands are what make the
+    // helix read as structural DNA rather than two orbit lines. Only
+    // the 2-strand form gets them; 1-strand has no pair, 3-strand is
+    // an anomaly that doesn't rung cleanly.
+    int rungCount;
+    if (strandCount != 2) {
+      rungCount = 0;
+    } else if (presence == PetHelixPresence.hint) {
+      rungCount = 3;
+    } else {
+      rungCount = 6;
+    }
+
+    return PetHelixSpec._(
+      enabled: true,
+      presence: presence,
+      strandCount: strandCount,
+      radiusFactor: radiusFactor,
+      verticalSpanFactor: verticalSpanFactor,
+      segmentCount: segmentCount,
+      twistCycles: twistCycles,
+      wobbleAmount: wobbleAmount,
+      baseAngle: baseAngle,
+      brokennessMask: brokennessMask,
+      rungCount: rungCount,
     );
   }
 
