@@ -786,16 +786,26 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     // Network/TCP transport reconnect is endpoint-based, not scan-based.
     // The BLE scan loop below is meaningless for a TCP peer and would
     // also short-circuit on `Bluetooth is off` even when the user has
-    // no intention of using BLE. Defer to autoReconnectManagerProvider's
-    // listener on transport state, which calls _performNetworkReconnect.
+    // no intention of using BLE. Hand off to the central reconnect
+    // dispatcher which routes `directEndpoint` to _performNetworkReconnect.
+    //
+    // Previously this branch deferred to autoReconnectManagerProvider's
+    // transport-state listener, but at cold start the listener uses the
+    // in-memory `_lastConnectedDeviceIdProvider` (null on fresh launch),
+    // so no reconnect would ever be triggered — the user was left
+    // staring at "Connecting…" forever.
     if (ref.read(transportProvider).reconnectMode ==
         TransportReconnectMode.directEndpoint) {
       AppLogging.connection(
         '🔌 startBackgroundConnection: transport reconnect mode is '
-        'directEndpoint — skipping BLE scan path, deferring to network '
-        'reconnect flow',
+        'directEndpoint — dispatching network reconnect for $lastDeviceId',
       );
       _backgroundScanInProgress = false;
+      state = state.copyWith(state: DevicePairingState.connecting);
+      ref
+          .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.scanning);
+      dispatchReconnectForDevice(ref, lastDeviceId);
       return;
     }
 
@@ -1421,6 +1431,18 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
         .read(autoReconnectStateProvider.notifier)
         .setState(AutoReconnectState.connecting);
 
+    // Central transition prep runs BEFORE the transport read so we bind
+    // against the right transport family (the user may have manually
+    // connected via TCP last session and transportTypeProvider would
+    // otherwise still point at network when they tap a BLE device).
+    // prepareForDeviceTransitionRef: classifies, persists new identity,
+    // clears state in the correct order, then flips transport type.
+    await prepareForDeviceTransitionRef(
+      ref,
+      device: device,
+      deviceProtocol: 'meshtastic',
+    );
+
     final transport = ref.read(transportProvider);
 
     try {
@@ -1431,48 +1453,6 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       }
 
       state = state.copyWith(state: DevicePairingState.configuring);
-
-      // Capture the previously-saved device id + logical identity BEFORE
-      // clearing so the helper can distinguish true device switch from
-      // transport rebind (same physical radio, rotated BLE UUID). A raw
-      // UUID mismatch alone is not a switch — ESP32/nRF peripherals
-      // rotate their advertised UUID and we must not wipe NodeDB in that
-      // case. (settings.lastDeviceId is unchanged at this point since
-      // this path does not call setLastDevice before the clear.)
-      String? previousDeviceId;
-      int? lastMyNodeNum;
-      String? lastDeviceName;
-      try {
-        final settings = await ref.read(settingsServiceProvider.future);
-        previousDeviceId = settings.lastDeviceId;
-        lastMyNodeNum = settings.lastMyNodeNum;
-        lastDeviceName = settings.lastDeviceName;
-      } catch (_) {
-        previousDeviceId = null;
-      }
-      final isTransportRebind = isLogicalTransportRebind(
-        newDeviceName: device.name,
-        newDeviceId: device.id,
-        previousDeviceId: previousDeviceId,
-        lastMyNodeNum: lastMyNodeNum,
-        lastDeviceName: lastDeviceName,
-      );
-      AppLogging.connection(
-        '🧮 SWITCH CLASSIFY (connection_providers): '
-        'previousDeviceId=$previousDeviceId '
-        'newDeviceId=${device.id} '
-        'lastMyNodeNum=${lastMyNodeNum?.toRadixString(16)} '
-        'lastDeviceName=$lastDeviceName '
-        'isTransportRebind=$isTransportRebind',
-      );
-
-      // Clear previous device data
-      await clearDeviceDataBeforeConnectRef(
-        ref,
-        previousDeviceId: previousDeviceId,
-        newDeviceId: device.id,
-        isTransportRebind: isTransportRebind,
-      );
 
       // Start protocol service
       final protocol = ref.read(protocolServiceProvider);

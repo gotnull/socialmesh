@@ -851,6 +851,31 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       final settings = await ref.read(settingsServiceProvider.future);
       final lastProtocol = settings.lastDeviceProtocol;
 
+      // Restore transport type from persisted lastDeviceType. At cold
+      // start transportTypeProvider defaults to BLE — without this, a
+      // resume for a previously-connected TCP device would run
+      // `transport.scan()` against BleTransport and never find its
+      // endpoint. The rest of the resume path reads transportProvider
+      // (and the device-transition helper) and relies on it already
+      // matching the device family.
+      if (!mounted) return;
+      final restoredType = transportTypeFromString(settings.lastDeviceType);
+      if (restoredType != null &&
+          ref.read(transportTypeProvider) != restoredType) {
+        AppLogging.connection(
+          '📱 RECONNECT ON RESUME: restoring transport type to '
+          '${restoredType.name} from persisted lastDeviceType',
+        );
+        if (restoredType == TransportType.network) {
+          final endpoint = parseNetworkEndpointId(deviceId);
+          if (endpoint != null) {
+            ref.read(networkTransportHostProvider.notifier).set(endpoint.host);
+            ref.read(networkTransportPortProvider.notifier).set(endpoint.port);
+          }
+        }
+        ref.read(transportTypeProvider.notifier).setType(restoredType);
+      }
+
       if (lastProtocol == 'meshcore') {
         await _performMeshCoreReconnectOnResume(deviceId, settings);
       } else {
@@ -1109,29 +1134,29 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
             .read(autoReconnectStateProvider.notifier)
             .setState(AutoReconnectState.connecting);
 
-        await transport.connect(foundDevice);
+        // Run central transition prep BEFORE transport.connect so
+        // transportTypeProvider matches the device family and the
+        // classifier decides preserve-vs-clear-vs-rehydrate via a
+        // single source of truth. On resume this is usually
+        // `sameDevice`, but if the user's last session was TCP and the
+        // resume lands on BLE (or vice-versa) we still need to flip
+        // transport type and (when logical identity matches) force a
+        // fresh hydrate.
+        await prepareForDeviceTransition(
+          ref,
+          device: foundDevice,
+          deviceProtocol: 'meshtastic',
+        );
+        if (!mounted) return;
 
-        if (transport.state == DeviceConnectionState.connected) {
+        // Re-read transport after prep — transportTypeProvider may have
+        // been flipped to the correct family.
+        final connectTransport = ref.read(transportProvider);
+        await connectTransport.connect(foundDevice);
+
+        if (connectTransport.state == DeviceConnectionState.connected) {
           AppLogging.connection(
             '📱 RECONNECT ON RESUME: BLE connected, starting protocol...',
-          );
-          // Clear all previous device data before starting new connection.
-          // Pass previous + new IDs so node data is auto-cleared if this
-          // resume happens to land on a different physical device than
-          // was last connected (rare on this auto-reconnect path, but
-          // harmless when they match).
-          String? previousDeviceId;
-          try {
-            final settings = await ref.read(settingsServiceProvider.future);
-            if (mounted) previousDeviceId = settings.lastDeviceId;
-          } catch (_) {
-            previousDeviceId = null;
-          }
-          if (!mounted) return;
-          await clearDeviceDataBeforeConnect(
-            ref,
-            previousDeviceId: previousDeviceId,
-            newDeviceId: foundDevice.id,
           );
 
           if (!mounted) return;
@@ -1139,8 +1164,8 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
 
           // Set device info for hardware model inference
           protocol.setDeviceName(foundDevice.name);
-          protocol.setBleModelNumber(transport.bleModelNumber);
-          protocol.setBleManufacturerName(transport.bleManufacturerName);
+          protocol.setBleModelNumber(connectTransport.bleModelNumber);
+          protocol.setBleManufacturerName(connectTransport.bleManufacturerName);
 
           await protocol.start();
 
@@ -1148,7 +1173,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
             AppLogging.connection(
               '📱 RECONNECT ON RESUME: No myNodeNum - auth may have failed',
             );
-            await transport.disconnect();
+            await connectTransport.disconnect();
             throw Exception('Authentication failed');
           }
 
@@ -1174,7 +1199,8 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
               .setState(AutoReconnectState.idle);
         } else {
           AppLogging.connection(
-            '📱 RECONNECT ON RESUME: BLE connect failed, transport.state=${transport.state}',
+            '📱 RECONNECT ON RESUME: BLE connect failed, '
+            'transport.state=${connectTransport.state}',
           );
           throw Exception('Connection failed');
         }

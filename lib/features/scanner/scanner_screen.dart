@@ -290,12 +290,17 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   }
 
   Future<void> _tryAutoReconnect() async {
-    // Capture providers BEFORE any await
+    // Capture providers BEFORE any await.
+    // Scan uses `bleScanTransportProvider`, not `transportProvider`:
+    // after a TCP session the active transport type is still `network`,
+    // so `transportProvider.scan()` would return an empty stream and
+    // BLE discovery would appear broken. The dedicated BLE scan
+    // transport is decoupled from the session transport type.
     final autoReconnectState = ref.read(autoReconnectStateProvider);
     final deviceState = ref.read(conn.deviceConnectionProvider);
     final userDisconnected = ref.read(userDisconnectedProvider);
     final settingsFuture = ref.read(settingsServiceProvider.future);
-    final transport = ref.read(transportProvider);
+    final transport = ref.read(bleScanTransportProvider);
 
     AppLogging.connection(
       '📡 SCANNER: _tryAutoReconnect - autoReconnectState=$autoReconnectState, '
@@ -541,11 +546,15 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       return;
     }
 
-    // Capture providers BEFORE any await
+    // Capture providers BEFORE any await. Scan binds to the dedicated
+    // BLE scan transport — see `bleScanTransportProvider` docs — so a
+    // session-transport pinned to `network` (e.g. after a TCP
+    // disconnect) does not silently convert the BLE scan into an
+    // empty NetworkTransport.scan() stream.
     try {
       userJustDisconnected = ref.read(userDisconnectedProvider);
       settingsFuture = ref.read(settingsServiceProvider.future);
-      transport = ref.read(transportProvider);
+      transport = ref.read(bleScanTransportProvider);
       showAllDevices = ref.read(showAllBleDevicesProvider);
     } on StateError {
       return;
@@ -1109,11 +1118,8 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
     // Capture providers and context-dependent strings BEFORE any await
     final pinRequiredError = context.l10n.scannerPinRequiredError;
-    final transport = ref.read(transportProvider);
     final connectedDeviceNotifier = ref.read(connectedDeviceProvider.notifier);
-    final settingsAsync = ref.read(settingsServiceProvider);
     final settingsFuture = ref.read(settingsServiceProvider.future);
-    final protocol = ref.read(protocolServiceProvider);
     final locationService = ref.read(locationServiceProvider);
     final deviceConnectionNotifier = ref.read(
       conn.deviceConnectionProvider.notifier,
@@ -1129,6 +1135,22 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     });
 
     try {
+      // Central transition prep — classifies the connection, persists the
+      // new identity, clears state in the correct order (before the
+      // transport-type flip so NodesNotifier._init cannot race the
+      // clear), and only then flips transportTypeProvider. MUST run
+      // before any `ref.read(transportProvider)` so we bind against
+      // the right transport family.
+      await prepareForDeviceTransition(
+        ref,
+        device: device,
+        deviceProtocol: 'meshtastic',
+      );
+      if (!mounted) return;
+
+      final transport = ref.read(transportProvider);
+      final protocol = ref.read(protocolServiceProvider);
+
       AppLogging.connection('📡 SCANNER: Calling transport.connect()...');
       await transport.connect(device);
       AppLogging.connection(
@@ -1138,61 +1160,6 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       if (!mounted) return;
 
       connectedDeviceNotifier.setState(device);
-
-      // Capture the previously-saved device id + logical identity BEFORE
-      // setLastDevice overwrites it. clearDeviceDataBeforeConnect uses
-      // these to distinguish:
-      //   * true device switch → wipe cached NodeDB so the new device's
-      //     nodes don't get unioned with the old one's
-      //   * transport rebind (same physical radio, BLE UUID rotated on
-      //     ESP32/nRF) → preserve cached NodeDB
-      // Without the rebind check we wipe the user's own-node metadata
-      // every time a BLE peripheral rotates its UUID.
-      final settingsService = settingsAsync.value;
-      final previousDeviceId = settingsService?.lastDeviceId;
-      final lastMyNodeNum = settingsService?.lastMyNodeNum;
-      final lastDeviceName = settingsService?.lastDeviceName;
-      final isTransportRebind = isLogicalTransportRebind(
-        newDeviceName: device.name,
-        newDeviceId: device.id,
-        previousDeviceId: previousDeviceId,
-        lastMyNodeNum: lastMyNodeNum,
-        lastDeviceName: lastDeviceName,
-      );
-      AppLogging.connection(
-        '🧮 SWITCH CLASSIFY (scanner): '
-        'previousDeviceId=$previousDeviceId '
-        'newDeviceId=${device.id} '
-        'lastMyNodeNum=${lastMyNodeNum?.toRadixString(16)} '
-        'lastDeviceName=$lastDeviceName '
-        'isTransportRebind=$isTransportRebind',
-      );
-
-      // Save device for auto-reconnect (with protocol for future reconnect routing)
-      if (settingsService != null) {
-        final deviceType = switch (device.type) {
-          TransportType.ble => 'ble',
-          TransportType.usb => 'usb',
-          TransportType.network => 'network',
-        };
-        await settingsService.setLastDevice(
-          device.id,
-          deviceType,
-          deviceName: device.name,
-          protocol: 'meshtastic',
-        );
-      }
-
-      // Clear all previous device data before starting new connection.
-      // Pass previous + new IDs so the helper can auto-clear node data on
-      // a real device switch, but suppress the auto-clear on a transport
-      // rebind (same radio, rotated BLE UUID).
-      await clearDeviceDataBeforeConnect(
-        ref,
-        previousDeviceId: previousDeviceId,
-        newDeviceId: device.id,
-        isTransportRebind: isTransportRebind,
-      );
 
       // Start protocol service and wait for configuration
       AppLogging.debug(
@@ -1416,9 +1383,12 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         AppErrorHandler.reportError(e, stack, context: 'BLE connection');
       }
 
-      // Force cleanup on error to ensure clean state for retry
+      // Force cleanup on error to ensure clean state for retry. Re-read
+      // transport rather than relying on an outer-scope capture — this
+      // catch block is reached from paths where prepareForDeviceTransition
+      // may have flipped transportTypeProvider since the original read.
       try {
-        await transport.disconnect();
+        await ref.read(transportProvider).disconnect();
       } catch (_) {
         // Continue on cleanup errors
       }
