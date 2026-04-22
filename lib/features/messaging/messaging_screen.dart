@@ -33,6 +33,7 @@ import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/auto_scroll_text.dart';
 import '../../core/widgets/gradient_border_container.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../core/widgets/linkified_text.dart';
 import '../../core/widgets/search_filter_header.dart';
 import '../../core/widgets/ico_help_system.dart';
 
@@ -3044,10 +3045,15 @@ class _MessageBubble extends ConsumerWidget {
                             _buildReplyQuote(context, sentByMe: true),
                             const SizedBox(height: AppTheme.spacing6),
                           ],
-                          Text(
-                            message.text,
+                          LinkifiedText(
+                            text: message.text,
                             style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(color: Colors.white),
+                            linkStyle: const TextStyle(
+                              color: Colors.white,
+                              decoration: TextDecoration.underline,
+                              decorationColor: Colors.white,
+                            ),
                           ),
                           // Inline translation
                           if (isTranslatable)
@@ -3321,8 +3327,8 @@ class _MessageBubble extends ConsumerWidget {
                           _buildReplyQuote(context),
                           const SizedBox(height: AppTheme.spacing6),
                         ],
-                        Text(
-                          message.text,
+                        LinkifiedText(
+                          text: message.text,
                           style: TextStyle(
                             fontSize: 15,
                             color: context.textPrimary,

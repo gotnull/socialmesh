@@ -8,6 +8,7 @@ import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/info_table.dart';
 import '../../../core/widgets/section_header.dart';
+import '../../../l10n/app_localizations.dart';
 import '../models/pet_enums.dart';
 import '../providers/pet_providers.dart';
 
@@ -104,7 +105,7 @@ class PetInspectSheet extends ConsumerWidget {
         ),
         const SizedBox(height: AppTheme.spacing16),
         SectionTitle(title: l10n.petInspectSectionRecent),
-        _RecentEventsList(events: state.recentEvents),
+        _RecentEventsList(events: state.recentEvents, l10n: l10n),
         const SizedBox(height: AppTheme.spacing16),
         Text(
           l10n.petInspectDeviceLocalNote,
@@ -122,7 +123,8 @@ class PetInspectSheet extends ConsumerWidget {
 
 class _RecentEventsList extends StatelessWidget {
   final List<dynamic> events;
-  const _RecentEventsList({required this.events});
+  final AppLocalizations l10n;
+  const _RecentEventsList({required this.events, required this.l10n});
 
   @override
   Widget build(BuildContext context) {
@@ -167,9 +169,64 @@ class _RecentEventsList extends StatelessWidget {
   String _formatEvent(dynamic event) {
     final at = event.at as DateTime;
     final kind = event.kind as CareEventKind;
-    final hh = at.hour.toString().padLeft(2, '0');
-    final mm = at.minute.toString().padLeft(2, '0');
-    return '$hh:$mm  ${kind.name}';
+    return '${_eventLabel(kind, l10n)}  ·  ${_relativeTime(at, l10n)}';
+  }
+}
+
+String _relativeTime(DateTime at, AppLocalizations l10n) {
+  final diff = DateTime.now().difference(at);
+  if (diff.isNegative || diff.inMinutes < 1) return l10n.commonJustNow;
+  if (diff.inHours < 1) return l10n.commonMinutesAgo(diff.inMinutes);
+  if (diff.inDays < 1) return l10n.commonHoursAgo(diff.inHours);
+  return l10n.commonDaysAgo(diff.inDays);
+}
+
+String _eventLabel(CareEventKind kind, AppLocalizations l10n) {
+  switch (kind) {
+    case CareEventKind.hatched:
+      return l10n.petEventHatched;
+    case CareEventKind.charged:
+      return l10n.petEventCharged;
+    case CareEventKind.surged:
+      return l10n.petEventSurged;
+    case CareEventKind.resonated:
+      return l10n.petEventResonated;
+    case CareEventKind.stabilised:
+      return l10n.petEventStabilised;
+    case CareEventKind.synced:
+      return l10n.petEventSynced;
+    case CareEventKind.purged:
+      return l10n.petEventPurged;
+    case CareEventKind.dimmed:
+      return l10n.petEventDimmed;
+    case CareEventKind.inspected:
+      return l10n.petEventInspected;
+    case CareEventKind.hygieneArtefactAppeared:
+      return l10n.petEventHygieneArtefactAppeared;
+    case CareEventKind.sicknessOnset:
+      return l10n.petEventSicknessOnset;
+    case CareEventKind.sicknessRecovered:
+      return l10n.petEventSicknessRecovered;
+    case CareEventKind.sleepEntered:
+      return l10n.petEventSleepEntered;
+    case CareEventKind.sleepExited:
+      return l10n.petEventSleepExited;
+    case CareEventKind.callStarted:
+      return l10n.petEventCallStarted;
+    case CareEventKind.callAnswered:
+      return l10n.petEventCallAnswered;
+    case CareEventKind.callMissed:
+      return l10n.petEventCallMissed;
+    case CareEventKind.mistakeRecorded:
+      return l10n.petEventMistakeRecorded;
+    case CareEventKind.stageAdvanced:
+      return l10n.petEventStageAdvanced;
+    case CareEventKind.branchResolved:
+      return l10n.petEventBranchResolved;
+    case CareEventKind.dormantEntered:
+      return l10n.petEventDormantEntered;
+    case CareEventKind.reSigilled:
+      return l10n.petEventReSigilled;
   }
 }
 

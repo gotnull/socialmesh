@@ -40,6 +40,16 @@ class MrrpEngine {
   /// Callback for traffic event reporting to the harness console.
   void Function(MrrpTrafficEvent event)? onTrafficEvent;
 
+  /// Observer for inbound RESPONSE and ERROR frames, invoked AFTER the
+  /// dedup check passes but BEFORE the dispatcher completes the pending
+  /// request. Gives feature-layer hooks the authoritative sender nodeNum
+  /// (from the Meshtastic packet's `from` field) so they can attribute
+  /// response payloads to specific peers — information that
+  /// [MrrpDispatcher.sendRequest]'s completer does NOT carry.
+  ///
+  /// Must be side-effect-only: do not throw, do not mutate the frame.
+  void Function(MrrpFrame frame, int senderNodeId)? onResponseObserved;
+
   /// Whether the engine accepts inbound MRRP REQUEST frames.
   ///
   /// When `false` (default), inbound requests are silently dropped — the
@@ -226,10 +236,10 @@ class MrrpEngine {
         });
 
       case MrrpMessageType.response:
-        _handleInboundResponse(frame);
+        _handleInboundResponse(frame, senderNodeId);
 
       case MrrpMessageType.error:
-        _handleInboundResponse(frame);
+        _handleInboundResponse(frame, senderNodeId);
 
       case MrrpMessageType.cancel:
         dispatcher.handleInboundCancel(frame);
@@ -325,7 +335,7 @@ class MrrpEngine {
   // Response handling with dedup
   // ---------------------------------------------------------------------------
 
-  void _handleInboundResponse(MrrpFrame frame) {
+  void _handleInboundResponse(MrrpFrame frame, int senderNodeId) {
     if (!dedupCache.checkAndRecordResponse(frame.requestId)) {
       // Duplicate response — suppress.
       AppLogging.mrrp(
@@ -337,6 +347,16 @@ class MrrpEngine {
       );
       counters?.recordDuplicateResponseIgnored();
       return;
+    }
+    // Invoke the sender-attributing observer before dispatch — lets
+    // feature layers attribute payloads to specific peers even though
+    // the dispatcher's completer only sees requestId correlation.
+    try {
+      onResponseObserved?.call(frame, senderNodeId);
+    } catch (e, st) {
+      AppLogging.mrrp(
+        'MRRP_ENGINE: onResponseObserved threw: $e\n$st', // lint-allow: hardcoded-string
+      );
     }
     dispatcher.handleResponse(frame);
   }

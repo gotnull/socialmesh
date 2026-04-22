@@ -4841,6 +4841,10 @@
     "@nodeInfoViewDetails": {
         "description": "Tooltip for the node detail navigation icon button on the node info card."
     },
+    "nodeInfoOpenInNodeDex": "Open in NodeDex",
+    "@nodeInfoOpenInNodeDex": {
+        "description": "Tooltip for the open-in-NodeDex icon button on the node info card."
+    },
     "nodeInfoViewHistory": "Traceroute History",
     "@nodeInfoViewHistory": {
         "description": "Tooltip for the traceroute history icon button on the node info card."
@@ -17404,6 +17408,26 @@
     "onboardingWidgetSnrDb": "SNR dB",
     "@onboardingWidgetSnrDb": {
         "description": "Dashboard widget label for signal-to-noise ratio in decibels"
+    },
+    "openLinkTitle": "Open link?",
+    "@openLinkTitle": {
+        "description": "Title of the confirm sheet shown when a user taps a URL inside a message."
+    },
+    "openLinkDescription": "This link was received in a message. Verify the destination before continuing.",
+    "@openLinkDescription": {
+        "description": "Body text of the confirm sheet shown when a user taps a URL inside a message."
+    },
+    "openLinkOpenAction": "Open",
+    "@openLinkOpenAction": {
+        "description": "Primary button label on the open-link confirm sheet — launches the URL in the browser."
+    },
+    "openLinkCancelAction": "Cancel",
+    "@openLinkCancelAction": {
+        "description": "Secondary button label on the open-link confirm sheet — dismisses without launching."
+    },
+    "openLinkLaunchFailed": "Could not open link",
+    "@openLinkLaunchFailed": {
+        "description": "Error snackbar shown when url_launcher fails to open a tapped link."
     },
     "paxCounterAboutSubtitle": "PAX Counter passively listens for WiFi and Bluetooth probe requests from nearby devices. It does not store MAC addresses or any personal data.",
     "@paxCounterAboutSubtitle": {
@@ -47649,11 +47673,11 @@
     "@meshFeedEmptyFilterDescription": {
         "description": "Description shown when no posts match the active filter."
     },
-    "petDrawerLabel": "Node Pet",
+    "petDrawerLabel": "NodePet",
     "@petDrawerLabel": {
-        "description": "Drawer / navigation rail label for the Node Pet feature."
+        "description": "Drawer / navigation rail label for the NodePet feature."
     },
-    "petScreenTitle": "Node Pet",
+    "petScreenTitle": "NodePet",
     "@petScreenTitle": {
         "description": "App bar title on the Pet home screen."
     },
@@ -47854,6 +47878,94 @@
     "@petInspectDeviceLocalNote": {
         "description": "Footer note clarifying the v1 local-first constraint."
     },
+    "petEventHatched": "Hatched",
+    "@petEventHatched": {
+        "description": "Recent-events entry: the egg hatched into the first living stage."
+    },
+    "petEventCharged": "Charged",
+    "@petEventCharged": {
+        "description": "Recent-events entry: the user performed the Charge action."
+    },
+    "petEventSurged": "Surged",
+    "@petEventSurged": {
+        "description": "Recent-events entry: the user performed the Surge (long-press charge) action."
+    },
+    "petEventResonated": "Resonated",
+    "@petEventResonated": {
+        "description": "Recent-events entry: the user performed the Resonate action."
+    },
+    "petEventStabilised": "Stabilised",
+    "@petEventStabilised": {
+        "description": "Recent-events entry: the user performed the Stabilise action."
+    },
+    "petEventSynced": "Synced",
+    "@petEventSynced": {
+        "description": "Recent-events entry: the user performed the Sync action."
+    },
+    "petEventPurged": "Purged",
+    "@petEventPurged": {
+        "description": "Recent-events entry: the user performed the Purge action."
+    },
+    "petEventDimmed": "Dimmed",
+    "@petEventDimmed": {
+        "description": "Recent-events entry: the user performed the Dim action (put pet to sleep)."
+    },
+    "petEventInspected": "Inspected",
+    "@petEventInspected": {
+        "description": "Recent-events entry: the user opened the inspect sheet."
+    },
+    "petEventHygieneArtefactAppeared": "Stale field formed",
+    "@petEventHygieneArtefactAppeared": {
+        "description": "Recent-events entry: a hygiene artefact (stale-field mark) appeared on the pet."
+    },
+    "petEventSicknessOnset": "Fell sick",
+    "@petEventSicknessOnset": {
+        "description": "Recent-events entry: the pet became ill."
+    },
+    "petEventSicknessRecovered": "Recovered",
+    "@petEventSicknessRecovered": {
+        "description": "Recent-events entry: the pet recovered from sickness."
+    },
+    "petEventSleepEntered": "Fell asleep",
+    "@petEventSleepEntered": {
+        "description": "Recent-events entry: the pet entered sleep state."
+    },
+    "petEventSleepExited": "Woke up",
+    "@petEventSleepExited": {
+        "description": "Recent-events entry: the pet exited sleep state."
+    },
+    "petEventCallStarted": "Called for you",
+    "@petEventCallStarted": {
+        "description": "Recent-events entry: the pet started an attention call."
+    },
+    "petEventCallAnswered": "Call answered",
+    "@petEventCallAnswered": {
+        "description": "Recent-events entry: the user answered the pet's call."
+    },
+    "petEventCallMissed": "Call missed",
+    "@petEventCallMissed": {
+        "description": "Recent-events entry: the pet's call timed out without being answered."
+    },
+    "petEventMistakeRecorded": "Care gap",
+    "@petEventMistakeRecorded": {
+        "description": "Recent-events entry: a mistake was recorded against the care history (contributes to branch resolution)."
+    },
+    "petEventStageAdvanced": "Evolved",
+    "@petEventStageAdvanced": {
+        "description": "Recent-events entry: the pet advanced to the next life stage."
+    },
+    "petEventBranchResolved": "Branch revealed",
+    "@petEventBranchResolved": {
+        "description": "Recent-events entry: the pet's branch (Luminous / Steady / Volatile / Dimmed) was determined at adulthood."
+    },
+    "petEventDormantEntered": "Gone dormant",
+    "@petEventDormantEntered": {
+        "description": "Recent-events entry: the pet reached the dormant end-of-life stage."
+    },
+    "petEventReSigilled": "New sigil cast",
+    "@petEventReSigilled": {
+        "description": "Recent-events entry: the user re-sigilled (started a new pet lineage after dormant)."
+    },
     "petDormantTitle": "The sigil has gone quiet",
     "@petDormantTitle": {
         "description": "Dormant-state headline on the Pet home screen."
@@ -47861,5 +47973,207 @@
     "petDormantDescription": "Begin a new lineage — your next pet inherits a fresh seed tied to this node.",
     "@petDormantDescription": {
         "description": "Dormant-state description."
+    },
+    "petCompanionSectionTitle": "Companion",
+    "@petCompanionSectionTitle": {
+        "description": "Title of the pet/companion section on a peer's NodeDex detail screen."
+    },
+    "petCompanionUnknown": "No sigil creature observed yet.",
+    "@petCompanionUnknown": {
+        "description": "Shown in the Companion card when we have no cached observation of this peer's pet."
+    },
+    "petCompanionObservedRelative": "Observed {age} ago",
+    "@petCompanionObservedRelative": {
+        "description": "Freshness label under a cached companion preview (age is a short string like '3h' or '2d').",
+        "placeholders": {
+            "age": {
+                "type": "String"
+            }
+        }
+    },
+    "petHatchBannerTitle": "Hatched",
+    "@petHatchBannerTitle": {
+        "description": "Non-blocking banner title after the egg hatches."
+    },
+    "petHatchBannerSubtitle": "Your sigil creature has emerged. Keep caring for it to shape its evolution.",
+    "@petHatchBannerSubtitle": {
+        "description": "Non-blocking banner subtitle after hatch."
+    },
+    "petBranchBannerTitleLuminous": "Evolved: Luminous",
+    "@petBranchBannerTitleLuminous": {
+        "description": "Banner title shown when the adolescent→adult transition resolves the Luminous branch."
+    },
+    "petBranchBannerSubtitleLuminous": "Pristine care paid off — your creature has taken its brightest form.",
+    "@petBranchBannerSubtitleLuminous": {
+        "description": "Banner subtitle for the Luminous branch."
+    },
+    "petBranchBannerTitleSteady": "Evolved: Steady",
+    "@petBranchBannerTitleSteady": {
+        "description": "Banner title for the Steady branch."
+    },
+    "petBranchBannerSubtitleSteady": "Balanced care has settled your creature into a calm, resilient form.",
+    "@petBranchBannerSubtitleSteady": {
+        "description": "Banner subtitle for the Steady branch."
+    },
+    "petBranchBannerTitleVolatile": "Evolved: Volatile",
+    "@petBranchBannerTitleVolatile": {
+        "description": "Banner title for the Volatile branch."
+    },
+    "petBranchBannerSubtitleVolatile": "Heavy surges have shaped a restless, energetic form.",
+    "@petBranchBannerSubtitleVolatile": {
+        "description": "Banner subtitle for the Volatile branch."
+    },
+    "petBranchBannerTitleDimmed": "Evolved: Dimmed",
+    "@petBranchBannerTitleDimmed": {
+        "description": "Banner title for the Dimmed (neglect) branch."
+    },
+    "petBranchBannerSubtitleDimmed": "Neglect has dimmed your creature — it may still be revived with steady care.",
+    "@petBranchBannerSubtitleDimmed": {
+        "description": "Banner subtitle for the Dimmed branch."
+    },
+    "petElderBannerTitle": "Matured",
+    "@petElderBannerTitle": {
+        "description": "Banner title for the adult→elder transition."
+    },
+    "petElderBannerSubtitle": "Your creature has entered its elder phase.",
+    "@petElderBannerSubtitle": {
+        "description": "Banner subtitle for elder transition."
+    },
+    "petDormantBannerTitle": "Gone dormant",
+    "@petDormantBannerTitle": {
+        "description": "Banner title for the elder→dormant transition."
+    },
+    "petDormantBannerSubtitle": "The sigil has quieted. Re-sigil to begin a new lineage.",
+    "@petDormantBannerSubtitle": {
+        "description": "Banner subtitle for dormant transition."
+    },
+    "petReasonFullyCharged": "Already full",
+    "@petReasonFullyCharged": {
+        "description": "Toast when Charge or Surge is tapped and energy is already at max."
+    },
+    "petReasonMoodAlreadyFull": "Already happy",
+    "@petReasonMoodAlreadyFull": {
+        "description": "Toast when Resonate is tapped and mood is at max."
+    },
+    "petReasonStabilityAlreadyFull": "Already steady",
+    "@petReasonStabilityAlreadyFull": {
+        "description": "Toast when stability is at max and the tapped action would have raised it."
+    },
+    "petReasonNothingToClean": "Field is clean",
+    "@petReasonNothingToClean": {
+        "description": "Toast when Stabilise is tapped without any hygiene artefact on the field."
+    },
+    "petReasonNothingToSync": "Nothing to sync",
+    "@petReasonNothingToSync": {
+        "description": "Toast when Sync is tapped and the pet has no active call and stability is at max."
+    },
+    "petReasonAlreadyAsleep": "Already resting",
+    "@petReasonAlreadyAsleep": {
+        "description": "Toast when Dim is tapped while the pet is already asleep."
+    },
+    "petReasonAsleep": "Resting right now",
+    "@petReasonAsleep": {
+        "description": "Toast when an interactive action is attempted while the pet is asleep."
+    },
+    "petReasonEgg": "Still unhatched",
+    "@petReasonEgg": {
+        "description": "Toast when an interactive action is attempted on an unhatched egg."
+    },
+    "petReasonDormant": "Your sigil has gone quiet",
+    "@petReasonDormant": {
+        "description": "Toast when an interactive action is attempted on a dormant pet."
+    },
+    "petReasonNotSick": "Not unwell",
+    "@petReasonNotSick": {
+        "description": "Toast when Purge is tapped and the pet isn't sick."
+    },
+    "petReasonNotBedtime": "Not bedtime yet",
+    "@petReasonNotBedtime": {
+        "description": "Toast when Dim is tapped outside the sleep window."
+    },
+    "petReasonNotDormant": "Pet is still alive",
+    "@petReasonNotDormant": {
+        "description": "Toast when Re-sigil is tapped and the pet isn't dormant."
+    },
+    "notificationChannelPetMilestones": "Hatch, evolution, and dormant moments for your NodePet.",
+    "@notificationChannelPetMilestones": {
+        "description": "Android notification channel description for pet milestones."
+    },
+    "notificationChannelPetCare": "Attention calls and sickness alerts for your NodePet.",
+    "@notificationChannelPetCare": {
+        "description": "Android notification channel description for pet care."
+    },
+    "notificationPetHatchedTitle": "Your pet hatched",
+    "@notificationPetHatchedTitle": {
+        "description": "Notification title when the egg transitions to juvenile."
+    },
+    "notificationPetHatchedBody": "Open NodePet to meet your sigil creature.",
+    "@notificationPetHatchedBody": {
+        "description": "Notification body after hatch."
+    },
+    "notificationPetEvolvedTitle": "Your pet evolved",
+    "@notificationPetEvolvedTitle": {
+        "description": "Notification title for stage transitions other than hatch and dormant."
+    },
+    "notificationPetEvolvedBody": "New stage settled into the {branch} branch.",
+    "@notificationPetEvolvedBody": {
+        "description": "Notification body for stage transitions, naming the evolution branch.",
+        "placeholders": {
+            "branch": {
+                "type": "String"
+            }
+        }
+    },
+    "notificationPetMaturedTitle": "Your pet is an elder",
+    "@notificationPetMaturedTitle": {
+        "description": "Notification title for adult to elder transition."
+    },
+    "notificationPetMaturedBody": "Open NodePet to see your pet's elder form.",
+    "@notificationPetMaturedBody": {
+        "description": "Notification body for elder transition."
+    },
+    "notificationPetDormantTitle": "Your pet has gone dormant",
+    "@notificationPetDormantTitle": {
+        "description": "Notification title when the pet enters the dormant stage."
+    },
+    "notificationPetDormantBody": "Open NodePet and Re-sigil to begin a new lineage.",
+    "@notificationPetDormantBody": {
+        "description": "Notification body for dormant transition."
+    },
+    "notificationPetSickTitle": "Your pet is unwell",
+    "@notificationPetSickTitle": {
+        "description": "Notification title when sickness onsets."
+    },
+    "notificationPetSickBody": "Open NodePet and Purge to help it recover.",
+    "@notificationPetSickBody": {
+        "description": "Notification body for sickness onset."
+    },
+    "notificationPetAttentionTitle": "Your pet needs attention",
+    "@notificationPetAttentionTitle": {
+        "description": "Notification title for an active attention call."
+    },
+    "notificationPetAttentionHungryBody": "Low energy — tap Charge.",
+    "@notificationPetAttentionHungryBody": {
+        "description": "Attention call body for hungry reason."
+    },
+    "notificationPetAttentionLonelyBody": "Mood is drifting — tap Resonate.",
+    "@notificationPetAttentionLonelyBody": {
+        "description": "Attention call body for lonely reason."
+    },
+    "notificationPetAttentionSickBody": "Feeling unwell — tap Purge.",
+    "@notificationPetAttentionSickBody": {
+        "description": "Attention call body for sick reason."
+    },
+    "notificationPetAttentionHygieneBody": "Field needs stabilising — tap Stabilise.",
+    "@notificationPetAttentionHygieneBody": {
+        "description": "Attention call body for hygiene reason."
+    },
+    "notificationPetAttentionBedtimeBody": "Almost bedtime — tap Dim.",
+    "@notificationPetAttentionBedtimeBody": {
+        "description": "Attention call body for bedtime reason."
+    },
+    "notificationPetAttentionBoredomBody": "Restless — tap Resonate.",
+    "@notificationPetAttentionBoredomBody": {
+        "description": "Attention call body for boredom reason."
     }
 }

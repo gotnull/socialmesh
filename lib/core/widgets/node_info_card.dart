@@ -30,6 +30,7 @@ class NodeInfoCard extends ConsumerWidget {
   final VoidCallback? onCopyCoordinates;
   final VoidCallback? onTraceroute;
   final VoidCallback? onViewDetails;
+  final VoidCallback? onOpenInNodeDex;
   final VoidCallback? onViewHistory;
   final VoidCallback? onShowTrack;
   final bool isTrackVisible;
@@ -50,6 +51,7 @@ class NodeInfoCard extends ConsumerWidget {
     this.onCopyCoordinates,
     this.onTraceroute,
     this.onViewDetails,
+    this.onOpenInNodeDex,
     this.onViewHistory,
     this.onShowTrack,
     this.isTrackVisible = false,
@@ -788,6 +790,29 @@ class NodeInfoCard extends ConsumerWidget {
                         child: Center(
                           child: Icon(
                             Icons.open_in_new,
+                            size: 18,
+                            color: context.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              if (onOpenInNodeDex != null)
+                Tooltip(
+                  message: context.l10n.nodeInfoOpenInNodeDex,
+                  child: SizedBox(
+                    width: 36,
+                    height: 36,
+                    child: Material(
+                      color: context.background,
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
+                      child: InkWell(
+                        onTap: onOpenInNodeDex,
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
+                        child: Center(
+                          child: Icon(
+                            Icons.badge_outlined,
                             size: 18,
                             color: context.textSecondary,
                           ),

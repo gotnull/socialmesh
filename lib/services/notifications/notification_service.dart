@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:socialmesh/l10n/app_localizations.dart';
+import '../../features/pet/models/pet_enums.dart';
 import '../../models/mesh_models.dart';
 import '../../utils/text_sanitizer.dart';
 import 'package:socialmesh/core/theme.dart';
@@ -363,6 +364,173 @@ class NotificationService {
     );
 
     AppLogging.notifications('🔔 Showed notification for node: $nodeName');
+  }
+
+  // ---------------------------------------------------------------------
+  // Node Pet — disciplined notification set.
+  // ---------------------------------------------------------------------
+  //
+  // Two channels:
+  //   pet_milestones  — hatch / evolution / dormant (low-frequency, big).
+  //   pet_care        — sickness onset + attention calls (actionable).
+  // Dedupe is handled upstream by PetNotificationDispatcher; these
+  // methods are pure dispatch. Payloads route taps into the Pet home
+  // screen via the same navigation hook the other pet-aware surfaces
+  // already use.
+
+  Future<void> showPetStageTransitionNotification({
+    required PetStage toStage,
+    required PetBranch branch,
+    required int ownerNodeNum,
+  }) async {
+    if (!_initialized) return;
+    final androidDetails = AndroidNotificationDetails(
+      'pet_milestones', // lint-allow: hardcoded-string
+      'NodePet milestones', // lint-allow: hardcoded-string
+      channelDescription: _l10n.notificationChannelPetMilestones,
+      importance: Importance.high,
+      priority: Priority.high,
+      icon: '@mipmap/ic_launcher',
+      groupKey: 'pet_milestones', // lint-allow: hardcoded-string
+    );
+    final iosDetails = const DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: false,
+    );
+    final details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+      macOS: iosDetails,
+    );
+    await _notifications.show(
+      id: (ownerNodeNum % 1000000) + 8000000,
+      title: _petStageTitle(toStage),
+      body: _petStageBody(toStage, branch),
+      notificationDetails: details,
+      payload: 'pet:milestone:${toStage.name}', // lint-allow: hardcoded-string
+    );
+    AppLogging.notifications('🔔 Pet milestone notification: ${toStage.name}');
+  }
+
+  Future<void> showPetSicknessNotification({required int ownerNodeNum}) async {
+    if (!_initialized) return;
+    final androidDetails = AndroidNotificationDetails(
+      'pet_care', // lint-allow: hardcoded-string
+      'NodePet care', // lint-allow: hardcoded-string
+      channelDescription: _l10n.notificationChannelPetCare,
+      importance: Importance.high,
+      priority: Priority.high,
+      icon: '@mipmap/ic_launcher',
+      groupKey: 'pet_care', // lint-allow: hardcoded-string
+    );
+    final iosDetails = const DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: false,
+    );
+    final details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+      macOS: iosDetails,
+    );
+    await _notifications.show(
+      id: (ownerNodeNum % 1000000) + 8100000,
+      title: _l10n.notificationPetSickTitle,
+      body: _l10n.notificationPetSickBody,
+      notificationDetails: details,
+      payload: 'pet:care:sick', // lint-allow: hardcoded-string
+    );
+    AppLogging.notifications('🔔 Pet sickness notification dispatched');
+  }
+
+  Future<void> showPetAttentionCallNotification({
+    required CallReason reason,
+    required int ownerNodeNum,
+  }) async {
+    if (!_initialized) return;
+    final androidDetails = AndroidNotificationDetails(
+      'pet_care', // lint-allow: hardcoded-string
+      'NodePet care', // lint-allow: hardcoded-string
+      channelDescription: _l10n.notificationChannelPetCare,
+      importance: Importance.high,
+      priority: Priority.high,
+      icon: '@mipmap/ic_launcher',
+      groupKey: 'pet_care', // lint-allow: hardcoded-string
+    );
+    final iosDetails = const DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: false,
+    );
+    final details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+      macOS: iosDetails,
+    );
+    await _notifications.show(
+      id: (ownerNodeNum % 1000000) + 8200000,
+      title: _l10n.notificationPetAttentionTitle,
+      body: _petAttentionCallBody(reason),
+      notificationDetails: details,
+      payload:
+          'pet:care:attention:${reason.name}', // lint-allow: hardcoded-string
+    );
+    AppLogging.notifications(
+      '🔔 Pet attention-call notification: ${reason.name}',
+    );
+  }
+
+  String _petStageTitle(PetStage stage) {
+    switch (stage) {
+      case PetStage.juvenile:
+        return _l10n.notificationPetHatchedTitle;
+      case PetStage.adolescent:
+        return _l10n.notificationPetEvolvedTitle;
+      case PetStage.adult:
+        return _l10n.notificationPetEvolvedTitle;
+      case PetStage.elder:
+        return _l10n.notificationPetMaturedTitle;
+      case PetStage.dormant:
+        return _l10n.notificationPetDormantTitle;
+      case PetStage.egg:
+        // Unreachable — egg is never a transition target.
+        return _l10n.notificationPetEvolvedTitle;
+    }
+  }
+
+  String _petStageBody(PetStage stage, PetBranch branch) {
+    switch (stage) {
+      case PetStage.juvenile:
+        return _l10n.notificationPetHatchedBody;
+      case PetStage.adolescent:
+        return _l10n.notificationPetEvolvedBody(branch.name);
+      case PetStage.adult:
+        return _l10n.notificationPetEvolvedBody(branch.name);
+      case PetStage.elder:
+        return _l10n.notificationPetMaturedBody;
+      case PetStage.dormant:
+        return _l10n.notificationPetDormantBody;
+      case PetStage.egg:
+        return _l10n.notificationPetEvolvedBody(branch.name);
+    }
+  }
+
+  String _petAttentionCallBody(CallReason reason) {
+    switch (reason) {
+      case CallReason.hungry:
+        return _l10n.notificationPetAttentionHungryBody;
+      case CallReason.lonely:
+        return _l10n.notificationPetAttentionLonelyBody;
+      case CallReason.sick:
+        return _l10n.notificationPetAttentionSickBody;
+      case CallReason.hygiene:
+        return _l10n.notificationPetAttentionHygieneBody;
+      case CallReason.bedtime:
+        return _l10n.notificationPetAttentionBedtimeBody;
+      case CallReason.boredom:
+        return _l10n.notificationPetAttentionBoredomBody;
+    }
   }
 
   /// Show notification when a mesh node matches an active Aether flight.

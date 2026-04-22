@@ -114,7 +114,7 @@ void main() {
 
       final answeredBefore = s.stageAccumulators.answeredCalls;
       final actionAt = s.lastTickAt.add(const Duration(minutes: 5));
-      s = engine.applyAction(s, CareAction.charge, actionAt);
+      s = engine.applyAction(s, CareAction.charge, actionAt).state;
 
       expect(s.activeCall, isNull);
       expect(s.stageAccumulators.answeredCalls, answeredBefore + 1);
@@ -154,7 +154,7 @@ void main() {
       expect(s.isAsleep, isTrue);
 
       final energyBefore = s.energy;
-      s = engine.applyAction(s, CareAction.charge, start);
+      s = engine.applyAction(s, CareAction.charge, start).state;
       expect(s.energy, energyBefore);
     });
   });
@@ -165,17 +165,24 @@ void main() {
       final engine = PetCareEngine(config: config);
       final start = _day(1, 10);
       var s = _freshJuvenile(config, start);
+      // Advance past the egg stage so Surge is valid, and drain energy
+      // to just below max so each Surge is "applied" (not capped) and
+      // the instability bump fires.
+      s = engine.advanceTo(s, start.add(const Duration(hours: 2)));
+      s = s.copyWith(energy: 3);
 
       // Enough surges to push instability ≥ sicknessInstabilityThreshold.
       final surgesNeeded =
           (config.sicknessInstabilityThreshold / config.instabilityPerSurge)
               .ceil();
-      var t = start;
+      var t = s.lastTickAt;
       for (var i = 0; i < surgesNeeded + 1; i++) {
         t = t.add(const Duration(seconds: 1));
-        s = engine.applyAction(s, CareAction.surge, t);
+        s = engine.applyAction(s, CareAction.surge, t).state;
+        // Keep draining energy so each surge is applied, not capped.
+        s = s.copyWith(energy: 3);
       }
-      // The next tick evaluates sickness onset.
+      // The next care tick evaluates sickness onset.
       s = engine.advanceTo(s, t.add(config.careTickDuration));
       expect(s.isSick, isTrue);
     });
@@ -188,7 +195,7 @@ void main() {
 
       // Force sickness directly.
       s = s.copyWith(isSick: true, instability: 8);
-      s = engine.applyAction(s, CareAction.purge, start);
+      s = engine.applyAction(s, CareAction.purge, start).state;
       expect(s.isSick, isFalse);
     });
   });
@@ -201,11 +208,13 @@ void main() {
       var s = _freshJuvenile(config, start);
       // Generate some history.
       s = engine.advanceTo(s, start.add(const Duration(hours: 3)));
-      s = engine.applyAction(
-        s,
-        CareAction.charge,
-        start.add(const Duration(hours: 3, minutes: 1)),
-      );
+      s = engine
+          .applyAction(
+            s,
+            CareAction.charge,
+            start.add(const Duration(hours: 3, minutes: 1)),
+          )
+          .state;
 
       final json = s.toJsonString();
       final restored = PetState.fromJsonString(json);

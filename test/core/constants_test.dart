@@ -177,6 +177,30 @@ void main() {
       );
       expect(AppFeatureFlags.isMessageTimelineEnabled, isTrue);
     });
+
+    test('pet feature defaults to disabled', () {
+      dotenv.loadFromString(envString: 'TEST_MODE=true');
+      expect(AppFeatureFlags.isPetEnabled, isFalse);
+    });
+
+    test('pet feature stays disabled when PET_ENABLED is unset', () {
+      // Sibling flag set but not PET_ENABLED — isPetEnabled must remain
+      // false so partial env configs don't accidentally flip it on.
+      dotenv.loadFromString(
+        envString: 'TEST_MODE=true\nMESSAGE_TIMELINE_ENABLED=true',
+      );
+      expect(AppFeatureFlags.isPetEnabled, isFalse);
+    });
+
+    test('pet feature stays disabled when PET_ENABLED=false', () {
+      dotenv.loadFromString(envString: 'TEST_MODE=true\nPET_ENABLED=false');
+      expect(AppFeatureFlags.isPetEnabled, isFalse);
+    });
+
+    test('pet feature enables only when PET_ENABLED=true', () {
+      dotenv.loadFromString(envString: 'TEST_MODE=true\nPET_ENABLED=true');
+      expect(AppFeatureFlags.isPetEnabled, isTrue);
+    });
   });
 
   group('IdentityConstants', () {
