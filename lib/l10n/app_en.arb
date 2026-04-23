@@ -47681,41 +47681,121 @@
     "@petScreenTitle": {
         "description": "App bar title on the Pet home screen."
     },
-    "petActionCharge": "Charge",
+    "petActionCharge": "Feed",
     "@petActionCharge": {
         "description": "Primary action label — replenishes the pet's energy."
     },
-    "petActionSurge": "Surge",
+    "petActionSurge": "Overfeed",
     "@petActionSurge": {
         "description": "Secondary action label — hold-to-surge charges faster but raises instability."
     },
-    "petActionResonate": "Resonate",
+    "petActionResonate": "Play",
     "@petActionResonate": {
         "description": "Action label — brief premium interaction that raises mood."
     },
-    "petActionStabilise": "Stabilise",
+    "petActionStabilise": "Clean",
     "@petActionStabilise": {
         "description": "Action label — clears a distortion artefact (hygiene analogue)."
     },
-    "petActionSync": "Sync",
+    "petActionSync": "Answer",
     "@petActionSync": {
-        "description": "Action label — corrects the pet during a discipline moment."
+        "description": "Action label — acknowledges whatever attention call the pet is currently making."
     },
-    "petActionPurge": "Purge",
+    "petActionPurge": "Medicine",
     "@petActionPurge": {
         "description": "Action label — medicine analogue; only valid while the pet is sick."
     },
-    "petActionDim": "Dim",
+    "petActionDim": "Sleep",
     "@petActionDim": {
         "description": "Action label — puts the pet to sleep during the sleep window."
     },
-    "petActionInspect": "Inspect",
+    "petActionInspect": "Status",
     "@petActionInspect": {
         "description": "Action label — opens a sheet with detailed pet stats."
     },
-    "petActionReSigil": "Re-sigil",
+    "petActionReSigil": "Revive",
     "@petActionReSigil": {
         "description": "Action label — restart a dormant pet from a fresh sigil seed."
+    },
+    "petOnboardingPage1Title": "Meet your pet",
+    "@petOnboardingPage1Title": {
+        "description": "Title of the first onboarding card."
+    },
+    "petOnboardingPage1Body": "A digital companion that hatches from your node's signature and grows over time. The better you care for it, the healthier it stays.",
+    "@petOnboardingPage1Body": {
+        "description": "Body of the first onboarding card."
+    },
+    "petOnboardingPage2Title": "When it beeps, it needs you",
+    "@petOnboardingPage2Title": {
+        "description": "Title of the second onboarding card."
+    },
+    "petOnboardingPage2Body": "The pet pulses when it wants attention, and a floating symbol above shows what: food, heart, medicine, moon, or question mark. Tap Answer to acknowledge, then use the action that solves it — Feed, Play, Clean, Sleep, or Medicine.",
+    "@petOnboardingPage2Body": {
+        "description": "Body of the second onboarding card."
+    },
+    "petOnboardingPage3Title": "Check in anytime",
+    "@petOnboardingPage3Title": {
+        "description": "Title of the third onboarding card."
+    },
+    "petOnboardingPage3Body": "Tap Status to see energy, mood, stability and recent events. Tap the ? icon for the full action guide. Your pet won't time-out if you miss a day, but consistent care earns it a better branch.",
+    "@petOnboardingPage3Body": {
+        "description": "Body of the third onboarding card."
+    },
+    "petOnboardingNext": "Next",
+    "@petOnboardingNext": {
+        "description": "Next button on onboarding cards."
+    },
+    "petOnboardingSkip": "Skip",
+    "@petOnboardingSkip": {
+        "description": "Skip button on onboarding cards."
+    },
+    "petOnboardingFinish": "Got it",
+    "@petOnboardingFinish": {
+        "description": "Final button on the last onboarding card."
+    },
+    "petGuideSheetTitle": "Action Guide",
+    "@petGuideSheetTitle": {
+        "description": "Title of the help sheet that explains every pet care action."
+    },
+    "petGuideSheetIntro": "Each action does one specific thing. When the pet beeps for attention (pulsing icon), tap Answer to stop the beep, then use the action that addresses what the pet actually needs — Feed for hunger, Play for loneliness, Clean for a mess, Sleep for bedtime, or Medicine for sickness.",
+    "@petGuideSheetIntro": {
+        "description": "Intro paragraph above the action list on the Pet help sheet."
+    },
+    "petActionChargeDescription": "Feeds the pet. +3 energy. Answers a Hungry call.",
+    "@petActionChargeDescription": {
+        "description": "Help-sheet body text for the Charge action."
+    },
+    "petActionSurgeDescription": "Overfeeds. Long-press Feed for +5 energy, but adds instability — too many overfeeds can make the pet sick. Answers a Hungry call.",
+    "@petActionSurgeDescription": {
+        "description": "Help-sheet body text for the Surge action."
+    },
+    "petActionResonateDescription": "Plays with the pet. +3 mood. Answers a Lonely call.",
+    "@petActionResonateDescription": {
+        "description": "Help-sheet body text for the Resonate action."
+    },
+    "petActionStabiliseDescription": "Cleans up. Removes the distortion artefact on the field. +2 stability. Answers a Hygiene call.",
+    "@petActionStabiliseDescription": {
+        "description": "Help-sheet body text for the Stabilise action."
+    },
+    "petActionSyncDescription": "Stops the pet's attention beep. No stat change on its own — use the matching action (Feed, Play, Clean, Sleep, or Medicine) to actually resolve what the pet needs.",
+    "@petActionSyncDescription": {
+        "description": "Help-sheet body text for the Sync action."
+    },
+    "petActionPurgeDescription": "Medicine. Removes sickness and drops instability. Only valid while the pet is sick. Answers a Sick call.",
+    "@petActionPurgeDescription": {
+        "description": "Help-sheet body text for the Purge action."
+    },
+    "petActionDimDescription": "Puts the pet to sleep. Only valid inside the sleep window (or when the pet is yawning). Answers a Bedtime call.",
+    "@petActionDimDescription": {
+        "description": "Help-sheet body text for the Dim action."
+    },
+    "petActionInspectDescription": "Opens a read-only status sheet showing identity, stats, and recent events. No stat change.",
+    "@petActionInspectDescription": {
+        "description": "Help-sheet body text for the Inspect action."
+    },
+    "petActionReSigilDescription": "Revives a dormant pet with a fresh sigil. Only available after the pet has gone dormant.",
+    "@petActionReSigilDescription": {
+        "description": "Help-sheet body text for the Re-sigil action."
     },
     "petStageEgg": "Egg",
     "@petStageEgg": {
@@ -47814,31 +47894,31 @@
             }
         }
     },
-    "petCallBannerHungry": "Low on energy — Charge or Surge to answer.",
+    "petCallBannerHungry": "Low on energy — Feed or Overfeed to answer.",
     "@petCallBannerHungry": {
         "description": "Attention call banner copy."
     },
-    "petCallBannerLonely": "Wants attention — Resonate to answer.",
+    "petCallBannerLonely": "Wants attention — Play to answer.",
     "@petCallBannerLonely": {
         "description": "Attention call banner copy."
     },
-    "petCallBannerSick": "Feeling unwell — Purge to answer.",
+    "petCallBannerSick": "Feeling unwell — Medicine to answer.",
     "@petCallBannerSick": {
         "description": "Attention call banner copy."
     },
-    "petCallBannerHygiene": "Field is unstable — Stabilise to clear.",
+    "petCallBannerHygiene": "Made a mess — Clean to remove.",
     "@petCallBannerHygiene": {
         "description": "Attention call banner copy."
     },
-    "petCallBannerBedtime": "It's almost time to rest — Dim to answer.",
+    "petCallBannerBedtime": "It's almost time to rest — Sleep to answer.",
     "@petCallBannerBedtime": {
         "description": "Attention call banner copy."
     },
-    "petCallBannerBoredom": "Restless — Resonate to answer.",
+    "petCallBannerBoredom": "Restless — Play to answer.",
     "@petCallBannerBoredom": {
         "description": "Attention call banner copy."
     },
-    "petInspectTitle": "Inspect",
+    "petInspectTitle": "Status",
     "@petInspectTitle": {
         "description": "Title of the Inspect bottom sheet."
     },
@@ -47938,35 +48018,35 @@
     "@petEventHatched": {
         "description": "Recent-events entry: the egg hatched into the first living stage."
     },
-    "petEventCharged": "Charged",
+    "petEventCharged": "Fed",
     "@petEventCharged": {
         "description": "Recent-events entry: the user performed the Charge action."
     },
-    "petEventSurged": "Surged",
+    "petEventSurged": "Overfed",
     "@petEventSurged": {
         "description": "Recent-events entry: the user performed the Surge (long-press charge) action."
     },
-    "petEventResonated": "Resonated",
+    "petEventResonated": "Played",
     "@petEventResonated": {
         "description": "Recent-events entry: the user performed the Resonate action."
     },
-    "petEventStabilised": "Stabilised",
+    "petEventStabilised": "Cleaned",
     "@petEventStabilised": {
         "description": "Recent-events entry: the user performed the Stabilise action."
     },
-    "petEventSynced": "Synced",
+    "petEventSynced": "Answered",
     "@petEventSynced": {
         "description": "Recent-events entry: the user performed the Sync action."
     },
-    "petEventPurged": "Purged",
+    "petEventPurged": "Gave medicine",
     "@petEventPurged": {
         "description": "Recent-events entry: the user performed the Purge action."
     },
-    "petEventDimmed": "Dimmed",
+    "petEventDimmed": "Put to sleep",
     "@petEventDimmed": {
         "description": "Recent-events entry: the user performed the Dim action (put pet to sleep)."
     },
-    "petEventInspected": "Inspected",
+    "petEventInspected": "Checked status",
     "@petEventInspected": {
         "description": "Recent-events entry: the user opened the inspect sheet."
     },
@@ -48018,7 +48098,7 @@
     "@petEventDormantEntered": {
         "description": "Recent-events entry: the pet reached the dormant end-of-life stage."
     },
-    "petEventReSigilled": "New sigil cast",
+    "petEventReSigilled": "Revived",
     "@petEventReSigilled": {
         "description": "Recent-events entry: the user re-sigilled (started a new pet lineage after dormant)."
     },
@@ -48066,6 +48146,38 @@
     "petLiveStateDormant": "Dormant",
     "@petLiveStateDormant": {
         "description": "Smoothed peer pet live-state label when the peer's pet has reached its terminal dormant stage."
+    },
+    "petDnaSectionAlleles": "RESONANCE ALLELES",
+    "@petDnaSectionAlleles": {
+        "description": "Section title in the DNA viewer's decoded panel for the 4 base alleles that make up the pet's genetic sequence."
+    },
+    "petDnaAlleleDominant": "Dominant",
+    "@petDnaAlleleDominant": {
+        "description": "Row label for the most-represented allele in the pet's sequence."
+    },
+    "petAlleleAurora": "Aurora",
+    "@petAlleleAurora": {
+        "description": "Name of the Aurora allele (DNA base A), paired with Tether. Luminous-branch archetype."
+    },
+    "petAlleleTether": "Tether",
+    "@petAlleleTether": {
+        "description": "Name of the Tether allele (DNA base T), paired with Aurora. Steady-branch archetype."
+    },
+    "petAlleleGale": "Gale",
+    "@petAlleleGale": {
+        "description": "Name of the Gale allele (DNA base G), paired with Calm. Volatile-branch archetype."
+    },
+    "petAlleleCalm": "Calm",
+    "@petAlleleCalm": {
+        "description": "Name of the Calm allele (DNA base C), paired with Gale. Dimmed-branch archetype."
+    },
+    "petDnaAlleleRatioValue": "{letter}  {percent}%",
+    "@petDnaAlleleRatioValue": {
+        "description": "Value format for an allele ratio row — the base letter, two spaces, percentage, percent sign. E.g. 'A  34%'.",
+        "placeholders": {
+            "letter": {"type": "String"},
+            "percent": {"type": "int"}
+        }
     },
     "petHatchBannerTitle": "Hatched",
     "@petHatchBannerTitle": {

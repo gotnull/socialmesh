@@ -135,7 +135,11 @@ void main() {
     test('recentRemotePets filters by age and orders newest first', () async {
       final repo = newRepo();
       await repo.init();
-      final now = DateTime(2026, 4, 22, 12);
+      // `recentRemotePets` cuts off against real `DateTime.now()`, so
+      // the test's observed timestamps MUST be anchored to real now —
+      // using a fixed wall-clock date makes this test silently rot as
+      // real time drifts past the hardcoded window.
+      final now = DateTime.now();
       await repo.saveRemotePet(
         nodeNum: 1,
         state: publicState(seed: 0x11),

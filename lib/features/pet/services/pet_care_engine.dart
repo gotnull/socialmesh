@@ -556,7 +556,6 @@ class PetCareEngine {
     var next = _answerCallIfMatching(s, now, CallReason.lonely);
     next = next.copyWith(
       mood: _clampStat(next.mood + 3),
-      stability: _clampStat(next.stability + 1),
       recentEvents: _appendEvent(
         next.recentEvents,
         CareEvent(at: now, kind: CareEventKind.resonated),
@@ -586,27 +585,25 @@ class PetCareEngine {
   }
 
   PetActionResult _applySync(PetState s, DateTime now) {
-    // Sync is meaningful when there's an active attention call (of any
-    // reason — it counts as a discipline correction) OR when stability
-    // is below its ceiling. Otherwise "nothing to sync".
+    // Sync is purely the "answer the call" tap — it exists only to
+    // acknowledge an active attention call. It does NOT change stats.
+    // Stat management lives with the dedicated care actions:
+    // Stabilise raises stability, Resonate raises mood, Charge/Surge
+    // raise energy, Purge clears sickness. Tamagotchi-style one-action
+    // -per-stat: the beep is cleared by acknowledging, but whatever
+    // underlying need the call surfaces must be addressed by its own
+    // action. This keeps the mental model honest.
     final hasCall = s.activeCall != null;
-    final stabilityCanRise = s.stability < config.statMax;
-    if (!hasCall && !stabilityCanRise) {
+    if (!hasCall) {
       return PetActionResult.notNeeded(
         state: s,
         action: CareAction.sync,
         reason: PetActionReason.nothingToSync,
       );
     }
-    var next = s;
-    if (hasCall) {
-      // Answer whatever call is active — Sync is the universal "I'm
-      // paying attention" tap.
-      next = _answerCallIfMatching(next, now, next.activeCall!.reason);
-    }
+    var next = _answerCallIfMatching(s, now, s.activeCall!.reason);
     final acc = next.stageAccumulators;
     next = next.copyWith(
-      stability: _clampStat(next.stability + 2),
       stageAccumulators: acc.copyWith(
         disciplineCorrections: acc.disciplineCorrections + 1,
       ),

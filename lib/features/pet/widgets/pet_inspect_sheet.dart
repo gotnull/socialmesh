@@ -41,7 +41,12 @@ class PetInspectSheet extends ConsumerWidget {
     final ageDays = state.ageInDaysAt(DateTime.now());
     return ListView(
       controller: scrollController,
-      padding: const EdgeInsets.only(top: AppTheme.spacing8),
+      padding: const EdgeInsets.fromLTRB(
+        AppTheme.spacing16,
+        AppTheme.spacing8,
+        AppTheme.spacing16,
+        AppTheme.spacing16,
+      ),
       children: [
         Text(
           l10n.petInspectTitle,

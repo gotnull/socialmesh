@@ -62515,56 +62515,176 @@ abstract class AppLocalizations {
   /// Primary action label — replenishes the pet's energy.
   ///
   /// In en, this message translates to:
-  /// **'Charge'**
+  /// **'Feed'**
   String get petActionCharge;
 
   /// Secondary action label — hold-to-surge charges faster but raises instability.
   ///
   /// In en, this message translates to:
-  /// **'Surge'**
+  /// **'Overfeed'**
   String get petActionSurge;
 
   /// Action label — brief premium interaction that raises mood.
   ///
   /// In en, this message translates to:
-  /// **'Resonate'**
+  /// **'Play'**
   String get petActionResonate;
 
   /// Action label — clears a distortion artefact (hygiene analogue).
   ///
   /// In en, this message translates to:
-  /// **'Stabilise'**
+  /// **'Clean'**
   String get petActionStabilise;
 
-  /// Action label — corrects the pet during a discipline moment.
+  /// Action label — acknowledges whatever attention call the pet is currently making.
   ///
   /// In en, this message translates to:
-  /// **'Sync'**
+  /// **'Answer'**
   String get petActionSync;
 
   /// Action label — medicine analogue; only valid while the pet is sick.
   ///
   /// In en, this message translates to:
-  /// **'Purge'**
+  /// **'Medicine'**
   String get petActionPurge;
 
   /// Action label — puts the pet to sleep during the sleep window.
   ///
   /// In en, this message translates to:
-  /// **'Dim'**
+  /// **'Sleep'**
   String get petActionDim;
 
   /// Action label — opens a sheet with detailed pet stats.
   ///
   /// In en, this message translates to:
-  /// **'Inspect'**
+  /// **'Status'**
   String get petActionInspect;
 
   /// Action label — restart a dormant pet from a fresh sigil seed.
   ///
   /// In en, this message translates to:
-  /// **'Re-sigil'**
+  /// **'Revive'**
   String get petActionReSigil;
+
+  /// Title of the first onboarding card.
+  ///
+  /// In en, this message translates to:
+  /// **'Meet your pet'**
+  String get petOnboardingPage1Title;
+
+  /// Body of the first onboarding card.
+  ///
+  /// In en, this message translates to:
+  /// **'A digital companion that hatches from your node\'s signature and grows over time. The better you care for it, the healthier it stays.'**
+  String get petOnboardingPage1Body;
+
+  /// Title of the second onboarding card.
+  ///
+  /// In en, this message translates to:
+  /// **'When it beeps, it needs you'**
+  String get petOnboardingPage2Title;
+
+  /// Body of the second onboarding card.
+  ///
+  /// In en, this message translates to:
+  /// **'The pet pulses when it wants attention, and a floating symbol above shows what: food, heart, medicine, moon, or question mark. Tap Answer to acknowledge, then use the action that solves it — Feed, Play, Clean, Sleep, or Medicine.'**
+  String get petOnboardingPage2Body;
+
+  /// Title of the third onboarding card.
+  ///
+  /// In en, this message translates to:
+  /// **'Check in anytime'**
+  String get petOnboardingPage3Title;
+
+  /// Body of the third onboarding card.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap Status to see energy, mood, stability and recent events. Tap the ? icon for the full action guide. Your pet won\'t time-out if you miss a day, but consistent care earns it a better branch.'**
+  String get petOnboardingPage3Body;
+
+  /// Next button on onboarding cards.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get petOnboardingNext;
+
+  /// Skip button on onboarding cards.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get petOnboardingSkip;
+
+  /// Final button on the last onboarding card.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get petOnboardingFinish;
+
+  /// Title of the help sheet that explains every pet care action.
+  ///
+  /// In en, this message translates to:
+  /// **'Action Guide'**
+  String get petGuideSheetTitle;
+
+  /// Intro paragraph above the action list on the Pet help sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Each action does one specific thing. When the pet beeps for attention (pulsing icon), tap Answer to stop the beep, then use the action that addresses what the pet actually needs — Feed for hunger, Play for loneliness, Clean for a mess, Sleep for bedtime, or Medicine for sickness.'**
+  String get petGuideSheetIntro;
+
+  /// Help-sheet body text for the Charge action.
+  ///
+  /// In en, this message translates to:
+  /// **'Feeds the pet. +3 energy. Answers a Hungry call.'**
+  String get petActionChargeDescription;
+
+  /// Help-sheet body text for the Surge action.
+  ///
+  /// In en, this message translates to:
+  /// **'Overfeeds. Long-press Feed for +5 energy, but adds instability — too many overfeeds can make the pet sick. Answers a Hungry call.'**
+  String get petActionSurgeDescription;
+
+  /// Help-sheet body text for the Resonate action.
+  ///
+  /// In en, this message translates to:
+  /// **'Plays with the pet. +3 mood. Answers a Lonely call.'**
+  String get petActionResonateDescription;
+
+  /// Help-sheet body text for the Stabilise action.
+  ///
+  /// In en, this message translates to:
+  /// **'Cleans up. Removes the distortion artefact on the field. +2 stability. Answers a Hygiene call.'**
+  String get petActionStabiliseDescription;
+
+  /// Help-sheet body text for the Sync action.
+  ///
+  /// In en, this message translates to:
+  /// **'Stops the pet\'s attention beep. No stat change on its own — use the matching action (Feed, Play, Clean, Sleep, or Medicine) to actually resolve what the pet needs.'**
+  String get petActionSyncDescription;
+
+  /// Help-sheet body text for the Purge action.
+  ///
+  /// In en, this message translates to:
+  /// **'Medicine. Removes sickness and drops instability. Only valid while the pet is sick. Answers a Sick call.'**
+  String get petActionPurgeDescription;
+
+  /// Help-sheet body text for the Dim action.
+  ///
+  /// In en, this message translates to:
+  /// **'Puts the pet to sleep. Only valid inside the sleep window (or when the pet is yawning). Answers a Bedtime call.'**
+  String get petActionDimDescription;
+
+  /// Help-sheet body text for the Inspect action.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens a read-only status sheet showing identity, stats, and recent events. No stat change.'**
+  String get petActionInspectDescription;
+
+  /// Help-sheet body text for the Re-sigil action.
+  ///
+  /// In en, this message translates to:
+  /// **'Revives a dormant pet with a fresh sigil. Only available after the pet has gone dormant.'**
+  String get petActionReSigilDescription;
 
   /// Life-cycle stage name.
   ///
@@ -62707,43 +62827,43 @@ abstract class AppLocalizations {
   /// Attention call banner copy.
   ///
   /// In en, this message translates to:
-  /// **'Low on energy — Charge or Surge to answer.'**
+  /// **'Low on energy — Feed or Overfeed to answer.'**
   String get petCallBannerHungry;
 
   /// Attention call banner copy.
   ///
   /// In en, this message translates to:
-  /// **'Wants attention — Resonate to answer.'**
+  /// **'Wants attention — Play to answer.'**
   String get petCallBannerLonely;
 
   /// Attention call banner copy.
   ///
   /// In en, this message translates to:
-  /// **'Feeling unwell — Purge to answer.'**
+  /// **'Feeling unwell — Medicine to answer.'**
   String get petCallBannerSick;
 
   /// Attention call banner copy.
   ///
   /// In en, this message translates to:
-  /// **'Field is unstable — Stabilise to clear.'**
+  /// **'Made a mess — Clean to remove.'**
   String get petCallBannerHygiene;
 
   /// Attention call banner copy.
   ///
   /// In en, this message translates to:
-  /// **'It\'s almost time to rest — Dim to answer.'**
+  /// **'It\'s almost time to rest — Sleep to answer.'**
   String get petCallBannerBedtime;
 
   /// Attention call banner copy.
   ///
   /// In en, this message translates to:
-  /// **'Restless — Resonate to answer.'**
+  /// **'Restless — Play to answer.'**
   String get petCallBannerBoredom;
 
   /// Title of the Inspect bottom sheet.
   ///
   /// In en, this message translates to:
-  /// **'Inspect'**
+  /// **'Status'**
   String get petInspectTitle;
 
   /// Inspect sheet section — identity block.
@@ -62893,49 +63013,49 @@ abstract class AppLocalizations {
   /// Recent-events entry: the user performed the Charge action.
   ///
   /// In en, this message translates to:
-  /// **'Charged'**
+  /// **'Fed'**
   String get petEventCharged;
 
   /// Recent-events entry: the user performed the Surge (long-press charge) action.
   ///
   /// In en, this message translates to:
-  /// **'Surged'**
+  /// **'Overfed'**
   String get petEventSurged;
 
   /// Recent-events entry: the user performed the Resonate action.
   ///
   /// In en, this message translates to:
-  /// **'Resonated'**
+  /// **'Played'**
   String get petEventResonated;
 
   /// Recent-events entry: the user performed the Stabilise action.
   ///
   /// In en, this message translates to:
-  /// **'Stabilised'**
+  /// **'Cleaned'**
   String get petEventStabilised;
 
   /// Recent-events entry: the user performed the Sync action.
   ///
   /// In en, this message translates to:
-  /// **'Synced'**
+  /// **'Answered'**
   String get petEventSynced;
 
   /// Recent-events entry: the user performed the Purge action.
   ///
   /// In en, this message translates to:
-  /// **'Purged'**
+  /// **'Gave medicine'**
   String get petEventPurged;
 
   /// Recent-events entry: the user performed the Dim action (put pet to sleep).
   ///
   /// In en, this message translates to:
-  /// **'Dimmed'**
+  /// **'Put to sleep'**
   String get petEventDimmed;
 
   /// Recent-events entry: the user opened the inspect sheet.
   ///
   /// In en, this message translates to:
-  /// **'Inspected'**
+  /// **'Checked status'**
   String get petEventInspected;
 
   /// Recent-events entry: a hygiene artefact (stale-field mark) appeared on the pet.
@@ -63013,7 +63133,7 @@ abstract class AppLocalizations {
   /// Recent-events entry: the user re-sigilled (started a new pet lineage after dormant).
   ///
   /// In en, this message translates to:
-  /// **'New sigil cast'**
+  /// **'Revived'**
   String get petEventReSigilled;
 
   /// Dormant-state headline on the Pet home screen.
@@ -63075,6 +63195,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Dormant'**
   String get petLiveStateDormant;
+
+  /// Section title in the DNA viewer's decoded panel for the 4 base alleles that make up the pet's genetic sequence.
+  ///
+  /// In en, this message translates to:
+  /// **'RESONANCE ALLELES'**
+  String get petDnaSectionAlleles;
+
+  /// Row label for the most-represented allele in the pet's sequence.
+  ///
+  /// In en, this message translates to:
+  /// **'Dominant'**
+  String get petDnaAlleleDominant;
+
+  /// Name of the Aurora allele (DNA base A), paired with Tether. Luminous-branch archetype.
+  ///
+  /// In en, this message translates to:
+  /// **'Aurora'**
+  String get petAlleleAurora;
+
+  /// Name of the Tether allele (DNA base T), paired with Aurora. Steady-branch archetype.
+  ///
+  /// In en, this message translates to:
+  /// **'Tether'**
+  String get petAlleleTether;
+
+  /// Name of the Gale allele (DNA base G), paired with Calm. Volatile-branch archetype.
+  ///
+  /// In en, this message translates to:
+  /// **'Gale'**
+  String get petAlleleGale;
+
+  /// Name of the Calm allele (DNA base C), paired with Gale. Dimmed-branch archetype.
+  ///
+  /// In en, this message translates to:
+  /// **'Calm'**
+  String get petAlleleCalm;
+
+  /// Value format for an allele ratio row — the base letter, two spaces, percentage, percent sign. E.g. 'A  34%'.
+  ///
+  /// In en, this message translates to:
+  /// **'{letter}  {percent}%'**
+  String petDnaAlleleRatioValue(String letter, int percent);
 
   /// Non-blocking banner title after the egg hatches.
   ///

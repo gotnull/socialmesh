@@ -35849,31 +35849,104 @@ class AppLocalizationsIt extends AppLocalizations {
   String get petScreenTitle => 'NodePet';
 
   @override
-  String get petActionCharge => 'Charge';
+  String get petActionCharge => 'Feed';
 
   @override
-  String get petActionSurge => 'Surge';
+  String get petActionSurge => 'Overfeed';
 
   @override
-  String get petActionResonate => 'Resonate';
+  String get petActionResonate => 'Play';
 
   @override
-  String get petActionStabilise => 'Stabilise';
+  String get petActionStabilise => 'Clean';
 
   @override
-  String get petActionSync => 'Sync';
+  String get petActionSync => 'Answer';
 
   @override
-  String get petActionPurge => 'Purge';
+  String get petActionPurge => 'Medicine';
 
   @override
-  String get petActionDim => 'Dim';
+  String get petActionDim => 'Sleep';
 
   @override
-  String get petActionInspect => 'Inspect';
+  String get petActionInspect => 'Status';
 
   @override
-  String get petActionReSigil => 'Re-sigil';
+  String get petActionReSigil => 'Revive';
+
+  @override
+  String get petOnboardingPage1Title => 'Meet your pet';
+
+  @override
+  String get petOnboardingPage1Body =>
+      'A digital companion that hatches from your node\'s signature and grows over time. The better you care for it, the healthier it stays.';
+
+  @override
+  String get petOnboardingPage2Title => 'When it beeps, it needs you';
+
+  @override
+  String get petOnboardingPage2Body =>
+      'The pet pulses when it wants attention, and a floating symbol above shows what: food, heart, medicine, moon, or question mark. Tap Answer to acknowledge, then use the action that solves it — Feed, Play, Clean, Sleep, or Medicine.';
+
+  @override
+  String get petOnboardingPage3Title => 'Check in anytime';
+
+  @override
+  String get petOnboardingPage3Body =>
+      'Tap Status to see energy, mood, stability and recent events. Tap the ? icon for the full action guide. Your pet won\'t time-out if you miss a day, but consistent care earns it a better branch.';
+
+  @override
+  String get petOnboardingNext => 'Next';
+
+  @override
+  String get petOnboardingSkip => 'Skip';
+
+  @override
+  String get petOnboardingFinish => 'Got it';
+
+  @override
+  String get petGuideSheetTitle => 'Action Guide';
+
+  @override
+  String get petGuideSheetIntro =>
+      'Each action does one specific thing. When the pet beeps for attention (pulsing icon), tap Answer to stop the beep, then use the action that addresses what the pet actually needs — Feed for hunger, Play for loneliness, Clean for a mess, Sleep for bedtime, or Medicine for sickness.';
+
+  @override
+  String get petActionChargeDescription =>
+      'Feeds the pet. +3 energy. Answers a Hungry call.';
+
+  @override
+  String get petActionSurgeDescription =>
+      'Overfeeds. Long-press Feed for +5 energy, but adds instability — too many overfeeds can make the pet sick. Answers a Hungry call.';
+
+  @override
+  String get petActionResonateDescription =>
+      'Plays with the pet. +3 mood. Answers a Lonely call.';
+
+  @override
+  String get petActionStabiliseDescription =>
+      'Cleans up. Removes the distortion artefact on the field. +2 stability. Answers a Hygiene call.';
+
+  @override
+  String get petActionSyncDescription =>
+      'Stops the pet\'s attention beep. No stat change on its own — use the matching action (Feed, Play, Clean, Sleep, or Medicine) to actually resolve what the pet needs.';
+
+  @override
+  String get petActionPurgeDescription =>
+      'Medicine. Removes sickness and drops instability. Only valid while the pet is sick. Answers a Sick call.';
+
+  @override
+  String get petActionDimDescription =>
+      'Puts the pet to sleep. Only valid inside the sleep window (or when the pet is yawning). Answers a Bedtime call.';
+
+  @override
+  String get petActionInspectDescription =>
+      'Opens a read-only status sheet showing identity, stats, and recent events. No stat change.';
+
+  @override
+  String get petActionReSigilDescription =>
+      'Revives a dormant pet with a fresh sigil. Only available after the pet has gone dormant.';
 
   @override
   String get petStageEgg => 'Egg';
@@ -35956,26 +36029,26 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get petCallBannerHungry =>
-      'Low on energy — Charge or Surge to answer.';
+      'Low on energy — Feed or Overfeed to answer.';
 
   @override
-  String get petCallBannerLonely => 'Wants attention — Resonate to answer.';
+  String get petCallBannerLonely => 'Wants attention — Play to answer.';
 
   @override
-  String get petCallBannerSick => 'Feeling unwell — Purge to answer.';
+  String get petCallBannerSick => 'Feeling unwell — Medicine to answer.';
 
   @override
-  String get petCallBannerHygiene => 'Field is unstable — Stabilise to clear.';
+  String get petCallBannerHygiene => 'Made a mess — Clean to remove.';
 
   @override
   String get petCallBannerBedtime =>
-      'It\'s almost time to rest — Dim to answer.';
+      'It\'s almost time to rest — Sleep to answer.';
 
   @override
-  String get petCallBannerBoredom => 'Restless — Resonate to answer.';
+  String get petCallBannerBoredom => 'Restless — Play to answer.';
 
   @override
-  String get petInspectTitle => 'Inspect';
+  String get petInspectTitle => 'Status';
 
   @override
   String get petInspectSectionIdentity => 'Identity';
@@ -36051,28 +36124,28 @@ class AppLocalizationsIt extends AppLocalizations {
   String get petEventHatched => 'Hatched';
 
   @override
-  String get petEventCharged => 'Charged';
+  String get petEventCharged => 'Fed';
 
   @override
-  String get petEventSurged => 'Surged';
+  String get petEventSurged => 'Overfed';
 
   @override
-  String get petEventResonated => 'Resonated';
+  String get petEventResonated => 'Played';
 
   @override
-  String get petEventStabilised => 'Stabilised';
+  String get petEventStabilised => 'Cleaned';
 
   @override
-  String get petEventSynced => 'Synced';
+  String get petEventSynced => 'Answered';
 
   @override
-  String get petEventPurged => 'Purged';
+  String get petEventPurged => 'Gave medicine';
 
   @override
-  String get petEventDimmed => 'Dimmed';
+  String get petEventDimmed => 'Put to sleep';
 
   @override
-  String get petEventInspected => 'Inspected';
+  String get petEventInspected => 'Checked status';
 
   @override
   String get petEventHygieneArtefactAppeared => 'Stale field formed';
@@ -36111,7 +36184,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get petEventDormantEntered => 'Gone dormant';
 
   @override
-  String get petEventReSigilled => 'New sigil cast';
+  String get petEventReSigilled => 'Revived';
 
   @override
   String get petDormantTitle => 'The sigil has gone quiet';
@@ -36145,6 +36218,29 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get petLiveStateDormant => 'Dormant';
+
+  @override
+  String get petDnaSectionAlleles => 'RESONANCE ALLELES';
+
+  @override
+  String get petDnaAlleleDominant => 'Dominant';
+
+  @override
+  String get petAlleleAurora => 'Aurora';
+
+  @override
+  String get petAlleleTether => 'Tether';
+
+  @override
+  String get petAlleleGale => 'Gale';
+
+  @override
+  String get petAlleleCalm => 'Calm';
+
+  @override
+  String petDnaAlleleRatioValue(String letter, int percent) {
+    return '$letter  $percent%';
+  }
 
   @override
   String get petHatchBannerTitle => 'Hatched';

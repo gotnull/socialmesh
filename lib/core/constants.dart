@@ -538,24 +538,6 @@ class AppFeatureFlags {
     }
   }
 
-  /// Whether the Rive-backed owner-mode pet hero is active on the
-  /// home screen. When true AND the rive package + asset are present,
-  /// `PetCreatureRive` mounts a Rive artboard driven by the state
-  /// contract. When false OR the asset fails to load, the existing
-  /// procedural `PetCreature` custom-painter is used as the fallback
-  /// — mini previews, companion cards, and NodeDex rows always use
-  /// the painter regardless of this flag.
-  /// Set `PET_RIVE_ENABLED=true` in `.env` to enable.
-  /// Default: false.
-  static bool get isPetRiveEnabled {
-    try {
-      final raw = dotenv.env['PET_RIVE_ENABLED']?.toLowerCase().trim();
-      return raw == 'true' || raw == '1';
-    } catch (_) {
-      return false;
-    }
-  }
-
   /// Whether the Mesh Feed (store-and-forward content feed) is enabled.
   /// Set `MESH_FEED_ENABLED=true` in `.env` to enable.
   /// Default: false — mesh feed UI is hidden until ready for release.

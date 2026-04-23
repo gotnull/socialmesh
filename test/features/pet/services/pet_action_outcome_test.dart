@@ -177,22 +177,15 @@ void main() {
   });
 
   group('Sync outcomes', () {
-    test('notNeeded(nothingToSync) when no call + stability at max', () {
-      final s = _stateAt(PetStage.juvenile, stability: _config.statMax);
+    test('notNeeded(nothingToSync) when no active call', () {
+      final s = _stateAt(PetStage.juvenile, stability: 5);
       final r = _engine.applyAction(s, CareAction.sync, t);
       expect(r.outcome, PetActionOutcome.notNeeded);
       expect(r.reason, PetActionReason.nothingToSync);
     });
 
-    test('applied when stability is below max', () {
-      final s = _stateAt(PetStage.juvenile, stability: 5);
-      final r = _engine.applyAction(s, CareAction.sync, t);
-      expect(r.outcome, PetActionOutcome.applied);
-      expect(r.state.stability, greaterThan(5));
-    });
-
-    test('applied (answering call) at max stability when call is active', () {
-      var s = _stateAt(PetStage.juvenile, stability: _config.statMax);
+    test('applied when call is active — answers it without changing stats', () {
+      var s = _stateAt(PetStage.juvenile, stability: 5);
       s = s.copyWith(
         activeCall: AttentionCall(
           startedAt: t,
@@ -203,6 +196,11 @@ void main() {
       final r = _engine.applyAction(s, CareAction.sync, t);
       expect(r.outcome, PetActionOutcome.applied);
       expect(r.state.activeCall, isNull);
+      expect(
+        r.state.stability,
+        s.stability,
+        reason: 'Sync is pure call-answer; stability is untouched',
+      );
     });
   });
 

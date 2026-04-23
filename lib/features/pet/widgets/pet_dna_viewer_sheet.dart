@@ -15,6 +15,8 @@ import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/info_table.dart';
 import '../../../core/widgets/section_header.dart';
+import '../../../l10n/app_localizations.dart';
+import '../models/pet_base_allele.dart';
 import '../models/pet_enums.dart';
 import '../models/pet_state.dart';
 import '../providers/pet_providers.dart';
@@ -76,7 +78,9 @@ class _PetDnaViewerBodyState extends State<_PetDnaViewerBody>
     // calmer, ceremonial object.
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 10),
+      // Slow readable rotation — one full helix turn per 20s. Was 10s,
+      // which read as "jittery" at the previous bead count.
+      duration: const Duration(seconds: 20),
     )..repeat();
   }
 
@@ -215,6 +219,30 @@ class _PetDnaViewerBodyState extends State<_PetDnaViewerBody>
           ],
         ),
         const SizedBox(height: AppTheme.spacing16),
+        SectionTitle(title: l10n.petDnaSectionAlleles),
+        InfoTable(
+          rows: [
+            InfoTableRow(
+              label: l10n.petDnaAlleleDominant,
+              value:
+                  '${geometry.dominantAllele.code}  '
+                  '${_alleleName(geometry.dominantAllele, l10n)}',
+              icon: Icons.star_outline,
+              iconColor: geometry.dominantAllele.archetypeColor,
+            ),
+            for (final allele in PetBaseAllele.values)
+              InfoTableRow(
+                label: _alleleName(allele, l10n),
+                value: l10n.petDnaAlleleRatioValue(
+                  allele.code,
+                  (geometry.alleleDistribution.ratio(allele) * 100).round(),
+                ),
+                icon: Icons.circle,
+                iconColor: allele.archetypeColor,
+              ),
+          ],
+        ),
+        const SizedBox(height: AppTheme.spacing16),
         Text(
           l10n.petInspectDeviceLocalNote,
           style: TextStyle(
@@ -247,7 +275,9 @@ class _DnaCanvas extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 420,
+      // Taller canvas so the helix dominates the sheet. The user's
+      // brief: the DNA structure must be large and dominate the screen.
+      height: 520,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         // Horizontal drag scrubs the user spin — clockwise positive.
@@ -291,6 +321,19 @@ String _stageLabel(PetStage stage, dynamic l10n) {
       return l10n.petStageElder as String;
     case PetStage.dormant:
       return l10n.petStageDormant as String;
+  }
+}
+
+String _alleleName(PetBaseAllele allele, AppLocalizations l10n) {
+  switch (allele) {
+    case PetBaseAllele.aurora:
+      return l10n.petAlleleAurora;
+    case PetBaseAllele.tether:
+      return l10n.petAlleleTether;
+    case PetBaseAllele.gale:
+      return l10n.petAlleleGale;
+    case PetBaseAllele.calm:
+      return l10n.petAlleleCalm;
   }
 }
 

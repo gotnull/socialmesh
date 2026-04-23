@@ -400,6 +400,28 @@ final petNotificationLedgerProvider = FutureProvider<PetNotificationLedger>((
   return PetNotificationLedger(prefs);
 });
 
+/// SharedPreferences key for the one-time pet onboarding flow. Bumped
+/// (v2, v3…) if the onboarding copy changes enough to warrant
+/// re-showing it to existing users.
+const _petOnboardingPrefKey = 'pet_onboarding_completed_v1';
+
+/// True once the user has seen the pet onboarding. Starts as `null`
+/// while SharedPreferences loads; consumers should treat `null` as
+/// "don't show anything yet" to avoid a flash.
+final petOnboardingCompletedProvider = FutureProvider<bool>((ref) async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getBool(_petOnboardingPrefKey) ?? false;
+});
+
+/// Marks the onboarding as completed. Call this from the sheet's
+/// "Got it" button handler. Invalidates the read-side provider so
+/// the host screen sees the new value.
+Future<void> markPetOnboardingCompleted(WidgetRef ref) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setBool(_petOnboardingPrefKey, true);
+  ref.invalidate(petOnboardingCompletedProvider);
+}
+
 /// The dispatcher that turns ownPetProvider state transitions into
 /// at-most-one-per-event local notifications. Returns null until the
 /// ledger future resolves.
