@@ -141,10 +141,10 @@ packages:
     dependency: "direct main"
     description:
       name: bonsoir
-      sha256: "42f2c1eb55e833bcb541dfcb759851da0a703106646a0cf15a16c6de21f4a5a4"
+      sha256: "1ad01f0cab0b2e59b3b430bb9cca0997f20f2a5257f110325c03080c24e4d0cc"
       url: "https://pub.dev"
     source: hosted
-    version: "6.0.2"
+    version: "6.0.3"
   bonsoir_android:
     dependency: transitive
     description:
@@ -181,10 +181,10 @@ packages:
     dependency: transitive
     description:
       name: bonsoir_windows
-      sha256: "34c54802baaa2f00e3c4ab7ea46888f2a829876753778e2f40e3f273c3382d34"
+      sha256: "19bf0d4659f52b644961dfd34ca7260a0cc4f2277b660e10f9ad6401c4671353"
       url: "https://pub.dev"
     source: hosted
-    version: "6.0.1"
+    version: "6.0.2"
   boolean_selector:
     dependency: transitive
     description:
