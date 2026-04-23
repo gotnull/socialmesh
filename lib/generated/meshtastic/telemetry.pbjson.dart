@@ -70,6 +70,7 @@ const TelemetrySensorType$json = {
     {'1': 'STC31', '2': 48},
     {'1': 'SCD30', '2': 49},
     {'1': 'SHTXX', '2': 50},
+    {'1': 'DS248X', '2': 51},
   ],
 };
 
@@ -87,7 +88,7 @@ final $typed_data.Uint8List telemetrySensorTypeDescriptor = $convert.base64Decod
     'lOECMSCgoGRFBTMzEwECQSDAoIUkFLMTIwMzUQJRIMCghNQVgxNzI2MRAmEgsKB1BDVDIwNzUQ'
     'JxILCgdBRFMxWDE1ECgSDwoLQURTMVgxNV9BTFQQKRIJCgVTRkEzMBAqEgkKBVNFTjVYECsSCw'
     'oHVFNMMjU2MRAsEgoKBkJIMTc1MBAtEgsKB0hEQzEwODAQLhIJCgVTSFQyMRAvEgkKBVNUQzMx'
-    'EDASCQoFU0NEMzAQMRIJCgVTSFRYWBAy');
+    'EDASCQoFU0NEMzAQMRIJCgVTSFRYWBAyEgoKBkRTMjQ4WBAz');
 
 @$core.Deprecated('Use deviceMetricsDescriptor instead')
 const DeviceMetrics$json = {
@@ -343,6 +344,13 @@ const EnvironmentMetrics$json = {
       '10': 'soilTemperature',
       '17': true
     },
+    {
+      '1': 'one_wire_temperature',
+      '3': 23,
+      '4': 3,
+      '5': 2,
+      '10': 'oneWireTemperature'
+    },
   ],
   '8': [
     {'1': '_temperature'},
@@ -386,13 +394,14 @@ final $typed_data.Uint8List environmentMetricsDescriptor = $convert.base64Decode
     'xsiAEBEiEKCXJhZGlhdGlvbhgSIAEoAkgRUglyYWRpYXRpb26IAQESJAoLcmFpbmZhbGxfMWgY'
     'EyABKAJIElIKcmFpbmZhbGwxaIgBARImCgxyYWluZmFsbF8yNGgYFCABKAJIE1ILcmFpbmZhbG'
     'wyNGiIAQESKAoNc29pbF9tb2lzdHVyZRgVIAEoDUgUUgxzb2lsTW9pc3R1cmWIAQESLgoQc29p'
-    'bF90ZW1wZXJhdHVyZRgWIAEoAkgVUg9zb2lsVGVtcGVyYXR1cmWIAQFCDgoMX3RlbXBlcmF0dX'
-    'JlQhQKEl9yZWxhdGl2ZV9odW1pZGl0eUIWChRfYmFyb21ldHJpY19wcmVzc3VyZUIRCg9fZ2Fz'
-    'X3Jlc2lzdGFuY2VCCgoIX3ZvbHRhZ2VCCgoIX2N1cnJlbnRCBgoEX2lhcUILCglfZGlzdGFuY2'
-    'VCBgoEX2x1eEIMCgpfd2hpdGVfbHV4QgkKB19pcl9sdXhCCQoHX3V2X2x1eEIRCg9fd2luZF9k'
-    'aXJlY3Rpb25CDQoLX3dpbmRfc3BlZWRCCQoHX3dlaWdodEIMCgpfd2luZF9ndXN0QgwKCl93aW'
-    '5kX2x1bGxCDAoKX3JhZGlhdGlvbkIOCgxfcmFpbmZhbGxfMWhCDwoNX3JhaW5mYWxsXzI0aEIQ'
-    'Cg5fc29pbF9tb2lzdHVyZUITChFfc29pbF90ZW1wZXJhdHVyZQ==');
+    'bF90ZW1wZXJhdHVyZRgWIAEoAkgVUg9zb2lsVGVtcGVyYXR1cmWIAQESMAoUb25lX3dpcmVfdG'
+    'VtcGVyYXR1cmUYFyADKAJSEm9uZVdpcmVUZW1wZXJhdHVyZUIOCgxfdGVtcGVyYXR1cmVCFAoS'
+    'X3JlbGF0aXZlX2h1bWlkaXR5QhYKFF9iYXJvbWV0cmljX3ByZXNzdXJlQhEKD19nYXNfcmVzaX'
+    'N0YW5jZUIKCghfdm9sdGFnZUIKCghfY3VycmVudEIGCgRfaWFxQgsKCV9kaXN0YW5jZUIGCgRf'
+    'bHV4QgwKCl93aGl0ZV9sdXhCCQoHX2lyX2x1eEIJCgdfdXZfbHV4QhEKD193aW5kX2RpcmVjdG'
+    'lvbkINCgtfd2luZF9zcGVlZEIJCgdfd2VpZ2h0QgwKCl93aW5kX2d1c3RCDAoKX3dpbmRfbHVs'
+    'bEIMCgpfcmFkaWF0aW9uQg4KDF9yYWluZmFsbF8xaEIPCg1fcmFpbmZhbGxfMjRoQhAKDl9zb2'
+    'lsX21vaXN0dXJlQhMKEV9zb2lsX3RlbXBlcmF0dXJl');
 
 @$core.Deprecated('Use powerMetricsDescriptor instead')
 const PowerMetrics$json = {

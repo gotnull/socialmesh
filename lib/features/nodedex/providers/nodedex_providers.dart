@@ -1746,7 +1746,7 @@ class NodeDexFilterNotifier extends Notifier<NodeDexFilter> {
 }
 
 final nodeDexFilterProvider =
-    NotifierProvider<NodeDexFilterNotifier, NodeDexFilter>(
+    NotifierProvider.autoDispose<NodeDexFilterNotifier, NodeDexFilter>(
       NodeDexFilterNotifier.new,
     );
 
@@ -1759,9 +1759,10 @@ class NodeDexSearchNotifier extends Notifier<String> {
   void clear() => state = '';
 }
 
-final nodeDexSearchProvider = NotifierProvider<NodeDexSearchNotifier, String>(
-  NodeDexSearchNotifier.new,
-);
+final nodeDexSearchProvider =
+    NotifierProvider.autoDispose<NodeDexSearchNotifier, String>(
+      NodeDexSearchNotifier.new,
+    );
 
 /// Notifier for filtering NodeDex entries by observed radio preset.
 ///
@@ -1793,7 +1794,7 @@ class NodeDexRadioPresetFilterNotifier extends Notifier<Set<int>> {
 }
 
 final nodeDexRadioPresetFilterProvider =
-    NotifierProvider<NodeDexRadioPresetFilterNotifier, Set<int>>(
+    NotifierProvider.autoDispose<NodeDexRadioPresetFilterNotifier, Set<int>>(
       NodeDexRadioPresetFilterNotifier.new,
     );
 

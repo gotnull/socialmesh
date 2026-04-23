@@ -6514,6 +6514,12 @@ abstract class AppLocalizations {
   /// **'View Details'**
   String get nodeInfoViewDetails;
 
+  /// Tooltip for the open-in-NodeDex icon button on the node info card.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in NodeDex'**
+  String get nodeInfoOpenInNodeDex;
+
   /// Tooltip for the traceroute history icon button on the node info card.
   ///
   /// In en, this message translates to:
@@ -22168,6 +22174,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'SNR dB'**
   String get onboardingWidgetSnrDb;
+
+  /// Title of the confirm sheet shown when a user taps a URL inside a message.
+  ///
+  /// In en, this message translates to:
+  /// **'Open link?'**
+  String get openLinkTitle;
+
+  /// Body text of the confirm sheet shown when a user taps a URL inside a message.
+  ///
+  /// In en, this message translates to:
+  /// **'This link was received in a message. Verify the destination before continuing.'**
+  String get openLinkDescription;
+
+  /// Primary button label on the open-link confirm sheet — launches the URL in the browser.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get openLinkOpenAction;
+
+  /// Secondary button label on the open-link confirm sheet — dismisses without launching.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get openLinkCancelAction;
+
+  /// Error snackbar shown when url_launcher fails to open a tapped link.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open link'**
+  String get openLinkLaunchFailed;
 
   /// Subtitle or secondary text
   ///
@@ -62464,16 +62500,16 @@ abstract class AppLocalizations {
   /// **'Try changing the filter to see more posts.'**
   String get meshFeedEmptyFilterDescription;
 
-  /// Drawer / navigation rail label for the Node Pet feature.
+  /// Drawer / navigation rail label for the NodePet feature.
   ///
   /// In en, this message translates to:
-  /// **'Node Pet'**
+  /// **'NodePet'**
   String get petDrawerLabel;
 
   /// App bar title on the Pet home screen.
   ///
   /// In en, this message translates to:
-  /// **'Node Pet'**
+  /// **'NodePet'**
   String get petScreenTitle;
 
   /// Primary action label — replenishes the pet's energy.
@@ -62758,11 +62794,227 @@ abstract class AppLocalizations {
   /// **'Hatched'**
   String get petInspectRowHatched;
 
+  /// Inspect row label — elapsed time since the pet entered the current stage.
+  ///
+  /// In en, this message translates to:
+  /// **'In stage'**
+  String get petInspectRowInStage;
+
+  /// Title for the dedicated DNA Viewer sheet — shows the structural genome derived from the pet's dnaSeed.
+  ///
+  /// In en, this message translates to:
+  /// **'DNA Blueprint'**
+  String get petDnaViewerTitle;
+
+  /// Label for the affordance on the pet home screen that opens the DNA Viewer.
+  ///
+  /// In en, this message translates to:
+  /// **'View DNA blueprint'**
+  String get petDnaViewerOpenAction;
+
+  /// DNA Viewer section header — identity block (seed, stage, branch).
+  ///
+  /// In en, this message translates to:
+  /// **'Identity'**
+  String get petDnaSectionIdentity;
+
+  /// DNA Viewer section header — structural trait breakdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Decoded traits'**
+  String get petDnaSectionDecoded;
+
+  /// DNA Viewer decoded trait — core polygon symmetry class.
+  ///
+  /// In en, this message translates to:
+  /// **'Symmetry'**
+  String get petDnaTraitSymmetry;
+
+  /// DNA Viewer decoded trait — petal/orbital count.
+  ///
+  /// In en, this message translates to:
+  /// **'Orbital complexity'**
+  String get petDnaTraitOrbitals;
+
+  /// DNA Viewer decoded trait — twist cycles.
+  ///
+  /// In en, this message translates to:
+  /// **'Resonance'**
+  String get petDnaTraitResonance;
+
+  /// DNA Viewer decoded trait — strand count (Monad / Dyad / Triad).
+  ///
+  /// In en, this message translates to:
+  /// **'Strand configuration'**
+  String get petDnaTraitStrands;
+
+  /// DNA Viewer decoded trait — number of broken strand segments.
+  ///
+  /// In en, this message translates to:
+  /// **'Volatility markers'**
+  String get petDnaTraitVolatility;
+
+  /// DNA Viewer decoded trait — anomaly bit flag.
+  ///
+  /// In en, this message translates to:
+  /// **'Anomaly'**
+  String get petDnaTraitAnomaly;
+
+  /// DNA Viewer decoded trait — seed-derived body rotation angle in degrees.
+  ///
+  /// In en, this message translates to:
+  /// **'Signature rotation'**
+  String get petDnaTraitSignatureRotation;
+
+  /// DNA Viewer anomaly trait value when the anomaly bit is set.
+  ///
+  /// In en, this message translates to:
+  /// **'Present'**
+  String get petDnaAnomalyPresent;
+
+  /// DNA Viewer anomaly trait value when the anomaly bit is unset.
+  ///
+  /// In en, this message translates to:
+  /// **'Stable'**
+  String get petDnaAnomalyAbsent;
+
   /// Footer note clarifying the v1 local-first constraint.
   ///
   /// In en, this message translates to:
   /// **'Pet state currently stays on this device. Cross-device migration is coming later.'**
   String get petInspectDeviceLocalNote;
+
+  /// Recent-events entry: the egg hatched into the first living stage.
+  ///
+  /// In en, this message translates to:
+  /// **'Hatched'**
+  String get petEventHatched;
+
+  /// Recent-events entry: the user performed the Charge action.
+  ///
+  /// In en, this message translates to:
+  /// **'Charged'**
+  String get petEventCharged;
+
+  /// Recent-events entry: the user performed the Surge (long-press charge) action.
+  ///
+  /// In en, this message translates to:
+  /// **'Surged'**
+  String get petEventSurged;
+
+  /// Recent-events entry: the user performed the Resonate action.
+  ///
+  /// In en, this message translates to:
+  /// **'Resonated'**
+  String get petEventResonated;
+
+  /// Recent-events entry: the user performed the Stabilise action.
+  ///
+  /// In en, this message translates to:
+  /// **'Stabilised'**
+  String get petEventStabilised;
+
+  /// Recent-events entry: the user performed the Sync action.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced'**
+  String get petEventSynced;
+
+  /// Recent-events entry: the user performed the Purge action.
+  ///
+  /// In en, this message translates to:
+  /// **'Purged'**
+  String get petEventPurged;
+
+  /// Recent-events entry: the user performed the Dim action (put pet to sleep).
+  ///
+  /// In en, this message translates to:
+  /// **'Dimmed'**
+  String get petEventDimmed;
+
+  /// Recent-events entry: the user opened the inspect sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Inspected'**
+  String get petEventInspected;
+
+  /// Recent-events entry: a hygiene artefact (stale-field mark) appeared on the pet.
+  ///
+  /// In en, this message translates to:
+  /// **'Stale field formed'**
+  String get petEventHygieneArtefactAppeared;
+
+  /// Recent-events entry: the pet became ill.
+  ///
+  /// In en, this message translates to:
+  /// **'Fell sick'**
+  String get petEventSicknessOnset;
+
+  /// Recent-events entry: the pet recovered from sickness.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovered'**
+  String get petEventSicknessRecovered;
+
+  /// Recent-events entry: the pet entered sleep state.
+  ///
+  /// In en, this message translates to:
+  /// **'Fell asleep'**
+  String get petEventSleepEntered;
+
+  /// Recent-events entry: the pet exited sleep state.
+  ///
+  /// In en, this message translates to:
+  /// **'Woke up'**
+  String get petEventSleepExited;
+
+  /// Recent-events entry: the pet started an attention call.
+  ///
+  /// In en, this message translates to:
+  /// **'Called for you'**
+  String get petEventCallStarted;
+
+  /// Recent-events entry: the user answered the pet's call.
+  ///
+  /// In en, this message translates to:
+  /// **'Call answered'**
+  String get petEventCallAnswered;
+
+  /// Recent-events entry: the pet's call timed out without being answered.
+  ///
+  /// In en, this message translates to:
+  /// **'Call missed'**
+  String get petEventCallMissed;
+
+  /// Recent-events entry: a mistake was recorded against the care history (contributes to branch resolution).
+  ///
+  /// In en, this message translates to:
+  /// **'Care gap'**
+  String get petEventMistakeRecorded;
+
+  /// Recent-events entry: the pet advanced to the next life stage.
+  ///
+  /// In en, this message translates to:
+  /// **'Evolved'**
+  String get petEventStageAdvanced;
+
+  /// Recent-events entry: the pet's branch (Luminous / Steady / Volatile / Dimmed) was determined at adulthood.
+  ///
+  /// In en, this message translates to:
+  /// **'Branch revealed'**
+  String get petEventBranchResolved;
+
+  /// Recent-events entry: the pet reached the dormant end-of-life stage.
+  ///
+  /// In en, this message translates to:
+  /// **'Gone dormant'**
+  String get petEventDormantEntered;
+
+  /// Recent-events entry: the user re-sigilled (started a new pet lineage after dormant).
+  ///
+  /// In en, this message translates to:
+  /// **'New sigil cast'**
+  String get petEventReSigilled;
 
   /// Dormant-state headline on the Pet home screen.
   ///
@@ -62775,6 +63027,324 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Begin a new lineage — your next pet inherits a fresh seed tied to this node.'**
   String get petDormantDescription;
+
+  /// Title of the pet/companion section on a peer's NodeDex detail screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Companion'**
+  String get petCompanionSectionTitle;
+
+  /// Shown in the Companion card when we have no cached observation of this peer's pet.
+  ///
+  /// In en, this message translates to:
+  /// **'No sigil creature observed yet.'**
+  String get petCompanionUnknown;
+
+  /// Freshness label under a cached companion preview (age is a short string like '3h' or '2d').
+  ///
+  /// In en, this message translates to:
+  /// **'Observed {age} ago'**
+  String petCompanionObservedRelative(String age);
+
+  /// Smoothed peer pet live-state label when the peer is currently on the mesh (last-seen under a minute).
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get petLiveStateActive;
+
+  /// Smoothed peer pet live-state label when the peer has been seen recently but not in the last minute (last-seen under 5 minutes).
+  ///
+  /// In en, this message translates to:
+  /// **'Calm'**
+  String get petLiveStateCalm;
+
+  /// Smoothed peer pet live-state label when the peer has not been seen for a while (last-seen under 30 minutes).
+  ///
+  /// In en, this message translates to:
+  /// **'Idle'**
+  String get petLiveStateIdle;
+
+  /// Smoothed peer pet live-state label when the peer's pet is in its sleep window.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleepy'**
+  String get petLiveStateSleepy;
+
+  /// Smoothed peer pet live-state label when the peer's pet has reached its terminal dormant stage.
+  ///
+  /// In en, this message translates to:
+  /// **'Dormant'**
+  String get petLiveStateDormant;
+
+  /// Non-blocking banner title after the egg hatches.
+  ///
+  /// In en, this message translates to:
+  /// **'Hatched'**
+  String get petHatchBannerTitle;
+
+  /// Non-blocking banner subtitle after hatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Your sigil creature has emerged. Keep caring for it to shape its evolution.'**
+  String get petHatchBannerSubtitle;
+
+  /// Banner title shown when the adolescent→adult transition resolves the Luminous branch.
+  ///
+  /// In en, this message translates to:
+  /// **'Evolved: Luminous'**
+  String get petBranchBannerTitleLuminous;
+
+  /// Banner subtitle for the Luminous branch.
+  ///
+  /// In en, this message translates to:
+  /// **'Pristine care paid off — your creature has taken its brightest form.'**
+  String get petBranchBannerSubtitleLuminous;
+
+  /// Banner title for the Steady branch.
+  ///
+  /// In en, this message translates to:
+  /// **'Evolved: Steady'**
+  String get petBranchBannerTitleSteady;
+
+  /// Banner subtitle for the Steady branch.
+  ///
+  /// In en, this message translates to:
+  /// **'Balanced care has settled your creature into a calm, resilient form.'**
+  String get petBranchBannerSubtitleSteady;
+
+  /// Banner title for the Volatile branch.
+  ///
+  /// In en, this message translates to:
+  /// **'Evolved: Volatile'**
+  String get petBranchBannerTitleVolatile;
+
+  /// Banner subtitle for the Volatile branch.
+  ///
+  /// In en, this message translates to:
+  /// **'Heavy surges have shaped a restless, energetic form.'**
+  String get petBranchBannerSubtitleVolatile;
+
+  /// Banner title for the Dimmed (neglect) branch.
+  ///
+  /// In en, this message translates to:
+  /// **'Evolved: Dimmed'**
+  String get petBranchBannerTitleDimmed;
+
+  /// Banner subtitle for the Dimmed branch.
+  ///
+  /// In en, this message translates to:
+  /// **'Neglect has dimmed your creature — it may still be revived with steady care.'**
+  String get petBranchBannerSubtitleDimmed;
+
+  /// Banner title for the adult→elder transition.
+  ///
+  /// In en, this message translates to:
+  /// **'Matured'**
+  String get petElderBannerTitle;
+
+  /// Banner subtitle for elder transition.
+  ///
+  /// In en, this message translates to:
+  /// **'Your creature has entered its elder phase.'**
+  String get petElderBannerSubtitle;
+
+  /// Banner title for the elder→dormant transition.
+  ///
+  /// In en, this message translates to:
+  /// **'Gone dormant'**
+  String get petDormantBannerTitle;
+
+  /// Banner subtitle for dormant transition.
+  ///
+  /// In en, this message translates to:
+  /// **'The sigil has quieted. Re-sigil to begin a new lineage.'**
+  String get petDormantBannerSubtitle;
+
+  /// Toast when Charge or Surge is tapped and energy is already at max.
+  ///
+  /// In en, this message translates to:
+  /// **'Already full'**
+  String get petReasonFullyCharged;
+
+  /// Toast when Resonate is tapped and mood is at max.
+  ///
+  /// In en, this message translates to:
+  /// **'Already happy'**
+  String get petReasonMoodAlreadyFull;
+
+  /// Toast when stability is at max and the tapped action would have raised it.
+  ///
+  /// In en, this message translates to:
+  /// **'Already steady'**
+  String get petReasonStabilityAlreadyFull;
+
+  /// Toast when Stabilise is tapped without any hygiene artefact on the field.
+  ///
+  /// In en, this message translates to:
+  /// **'Field is clean'**
+  String get petReasonNothingToClean;
+
+  /// Toast when Sync is tapped and the pet has no active call and stability is at max.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to sync'**
+  String get petReasonNothingToSync;
+
+  /// Toast when Dim is tapped while the pet is already asleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Already resting'**
+  String get petReasonAlreadyAsleep;
+
+  /// Toast when an interactive action is attempted while the pet is asleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Resting right now'**
+  String get petReasonAsleep;
+
+  /// Toast when an interactive action is attempted on an unhatched egg.
+  ///
+  /// In en, this message translates to:
+  /// **'Still unhatched'**
+  String get petReasonEgg;
+
+  /// Toast when an interactive action is attempted on a dormant pet.
+  ///
+  /// In en, this message translates to:
+  /// **'Your sigil has gone quiet'**
+  String get petReasonDormant;
+
+  /// Toast when Purge is tapped and the pet isn't sick.
+  ///
+  /// In en, this message translates to:
+  /// **'Not unwell'**
+  String get petReasonNotSick;
+
+  /// Toast when Dim is tapped outside the sleep window.
+  ///
+  /// In en, this message translates to:
+  /// **'Not bedtime yet'**
+  String get petReasonNotBedtime;
+
+  /// Toast when Re-sigil is tapped and the pet isn't dormant.
+  ///
+  /// In en, this message translates to:
+  /// **'Pet is still alive'**
+  String get petReasonNotDormant;
+
+  /// Android notification channel description for pet milestones.
+  ///
+  /// In en, this message translates to:
+  /// **'Hatch, evolution, and dormant moments for your NodePet.'**
+  String get notificationChannelPetMilestones;
+
+  /// Android notification channel description for pet care.
+  ///
+  /// In en, this message translates to:
+  /// **'Attention calls and sickness alerts for your NodePet.'**
+  String get notificationChannelPetCare;
+
+  /// Notification title when the egg transitions to juvenile.
+  ///
+  /// In en, this message translates to:
+  /// **'Your pet hatched'**
+  String get notificationPetHatchedTitle;
+
+  /// Notification body after hatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Open NodePet to meet your sigil creature.'**
+  String get notificationPetHatchedBody;
+
+  /// Notification title for stage transitions other than hatch and dormant.
+  ///
+  /// In en, this message translates to:
+  /// **'Your pet evolved'**
+  String get notificationPetEvolvedTitle;
+
+  /// Notification body for stage transitions, naming the evolution branch.
+  ///
+  /// In en, this message translates to:
+  /// **'New stage settled into the {branch} branch.'**
+  String notificationPetEvolvedBody(String branch);
+
+  /// Notification title for adult to elder transition.
+  ///
+  /// In en, this message translates to:
+  /// **'Your pet is an elder'**
+  String get notificationPetMaturedTitle;
+
+  /// Notification body for elder transition.
+  ///
+  /// In en, this message translates to:
+  /// **'Open NodePet to see your pet\'s elder form.'**
+  String get notificationPetMaturedBody;
+
+  /// Notification title when the pet enters the dormant stage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your pet has gone dormant'**
+  String get notificationPetDormantTitle;
+
+  /// Notification body for dormant transition.
+  ///
+  /// In en, this message translates to:
+  /// **'Open NodePet and Re-sigil to begin a new lineage.'**
+  String get notificationPetDormantBody;
+
+  /// Notification title when sickness onsets.
+  ///
+  /// In en, this message translates to:
+  /// **'Your pet is unwell'**
+  String get notificationPetSickTitle;
+
+  /// Notification body for sickness onset.
+  ///
+  /// In en, this message translates to:
+  /// **'Open NodePet and Purge to help it recover.'**
+  String get notificationPetSickBody;
+
+  /// Notification title for an active attention call.
+  ///
+  /// In en, this message translates to:
+  /// **'Your pet needs attention'**
+  String get notificationPetAttentionTitle;
+
+  /// Attention call body for hungry reason.
+  ///
+  /// In en, this message translates to:
+  /// **'Low energy — tap Charge.'**
+  String get notificationPetAttentionHungryBody;
+
+  /// Attention call body for lonely reason.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood is drifting — tap Resonate.'**
+  String get notificationPetAttentionLonelyBody;
+
+  /// Attention call body for sick reason.
+  ///
+  /// In en, this message translates to:
+  /// **'Feeling unwell — tap Purge.'**
+  String get notificationPetAttentionSickBody;
+
+  /// Attention call body for hygiene reason.
+  ///
+  /// In en, this message translates to:
+  /// **'Field needs stabilising — tap Stabilise.'**
+  String get notificationPetAttentionHygieneBody;
+
+  /// Attention call body for bedtime reason.
+  ///
+  /// In en, this message translates to:
+  /// **'Almost bedtime — tap Dim.'**
+  String get notificationPetAttentionBedtimeBody;
+
+  /// Attention call body for boredom reason.
+  ///
+  /// In en, this message translates to:
+  /// **'Restless — tap Resonate.'**
+  String get notificationPetAttentionBoredomBody;
 }
 
 class _AppLocalizationsDelegate

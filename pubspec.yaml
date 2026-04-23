@@ -48,6 +48,11 @@ dependencies:
   # Markdown rendering (Help Center knowledge base articles)
   flutter_markdown: ^0.7.6
 
+  # Rive — presentation layer for the NodePet home hero only. Gated via
+  # PET_RIVE_ENABLED; fallback path is PetCreature (custom painter). See
+  # docs/pet/NODE_PET_SYSTEM.md §9.13.
+  rive: ^0.13.20
+
   # UI/UX
   cupertino_icons: ^1.0.9
   flutter_compass: ^0.8.1
@@ -175,8 +180,10 @@ flutter:
     - .env
     - assets/app_icons/
     - assets/app_icons/source/
+    - assets/pet/
     - assets/rtttl_library.json
     - assets/banned_words.json
+    - assets/device_hardware.json
     - assets/help/manifest.json
     - assets/help/getting-started/
     - assets/help/mesh-basics/

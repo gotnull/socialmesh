@@ -683,6 +683,21 @@ class HardwareModel extends $pb.ProtobufEnum {
       HardwareModel._(127, _omitEnumNames ? '' : 'HELTEC_MESH_NODE_T096');
 
   ///
+  ///  Seeed studio T1000-E Pro tracker card. NRF52840 w/ LR2021 radio,
+  ///  GPS, button, buzzer, and sensors.
+  static const HardwareModel TRACKER_T1000_E_PRO =
+      HardwareModel._(128, _omitEnumNames ? '' : 'TRACKER_T1000_E_PRO');
+
+  ///
+  ///  Elecrow ThinkNode M7, M8 and M9
+  static const HardwareModel THINKNODE_M7 =
+      HardwareModel._(129, _omitEnumNames ? '' : 'THINKNODE_M7');
+  static const HardwareModel THINKNODE_M8 =
+      HardwareModel._(130, _omitEnumNames ? '' : 'THINKNODE_M8');
+  static const HardwareModel THINKNODE_M9 =
+      HardwareModel._(131, _omitEnumNames ? '' : 'THINKNODE_M9');
+
+  ///
   ///  ------------------------------------------------------------------------------------------------------------------------------------------
   ///  Reserved ID For developing private Ports. These will show up in live traffic sparsely, so we can use a high number. Keep it within 8 bits.
   ///  ------------------------------------------------------------------------------------------------------------------------------------------
@@ -818,6 +833,10 @@ class HardwareModel extends $pb.ProtobufEnum {
     MINI_EPAPER_S3,
     TDISPLAY_S3_PRO,
     HELTEC_MESH_NODE_T096,
+    TRACKER_T1000_E_PRO,
+    THINKNODE_M7,
+    THINKNODE_M8,
+    THINKNODE_M9,
     PRIVATE_HW,
   ];
 
@@ -1394,6 +1413,63 @@ class StoreForwardPlusPlus_SFPP_message_type extends $pb.ProtobufEnum {
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 
   const StoreForwardPlusPlus_SFPP_message_type._(super.value, super.name);
+}
+
+///
+///  Frame op code for PTY session control and stream transport.
+///
+///  Values 1-63 are client->server requests.
+///  Values 64-127 are server->client responses/events.
+class RemoteShell_OpCode extends $pb.ProtobufEnum {
+  static const RemoteShell_OpCode OP_UNSET =
+      RemoteShell_OpCode._(0, _omitEnumNames ? '' : 'OP_UNSET');
+
+  /// Client -> server
+  static const RemoteShell_OpCode OPEN =
+      RemoteShell_OpCode._(1, _omitEnumNames ? '' : 'OPEN');
+  static const RemoteShell_OpCode INPUT =
+      RemoteShell_OpCode._(2, _omitEnumNames ? '' : 'INPUT');
+  static const RemoteShell_OpCode RESIZE =
+      RemoteShell_OpCode._(3, _omitEnumNames ? '' : 'RESIZE');
+  static const RemoteShell_OpCode CLOSE =
+      RemoteShell_OpCode._(4, _omitEnumNames ? '' : 'CLOSE');
+  static const RemoteShell_OpCode PING =
+      RemoteShell_OpCode._(5, _omitEnumNames ? '' : 'PING');
+  static const RemoteShell_OpCode ACK =
+      RemoteShell_OpCode._(6, _omitEnumNames ? '' : 'ACK');
+
+  /// Server -> client
+  static const RemoteShell_OpCode OPEN_OK =
+      RemoteShell_OpCode._(64, _omitEnumNames ? '' : 'OPEN_OK');
+  static const RemoteShell_OpCode OUTPUT =
+      RemoteShell_OpCode._(65, _omitEnumNames ? '' : 'OUTPUT');
+  static const RemoteShell_OpCode CLOSED =
+      RemoteShell_OpCode._(66, _omitEnumNames ? '' : 'CLOSED');
+  static const RemoteShell_OpCode ERROR =
+      RemoteShell_OpCode._(67, _omitEnumNames ? '' : 'ERROR');
+  static const RemoteShell_OpCode PONG =
+      RemoteShell_OpCode._(68, _omitEnumNames ? '' : 'PONG');
+
+  static const $core.List<RemoteShell_OpCode> values = <RemoteShell_OpCode>[
+    OP_UNSET,
+    OPEN,
+    INPUT,
+    RESIZE,
+    CLOSE,
+    PING,
+    ACK,
+    OPEN_OK,
+    OUTPUT,
+    CLOSED,
+    ERROR,
+    PONG,
+  ];
+
+  static final $core.Map<$core.int, RemoteShell_OpCode> _byValue =
+      $pb.ProtobufEnum.initByValue(values);
+  static RemoteShell_OpCode? valueOf($core.int value) => _byValue[value];
+
+  const RemoteShell_OpCode._(super.value, super.name);
 }
 
 ///

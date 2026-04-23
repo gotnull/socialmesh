@@ -163,6 +163,7 @@ class EnvironmentMetrics extends $pb.GeneratedMessage {
     $core.double? rainfall24h,
     $core.int? soilMoisture,
     $core.double? soilTemperature,
+    $core.Iterable<$core.double>? oneWireTemperature,
   }) {
     final result = create();
     if (temperature != null) result.temperature = temperature;
@@ -188,6 +189,8 @@ class EnvironmentMetrics extends $pb.GeneratedMessage {
     if (rainfall24h != null) result.rainfall24h = rainfall24h;
     if (soilMoisture != null) result.soilMoisture = soilMoisture;
     if (soilTemperature != null) result.soilTemperature = soilTemperature;
+    if (oneWireTemperature != null)
+      result.oneWireTemperature.addAll(oneWireTemperature);
     return result;
   }
 
@@ -234,6 +237,8 @@ class EnvironmentMetrics extends $pb.GeneratedMessage {
         fieldType: $pb.PbFieldType.OU3)
     ..aD(22, _omitFieldNames ? '' : 'soilTemperature',
         fieldType: $pb.PbFieldType.OF)
+    ..p<$core.double>(
+        23, _omitFieldNames ? '' : 'oneWireTemperature', $pb.PbFieldType.KF)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -498,6 +503,11 @@ class EnvironmentMetrics extends $pb.GeneratedMessage {
   $core.bool hasSoilTemperature() => $_has(21);
   @$pb.TagNumber(22)
   void clearSoilTemperature() => $_clearField(22);
+
+  ///
+  ///  One-wire temperature (*C)
+  @$pb.TagNumber(23)
+  $pb.PbList<$core.double> get oneWireTemperature => $_getList(22);
 }
 
 ///

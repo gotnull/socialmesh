@@ -39,6 +39,7 @@ import '../../utils/location_privacy.dart';
 import '../../utils/presence_utils.dart';
 import '../messaging/messaging_screen.dart';
 import '../navigation/main_shell.dart';
+import '../nodedex/screens/nodedex_detail_screen.dart';
 import '../nodes/node_detail_screen.dart';
 import '../nodes/node_display_name_resolver.dart';
 import '../telemetry/traceroute_log_screen.dart';
@@ -1970,6 +1971,15 @@ class _MapScreenState extends ConsumerState<MapScreen>
                             context,
                             node,
                             node.nodeNum == myNodeNum,
+                          );
+                        },
+                        onOpenInNodeDex: () {
+                          final node = _selectedNode!;
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) =>
+                                  NodeDexDetailScreen(nodeNum: node.nodeNum),
+                            ),
                           );
                         },
                         onViewHistory: () {

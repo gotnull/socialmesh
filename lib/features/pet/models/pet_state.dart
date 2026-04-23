@@ -87,7 +87,11 @@ class PetState {
       hygieneArtefacts: const [],
       activeCall: null,
       stageAccumulators: const CareAccumulators.empty(),
-      recentEvents: [CareEvent(at: hatchedAt, kind: CareEventKind.hatched)],
+      // Recent feed starts empty — an egg that was just laid has NOT
+      // hatched yet. The `hatched` event is emitted by the care engine
+      // on the real egg → juvenile transition (see
+      // PetCareEngine._applyStageTransition).
+      recentEvents: const [],
     );
   }
 

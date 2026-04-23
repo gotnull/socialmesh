@@ -158,6 +158,17 @@ class AppInitNotifier extends Notifier<AppInitState> {
       final lastDeviceId = settings.lastDeviceId;
       final hasEverPaired = lastDeviceId != null;
 
+      // Restore transport type from persisted lastDeviceType BEFORE any
+      // auto-reconnect path fires. On cold start transportTypeProvider
+      // defaults to BLE — a TCP last-device would otherwise route
+      // through the BLE scan loop looking for a `tcp:...` id and spin
+      // at "Connecting…" indefinitely. This sync does NOT classify or
+      // clear anything; it simply aligns the transport provider with
+      // the persisted target family.
+      if (hasEverPaired) {
+        restoreTransportTypeFromSettings(ref, settings);
+      }
+
       // Phase 2: Background services (can complete after UI shows)
       // These run in parallel but don't block app ready state.
       // Guarded so only the first initialize() call triggers them —
@@ -797,6 +808,23 @@ final transportProvider = Provider<DeviceTransport>((ref) {
   }
 });
 
+/// Dedicated BLE scanner — always a `BleTransport`, independent of the
+/// session's active [transportTypeProvider]. Scanner UI uses this so a
+/// BLE scan works even while the session transport is pinned to
+/// network (e.g. user just disconnected from a TCP radio and opened the
+/// scanner to pick a BLE device). Without it, `transportProvider.scan()`
+/// would return `NetworkTransport.scan()` — an immediately-empty stream
+/// — and the scanner would spin forever at "Looking for devices…".
+///
+/// Not used for connect: the connect path goes through
+/// [prepareForDeviceTransition] which flips [transportTypeProvider]
+/// and then uses `transportProvider` for the actual connection.
+final bleScanTransportProvider = Provider<DeviceTransport>((ref) {
+  final transport = BleTransport();
+  ref.onDispose(transport.dispose);
+  return transport;
+});
+
 // Connection state - create a stream that emits current state immediately,
 // then listens for future updates. This fixes the issue where the dashboard
 // subscribes after the state has already changed to connected.
@@ -1415,6 +1443,414 @@ bool isLogicalTransportRebind({
   return false;
 }
 
+/// Broader logical-identity check that works across transports.
+///
+/// [isLogicalTransportRebind] was BLE-only. Same physical radio can also
+/// surface under a TCP/mDNS endpoint (e.g. `tcp:meshtastic_abcd.local:4403`)
+/// whose hostname carries the same 4-hex node suffix. This predicate
+/// centralises both checks in one place so the transition classifier
+/// can answer "same logical radio?" consistently regardless of the pair
+/// of transports involved.
+@visibleForTesting
+bool isLogicalSameRadio({
+  required String newDeviceName,
+  required String newDeviceId,
+  required TransportType newDeviceType,
+  required int? lastMyNodeNum,
+  required String? lastDeviceName,
+}) {
+  if (lastMyNodeNum != null) {
+    final fullHex = lastMyNodeNum.toRadixString(16).padLeft(4, '0');
+    final suffix = fullHex.substring(fullHex.length - 4);
+    if (bleNameMatchesNodeNum(newDeviceName, suffix)) return true;
+    // mDNS / TCP host often embeds the same suffix: `meshtastic_abcd.local`.
+    // Match it as a hex token bounded by non-alnum so we don't hit
+    // coincidental 4-char substrings inside unrelated words.
+    final loweredSuffix = suffix.toLowerCase();
+    final boundary = RegExp(
+      r'(^|[^a-z0-9])' + loweredSuffix + r'([^a-z0-9]|$)',
+    );
+    if (boundary.hasMatch(newDeviceName.toLowerCase())) return true;
+    if (newDeviceType == TransportType.network) {
+      final endpoint = _parseNetworkEndpointId(newDeviceId);
+      if (endpoint != null && boundary.hasMatch(endpoint.host)) return true;
+    }
+  }
+  if (lastDeviceName != null &&
+      lastDeviceName.isNotEmpty &&
+      newDeviceName == lastDeviceName) {
+    return true;
+  }
+  return false;
+}
+
+/// Parse the persisted `last_device_type` string back to [TransportType].
+/// Returns `null` when the stored value is missing or unrecognised — the
+/// caller must treat that as "transport family unknown".
+TransportType? transportTypeFromString(String? stored) {
+  switch (stored) {
+    case 'ble':
+      return TransportType.ble;
+    case 'usb':
+      return TransportType.usb;
+    case 'network':
+      return TransportType.network;
+  }
+  return null;
+}
+
+String _transportTypeToString(TransportType type) {
+  switch (type) {
+    case TransportType.ble:
+      return 'ble';
+    case TransportType.usb:
+      return 'usb';
+    case TransportType.network:
+      return 'network';
+  }
+}
+
+/// Canonical taxonomy of active-device transitions. A single source of
+/// truth for "preserve vs clear vs rehydrate" — consumed by every connect
+/// entrypoint via [prepareForDeviceTransition].
+enum DeviceTransitionKind {
+  /// No prior device persisted — first connect after install / reset.
+  firstEver,
+
+  /// Raw ids identical — ordinary reconnect to same physical device on
+  /// the same transport.
+  sameDevice,
+
+  /// Raw ids differ but logical identity matches AND transport family
+  /// is unchanged (classic ESP32/nRF BLE UUID rotation).
+  transportRebind,
+
+  /// Raw ids differ but logical identity matches AND transport family
+  /// CHANGED (same radio reached over a different transport — e.g. BLE
+  /// to TCP). Persisted node cache is preserved, but session-scoped
+  /// state must be reset and the new session must run a fresh hydrate.
+  sameRadioCrossTransport,
+
+  /// Different physical radio — destructive switch. Nodes cleared.
+  deviceSwitch,
+}
+
+class ActiveDeviceTransition {
+  const ActiveDeviceTransition({
+    required this.kind,
+    required this.previousDeviceId,
+    required this.newDeviceId,
+    required this.previousTransportType,
+    required this.newTransportType,
+  });
+
+  final DeviceTransitionKind kind;
+  final String? previousDeviceId;
+  final String newDeviceId;
+  final TransportType? previousTransportType;
+  final TransportType newTransportType;
+
+  /// Destructive clear of persisted node cache. Only `deviceSwitch`.
+  bool get clearNodes => kind == DeviceTransitionKind.deviceSwitch;
+
+  /// Logical identity matches — suppress `_isDeviceSwitch` auto-clear
+  /// inside [clearDeviceDataBeforeConnectRef]. Covers both same-family
+  /// rebinds and same-radio cross-transport.
+  bool get isLogicalRebind =>
+      kind == DeviceTransitionKind.transportRebind ||
+      kind == DeviceTransitionKind.sameRadioCrossTransport;
+
+  /// Transport family changed — the transportTypeProvider must be
+  /// flipped so the next protocolServiceProvider rebuild instantiates
+  /// the right transport.
+  bool get transportFamilyChanged =>
+      previousTransportType != null &&
+      previousTransportType != newTransportType;
+
+  /// Force fresh hydration of session-scoped in-memory state even
+  /// though persisted node cache is preserved (scenario D).
+  bool get forceFreshHydration =>
+      kind == DeviceTransitionKind.sameRadioCrossTransport;
+}
+
+/// Pure classifier — no side effects. Consumed by [prepareForDeviceTransition]
+/// and by unit tests that pin the matrix row-by-row.
+@visibleForTesting
+ActiveDeviceTransition classifyDeviceTransition({
+  required String newDeviceId,
+  required String newDeviceName,
+  required TransportType newDeviceType,
+  required String? previousDeviceId,
+  required String? previousDeviceType,
+  required int? lastMyNodeNum,
+  required String? lastDeviceName,
+}) {
+  final previousTransportType = transportTypeFromString(previousDeviceType);
+
+  if (previousDeviceId == null) {
+    return ActiveDeviceTransition(
+      kind: DeviceTransitionKind.firstEver,
+      previousDeviceId: null,
+      newDeviceId: newDeviceId,
+      previousTransportType: previousTransportType,
+      newTransportType: newDeviceType,
+    );
+  }
+
+  if (newDeviceId == previousDeviceId) {
+    return ActiveDeviceTransition(
+      kind: DeviceTransitionKind.sameDevice,
+      previousDeviceId: previousDeviceId,
+      newDeviceId: newDeviceId,
+      previousTransportType: previousTransportType,
+      newTransportType: newDeviceType,
+    );
+  }
+
+  final sameRadio = isLogicalSameRadio(
+    newDeviceName: newDeviceName,
+    newDeviceId: newDeviceId,
+    newDeviceType: newDeviceType,
+    lastMyNodeNum: lastMyNodeNum,
+    lastDeviceName: lastDeviceName,
+  );
+
+  if (sameRadio) {
+    final transportChanged =
+        previousTransportType != null && previousTransportType != newDeviceType;
+    return ActiveDeviceTransition(
+      kind: transportChanged
+          ? DeviceTransitionKind.sameRadioCrossTransport
+          : DeviceTransitionKind.transportRebind,
+      previousDeviceId: previousDeviceId,
+      newDeviceId: newDeviceId,
+      previousTransportType: previousTransportType,
+      newTransportType: newDeviceType,
+    );
+  }
+
+  return ActiveDeviceTransition(
+    kind: DeviceTransitionKind.deviceSwitch,
+    previousDeviceId: previousDeviceId,
+    newDeviceId: newDeviceId,
+    previousTransportType: previousTransportType,
+    newTransportType: newDeviceType,
+  );
+}
+
+/// Central pre-connect preparation. **Must** be called before
+/// `ref.read(transportProvider)` in every connect entrypoint — it
+/// decides the transition kind, clears state in the correct order to
+/// avoid the NodesNotifier `_init` hydration race, persists the new
+/// identity, and only then flips `transportTypeProvider`.
+///
+/// Returns the classification so callers can log or conditionally act
+/// on it (e.g. skip redundant protocol setup). Callers must NOT make
+/// their own clear/setType decisions after this returns.
+Future<ActiveDeviceTransition> prepareForDeviceTransitionRef(
+  Ref ref, {
+  required DeviceInfo device,
+  String? deviceProtocol,
+}) async {
+  final settings = await ref.read(settingsServiceProvider.future);
+  final transition = classifyDeviceTransition(
+    newDeviceId: device.id,
+    newDeviceName: device.name,
+    newDeviceType: device.type,
+    previousDeviceId: settings.lastDeviceId,
+    previousDeviceType: settings.lastDeviceType,
+    lastMyNodeNum: settings.lastMyNodeNum,
+    lastDeviceName: settings.lastDeviceName,
+  );
+
+  AppLogging.connection(
+    '🔄 DEVICE TRANSITION: kind=${transition.kind.name} '
+    'prev=${transition.previousDeviceId} new=${transition.newDeviceId} '
+    'prevType=${transition.previousTransportType?.name} '
+    'newType=${transition.newTransportType.name} '
+    'clearNodes=${transition.clearNodes} '
+    'forceFreshHydration=${transition.forceFreshHydration}',
+  );
+
+  // Persist new identity BEFORE clear so a crash mid-transition cannot
+  // leave the app re-classifying this same transition on next launch.
+  // Node suffix / name-match fallbacks used by classifyDeviceTransition
+  // all key off lastMyNodeNum + lastDeviceName, which are updated
+  // independently as the handshake progresses.
+  await settings.setLastDevice(
+    device.id,
+    _transportTypeToString(device.type),
+    deviceName: device.name,
+    protocol: deviceProtocol,
+  );
+
+  // Clear — ordering is critical: this runs while transportTypeProvider
+  // still points at the OLD transport so the OLD NodesNotifier is the
+  // one whose state is reset + whose epoch is bumped. If we flipped
+  // transport type first, the provider rebuild would spawn a fresh
+  // NodesNotifier whose `_init` would immediately `await loadNodes()`
+  // on still-populated storage — and any write back via its async
+  // resumption would resurrect the old nodes we're trying to clear.
+  await clearDeviceDataBeforeConnectRef(
+    ref,
+    clearNodeData: transition.clearNodes,
+    previousDeviceId: transition.previousDeviceId,
+    newDeviceId: transition.newDeviceId,
+    isTransportRebind: transition.isLogicalRebind,
+  );
+
+  // For same-radio cross-transport: preserve the persisted node cache
+  // but reset session-scoped in-memory state so the new session starts
+  // clean. clearDeviceDataBeforeConnectRef already clears channels and
+  // the new-nodes badge. The NodesNotifier rebuild (triggered by the
+  // transport type flip below) will re-`_init` against preserved
+  // storage — that's the fresh hydrate.
+  if (transition.forceFreshHydration) {
+    AppLogging.connection(
+      '🔄 DEVICE TRANSITION: forceFreshHydration — preserving persisted '
+      'node cache but rebuilding NodesNotifier against new transport',
+    );
+  }
+
+  // Flip transport type AFTER clear. For sameDevice / transportRebind
+  // this is a no-op (family unchanged). For deviceSwitch / sameRadioCross
+  // the rebuild picks up the new BleTransport / NetworkTransport and
+  // the fresh ProtocolService.
+  if (transition.transportFamilyChanged) {
+    AppLogging.connection(
+      '🔄 DEVICE TRANSITION: transport family flip '
+      '${transition.previousTransportType?.name} → '
+      '${transition.newTransportType.name}',
+    );
+    if (transition.newTransportType == TransportType.network) {
+      final endpoint = _parseNetworkEndpointId(device.id);
+      if (endpoint != null) {
+        ref.read(networkTransportHostProvider.notifier).set(endpoint.host);
+        ref.read(networkTransportPortProvider.notifier).set(endpoint.port);
+      }
+    }
+    ref
+        .read(transportTypeProvider.notifier)
+        .setType(transition.newTransportType);
+  }
+
+  return transition;
+}
+
+/// Restore [transportTypeProvider] to match the persisted `lastDeviceType`.
+/// MUST run at cold-start (before any auto-reconnect path fires) for the
+/// TCP-resume case: `transportTypeProvider` defaults to BLE on a fresh
+/// process, so a TCP last-device would otherwise hit the BLE scan loop
+/// looking for a `tcp:...` endpoint id and spin forever at "Connecting…".
+///
+/// Idempotent: no-op if the stored type is null/unknown or already matches
+/// the current provider value. Seeds `networkTransportHost/Port` when the
+/// persisted device is a network endpoint so the rebuilt `NetworkTransport`
+/// binds to the right address.
+///
+/// This is distinct from [prepareForDeviceTransitionRef] — it does NOT
+/// classify, clear, or persist anything. It is a pure read-from-settings
+/// → write-to-transport-providers sync.
+void restoreTransportTypeFromSettings(Ref ref, SettingsService settings) {
+  final restoredType = transportTypeFromString(settings.lastDeviceType);
+  if (restoredType == null) return;
+  if (ref.read(transportTypeProvider) == restoredType) return;
+  AppLogging.connection(
+    '🔄 TRANSPORT RESTORE: ${ref.read(transportTypeProvider).name} → '
+    '${restoredType.name} from persisted lastDeviceType',
+  );
+  if (restoredType == TransportType.network) {
+    final deviceId = settings.lastDeviceId;
+    if (deviceId != null) {
+      final endpoint = _parseNetworkEndpointId(deviceId);
+      if (endpoint != null) {
+        ref.read(networkTransportHostProvider.notifier).set(endpoint.host);
+        ref.read(networkTransportPortProvider.notifier).set(endpoint.port);
+      }
+    }
+  }
+  ref.read(transportTypeProvider.notifier).setType(restoredType);
+}
+
+/// Public entry point for the reconnect strategy dispatcher. Callers
+/// outside this library (e.g. `connection_providers.startBackgroundConnection`
+/// when it detects a `directEndpoint` transport) use this to hand off
+/// into the right reconnect path without reimplementing the BLE vs
+/// network routing. Internal callers still use `_dispatchReconnect`.
+void dispatchReconnectForDevice(Ref ref, String deviceId) {
+  _dispatchReconnect(ref, deviceId);
+}
+
+/// WidgetRef wrapper for widget-layer callers (scanner, etc.). Delegates
+/// to the Ref variant via the underlying container reference.
+Future<ActiveDeviceTransition> prepareForDeviceTransition(
+  WidgetRef ref, {
+  required DeviceInfo device,
+  String? deviceProtocol,
+}) async {
+  final settings = await ref.read(settingsServiceProvider.future);
+  final transition = classifyDeviceTransition(
+    newDeviceId: device.id,
+    newDeviceName: device.name,
+    newDeviceType: device.type,
+    previousDeviceId: settings.lastDeviceId,
+    previousDeviceType: settings.lastDeviceType,
+    lastMyNodeNum: settings.lastMyNodeNum,
+    lastDeviceName: settings.lastDeviceName,
+  );
+
+  AppLogging.connection(
+    '🔄 DEVICE TRANSITION: kind=${transition.kind.name} '
+    'prev=${transition.previousDeviceId} new=${transition.newDeviceId} '
+    'prevType=${transition.previousTransportType?.name} '
+    'newType=${transition.newTransportType.name} '
+    'clearNodes=${transition.clearNodes} '
+    'forceFreshHydration=${transition.forceFreshHydration}',
+  );
+
+  await settings.setLastDevice(
+    device.id,
+    _transportTypeToString(device.type),
+    deviceName: device.name,
+    protocol: deviceProtocol,
+  );
+
+  await clearDeviceDataBeforeConnect(
+    ref,
+    clearNodeData: transition.clearNodes,
+    previousDeviceId: transition.previousDeviceId,
+    newDeviceId: transition.newDeviceId,
+    isTransportRebind: transition.isLogicalRebind,
+  );
+
+  if (transition.forceFreshHydration) {
+    AppLogging.connection(
+      '🔄 DEVICE TRANSITION: forceFreshHydration — preserving persisted '
+      'node cache but rebuilding NodesNotifier against new transport',
+    );
+  }
+
+  if (transition.transportFamilyChanged) {
+    AppLogging.connection(
+      '🔄 DEVICE TRANSITION: transport family flip '
+      '${transition.previousTransportType?.name} → '
+      '${transition.newTransportType.name}',
+    );
+    if (transition.newTransportType == TransportType.network) {
+      final endpoint = _parseNetworkEndpointId(device.id);
+      if (endpoint != null) {
+        ref.read(networkTransportHostProvider.notifier).set(endpoint.host);
+        ref.read(networkTransportPortProvider.notifier).set(endpoint.port);
+      }
+    }
+    ref
+        .read(transportTypeProvider.notifier)
+        .setType(transition.newTransportType);
+  }
+
+  return transition;
+}
+
 /// Helper function to clear all device-specific data before connecting to a (potentially different) device.
 /// This follows the Meshtastic iOS approach of always fetching fresh data from the device.
 /// Should be called BEFORE protocol.start() in all connection paths.
@@ -1988,6 +2424,12 @@ void _dispatchReconnect(Ref ref, String deviceId) {
 ({String host, int port})? parseNetworkEndpointIdForTest(String deviceId) =>
     _parseNetworkEndpointId(deviceId);
 
+/// Public accessor for callers outside this library (e.g. `main.dart`
+/// startup path restoring the persisted transport family). Same
+/// behaviour as the test-only variant above.
+({String host, int port})? parseNetworkEndpointId(String deviceId) =>
+    _parseNetworkEndpointId(deviceId);
+
 ({String host, int port})? _parseNetworkEndpointId(String deviceId) {
   // Normalize before parsing so `TCP:Node.Local:4403 ` and
   // `tcp:node.local:4403` collapse to the same reconnect key.
@@ -2175,6 +2617,17 @@ Future<void> _runNetworkReconnect(Ref ref, String deviceId) async {
     );
 
     try {
+      // Central transition prep — for NET RECONNECT this is almost
+      // always `sameDevice` (we're reconnecting to the persisted TCP
+      // endpoint), so no destructive clear fires. Still routed through
+      // the helper so the preserve-vs-clear-vs-rehydrate decision
+      // lives in exactly one place across BLE and TCP paths.
+      await prepareForDeviceTransitionRef(
+        ref,
+        device: deviceInfo,
+        deviceProtocol: 'meshtastic',
+      );
+
       await transport.connect(deviceInfo);
       if (transport.state != DeviceConnectionState.connected) {
         throw Exception('TCP connect did not reach connected state');
@@ -2638,51 +3091,16 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
           // Restart protocol service
           AppLogging.connection('Starting protocol service...');
 
-          // Clear all previous device data before starting new connection.
-          // Pass previous + new IDs so node data is auto-cleared if this
-          // is a different physical device than was last connected.
-          // When this is a transport rebind (same physical radio, BLE UUID
-          // rotated), we signal the helper to suppress the auto-clear —
-          // the wipe fires on raw UUID inequality alone and would otherwise
-          // destroy cached NodeDB on every ESP32/nRF UUID rotation.
-          String? previousDeviceId;
-          try {
-            final settings = await ref.read(settingsServiceProvider.future);
-            previousDeviceId = settings.lastDeviceId;
-
-            // On a transport rebind, persist the new BLE UUID BEFORE the
-            // clear runs so future reconnects don't keep comparing against
-            // a stale persisted id and re-classifying the same radio as a
-            // new device. The helper's `isTransportRebind` already
-            // suppresses the wipe for this attempt; this alignment ensures
-            // it stays aligned across subsequent reconnects even if the
-            // later `setLastDevice` call (after protocol start) is never
-            // reached (e.g. the protocol start fails after this point).
-            if (isTransportRebind) {
-              AppLogging.connection(
-                '🔄 REBIND PERSIST (pre-clear): '
-                '$previousDeviceId → ${foundDevice.id}',
-              );
-              await settings.setLastDevice(
-                foundDevice.id,
-                foundDevice.type.name,
-                deviceName: foundDevice.name,
-              );
-            }
-          } catch (_) {
-            previousDeviceId = null;
-          }
-          AppLogging.connection(
-            '🧮 SWITCH CLASSIFY (_performReconnect): '
-            'previousDeviceId=$previousDeviceId '
-            'newDeviceId=${foundDevice.id} '
-            'isTransportRebind=$isTransportRebind',
-          );
-          await clearDeviceDataBeforeConnectRef(
+          // Central transition prep — single source of truth for the
+          // preserve-vs-clear-vs-rehydrate decision. The classifier
+          // inside will detect a same-radio BLE UUID rotation as
+          // `transportRebind` (no clear) via lastMyNodeNum / name
+          // match, independently of the `isTransportRebind` we
+          // computed from the logical-match fallback during scan.
+          await prepareForDeviceTransitionRef(
             ref,
-            previousDeviceId: previousDeviceId,
-            newDeviceId: foundDevice.id,
-            isTransportRebind: isTransportRebind,
+            device: foundDevice,
+            deviceProtocol: 'meshtastic',
           );
 
           final protocol = ref.read(protocolServiceProvider);
@@ -2721,23 +3139,12 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
           final locationService = ref.read(locationServiceProvider);
           await locationService.startLocationUpdates();
 
-          // Final check - if we're still connected, declare success
+          // Final check - if we're still connected, declare success.
+          // (Note: prepareForDeviceTransitionRef above already persisted
+          // the new BLE id to settings, so no REBIND COMPLETE write is
+          // needed here — the prep runs pre-clear specifically so the
+          // new id survives even if protocol start subsequently fails.)
           if (transport.state == DeviceConnectionState.connected) {
-            // Persist updated transport identity if BLE UUID changed
-            if (isTransportRebind) {
-              AppLogging.connection(
-                '🔄 REBIND COMPLETE: Persisting new BLE ID ${foundDevice.id}',
-              );
-              final rebindSettings = await ref.read(
-                settingsServiceProvider.future,
-              );
-              await rebindSettings.setLastDevice(
-                foundDevice.id,
-                foundDevice.type.name,
-                deviceName: foundDevice.name,
-              );
-            }
-
             ref
                 .read(autoReconnectStateProvider.notifier)
                 .setState(AutoReconnectState.success);
@@ -4642,6 +5049,15 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
   final Set<int> _fallbackLoggedNodes = {};
   final Set<int> _bleStripLoggedNodes = {};
 
+  /// Monotonic counter bumped by [clearNodes]. `_init`'s storage load is
+  /// async; if a destructive clear fires while `await loadNodes()` is
+  /// in flight, the in-memory `savedNodes` variable resolves with the
+  /// pre-clear snapshot. Without this epoch check, the resumption
+  /// would then `state = nodeMap(...)` and resurrect the very nodes we
+  /// just cleared. On resume we compare the captured epoch against
+  /// the live one and abandon the stale write.
+  int _clearEpoch = 0;
+
   /// Haversine distance in meters between two lat/lon points.
   static double _haversineMeters(
     double lat1,
@@ -4841,11 +5257,24 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
     // below can safely read `state` only when it is readable.
     var stateReadable = false;
 
-    // Load persisted nodes (with their positions) first
+    // Load persisted nodes (with their positions) first. Capture the
+    // clear-epoch before the await so we can detect a destructive
+    // clear that fired during the async gap.
+    final initEpoch = _clearEpoch;
     if (_storage != null) {
       final savedNodes = await _storage!.loadNodes();
       if (!ref.mounted) return;
-      if (savedNodes.isNotEmpty) {
+      if (_clearEpoch != initEpoch) {
+        AppLogging.nodes(
+          'NodesNotifier._init: abandoning stale load — destructive '
+          'clearNodes() fired during storage await '
+          '(epoch $initEpoch → $_clearEpoch); starting empty',
+        );
+        // Do not write `state = nodeMap(...)` — state was already set
+        // to {} by clearNodes(). Proceed to the protocol-merge step
+        // using the current (empty) state as the base.
+        stateReadable = true;
+      } else if (savedNodes.isNotEmpty) {
         AppLogging.nodes('Loaded ${savedNodes.length} nodes from storage');
         final nodeMap = <int, MeshNode>{};
         for (var node in savedNodes) {
@@ -5151,6 +5580,10 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
   }
 
   void clearNodes() {
+    // Bump the epoch first so any `_init` currently awaiting
+    // `loadNodes()` will detect the clear on resumption and abandon its
+    // stale-state writeback. See `_clearEpoch` docs.
+    _clearEpoch++;
     state = {};
     _storage?.clearNodes();
   }
@@ -5159,6 +5592,22 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
 final nodesProvider = NotifierProvider<NodesNotifier, Map<int, MeshNode>>(
   NodesNotifier.new,
 );
+
+/// Cross-feature selector for a single peer's last-heard timestamp.
+///
+/// Exists so features outside `lib/features/nodes/` (e.g. NodePet's
+/// peer live-state derivation) can observe peer presence freshness
+/// without importing another feature module — the module boundary
+/// rule forbids `features/pet/` from importing `features/nodedex/`
+/// or `features/nodes/`, and `lib/providers/` is the sanctioned
+/// shared root.
+///
+/// Returns null when the node is not yet in the nodes map. Consumers
+/// treat null as "never seen" — rendered as the [PeerPetLiveBand.unknown]
+/// band downstream.
+final peerLastSeenProvider = Provider.family<DateTime?, int>((ref, nodeNum) {
+  return ref.watch(nodesProvider)[nodeNum]?.lastHeard;
+});
 
 // Channels
 class ChannelsNotifier extends Notifier<List<ChannelConfig>> {

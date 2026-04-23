@@ -3691,6 +3691,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get nodeInfoViewDetails => 'Ver Detalhes';
 
   @override
+  String get nodeInfoOpenInNodeDex => 'Open in NodeDex';
+
+  @override
   String get nodeInfoViewHistory => 'Histórico de Traceroute';
 
   @override
@@ -12738,6 +12741,22 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get onboardingWidgetSnrDb => 'SNR dB';
+
+  @override
+  String get openLinkTitle => 'Open link?';
+
+  @override
+  String get openLinkDescription =>
+      'This link was received in a message. Verify the destination before continuing.';
+
+  @override
+  String get openLinkOpenAction => 'Open';
+
+  @override
+  String get openLinkCancelAction => 'Cancel';
+
+  @override
+  String get openLinkLaunchFailed => 'Could not open link';
 
   @override
   String get paxCounterAboutSubtitle =>
@@ -35804,10 +35823,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Try changing the filter to see more posts.';
 
   @override
-  String get petDrawerLabel => 'Node Pet';
+  String get petDrawerLabel => 'NodePet';
 
   @override
-  String get petScreenTitle => 'Node Pet';
+  String get petScreenTitle => 'NodePet';
 
   @override
   String get petActionCharge => 'Charge';
@@ -35963,8 +35982,116 @@ class AppLocalizationsPt extends AppLocalizations {
   String get petInspectRowHatched => 'Hatched';
 
   @override
+  String get petInspectRowInStage => 'In stage';
+
+  @override
+  String get petDnaViewerTitle => 'DNA Blueprint';
+
+  @override
+  String get petDnaViewerOpenAction => 'View DNA blueprint';
+
+  @override
+  String get petDnaSectionIdentity => 'Identity';
+
+  @override
+  String get petDnaSectionDecoded => 'Decoded traits';
+
+  @override
+  String get petDnaTraitSymmetry => 'Symmetry';
+
+  @override
+  String get petDnaTraitOrbitals => 'Orbital complexity';
+
+  @override
+  String get petDnaTraitResonance => 'Resonance';
+
+  @override
+  String get petDnaTraitStrands => 'Strand configuration';
+
+  @override
+  String get petDnaTraitVolatility => 'Volatility markers';
+
+  @override
+  String get petDnaTraitAnomaly => 'Anomaly';
+
+  @override
+  String get petDnaTraitSignatureRotation => 'Signature rotation';
+
+  @override
+  String get petDnaAnomalyPresent => 'Present';
+
+  @override
+  String get petDnaAnomalyAbsent => 'Stable';
+
+  @override
   String get petInspectDeviceLocalNote =>
       'Pet state currently stays on this device. Cross-device migration is coming later.';
+
+  @override
+  String get petEventHatched => 'Hatched';
+
+  @override
+  String get petEventCharged => 'Charged';
+
+  @override
+  String get petEventSurged => 'Surged';
+
+  @override
+  String get petEventResonated => 'Resonated';
+
+  @override
+  String get petEventStabilised => 'Stabilised';
+
+  @override
+  String get petEventSynced => 'Synced';
+
+  @override
+  String get petEventPurged => 'Purged';
+
+  @override
+  String get petEventDimmed => 'Dimmed';
+
+  @override
+  String get petEventInspected => 'Inspected';
+
+  @override
+  String get petEventHygieneArtefactAppeared => 'Stale field formed';
+
+  @override
+  String get petEventSicknessOnset => 'Fell sick';
+
+  @override
+  String get petEventSicknessRecovered => 'Recovered';
+
+  @override
+  String get petEventSleepEntered => 'Fell asleep';
+
+  @override
+  String get petEventSleepExited => 'Woke up';
+
+  @override
+  String get petEventCallStarted => 'Called for you';
+
+  @override
+  String get petEventCallAnswered => 'Call answered';
+
+  @override
+  String get petEventCallMissed => 'Call missed';
+
+  @override
+  String get petEventMistakeRecorded => 'Care gap';
+
+  @override
+  String get petEventStageAdvanced => 'Evolved';
+
+  @override
+  String get petEventBranchResolved => 'Branch revealed';
+
+  @override
+  String get petEventDormantEntered => 'Gone dormant';
+
+  @override
+  String get petEventReSigilled => 'New sigil cast';
 
   @override
   String get petDormantTitle => 'The sigil has gone quiet';
@@ -35972,4 +36099,182 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get petDormantDescription =>
       'Begin a new lineage — your next pet inherits a fresh seed tied to this node.';
+
+  @override
+  String get petCompanionSectionTitle => 'Companion';
+
+  @override
+  String get petCompanionUnknown => 'No sigil creature observed yet.';
+
+  @override
+  String petCompanionObservedRelative(String age) {
+    return 'Observed $age ago';
+  }
+
+  @override
+  String get petLiveStateActive => 'Active';
+
+  @override
+  String get petLiveStateCalm => 'Calm';
+
+  @override
+  String get petLiveStateIdle => 'Idle';
+
+  @override
+  String get petLiveStateSleepy => 'Sleepy';
+
+  @override
+  String get petLiveStateDormant => 'Dormant';
+
+  @override
+  String get petHatchBannerTitle => 'Hatched';
+
+  @override
+  String get petHatchBannerSubtitle =>
+      'Your sigil creature has emerged. Keep caring for it to shape its evolution.';
+
+  @override
+  String get petBranchBannerTitleLuminous => 'Evolved: Luminous';
+
+  @override
+  String get petBranchBannerSubtitleLuminous =>
+      'Pristine care paid off — your creature has taken its brightest form.';
+
+  @override
+  String get petBranchBannerTitleSteady => 'Evolved: Steady';
+
+  @override
+  String get petBranchBannerSubtitleSteady =>
+      'Balanced care has settled your creature into a calm, resilient form.';
+
+  @override
+  String get petBranchBannerTitleVolatile => 'Evolved: Volatile';
+
+  @override
+  String get petBranchBannerSubtitleVolatile =>
+      'Heavy surges have shaped a restless, energetic form.';
+
+  @override
+  String get petBranchBannerTitleDimmed => 'Evolved: Dimmed';
+
+  @override
+  String get petBranchBannerSubtitleDimmed =>
+      'Neglect has dimmed your creature — it may still be revived with steady care.';
+
+  @override
+  String get petElderBannerTitle => 'Matured';
+
+  @override
+  String get petElderBannerSubtitle =>
+      'Your creature has entered its elder phase.';
+
+  @override
+  String get petDormantBannerTitle => 'Gone dormant';
+
+  @override
+  String get petDormantBannerSubtitle =>
+      'The sigil has quieted. Re-sigil to begin a new lineage.';
+
+  @override
+  String get petReasonFullyCharged => 'Already full';
+
+  @override
+  String get petReasonMoodAlreadyFull => 'Already happy';
+
+  @override
+  String get petReasonStabilityAlreadyFull => 'Already steady';
+
+  @override
+  String get petReasonNothingToClean => 'Field is clean';
+
+  @override
+  String get petReasonNothingToSync => 'Nothing to sync';
+
+  @override
+  String get petReasonAlreadyAsleep => 'Already resting';
+
+  @override
+  String get petReasonAsleep => 'Resting right now';
+
+  @override
+  String get petReasonEgg => 'Still unhatched';
+
+  @override
+  String get petReasonDormant => 'Your sigil has gone quiet';
+
+  @override
+  String get petReasonNotSick => 'Not unwell';
+
+  @override
+  String get petReasonNotBedtime => 'Not bedtime yet';
+
+  @override
+  String get petReasonNotDormant => 'Pet is still alive';
+
+  @override
+  String get notificationChannelPetMilestones =>
+      'Hatch, evolution, and dormant moments for your NodePet.';
+
+  @override
+  String get notificationChannelPetCare =>
+      'Attention calls and sickness alerts for your NodePet.';
+
+  @override
+  String get notificationPetHatchedTitle => 'Your pet hatched';
+
+  @override
+  String get notificationPetHatchedBody =>
+      'Open NodePet to meet your sigil creature.';
+
+  @override
+  String get notificationPetEvolvedTitle => 'Your pet evolved';
+
+  @override
+  String notificationPetEvolvedBody(String branch) {
+    return 'New stage settled into the $branch branch.';
+  }
+
+  @override
+  String get notificationPetMaturedTitle => 'Your pet is an elder';
+
+  @override
+  String get notificationPetMaturedBody =>
+      'Open NodePet to see your pet\'s elder form.';
+
+  @override
+  String get notificationPetDormantTitle => 'Your pet has gone dormant';
+
+  @override
+  String get notificationPetDormantBody =>
+      'Open NodePet and Re-sigil to begin a new lineage.';
+
+  @override
+  String get notificationPetSickTitle => 'Your pet is unwell';
+
+  @override
+  String get notificationPetSickBody =>
+      'Open NodePet and Purge to help it recover.';
+
+  @override
+  String get notificationPetAttentionTitle => 'Your pet needs attention';
+
+  @override
+  String get notificationPetAttentionHungryBody => 'Low energy — tap Charge.';
+
+  @override
+  String get notificationPetAttentionLonelyBody =>
+      'Mood is drifting — tap Resonate.';
+
+  @override
+  String get notificationPetAttentionSickBody => 'Feeling unwell — tap Purge.';
+
+  @override
+  String get notificationPetAttentionHygieneBody =>
+      'Field needs stabilising — tap Stabilise.';
+
+  @override
+  String get notificationPetAttentionBedtimeBody => 'Almost bedtime — tap Dim.';
+
+  @override
+  String get notificationPetAttentionBoredomBody => 'Restless — tap Resonate.';
 }

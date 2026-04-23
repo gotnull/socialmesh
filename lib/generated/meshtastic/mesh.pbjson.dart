@@ -147,6 +147,10 @@ const HardwareModel$json = {
     {'1': 'MINI_EPAPER_S3', '2': 125},
     {'1': 'TDISPLAY_S3_PRO', '2': 126},
     {'1': 'HELTEC_MESH_NODE_T096', '2': 127},
+    {'1': 'TRACKER_T1000_E_PRO', '2': 128},
+    {'1': 'THINKNODE_M7', '2': 129},
+    {'1': 'THINKNODE_M8', '2': 130},
+    {'1': 'THINKNODE_M9', '2': 131},
     {'1': 'PRIVATE_HW', '2': 255},
   ],
 };
@@ -196,8 +200,9 @@ final $typed_data.Uint8List hardwareModelDescriptor = $convert.base64Decode(
     'RVNIX1RBUF9WMhB0EgsKB1JBSzM0MDEQdRILCgdSQUs2NDIxEHYSEAoMVEhJTktOT0RFX000EH'
     'cSEAoMVEhJTktOT0RFX002EHgSEgoOTUVTSFNUSUNLXzEyNjIQeRIQCgxUQkVBTV8xX1dBVFQQ'
     'ehIUChBUNV9TM19FUEFQRVJfUFJPEHsSDQoJVEJFQU1fQlBGEHwSEgoOTUlOSV9FUEFQRVJfUz'
-    'MQfRITCg9URElTUExBWV9TM19QUk8QfhIZChVIRUxURUNfTUVTSF9OT0RFX1QwOTYQfxIPCgpQ'
-    'UklWQVRFX0hXEP8B');
+    'MQfRITCg9URElTUExBWV9TM19QUk8QfhIZChVIRUxURUNfTUVTSF9OT0RFX1QwOTYQfxIYChNU'
+    'UkFDS0VSX1QxMDAwX0VfUFJPEIABEhEKDFRISU5LTk9ERV9NNxCBARIRCgxUSElOS05PREVfTT'
+    'gQggESEQoMVEhJTktOT0RFX005EIMBEg8KClBSSVZBVEVfSFcQ/wE=');
 
 @$core.Deprecated('Use constantsDescriptor instead')
 const Constants$json = {
@@ -732,6 +737,58 @@ final $typed_data.Uint8List storeForwardPlusPlusDescriptor = $convert.base64Deco
     'bkNvdW50IpUBChFTRlBQX21lc3NhZ2VfdHlwZRISCg5DQU5PTl9BTk5PVU5DRRAAEg8KC0NIQU'
     'lOX1FVRVJZEAESEAoMTElOS19SRVFVRVNUEAMSEAoMTElOS19QUk9WSURFEAQSGgoWTElOS19Q'
     'Uk9WSURFX0ZJUlNUSEFMRhAFEhsKF0xJTktfUFJPVklERV9TRUNPTkRIQUxGEAY=');
+
+@$core.Deprecated('Use remoteShellDescriptor instead')
+const RemoteShell$json = {
+  '1': 'RemoteShell',
+  '2': [
+    {
+      '1': 'op',
+      '3': 1,
+      '4': 1,
+      '5': 14,
+      '6': '.meshtastic.RemoteShell.OpCode',
+      '10': 'op'
+    },
+    {'1': 'session_id', '3': 2, '4': 1, '5': 13, '10': 'sessionId'},
+    {'1': 'seq', '3': 3, '4': 1, '5': 13, '10': 'seq'},
+    {'1': 'ack_seq', '3': 4, '4': 1, '5': 13, '10': 'ackSeq'},
+    {'1': 'payload', '3': 5, '4': 1, '5': 12, '10': 'payload'},
+    {'1': 'cols', '3': 6, '4': 1, '5': 13, '10': 'cols'},
+    {'1': 'rows', '3': 7, '4': 1, '5': 13, '10': 'rows'},
+    {'1': 'flags', '3': 8, '4': 1, '5': 13, '10': 'flags'},
+  ],
+  '4': [RemoteShell_OpCode$json],
+};
+
+@$core.Deprecated('Use remoteShellDescriptor instead')
+const RemoteShell_OpCode$json = {
+  '1': 'OpCode',
+  '2': [
+    {'1': 'OP_UNSET', '2': 0},
+    {'1': 'OPEN', '2': 1},
+    {'1': 'INPUT', '2': 2},
+    {'1': 'RESIZE', '2': 3},
+    {'1': 'CLOSE', '2': 4},
+    {'1': 'PING', '2': 5},
+    {'1': 'ACK', '2': 6},
+    {'1': 'OPEN_OK', '2': 64},
+    {'1': 'OUTPUT', '2': 65},
+    {'1': 'CLOSED', '2': 66},
+    {'1': 'ERROR', '2': 67},
+    {'1': 'PONG', '2': 68},
+  ],
+};
+
+/// Descriptor for `RemoteShell`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List remoteShellDescriptor = $convert.base64Decode(
+    'CgtSZW1vdGVTaGVsbBIuCgJvcBgBIAEoDjIeLm1lc2h0YXN0aWMuUmVtb3RlU2hlbGwuT3BDb2'
+    'RlUgJvcBIdCgpzZXNzaW9uX2lkGAIgASgNUglzZXNzaW9uSWQSEAoDc2VxGAMgASgNUgNzZXES'
+    'FwoHYWNrX3NlcRgEIAEoDVIGYWNrU2VxEhgKB3BheWxvYWQYBSABKAxSB3BheWxvYWQSEgoEY2'
+    '9scxgGIAEoDVIEY29scxISCgRyb3dzGAcgASgNUgRyb3dzEhQKBWZsYWdzGAggASgNUgVmbGFn'
+    'cyKPAQoGT3BDb2RlEgwKCE9QX1VOU0VUEAASCAoET1BFThABEgkKBUlOUFVUEAISCgoGUkVTSV'
+    'pFEAMSCQoFQ0xPU0UQBBIICgRQSU5HEAUSBwoDQUNLEAYSCwoHT1BFTl9PSxBAEgoKBk9VVFBV'
+    'VBBBEgoKBkNMT1NFRBBCEgkKBUVSUk9SEEMSCAoEUE9ORxBE');
 
 @$core.Deprecated('Use waypointDescriptor instead')
 const Waypoint$json = {

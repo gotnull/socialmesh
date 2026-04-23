@@ -22,10 +22,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
+import '../../../core/constants.dart';
 import '../../../core/logging.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/widgets/animated_empty_state.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
+import '../../pet/widgets/pet_mini_preview.dart';
 import '../../../providers/accessibility_providers.dart';
 import '../../../providers/app_providers.dart';
 import '../../../core/theme.dart';
@@ -69,7 +71,12 @@ class NodeDexScreen extends ConsumerStatefulWidget {
 
 class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
   final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.text = ref.read(nodeDexSearchProvider);
+  }
 
   @override
   void dispose() {
@@ -92,6 +99,7 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
     final myNodeNum = ref.watch(myNodeNumProvider);
     final radioPresetFilter = ref.watch(nodeDexRadioPresetFilterProvider);
     final observedPresets = ref.watch(nodeDexObservedPresetsProvider);
+    final searchQuery = ref.watch(nodeDexSearchProvider);
     final viewMode = ref.watch(albumViewModeProvider);
     final reduceMotion = ref.watch(reduceMotionEnabledProvider);
 
@@ -162,6 +170,7 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
                   radioPresetFilter: radioPresetFilter,
                   observedPresets: observedPresets,
                   reduceMotion: reduceMotion,
+                  searchQuery: searchQuery,
                 ),
         ),
       ),
@@ -226,6 +235,7 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
     required Set<int> radioPresetFilter,
     required Set<int> observedPresets,
     required bool reduceMotion,
+    required String searchQuery,
   }) {
     return [
       // Top padding below glass app bar
@@ -249,10 +259,9 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
         delegate: SearchFilterHeaderDelegate(
           textScaler: MediaQuery.textScalerOf(context),
           searchController: _searchController,
-          searchQuery: _searchQuery,
+          searchQuery: searchQuery,
           hintText: context.l10n.nodedexSearchHint,
           onSearchChanged: (value) {
-            setState(() => _searchQuery = value);
             ref.read(nodeDexSearchProvider.notifier).setQuery(value);
             if (value.isNotEmpty) {
               AppLogging.nodeDex('Search query changed: "$value"');
@@ -1187,6 +1196,12 @@ class _NodeDexListTile extends ConsumerWidget {
                   ],
                 ),
               ),
+
+              // Optional pet preview (cached remote observation)
+              if (AppFeatureFlags.isPetEnabled) ...[
+                PetMiniPreview(nodeNum: entry.nodeNum, size: 32),
+                const SizedBox(width: AppTheme.spacing4),
+              ],
 
               // Chevron
               const SizedBox(width: AppTheme.spacing4),

@@ -8,12 +8,18 @@ import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/info_table.dart';
 import '../../../core/widgets/section_header.dart';
+import '../../../l10n/app_localizations.dart';
 import '../models/pet_enums.dart';
 import '../providers/pet_providers.dart';
 
 /// Inspect sheet — the "status" screen for the pet. Read-only.
 class PetInspectSheet extends ConsumerWidget {
-  const PetInspectSheet({super.key});
+  /// Provided by `AppBottomSheet.showScrollable`'s builder — wired to
+  /// the internal ListView so drag gestures coordinate with scroll
+  /// position.
+  final ScrollController? scrollController;
+
+  const PetInspectSheet({super.key, this.scrollController});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -34,8 +40,7 @@ class PetInspectSheet extends ConsumerWidget {
     }
     final ageDays = state.ageInDaysAt(DateTime.now());
     return ListView(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
+      controller: scrollController,
       padding: const EdgeInsets.only(top: AppTheme.spacing8),
       children: [
         Text(
@@ -76,6 +81,13 @@ class PetInspectSheet extends ConsumerWidget {
               value: l10n.petAgeDaysLabel(ageDays),
               icon: Icons.schedule_outlined,
             ),
+            InfoTableRow(
+              label: l10n.petInspectRowInStage,
+              value: _elapsedLabel(
+                DateTime.now().difference(state.stageStartedAt),
+              ),
+              icon: Icons.timer_outlined,
+            ),
           ],
         ),
         const SizedBox(height: AppTheme.spacing16),
@@ -104,7 +116,7 @@ class PetInspectSheet extends ConsumerWidget {
         ),
         const SizedBox(height: AppTheme.spacing16),
         SectionTitle(title: l10n.petInspectSectionRecent),
-        _RecentEventsList(events: state.recentEvents),
+        _RecentEventsList(events: state.recentEvents, l10n: l10n),
         const SizedBox(height: AppTheme.spacing16),
         Text(
           l10n.petInspectDeviceLocalNote,
@@ -122,7 +134,8 @@ class PetInspectSheet extends ConsumerWidget {
 
 class _RecentEventsList extends StatelessWidget {
   final List<dynamic> events;
-  const _RecentEventsList({required this.events});
+  final AppLocalizations l10n;
+  const _RecentEventsList({required this.events, required this.l10n});
 
   @override
   Widget build(BuildContext context) {
@@ -167,9 +180,89 @@ class _RecentEventsList extends StatelessWidget {
   String _formatEvent(dynamic event) {
     final at = event.at as DateTime;
     final kind = event.kind as CareEventKind;
-    final hh = at.hour.toString().padLeft(2, '0');
-    final mm = at.minute.toString().padLeft(2, '0');
-    return '$hh:$mm  ${kind.name}';
+    return '${_eventLabel(kind, l10n)}  ·  ${_relativeTime(at, l10n)}';
+  }
+}
+
+String _relativeTime(DateTime at, AppLocalizations l10n) {
+  final diff = DateTime.now().difference(at);
+  if (diff.isNegative || diff.inMinutes < 1) return l10n.commonJustNow;
+  if (diff.inHours < 1) return l10n.commonMinutesAgo(diff.inMinutes);
+  if (diff.inDays < 1) return l10n.commonHoursAgo(diff.inHours);
+  return l10n.commonDaysAgo(diff.inDays);
+}
+
+/// Compact elapsed-duration label for the "In stage" row. Differs from
+/// [_relativeTime] in that it has no "ago" suffix — this is a forward-
+/// reading elapsed counter, not a past-tense timestamp.
+///
+///   < 1 m  → "<1m"
+///   < 1 h  → "12m"
+///   < 1 d  → "2h 15m"  (minutes only shown when > 0)
+///   ≥ 1 d  → "3d 4h"   (hours only shown when > 0)
+String _elapsedLabel(Duration d) {
+  if (d.isNegative || d.inMinutes < 1) {
+    return '<1m'; // lint-allow: hardcoded-string
+  }
+  if (d.inHours < 1) return '${d.inMinutes}m'; // lint-allow: hardcoded-string
+  if (d.inDays < 1) {
+    final h = d.inHours;
+    final m = d.inMinutes - h * 60;
+    return m > 0 ? '${h}h ${m}m' : '${h}h'; // lint-allow: hardcoded-string
+  }
+  final days = d.inDays;
+  final hours = d.inHours - days * 24;
+  return hours > 0
+      ? '${days}d ${hours}h'
+      : '${days}d'; // lint-allow: hardcoded-string
+}
+
+String _eventLabel(CareEventKind kind, AppLocalizations l10n) {
+  switch (kind) {
+    case CareEventKind.hatched:
+      return l10n.petEventHatched;
+    case CareEventKind.charged:
+      return l10n.petEventCharged;
+    case CareEventKind.surged:
+      return l10n.petEventSurged;
+    case CareEventKind.resonated:
+      return l10n.petEventResonated;
+    case CareEventKind.stabilised:
+      return l10n.petEventStabilised;
+    case CareEventKind.synced:
+      return l10n.petEventSynced;
+    case CareEventKind.purged:
+      return l10n.petEventPurged;
+    case CareEventKind.dimmed:
+      return l10n.petEventDimmed;
+    case CareEventKind.inspected:
+      return l10n.petEventInspected;
+    case CareEventKind.hygieneArtefactAppeared:
+      return l10n.petEventHygieneArtefactAppeared;
+    case CareEventKind.sicknessOnset:
+      return l10n.petEventSicknessOnset;
+    case CareEventKind.sicknessRecovered:
+      return l10n.petEventSicknessRecovered;
+    case CareEventKind.sleepEntered:
+      return l10n.petEventSleepEntered;
+    case CareEventKind.sleepExited:
+      return l10n.petEventSleepExited;
+    case CareEventKind.callStarted:
+      return l10n.petEventCallStarted;
+    case CareEventKind.callAnswered:
+      return l10n.petEventCallAnswered;
+    case CareEventKind.callMissed:
+      return l10n.petEventCallMissed;
+    case CareEventKind.mistakeRecorded:
+      return l10n.petEventMistakeRecorded;
+    case CareEventKind.stageAdvanced:
+      return l10n.petEventStageAdvanced;
+    case CareEventKind.branchResolved:
+      return l10n.petEventBranchResolved;
+    case CareEventKind.dormantEntered:
+      return l10n.petEventDormantEntered;
+    case CareEventKind.reSigilled:
+      return l10n.petEventReSigilled;
   }
 }
 

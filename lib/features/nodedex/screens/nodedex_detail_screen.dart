@@ -43,6 +43,7 @@ import '../../../providers/app_providers.dart';
 
 import '../../nodeboard/widgets/nodeboard_node_card.dart';
 import '../../nodes/node_display_name_resolver.dart';
+import '../../pet/widgets/pet_companion_card.dart';
 
 import '../../../services/protocol/sip/mrrp_types.dart';
 
@@ -248,6 +249,20 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
                 index: 2,
                 reduceMotion: reduceMotion,
                 child: NodeBoardNodeCard(nodeId: hexId),
+              ),
+            ),
+
+          // Pet companion card — peer's cached Node Pet observation.
+          if (AppFeatureFlags.isPetEnabled)
+            SliverToBoxAdapter(
+              child: _DetailEntrance(
+                index: 2,
+                reduceMotion: reduceMotion,
+                child: _CardContainer(
+                  title: context.l10n.petCompanionSectionTitle,
+                  icon: Icons.egg_alt_outlined,
+                  child: PetCompanionContent(nodeNum: entry.nodeNum),
+                ),
               ),
             ),
 

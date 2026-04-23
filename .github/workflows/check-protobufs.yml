@@ -91,17 +91,22 @@ jobs:
 
           ### Update Instructions
 
-          Run the following command to update:
+          Run the following commands in order:
 
           ```bash
-          ./scripts/generate_protos.sh update
-          ```
-
-          Or to update to a specific version:
-
-          ```bash
+          # 1. Regenerate protobufs from upstream.
           ./scripts/generate_protos.sh update LATEST_PLACEHOLDER
+
+          # 2. Refresh the upstream hardware catalog (used by device_hardware_catalog.dart
+          #    for hwModel → architecture mapping in the firmware update flow).
+          ./scripts/fetch_device_hardware.sh
+
+          # 3. Run the parity test — this is the signal for whether the supplement
+          #    in lib/services/firmware/device_hardware_catalog.dart needs editing.
+          flutter test test/services/firmware/hardware_architecture_test.dart
           ```
+
+          If step 1 prints `✅ Protobuf generation complete!` but `git status lib/generated/` shows nothing changed, run `./scripts/generate_protos.sh generate` once more — the noisy pub-cache output can mask a silently-skipped codegen step.
 
           ### Release Notes
 
@@ -110,12 +115,15 @@ jobs:
 
           ### Checklist
 
-          - [ ] Update protobufs using the script above
-          - [ ] Review generated Dart code changes
+          - [ ] Run `./scripts/generate_protos.sh update LATEST_PLACEHOLDER` — verify `protos/VERSION` and `lib/generated/meshtastic/` changed
+          - [ ] Run `./scripts/fetch_device_hardware.sh` — review any reported architecture mismatches or redundant supplement entries
+          - [ ] Run `flutter test test/services/firmware/hardware_architecture_test.dart` — if a new `HardwareModel` lacks coverage, add it to `_supplement` in `lib/services/firmware/device_hardware_catalog.dart`; if architecture is unclear, map to `DeviceArchitecture.unknown` (never guess)
+          - [ ] Review generated Dart diff in `lib/generated/meshtastic/` for unexpected field reorderings
+          - [ ] Update any app code affected by new PortNum / message type changes (search for `default:` in `lib/services/protocol/protocol_service.dart` portnum switch)
           - [ ] Test with a physical Meshtastic device
-          - [ ] Update any app code affected by protobuf changes
-          - [ ] Run `flutter test test/services/firmware/hardware_architecture_test.dart` — if new HardwareModel values were added, update `_hwModelToArchitecture` in `lib/services/firmware/hardware_architecture.dart`
-          - [ ] Commit and push changes
+          - [ ] Commit and push changes (use `Closes #<issue>` in the commit message to auto-close)
+
+          See `CLAUDE.md` → "Meshtastic Protobuf Updates" for the full workflow and rationale.
 
           ---
           *This issue was automatically created by the protobuf update checker.*

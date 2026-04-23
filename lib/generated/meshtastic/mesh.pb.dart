@@ -1296,6 +1296,164 @@ class StoreForwardPlusPlus extends $pb.GeneratedMessage {
 }
 
 ///
+///  The actual over-the-mesh message doing RemoteShell
+class RemoteShell extends $pb.GeneratedMessage {
+  factory RemoteShell({
+    RemoteShell_OpCode? op,
+    $core.int? sessionId,
+    $core.int? seq,
+    $core.int? ackSeq,
+    $core.List<$core.int>? payload,
+    $core.int? cols,
+    $core.int? rows,
+    $core.int? flags,
+  }) {
+    final result = create();
+    if (op != null) result.op = op;
+    if (sessionId != null) result.sessionId = sessionId;
+    if (seq != null) result.seq = seq;
+    if (ackSeq != null) result.ackSeq = ackSeq;
+    if (payload != null) result.payload = payload;
+    if (cols != null) result.cols = cols;
+    if (rows != null) result.rows = rows;
+    if (flags != null) result.flags = flags;
+    return result;
+  }
+
+  RemoteShell._();
+
+  factory RemoteShell.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory RemoteShell.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RemoteShell',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aE<RemoteShell_OpCode>(1, _omitFieldNames ? '' : 'op',
+        enumValues: RemoteShell_OpCode.values)
+    ..aI(2, _omitFieldNames ? '' : 'sessionId', fieldType: $pb.PbFieldType.OU3)
+    ..aI(3, _omitFieldNames ? '' : 'seq', fieldType: $pb.PbFieldType.OU3)
+    ..aI(4, _omitFieldNames ? '' : 'ackSeq', fieldType: $pb.PbFieldType.OU3)
+    ..a<$core.List<$core.int>>(
+        5, _omitFieldNames ? '' : 'payload', $pb.PbFieldType.OY)
+    ..aI(6, _omitFieldNames ? '' : 'cols', fieldType: $pb.PbFieldType.OU3)
+    ..aI(7, _omitFieldNames ? '' : 'rows', fieldType: $pb.PbFieldType.OU3)
+    ..aI(8, _omitFieldNames ? '' : 'flags', fieldType: $pb.PbFieldType.OU3)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RemoteShell clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RemoteShell copyWith(void Function(RemoteShell) updates) =>
+      super.copyWith((message) => updates(message as RemoteShell))
+          as RemoteShell;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static RemoteShell create() => RemoteShell._();
+  @$core.override
+  RemoteShell createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static RemoteShell getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RemoteShell>(create);
+  static RemoteShell? _defaultInstance;
+
+  ///
+  ///  Structured frame operation.
+  @$pb.TagNumber(1)
+  RemoteShell_OpCode get op => $_getN(0);
+  @$pb.TagNumber(1)
+  set op(RemoteShell_OpCode value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasOp() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearOp() => $_clearField(1);
+
+  ///
+  ///  Logical PTY session identifier.
+  @$pb.TagNumber(2)
+  $core.int get sessionId => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set sessionId($core.int value) => $_setUnsignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasSessionId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSessionId() => $_clearField(2);
+
+  ///
+  ///  Monotonic sequence number for this frame.
+  @$pb.TagNumber(3)
+  $core.int get seq => $_getIZ(2);
+  @$pb.TagNumber(3)
+  set seq($core.int value) => $_setUnsignedInt32(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasSeq() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearSeq() => $_clearField(3);
+
+  ///
+  ///  Cumulative ack sequence number.
+  @$pb.TagNumber(4)
+  $core.int get ackSeq => $_getIZ(3);
+  @$pb.TagNumber(4)
+  set ackSeq($core.int value) => $_setUnsignedInt32(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasAckSeq() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearAckSeq() => $_clearField(4);
+
+  ///
+  ///  Opaque bytes payload for INPUT/OUTPUT/ERROR and other frame bodies.
+  @$pb.TagNumber(5)
+  $core.List<$core.int> get payload => $_getN(4);
+  @$pb.TagNumber(5)
+  set payload($core.List<$core.int> value) => $_setBytes(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasPayload() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearPayload() => $_clearField(5);
+
+  ///
+  ///  Terminal size columns used for OPEN/RESIZE signaling.
+  @$pb.TagNumber(6)
+  $core.int get cols => $_getIZ(5);
+  @$pb.TagNumber(6)
+  set cols($core.int value) => $_setUnsignedInt32(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasCols() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearCols() => $_clearField(6);
+
+  ///
+  ///  Terminal size rows used for OPEN/RESIZE signaling.
+  @$pb.TagNumber(7)
+  $core.int get rows => $_getIZ(6);
+  @$pb.TagNumber(7)
+  set rows($core.int value) => $_setUnsignedInt32(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasRows() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearRows() => $_clearField(7);
+
+  ///
+  ///  Bit flags for protocol extensions.
+  @$pb.TagNumber(8)
+  $core.int get flags => $_getIZ(7);
+  @$pb.TagNumber(8)
+  set flags($core.int value) => $_setUnsignedInt32(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasFlags() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearFlags() => $_clearField(8);
+}
+
+///
 ///  Waypoint message, used to share arbitrary locations across the mesh
 class Waypoint extends $pb.GeneratedMessage {
   factory Waypoint({

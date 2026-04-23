@@ -23,6 +23,7 @@ import '../services/protocol/sip/mrrp_service_board.dart';
 import '../services/protocol/sip/mrrp_service_echo.dart';
 import '../services/protocol/sip/mrrp_service_incident.dart';
 import '../services/protocol/sip/mrrp_service_meetup.dart';
+import '../services/protocol/sip/mrrp_service_pet.dart';
 import '../services/protocol/sip/mrrp_service_profile.dart';
 import '../services/protocol/sip/mrrp_service_registry.dart';
 import '../services/protocol/sip/mrrp_simulated_peer.dart';
@@ -32,6 +33,8 @@ import '../services/protocol/sip/sip_types.dart';
 import 'app_providers.dart';
 import 'sip_providers.dart';
 import '../features/incidents/providers/mesh_incident_providers.dart';
+import '../features/pet/providers/pet_providers.dart';
+import '../features/pet/services/pet_public_state_codec.dart';
 
 /// Whether MRRP is enabled (sourced from SmFeatureFlag).
 final mrrpEnabledProvider = NotifierProvider<MrrpEnabledNotifier, bool>(
@@ -132,6 +135,27 @@ final mrrpServiceRegistryProvider = Provider<MrrpServiceRegistry?>((ref) {
       incident,
       MrrpServiceDescriptor(
         serviceId: MrrpServiceId.incidentV1,
+        serviceType: MrrpServiceType.app,
+        serviceFlags:
+            MrrpServiceFlags.supportsRequest |
+            MrrpServiceFlags.supportsResponse,
+      ),
+    );
+  }
+
+  // pet.v1 — opt-in compact owner pet public state.
+  if (AppFeatureFlags.isPetEnabled) {
+    final pet = MrrpServicePet(
+      bytesProvider: () {
+        final public = ref.read(petPublicStateProvider);
+        if (public == null) return null;
+        return PetPublicStateCodec.encode(public);
+      },
+    );
+    registry.register(
+      pet,
+      MrrpServiceDescriptor(
+        serviceId: MrrpServiceId.petV1,
         serviceType: MrrpServiceType.app,
         serviceFlags:
             MrrpServiceFlags.supportsRequest |
@@ -402,6 +426,38 @@ final mrrpEngineProvider = Provider<MrrpEngine?>((ref) {
     profileHandler.isProfileSharingEnabled = ref.watch(
       meshPrivacyProfileSharingProvider,
     );
+  }
+
+  // Wire pet sharing on the pet.v1 handler. For v1, the feature flag
+  // itself is the privacy gate; a user-visible opt-out toggle comes
+  // with the NodeDex peer-visibility work.
+  final petHandler = registry.getHandler(MrrpServiceId.petV1);
+  if (petHandler is MrrpServicePet) {
+    petHandler.isPetSharingEnabled = AppFeatureFlags.isPetEnabled;
+  }
+
+  // Wire inbound pet.v1 response ingestion. The observer fires on every
+  // RESPONSE/ERROR whose dedup check passed; we inspect the service ID
+  // and (on success) decode the 8-byte PetPublicState from the payload,
+  // then write it to the remote_pet_cache keyed by the authoritative
+  // sender nodeNum from the Meshtastic packet — NOT by a requester-side
+  // assumed target (see peer-targeting notes in pet_remote_client.dart).
+  if (AppFeatureFlags.isPetEnabled) {
+    engine.onResponseObserved = (frame, senderNodeId) {
+      if (frame.serviceId != MrrpServiceId.petV1) return;
+      if (frame.actionId != PetAction.getSummary) return;
+      if ((frame.flags & MrrpFlags.isError) != 0) return;
+      if (frame.payload.isEmpty) return; // peer has no pet bound
+      final decoded = PetPublicStateCodec.tryDecode(
+        Uint8List.fromList(frame.payload),
+      );
+      if (decoded == null) return;
+      // ref.read is safe here — we're inside a provider body's closure,
+      // not rebuilding. Fire-and-forget; failures are logged internally.
+      ref
+          .read(petIngestControllerProvider)
+          .ingestRemotePet(senderNodeId, decoded);
+    };
   }
 
   // Start the engine BEFORE attaching to the protocol service.

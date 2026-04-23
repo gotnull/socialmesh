@@ -156,6 +156,9 @@ abstract final class MrrpServiceId {
   /// incident.v1 — structured incident/emergency reporting.
   static const int incidentV1 = 0x00000004;
 
+  /// pet.v1 — opt-in compact owner-pet public state (~8 B per peer).
+  static const int petV1 = 0x00000005;
+
   /// echo.test — harness-only echo service.
   static const int echoTest = 0xFFFF0001;
 
@@ -170,6 +173,8 @@ abstract final class MrrpServiceId {
         return 'board.v1'; // lint-allow: hardcoded-string
       case incidentV1:
         return 'incident.v1'; // lint-allow: hardcoded-string
+      case petV1:
+        return 'pet.v1'; // lint-allow: hardcoded-string
       case echoTest:
         return 'echo.test'; // lint-allow: hardcoded-string
       default:
@@ -241,6 +246,16 @@ abstract final class ProfileAction {
   static const int getSummary = 0x0001;
   static const int getContactCard = 0x0002;
   static const int getCapabilities = 0x0003;
+}
+
+/// Well-known action IDs for pet.v1 service.
+///
+/// See `docs/sip/MRRP_SERVICES_V0_1.md` for the spec entry (to be added).
+/// Wire format for the get_summary response is the 8-byte PetPublicState
+/// codec v1 (schema_tag 0x01). Empty 0-byte response signals "no pet
+/// bound yet" — the requester treats this as a silent no-op.
+abstract final class PetAction {
+  static const int getSummary = 0x0001;
 }
 
 /// Well-known action IDs for board.v1 service.

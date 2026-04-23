@@ -121,6 +121,11 @@ class PortNum extends $pb.ProtobufEnum {
       PortNum._(12, _omitEnumNames ? '' : 'KEY_VERIFICATION_APP');
 
   ///
+  ///  Module/port for handling primitive remote shell access.
+  static const PortNum REMOTE_SHELL_APP =
+      PortNum._(13, _omitEnumNames ? '' : 'REMOTE_SHELL_APP');
+
+  ///
   ///  Provides a 'ping' service that replies to any packet it receives.
   ///  Also serves as a small example module.
   ///  ENCODING: ASCII Plaintext
@@ -251,6 +256,13 @@ class PortNum extends $pb.ProtobufEnum {
       PortNum._(77, _omitEnumNames ? '' : 'CAYENNE_APP');
 
   ///
+  ///  ATAK Plugin V2
+  ///  Portnum for payloads from the official Meshtastic ATAK plugin using
+  ///  TAKPacketV2 with zstd dictionary compression.
+  static const PortNum ATAK_PLUGIN_V2 =
+      PortNum._(78, _omitEnumNames ? '' : 'ATAK_PLUGIN_V2');
+
+  ///
   ///  GroupAlarm integration
   ///  Used for transporting GroupAlarm-related messages between Meshtastic nodes
   ///  and companion applications/services.
@@ -288,6 +300,7 @@ class PortNum extends $pb.ProtobufEnum {
     DETECTION_SENSOR_APP,
     ALERT_APP,
     KEY_VERIFICATION_APP,
+    REMOTE_SHELL_APP,
     REPLY_APP,
     IP_TUNNEL_APP,
     PAXCOUNTER_APP,
@@ -307,6 +320,7 @@ class PortNum extends $pb.ProtobufEnum {
     LORAWAN_BRIDGE,
     RETICULUM_TUNNEL_APP,
     CAYENNE_APP,
+    ATAK_PLUGIN_V2,
     GROUPALARM_APP,
     PRIVATE_APP,
     ATAK_FORWARDER,

@@ -18,6 +18,7 @@ import 'dart:math' as math;
 import '../models/attention_call.dart';
 import '../models/care_accumulators.dart';
 import '../models/care_event.dart';
+import '../models/pet_action_result.dart';
 import '../models/pet_config.dart';
 import '../models/pet_enums.dart';
 import '../models/pet_state.dart';
@@ -78,23 +79,56 @@ class PetCareEngine {
   }
 
   // ---- Exact-simulation mode -------------------------------------------
+  //
+  // Stage transitions are time-exact: each stage has a configured duration
+  // and fires at `stageStartedAt + duration`, independent of the 30-minute
+  // care-tick cadence. Care ticks only drive decay, hygiene spawns,
+  // sickness, and call lifecycle — the care-loop rhythm. To honour both
+  // rhythms at once we interleave the two event streams in chronological
+  // order, firing whichever boundary comes first each iteration.
 
   PetState _advanceExact(PetState state, DateTime now) {
     var s = state;
-    // Advance one care tick at a time so decisions that depend on
-    // sleep-window boundaries (e.g. bedtime call) fire at the right moment.
     while (true) {
-      final nextTick = s.lastTickAt.add(config.careTickDuration);
-      if (nextTick.isAfter(now)) break;
-      s = _applyCareTick(s, nextTick);
+      final nextCareTick = s.lastTickAt.add(config.careTickDuration);
+      final nextStageAt = _nextStageBoundaryAt(s);
+      final tickDue = !nextCareTick.isAfter(now);
+      final stageDue = nextStageAt != null && !nextStageAt.isAfter(now);
+
+      if (!tickDue && !stageDue) break;
+
+      // Pick the earlier event. If tied, fire the stage transition first
+      // so the new stage governs anything the care tick might do.
+      final fireStage =
+          stageDue && (!tickDue || !nextStageAt.isAfter(nextCareTick));
+
+      if (fireStage) {
+        // Flush time-only effects up to the transition instant, then
+        // advance the stage. lastTickAt jumps to the transition moment.
+        s = _applyTimeOnlyTransitions(s, nextStageAt);
+        s = s.copyWith(lastTickAt: nextStageAt);
+        s = _applyStageTransition(s, nextStageAt);
+      } else {
+        s = _applyCareTick(s, nextCareTick);
+      }
     }
-    // Handle the partial tick's worth of time-only effects (sleep/wake and
-    // call expiry transitions need to fire even when no full tick elapsed).
+
+    // Partial sub-tick between the last event and now — lets sleep/wake
+    // edge transitions and call expiry fire even when no full care tick
+    // or stage boundary was crossed.
     if (now.isAfter(s.lastTickAt)) {
       s = _applyTimeOnlyTransitions(s, now);
       s = s.copyWith(lastTickAt: now);
     }
     return s;
+  }
+
+  /// The instant at which [s] will next cross a stage boundary, or null
+  /// if [s] is in a terminal stage (dormant).
+  DateTime? _nextStageBoundaryAt(PetState s) {
+    final duration = evolution.durationFor(s.stage);
+    if (duration == null) return null;
+    return s.stageStartedAt.add(duration);
   }
 
   PetState _applyCareTick(PetState s, DateTime tickTime) {
@@ -168,8 +202,9 @@ class PetCareEngine {
     // Advance lastTickAt to this tick's instant.
     next = next.copyWith(lastTickAt: tickTime);
 
-    // Stage transitions happen on tick boundaries.
-    next = _maybeAdvanceStage(next, tickTime);
+    // Stage transitions are handled by the outer _advanceExact loop
+    // at their exact configured boundaries, not here — see
+    // _advanceExact / _applyStageTransition.
 
     return next;
   }
@@ -258,14 +293,14 @@ class PetCareEngine {
     );
   }
 
-  PetState _maybeAdvanceStage(PetState s, DateTime now) {
-    if (!evolution.shouldAdvance(
-      stage: s.stage,
-      stageStartedAt: s.stageStartedAt,
-      now: now,
-    )) {
-      return s;
-    }
+  /// Transition [s] to the next stage at [transitionAt]. Resolves the
+  /// branch, resets stage accumulators, and appends the transition
+  /// events. No time guard — the caller must have already verified that
+  /// [transitionAt] is at or after the current stage's duration boundary
+  /// (see [_advanceExact] and [_advanceBounded]).
+  ///
+  /// Returns [s] unchanged if the stage is terminal (dormant).
+  PetState _applyStageTransition(PetState s, DateTime transitionAt) {
     final nextStage = evolution.nextStage(s.stage);
     if (nextStage == s.stage) return s;
 
@@ -275,17 +310,28 @@ class PetCareEngine {
       current: s.branch,
       acc: s.stageAccumulators,
     );
+    // Egg → juvenile is the player-facing "Hatched" moment and emits
+    // `hatched` INSTEAD OF `stageAdvanced`. Every downstream consumer
+    // that filters on "stage transition" must accept either kind (see
+    // PetNotificationDispatcher._isStageTransitionKind and
+    // PetAnimationTracker). This keeps the recent-events feed from
+    // showing both "Hatched" and "Evolved" at the same timestamp.
+    final isHatching =
+        s.stage == PetStage.egg && nextStage == PetStage.juvenile;
     final events = <CareEvent>[
-      CareEvent(at: now, kind: CareEventKind.stageAdvanced),
+      if (isHatching)
+        CareEvent(at: transitionAt, kind: CareEventKind.hatched)
+      else
+        CareEvent(at: transitionAt, kind: CareEventKind.stageAdvanced),
       if (s.stage == PetStage.adolescent && nextStage == PetStage.adult)
-        CareEvent(at: now, kind: CareEventKind.branchResolved),
+        CareEvent(at: transitionAt, kind: CareEventKind.branchResolved),
       if (nextStage == PetStage.dormant)
-        CareEvent(at: now, kind: CareEventKind.dormantEntered),
+        CareEvent(at: transitionAt, kind: CareEventKind.dormantEntered),
     ];
     return s.copyWith(
       stage: nextStage,
       branch: nextBranch,
-      stageStartedAt: now,
+      stageStartedAt: transitionAt,
       stageAccumulators: const CareAccumulators.empty(),
       recentEvents: _appendEvents(s.recentEvents, events),
     );
@@ -339,14 +385,14 @@ class PetCareEngine {
       recentEvents: _appendEvents(state.recentEvents, events),
     );
 
-    // Walk the stage chain based on actual elapsed time, not per-transition
-    // `now`. This lets a multi-stage absence step through every boundary.
+    // Walk the stage chain based on actual elapsed time, stepping
+    // through every boundary crossed during the gap.
     while (true) {
       final duration = evolution.durationFor(projected.stage);
       if (duration == null) break;
       final transitionAt = projected.stageStartedAt.add(duration);
       if (transitionAt.isAfter(now)) break;
-      final advanced = _maybeAdvanceStage(
+      final advanced = _applyStageTransition(
         projected.copyWith(lastTickAt: transitionAt),
         transitionAt,
       );
@@ -360,118 +406,286 @@ class PetCareEngine {
 
   // ---- Player actions --------------------------------------------------
 
-  PetState applyAction(PetState state, CareAction action, DateTime now) {
+  /// Apply [action] to [state] and return a structured result describing
+  /// what the engine did. The result's [PetActionResult.state] is the
+  /// (possibly-unchanged) post-action state; its [PetActionOutcome] tells
+  /// the UI whether to show a toast, a no-op reaction, or nothing at all.
+  ///
+  /// Action semantics:
+  ///   - **charge/surge**: invalid while asleep / egg / dormant; capped
+  ///     when energy is at max AND there's no hungry call to answer.
+  ///   - **resonate**: invalid while asleep / egg / dormant; notNeeded
+  ///     when mood is at max AND there's no lonely call to answer.
+  ///   - **stabilise**: notNeeded when no hygiene artefact exists.
+  ///   - **sync**: notNeeded when no active call AND stability is at max.
+  ///   - **purge**: invalid (notSick) unless the pet is sick.
+  ///   - **dim**: invalid outside the sleep window; notNeeded when
+  ///     already asleep.
+  ///   - **inspect**: always applied (opens the detail sheet).
+  ///   - **reSigil**: invalid unless dormant — the controller layer
+  ///     handles the actual replacement because it needs to mint a new
+  ///     PetState from scratch.
+  PetActionResult applyAction(PetState state, CareAction action, DateTime now) {
     // Always advance first so the action applies to the "current" state.
-    var s = advanceTo(state, now);
+    final base = advanceTo(state, now);
 
     switch (action) {
       case CareAction.charge:
-        if (s.isAsleep) return s;
-        s = _answerCallIfMatching(s, now, CallReason.hungry);
-        s = s.copyWith(
-          energy: _clampStat(s.energy + 3),
-          recentEvents: _appendEvent(
-            s.recentEvents,
-            CareEvent(at: now, kind: CareEventKind.charged),
-          ),
-        );
-        break;
-
+        return _applyCharge(base, now);
       case CareAction.surge:
-        if (s.isAsleep) return s;
-        s = _answerCallIfMatching(s, now, CallReason.hungry);
-        final acc = s.stageAccumulators;
-        s = s.copyWith(
-          energy: _clampStat(s.energy + 5),
-          instability: _clampStat(s.instability + config.instabilityPerSurge),
-          stageAccumulators: acc.copyWith(surges: acc.surges + 1),
-          recentEvents: _appendEvent(
-            s.recentEvents,
-            CareEvent(at: now, kind: CareEventKind.surged),
-          ),
-        );
-        break;
-
+        return _applySurge(base, now);
       case CareAction.resonate:
-        if (s.isAsleep) return s;
-        s = _answerCallIfMatching(s, now, CallReason.lonely);
-        s = s.copyWith(
-          mood: _clampStat(s.mood + 3),
-          stability: _clampStat(s.stability + 1),
-          recentEvents: _appendEvent(
-            s.recentEvents,
-            CareEvent(at: now, kind: CareEventKind.resonated),
-          ),
-        );
-        break;
-
+        return _applyResonate(base, now);
       case CareAction.stabilise:
-        if (s.hygieneArtefacts.isEmpty) return s;
-        s = _answerCallIfMatching(s, now, CallReason.hygiene);
-        s = s.copyWith(
-          hygieneArtefacts: const [],
-          stability: _clampStat(s.stability + 2),
-          recentEvents: _appendEvent(
-            s.recentEvents,
-            CareEvent(at: now, kind: CareEventKind.stabilised),
-          ),
-        );
-        break;
-
+        return _applyStabilise(base, now);
       case CareAction.sync:
-        final acc = s.stageAccumulators;
-        s = s.copyWith(
-          stability: _clampStat(s.stability + 2),
-          stageAccumulators: acc.copyWith(
-            disciplineCorrections: acc.disciplineCorrections + 1,
-          ),
-          recentEvents: _appendEvent(
-            s.recentEvents,
-            CareEvent(at: now, kind: CareEventKind.synced),
-          ),
-        );
-        break;
-
+        return _applySync(base, now);
       case CareAction.purge:
-        if (!s.isSick) return s;
-        s = _answerCallIfMatching(s, now, CallReason.sick);
-        s = s.copyWith(
-          isSick: false,
-          instability: math.max(0, s.instability - 3),
-          recentEvents: _appendEvents(s.recentEvents, [
-            CareEvent(at: now, kind: CareEventKind.purged),
-            CareEvent(at: now, kind: CareEventKind.sicknessRecovered),
-          ]),
-        );
-        break;
-
+        return _applyPurge(base, now);
       case CareAction.dim:
-        // Dim only meaningful inside or near sleep window.
-        s = _answerCallIfMatching(s, now, CallReason.bedtime);
-        s = s.copyWith(
-          isAsleep: true,
-          recentEvents: _appendEvent(
-            s.recentEvents,
-            CareEvent(at: now, kind: CareEventKind.dimmed),
-          ),
-        );
-        break;
-
+        return _applyDim(base, now);
       case CareAction.inspect:
-        s = s.copyWith(
-          recentEvents: _appendEvent(
-            s.recentEvents,
-            CareEvent(at: now, kind: CareEventKind.inspected),
-          ),
-        );
-        break;
-
+        return _applyInspect(base, now);
       case CareAction.reSigil:
-        // Handled one level up (replaces state with a fresh egg).
-        break;
+        return _applyReSigil(base, action);
     }
+  }
 
-    return s;
+  // ---- Per-action handlers ---------------------------------------------
+
+  /// Returns a refusal result when [s]'s life-cycle stage (egg or
+  /// dormant) forbids the interactive action, or null when the stage is
+  /// permissive and the caller should continue checking other guards.
+  PetActionResult? _refuseForLifeStage(PetState s, CareAction action) {
+    if (s.stage == PetStage.egg) {
+      return PetActionResult.invalidInState(
+        state: s,
+        action: action,
+        reason: PetActionReason.egg,
+      );
+    }
+    if (s.stage == PetStage.dormant) {
+      return PetActionResult.invalidInState(
+        state: s,
+        action: action,
+        reason: PetActionReason.dormant,
+      );
+    }
+    return null;
+  }
+
+  PetActionResult _applyCharge(PetState s, DateTime now) {
+    final refusal = _refuseForLifeStage(s, CareAction.charge);
+    if (refusal != null) return refusal;
+    if (s.isAsleep) {
+      return PetActionResult.invalidInState(
+        state: s,
+        action: CareAction.charge,
+        reason: PetActionReason.asleep,
+      );
+    }
+    final hasHungryCall = s.activeCall?.reason == CallReason.hungry;
+    if (s.energy >= config.statMax && !hasHungryCall) {
+      return PetActionResult.capped(
+        state: s,
+        action: CareAction.charge,
+        reason: PetActionReason.fullyCharged,
+      );
+    }
+    var next = _answerCallIfMatching(s, now, CallReason.hungry);
+    next = next.copyWith(
+      energy: _clampStat(next.energy + 3),
+      recentEvents: _appendEvent(
+        next.recentEvents,
+        CareEvent(at: now, kind: CareEventKind.charged),
+      ),
+    );
+    return PetActionResult.applied(state: next, action: CareAction.charge);
+  }
+
+  PetActionResult _applySurge(PetState s, DateTime now) {
+    final refusal = _refuseForLifeStage(s, CareAction.surge);
+    if (refusal != null) return refusal;
+    if (s.isAsleep) {
+      return PetActionResult.invalidInState(
+        state: s,
+        action: CareAction.surge,
+        reason: PetActionReason.asleep,
+      );
+    }
+    final hasHungryCall = s.activeCall?.reason == CallReason.hungry;
+    if (s.energy >= config.statMax && !hasHungryCall) {
+      return PetActionResult.capped(
+        state: s,
+        action: CareAction.surge,
+        reason: PetActionReason.fullyCharged,
+      );
+    }
+    var next = _answerCallIfMatching(s, now, CallReason.hungry);
+    final acc = next.stageAccumulators;
+    next = next.copyWith(
+      energy: _clampStat(next.energy + 5),
+      instability: _clampStat(next.instability + config.instabilityPerSurge),
+      stageAccumulators: acc.copyWith(surges: acc.surges + 1),
+      recentEvents: _appendEvent(
+        next.recentEvents,
+        CareEvent(at: now, kind: CareEventKind.surged),
+      ),
+    );
+    return PetActionResult.applied(state: next, action: CareAction.surge);
+  }
+
+  PetActionResult _applyResonate(PetState s, DateTime now) {
+    final refusal = _refuseForLifeStage(s, CareAction.resonate);
+    if (refusal != null) return refusal;
+    if (s.isAsleep) {
+      return PetActionResult.invalidInState(
+        state: s,
+        action: CareAction.resonate,
+        reason: PetActionReason.asleep,
+      );
+    }
+    final hasLonelyCall = s.activeCall?.reason == CallReason.lonely;
+    if (s.mood >= config.statMax && !hasLonelyCall) {
+      return PetActionResult.notNeeded(
+        state: s,
+        action: CareAction.resonate,
+        reason: PetActionReason.moodAlreadyFull,
+      );
+    }
+    var next = _answerCallIfMatching(s, now, CallReason.lonely);
+    next = next.copyWith(
+      mood: _clampStat(next.mood + 3),
+      stability: _clampStat(next.stability + 1),
+      recentEvents: _appendEvent(
+        next.recentEvents,
+        CareEvent(at: now, kind: CareEventKind.resonated),
+      ),
+    );
+    return PetActionResult.applied(state: next, action: CareAction.resonate);
+  }
+
+  PetActionResult _applyStabilise(PetState s, DateTime now) {
+    if (s.hygieneArtefacts.isEmpty) {
+      return PetActionResult.notNeeded(
+        state: s,
+        action: CareAction.stabilise,
+        reason: PetActionReason.nothingToClean,
+      );
+    }
+    var next = _answerCallIfMatching(s, now, CallReason.hygiene);
+    next = next.copyWith(
+      hygieneArtefacts: const [],
+      stability: _clampStat(next.stability + 2),
+      recentEvents: _appendEvent(
+        next.recentEvents,
+        CareEvent(at: now, kind: CareEventKind.stabilised),
+      ),
+    );
+    return PetActionResult.applied(state: next, action: CareAction.stabilise);
+  }
+
+  PetActionResult _applySync(PetState s, DateTime now) {
+    // Sync is meaningful when there's an active attention call (of any
+    // reason — it counts as a discipline correction) OR when stability
+    // is below its ceiling. Otherwise "nothing to sync".
+    final hasCall = s.activeCall != null;
+    final stabilityCanRise = s.stability < config.statMax;
+    if (!hasCall && !stabilityCanRise) {
+      return PetActionResult.notNeeded(
+        state: s,
+        action: CareAction.sync,
+        reason: PetActionReason.nothingToSync,
+      );
+    }
+    var next = s;
+    if (hasCall) {
+      // Answer whatever call is active — Sync is the universal "I'm
+      // paying attention" tap.
+      next = _answerCallIfMatching(next, now, next.activeCall!.reason);
+    }
+    final acc = next.stageAccumulators;
+    next = next.copyWith(
+      stability: _clampStat(next.stability + 2),
+      stageAccumulators: acc.copyWith(
+        disciplineCorrections: acc.disciplineCorrections + 1,
+      ),
+      recentEvents: _appendEvent(
+        next.recentEvents,
+        CareEvent(at: now, kind: CareEventKind.synced),
+      ),
+    );
+    return PetActionResult.applied(state: next, action: CareAction.sync);
+  }
+
+  PetActionResult _applyPurge(PetState s, DateTime now) {
+    if (!s.isSick) {
+      return PetActionResult.invalidInState(
+        state: s,
+        action: CareAction.purge,
+        reason: PetActionReason.notSick,
+      );
+    }
+    var next = _answerCallIfMatching(s, now, CallReason.sick);
+    next = next.copyWith(
+      isSick: false,
+      instability: math.max(0, next.instability - 3),
+      recentEvents: _appendEvents(next.recentEvents, [
+        CareEvent(at: now, kind: CareEventKind.purged),
+        CareEvent(at: now, kind: CareEventKind.sicknessRecovered),
+      ]),
+    );
+    return PetActionResult.applied(state: next, action: CareAction.purge);
+  }
+
+  PetActionResult _applyDim(PetState s, DateTime now) {
+    if (s.isAsleep) {
+      return PetActionResult.notNeeded(
+        state: s,
+        action: CareAction.dim,
+        reason: PetActionReason.alreadyAsleep,
+      );
+    }
+    if (!isInSleepWindow(now)) {
+      return PetActionResult.invalidInState(
+        state: s,
+        action: CareAction.dim,
+        reason: PetActionReason.notBedtime,
+      );
+    }
+    var next = _answerCallIfMatching(s, now, CallReason.bedtime);
+    next = next.copyWith(
+      isAsleep: true,
+      recentEvents: _appendEvent(
+        next.recentEvents,
+        CareEvent(at: now, kind: CareEventKind.dimmed),
+      ),
+    );
+    return PetActionResult.applied(state: next, action: CareAction.dim);
+  }
+
+  PetActionResult _applyInspect(PetState s, DateTime now) {
+    final next = s.copyWith(
+      recentEvents: _appendEvent(
+        s.recentEvents,
+        CareEvent(at: now, kind: CareEventKind.inspected),
+      ),
+    );
+    return PetActionResult.applied(state: next, action: CareAction.inspect);
+  }
+
+  PetActionResult _applyReSigil(PetState s, CareAction action) {
+    if (s.stage != PetStage.dormant) {
+      return PetActionResult.invalidInState(
+        state: s,
+        action: action,
+        reason: PetActionReason.notDormant,
+      );
+    }
+    // Controller layer performs the actual replacement (minting a new
+    // PetState). Engine reports "applied" so the UI can fire feedback;
+    // the state it returns is unchanged.
+    return PetActionResult.applied(state: s, action: action);
   }
 
   PetState _answerCallIfMatching(PetState s, DateTime now, CallReason reason) {
