@@ -29,7 +29,7 @@ dependencies:
   fixnum: ^1.1.0
 
   # MQTT Client (for device client proxy mode)
-  mqtt_client: ^10.6.0
+  mqtt_client: ^10.11.11
   typed_data: ^1.4.0
 
   # Storage
