@@ -183,6 +183,7 @@ flutter:
     - assets/pet/
     - assets/rtttl_library.json
     - assets/banned_words.json
+    - assets/device_hardware.json
     - assets/help/manifest.json
     - assets/help/getting-started/
     - assets/help/mesh-basics/

@@ -873,6 +873,7 @@ class _FirmwareUpdateScreenState extends ConsumerState<FirmwareUpdateScreen>
         return context.l10n.firmwareArchitectureNrf52;
       case DeviceArchitecture.esp32:
       case DeviceArchitecture.esp32s3:
+      case DeviceArchitecture.esp32c3:
       case DeviceArchitecture.esp32c6:
         return context.l10n.firmwareArchitectureEsp32;
       case DeviceArchitecture.rp2040:

@@ -73,6 +73,7 @@ import 'services/privacy_consent_service.dart';
 import 'services/notifications/notification_service.dart';
 import 'services/notifications/push_notification_service.dart';
 import 'services/content_moderation/profanity_checker.dart';
+import 'services/firmware/device_hardware_catalog.dart';
 import 'features/scanner/scanner_screen.dart';
 import 'features/messaging/messaging_screen.dart';
 import 'features/channels/channels_screen.dart';
@@ -155,6 +156,10 @@ Future<void> main() async {
 
   // Initialize profanity checker (load banned words from assets)
   await ProfanityChecker.instance.load();
+
+  // Load the Meshtastic hardware catalog (architecture mapping for firmware
+  // updates) from the bundled asset before any UI can query it.
+  await DeviceHardwareCatalog.instance.load();
 
   // Initialize accessibility preferences before UI renders
   // This ensures text scaling and density are applied from first frame
