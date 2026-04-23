@@ -51,7 +51,7 @@ dependencies:
   # Rive — presentation layer for the NodePet home hero only. Gated via
   # PET_RIVE_ENABLED; fallback path is PetCreature (custom painter). See
   # docs/pet/NODE_PET_SYSTEM.md §9.13.
-  rive: ^0.13.20
+  rive: ^0.14.5
 
   # UI/UX
   cupertino_icons: ^1.0.9
