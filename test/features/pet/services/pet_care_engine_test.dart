@@ -83,6 +83,38 @@ void main() {
       );
       expect(advanced, s);
     });
+
+    // Regression: the partial-sub-tick branch in _advanceExact used to
+    // unconditionally bump `lastTickAt` to `now`, which pushed the next
+    // care-tick boundary forward every time advanceTo was called with a
+    // sub-tick gap. Result: when the UI's animation ticker called
+    // advanceTo every 10s, the care tick's 30-minute cadence never
+    // fired and stats stayed at the hatch value forever. Reproduce the
+    // tight-cadence pattern and assert real decay.
+    test('repeated sub-tick advanceTo calls still hit care tick at 30min', () {
+      const config = PetConfig();
+      final engine = PetCareEngine(config: config);
+      final start = _day(1, 12);
+      var s = _freshJuvenile(config, start);
+      final initialEnergy = s.energy;
+      // Simulate the UI animation ticker: call advanceTo every 10s for
+      // 45 real minutes. The partial-sub-tick bug would keep
+      // `lastTickAt` bumping forward and suppress every care tick.
+      for (
+        var elapsed = Duration.zero;
+        elapsed < const Duration(minutes: 45);
+        elapsed += const Duration(seconds: 10)
+      ) {
+        s = engine.advanceTo(s, start.add(elapsed));
+      }
+      // After 45 minutes, at least one 30-minute care tick must have
+      // fired — stats must have decayed off the hatch value.
+      expect(
+        s.energy,
+        lessThan(initialEnergy),
+        reason: 'care tick must fire across sub-tick advanceTo calls',
+      );
+    });
   });
 
   group('PetCareEngine — attention calls + mistakes (acceptance #3)', () {
@@ -100,6 +132,88 @@ void main() {
       final deadline = s.activeCall!.deadline;
       s = engine.advanceTo(s, deadline.add(const Duration(minutes: 1)));
       expect(s.stageAccumulators.mistakes, greaterThan(mistakesBefore));
+    });
+
+    // Regression: totalCalls used to be incremented BOTH when the call
+    // started AND again when it expired, double-counting missed calls
+    // and deflating attentionScore. This biases the adolescent→adult
+    // branch resolution away from Luminous for pets that miss calls.
+    test('missed call increments totalCalls exactly once', () {
+      const config = PetConfig();
+      final engine = PetCareEngine(config: config);
+      final start = _day(1, 10);
+      var s = _freshJuvenile(config, start);
+
+      // Drain to trigger a call.
+      s = engine.advanceTo(s, start.add(const Duration(hours: 4)));
+      expect(s.activeCall, isNotNull);
+      expect(s.stageAccumulators.totalCalls, 1);
+
+      // Miss it.
+      final deadline = s.activeCall!.deadline;
+      s = engine.advanceTo(s, deadline.add(const Duration(minutes: 1)));
+
+      // After miss: totalCalls must STILL be 1, not 2.
+      expect(
+        s.stageAccumulators.totalCalls,
+        1,
+        reason: 'totalCalls counted at start; expiry must not re-count',
+      );
+      expect(s.stageAccumulators.mistakes, greaterThan(0));
+      // attentionScore is the key derived value — 0 answered / 1 total = 0.0
+      // (with the bug: 0 / 2 = 0.0, same output but the semantics are wrong
+      // and multi-call sequences diverge from truth).
+      expect(s.stageAccumulators.attentionScore, 0.0);
+    });
+
+    // Conservation invariant: every call either gets answered or missed.
+    // So totalCalls must equal answeredCalls + missed-call mistakes.
+    // With the double-count bug, totalCalls would exceed that sum and
+    // attentionScore would be deflated. This test runs a long session
+    // with mixed answered/missed calls and asserts the invariant.
+    test('totalCalls == answeredCalls + missedCalls across a long session', () {
+      const config = PetConfig();
+      final engine = PetCareEngine(config: config);
+      final start = _day(1, 10);
+      var s = _freshJuvenile(config, start);
+
+      // First call: answer it.
+      s = engine.advanceTo(s, start.add(const Duration(hours: 4)));
+      expect(s.activeCall?.reason, CallReason.hungry);
+      s = engine
+          .applyAction(
+            s,
+            CareAction.charge,
+            start.add(const Duration(hours: 4, minutes: 1)),
+          )
+          .state;
+
+      // Long catch-up: lets more calls trigger + expire unanswered.
+      s = engine.advanceTo(s, start.add(const Duration(hours: 16)));
+
+      // Count missed calls by scanning recentEvents for callMissed.
+      final missedCount = s.recentEvents
+          .where((e) => e.kind == CareEventKind.callMissed)
+          .length;
+
+      // Conservation: totalCalls = answered + missed + (live call, if any)
+      final live = s.activeCall == null ? 0 : 1;
+      expect(
+        s.stageAccumulators.totalCalls,
+        s.stageAccumulators.answeredCalls + missedCount + live,
+        reason:
+            'totalCalls must equal answered + missed (+ live); '
+            'double-counting would make this diverge',
+      );
+
+      // And attentionScore is the honest ratio.
+      expect(
+        s.stageAccumulators.attentionScore,
+        closeTo(
+          s.stageAccumulators.answeredCalls / s.stageAccumulators.totalCalls,
+          1e-9,
+        ),
+      );
     });
 
     test('Charge answers a hungry call and increments answeredCalls', () {
@@ -292,6 +406,45 @@ void main() {
       // handles days 2-8.
       s = engine.advanceTo(s, start.add(const Duration(days: 8)));
       expect(s.stage, PetStage.adult);
+    });
+
+    // Regression: bounded-mode used to generate synthetic hygiene
+    // artefacts at `lastTickAt + (fullListIndex + 1) days`, which
+    // placed high-index artefacts PAST `now` when the pet already had
+    // some artefacts before the gap. Artefacts dated in the future
+    // never satisfy the stale check, so sickness would never trigger
+    // from them during catch-up.
+    test('bounded-mode synthetic hygiene artefacts are all ≤ now', () {
+      const config = PetConfig();
+      final engine = PetCareEngine(config: config);
+      final start = _day(1, 10);
+      // Start with an existing pre-gap artefact so the synthetic
+      // ones get placed at high indices.
+      var s = _freshJuvenile(
+        config,
+        start,
+      ).copyWith(hygieneArtefacts: [start.add(const Duration(hours: 1))]);
+
+      final now = start.add(const Duration(days: 5));
+      s = engine.advanceTo(s, now);
+
+      // Every artefact must land at or before `now` — no futures.
+      for (final a in s.hygieneArtefacts) {
+        expect(
+          a.isAfter(now),
+          isFalse,
+          reason: 'hygiene artefact $a landed past now=$now',
+        );
+      }
+      // And every artefact must be >= the start so we don't go back
+      // in time either.
+      for (final a in s.hygieneArtefacts) {
+        expect(
+          a.isBefore(start),
+          isFalse,
+          reason: 'hygiene artefact $a landed before start=$start',
+        );
+      }
     });
   });
 }

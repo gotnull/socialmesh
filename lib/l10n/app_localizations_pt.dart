@@ -35863,18 +35863,18 @@ class AppLocalizationsPt extends AppLocalizations {
       'A digital companion that hatches from your node\'s signature and grows over time. The better you care for it, the healthier it stays.';
 
   @override
-  String get petOnboardingPage2Title => 'When it beeps, it needs you';
+  String get petOnboardingPage2Title => 'The status line tells you what to do';
 
   @override
   String get petOnboardingPage2Body =>
-      'The pet pulses when it wants attention, and a floating symbol above shows what: food, heart, medicine, moon, or question mark. Tap Answer to acknowledge, then use the action that solves it — Feed, Play, Clean, Sleep, or Medicine.';
+      'Above your pet, a single status line says exactly what it needs and names the button to tap — Charge when hungry, Resonate when lonely, Stabilise when messy, Purge when sick, Dim at bedtime. The matching button also pulses so you can\'t miss it.';
 
   @override
   String get petOnboardingPage3Title => 'Check in anytime';
 
   @override
   String get petOnboardingPage3Body =>
-      'Tap Status to see energy, mood, stability and recent events. Tap the ? icon for the full action guide. Your pet won\'t time-out if you miss a day, but consistent care earns it a better branch.';
+      'Tap Inspect to see energy, mood, stability and recent events. Tap the ? icon for the full action guide. Your pet won\'t time-out if you miss a day, but consistent care earns it a better branch.';
 
   @override
   String get petOnboardingNext => 'Next';
@@ -36221,6 +36221,57 @@ class AppLocalizationsPt extends AppLocalizations {
   String petDnaAlleleRatioValue(String letter, int percent) {
     return '$letter  $percent%';
   }
+
+  @override
+  String get petAdvisoryDormant =>
+      'Your pet\'s journey has ended. Tap [[Re-sigil]] to begin anew.';
+
+  @override
+  String get petAdvisoryEgg => 'Preparing to hatch…';
+
+  @override
+  String get petAdvisorySick => 'Sick — tap [[Purge]] to heal.';
+
+  @override
+  String get petAdvisoryCallHungry => 'Hungry — tap [[Charge]] to feed.';
+
+  @override
+  String get petAdvisoryCallLonely => 'Lonely — tap [[Resonate]] to play.';
+
+  @override
+  String get petAdvisoryCallSick => 'Sick — tap [[Purge]] to heal.';
+
+  @override
+  String get petAdvisoryCallHygiene => 'Messy — tap [[Stabilise]] to clean up.';
+
+  @override
+  String get petAdvisoryCallBedtime => 'Bedtime — tap [[Dim]] to tuck in.';
+
+  @override
+  String get petAdvisoryCallBoredom => 'Bored — tap [[Resonate]] to engage.';
+
+  @override
+  String get petAdvisoryHygieneImminent =>
+      'Getting messy — tap [[Stabilise]] before they get sick.';
+
+  @override
+  String get petAdvisoryEnergyLow => 'Energy low — tap [[Charge]] soon.';
+
+  @override
+  String get petAdvisoryMoodLow => 'Mood low — tap [[Resonate]] soon.';
+
+  @override
+  String get petAdvisoryHygieneMild =>
+      'Small mess — tap [[Stabilise]] when you can.';
+
+  @override
+  String get petAdvisoryResting => 'Resting peacefully.';
+
+  @override
+  String get petAdvisoryBedtime => 'Bedtime — tap [[Dim]] to tuck in.';
+
+  @override
+  String get petAdvisoryThriving => 'Thriving.';
 
   @override
   String get petHatchBannerTitle => 'Hatched';

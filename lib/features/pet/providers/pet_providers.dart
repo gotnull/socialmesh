@@ -70,6 +70,12 @@ final petRepositoryProvider = Provider<PetRepository>((ref) {
 class OwnPetController extends AsyncNotifier<PetState?> {
   Timer? _animationTicker;
 
+  /// Guard against overlapping animation ticks. A Timer.periodic callback
+  /// is sync, but [_animationTick] is async — if the SQLite persist
+  /// stalls past the 10s period, a new tick would otherwise start
+  /// concurrently and race against the pending one on state read/write.
+  bool _tickInFlight = false;
+
   @override
   Future<PetState?> build() async {
     ref.onDispose(() {
@@ -156,23 +162,32 @@ class OwnPetController extends AsyncNotifier<PetState?> {
   /// idempotent for sub-tick advances, so this is a cheap UI refresh that
   /// also lets short wait times feel live without ever touching the DB.
   Future<void> _animationTick() async {
-    final current = state.value;
-    if (current == null) return;
-    final engine = ref.read(petCareEngineProvider);
-    final next = engine.advanceTo(current, DateTime.now());
-    if (identical(next, current)) return;
-    state = AsyncValue.data(next);
-    // Persist only when something meaningful changed beyond lastTickAt.
-    if (next.stage != current.stage ||
-        next.branch != current.branch ||
-        next.isSick != current.isSick ||
-        next.isAsleep != current.isAsleep ||
-        next.energy != current.energy ||
-        next.mood != current.mood ||
-        next.stability != current.stability ||
-        next.activeCall != current.activeCall ||
-        next.hygieneArtefacts.length != current.hygieneArtefacts.length) {
-      await _persist(next);
+    // Re-entrancy guard: skip this tick entirely if the previous one is
+    // still running. Better to drop a UI refresh than to concurrently
+    // mutate `state` + fire overlapping saveOwnPet calls.
+    if (_tickInFlight) return;
+    _tickInFlight = true;
+    try {
+      final current = state.value;
+      if (current == null) return;
+      final engine = ref.read(petCareEngineProvider);
+      final next = engine.advanceTo(current, DateTime.now());
+      if (identical(next, current)) return;
+      state = AsyncValue.data(next);
+      // Persist only when something meaningful changed beyond lastTickAt.
+      if (next.stage != current.stage ||
+          next.branch != current.branch ||
+          next.isSick != current.isSick ||
+          next.isAsleep != current.isAsleep ||
+          next.energy != current.energy ||
+          next.mood != current.mood ||
+          next.stability != current.stability ||
+          next.activeCall != current.activeCall ||
+          next.hygieneArtefacts.length != current.hygieneArtefacts.length) {
+        await _persist(next);
+      }
+    } finally {
+      _tickInFlight = false;
     }
   }
 
@@ -242,7 +257,13 @@ class OwnPetController extends AsyncNotifier<PetState?> {
     }
     final engine = ref.read(petCareEngineProvider);
     final result = engine.applyAction(current, action, DateTime.now());
-    if (result.isApplied && !identical(result.state, current)) {
+    // Persist + emit ANY state change, not only action-applied outcomes.
+    // `engine.applyAction` calls `advanceTo(state, now)` before routing
+    // to the per-action handler, so even a capped/notNeeded/invalid tap
+    // can carry real forward-progress (decayed stats, fired stage
+    // transitions, new hygiene artefacts) that would otherwise be
+    // discarded until the next 10s animation tick.
+    if (!identical(result.state, current)) {
       await _persist(result.state);
       state = AsyncValue.data(result.state);
     }

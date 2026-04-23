@@ -32,6 +32,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../services/haptic_service.dart';
 import '../models/care_event.dart';
 import '../models/pet_action_result.dart';
+import '../models/pet_advisory.dart';
 import '../models/pet_enums.dart';
 import '../models/pet_state.dart';
 import '../providers/pet_providers.dart';
@@ -45,6 +46,7 @@ import '../widgets/pet_need_indicator.dart';
 import '../widgets/pet_onboarding_sheet.dart';
 import '../widgets/pet_sigil_painter.dart';
 import '../widgets/pet_stat_pip_row.dart';
+import '../widgets/pet_status_line.dart';
 
 class PetHomeScreen extends ConsumerWidget {
   const PetHomeScreen({super.key});
@@ -171,6 +173,16 @@ class _PetBodyState extends ConsumerState<_PetBody>
   _BannerSpec? _banner;
   int? _syncSessionNodeNum;
 
+  /// In-memory watermark of the most recent transition we've already
+  /// played an effect for, set synchronously in [_evaluateNewTransition]
+  /// before we kick the async `tracker.acknowledge` write. Guards
+  /// against SharedPreferences write latency: if the provider re-emits
+  /// before the disk write flushes, `latestUnacknowledged` would
+  /// otherwise return the same event and we'd replay the hatch overlay
+  /// + banner. Keyed to the current owner so a pet rekey resets it.
+  int? _playedOwnerNodeNum;
+  DateTime? _lastPlayedEventAt;
+
   // No-op reaction feedback — transient toast + creature bounce shown
   // when a tapped action resolved to capped / notNeeded / invalidInState.
   late final AnimationController _bounceController;
@@ -232,23 +244,28 @@ class _PetBodyState extends ConsumerState<_PetBody>
   void didUpdateWidget(covariant _PetBody old) {
     super.didUpdateWidget(old);
     if (old.state.ownerNodeNum != widget.state.ownerNodeNum) {
-      // Owner changed (rare — device swap) — reset local effect state.
+      // Owner changed (rare — device swap, or reSigil) — reset local
+      // effect state so the new owner's transitions fire cleanly.
       _hatchOverlayActive = false;
       _banner = null;
       _syncSessionNodeNum = null;
+      _playedOwnerNodeNum = null;
+      _lastPlayedEventAt = null;
     }
     _syncTrackerForCurrentOwner();
   }
 
-  /// Check the tracker and kick any pending effect. Guarded so it fires
-  /// at most once per (ownerNodeNum, mount session); the tracker itself
-  /// persists acknowledgment across restarts.
+  /// Check the tracker and kick any pending effect. First-mount only —
+  /// future transitions are detected by the [ref.listen] on
+  /// [ownPetProvider] inside [build], which fires on actual stage
+  /// changes. Calling this again on every [didUpdateWidget] was
+  /// replaying the hatch overlay whenever the provider re-emitted for
+  /// any reason (e.g. per-animation-tick state churn).
   void _syncTrackerForCurrentOwner() {
     final state = widget.state;
     if (_syncSessionNodeNum == state.ownerNodeNum) {
-      // Already synced once this mount — the watermark is authoritative
-      // from here; future transitions will arrive through ref.listen.
-      _evaluateNewTransition();
+      // Already synced this mount — nothing to do. The in-build
+      // ref.listen handles new transitions from here.
       return;
     }
     final trackerAsync = ref.read(petAnimationTrackerProvider);
@@ -270,8 +287,9 @@ class _PetBodyState extends ConsumerState<_PetBody>
       return;
     }
 
-    // Fresh event — acknowledge immediately so a provider rebuild can't
-    // replay the effect, then fire it asynchronously.
+    // Fresh event — acknowledge synchronously in-memory AND kick the
+    // async disk write, then fire the effect.
+    _markPlayed(state.ownerNodeNum, unack.at);
     unawaited(tracker.acknowledge(state.ownerNodeNum, unack.at));
     _playTransitionEffect(state, unack);
   }
@@ -286,8 +304,22 @@ class _PetBodyState extends ConsumerState<_PetBody>
     if (tracker == null) return;
     final unack = tracker.latestUnacknowledged(state);
     if (unack == null) return;
+    // In-memory guard: if we've already played this exact event (or a
+    // newer one) this session, don't replay. Beats the shared_prefs
+    // write race.
+    if (_playedOwnerNodeNum == state.ownerNodeNum &&
+        _lastPlayedEventAt != null &&
+        !unack.at.isAfter(_lastPlayedEventAt!)) {
+      return;
+    }
+    _markPlayed(state.ownerNodeNum, unack.at);
     unawaited(tracker.acknowledge(state.ownerNodeNum, unack.at));
     _playTransitionEffect(state, unack);
+  }
+
+  void _markPlayed(int ownerNodeNum, DateTime at) {
+    _playedOwnerNodeNum = ownerNodeNum;
+    _lastPlayedEventAt = at;
   }
 
   void _playTransitionEffect(PetState state, CareEvent event) {
@@ -427,11 +459,20 @@ class _PetBodyState extends ConsumerState<_PetBody>
     final state = widget.state;
     final l10n = context.l10n;
     final engine = ref.watch(petCareEngineProvider);
-    final statMax = ref.watch(petConfigProvider).statMax;
+    final config = ref.watch(petConfigProvider);
+    final statMax = config.statMax;
     final mood = engine.deriveMood(state);
     final now = DateTime.now();
     final ageDays = state.ageInDaysAt(now);
     final inSleepWindow = engine.isInSleepWindow(now);
+    // The primary "what should I tap right now?" advisory. Derived
+    // purely from state + config; drives the PetStatusLine above the
+    // creature AND the pulsing-button semantics in _ActionBar.
+    final advisory = computePrimaryAdvisory(
+      state: state,
+      config: config,
+      inSleepWindow: inSleepWindow,
+    );
 
     // Bottom cluster — goes into Scaffold.bottomNavigationBar via the
     // GlassScaffold passthrough. This is the one Flutter slot that is
@@ -480,6 +521,7 @@ class _PetBodyState extends ConsumerState<_PetBody>
           _ActionBar(
             state: state,
             inSleepWindow: inSleepWindow,
+            advisory: advisory,
             onResult: _onActionResult,
           ),
         ],
@@ -513,6 +555,12 @@ class _PetBodyState extends ConsumerState<_PetBody>
                 _DormantBanner(l10n: l10n),
                 const SizedBox(height: AppTheme.spacing16),
               ],
+              // Plain-language advisory — the single highest-priority
+              // "what to tap right now" for a first-time user. Always
+              // visible; reads "Thriving" when nothing's needed so the
+              // position itself is a stable signal to rest the eye on.
+              PetStatusLine(advisory: advisory),
+              const SizedBox(height: AppTheme.spacing16),
               Center(
                 child: Stack(
                   alignment: Alignment.center,
@@ -898,12 +946,20 @@ class _DormantBanner extends StatelessWidget {
 class _ActionBar extends ConsumerWidget {
   final PetState state;
   final bool inSleepWindow;
+
+  /// Advisory computed once at the parent level. Used to pulse the
+  /// button that matches `advisory.action` so the status line's
+  /// inline action name and the bottom-bar pulse reinforce each
+  /// other — user's eye follows the cue from sentence to button.
+  final PetAdvisory advisory;
+
   final Future<void> Function(PetActionResult result, HapticType applied)
   onResult;
 
   const _ActionBar({
     required this.state,
     required this.inSleepWindow,
+    required this.advisory,
     required this.onResult,
   });
 
@@ -937,6 +993,7 @@ class _ActionBar extends ConsumerWidget {
           icon: Icons.auto_awesome_outlined,
           label: l10n.petActionReSigil,
           accent: AccentColors.yellow,
+          pulsing: advisory.action == PetAdvisoryAction.reSigil,
           onTap: run(controller.reSigil, HapticType.heavy),
         ),
       );
@@ -961,6 +1018,7 @@ class _ActionBar extends ConsumerWidget {
           label: l10n.petActionCharge,
           accent: AccentColors.yellow,
           dimmed: chargeDimmed,
+          pulsing: advisory.action == PetAdvisoryAction.charge,
           onTap: chargeUsable
               ? run(controller.charge, HapticType.medium)
               : null,
@@ -979,6 +1037,7 @@ class _ActionBar extends ConsumerWidget {
           label: l10n.petActionResonate,
           accent: AccentColors.pink,
           dimmed: resonateDimmed,
+          pulsing: advisory.action == PetAdvisoryAction.resonate,
           onTap: resonateUsable
               ? run(controller.resonate, HapticType.medium)
               : null,
@@ -991,6 +1050,7 @@ class _ActionBar extends ConsumerWidget {
             icon: Icons.cleaning_services_outlined,
             label: l10n.petActionStabilise,
             accent: AccentColors.teal,
+            pulsing: advisory.action == PetAdvisoryAction.stabilise,
             onTap: run(controller.stabilise, HapticType.medium),
           ),
         );
@@ -1002,7 +1062,7 @@ class _ActionBar extends ConsumerWidget {
             icon: Icons.healing_outlined,
             label: l10n.petActionPurge,
             accent: AccentColors.red,
-            pulsing: true,
+            pulsing: advisory.action == PetAdvisoryAction.purge,
             onTap: run(controller.purge, HapticType.heavy),
           ),
         );
@@ -1018,6 +1078,7 @@ class _ActionBar extends ConsumerWidget {
             label: l10n.petActionSync,
             accent: AccentColors.lavender,
             dimmed: syncDimmed,
+            pulsing: advisory.action == PetAdvisoryAction.sync,
             onTap: run(controller.sync, HapticType.light),
           ),
         );
@@ -1030,6 +1091,7 @@ class _ActionBar extends ConsumerWidget {
             label: l10n.petActionDim,
             accent: AccentColors.indigo,
             dimmed: asleep,
+            pulsing: advisory.action == PetAdvisoryAction.dim && !asleep,
             // We still wire onTap while asleep so the user gets the
             // "Already resting" toast rather than a silent no-op.
             onTap: run(controller.dim, HapticType.light),

@@ -62578,16 +62578,16 @@ abstract class AppLocalizations {
   /// **'A digital companion that hatches from your node\'s signature and grows over time. The better you care for it, the healthier it stays.'**
   String get petOnboardingPage1Body;
 
-  /// Title of the second onboarding card.
+  /// Title of the second onboarding card — introduces the plain-language advisory line above the pet.
   ///
   /// In en, this message translates to:
-  /// **'When it beeps, it needs you'**
+  /// **'The status line tells you what to do'**
   String get petOnboardingPage2Title;
 
-  /// Body of the second onboarding card.
+  /// Body of the second onboarding card — explains the status line + pulsing-button cue.
   ///
   /// In en, this message translates to:
-  /// **'The pet pulses when it wants attention, and a floating symbol above shows what: food, heart, medicine, moon, or question mark. Tap Answer to acknowledge, then use the action that solves it — Feed, Play, Clean, Sleep, or Medicine.'**
+  /// **'Above your pet, a single status line says exactly what it needs and names the button to tap — Charge when hungry, Resonate when lonely, Stabilise when messy, Purge when sick, Dim at bedtime. The matching button also pulses so you can\'t miss it.'**
   String get petOnboardingPage2Body;
 
   /// Title of the third onboarding card.
@@ -62599,7 +62599,7 @@ abstract class AppLocalizations {
   /// Body of the third onboarding card.
   ///
   /// In en, this message translates to:
-  /// **'Tap Status to see energy, mood, stability and recent events. Tap the ? icon for the full action guide. Your pet won\'t time-out if you miss a day, but consistent care earns it a better branch.'**
+  /// **'Tap Inspect to see energy, mood, stability and recent events. Tap the ? icon for the full action guide. Your pet won\'t time-out if you miss a day, but consistent care earns it a better branch.'**
   String get petOnboardingPage3Body;
 
   /// Next button on onboarding cards.
@@ -63237,6 +63237,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{letter}  {percent}%'**
   String petDnaAlleleRatioValue(String letter, int percent);
+
+  /// Status-line message when the pet has reached its terminal dormant stage. `[[…]]` brackets the action button name so the UI can render it in accent color.
+  ///
+  /// In en, this message translates to:
+  /// **'Your pet\'s journey has ended. Tap [[Re-sigil]] to begin anew.'**
+  String get petAdvisoryDormant;
+
+  /// Status-line message while the pet is still an egg. No action yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing to hatch…'**
+  String get petAdvisoryEgg;
+
+  /// Status-line message when the pet is sick (passive sickness, no attention call yet).
+  ///
+  /// In en, this message translates to:
+  /// **'Sick — tap [[Purge]] to heal.'**
+  String get petAdvisorySick;
+
+  /// Status-line message when an active attention call is firing for low energy.
+  ///
+  /// In en, this message translates to:
+  /// **'Hungry — tap [[Charge]] to feed.'**
+  String get petAdvisoryCallHungry;
+
+  /// Status-line message when an active attention call is firing for low mood.
+  ///
+  /// In en, this message translates to:
+  /// **'Lonely — tap [[Resonate]] to play.'**
+  String get petAdvisoryCallLonely;
+
+  /// Status-line message when an active attention call is firing because the pet is sick.
+  ///
+  /// In en, this message translates to:
+  /// **'Sick — tap [[Purge]] to heal.'**
+  String get petAdvisoryCallSick;
+
+  /// Status-line message when an active attention call is firing for accumulated hygiene artefacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Messy — tap [[Stabilise]] to clean up.'**
+  String get petAdvisoryCallHygiene;
+
+  /// Status-line message when an active attention call is firing during the sleep window.
+  ///
+  /// In en, this message translates to:
+  /// **'Bedtime — tap [[Dim]] to tuck in.'**
+  String get petAdvisoryCallBedtime;
+
+  /// Status-line message when an active attention call is firing for generic boredom.
+  ///
+  /// In en, this message translates to:
+  /// **'Bored — tap [[Resonate]] to engage.'**
+  String get petAdvisoryCallBoredom;
+
+  /// Status-line message when hygiene artefacts have reached the sickness threshold but the pet isn't sick yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Getting messy — tap [[Stabilise]] before they get sick.'**
+  String get petAdvisoryHygieneImminent;
+
+  /// Status-line warning when energy is below the call threshold but no call has fired yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Energy low — tap [[Charge]] soon.'**
+  String get petAdvisoryEnergyLow;
+
+  /// Status-line warning when mood is below the call threshold but no call has fired yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood low — tap [[Resonate]] soon.'**
+  String get petAdvisoryMoodLow;
+
+  /// Status-line nudge when there's at least one hygiene artefact but below the sickness threshold.
+  ///
+  /// In en, this message translates to:
+  /// **'Small mess — tap [[Stabilise]] when you can.'**
+  String get petAdvisoryHygieneMild;
+
+  /// Status-line message when the pet is asleep. No action.
+  ///
+  /// In en, this message translates to:
+  /// **'Resting peacefully.'**
+  String get petAdvisoryResting;
+
+  /// Status-line hint during the sleep window when the pet is awake.
+  ///
+  /// In en, this message translates to:
+  /// **'Bedtime — tap [[Dim]] to tuck in.'**
+  String get petAdvisoryBedtime;
+
+  /// Status-line message when the pet has no active needs.
+  ///
+  /// In en, this message translates to:
+  /// **'Thriving.'**
+  String get petAdvisoryThriving;
 
   /// Non-blocking banner title after the egg hatches.
   ///

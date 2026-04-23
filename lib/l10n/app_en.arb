@@ -47725,19 +47725,19 @@
     "@petOnboardingPage1Body": {
         "description": "Body of the first onboarding card."
     },
-    "petOnboardingPage2Title": "When it beeps, it needs you",
+    "petOnboardingPage2Title": "The status line tells you what to do",
     "@petOnboardingPage2Title": {
-        "description": "Title of the second onboarding card."
+        "description": "Title of the second onboarding card — introduces the plain-language advisory line above the pet."
     },
-    "petOnboardingPage2Body": "The pet pulses when it wants attention, and a floating symbol above shows what: food, heart, medicine, moon, or question mark. Tap Answer to acknowledge, then use the action that solves it — Feed, Play, Clean, Sleep, or Medicine.",
+    "petOnboardingPage2Body": "Above your pet, a single status line says exactly what it needs and names the button to tap — Charge when hungry, Resonate when lonely, Stabilise when messy, Purge when sick, Dim at bedtime. The matching button also pulses so you can't miss it.",
     "@petOnboardingPage2Body": {
-        "description": "Body of the second onboarding card."
+        "description": "Body of the second onboarding card — explains the status line + pulsing-button cue."
     },
     "petOnboardingPage3Title": "Check in anytime",
     "@petOnboardingPage3Title": {
         "description": "Title of the third onboarding card."
     },
-    "petOnboardingPage3Body": "Tap Status to see energy, mood, stability and recent events. Tap the ? icon for the full action guide. Your pet won't time-out if you miss a day, but consistent care earns it a better branch.",
+    "petOnboardingPage3Body": "Tap Inspect to see energy, mood, stability and recent events. Tap the ? icon for the full action guide. Your pet won't time-out if you miss a day, but consistent care earns it a better branch.",
     "@petOnboardingPage3Body": {
         "description": "Body of the third onboarding card."
     },
@@ -48178,6 +48178,70 @@
             "letter": {"type": "String"},
             "percent": {"type": "int"}
         }
+    },
+    "petAdvisoryDormant": "Your pet's journey has ended. Tap [[Re-sigil]] to begin anew.",
+    "@petAdvisoryDormant": {
+        "description": "Status-line message when the pet has reached its terminal dormant stage. `[[…]]` brackets the action button name so the UI can render it in accent color."
+    },
+    "petAdvisoryEgg": "Preparing to hatch…",
+    "@petAdvisoryEgg": {
+        "description": "Status-line message while the pet is still an egg. No action yet."
+    },
+    "petAdvisorySick": "Sick — tap [[Purge]] to heal.",
+    "@petAdvisorySick": {
+        "description": "Status-line message when the pet is sick (passive sickness, no attention call yet)."
+    },
+    "petAdvisoryCallHungry": "Hungry — tap [[Charge]] to feed.",
+    "@petAdvisoryCallHungry": {
+        "description": "Status-line message when an active attention call is firing for low energy."
+    },
+    "petAdvisoryCallLonely": "Lonely — tap [[Resonate]] to play.",
+    "@petAdvisoryCallLonely": {
+        "description": "Status-line message when an active attention call is firing for low mood."
+    },
+    "petAdvisoryCallSick": "Sick — tap [[Purge]] to heal.",
+    "@petAdvisoryCallSick": {
+        "description": "Status-line message when an active attention call is firing because the pet is sick."
+    },
+    "petAdvisoryCallHygiene": "Messy — tap [[Stabilise]] to clean up.",
+    "@petAdvisoryCallHygiene": {
+        "description": "Status-line message when an active attention call is firing for accumulated hygiene artefacts."
+    },
+    "petAdvisoryCallBedtime": "Bedtime — tap [[Dim]] to tuck in.",
+    "@petAdvisoryCallBedtime": {
+        "description": "Status-line message when an active attention call is firing during the sleep window."
+    },
+    "petAdvisoryCallBoredom": "Bored — tap [[Resonate]] to engage.",
+    "@petAdvisoryCallBoredom": {
+        "description": "Status-line message when an active attention call is firing for generic boredom."
+    },
+    "petAdvisoryHygieneImminent": "Getting messy — tap [[Stabilise]] before they get sick.",
+    "@petAdvisoryHygieneImminent": {
+        "description": "Status-line message when hygiene artefacts have reached the sickness threshold but the pet isn't sick yet."
+    },
+    "petAdvisoryEnergyLow": "Energy low — tap [[Charge]] soon.",
+    "@petAdvisoryEnergyLow": {
+        "description": "Status-line warning when energy is below the call threshold but no call has fired yet."
+    },
+    "petAdvisoryMoodLow": "Mood low — tap [[Resonate]] soon.",
+    "@petAdvisoryMoodLow": {
+        "description": "Status-line warning when mood is below the call threshold but no call has fired yet."
+    },
+    "petAdvisoryHygieneMild": "Small mess — tap [[Stabilise]] when you can.",
+    "@petAdvisoryHygieneMild": {
+        "description": "Status-line nudge when there's at least one hygiene artefact but below the sickness threshold."
+    },
+    "petAdvisoryResting": "Resting peacefully.",
+    "@petAdvisoryResting": {
+        "description": "Status-line message when the pet is asleep. No action."
+    },
+    "petAdvisoryBedtime": "Bedtime — tap [[Dim]] to tuck in.",
+    "@petAdvisoryBedtime": {
+        "description": "Status-line hint during the sleep window when the pet is awake."
+    },
+    "petAdvisoryThriving": "Thriving.",
+    "@petAdvisoryThriving": {
+        "description": "Status-line message when the pet has no active needs."
     },
     "petHatchBannerTitle": "Hatched",
     "@petHatchBannerTitle": {
