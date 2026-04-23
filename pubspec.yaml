@@ -85,7 +85,7 @@ dependencies:
   flutter_local_notifications: ^20.1.0
   just_audio: ^0.10.5
   record: ^6.0.0
-  live_activities: ^2.4.7
+  live_activities: ^2.4.9
   package_info_plus: ^9.0.1
   device_info_plus: ^12.4.0
 
