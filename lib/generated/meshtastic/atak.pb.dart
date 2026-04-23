@@ -201,11 +201,15 @@ class GeoChat extends $pb.GeneratedMessage {
     $core.String? message,
     $core.String? to,
     $core.String? toCallsign,
+    $core.String? receiptForUid,
+    GeoChat_ReceiptType? receiptType,
   }) {
     final result = create();
     if (message != null) result.message = message;
     if (to != null) result.to = to;
     if (toCallsign != null) result.toCallsign = toCallsign;
+    if (receiptForUid != null) result.receiptForUid = receiptForUid;
+    if (receiptType != null) result.receiptType = receiptType;
     return result;
   }
 
@@ -225,6 +229,9 @@ class GeoChat extends $pb.GeneratedMessage {
     ..aOS(1, _omitFieldNames ? '' : 'message')
     ..aOS(2, _omitFieldNames ? '' : 'to')
     ..aOS(3, _omitFieldNames ? '' : 'toCallsign')
+    ..aOS(4, _omitFieldNames ? '' : 'receiptForUid')
+    ..aE<GeoChat_ReceiptType>(5, _omitFieldNames ? '' : 'receiptType',
+        enumValues: GeoChat_ReceiptType.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -246,7 +253,7 @@ class GeoChat extends $pb.GeneratedMessage {
   static GeoChat? _defaultInstance;
 
   ///
-  ///  The text message
+  ///  The text message. Empty for receipts.
   @$pb.TagNumber(1)
   $core.String get message => $_getSZ(0);
   @$pb.TagNumber(1)
@@ -277,6 +284,32 @@ class GeoChat extends $pb.GeneratedMessage {
   $core.bool hasToCallsign() => $_has(2);
   @$pb.TagNumber(3)
   void clearToCallsign() => $_clearField(3);
+
+  ///
+  ///  UID of the chat message this event is acknowledging. Empty for a
+  ///  normal chat message; set for delivered / read receipts. Paired with
+  ///  receipt_type so receivers can match the ack back to the original
+  ///  outbound GeoChat by its event uid.
+  @$pb.TagNumber(4)
+  $core.String get receiptForUid => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set receiptForUid($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasReceiptForUid() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearReceiptForUid() => $_clearField(4);
+
+  ///
+  ///  Receipt kind discriminator. See ReceiptType doc. Default ReceiptType_None
+  ///  means this is a regular chat message, not a receipt.
+  @$pb.TagNumber(5)
+  GeoChat_ReceiptType get receiptType => $_getN(4);
+  @$pb.TagNumber(5)
+  set receiptType(GeoChat_ReceiptType value) => $_setField(5, value);
+  @$pb.TagNumber(5)
+  $core.bool hasReceiptType() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearReceiptType() => $_clearField(5);
 }
 
 ///
@@ -597,6 +630,2275 @@ class PLI extends $pb.GeneratedMessage {
   $core.bool hasCourse() => $_has(4);
   @$pb.TagNumber(5)
   void clearCourse() => $_clearField(5);
+}
+
+///
+///  Aircraft track information from ADS-B or military air tracking.
+///  Covers the majority of observed real-world CoT traffic.
+class AircraftTrack extends $pb.GeneratedMessage {
+  factory AircraftTrack({
+    $core.String? icao,
+    $core.String? registration,
+    $core.String? flight,
+    $core.String? aircraftType,
+    $core.int? squawk,
+    $core.String? category,
+    $core.int? rssiX10,
+    $core.bool? gps,
+    $core.String? cotHostId,
+  }) {
+    final result = create();
+    if (icao != null) result.icao = icao;
+    if (registration != null) result.registration = registration;
+    if (flight != null) result.flight = flight;
+    if (aircraftType != null) result.aircraftType = aircraftType;
+    if (squawk != null) result.squawk = squawk;
+    if (category != null) result.category = category;
+    if (rssiX10 != null) result.rssiX10 = rssiX10;
+    if (gps != null) result.gps = gps;
+    if (cotHostId != null) result.cotHostId = cotHostId;
+    return result;
+  }
+
+  AircraftTrack._();
+
+  factory AircraftTrack.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory AircraftTrack.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'AircraftTrack',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'icao')
+    ..aOS(2, _omitFieldNames ? '' : 'registration')
+    ..aOS(3, _omitFieldNames ? '' : 'flight')
+    ..aOS(4, _omitFieldNames ? '' : 'aircraftType')
+    ..aI(5, _omitFieldNames ? '' : 'squawk', fieldType: $pb.PbFieldType.OU3)
+    ..aOS(6, _omitFieldNames ? '' : 'category')
+    ..aI(7, _omitFieldNames ? '' : 'rssiX10', fieldType: $pb.PbFieldType.OS3)
+    ..aOB(8, _omitFieldNames ? '' : 'gps')
+    ..aOS(9, _omitFieldNames ? '' : 'cotHostId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  AircraftTrack clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  AircraftTrack copyWith(void Function(AircraftTrack) updates) =>
+      super.copyWith((message) => updates(message as AircraftTrack))
+          as AircraftTrack;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static AircraftTrack create() => AircraftTrack._();
+  @$core.override
+  AircraftTrack createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static AircraftTrack getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<AircraftTrack>(create);
+  static AircraftTrack? _defaultInstance;
+
+  ///
+  ///  ICAO hex identifier (e.g. "AD237C")
+  @$pb.TagNumber(1)
+  $core.String get icao => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set icao($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasIcao() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearIcao() => $_clearField(1);
+
+  ///
+  ///  Aircraft registration (e.g. "N946AK")
+  @$pb.TagNumber(2)
+  $core.String get registration => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set registration($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasRegistration() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearRegistration() => $_clearField(2);
+
+  ///
+  ///  Flight number/callsign (e.g. "ASA864")
+  @$pb.TagNumber(3)
+  $core.String get flight => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set flight($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasFlight() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearFlight() => $_clearField(3);
+
+  ///
+  ///  ICAO aircraft type designator (e.g. "B39M")
+  @$pb.TagNumber(4)
+  $core.String get aircraftType => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set aircraftType($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasAircraftType() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearAircraftType() => $_clearField(4);
+
+  ///
+  ///  Transponder squawk code (0-7777 octal)
+  @$pb.TagNumber(5)
+  $core.int get squawk => $_getIZ(4);
+  @$pb.TagNumber(5)
+  set squawk($core.int value) => $_setUnsignedInt32(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasSquawk() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearSquawk() => $_clearField(5);
+
+  ///
+  ///  ADS-B emitter category (e.g. "A3")
+  @$pb.TagNumber(6)
+  $core.String get category => $_getSZ(5);
+  @$pb.TagNumber(6)
+  set category($core.String value) => $_setString(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasCategory() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearCategory() => $_clearField(6);
+
+  ///
+  ///  Received signal strength * 10 (e.g. -194 for -19.4 dBm)
+  @$pb.TagNumber(7)
+  $core.int get rssiX10 => $_getIZ(6);
+  @$pb.TagNumber(7)
+  set rssiX10($core.int value) => $_setSignedInt32(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasRssiX10() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearRssiX10() => $_clearField(7);
+
+  ///
+  ///  Whether receiver has GPS fix
+  @$pb.TagNumber(8)
+  $core.bool get gps => $_getBF(7);
+  @$pb.TagNumber(8)
+  set gps($core.bool value) => $_setBool(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasGps() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearGps() => $_clearField(8);
+
+  ///
+  ///  CoT host ID for source attribution
+  @$pb.TagNumber(9)
+  $core.String get cotHostId => $_getSZ(8);
+  @$pb.TagNumber(9)
+  set cotHostId($core.String value) => $_setString(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasCotHostId() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearCotHostId() => $_clearField(9);
+}
+
+///
+///  Compact geographic vertex used by repeated vertex lists in TAK geometry
+///  payloads. Named with a `Cot` prefix to avoid a namespace collision with
+///  `meshtastic.GeoPoint` in `device_ui.proto`, which is an unrelated zoom/
+///  latitude/longitude type used by the on-device map UI.
+///
+///  Encoded as a signed DELTA from TAKPacketV2.latitude_i / longitude_i (the
+///  enclosing event's anchor point). The absolute coordinate is recovered by
+///  the receiver as `event.latitude_i + vertex.lat_delta_i` (and likewise for
+///  longitude).
+///
+///  Why deltas: a 32-vertex telestration with vertices clustered within a few
+///  hundred meters of the anchor has per-vertex deltas in the ±10^4 range.
+///  Under sint32+zigzag those encode as 2 bytes each (tag+varint), versus the
+///  4 bytes that sfixed32 would always require. At 32 vertices that is ~128
+///  bytes of savings — the difference between fitting under the LoRa MTU or
+///  not. Absolute coordinates (values ~10^9) would cost sint32 varint 5 bytes
+///  per field, which is why TAKPacketV2's top-level latitude_i / longitude_i
+///  stay sfixed32 — only small values win with sint32.
+class CotGeoPoint extends $pb.GeneratedMessage {
+  factory CotGeoPoint({
+    $core.int? latDeltaI,
+    $core.int? lonDeltaI,
+  }) {
+    final result = create();
+    if (latDeltaI != null) result.latDeltaI = latDeltaI;
+    if (lonDeltaI != null) result.lonDeltaI = lonDeltaI;
+    return result;
+  }
+
+  CotGeoPoint._();
+
+  factory CotGeoPoint.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory CotGeoPoint.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'CotGeoPoint',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aI(1, _omitFieldNames ? '' : 'latDeltaI', fieldType: $pb.PbFieldType.OS3)
+    ..aI(2, _omitFieldNames ? '' : 'lonDeltaI', fieldType: $pb.PbFieldType.OS3)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CotGeoPoint clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CotGeoPoint copyWith(void Function(CotGeoPoint) updates) =>
+      super.copyWith((message) => updates(message as CotGeoPoint))
+          as CotGeoPoint;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static CotGeoPoint create() => CotGeoPoint._();
+  @$core.override
+  CotGeoPoint createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static CotGeoPoint getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<CotGeoPoint>(create);
+  static CotGeoPoint? _defaultInstance;
+
+  ///
+  ///  Latitude delta from TAKPacketV2.latitude_i, in 1e-7 degree units.
+  ///  Add to the enclosing event's latitude_i to recover the absolute latitude.
+  @$pb.TagNumber(1)
+  $core.int get latDeltaI => $_getIZ(0);
+  @$pb.TagNumber(1)
+  set latDeltaI($core.int value) => $_setSignedInt32(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasLatDeltaI() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearLatDeltaI() => $_clearField(1);
+
+  ///
+  ///  Longitude delta from TAKPacketV2.longitude_i, in 1e-7 degree units.
+  @$pb.TagNumber(2)
+  $core.int get lonDeltaI => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set lonDeltaI($core.int value) => $_setSignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasLonDeltaI() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearLonDeltaI() => $_clearField(2);
+}
+
+///
+///  User-drawn tactical graphic: circle, rectangle, polygon, polyline, freehand
+///  telestration, ranging circle, or bullseye.
+///
+///  Covers CoT types u-d-c-c, u-d-r, u-d-f, u-d-f-m, u-d-p, u-r-b-c-c,
+///  u-r-b-bullseye. The shape's anchor position is carried on
+///  TAKPacketV2.latitude_i/longitude_i; polyline/polygon vertices are in the
+///  `vertices` repeated field as `CotGeoPoint` deltas from that anchor.
+///
+///  Colors use the Team enum as a 14-color palette (see color encoding below)
+///  with a fixed32 exact-ARGB fallback for custom user-picked colors that
+///  don't map to a palette entry.
+class DrawnShape extends $pb.GeneratedMessage {
+  factory DrawnShape({
+    DrawnShape_Kind? kind,
+    DrawnShape_StyleMode? style,
+    $core.int? majorCm,
+    $core.int? minorCm,
+    $core.int? angleDeg,
+    Team? strokeColor,
+    $core.int? strokeArgb,
+    $core.int? strokeWeightX10,
+    Team? fillColor,
+    $core.int? fillArgb,
+    $core.bool? labelsOn,
+    $core.Iterable<CotGeoPoint>? vertices,
+    $core.bool? truncated,
+    $core.int? bullseyeDistanceDm,
+    $core.int? bullseyeBearingRef,
+    $core.int? bullseyeFlags,
+    $core.String? bullseyeUidRef,
+  }) {
+    final result = create();
+    if (kind != null) result.kind = kind;
+    if (style != null) result.style = style;
+    if (majorCm != null) result.majorCm = majorCm;
+    if (minorCm != null) result.minorCm = minorCm;
+    if (angleDeg != null) result.angleDeg = angleDeg;
+    if (strokeColor != null) result.strokeColor = strokeColor;
+    if (strokeArgb != null) result.strokeArgb = strokeArgb;
+    if (strokeWeightX10 != null) result.strokeWeightX10 = strokeWeightX10;
+    if (fillColor != null) result.fillColor = fillColor;
+    if (fillArgb != null) result.fillArgb = fillArgb;
+    if (labelsOn != null) result.labelsOn = labelsOn;
+    if (vertices != null) result.vertices.addAll(vertices);
+    if (truncated != null) result.truncated = truncated;
+    if (bullseyeDistanceDm != null)
+      result.bullseyeDistanceDm = bullseyeDistanceDm;
+    if (bullseyeBearingRef != null)
+      result.bullseyeBearingRef = bullseyeBearingRef;
+    if (bullseyeFlags != null) result.bullseyeFlags = bullseyeFlags;
+    if (bullseyeUidRef != null) result.bullseyeUidRef = bullseyeUidRef;
+    return result;
+  }
+
+  DrawnShape._();
+
+  factory DrawnShape.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory DrawnShape.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'DrawnShape',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aE<DrawnShape_Kind>(1, _omitFieldNames ? '' : 'kind',
+        enumValues: DrawnShape_Kind.values)
+    ..aE<DrawnShape_StyleMode>(2, _omitFieldNames ? '' : 'style',
+        enumValues: DrawnShape_StyleMode.values)
+    ..aI(3, _omitFieldNames ? '' : 'majorCm', fieldType: $pb.PbFieldType.OU3)
+    ..aI(4, _omitFieldNames ? '' : 'minorCm', fieldType: $pb.PbFieldType.OU3)
+    ..aI(5, _omitFieldNames ? '' : 'angleDeg', fieldType: $pb.PbFieldType.OU3)
+    ..aE<Team>(6, _omitFieldNames ? '' : 'strokeColor', enumValues: Team.values)
+    ..aI(7, _omitFieldNames ? '' : 'strokeArgb', fieldType: $pb.PbFieldType.OF3)
+    ..aI(8, _omitFieldNames ? '' : 'strokeWeightX10',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aE<Team>(9, _omitFieldNames ? '' : 'fillColor', enumValues: Team.values)
+    ..aI(10, _omitFieldNames ? '' : 'fillArgb', fieldType: $pb.PbFieldType.OF3)
+    ..aOB(11, _omitFieldNames ? '' : 'labelsOn')
+    ..pPM<CotGeoPoint>(12, _omitFieldNames ? '' : 'vertices',
+        subBuilder: CotGeoPoint.create)
+    ..aOB(13, _omitFieldNames ? '' : 'truncated')
+    ..aI(14, _omitFieldNames ? '' : 'bullseyeDistanceDm',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(15, _omitFieldNames ? '' : 'bullseyeBearingRef',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(16, _omitFieldNames ? '' : 'bullseyeFlags',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aOS(17, _omitFieldNames ? '' : 'bullseyeUidRef')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DrawnShape clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DrawnShape copyWith(void Function(DrawnShape) updates) =>
+      super.copyWith((message) => updates(message as DrawnShape)) as DrawnShape;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static DrawnShape create() => DrawnShape._();
+  @$core.override
+  DrawnShape createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static DrawnShape getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<DrawnShape>(create);
+  static DrawnShape? _defaultInstance;
+
+  ///
+  ///  Shape kind (circle, rectangle, freeform, etc.)
+  @$pb.TagNumber(1)
+  DrawnShape_Kind get kind => $_getN(0);
+  @$pb.TagNumber(1)
+  set kind(DrawnShape_Kind value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasKind() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearKind() => $_clearField(1);
+
+  ///
+  ///  Explicit stroke/fill/both discriminator. See StyleMode doc.
+  @$pb.TagNumber(2)
+  DrawnShape_StyleMode get style => $_getN(1);
+  @$pb.TagNumber(2)
+  set style(DrawnShape_StyleMode value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasStyle() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearStyle() => $_clearField(2);
+
+  ///
+  ///  Ellipse major radius in centimeters. 0 for non-ellipse kinds.
+  @$pb.TagNumber(3)
+  $core.int get majorCm => $_getIZ(2);
+  @$pb.TagNumber(3)
+  set majorCm($core.int value) => $_setUnsignedInt32(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasMajorCm() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearMajorCm() => $_clearField(3);
+
+  ///
+  ///  Ellipse minor radius in centimeters. 0 for non-ellipse kinds.
+  @$pb.TagNumber(4)
+  $core.int get minorCm => $_getIZ(3);
+  @$pb.TagNumber(4)
+  set minorCm($core.int value) => $_setUnsignedInt32(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasMinorCm() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearMinorCm() => $_clearField(4);
+
+  ///
+  ///  Ellipse rotation angle in degrees. Valid values are 0..360 inclusive;
+  ///  0 and 360 are equivalent rotations. In proto3, an unset uint32 reads
+  ///  as 0, so senders should emit 0 when the angle is unspecified.
+  @$pb.TagNumber(5)
+  $core.int get angleDeg => $_getIZ(4);
+  @$pb.TagNumber(5)
+  set angleDeg($core.int value) => $_setUnsignedInt32(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasAngleDeg() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearAngleDeg() => $_clearField(5);
+
+  ///
+  ///  Stroke color as a named palette entry from the Team enum. If
+  ///  Unspecifed_Color, the exact ARGB is carried in stroke_argb.
+  ///  Valid only when style is StrokeOnly or StrokeAndFill.
+  @$pb.TagNumber(6)
+  Team get strokeColor => $_getN(5);
+  @$pb.TagNumber(6)
+  set strokeColor(Team value) => $_setField(6, value);
+  @$pb.TagNumber(6)
+  $core.bool hasStrokeColor() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearStrokeColor() => $_clearField(6);
+
+  ///
+  ///  Stroke color as an exact 32-bit ARGB bit pattern. Always populated
+  ///  on the wire; readers MUST use this value when stroke_color ==
+  ///  Unspecifed_Color and MAY use it to recover the exact original bytes
+  ///  even when a palette entry is set.
+  @$pb.TagNumber(7)
+  $core.int get strokeArgb => $_getIZ(6);
+  @$pb.TagNumber(7)
+  set strokeArgb($core.int value) => $_setUnsignedInt32(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasStrokeArgb() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearStrokeArgb() => $_clearField(7);
+
+  ///
+  ///  Stroke weight in tenths of a unit (e.g. 30 = 3.0). Typical ATAK
+  ///  range 10..60.
+  @$pb.TagNumber(8)
+  $core.int get strokeWeightX10 => $_getIZ(7);
+  @$pb.TagNumber(8)
+  set strokeWeightX10($core.int value) => $_setUnsignedInt32(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasStrokeWeightX10() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearStrokeWeightX10() => $_clearField(8);
+
+  ///
+  ///  Fill color as a named palette entry. See stroke_color docs.
+  ///  Valid only when style is FillOnly or StrokeAndFill.
+  @$pb.TagNumber(9)
+  Team get fillColor => $_getN(8);
+  @$pb.TagNumber(9)
+  set fillColor(Team value) => $_setField(9, value);
+  @$pb.TagNumber(9)
+  $core.bool hasFillColor() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearFillColor() => $_clearField(9);
+
+  ///
+  ///  Fill color exact ARGB fallback. See stroke_argb docs.
+  @$pb.TagNumber(10)
+  $core.int get fillArgb => $_getIZ(9);
+  @$pb.TagNumber(10)
+  set fillArgb($core.int value) => $_setUnsignedInt32(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasFillArgb() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearFillArgb() => $_clearField(10);
+
+  ///
+  ///  Whether labels are rendered on this shape.
+  @$pb.TagNumber(11)
+  $core.bool get labelsOn => $_getBF(10);
+  @$pb.TagNumber(11)
+  set labelsOn($core.bool value) => $_setBool(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasLabelsOn() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearLabelsOn() => $_clearField(11);
+
+  ///
+  ///  Vertex list for polyline/polygon/rectangle shapes. Capped at 32 by
+  ///  the nanopb pool; senders MUST truncate longer inputs and set
+  ///  `truncated = true`.
+  @$pb.TagNumber(12)
+  $pb.PbList<CotGeoPoint> get vertices => $_getList(11);
+
+  ///
+  ///  True if the sender truncated `vertices` to fit the pool.
+  @$pb.TagNumber(13)
+  $core.bool get truncated => $_getBF(12);
+  @$pb.TagNumber(13)
+  set truncated($core.bool value) => $_setBool(12, value);
+  @$pb.TagNumber(13)
+  $core.bool hasTruncated() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearTruncated() => $_clearField(13);
+
+  ///
+  ///  Bullseye distance in meters * 10 (e.g. 3285 = 328.5 m). 0 = unset.
+  @$pb.TagNumber(14)
+  $core.int get bullseyeDistanceDm => $_getIZ(13);
+  @$pb.TagNumber(14)
+  set bullseyeDistanceDm($core.int value) => $_setUnsignedInt32(13, value);
+  @$pb.TagNumber(14)
+  $core.bool hasBullseyeDistanceDm() => $_has(13);
+  @$pb.TagNumber(14)
+  void clearBullseyeDistanceDm() => $_clearField(14);
+
+  ///
+  ///  Bullseye bearing reference: 0 unset, 1 Magnetic, 2 True, 3 Grid.
+  @$pb.TagNumber(15)
+  $core.int get bullseyeBearingRef => $_getIZ(14);
+  @$pb.TagNumber(15)
+  set bullseyeBearingRef($core.int value) => $_setUnsignedInt32(14, value);
+  @$pb.TagNumber(15)
+  $core.bool hasBullseyeBearingRef() => $_has(14);
+  @$pb.TagNumber(15)
+  void clearBullseyeBearingRef() => $_clearField(15);
+
+  ///
+  ///  Bullseye attribute bit flags:
+  ///    bit 0: rangeRingVisible
+  ///    bit 1: hasRangeRings
+  ///    bit 2: edgeToCenter
+  ///    bit 3: mils
+  @$pb.TagNumber(16)
+  $core.int get bullseyeFlags => $_getIZ(15);
+  @$pb.TagNumber(16)
+  set bullseyeFlags($core.int value) => $_setUnsignedInt32(15, value);
+  @$pb.TagNumber(16)
+  $core.bool hasBullseyeFlags() => $_has(15);
+  @$pb.TagNumber(16)
+  void clearBullseyeFlags() => $_clearField(16);
+
+  ///
+  ///  Bullseye reference UID (anchor marker). Empty = anchor is self.
+  @$pb.TagNumber(17)
+  $core.String get bullseyeUidRef => $_getSZ(16);
+  @$pb.TagNumber(17)
+  set bullseyeUidRef($core.String value) => $_setString(16, value);
+  @$pb.TagNumber(17)
+  $core.bool hasBullseyeUidRef() => $_has(16);
+  @$pb.TagNumber(17)
+  void clearBullseyeUidRef() => $_clearField(17);
+}
+
+///
+///  Fixed point of interest: spot marker, waypoint, checkpoint, 2525 symbol,
+///  or custom icon.
+///
+///  Covers CoT types b-m-p-s-m, b-m-p-w, b-m-p-c, b-m-p-s-p-i, b-m-p-s-p-loc,
+///  plus a-u-G / a-f-G / a-h-G / a-n-G with iconset paths. The marker position
+///  is carried on TAKPacketV2.latitude_i/longitude_i; fields below carry only
+///  the marker-specific metadata.
+class Marker extends $pb.GeneratedMessage {
+  factory Marker({
+    Marker_Kind? kind,
+    Team? color,
+    $core.int? colorArgb,
+    $core.bool? readiness,
+    $core.String? parentUid,
+    $core.String? parentType,
+    $core.String? parentCallsign,
+    $core.String? iconset,
+  }) {
+    final result = create();
+    if (kind != null) result.kind = kind;
+    if (color != null) result.color = color;
+    if (colorArgb != null) result.colorArgb = colorArgb;
+    if (readiness != null) result.readiness = readiness;
+    if (parentUid != null) result.parentUid = parentUid;
+    if (parentType != null) result.parentType = parentType;
+    if (parentCallsign != null) result.parentCallsign = parentCallsign;
+    if (iconset != null) result.iconset = iconset;
+    return result;
+  }
+
+  Marker._();
+
+  factory Marker.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Marker.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Marker',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aE<Marker_Kind>(1, _omitFieldNames ? '' : 'kind',
+        enumValues: Marker_Kind.values)
+    ..aE<Team>(2, _omitFieldNames ? '' : 'color', enumValues: Team.values)
+    ..aI(3, _omitFieldNames ? '' : 'colorArgb', fieldType: $pb.PbFieldType.OF3)
+    ..aOB(4, _omitFieldNames ? '' : 'readiness')
+    ..aOS(5, _omitFieldNames ? '' : 'parentUid')
+    ..aOS(6, _omitFieldNames ? '' : 'parentType')
+    ..aOS(7, _omitFieldNames ? '' : 'parentCallsign')
+    ..aOS(8, _omitFieldNames ? '' : 'iconset')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Marker clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Marker copyWith(void Function(Marker) updates) =>
+      super.copyWith((message) => updates(message as Marker)) as Marker;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Marker create() => Marker._();
+  @$core.override
+  Marker createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static Marker getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Marker>(create);
+  static Marker? _defaultInstance;
+
+  ///
+  ///  Marker kind
+  @$pb.TagNumber(1)
+  Marker_Kind get kind => $_getN(0);
+  @$pb.TagNumber(1)
+  set kind(Marker_Kind value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasKind() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearKind() => $_clearField(1);
+
+  ///
+  ///  Marker color as a named palette entry. If Unspecifed_Color, the exact
+  ///  ARGB is in color_argb.
+  @$pb.TagNumber(2)
+  Team get color => $_getN(1);
+  @$pb.TagNumber(2)
+  set color(Team value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasColor() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearColor() => $_clearField(2);
+
+  ///
+  ///  Marker color exact ARGB bit pattern. Always populated on the wire.
+  @$pb.TagNumber(3)
+  $core.int get colorArgb => $_getIZ(2);
+  @$pb.TagNumber(3)
+  set colorArgb($core.int value) => $_setUnsignedInt32(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasColorArgb() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearColorArgb() => $_clearField(3);
+
+  ///
+  ///  Status readiness flag (ATAK <status readiness="true"/>).
+  @$pb.TagNumber(4)
+  $core.bool get readiness => $_getBF(3);
+  @$pb.TagNumber(4)
+  set readiness($core.bool value) => $_setBool(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasReadiness() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearReadiness() => $_clearField(4);
+
+  ///
+  ///  Parent link UID (ATAK <link uid=... relation="p-p"/>). Empty = no parent.
+  ///  For spot/waypoint markers this is typically the producing TAK user's UID.
+  @$pb.TagNumber(5)
+  $core.String get parentUid => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set parentUid($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasParentUid() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearParentUid() => $_clearField(5);
+
+  ///
+  ///  Parent CoT type (e.g. "a-f-G-U-C"). Usually the parent TAK user's type.
+  @$pb.TagNumber(6)
+  $core.String get parentType => $_getSZ(5);
+  @$pb.TagNumber(6)
+  set parentType($core.String value) => $_setString(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasParentType() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearParentType() => $_clearField(6);
+
+  ///
+  ///  Parent callsign (e.g. "HOPE").
+  @$pb.TagNumber(7)
+  $core.String get parentCallsign => $_getSZ(6);
+  @$pb.TagNumber(7)
+  set parentCallsign($core.String value) => $_setString(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasParentCallsign() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearParentCallsign() => $_clearField(7);
+
+  ///
+  ///  Iconset path stored verbatim. ATAK emits three flavors:
+  ///    Kind_Symbol2525    -> "COT_MAPPING_2525B/<cot-type-prefix>/<cot-type>"
+  ///    Kind_SpotMap       -> "COT_MAPPING_SPOTMAP/<cot-type>/<argb>"
+  ///    Kind_CustomIcon    -> "<UUID>/<GroupName>/<filename>.png"
+  ///  Stored end-to-end without prefix stripping; the ~19 bytes saved by
+  ///  stripping well-known prefixes are not worth the builder-side bug
+  ///  surface, and the dict compresses the repetition effectively.
+  @$pb.TagNumber(8)
+  $core.String get iconset => $_getSZ(7);
+  @$pb.TagNumber(8)
+  set iconset($core.String value) => $_setString(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasIconset() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearIconset() => $_clearField(8);
+}
+
+///
+///  Range and bearing measurement line from the event anchor to a target point.
+///
+///  Covers CoT type u-rb-a. The anchor position is on
+///  TAKPacketV2.latitude_i/longitude_i; the target endpoint is carried as a
+///  CotGeoPoint — same delta-from-anchor encoding used by DrawnShape.vertices
+///  so a self-anchored RAB (common case) encodes in zero bytes.
+class RangeAndBearing extends $pb.GeneratedMessage {
+  factory RangeAndBearing({
+    CotGeoPoint? anchor,
+    $core.String? anchorUid,
+    $core.int? rangeCm,
+    $core.int? bearingCdeg,
+    Team? strokeColor,
+    $core.int? strokeArgb,
+    $core.int? strokeWeightX10,
+  }) {
+    final result = create();
+    if (anchor != null) result.anchor = anchor;
+    if (anchorUid != null) result.anchorUid = anchorUid;
+    if (rangeCm != null) result.rangeCm = rangeCm;
+    if (bearingCdeg != null) result.bearingCdeg = bearingCdeg;
+    if (strokeColor != null) result.strokeColor = strokeColor;
+    if (strokeArgb != null) result.strokeArgb = strokeArgb;
+    if (strokeWeightX10 != null) result.strokeWeightX10 = strokeWeightX10;
+    return result;
+  }
+
+  RangeAndBearing._();
+
+  factory RangeAndBearing.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory RangeAndBearing.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RangeAndBearing',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aOM<CotGeoPoint>(1, _omitFieldNames ? '' : 'anchor',
+        subBuilder: CotGeoPoint.create)
+    ..aOS(2, _omitFieldNames ? '' : 'anchorUid')
+    ..aI(3, _omitFieldNames ? '' : 'rangeCm', fieldType: $pb.PbFieldType.OU3)
+    ..aI(4, _omitFieldNames ? '' : 'bearingCdeg',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aE<Team>(5, _omitFieldNames ? '' : 'strokeColor', enumValues: Team.values)
+    ..aI(6, _omitFieldNames ? '' : 'strokeArgb', fieldType: $pb.PbFieldType.OF3)
+    ..aI(7, _omitFieldNames ? '' : 'strokeWeightX10',
+        fieldType: $pb.PbFieldType.OU3)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RangeAndBearing clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RangeAndBearing copyWith(void Function(RangeAndBearing) updates) =>
+      super.copyWith((message) => updates(message as RangeAndBearing))
+          as RangeAndBearing;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static RangeAndBearing create() => RangeAndBearing._();
+  @$core.override
+  RangeAndBearing createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static RangeAndBearing getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RangeAndBearing>(create);
+  static RangeAndBearing? _defaultInstance;
+
+  ///
+  ///  Target/anchor endpoint (delta-encoded from TAKPacketV2.latitude_i/longitude_i).
+  @$pb.TagNumber(1)
+  CotGeoPoint get anchor => $_getN(0);
+  @$pb.TagNumber(1)
+  set anchor(CotGeoPoint value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasAnchor() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearAnchor() => $_clearField(1);
+  @$pb.TagNumber(1)
+  CotGeoPoint ensureAnchor() => $_ensure(0);
+
+  ///
+  ///  Anchor UID (from <link uid="anchor-1"/>). Empty = free-standing.
+  @$pb.TagNumber(2)
+  $core.String get anchorUid => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set anchorUid($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasAnchorUid() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearAnchorUid() => $_clearField(2);
+
+  ///
+  ///  Range in centimeters (value * 100). Range 0..4294 km.
+  @$pb.TagNumber(3)
+  $core.int get rangeCm => $_getIZ(2);
+  @$pb.TagNumber(3)
+  set rangeCm($core.int value) => $_setUnsignedInt32(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasRangeCm() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearRangeCm() => $_clearField(3);
+
+  ///
+  ///  Bearing in degrees * 100 (0..36000).
+  @$pb.TagNumber(4)
+  $core.int get bearingCdeg => $_getIZ(3);
+  @$pb.TagNumber(4)
+  set bearingCdeg($core.int value) => $_setUnsignedInt32(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasBearingCdeg() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearBearingCdeg() => $_clearField(4);
+
+  ///
+  ///  Stroke color as a Team palette entry. See DrawnShape.stroke_color doc.
+  @$pb.TagNumber(5)
+  Team get strokeColor => $_getN(4);
+  @$pb.TagNumber(5)
+  set strokeColor(Team value) => $_setField(5, value);
+  @$pb.TagNumber(5)
+  $core.bool hasStrokeColor() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearStrokeColor() => $_clearField(5);
+
+  ///
+  ///  Stroke color exact ARGB fallback.
+  @$pb.TagNumber(6)
+  $core.int get strokeArgb => $_getIZ(5);
+  @$pb.TagNumber(6)
+  set strokeArgb($core.int value) => $_setUnsignedInt32(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasStrokeArgb() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearStrokeArgb() => $_clearField(6);
+
+  ///
+  ///  Stroke weight * 10 (e.g. 30 = 3.0).
+  @$pb.TagNumber(7)
+  $core.int get strokeWeightX10 => $_getIZ(6);
+  @$pb.TagNumber(7)
+  set strokeWeightX10($core.int value) => $_setUnsignedInt32(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasStrokeWeightX10() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearStrokeWeightX10() => $_clearField(7);
+}
+
+///
+///  Route waypoint or control point. Each link corresponds to one ATAK
+///  <link type=... point=...> entry inside the b-m-r event.
+class Route_Link extends $pb.GeneratedMessage {
+  factory Route_Link({
+    CotGeoPoint? point,
+    $core.String? uid,
+    $core.String? callsign,
+    $core.int? linkType,
+  }) {
+    final result = create();
+    if (point != null) result.point = point;
+    if (uid != null) result.uid = uid;
+    if (callsign != null) result.callsign = callsign;
+    if (linkType != null) result.linkType = linkType;
+    return result;
+  }
+
+  Route_Link._();
+
+  factory Route_Link.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Route_Link.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Route.Link',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aOM<CotGeoPoint>(1, _omitFieldNames ? '' : 'point',
+        subBuilder: CotGeoPoint.create)
+    ..aOS(2, _omitFieldNames ? '' : 'uid')
+    ..aOS(3, _omitFieldNames ? '' : 'callsign')
+    ..aI(4, _omitFieldNames ? '' : 'linkType', fieldType: $pb.PbFieldType.OU3)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Route_Link clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Route_Link copyWith(void Function(Route_Link) updates) =>
+      super.copyWith((message) => updates(message as Route_Link)) as Route_Link;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Route_Link create() => Route_Link._();
+  @$core.override
+  Route_Link createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static Route_Link getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<Route_Link>(create);
+  static Route_Link? _defaultInstance;
+
+  ///
+  ///  Waypoint position (delta-encoded from TAKPacketV2.latitude_i/longitude_i).
+  @$pb.TagNumber(1)
+  CotGeoPoint get point => $_getN(0);
+  @$pb.TagNumber(1)
+  set point(CotGeoPoint value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasPoint() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearPoint() => $_clearField(1);
+  @$pb.TagNumber(1)
+  CotGeoPoint ensurePoint() => $_ensure(0);
+
+  ///
+  ///  Optional UID (empty = receiver derives).
+  @$pb.TagNumber(2)
+  $core.String get uid => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set uid($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasUid() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearUid() => $_clearField(2);
+
+  ///
+  ///  Optional display callsign (e.g. "CP1"). Empty for unnamed control points.
+  @$pb.TagNumber(3)
+  $core.String get callsign => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set callsign($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasCallsign() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearCallsign() => $_clearField(3);
+
+  ///
+  ///  Link role: 0 = waypoint (b-m-p-w), 1 = checkpoint (b-m-p-c).
+  @$pb.TagNumber(4)
+  $core.int get linkType => $_getIZ(3);
+  @$pb.TagNumber(4)
+  set linkType($core.int value) => $_setUnsignedInt32(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasLinkType() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearLinkType() => $_clearField(4);
+}
+
+///
+///  Named route consisting of ordered waypoints and control points.
+///
+///  Covers CoT type b-m-r. The first waypoint's position is on
+///  TAKPacketV2.latitude_i/longitude_i; subsequent waypoints and checkpoints
+///  are in `links`. Link count is capped at 16 by the nanopb pool; senders
+///  MUST truncate longer routes and set `truncated = true`.
+class Route extends $pb.GeneratedMessage {
+  factory Route({
+    Route_Method? method,
+    Route_Direction? direction,
+    $core.String? prefix,
+    $core.int? strokeWeightX10,
+    $core.Iterable<Route_Link>? links,
+    $core.bool? truncated,
+  }) {
+    final result = create();
+    if (method != null) result.method = method;
+    if (direction != null) result.direction = direction;
+    if (prefix != null) result.prefix = prefix;
+    if (strokeWeightX10 != null) result.strokeWeightX10 = strokeWeightX10;
+    if (links != null) result.links.addAll(links);
+    if (truncated != null) result.truncated = truncated;
+    return result;
+  }
+
+  Route._();
+
+  factory Route.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Route.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Route',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aE<Route_Method>(1, _omitFieldNames ? '' : 'method',
+        enumValues: Route_Method.values)
+    ..aE<Route_Direction>(2, _omitFieldNames ? '' : 'direction',
+        enumValues: Route_Direction.values)
+    ..aOS(3, _omitFieldNames ? '' : 'prefix')
+    ..aI(4, _omitFieldNames ? '' : 'strokeWeightX10',
+        fieldType: $pb.PbFieldType.OU3)
+    ..pPM<Route_Link>(5, _omitFieldNames ? '' : 'links',
+        subBuilder: Route_Link.create)
+    ..aOB(6, _omitFieldNames ? '' : 'truncated')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Route clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Route copyWith(void Function(Route) updates) =>
+      super.copyWith((message) => updates(message as Route)) as Route;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Route create() => Route._();
+  @$core.override
+  Route createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static Route getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Route>(create);
+  static Route? _defaultInstance;
+
+  ///
+  ///  Travel method
+  @$pb.TagNumber(1)
+  Route_Method get method => $_getN(0);
+  @$pb.TagNumber(1)
+  set method(Route_Method value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasMethod() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearMethod() => $_clearField(1);
+
+  ///
+  ///  Direction (infil/exfil)
+  @$pb.TagNumber(2)
+  Route_Direction get direction => $_getN(1);
+  @$pb.TagNumber(2)
+  set direction(Route_Direction value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasDirection() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearDirection() => $_clearField(2);
+
+  ///
+  ///  Waypoint name prefix (e.g. "CP").
+  @$pb.TagNumber(3)
+  $core.String get prefix => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set prefix($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasPrefix() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearPrefix() => $_clearField(3);
+
+  ///
+  ///  Stroke weight * 10 (e.g. 30 = 3.0). 0 = default.
+  @$pb.TagNumber(4)
+  $core.int get strokeWeightX10 => $_getIZ(3);
+  @$pb.TagNumber(4)
+  set strokeWeightX10($core.int value) => $_setUnsignedInt32(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasStrokeWeightX10() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearStrokeWeightX10() => $_clearField(4);
+
+  ///
+  ///  Ordered list of route control points. Capped at 16.
+  @$pb.TagNumber(5)
+  $pb.PbList<Route_Link> get links => $_getList(4);
+
+  ///
+  ///  True if the sender truncated `links` to fit the pool.
+  @$pb.TagNumber(6)
+  $core.bool get truncated => $_getBF(5);
+  @$pb.TagNumber(6)
+  set truncated($core.bool value) => $_setBool(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasTruncated() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearTruncated() => $_clearField(6);
+}
+
+///
+///  9-line MEDEVAC request (CoT type b-r-f-h-c).
+///
+///  Mirrors the ATAK MedLine tool's <_medevac_> detail element. Every field
+///  is optional (proto3 default); senders omit lines they don't have. The
+///  envelope (TAKPacketV2.uid, cot_type_id=b-r-f-h-c, latitude_i/longitude_i,
+///  altitude, callsign) carries Line 1 (location) and Line 2 (callsign).
+///
+///  All numeric fields are tight varints so a complete 9-line request fits
+///  in well under 100 bytes of proto on the wire.
+class CasevacReport extends $pb.GeneratedMessage {
+  factory CasevacReport({
+    CasevacReport_Precedence? precedence,
+    $core.int? equipmentFlags,
+    $core.int? litterPatients,
+    $core.int? ambulatoryPatients,
+    CasevacReport_Security? security,
+    CasevacReport_HlzMarking? hlzMarking,
+    $core.String? zoneMarker,
+    $core.int? usMilitary,
+    $core.int? usCivilian,
+    $core.int? nonUsMilitary,
+    $core.int? nonUsCivilian,
+    $core.int? epw,
+    $core.int? child,
+    $core.int? terrainFlags,
+    $core.String? frequency,
+  }) {
+    final result = create();
+    if (precedence != null) result.precedence = precedence;
+    if (equipmentFlags != null) result.equipmentFlags = equipmentFlags;
+    if (litterPatients != null) result.litterPatients = litterPatients;
+    if (ambulatoryPatients != null)
+      result.ambulatoryPatients = ambulatoryPatients;
+    if (security != null) result.security = security;
+    if (hlzMarking != null) result.hlzMarking = hlzMarking;
+    if (zoneMarker != null) result.zoneMarker = zoneMarker;
+    if (usMilitary != null) result.usMilitary = usMilitary;
+    if (usCivilian != null) result.usCivilian = usCivilian;
+    if (nonUsMilitary != null) result.nonUsMilitary = nonUsMilitary;
+    if (nonUsCivilian != null) result.nonUsCivilian = nonUsCivilian;
+    if (epw != null) result.epw = epw;
+    if (child != null) result.child = child;
+    if (terrainFlags != null) result.terrainFlags = terrainFlags;
+    if (frequency != null) result.frequency = frequency;
+    return result;
+  }
+
+  CasevacReport._();
+
+  factory CasevacReport.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory CasevacReport.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'CasevacReport',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aE<CasevacReport_Precedence>(1, _omitFieldNames ? '' : 'precedence',
+        enumValues: CasevacReport_Precedence.values)
+    ..aI(2, _omitFieldNames ? '' : 'equipmentFlags',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(3, _omitFieldNames ? '' : 'litterPatients',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(4, _omitFieldNames ? '' : 'ambulatoryPatients',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aE<CasevacReport_Security>(5, _omitFieldNames ? '' : 'security',
+        enumValues: CasevacReport_Security.values)
+    ..aE<CasevacReport_HlzMarking>(6, _omitFieldNames ? '' : 'hlzMarking',
+        enumValues: CasevacReport_HlzMarking.values)
+    ..aOS(7, _omitFieldNames ? '' : 'zoneMarker')
+    ..aI(8, _omitFieldNames ? '' : 'usMilitary', fieldType: $pb.PbFieldType.OU3)
+    ..aI(9, _omitFieldNames ? '' : 'usCivilian', fieldType: $pb.PbFieldType.OU3)
+    ..aI(10, _omitFieldNames ? '' : 'nonUsMilitary',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(11, _omitFieldNames ? '' : 'nonUsCivilian',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(12, _omitFieldNames ? '' : 'epw', fieldType: $pb.PbFieldType.OU3)
+    ..aI(13, _omitFieldNames ? '' : 'child', fieldType: $pb.PbFieldType.OU3)
+    ..aI(14, _omitFieldNames ? '' : 'terrainFlags',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aOS(15, _omitFieldNames ? '' : 'frequency')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CasevacReport clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CasevacReport copyWith(void Function(CasevacReport) updates) =>
+      super.copyWith((message) => updates(message as CasevacReport))
+          as CasevacReport;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static CasevacReport create() => CasevacReport._();
+  @$core.override
+  CasevacReport createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static CasevacReport getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<CasevacReport>(create);
+  static CasevacReport? _defaultInstance;
+
+  ///
+  ///  Line 3: precedence / urgency.
+  @$pb.TagNumber(1)
+  CasevacReport_Precedence get precedence => $_getN(0);
+  @$pb.TagNumber(1)
+  set precedence(CasevacReport_Precedence value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasPrecedence() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearPrecedence() => $_clearField(1);
+
+  ///
+  ///  Line 4: special equipment required, as a bitfield.
+  ///    bit 0: none
+  ///    bit 1: hoist
+  ///    bit 2: extraction equipment
+  ///    bit 3: ventilator
+  ///    bit 4: blood
+  @$pb.TagNumber(2)
+  $core.int get equipmentFlags => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set equipmentFlags($core.int value) => $_setUnsignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasEquipmentFlags() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearEquipmentFlags() => $_clearField(2);
+
+  ///
+  ///  Line 5: number of litter (stretcher-bound) patients.
+  @$pb.TagNumber(3)
+  $core.int get litterPatients => $_getIZ(2);
+  @$pb.TagNumber(3)
+  set litterPatients($core.int value) => $_setUnsignedInt32(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasLitterPatients() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearLitterPatients() => $_clearField(3);
+
+  ///
+  ///  Line 5: number of ambulatory (walking-wounded) patients.
+  @$pb.TagNumber(4)
+  $core.int get ambulatoryPatients => $_getIZ(3);
+  @$pb.TagNumber(4)
+  set ambulatoryPatients($core.int value) => $_setUnsignedInt32(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasAmbulatoryPatients() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearAmbulatoryPatients() => $_clearField(4);
+
+  ///
+  ///  Line 6: security situation at the PZ.
+  @$pb.TagNumber(5)
+  CasevacReport_Security get security => $_getN(4);
+  @$pb.TagNumber(5)
+  set security(CasevacReport_Security value) => $_setField(5, value);
+  @$pb.TagNumber(5)
+  $core.bool hasSecurity() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearSecurity() => $_clearField(5);
+
+  ///
+  ///  Line 7: HLZ marking method.
+  @$pb.TagNumber(6)
+  CasevacReport_HlzMarking get hlzMarking => $_getN(5);
+  @$pb.TagNumber(6)
+  set hlzMarking(CasevacReport_HlzMarking value) => $_setField(6, value);
+  @$pb.TagNumber(6)
+  $core.bool hasHlzMarking() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearHlzMarking() => $_clearField(6);
+
+  ///
+  ///  Line 7 supplementary: short free-text describing the zone marker
+  ///  (e.g. "Green smoke", "VS-17 panel west"). Capped tight in options.
+  @$pb.TagNumber(7)
+  $core.String get zoneMarker => $_getSZ(6);
+  @$pb.TagNumber(7)
+  set zoneMarker($core.String value) => $_setString(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasZoneMarker() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearZoneMarker() => $_clearField(7);
+
+  /// --- Line 8: patient nationality counts ---
+  @$pb.TagNumber(8)
+  $core.int get usMilitary => $_getIZ(7);
+  @$pb.TagNumber(8)
+  set usMilitary($core.int value) => $_setUnsignedInt32(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasUsMilitary() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearUsMilitary() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $core.int get usCivilian => $_getIZ(8);
+  @$pb.TagNumber(9)
+  set usCivilian($core.int value) => $_setUnsignedInt32(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasUsCivilian() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearUsCivilian() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  $core.int get nonUsMilitary => $_getIZ(9);
+  @$pb.TagNumber(10)
+  set nonUsMilitary($core.int value) => $_setUnsignedInt32(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasNonUsMilitary() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearNonUsMilitary() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  $core.int get nonUsCivilian => $_getIZ(10);
+  @$pb.TagNumber(11)
+  set nonUsCivilian($core.int value) => $_setUnsignedInt32(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasNonUsCivilian() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearNonUsCivilian() => $_clearField(11);
+
+  @$pb.TagNumber(12)
+  $core.int get epw => $_getIZ(11);
+  @$pb.TagNumber(12)
+  set epw($core.int value) => $_setUnsignedInt32(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasEpw() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearEpw() => $_clearField(12);
+
+  @$pb.TagNumber(13)
+  $core.int get child => $_getIZ(12);
+  @$pb.TagNumber(13)
+  set child($core.int value) => $_setUnsignedInt32(12, value);
+  @$pb.TagNumber(13)
+  $core.bool hasChild() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearChild() => $_clearField(13);
+
+  ///
+  ///  Line 9: terrain and obstacles at the PZ, as a bitfield.
+  ///    bit 0: slope
+  ///    bit 1: rough
+  ///    bit 2: loose
+  ///    bit 3: trees
+  ///    bit 4: wires
+  ///    bit 5: other
+  @$pb.TagNumber(14)
+  $core.int get terrainFlags => $_getIZ(13);
+  @$pb.TagNumber(14)
+  set terrainFlags($core.int value) => $_setUnsignedInt32(13, value);
+  @$pb.TagNumber(14)
+  $core.bool hasTerrainFlags() => $_has(13);
+  @$pb.TagNumber(14)
+  void clearTerrainFlags() => $_clearField(14);
+
+  ///
+  ///  Line 2: radio frequency / callsign metadata (e.g. "38.90 Mhz" or
+  ///  "Victor 6"). Capped tight in options.
+  @$pb.TagNumber(15)
+  $core.String get frequency => $_getSZ(14);
+  @$pb.TagNumber(15)
+  set frequency($core.String value) => $_setString(14, value);
+  @$pb.TagNumber(15)
+  $core.bool hasFrequency() => $_has(14);
+  @$pb.TagNumber(15)
+  void clearFrequency() => $_clearField(15);
+}
+
+///
+///  Emergency alert / 911 beacon (CoT types b-a-o-tbl, b-a-o-pan, b-a-o-opn,
+///  b-a-o-can, b-a-o-c, b-a-g).
+///
+///  Small, high-priority structured record. The CoT type string is still set
+///  on cot_type_id so receivers that ignore payload_variant can still display
+///  the alert from the enum alone; the typed fields let modern receivers show
+///  the authoring unit and handle cancel-referencing without XML parsing.
+class EmergencyAlert extends $pb.GeneratedMessage {
+  factory EmergencyAlert({
+    EmergencyAlert_Type? type,
+    $core.String? authoringUid,
+    $core.String? cancelReferenceUid,
+  }) {
+    final result = create();
+    if (type != null) result.type = type;
+    if (authoringUid != null) result.authoringUid = authoringUid;
+    if (cancelReferenceUid != null)
+      result.cancelReferenceUid = cancelReferenceUid;
+    return result;
+  }
+
+  EmergencyAlert._();
+
+  factory EmergencyAlert.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory EmergencyAlert.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'EmergencyAlert',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aE<EmergencyAlert_Type>(1, _omitFieldNames ? '' : 'type',
+        enumValues: EmergencyAlert_Type.values)
+    ..aOS(2, _omitFieldNames ? '' : 'authoringUid')
+    ..aOS(3, _omitFieldNames ? '' : 'cancelReferenceUid')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EmergencyAlert clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EmergencyAlert copyWith(void Function(EmergencyAlert) updates) =>
+      super.copyWith((message) => updates(message as EmergencyAlert))
+          as EmergencyAlert;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static EmergencyAlert create() => EmergencyAlert._();
+  @$core.override
+  EmergencyAlert createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static EmergencyAlert getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<EmergencyAlert>(create);
+  static EmergencyAlert? _defaultInstance;
+
+  ///
+  ///  Alert discriminator.
+  @$pb.TagNumber(1)
+  EmergencyAlert_Type get type => $_getN(0);
+  @$pb.TagNumber(1)
+  set type(EmergencyAlert_Type value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasType() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearType() => $_clearField(1);
+
+  ///
+  ///  UID of the unit that raised the alert. Often the same as
+  ///  TAKPacketV2.uid but can be a parent device uid when a tracker raises
+  ///  an alert on behalf of a dismount.
+  @$pb.TagNumber(2)
+  $core.String get authoringUid => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set authoringUid($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasAuthoringUid() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearAuthoringUid() => $_clearField(2);
+
+  ///
+  ///  For Type_Cancel: the uid of the alert being cancelled. Empty for
+  ///  non-cancel alert types.
+  @$pb.TagNumber(3)
+  $core.String get cancelReferenceUid => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set cancelReferenceUid($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasCancelReferenceUid() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearCancelReferenceUid() => $_clearField(3);
+}
+
+///
+///  Task / engage request (CoT type t-s).
+///
+///  Mirrors ATAK's TaskCotReceiver / CotTaskBuilder workflow. The envelope
+///  carries the task's originating uid (implicit requester), position, and
+///  creation time; the fields below carry structured metadata the raw-detail
+///  fallback currently loses.
+///
+///  Fields are deliberately lean — this variant is closer to the MTU ceiling
+///  than the others, so every string is capped in options.
+class TaskRequest extends $pb.GeneratedMessage {
+  factory TaskRequest({
+    $core.String? taskType,
+    $core.String? targetUid,
+    $core.String? assigneeUid,
+    TaskRequest_Priority? priority,
+    TaskRequest_Status? status,
+    $core.String? note,
+  }) {
+    final result = create();
+    if (taskType != null) result.taskType = taskType;
+    if (targetUid != null) result.targetUid = targetUid;
+    if (assigneeUid != null) result.assigneeUid = assigneeUid;
+    if (priority != null) result.priority = priority;
+    if (status != null) result.status = status;
+    if (note != null) result.note = note;
+    return result;
+  }
+
+  TaskRequest._();
+
+  factory TaskRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory TaskRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'TaskRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'taskType')
+    ..aOS(2, _omitFieldNames ? '' : 'targetUid')
+    ..aOS(3, _omitFieldNames ? '' : 'assigneeUid')
+    ..aE<TaskRequest_Priority>(4, _omitFieldNames ? '' : 'priority',
+        enumValues: TaskRequest_Priority.values)
+    ..aE<TaskRequest_Status>(5, _omitFieldNames ? '' : 'status',
+        enumValues: TaskRequest_Status.values)
+    ..aOS(6, _omitFieldNames ? '' : 'note')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  TaskRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  TaskRequest copyWith(void Function(TaskRequest) updates) =>
+      super.copyWith((message) => updates(message as TaskRequest))
+          as TaskRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static TaskRequest create() => TaskRequest._();
+  @$core.override
+  TaskRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static TaskRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<TaskRequest>(create);
+  static TaskRequest? _defaultInstance;
+
+  ///
+  ///  Short tag for the task category (e.g. "engage", "observe", "recon",
+  ///  "rescue"). Free text on the wire so ATAK-specific task taxonomies
+  ///  don't need proto coordination; capped tight in options.
+  @$pb.TagNumber(1)
+  $core.String get taskType => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set taskType($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasTaskType() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearTaskType() => $_clearField(1);
+
+  ///
+  ///  UID of the target / map item being tasked.
+  @$pb.TagNumber(2)
+  $core.String get targetUid => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set targetUid($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasTargetUid() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearTargetUid() => $_clearField(2);
+
+  ///
+  ///  UID of the assigned unit. Empty = unassigned / broadcast task.
+  @$pb.TagNumber(3)
+  $core.String get assigneeUid => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set assigneeUid($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasAssigneeUid() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearAssigneeUid() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  TaskRequest_Priority get priority => $_getN(3);
+  @$pb.TagNumber(4)
+  set priority(TaskRequest_Priority value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasPriority() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearPriority() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  TaskRequest_Status get status => $_getN(4);
+  @$pb.TagNumber(5)
+  set status(TaskRequest_Status value) => $_setField(5, value);
+  @$pb.TagNumber(5)
+  $core.bool hasStatus() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearStatus() => $_clearField(5);
+
+  ///
+  ///  Optional short note (reason, constraints, grid reference). Capped
+  ///  tight in options to keep the worst-case under the LoRa MTU.
+  @$pb.TagNumber(6)
+  $core.String get note => $_getSZ(5);
+  @$pb.TagNumber(6)
+  set note($core.String value) => $_setString(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasNote() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearNote() => $_clearField(6);
+}
+
+enum TAKPacketV2_PayloadVariant {
+  pli,
+  chat,
+  aircraft,
+  rawDetail,
+  shape,
+  marker,
+  rab,
+  route,
+  casevac,
+  emergency,
+  task,
+  notSet
+}
+
+///
+///  ATAK v2 packet with expanded CoT field support and zstd dictionary compression.
+///  Sent on ATAK_PLUGIN_V2 port. The wire payload is:
+///    [1 byte flags][zstd-compressed TAKPacketV2 protobuf]
+///  Flags byte: bits 0-5 = dictionary ID, bits 6-7 = reserved.
+class TAKPacketV2 extends $pb.GeneratedMessage {
+  factory TAKPacketV2({
+    CotType? cotTypeId,
+    CotHow? how,
+    $core.String? callsign,
+    Team? team,
+    MemberRole? role,
+    $core.int? latitudeI,
+    $core.int? longitudeI,
+    $core.int? altitude,
+    $core.int? speed,
+    $core.int? course,
+    $core.int? battery,
+    GeoPointSource? geoSrc,
+    GeoPointSource? altSrc,
+    $core.String? uid,
+    $core.String? deviceCallsign,
+    $core.int? staleSeconds,
+    $core.String? takVersion,
+    $core.String? takDevice,
+    $core.String? takPlatform,
+    $core.String? takOs,
+    $core.String? endpoint,
+    $core.String? phone,
+    $core.String? cotTypeStr,
+    $core.String? remarks,
+    $core.bool? pli,
+    GeoChat? chat,
+    AircraftTrack? aircraft,
+    $core.List<$core.int>? rawDetail,
+    DrawnShape? shape,
+    Marker? marker,
+    RangeAndBearing? rab,
+    Route? route,
+    CasevacReport? casevac,
+    EmergencyAlert? emergency,
+    TaskRequest? task,
+  }) {
+    final result = create();
+    if (cotTypeId != null) result.cotTypeId = cotTypeId;
+    if (how != null) result.how = how;
+    if (callsign != null) result.callsign = callsign;
+    if (team != null) result.team = team;
+    if (role != null) result.role = role;
+    if (latitudeI != null) result.latitudeI = latitudeI;
+    if (longitudeI != null) result.longitudeI = longitudeI;
+    if (altitude != null) result.altitude = altitude;
+    if (speed != null) result.speed = speed;
+    if (course != null) result.course = course;
+    if (battery != null) result.battery = battery;
+    if (geoSrc != null) result.geoSrc = geoSrc;
+    if (altSrc != null) result.altSrc = altSrc;
+    if (uid != null) result.uid = uid;
+    if (deviceCallsign != null) result.deviceCallsign = deviceCallsign;
+    if (staleSeconds != null) result.staleSeconds = staleSeconds;
+    if (takVersion != null) result.takVersion = takVersion;
+    if (takDevice != null) result.takDevice = takDevice;
+    if (takPlatform != null) result.takPlatform = takPlatform;
+    if (takOs != null) result.takOs = takOs;
+    if (endpoint != null) result.endpoint = endpoint;
+    if (phone != null) result.phone = phone;
+    if (cotTypeStr != null) result.cotTypeStr = cotTypeStr;
+    if (remarks != null) result.remarks = remarks;
+    if (pli != null) result.pli = pli;
+    if (chat != null) result.chat = chat;
+    if (aircraft != null) result.aircraft = aircraft;
+    if (rawDetail != null) result.rawDetail = rawDetail;
+    if (shape != null) result.shape = shape;
+    if (marker != null) result.marker = marker;
+    if (rab != null) result.rab = rab;
+    if (route != null) result.route = route;
+    if (casevac != null) result.casevac = casevac;
+    if (emergency != null) result.emergency = emergency;
+    if (task != null) result.task = task;
+    return result;
+  }
+
+  TAKPacketV2._();
+
+  factory TAKPacketV2.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory TAKPacketV2.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static const $core.Map<$core.int, TAKPacketV2_PayloadVariant>
+      _TAKPacketV2_PayloadVariantByTag = {
+    30: TAKPacketV2_PayloadVariant.pli,
+    31: TAKPacketV2_PayloadVariant.chat,
+    32: TAKPacketV2_PayloadVariant.aircraft,
+    33: TAKPacketV2_PayloadVariant.rawDetail,
+    34: TAKPacketV2_PayloadVariant.shape,
+    35: TAKPacketV2_PayloadVariant.marker,
+    36: TAKPacketV2_PayloadVariant.rab,
+    37: TAKPacketV2_PayloadVariant.route,
+    38: TAKPacketV2_PayloadVariant.casevac,
+    39: TAKPacketV2_PayloadVariant.emergency,
+    40: TAKPacketV2_PayloadVariant.task,
+    0: TAKPacketV2_PayloadVariant.notSet
+  };
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'TAKPacketV2',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..oo(0, [30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40])
+    ..aE<CotType>(1, _omitFieldNames ? '' : 'cotTypeId',
+        enumValues: CotType.values)
+    ..aE<CotHow>(2, _omitFieldNames ? '' : 'how', enumValues: CotHow.values)
+    ..aOS(3, _omitFieldNames ? '' : 'callsign')
+    ..aE<Team>(4, _omitFieldNames ? '' : 'team', enumValues: Team.values)
+    ..aE<MemberRole>(5, _omitFieldNames ? '' : 'role',
+        enumValues: MemberRole.values)
+    ..aI(6, _omitFieldNames ? '' : 'latitudeI', fieldType: $pb.PbFieldType.OSF3)
+    ..aI(7, _omitFieldNames ? '' : 'longitudeI',
+        fieldType: $pb.PbFieldType.OSF3)
+    ..aI(8, _omitFieldNames ? '' : 'altitude', fieldType: $pb.PbFieldType.OS3)
+    ..aI(9, _omitFieldNames ? '' : 'speed', fieldType: $pb.PbFieldType.OU3)
+    ..aI(10, _omitFieldNames ? '' : 'course', fieldType: $pb.PbFieldType.OU3)
+    ..aI(11, _omitFieldNames ? '' : 'battery', fieldType: $pb.PbFieldType.OU3)
+    ..aE<GeoPointSource>(12, _omitFieldNames ? '' : 'geoSrc',
+        enumValues: GeoPointSource.values)
+    ..aE<GeoPointSource>(13, _omitFieldNames ? '' : 'altSrc',
+        enumValues: GeoPointSource.values)
+    ..aOS(14, _omitFieldNames ? '' : 'uid')
+    ..aOS(15, _omitFieldNames ? '' : 'deviceCallsign')
+    ..aI(16, _omitFieldNames ? '' : 'staleSeconds',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aOS(17, _omitFieldNames ? '' : 'takVersion')
+    ..aOS(18, _omitFieldNames ? '' : 'takDevice')
+    ..aOS(19, _omitFieldNames ? '' : 'takPlatform')
+    ..aOS(20, _omitFieldNames ? '' : 'takOs')
+    ..aOS(21, _omitFieldNames ? '' : 'endpoint')
+    ..aOS(22, _omitFieldNames ? '' : 'phone')
+    ..aOS(23, _omitFieldNames ? '' : 'cotTypeStr')
+    ..aOS(24, _omitFieldNames ? '' : 'remarks')
+    ..aOB(30, _omitFieldNames ? '' : 'pli')
+    ..aOM<GeoChat>(31, _omitFieldNames ? '' : 'chat',
+        subBuilder: GeoChat.create)
+    ..aOM<AircraftTrack>(32, _omitFieldNames ? '' : 'aircraft',
+        subBuilder: AircraftTrack.create)
+    ..a<$core.List<$core.int>>(
+        33, _omitFieldNames ? '' : 'rawDetail', $pb.PbFieldType.OY)
+    ..aOM<DrawnShape>(34, _omitFieldNames ? '' : 'shape',
+        subBuilder: DrawnShape.create)
+    ..aOM<Marker>(35, _omitFieldNames ? '' : 'marker',
+        subBuilder: Marker.create)
+    ..aOM<RangeAndBearing>(36, _omitFieldNames ? '' : 'rab',
+        subBuilder: RangeAndBearing.create)
+    ..aOM<Route>(37, _omitFieldNames ? '' : 'route', subBuilder: Route.create)
+    ..aOM<CasevacReport>(38, _omitFieldNames ? '' : 'casevac',
+        subBuilder: CasevacReport.create)
+    ..aOM<EmergencyAlert>(39, _omitFieldNames ? '' : 'emergency',
+        subBuilder: EmergencyAlert.create)
+    ..aOM<TaskRequest>(40, _omitFieldNames ? '' : 'task',
+        subBuilder: TaskRequest.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  TAKPacketV2 clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  TAKPacketV2 copyWith(void Function(TAKPacketV2) updates) =>
+      super.copyWith((message) => updates(message as TAKPacketV2))
+          as TAKPacketV2;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static TAKPacketV2 create() => TAKPacketV2._();
+  @$core.override
+  TAKPacketV2 createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static TAKPacketV2 getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<TAKPacketV2>(create);
+  static TAKPacketV2? _defaultInstance;
+
+  @$pb.TagNumber(30)
+  @$pb.TagNumber(31)
+  @$pb.TagNumber(32)
+  @$pb.TagNumber(33)
+  @$pb.TagNumber(34)
+  @$pb.TagNumber(35)
+  @$pb.TagNumber(36)
+  @$pb.TagNumber(37)
+  @$pb.TagNumber(38)
+  @$pb.TagNumber(39)
+  @$pb.TagNumber(40)
+  TAKPacketV2_PayloadVariant whichPayloadVariant() =>
+      _TAKPacketV2_PayloadVariantByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(30)
+  @$pb.TagNumber(31)
+  @$pb.TagNumber(32)
+  @$pb.TagNumber(33)
+  @$pb.TagNumber(34)
+  @$pb.TagNumber(35)
+  @$pb.TagNumber(36)
+  @$pb.TagNumber(37)
+  @$pb.TagNumber(38)
+  @$pb.TagNumber(39)
+  @$pb.TagNumber(40)
+  void clearPayloadVariant() => $_clearField($_whichOneof(0));
+
+  ///
+  ///  Well-known CoT event type enum.
+  ///  Use CotType_Other with cot_type_str for unknown types.
+  @$pb.TagNumber(1)
+  CotType get cotTypeId => $_getN(0);
+  @$pb.TagNumber(1)
+  set cotTypeId(CotType value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasCotTypeId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearCotTypeId() => $_clearField(1);
+
+  ///
+  ///  How the coordinates were generated
+  @$pb.TagNumber(2)
+  CotHow get how => $_getN(1);
+  @$pb.TagNumber(2)
+  set how(CotHow value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasHow() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearHow() => $_clearField(2);
+
+  ///
+  ///  Callsign
+  @$pb.TagNumber(3)
+  $core.String get callsign => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set callsign($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasCallsign() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearCallsign() => $_clearField(3);
+
+  ///
+  ///  Team color assignment
+  @$pb.TagNumber(4)
+  Team get team => $_getN(3);
+  @$pb.TagNumber(4)
+  set team(Team value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasTeam() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearTeam() => $_clearField(4);
+
+  ///
+  ///  Role of the group member
+  @$pb.TagNumber(5)
+  MemberRole get role => $_getN(4);
+  @$pb.TagNumber(5)
+  set role(MemberRole value) => $_setField(5, value);
+  @$pb.TagNumber(5)
+  $core.bool hasRole() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearRole() => $_clearField(5);
+
+  ///
+  ///  Latitude, multiply by 1e-7 to get degrees in floating point
+  @$pb.TagNumber(6)
+  $core.int get latitudeI => $_getIZ(5);
+  @$pb.TagNumber(6)
+  set latitudeI($core.int value) => $_setSignedInt32(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasLatitudeI() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearLatitudeI() => $_clearField(6);
+
+  ///
+  ///  Longitude, multiply by 1e-7 to get degrees in floating point
+  @$pb.TagNumber(7)
+  $core.int get longitudeI => $_getIZ(6);
+  @$pb.TagNumber(7)
+  set longitudeI($core.int value) => $_setSignedInt32(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasLongitudeI() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearLongitudeI() => $_clearField(7);
+
+  ///
+  ///  Altitude in meters (HAE)
+  @$pb.TagNumber(8)
+  $core.int get altitude => $_getIZ(7);
+  @$pb.TagNumber(8)
+  set altitude($core.int value) => $_setSignedInt32(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasAltitude() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearAltitude() => $_clearField(8);
+
+  ///
+  ///  Speed in cm/s
+  @$pb.TagNumber(9)
+  $core.int get speed => $_getIZ(8);
+  @$pb.TagNumber(9)
+  set speed($core.int value) => $_setUnsignedInt32(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasSpeed() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearSpeed() => $_clearField(9);
+
+  ///
+  ///  Course in degrees * 100 (0-36000)
+  @$pb.TagNumber(10)
+  $core.int get course => $_getIZ(9);
+  @$pb.TagNumber(10)
+  set course($core.int value) => $_setUnsignedInt32(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasCourse() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearCourse() => $_clearField(10);
+
+  ///
+  ///  Battery level 0-100
+  @$pb.TagNumber(11)
+  $core.int get battery => $_getIZ(10);
+  @$pb.TagNumber(11)
+  set battery($core.int value) => $_setUnsignedInt32(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasBattery() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearBattery() => $_clearField(11);
+
+  ///
+  ///  Geopoint source
+  @$pb.TagNumber(12)
+  GeoPointSource get geoSrc => $_getN(11);
+  @$pb.TagNumber(12)
+  set geoSrc(GeoPointSource value) => $_setField(12, value);
+  @$pb.TagNumber(12)
+  $core.bool hasGeoSrc() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearGeoSrc() => $_clearField(12);
+
+  ///
+  ///  Altitude source
+  @$pb.TagNumber(13)
+  GeoPointSource get altSrc => $_getN(12);
+  @$pb.TagNumber(13)
+  set altSrc(GeoPointSource value) => $_setField(13, value);
+  @$pb.TagNumber(13)
+  $core.bool hasAltSrc() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearAltSrc() => $_clearField(13);
+
+  ///
+  ///  Device UID (UUID string or device ID like "ANDROID-xxxx")
+  @$pb.TagNumber(14)
+  $core.String get uid => $_getSZ(13);
+  @$pb.TagNumber(14)
+  set uid($core.String value) => $_setString(13, value);
+  @$pb.TagNumber(14)
+  $core.bool hasUid() => $_has(13);
+  @$pb.TagNumber(14)
+  void clearUid() => $_clearField(14);
+
+  ///
+  ///  Device callsign
+  @$pb.TagNumber(15)
+  $core.String get deviceCallsign => $_getSZ(14);
+  @$pb.TagNumber(15)
+  set deviceCallsign($core.String value) => $_setString(14, value);
+  @$pb.TagNumber(15)
+  $core.bool hasDeviceCallsign() => $_has(14);
+  @$pb.TagNumber(15)
+  void clearDeviceCallsign() => $_clearField(15);
+
+  ///
+  ///  Stale time as seconds offset from event time
+  @$pb.TagNumber(16)
+  $core.int get staleSeconds => $_getIZ(15);
+  @$pb.TagNumber(16)
+  set staleSeconds($core.int value) => $_setUnsignedInt32(15, value);
+  @$pb.TagNumber(16)
+  $core.bool hasStaleSeconds() => $_has(15);
+  @$pb.TagNumber(16)
+  void clearStaleSeconds() => $_clearField(16);
+
+  ///
+  ///  TAK client version string
+  @$pb.TagNumber(17)
+  $core.String get takVersion => $_getSZ(16);
+  @$pb.TagNumber(17)
+  set takVersion($core.String value) => $_setString(16, value);
+  @$pb.TagNumber(17)
+  $core.bool hasTakVersion() => $_has(16);
+  @$pb.TagNumber(17)
+  void clearTakVersion() => $_clearField(17);
+
+  ///
+  ///  TAK device model
+  @$pb.TagNumber(18)
+  $core.String get takDevice => $_getSZ(17);
+  @$pb.TagNumber(18)
+  set takDevice($core.String value) => $_setString(17, value);
+  @$pb.TagNumber(18)
+  $core.bool hasTakDevice() => $_has(17);
+  @$pb.TagNumber(18)
+  void clearTakDevice() => $_clearField(18);
+
+  ///
+  ///  TAK platform (ATAK-CIV, WebTAK, etc.)
+  @$pb.TagNumber(19)
+  $core.String get takPlatform => $_getSZ(18);
+  @$pb.TagNumber(19)
+  set takPlatform($core.String value) => $_setString(18, value);
+  @$pb.TagNumber(19)
+  $core.bool hasTakPlatform() => $_has(18);
+  @$pb.TagNumber(19)
+  void clearTakPlatform() => $_clearField(19);
+
+  ///
+  ///  TAK OS version
+  @$pb.TagNumber(20)
+  $core.String get takOs => $_getSZ(19);
+  @$pb.TagNumber(20)
+  set takOs($core.String value) => $_setString(19, value);
+  @$pb.TagNumber(20)
+  $core.bool hasTakOs() => $_has(19);
+  @$pb.TagNumber(20)
+  void clearTakOs() => $_clearField(20);
+
+  ///
+  ///  Connection endpoint
+  @$pb.TagNumber(21)
+  $core.String get endpoint => $_getSZ(20);
+  @$pb.TagNumber(21)
+  set endpoint($core.String value) => $_setString(20, value);
+  @$pb.TagNumber(21)
+  $core.bool hasEndpoint() => $_has(20);
+  @$pb.TagNumber(21)
+  void clearEndpoint() => $_clearField(21);
+
+  ///
+  ///  Phone number
+  @$pb.TagNumber(22)
+  $core.String get phone => $_getSZ(21);
+  @$pb.TagNumber(22)
+  set phone($core.String value) => $_setString(21, value);
+  @$pb.TagNumber(22)
+  $core.bool hasPhone() => $_has(21);
+  @$pb.TagNumber(22)
+  void clearPhone() => $_clearField(22);
+
+  ///
+  ///  CoT event type string, only populated when cot_type_id is CotType_Other
+  @$pb.TagNumber(23)
+  $core.String get cotTypeStr => $_getSZ(22);
+  @$pb.TagNumber(23)
+  set cotTypeStr($core.String value) => $_setString(22, value);
+  @$pb.TagNumber(23)
+  $core.bool hasCotTypeStr() => $_has(22);
+  @$pb.TagNumber(23)
+  void clearCotTypeStr() => $_clearField(23);
+
+  ///
+  ///  Optional remarks / free-text annotation from the <remarks> element.
+  ///  Populated for non-GeoChat payload types (shapes, markers, routes, etc.)
+  ///  when the original CoT event carried non-empty remarks text.
+  ///  GeoChat messages carry their text in GeoChat.message instead.
+  ///  Empty string (proto3 default) means no remarks were present.
+  @$pb.TagNumber(24)
+  $core.String get remarks => $_getSZ(23);
+  @$pb.TagNumber(24)
+  set remarks($core.String value) => $_setString(23, value);
+  @$pb.TagNumber(24)
+  $core.bool hasRemarks() => $_has(23);
+  @$pb.TagNumber(24)
+  void clearRemarks() => $_clearField(24);
+
+  ///
+  ///  Position report (true = PLI, no extra fields beyond the common ones above)
+  @$pb.TagNumber(30)
+  $core.bool get pli => $_getBF(24);
+  @$pb.TagNumber(30)
+  set pli($core.bool value) => $_setBool(24, value);
+  @$pb.TagNumber(30)
+  $core.bool hasPli() => $_has(24);
+  @$pb.TagNumber(30)
+  void clearPli() => $_clearField(30);
+
+  ///
+  ///  ATAK GeoChat message
+  @$pb.TagNumber(31)
+  GeoChat get chat => $_getN(25);
+  @$pb.TagNumber(31)
+  set chat(GeoChat value) => $_setField(31, value);
+  @$pb.TagNumber(31)
+  $core.bool hasChat() => $_has(25);
+  @$pb.TagNumber(31)
+  void clearChat() => $_clearField(31);
+  @$pb.TagNumber(31)
+  GeoChat ensureChat() => $_ensure(25);
+
+  ///
+  ///  Aircraft track data (ADS-B, military air)
+  @$pb.TagNumber(32)
+  AircraftTrack get aircraft => $_getN(26);
+  @$pb.TagNumber(32)
+  set aircraft(AircraftTrack value) => $_setField(32, value);
+  @$pb.TagNumber(32)
+  $core.bool hasAircraft() => $_has(26);
+  @$pb.TagNumber(32)
+  void clearAircraft() => $_clearField(32);
+  @$pb.TagNumber(32)
+  AircraftTrack ensureAircraft() => $_ensure(26);
+
+  ///
+  ///  Generic CoT detail XML for unmapped types. Kept as a fallback for CoT
+  ///  types not yet promoted to a typed variant; drawings, markers, ranging
+  ///  tools, and routes have dedicated variants below and should not land here.
+  @$pb.TagNumber(33)
+  $core.List<$core.int> get rawDetail => $_getN(27);
+  @$pb.TagNumber(33)
+  set rawDetail($core.List<$core.int> value) => $_setBytes(27, value);
+  @$pb.TagNumber(33)
+  $core.bool hasRawDetail() => $_has(27);
+  @$pb.TagNumber(33)
+  void clearRawDetail() => $_clearField(33);
+
+  ///
+  ///  User-drawn tactical graphic: circle, rectangle, polygon, polyline,
+  ///  telestration, ranging circle, or bullseye. See DrawnShape.
+  @$pb.TagNumber(34)
+  DrawnShape get shape => $_getN(28);
+  @$pb.TagNumber(34)
+  set shape(DrawnShape value) => $_setField(34, value);
+  @$pb.TagNumber(34)
+  $core.bool hasShape() => $_has(28);
+  @$pb.TagNumber(34)
+  void clearShape() => $_clearField(34);
+  @$pb.TagNumber(34)
+  DrawnShape ensureShape() => $_ensure(28);
+
+  ///
+  ///  Fixed point of interest: spot marker, waypoint, checkpoint, 2525
+  ///  symbol, or custom icon. See Marker.
+  @$pb.TagNumber(35)
+  Marker get marker => $_getN(29);
+  @$pb.TagNumber(35)
+  set marker(Marker value) => $_setField(35, value);
+  @$pb.TagNumber(35)
+  $core.bool hasMarker() => $_has(29);
+  @$pb.TagNumber(35)
+  void clearMarker() => $_clearField(35);
+  @$pb.TagNumber(35)
+  Marker ensureMarker() => $_ensure(29);
+
+  ///
+  ///  Range and bearing measurement line. See RangeAndBearing.
+  @$pb.TagNumber(36)
+  RangeAndBearing get rab => $_getN(30);
+  @$pb.TagNumber(36)
+  set rab(RangeAndBearing value) => $_setField(36, value);
+  @$pb.TagNumber(36)
+  $core.bool hasRab() => $_has(30);
+  @$pb.TagNumber(36)
+  void clearRab() => $_clearField(36);
+  @$pb.TagNumber(36)
+  RangeAndBearing ensureRab() => $_ensure(30);
+
+  ///
+  ///  Named route with ordered waypoints and control points. See Route.
+  @$pb.TagNumber(37)
+  Route get route => $_getN(31);
+  @$pb.TagNumber(37)
+  set route(Route value) => $_setField(37, value);
+  @$pb.TagNumber(37)
+  $core.bool hasRoute() => $_has(31);
+  @$pb.TagNumber(37)
+  void clearRoute() => $_clearField(37);
+  @$pb.TagNumber(37)
+  Route ensureRoute() => $_ensure(31);
+
+  ///
+  ///  9-line MEDEVAC request. See CasevacReport.
+  @$pb.TagNumber(38)
+  CasevacReport get casevac => $_getN(32);
+  @$pb.TagNumber(38)
+  set casevac(CasevacReport value) => $_setField(38, value);
+  @$pb.TagNumber(38)
+  $core.bool hasCasevac() => $_has(32);
+  @$pb.TagNumber(38)
+  void clearCasevac() => $_clearField(38);
+  @$pb.TagNumber(38)
+  CasevacReport ensureCasevac() => $_ensure(32);
+
+  ///
+  ///  Emergency beacon / 911 alert. See EmergencyAlert.
+  @$pb.TagNumber(39)
+  EmergencyAlert get emergency => $_getN(33);
+  @$pb.TagNumber(39)
+  set emergency(EmergencyAlert value) => $_setField(39, value);
+  @$pb.TagNumber(39)
+  $core.bool hasEmergency() => $_has(33);
+  @$pb.TagNumber(39)
+  void clearEmergency() => $_clearField(39);
+  @$pb.TagNumber(39)
+  EmergencyAlert ensureEmergency() => $_ensure(33);
+
+  ///
+  ///  Task / engage request. See TaskRequest.
+  @$pb.TagNumber(40)
+  TaskRequest get task => $_getN(34);
+  @$pb.TagNumber(40)
+  set task(TaskRequest value) => $_setField(40, value);
+  @$pb.TagNumber(40)
+  $core.bool hasTask() => $_has(34);
+  @$pb.TagNumber(40)
+  void clearTask() => $_clearField(40);
+  @$pb.TagNumber(40)
+  TaskRequest ensureTask() => $_ensure(34);
 }
 
 const $core.bool _omitFieldNames =

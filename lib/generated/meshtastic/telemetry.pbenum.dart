@@ -272,6 +272,11 @@ class TelemetrySensorType extends $pb.ProtobufEnum {
   static const TelemetrySensorType SHTXX =
       TelemetrySensorType._(50, _omitEnumNames ? '' : 'SHTXX');
 
+  ///
+  ///  DS248X Bridge for one-wire temperature sensors
+  static const TelemetrySensorType DS248X =
+      TelemetrySensorType._(51, _omitEnumNames ? '' : 'DS248X');
+
   static const $core.List<TelemetrySensorType> values = <TelemetrySensorType>[
     SENSOR_UNSET,
     BME280,
@@ -324,10 +329,11 @@ class TelemetrySensorType extends $pb.ProtobufEnum {
     STC31,
     SCD30,
     SHTXX,
+    DS248X,
   ];
 
   static final $core.List<TelemetrySensorType?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 50);
+      $pb.ProtobufEnum.$_initByValueList(values, 51);
   static TelemetrySensorType? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 

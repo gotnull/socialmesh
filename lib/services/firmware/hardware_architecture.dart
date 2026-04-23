@@ -110,6 +110,7 @@ const _hwModelToArchitecture = <int, DeviceArchitecture>{
   120: DeviceArchitecture.nrf52840, // THINKNODE_M6
   121: DeviceArchitecture.nrf52840, // MESHSTICK_1262
   127: DeviceArchitecture.nrf52840, // HELTEC_MESH_NODE_T096
+  128: DeviceArchitecture.nrf52840, // TRACKER_T1000_E_PRO
   // ESP32
   1: DeviceArchitecture.esp32, // TLORA_V2
   2: DeviceArchitecture.esp32, // TLORA_V1
@@ -217,6 +218,14 @@ const _hwModelToArchitecture = <int, DeviceArchitecture>{
   // Special / not flashable in-app
   37: DeviceArchitecture.unknown, // PORTDUINO (Linux native)
   38: DeviceArchitecture.unknown, // ANDROID_SIM
+  // Chipset unconfirmed — proto comment bundles M7/M8/M9 without MCU and the
+  // upstream meshtastic DeviceHardware.json table does not yet include them.
+  // Mapped to unknown so the DFU flow correctly reports "update not supported"
+  // instead of routing to the wrong update path. Revisit once the upstream
+  // table or firmware/variants/ lists these.
+  129: DeviceArchitecture.unknown, // THINKNODE_M7
+  130: DeviceArchitecture.unknown, // THINKNODE_M8
+  131: DeviceArchitecture.unknown, // THINKNODE_M9
   255: DeviceArchitecture.unknown, // PRIVATE_HW
 };
 
