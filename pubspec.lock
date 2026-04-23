@@ -1689,10 +1689,10 @@ packages:
     dependency: "direct main"
     description:
       name: mqtt_client
-      sha256: fde192a91f1d71b540574490f7f7e35302298f1342a4daf350c0ddc15e9d01f2
+      sha256: "41c8edd3bc8efc80c1c8ebfb40081c24d12d13085faca96b9280a624eca2d893"
       url: "https://pub.dev"
     source: hosted
-    version: "10.11.10"
+    version: "10.11.11"
   native_toolchain_c:
     dependency: transitive
     description:
