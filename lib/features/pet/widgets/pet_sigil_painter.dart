@@ -62,6 +62,11 @@ class PetCreature extends StatelessWidget {
   /// Optional tap callback — forwarded to the underlying MeshNodeBrain.
   final VoidCallback? onTap;
 
+  /// Pin the face forward so NodePet reads as a creature looking at
+  /// the user rather than a tumbling icosahedron. Default true —
+  /// overridable so the debug scrubber can show the tumble.
+  final bool preferFrontFace;
+
   const PetCreature({
     super.key,
     required this.dnaSeed,
@@ -79,6 +84,7 @@ class PetCreature extends StatelessWidget {
     this.stability,
     this.statMax = 10,
     this.onTap,
+    this.preferFrontFace = true,
   });
 
   @override
@@ -120,6 +126,7 @@ class PetCreature extends StatelessWidget {
       // register. Tiny NodeDex previews and card-mode companions stay
       // quiet (per-instance timer overhead × N node rows would add up).
       enableIdleBlink: mode == PetRenderMode.home,
+      preferFrontFace: preferFrontFace,
     );
   }
 }

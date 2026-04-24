@@ -17,6 +17,7 @@
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -36,10 +37,13 @@ import '../models/pet_action_result.dart';
 import '../models/pet_advisory.dart';
 import '../models/pet_enums.dart';
 import '../models/pet_state.dart';
+import '../providers/pet_debug_overrides.dart';
 import '../providers/pet_providers.dart';
+import '../services/pet_frame_profiler.dart';
 import '../services/pet_animation_tracker.dart';
 import '../widgets/pet_action_button.dart';
 import '../widgets/pet_actions_guide_sheet.dart';
+import '../widgets/pet_debug_overlay_sheet.dart';
 import '../widgets/pet_dna_viewer_sheet.dart';
 import '../widgets/pet_hatch_overlay.dart';
 import '../widgets/pet_inspect_sheet.dart';
@@ -195,6 +199,10 @@ class _PetBodyState extends ConsumerState<_PetBody>
   @override
   void initState() {
     super.initState();
+    // Dev-gated frame profiler — logs build/raster durations while the
+    // pet hero is on screen when PET_LOGGING_ENABLED=true in .env.
+    // No-op for users without the flag.
+    PetFrameProfiler.start();
     _bounceController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 320),
@@ -237,6 +245,7 @@ class _PetBodyState extends ConsumerState<_PetBody>
 
   @override
   void dispose() {
+    PetFrameProfiler.stop();
     _bounceController.dispose();
     _noOpToastTimer?.cancel();
     super.dispose();
@@ -462,6 +471,18 @@ class _PetBodyState extends ConsumerState<_PetBody>
     final config = ref.watch(petConfigProvider);
     final statMax = config.statMax;
     final mood = engine.deriveMood(state);
+    // Dev-only visual overrides. In release builds this provider always
+    // holds an empty PetDebugOverrides (no UI path writes to it), so
+    // every `??` below short-circuits to the real state.
+    final overrides = ref.watch(petDebugOverridesProvider);
+    final effectiveStage = overrides.stage ?? state.stage;
+    final effectiveBranch = overrides.branch ?? state.branch;
+    final effectiveMood = overrides.mood ?? mood;
+    final effectiveIsAsleep = overrides.isAsleep ?? state.isAsleep;
+    final effectiveIsSick = overrides.isSick ?? state.isSick;
+    final effectiveCallReason =
+        overrides.callReason ?? state.activeCall?.reason;
+    final effectiveIsCalling = effectiveCallReason != null;
     final now = DateTime.now();
     final ageDays = state.ageInDaysAt(now);
     final inSleepWindow = engine.isInSleepWindow(now);
@@ -573,27 +594,28 @@ class _PetBodyState extends ConsumerState<_PetBody>
                       ),
                       child: PetCreature(
                         dnaSeed: state.dnaSeed,
-                        stage: state.stage,
-                        branch: state.branch,
-                        mood: mood,
-                        isAsleep: state.isAsleep,
-                        isSick: state.isSick,
-                        isCalling: state.activeCall != null,
+                        stage: effectiveStage,
+                        branch: effectiveBranch,
+                        mood: effectiveMood,
+                        isAsleep: effectiveIsAsleep,
+                        isSick: effectiveIsSick,
+                        isCalling: effectiveIsCalling,
                         hygieneArtefactCount: state.hygieneArtefacts.length,
                         size: maxCreature.toDouble(),
                         energy: state.energy,
                         moodStat: state.mood,
                         stability: state.stability,
                         statMax: statMax,
+                        preferFrontFace: overrides.preferFrontFace ?? true,
                       ),
                     ),
                     // Floating thought-bubble indicator showing what the
                     // pet wants. Hygiene is excluded because dirt marks
                     // on the field already signal that channel.
-                    if (state.activeCall != null &&
-                        state.activeCall!.reason != CallReason.hygiene)
+                    if (effectiveCallReason != null &&
+                        effectiveCallReason != CallReason.hygiene)
                       PetNeedIndicator(
-                        reason: state.activeCall!.reason,
+                        reason: effectiveCallReason,
                         creatureSize: maxCreature.toDouble(),
                       ),
                     if (_hatchOverlayActive)
@@ -688,6 +710,15 @@ class _PetBodyState extends ConsumerState<_PetBody>
                   builder: (controller) =>
                       PetDnaViewerSheet(scrollController: controller),
                 );
+              case _PetOverflowAction.debugStates:
+                AppBottomSheet.showScrollable<void>(
+                  context: context,
+                  initialChildSize: 0.85,
+                  minChildSize: 0.5,
+                  maxChildSize: 0.95,
+                  builder: (controller) =>
+                      PetDebugOverlaySheet(scrollController: controller),
+                );
             }
           },
           itemBuilder: (context) => [
@@ -711,6 +742,17 @@ class _PetBodyState extends ConsumerState<_PetBody>
                 ],
               ),
             ),
+            if (kDebugMode)
+              const PopupMenuItem<_PetOverflowAction>(
+                value: _PetOverflowAction.debugStates,
+                child: Row(
+                  children: [
+                    Icon(Icons.science_outlined, size: 18),
+                    SizedBox(width: AppTheme.spacing12),
+                    Text('Debug: pet states'), // lint-allow: hardcoded-string
+                  ],
+                ),
+              ),
           ],
         ),
       ],
@@ -1212,4 +1254,4 @@ Color _moodColor(PetMood m) {
   }
 }
 
-enum _PetOverflowAction { guide, dnaViewer }
+enum _PetOverflowAction { guide, dnaViewer, debugStates }

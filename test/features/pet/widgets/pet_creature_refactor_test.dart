@@ -250,5 +250,37 @@ void main() {
       expect(brain.interactive, isFalse);
       expect(brain.mood, MeshBrainMood.dormant);
     });
+
+    testWidgets('NodePet always passes preferFrontFace: true', (tester) async {
+      for (final mode in PetRenderMode.values) {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Center(
+              child: PetCreature(
+                dnaSeed: 1,
+                stage: PetStage.adult,
+                branch: PetBranch.steady,
+                mood: PetMood.content,
+                isAsleep: false,
+                isSick: false,
+                isCalling: false,
+                hygieneArtefactCount: 0,
+                size: 120,
+                mode: mode,
+              ),
+            ),
+          ),
+        );
+        final brain = tester.widget<MeshNodeBrain>(find.byType(MeshNodeBrain));
+        expect(
+          brain.preferFrontFace,
+          isTrue,
+          reason:
+              'All NodePet modes should pin the face forward so the '
+              'creature looks at the user instead of tumbling, mode=$mode',
+        );
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+    });
   });
 }

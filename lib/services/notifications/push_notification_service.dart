@@ -9,6 +9,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart'
     hide Message;
 import 'package:http/http.dart' as http;
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -205,11 +206,17 @@ class PushNotificationService {
         return;
       }
 
-      // Store token in user's profile with device info
+      final packageInfo = await PackageInfo.fromPlatform();
+
+      // Store token in user's profile with device info. appVersion/buildNumber
+      // are read by the purchaseNotification trigger to surface "version at
+      // time of purchase" in the instant alert email.
       await _firestore.collection('users').doc(user.uid).set({
         'fcmTokens': {
           token: {
             'platform': Platform.operatingSystem,
+            'appVersion': packageInfo.version,
+            'buildNumber': packageInfo.buildNumber,
             'updatedAt': FieldValue.serverTimestamp(),
           },
         },

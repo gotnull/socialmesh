@@ -137,4 +137,68 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   });
+
+  group('MeshNodeBrain preferFrontFace', () {
+    testWidgets('defaults to false (Ico advisor unchanged)', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Center(
+            child: MeshNodeBrain(mood: MeshBrainMood.happy, size: 120),
+          ),
+        ),
+      );
+      final brain = tester.widget<MeshNodeBrain>(find.byType(MeshNodeBrain));
+      expect(
+        brain.preferFrontFace,
+        isFalse,
+        reason: 'Default must preserve existing Ico tumble behaviour',
+      );
+    });
+
+    testWidgets('preferFrontFace: true is surfaced on the widget', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Center(
+            child: MeshNodeBrain(
+              mood: MeshBrainMood.happy,
+              size: 120,
+              preferFrontFace: true,
+            ),
+          ),
+        ),
+      );
+      final brain = tester.widget<MeshNodeBrain>(find.byType(MeshNodeBrain));
+      expect(brain.preferFrontFace, isTrue);
+      await tester.pump(const Duration(milliseconds: 50));
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('preferFrontFace holds across every mood without exception', (
+      tester,
+    ) async {
+      for (final mood in MeshBrainMood.values) {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Center(
+              child: MeshNodeBrain(
+                mood: mood,
+                size: 120,
+                preferFrontFace: true,
+              ),
+            ),
+          ),
+        );
+        // 150ms > the 100ms mood-haptics debounce timer so it fires
+        // and frees itself before we rebuild with the next mood.
+        await tester.pump(const Duration(milliseconds: 150));
+        expect(
+          tester.takeException(),
+          isNull,
+          reason: 'preferFrontFace mood=$mood should not throw',
+        );
+      }
+    });
+  });
 }

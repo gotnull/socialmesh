@@ -505,6 +505,29 @@ class MeshNodeBrain extends StatefulWidget {
   /// Enable Blade Runner-style holographic face glitch effect (sci-fi mode)
   final bool sciFiGlitch;
 
+  /// Keep the creature's eye vertices (and the mouth edge) camera-
+  /// facing — suppresses full tumble / Z-spin rotation so the face is
+  /// readable most of the time.
+  ///
+  /// The "face" of MeshNodeBrain isn't a stable overlay; it's two
+  /// specific vertex nodes (eyes) + one specific edge (mouth) on the
+  /// icosahedron. Under [MeshNodeAnimationType.tumble] those nodes
+  /// frequently rotate to the back of the mesh, so an observer only
+  /// sees a face 15–30% of the time. Off by default to preserve the
+  /// advisor's restless Ico-the-sci-fi-sprite character. NodePet
+  /// enables this so it looks like a creature that's *looking at*
+  /// the user rather than a shape spinning in space.
+  ///
+  /// When true:
+  ///   - Animation type is forced to [MeshNodeAnimationType.breathe]
+  ///     (no rotation component) regardless of mood
+  ///   - External wobble is clamped to ±~30% of the default range
+  ///   - Z-axis spin is suppressed to zero
+  ///   - Ghost-personality squash/stretch, shell openness, node
+  ///     jitter, attention offset, edge thickness, glow, pulse, and
+  ///     haptics are preserved — only rotation is locked
+  final bool preferFrontFace;
+
   /// Enable mood-aware idle blinking — eyes briefly close at natural
   /// intervals so the creature reads as alive between mood changes.
   /// Off by default to preserve the onboarding advisor's existing look
@@ -540,6 +563,7 @@ class MeshNodeBrain extends StatefulWidget {
     this.faceOpacity = 0.0,
     this.sciFiGlitch = false,
     this.enableIdleBlink = false,
+    this.preferFrontFace = false,
   });
 
   @override
@@ -1703,17 +1727,27 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
     double wobbleX = _wobbleX.value;
     double wobbleY = _wobbleY.value;
 
-    // Special wobble modifications
-    if (widget.mood == MeshBrainMood.dizzy) {
-      final dizzyAngle = _specialController.value * 2 * math.pi;
-      wobbleX += math.sin(dizzyAngle) * 0.2;
-      wobbleY += math.cos(dizzyAngle) * 0.15;
-    } else if (widget.mood == MeshBrainMood.sassy) {
-      wobbleX *= 1.5; // More side-to-side attitude
-    } else if (widget.mood == MeshBrainMood.curious) {
-      wobbleX *= 0.5;
-      wobbleY = math.sin(_wobbleController.value * math.pi) * 0.15; // Tilt
+    // Special wobble modifications — skipped when preferFrontFace is
+    // on, since they all add rotation that would swing the face away.
+    if (!widget.preferFrontFace) {
+      if (widget.mood == MeshBrainMood.dizzy) {
+        final dizzyAngle = _specialController.value * 2 * math.pi;
+        wobbleX += math.sin(dizzyAngle) * 0.2;
+        wobbleY += math.cos(dizzyAngle) * 0.15;
+      } else if (widget.mood == MeshBrainMood.sassy) {
+        wobbleX *= 1.5; // More side-to-side attitude
+      } else if (widget.mood == MeshBrainMood.curious) {
+        wobbleX *= 0.5;
+        wobbleY = math.sin(_wobbleController.value * math.pi) * 0.15; // Tilt
+      }
     }
+
+    // preferFrontFace clamp: keep the eye vertices camera-facing by
+    // shrinking wobble amplitude ~70% and killing the Z spin.
+    final frontFaceScale = widget.preferFrontFace ? 0.3 : 1.0;
+    wobbleX *= frontFaceScale;
+    wobbleY *= frontFaceScale;
+    final spinZ = widget.preferFrontFace ? 0.0 : _spin.value;
 
     // Calculate bounce offset
     double bounceOffset = 0;
@@ -1762,7 +1796,7 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
           nodeSize: widget.nodeSize,
           externalRotationX: wobbleX,
           externalRotationY: wobbleY,
-          externalRotationZ: _spin.value,
+          externalRotationZ: spinZ,
           leftEyeScale: widget.showExpression
               ? faceExpr.leftEyeScale * (1.0 - (_blinkIntensity?.value ?? 0.0))
               : 1.0,
@@ -2873,6 +2907,13 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
   }
 
   MeshNodeAnimationType _getMeshAnimationType() {
+    // preferFrontFace pins the mesh so the eye vertices stay camera-
+    // facing. No rotation component — only breathe (scale pulse). The
+    // creature still feels alive via pulse, ghost-personality squash/
+    // stretch, jitter, and glow; just without tumbling the face away.
+    if (widget.preferFrontFace) {
+      return MeshNodeAnimationType.breathe;
+    }
     switch (widget.mood) {
       case MeshBrainMood.thinking:
       case MeshBrainMood.speaking:

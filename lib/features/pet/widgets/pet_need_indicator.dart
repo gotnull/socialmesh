@@ -18,6 +18,8 @@
 // loop; subtle enough to read as ambient, aggressive enough to catch
 // the eye when the pet actually needs attention.
 
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 
 import '../../../core/theme.dart';
@@ -98,25 +100,48 @@ class _PetNeedIndicatorState extends State<PetNeedIndicator>
           final glowAlpha = 0.18 + 0.22 * t;
           return Transform.scale(
             scale: scale,
+            // Glass bubble: translucent accent fill with a backdrop
+            // blur, matches socialmesh's glass language so the
+            // indicator reads as *floating in the scene* rather than
+            // a flat solid sticker pasted over the 3D sigil.
             child: Container(
-              width: 44,
-              height: 44,
               decoration: BoxDecoration(
-                color: data.color.withValues(alpha: 0.92),
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
                     color: data.color.withValues(alpha: glowAlpha),
-                    blurRadius: 16,
+                    blurRadius: 20,
                     spreadRadius: 2,
                   ),
                 ],
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.85),
-                  width: 2,
+              ),
+              child: ClipOval(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          data.color.withValues(alpha: 0.42),
+                          data.color.withValues(alpha: 0.12),
+                        ],
+                      ),
+                      border: Border.all(
+                        color: data.color.withValues(alpha: 0.85),
+                        width: 1.2,
+                      ),
+                    ),
+                    child: Icon(
+                      data.icon,
+                      size: 22,
+                      color: data.color.withValues(alpha: 0.95),
+                    ),
+                  ),
                 ),
               ),
-              child: Icon(data.icon, size: 24, color: Colors.white),
             ),
           );
         },
