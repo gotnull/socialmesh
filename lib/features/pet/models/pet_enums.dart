@@ -18,7 +18,6 @@ enum CareAction {
   surge,
   resonate,
   stabilise,
-  sync,
   purge,
   dim,
   inspect,

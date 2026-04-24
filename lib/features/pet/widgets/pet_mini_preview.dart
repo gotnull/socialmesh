@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme.dart';
+import '../../../providers/app_providers.dart';
 import '../models/pet_public_state.dart';
 import '../providers/pet_providers.dart';
 import '../services/pet_repository.dart';
@@ -18,6 +19,12 @@ import 'pet_sigil_painter.dart';
 /// Render a peer's cached pet observation at [size]. Returns a zero-sized
 /// widget when no cache exists (so callers can drop it straight into a
 /// Row without conditional logic).
+///
+/// Self discovery is intentionally suppressed here: when [nodeNum] is the
+/// local node, the list row stays empty. The user's own companion is only
+/// surfaced inside NodeDex detail → Companion card, so the list view
+/// never advertises it as a top-level decoration. Discovery flows through
+/// the detail card only.
 class PetMiniPreview extends ConsumerWidget {
   final int nodeNum;
   final double size;
@@ -32,6 +39,10 @@ class PetMiniPreview extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final myNodeNum = ref.watch(myNodeNumProvider);
+    if (myNodeNum != null && nodeNum == myNodeNum) {
+      return SizedBox(width: size, height: size);
+    }
     final async = ref.watch(remotePetProvider(nodeNum));
     final observation = async.value;
     if (observation == null) {

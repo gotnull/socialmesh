@@ -59,9 +59,9 @@ void main() {
       expect(stepIds, contains('nodedex_device'));
     });
 
-    test('topic has exactly 13 steps', () {
+    test('topic has exactly 18 steps', () {
       final topic = HelpContent.getTopic('nodedex_detail')!;
-      expect(topic.steps.length, equals(13));
+      expect(topic.steps.length, equals(18));
     });
 
     test('first step cannot go back', () {
@@ -148,8 +148,8 @@ void main() {
       }
     });
 
-    test('has exactly 19 entries (13 node-detail + 6 album)', () {
-      expect(HelpContent.nodeDexSectionHelp.length, equals(19));
+    test('has exactly 25 entries (19 node-detail + 6 album)', () {
+      expect(HelpContent.nodeDexSectionHelp.length, equals(25));
     });
 
     test('all values are non-empty strings', () {
@@ -183,11 +183,17 @@ void main() {
           .toSet();
 
       for (final key in nodeDetailKeys) {
+        // pet_companion_self and pet_companion_remote both share the
+        // single tour bubble "nodedex_pet_companion" — the tour is
+        // generic; the info sheet is what branches on self vs remote.
+        final expectedStepId = key.startsWith('pet_companion_')
+            ? 'nodedex_pet_companion'
+            : 'nodedex_$key';
         expect(
-          stepIds.contains('nodedex_$key'),
+          stepIds.contains(expectedStepId),
           isTrue,
           reason:
-              'Section help key "$key" has no matching tour step "nodedex_$key"',
+              'Section help key "$key" has no matching tour step "$expectedStepId"',
         );
       }
     });
@@ -1242,6 +1248,112 @@ void main() {
           greaterThanOrEqualTo(sorted[i - 1].priority),
         );
       }
+    });
+  });
+
+  // ===========================================================================
+  // Companion copy — truthfulness guard.
+  //
+  // Guards against copy regressions that would mislead users about how
+  // NodePet visibility works:
+  //   1. No claim that pet data is never transmitted (it is, when remote
+  //      sharing is enabled — small summary via companion sharing).
+  //   2. No passive-only "only observed" framing — remote visibility
+  //      depends on the peer explicitly sharing a summary.
+  //   3. No protocol jargon leaks (MRRP / SIP / pet.v1 / wire / packets).
+  //   4. Self copy makes it clear the companion is local-first.
+  //   5. Remote copy stays conservative while sharing is alpha.
+  // ===========================================================================
+
+  group('Companion copy truthfulness', () {
+    // Every piece of user-facing companion copy we can reach at test time
+    // (tour bubble + info-sheet fallback map). The ARB-backed sheet copy
+    // resolves through AppLocalizations at runtime; its English value is
+    // pinned by the fallback map entries below (same words).
+    List<String> companionCopyStrings() {
+      final tour = HelpContent.getTopic(
+        'nodedex_detail',
+      )!.steps.firstWhere((s) => s.id == 'nodedex_pet_companion').bubbleText;
+      final selfFallback =
+          HelpContent.nodeDexSectionHelp['pet_companion_self']!;
+      final remoteFallback =
+          HelpContent.nodeDexSectionHelp['pet_companion_remote']!;
+      return [tour, selfFallback, remoteFallback];
+    }
+
+    test('does not claim pet data is never transmitted', () {
+      for (final copy in companionCopyStrings()) {
+        expect(
+          copy.toLowerCase(),
+          isNot(contains('never transmit')),
+          reason:
+              'Companion copy must not claim pet data is never transmitted. '
+              'When companion sharing is enabled, a small summary is sent.',
+        );
+        expect(
+          copy.toLowerCase(),
+          isNot(contains('no pet data')),
+          reason: 'Dropped phrase "no pet data" reintroduced — this is false.',
+        );
+        expect(
+          copy.toLowerCase(),
+          isNot(contains('never travels')),
+          reason: 'Companion copy must not imply it never leaves the node.',
+        );
+      }
+    });
+
+    test('does not imply passive-only observation', () {
+      for (final copy in companionCopyStrings()) {
+        expect(
+          copy.toLowerCase(),
+          isNot(contains('only observed')),
+          reason:
+              'Companion copy must not claim peer pets are "only observed" — '
+              'visibility requires the peer to share a summary.',
+        );
+        expect(
+          copy.toLowerCase(),
+          isNot(contains('passively')),
+          reason:
+              'Companion copy must not imply peer pets appear passively from '
+              'mesh behaviour alone.',
+        );
+      }
+    });
+
+    test('contains no protocol jargon', () {
+      const banned = ['mrrp', 'sip', 'pet.v1', 'wire format', 'packet'];
+      for (final copy in companionCopyStrings()) {
+        final lower = copy.toLowerCase();
+        for (final term in banned) {
+          expect(
+            lower,
+            isNot(contains(term)),
+            reason:
+                'User-facing companion copy must not mention protocol jargon '
+                '("$term" leaked into: "$copy").',
+          );
+        }
+      }
+    });
+
+    test('self info copy is local-first and mentions the own node', () {
+      final selfCopy = HelpContent.nodeDexSectionHelp['pet_companion_self']!
+          .toLowerCase();
+      expect(selfCopy, contains('your'));
+      expect(selfCopy, anyOf(contains('local'), contains('with your node')));
+    });
+
+    test('remote info copy is conservative about sharing', () {
+      final remoteCopy = HelpContent.nodeDexSectionHelp['pet_companion_remote']!
+          .toLowerCase();
+      // Must not over-promise — no "always"/"live" language.
+      expect(remoteCopy, isNot(contains('always')));
+      expect(remoteCopy, isNot(contains('live')));
+      // Must frame remote visibility as conditional on the peer sharing.
+      expect(remoteCopy, anyOf(contains('if'), contains('when')));
+      expect(remoteCopy, contains('share'));
     });
   });
 }

@@ -24,6 +24,7 @@ import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/logging.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/bottom_action_bar.dart';
 import '../../../core/widgets/glass_scaffold.dart';
@@ -47,6 +48,7 @@ import '../widgets/pet_onboarding_sheet.dart';
 import '../widgets/pet_sigil_painter.dart';
 import '../widgets/pet_stat_pip_row.dart';
 import '../widgets/pet_status_line.dart';
+import 'pet_timeline_screen.dart';
 
 class PetHomeScreen extends ConsumerWidget {
   const PetHomeScreen({super.key});
@@ -421,8 +423,6 @@ class _PetBodyState extends ConsumerState<_PetBody>
         return l10n.petReasonStabilityAlreadyFull;
       case PetActionReason.nothingToClean:
         return l10n.petReasonNothingToClean;
-      case PetActionReason.nothingToSync:
-        return l10n.petReasonNothingToSync;
       case PetActionReason.alreadyAsleep:
         return l10n.petReasonAlreadyAsleep;
       case PetActionReason.asleep:
@@ -655,34 +655,63 @@ class _PetBodyState extends ConsumerState<_PetBody>
       physics: const NeverScrollableScrollPhysics(),
       actions: [
         IconButton(
-          tooltip: l10n.petGuideSheetTitle,
-          icon: const Icon(Icons.help_outline),
+          tooltip: l10n.petTimelineScreenTitle,
+          icon: const Icon(Icons.timeline_outlined),
           onPressed: () {
             ref.read(hapticServiceProvider).buttonTap();
-            AppBottomSheet.showScrollable<void>(
-              context: context,
-              initialChildSize: 0.8,
-              minChildSize: 0.4,
-              maxChildSize: 0.95,
-              builder: (controller) =>
-                  PetActionsGuideSheet(scrollController: controller),
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const PetTimelineScreen(),
+              ),
             );
           },
         ),
-        IconButton(
-          tooltip: l10n.petDnaViewerOpenAction,
-          icon: const Icon(Icons.fingerprint),
-          onPressed: () {
+        AppBarOverflowMenu<_PetOverflowAction>(
+          onSelected: (action) {
             ref.read(hapticServiceProvider).buttonTap();
-            AppBottomSheet.showScrollable<void>(
-              context: context,
-              initialChildSize: 0.9,
-              minChildSize: 0.5,
-              maxChildSize: 0.95,
-              builder: (controller) =>
-                  PetDnaViewerSheet(scrollController: controller),
-            );
+            switch (action) {
+              case _PetOverflowAction.guide:
+                AppBottomSheet.showScrollable<void>(
+                  context: context,
+                  initialChildSize: 0.8,
+                  minChildSize: 0.4,
+                  maxChildSize: 0.95,
+                  builder: (controller) =>
+                      PetActionsGuideSheet(scrollController: controller),
+                );
+              case _PetOverflowAction.dnaViewer:
+                AppBottomSheet.showScrollable<void>(
+                  context: context,
+                  initialChildSize: 0.9,
+                  minChildSize: 0.5,
+                  maxChildSize: 0.95,
+                  builder: (controller) =>
+                      PetDnaViewerSheet(scrollController: controller),
+                );
+            }
           },
+          itemBuilder: (context) => [
+            PopupMenuItem<_PetOverflowAction>(
+              value: _PetOverflowAction.dnaViewer,
+              child: Row(
+                children: [
+                  const Icon(Icons.fingerprint, size: 18),
+                  const SizedBox(width: AppTheme.spacing12),
+                  Text(l10n.petDnaViewerOpenAction),
+                ],
+              ),
+            ),
+            PopupMenuItem<_PetOverflowAction>(
+              value: _PetOverflowAction.guide,
+              child: Row(
+                children: [
+                  const Icon(Icons.help_outline, size: 18),
+                  const SizedBox(width: AppTheme.spacing12),
+                  Text(l10n.petGuideSheetTitle),
+                ],
+              ),
+            ),
+          ],
         ),
       ],
       body: scrollBody,
@@ -1068,22 +1097,6 @@ class _ActionBar extends ConsumerWidget {
         );
       }
 
-      if (!egg) {
-        // Sync is now purely the "answer the call" tap — dim it when
-        // there's no call, since stability no longer motivates it.
-        final syncDimmed = state.activeCall == null;
-        buttons.add(
-          PetActionButton(
-            icon: Icons.sync,
-            label: l10n.petActionSync,
-            accent: AccentColors.lavender,
-            dimmed: syncDimmed,
-            pulsing: advisory.action == PetAdvisoryAction.sync,
-            onTap: run(controller.sync, HapticType.light),
-          ),
-        );
-      }
-
       if ((inSleepWindow || asleep) && !egg) {
         buttons.add(
           PetActionButton(
@@ -1198,3 +1211,5 @@ Color _moodColor(PetMood m) {
       return AccentColors.orange;
   }
 }
+
+enum _PetOverflowAction { guide, dnaViewer }

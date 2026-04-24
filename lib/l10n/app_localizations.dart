@@ -20275,6 +20275,12 @@ abstract class AppLocalizations {
   /// **'Observation Timeline'**
   String get nodedexObservationTimelineTitle;
 
+  /// Card header for the bullet list explaining why the primary trait was assigned
+  ///
+  /// In en, this message translates to:
+  /// **'Trait Evidence'**
+  String get nodedexTraitEvidenceTitle;
+
   /// Text in node management Parameters: {date} = formatted date/time.
   ///
   /// In en, this message translates to:
@@ -21724,6 +21730,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'RF'**
   String get nodesScreenTransportRf;
+
+  /// Transport badge shown on the user's own device card when connected via WiFi/TCP.
+  ///
+  /// In en, this message translates to:
+  /// **'TCP'**
+  String get nodesScreenTransportTcp;
+
+  /// Transport badge shown on the user's own device card when connected via Bluetooth.
+  ///
+  /// In en, this message translates to:
+  /// **'BLE'**
+  String get nodesScreenTransportBle;
+
+  /// Transport badge shown on the user's own device card when connected via USB.
+  ///
+  /// In en, this message translates to:
+  /// **'USB'**
+  String get nodesScreenTransportUsb;
 
   /// Badge label on the user's own node card.
   ///
@@ -24899,12 +24923,6 @@ abstract class AppLocalizations {
   /// **'Enable Auto-Reconnect?'**
   String get scannerEnableAutoReconnectTitle;
 
-  /// Helper text shown below the looking-for-devices message.
-  ///
-  /// In en, this message translates to:
-  /// **'Make sure Bluetooth is enabled and your Meshtastic device is powered on'**
-  String get scannerEnableBluetoothHint;
-
   /// Confirm label for the enable auto-reconnect sheet.
   ///
   /// In en, this message translates to:
@@ -24916,12 +24934,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Connection failed. This can happen if the device was previously paired with another app. Go to Settings > Bluetooth, find the Meshtastic device, tap \"Forget\", then try again.'**
   String get scannerGattConnectionFailed;
-
-  /// Large text shown when scan is not active and no devices are listed.
-  ///
-  /// In en, this message translates to:
-  /// **'Looking for devices…'**
-  String get scannerLookingForDevices;
 
   /// Fallback error message when MeshCore connection fails with no specific message.
   ///
@@ -24982,18 +24994,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Scanning for nearby devices'**
   String get scannerScanningTitle;
-
-  /// Troubleshooting tip: check no other apps are using the BLE connection.
-  ///
-  /// In en, this message translates to:
-  /// **'Ensure no other app (e.g. official Meshtastic app) is connected to this device'**
-  String get scannerTipNoOtherApps;
-
-  /// Troubleshooting tip: check no other phones/tablets are paired.
-  ///
-  /// In en, this message translates to:
-  /// **'Ensure no other phone or tablet is already connected to the device via Bluetooth'**
-  String get scannerTipNoOtherDevices;
 
   /// Transport type label for BLE devices in the device card.
   ///
@@ -53562,6 +53562,42 @@ abstract class AppLocalizations {
   /// **'Live telemetry from the node: battery percentage, hardware model, firmware version, channel utilization, and uptime. This data is only available when the node is actively heard on the mesh.'**
   String get helpNodeDexSectionDevice;
 
+  /// Section help text for trait_evidence in nodeDexSectionHelp
+  ///
+  /// In en, this message translates to:
+  /// **'The observations that most strongly support the primary trait assigned above. Each bullet is a concrete signal drawn from encounter history — co-seen connections, tenure, mobility, signal consistency, and timing. These are the inputs that drove the confidence score.'**
+  String get helpNodeDexSectionTraitEvidence;
+
+  /// Section help text for additional_traits in nodeDexSectionHelp
+  ///
+  /// In en, this message translates to:
+  /// **'Other behavioral archetypes that also scored for this node, ranked by confidence. A node rarely fits a single archetype perfectly — secondary traits reveal nuance, like an Anchor that also acts as a Beacon, or a Drifter with Sentinel-like stretches.'**
+  String get helpNodeDexSectionAdditionalTraits;
+
+  /// Info-sheet copy for the Companion card when the selected node is the user's own node. Explains that the companion is local-first.
+  ///
+  /// In en, this message translates to:
+  /// **'Your NodePet lives with your node and evolves locally from your care and mesh activity.'**
+  String get helpNodeDexSectionPetCompanionSelf;
+
+  /// Info-sheet copy for the Companion card when viewing a remote peer. Keeps expectations conservative while remote companion sharing is still alpha — avoids promising live updates or protocol details.
+  ///
+  /// In en, this message translates to:
+  /// **'If this node shares a companion summary, it can appear here. Full companion state stays local to its owner.'**
+  String get helpNodeDexSectionPetCompanionRemote;
+
+  /// Section help text for mrrp_services in nodeDexSectionHelp
+  ///
+  /// In en, this message translates to:
+  /// **'MRRP (Mesh Request-Response Protocol) services this node advertises. Each service ID represents a capability the node exposes over the mesh, such as a message board, profile exchange, or meetup coordination. Tap any ID to learn more about that specific service.'**
+  String get helpNodeDexSectionMrrpServices;
+
+  /// Section help text for field_note in nodeDexSectionHelp
+  ///
+  /// In en, this message translates to:
+  /// **'A short, deterministic journal entry generated from this node\'s identity and primary trait — like a naturalist\'s field observation. The same node always produces the same note; it never changes, and it never travels over the mesh.'**
+  String get helpNodeDexSectionFieldNote;
+
   /// Section help text for album_rarity in nodeDexSectionHelp
   ///
   /// In en, this message translates to:
@@ -62536,12 +62572,6 @@ abstract class AppLocalizations {
   /// **'Clean'**
   String get petActionStabilise;
 
-  /// Action label — acknowledges whatever attention call the pet is currently making.
-  ///
-  /// In en, this message translates to:
-  /// **'Answer'**
-  String get petActionSync;
-
   /// Action label — medicine analogue; only valid while the pet is sick.
   ///
   /// In en, this message translates to:
@@ -62599,7 +62629,7 @@ abstract class AppLocalizations {
   /// Body of the third onboarding card.
   ///
   /// In en, this message translates to:
-  /// **'Tap Inspect to see energy, mood, stability and recent events. Tap the ? icon for the full action guide. Your pet won\'t time-out if you miss a day, but consistent care earns it a better branch.'**
+  /// **'Tap Inspect to see energy, mood, stability and recent events. Your pet won\'t time-out if you miss a day, but consistent care earns it a better branch — open the help sheet anytime for the full action guide.'**
   String get petOnboardingPage3Body;
 
   /// Next button on onboarding cards.
@@ -62620,6 +62650,12 @@ abstract class AppLocalizations {
   /// **'Got it'**
   String get petOnboardingFinish;
 
+  /// Hint shown next to the help-icon chip on the last pet onboarding page; points at the help icon in the pet home screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Full action guide'**
+  String get petOnboardingHelpHint;
+
   /// Title of the help sheet that explains every pet care action.
   ///
   /// In en, this message translates to:
@@ -62629,7 +62665,7 @@ abstract class AppLocalizations {
   /// Intro paragraph above the action list on the Pet help sheet.
   ///
   /// In en, this message translates to:
-  /// **'Each action does one specific thing. When the pet beeps for attention (pulsing icon), tap Answer to stop the beep, then use the action that addresses what the pet actually needs — Feed for hunger, Play for loneliness, Clean for a mess, Sleep for bedtime, or Medicine for sickness.'**
+  /// **'Each action does one specific thing. When the pet beeps for attention (pulsing icon), tap the matching action — Feed for hunger, Play for loneliness, Clean for a mess, Sleep for bedtime, or Medicine for sickness — and the beep clears automatically.'**
   String get petGuideSheetIntro;
 
   /// Help-sheet body text for the Charge action.
@@ -62656,16 +62692,10 @@ abstract class AppLocalizations {
   /// **'Cleans up. Removes the distortion artefact on the field. +2 stability. Answers a Hygiene call.'**
   String get petActionStabiliseDescription;
 
-  /// Help-sheet body text for the Sync action.
-  ///
-  /// In en, this message translates to:
-  /// **'Stops the pet\'s attention beep. No stat change on its own — use the matching action (Feed, Play, Clean, Sleep, or Medicine) to actually resolve what the pet needs.'**
-  String get petActionSyncDescription;
-
   /// Help-sheet body text for the Purge action.
   ///
   /// In en, this message translates to:
-  /// **'Medicine. Removes sickness and drops instability. Only valid while the pet is sick. Answers a Sick call.'**
+  /// **'Medicine. Removes sickness and drops instability. Only valid while the pet is sick.'**
   String get petActionPurgeDescription;
 
   /// Help-sheet body text for the Dim action.
@@ -63154,17 +63184,47 @@ abstract class AppLocalizations {
   /// **'Companion'**
   String get petCompanionSectionTitle;
 
-  /// Shown in the Companion card when we have no cached observation of this peer's pet.
+  /// Remote Companion empty-state shown when we have not received any pet summary from this node yet (first encounter, or no response since cold start).
   ///
   /// In en, this message translates to:
-  /// **'No sigil creature observed yet.'**
-  String get petCompanionUnknown;
+  /// **'No companion seen from this node yet.'**
+  String get petCompanionRemoteNoObservation;
 
-  /// Freshness label under a cached companion preview (age is a short string like '3h' or '2d').
+  /// Remote Companion empty-state shown when the node responded but declined to share or has no companion bound (covers both error responses and empty payloads — they look the same to the user).
+  ///
+  /// In en, this message translates to:
+  /// **'This node isn\'t sharing its companion.'**
+  String get petCompanionRemoteNotSharing;
+
+  /// Freshness label under a fresh cached companion preview (age is a short string like '3h' or '2d').
   ///
   /// In en, this message translates to:
   /// **'Observed {age} ago'**
   String petCompanionObservedRelative(String age);
+
+  /// Freshness label under a STALE cached companion preview (>12h old), emphasising that the data is old. Age is a short string like '3h' or '2d'.
+  ///
+  /// In en, this message translates to:
+  /// **'Last seen {age} ago'**
+  String petCompanionLastSeen(String age);
+
+  /// Action label shown on the Companion card when the selected node is the user's own node, opening the NodePet home screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open NodePet'**
+  String get petCompanionOpenAction;
+
+  /// Freshness-line replacement under the Companion card preview when the selected node is the user's own node.
+  ///
+  /// In en, this message translates to:
+  /// **'Your companion'**
+  String get petCompanionSelfYours;
+
+  /// Shown on the Companion card when the selected node is the user's own node but no pet state has been created locally yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Your companion hasn\'t hatched yet.'**
+  String get petCompanionSelfNoPet;
 
   /// Smoothed peer pet live-state label when the peer is currently on the mesh (last-seen under a minute).
   ///
@@ -63334,6 +63394,30 @@ abstract class AppLocalizations {
   /// **'Thriving.'**
   String get petAdvisoryThriving;
 
+  /// Empty-state title for the recent-events timeline on the pet inspect sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'No events yet'**
+  String get petRecentTimelineEmptyTitle;
+
+  /// Empty-state subtitle for the recent-events timeline on the pet inspect sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Care actions and milestones will appear here as you interact with your pet.'**
+  String get petRecentTimelineEmptySubtitle;
+
+  /// Day-group header on the recent-events timeline for events that happened on the current calendar day.
+  ///
+  /// In en, this message translates to:
+  /// **'TODAY'**
+  String get petRecentTimelineDayToday;
+
+  /// Day-group header on the recent-events timeline for events that happened on the previous calendar day.
+  ///
+  /// In en, this message translates to:
+  /// **'YESTERDAY'**
+  String get petRecentTimelineDayYesterday;
+
   /// Non-blocking banner title after the egg hatches.
   ///
   /// In en, this message translates to:
@@ -63442,12 +63526,6 @@ abstract class AppLocalizations {
   /// **'Field is clean'**
   String get petReasonNothingToClean;
 
-  /// Toast when Sync is tapped and the pet has no active call and stability is at max.
-  ///
-  /// In en, this message translates to:
-  /// **'Nothing to sync'**
-  String get petReasonNothingToSync;
-
   /// Toast when Dim is tapped while the pet is already asleep.
   ///
   /// In en, this message translates to:
@@ -63489,6 +63567,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pet is still alive'**
   String get petReasonNotDormant;
+
+  /// App bar title for the Pet Lifecycle Timeline screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Lifecycle'**
+  String get petTimelineScreenTitle;
+
+  /// Header pill showing the total number of timeline events recorded for this pet.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 event} other{{count} events}}'**
+  String petTimelineEventCountPill(int count);
+
+  /// Section label for the origin node at the top of the lifecycle timeline.
+  ///
+  /// In en, this message translates to:
+  /// **'DNA forged'**
+  String get petTimelineOriginTitle;
+
+  /// Describes which base allele (Aurora / Tether / Gale / Calm) dominates the pet's DNA.
+  ///
+  /// In en, this message translates to:
+  /// **'{allele}-dominant'**
+  String petTimelineOriginDominant(String allele);
+
+  /// Small pill next to the current stage heading on the timeline.
+  ///
+  /// In en, this message translates to:
+  /// **'NOW'**
+  String get petTimelineNowPill;
+
+  /// Shown inside the current stage's section when nothing has happened yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Quiet stretch — no events yet.'**
+  String get petTimelineQuietCurrent;
+
+  /// Multiplier pill for grouped minor events, e.g. 3× for three charges within the grouping window.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}×'**
+  String petTimelineGroupedCount(int count);
+
+  /// Label for the upcoming stage node at the tail of the timeline.
+  ///
+  /// In en, this message translates to:
+  /// **'Next: {stageName}'**
+  String petTimelineUpcomingLabel(String stageName);
+
+  /// Shown below the upcoming label when the next stage is due now.
+  ///
+  /// In en, this message translates to:
+  /// **'imminent'**
+  String get petTimelineUpcomingImminent;
+
+  /// Shown below the upcoming label, formatted relative time until the next stage.
+  ///
+  /// In en, this message translates to:
+  /// **'in {duration}'**
+  String petTimelineUpcomingIn(String duration);
+
+  /// Compact duration: days only.
+  ///
+  /// In en, this message translates to:
+  /// **'{days}d'**
+  String petTimelineDurationDays(int days);
+
+  /// Compact duration: days and hours.
+  ///
+  /// In en, this message translates to:
+  /// **'{days}d {hours}h'**
+  String petTimelineDurationDaysHours(int days, int hours);
+
+  /// Compact duration: hours only.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h'**
+  String petTimelineDurationHours(int hours);
+
+  /// Compact duration: hours and minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h {minutes}m'**
+  String petTimelineDurationHoursMinutes(int hours, int minutes);
+
+  /// Compact duration: minutes only.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes}m'**
+  String petTimelineDurationMinutes(int minutes);
+
+  /// Compact duration fallback when less than a minute remains.
+  ///
+  /// In en, this message translates to:
+  /// **'moments'**
+  String get petTimelineDurationImminent;
+
+  /// Empty state title on the lifecycle timeline when no pet exists for this node.
+  ///
+  /// In en, this message translates to:
+  /// **'No pet yet'**
+  String get petTimelineEmptyTitle;
+
+  /// Empty state subtitle on the lifecycle timeline when no pet exists.
+  ///
+  /// In en, this message translates to:
+  /// **'Pair a device to begin your pet\'s story.'**
+  String get petTimelineEmptySubtitle;
+
+  /// Expanded detail for the hatched major event on the lifecycle timeline.
+  ///
+  /// In en, this message translates to:
+  /// **'Your pet emerged from its sigil and began its life cycle.'**
+  String get petTimelineDetailHatched;
+
+  /// Expanded detail for stage-advanced events.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced into {stageName}.'**
+  String petTimelineDetailStageAdvanced(String stageName);
+
+  /// Expanded detail for branch-resolved events.
+  ///
+  /// In en, this message translates to:
+  /// **'Branch resolved as {branchName} based on care patterns.'**
+  String petTimelineDetailBranchResolved(String branchName);
+
+  /// Expanded detail for the dormant-entered event.
+  ///
+  /// In en, this message translates to:
+  /// **'Entered dormancy. Its journey is complete.'**
+  String get petTimelineDetailDormantEntered;
+
+  /// Expanded detail for the re-sigilled event.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-sigilled — a new creature begins.'**
+  String get petTimelineDetailReSigilled;
+
+  /// Expanded detail for sickness-onset events.
+  ///
+  /// In en, this message translates to:
+  /// **'Fell ill. Use Purge to recover.'**
+  String get petTimelineDetailSicknessOnset;
+
+  /// Expanded detail for sickness-recovered events.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovered from sickness.'**
+  String get petTimelineDetailSicknessRecovered;
+
+  /// Expanded detail for purge events.
+  ///
+  /// In en, this message translates to:
+  /// **'Received medical care.'**
+  String get petTimelineDetailPurged;
+
+  /// Expanded detail for call-missed events.
+  ///
+  /// In en, this message translates to:
+  /// **'A call for attention went unanswered.'**
+  String get petTimelineDetailCallMissed;
+
+  /// Expanded detail for mistake-recorded events.
+  ///
+  /// In en, this message translates to:
+  /// **'A lapse in care was recorded against the stage accumulator.'**
+  String get petTimelineDetailMistakeRecorded;
 
   /// Android notification channel description for pet milestones.
   ///

@@ -472,26 +472,29 @@ class MiniMeshNodeMarker extends StatelessWidget {
 
 /// Helper to calculate the center of multiple nodes
 LatLng calculateNodesCenter(List<MeshNodeMarkerData> nodes) {
-  if (nodes.isEmpty) {
-    return const LatLng(MapConfig.defaultLat, MapConfig.defaultLon);
-  }
+  const fallback = LatLng(MapConfig.defaultLat, MapConfig.defaultLon);
+  final finite = nodes
+      .where((n) => n.latitude.isFinite && n.longitude.isFinite)
+      .toList(growable: false);
+  if (finite.isEmpty) return fallback;
 
   double avgLat = 0, avgLon = 0;
-  for (final node in nodes) {
+  for (final node in finite) {
     avgLat += node.latitude;
     avgLon += node.longitude;
   }
-  return LatLng(avgLat / nodes.length, avgLon / nodes.length);
+  return safeLatLng(avgLat / finite.length, avgLon / finite.length) ?? fallback;
 }
 
 /// Helper to calculate zoom level to fit all nodes
 double calculateZoomToFitNodes(List<MeshNodeMarkerData> nodes) {
-  if (nodes.isEmpty || nodes.length == 1) {
-    return 13.0;
-  }
+  final finite = nodes
+      .where((n) => n.latitude.isFinite && n.longitude.isFinite)
+      .toList(growable: false);
+  if (finite.length <= 1) return 13.0;
 
-  final lats = nodes.map((n) => n.latitude).toList();
-  final lons = nodes.map((n) => n.longitude).toList();
+  final lats = finite.map((n) => n.latitude).toList();
+  final lons = finite.map((n) => n.longitude).toList();
 
   final minLat = lats.reduce((a, b) => a < b ? a : b);
   final maxLat = lats.reduce((a, b) => a > b ? a : b);

@@ -26,7 +26,7 @@ import '../../../utils/snackbar.dart';
 /// TCP connections. Shows "Manual Connections" with a host:port entry,
 /// following the standard Meshtastic companion app UX pattern.
 class NetworkConnectionSection extends ConsumerStatefulWidget {
-  final VoidCallback? onConnectionSuccess;
+  final ValueChanged<DeviceInfo>? onConnectionSuccess;
 
   /// When true, shows a minimal empty state (no icon, description, or
   /// duplicate add button). Used in the scanner screen where space is tight.
@@ -84,7 +84,7 @@ class _NetworkConnectionSectionState
       await endpointsNotifier.updateLastUsed(endpoint.id);
 
       if (!mounted) return;
-      widget.onConnectionSuccess?.call();
+      widget.onConnectionSuccess?.call(deviceInfo);
     } catch (e) {
       AppLogging.protocol('Network connection failed: $e');
       if (!mounted) return;

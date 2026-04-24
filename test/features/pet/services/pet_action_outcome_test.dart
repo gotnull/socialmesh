@@ -176,34 +176,6 @@ void main() {
     });
   });
 
-  group('Sync outcomes', () {
-    test('notNeeded(nothingToSync) when no active call', () {
-      final s = _stateAt(PetStage.juvenile, stability: 5);
-      final r = _engine.applyAction(s, CareAction.sync, t);
-      expect(r.outcome, PetActionOutcome.notNeeded);
-      expect(r.reason, PetActionReason.nothingToSync);
-    });
-
-    test('applied when call is active — answers it without changing stats', () {
-      var s = _stateAt(PetStage.juvenile, stability: 5);
-      s = s.copyWith(
-        activeCall: AttentionCall(
-          startedAt: t,
-          deadline: t.add(const Duration(hours: 2)),
-          reason: CallReason.lonely,
-        ),
-      );
-      final r = _engine.applyAction(s, CareAction.sync, t);
-      expect(r.outcome, PetActionOutcome.applied);
-      expect(r.state.activeCall, isNull);
-      expect(
-        r.state.stability,
-        s.stability,
-        reason: 'Sync is pure call-answer; stability is untouched',
-      );
-    });
-  });
-
   group('Purge outcomes', () {
     test('invalidInState(notSick) when not sick', () {
       final s = _stateAt(PetStage.juvenile);

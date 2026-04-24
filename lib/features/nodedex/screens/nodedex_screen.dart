@@ -1180,7 +1180,8 @@ class _NodeDexListTile extends ConsumerWidget {
                     _DiscoveryAgeBadge(entry: entry),
 
                     // User note preview
-                    if (entry.userNote != null) ...[
+                    if (entry.userNote != null &&
+                        entry.userNote!.trim().isNotEmpty) ...[
                       const SizedBox(height: AppTheme.spacing4),
                       Text(
                         entry.userNote!,

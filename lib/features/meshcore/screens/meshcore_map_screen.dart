@@ -62,9 +62,8 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && widget.highlightPosition != null) {
-        _mapController.move(widget.highlightPosition!, widget.highlightZoom);
-      }
+      if (!mounted) return;
+      _mapController.safeMove(widget.highlightPosition, widget.highlightZoom);
     });
   }
 
@@ -93,9 +92,14 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
     final isConnected = linkStatus.isConnected;
     final contactsState = ref.watch(meshCoreContactsProvider);
 
-    // Filter contacts with location
+    // Filter contacts with finite location
     final contactsWithLocation = contactsState.contacts
-        .where((c) => c.hasLocation)
+        .where(
+          (c) =>
+              c.hasLocation &&
+              (c.latitude?.isFinite ?? false) &&
+              (c.longitude?.isFinite ?? false),
+        )
         .where((c) {
           // Apply type filters
           if (c.type == 2 && !_showRepeaters) return false; // Repeater
@@ -141,15 +145,17 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
               .toList();
           final avgLat = filteredLatValues.reduce((a, b) => a + b);
           final avgLon = filteredLonValues.reduce((a, b) => a + b);
-          center = LatLng(
-            avgLat / filteredPoints.length,
-            avgLon / filteredPoints.length,
-          );
+          center =
+              safeLatLng(
+                avgLat / filteredPoints.length,
+                avgLon / filteredPoints.length,
+              ) ??
+              center;
           final filteredLatStdDev = _standardDeviation(filteredLatValues);
           final filteredLonStdDev = _standardDeviation(filteredLonValues);
           initialZoom = _zoomFromStdDev(filteredLatStdDev, filteredLonStdDev);
         } else {
-          center = LatLng(meanLat, meanLon);
+          center = safeLatLng(meanLat, meanLon) ?? center;
           initialZoom = _zoomFromStdDev(latStdDev, lonStdDev);
         }
       } else {
@@ -159,13 +165,16 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
           avgLat += point.latitude;
           avgLon += point.longitude;
         }
-        center = LatLng(avgLat / allPoints.length, avgLon / allPoints.length);
+        center =
+            safeLatLng(avgLat / allPoints.length, avgLon / allPoints.length) ??
+            center;
         initialZoom = 12.0;
       }
     }
 
-    if (widget.highlightPosition != null) {
-      center = widget.highlightPosition!;
+    final highlight = widget.highlightPosition;
+    if (highlight != null && isFiniteLatLng(highlight)) {
+      center = highlight;
       initialZoom = widget.highlightZoom;
     }
 
@@ -174,7 +183,7 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
       _hasInitializedMap = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          _mapController.move(center, initialZoom);
+          _mapController.safeMove(center, initialZoom);
         }
       });
     }
@@ -803,9 +812,11 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
   }
 
   void _centerOnContact(MeshCoreContact contact) {
-    if (contact.hasLocation) {
-      _mapController.move(LatLng(contact.latitude!, contact.longitude!), 15.0);
-    }
+    if (!contact.hasLocation) return;
+    _mapController.safeMove(
+      safeLatLng(contact.latitude, contact.longitude),
+      15.0,
+    );
   }
 
   void _showFilterDialog(BuildContext context) {

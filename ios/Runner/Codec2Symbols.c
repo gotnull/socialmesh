@@ -14,6 +14,15 @@
  * This file must be compiled as part of the Runner target.
  */
 
+/* libcodec2_ios.a is only linked for real-device builds (OTHER_LDFLAGS[sdk=iphoneos*]
+ * in project.pbxproj). The iOS simulator does not link codec2, so these extern
+ * references would be unresolved at link time. Codec2Bindings.isAvailable on the
+ * Dart side already handles the "no codec2 symbol" case gracefully — voice
+ * features simply report unavailable on simulator builds. */
+#include <TargetConditionals.h>
+
+#if !TARGET_OS_SIMULATOR
+
 /* Forward-declare only the opaque struct and the functions we need.  We avoid
  * #including codec2.h so that no extra header-search-path configuration is
  * required in the Xcode project. */
@@ -41,3 +50,5 @@ __attribute__((used)) static void *const _sm_codec2_symbol_refs[] = {
     (void *)codec2_bits_per_frame,
     (void *)codec2_bytes_per_frame,
 };
+
+#endif /* !TARGET_OS_SIMULATOR */

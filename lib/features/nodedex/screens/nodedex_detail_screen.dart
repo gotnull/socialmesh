@@ -29,7 +29,6 @@ import '../../../utils/time_format.dart';
 import '../../../providers/accessibility_providers.dart';
 
 import '../../../core/constants.dart';
-import '../../../core/help/help_content.dart';
 import '../../../core/logging.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
@@ -64,6 +63,7 @@ import '../widgets/observation_timeline.dart';
 import '../widgets/node_activity_timeline.dart';
 import '../widgets/node_summary_card.dart';
 import '../widgets/patina_stamp.dart';
+import '../widgets/section_info_button.dart';
 import '../widgets/sigil_card_sheet.dart';
 import '../widgets/sigil_painter.dart';
 import '../widgets/trait_badge.dart';
@@ -252,7 +252,10 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
               ),
             ),
 
-          // Pet companion card — peer's cached Node Pet observation.
+          // Pet companion card — local companion when viewing own node,
+          // cached peer observation otherwise. The info sheet copy and
+          // empty-state copy both branch on this distinction; see
+          // PetCompanionContent + helpNodeDexSectionPetCompanion{Self,Remote}.
           if (AppFeatureFlags.isPetEnabled)
             SliverToBoxAdapter(
               child: _DetailEntrance(
@@ -261,6 +264,9 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
                 child: _CardContainer(
                   title: context.l10n.petCompanionSectionTitle,
                   icon: Icons.egg_alt_outlined,
+                  helpKey: ref.watch(myNodeNumProvider) == entry.nodeNum
+                      ? 'pet_companion_self'
+                      : 'pet_companion_remote',
                   child: PetCompanionContent(nodeNum: entry.nodeNum),
                 ),
               ),
@@ -295,26 +301,34 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
               child: _DetailEntrance(
                 index: 3,
                 reduceMotion: reduceMotion,
-                child: TraitEvidenceList(
-                  observations: scoredTraits.first.evidence
-                      .map((e) => e.observation)
-                      .toList(),
-                  accentColor: entry.sigil?.primaryColor ?? context.accentColor,
-                  visible: disclosure.showTraitEvidence,
+                child: _CardContainer(
+                  title: context.l10n.nodedexTraitEvidenceTitle,
+                  icon: Icons.fact_check_outlined,
+                  helpKey: 'trait_evidence',
+                  child: TraitEvidenceList(
+                    observations: scoredTraits.first.evidence
+                        .map((e) => e.observation)
+                        .toList(),
+                    accentColor:
+                        entry.sigil?.primaryColor ?? context.accentColor,
+                    visible: disclosure.showTraitEvidence,
+                    padded: false,
+                  ),
                 ),
               ),
             ),
 
-          // Field note (collapsible)
+          // Field note
           if (disclosure.showFieldNote)
             SliverToBoxAdapter(
               child: _DetailEntrance(
                 index: 4,
                 reduceMotion: reduceMotion,
-                child: CollapsibleFieldNote(
+                child: FieldNoteWidget(
                   entry: entry,
                   trait: traitResult.primary,
                   accentColor: entry.sigil?.primaryColor ?? context.accentColor,
+                  expanded: true,
                   visible: disclosure.showFieldNote,
                 ),
               ),
@@ -347,9 +361,14 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
               child: _DetailEntrance(
                 index: 6,
                 reduceMotion: reduceMotion,
-                child: _ScoredTraitsList(
-                  scoredTraits: scoredTraits,
-                  showEvidence: disclosure.showTraitEvidence,
+                child: _CardContainer(
+                  title: context.l10n.nodedexAdditionalTraits,
+                  icon: Icons.bubble_chart_outlined,
+                  helpKey: 'additional_traits',
+                  child: _ScoredTraitsList(
+                    scoredTraits: scoredTraits,
+                    showEvidence: disclosure.showTraitEvidence,
+                  ),
                 ),
               ),
             ),
@@ -753,105 +772,92 @@ class _ScoredTraitsList extends StatelessWidget {
 
     if (remaining.isEmpty) return const SizedBox.shrink();
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            context.l10n.nodedexAdditionalTraits,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: context.textTertiary,
-              letterSpacing: 0.5,
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing8),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: remaining.map((scored) {
-              final pct = (scored.confidence * 100).round();
-              return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: scored.trait.color.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(AppTheme.radius8),
-                  border: Border.all(
-                    color: scored.trait.color.withValues(alpha: 0.15),
-                    width: 0.5,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: remaining.map((scored) {
+            final pct = (scored.confidence * 100).round();
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: scored.trait.color.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
+                border: Border.all(
+                  color: scored.trait.color.withValues(alpha: 0.15),
+                  width: 0.5,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    scored.trait.displayLabel(context.l10n),
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: scored.trait.color.withValues(alpha: 0.8),
+                    ),
                   ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      scored.trait.displayLabel(context.l10n),
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: scored.trait.color.withValues(alpha: 0.8),
-                      ),
+                  const SizedBox(width: AppTheme.spacing4),
+                  Text(
+                    '$pct%',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontFamily: AppTheme.fontFamily,
+                      color: scored.trait.color.withValues(alpha: 0.5),
                     ),
-                    const SizedBox(width: AppTheme.spacing4),
-                    Text(
-                      '$pct%',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontFamily: AppTheme.fontFamily,
-                        color: scored.trait.color.withValues(alpha: 0.5),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
-          ),
-          if (showEvidence) ...[
-            const SizedBox(height: AppTheme.spacing8),
-            ...remaining
-                .where((s) => s.evidence.isNotEmpty && s.confidence >= 0.2)
-                .take(3)
-                .expand(
-                  (s) => s.evidence
-                      .take(2)
-                      .map(
-                        (e) => Padding(
-                          padding: const EdgeInsets.only(bottom: 3),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(top: 5),
-                                child: Container(
-                                  width: 3,
-                                  height: 3,
-                                  decoration: BoxDecoration(
-                                    color: s.trait.color.withValues(alpha: 0.3),
-                                    shape: BoxShape.circle,
-                                  ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
+        if (showEvidence) ...[
+          const SizedBox(height: AppTheme.spacing8),
+          ...remaining
+              .where((s) => s.evidence.isNotEmpty && s.confidence >= 0.2)
+              .take(3)
+              .expand(
+                (s) => s.evidence
+                    .take(2)
+                    .map(
+                      (e) => Padding(
+                        padding: const EdgeInsets.only(bottom: 3),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(top: 5),
+                              child: Container(
+                                width: 3,
+                                height: 3,
+                                decoration: BoxDecoration(
+                                  color: s.trait.color.withValues(alpha: 0.3),
+                                  shape: BoxShape.circle,
                                 ),
                               ),
-                              const SizedBox(width: AppTheme.spacing6),
-                              Expanded(
-                                child: Text(
-                                  '${s.trait.displayLabel(context.l10n)}: ${e.observation}',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: context.textTertiary,
-                                  ),
+                            ),
+                            const SizedBox(width: AppTheme.spacing6),
+                            Expanded(
+                              child: Text(
+                                '${s.trait.displayLabel(context.l10n)}: ${e.observation}',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: context.textTertiary,
                                 ),
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
-                ),
-          ],
+                    ),
+              ),
         ],
-      ),
+      ],
     );
   }
 }
@@ -1152,6 +1158,8 @@ class _SigilHeroSectionState extends ConsumerState<_SigilHeroSection> {
             ),
           ),
           const SizedBox(width: AppTheme.spacing6),
+          _CharCounter(controller: _nicknameController, max: 40),
+          const SizedBox(width: AppTheme.spacing6),
           GestureDetector(
             onTap: _saveNickname,
             child: Icon(
@@ -1292,6 +1300,7 @@ class _TraitCard extends StatelessWidget {
         result: traitResult,
         size: TraitBadgeSize.expanded,
         showConfidence: true,
+        infoButton: const SectionInfoButton(helpKey: 'trait'),
       ),
     );
   }
@@ -1627,77 +1636,124 @@ class _UserNoteCard extends StatelessWidget {
               ),
         child: editing
             ? Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: TextField(
-                  controller: controller,
-                  maxLines: 4,
-                  maxLength: 280,
-                  autofocus: true,
-                  // Allow scroll to ensure field is visible above keyboard
-                  scrollPadding: const EdgeInsets.all(AppTheme.spacing80),
-                  onTapOutside: (_) {
-                    FocusScope.of(context).unfocus();
-                  },
-                  style: TextStyle(fontSize: 14, color: context.textPrimary),
-                  decoration: InputDecoration(
-                    hintText: context.l10n.nodedexNoteHint,
-                    hintStyle: TextStyle(
-                      fontSize: 14,
-                      color: context.textTertiary,
-                    ),
-                    filled: true,
-                    fillColor: context.background,
-                    contentPadding: const EdgeInsets.all(AppTheme.spacing12),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.radius12),
-                      borderSide: BorderSide(
-                        color: context.border.withValues(alpha: 0.3),
-                        width: 0.5,
-                      ),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.radius12),
-                      borderSide: BorderSide(
-                        color: context.border.withValues(alpha: 0.3),
-                        width: 0.5,
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.radius12),
-                      borderSide: BorderSide(
-                        color: context.accentColor.withValues(alpha: 0.5),
-                        width: 1.0,
-                      ),
-                    ),
-                    counterStyle: TextStyle(
-                      fontSize: 10,
-                      color: context.textTertiary,
-                    ),
-                    counterText: '',
-                  ),
+                padding: const EdgeInsets.only(top: AppTheme.spacing8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    _NoteEditField(controller: controller),
+                    const SizedBox(height: AppTheme.spacing4),
+                    _CharCounter(controller: controller, max: 280),
+                  ],
                 ),
               )
-            : Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: entry.userNote != null
-                    ? Text(
-                        entry.userNote!,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: context.textPrimary,
-                          height: 1.5,
-                        ),
-                      )
-                    : Text(
-                        context.l10n.nodedexNoNoteYet,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: context.textTertiary,
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-              ),
+            : _UserNotePlaceholder(entry: entry),
       ),
+    );
+  }
+}
+
+class _NoteEditField extends StatelessWidget {
+  final TextEditingController controller;
+  const _NoteEditField({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      maxLines: 4,
+      maxLength: 280,
+      autofocus: true,
+      // Allow scroll to ensure field is visible above keyboard
+      scrollPadding: const EdgeInsets.all(AppTheme.spacing80),
+      onTapOutside: (_) {
+        FocusScope.of(context).unfocus();
+      },
+      style: TextStyle(fontSize: 14, color: context.textPrimary),
+      decoration: InputDecoration(
+        hintText: context.l10n.nodedexNoteHint,
+        hintStyle: TextStyle(fontSize: 14, color: context.textTertiary),
+        filled: true,
+        fillColor: context.background,
+        contentPadding: const EdgeInsets.all(AppTheme.spacing12),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
+          borderSide: BorderSide(
+            color: context.border.withValues(alpha: 0.3),
+            width: 0.5,
+          ),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
+          borderSide: BorderSide(
+            color: context.border.withValues(alpha: 0.3),
+            width: 0.5,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
+          borderSide: BorderSide(
+            color: context.accentColor.withValues(alpha: 0.5),
+            width: 1.0,
+          ),
+        ),
+        counterText: '',
+      ),
+    );
+  }
+}
+
+class _UserNotePlaceholder extends StatelessWidget {
+  final NodeDexEntry entry;
+  const _UserNotePlaceholder({required this.entry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: AppTheme.spacing4),
+      child: entry.userNote != null && entry.userNote!.trim().isNotEmpty
+          ? Text(
+              entry.userNote!,
+              style: TextStyle(
+                fontSize: 14,
+                color: context.textPrimary,
+                height: 1.5,
+              ),
+            )
+          : Text(
+              context.l10n.nodedexNoNoteYet,
+              style: TextStyle(
+                fontSize: 13,
+                color: context.textTertiary,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+    );
+  }
+}
+
+class _CharCounter extends StatelessWidget {
+  final TextEditingController controller;
+  final int max;
+
+  const _CharCounter({required this.controller, required this.max});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, _) {
+        final used = controller.text.characters.length;
+        final near = used >= max - 10;
+        return Text(
+          '$used / $max',
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+            color: near ? AccentColors.orange : context.textTertiary,
+            fontFamily: AppTheme.fontFamily,
+          ),
+        );
+      },
     );
   }
 }
@@ -3173,6 +3229,7 @@ class _MrrpServicesCard extends StatelessWidget {
     return _CardContainer(
       title: context.l10n.nodedexMrrpServicesTitle,
       icon: Icons.hub_outlined,
+      helpKey: 'mrrp_services',
       child: Column(
         children: [
           for (final id in serviceIds)
@@ -3261,112 +3318,15 @@ class _CardContainer extends StatelessWidget {
 // Section Info Button — inline contextual help
 // =============================================================================
 
-/// Small info icon that shows contextual help for a NodeDex detail section.
-///
-/// Tapping opens a bottom sheet with the section-specific help text
-/// from [HelpContent.nodeDexSectionHelp]. This provides quick access
-/// to section explanations without starting a full guided tour.
+/// Private alias for the shared [SectionInfoButton] widget so existing
+/// callsites in this file keep working without churn.
 class _SectionInfoButton extends StatelessWidget {
   final String helpKey;
 
   const _SectionInfoButton({required this.helpKey});
 
   @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => _showHelp(context),
-      behavior: HitTestBehavior.opaque,
-      child: Padding(
-        padding: const EdgeInsets.all(AppTheme.spacing4),
-        child: Icon(
-          Icons.info_outline,
-          size: 14,
-          color: context.textTertiary.withValues(alpha: 0.5),
-        ),
-      ),
-    );
-  }
-
-  void _showHelp(BuildContext context) {
-    final rawText = HelpContent.nodeDexSectionHelp[helpKey];
-    if (rawText == null) return;
-
-    final helpText = HelpContent.localizedNodeDexSectionHelp(
-      helpKey,
-      context.l10n,
-    );
-
-    HapticFeedback.selectionClick();
-    AppBottomSheet.show<void>(
-      context: context,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(AppTheme.spacing24, 8, 24, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.lightbulb_outline,
-                  size: 18,
-                  color: context.accentColor,
-                ),
-                const SizedBox(width: AppTheme.spacing8),
-                Text(
-                  _titleForKey(helpKey, context),
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: context.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppTheme.spacing12),
-            Text(
-              helpText,
-              style: TextStyle(
-                fontSize: 14,
-                color: context.textSecondary,
-                height: 1.5,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  String _titleForKey(String key, BuildContext context) {
-    final l10n = context.l10n;
-    switch (key) {
-      case 'sigil':
-        return l10n.nodedexHelpSigil;
-      case 'trait':
-        return l10n.nodedexHelpPersonalityTrait;
-      case 'discovery':
-        return l10n.nodedexHelpDiscoveryStats;
-      case 'signal':
-        return l10n.nodedexHelpSignalRecords;
-      case 'social_tag':
-        return l10n.nodedexHelpClassification;
-      case 'note':
-        return l10n.nodedexHelpNote;
-      case 'regions':
-        return l10n.nodedexHelpRegionHistory;
-      case 'encounters':
-        return l10n.nodedexHelpRecentEncounters;
-      case 'activity_timeline':
-        return l10n.nodedexHelpActivityTimeline;
-      case 'constellation':
-        return l10n.nodedexHelpConstellationLinks;
-      case 'device':
-        return l10n.nodedexHelpDeviceInfo;
-      default:
-        return l10n.nodedexHelpInfoDefault;
-    }
-  }
+  Widget build(BuildContext context) => SectionInfoButton(helpKey: helpKey);
 }
 
 // =============================================================================

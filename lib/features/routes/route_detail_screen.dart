@@ -98,8 +98,8 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
     );
 
     _animationController!.addListener(() {
-      _mapController.move(
-        LatLng(latTween.evaluate(animation), lngTween.evaluate(animation)),
+      _mapController.safeMove(
+        safeLatLng(latTween.evaluate(animation), lngTween.evaluate(animation)),
         zoomTween.evaluate(animation),
       );
     });
@@ -112,7 +112,10 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
     final presenceMap = ref.watch(presenceMapProvider);
     final route = widget.route;
     final hasLocations = route.locations.isNotEmpty;
-    final center = route.center;
+    final routeCenter = route.center;
+    final LatLng? center = routeCenter == null
+        ? null
+        : safeLatLng(routeCenter.lat, routeCenter.lon);
 
     // Get mesh nodes with positions
     final nodes = ref.watch(nodesProvider);
@@ -140,7 +143,7 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
             MeshMapWidget(
               mapController: _mapController,
               mapStyle: _mapStyle,
-              initialCenter: LatLng(center.lat, center.lon),
+              initialCenter: center,
               initialZoom: _calculateZoom(route),
               minZoom: 3,
               maxZoom: 18,
@@ -497,11 +500,12 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
   void _fitBounds() {
     if (widget.route.locations.isEmpty) return;
 
-    final points = widget.route.locations
-        .map((l) => LatLng(l.latitude, l.longitude))
-        .toList();
+    final points = widget.route.locations.map(
+      (l) => LatLng(l.latitude, l.longitude),
+    );
+    final bounds = safeLatLngBounds(points);
+    if (bounds == null) return;
 
-    final bounds = LatLngBounds.fromPoints(points);
     _mapController.fitCamera(
       CameraFit.bounds(
         bounds: bounds,

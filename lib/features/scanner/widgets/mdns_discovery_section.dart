@@ -22,7 +22,7 @@ import '../../../utils/snackbar.dart';
 /// Starts scanning when mounted, stops when disposed. Each discovered
 /// device shows its display name and host:port, with a connect action.
 class MdnsDiscoverySection extends ConsumerStatefulWidget {
-  final VoidCallback? onConnectionSuccess;
+  final ValueChanged<DeviceInfo>? onConnectionSuccess;
 
   const MdnsDiscoverySection({super.key, this.onConnectionSuccess});
 
@@ -67,11 +67,12 @@ class _MdnsDiscoverySectionState extends ConsumerState<MdnsDiscoverySection>
       ref.read(transportTypeProvider.notifier).setType(TransportType.network);
 
       // Connect via the standard connection flow
+      final deviceInfo = device.toDeviceInfo();
       final connectionNotifier = ref.read(deviceConnectionProvider.notifier);
-      await connectionNotifier.connectToDevice(device.toDeviceInfo());
+      await connectionNotifier.connectToDevice(deviceInfo);
 
       if (!mounted) return;
-      widget.onConnectionSuccess?.call();
+      widget.onConnectionSuccess?.call(deviceInfo);
     } catch (e) {
       AppLogging.protocol('mDNS: Connection failed to ${device.host}: $e');
       if (!mounted) return;
@@ -239,82 +240,93 @@ class _MdnsDeviceCard extends StatelessWidget {
     final l10n = context.l10n;
     return Container(
       margin: const EdgeInsets.only(bottom: AppTheme.spacing12),
-      child: Material(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-        child: InkWell(
-          onTap: isConnecting ? null : onTap,
+      child: Semantics(
+        container: true,
+        button: true,
+        enabled: !isConnecting,
+        label:
+            '${device.displayName}, ${device.host}:${device.port}, ${l10n.mdnsTransportTcp}',
+        child: Material(
+          color: context.card,
           borderRadius: BorderRadius.circular(AppTheme.radius12),
-          splashColor: context.accentColor.withValues(alpha: 0.2),
-          highlightColor: context.accentColor.withValues(alpha: 0.1),
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppTheme.radius12),
-              border: Border.all(color: context.border),
-            ),
-            padding: const EdgeInsets.all(AppTheme.spacing16),
-            child: Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: context.background,
-                    borderRadius: BorderRadius.circular(AppTheme.radius12),
-                  ),
-                  child: isConnecting
-                      ? Padding(
-                          padding: const EdgeInsets.all(AppTheme.spacing12),
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
+          child: InkWell(
+            onTap: isConnecting ? null : onTap,
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
+            splashColor: context.accentColor.withValues(alpha: 0.2),
+            highlightColor: context.accentColor.withValues(alpha: 0.1),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
+                border: Border.all(color: context.border),
+              ),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
+              child: Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: context.background,
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
+                    ),
+                    child: isConnecting
+                        ? Padding(
+                            padding: const EdgeInsets.all(AppTheme.spacing12),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: context.accentColor,
+                            ),
+                          )
+                        : Icon(
+                            Icons.wifi,
                             color: context.accentColor,
+                            size: 24,
                           ),
-                        )
-                      : Icon(Icons.wifi, color: context.accentColor, size: 24),
-                ),
-                const SizedBox(width: AppTheme.spacing16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        device.displayName,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: context.textPrimary,
+                  ),
+                  const SizedBox(width: AppTheme.spacing16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          device.displayName,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: context.textPrimary,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: AppTheme.spacing4),
-                      Text(
-                        '${device.host}:${device.port}',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: context.textTertiary,
+                        const SizedBox(height: AppTheme.spacing4),
+                        Text(
+                          '${device.host}:${device.port}',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: context.textTertiary,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppTheme.spacing8,
-                    vertical: AppTheme.spacing4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AccentColors.cyan.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(AppTheme.radius4),
-                  ),
-                  child: Text(
-                    l10n.mdnsTransportTcp,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: AccentColors.cyan,
+                      ],
                     ),
                   ),
-                ),
-              ],
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spacing8,
+                      vertical: AppTheme.spacing4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AccentColors.cyan.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(AppTheme.radius4),
+                    ),
+                    child: Text(
+                      l10n.mdnsTransportTcp,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AccentColors.cyan,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

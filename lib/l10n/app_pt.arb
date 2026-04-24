@@ -29878,10 +29878,6 @@
   "@scannerEnableAutoReconnectTitle": {
     "description": "Title of the confirmation sheet for enabling auto-reconnect."
   },
-  "scannerEnableBluetoothHint": "Verifique se o Bluetooth está ativado e se seu dispositivo Meshtastic está ligado",
-  "@scannerEnableBluetoothHint": {
-    "description": "Helper text shown below the looking-for-devices message."
-  },
   "scannerEnableLabel": "Ativar",
   "@scannerEnableLabel": {
     "description": "Confirm label for the enable auto-reconnect sheet."
@@ -29893,10 +29889,6 @@
   "scannerGattConnectionFailed": "Falha na conexão. Isso pode acontecer se o dispositivo foi pareado anteriormente com outro app. Vá em Ajustes > Bluetooth, encontre o dispositivo Meshtastic, toque em \"Esquecer\" e tente novamente.",
   "@scannerGattConnectionFailed": {
     "description": "User-friendly error message for GATT_ERROR 133 or discovery failed BLE errors."
-  },
-  "scannerLookingForDevices": "Procurando dispositivos…",
-  "@scannerLookingForDevices": {
-    "description": "Large text shown when scan is not active and no devices are listed."
   },
   "scannerMeshCoreConnectionFailed": "Falha na conexão MeshCore",
   "@scannerMeshCoreConnectionFailed": {
@@ -29948,15 +29940,6 @@
   "@scannerScanningTitle": {
     "description": "Banner title shown while actively scanning for BLE devices."
   },
-  "scannerTipNoOtherApps": "Verifique se nenhum outro app (ex. app oficial Meshtastic) está conectado ao dispositivo",
-  "@scannerTipNoOtherApps": {
-    "description": "Troubleshooting tip: check no other apps are using the BLE connection."
-  },
-  "scannerTipNoOtherDevices": "Verifique se nenhum outro telefone ou tablet já está conectado ao dispositivo via Bluetooth",
-  "@scannerTipNoOtherDevices": {
-    "description": "Troubleshooting tip: check no other phones/tablets are paired."
-  },
-
   "scannerShowAllBleDevices": "Mostrar todos os dispositivos BLE",
   "@scannerShowAllBleDevices": {
     "description": "Text displayed in BLE scanner"

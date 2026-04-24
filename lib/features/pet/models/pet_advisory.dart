@@ -49,15 +49,7 @@ enum PetAdvisoryLevel {
 /// to (a) bold the action name in the status message, (b) pulse the
 /// matching button, and (c) scroll/highlight the button into view if
 /// needed. `null` = no suggested action (thriving, resting, egg).
-enum PetAdvisoryAction {
-  charge,
-  resonate,
-  stabilise,
-  purge,
-  sync,
-  dim,
-  reSigil,
-}
+enum PetAdvisoryAction { charge, resonate, stabilise, purge, dim, reSigil }
 
 /// A single primary-need advisory. Equal-by-value so consumers can
 /// `.select` on this without rebuilding every frame.

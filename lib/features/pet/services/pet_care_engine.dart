@@ -459,8 +459,6 @@ class PetCareEngine {
         return _applyResonate(base, now);
       case CareAction.stabilise:
         return _applyStabilise(base, now);
-      case CareAction.sync:
-        return _applySync(base, now);
       case CareAction.purge:
         return _applyPurge(base, now);
       case CareAction.dim:
@@ -603,37 +601,6 @@ class PetCareEngine {
       ),
     );
     return PetActionResult.applied(state: next, action: CareAction.stabilise);
-  }
-
-  PetActionResult _applySync(PetState s, DateTime now) {
-    // Sync is purely the "answer the call" tap — it exists only to
-    // acknowledge an active attention call. It does NOT change stats.
-    // Stat management lives with the dedicated care actions:
-    // Stabilise raises stability, Resonate raises mood, Charge/Surge
-    // raise energy, Purge clears sickness. Tamagotchi-style one-action
-    // -per-stat: the beep is cleared by acknowledging, but whatever
-    // underlying need the call surfaces must be addressed by its own
-    // action. This keeps the mental model honest.
-    final hasCall = s.activeCall != null;
-    if (!hasCall) {
-      return PetActionResult.notNeeded(
-        state: s,
-        action: CareAction.sync,
-        reason: PetActionReason.nothingToSync,
-      );
-    }
-    var next = _answerCallIfMatching(s, now, s.activeCall!.reason);
-    final acc = next.stageAccumulators;
-    next = next.copyWith(
-      stageAccumulators: acc.copyWith(
-        disciplineCorrections: acc.disciplineCorrections + 1,
-      ),
-      recentEvents: _appendEvent(
-        next.recentEvents,
-        CareEvent(at: now, kind: CareEventKind.synced),
-      ),
-    );
-    return PetActionResult.applied(state: next, action: CareAction.sync);
   }
 
   PetActionResult _applyPurge(PetState s, DateTime now) {

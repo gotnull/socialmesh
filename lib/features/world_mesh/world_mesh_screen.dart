@@ -116,8 +116,8 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
     );
 
     _animationController!.addListener(() {
-      _mapController.moveAndRotate(
-        LatLng(latTween.evaluate(animation), lngTween.evaluate(animation)),
+      _mapController.safeMoveAndRotate(
+        safeLatLng(latTween.evaluate(animation), lngTween.evaluate(animation)),
         zoomTween.evaluate(animation),
         rotationTween.evaluate(animation),
       );
@@ -935,21 +935,24 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
             rotation: 0,
           ),
           onFitAll: () {
-            // Fit to show all visible nodes
-            if (displayNodes.isNotEmpty) {
-              final lats = displayNodes.map((n) => n.latitudeDecimal).toList();
-              final lons = displayNodes.map((n) => n.longitudeDecimal).toList();
-              final bounds = LatLngBounds(
-                LatLng(lats.reduce(math.min), lons.reduce(math.min)),
-                LatLng(lats.reduce(math.max), lons.reduce(math.max)),
-              );
-              _mapController.fitCamera(
-                CameraFit.bounds(
-                  bounds: bounds,
-                  padding: const EdgeInsets.all(AppTheme.spacing50),
-                ),
-              );
-            }
+            final finite = displayNodes
+                .where(
+                  (n) =>
+                      n.latitudeDecimal.isFinite && n.longitudeDecimal.isFinite,
+                )
+                .toList(growable: false);
+            if (finite.isEmpty) return;
+            final lats = finite.map((n) => n.latitudeDecimal).toList();
+            final lons = finite.map((n) => n.longitudeDecimal).toList();
+            final sw = safeLatLng(lats.reduce(math.min), lons.reduce(math.min));
+            final ne = safeLatLng(lats.reduce(math.max), lons.reduce(math.max));
+            if (sw == null || ne == null) return;
+            _mapController.fitCamera(
+              CameraFit.bounds(
+                bounds: LatLngBounds(sw, ne),
+                padding: const EdgeInsets.all(AppTheme.spacing50),
+              ),
+            );
           },
         ),
 

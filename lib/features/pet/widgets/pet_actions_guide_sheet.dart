@@ -52,12 +52,6 @@ class PetActionsGuideSheet extends StatelessWidget {
           description: l10n.petActionStabiliseDescription,
         ),
         HelpSheetItem(
-          icon: Icons.sync,
-          iconColor: AccentColors.lavender,
-          title: l10n.petActionSync,
-          description: l10n.petActionSyncDescription,
-        ),
-        HelpSheetItem(
           icon: Icons.healing_outlined,
           iconColor: AccentColors.red,
           title: l10n.petActionPurge,

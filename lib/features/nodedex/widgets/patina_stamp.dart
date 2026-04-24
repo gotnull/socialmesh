@@ -19,9 +19,11 @@
 // history that emerges naturally from observation.
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../services/patina_score.dart';
 
 /// Compact stamp displaying a node's patina score.
@@ -45,24 +47,36 @@ class PatinaStamp extends StatelessWidget {
   /// Typically the node's sigil primary color.
   final Color accentColor;
 
-  /// Whether to show the breakdown tooltip on long press.
-  final bool showBreakdownOnLongPress;
+  /// Whether tapping the stamp opens the breakdown sheet. Set false
+  /// when rendering the stamp inside that very sheet to avoid
+  /// recursive presentation.
+  final bool interactive;
 
   const PatinaStamp({
     super.key,
     required this.result,
     required this.accentColor,
-    this.showBreakdownOnLongPress = true,
+    this.interactive = true,
   });
 
   @override
   Widget build(BuildContext context) {
+    final localizedLabel = PatinaScore.localizedStampLabel(
+      result.stampLabel,
+      context.l10n,
+    );
     return GestureDetector(
-      onLongPress: showBreakdownOnLongPress
-          ? () => _showBreakdown(context)
+      onTap: interactive
+          ? () {
+              HapticFeedback.selectionClick();
+              _showBreakdown(context);
+            }
           : null,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppTheme.spacing10,
+          vertical: AppTheme.spacing4,
+        ),
         decoration: BoxDecoration(
           color: accentColor.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(AppTheme.radius6),
@@ -76,7 +90,7 @@ class PatinaStamp extends StatelessWidget {
           children: [
             // Stamp label (e.g., "Inked")
             Text(
-              result.stampLabel,
+              localizedLabel,
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
@@ -86,7 +100,9 @@ class PatinaStamp extends StatelessWidget {
             ),
             // Separator
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spacing4,
+              ),
               child: Text(
                 ':',
                 style: TextStyle(
@@ -107,6 +123,16 @@ class PatinaStamp extends StatelessWidget {
                 letterSpacing: 0.5,
               ),
             ),
+            // Visible (i) tap target — never hide the breakdown behind
+            // a long-press; people don't know to try it.
+            if (interactive) ...[
+              const SizedBox(width: AppTheme.spacing4),
+              Icon(
+                Icons.info_outline,
+                size: 12,
+                color: accentColor.withValues(alpha: 0.6),
+              ),
+            ],
           ],
         ),
       ),
@@ -115,105 +141,86 @@ class PatinaStamp extends StatelessWidget {
 
   void _showBreakdown(BuildContext context) {
     final l10n = context.l10n;
-    showModalBottomSheet<void>(
+    AppBottomSheet.showScrollable<void>(
       context: context,
-      backgroundColor: context.background,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (sheetContext) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(AppTheme.spacing24, 16, 24, 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
+      initialChildSize: 0.7,
+      minChildSize: 0.4,
+      maxChildSize: 0.9,
+      builder: (scrollController) {
+        return ListView(
+          controller: scrollController,
+          padding: const EdgeInsets.fromLTRB(
+            AppTheme.spacing24,
+            0,
+            AppTheme.spacing24,
+            AppTheme.spacing24,
+          ),
+          children: [
+            // Title row with overall score stamp on the right.
+            Row(
               children: [
-                // Drag pill
-                Center(
-                  child: Container(
-                    width: 36,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: context.textTertiary.withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(AppTheme.radius2),
+                Expanded(
+                  child: Text(
+                    l10n.nodedexPatinaBreakdownTitle,
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      color: context.textPrimary,
                     ),
                   ),
                 ),
-                const SizedBox(height: AppTheme.spacing16),
-
-                // Title row with overall score
-                Row(
-                  children: [
-                    Text(
-                      l10n.nodedexPatinaBreakdownTitle,
-                      style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                        color: context.textPrimary,
-                      ),
-                    ),
-                    const Spacer(),
-                    PatinaStamp(
-                      result: result,
-                      accentColor: accentColor,
-                      showBreakdownOnLongPress: false,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppTheme.spacing4),
-                Text(
-                  l10n.nodedexPatinaBreakdownSubtitle,
-                  style: TextStyle(fontSize: 12, color: context.textTertiary),
-                ),
-                const SizedBox(height: AppTheme.spacing20),
-
-                // Axis breakdowns
-                _AxisRow(
-                  label: l10n.nodedexPatinaAxisTenure,
-                  value: result.tenure,
-                  description: l10n.nodedexPatinaAxisTenureDescription,
-                  color: accentColor,
-                  context: sheetContext,
-                ),
-                _AxisRow(
-                  label: l10n.nodedexPatinaAxisEncounters,
-                  value: result.encounters,
-                  description: l10n.nodedexPatinaAxisEncountersDescription,
-                  color: accentColor,
-                  context: sheetContext,
-                ),
-                _AxisRow(
-                  label: l10n.nodedexPatinaAxisReach,
-                  value: result.reach,
-                  description: l10n.nodedexPatinaAxisReachDescription,
-                  color: accentColor,
-                  context: sheetContext,
-                ),
-                _AxisRow(
-                  label: l10n.nodedexPatinaAxisSignalDepth,
-                  value: result.signalDepth,
-                  description: l10n.nodedexPatinaAxisSignalDepthDescription,
-                  color: accentColor,
-                  context: sheetContext,
-                ),
-                _AxisRow(
-                  label: l10n.nodedexPatinaAxisSocial,
-                  value: result.social,
-                  description: l10n.nodedexPatinaAxisSocialDescription,
-                  color: accentColor,
-                  context: sheetContext,
-                ),
-                _AxisRow(
-                  label: l10n.nodedexPatinaAxisRecency,
-                  value: result.recency,
-                  description: l10n.nodedexPatinaAxisRecencyDescription,
-                  color: accentColor,
-                  context: sheetContext,
+                PatinaStamp(
+                  result: result,
+                  accentColor: accentColor,
+                  interactive: false,
                 ),
               ],
             ),
-          ),
+            const SizedBox(height: AppTheme.spacing4),
+            Text(
+              l10n.nodedexPatinaBreakdownSubtitle,
+              style: TextStyle(fontSize: 12, color: context.textTertiary),
+            ),
+            const SizedBox(height: AppTheme.spacing20),
+
+            // Axis breakdowns
+            _AxisRow(
+              label: l10n.nodedexPatinaAxisTenure,
+              value: result.tenure,
+              description: l10n.nodedexPatinaAxisTenureDescription,
+              color: accentColor,
+            ),
+            _AxisRow(
+              label: l10n.nodedexPatinaAxisEncounters,
+              value: result.encounters,
+              description: l10n.nodedexPatinaAxisEncountersDescription,
+              color: accentColor,
+            ),
+            _AxisRow(
+              label: l10n.nodedexPatinaAxisReach,
+              value: result.reach,
+              description: l10n.nodedexPatinaAxisReachDescription,
+              color: accentColor,
+            ),
+            _AxisRow(
+              label: l10n.nodedexPatinaAxisSignalDepth,
+              value: result.signalDepth,
+              description: l10n.nodedexPatinaAxisSignalDepthDescription,
+              color: accentColor,
+            ),
+            _AxisRow(
+              label: l10n.nodedexPatinaAxisSocial,
+              value: result.social,
+              description: l10n.nodedexPatinaAxisSocialDescription,
+              color: accentColor,
+            ),
+            _AxisRow(
+              label: l10n.nodedexPatinaAxisRecency,
+              value: result.recency,
+              description: l10n.nodedexPatinaAxisRecencyDescription,
+              color: accentColor,
+            ),
+          ],
         );
       },
     );
@@ -226,22 +233,20 @@ class _AxisRow extends StatelessWidget {
   final double value;
   final String description;
   final Color color;
-  final BuildContext context;
 
   const _AxisRow({
     required this.label,
     required this.value,
     required this.description,
     required this.color,
-    required this.context,
   });
 
   @override
-  Widget build(BuildContext buildContext) {
+  Widget build(BuildContext context) {
     final percentage = (value * 100).round();
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: AppTheme.spacing12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -253,7 +258,7 @@ class _AxisRow extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: buildContext.textPrimary,
+                    color: context.textPrimary,
                   ),
                 ),
               ),
@@ -282,7 +287,7 @@ class _AxisRow extends StatelessWidget {
                       // Background track
                       Container(
                         width: constraints.maxWidth,
-                        color: buildContext.border.withValues(alpha: 0.3),
+                        color: context.border.withValues(alpha: 0.3),
                       ),
                       // Filled portion
                       Container(
@@ -298,7 +303,7 @@ class _AxisRow extends StatelessWidget {
           const SizedBox(height: AppTheme.spacing2),
           Text(
             description,
-            style: TextStyle(fontSize: 10, color: buildContext.textTertiary),
+            style: TextStyle(fontSize: 10, color: context.textTertiary),
           ),
         ],
       ),

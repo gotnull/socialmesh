@@ -1372,9 +1372,15 @@ void main() {
         expect(json.containsKey('md'), isFalse);
         expect(json.containsKey('bs'), isFalse);
         expect(json.containsKey('br'), isFalse);
-        expect(json.containsKey('st'), isFalse);
-        expect(json.containsKey('un'), isFalse);
         expect(json.containsKey('sig'), isFalse);
+        // User-editable clearable fields (st, un, ln) are emitted as explicit
+        // null when unset so Firestore set(merge: true) can clear them.
+        expect(json.containsKey('st'), isTrue);
+        expect(json['st'], isNull);
+        expect(json.containsKey('un'), isTrue);
+        expect(json['un'], isNull);
+        expect(json.containsKey('ln'), isTrue);
+        expect(json['ln'], isNull);
       });
 
       test('fromJson handles missing optional fields gracefully', () {

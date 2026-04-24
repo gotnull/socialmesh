@@ -11562,6 +11562,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nodedexObservationTimelineTitle => 'Observation Timeline';
 
   @override
+  String get nodedexTraitEvidenceTitle => 'Trait Evidence';
+
+  @override
   String nodedexObservedDate(String date) {
     return 'Observed $date';
   }
@@ -12391,6 +12394,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nodesScreenTransportRf => 'RF';
+
+  @override
+  String get nodesScreenTransportTcp => 'TCP';
+
+  @override
+  String get nodesScreenTransportBle => 'BLE';
+
+  @override
+  String get nodesScreenTransportUsb => 'USB';
 
   @override
   String get nodesScreenYouBadge => 'YOU';
@@ -14190,18 +14202,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scannerEnableAutoReconnectTitle => 'Enable Auto-Reconnect?';
 
   @override
-  String get scannerEnableBluetoothHint =>
-      'Make sure Bluetooth is enabled and your Meshtastic device is powered on';
-
-  @override
   String get scannerEnableLabel => 'Enable';
 
   @override
   String get scannerGattConnectionFailed =>
       'Connection failed. This can happen if the device was previously paired with another app. Go to Settings > Bluetooth, find the Meshtastic device, tap \"Forget\", then try again.';
-
-  @override
-  String get scannerLookingForDevices => 'Looking for devices…';
 
   @override
   String get scannerMeshCoreConnectionFailed => 'MeshCore connection failed';
@@ -14236,14 +14241,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get scannerScanningTitle => 'Scanning for nearby devices';
-
-  @override
-  String get scannerTipNoOtherApps =>
-      'Ensure no other app (e.g. official Meshtastic app) is connected to this device';
-
-  @override
-  String get scannerTipNoOtherDevices =>
-      'Ensure no other phone or tablet is already connected to the device via Bluetooth';
 
   @override
   String get scannerTransportBluetooth => 'Bluetooth';
@@ -30351,6 +30348,30 @@ class AppLocalizationsEn extends AppLocalizations {
       'Live telemetry from the node: battery percentage, hardware model, firmware version, channel utilization, and uptime. This data is only available when the node is actively heard on the mesh.';
 
   @override
+  String get helpNodeDexSectionTraitEvidence =>
+      'The observations that most strongly support the primary trait assigned above. Each bullet is a concrete signal drawn from encounter history — co-seen connections, tenure, mobility, signal consistency, and timing. These are the inputs that drove the confidence score.';
+
+  @override
+  String get helpNodeDexSectionAdditionalTraits =>
+      'Other behavioral archetypes that also scored for this node, ranked by confidence. A node rarely fits a single archetype perfectly — secondary traits reveal nuance, like an Anchor that also acts as a Beacon, or a Drifter with Sentinel-like stretches.';
+
+  @override
+  String get helpNodeDexSectionPetCompanionSelf =>
+      'Your NodePet lives with your node and evolves locally from your care and mesh activity.';
+
+  @override
+  String get helpNodeDexSectionPetCompanionRemote =>
+      'If this node shares a companion summary, it can appear here. Full companion state stays local to its owner.';
+
+  @override
+  String get helpNodeDexSectionMrrpServices =>
+      'MRRP (Mesh Request-Response Protocol) services this node advertises. Each service ID represents a capability the node exposes over the mesh, such as a message board, profile exchange, or meetup coordination. Tap any ID to learn more about that specific service.';
+
+  @override
+  String get helpNodeDexSectionFieldNote =>
+      'A short, deterministic journal entry generated from this node\'s identity and primary trait — like a naturalist\'s field observation. The same node always produces the same note; it never changes, and it never travels over the mesh.';
+
+  @override
   String get helpNodeDexSectionAlbumRarity =>
       'Rarity tiers are computed from encounter count and inferred trait. Common nodes have few encounters, while Legendary nodes combine rare traits with deep observation history. Rarity determines the card border color and holographic shimmer intensity.';
 
@@ -35516,9 +35537,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get petActionStabilise => 'Clean';
 
   @override
-  String get petActionSync => 'Answer';
-
-  @override
   String get petActionPurge => 'Medicine';
 
   @override
@@ -35549,7 +35567,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get petOnboardingPage3Body =>
-      'Tap Inspect to see energy, mood, stability and recent events. Tap the ? icon for the full action guide. Your pet won\'t time-out if you miss a day, but consistent care earns it a better branch.';
+      'Tap Inspect to see energy, mood, stability and recent events. Your pet won\'t time-out if you miss a day, but consistent care earns it a better branch — open the help sheet anytime for the full action guide.';
 
   @override
   String get petOnboardingNext => 'Next';
@@ -35561,11 +35579,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get petOnboardingFinish => 'Got it';
 
   @override
+  String get petOnboardingHelpHint => 'Full action guide';
+
+  @override
   String get petGuideSheetTitle => 'Action Guide';
 
   @override
   String get petGuideSheetIntro =>
-      'Each action does one specific thing. When the pet beeps for attention (pulsing icon), tap Answer to stop the beep, then use the action that addresses what the pet actually needs — Feed for hunger, Play for loneliness, Clean for a mess, Sleep for bedtime, or Medicine for sickness.';
+      'Each action does one specific thing. When the pet beeps for attention (pulsing icon), tap the matching action — Feed for hunger, Play for loneliness, Clean for a mess, Sleep for bedtime, or Medicine for sickness — and the beep clears automatically.';
 
   @override
   String get petActionChargeDescription =>
@@ -35584,12 +35605,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'Cleans up. Removes the distortion artefact on the field. +2 stability. Answers a Hygiene call.';
 
   @override
-  String get petActionSyncDescription =>
-      'Stops the pet\'s attention beep. No stat change on its own — use the matching action (Feed, Play, Clean, Sleep, or Medicine) to actually resolve what the pet needs.';
-
-  @override
   String get petActionPurgeDescription =>
-      'Medicine. Removes sickness and drops instability. Only valid while the pet is sick. Answers a Sick call.';
+      'Medicine. Removes sickness and drops instability. Only valid while the pet is sick.';
 
   @override
   String get petActionDimDescription =>
@@ -35852,12 +35869,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get petCompanionSectionTitle => 'Companion';
 
   @override
-  String get petCompanionUnknown => 'No sigil creature observed yet.';
+  String get petCompanionRemoteNoObservation =>
+      'No companion seen from this node yet.';
+
+  @override
+  String get petCompanionRemoteNotSharing =>
+      'This node isn\'t sharing its companion.';
 
   @override
   String petCompanionObservedRelative(String age) {
     return 'Observed $age ago';
   }
+
+  @override
+  String petCompanionLastSeen(String age) {
+    return 'Last seen $age ago';
+  }
+
+  @override
+  String get petCompanionOpenAction => 'Open NodePet';
+
+  @override
+  String get petCompanionSelfYours => 'Your companion';
+
+  @override
+  String get petCompanionSelfNoPet => 'Your companion hasn\'t hatched yet.';
 
   @override
   String get petLiveStateActive => 'Active';
@@ -35949,6 +35985,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get petAdvisoryThriving => 'Thriving.';
 
   @override
+  String get petRecentTimelineEmptyTitle => 'No events yet';
+
+  @override
+  String get petRecentTimelineEmptySubtitle =>
+      'Care actions and milestones will appear here as you interact with your pet.';
+
+  @override
+  String get petRecentTimelineDayToday => 'TODAY';
+
+  @override
+  String get petRecentTimelineDayYesterday => 'YESTERDAY';
+
+  @override
   String get petHatchBannerTitle => 'Hatched';
 
   @override
@@ -36010,9 +36059,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get petReasonNothingToClean => 'Field is clean';
 
   @override
-  String get petReasonNothingToSync => 'Nothing to sync';
-
-  @override
   String get petReasonAlreadyAsleep => 'Already resting';
 
   @override
@@ -36032,6 +36078,127 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get petReasonNotDormant => 'Pet is still alive';
+
+  @override
+  String get petTimelineScreenTitle => 'Lifecycle';
+
+  @override
+  String petTimelineEventCountPill(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count events',
+      one: '1 event',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get petTimelineOriginTitle => 'DNA forged';
+
+  @override
+  String petTimelineOriginDominant(String allele) {
+    return '$allele-dominant';
+  }
+
+  @override
+  String get petTimelineNowPill => 'NOW';
+
+  @override
+  String get petTimelineQuietCurrent => 'Quiet stretch — no events yet.';
+
+  @override
+  String petTimelineGroupedCount(int count) {
+    return '$count×';
+  }
+
+  @override
+  String petTimelineUpcomingLabel(String stageName) {
+    return 'Next: $stageName';
+  }
+
+  @override
+  String get petTimelineUpcomingImminent => 'imminent';
+
+  @override
+  String petTimelineUpcomingIn(String duration) {
+    return 'in $duration';
+  }
+
+  @override
+  String petTimelineDurationDays(int days) {
+    return '${days}d';
+  }
+
+  @override
+  String petTimelineDurationDaysHours(int days, int hours) {
+    return '${days}d ${hours}h';
+  }
+
+  @override
+  String petTimelineDurationHours(int hours) {
+    return '${hours}h';
+  }
+
+  @override
+  String petTimelineDurationHoursMinutes(int hours, int minutes) {
+    return '${hours}h ${minutes}m';
+  }
+
+  @override
+  String petTimelineDurationMinutes(int minutes) {
+    return '${minutes}m';
+  }
+
+  @override
+  String get petTimelineDurationImminent => 'moments';
+
+  @override
+  String get petTimelineEmptyTitle => 'No pet yet';
+
+  @override
+  String get petTimelineEmptySubtitle =>
+      'Pair a device to begin your pet\'s story.';
+
+  @override
+  String get petTimelineDetailHatched =>
+      'Your pet emerged from its sigil and began its life cycle.';
+
+  @override
+  String petTimelineDetailStageAdvanced(String stageName) {
+    return 'Advanced into $stageName.';
+  }
+
+  @override
+  String petTimelineDetailBranchResolved(String branchName) {
+    return 'Branch resolved as $branchName based on care patterns.';
+  }
+
+  @override
+  String get petTimelineDetailDormantEntered =>
+      'Entered dormancy. Its journey is complete.';
+
+  @override
+  String get petTimelineDetailReSigilled =>
+      'Re-sigilled — a new creature begins.';
+
+  @override
+  String get petTimelineDetailSicknessOnset =>
+      'Fell ill. Use Purge to recover.';
+
+  @override
+  String get petTimelineDetailSicknessRecovered => 'Recovered from sickness.';
+
+  @override
+  String get petTimelineDetailPurged => 'Received medical care.';
+
+  @override
+  String get petTimelineDetailCallMissed =>
+      'A call for attention went unanswered.';
+
+  @override
+  String get petTimelineDetailMistakeRecorded =>
+      'A lapse in care was recorded against the stage accumulator.';
 
   @override
   String get notificationChannelPetMilestones =>

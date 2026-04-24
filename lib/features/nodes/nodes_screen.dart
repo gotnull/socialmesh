@@ -1230,7 +1230,7 @@ void showNodeDetailsSheet(BuildContext context, MeshNode node, bool isMyNode) {
   showNodeDetails(context, node, isMyNode);
 }
 
-class _NodeCard extends StatelessWidget {
+class _NodeCard extends ConsumerWidget {
   final MeshNode node;
   final bool isMyNode;
   final PresenceConfidence presenceConfidence;
@@ -1307,7 +1307,7 @@ class _NodeCard extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final signalBars = _calculateSignalBars(node.rssi);
     final statusColor = _presenceColor(context, presenceConfidence);
     final blendColor = _blendColor(context);
@@ -1315,6 +1315,13 @@ class _NodeCard extends StatelessWidget {
     final cardOpacity = isMyNode || node.isFavorite
         ? 1.0
         : presenceOpacity(presenceConfidence);
+    // When this card represents our own device, show the direct link
+    // transport (TCP / BLE / USB) instead of the mesh transport (RF /
+    // MQTT), because we reach this node via our own phone↔device link,
+    // not over the air.
+    final myDirectTransport = isMyNode
+        ? ref.watch(transportTypeProvider)
+        : null;
 
     return BouncyTap(
       onTap: onTap,
@@ -1395,6 +1402,7 @@ class _NodeCard extends StatelessWidget {
                     signalBars,
                     statusColor,
                     statusText,
+                    myDirectTransport,
                   ),
                 ),
               ],
@@ -1410,6 +1418,7 @@ class _NodeCard extends StatelessWidget {
     int signalBars,
     Color statusColor,
     String statusText,
+    TransportType? myDirectTransport,
   ) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1682,7 +1691,8 @@ class _NodeCard extends StatelessWidget {
               // RF metadata row: RSSI, hops, transport
               if (node.rssi != null ||
                   node.hopCount != null ||
-                  node.viaMqtt) ...[
+                  node.viaMqtt ||
+                  myDirectTransport != null) ...[
                 SizedBox(height: AppTheme.spacing8),
                 Wrap(
                   spacing: AppTheme.spacing8,
@@ -1752,44 +1762,14 @@ class _NodeCard extends StatelessWidget {
                           ),
                         ],
                       ),
-                    // Transport badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 5,
-                        vertical: 1,
-                      ),
-                      decoration: BoxDecoration(
-                        color: node.viaMqtt
-                            ? AccentColors.sky.withValues(alpha: 0.15)
-                            : AccentColors.emerald.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(AppTheme.radius4),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            node.viaMqtt
-                                ? Icons.cloud_outlined
-                                : Icons.cell_tower,
-                            size: 10,
-                            color: node.viaMqtt
-                                ? AccentColors.sky
-                                : AccentColors.emerald,
-                          ),
-                          SizedBox(width: AppTheme.spacing2),
-                          Text(
-                            node.viaMqtt
-                                ? context.l10n.nodesScreenTransportMqtt
-                                : context.l10n.nodesScreenTransportRf,
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              color: node.viaMqtt
-                                  ? AccentColors.sky
-                                  : AccentColors.emerald,
-                            ),
-                          ),
-                        ],
+                    // Transport badge — own node shows direct link
+                    // (TCP / BLE / USB); other nodes show mesh path
+                    // (MQTT / RF).
+                    _TransportBadge(
+                      spec: _transportBadgeSpec(
+                        context,
+                        myDirectTransport,
+                        node.viaMqtt,
                       ),
                     ),
                   ],
@@ -2111,6 +2091,95 @@ class _CompactHopIndicator extends StatelessWidget {
           color: color,
           height: 1,
         ),
+      ),
+    );
+  }
+}
+
+/// Spec for a transport badge chip. See [_TransportBadge].
+class _TransportBadgeSpec {
+  final Color color;
+  final IconData icon;
+  final String label;
+  const _TransportBadgeSpec({
+    required this.color,
+    required this.icon,
+    required this.label,
+  });
+}
+
+/// Chooses the transport badge to show on a node card.
+///
+/// For the user's own device (`myDirectTransport` non-null), shows the
+/// direct link type: TCP over WiFi, BLE, or USB. For any other node,
+/// shows the mesh delivery path: MQTT bridge or RF radio.
+_TransportBadgeSpec _transportBadgeSpec(
+  BuildContext context,
+  TransportType? myDirectTransport,
+  bool viaMqtt,
+) {
+  if (myDirectTransport != null) {
+    switch (myDirectTransport) {
+      case TransportType.network:
+        return _TransportBadgeSpec(
+          color: AccentColors.cyan,
+          icon: Icons.wifi,
+          label: context.l10n.nodesScreenTransportTcp,
+        );
+      case TransportType.ble:
+        return _TransportBadgeSpec(
+          color: AccentColors.purple,
+          icon: Icons.bluetooth,
+          label: context.l10n.nodesScreenTransportBle,
+        );
+      case TransportType.usb:
+        return _TransportBadgeSpec(
+          color: AccentColors.orange,
+          icon: Icons.usb,
+          label: context.l10n.nodesScreenTransportUsb,
+        );
+    }
+  }
+  if (viaMqtt) {
+    return _TransportBadgeSpec(
+      color: AccentColors.sky,
+      icon: Icons.cloud_outlined,
+      label: context.l10n.nodesScreenTransportMqtt,
+    );
+  }
+  return _TransportBadgeSpec(
+    color: AccentColors.emerald,
+    icon: Icons.cell_tower,
+    label: context.l10n.nodesScreenTransportRf,
+  );
+}
+
+class _TransportBadge extends StatelessWidget {
+  final _TransportBadgeSpec spec;
+  const _TransportBadge({required this.spec});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+      decoration: BoxDecoration(
+        color: spec.color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(AppTheme.radius4),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(spec.icon, size: 10, color: spec.color),
+          SizedBox(width: AppTheme.spacing2),
+          Text(
+            spec.label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: spec.color,
+            ),
+          ),
+        ],
       ),
     );
   }

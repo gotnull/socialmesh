@@ -33,6 +33,7 @@ import '../services/protocol/sip/sip_types.dart';
 import 'app_providers.dart';
 import 'sip_providers.dart';
 import '../features/incidents/providers/mesh_incident_providers.dart';
+import '../features/pet/models/remote_pet_share_status.dart';
 import '../features/pet/providers/pet_providers.dart';
 import '../features/pet/services/pet_public_state_codec.dart';
 
@@ -446,14 +447,33 @@ final mrrpEngineProvider = Provider<MrrpEngine?>((ref) {
     engine.onResponseObserved = (frame, senderNodeId) {
       if (frame.serviceId != MrrpServiceId.petV1) return;
       if (frame.actionId != PetAction.getSummary) return;
-      if ((frame.flags & MrrpFlags.isError) != 0) return;
-      if (frame.payload.isEmpty) return; // peer has no pet bound
+      // Error frame → peer declined to share (feature disabled,
+      // unauthorized, or any service-level failure). Record the signal
+      // so the Companion card can say "this node isn't sharing" in
+      // plain language instead of "no observation yet".
+      if ((frame.flags & MrrpFlags.isError) != 0) {
+        ref
+            .read(petIngestControllerProvider)
+            .recordShareStatus(senderNodeId, RemotePetShareStatus.notSharing);
+        return;
+      }
+      // Empty payload → peer acknowledged the request but has no pet
+      // bound right now (not paired, just reset, etc.). Surface the
+      // same "not sharing" copy; the distinction from an error frame is
+      // invisible to the user and would add no product value.
+      if (frame.payload.isEmpty) {
+        ref
+            .read(petIngestControllerProvider)
+            .recordShareStatus(senderNodeId, RemotePetShareStatus.notSharing);
+        return;
+      }
       final decoded = PetPublicStateCodec.tryDecode(
         Uint8List.fromList(frame.payload),
       );
       if (decoded == null) return;
       // ref.read is safe here — we're inside a provider body's closure,
       // not rebuilding. Fire-and-forget; failures are logged internally.
+      // ingestRemotePet also flips share status to `sharing`.
       ref
           .read(petIngestControllerProvider)
           .ingestRemotePet(senderNodeId, decoded);

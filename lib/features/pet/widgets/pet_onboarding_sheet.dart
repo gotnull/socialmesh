@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// PetOnboardingSheet — three-card welcome flow shown on first launch
-// of the pet home screen. Explains the core Tamagotchi loop in plain
-// terms so the user arrives at the action buttons already knowing
-// what they do. Dismissal or "Got it" both flip the completion flag
-// — a dismissed sheet is not re-shown (the user saw it; we trust
-// them to open the ? icon if they want the details later).
+// PetOnboardingSheet — three-page welcome flow shown on first launch
+// of the pet home screen. Visually aligned with the main onboarding
+// flow: Ico the mesh-brain advisor narrates each page via a sci-fi
+// speech bubble, ShaderMask gradient titles, glowing gradient page
+// indicators, and a full-width gradient primary button. Dismissal or
+// "Got it" both flip the completion flag so the sheet is never
+// re-shown.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,6 +16,8 @@ import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../onboarding/widgets/advisor_speech_bubble.dart';
+import '../../onboarding/widgets/mesh_node_brain.dart';
 import '../providers/pet_providers.dart';
 
 class PetOnboardingSheet extends ConsumerStatefulWidget {
@@ -36,24 +39,25 @@ class _PetOnboardingSheetState extends ConsumerState<PetOnboardingSheet>
     super.dispose();
   }
 
-  List<_OnboardingCard> _cards(AppLocalizations l10n) => [
-    _OnboardingCard(
-      icon: Icons.pets,
-      iconColor: AccentColors.pink,
+  List<_PetOnboardingPage> _pages(AppLocalizations l10n) => [
+    _PetOnboardingPage(
       title: l10n.petOnboardingPage1Title,
-      body: l10n.petOnboardingPage1Body,
+      advisorText: l10n.petOnboardingPage1Body,
+      mood: MeshBrainMood.inviting,
+      accent: AccentColors.pink,
     ),
-    _OnboardingCard(
-      icon: Icons.notifications_active_outlined,
-      iconColor: AccentColors.yellow,
+    _PetOnboardingPage(
       title: l10n.petOnboardingPage2Title,
-      body: l10n.petOnboardingPage2Body,
+      advisorText: l10n.petOnboardingPage2Body,
+      mood: MeshBrainMood.speaking,
+      accent: AccentColors.yellow,
     ),
-    _OnboardingCard(
-      icon: Icons.visibility_outlined,
-      iconColor: AccentColors.sky,
+    _PetOnboardingPage(
       title: l10n.petOnboardingPage3Title,
-      body: l10n.petOnboardingPage3Body,
+      advisorText: l10n.petOnboardingPage3Body,
+      mood: MeshBrainMood.curious,
+      accent: AccentColors.sky,
+      showHelpHint: true,
     ),
   ];
 
@@ -69,7 +73,7 @@ class _PetOnboardingSheetState extends ConsumerState<PetOnboardingSheet>
       return;
     }
     _pageController.nextPage(
-      duration: const Duration(milliseconds: 260),
+      duration: const Duration(milliseconds: 500),
       curve: Curves.easeOutCubic,
     );
   }
@@ -77,120 +81,75 @@ class _PetOnboardingSheetState extends ConsumerState<PetOnboardingSheet>
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final cards = _cards(l10n);
-    final isLast = _page == cards.length - 1;
+    final pages = _pages(l10n);
+    final isLast = _page == pages.length - 1;
+    final accent = pages[_page].accent;
 
-    return Column(
-      children: [
-        Expanded(
-          child: PageView.builder(
-            controller: _pageController,
-            itemCount: cards.length,
-            onPageChanged: (i) => setState(() => _page = i),
-            itemBuilder: (context, i) => _OnboardingCardView(card: cards[i]),
-          ),
-        ),
-        _PageDots(count: cards.length, active: _page),
-        const SizedBox(height: AppTheme.spacing16),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppTheme.spacing16,
-            0,
-            AppTheme.spacing16,
-            AppTheme.spacing24,
-          ),
-          child: Row(
-            children: [
-              if (!isLast)
-                TextButton(
-                  onPressed: _finish,
-                  child: Text(
-                    l10n.petOnboardingSkip,
-                    style: TextStyle(
-                      color: context.textSecondary,
-                      fontFamily: AppTheme.fontFamily,
+    return Padding(
+      padding: const EdgeInsets.only(top: AppTheme.spacing8),
+      child: Column(
+        children: [
+          // Skip button — top-right, mirrors main onboarding.
+          SizedBox(
+            height: 40,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spacing16,
+              ),
+              child: Row(
+                children: [
+                  const Spacer(),
+                  AnimatedOpacity(
+                    duration: const Duration(milliseconds: 200),
+                    opacity: isLast ? 0.0 : 1.0,
+                    child: TextButton(
+                      onPressed: isLast ? null : _finish,
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppTheme.spacing12,
+                          vertical: AppTheme.spacing4,
+                        ),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: Text(
+                        l10n.petOnboardingSkip,
+                        style: TextStyle(
+                          color: context.textSecondary,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          fontFamily: AppTheme.fontFamily,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              const Spacer(),
-              FilledButton(
-                onPressed: () => _next(cards.length),
-                style: FilledButton.styleFrom(
-                  backgroundColor: context.accentColor,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppTheme.spacing24,
-                    vertical: AppTheme.spacing12,
-                  ),
-                ),
-                child: Text(
-                  isLast ? l10n.petOnboardingFinish : l10n.petOnboardingNext,
-                  style: const TextStyle(
-                    fontFamily: AppTheme.fontFamily,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                ],
               ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _OnboardingCard {
-  final IconData icon;
-  final Color iconColor;
-  final String title;
-  final String body;
-  const _OnboardingCard({
-    required this.icon,
-    required this.iconColor,
-    required this.title,
-    required this.body,
-  });
-}
-
-class _OnboardingCardView extends StatelessWidget {
-  final _OnboardingCard card;
-  const _OnboardingCardView({required this.card});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing24),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 96,
-            height: 96,
-            decoration: BoxDecoration(
-              color: card.iconColor.withValues(alpha: 0.14),
-              shape: BoxShape.circle,
             ),
-            child: Icon(card.icon, size: 48, color: card.iconColor),
           ),
-          const SizedBox(height: AppTheme.spacing24),
-          Text(
-            card.title,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-              color: context.textPrimary,
-              fontFamily: AppTheme.fontFamily,
+          Expanded(
+            child: PageView.builder(
+              controller: _pageController,
+              itemCount: pages.length,
+              onPageChanged: (i) => setState(() => _page = i),
+              itemBuilder: (context, i) =>
+                  _PetOnboardingPageView(page: pages[i], isActive: i == _page),
             ),
           ),
           const SizedBox(height: AppTheme.spacing12),
-          Text(
-            card.body,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14,
-              height: 1.5,
-              color: context.textSecondary,
-              fontFamily: AppTheme.fontFamily,
+          _GradientPageDots(count: pages.length, active: _page, accent: accent),
+          const SizedBox(height: AppTheme.spacing20),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppTheme.spacing16,
+              0,
+              AppTheme.spacing16,
+              AppTheme.spacing24,
+            ),
+            child: _GradientActionButton(
+              label: isLast ? l10n.petOnboardingFinish : l10n.petOnboardingNext,
+              accent: accent,
+              onPressed: () => _next(pages.length),
             ),
           ),
         ],
@@ -199,10 +158,96 @@ class _OnboardingCardView extends StatelessWidget {
   }
 }
 
-class _PageDots extends StatelessWidget {
+class _PetOnboardingPage {
+  final String title;
+  final String advisorText;
+  final MeshBrainMood mood;
+  final Color accent;
+  final bool showHelpHint;
+
+  const _PetOnboardingPage({
+    required this.title,
+    required this.advisorText,
+    required this.mood,
+    required this.accent,
+    this.showHelpHint = false,
+  });
+}
+
+class _PetOnboardingPageView extends StatelessWidget {
+  final _PetOnboardingPage page;
+  final bool isActive;
+
+  const _PetOnboardingPageView({required this.page, required this.isActive});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          MeshNodeBrain(
+            size: 88,
+            mood: page.mood,
+            colors: [
+              page.accent,
+              Color.lerp(page.accent, AppTheme.primaryMagenta, 0.5) ??
+                  page.accent,
+              Color.lerp(page.accent, AppTheme.graphBlue, 0.5) ?? page.accent,
+            ],
+            glowIntensity: 0.9,
+            lineThickness: 0.6,
+            nodeSize: 0.9,
+          ),
+          AdvisorSpeechBubble(
+            key: ValueKey('pet_onboarding_speech_${page.title}'),
+            text: page.advisorText,
+            accentColor: page.accent,
+            typewriterEffect: isActive,
+            typingSpeed: 25,
+          ),
+          if (page.showHelpHint) ...[
+            const SizedBox(height: AppTheme.spacing12),
+            _HelpIconHint(accent: page.accent),
+          ],
+          const SizedBox(height: AppTheme.spacing20),
+          ShaderMask(
+            shaderCallback: (bounds) => LinearGradient(
+              colors: [
+                Colors.white,
+                Colors.white.withValues(alpha: 0.9),
+                Colors.white,
+              ],
+            ).createShader(bounds),
+            child: Text(
+              page.title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                letterSpacing: -0.5,
+                fontFamily: AppTheme.fontFamily,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GradientPageDots extends StatelessWidget {
   final int count;
   final int active;
-  const _PageDots({required this.count, required this.active});
+  final Color accent;
+
+  const _GradientPageDots({
+    required this.count,
+    required this.active,
+    required this.accent,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -211,18 +256,134 @@ class _PageDots extends StatelessWidget {
       children: List.generate(count, (i) {
         final isActive = i == active;
         return AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic,
           margin: const EdgeInsets.symmetric(horizontal: AppTheme.spacing4),
-          width: isActive ? AppTheme.spacing20 : AppTheme.spacing8,
-          height: AppTheme.spacing8,
+          width: isActive ? 28 : 10,
+          height: 10,
           decoration: BoxDecoration(
-            color: isActive
-                ? context.accentColor
-                : context.textTertiary.withValues(alpha: 0.4),
-            borderRadius: BorderRadius.circular(AppTheme.radius4),
+            gradient: isActive
+                ? LinearGradient(
+                    colors: [accent, accent.withValues(alpha: 0.7)],
+                  )
+                : null,
+            color: isActive ? null : context.border,
+            borderRadius: BorderRadius.circular(AppTheme.radius5),
+            boxShadow: isActive
+                ? [
+                    BoxShadow(
+                      color: accent.withValues(alpha: 0.4),
+                      blurRadius: 8,
+                      spreadRadius: 1,
+                    ),
+                  ]
+                : null,
           ),
         );
       }),
+    );
+  }
+}
+
+/// A small visual hint — a styled help-icon chip + label — used on page
+/// 3 of the pet onboarding to point users at the help sheet they can
+/// open from the pet home screen. Replaces the plain "?" character in
+/// body copy with a proper chip so the reference is visually unmistakable.
+class _HelpIconHint extends StatelessWidget {
+  final Color accent;
+  const _HelpIconHint({required this.accent});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: accent.withValues(alpha: 0.18),
+            border: Border.all(color: accent.withValues(alpha: 0.45)),
+          ),
+          alignment: Alignment.center,
+          child: Icon(Icons.help_outline, size: 16, color: accent),
+        ),
+        const SizedBox(width: AppTheme.spacing8),
+        Text(
+          context.l10n.petOnboardingHelpHint,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: context.textSecondary,
+            fontFamily: AppTheme.fontFamily,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _GradientActionButton extends StatelessWidget {
+  final String label;
+  final Color accent;
+  final VoidCallback onPressed;
+
+  const _GradientActionButton({
+    required this.label,
+    required this.accent,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 56),
+      child: SizedBox(
+        width: double.infinity,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              colors: [
+                accent,
+                Color.lerp(accent, AppTheme.primaryPurple, 0.5) ?? accent,
+              ],
+            ),
+            borderRadius: BorderRadius.circular(AppTheme.radius16),
+            boxShadow: [
+              BoxShadow(
+                color: accent.withValues(alpha: 0.3),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: ElevatedButton(
+            onPressed: onPressed,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.transparent,
+              shadowColor: Colors.transparent,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radius16),
+              ),
+              elevation: 0,
+            ),
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+                fontFamily: AppTheme.fontFamily,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

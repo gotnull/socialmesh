@@ -24,6 +24,7 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/animated_avatar_stack.dart';
 import '../../../providers/accessibility_providers.dart';
 import 'nodedex_avatar_stack.dart';
+import 'section_info_button.dart';
 
 /// View model for the co-seen network card on the node detail screen.
 @immutable
@@ -128,17 +129,18 @@ class CoSeenNetworkCard extends ConsumerWidget {
                 // Title + icon
                 Icon(Icons.hub_outlined, size: 16, color: context.textTertiary),
                 const SizedBox(width: AppTheme.spacing8),
-                Expanded(
-                  child: Text(
-                    context.l10n.nodedexCoSeenCardTitle.toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: context.textTertiary,
-                      letterSpacing: 0.8,
-                    ),
+                Text(
+                  context.l10n.nodedexCoSeenCardTitle.toUpperCase(),
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: context.textTertiary,
+                    letterSpacing: 0.8,
                   ),
                 ),
+                const SizedBox(width: AppTheme.spacing4),
+                const SectionInfoButton(helpKey: 'coseen'),
+                const Spacer(),
                 // Animated avatar cluster — top-right anchored
                 AnimatedAvatarStack(
                   items: items,

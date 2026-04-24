@@ -56,6 +56,11 @@ class TraitBadge extends StatelessWidget {
   /// Optional tap handler.
   final VoidCallback? onTap;
 
+  /// Optional inline info button rendered in the expanded header (between
+  /// the trait description and the confidence dot). Only used by the
+  /// expanded size; ignored for minimal/compact/standard.
+  final Widget? infoButton;
+
   const TraitBadge({
     super.key,
     required this.trait,
@@ -63,6 +68,7 @@ class TraitBadge extends StatelessWidget {
     this.size = TraitBadgeSize.compact,
     this.showConfidence = false,
     this.onTap,
+    this.infoButton,
   });
 
   /// Create a badge from a TraitResult.
@@ -72,6 +78,7 @@ class TraitBadge extends StatelessWidget {
     TraitBadgeSize size = TraitBadgeSize.compact,
     bool showConfidence = false,
     VoidCallback? onTap,
+    Widget? infoButton,
   }) {
     return TraitBadge(
       key: key,
@@ -80,6 +87,7 @@ class TraitBadge extends StatelessWidget {
       size: size,
       showConfidence: showConfidence,
       onTap: onTap,
+      infoButton: infoButton,
     );
   }
 
@@ -212,9 +220,9 @@ class TraitBadge extends StatelessWidget {
     Widget content = Container(
       padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(AppTheme.radius16),
-        border: Border.all(color: color.withValues(alpha: 0.2), width: 0.5),
+        color: context.card,
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+        border: Border.all(color: context.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -237,13 +245,23 @@ class TraitBadge extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      trait.displayLabel(context.l10n),
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: context.textPrimary,
-                      ),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            trait.displayLabel(context.l10n),
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: context.textPrimary,
+                            ),
+                          ),
+                        ),
+                        if (infoButton != null) ...[
+                          const SizedBox(width: AppTheme.spacing4),
+                          infoButton!,
+                        ],
+                      ],
                     ),
                     const SizedBox(height: AppTheme.spacing2),
                     Text(
@@ -256,13 +274,15 @@ class TraitBadge extends StatelessWidget {
                   ],
                 ),
               ),
-              if (showConfidence && effectiveConfidence > 0)
+              if (showConfidence && effectiveConfidence > 0) ...[
+                const SizedBox(width: AppTheme.spacing8),
                 _ConfidenceDot(
                   confidence: effectiveConfidence,
                   color: color,
                   size: 24,
                   showLabel: true,
                 ),
+              ],
             ],
           ),
 

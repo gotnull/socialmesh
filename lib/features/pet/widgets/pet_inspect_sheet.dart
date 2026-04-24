@@ -8,9 +8,9 @@ import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/info_table.dart';
 import '../../../core/widgets/section_header.dart';
-import '../../../l10n/app_localizations.dart';
 import '../models/pet_enums.dart';
 import '../providers/pet_providers.dart';
+import 'pet_recent_timeline.dart';
 
 /// Inspect sheet — the "status" screen for the pet. Read-only.
 class PetInspectSheet extends ConsumerWidget {
@@ -121,7 +121,10 @@ class PetInspectSheet extends ConsumerWidget {
         ),
         const SizedBox(height: AppTheme.spacing16),
         SectionTitle(title: l10n.petInspectSectionRecent),
-        _RecentEventsList(events: state.recentEvents, l10n: l10n),
+        PetRecentTimeline(
+          events: state.recentEvents,
+          accent: _branchAccent(state.branch),
+        ),
         const SizedBox(height: AppTheme.spacing16),
         Text(
           l10n.petInspectDeviceLocalNote,
@@ -137,64 +140,24 @@ class PetInspectSheet extends ConsumerWidget {
   }
 }
 
-class _RecentEventsList extends StatelessWidget {
-  final List<dynamic> events;
-  final AppLocalizations l10n;
-  const _RecentEventsList({required this.events, required this.l10n});
-
-  @override
-  Widget build(BuildContext context) {
-    if (events.isEmpty) {
-      return Text(
-        '—',
-        style: TextStyle(
-          fontSize: 14,
-          color: context.textTertiary,
-          fontFamily: AppTheme.fontFamily,
-        ),
-      );
-    }
-    final tail = events.length > 8 ? events.sublist(events.length - 8) : events;
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spacing12),
-      decoration: BoxDecoration(
-        color: context.card,
-        border: Border.all(color: context.border),
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (final e in tail.reversed.cast<dynamic>())
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2),
-              child: Text(
-                _formatEvent(e),
-                style: TextStyle(
-                  fontSize: 12,
-                  color: context.textSecondary,
-                  fontFamily: AppTheme.fontFamily,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
+/// Map a [PetBranch] to the accent color used by the recent-events
+/// timeline (chevron buttons + generic stage-advanced dots). Mirrors
+/// the branch-primary mapping in [PetRenderPalette] but inlined so
+/// this file doesn't have to reach into the render-model layer just
+/// for a single color lookup.
+Color _branchAccent(PetBranch branch) {
+  switch (branch) {
+    case PetBranch.luminous:
+      return AccentColors.yellow;
+    case PetBranch.steady:
+      return AccentColors.emerald;
+    case PetBranch.volatile:
+      return AccentColors.orange;
+    case PetBranch.dimmed:
+      return AccentColors.lavender;
+    case PetBranch.unborn:
+      return AppTheme.primaryPurple;
   }
-
-  String _formatEvent(dynamic event) {
-    final at = event.at as DateTime;
-    final kind = event.kind as CareEventKind;
-    return '${_eventLabel(kind, l10n)}  ·  ${_relativeTime(at, l10n)}';
-  }
-}
-
-String _relativeTime(DateTime at, AppLocalizations l10n) {
-  final diff = DateTime.now().difference(at);
-  if (diff.isNegative || diff.inMinutes < 1) return l10n.commonJustNow;
-  if (diff.inHours < 1) return l10n.commonMinutesAgo(diff.inMinutes);
-  if (diff.inDays < 1) return l10n.commonHoursAgo(diff.inHours);
-  return l10n.commonDaysAgo(diff.inDays);
 }
 
 /// Compact elapsed-duration label for the "In stage" row. Differs from
@@ -220,55 +183,6 @@ String _elapsedLabel(Duration d) {
   return hours > 0
       ? '${days}d ${hours}h'
       : '${days}d'; // lint-allow: hardcoded-string
-}
-
-String _eventLabel(CareEventKind kind, AppLocalizations l10n) {
-  switch (kind) {
-    case CareEventKind.hatched:
-      return l10n.petEventHatched;
-    case CareEventKind.charged:
-      return l10n.petEventCharged;
-    case CareEventKind.surged:
-      return l10n.petEventSurged;
-    case CareEventKind.resonated:
-      return l10n.petEventResonated;
-    case CareEventKind.stabilised:
-      return l10n.petEventStabilised;
-    case CareEventKind.synced:
-      return l10n.petEventSynced;
-    case CareEventKind.purged:
-      return l10n.petEventPurged;
-    case CareEventKind.dimmed:
-      return l10n.petEventDimmed;
-    case CareEventKind.inspected:
-      return l10n.petEventInspected;
-    case CareEventKind.hygieneArtefactAppeared:
-      return l10n.petEventHygieneArtefactAppeared;
-    case CareEventKind.sicknessOnset:
-      return l10n.petEventSicknessOnset;
-    case CareEventKind.sicknessRecovered:
-      return l10n.petEventSicknessRecovered;
-    case CareEventKind.sleepEntered:
-      return l10n.petEventSleepEntered;
-    case CareEventKind.sleepExited:
-      return l10n.petEventSleepExited;
-    case CareEventKind.callStarted:
-      return l10n.petEventCallStarted;
-    case CareEventKind.callAnswered:
-      return l10n.petEventCallAnswered;
-    case CareEventKind.callMissed:
-      return l10n.petEventCallMissed;
-    case CareEventKind.mistakeRecorded:
-      return l10n.petEventMistakeRecorded;
-    case CareEventKind.stageAdvanced:
-      return l10n.petEventStageAdvanced;
-    case CareEventKind.branchResolved:
-      return l10n.petEventBranchResolved;
-    case CareEventKind.dormantEntered:
-      return l10n.petEventDormantEntered;
-    case CareEventKind.reSigilled:
-      return l10n.petEventReSigilled;
-  }
 }
 
 String _stageLabel(PetStage stage, dynamic l10n) {

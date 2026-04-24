@@ -967,17 +967,18 @@ class _PositionMapViewState extends State<_PositionMapView> {
   }
 
   void _fitToVisible() {
-    final visibleLogs = _filteredLogs;
+    final visibleLogs = _filteredLogs
+        .where((l) => l.latitude.isFinite && l.longitude.isFinite)
+        .toList(growable: false);
     if (visibleLogs.isEmpty) return;
     final lats = visibleLogs.map((l) => l.latitude).toList();
     final lons = visibleLogs.map((l) => l.longitude).toList();
-    final bounds = LatLngBounds(
-      LatLng(lats.reduce(math.min), lons.reduce(math.min)),
-      LatLng(lats.reduce(math.max), lons.reduce(math.max)),
-    );
+    final sw = safeLatLng(lats.reduce(math.min), lons.reduce(math.min));
+    final ne = safeLatLng(lats.reduce(math.max), lons.reduce(math.max));
+    if (sw == null || ne == null) return;
     _mapController.fitCamera(
       CameraFit.bounds(
-        bounds: bounds,
+        bounds: LatLngBounds(sw, ne),
         padding: const EdgeInsets.all(AppTheme.spacing50),
       ),
     );
@@ -1014,13 +1015,33 @@ class _PositionMapViewState extends State<_PositionMapView> {
       );
     }
 
-    // Calculate bounds
-    final lats = logs.map((l) => l.latitude).toList();
-    final lons = logs.map((l) => l.longitude).toList();
-    final center = LatLng(
-      (lats.reduce(math.min) + lats.reduce(math.max)) / 2,
-      (lons.reduce(math.min) + lons.reduce(math.max)) / 2,
-    );
+    // Calculate bounds from finite coordinates only.
+    final finiteLogs = logs
+        .where((l) => l.latitude.isFinite && l.longitude.isFinite)
+        .toList(growable: false);
+    if (finiteLogs.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.map_outlined, size: 48, color: context.textTertiary),
+            const SizedBox(height: AppTheme.spacing12),
+            Text(
+              context.l10n.telemetryPositionNoDisplay,
+              style: TextStyle(color: context.textSecondary),
+            ),
+          ],
+        ),
+      );
+    }
+    final lats = finiteLogs.map((l) => l.latitude).toList();
+    final lons = finiteLogs.map((l) => l.longitude).toList();
+    final center =
+        safeLatLng(
+          (lats.reduce(math.min) + lats.reduce(math.max)) / 2,
+          (lons.reduce(math.min) + lons.reduce(math.max)) / 2,
+        ) ??
+        const LatLng(MapConfig.defaultLat, MapConfig.defaultLon);
 
     // Group logs by node for trails (downsampled to max 300 points per node)
     final nodeTrails = <int, List<LatLng>>{};
@@ -1252,11 +1273,17 @@ class _PositionMapViewState extends State<_PositionMapView> {
                 showFitAll: true,
                 onZoomIn: () {
                   final newZoom = (_currentZoom + 1).clamp(3.0, 18.0);
-                  _mapController.move(_mapController.camera.center, newZoom);
+                  _mapController.safeMove(
+                    _mapController.camera.center,
+                    newZoom,
+                  );
                 },
                 onZoomOut: () {
                   final newZoom = (_currentZoom - 1).clamp(3.0, 18.0);
-                  _mapController.move(_mapController.camera.center, newZoom);
+                  _mapController.safeMove(
+                    _mapController.camera.center,
+                    newZoom,
+                  );
                 },
                 onFitAll: _fitToVisible,
               ),

@@ -21,6 +21,7 @@ import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
 import '../models/nodedex_entry.dart';
 import '../services/field_note_generator.dart';
+import 'section_info_button.dart';
 
 /// Displays a deterministic field note for a NodeDex entry.
 ///
@@ -101,38 +102,39 @@ class FieldNoteWidget extends StatelessWidget {
   /// is available. Includes a small icon and "Field Note" label.
   Widget _buildExpanded(BuildContext context, String note) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      padding: const EdgeInsets.all(AppTheme.spacing12),
+      margin: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing16,
+        vertical: AppTheme.spacing4,
+      ),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
-        color: accentColor.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(AppTheme.radius10),
-        border: Border.all(
-          color: accentColor.withValues(alpha: 0.12),
-          width: 0.5,
-        ),
+        color: context.card,
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+        border: Border.all(color: context.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Header row
+          // Header row — canonical SectionTitle-style subheader.
           Row(
             children: [
               Icon(
                 Icons.edit_note_rounded,
                 size: 14,
-                color: accentColor.withValues(alpha: 0.5),
+                color: context.textTertiary,
               ),
               const SizedBox(width: AppTheme.spacing6),
               Text(
-                context.l10n.nodedexFieldNoteLabel,
+                context.l10n.nodedexFieldNoteLabel.toUpperCase(),
                 style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: accentColor.withValues(alpha: 0.5),
-                  letterSpacing: 0.5,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: context.textTertiary,
+                  letterSpacing: 1,
                 ),
               ),
+              const SectionInfoButton(helpKey: 'field_note'),
             ],
           ),
           const SizedBox(height: AppTheme.spacing8),
@@ -141,7 +143,7 @@ class FieldNoteWidget extends StatelessWidget {
           Text(
             note,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: 13,
               fontStyle: FontStyle.italic,
               color: context.textSecondary,
               height: 1.5,
@@ -244,14 +246,14 @@ class _CollapsibleFieldNoteState extends State<CollapsibleFieldNote>
     );
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      margin: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing16,
+        vertical: AppTheme.spacing4,
+      ),
       decoration: BoxDecoration(
-        color: widget.accentColor.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(AppTheme.radius10),
-        border: Border.all(
-          color: widget.accentColor.withValues(alpha: 0.12),
-          width: 0.5,
-        ),
+        color: context.card,
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+        border: Border.all(color: context.border),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -259,33 +261,37 @@ class _CollapsibleFieldNoteState extends State<CollapsibleFieldNote>
           // Tappable header
           InkWell(
             onTap: _toggle,
-            borderRadius: BorderRadius.circular(AppTheme.radius10),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spacing16,
+                vertical: AppTheme.spacing12,
+              ),
               child: Row(
                 children: [
                   Icon(
                     Icons.edit_note_rounded,
                     size: 14,
-                    color: widget.accentColor.withValues(alpha: 0.5),
+                    color: context.textTertiary,
                   ),
                   const SizedBox(width: AppTheme.spacing6),
                   Text(
-                    'Field Note', // lint-allow: hardcoded-string
+                    context.l10n.nodedexFieldNoteLabel.toUpperCase(),
                     style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: widget.accentColor.withValues(alpha: 0.5),
-                      letterSpacing: 0.5,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: context.textTertiary,
+                      letterSpacing: 1,
                     ),
                   ),
+                  const SectionInfoButton(helpKey: 'field_note'),
                   const Spacer(),
                   RotationTransition(
                     turns: _iconTurns,
                     child: Icon(
                       Icons.expand_more,
                       size: 16,
-                      color: widget.accentColor.withValues(alpha: 0.4),
+                      color: context.textTertiary,
                     ),
                   ),
                 ],
@@ -306,15 +312,15 @@ class _CollapsibleFieldNoteState extends State<CollapsibleFieldNote>
               },
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
-                  AppTheme.spacing12,
+                  AppTheme.spacing16,
                   0,
-                  12,
-                  12,
+                  AppTheme.spacing16,
+                  AppTheme.spacing16,
                 ),
                 child: Text(
                   note,
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 13,
                     fontStyle: FontStyle.italic,
                     color: context.textSecondary,
                     height: 1.5,
@@ -345,26 +351,33 @@ class TraitEvidenceList extends StatelessWidget {
   /// Whether this evidence list is visible.
   final bool visible;
 
+  /// Whether to wrap the list in the default screen-edge padding.
+  /// Set to `false` when embedding inside a card that already pads.
+  final bool padded;
+
   const TraitEvidenceList({
     super.key,
     required this.observations,
     required this.accentColor,
     this.visible = true,
+    this.padded = true,
   });
 
   @override
   Widget build(BuildContext context) {
     if (!visible || observations.isEmpty) return const SizedBox.shrink();
 
+    final list = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: observations.map((obs) => _buildBullet(context, obs)).toList(),
+    );
+
+    if (!padded) return list;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: observations
-            .map((obs) => _buildBullet(context, obs))
-            .toList(),
-      ),
+      child: list,
     );
   }
 

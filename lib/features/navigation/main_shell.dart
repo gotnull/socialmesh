@@ -73,7 +73,6 @@ import '../mrrp_harness/mrrp_harness_home_screen.dart';
 import '../mesh_explorer/mesh_explorer_screen.dart';
 import '../mesh_feed/screens/mesh_feed_screen.dart';
 import '../nodeboard/screens/nodeboard_list_screen.dart';
-import '../pet/screens/pet_home_screen.dart';
 import '../incidents/screens/mesh_incident_list_screen.dart';
 import '../tak/screens/tak_screen.dart';
 import '../../providers/activity_providers.dart';
@@ -437,16 +436,6 @@ class _MainShellState extends ConsumerState<MainShell> {
         iconColor: AccentColors.orange,
         requiresConnection: false,
       ),
-    if (AppFeatureFlags.isPetEnabled)
-      DrawerMenuItem(
-        icon: Icons.egg_alt_outlined,
-        label: l10n.petDrawerLabel,
-        screen: const PetHomeScreen(),
-        iconColor: AccentColors.lavender,
-        requiresConnection: false,
-      ),
-
-    // Identity section — your social presence and interactions
     if (AppFeatureFlags.isSocialEnabled)
       DrawerMenuItem(
         icon: Icons.forum_outlined,

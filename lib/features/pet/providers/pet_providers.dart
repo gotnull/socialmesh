@@ -28,16 +28,22 @@ import '../../../providers/app_providers.dart'
 import '../../../providers/mrrp_providers.dart';
 import '../models/peer_pet_live_state.dart';
 import '../models/pet_action_result.dart';
+import '../models/pet_base_allele.dart';
 import '../models/pet_config.dart';
 import '../models/pet_enums.dart';
 import '../models/pet_public_state.dart';
 import '../models/pet_state.dart';
+import '../models/pet_timeline_view.dart';
+import '../models/remote_pet_share_status.dart';
 import '../services/peer_pet_live_state_mapper.dart';
 import '../services/pet_animation_tracker.dart';
 import '../services/pet_care_engine.dart';
 import '../services/pet_notification_dispatcher.dart';
 import '../services/pet_remote_client.dart';
 import '../services/pet_repository.dart';
+import '../services/pet_timeline_projector.dart';
+import '../services/pet_timeline_recorder.dart';
+import '../services/pet_timeline_repository.dart';
 import '../storage/pet_database.dart';
 
 /// Binary gate for all pet UI entry points.
@@ -57,11 +63,29 @@ final petCareEngineProvider = Provider<PetCareEngine>((ref) {
 });
 
 /// The SQLite-backed repository. Held alive for the app's lifetime.
-final petRepositoryProvider = Provider<PetRepository>((ref) {
+/// Shared SQLite handle for pet.db. Both [petRepositoryProvider] and
+/// [petTimelineRepositoryProvider] multiplex onto it — pet.db already
+/// holds own_pet, remote_pet_cache AND (v2+) pet_timeline_events.
+final petDatabaseProvider = Provider<PetDatabase>((ref) {
   final db = PetDatabase();
-  final repo = PetRepository(db);
-  ref.onDispose(() => repo.close());
-  return repo;
+  ref.onDispose(() => db.close());
+  return db;
+});
+
+final petRepositoryProvider = Provider<PetRepository>((ref) {
+  return PetRepository(ref.watch(petDatabaseProvider));
+});
+
+/// Persistence for the bounded-per-owner timeline event log.
+final petTimelineRepositoryProvider = Provider<PetTimelineRepository>((ref) {
+  return PetTimelineRepository(ref.watch(petDatabaseProvider));
+});
+
+/// Write-through bridge invoked by [OwnPetController] whenever the
+/// pet state is persisted. Dedupes on insert via the table's unique
+/// index; safe to call after every emission.
+final petTimelineRecorderProvider = Provider<PetTimelineRecorder>((ref) {
+  return PetTimelineRecorder(ref.watch(petTimelineRepositoryProvider));
 });
 
 /// Owner-side pet state. `null` when no device has ever paired (no node
@@ -117,6 +141,11 @@ class OwnPetController extends AsyncNotifier<PetState?> {
       if (!identical(caughtUp, existing)) {
         await repo.saveOwnPet(caughtUp);
       }
+      // Seed the timeline from the ring buffer on every load. Dedupe
+      // on the repository side makes re-ingesting the same events a
+      // no-op, so this is also the "migration on first launch after
+      // feature ship" path for pets that predate the timeline table.
+      unawaited(_recordTimeline(caughtUp));
       AppLogging.pet(
         'OwnPetController: loaded pet stage=${caughtUp.stage.name} '
         'branch=${caughtUp.branch.name}',
@@ -129,11 +158,24 @@ class OwnPetController extends AsyncNotifier<PetState?> {
       hatchedAt: DateTime.now(),
     );
     await repo.saveOwnPet(fresh);
+    // Fresh egg has no events yet — nothing to ingest. The first
+    // `hatched` event will flow through _persist on the next tick.
     AppLogging.pet(
       'OwnPetController: hatched fresh egg for node=$ownerNodeNum '
       'seed=0x${fresh.dnaSeed.toRadixString(16)}',
     );
     return fresh;
+  }
+
+  /// Fire-and-forget write-through to the pet_timeline_events table.
+  /// Deduped on the repository side (unique index on (owner, at_ms,
+  /// kind, detail)), so calling this after every persist is cheap.
+  Future<void> _recordTimeline(PetState next) async {
+    try {
+      await ref.read(petTimelineRecorderProvider).ingestFromState(next);
+    } catch (e, st) {
+      AppLogging.pet('OwnPetController: timeline ingest failed: $e\n$st');
+    }
   }
 
   Future<void> _onResume() async {
@@ -143,6 +185,7 @@ class OwnPetController extends AsyncNotifier<PetState?> {
     final next = engine.advanceTo(current, DateTime.now());
     if (identical(next, current)) return;
     await _persist(next);
+    unawaited(_recordTimeline(next));
     state = AsyncValue.data(next);
     AppLogging.pet('OwnPetController: catch-up advance on resume');
   }
@@ -175,7 +218,8 @@ class OwnPetController extends AsyncNotifier<PetState?> {
       if (identical(next, current)) return;
       state = AsyncValue.data(next);
       // Persist only when something meaningful changed beyond lastTickAt.
-      if (next.stage != current.stage ||
+      final meaningfulChange =
+          next.stage != current.stage ||
           next.branch != current.branch ||
           next.isSick != current.isSick ||
           next.isAsleep != current.isAsleep ||
@@ -183,8 +227,18 @@ class OwnPetController extends AsyncNotifier<PetState?> {
           next.mood != current.mood ||
           next.stability != current.stability ||
           next.activeCall != current.activeCall ||
-          next.hygieneArtefacts.length != current.hygieneArtefacts.length) {
+          next.hygieneArtefacts.length != current.hygieneArtefacts.length;
+      if (meaningfulChange) {
         await _persist(next);
+      }
+      // Record to the timeline whenever recentEvents grew or changed
+      // — this can happen without a meaningful-change persist (e.g.
+      // a `sleepEntered` edge-transition that doesn't touch stats).
+      if (next.recentEvents.length != current.recentEvents.length ||
+          (next.recentEvents.isNotEmpty &&
+              current.recentEvents.isNotEmpty &&
+              next.recentEvents.last.at != current.recentEvents.last.at)) {
+        unawaited(_recordTimeline(next));
       }
     } finally {
       _tickInFlight = false;
@@ -203,7 +257,6 @@ class OwnPetController extends AsyncNotifier<PetState?> {
   Future<PetActionResult> surge() => _apply(CareAction.surge);
   Future<PetActionResult> resonate() => _apply(CareAction.resonate);
   Future<PetActionResult> stabilise() => _apply(CareAction.stabilise);
-  Future<PetActionResult> sync() => _apply(CareAction.sync);
   Future<PetActionResult> purge() => _apply(CareAction.purge);
   Future<PetActionResult> dim() => _apply(CareAction.dim);
   Future<PetActionResult> inspect() => _apply(CareAction.inspect);
@@ -236,6 +289,16 @@ class OwnPetController extends AsyncNotifier<PetState?> {
       ownerNodeNum: current.ownerNodeNum,
       hatchedAt: DateTime.now(),
     );
+    // Wipe the retired creature's timeline first — a re-sigil is a
+    // new life, its own story. The new egg's events flow in through
+    // the normal _recordTimeline path on subsequent ticks.
+    try {
+      await ref
+          .read(petTimelineRecorderProvider)
+          .clearForOwner(current.ownerNodeNum);
+    } catch (e) {
+      AppLogging.pet('OwnPetController: reSigil timeline-clear failed: $e');
+    }
     await _persist(fresh);
     state = AsyncValue.data(fresh);
     AppLogging.pet(
@@ -265,6 +328,7 @@ class OwnPetController extends AsyncNotifier<PetState?> {
     // discarded until the next 10s animation tick.
     if (!identical(result.state, current)) {
       await _persist(result.state);
+      unawaited(_recordTimeline(result.state));
       state = AsyncValue.data(result.state);
     }
     AppLogging.pet(
@@ -352,6 +416,33 @@ final recentRemotePetsProvider =
       return repo.recentRemotePets(maxAge: maxAge);
     });
 
+/// In-memory per-peer companion sharing status. The MRRP response
+/// observer in `mrrp_providers.dart` feeds this via
+/// [PetIngestController.recordShareStatus] so the Companion card can
+/// distinguish "never heard from this node" (unknown) from "node
+/// responded but isn't sharing a pet right now" (notSharing) without a
+/// pet.db schema bump. Rehydrates naturally from fresh mesh traffic
+/// after a cold start; defaults to [RemotePetShareStatus.unknown].
+class RemotePetShareStatusNotifier extends Notifier<RemotePetShareStatus> {
+  RemotePetShareStatusNotifier(this.nodeNum);
+
+  final int nodeNum;
+
+  @override
+  RemotePetShareStatus build() => RemotePetShareStatus.unknown;
+
+  void set(RemotePetShareStatus status) {
+    if (state != status) state = status;
+  }
+}
+
+final remotePetShareStatusProvider =
+    NotifierProvider.family<
+      RemotePetShareStatusNotifier,
+      RemotePetShareStatus,
+      int
+    >(RemotePetShareStatusNotifier.new);
+
 /// Write-side controller for the remote pet cache. Other layers (mesh
 /// inbound hook, fetch-on-expand) call into this to persist new
 /// observations; [remotePetProvider] is invalidated afterwards so any
@@ -374,6 +465,11 @@ class PetIngestController {
       observedAt: observedAt,
     );
     _ref.invalidate(remotePetProvider(nodeNum));
+    // Success response → flip status to sharing. The Companion card
+    // uses this alongside the cache entry to decide copy.
+    _ref
+        .read(remotePetShareStatusProvider(nodeNum).notifier)
+        .set(RemotePetShareStatus.sharing);
     AppLogging.pet(
       'PetIngestController: ingested node=$nodeNum '
       'stage=${observed.stage.name} branch=${observed.branch.name}',
@@ -384,6 +480,15 @@ class PetIngestController {
     final repo = _ref.read(petRepositoryProvider);
     await repo.clearRemotePet(nodeNum);
     _ref.invalidate(remotePetProvider(nodeNum));
+  }
+
+  /// Record a bare share-status signal without ingesting a payload.
+  /// Used by the MRRP response observer for error frames and empty
+  /// payloads — the peer acknowledged the request but declined or had
+  /// nothing to share. The Companion card uses this to explain the
+  /// absence of a preview in plain language.
+  void recordShareStatus(int nodeNum, RemotePetShareStatus status) {
+    _ref.read(remotePetShareStatusProvider(nodeNum).notifier).set(status);
   }
 }
 
@@ -690,3 +795,70 @@ final peerPetLiveStateProvider =
     NotifierProvider.family<PeerPetLiveStateController, PeerPetLiveState, int>(
       PeerPetLiveStateController.new,
     );
+
+// ---------------------------------------------------------------------------
+// Lifecycle timeline — persisted event log + projected view model.
+// ---------------------------------------------------------------------------
+
+/// Raw timeline records for the current owner. Rebuilds whenever
+/// [ownPetProvider] emits, because the recorder write-through has
+/// typically just added new rows by then.
+///
+/// Returns an empty list when there's no paired owner.
+final petTimelineRecordsProvider = FutureProvider<List<PetTimelineRecord>>((
+  ref,
+) async {
+  // Trigger rebuild on any owner-state emission. This is how new
+  // rows (written through by OwnPetController.recordTimeline) get
+  // picked up — we don't listen to DB changes directly.
+  final pet = ref.watch(ownPetProvider).value;
+  if (pet == null) return const <PetTimelineRecord>[];
+  final repo = ref.watch(petTimelineRepositoryProvider);
+  await repo.init();
+  return repo.loadForOwner(pet.ownerNodeNum);
+});
+
+/// The built render model. UI consumes this directly — no further
+/// manipulation needed.
+final petTimelineViewProvider = Provider<AsyncValue<PetTimelineView?>>((ref) {
+  final petAsync = ref.watch(ownPetProvider);
+  final recordsAsync = ref.watch(petTimelineRecordsProvider);
+
+  // Loading/error on either input propagates. Null pet (no owner
+  // bound) resolves to data(null) — the screen renders an empty
+  // state.
+  if (petAsync.isLoading || recordsAsync.isLoading) {
+    return const AsyncValue<PetTimelineView?>.loading();
+  }
+  if (petAsync.hasError) {
+    return AsyncValue<PetTimelineView?>.error(
+      petAsync.error!,
+      petAsync.stackTrace ?? StackTrace.current,
+    );
+  }
+  if (recordsAsync.hasError) {
+    return AsyncValue<PetTimelineView?>.error(
+      recordsAsync.error!,
+      recordsAsync.stackTrace ?? StackTrace.current,
+    );
+  }
+
+  final pet = petAsync.value;
+  if (pet == null) {
+    return const AsyncValue<PetTimelineView?>.data(null);
+  }
+  final records = recordsAsync.value ?? const <PetTimelineRecord>[];
+  final config = ref.watch(petConfigProvider);
+  // Use the same allele sequence the DNA viewer renders from, so the
+  // origin block and the viewer agree on the dominant allele.
+  final alleles = deriveAlleleSequence(pet.dnaSeed);
+
+  final view = projectPetTimeline(
+    state: pet,
+    config: config,
+    records: records,
+    alleleSequence: alleles,
+    now: DateTime.now(),
+  );
+  return AsyncValue<PetTimelineView?>.data(view);
+});

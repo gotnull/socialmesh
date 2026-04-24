@@ -32,6 +32,7 @@ import 'core/accessibility_theme_adapter.dart';
 import 'l10n/app_localizations.dart';
 import 'core/l10n/l10n_extension.dart';
 import 'core/logging.dart';
+import 'core/logging/os_log_bridge.dart';
 import 'core/safety/error_handler.dart';
 import 'core/safety/lifecycle_mixin.dart';
 import 'features/debug/app_log_screen.dart' as app_log;
@@ -128,6 +129,10 @@ Future<bool> get firebaseReady => firebaseReadyCompleter.future;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Tee debugPrint into iOS os_log so Dart logs are visible via MCP log
+  // capture. Debug + iOS only — no-op everywhere else.
+  OsLogBridge.setup();
 
   // Initialize centralized error handler FIRST - catches errors during startup
   AppErrorHandler.initialize();

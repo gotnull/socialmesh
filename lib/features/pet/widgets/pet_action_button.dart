@@ -11,11 +11,20 @@ import '../../../core/widgets/animations.dart';
 /// Optional [onLongPress] enables a Tamagotchi-style hold gesture
 /// (tap = primary action, hold = alt action) — used for Charge → Surge.
 ///
-/// [dimmed] is a soft "this action would be a no-op right now" visual —
-/// the button is still tappable (so the user gets a toast explaining
-/// why), but the fill/icon are muted to cue that nothing will change.
-/// Different from a disabled button (no onTap), which is untappable.
-class PetActionButton extends StatelessWidget {
+/// States (must be visually distinct — the bar shows 4–6 of these
+/// side-by-side and the user must be able to tell at a glance which
+/// one to tap):
+///
+///   * Normal              — accent color, clear border, icon bright
+///   * Pulsing (actionable) — normal + animated glow ring + bold label
+///   * Dimmed (tappable no-op) — accent VISIBLE but muted, label
+///       in textSecondary; tap still registers so the engine can
+///       toast "already charged" etc.
+///   * Disabled (untappable) — NEUTRAL gray, accent removed entirely,
+///       label in textTertiary, no tap response. This drops the
+///       accent color so disabled reads unambiguously as "off" and
+///       can't be confused with a dimmed accent button.
+class PetActionButton extends StatefulWidget {
   final IconData icon;
   final String label;
   final VoidCallback? onTap;
@@ -36,57 +45,149 @@ class PetActionButton extends StatelessWidget {
   });
 
   @override
+  State<PetActionButton> createState() => _PetActionButtonState();
+}
+
+class _PetActionButtonState extends State<PetActionButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulseController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    );
+    if (widget.pulsing && _isTappable) _pulseController.repeat(reverse: true);
+  }
+
+  @override
+  void didUpdateWidget(covariant PetActionButton old) {
+    super.didUpdateWidget(old);
+    final shouldPulse = widget.pulsing && _isTappable;
+    if (shouldPulse && !_pulseController.isAnimating) {
+      _pulseController.repeat(reverse: true);
+    } else if (!shouldPulse && _pulseController.isAnimating) {
+      _pulseController.stop();
+      _pulseController.value = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  bool get _isTappable => widget.onTap != null || widget.onLongPress != null;
+
+  @override
   Widget build(BuildContext context) {
-    final enabled = onTap != null || onLongPress != null;
-    const disabledAlpha = 0.35;
-    final effectiveFillAlpha = !enabled
-        ? 0.05
-        : dimmed
-        ? 0.08
-        : pulsing
-        ? 0.28
-        : 0.16;
-    final effectiveBorderAlpha = !enabled
-        ? 0.1
-        : dimmed
-        ? 0.18
-        : pulsing
-        ? 0.6
-        : 0.35;
-    final effectiveIconAlpha = !enabled
-        ? disabledAlpha
-        : dimmed
-        ? 0.55
-        : 1.0;
+    final enabled = _isTappable;
+    final pulsing = widget.pulsing && enabled;
+
+    // Resolve all four style tokens at once so the state branches
+    // stay readable and easy to audit.
+    final Color fillColor;
+    final Color borderColor;
+    final Color iconColor;
+    final Color labelColor;
+    final double borderWidth;
+    final FontWeight labelWeight;
+
+    if (!enabled) {
+      // Disabled = neutral gray. Drop the accent entirely so the
+      // button reads as "off" and can't be confused with dimmed.
+      final neutral = context.textTertiary;
+      fillColor = neutral.withValues(alpha: 0.04);
+      borderColor = neutral.withValues(alpha: 0.22);
+      iconColor = neutral.withValues(alpha: 0.50);
+      labelColor = neutral.withValues(alpha: 0.60);
+      borderWidth = 1.0;
+      labelWeight = FontWeight.w600;
+    } else if (widget.dimmed) {
+      // Dimmed = tappable but no-op. Accent is VISIBLE so the user
+      // can still identify "which button is Charge"; label drops to
+      // textSecondary so it reads as "not the one to tap right now."
+      fillColor = widget.accent.withValues(alpha: 0.08);
+      borderColor = widget.accent.withValues(alpha: 0.40);
+      iconColor = widget.accent.withValues(alpha: 0.70);
+      labelColor = context.textSecondary;
+      borderWidth = 1.0;
+      labelWeight = FontWeight.w600;
+    } else if (pulsing) {
+      // Pulsing = urgent / recommended. Strongest contrast + label
+      // bolded to draw the eye. Glow ring is applied separately as
+      // an animated BoxShadow below.
+      fillColor = widget.accent.withValues(alpha: 0.28);
+      borderColor = widget.accent.withValues(alpha: 0.88);
+      iconColor = widget.accent;
+      labelColor = context.textPrimary;
+      borderWidth = 1.5;
+      labelWeight = FontWeight.w700;
+    } else {
+      // Normal actionable.
+      fillColor = widget.accent.withValues(alpha: 0.16);
+      borderColor = widget.accent.withValues(alpha: 0.50);
+      iconColor = widget.accent;
+      labelColor = context.textPrimary;
+      borderWidth = 1.0;
+      labelWeight = FontWeight.w600;
+    }
+
+    final iconBox = AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      padding: const EdgeInsets.all(AppTheme.spacing12),
+      decoration: BoxDecoration(
+        color: fillColor,
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+        border: Border.all(color: borderColor, width: borderWidth),
+      ),
+      child: Icon(widget.icon, size: 22, color: iconColor),
+    );
+
+    // Animated glow ring — only allocated when pulsing. The
+    // SingleTickerProviderStateMixin doesn't spin if we aren't
+    // calling `_pulseController.repeat()` in this branch, so the
+    // non-pulsing path has zero animation cost.
+    final iconWithOptionalPulse = pulsing
+        ? AnimatedBuilder(
+            animation: _pulseController,
+            builder: (_, child) {
+              final t = _pulseController.value; // 0..1..0 triangle
+              final glowAlpha = 0.18 + 0.30 * (1.0 - t);
+              final spread = 2.0 + 8.0 * t;
+              return DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: widget.accent.withValues(alpha: glowAlpha),
+                      blurRadius: 16.0,
+                      spreadRadius: spread,
+                    ),
+                  ],
+                ),
+                child: child,
+              );
+            },
+            child: iconBox,
+          )
+        : iconBox;
+
     final child = Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 220),
-          padding: const EdgeInsets.all(AppTheme.spacing12),
-          decoration: BoxDecoration(
-            color: accent.withValues(alpha: effectiveFillAlpha),
-            borderRadius: BorderRadius.circular(AppTheme.radius12),
-            border: Border.all(
-              color: accent.withValues(alpha: effectiveBorderAlpha),
-            ),
-          ),
-          child: Icon(
-            icon,
-            size: 22,
-            color: accent.withValues(alpha: effectiveIconAlpha),
-          ),
-        ),
+        iconWithOptionalPulse,
         const SizedBox(height: AppTheme.spacing6),
         Text(
-          label,
+          widget.label,
           style: TextStyle(
             fontSize: 11,
-            fontWeight: FontWeight.w600,
+            fontWeight: labelWeight,
             letterSpacing: 0.4,
-            color: (!enabled || dimmed)
-                ? context.textTertiary
-                : context.textPrimary,
+            color: labelColor,
             fontFamily: AppTheme.fontFamily,
           ),
         ),
@@ -94,8 +195,8 @@ class PetActionButton extends StatelessWidget {
     );
     return Expanded(
       child: BouncyTap(
-        onTap: onTap,
-        onLongPress: onLongPress,
+        onTap: widget.onTap,
+        onLongPress: widget.onLongPress,
         enabled: enabled,
         scaleFactor: 0.9,
         child: Padding(

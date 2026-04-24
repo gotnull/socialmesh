@@ -41,7 +41,6 @@ enum PetActionReason {
 
   // Not needed — no pending work for this action.
   nothingToClean,
-  nothingToSync,
   alreadyAsleep,
 
   // Invalid — the pet's state forbids this action.
