@@ -16,6 +16,23 @@ import 'package:socialmesh/services/rns_companion/rns_companion_client.dart';
 
 final _l10n = AppLocalizationsEn();
 
+const String _healthOk =
+    '{"ok":true,"service":"rns_companion","version":"0.1","mode":"stub"}';
+
+typedef _PathHandler = Future<http.Response> Function(http.BaseRequest);
+
+/// Builds a MockClient that pre-handles `/health` with a successful
+/// payload (so the screen's health-probe short-circuit does not
+/// fire) and forwards every other path to [servicesHandler].
+MockClient _mock(_PathHandler servicesHandler) {
+  return MockClient((req) async {
+    if (req.url.path == '/health') {
+      return http.Response(_healthOk, 200);
+    }
+    return servicesHandler(req);
+  });
+}
+
 Widget _wrap(MockClient mock) {
   final client = RnsCompanionClient(httpClient: mock);
   return ProviderScope(
@@ -33,7 +50,7 @@ void main() {
   testWidgets('renders title, experimental header, and connection hint', (
     tester,
   ) async {
-    final mock = MockClient((_) async => http.Response('[]', 200));
+    final mock = _mock((_) async => http.Response('[]', 200));
     await tester.pumpWidget(_wrap(mock));
     await tester.pump(const Duration(milliseconds: 50));
 
@@ -49,7 +66,7 @@ void main() {
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
 
-    final mock = MockClient((_) async => http.Response('[]', 200));
+    final mock = _mock((_) async => http.Response('[]', 200));
     await tester.pumpWidget(_wrap(mock));
     await tester.pump(const Duration(milliseconds: 50));
     await tester.pump(const Duration(milliseconds: 50));
@@ -62,7 +79,7 @@ void main() {
   testWidgets('renders one tile per service from the stub response', (
     tester,
   ) async {
-    final mock = MockClient(
+    final mock = _mock(
       (_) async => http.Response(
         jsonEncode([
           <String, dynamic>{
@@ -145,7 +162,7 @@ void main() {
   ) async {
     // Use a short delay rather than a never-completer so no timers
     // leak past the test body.
-    final mock = MockClient((_) async {
+    final mock = _mock((_) async {
       await Future<void>.delayed(const Duration(milliseconds: 200));
       return http.Response('[]', 200);
     });

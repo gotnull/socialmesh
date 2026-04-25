@@ -22,7 +22,19 @@ class RnsCompanionServicesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final asyncHealth = ref.watch(rnsCompanionHealthProvider);
     final asyncServices = ref.watch(rnsCompanionServicesProvider);
+    // Health probe has a 2s timeout vs services' 5s — when the
+    // companion is unreachable, the health probe surfaces the error
+    // first. Surface that error to the screen instead of also
+    // waiting for /services to time out (3+ extra seconds of
+    // pointless spinning otherwise).
+    final effectiveServices = asyncHealth.hasError
+        ? AsyncError<List<RnsCompanionServiceSummary>>(
+            asyncHealth.error!,
+            asyncHealth.stackTrace ?? StackTrace.current,
+          )
+        : asyncServices;
     return GlassScaffold(
       title: context.l10n.rnsCompanionServicesTitle,
       actions: [
@@ -57,7 +69,7 @@ class RnsCompanionServicesScreen extends ConsumerWidget {
               const _ExperimentalHeader(),
               const _ConnectionStatusPill(),
               const _LastAnnounceChip(),
-              ...asyncServices.when(
+              ...effectiveServices.when(
                 data: (services) {
                   if (services.isEmpty) {
                     return [

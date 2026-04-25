@@ -100,19 +100,21 @@ final rnsCompanionServicesProvider =
 /// timeout so the UI can render a "connected / unreachable" pill
 /// without waiting on the heavier `listServices()` call. Refreshes
 /// when the user taps the pill or invalidates the provider.
+///
+/// Shares the same client as the rest of the providers so that
+/// tests overriding `rnsCompanionClientProvider` route the health
+/// probe through their mock too. The tighter (2 s) timeout is
+/// applied as a wrapper so the shared client's default (5 s) is
+/// respected on every other call site.
 final rnsCompanionHealthProvider = FutureProvider<RnsCompanionHealth>((
   ref,
 ) async {
-  // Build a one-off client with a tighter timeout. We can't use
-  // the shared client because its 5 s timeout is a property at
-  // construction time — too long for a status pill.
-  final baseUrl = ref.watch(rnsCompanionBaseUrlProvider);
-  final client = RnsCompanionClient(
-    baseUri: Uri.parse(baseUrl),
-    timeout: const Duration(seconds: 2),
-  );
-  ref.onDispose(client.close);
-  return client.getHealth();
+  final client = ref.watch(rnsCompanionClientProvider);
+  try {
+    return await client.getHealth().timeout(const Duration(seconds: 2));
+  } on TimeoutException {
+    throw const RnsCompanionTimeoutError('health probe exceeded 2s ceiling');
+  }
 });
 
 /// Async list of pages for a given service destination.
