@@ -20,6 +20,7 @@ import '../dev/demo/demo.dart';
 import '../services/transport/ble_transport.dart';
 import '../services/transport/network_transport.dart';
 import '../services/transport/usb_transport.dart';
+import '../services/backup/device_config_backup_service.dart';
 import '../services/protocol/protocol_service.dart';
 import '../services/protocol/reticulum/reticulum_fragment_event.dart';
 import '../services/storage/storage_service.dart';
@@ -5824,6 +5825,22 @@ final channelsProvider =
     NotifierProvider<ChannelsNotifier, List<ChannelConfig>>(
       ChannelsNotifier.new,
     );
+
+/// Device-config backup service. Captures the current device's channels,
+/// LoRa/device/module config, and owner into a [DeviceConfigBundle], and
+/// applies one back to the device on restore. Backed by a thin gateway
+/// over [ProtocolService] so unit tests can fake the wire layer.
+final deviceConfigBackupServiceProvider = Provider<DeviceConfigBackupService>((
+  ref,
+) {
+  final protocol = ref.watch(protocolServiceProvider);
+  return DeviceConfigBackupService(
+    gateway: ProtocolServiceBackupGateway(
+      protocol,
+      () => ref.read(channelsProvider),
+    ),
+  );
+});
 
 // My node number - updates when received from device
 class MyNodeNumNotifier extends Notifier<int?> {

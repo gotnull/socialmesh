@@ -25781,6 +25781,190 @@ class AppLocalizationsRu extends AppLocalizations {
   String get dataExportSnrNotAvailable => 'N/A';
 
   @override
+  String get dataExportSectionDeviceConfig => 'Device Configuration';
+
+  @override
+  String get dataExportDeviceConfigBackupTitle => 'Backup Device Config';
+
+  @override
+  String get dataExportDeviceConfigBackupSubtitle =>
+      'Channels, LoRa, modules, owner';
+
+  @override
+  String get dataExportDeviceConfigRestoreTitle => 'Restore Device Config';
+
+  @override
+  String get dataExportDeviceConfigRestoreSubtitle =>
+      'Apply a saved backup to this device';
+
+  @override
+  String get dataExportDeviceConfigFormatJson => 'JSON';
+
+  @override
+  String get dataExportDeviceConfigFormatImport => 'IMPORT';
+
+  @override
+  String get dataExportDeviceConfigBackupWarningTitle =>
+      'Save your backup safely';
+
+  @override
+  String get dataExportDeviceConfigBackupWarningBody =>
+      'This file contains your channel keys (PSKs) and device settings. Anyone with the file can decrypt your channel traffic. Save it to a secure location.';
+
+  @override
+  String get dataExportDeviceConfigBackupContinueBtn => 'Export backup';
+
+  @override
+  String get dataExportDeviceConfigBackupCancelBtn => 'Cancel';
+
+  @override
+  String get dataExportDeviceConfigBackupNotConnected =>
+      'Connect to a device before backing up its config.';
+
+  @override
+  String dataExportDeviceConfigBackupPartial(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString sections were unavailable',
+      one: '1 section was unavailable',
+    );
+    return 'Backup saved. $_temp0 and not included.';
+  }
+
+  @override
+  String dataExportDeviceConfigBackupFailed(String error) {
+    return 'Failed to capture device config: $error';
+  }
+
+  @override
+  String get dataExportDeviceConfigBackupShareSubject =>
+      'Socialmesh Device Config Backup';
+
+  @override
+  String get dataExportDeviceConfigRestoreSheetTitle => 'Restore Device Config';
+
+  @override
+  String get dataExportDeviceConfigRestoreSheetBody =>
+      'Choose which sections to apply to this device. Each section is sent to the device separately and may trigger a reboot.';
+
+  @override
+  String get dataExportDeviceConfigRestoreToggleChannels => 'Channels';
+
+  @override
+  String get dataExportDeviceConfigRestoreToggleRadio => 'Radio settings';
+
+  @override
+  String get dataExportDeviceConfigRestoreToggleModules => 'Module configs';
+
+  @override
+  String get dataExportDeviceConfigRestoreToggleOwner => 'Owner name';
+
+  @override
+  String get dataExportDeviceConfigRestoreApplyBtn => 'Apply restore';
+
+  @override
+  String get dataExportDeviceConfigRestoreNodeMismatch =>
+      'This backup is from a different node. Channels and owner will be applied as-is.';
+
+  @override
+  String get dataExportDeviceConfigRestoreInvalidFile =>
+      'That file is not a valid Socialmesh device config backup.';
+
+  @override
+  String get dataExportDeviceConfigRestoreEmpty =>
+      'The backup file contains no sections to restore.';
+
+  @override
+  String get dataExportDeviceConfigRestoreNotConnected =>
+      'Connect to a device before restoring its config.';
+
+  @override
+  String dataExportDeviceConfigRestoreSummary(int applied, int total) {
+    final intl.NumberFormat appliedNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String appliedString = appliedNumberFormat.format(applied);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return 'Applied $appliedString of $totalString.';
+  }
+
+  @override
+  String dataExportDeviceConfigRestoreSummaryWithFailures(
+    int applied,
+    int total,
+    int failed,
+  ) {
+    final intl.NumberFormat appliedNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String appliedString = appliedNumberFormat.format(applied);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+    final intl.NumberFormat failedNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String failedString = failedNumberFormat.format(failed);
+
+    return 'Applied $appliedString of $totalString. $failedString failed.';
+  }
+
+  @override
+  String get dataExportDeviceConfigRestoreNoSelection =>
+      'Select at least one section to restore.';
+
+  @override
+  String dataExportDeviceConfigRestoreFromMetadata(String metadata) {
+    return 'From: $metadata';
+  }
+
+  @override
+  String dataExportDeviceConfigRestoreCreatedAt(String date) {
+    return 'Saved: $date';
+  }
+
+  @override
+  String dataExportDeviceConfigRestoreChannelsCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString channels',
+      one: '1 channel',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String dataExportDeviceConfigRestoreModulesCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString modules',
+      one: '1 module',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dataExportDeviceConfigRestoreRadioPresent => 'Included';
+
+  @override
+  String get dataExportDeviceConfigRestoreRadioMissing => 'Not in backup';
+
+  @override
   String get deviceMgmtTitle => 'Device Management';
 
   @override

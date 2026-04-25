@@ -35106,6 +35106,178 @@
     "@dataExportSnrNotAvailable": {
         "description": "UI text: data export snr not available"
     },
+    "dataExportSectionDeviceConfig": "Device Configuration",
+    "@dataExportSectionDeviceConfig": {
+        "description": "Section header for device config backup tiles on the Export Data screen"
+    },
+    "dataExportDeviceConfigBackupTitle": "Backup Device Config",
+    "@dataExportDeviceConfigBackupTitle": {
+        "description": "Tile title for exporting device config bundle (channels, LoRa, modules, owner)"
+    },
+    "dataExportDeviceConfigBackupSubtitle": "Channels, LoRa, modules, owner",
+    "@dataExportDeviceConfigBackupSubtitle": {
+        "description": "Tile subtitle listing what the device config backup includes"
+    },
+    "dataExportDeviceConfigRestoreTitle": "Restore Device Config",
+    "@dataExportDeviceConfigRestoreTitle": {
+        "description": "Tile title for restoring a previously-saved device config bundle"
+    },
+    "dataExportDeviceConfigRestoreSubtitle": "Apply a saved backup to this device",
+    "@dataExportDeviceConfigRestoreSubtitle": {
+        "description": "Tile subtitle for the restore device config tile"
+    },
+    "dataExportDeviceConfigFormatJson": "JSON",
+    "@dataExportDeviceConfigFormatJson": {
+        "description": "Format pill on the device config backup tile"
+    },
+    "dataExportDeviceConfigFormatImport": "IMPORT",
+    "@dataExportDeviceConfigFormatImport": {
+        "description": "Format pill on the device config restore tile"
+    },
+    "dataExportDeviceConfigBackupWarningTitle": "Save your backup safely",
+    "@dataExportDeviceConfigBackupWarningTitle": {
+        "description": "Title of the security warning shown before exporting a device config backup"
+    },
+    "dataExportDeviceConfigBackupWarningBody": "This file contains your channel keys (PSKs) and device settings. Anyone with the file can decrypt your channel traffic. Save it to a secure location.",
+    "@dataExportDeviceConfigBackupWarningBody": {
+        "description": "Body of the security warning shown before exporting a device config backup"
+    },
+    "dataExportDeviceConfigBackupContinueBtn": "Export backup",
+    "@dataExportDeviceConfigBackupContinueBtn": {
+        "description": "Button label to confirm exporting a device config backup"
+    },
+    "dataExportDeviceConfigBackupCancelBtn": "Cancel",
+    "@dataExportDeviceConfigBackupCancelBtn": {
+        "description": "Button label to cancel an in-progress device config backup"
+    },
+    "dataExportDeviceConfigBackupNotConnected": "Connect to a device before backing up its config.",
+    "@dataExportDeviceConfigBackupNotConnected": {
+        "description": "Snackbar shown when device config backup is invoked without a connected device"
+    },
+    "dataExportDeviceConfigBackupPartial": "Backup saved. {count, plural, =1{1 section was unavailable} other{{count} sections were unavailable}} and not included.",
+    "@dataExportDeviceConfigBackupPartial": {
+        "description": "Snackbar after a device config backup that was partial",
+        "placeholders": {
+            "count": {
+                "type": "int",
+                "format": "decimalPattern"
+            }
+        }
+    },
+    "dataExportDeviceConfigBackupFailed": "Failed to capture device config: {error}",
+    "@dataExportDeviceConfigBackupFailed": {
+        "description": "Snackbar shown when device config backup capture fails",
+        "placeholders": {
+            "error": {
+                "type": "String"
+            }
+        }
+    },
+    "dataExportDeviceConfigBackupShareSubject": "Socialmesh Device Config Backup",
+    "@dataExportDeviceConfigBackupShareSubject": {
+        "description": "Share-sheet subject for a device config backup file"
+    },
+    "dataExportDeviceConfigRestoreSheetTitle": "Restore Device Config",
+    "@dataExportDeviceConfigRestoreSheetTitle": {
+        "description": "Title of the bottom sheet shown when restoring a device config bundle"
+    },
+    "dataExportDeviceConfigRestoreSheetBody": "Choose which sections to apply to this device. Each section is sent to the device separately and may trigger a reboot.",
+    "@dataExportDeviceConfigRestoreSheetBody": {
+        "description": "Body text in the restore device config bottom sheet"
+    },
+    "dataExportDeviceConfigRestoreToggleChannels": "Channels",
+    "@dataExportDeviceConfigRestoreToggleChannels": {
+        "description": "Restore toggle label for channels (with PSKs)"
+    },
+    "dataExportDeviceConfigRestoreToggleRadio": "Radio settings",
+    "@dataExportDeviceConfigRestoreToggleRadio": {
+        "description": "Restore toggle label for LoRa, device, position, power, network, display, bluetooth"
+    },
+    "dataExportDeviceConfigRestoreToggleModules": "Module configs",
+    "@dataExportDeviceConfigRestoreToggleModules": {
+        "description": "Restore toggle label for module configs (MQTT, telemetry, serial, etc.)"
+    },
+    "dataExportDeviceConfigRestoreToggleOwner": "Owner name",
+    "@dataExportDeviceConfigRestoreToggleOwner": {
+        "description": "Restore toggle label for owner long/short name"
+    },
+    "dataExportDeviceConfigRestoreApplyBtn": "Apply restore",
+    "@dataExportDeviceConfigRestoreApplyBtn": {
+        "description": "Button label that triggers the actual restore"
+    },
+    "dataExportDeviceConfigRestoreNodeMismatch": "This backup is from a different node. Channels and owner will be applied as-is.",
+    "@dataExportDeviceConfigRestoreNodeMismatch": {
+        "description": "Warning shown in the restore sheet when the bundle's nodeNum differs from the connected device"
+    },
+    "dataExportDeviceConfigRestoreInvalidFile": "That file is not a valid Socialmesh device config backup.",
+    "@dataExportDeviceConfigRestoreInvalidFile": {
+        "description": "Snackbar shown when the picked file fails to parse"
+    },
+    "dataExportDeviceConfigRestoreEmpty": "The backup file contains no sections to restore.",
+    "@dataExportDeviceConfigRestoreEmpty": {
+        "description": "Snackbar shown when the parsed bundle is empty"
+    },
+    "dataExportDeviceConfigRestoreNotConnected": "Connect to a device before restoring its config.",
+    "@dataExportDeviceConfigRestoreNotConnected": {
+        "description": "Snackbar shown when restore is invoked without a connected device"
+    },
+    "dataExportDeviceConfigRestoreSummary": "Applied {applied} of {total}.",
+    "@dataExportDeviceConfigRestoreSummary": {
+        "description": "Snackbar after a restore completes",
+        "placeholders": {
+            "applied": {"type": "int", "format": "decimalPattern"},
+            "total": {"type": "int", "format": "decimalPattern"}
+        }
+    },
+    "dataExportDeviceConfigRestoreSummaryWithFailures": "Applied {applied} of {total}. {failed} failed.",
+    "@dataExportDeviceConfigRestoreSummaryWithFailures": {
+        "description": "Snackbar after a restore that had failures",
+        "placeholders": {
+            "applied": {"type": "int", "format": "decimalPattern"},
+            "total": {"type": "int", "format": "decimalPattern"},
+            "failed": {"type": "int", "format": "decimalPattern"}
+        }
+    },
+    "dataExportDeviceConfigRestoreNoSelection": "Select at least one section to restore.",
+    "@dataExportDeviceConfigRestoreNoSelection": {
+        "description": "Snackbar shown when the user taps Apply with no toggles enabled"
+    },
+    "dataExportDeviceConfigRestoreFromMetadata": "From: {metadata}",
+    "@dataExportDeviceConfigRestoreFromMetadata": {
+        "description": "Restore sheet info row showing where the backup was taken",
+        "placeholders": {
+            "metadata": {"type": "String"}
+        }
+    },
+    "dataExportDeviceConfigRestoreCreatedAt": "Saved: {date}",
+    "@dataExportDeviceConfigRestoreCreatedAt": {
+        "description": "Restore sheet info row showing the backup timestamp",
+        "placeholders": {
+            "date": {"type": "String"}
+        }
+    },
+    "dataExportDeviceConfigRestoreChannelsCount": "{count, plural, =1{1 channel} other{{count} channels}}",
+    "@dataExportDeviceConfigRestoreChannelsCount": {
+        "description": "Restore sheet caption showing how many channels are in the bundle",
+        "placeholders": {
+            "count": {"type": "int", "format": "decimalPattern"}
+        }
+    },
+    "dataExportDeviceConfigRestoreModulesCount": "{count, plural, =1{1 module} other{{count} modules}}",
+    "@dataExportDeviceConfigRestoreModulesCount": {
+        "description": "Restore sheet caption showing how many module configs are in the bundle",
+        "placeholders": {
+            "count": {"type": "int", "format": "decimalPattern"}
+        }
+    },
+    "dataExportDeviceConfigRestoreRadioPresent": "Included",
+    "@dataExportDeviceConfigRestoreRadioPresent": {
+        "description": "Restore sheet caption shown when a section is present in the bundle"
+    },
+    "dataExportDeviceConfigRestoreRadioMissing": "Not in backup",
+    "@dataExportDeviceConfigRestoreRadioMissing": {
+        "description": "Restore sheet caption shown when a section is absent from the bundle"
+    },
     "deviceMgmtTitle": "Device Management",
     "@deviceMgmtTitle": {
         "description": "Title for the developer tools screen"

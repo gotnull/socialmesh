@@ -45666,6 +45666,220 @@ abstract class AppLocalizations {
   /// **'N/A'**
   String get dataExportSnrNotAvailable;
 
+  /// Section header for device config backup tiles on the Export Data screen
+  ///
+  /// In en, this message translates to:
+  /// **'Device Configuration'**
+  String get dataExportSectionDeviceConfig;
+
+  /// Tile title for exporting device config bundle (channels, LoRa, modules, owner)
+  ///
+  /// In en, this message translates to:
+  /// **'Backup Device Config'**
+  String get dataExportDeviceConfigBackupTitle;
+
+  /// Tile subtitle listing what the device config backup includes
+  ///
+  /// In en, this message translates to:
+  /// **'Channels, LoRa, modules, owner'**
+  String get dataExportDeviceConfigBackupSubtitle;
+
+  /// Tile title for restoring a previously-saved device config bundle
+  ///
+  /// In en, this message translates to:
+  /// **'Restore Device Config'**
+  String get dataExportDeviceConfigRestoreTitle;
+
+  /// Tile subtitle for the restore device config tile
+  ///
+  /// In en, this message translates to:
+  /// **'Apply a saved backup to this device'**
+  String get dataExportDeviceConfigRestoreSubtitle;
+
+  /// Format pill on the device config backup tile
+  ///
+  /// In en, this message translates to:
+  /// **'JSON'**
+  String get dataExportDeviceConfigFormatJson;
+
+  /// Format pill on the device config restore tile
+  ///
+  /// In en, this message translates to:
+  /// **'IMPORT'**
+  String get dataExportDeviceConfigFormatImport;
+
+  /// Title of the security warning shown before exporting a device config backup
+  ///
+  /// In en, this message translates to:
+  /// **'Save your backup safely'**
+  String get dataExportDeviceConfigBackupWarningTitle;
+
+  /// Body of the security warning shown before exporting a device config backup
+  ///
+  /// In en, this message translates to:
+  /// **'This file contains your channel keys (PSKs) and device settings. Anyone with the file can decrypt your channel traffic. Save it to a secure location.'**
+  String get dataExportDeviceConfigBackupWarningBody;
+
+  /// Button label to confirm exporting a device config backup
+  ///
+  /// In en, this message translates to:
+  /// **'Export backup'**
+  String get dataExportDeviceConfigBackupContinueBtn;
+
+  /// Button label to cancel an in-progress device config backup
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get dataExportDeviceConfigBackupCancelBtn;
+
+  /// Snackbar shown when device config backup is invoked without a connected device
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to a device before backing up its config.'**
+  String get dataExportDeviceConfigBackupNotConnected;
+
+  /// Snackbar after a device config backup that was partial
+  ///
+  /// In en, this message translates to:
+  /// **'Backup saved. {count, plural, =1{1 section was unavailable} other{{count} sections were unavailable}} and not included.'**
+  String dataExportDeviceConfigBackupPartial(int count);
+
+  /// Snackbar shown when device config backup capture fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to capture device config: {error}'**
+  String dataExportDeviceConfigBackupFailed(String error);
+
+  /// Share-sheet subject for a device config backup file
+  ///
+  /// In en, this message translates to:
+  /// **'Socialmesh Device Config Backup'**
+  String get dataExportDeviceConfigBackupShareSubject;
+
+  /// Title of the bottom sheet shown when restoring a device config bundle
+  ///
+  /// In en, this message translates to:
+  /// **'Restore Device Config'**
+  String get dataExportDeviceConfigRestoreSheetTitle;
+
+  /// Body text in the restore device config bottom sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which sections to apply to this device. Each section is sent to the device separately and may trigger a reboot.'**
+  String get dataExportDeviceConfigRestoreSheetBody;
+
+  /// Restore toggle label for channels (with PSKs)
+  ///
+  /// In en, this message translates to:
+  /// **'Channels'**
+  String get dataExportDeviceConfigRestoreToggleChannels;
+
+  /// Restore toggle label for LoRa, device, position, power, network, display, bluetooth
+  ///
+  /// In en, this message translates to:
+  /// **'Radio settings'**
+  String get dataExportDeviceConfigRestoreToggleRadio;
+
+  /// Restore toggle label for module configs (MQTT, telemetry, serial, etc.)
+  ///
+  /// In en, this message translates to:
+  /// **'Module configs'**
+  String get dataExportDeviceConfigRestoreToggleModules;
+
+  /// Restore toggle label for owner long/short name
+  ///
+  /// In en, this message translates to:
+  /// **'Owner name'**
+  String get dataExportDeviceConfigRestoreToggleOwner;
+
+  /// Button label that triggers the actual restore
+  ///
+  /// In en, this message translates to:
+  /// **'Apply restore'**
+  String get dataExportDeviceConfigRestoreApplyBtn;
+
+  /// Warning shown in the restore sheet when the bundle's nodeNum differs from the connected device
+  ///
+  /// In en, this message translates to:
+  /// **'This backup is from a different node. Channels and owner will be applied as-is.'**
+  String get dataExportDeviceConfigRestoreNodeMismatch;
+
+  /// Snackbar shown when the picked file fails to parse
+  ///
+  /// In en, this message translates to:
+  /// **'That file is not a valid Socialmesh device config backup.'**
+  String get dataExportDeviceConfigRestoreInvalidFile;
+
+  /// Snackbar shown when the parsed bundle is empty
+  ///
+  /// In en, this message translates to:
+  /// **'The backup file contains no sections to restore.'**
+  String get dataExportDeviceConfigRestoreEmpty;
+
+  /// Snackbar shown when restore is invoked without a connected device
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to a device before restoring its config.'**
+  String get dataExportDeviceConfigRestoreNotConnected;
+
+  /// Snackbar after a restore completes
+  ///
+  /// In en, this message translates to:
+  /// **'Applied {applied} of {total}.'**
+  String dataExportDeviceConfigRestoreSummary(int applied, int total);
+
+  /// Snackbar after a restore that had failures
+  ///
+  /// In en, this message translates to:
+  /// **'Applied {applied} of {total}. {failed} failed.'**
+  String dataExportDeviceConfigRestoreSummaryWithFailures(
+    int applied,
+    int total,
+    int failed,
+  );
+
+  /// Snackbar shown when the user taps Apply with no toggles enabled
+  ///
+  /// In en, this message translates to:
+  /// **'Select at least one section to restore.'**
+  String get dataExportDeviceConfigRestoreNoSelection;
+
+  /// Restore sheet info row showing where the backup was taken
+  ///
+  /// In en, this message translates to:
+  /// **'From: {metadata}'**
+  String dataExportDeviceConfigRestoreFromMetadata(String metadata);
+
+  /// Restore sheet info row showing the backup timestamp
+  ///
+  /// In en, this message translates to:
+  /// **'Saved: {date}'**
+  String dataExportDeviceConfigRestoreCreatedAt(String date);
+
+  /// Restore sheet caption showing how many channels are in the bundle
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 channel} other{{count} channels}}'**
+  String dataExportDeviceConfigRestoreChannelsCount(int count);
+
+  /// Restore sheet caption showing how many module configs are in the bundle
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 module} other{{count} modules}}'**
+  String dataExportDeviceConfigRestoreModulesCount(int count);
+
+  /// Restore sheet caption shown when a section is present in the bundle
+  ///
+  /// In en, this message translates to:
+  /// **'Included'**
+  String get dataExportDeviceConfigRestoreRadioPresent;
+
+  /// Restore sheet caption shown when a section is absent from the bundle
+  ///
+  /// In en, this message translates to:
+  /// **'Not in backup'**
+  String get dataExportDeviceConfigRestoreRadioMissing;
+
   /// Title for the developer tools screen
   ///
   /// In en, this message translates to:
