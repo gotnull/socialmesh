@@ -4805,14 +4805,55 @@ class MessagesNotifier extends Notifier<List<Message>> {
   /// Receiving a text message is direct proof that the sender was
   /// on-mesh at [Message.timestamp], independent of whether the
   /// [nodesProvider] tick path observed a fresh `node.lastHeard` value
-  /// for that sender. This handler is the only point that is reached
-  /// after both id-based and content-based dedup ([_addMessageToState]
-  /// and [mergeBackgroundMessages]), so callers can invoke it without
-  /// risking double-counts.
+  /// for that sender.
+  ///
+  /// Carries its own idempotency guard ([_nodeDexHookKey] +
+  /// [_nodeDexHookDedupWindow]) keyed on packet identity rather than
+  /// row identity. The foreground `_isDuplicateMessage` path catches
+  /// most duplicates before they reach this hook, but
+  /// [mergeBackgroundMessages] only checks id + 60s content dedup —
+  /// missing the `packetId` axis on purpose, since push payloads can
+  /// lack `packetId` and a `null == null` match would over-suppress
+  /// distinct messages. So a foreground UUID copy and a later
+  /// background-merged SHA1 copy of the same physical packet, separated
+  /// by more than 60s of timestamp skew, can both reach this hook. The
+  /// hook-local key uses `packetId` when present (with sender + recipient
+  /// + channel context to avoid cross-conversation collisions when packet
+  /// ids wrap or are reused) and falls back to a TTL-bounded sender +
+  /// channel + text signature otherwise.
+  static const Duration _nodeDexHookDedupWindow = Duration(minutes: 5);
+  final Map<String, DateTime> _nodeDexHookKeys = {};
+  int _nodeDexHookAcceptedCount = 0;
+
+  String _nodeDexHookKey(Message message) {
+    final to = message.to;
+    final channel = message.channel ?? '';
+    if (message.packetId != null) {
+      return 'pid:${message.from}:$to:$channel:${message.packetId}';
+    }
+    return 'sig:${message.from}:$to:$channel:${message.text}';
+  }
+
   void _recordNodeDexActivity(Message message) {
     final myNum = ref.read(myNodeNumProvider);
     if (myNum != null && message.from == myNum) return;
     if (message.from == 0) return;
+
+    final key = _nodeDexHookKey(message);
+    final now = DateTime.now();
+    final priorAt = _nodeDexHookKeys[key];
+    if (priorAt != null && now.difference(priorAt) <= _nodeDexHookDedupWindow) {
+      AppLogging.nodeDex(
+        'Skipping NodeDex hook (duplicate key=$key, '
+        'prior at ${priorAt.toIso8601String()})',
+      );
+      return;
+    }
+    _nodeDexHookKeys[key] = now;
+    _nodeDexHookKeys.removeWhere(
+      (_, ts) => now.difference(ts) > _nodeDexHookDedupWindow,
+    );
+    _nodeDexHookAcceptedCount++;
 
     final notifier = ref.read(nodeDexProvider.notifier);
     notifier.recordMessage(message.from);
@@ -4824,9 +4865,25 @@ class MessagesNotifier extends Notifier<List<Message>> {
     AppLogging.nodeDex(
       'Inbound ${message.isBroadcast ? "channel" : "DM"} message → '
       'NodeDex: from=${message.from}, '
-      'ts=${message.timestamp.toIso8601String()}, '
+      'ts=${message.timestamp.toIso8601String()}, key=$key, '
       'recordMessage=true, encounterRecorded=$encounterRecorded',
     );
+  }
+
+  @visibleForTesting
+  void recordNodeDexActivityForTest(Message message) =>
+      _recordNodeDexActivity(message);
+
+  @visibleForTesting
+  int get nodeDexHookAcceptedCountForTest => _nodeDexHookAcceptedCount;
+
+  @visibleForTesting
+  Map<String, DateTime> get nodeDexHookKeysForTest => _nodeDexHookKeys;
+
+  @visibleForTesting
+  void resetNodeDexHookForTest() {
+    _nodeDexHookKeys.clear();
+    _nodeDexHookAcceptedCount = 0;
   }
 
   Future<void> _persistHiddenTapback(Message message) async {

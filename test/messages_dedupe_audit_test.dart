@@ -537,4 +537,195 @@ void main() {
       );
     },
   );
+
+  // =========================================================================
+  // NodeDex hook idempotency
+  // =========================================================================
+  //
+  // The NodeDex activity hook (_recordNodeDexActivity) lives past
+  // _addMessageToState's 4-layer dedup, but mergeBackgroundMessages only
+  // checks id + 60s content fingerprint. A foreground UUID copy and a
+  // later background-merged SHA1 copy of the same physical packet,
+  // separated by more than 60s of timestamp skew, can both reach this
+  // hook. The hook-local key carries a wider TTL and prefers packetId
+  // identity to absorb that race.
+
+  test('NodeDex hook: same from + packetId, different ids, ts drift > 60s '
+      'is counted exactly once', () async {
+    final h = await _createTestHarness();
+    addTearDown(h.container.dispose);
+    final notifier = h.container.read(messagesProvider.notifier);
+    notifier.resetNodeDexHookForTest();
+
+    final base = DateTime.now();
+    final foreground = Message(
+      from: 10,
+      to: 0xFFFFFFFF,
+      text: 'race packet',
+      timestamp: base,
+      channel: 1,
+      received: true,
+      packetId: 4242,
+    );
+    final backgroundCopy = Message(
+      from: 10,
+      to: 0xFFFFFFFF,
+      text: 'race packet',
+      timestamp: base.add(const Duration(seconds: 90)),
+      channel: 1,
+      received: true,
+      packetId: 4242,
+    );
+    // Default Message ids are fresh UUIDs — must genuinely differ for
+    // this to exercise the post-id-dedup race.
+    expect(foreground.id, isNot(equals(backgroundCopy.id)));
+
+    notifier.recordNodeDexActivityForTest(foreground);
+    notifier.recordNodeDexActivityForTest(backgroundCopy);
+
+    expect(notifier.nodeDexHookAcceptedCountForTest, equals(1));
+    expect(notifier.nodeDexHookKeysForTest.length, equals(1));
+  });
+
+  test('NodeDex hook: no packetId on either copy, same sender/channel/text, '
+      'ts drift > 60s within TTL is counted exactly once', () async {
+    final h = await _createTestHarness();
+    addTearDown(h.container.dispose);
+    final notifier = h.container.read(messagesProvider.notifier);
+    notifier.resetNodeDexHookForTest();
+
+    final base = DateTime.now();
+    final pushCopy = Message(
+      from: 10,
+      to: 0xFFFFFFFF,
+      text: 'no packetId here',
+      timestamp: base,
+      channel: 1,
+      received: true,
+    );
+    final streamCopy = Message(
+      from: 10,
+      to: 0xFFFFFFFF,
+      text: 'no packetId here',
+      timestamp: base.add(const Duration(seconds: 120)),
+      channel: 1,
+      received: true,
+    );
+    expect(pushCopy.packetId, isNull);
+    expect(streamCopy.packetId, isNull);
+
+    notifier.recordNodeDexActivityForTest(pushCopy);
+    notifier.recordNodeDexActivityForTest(streamCopy);
+
+    expect(notifier.nodeDexHookAcceptedCountForTest, equals(1));
+  });
+
+  test('NodeDex hook: same sender repeats same text after the TTL window '
+      'is counted twice', () async {
+    final h = await _createTestHarness();
+    addTearDown(h.container.dispose);
+    final notifier = h.container.read(messagesProvider.notifier);
+    notifier.resetNodeDexHookForTest();
+
+    final msg = Message(
+      from: 10,
+      to: 0xFFFFFFFF,
+      text: 'standard greeting',
+      timestamp: DateTime.now(),
+      channel: 1,
+      received: true,
+      packetId: 7777,
+    );
+
+    notifier.recordNodeDexActivityForTest(msg);
+    expect(notifier.nodeDexHookAcceptedCountForTest, equals(1));
+
+    // Age the recorded key past the TTL window. We can't change wall
+    // clock from here, but the keys map is exposed for testing and
+    // back-dating its entries simulates the same outcome.
+    final keys = notifier.nodeDexHookKeysForTest;
+    final aged = DateTime.now().subtract(const Duration(minutes: 10));
+    for (final k in keys.keys.toList()) {
+      keys[k] = aged;
+    }
+
+    notifier.recordNodeDexActivityForTest(msg);
+    expect(notifier.nodeDexHookAcceptedCountForTest, equals(2));
+  });
+
+  test(
+    'NodeDex hook: different senders sharing a packetId are both counted',
+    () async {
+      final h = await _createTestHarness();
+      addTearDown(h.container.dispose);
+      final notifier = h.container.read(messagesProvider.notifier);
+      notifier.resetNodeDexHookForTest();
+
+      final now = DateTime.now();
+      final fromA = Message(
+        from: 10,
+        to: 0xFFFFFFFF,
+        text: 'a',
+        timestamp: now,
+        channel: 1,
+        received: true,
+        packetId: 555,
+      );
+      final fromB = Message(
+        from: 11,
+        to: 0xFFFFFFFF,
+        text: 'b',
+        timestamp: now,
+        channel: 1,
+        received: true,
+        packetId: 555,
+      );
+
+      notifier.recordNodeDexActivityForTest(fromA);
+      notifier.recordNodeDexActivityForTest(fromB);
+
+      expect(notifier.nodeDexHookAcceptedCountForTest, equals(2));
+      expect(notifier.nodeDexHookKeysForTest.length, equals(2));
+    },
+  );
+
+  test('NodeDex hook: same sender and packetId across different channels are '
+      'both counted (key is conservative; the messaging layer decides whether '
+      'they are the same packet)', () async {
+    // In practice a single radio packet has exactly one channel; if the
+    // foreground and background copies disagree on channel for the same
+    // packetId, that disagreement is itself a sign that one of them was
+    // constructed from a partial payload. Counting both is the
+    // conservative choice — better to over-count than to suppress an
+    // observation we cannot prove is a duplicate.
+    final h = await _createTestHarness();
+    addTearDown(h.container.dispose);
+    final notifier = h.container.read(messagesProvider.notifier);
+    notifier.resetNodeDexHookForTest();
+
+    final now = DateTime.now();
+    final ch1 = Message(
+      from: 10,
+      to: 0xFFFFFFFF,
+      text: 'cross-channel',
+      timestamp: now,
+      channel: 1,
+      received: true,
+      packetId: 9001,
+    );
+    final ch2 = Message(
+      from: 10,
+      to: 0xFFFFFFFF,
+      text: 'cross-channel',
+      timestamp: now,
+      channel: 2,
+      received: true,
+      packetId: 9001,
+    );
+
+    notifier.recordNodeDexActivityForTest(ch1);
+    notifier.recordNodeDexActivityForTest(ch2);
+
+    expect(notifier.nodeDexHookAcceptedCountForTest, equals(2));
+  });
 }
