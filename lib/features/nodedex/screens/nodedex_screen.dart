@@ -52,6 +52,7 @@ import '../../settings/settings_screen.dart';
 import '../widgets/identity_overlay_painter.dart';
 import '../widgets/patina_stamp.dart';
 import '../widgets/sigil_painter.dart';
+import '../widgets/reticulum_activity_badge.dart';
 import '../widgets/trait_badge.dart';
 import '../widgets/trust_indicator.dart';
 import 'nodedex_detail_screen.dart';
@@ -1133,6 +1134,7 @@ class _NodeDexListTile extends ConsumerWidget {
                       spacing: AppTheme.spacing4,
                       runSpacing: AppTheme.spacing4,
                       children: [
+                        ReticulumActivityBadge(nodeNum: entry.nodeNum),
                         if (disclosure.showPrimaryTrait)
                           TraitBadge(
                             trait: traitResult.primary,

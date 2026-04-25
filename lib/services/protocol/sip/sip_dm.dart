@@ -51,9 +51,6 @@ class SipDmSession {
   /// TTL in seconds.
   final int ttlS;
 
-  /// Whether this session is pinned (no expiry).
-  bool isPinned;
-
   /// Current session status.
   SipDmSessionStatus status;
 
@@ -65,14 +62,12 @@ class SipDmSession {
     required this.peerNodeId,
     required this.createdAtMs,
     required this.ttlS,
-    this.isPinned = false,
     this.status = SipDmSessionStatus.active,
     List<SipDmHistoryEntry>? messages,
   }) : messages = messages ?? [];
 
   /// Check if this session has expired based on [nowMs].
   bool isExpired(int nowMs) {
-    if (isPinned) return false;
     if (status == SipDmSessionStatus.closed) return true;
     final expiresAtMs = createdAtMs + (ttlS * 1000);
     return nowMs >= expiresAtMs;
@@ -267,41 +262,6 @@ class SipDmManager {
     return List.unmodifiable(
       _sessions.values.where((s) => s.status == SipDmSessionStatus.active),
     );
-  }
-
-  /// Pin a session to prevent expiry.
-  ///
-  /// Returns false if session not found.
-  bool pinSession(int sessionTag) {
-    final session = _sessions[sessionTag];
-    if (session == null) return false;
-
-    if (session.isExpired(_clock())) {
-      _expireSession(sessionTag);
-      return false;
-    }
-
-    session.isPinned = true;
-    AppLogging.sip(
-      'SIP_DM: session pinned, tag=0x${sessionTag.toRadixString(16)}',
-    );
-    return true;
-  }
-
-  /// Unpin a session (re-enables TTL expiry).
-  ///
-  /// Returns false if session not found or not pinned.
-  bool unpinSession(int sessionTag) {
-    final session = _sessions[sessionTag];
-    if (session == null) return false;
-
-    if (!session.isPinned) return false;
-
-    session.isPinned = false;
-    AppLogging.sip(
-      'SIP_DM: session unpinned, tag=0x${sessionTag.toRadixString(16)}',
-    );
-    return true;
   }
 
   /// Locally expire every active session for [peerNodeId] whose tag

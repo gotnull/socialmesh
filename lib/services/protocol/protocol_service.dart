@@ -23,6 +23,8 @@ import '../../generated/meshtastic/telemetry.pb.dart' as telemetry;
 import 'admin_ack_tracker.dart';
 import 'admin_target.dart';
 import 'mesh_packet_builder.dart';
+import 'reticulum/reticulum_fragment_event.dart';
+import 'reticulum/reticulum_safe_log.dart';
 import 'packet_framer.dart';
 import 'text_message_payload_budget.dart';
 import 'socialmesh/sm_capability_store.dart';
@@ -334,6 +336,7 @@ class ProtocolService {
   final StreamController<ChannelConfig> _channelController;
   final StreamController<DeviceError> _errorController;
   final StreamController<MeshSignalPacket> _signalController;
+  final StreamController<ReticulumFragmentEvent> _reticulumFragmentController;
   final StreamController<SmFileTransferEvent> _fileTransferController;
   final StreamController<int> _myNodeNumController;
   final StreamController<int> _rssiController;
@@ -807,6 +810,8 @@ class ProtocolService {
        _channelController = StreamController<ChannelConfig>.broadcast(),
        _errorController = StreamController<DeviceError>.broadcast(),
        _signalController = StreamController<MeshSignalPacket>.broadcast(),
+       _reticulumFragmentController =
+           StreamController<ReticulumFragmentEvent>.broadcast(),
        _fileTransferController =
            StreamController<SmFileTransferEvent>.broadcast(),
        _myNodeNumController = StreamController<int>.broadcast(),
@@ -951,6 +956,12 @@ class ProtocolService {
 
   /// Stream of received mesh signal packets (PRIVATE_APP portnum)
   Stream<MeshSignalPacket> get signalStream => _signalController.stream;
+
+  /// Stream of inbound port-76 (`RETICULUM_TUNNEL_APP`) fragment events.
+  /// Phase 1 emits one event per packet with metadata + raw payload;
+  /// reassembly is deferred to a later phase.
+  Stream<ReticulumFragmentEvent> get reticulumFragmentStream =>
+      _reticulumFragmentController.stream;
 
   /// Stream of incoming SM file transfer packets (FILE_OFFER, FILE_CHUNK,
   /// FILE_NACK, FILE_ACK). Consumers subscribe instead of setting a callback.
@@ -2058,6 +2069,9 @@ class ProtocolService {
           case pn.PortNum.TRACEROUTE_APP:
             _handleTracerouteMessage(packet, data);
             break;
+          case pn.PortNum.RETICULUM_TUNNEL_APP:
+            _handleReticulumTunnelPacket(packet, data);
+            break;
           default:
             AppLogging.protocol(
               'Received message with portnum: ${data.portnum} '
@@ -2170,6 +2184,42 @@ class ProtocolService {
       _traceRouteLogController.add(log);
     } catch (e) {
       AppLogging.protocol('Failed to parse traceroute response: $e');
+    }
+  }
+
+  /// Handle inbound port-76 (`RETICULUM_TUNNEL_APP`) fragments.
+  ///
+  /// Phase 1 — protocol-intelligence foundation. We do not parse the
+  /// fragmentation framing (the wire format is undocumented and is
+  /// deliberately reverse-engineered from captures in a later phase).
+  /// Every payload becomes one [ReticulumFragmentEvent] carrying the
+  /// envelope metadata + raw payload bytes; downstream providers handle
+  /// capture, stats, and NodeDex bridging.
+  void _handleReticulumTunnelPacket(pb.MeshPacket packet, pb.Data data) {
+    try {
+      final payload = Uint8List.fromList(data.payload);
+      final event = ReticulumFragmentEvent(
+        timestampMs: DateTime.now().millisecondsSinceEpoch,
+        fromNode: packet.from,
+        toNode: packet.to,
+        packetId: packet.id,
+        channel: packet.channel,
+        rssi: packet.hasRxRssi() ? packet.rxRssi : null,
+        snr: packet.hasRxSnr() ? packet.rxSnr.toDouble() : null,
+        payload: payload,
+      );
+      ReticulumSafeLog.fragmentReceived(
+        fromNode: event.fromNode,
+        toNode: event.toNode,
+        packetId: event.packetId,
+        channel: event.channel,
+        payloadLen: event.payloadLen,
+        rssi: event.rssi,
+        snr: event.snr,
+      );
+      _reticulumFragmentController.add(event);
+    } catch (e) {
+      ReticulumSafeLog.event('handler_error error=$e');
     }
   }
 
@@ -5628,32 +5678,45 @@ class ProtocolService {
 
     _sipCounters?.recordHandshakeInitiated();
 
+    // Suppress notification for HELLO retransmits: SipHandshakeManager
+    // dedupes against _pendingRequests / _completed, but the notification
+    // fires before that. Without this guard a peer that retransmits HELLO
+    // while the request sits awaiting consent re-pops the OS notification
+    // on every retry.
+    final existingState = hs.getState(senderNodeId);
+    final alreadyTracked =
+        existingState == SipHandshakeState.pendingApproval ||
+        existingState == SipHandshakeState.challengeSent ||
+        existingState == SipHandshakeState.accepted;
+
     // Show a notification prompting the user to respond.
     // Gated on master + DM notification preferences + minor contact restriction.
-    () async {
-      final prefs = await SharedPreferences.getInstance();
+    if (!alreadyTracked) {
+      () async {
+        final prefs = await SharedPreferences.getInstance();
 
-      // Minor contact restriction: confirmed teen/under-13 users should not
-      // receive unsolicited handshake requests. Auto-decline silently.
-      final ageGroup = prefs.getString('age_eligibility_age_group') ?? '';
-      if (ageGroup == 'under13' || ageGroup == 'teen') {
-        AppLogging.sip(
-          'SIP_HS: suppressing incoming HS_HELLO — minor contact restriction',
+        // Minor contact restriction: confirmed teen/under-13 users should not
+        // receive unsolicited handshake requests. Auto-decline silently.
+        final ageGroup = prefs.getString('age_eligibility_age_group') ?? '';
+        if (ageGroup == 'under13' || ageGroup == 'teen') {
+          AppLogging.sip(
+            'SIP_HS: suppressing incoming HS_HELLO — minor contact restriction',
+          );
+          hs.declineHandshake(senderNodeId);
+          return;
+        }
+
+        if (!(prefs.getBool('notifications_enabled') ?? true)) return;
+        if (!(prefs.getBool('dm_notifications_enabled') ?? true)) return;
+        final peerName =
+            _nodes[senderNodeId]?.displayName ??
+            NodeDisplayNameResolver.defaultName(senderNodeId);
+        NotificationService().showSipHandshakeRequestNotification(
+          peerName: peerName,
+          peerNodeId: senderNodeId,
         );
-        hs.declineHandshake(senderNodeId);
-        return;
-      }
-
-      if (!(prefs.getBool('notifications_enabled') ?? true)) return;
-      if (!(prefs.getBool('dm_notifications_enabled') ?? true)) return;
-      final peerName =
-          _nodes[senderNodeId]?.displayName ??
-          NodeDisplayNameResolver.defaultName(senderNodeId);
-      NotificationService().showSipHandshakeRequestNotification(
-        peerName: peerName,
-        peerNodeId: senderNodeId,
-      );
-    }();
+      }();
+    }
 
     // Queue the request for user consent — no automatic challenge response.
     // Consent is a hard privacy boundary and is required even on the
@@ -9319,6 +9382,7 @@ class ProtocolService {
     await _channelController.close();
     await _errorController.close();
     await _signalController.close();
+    await _reticulumFragmentController.close();
     await _fileTransferController.close();
     await _deliveryController.close();
     await _regionController.close();

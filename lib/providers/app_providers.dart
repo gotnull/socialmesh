@@ -42,6 +42,7 @@ import '../features/nodedex/providers/nodedex_providers.dart';
 import '../features/widget_builder/storage/widget_storage_service.dart';
 import '../features/widget_builder/widget_sync_providers.dart';
 import 'cloud_sync_entitlement_providers.dart';
+import 'reticulum_providers.dart';
 import '../core/auth/claims_provider.dart';
 import '../models/mesh_models.dart';
 import '../generated/meshtastic/config.pbenum.dart' as config_pbenum;
@@ -3474,6 +3475,27 @@ final protocolServiceProvider = Provider<ProtocolService>((ref) {
     }
   };
 
+  // Reticulum subsystem: dispatch port-76 fragment events to the
+  // capture writer and the NodeDex bridge. Both providers are
+  // instantiated lazily via ref.read on first fragment; once read they
+  // stay alive for the lifetime of the container.
+  //
+  // Eagerly init the stats notifier so it subscribes to the fragment
+  // broadcast stream from app boot, not just when the diagnostics UI is
+  // first opened. Without this, fragments that arrive before any UI
+  // watches reticulumStatsProvider are missed by stats (the broadcast
+  // stream does not replay), which drops the NodeDex RNS badge.
+  ref.read(reticulumStatsProvider.notifier);
+
+  final reticulumSub = service.reticulumFragmentStream.listen((event) {
+    try {
+      ref.read(reticulumCaptureWriterProvider).write(event);
+      ref.read(reticulumNodeDexBridgeProvider).onFragment(event);
+    } catch (e) {
+      AppLogging.reticulum('pipeline_dispatch_error error=$e');
+    }
+  });
+
   // Keep the service alive for the lifetime of the app
   ref.onDispose(() {
     AppLogging.debug(
@@ -3481,6 +3503,7 @@ final protocolServiceProvider = Provider<ProtocolService>((ref) {
     );
     // Clear the callback when disposing
     NotificationService().onReactionSelected = null;
+    reticulumSub.cancel();
     service.stop();
   });
 

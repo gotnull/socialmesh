@@ -8306,7 +8306,7 @@
     "@helpCenterNoArticlesMatchSearch": {
         "description": "Empty state text when the article search returns no results."
     },
-    "helpCenterReadEverything": "You’ve read everything!",
+    "helpCenterReadEverything": "You've read everything!",
     "@helpCenterReadEverything": {
         "description": "Empty state title when all articles have been read."
     },
@@ -21163,7 +21163,7 @@
     "@settingsTileWhatsNewSubtitle": {
         "description": "Subtitle of the what's new settings tile."
     },
-    "settingsTileWhatsNewTitle": "What’s New",
+    "settingsTileWhatsNewTitle": "What's New",
     "@settingsTileWhatsNewTitle": {
         "description": "Title of the what's new settings tile."
     },
@@ -31964,7 +31964,7 @@
     "@appearanceFontSystem": {
         "description": "Text displayed in appearance settings"
     },
-    "appearanceFontSystemDesc": "Your device’s default font",
+    "appearanceFontSystemDesc": "Your device's default font",
     "@appearanceFontSystemDesc": {
         "description": "Text displayed in appearance settings"
     },
@@ -32164,7 +32164,7 @@
     "@appearanceTimeFormatSystem": {
         "description": "Time format option name in appearance settings"
     },
-    "appearanceTimeFormatSystemDesc": "Follow your device’s clock setting",
+    "appearanceTimeFormatSystemDesc": "Follow your device's clock setting",
     "@appearanceTimeFormatSystemDesc": {
         "description": "Time format option description in appearance settings"
     },
@@ -42513,7 +42513,7 @@
         "description": "Error message when a command requires a connected mesh device."
     },
     "commandErrorConnectDevice": "Connect your device to use this feature",
-    "sipBadgeLabel": "Socialmesh",
+    "sipBadgeLabel": "Handshake",
     "@sipBadgeLabel": {
         "description": "Badge label shown on NodeDex entries for SIP-capable peers."
     },
@@ -42566,7 +42566,7 @@
     "@sipDiscoveryNoPeers": {
         "description": "Empty state text when no Socialmesh peers are found."
     },
-    "sipDiscoveryNoPeersDescription": "People using Socialmesh will appear here when they’re in range.",
+    "sipDiscoveryNoPeersDescription": "People using Handshake will appear here when they're in range.",
     "@sipDiscoveryNoPeersDescription": {
         "description": "Description for the empty state in Socialmesh discovery."
     },
@@ -42637,10 +42637,6 @@
             }
         }
     },
-    "sipDmPinned": "Session pinned",
-    "@sipDmPinned": {
-        "description": "Label when a DM session is pinned."
-    },
     "sipDmInputHint": "Message…",
     "@sipDmInputHint": {
         "description": "Hint text for the DM message input field."
@@ -42665,13 +42661,15 @@
     "@sipDmSessionClosed": {
         "description": "Message when trying to send on a closed session."
     },
-    "sipDmPinAction": "Pin Session",
-    "@sipDmPinAction": {
-        "description": "Action to pin a DM session to prevent expiry."
-    },
-    "sipDmUnpinAction": "Unpin Session",
-    "@sipDmUnpinAction": {
-        "description": "Action to unpin a DM session."
+    "sipDmTextTooLong": "Message is too long. Trim it to fit the {maxBytes}-byte limit.",
+    "@sipDmTextTooLong": {
+        "description": "Error when DM send fails because the encoded text exceeds the SIP DM payload cap.",
+        "placeholders": {
+            "maxBytes": {
+                "type": "int",
+                "example": "180"
+            }
+        }
     },
     "sipDmCloseAction": "Close Session",
     "@sipDmCloseAction": {
@@ -42772,7 +42770,7 @@
     "@sipCountersTitle": {
         "description": "Title for the SIP debug counters screen."
     },
-    "sipHubTitle": "Socialmesh",
+    "sipHubTitle": "Handshake",
     "@sipHubTitle": {
         "description": "Title for the SIP Hub screen."
     },
@@ -42866,7 +42864,7 @@
     "@sipHubEmptyTitle": {
         "description": "Empty state title when no SIP peers are found."
     },
-    "sipHubEmptyDescription": "Tap Scan to look for other Socialmesh users on the mesh.",
+    "sipHubEmptyDescription": "Tap Scan to look for other Handshake users on the mesh.",
     "@sipHubEmptyDescription": {
         "description": "Empty state description when no SIP peers are found."
     },
@@ -42902,15 +42900,15 @@
     "@sipHubHelp": {
         "description": "Help overflow menu item label for the SIP Hub screen."
     },
-    "helpSipHubOverviewTitle": "Socialmesh",
+    "helpSipHubOverviewTitle": "Handshake",
     "@helpSipHubOverviewTitle": {
         "description": "Help topic title for the SIP Hub screen."
     },
-    "helpSipHubOverviewDescription": "Discover and chat with nearby Socialmesh peers",
+    "helpSipHubOverviewDescription": "Discover and chat with nearby Handshake peers",
     "@helpSipHubOverviewDescription": {
         "description": "Help topic description for the SIP Hub screen."
     },
-    "helpSipHubIntroBubble": "Welcome to **Socialmesh**! This is your peer discovery hub. Nearby devices running Socialmesh appear here once they beacon or respond to a rollcall.",
+    "helpSipHubIntroBubble": "Welcome to **Handshake**! This is your peer discovery hub. Nearby devices running Handshake appear here once they beacon or respond to a rollcall.",
     "@helpSipHubIntroBubble": {
         "description": "Help bubble: SIP Hub intro step."
     },
@@ -42967,10 +42965,6 @@
                 "type": "String"
             }
         }
-    },
-    "sipHubSessionPinned": "Pinned",
-    "@sipHubSessionPinned": {
-        "description": "Badge label for pinned sessions."
     },
     "sipHubNoMessages": "No messages yet",
     "@sipHubNoMessages": {
@@ -43924,7 +43918,7 @@
     "@notificationSipPeerFoundTitle": {
         "description": "Notification title when a new SIP peer is discovered."
     },
-    "notificationSipPeerFoundBody": "A Socialmesh peer is in range. Open Mesh Explorer to connect.",
+    "notificationSipPeerFoundBody": "A Handshake peer is in range. Open Handshake to connect.",
     "@notificationSipPeerFoundBody": {
         "description": "Notification body when a new SIP peer is discovered."
     },
@@ -44570,7 +44564,7 @@
     "@meshServicesInteractionFailed": {
         "description": "Snackbar shown when an interactive mesh share action fails."
     },
-    "serviceDetailFetchingInstances": "Loading what’s being shared…",
+    "serviceDetailFetchingInstances": "Loading what's being shared…",
     "@serviceDetailFetchingInstances": {
         "description": "Loading text shown while fetching remote service instances via MRRP."
     },
@@ -46774,7 +46768,7 @@
     "@deliveryPhaseWaitingForPath": {
         "description": "Delivery phase: no route available yet"
     },
-    "deliveryPhaseWaitingForPathDesc": "The mesh hasn’t found a route yet. Delivery will continue automatically.",
+    "deliveryPhaseWaitingForPathDesc": "The mesh hasn't found a route yet. Delivery will continue automatically.",
     "@deliveryPhaseWaitingForPathDesc": {
         "description": "Description for waiting-for-path phase"
     },
@@ -46968,7 +46962,7 @@
     "@serviceWizardAudienceContacts": {
         "description": "Audience option: contacts"
     },
-    "serviceWizardAudienceContactsDesc": "Only people you’ve exchanged contacts with",
+    "serviceWizardAudienceContactsDesc": "Only people you've exchanged contacts with",
     "@serviceWizardAudienceContactsDesc": {
         "description": "Description for contacts audience"
     },
@@ -46976,11 +46970,11 @@
     "@serviceWizardReviewTitle": {
         "description": "Review step title"
     },
-    "serviceWizardReviewSubtitle": "This is the shape of the share you’re about to compose.",
+    "serviceWizardReviewSubtitle": "This is the shape of the share you're about to compose.",
     "@serviceWizardReviewSubtitle": {
         "description": "Review step subtitle"
     },
-    "serviceWizardReviewType": "You’re sharing",
+    "serviceWizardReviewType": "You're sharing",
     "@serviceWizardReviewType": {
         "description": "Summary row label: service type"
     },
@@ -48677,5 +48671,234 @@
     "notificationPetAttentionBoredomBody": "Restless — tap Resonate.",
     "@notificationPetAttentionBoredomBody": {
         "description": "Attention call body for boredom reason."
+    },
+    "reticulumDiagTitle": "Reticulum Tunnel",
+    "@reticulumDiagTitle": {
+        "description": "Title for the Reticulum tunnel diagnostics screen."
+    },
+    "reticulumDiagExperimental": "Experimental",
+    "@reticulumDiagExperimental": {
+        "description": "Pill label marking the Reticulum diagnostics screen as experimental."
+    },
+    "reticulumDiagDescription": "Socialmesh observes RNS traffic on the mesh; behavior may be incomplete while the wire format is being characterized.",
+    "@reticulumDiagDescription": {
+        "description": "Header description on the Reticulum diagnostics screen."
+    },
+    "reticulumDiagSectionOverview": "OVERVIEW",
+    "@reticulumDiagSectionOverview": {
+        "description": "Section header above the overview info table."
+    },
+    "reticulumDiagFragmentCount": "Fragments observed",
+    "@reticulumDiagFragmentCount": {
+        "description": "Info-table label for the lifetime fragment count."
+    },
+    "reticulumDiagLastSeen": "Last seen",
+    "@reticulumDiagLastSeen": {
+        "description": "Info-table label for the most recent fragment timestamp."
+    },
+    "reticulumDiagDistinctSources": "Distinct sources",
+    "@reticulumDiagDistinctSources": {
+        "description": "Info-table label for the number of unique source nodes."
+    },
+    "reticulumDiagAvgFragmentSize": "Avg fragment size",
+    "@reticulumDiagAvgFragmentSize": {
+        "description": "Info-table label for the running mean payload size."
+    },
+    "reticulumDiagFragmentsPerSecond": "Fragments/sec (60s)",
+    "@reticulumDiagFragmentsPerSecond": {
+        "description": "Info-table label for the rolling-window fragments-per-second rate."
+    },
+    "reticulumDiagNeverSeen": "Never",
+    "@reticulumDiagNeverSeen": {
+        "description": "Placeholder shown when no fragments have been observed yet."
+    },
+    "reticulumDiagSectionCapture": "CAPTURE",
+    "@reticulumDiagSectionCapture": {
+        "description": "Section header above the capture controls."
+    },
+    "reticulumDiagCaptureEnable": "Capture to disk",
+    "@reticulumDiagCaptureEnable": {
+        "description": "Toggle title for enabling on-disk fragment capture."
+    },
+    "reticulumDiagCaptureEnableSubtitle": "Append every fragment to a binary file for offline analysis",
+    "@reticulumDiagCaptureEnableSubtitle": {
+        "description": "Subtitle for the capture toggle."
+    },
+    "reticulumDiagCaptureCurrentFile": "Current file",
+    "@reticulumDiagCaptureCurrentFile": {
+        "description": "Info-table label for the active capture filename."
+    },
+    "reticulumDiagCaptureNoActiveFile": "No active capture",
+    "@reticulumDiagCaptureNoActiveFile": {
+        "description": "Placeholder shown when capture is disabled."
+    },
+    "reticulumDiagCaptureBytes": "Bytes in current file",
+    "@reticulumDiagCaptureBytes": {
+        "description": "Info-table label for the byte count in the active capture file."
+    },
+    "reticulumDiagShareCaptures": "Share captures",
+    "@reticulumDiagShareCaptures": {
+        "description": "Action button label for sharing capture files."
+    },
+    "reticulumDiagShareNoFiles": "No capture files yet",
+    "@reticulumDiagShareNoFiles": {
+        "description": "Snackbar shown when no capture files exist to share."
+    },
+    "reticulumDiagSectionReplay": "REPLAY",
+    "@reticulumDiagSectionReplay": {
+        "description": "Section header for the replay tool entry."
+    },
+    "reticulumDiagOpenReplay": "Open replay tool",
+    "@reticulumDiagOpenReplay": {
+        "description": "Tile title for opening the replay screen."
+    },
+    "reticulumDiagOpenReplaySubtitle": "Re-feed a captured file through the live decode path",
+    "@reticulumDiagOpenReplaySubtitle": {
+        "description": "Tile subtitle for opening the replay screen."
+    },
+    "reticulumDiagEmptyTitlePrefix": "No ",
+    "@reticulumDiagEmptyTitlePrefix": {
+        "description": "Animated empty-state title prefix on the diagnostics screen."
+    },
+    "reticulumDiagEmptyTitleKeyword": "RNS traffic",
+    "@reticulumDiagEmptyTitleKeyword": {
+        "description": "Animated empty-state highlighted keyword."
+    },
+    "reticulumDiagEmptyTitleSuffix": " observed yet",
+    "@reticulumDiagEmptyTitleSuffix": {
+        "description": "Animated empty-state title suffix."
+    },
+    "reticulumDiagEmptyTagline1": "Listening for fragmented Reticulum frames on port 76.",
+    "@reticulumDiagEmptyTagline1": {
+        "description": "First cycling tagline on the empty diagnostics screen."
+    },
+    "reticulumDiagEmptyTagline2": "Bring this app within range of an RNS-bridged node.",
+    "@reticulumDiagEmptyTagline2": {
+        "description": "Second cycling tagline on the empty diagnostics screen."
+    },
+    "reticulumDiagEmptyTagline3": "Fragments are decoded but never reassembled in this build.",
+    "@reticulumDiagEmptyTagline3": {
+        "description": "Third cycling tagline on the empty diagnostics screen."
+    },
+    "reticulumDiagSourceFragments": "{count} fragments",
+    "@reticulumDiagSourceFragments": {
+        "description": "Subtitle showing fragment count for a source node.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "reticulumReplayTitle": "Replay capture",
+    "@reticulumReplayTitle": {
+        "description": "Title for the Reticulum replay screen."
+    },
+    "reticulumReplaySectionFile": "FILE",
+    "@reticulumReplaySectionFile": {
+        "description": "Section header for the file picker on the replay screen."
+    },
+    "reticulumReplayPickFile": "Choose capture file",
+    "@reticulumReplayPickFile": {
+        "description": "Button to choose a capture file for replay."
+    },
+    "reticulumReplayNoFilesAvailable": "No capture files available",
+    "@reticulumReplayNoFilesAvailable": {
+        "description": "Empty-state message when no capture files exist."
+    },
+    "reticulumReplayFileLabel": "Capture",
+    "@reticulumReplayFileLabel": {
+        "description": "Info-table label for the selected capture filename."
+    },
+    "reticulumReplayRecords": "Records",
+    "@reticulumReplayRecords": {
+        "description": "Info-table label for the total record count in the capture."
+    },
+    "reticulumReplaySectionMode": "MODE",
+    "@reticulumReplaySectionMode": {
+        "description": "Section header for the replay mode picker."
+    },
+    "reticulumReplayModeRealtime": "Realtime",
+    "@reticulumReplayModeRealtime": {
+        "description": "Replay mode option: emit at original spacing."
+    },
+    "reticulumReplayModeAccelerated": "Accelerated",
+    "@reticulumReplayModeAccelerated": {
+        "description": "Replay mode option: emit at accelerated spacing."
+    },
+    "reticulumReplayModeStep": "Step",
+    "@reticulumReplayModeStep": {
+        "description": "Replay mode option: caller-driven stepping."
+    },
+    "reticulumReplaySpeedLabel": "Speed multiplier",
+    "@reticulumReplaySpeedLabel": {
+        "description": "Label for the accelerated-mode speed multiplier field."
+    },
+    "reticulumReplaySectionControls": "CONTROLS",
+    "@reticulumReplaySectionControls": {
+        "description": "Section header above replay control buttons."
+    },
+    "reticulumReplayStart": "Start",
+    "@reticulumReplayStart": {
+        "description": "Replay control button label."
+    },
+    "reticulumReplayPause": "Pause",
+    "@reticulumReplayPause": {
+        "description": "Replay control button label."
+    },
+    "reticulumReplayResume": "Resume",
+    "@reticulumReplayResume": {
+        "description": "Replay control button label."
+    },
+    "reticulumReplayStop": "Stop",
+    "@reticulumReplayStop": {
+        "description": "Replay control button label."
+    },
+    "reticulumReplayStep": "Step once",
+    "@reticulumReplayStep": {
+        "description": "Step-mode advance button label."
+    },
+    "reticulumReplaySectionStatus": "STATUS",
+    "@reticulumReplaySectionStatus": {
+        "description": "Section header above replay status info."
+    },
+    "reticulumReplayProgress": "Record {current} of {total}",
+    "@reticulumReplayProgress": {
+        "description": "Status line showing current replay position.",
+        "placeholders": {
+            "current": {
+                "type": "int"
+            },
+            "total": {
+                "type": "int"
+            }
+        }
+    },
+    "reticulumReplayInvalidFile": "Selected file is not a valid SMRC v1 capture",
+    "@reticulumReplayInvalidFile": {
+        "description": "Error message when a chosen file fails magic-header validation."
+    },
+    "reticulumReplayLoadError": "Failed to load capture",
+    "@reticulumReplayLoadError": {
+        "description": "Generic load-error snackbar message."
+    },
+    "settingsReticulumTunnelTitle": "Reticulum Tunnel",
+    "@settingsReticulumTunnelTitle": {
+        "description": "Settings tile title for the Reticulum tunnel diagnostics screen."
+    },
+    "settingsReticulumTunnelSubtitle": "Observe + capture port-76 RNS fragments",
+    "@settingsReticulumTunnelSubtitle": {
+        "description": "Settings tile subtitle for the Reticulum tunnel diagnostics screen."
+    },
+    "nodeDexRnsActivityBadge": "RNS",
+    "@nodeDexRnsActivityBadge": {
+        "description": "NodeDex node-tile badge for nodes emitting Reticulum-tunnel fragments."
+    },
+    "nodeDexRnsActivityCount": "RNS fragments",
+    "@nodeDexRnsActivityCount": {
+        "description": "Node-detail info row label for the fragment count from this source."
+    },
+    "nodeDexRnsActivityLastSeen": "RNS last seen",
+    "@nodeDexRnsActivityLastSeen": {
+        "description": "Node-detail info row label for the most recent fragment time from this source."
     }
 }

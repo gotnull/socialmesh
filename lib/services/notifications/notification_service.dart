@@ -1587,10 +1587,9 @@ class NotificationService {
     );
   }
 
-  /// Show notification when a new SIP peer is discovered nearby.
-  ///
-  /// Fires on the `sip_discovery` channel. Intended to run in the background
-  /// so the user knows to open Mesh Explorer and connect.
+  // Show notification when a new SIP peer is discovered nearby.
+  // Fires on the `sip_discovery` channel. Intended to run in the
+  // background so the user knows to open the Handshake screen and connect.
   Future<void> showSipPeerFoundNotification({required int peerNodeId}) async {
     if (!_initialized) return;
 

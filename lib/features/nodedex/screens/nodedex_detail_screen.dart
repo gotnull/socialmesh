@@ -66,6 +66,7 @@ import '../widgets/patina_stamp.dart';
 import '../widgets/section_info_button.dart';
 import '../widgets/sigil_card_sheet.dart';
 import '../widgets/sigil_painter.dart';
+import '../widgets/reticulum_activity_badge.dart';
 import '../widgets/trait_badge.dart';
 import '../widgets/trust_indicator.dart';
 
@@ -354,6 +355,11 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
                 ),
               ),
             ),
+
+          // Reticulum (port-76) activity for this node, if any.
+          SliverToBoxAdapter(
+            child: ReticulumActivityDetail(nodeNum: widget.nodeNum),
+          ),
 
           // All scored traits list (progressive: only at Tier 3+)
           if (disclosure.showAllTraits && scoredTraits.length > 1)

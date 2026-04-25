@@ -14,7 +14,6 @@
 
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -37,7 +36,6 @@ import '../../core/constants.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/age_eligibility_provider.dart';
 import '../../providers/help_providers.dart';
-import '../../providers/overlay_providers.dart';
 import '../../providers/sip_providers.dart';
 import '../../services/haptic_service.dart';
 import '../../services/protocol/sip/sip_codec.dart';
@@ -899,10 +897,6 @@ class _PeerTileState extends ConsumerState<_PeerTile>
                   ),
                 ),
 
-                // Dev-only: Overlay v0.2 link opener. Only visible
-                // when OVERLAY_LINK_ENABLED=true in .env.
-                _OverlayLinkDevAction(peer: widget.peer),
-
                 // Chevron — chat icon when DM session exists
                 const SizedBox(width: AppTheme.spacing4),
                 Icon(
@@ -1287,7 +1281,6 @@ class _ConversationTile extends ConsumerWidget {
                       children: [
                         _buildConnectedBadge(context, l10n),
                         _buildSessionBadge(context, l10n),
-                        if (session.isPinned) _buildPinnedBadge(context, l10n),
                       ],
                     ),
                   ],
@@ -1368,34 +1361,6 @@ class _ConversationTile extends ConsumerWidget {
           Text(
             timeText,
             style: TextStyle(fontSize: 10, color: context.textTertiary),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPinnedBadge(BuildContext context, dynamic l10n) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppTheme.spacing6,
-        vertical: AppTheme.spacing2,
-      ),
-      decoration: BoxDecoration(
-        color: context.accentColor.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(AppTheme.radius6),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.push_pin, size: 11, color: context.accentColor),
-          const SizedBox(width: AppTheme.spacing4),
-          Text(
-            l10n.sipHubSessionPinned,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w500,
-              color: context.accentColor,
-            ),
           ),
         ],
       ),
@@ -1670,61 +1635,5 @@ class _ShimmerPeerPlaceholderState extends State<_ShimmerPeerPlaceholder>
         );
       },
     );
-  }
-}
-
-// =============================================================================
-// Overlay v0.2 dev-only link opener (inline on peer tile)
-// =============================================================================
-
-/// Dev-only IconButton that calls [OverlayLinkEngine.openLocal] against
-/// the tile's peer. Renders only when `OVERLAY_LINK_ENABLED=true` in
-/// `.env`. The IconButton absorbs taps so the surrounding `BouncyTap`
-/// does not also trigger a handshake.
-class _OverlayLinkDevAction extends ConsumerWidget {
-  final SipPeerCapability peer;
-
-  const _OverlayLinkDevAction({required this.peer});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // Debug-only diagnostic. Production builds auto-open the overlay
-    // link from _autoOpenOverlayLink after handshake completion, so no
-    // user-facing control is needed. Delete this widget once auto-open
-    // has been verified stable in the field.
-    if (!kDebugMode) return const SizedBox.shrink();
-    final flags = ref.watch(overlayFlagProvider);
-    if (!flags.linkEnabled) return const SizedBox.shrink();
-
-    return IconButton(
-      icon: const Icon(Icons.link, size: 18),
-      tooltip: 'Open Overlay Link (dev)', // lint-allow: hardcoded-string
-      visualDensity: VisualDensity.compact,
-      color: AccentColors.teal,
-      onPressed: () => _openLink(context, ref),
-    );
-  }
-
-  Future<void> _openLink(BuildContext context, WidgetRef ref) async {
-    ref.read(hapticServiceProvider).trigger(HapticType.medium);
-    try {
-      final engine = await ref.read(overlayLinkEngineProvider.future);
-      final hint = Uint8List(8);
-      ByteData.view(hint.buffer).setUint32(0, peer.nodeId);
-      final record = await engine.openLocal(
-        peerPersonaHint: hint,
-        peerNodeNum: peer.nodeId,
-      );
-      if (!context.mounted) return;
-      showInfoSnackBar(
-        context,
-        // lint-allow: hardcoded-string
-        'Overlay link opening: 0x${record.linkId.toRadixString(16)}',
-      );
-    } catch (e) {
-      if (!context.mounted) return;
-      // lint-allow: hardcoded-string
-      showErrorSnackBar(context, 'Overlay link failed: $e');
-    }
   }
 }

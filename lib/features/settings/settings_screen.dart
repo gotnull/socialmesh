@@ -98,6 +98,7 @@ import '../../core/widgets/loading_indicator.dart';
 import '../../core/constants.dart';
 import '../tak/screens/tak_settings_screen.dart';
 import 'network_endpoints_screen.dart';
+import 'reticulum_diagnostics_screen.dart';
 import 'translation_settings_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -521,6 +522,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const NetworkEndpointsScreen()),
+          ),
+        ),
+        _SearchableSettingItem(
+          icon: Icons.podcasts,
+          title: context.l10n.settingsReticulumTunnelTitle,
+          subtitle: context.l10n.settingsReticulumTunnelSubtitle,
+          keywords: const [
+            'reticulum',
+            'rns',
+            'tunnel',
+            'port 76',
+            'fragment',
+            'capture',
+            'observability',
+          ],
+          section: context.l10n.settingsSectionConnection,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const ReticulumDiagnosticsScreen(),
+            ),
           ),
         ),
 

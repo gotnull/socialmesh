@@ -113,7 +113,6 @@ void main() {
       expect(session!.sessionTag, equals(0x12345678));
       expect(session.peerNodeId, equals(0xABCD1234));
       expect(session.ttlS, equals(SipConstants.dmTtlDefaultS));
-      expect(session.isPinned, isFalse);
       expect(session.status, equals(SipDmSessionStatus.active));
       expect(session.messages, isEmpty);
     });
@@ -188,16 +187,6 @@ void main() {
       expect(dm.getSession(0x11), isNull);
     });
 
-    test('getSession returns active for pinned session past TTL', () {
-      dm.createSession(sessionTag: 0x11, peerNodeId: 0x22, ttlS: 60);
-      dm.pinSession(0x11);
-      // Advance past TTL
-      nowMs += 61 * 1000;
-      final session = dm.getSession(0x11);
-      expect(session, isNotNull);
-      expect(session!.isPinned, isTrue);
-    });
-
     test('activeSessions filters expired', () {
       dm.createSession(sessionTag: 0x11, peerNodeId: 0x22, ttlS: 60);
       dm.createSession(sessionTag: 0x33, peerNodeId: 0x44, ttlS: 120);
@@ -208,32 +197,6 @@ void main() {
       final active = dm.activeSessions;
       expect(active, hasLength(1));
       expect(active.first.sessionTag, equals(0x33));
-    });
-
-    test('pinSession returns true and prevents expiry', () {
-      dm.createSession(sessionTag: 0x11, peerNodeId: 0x22, ttlS: 10);
-      expect(dm.pinSession(0x11), isTrue);
-
-      nowMs += 20 * 1000; // Well past TTL
-      expect(dm.getSession(0x11), isNotNull);
-    });
-
-    test('pinSession returns false for unknown session', () {
-      expect(dm.pinSession(0x99), isFalse);
-    });
-
-    test('unpinSession returns true and re-enables expiry', () {
-      dm.createSession(sessionTag: 0x11, peerNodeId: 0x22, ttlS: 10);
-      dm.pinSession(0x11);
-      expect(dm.unpinSession(0x11), isTrue);
-
-      nowMs += 20 * 1000; // Past TTL
-      expect(dm.getSession(0x11), isNull);
-    });
-
-    test('unpinSession returns false when not pinned', () {
-      dm.createSession(sessionTag: 0x11, peerNodeId: 0x22);
-      expect(dm.unpinSession(0x11), isFalse);
     });
 
     test('closeSession marks session as closed and removes it', () {
@@ -532,17 +495,6 @@ void main() {
         ttlS: 60,
       );
       expect(session.isExpired(1000 + 60 * 1000), isTrue);
-    });
-
-    test('isExpired false when pinned', () {
-      final session = SipDmSession(
-        sessionTag: 0x11,
-        peerNodeId: 0x22,
-        createdAtMs: 1000,
-        ttlS: 60,
-        isPinned: true,
-      );
-      expect(session.isExpired(1000 + 120 * 1000), isFalse);
     });
 
     test('isExpired true when closed', () {

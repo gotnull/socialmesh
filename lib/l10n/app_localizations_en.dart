@@ -6179,7 +6179,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'No articles match your search.\nTry different keywords.';
 
   @override
-  String get helpCenterReadEverything => 'You’ve read everything!';
+  String get helpCenterReadEverything => 'You\'ve read everything!';
 
   @override
   String get helpCenterResetAllProgress => 'Reset All Progress';
@@ -15450,7 +15450,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Browse recent features and updates';
 
   @override
-  String get settingsTileWhatsNewTitle => 'What’s New';
+  String get settingsTileWhatsNewTitle => 'What\'s New';
 
   @override
   String get settingsTitle => 'Settings';
@@ -23361,7 +23361,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appearanceFontSystem => 'System';
 
   @override
-  String get appearanceFontSystemDesc => 'Your device’s default font';
+  String get appearanceFontSystemDesc => 'Your device\'s default font';
 
   @override
   String get appearanceFontAccessibility => 'Accessibility';
@@ -23524,7 +23524,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appearanceTimeFormatSystemDesc =>
-      'Follow your device’s clock setting';
+      'Follow your device\'s clock setting';
 
   @override
   String get appearanceTimeFormat12h => '12-hour';
@@ -31656,7 +31656,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Connect your device to use this feature';
 
   @override
-  String get sipBadgeLabel => 'Socialmesh';
+  String get sipBadgeLabel => 'Handshake';
 
   @override
   String get sipIdentityStateUnverified => 'Unverified';
@@ -31702,7 +31702,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sipDiscoveryNoPeersDescription =>
-      'People using Socialmesh will appear here when they’re in range.';
+      'People using Handshake will appear here when they\'re in range.';
 
   @override
   String get sipDiscoveryScanButton => 'Look for people';
@@ -31750,9 +31750,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get sipDmPinned => 'Session pinned';
-
-  @override
   String get sipDmInputHint => 'Message…';
 
   @override
@@ -31773,10 +31770,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sipDmSessionClosed => 'This conversation has ended.';
 
   @override
-  String get sipDmPinAction => 'Pin Session';
-
-  @override
-  String get sipDmUnpinAction => 'Unpin Session';
+  String sipDmTextTooLong(int maxBytes) {
+    return 'Message is too long. Trim it to fit the $maxBytes-byte limit.';
+  }
 
   @override
   String get sipDmCloseAction => 'Close Session';
@@ -31860,7 +31856,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sipCountersTitle => 'SIP Debug Counters';
 
   @override
-  String get sipHubTitle => 'Socialmesh';
+  String get sipHubTitle => 'Handshake';
 
   @override
   String get sipHubSectionPeers => 'People';
@@ -31918,7 +31914,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sipHubEmptyDescription =>
-      'Tap Scan to look for other Socialmesh users on the mesh.';
+      'Tap Scan to look for other Handshake users on the mesh.';
 
   @override
   String get sipHubScanningTitlePrefix => 'No peers ';
@@ -31945,15 +31941,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sipHubHelp => 'Help';
 
   @override
-  String get helpSipHubOverviewTitle => 'Socialmesh';
+  String get helpSipHubOverviewTitle => 'Handshake';
 
   @override
   String get helpSipHubOverviewDescription =>
-      'Discover and chat with nearby Socialmesh peers';
+      'Discover and chat with nearby Handshake peers';
 
   @override
   String get helpSipHubIntroBubble =>
-      'Welcome to **Socialmesh**! This is your peer discovery hub. Nearby devices running Socialmesh appear here once they beacon or respond to a rollcall.';
+      'Welcome to **Handshake**! This is your peer discovery hub. Nearby devices running Handshake appear here once they beacon or respond to a rollcall.';
 
   @override
   String get helpSipHubScanBubble =>
@@ -31990,9 +31986,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String sipHubSessionExpiry(String time) {
     return 'Expires in $time';
   }
-
-  @override
-  String get sipHubSessionPinned => 'Pinned';
 
   @override
   String get sipHubNoMessages => 'No messages yet';
@@ -32682,7 +32675,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationSipPeerFoundBody =>
-      'A Socialmesh peer is in range. Open Mesh Explorer to connect.';
+      'A Handshake peer is in range. Open Handshake to connect.';
 
   @override
   String get notificationChannelSipDiscovery => 'Peer Discovery';
@@ -33195,7 +33188,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not update this share right now.';
 
   @override
-  String get serviceDetailFetchingInstances => 'Loading what’s being shared…';
+  String get serviceDetailFetchingInstances => 'Loading what\'s being shared…';
 
   @override
   String get serviceDetailFetchFailed =>
@@ -34831,7 +34824,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deliveryPhaseWaitingForPathDesc =>
-      'The mesh hasn’t found a route yet. Delivery will continue automatically.';
+      'The mesh hasn\'t found a route yet. Delivery will continue automatically.';
 
   @override
   String get deliveryPhaseDelivering => 'Delivering';
@@ -34984,17 +34977,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serviceWizardAudienceContactsDesc =>
-      'Only people you’ve exchanged contacts with';
+      'Only people you\'ve exchanged contacts with';
 
   @override
   String get serviceWizardReviewTitle => 'Before you write';
 
   @override
   String get serviceWizardReviewSubtitle =>
-      'This is the shape of the share you’re about to compose.';
+      'This is the shape of the share you\'re about to compose.';
 
   @override
-  String get serviceWizardReviewType => 'You’re sharing';
+  String get serviceWizardReviewType => 'You\'re sharing';
 
   @override
   String get serviceWizardReviewPreset => 'Starting point';
@@ -36279,4 +36272,178 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationPetAttentionBoredomBody => 'Restless — tap Resonate.';
+
+  @override
+  String get reticulumDiagTitle => 'Reticulum Tunnel';
+
+  @override
+  String get reticulumDiagExperimental => 'Experimental';
+
+  @override
+  String get reticulumDiagDescription =>
+      'Socialmesh observes RNS traffic on the mesh; behavior may be incomplete while the wire format is being characterized.';
+
+  @override
+  String get reticulumDiagSectionOverview => 'OVERVIEW';
+
+  @override
+  String get reticulumDiagFragmentCount => 'Fragments observed';
+
+  @override
+  String get reticulumDiagLastSeen => 'Last seen';
+
+  @override
+  String get reticulumDiagDistinctSources => 'Distinct sources';
+
+  @override
+  String get reticulumDiagAvgFragmentSize => 'Avg fragment size';
+
+  @override
+  String get reticulumDiagFragmentsPerSecond => 'Fragments/sec (60s)';
+
+  @override
+  String get reticulumDiagNeverSeen => 'Never';
+
+  @override
+  String get reticulumDiagSectionCapture => 'CAPTURE';
+
+  @override
+  String get reticulumDiagCaptureEnable => 'Capture to disk';
+
+  @override
+  String get reticulumDiagCaptureEnableSubtitle =>
+      'Append every fragment to a binary file for offline analysis';
+
+  @override
+  String get reticulumDiagCaptureCurrentFile => 'Current file';
+
+  @override
+  String get reticulumDiagCaptureNoActiveFile => 'No active capture';
+
+  @override
+  String get reticulumDiagCaptureBytes => 'Bytes in current file';
+
+  @override
+  String get reticulumDiagShareCaptures => 'Share captures';
+
+  @override
+  String get reticulumDiagShareNoFiles => 'No capture files yet';
+
+  @override
+  String get reticulumDiagSectionReplay => 'REPLAY';
+
+  @override
+  String get reticulumDiagOpenReplay => 'Open replay tool';
+
+  @override
+  String get reticulumDiagOpenReplaySubtitle =>
+      'Re-feed a captured file through the live decode path';
+
+  @override
+  String get reticulumDiagEmptyTitlePrefix => 'No ';
+
+  @override
+  String get reticulumDiagEmptyTitleKeyword => 'RNS traffic';
+
+  @override
+  String get reticulumDiagEmptyTitleSuffix => ' observed yet';
+
+  @override
+  String get reticulumDiagEmptyTagline1 =>
+      'Listening for fragmented Reticulum frames on port 76.';
+
+  @override
+  String get reticulumDiagEmptyTagline2 =>
+      'Bring this app within range of an RNS-bridged node.';
+
+  @override
+  String get reticulumDiagEmptyTagline3 =>
+      'Fragments are decoded but never reassembled in this build.';
+
+  @override
+  String reticulumDiagSourceFragments(int count) {
+    return '$count fragments';
+  }
+
+  @override
+  String get reticulumReplayTitle => 'Replay capture';
+
+  @override
+  String get reticulumReplaySectionFile => 'FILE';
+
+  @override
+  String get reticulumReplayPickFile => 'Choose capture file';
+
+  @override
+  String get reticulumReplayNoFilesAvailable => 'No capture files available';
+
+  @override
+  String get reticulumReplayFileLabel => 'Capture';
+
+  @override
+  String get reticulumReplayRecords => 'Records';
+
+  @override
+  String get reticulumReplaySectionMode => 'MODE';
+
+  @override
+  String get reticulumReplayModeRealtime => 'Realtime';
+
+  @override
+  String get reticulumReplayModeAccelerated => 'Accelerated';
+
+  @override
+  String get reticulumReplayModeStep => 'Step';
+
+  @override
+  String get reticulumReplaySpeedLabel => 'Speed multiplier';
+
+  @override
+  String get reticulumReplaySectionControls => 'CONTROLS';
+
+  @override
+  String get reticulumReplayStart => 'Start';
+
+  @override
+  String get reticulumReplayPause => 'Pause';
+
+  @override
+  String get reticulumReplayResume => 'Resume';
+
+  @override
+  String get reticulumReplayStop => 'Stop';
+
+  @override
+  String get reticulumReplayStep => 'Step once';
+
+  @override
+  String get reticulumReplaySectionStatus => 'STATUS';
+
+  @override
+  String reticulumReplayProgress(int current, int total) {
+    return 'Record $current of $total';
+  }
+
+  @override
+  String get reticulumReplayInvalidFile =>
+      'Selected file is not a valid SMRC v1 capture';
+
+  @override
+  String get reticulumReplayLoadError => 'Failed to load capture';
+
+  @override
+  String get settingsReticulumTunnelTitle => 'Reticulum Tunnel';
+
+  @override
+  String get settingsReticulumTunnelSubtitle =>
+      'Observe + capture port-76 RNS fragments';
+
+  @override
+  String get nodeDexRnsActivityBadge => 'RNS';
+
+  @override
+  String get nodeDexRnsActivityCount => 'RNS fragments';
+
+  @override
+  String get nodeDexRnsActivityLastSeen => 'RNS last seen';
 }

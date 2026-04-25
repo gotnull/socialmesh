@@ -93,6 +93,7 @@ class AppLogging {
   static bool? _sppNegotiationLoggingEnabled;
   static bool? _stlLoggingEnabled;
   static bool? _overlayLoggingEnabled;
+  static bool? _reticulumLoggingEnabled;
   static bool? _meshFeedLoggingEnabled;
   static bool? _meshGamesLoggingEnabled;
   static bool? _meshGameTransportLoggingEnabled;
@@ -613,6 +614,18 @@ class AppLogging {
 
   static void sip(String message) {
     if (sipLoggingEnabled) debugPrint('SIP: $message');
+  }
+
+  /// Reticulum tunnel (Meshtastic portnum 76) observability logging.
+  /// Enable with RETICULUM_LOGGING_ENABLED=true in .env file.
+  static bool get reticulumLoggingEnabled {
+    _reticulumLoggingEnabled ??=
+        _safeGetEnv('RETICULUM_LOGGING_ENABLED')?.toLowerCase() == 'true';
+    return _reticulumLoggingEnabled!;
+  }
+
+  static void reticulum(String message) {
+    if (reticulumLoggingEnabled) debugPrint('Reticulum: $message');
   }
 
   /// MRRP protocol debug logging.

@@ -1246,6 +1246,24 @@ check_file() {
 
   fi # end whole-file checks
 
+  # ------------------------------------------------------------------
+  # ARB file checks
+  # BLOCK: U+2019 (right single quotation mark "’") in ARB strings.
+  # When flutter gen-l10n emits the value into a Dart string literal,
+  # the analyzer raises "could be confused with U+0060 (`)" on the
+  # generated file. Use ASCII apostrophe (U+0027) instead.
+  # ------------------------------------------------------------------
+  case "$file" in
+    *.arb)
+      while IFS=: read -r lineno matched_line; do
+        line_in_scope "$file" "$lineno" || continue
+        record_hit "$file" "$lineno" "no-smart-apostrophe" \
+          "ARB contains U+2019 (’) — use ASCII apostrophe (') to keep generated Dart analyzer-clean" \
+          "error"
+      done < <(grep -nF $'\xe2\x80\x99' "$file" 2>/dev/null || true)
+      ;;
+  esac
+
   # Flush grouped output for this file
   flush_file_hits "$file"
 }

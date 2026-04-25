@@ -10943,7 +10943,7 @@ abstract class AppLocalizations {
   /// Empty state title when all articles have been read.
   ///
   /// In en, this message translates to:
-  /// **'You’ve read everything!'**
+  /// **'You\'ve read everything!'**
   String get helpCenterReadEverything;
 
   /// Button label to reset all help progress.
@@ -27134,7 +27134,7 @@ abstract class AppLocalizations {
   /// Title of the what's new settings tile.
   ///
   /// In en, this message translates to:
-  /// **'What’s New'**
+  /// **'What\'s New'**
   String get settingsTileWhatsNewTitle;
 
   /// Title of the settings screen.
@@ -41284,7 +41284,7 @@ abstract class AppLocalizations {
   /// Text displayed in appearance settings
   ///
   /// In en, this message translates to:
-  /// **'Your device’s default font'**
+  /// **'Your device\'s default font'**
   String get appearanceFontSystemDesc;
 
   /// Text displayed in appearance settings
@@ -41584,7 +41584,7 @@ abstract class AppLocalizations {
   /// Time format option description in appearance settings
   ///
   /// In en, this message translates to:
-  /// **'Follow your device’s clock setting'**
+  /// **'Follow your device\'s clock setting'**
   String get appearanceTimeFormatSystemDesc;
 
   /// Time format option name in appearance settings
@@ -55777,7 +55777,7 @@ abstract class AppLocalizations {
   /// Badge label shown on NodeDex entries for SIP-capable peers.
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh'**
+  /// **'Handshake'**
   String get sipBadgeLabel;
 
   /// SIP identity state label when no verified claim has been received.
@@ -55849,7 +55849,7 @@ abstract class AppLocalizations {
   /// Description for the empty state in Socialmesh discovery.
   ///
   /// In en, this message translates to:
-  /// **'People using Socialmesh will appear here when they’re in range.'**
+  /// **'People using Handshake will appear here when they\'re in range.'**
   String get sipDiscoveryNoPeersDescription;
 
   /// Button to trigger a Socialmesh rollcall scan.
@@ -55930,12 +55930,6 @@ abstract class AppLocalizations {
   /// **'Expires in {time}'**
   String sipDmExpiry(String time);
 
-  /// Label when a DM session is pinned.
-  ///
-  /// In en, this message translates to:
-  /// **'Session pinned'**
-  String get sipDmPinned;
-
   /// Hint text for the DM message input field.
   ///
   /// In en, this message translates to:
@@ -55972,17 +55966,11 @@ abstract class AppLocalizations {
   /// **'This conversation has ended.'**
   String get sipDmSessionClosed;
 
-  /// Action to pin a DM session to prevent expiry.
+  /// Error when DM send fails because the encoded text exceeds the SIP DM payload cap.
   ///
   /// In en, this message translates to:
-  /// **'Pin Session'**
-  String get sipDmPinAction;
-
-  /// Action to unpin a DM session.
-  ///
-  /// In en, this message translates to:
-  /// **'Unpin Session'**
-  String get sipDmUnpinAction;
+  /// **'Message is too long. Trim it to fit the {maxBytes}-byte limit.'**
+  String sipDmTextTooLong(int maxBytes);
 
   /// Action to close a DM session.
   ///
@@ -56113,7 +56101,7 @@ abstract class AppLocalizations {
   /// Title for the SIP Hub screen.
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh'**
+  /// **'Handshake'**
   String get sipHubTitle;
 
   /// Section header for discovered SIP peers.
@@ -56215,7 +56203,7 @@ abstract class AppLocalizations {
   /// Empty state description when no SIP peers are found.
   ///
   /// In en, this message translates to:
-  /// **'Tap Scan to look for other Socialmesh users on the mesh.'**
+  /// **'Tap Scan to look for other Handshake users on the mesh.'**
   String get sipHubEmptyDescription;
 
   /// Prefix for the animated SIP Hub scanning empty state title (trailing space separates from keyword).
@@ -56269,19 +56257,19 @@ abstract class AppLocalizations {
   /// Help topic title for the SIP Hub screen.
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh'**
+  /// **'Handshake'**
   String get helpSipHubOverviewTitle;
 
   /// Help topic description for the SIP Hub screen.
   ///
   /// In en, this message translates to:
-  /// **'Discover and chat with nearby Socialmesh peers'**
+  /// **'Discover and chat with nearby Handshake peers'**
   String get helpSipHubOverviewDescription;
 
   /// Help bubble: SIP Hub intro step.
   ///
   /// In en, this message translates to:
-  /// **'Welcome to **Socialmesh**! This is your peer discovery hub. Nearby devices running Socialmesh appear here once they beacon or respond to a rollcall.'**
+  /// **'Welcome to **Handshake**! This is your peer discovery hub. Nearby devices running Handshake appear here once they beacon or respond to a rollcall.'**
   String get helpSipHubIntroBubble;
 
   /// Help bubble: SIP Hub scan step.
@@ -56337,12 +56325,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Expires in {time}'**
   String sipHubSessionExpiry(String time);
-
-  /// Badge label for pinned sessions.
-  ///
-  /// In en, this message translates to:
-  /// **'Pinned'**
-  String get sipHubSessionPinned;
 
   /// Subtitle for conversations with no messages.
   ///
@@ -57565,7 +57547,7 @@ abstract class AppLocalizations {
   /// Notification body when a new SIP peer is discovered.
   ///
   /// In en, this message translates to:
-  /// **'A Socialmesh peer is in range. Open Mesh Explorer to connect.'**
+  /// **'A Handshake peer is in range. Open Handshake to connect.'**
   String get notificationSipPeerFoundBody;
 
   /// Notification channel name for SIP peer discovery alerts.
@@ -58429,7 +58411,7 @@ abstract class AppLocalizations {
   /// Loading text shown while fetching remote service instances via MRRP.
   ///
   /// In en, this message translates to:
-  /// **'Loading what’s being shared…'**
+  /// **'Loading what\'s being shared…'**
   String get serviceDetailFetchingInstances;
 
   /// Error text shown when a single MRRP request attempt to fetch remote instances fails.
@@ -61327,7 +61309,7 @@ abstract class AppLocalizations {
   /// Description for waiting-for-path phase
   ///
   /// In en, this message translates to:
-  /// **'The mesh hasn’t found a route yet. Delivery will continue automatically.'**
+  /// **'The mesh hasn\'t found a route yet. Delivery will continue automatically.'**
   String get deliveryPhaseWaitingForPathDesc;
 
   /// Delivery phase: data being relayed
@@ -61597,7 +61579,7 @@ abstract class AppLocalizations {
   /// Description for contacts audience
   ///
   /// In en, this message translates to:
-  /// **'Only people you’ve exchanged contacts with'**
+  /// **'Only people you\'ve exchanged contacts with'**
   String get serviceWizardAudienceContactsDesc;
 
   /// Review step title
@@ -61609,13 +61591,13 @@ abstract class AppLocalizations {
   /// Review step subtitle
   ///
   /// In en, this message translates to:
-  /// **'This is the shape of the share you’re about to compose.'**
+  /// **'This is the shape of the share you\'re about to compose.'**
   String get serviceWizardReviewSubtitle;
 
   /// Summary row label: service type
   ///
   /// In en, this message translates to:
-  /// **'You’re sharing'**
+  /// **'You\'re sharing'**
   String get serviceWizardReviewType;
 
   /// Summary row label: selected preset
@@ -63873,6 +63855,330 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Restless — tap Resonate.'**
   String get notificationPetAttentionBoredomBody;
+
+  /// Title for the Reticulum tunnel diagnostics screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Reticulum Tunnel'**
+  String get reticulumDiagTitle;
+
+  /// Pill label marking the Reticulum diagnostics screen as experimental.
+  ///
+  /// In en, this message translates to:
+  /// **'Experimental'**
+  String get reticulumDiagExperimental;
+
+  /// Header description on the Reticulum diagnostics screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Socialmesh observes RNS traffic on the mesh; behavior may be incomplete while the wire format is being characterized.'**
+  String get reticulumDiagDescription;
+
+  /// Section header above the overview info table.
+  ///
+  /// In en, this message translates to:
+  /// **'OVERVIEW'**
+  String get reticulumDiagSectionOverview;
+
+  /// Info-table label for the lifetime fragment count.
+  ///
+  /// In en, this message translates to:
+  /// **'Fragments observed'**
+  String get reticulumDiagFragmentCount;
+
+  /// Info-table label for the most recent fragment timestamp.
+  ///
+  /// In en, this message translates to:
+  /// **'Last seen'**
+  String get reticulumDiagLastSeen;
+
+  /// Info-table label for the number of unique source nodes.
+  ///
+  /// In en, this message translates to:
+  /// **'Distinct sources'**
+  String get reticulumDiagDistinctSources;
+
+  /// Info-table label for the running mean payload size.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg fragment size'**
+  String get reticulumDiagAvgFragmentSize;
+
+  /// Info-table label for the rolling-window fragments-per-second rate.
+  ///
+  /// In en, this message translates to:
+  /// **'Fragments/sec (60s)'**
+  String get reticulumDiagFragmentsPerSecond;
+
+  /// Placeholder shown when no fragments have been observed yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Never'**
+  String get reticulumDiagNeverSeen;
+
+  /// Section header above the capture controls.
+  ///
+  /// In en, this message translates to:
+  /// **'CAPTURE'**
+  String get reticulumDiagSectionCapture;
+
+  /// Toggle title for enabling on-disk fragment capture.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture to disk'**
+  String get reticulumDiagCaptureEnable;
+
+  /// Subtitle for the capture toggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Append every fragment to a binary file for offline analysis'**
+  String get reticulumDiagCaptureEnableSubtitle;
+
+  /// Info-table label for the active capture filename.
+  ///
+  /// In en, this message translates to:
+  /// **'Current file'**
+  String get reticulumDiagCaptureCurrentFile;
+
+  /// Placeholder shown when capture is disabled.
+  ///
+  /// In en, this message translates to:
+  /// **'No active capture'**
+  String get reticulumDiagCaptureNoActiveFile;
+
+  /// Info-table label for the byte count in the active capture file.
+  ///
+  /// In en, this message translates to:
+  /// **'Bytes in current file'**
+  String get reticulumDiagCaptureBytes;
+
+  /// Action button label for sharing capture files.
+  ///
+  /// In en, this message translates to:
+  /// **'Share captures'**
+  String get reticulumDiagShareCaptures;
+
+  /// Snackbar shown when no capture files exist to share.
+  ///
+  /// In en, this message translates to:
+  /// **'No capture files yet'**
+  String get reticulumDiagShareNoFiles;
+
+  /// Section header for the replay tool entry.
+  ///
+  /// In en, this message translates to:
+  /// **'REPLAY'**
+  String get reticulumDiagSectionReplay;
+
+  /// Tile title for opening the replay screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open replay tool'**
+  String get reticulumDiagOpenReplay;
+
+  /// Tile subtitle for opening the replay screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-feed a captured file through the live decode path'**
+  String get reticulumDiagOpenReplaySubtitle;
+
+  /// Animated empty-state title prefix on the diagnostics screen.
+  ///
+  /// In en, this message translates to:
+  /// **'No '**
+  String get reticulumDiagEmptyTitlePrefix;
+
+  /// Animated empty-state highlighted keyword.
+  ///
+  /// In en, this message translates to:
+  /// **'RNS traffic'**
+  String get reticulumDiagEmptyTitleKeyword;
+
+  /// Animated empty-state title suffix.
+  ///
+  /// In en, this message translates to:
+  /// **' observed yet'**
+  String get reticulumDiagEmptyTitleSuffix;
+
+  /// First cycling tagline on the empty diagnostics screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening for fragmented Reticulum frames on port 76.'**
+  String get reticulumDiagEmptyTagline1;
+
+  /// Second cycling tagline on the empty diagnostics screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Bring this app within range of an RNS-bridged node.'**
+  String get reticulumDiagEmptyTagline2;
+
+  /// Third cycling tagline on the empty diagnostics screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Fragments are decoded but never reassembled in this build.'**
+  String get reticulumDiagEmptyTagline3;
+
+  /// Subtitle showing fragment count for a source node.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} fragments'**
+  String reticulumDiagSourceFragments(int count);
+
+  /// Title for the Reticulum replay screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Replay capture'**
+  String get reticulumReplayTitle;
+
+  /// Section header for the file picker on the replay screen.
+  ///
+  /// In en, this message translates to:
+  /// **'FILE'**
+  String get reticulumReplaySectionFile;
+
+  /// Button to choose a capture file for replay.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose capture file'**
+  String get reticulumReplayPickFile;
+
+  /// Empty-state message when no capture files exist.
+  ///
+  /// In en, this message translates to:
+  /// **'No capture files available'**
+  String get reticulumReplayNoFilesAvailable;
+
+  /// Info-table label for the selected capture filename.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture'**
+  String get reticulumReplayFileLabel;
+
+  /// Info-table label for the total record count in the capture.
+  ///
+  /// In en, this message translates to:
+  /// **'Records'**
+  String get reticulumReplayRecords;
+
+  /// Section header for the replay mode picker.
+  ///
+  /// In en, this message translates to:
+  /// **'MODE'**
+  String get reticulumReplaySectionMode;
+
+  /// Replay mode option: emit at original spacing.
+  ///
+  /// In en, this message translates to:
+  /// **'Realtime'**
+  String get reticulumReplayModeRealtime;
+
+  /// Replay mode option: emit at accelerated spacing.
+  ///
+  /// In en, this message translates to:
+  /// **'Accelerated'**
+  String get reticulumReplayModeAccelerated;
+
+  /// Replay mode option: caller-driven stepping.
+  ///
+  /// In en, this message translates to:
+  /// **'Step'**
+  String get reticulumReplayModeStep;
+
+  /// Label for the accelerated-mode speed multiplier field.
+  ///
+  /// In en, this message translates to:
+  /// **'Speed multiplier'**
+  String get reticulumReplaySpeedLabel;
+
+  /// Section header above replay control buttons.
+  ///
+  /// In en, this message translates to:
+  /// **'CONTROLS'**
+  String get reticulumReplaySectionControls;
+
+  /// Replay control button label.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get reticulumReplayStart;
+
+  /// Replay control button label.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get reticulumReplayPause;
+
+  /// Replay control button label.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get reticulumReplayResume;
+
+  /// Replay control button label.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get reticulumReplayStop;
+
+  /// Step-mode advance button label.
+  ///
+  /// In en, this message translates to:
+  /// **'Step once'**
+  String get reticulumReplayStep;
+
+  /// Section header above replay status info.
+  ///
+  /// In en, this message translates to:
+  /// **'STATUS'**
+  String get reticulumReplaySectionStatus;
+
+  /// Status line showing current replay position.
+  ///
+  /// In en, this message translates to:
+  /// **'Record {current} of {total}'**
+  String reticulumReplayProgress(int current, int total);
+
+  /// Error message when a chosen file fails magic-header validation.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected file is not a valid SMRC v1 capture'**
+  String get reticulumReplayInvalidFile;
+
+  /// Generic load-error snackbar message.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load capture'**
+  String get reticulumReplayLoadError;
+
+  /// Settings tile title for the Reticulum tunnel diagnostics screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Reticulum Tunnel'**
+  String get settingsReticulumTunnelTitle;
+
+  /// Settings tile subtitle for the Reticulum tunnel diagnostics screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Observe + capture port-76 RNS fragments'**
+  String get settingsReticulumTunnelSubtitle;
+
+  /// NodeDex node-tile badge for nodes emitting Reticulum-tunnel fragments.
+  ///
+  /// In en, this message translates to:
+  /// **'RNS'**
+  String get nodeDexRnsActivityBadge;
+
+  /// Node-detail info row label for the fragment count from this source.
+  ///
+  /// In en, this message translates to:
+  /// **'RNS fragments'**
+  String get nodeDexRnsActivityCount;
+
+  /// Node-detail info row label for the most recent fragment time from this source.
+  ///
+  /// In en, this message translates to:
+  /// **'RNS last seen'**
+  String get nodeDexRnsActivityLastSeen;
 }
 
 class _AppLocalizationsDelegate

@@ -12,6 +12,7 @@
 // - Consistent badge styling (container + color + radius6)
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -39,6 +40,7 @@ import '../../providers/sip_providers.dart';
 import '../../services/haptic_service.dart';
 import '../../services/protocol/sip/sip_dm.dart';
 import '../../services/protocol/sip/sip_messages_dm.dart';
+import '../../services/protocol/text_message_payload_budget.dart';
 import '../../utils/snackbar.dart';
 
 /// Ephemeral DM thread screen for a single SIP session.
@@ -107,6 +109,22 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
     FocusScope.of(context).unfocus();
   }
 
+  // SIP DM caps text at SipDmConstants.maxDmTextBytes UTF-8 bytes (not
+  // characters) — emoji/CJK runs out of budget faster than the visible
+  // char count suggests. Surface that to the user via the same byte
+  // counter pattern used in the messaging composer.
+  TextMessagePayloadBudget _measureSipDmBudget(String text) {
+    final bytes = utf8.encode(text).length;
+    return TextMessagePayloadBudget(
+      utf8Bytes: bytes,
+      maxUtf8Bytes: SipDmConstants.maxDmTextBytes,
+      encodedDataBytes: bytes,
+      maxEncodedDataBytes: SipDmConstants.maxDmTextBytes,
+      replyId: null,
+      isEmoji: false,
+    );
+  }
+
   Future<void> _sendMessage() async {
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
@@ -150,6 +168,9 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
     final l10n = context.l10n;
     final message = switch (error) {
       SipDmSendError.budgetExhausted => l10n.sipDmBudgetExhausted,
+      SipDmSendError.textTooLong => l10n.sipDmTextTooLong(
+        SipDmConstants.maxDmTextBytes,
+      ),
       SipDmSendError.sessionClosed => l10n.sipDmSessionClosed,
       SipDmSendError.sessionNotFound => l10n.sipDmSessionClosed,
       _ => l10n.sipDmSessionClosed,
@@ -168,24 +189,6 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
         );
       }
     });
-  }
-
-  void _onPin() {
-    final dm = ref.read(sipDmManagerProvider);
-    if (dm == null) return;
-
-    final session = dm.getSession(widget.sessionTag);
-    if (session == null) return;
-
-    final haptics = ref.read(hapticServiceProvider);
-
-    if (session.isPinned) {
-      dm.unpinSession(widget.sessionTag);
-    } else {
-      dm.pinSession(widget.sessionTag);
-    }
-    haptics.trigger(HapticType.light);
-    setState(() {});
   }
 
   void _onClose() {
@@ -426,23 +429,6 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
             AppBarOverflowMenu<String>(
               itemBuilder: (context) => [
                 PopupMenuItem(
-                  value: 'pin', // lint-allow: hardcoded-string
-                  child: ListTile(
-                    leading: Icon(
-                      session.isPinned
-                          ? Icons.push_pin
-                          : Icons.push_pin_outlined,
-                    ),
-                    title: Text(
-                      session.isPinned
-                          ? l10n.sipDmUnpinAction
-                          : l10n.sipDmPinAction,
-                    ),
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-                PopupMenuItem(
                   value: 'close', // lint-allow: hardcoded-string
                   child: ListTile(
                     leading: const Icon(Icons.close),
@@ -453,9 +439,6 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
                 ),
               ],
               onSelected: (value) {
-                if (value == 'pin') {
-                  _onPin(); // lint-allow: hardcoded-string
-                }
                 if (value == 'close') {
                   _onClose(); // lint-allow: hardcoded-string
                 }
@@ -632,10 +615,16 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
                   focusNode: _inputFocusNode,
                   onSend: _sendMessage,
                   hintText: l10n.sipDmInputHint,
-                  maxLength: 180,
+                  maxLength: SipDmConstants.maxDmTextBytes,
                   maxLines: 4,
                   enabled: enabled,
                   sendTooltip: l10n.sipDmSendButton,
+                  budgetResolver: _measureSipDmBudget,
+                  budgetLabelBuilder: (context, budget) =>
+                      context.l10n.messagingComposerByteCounter(
+                        budget.utf8Bytes,
+                        budget.maxUtf8Bytes,
+                      ),
                 ),
               ),
             ],
@@ -701,7 +690,6 @@ class _SessionInfoBarDelegate extends SliverPersistentHeaderDelegate {
   @override
   bool shouldRebuild(covariant _SessionInfoBarDelegate oldDelegate) =>
       session.sessionTag != oldDelegate.session.sessionTag ||
-      session.isPinned != oldDelegate.session.isPinned ||
       session.status != oldDelegate.session.status;
 }
 
@@ -758,7 +746,7 @@ class _SessionInfoBar extends ConsumerWidget {
             ),
           ),
 
-          // Expiry or pinned badge
+          // Expiry badge
           _buildStatusBadge(context, l10n),
         ],
       ),
@@ -766,34 +754,6 @@ class _SessionInfoBar extends ConsumerWidget {
   }
 
   Widget _buildStatusBadge(BuildContext context, dynamic l10n) {
-    if (session.isPinned) {
-      return Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppTheme.spacing6,
-          vertical: AppTheme.spacing2,
-        ),
-        decoration: BoxDecoration(
-          color: context.accentColor.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(AppTheme.radius6),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.push_pin, size: 12, color: context.accentColor),
-            const SizedBox(width: AppTheme.spacing4),
-            Text(
-              l10n.sipDmPinned,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-                color: context.accentColor,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
     final expiryText = l10n.sipDmExpiry(_formatTtl(session));
     return Container(
       padding: const EdgeInsets.symmetric(

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
+
 // lint-allow: scaffold — transient loader widgets, visible for milliseconds only
 import 'dart:async';
 import 'dart:convert';

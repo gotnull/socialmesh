@@ -1,0 +1,495 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
+
+import 'dart:io';
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
+
+import '../../core/l10n/l10n_extension.dart';
+import '../../core/safety/lifecycle_mixin.dart';
+import '../../core/theme.dart';
+import '../../core/widgets/animated_empty_state.dart';
+import '../../core/widgets/animations.dart';
+import '../../core/widgets/glass_scaffold.dart';
+import '../../core/widgets/info_table.dart';
+import '../../core/widgets/section_header.dart';
+import '../../providers/reticulum_providers.dart';
+import '../../services/protocol/reticulum/reticulum_capture_writer.dart';
+import '../../services/protocol/reticulum/reticulum_flags.dart';
+import '../../services/protocol/reticulum/reticulum_stats.dart';
+import '../../utils/snackbar.dart';
+import 'reticulum_replay_screen.dart';
+
+class ReticulumDiagnosticsScreen extends ConsumerStatefulWidget {
+  const ReticulumDiagnosticsScreen({super.key});
+
+  @override
+  ConsumerState<ReticulumDiagnosticsScreen> createState() =>
+      _ReticulumDiagnosticsScreenState();
+}
+
+class _ReticulumDiagnosticsScreenState
+    extends ConsumerState<ReticulumDiagnosticsScreen>
+    with LifecycleSafeMixin {
+  Future<void> _toggleCapture(bool value) async {
+    HapticFeedback.selectionClick();
+    await ref.read(reticulumFlagsProvider.notifier).setCaptureEnabled(value);
+  }
+
+  Future<void> _shareCaptures() async {
+    HapticFeedback.selectionClick();
+    final writer = ref.read(reticulumCaptureWriterProvider);
+    final files = await writer.listCaptureFiles();
+    if (!mounted) return;
+    if (files.isEmpty) {
+      showInfoSnackBar(context, context.l10n.reticulumDiagShareNoFiles);
+      return;
+    }
+    await Share.shareXFiles(
+      files.map((f) => XFile(f.path)).toList(growable: false),
+    );
+  }
+
+  void _openReplay() {
+    HapticFeedback.selectionClick();
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => const ReticulumReplayScreen()),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final flags = ref.watch(reticulumFlagsProvider);
+    final stats = ref.watch(reticulumStatsProvider);
+    final writer = ref.watch(reticulumCaptureWriterProvider);
+
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: GlassScaffold(
+        title: context.l10n.reticulumDiagTitle,
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing8),
+            sliver: SliverList.list(
+              children: [
+                _ExperimentalHeader(),
+                if (stats.totalFragments == 0)
+                  _EmptyState()
+                else
+                  _OverviewSection(stats: stats),
+                const SizedBox(height: AppTheme.spacing16),
+                _CaptureSection(
+                  flags: flags,
+                  writer: writer,
+                  onToggle: _toggleCapture,
+                  onShare: _shareCaptures,
+                ),
+                const SizedBox(height: AppTheme.spacing16),
+                _ReplaySection(onOpen: _openReplay),
+                const SizedBox(height: AppTheme.spacing24),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// -----------------------------------------------------------------------------
+
+class _ExperimentalHeader extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppTheme.spacing16,
+        AppTheme.spacing8,
+        AppTheme.spacing16,
+        AppTheme.spacing16,
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(AppTheme.spacing16),
+        decoration: BoxDecoration(
+          color: context.card,
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
+          border: Border.all(color: context.border),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spacing8,
+                vertical: AppTheme.spacing4,
+              ),
+              decoration: BoxDecoration(
+                color: AppTheme.warningYellow.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
+                border: Border.all(
+                  color: AppTheme.warningYellow.withValues(alpha: 0.4),
+                ),
+              ),
+              child: Text(
+                context.l10n.reticulumDiagExperimental,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.warningYellow,
+                  letterSpacing: 1.2,
+                ),
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacing12),
+            Text(
+              context.l10n.reticulumDiagDescription,
+              style: TextStyle(
+                fontSize: 13,
+                color: context.textSecondary,
+                height: 1.4,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// -----------------------------------------------------------------------------
+
+class _EmptyState extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing24),
+      child: AnimatedEmptyState(
+        config: AnimatedEmptyStateConfig(
+          icons: const [
+            Icons.podcasts,
+            Icons.lan_outlined,
+            Icons.hub_outlined,
+            Icons.router_outlined,
+            Icons.settings_input_antenna,
+          ],
+          taglines: [
+            context.l10n.reticulumDiagEmptyTagline1,
+            context.l10n.reticulumDiagEmptyTagline2,
+            context.l10n.reticulumDiagEmptyTagline3,
+          ],
+          titlePrefix: context.l10n.reticulumDiagEmptyTitlePrefix,
+          titleKeyword: context.l10n.reticulumDiagEmptyTitleKeyword,
+          titleSuffix: context.l10n.reticulumDiagEmptyTitleSuffix,
+        ),
+      ),
+    );
+  }
+}
+
+// -----------------------------------------------------------------------------
+
+class _OverviewSection extends StatelessWidget {
+  const _OverviewSection({required this.stats});
+  final ReticulumStats stats;
+
+  String _formatLastSeen(BuildContext context) {
+    final ms = stats.lastSeenMs;
+    if (ms == null) return context.l10n.reticulumDiagNeverSeen;
+    final dt = DateTime.fromMillisecondsSinceEpoch(ms).toLocal();
+    return dt.toIso8601String();
+  }
+
+  String _formatRate(double v) => v.toStringAsFixed(2);
+
+  String _formatBytes(double v) =>
+      '${v.toStringAsFixed(0)} B'; // lint-allow: hardcoded-string
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SectionTitle(title: context.l10n.reticulumDiagSectionOverview),
+          InfoTable(
+            rows: [
+              InfoTableRow(
+                label: context.l10n.reticulumDiagFragmentCount,
+                value: '${stats.totalFragments}',
+                icon: Icons.podcasts,
+              ),
+              InfoTableRow(
+                label: context.l10n.reticulumDiagLastSeen,
+                value: _formatLastSeen(context),
+                icon: Icons.schedule_outlined,
+              ),
+              InfoTableRow(
+                label: context.l10n.reticulumDiagDistinctSources,
+                value: '${stats.distinctSourceCount}',
+                icon: Icons.account_tree_outlined,
+              ),
+              InfoTableRow(
+                label: context.l10n.reticulumDiagAvgFragmentSize,
+                value: _formatBytes(stats.avgFragmentSize),
+                icon: Icons.straighten_outlined,
+              ),
+              InfoTableRow(
+                label: context.l10n.reticulumDiagFragmentsPerSecond,
+                value: _formatRate(stats.fragmentsPerSecond),
+                icon: Icons.speed_outlined,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// -----------------------------------------------------------------------------
+
+class _CaptureSection extends StatelessWidget {
+  const _CaptureSection({
+    required this.flags,
+    required this.writer,
+    required this.onToggle,
+    required this.onShare,
+  });
+
+  final ReticulumFlags flags;
+  final ReticulumCaptureWriter writer;
+  final ValueChanged<bool> onToggle;
+  final VoidCallback onShare;
+
+  @override
+  Widget build(BuildContext context) {
+    final activeFile = writer.currentFile;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionHeader(title: context.l10n.reticulumDiagSectionCapture),
+        _SettingsTile(
+          icon: Icons.fiber_manual_record_outlined,
+          iconColor: flags.captureEnabled ? context.accentColor : null,
+          title: context.l10n.reticulumDiagCaptureEnable,
+          subtitle: context.l10n.reticulumDiagCaptureEnableSubtitle,
+          trailing: ThemedSwitch(
+            value: flags.captureEnabled,
+            onChanged: onToggle,
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacing8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+          child: InfoTable(
+            rows: [
+              InfoTableRow(
+                label: context.l10n.reticulumDiagCaptureCurrentFile,
+                value: activeFile == null
+                    ? context.l10n.reticulumDiagCaptureNoActiveFile
+                    : _basename(activeFile),
+                icon: Icons.description_outlined,
+              ),
+              InfoTableRow(
+                label: context.l10n.reticulumDiagCaptureBytes,
+                value: '${writer.bytesInCurrentFile}',
+                icon: Icons.data_array,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacing12),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+          child: _GradientActionButton(
+            label: context.l10n.reticulumDiagShareCaptures,
+            icon: Icons.ios_share,
+            onPressed: onShare,
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _basename(File f) {
+    final segs = f.path.split(Platform.pathSeparator);
+    return segs.isEmpty ? f.path : segs.last;
+  }
+}
+
+// -----------------------------------------------------------------------------
+
+class _ReplaySection extends StatelessWidget {
+  const _ReplaySection({required this.onOpen});
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionHeader(title: context.l10n.reticulumDiagSectionReplay),
+        InkWell(
+          onTap: onOpen,
+          child: _SettingsTile(
+            icon: Icons.play_circle_outline,
+            title: context.l10n.reticulumDiagOpenReplay,
+            subtitle: context.l10n.reticulumDiagOpenReplaySubtitle,
+            trailing: Icon(Icons.chevron_right, color: context.textTertiary),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// -----------------------------------------------------------------------------
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.title});
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppTheme.spacing16,
+        AppTheme.spacing8,
+        AppTheme.spacing16,
+        AppTheme.spacing8,
+      ),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: context.textTertiary,
+          letterSpacing: 1.2,
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsTile extends StatelessWidget {
+  const _SettingsTile({
+    required this.icon,
+    this.iconColor,
+    required this.title,
+    required this.subtitle,
+    this.trailing,
+  });
+
+  final IconData icon;
+  final Color? iconColor;
+  final String title;
+  final String subtitle;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing16,
+        vertical: AppTheme.spacing2,
+      ),
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppTheme.spacing16,
+          vertical: AppTheme.spacing12,
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: iconColor ?? context.textSecondary),
+            const SizedBox(width: AppTheme.spacing16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: context.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: AppTheme.spacing2),
+                  Text(
+                    subtitle,
+                    style: context.bodySmallStyle?.copyWith(
+                      color: context.textTertiary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (trailing != null) trailing!,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _GradientActionButton extends StatelessWidget {
+  const _GradientActionButton({
+    required this.label,
+    required this.icon,
+    required this.onPressed,
+  });
+
+  final String label;
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(
+            vertical: AppTheme.spacing12,
+            horizontal: AppTheme.spacing16,
+          ),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                context.accentColor,
+                context.accentColor.withValues(alpha: 0.7),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: Colors.white, size: 20),
+              const SizedBox(width: AppTheme.spacing8),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
