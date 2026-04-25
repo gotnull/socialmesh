@@ -342,6 +342,33 @@ class WhatsNewRegistry {
         ),
       ],
     ),
+
+    // v1.36.0 — Device Shop introduction (gated behind DEVICE_SHOP_ENABLED)
+    if (AppFeatureFlags.isDeviceShopEnabled)
+      WhatsNewPayload(
+        version: '1.36.0',
+        headline: "What's New in Socialmesh",
+        subtitle: 'Version 1.36.0',
+        items: [
+          WhatsNewItem(
+            id: 'device_shop_intro',
+            title: 'Device Shop',
+            description:
+                'Browse Meshtastic-compatible hardware from official partners '
+                'and trusted sellers — all in one place. Filter by category, '
+                'sort by price or new arrivals, and tap through to the '
+                "seller's store to buy.\n\n"
+                "Purchases happen on the seller's site; Socialmesh never "
+                'handles payment, shipping, or returns. Find it in the '
+                'drawer menu under Tools.',
+            icon: Icons.storefront_outlined,
+            iconColor: Color(0xFF06B6D4), // AccentColors.cyan
+            deepLinkRoute: '/device-shop',
+            badgeKey: 'device_shop',
+            ctaLabel: 'Open Device Shop',
+          ),
+        ],
+      ),
   ];
 
   // ===========================================================================
@@ -493,6 +520,8 @@ class WhatsNewRegistry {
         return l10n.whatsNewVersion1270Subtitle;
       case '1.30.0':
         return l10n.whatsNewVersion1300Subtitle;
+      case '1.36.0':
+        return l10n.whatsNewVersion1360Subtitle;
       default:
         return null;
     }
@@ -546,6 +575,10 @@ class WhatsNewRegistry {
         title = l10n.whatsNewReactionGroupingTitle;
         description = l10n.whatsNewReactionGroupingDescription;
         ctaLabel = null;
+      case 'device_shop_intro':
+        title = l10n.whatsNewDeviceShopTitle;
+        description = l10n.whatsNewDeviceShopDescription;
+        ctaLabel = l10n.whatsNewCtaOpenDeviceShop;
       default:
         return i;
     }

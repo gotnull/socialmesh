@@ -62260,6 +62260,30 @@ abstract class AppLocalizations {
   /// **'Message reactions are now grouped by emoji — if five people send a thumbs-up, you see one compact chip instead of five. Long-press any reaction to see every sender.\n\nReactions also wrap to the next line instead of overflowing off-screen, keeping the conversation tidy.'**
   String get whatsNewReactionGroupingDescription;
 
+  /// Subtitle for the What's New popup for version 1.36.0.
+  ///
+  /// In en, this message translates to:
+  /// **'Version 1.36.0'**
+  String get whatsNewVersion1360Subtitle;
+
+  /// Title for the Device Shop feature in What's New.
+  ///
+  /// In en, this message translates to:
+  /// **'Device Shop'**
+  String get whatsNewDeviceShopTitle;
+
+  /// Description for the Device Shop feature in What's New.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse Meshtastic-compatible hardware from official partners and trusted sellers — all in one place. Filter by category, sort by price or new arrivals, and tap through to the seller\'s store to buy.\n\nPurchases happen on the seller\'s site; Socialmesh never handles payment, shipping, or returns. Find it in the drawer menu under Tools.'**
+  String get whatsNewDeviceShopDescription;
+
+  /// CTA button label to open the Device Shop screen from What's New.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Device Shop'**
+  String get whatsNewCtaOpenDeviceShop;
+
   /// Title for the mesh feed screen.
   ///
   /// In en, this message translates to:

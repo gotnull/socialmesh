@@ -474,6 +474,7 @@ class _MainShellState extends ConsumerState<MainShell> {
         screen: const DeviceShopScreen(),
         iconColor: AccentColors.cyan,
         requiresConnection: false,
+        whatsNewBadgeKey: 'device_shop',
       ),
     if (AppFeatureFlags.isFileTransferEnabled)
       DrawerMenuItem(

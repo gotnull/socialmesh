@@ -47501,6 +47501,22 @@
     "@whatsNewReactionGroupingDescription": {
         "description": "Description for the reaction grouping improvement in What's New."
     },
+    "whatsNewVersion1360Subtitle": "Version 1.36.0",
+    "@whatsNewVersion1360Subtitle": {
+        "description": "Subtitle for the What's New popup for version 1.36.0."
+    },
+    "whatsNewDeviceShopTitle": "Device Shop",
+    "@whatsNewDeviceShopTitle": {
+        "description": "Title for the Device Shop feature in What's New."
+    },
+    "whatsNewDeviceShopDescription": "Browse Meshtastic-compatible hardware from official partners and trusted sellers — all in one place. Filter by category, sort by price or new arrivals, and tap through to the seller's store to buy.\n\nPurchases happen on the seller's site; Socialmesh never handles payment, shipping, or returns. Find it in the drawer menu under Tools.",
+    "@whatsNewDeviceShopDescription": {
+        "description": "Description for the Device Shop feature in What's New."
+    },
+    "whatsNewCtaOpenDeviceShop": "Open Device Shop",
+    "@whatsNewCtaOpenDeviceShop": {
+        "description": "CTA button label to open the Device Shop screen from What's New."
+    },
 
     "meshFeedTitle": "Mesh Feed",
     "@meshFeedTitle": {
