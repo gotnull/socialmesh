@@ -49236,5 +49236,137 @@
     "reticulumDiagBufferedBytes": "Buffered bytes",
     "@reticulumDiagBufferedBytes": {
         "description": "Live gauge: total fragment-body bytes pinned in memory across all buffers."
+    },
+    "settingsReticulumBridgeTitle": "Reticulum Bridge",
+    "@settingsReticulumBridgeTitle": {
+        "description": "Search/settings tile title for the Reticulum TCP bridge configuration screen."
+    },
+    "settingsReticulumBridgeSubtitle": "Forward reassembled RNS frames to a local rnsd over TCP",
+    "@settingsReticulumBridgeSubtitle": {
+        "description": "Settings tile subtitle for the Reticulum TCP bridge."
+    },
+    "reticulumBridgeTitle": "Reticulum Bridge",
+    "@reticulumBridgeTitle": {
+        "description": "App-bar title of the Reticulum bridge configuration screen."
+    },
+    "reticulumBridgeDescription": "Forward reassembled RNS frames to a local rnsd over TCP. The bridge stays disconnected until reassembly is enabled.",
+    "@reticulumBridgeDescription": {
+        "description": "One-line description shown in the experimental header of the bridge screen."
+    },
+    "reticulumBridgeRequiresReassembly": "Enable reassembly first to start forwarding.",
+    "@reticulumBridgeRequiresReassembly": {
+        "description": "Banner shown when reassembly is off and the bridge cannot operate."
+    },
+    "reticulumBridgeSectionConnection": "CONNECTION",
+    "@reticulumBridgeSectionConnection": {
+        "description": "Section header for the bridge enable toggle and connection status."
+    },
+    "reticulumBridgeEnable": "Enable bridge",
+    "@reticulumBridgeEnable": {
+        "description": "Toggle label that switches the TCP bridge on or off."
+    },
+    "reticulumBridgeEnableSubtitle": "Open a TCP connection to rnsd while reassembly is on",
+    "@reticulumBridgeEnableSubtitle": {
+        "description": "Subtitle clarifying when the bridge will actually connect."
+    },
+    "reticulumBridgeStatusLabel": "Status",
+    "@reticulumBridgeStatusLabel": {
+        "description": "Row label for the current bridge connection state."
+    },
+    "reticulumBridgeStatusDisconnected": "Disconnected",
+    "@reticulumBridgeStatusDisconnected": {
+        "description": "Bridge status when no TCP connection is open."
+    },
+    "reticulumBridgeStatusConnecting": "Connecting…",
+    "@reticulumBridgeStatusConnecting": {
+        "description": "Bridge status while a TCP connect is in progress."
+    },
+    "reticulumBridgeStatusConnected": "Connected",
+    "@reticulumBridgeStatusConnected": {
+        "description": "Bridge status when a TCP connection is open and forwarding."
+    },
+    "reticulumBridgeStatusError": "Error",
+    "@reticulumBridgeStatusError": {
+        "description": "Bridge status when the most recent connect attempt failed."
+    },
+    "reticulumBridgeLastErrorLabel": "Last error",
+    "@reticulumBridgeLastErrorLabel": {
+        "description": "Row label for the message of the most recent connect / write failure."
+    },
+    "reticulumBridgeNoLastError": "—",
+    "@reticulumBridgeNoLastError": {
+        "description": "Placeholder shown for last error when none has occurred."
+    },
+    "reticulumBridgeSectionEndpoint": "ENDPOINT",
+    "@reticulumBridgeSectionEndpoint": {
+        "description": "Section header for the host and port input fields."
+    },
+    "reticulumBridgeHostLabel": "Host",
+    "@reticulumBridgeHostLabel": {
+        "description": "Input label for the rnsd host (IP or DNS name)."
+    },
+    "reticulumBridgeHostHint": "127.0.0.1",
+    "@reticulumBridgeHostHint": {
+        "description": "Placeholder for the host input field."
+    },
+    "reticulumBridgePortLabel": "Port",
+    "@reticulumBridgePortLabel": {
+        "description": "Input label for the rnsd TCP port."
+    },
+    "reticulumBridgePortHint": "4242",
+    "@reticulumBridgePortHint": {
+        "description": "Placeholder for the port input field."
+    },
+    "reticulumBridgeSaveAndConnect": "Save & connect",
+    "@reticulumBridgeSaveAndConnect": {
+        "description": "Bottom action button: persist host/port and enable the bridge."
+    },
+    "reticulumBridgeSectionCounters": "COUNTERS",
+    "@reticulumBridgeSectionCounters": {
+        "description": "Section header for forwarded / dropped / errored counters."
+    },
+    "reticulumBridgeForwarded": "Frames forwarded",
+    "@reticulumBridgeForwarded": {
+        "description": "Lifetime count of frames successfully written to rnsd."
+    },
+    "reticulumBridgeDroppedNoConnection": "Dropped — no connection",
+    "@reticulumBridgeDroppedNoConnection": {
+        "description": "Counter for frames dropped because the TCP socket was not connected."
+    },
+    "reticulumBridgeDroppedBackpressure": "Dropped — queue full",
+    "@reticulumBridgeDroppedBackpressure": {
+        "description": "Counter for frames dropped by the bounded outbound queue."
+    },
+    "reticulumBridgeDroppedFramingError": "Dropped — framing error",
+    "@reticulumBridgeDroppedFramingError": {
+        "description": "Counter for frames dropped because encode/write failed."
+    },
+    "reticulumBridgeConnectErrors": "Connect errors",
+    "@reticulumBridgeConnectErrors": {
+        "description": "Lifetime count of failed TCP connect attempts."
+    },
+    "reticulumBridgeQueueDepthLabel": "Queue depth",
+    "@reticulumBridgeQueueDepthLabel": {
+        "description": "Live gauge label for the outbound queue depth versus its capacity."
+    },
+    "reticulumBridgeDropPolicyLabel": "Drop policy",
+    "@reticulumBridgeDropPolicyLabel": {
+        "description": "Row label describing how the queue handles overflow."
+    },
+    "reticulumBridgeDropPolicyValue": "Drop newest when full",
+    "@reticulumBridgeDropPolicyValue": {
+        "description": "Documented overflow behavior of the bounded outbound queue."
+    },
+    "reticulumBridgeSectionUptime": "UPTIME",
+    "@reticulumBridgeSectionUptime": {
+        "description": "Section header for current-session and total-uptime gauges."
+    },
+    "reticulumBridgeCurrentSession": "Current session",
+    "@reticulumBridgeCurrentSession": {
+        "description": "Time the current TCP session has been connected; zero when not connected."
+    },
+    "reticulumBridgeTotalUptime": "Total uptime",
+    "@reticulumBridgeTotalUptime": {
+        "description": "Cumulative connected-time across all sessions in the lifetime of this provider."
     }
 }

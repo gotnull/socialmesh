@@ -36700,4 +36700,107 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reticulumDiagBufferedBytes => 'Buffered bytes';
+
+  @override
+  String get settingsReticulumBridgeTitle => 'Reticulum Bridge';
+
+  @override
+  String get settingsReticulumBridgeSubtitle =>
+      'Forward reassembled RNS frames to a local rnsd over TCP';
+
+  @override
+  String get reticulumBridgeTitle => 'Reticulum Bridge';
+
+  @override
+  String get reticulumBridgeDescription =>
+      'Forward reassembled RNS frames to a local rnsd over TCP. The bridge stays disconnected until reassembly is enabled.';
+
+  @override
+  String get reticulumBridgeRequiresReassembly =>
+      'Enable reassembly first to start forwarding.';
+
+  @override
+  String get reticulumBridgeSectionConnection => 'CONNECTION';
+
+  @override
+  String get reticulumBridgeEnable => 'Enable bridge';
+
+  @override
+  String get reticulumBridgeEnableSubtitle =>
+      'Open a TCP connection to rnsd while reassembly is on';
+
+  @override
+  String get reticulumBridgeStatusLabel => 'Status';
+
+  @override
+  String get reticulumBridgeStatusDisconnected => 'Disconnected';
+
+  @override
+  String get reticulumBridgeStatusConnecting => 'Connecting…';
+
+  @override
+  String get reticulumBridgeStatusConnected => 'Connected';
+
+  @override
+  String get reticulumBridgeStatusError => 'Error';
+
+  @override
+  String get reticulumBridgeLastErrorLabel => 'Last error';
+
+  @override
+  String get reticulumBridgeNoLastError => '—';
+
+  @override
+  String get reticulumBridgeSectionEndpoint => 'ENDPOINT';
+
+  @override
+  String get reticulumBridgeHostLabel => 'Host';
+
+  @override
+  String get reticulumBridgeHostHint => '127.0.0.1';
+
+  @override
+  String get reticulumBridgePortLabel => 'Port';
+
+  @override
+  String get reticulumBridgePortHint => '4242';
+
+  @override
+  String get reticulumBridgeSaveAndConnect => 'Save & connect';
+
+  @override
+  String get reticulumBridgeSectionCounters => 'COUNTERS';
+
+  @override
+  String get reticulumBridgeForwarded => 'Frames forwarded';
+
+  @override
+  String get reticulumBridgeDroppedNoConnection => 'Dropped — no connection';
+
+  @override
+  String get reticulumBridgeDroppedBackpressure => 'Dropped — queue full';
+
+  @override
+  String get reticulumBridgeDroppedFramingError => 'Dropped — framing error';
+
+  @override
+  String get reticulumBridgeConnectErrors => 'Connect errors';
+
+  @override
+  String get reticulumBridgeQueueDepthLabel => 'Queue depth';
+
+  @override
+  String get reticulumBridgeDropPolicyLabel => 'Drop policy';
+
+  @override
+  String get reticulumBridgeDropPolicyValue => 'Drop newest when full';
+
+  @override
+  String get reticulumBridgeSectionUptime => 'UPTIME';
+
+  @override
+  String get reticulumBridgeCurrentSession => 'Current session';
+
+  @override
+  String get reticulumBridgeTotalUptime => 'Total uptime';
 }

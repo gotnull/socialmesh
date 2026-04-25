@@ -13,6 +13,7 @@
 
 import 'dart:async';
 import 'dart:collection';
+import 'dart:io' show Socket;
 import 'dart:math' as math;
 import 'dart:typed_data';
 
@@ -97,6 +98,58 @@ abstract class BridgeSocket {
 
 typedef BridgeSocketFactory =
     Future<BridgeSocket> Function(String host, int port);
+
+/// Production socket factory backed by `dart:io` `Socket.connect`.
+/// The provider layer wires this in by default; tests inject fakes.
+Future<BridgeSocket> defaultBridgeSocketFactory(String host, int port) async {
+  final socket = await Socket.connect(host, port);
+  return _RealBridgeSocket(socket);
+}
+
+class _RealBridgeSocket implements BridgeSocket {
+  _RealBridgeSocket(this._socket) {
+    _sub = _socket.listen(
+      _ignoreInbound,
+      onError: (_) => _markDone(),
+      onDone: _markDone,
+      cancelOnError: true,
+    );
+  }
+
+  final Socket _socket;
+  final Completer<void> _doneCompleter = Completer<void>();
+  StreamSubscription<List<int>>? _sub;
+
+  static void _ignoreInbound(List<int> _) {
+    // We are write-only for v1 (forward Reticulum frames into rnsd).
+    // Discarding inbound bytes here is intentional. Future bidirectional
+    // support would surface this stream to the caller.
+  }
+
+  void _markDone() {
+    if (!_doneCompleter.isCompleted) _doneCompleter.complete();
+  }
+
+  @override
+  Future<void> write(List<int> bytes) async {
+    _socket.add(bytes);
+    await _socket.flush();
+  }
+
+  @override
+  Future<void> close() async {
+    await _sub?.cancel();
+    _sub = null;
+    try {
+      await _socket.close();
+    } finally {
+      _markDone();
+    }
+  }
+
+  @override
+  Future<void> get done => _doneCompleter.future;
+}
 
 class ReticulumBridgeService {
   ReticulumBridgeService({
@@ -207,6 +260,7 @@ class ReticulumBridgeService {
     if (_disposed) return false;
     if (_status.kind != ReticulumBridgeStatusKind.connected) {
       _counters = _counters._add(droppedNoConnection: 1);
+      _emitChange();
       return false;
     }
     // Capacity covers queue + the one frame currently being written
@@ -218,6 +272,7 @@ class ReticulumBridgeService {
       // Drop-newest: preserve order of in-flight frames so the peer
       // sees a coherent prefix of the original stream.
       _counters = _counters._add(droppedBackpressure: 1);
+      _emitChange();
       return false;
     }
     _queue.add(body);
@@ -357,13 +412,16 @@ class ReticulumBridgeService {
           // but if it ever does we mark it as a framing error rather
           // than silently dropping.
           _counters = _counters._add(droppedFramingError: 1);
+          _emitChange();
           continue;
         }
         try {
           await _socket!.write(wire);
           _counters = _counters._add(forwarded: 1);
+          _emitChange();
         } catch (e) {
           _counters = _counters._add(droppedFramingError: 1);
+          _emitChange();
           // Write errors mean the socket is dead; tear down and let
           // auto-reconnect take over.
           await _teardownAfterWriteError(e.toString());
@@ -405,5 +463,14 @@ class ReticulumBridgeService {
     if (_disposed) return;
     _status = next;
     _statusController.add(next);
+  }
+
+  /// Re-emits the current status so any listener that mirrors live
+  /// service state (counters, queue depth, uptime) gets a refresh
+  /// without needing to wait for a status transition or a periodic
+  /// poll. Called after every counter mutation.
+  void _emitChange() {
+    if (_disposed) return;
+    _statusController.add(_status);
   }
 }

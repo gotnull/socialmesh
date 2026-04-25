@@ -64653,6 +64653,204 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Buffered bytes'**
   String get reticulumDiagBufferedBytes;
+
+  /// Search/settings tile title for the Reticulum TCP bridge configuration screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Reticulum Bridge'**
+  String get settingsReticulumBridgeTitle;
+
+  /// Settings tile subtitle for the Reticulum TCP bridge.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward reassembled RNS frames to a local rnsd over TCP'**
+  String get settingsReticulumBridgeSubtitle;
+
+  /// App-bar title of the Reticulum bridge configuration screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Reticulum Bridge'**
+  String get reticulumBridgeTitle;
+
+  /// One-line description shown in the experimental header of the bridge screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward reassembled RNS frames to a local rnsd over TCP. The bridge stays disconnected until reassembly is enabled.'**
+  String get reticulumBridgeDescription;
+
+  /// Banner shown when reassembly is off and the bridge cannot operate.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable reassembly first to start forwarding.'**
+  String get reticulumBridgeRequiresReassembly;
+
+  /// Section header for the bridge enable toggle and connection status.
+  ///
+  /// In en, this message translates to:
+  /// **'CONNECTION'**
+  String get reticulumBridgeSectionConnection;
+
+  /// Toggle label that switches the TCP bridge on or off.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable bridge'**
+  String get reticulumBridgeEnable;
+
+  /// Subtitle clarifying when the bridge will actually connect.
+  ///
+  /// In en, this message translates to:
+  /// **'Open a TCP connection to rnsd while reassembly is on'**
+  String get reticulumBridgeEnableSubtitle;
+
+  /// Row label for the current bridge connection state.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get reticulumBridgeStatusLabel;
+
+  /// Bridge status when no TCP connection is open.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnected'**
+  String get reticulumBridgeStatusDisconnected;
+
+  /// Bridge status while a TCP connect is in progress.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting…'**
+  String get reticulumBridgeStatusConnecting;
+
+  /// Bridge status when a TCP connection is open and forwarding.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get reticulumBridgeStatusConnected;
+
+  /// Bridge status when the most recent connect attempt failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get reticulumBridgeStatusError;
+
+  /// Row label for the message of the most recent connect / write failure.
+  ///
+  /// In en, this message translates to:
+  /// **'Last error'**
+  String get reticulumBridgeLastErrorLabel;
+
+  /// Placeholder shown for last error when none has occurred.
+  ///
+  /// In en, this message translates to:
+  /// **'—'**
+  String get reticulumBridgeNoLastError;
+
+  /// Section header for the host and port input fields.
+  ///
+  /// In en, this message translates to:
+  /// **'ENDPOINT'**
+  String get reticulumBridgeSectionEndpoint;
+
+  /// Input label for the rnsd host (IP or DNS name).
+  ///
+  /// In en, this message translates to:
+  /// **'Host'**
+  String get reticulumBridgeHostLabel;
+
+  /// Placeholder for the host input field.
+  ///
+  /// In en, this message translates to:
+  /// **'127.0.0.1'**
+  String get reticulumBridgeHostHint;
+
+  /// Input label for the rnsd TCP port.
+  ///
+  /// In en, this message translates to:
+  /// **'Port'**
+  String get reticulumBridgePortLabel;
+
+  /// Placeholder for the port input field.
+  ///
+  /// In en, this message translates to:
+  /// **'4242'**
+  String get reticulumBridgePortHint;
+
+  /// Bottom action button: persist host/port and enable the bridge.
+  ///
+  /// In en, this message translates to:
+  /// **'Save & connect'**
+  String get reticulumBridgeSaveAndConnect;
+
+  /// Section header for forwarded / dropped / errored counters.
+  ///
+  /// In en, this message translates to:
+  /// **'COUNTERS'**
+  String get reticulumBridgeSectionCounters;
+
+  /// Lifetime count of frames successfully written to rnsd.
+  ///
+  /// In en, this message translates to:
+  /// **'Frames forwarded'**
+  String get reticulumBridgeForwarded;
+
+  /// Counter for frames dropped because the TCP socket was not connected.
+  ///
+  /// In en, this message translates to:
+  /// **'Dropped — no connection'**
+  String get reticulumBridgeDroppedNoConnection;
+
+  /// Counter for frames dropped by the bounded outbound queue.
+  ///
+  /// In en, this message translates to:
+  /// **'Dropped — queue full'**
+  String get reticulumBridgeDroppedBackpressure;
+
+  /// Counter for frames dropped because encode/write failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Dropped — framing error'**
+  String get reticulumBridgeDroppedFramingError;
+
+  /// Lifetime count of failed TCP connect attempts.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect errors'**
+  String get reticulumBridgeConnectErrors;
+
+  /// Live gauge label for the outbound queue depth versus its capacity.
+  ///
+  /// In en, this message translates to:
+  /// **'Queue depth'**
+  String get reticulumBridgeQueueDepthLabel;
+
+  /// Row label describing how the queue handles overflow.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop policy'**
+  String get reticulumBridgeDropPolicyLabel;
+
+  /// Documented overflow behavior of the bounded outbound queue.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop newest when full'**
+  String get reticulumBridgeDropPolicyValue;
+
+  /// Section header for current-session and total-uptime gauges.
+  ///
+  /// In en, this message translates to:
+  /// **'UPTIME'**
+  String get reticulumBridgeSectionUptime;
+
+  /// Time the current TCP session has been connected; zero when not connected.
+  ///
+  /// In en, this message translates to:
+  /// **'Current session'**
+  String get reticulumBridgeCurrentSession;
+
+  /// Cumulative connected-time across all sessions in the lifetime of this provider.
+  ///
+  /// In en, this message translates to:
+  /// **'Total uptime'**
+  String get reticulumBridgeTotalUptime;
 }
 
 class _AppLocalizationsDelegate
