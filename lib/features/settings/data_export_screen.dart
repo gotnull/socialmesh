@@ -1,13 +1,19 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:convert';
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/theme.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../services/backup/device_config_bundle.dart';
+import '../../services/backup/device_config_backup_service.dart';
 import '../../utils/share_utils.dart';
 import '../../utils/snackbar.dart';
 import '../../models/mesh_models.dart';
@@ -15,6 +21,7 @@ import '../../providers/app_providers.dart';
 import '../../providers/telemetry_providers.dart';
 import '../automations/automation_providers.dart';
 import '../../core/widgets/loading_indicator.dart';
+import 'widgets/device_config_restore_sheet.dart';
 
 class DataExportScreen extends ConsumerStatefulWidget {
   const DataExportScreen({super.key});
@@ -185,6 +192,42 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
                         'traceroutes',
                         context.l10n.dataExportClearTracerouteData,
                       ),
+                    ),
+                  ],
+                ),
+              ),
+
+              SizedBox(height: AppTheme.spacing24),
+
+              // Device Configuration
+              _buildSectionHeader(context.l10n.dataExportSectionDeviceConfig),
+              Container(
+                decoration: BoxDecoration(
+                  color: context.card,
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
+                  border: Border.all(color: context.border),
+                ),
+                child: Column(
+                  children: [
+                    _buildExportTile(
+                      icon: Icons.settings_backup_restore,
+                      title: context.l10n.dataExportDeviceConfigBackupTitle,
+                      subtitle:
+                          context.l10n.dataExportDeviceConfigBackupSubtitle,
+                      format: context.l10n.dataExportDeviceConfigFormatJson,
+                      type: 'device_config_backup',
+                      onExport: _exportDeviceConfig,
+                      onClear: null,
+                    ),
+                    _buildDivider(),
+                    _buildRestoreTile(
+                      icon: Icons.restore,
+                      title: context.l10n.dataExportDeviceConfigRestoreTitle,
+                      subtitle:
+                          context.l10n.dataExportDeviceConfigRestoreSubtitle,
+                      format: context.l10n.dataExportDeviceConfigFormatImport,
+                      type: 'device_config_restore',
+                      onRestore: _restoreDeviceConfig,
                     ),
                   ],
                 ),
@@ -518,6 +561,87 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
     );
   }
 
+  Widget _buildRestoreTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required String format,
+    required String type,
+    required Future<void> Function() onRestore,
+  }) {
+    final isWorking = _exportingTypes.contains(type);
+
+    return Padding(
+      padding: const EdgeInsets.all(AppTheme.spacing16),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: context.accentColor.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
+            ),
+            child: Icon(icon, color: context.accentColor, size: 22),
+          ),
+          SizedBox(width: AppTheme.spacing14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: context.textPrimary,
+                  ),
+                ),
+                SizedBox(height: AppTheme.spacing2),
+                Text(
+                  subtitle,
+                  style: context.bodySmallStyle?.copyWith(
+                    color: context.textTertiary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: context.background,
+              borderRadius: BorderRadius.circular(AppTheme.radius6),
+            ),
+            child: Text(
+              format,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: context.textTertiary,
+              ),
+            ),
+          ),
+          SizedBox(width: AppTheme.spacing4),
+          if (isWorking)
+            LoadingIndicator(size: 20)
+          else
+            IconButton(
+              icon: Icon(
+                Icons.file_upload_outlined,
+                color: context.accentColor,
+                size: 20,
+              ),
+              onPressed: () => _handleExport(type, onRestore),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              tooltip: context.l10n.dataExportDeviceConfigRestoreTitle,
+            ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _handleExport(
     String type,
     Future<void> Function() exportFn,
@@ -693,6 +817,144 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
       safeSetState(() {
         _clearingTypes.clear();
       });
+    }
+  }
+
+  Future<void> _exportDeviceConfig() async {
+    final l10n = context.l10n;
+    final protocol = ref.read(protocolServiceProvider);
+    final backupService = ref.read(deviceConfigBackupServiceProvider);
+
+    if (protocol.myNodeNum == null) {
+      showErrorSnackBar(context, l10n.dataExportDeviceConfigBackupNotConnected);
+      return;
+    }
+
+    final confirmed = await AppBottomSheet.showConfirm(
+      context: context,
+      title: l10n.dataExportDeviceConfigBackupWarningTitle,
+      message: l10n.dataExportDeviceConfigBackupWarningBody,
+      confirmLabel: l10n.dataExportDeviceConfigBackupContinueBtn,
+      cancelLabel: l10n.dataExportDeviceConfigBackupCancelBtn,
+    );
+    if (confirmed != true || !mounted) return;
+
+    final box = context.findRenderObject() as RenderBox?;
+    final sharePositionOrigin = box != null
+        ? box.localToGlobal(Offset.zero) & box.size
+        : const Rect.fromLTWH(0, 0, 100, 100);
+    final safePosition = getSafeSharePosition(context, sharePositionOrigin);
+
+    try {
+      final capture = await backupService.capture();
+      if (!mounted) return;
+
+      final bundle = capture.bundle;
+      final json = bundle.encode();
+      final filename = bundle.suggestedFilename();
+
+      final tempDir = await getTemporaryDirectory();
+      if (!mounted) return;
+      final file = File('${tempDir.path}/$filename');
+      await file.writeAsString(json);
+      if (!mounted) return;
+
+      await Share.shareXFiles(
+        [XFile(file.path, mimeType: 'application/json')],
+        subject: l10n.dataExportDeviceConfigBackupShareSubject,
+        sharePositionOrigin: safePosition,
+      );
+
+      if (!mounted) return;
+      if (capture.missingSections.isNotEmpty) {
+        showInfoSnackBar(
+          context,
+          l10n.dataExportDeviceConfigBackupPartial(
+            capture.missingSections.length,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      showErrorSnackBar(
+        context,
+        l10n.dataExportDeviceConfigBackupFailed(e.toString()),
+      );
+    }
+  }
+
+  Future<void> _restoreDeviceConfig() async {
+    final l10n = context.l10n;
+    final protocol = ref.read(protocolServiceProvider);
+    final backupService = ref.read(deviceConfigBackupServiceProvider);
+
+    if (protocol.myNodeNum == null) {
+      showErrorSnackBar(
+        context,
+        l10n.dataExportDeviceConfigRestoreNotConnected,
+      );
+      return;
+    }
+
+    final pickResult = await FilePicker.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['json'],
+      withData: true,
+    );
+    if (pickResult == null || pickResult.files.isEmpty) return;
+    if (!mounted) return;
+
+    final picked = pickResult.files.first;
+    final bytes = picked.bytes;
+    if (bytes == null) {
+      showErrorSnackBar(context, l10n.dataExportDeviceConfigRestoreInvalidFile);
+      return;
+    }
+
+    DeviceConfigBundle bundle;
+    try {
+      bundle = DeviceConfigBundle.decode(utf8.decode(bytes));
+    } catch (_) {
+      if (!mounted) return;
+      showErrorSnackBar(context, l10n.dataExportDeviceConfigRestoreInvalidFile);
+      return;
+    }
+
+    if (bundle.isEmpty) {
+      showInfoSnackBar(context, l10n.dataExportDeviceConfigRestoreEmpty);
+      return;
+    }
+
+    final report = await AppBottomSheet.showScrollable<RestoreReport>(
+      context: context,
+      initialChildSize: 0.85,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      builder: (controller) => DeviceConfigRestoreSheet(
+        bundle: bundle,
+        connectedNodeNum: protocol.myNodeNum,
+        scrollController: controller,
+        onRestore: (selection) => backupService.restore(bundle, selection),
+      ),
+    );
+
+    if (!mounted || report == null) return;
+
+    final total = report.appliedCount + report.failed.length;
+    if (report.hasFailures) {
+      showErrorSnackBar(
+        context,
+        l10n.dataExportDeviceConfigRestoreSummaryWithFailures(
+          report.appliedCount,
+          total,
+          report.failed.length,
+        ),
+      );
+    } else {
+      showSuccessSnackBar(
+        context,
+        l10n.dataExportDeviceConfigRestoreSummary(report.appliedCount, total),
+      );
     }
   }
 
