@@ -35106,6 +35106,22 @@
     "@dataExportSnrNotAvailable": {
         "description": "UI text: data export snr not available"
     },
+    "dataExportCompleteWarningTitle": "Save your export safely",
+    "@dataExportCompleteWarningTitle": {
+        "description": "Title of the privacy warning before complete export"
+    },
+    "dataExportCompleteWarningBody": "This file contains every direct message you've sent and received, all node positions, and the full node list. Anyone with the file can read your messages and see where you've been. Save it to a secure location.",
+    "@dataExportCompleteWarningBody": {
+        "description": "Body of the privacy warning before complete export"
+    },
+    "dataExportCompleteWarningContinueBtn": "Export everything",
+    "@dataExportCompleteWarningContinueBtn": {
+        "description": "Confirm button on the complete-export privacy warning"
+    },
+    "dataExportCompleteWarningCancelBtn": "Cancel",
+    "@dataExportCompleteWarningCancelBtn": {
+        "description": "Cancel button on the complete-export privacy warning"
+    },
     "dataExportSectionDeviceConfig": "Device Configuration",
     "@dataExportSectionDeviceConfig": {
         "description": "Section header for device config backup tiles on the Export Data screen"

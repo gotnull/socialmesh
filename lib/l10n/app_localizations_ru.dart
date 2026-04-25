@@ -25781,6 +25781,19 @@ class AppLocalizationsRu extends AppLocalizations {
   String get dataExportSnrNotAvailable => 'N/A';
 
   @override
+  String get dataExportCompleteWarningTitle => 'Save your export safely';
+
+  @override
+  String get dataExportCompleteWarningBody =>
+      'This file contains every direct message you\'ve sent and received, all node positions, and the full node list. Anyone with the file can read your messages and see where you\'ve been. Save it to a secure location.';
+
+  @override
+  String get dataExportCompleteWarningContinueBtn => 'Export everything';
+
+  @override
+  String get dataExportCompleteWarningCancelBtn => 'Cancel';
+
+  @override
   String get dataExportSectionDeviceConfig => 'Device Configuration';
 
   @override

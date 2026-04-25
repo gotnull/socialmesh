@@ -45666,6 +45666,30 @@ abstract class AppLocalizations {
   /// **'N/A'**
   String get dataExportSnrNotAvailable;
 
+  /// Title of the privacy warning before complete export
+  ///
+  /// In en, this message translates to:
+  /// **'Save your export safely'**
+  String get dataExportCompleteWarningTitle;
+
+  /// Body of the privacy warning before complete export
+  ///
+  /// In en, this message translates to:
+  /// **'This file contains every direct message you\'ve sent and received, all node positions, and the full node list. Anyone with the file can read your messages and see where you\'ve been. Save it to a secure location.'**
+  String get dataExportCompleteWarningBody;
+
+  /// Confirm button on the complete-export privacy warning
+  ///
+  /// In en, this message translates to:
+  /// **'Export everything'**
+  String get dataExportCompleteWarningContinueBtn;
+
+  /// Cancel button on the complete-export privacy warning
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get dataExportCompleteWarningCancelBtn;
+
   /// Section header for device config backup tiles on the Export Data screen
   ///
   /// In en, this message translates to:
