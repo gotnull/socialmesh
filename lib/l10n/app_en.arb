@@ -49424,5 +49424,156 @@
     "reticulumBridgeCopiedSnack": "Diagnostics copied to clipboard",
     "@reticulumBridgeCopiedSnack": {
         "description": "Snackbar shown after the diagnostics blob is copied."
+    },
+    "settingsRnsCompanionTitle": "RNS Services (Companion)",
+    "@settingsRnsCompanionTitle": {
+        "description": "Settings tile title for the local RNS companion services screen."
+    },
+    "settingsRnsCompanionSubtitle": "Browse RNS / NomadNet content via the local companion service",
+    "@settingsRnsCompanionSubtitle": {
+        "description": "Settings tile subtitle for the local RNS companion."
+    },
+    "rnsCompanionServicesTitle": "RNS Services",
+    "@rnsCompanionServicesTitle": {
+        "description": "App-bar title of the companion-services list screen."
+    },
+    "rnsCompanionPagesTitle": "Pages",
+    "@rnsCompanionPagesTitle": {
+        "description": "App-bar title of the per-service pages list screen."
+    },
+    "rnsCompanionReaderTitle": "Page",
+    "@rnsCompanionReaderTitle": {
+        "description": "App-bar title of the page-body reader screen."
+    },
+    "rnsCompanionConnectionHint": "Requires rns_companion running on your computer at the configured URL.",
+    "@rnsCompanionConnectionHint": {
+        "description": "Connection hint shown above the services list explaining the local companion requirement."
+    },
+    "rnsCompanionExperimental": "Experimental",
+    "@rnsCompanionExperimental": {
+        "description": "Pill label marking the companion screens as experimental."
+    },
+    "rnsCompanionEmptyTitle": "No services",
+    "@rnsCompanionEmptyTitle": {
+        "description": "Empty-state heading when the companion returns zero services."
+    },
+    "rnsCompanionEmptyHint": "The companion is reachable but has no services yet.",
+    "@rnsCompanionEmptyHint": {
+        "description": "Empty-state body explaining the companion has no services to show."
+    },
+    "rnsCompanionEmptyTagline1": "browse",
+    "@rnsCompanionEmptyTagline1": {
+        "description": "Empty-state animated tagline word 1."
+    },
+    "rnsCompanionEmptyTagline2": "discover",
+    "@rnsCompanionEmptyTagline2": {
+        "description": "Empty-state animated tagline word 2."
+    },
+    "rnsCompanionEmptyTagline3": "read",
+    "@rnsCompanionEmptyTagline3": {
+        "description": "Empty-state animated tagline word 3."
+    },
+    "rnsCompanionEmptyAction": "Reload",
+    "@rnsCompanionEmptyAction": {
+        "description": "Empty-state action button label."
+    },
+    "rnsCompanionPagesEmpty": "This service has no pages yet.",
+    "@rnsCompanionPagesEmpty": {
+        "description": "Empty state when a service exposes zero pages."
+    },
+    "rnsCompanionRetry": "Retry",
+    "@rnsCompanionRetry": {
+        "description": "Retry button label shown on error states."
+    },
+    "rnsCompanionServiceDestinationLabel": "Destination",
+    "@rnsCompanionServiceDestinationLabel": {
+        "description": "Row label for an RNS service's destination hash."
+    },
+    "rnsCompanionServiceTypeLabel": "Type",
+    "@rnsCompanionServiceTypeLabel": {
+        "description": "Row label for an RNS service's category."
+    },
+    "rnsCompanionServiceLastSeenLabel": "Last seen",
+    "@rnsCompanionServiceLastSeenLabel": {
+        "description": "Row label for an RNS service's last-seen timestamp."
+    },
+    "rnsCompanionPageUpdatedLabel": "Updated",
+    "@rnsCompanionPageUpdatedLabel": {
+        "description": "Row label for a page's last-updated timestamp."
+    },
+    "rnsCompanionErrorConnection": "Cannot reach companion. Is the service running on your computer?",
+    "@rnsCompanionErrorConnection": {
+        "description": "Friendly text shown when the companion is unreachable."
+    },
+    "rnsCompanionErrorTimeout": "Companion took too long to respond.",
+    "@rnsCompanionErrorTimeout": {
+        "description": "Friendly text shown when the companion times out."
+    },
+    "rnsCompanionErrorParse": "Companion sent a response we couldn't read.",
+    "@rnsCompanionErrorParse": {
+        "description": "Friendly text shown when JSON decode or model parse fails."
+    },
+    "rnsCompanionErrorNotFound": "Not found.",
+    "@rnsCompanionErrorNotFound": {
+        "description": "Friendly text shown when a service or page returns 404."
+    },
+    "rnsCompanionErrorGeneric": "Something went wrong talking to the companion.",
+    "@rnsCompanionErrorGeneric": {
+        "description": "Catch-all error text for unexpected companion failures."
+    },
+    "rnsCompanionSettingsTitle": "Companion Settings",
+    "@rnsCompanionSettingsTitle": {
+        "description": "App-bar title for the companion endpoint settings screen."
+    },
+    "rnsCompanionSettingsSectionEndpoint": "ENDPOINT",
+    "@rnsCompanionSettingsSectionEndpoint": {
+        "description": "Section header above the host/port fields."
+    },
+    "rnsCompanionSettingsHostLabel": "Host",
+    "@rnsCompanionSettingsHostLabel": {
+        "description": "Label for the host input."
+    },
+    "rnsCompanionSettingsHostHint": "laptop IP or hostname",
+    "@rnsCompanionSettingsHostHint": {
+        "description": "Placeholder for the host input. Avoid embedding the literal loopback IP — the codebase audit forbids hardcoded 127.0.0.1 in source, including ARB-derived generated files."
+    },
+    "rnsCompanionSettingsPortLabel": "Port",
+    "@rnsCompanionSettingsPortLabel": {
+        "description": "Label for the port input."
+    },
+    "rnsCompanionSettingsPortHint": "8787",
+    "@rnsCompanionSettingsPortHint": {
+        "description": "Placeholder for the port input."
+    },
+    "rnsCompanionSettingsSave": "Save",
+    "@rnsCompanionSettingsSave": {
+        "description": "Save button label on the companion settings screen."
+    },
+    "rnsCompanionSettingsSavedSnack": "Companion endpoint saved",
+    "@rnsCompanionSettingsSavedSnack": {
+        "description": "Snackbar shown after saving the companion endpoint."
+    },
+    "rnsCompanionSettingsHint": "Tip: bind your companion server to 0.0.0.0 so the phone can reach it on your LAN.",
+    "@rnsCompanionSettingsHint": {
+        "description": "Hint text shown above the fields explaining LAN reachability."
+    },
+    "rnsCompanionStatusChecking": "Checking…",
+    "@rnsCompanionStatusChecking": {
+        "description": "Status-pill text shown while the /health probe is in flight."
+    },
+    "rnsCompanionStatusConnected": "Connected",
+    "@rnsCompanionStatusConnected": {
+        "description": "Status-pill text when the companion responds to /health."
+    },
+    "rnsCompanionStatusConnectedWithVersion": "Connected · v{version}",
+    "@rnsCompanionStatusConnectedWithVersion": {
+        "description": "Status-pill text including the companion's reported version.",
+        "placeholders": {
+            "version": {"type": "String", "example": "0.1"}
+        }
+    },
+    "rnsCompanionStatusUnreachable": "Unreachable",
+    "@rnsCompanionStatusUnreachable": {
+        "description": "Status-pill text when /health fails."
     }
 }

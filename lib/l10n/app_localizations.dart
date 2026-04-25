@@ -64935,6 +64935,228 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Diagnostics copied to clipboard'**
   String get reticulumBridgeCopiedSnack;
+
+  /// Settings tile title for the local RNS companion services screen.
+  ///
+  /// In en, this message translates to:
+  /// **'RNS Services (Companion)'**
+  String get settingsRnsCompanionTitle;
+
+  /// Settings tile subtitle for the local RNS companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse RNS / NomadNet content via the local companion service'**
+  String get settingsRnsCompanionSubtitle;
+
+  /// App-bar title of the companion-services list screen.
+  ///
+  /// In en, this message translates to:
+  /// **'RNS Services'**
+  String get rnsCompanionServicesTitle;
+
+  /// App-bar title of the per-service pages list screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Pages'**
+  String get rnsCompanionPagesTitle;
+
+  /// App-bar title of the page-body reader screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Page'**
+  String get rnsCompanionReaderTitle;
+
+  /// Connection hint shown above the services list explaining the local companion requirement.
+  ///
+  /// In en, this message translates to:
+  /// **'Requires rns_companion running on your computer at the configured URL.'**
+  String get rnsCompanionConnectionHint;
+
+  /// Pill label marking the companion screens as experimental.
+  ///
+  /// In en, this message translates to:
+  /// **'Experimental'**
+  String get rnsCompanionExperimental;
+
+  /// Empty-state heading when the companion returns zero services.
+  ///
+  /// In en, this message translates to:
+  /// **'No services'**
+  String get rnsCompanionEmptyTitle;
+
+  /// Empty-state body explaining the companion has no services to show.
+  ///
+  /// In en, this message translates to:
+  /// **'The companion is reachable but has no services yet.'**
+  String get rnsCompanionEmptyHint;
+
+  /// Empty-state animated tagline word 1.
+  ///
+  /// In en, this message translates to:
+  /// **'browse'**
+  String get rnsCompanionEmptyTagline1;
+
+  /// Empty-state animated tagline word 2.
+  ///
+  /// In en, this message translates to:
+  /// **'discover'**
+  String get rnsCompanionEmptyTagline2;
+
+  /// Empty-state animated tagline word 3.
+  ///
+  /// In en, this message translates to:
+  /// **'read'**
+  String get rnsCompanionEmptyTagline3;
+
+  /// Empty-state action button label.
+  ///
+  /// In en, this message translates to:
+  /// **'Reload'**
+  String get rnsCompanionEmptyAction;
+
+  /// Empty state when a service exposes zero pages.
+  ///
+  /// In en, this message translates to:
+  /// **'This service has no pages yet.'**
+  String get rnsCompanionPagesEmpty;
+
+  /// Retry button label shown on error states.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get rnsCompanionRetry;
+
+  /// Row label for an RNS service's destination hash.
+  ///
+  /// In en, this message translates to:
+  /// **'Destination'**
+  String get rnsCompanionServiceDestinationLabel;
+
+  /// Row label for an RNS service's category.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get rnsCompanionServiceTypeLabel;
+
+  /// Row label for an RNS service's last-seen timestamp.
+  ///
+  /// In en, this message translates to:
+  /// **'Last seen'**
+  String get rnsCompanionServiceLastSeenLabel;
+
+  /// Row label for a page's last-updated timestamp.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated'**
+  String get rnsCompanionPageUpdatedLabel;
+
+  /// Friendly text shown when the companion is unreachable.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot reach companion. Is the service running on your computer?'**
+  String get rnsCompanionErrorConnection;
+
+  /// Friendly text shown when the companion times out.
+  ///
+  /// In en, this message translates to:
+  /// **'Companion took too long to respond.'**
+  String get rnsCompanionErrorTimeout;
+
+  /// Friendly text shown when JSON decode or model parse fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Companion sent a response we couldn\'t read.'**
+  String get rnsCompanionErrorParse;
+
+  /// Friendly text shown when a service or page returns 404.
+  ///
+  /// In en, this message translates to:
+  /// **'Not found.'**
+  String get rnsCompanionErrorNotFound;
+
+  /// Catch-all error text for unexpected companion failures.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong talking to the companion.'**
+  String get rnsCompanionErrorGeneric;
+
+  /// App-bar title for the companion endpoint settings screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Companion Settings'**
+  String get rnsCompanionSettingsTitle;
+
+  /// Section header above the host/port fields.
+  ///
+  /// In en, this message translates to:
+  /// **'ENDPOINT'**
+  String get rnsCompanionSettingsSectionEndpoint;
+
+  /// Label for the host input.
+  ///
+  /// In en, this message translates to:
+  /// **'Host'**
+  String get rnsCompanionSettingsHostLabel;
+
+  /// Placeholder for the host input. Avoid embedding the literal loopback IP — the codebase audit forbids hardcoded 127.0.0.1 in source, including ARB-derived generated files.
+  ///
+  /// In en, this message translates to:
+  /// **'laptop IP or hostname'**
+  String get rnsCompanionSettingsHostHint;
+
+  /// Label for the port input.
+  ///
+  /// In en, this message translates to:
+  /// **'Port'**
+  String get rnsCompanionSettingsPortLabel;
+
+  /// Placeholder for the port input.
+  ///
+  /// In en, this message translates to:
+  /// **'8787'**
+  String get rnsCompanionSettingsPortHint;
+
+  /// Save button label on the companion settings screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get rnsCompanionSettingsSave;
+
+  /// Snackbar shown after saving the companion endpoint.
+  ///
+  /// In en, this message translates to:
+  /// **'Companion endpoint saved'**
+  String get rnsCompanionSettingsSavedSnack;
+
+  /// Hint text shown above the fields explaining LAN reachability.
+  ///
+  /// In en, this message translates to:
+  /// **'Tip: bind your companion server to 0.0.0.0 so the phone can reach it on your LAN.'**
+  String get rnsCompanionSettingsHint;
+
+  /// Status-pill text shown while the /health probe is in flight.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking…'**
+  String get rnsCompanionStatusChecking;
+
+  /// Status-pill text when the companion responds to /health.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get rnsCompanionStatusConnected;
+
+  /// Status-pill text including the companion's reported version.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected · v{version}'**
+  String rnsCompanionStatusConnectedWithVersion(String version);
+
+  /// Status-pill text when /health fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Unreachable'**
+  String get rnsCompanionStatusUnreachable;
 }
 
 class _AppLocalizationsDelegate

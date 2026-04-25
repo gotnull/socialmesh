@@ -37172,4 +37172,124 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get reticulumBridgeCopiedSnack => 'Diagnostics copied to clipboard';
+
+  @override
+  String get settingsRnsCompanionTitle => 'RNS Services (Companion)';
+
+  @override
+  String get settingsRnsCompanionSubtitle =>
+      'Browse RNS / NomadNet content via the local companion service';
+
+  @override
+  String get rnsCompanionServicesTitle => 'RNS Services';
+
+  @override
+  String get rnsCompanionPagesTitle => 'Pages';
+
+  @override
+  String get rnsCompanionReaderTitle => 'Page';
+
+  @override
+  String get rnsCompanionConnectionHint =>
+      'Requires rns_companion running on your computer at the configured URL.';
+
+  @override
+  String get rnsCompanionExperimental => 'Experimental';
+
+  @override
+  String get rnsCompanionEmptyTitle => 'No services';
+
+  @override
+  String get rnsCompanionEmptyHint =>
+      'The companion is reachable but has no services yet.';
+
+  @override
+  String get rnsCompanionEmptyTagline1 => 'browse';
+
+  @override
+  String get rnsCompanionEmptyTagline2 => 'discover';
+
+  @override
+  String get rnsCompanionEmptyTagline3 => 'read';
+
+  @override
+  String get rnsCompanionEmptyAction => 'Reload';
+
+  @override
+  String get rnsCompanionPagesEmpty => 'This service has no pages yet.';
+
+  @override
+  String get rnsCompanionRetry => 'Retry';
+
+  @override
+  String get rnsCompanionServiceDestinationLabel => 'Destination';
+
+  @override
+  String get rnsCompanionServiceTypeLabel => 'Type';
+
+  @override
+  String get rnsCompanionServiceLastSeenLabel => 'Last seen';
+
+  @override
+  String get rnsCompanionPageUpdatedLabel => 'Updated';
+
+  @override
+  String get rnsCompanionErrorConnection =>
+      'Cannot reach companion. Is the service running on your computer?';
+
+  @override
+  String get rnsCompanionErrorTimeout => 'Companion took too long to respond.';
+
+  @override
+  String get rnsCompanionErrorParse =>
+      'Companion sent a response we couldn\'t read.';
+
+  @override
+  String get rnsCompanionErrorNotFound => 'Not found.';
+
+  @override
+  String get rnsCompanionErrorGeneric =>
+      'Something went wrong talking to the companion.';
+
+  @override
+  String get rnsCompanionSettingsTitle => 'Companion Settings';
+
+  @override
+  String get rnsCompanionSettingsSectionEndpoint => 'ENDPOINT';
+
+  @override
+  String get rnsCompanionSettingsHostLabel => 'Host';
+
+  @override
+  String get rnsCompanionSettingsHostHint => 'laptop IP or hostname';
+
+  @override
+  String get rnsCompanionSettingsPortLabel => 'Port';
+
+  @override
+  String get rnsCompanionSettingsPortHint => '8787';
+
+  @override
+  String get rnsCompanionSettingsSave => 'Save';
+
+  @override
+  String get rnsCompanionSettingsSavedSnack => 'Companion endpoint saved';
+
+  @override
+  String get rnsCompanionSettingsHint =>
+      'Tip: bind your companion server to 0.0.0.0 so the phone can reach it on your LAN.';
+
+  @override
+  String get rnsCompanionStatusChecking => 'Checking…';
+
+  @override
+  String get rnsCompanionStatusConnected => 'Connected';
+
+  @override
+  String rnsCompanionStatusConnectedWithVersion(String version) {
+    return 'Connected · v$version';
+  }
+
+  @override
+  String get rnsCompanionStatusUnreachable => 'Unreachable';
 }
