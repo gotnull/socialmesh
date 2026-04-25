@@ -13,8 +13,10 @@ import '../services/protocol/reticulum/reticulum_capture_library.dart';
 import '../services/protocol/reticulum/reticulum_capture_metadata.dart';
 import '../services/protocol/reticulum/reticulum_capture_writer.dart';
 import '../services/protocol/reticulum/reticulum_flags.dart';
+import '../services/protocol/reticulum/reticulum_frame.dart';
 import '../services/protocol/reticulum/reticulum_fragment_event.dart';
 import '../services/protocol/reticulum/reticulum_nodedex_bridge.dart';
+import '../services/protocol/reticulum/reticulum_reassembler.dart';
 import '../services/protocol/reticulum/reticulum_safe_log.dart';
 import '../services/protocol/reticulum/reticulum_stats.dart';
 import '../services/protocol/reticulum/reticulum_stats_recorder.dart';
@@ -260,3 +262,52 @@ final reticulumCaptureListProvider =
       ReticulumCaptureListNotifier,
       List<ReticulumCaptureEntry>
     >(ReticulumCaptureListNotifier.new);
+
+/// Singleton reassembler. Owns its broadcast streams (`frames` and
+/// `statsStream`) and a 1 Hz `tick()` Timer for TTL sweeps.
+///
+/// The dispatch loop in `protocolServiceProvider` pushes fragments
+/// in via [ReticulumReassembler.onFragment], gated on
+/// [ReticulumFlags.reassemblyEnabled].
+final reticulumReassemblerProvider = Provider<ReticulumReassembler>((ref) {
+  final reasm = ReticulumReassembler();
+  // Periodic TTL sweep so zombie buffers don't accumulate when traffic
+  // stops mid-frame.
+  final tick = Timer.periodic(const Duration(seconds: 1), (_) => reasm.tick());
+  ref.onDispose(() {
+    tick.cancel();
+    unawaited(reasm.dispose());
+  });
+  return reasm;
+});
+
+/// Live stream of reassembled RNS frames. Future Phase 3 TCP-bridge
+/// consumers (`rnsd` forwarders) subscribe here.
+final reticulumFrameStreamProvider = StreamProvider<ReticulumFrame>((ref) {
+  final reasm = ref.watch(reticulumReassemblerProvider);
+  return reasm.frames;
+});
+
+/// Reassembler counters (frames emitted, drops by reason, success rate).
+/// UI consumers watch this for the diagnostics screen.
+class ReticulumReassemblerStatsNotifier
+    extends Notifier<ReticulumReassemblerStats> {
+  StreamSubscription<ReticulumReassemblerStats>? _sub;
+
+  @override
+  ReticulumReassemblerStats build() {
+    final reasm = ref.watch(reticulumReassemblerProvider);
+    state = reasm.stats;
+    _sub = reasm.statsStream.listen((s) {
+      state = s;
+    });
+    ref.onDispose(() => _sub?.cancel());
+    return state;
+  }
+}
+
+final reticulumReassemblerStatsProvider =
+    NotifierProvider<
+      ReticulumReassemblerStatsNotifier,
+      ReticulumReassemblerStats
+    >(ReticulumReassemblerStatsNotifier.new);

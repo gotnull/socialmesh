@@ -3500,6 +3500,14 @@ final protocolServiceProvider = Provider<ProtocolService>((ref) {
         ref.read(reticulumCaptureWriterProvider).write(event);
         ref.read(reticulumNodeDexBridgeProvider).onFragment(event);
         ref.read(reticulumStatsProvider.notifier).recordFragment(event);
+        // Phase 2: feed the reassembler when the per-user toggle is
+        // on. This is independent of the build-time env flag — the
+        // env flag gates the entire subsystem; this gates only the
+        // reassembly layer (since it produces RNS-frame events that
+        // a future Phase 3 bridge would consume).
+        if (ref.read(reticulumFlagsProvider).reassemblyEnabled) {
+          ref.read(reticulumReassemblerProvider).onFragment(event);
+        }
       } catch (e) {
         AppLogging.reticulum('pipeline_dispatch_error error=$e');
       }
