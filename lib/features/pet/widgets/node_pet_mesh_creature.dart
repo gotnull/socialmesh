@@ -39,6 +39,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../models/pet_enums.dart';
 import 'pet_render_model.dart' show PetRenderMode;
@@ -934,7 +935,10 @@ class _NodePetMeshCreatureState extends State<NodePetMeshCreature>
     if (widget.onTap != null) {
       canvas = GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: widget.onTap,
+        onTap: () {
+          HapticFeedback.lightImpact();
+          widget.onTap!();
+        },
         child: canvas,
       );
     }
