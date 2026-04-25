@@ -3,6 +3,7 @@
 
 # Miscellaneous
 logs.txt
+logs_android.txt
 *.class
 *.log
 *.pyc

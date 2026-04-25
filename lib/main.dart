@@ -1261,37 +1261,15 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       final service = await ref.read(subscriptionServiceProvider.future);
       AppLogging.debug('💰 RevenueCat initialized');
 
-      // Deterministic bootstrap sequence (Play Billing 8 / RC 10.x):
-      //   1. configure                — done by service.initialize() above
-      //   2. syncPurchases (anonymous)— merge any store-held tokens into RC
-      //   3. logIn(firebaseUid)       — alias anonymous → identified
-      //   4. syncPurchases (identified)— attach receipt under the UID alias
-      //   5. refreshPurchases         — explicit deterministic state pull
-      // Anonymous users only need step 2.
+      // service.initialize() already called Purchases.configure() with the
+      // current Firebase UID (when signed in), so no logIn / pre-login
+      // syncPurchases hop is needed here. A single refresh pulls the latest
+      // entitlements; explicit Restore is exposed via the Restore button.
       final firebaseUser = FirebaseAuth.instance.currentUser;
       AppLogging.subscriptions(
         '💰 [Bootstrap] firebaseUser=${firebaseUser?.uid ?? "(anonymous)"}',
       );
-
-      AppLogging.subscriptions(
-        '💰 [Bootstrap] step 2: pre-login syncPurchases',
-      );
-      await service.syncPurchases();
-
-      if (firebaseUser != null) {
-        AppLogging.subscriptions(
-          '💰 [Bootstrap] step 3: logIn(${firebaseUser.uid})',
-        );
-        await service.logIn(firebaseUser.uid);
-
-        AppLogging.subscriptions(
-          '💰 [Bootstrap] step 4: post-login syncPurchases',
-        );
-        await service.syncPurchases();
-
-        AppLogging.subscriptions('💰 [Bootstrap] step 5: refreshPurchases');
-        await service.refreshPurchases();
-      }
+      await service.refreshPurchases();
       AppLogging.subscriptions('💰 [Bootstrap] complete');
 
       // Initialize cloud sync entitlement service AFTER purchases are

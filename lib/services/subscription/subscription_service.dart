@@ -98,8 +98,13 @@ class PurchaseService {
     await _saveStoreConfirmedProducts();
   }
 
-  /// Initialize RevenueCat SDK
-  Future<void> initialize() async {
+  /// Initialize RevenueCat SDK.
+  ///
+  /// If [appUserId] is non-null, RevenueCat is configured directly under that
+  /// id — no anonymous → identified alias is created at cold start. Pass the
+  /// FirebaseAuth UID when the user is already signed in. Pass null only when
+  /// the user is genuinely signed out; the SDK will then mint an anonymous id.
+  Future<void> initialize({String? appUserId}) async {
     AppLogging.subscriptions(
       '💰 ═══════════════════════════════════════════════',
     );
@@ -142,13 +147,25 @@ class PurchaseService {
       }
 
       AppLogging.subscriptions(
-        '💰 Configuring RevenueCat with anonymous user...',
+        appUserId != null
+            ? '💰 Configuring RevenueCat with appUserID=$appUserId...'
+            : '💰 Configuring RevenueCat with anonymous user...',
       );
       final configuration = PurchasesConfiguration(apiKey)
-        ..appUserID = null; // Anonymous user
+        ..appUserID = appUserId;
 
       await Purchases.configure(configuration);
       AppLogging.subscriptions('💰 Purchases.configure() completed');
+
+      // Suppress alias-on-restore. The SDK persists this flag across
+      // launches in NSUserDefaults / SharedPreferences, so once any prior
+      // session set it to false it stays false even for anonymous configs
+      // — that's why we set it unconditionally on every initialize. With
+      // false, every restorePurchases() call aliases the current appUserID
+      // to any other id sharing the same store receipt, and the alias
+      // chain eventually saturates with RC error code 23 "Alias limit
+      // reached" on syncPurchases / restorePurchases.
+      await Purchases.setAllowSharingStoreAccount(true);
 
       // Load store-confirmed products from persistent storage
       // (products confirmed by Google Play but not synced to RevenueCat)
