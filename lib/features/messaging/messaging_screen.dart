@@ -686,11 +686,7 @@ class _ContactTile extends StatelessWidget {
           Stack(
             children: [
               NodeAvatar(
-                text:
-                    contact.shortName ??
-                    (contact.displayName.length >= 2
-                        ? contact.displayName.substring(0, 2)
-                        : contact.displayName),
+                text: contact.shortName ?? safeTruncate(contact.displayName, 2),
                 color: contact.avatarColor != null
                     ? Color(contact.avatarColor!)
                     : AppTheme.graphPurple,
@@ -2139,9 +2135,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                   )
                 else
                   NodeAvatar(
-                    text: widget.title.length >= 2
-                        ? widget.title.substring(0, 2)
-                        : widget.title,
+                    text: safeTruncate(widget.title, 2),
                     color: widget.avatarColor != null
                         ? Color(widget.avatarColor!)
                         : AppTheme.graphPurple,
@@ -2792,7 +2786,7 @@ class _MessageBubble extends ConsumerWidget {
                 : 0,
           );
     }
-    return sanitized.length > 4 ? sanitized.substring(0, 4) : sanitized;
+    return safeTruncate(sanitized, 4);
   }
 
   /// Get icon data for message source (only for non-manual sources)
@@ -2894,9 +2888,7 @@ class _MessageBubble extends ConsumerWidget {
 
     final replyText =
         replyMessage?.text ?? context.l10n.messagingOriginalMessage;
-    final truncated = replyText.length > 60
-        ? '${replyText.substring(0, 60)}…'
-        : replyText;
+    final truncated = safeSubstring(replyText, 60);
 
     final quoteWidget = Container(
       width: double.infinity,

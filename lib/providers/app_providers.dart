@@ -38,6 +38,7 @@ import '../services/bug_report_service.dart';
 import '../services/config/mesh_firestore_config_service.dart';
 import '../features/automations/automation_providers.dart';
 import '../features/automations/automation_engine.dart';
+import '../features/nodedex/providers/nodedex_providers.dart';
 import '../features/widget_builder/storage/widget_storage_service.dart';
 import '../features/widget_builder/widget_sync_providers.dart';
 import 'cloud_sync_entitlement_providers.dart';
@@ -4793,6 +4794,39 @@ class MessagesNotifier extends Notifier<List<Message>> {
     state = [...state, message];
     _storage?.saveMessage(message);
     _recordMessageSignature(message);
+    _recordNodeDexActivity(message);
+  }
+
+  /// Forward inbound traffic to NodeDex so the Discovery card's
+  /// `Messages` count and `Last Seen` reflect chat activity, not just
+  /// node-tick encounters. Outgoing messages (where `from == myNodeNum`)
+  /// are skipped, as are messages with no resolved sender.
+  ///
+  /// Receiving a text message is direct proof that the sender was
+  /// on-mesh at [Message.timestamp], independent of whether the
+  /// [nodesProvider] tick path observed a fresh `node.lastHeard` value
+  /// for that sender. This handler is the only point that is reached
+  /// after both id-based and content-based dedup ([_addMessageToState]
+  /// and [mergeBackgroundMessages]), so callers can invoke it without
+  /// risking double-counts.
+  void _recordNodeDexActivity(Message message) {
+    final myNum = ref.read(myNodeNumProvider);
+    if (myNum != null && message.from == myNum) return;
+    if (message.from == 0) return;
+
+    final notifier = ref.read(nodeDexProvider.notifier);
+    notifier.recordMessage(message.from);
+    final encounterRecorded = notifier.recordEncounter(
+      message.from,
+      timestamp: message.timestamp,
+    );
+
+    AppLogging.nodeDex(
+      'Inbound ${message.isBroadcast ? "channel" : "DM"} message → '
+      'NodeDex: from=${message.from}, '
+      'ts=${message.timestamp.toIso8601String()}, '
+      'recordMessage=true, encounterRecorded=$encounterRecorded',
+    );
   }
 
   Future<void> _persistHiddenTapback(Message message) async {
@@ -4993,6 +5027,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
       }
       state = [...state, m];
       _recordMessageSignature(m);
+      _recordNodeDexActivity(m);
       inserted++;
     }
     if (inserted > 0) {

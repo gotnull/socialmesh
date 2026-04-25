@@ -1517,7 +1517,10 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
       case MeshBrainMood.dormant:
       case MeshBrainMood.tired:
       case MeshBrainMood.sad:
-        return 0.92;
+        // Small sag rather than a full shrink — dormant/sleeping should
+        // read as "at rest," not "shrunken." Prior 0.92 made NodePet
+        // look noticeably smaller when asleep than awake.
+        return 0.97;
       case MeshBrainMood.shy:
       case MeshBrainMood.scared:
       case MeshBrainMood.embarrassed:

@@ -30,6 +30,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../../core/logging.dart';
 import '../../../models/mesh_models.dart';
+import '../../../utils/text_sanitizer.dart';
 import '../../../models/presence_confidence.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/cloud_sync_entitlement_providers.dart';
@@ -734,11 +735,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
     final trimmed = note?.trim();
     final updated = (trimmed == null || trimmed.isEmpty)
         ? entry.copyWith(clearUserNote: true)
-        : entry.copyWith(
-            userNote: trimmed.length > 280
-                ? trimmed.substring(0, 280)
-                : trimmed,
-          );
+        : entry.copyWith(userNote: safeTruncate(trimmed, 280));
 
     final newState = {...state, nodeNum: updated};
     state = newState;
@@ -773,11 +770,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
     final trimmed = nickname?.trim();
     final updated = (trimmed == null || trimmed.isEmpty)
         ? entry.copyWith(clearLocalNickname: true)
-        : entry.copyWith(
-            localNickname: trimmed.length > 40
-                ? trimmed.substring(0, 40)
-                : trimmed,
-          );
+        : entry.copyWith(localNickname: safeTruncate(trimmed, 40));
 
     final newState = {...state, nodeNum: updated};
     state = newState;
@@ -868,12 +861,16 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
 
   /// Increment the message count for a node and its co-seen edges.
   ///
-  /// In addition to incrementing the node's own message count, this
-  /// also increments [CoSeenRelationship.messageCount] for every
-  /// co-seen relationship between this node and other nodes that are
-  /// currently active in the session. This ensures per-edge message
-  /// counts accumulate naturally as messages flow between nodes that
-  /// are co-present on the mesh.
+  /// In addition to incrementing the node's own message count, this also
+  /// increments [CoSeenRelationship.messageCount] for every co-seen
+  /// relationship between this node and other nodes that are currently
+  /// active in the session.
+  ///
+  /// Pair this with [recordEncounter] when the message is also proof of
+  /// recent activity (i.e. fresh inbound traffic) so that
+  /// [NodeDexEntry.lastSeen] advances even when the node-tick encounter
+  /// gates (`isRecentlyHeard` + `hasFreshLastHeard` + cooldown) would
+  /// have suppressed an encounter.
   void recordMessage(int nodeNum, {int count = 1}) {
     final entry = state[nodeNum];
     if (entry == null) return;
@@ -907,6 +904,53 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
     AppLogging.nodeDex(
       'Message count updated for $hexId: ${updated.messageCount} total',
     );
+  }
+
+  /// Record an encounter that did not arrive through the [nodesProvider]
+  /// `lastHeard` polling path — typically a received text message, which
+  /// is direct proof that the sender was on-mesh at [timestamp].
+  ///
+  /// Bypasses the tick-path freshness gate (`hasFreshLastHeard`) and the
+  /// tick-path cooldown bookkeeping (`_lastEncounterTime`) — those guard
+  /// against re-recording the same `node.lastHeard` value. The
+  /// entry-level cooldown inside [NodeDexEntry.recordEncounter]
+  /// (`encounterCooldownMinutes`) still applies, so chatty channels do
+  /// not inflate `encounterCount`.
+  ///
+  /// Skips updates whose [timestamp] is not newer than the entry's
+  /// current `lastSeen`, so background-merged stale messages cannot
+  /// regress the timeline. Returns `true` when the entry was updated.
+  bool recordEncounter(int nodeNum, {required DateTime timestamp}) {
+    final entry = state[nodeNum];
+    if (entry == null) {
+      AppLogging.nodeDex(
+        'Skipping message-derived encounter: node $nodeNum not in NodeDex',
+      );
+      return false;
+    }
+
+    if (!timestamp.isAfter(entry.lastSeen)) {
+      AppLogging.nodeDex(
+        'Skipping message-derived encounter for $nodeNum: '
+        'timestamp ${timestamp.toIso8601String()} not newer than '
+        'lastSeen ${entry.lastSeen.toIso8601String()}',
+      );
+      return false;
+    }
+
+    final updated = entry.recordEncounter(timestamp: timestamp);
+    final newState = {...state, nodeNum: updated};
+    state = newState;
+    _lastKnownState = newState;
+    _store?.saveEntry(updated);
+
+    final hexId = '!${nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}';
+    AppLogging.nodeDex(
+      'Message-derived encounter: $hexId at ${timestamp.toIso8601String()}, '
+      'encounterCount: ${updated.encounterCount}, '
+      'lastSeen: ${updated.lastSeen.toIso8601String()}',
+    );
+    return true;
   }
 
   /// Force a refresh from storage.

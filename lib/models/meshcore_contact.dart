@@ -3,6 +3,8 @@
 
 import 'dart:typed_data';
 
+import '../utils/text_sanitizer.dart';
+
 /// Advertisement types for MeshCore contacts.
 class MeshCoreAdvType {
   MeshCoreAdvType._();
@@ -220,7 +222,9 @@ MeshCoreContact? parseContact(Uint8List payload) {
     while (end < payload.length && payload[end] != 0) {
       end++;
     }
-    name = String.fromCharCodes(payload.sublist(nameOffset, end));
+    name = sanitizeExternalText(
+      String.fromCharCodes(payload.sublist(nameOffset, end)),
+    );
   }
 
   // Read path bytes if path_len > 0

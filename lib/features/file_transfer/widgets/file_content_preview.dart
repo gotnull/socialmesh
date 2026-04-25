@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 
 import '../../../core/theme.dart';
 import '../../../utils/snackbar.dart';
+import '../../../utils/text_sanitizer.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../services/file_transfer/file_transfer_engine.dart';
 import '../../../services/voice/voice_mime.dart';
@@ -249,9 +250,9 @@ class _TextViewer extends StatelessWidget {
   Widget build(BuildContext context) {
     String text;
     try {
-      text = utf8.decode(bytes, allowMalformed: true);
+      text = sanitizeExternalText(utf8.decode(bytes, allowMalformed: true));
     } catch (_) {
-      text = String.fromCharCodes(bytes);
+      text = sanitizeExternalText(String.fromCharCodes(bytes));
     }
 
     final isJson = mimeType.contains('json');

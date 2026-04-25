@@ -29,6 +29,7 @@ import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/bottom_action_bar.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/scanline_overlay.dart';
 import '../../../core/widgets/status_banner.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../services/haptic_service.dart';
@@ -583,48 +584,57 @@ class _PetBodyState extends ConsumerState<_PetBody>
               PetStatusLine(advisory: advisory),
               const SizedBox(height: AppTheme.spacing16),
               Center(
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    AnimatedBuilder(
-                      animation: _bounceScale,
-                      builder: (context, child) => Transform.scale(
-                        scale: _bounceScale.value,
-                        child: child,
+                child: SizedBox(
+                  width: maxCreature.toDouble(),
+                  height: maxCreature.toDouble(),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Pocket-space ambience — faint horizontal scanlines
+                      // pinned behind the creature (static, no transforms
+                      // follow the pet). Matches the OG NodePet backdrop.
+                      const Positioned.fill(child: ScanlineOverlay()),
+                      AnimatedBuilder(
+                        animation: _bounceScale,
+                        builder: (context, child) => Transform.scale(
+                          scale: _bounceScale.value,
+                          child: child,
+                        ),
+                        child: PetCreature(
+                          dnaSeed: state.dnaSeed,
+                          stage: effectiveStage,
+                          branch: effectiveBranch,
+                          mood: effectiveMood,
+                          isAsleep: effectiveIsAsleep,
+                          isSick: effectiveIsSick,
+                          isCalling: effectiveIsCalling,
+                          hygieneArtefactCount: state.hygieneArtefacts.length,
+                          size: maxCreature.toDouble(),
+                          energy: state.energy,
+                          moodStat: state.mood,
+                          stability: state.stability,
+                          statMax: statMax,
+                          preferFrontFace: overrides.preferFrontFace ?? true,
+                        ),
                       ),
-                      child: PetCreature(
-                        dnaSeed: state.dnaSeed,
-                        stage: effectiveStage,
-                        branch: effectiveBranch,
-                        mood: effectiveMood,
-                        isAsleep: effectiveIsAsleep,
-                        isSick: effectiveIsSick,
-                        isCalling: effectiveIsCalling,
-                        hygieneArtefactCount: state.hygieneArtefacts.length,
-                        size: maxCreature.toDouble(),
-                        energy: state.energy,
-                        moodStat: state.mood,
-                        stability: state.stability,
-                        statMax: statMax,
-                        preferFrontFace: overrides.preferFrontFace ?? true,
-                      ),
-                    ),
-                    // Floating thought-bubble indicator showing what the
-                    // pet wants. Hygiene is excluded because dirt marks
-                    // on the field already signal that channel.
-                    if (effectiveCallReason != null &&
-                        effectiveCallReason != CallReason.hygiene)
-                      PetNeedIndicator(
-                        reason: effectiveCallReason,
-                        creatureSize: maxCreature.toDouble(),
-                      ),
-                    if (_hatchOverlayActive)
-                      PetHatchOverlay(
-                        dnaSeed: state.dnaSeed,
-                        size: maxCreature.toDouble(),
-                        onComplete: _onOverlayComplete,
-                      ),
-                  ],
+                      // Floating thought-bubble indicator showing what
+                      // the pet wants. Hygiene is excluded because
+                      // dirt marks on the field already signal that
+                      // channel.
+                      if (effectiveCallReason != null &&
+                          effectiveCallReason != CallReason.hygiene)
+                        PetNeedIndicator(
+                          reason: effectiveCallReason,
+                          creatureSize: maxCreature.toDouble(),
+                        ),
+                      if (_hatchOverlayActive)
+                        PetHatchOverlay(
+                          dnaSeed: state.dnaSeed,
+                          size: maxCreature.toDouble(),
+                          onComplete: _onOverlayComplete,
+                        ),
+                    ],
+                  ),
                 ),
               ),
               _NoOpToastSlot(message: _noOpToastMessage),

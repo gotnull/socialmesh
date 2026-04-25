@@ -27,6 +27,7 @@ import 'dart:typed_data';
 import 'package:cryptography/cryptography.dart';
 
 import '../../../core/logging.dart';
+import '../../../utils/text_sanitizer.dart';
 import 'overlay_bitmap.dart';
 import 'overlay_constants.dart';
 import 'overlay_resource_codec.dart';
@@ -1245,14 +1246,18 @@ class OverlayResourceEngine {
       if (off + mimeLen > payload.length) return null;
       final mime = mimeLen == 0
           ? null
-          : String.fromCharCodes(payload.sublist(off, off + mimeLen));
+          : sanitizeExternalText(
+              String.fromCharCodes(payload.sublist(off, off + mimeLen)),
+            );
       off += mimeLen;
       if (off >= payload.length) return null;
       final nameLen = payload[off++];
       if (off + nameLen > payload.length) return null;
       final name = nameLen == 0
           ? null
-          : String.fromCharCodes(payload.sublist(off, off + nameLen));
+          : sanitizeExternalText(
+              String.fromCharCodes(payload.sublist(off, off + nameLen)),
+            );
       return _OfferManifest(
         totalBytes: total,
         chunkSize: chunkSize,

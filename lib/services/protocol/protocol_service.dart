@@ -2205,7 +2205,7 @@ class ProtocolService {
 
       AppLogging.social(
         'Received mesh signal from !${packet.from.toRadixString(16)}: '
-        '"${signalPacket.content.length > 30 ? '${signalPacket.content.substring(0, 30)}...' : signalPacket.content}" '
+        '"${safeSubstring(signalPacket.content, 30)}" '
         '(ttl=${signalPacket.ttlMinutes}m)',
       );
 
@@ -5017,7 +5017,7 @@ class ProtocolService {
       await _transport.send(_prepareForSend(bytes));
 
       AppLogging.social(
-        'Broadcast signal: "${content.length > 30 ? '${content.substring(0, 30)}...' : content}" '
+        'Broadcast signal: "${safeSubstring(content, 30)}" '
         '(ttl=${ttlMinutes}m, packetId=$packetId)',
       );
 
@@ -6844,10 +6844,10 @@ class ProtocolService {
     try {
       // Validate and trim lengths
       final trimmedLong = longName != null
-          ? (longName.length > 36 ? longName.substring(0, 36) : longName)
+          ? safeTruncateCodeUnits(longName, 36)
           : null;
       final trimmedShort = shortName != null
-          ? (shortName.length > 4 ? shortName.substring(0, 4) : shortName)
+          ? safeTruncateCodeUnits(shortName, 4)
           : null;
 
       AppLogging.protocol(

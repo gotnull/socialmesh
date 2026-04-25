@@ -34,6 +34,7 @@ import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../utils/snackbar.dart';
+import '../../../utils/text_sanitizer.dart';
 import '../models/import_preview.dart';
 import '../providers/nodedex_providers.dart';
 
@@ -908,10 +909,7 @@ class _ConflictEntryRow extends StatelessWidget {
     return resolution?.useUserNoteFromImport;
   }
 
-  String _truncate(String text, int maxLen) {
-    if (text.length <= maxLen) return text;
-    return '${text.substring(0, maxLen)}…';
-  }
+  String _truncate(String text, int maxLen) => safeSubstring(text, maxLen);
 }
 
 // =============================================================================

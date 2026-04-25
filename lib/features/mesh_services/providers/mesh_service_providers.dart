@@ -14,6 +14,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants.dart';
 import '../../../core/logging.dart';
+import '../../../utils/text_sanitizer.dart';
 import '../models/mesh_service_instance.dart';
 import '../models/mesh_service_template.dart';
 import '../services/mesh_service_engine.dart';
@@ -278,7 +279,7 @@ Uint8List _encodeAdvertMetadata(MeshServiceInstance instance) {
   return MeshServiceAdvertMetadata.encode(
     canonicalType: instance.canonicalType,
     presetId: instance.presetId,
-    title: utf8.decode(title, allowMalformed: true),
+    title: sanitizeExternalText(utf8.decode(title, allowMalformed: true)),
   );
 }
 

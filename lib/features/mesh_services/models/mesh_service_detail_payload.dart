@@ -6,6 +6,7 @@ library;
 import 'dart:convert';
 import 'dart:typed_data';
 
+import '../../../utils/text_sanitizer.dart';
 import 'mesh_service_instance.dart';
 import 'mesh_service_signal_kind.dart';
 import 'mesh_service_template.dart';
@@ -398,9 +399,11 @@ abstract final class MeshServiceDetailPayloadCodec {
     final length = payload[offset++];
     if (offset + length > payload.length) return null;
     return (
-      value: utf8.decode(
-        payload.sublist(offset, offset + length),
-        allowMalformed: true,
+      value: sanitizeExternalText(
+        utf8.decode(
+          payload.sublist(offset, offset + length),
+          allowMalformed: true,
+        ),
       ),
       nextOffset: offset + length,
     );

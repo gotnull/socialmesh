@@ -8,6 +8,7 @@ import '../../core/logging.dart';
 import '../../core/meshcore_constants.dart';
 import '../../core/transport.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
+import '../../utils/text_sanitizer.dart';
 import 'background_ble_service.dart';
 
 /// Exception thrown when Meshtastic BLE service is not found on a device.
@@ -642,7 +643,9 @@ class BleTransport implements DeviceTransport {
           // Strip whitespace and embedded quotes — some devices (e.g. Heltec
           // MeshPocket) return model number as '"1.0"' with literal quote
           // bytes in the BLE characteristic value.
-          final value = String.fromCharCodes(data).trim().replaceAll('"', '');
+          final value = sanitizeExternalText(
+            String.fromCharCodes(data).trim().replaceAll('"', ''),
+          );
           AppLogging.ble('Device Info ${char.uuid}: "$value" (raw: $data)');
 
           final uuid = char.uuid.toString().toLowerCase();

@@ -25,6 +25,8 @@
 
 import 'dart:typed_data';
 
+import '../../../utils/text_sanitizer.dart';
+
 /// Maximum frame size in bytes (command + payload).
 const int meshCoreMaxFrameSize = 172;
 
@@ -161,7 +163,7 @@ class MeshCoreBufferReader {
       if (byte == 0) break;
       value.add(byte);
     }
-    return String.fromCharCodes(value);
+    return sanitizeExternalText(String.fromCharCodes(value));
   }
 
   /// Read a string from remaining bytes (may contain nulls).
@@ -172,7 +174,7 @@ class MeshCoreBufferReader {
     while (end > 0 && bytes[end - 1] == 0) {
       end--;
     }
-    return String.fromCharCodes(bytes.sublist(0, end));
+    return sanitizeExternalText(String.fromCharCodes(bytes.sublist(0, end)));
   }
 
   /// Read unsigned 8-bit integer.

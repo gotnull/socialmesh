@@ -37,6 +37,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import '../../../core/logging.dart';
+import '../../../utils/text_sanitizer.dart';
 import '../../../features/incidents/models/incident.dart';
 import '../../../features/incidents/models/mesh_incident_report.dart';
 import 'spp_constants.dart';
@@ -229,9 +230,8 @@ abstract final class SppIncidentCodec {
     final bodyLen = bd.getUint8(offset++);
     if (offset + bodyLen > data.length) return null;
 
-    final body = utf8.decode(
-      data.sublist(offset, offset + bodyLen),
-      allowMalformed: true,
+    final body = sanitizeExternalText(
+      utf8.decode(data.sublist(offset, offset + bodyLen), allowMalformed: true),
     );
 
     return MeshIncidentReport(

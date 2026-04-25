@@ -12,6 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/l10n/l10n_extension.dart';
+import '../../utils/text_sanitizer.dart';
 import '../../core/los_analysis.dart';
 import '../../core/map_config.dart';
 import '../../core/safe_lat_lng.dart';
@@ -1633,9 +1634,7 @@ class _SearchResultTile extends StatelessWidget {
     if (shortName.isNotEmpty &&
         shortName != '????' &&
         !shortName.startsWith('!')) {
-      return shortName.length > 2
-          ? shortName.substring(0, 2).toUpperCase()
-          : shortName.toUpperCase();
+      return safeTruncate(shortName, 2).toUpperCase();
     }
     return node.nodeNum
         .toRadixString(16)
@@ -2242,9 +2241,7 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
         shortName != '????' &&
         !shortName.startsWith('!')) {
       // Use first 2 characters of shortName
-      return shortName.length > 2
-          ? shortName.substring(0, 2).toUpperCase()
-          : shortName.toUpperCase();
+      return safeTruncate(shortName, 2).toUpperCase();
     }
     // Fall back to hex node ID (first 2 hex chars)
     return node.nodeNum

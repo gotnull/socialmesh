@@ -28,10 +28,12 @@
 library;
 
 import 'dart:async';
+import 'dart:convert';
 
 import '../../../core/mqtt/mqtt_config.dart';
 import '../../../core/mqtt/mqtt_connection_state.dart';
 import '../../../core/mqtt/mqtt_diagnostics.dart';
+import '../../utils/text_sanitizer.dart';
 
 // ---------------------------------------------------------------------------
 // Data types
@@ -63,9 +65,14 @@ class MqttInboundMessage {
   });
 
   /// Payload decoded as a UTF-8 string, or null if decoding fails.
+  ///
+  /// Uses lenient UTF-8 decoding so MQTT messages containing partial multibyte
+  /// sequences still surface as text, then sanitizes the result so any lone
+  /// UTF-16 surrogates or unsafe control characters cannot crash Flutter's
+  /// native paragraph builder when displayed.
   String? get payloadString {
     try {
-      return String.fromCharCodes(payload);
+      return sanitizeExternalText(utf8.decode(payload, allowMalformed: true));
     } catch (_) {
       return null;
     }

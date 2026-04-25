@@ -346,7 +346,12 @@ class SmFileOffer {
     if (hasFetchHint && offset < data.length) {
       final hintLen = buffer.getUint8(offset++);
       if (offset + hintLen <= data.length) {
-        fetchHint = utf8.decode(data.sublist(offset, offset + hintLen));
+        fetchHint = sanitizeExternalText(
+          utf8.decode(
+            data.sublist(offset, offset + hintLen),
+            allowMalformed: true,
+          ),
+        );
         offset += hintLen;
       }
     }

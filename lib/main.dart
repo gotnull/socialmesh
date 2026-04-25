@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -69,6 +70,7 @@ import 'models/social.dart';
 import 'services/app_intents/app_intents_service.dart';
 import 'services/deep_link_manager.dart';
 import 'utils/snackbar.dart';
+import 'utils/text_sanitizer.dart';
 import 'services/profile/profile_cloud_sync_service.dart';
 import 'services/privacy_consent_service.dart';
 import 'services/notifications/notification_service.dart';
@@ -187,6 +189,30 @@ Future<void> main() async {
       await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(false);
     } catch (_) {
       // Best-effort — if this fails, _initializeFirebaseServices will retry.
+    }
+
+    // iOS simulator cannot receive silent APN pushes, so Firebase Phone
+    // Auth falls back to reCAPTCHA via SFSafariViewController — which
+    // cascades our Flutter bottom sheet out of the visible view when it
+    // dismisses (UIKit unwinds the modal stack). Firebase's
+    // appVerificationDisabledForTesting skips both silent APN and
+    // reCAPTCHA when the phone is whitelisted in Firebase Console as a
+    // test number. Release builds strip this block entirely because
+    // kDebugMode is false — so shipped App Store binaries always run
+    // real APN + real reCAPTCHA + real SMS.
+    if (kDebugMode && Platform.isIOS) {
+      try {
+        await FirebaseAuth.instance.setSettings(
+          appVerificationDisabledForTesting: true,
+        );
+        AppLogging.mfa(
+          '⚠️ Debug iOS: appVerificationDisabledForTesting=true — '
+          'reCAPTCHA skipped; requires Firebase Console test phone '
+          'whitelist to sign in',
+        );
+      } catch (e) {
+        AppLogging.mfa('appVerificationDisabledForTesting failed: $e');
+      }
     }
 
     firebaseReadyCompleter.complete(true);
@@ -3749,8 +3775,8 @@ class _AppleTVGridCardState extends State<_AppleTVGridCard>
                       );
                       final visibleChars = (displayName.length * progress)
                           .round();
-                      final displayText = displayName.substring(
-                        0,
+                      final displayText = safeTruncateCodeUnits(
+                        displayName,
                         visibleChars,
                       );
                       return Text(
@@ -3994,7 +4020,7 @@ class _SplashNodeCardState extends State<_SplashNodeCard>
               child: Center(
                 child: shortName.isNotEmpty
                     ? Text(
-                        shortName.substring(0, shortName.length.clamp(0, 2)),
+                        safeTruncate(shortName, 2),
                         style: TextStyle(
                           color: context.accentColor,
                           fontSize: 12,
