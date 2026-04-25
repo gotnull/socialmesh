@@ -12,6 +12,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/admin_config.dart';
 
+import '../core/constants.dart';
 import '../core/logging.dart';
 import '../core/safety/error_handler.dart';
 import '../core/transport.dart';
@@ -20,6 +21,7 @@ import '../services/transport/ble_transport.dart';
 import '../services/transport/network_transport.dart';
 import '../services/transport/usb_transport.dart';
 import '../services/protocol/protocol_service.dart';
+import '../services/protocol/reticulum/reticulum_fragment_event.dart';
 import '../services/storage/storage_service.dart';
 import '../services/storage/message_database.dart';
 import '../services/mesh_packet_dedupe_store.dart';
@@ -3480,20 +3482,29 @@ final protocolServiceProvider = Provider<ProtocolService>((ref) {
   // pushed-to from this single listener; none of them ref.watch
   // protocolServiceProvider, which keeps the provider DAG acyclic.
   //
-  // Eagerly init the stats notifier so it's alive (and its tick timer
-  // is running) from app boot, not just when the diagnostics UI is
-  // first opened.
-  ref.read(reticulumStatsProvider.notifier);
+  // Gated by AppFeatureFlags.isReticulumTunnelEnabled. When the flag
+  // is off (default), no providers are instantiated and no
+  // subscription is created — the broadcast controller in ProtocolService
+  // exists but never has any listeners, and its handler is short-
+  // circuited at the switch in _handleMeshPacket. Net cost when off:
+  // a single boolean comparison per port-76 packet.
+  StreamSubscription<ReticulumFragmentEvent>? reticulumSub;
+  if (AppFeatureFlags.isReticulumTunnelEnabled) {
+    // Eagerly init the stats notifier so it's alive (and its tick
+    // timer is running) from app boot, not just when the diagnostics
+    // UI is first opened.
+    ref.read(reticulumStatsProvider.notifier);
 
-  final reticulumSub = service.reticulumFragmentStream.listen((event) {
-    try {
-      ref.read(reticulumCaptureWriterProvider).write(event);
-      ref.read(reticulumNodeDexBridgeProvider).onFragment(event);
-      ref.read(reticulumStatsProvider.notifier).recordFragment(event);
-    } catch (e) {
-      AppLogging.reticulum('pipeline_dispatch_error error=$e');
-    }
-  });
+    reticulumSub = service.reticulumFragmentStream.listen((event) {
+      try {
+        ref.read(reticulumCaptureWriterProvider).write(event);
+        ref.read(reticulumNodeDexBridgeProvider).onFragment(event);
+        ref.read(reticulumStatsProvider.notifier).recordFragment(event);
+      } catch (e) {
+        AppLogging.reticulum('pipeline_dispatch_error error=$e');
+      }
+    });
+  }
 
   // Keep the service alive for the lifetime of the app
   ref.onDispose(() {
@@ -3502,7 +3513,7 @@ final protocolServiceProvider = Provider<ProtocolService>((ref) {
     );
     // Clear the callback when disposing
     NotificationService().onReactionSelected = null;
-    reticulumSub.cancel();
+    reticulumSub?.cancel();
     service.stop();
   });
 

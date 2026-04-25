@@ -20,6 +20,7 @@ import '../../generated/meshtastic/channel.pb.dart' as channel_pb;
 import '../../generated/meshtastic/channel.pbenum.dart' as channel_pbenum;
 import '../../generated/meshtastic/portnums.pbenum.dart' as pn;
 import '../../generated/meshtastic/telemetry.pb.dart' as telemetry;
+import '../../core/constants.dart';
 import 'admin_ack_tracker.dart';
 import 'admin_target.dart';
 import 'mesh_packet_builder.dart';
@@ -2082,7 +2083,13 @@ class ProtocolService {
             _handleTracerouteMessage(packet, data);
             break;
           case pn.PortNum.RETICULUM_TUNNEL_APP:
-            _handleReticulumTunnelPacket(packet, data);
+            // Gated by AppFeatureFlags.isReticulumTunnelEnabled. When
+            // false (default), the handler is a no-op and the broadcast
+            // controller never sees the event — saves the dispatch loop
+            // and downstream consumer cost on every port-76 packet.
+            if (AppFeatureFlags.isReticulumTunnelEnabled) {
+              _handleReticulumTunnelPacket(packet, data);
+            }
             break;
           default:
             AppLogging.protocol(

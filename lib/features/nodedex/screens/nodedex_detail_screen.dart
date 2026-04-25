@@ -360,9 +360,10 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
             ),
 
           // Reticulum (port-76) activity for this node, if any.
-          SliverToBoxAdapter(
-            child: ReticulumActivityDetail(nodeNum: widget.nodeNum),
-          ),
+          if (AppFeatureFlags.isReticulumTunnelEnabled)
+            SliverToBoxAdapter(
+              child: ReticulumActivityDetail(nodeNum: widget.nodeNum),
+            ),
 
           // All scored traits list (progressive: only at Tier 3+)
           if (disclosure.showAllTraits && scoredTraits.length > 1)

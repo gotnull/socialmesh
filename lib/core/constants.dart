@@ -583,6 +583,21 @@ class AppFeatureFlags {
       return true;
     }
   }
+
+  /// Whether the Reticulum Tunnel (Meshtastic portnum 76) UI is enabled.
+  /// Set `RETICULUM_TUNNEL_ENABLED=true` in `.env` to enable.
+  /// Default: false — the Settings tile, NodeDex `RNS` activity badge,
+  /// and NodeDex detail "RNS fragments" card are all hidden. The
+  /// background protocol-service hook + Phase 1 pipeline still observe
+  /// port-76 traffic regardless; this flag only gates user-facing UI.
+  static bool get isReticulumTunnelEnabled {
+    try {
+      final raw = dotenv.env['RETICULUM_TUNNEL_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
 }
 
 /// Privacy level for content visibility

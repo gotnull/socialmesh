@@ -1134,7 +1134,8 @@ class _NodeDexListTile extends ConsumerWidget {
                       spacing: AppTheme.spacing4,
                       runSpacing: AppTheme.spacing4,
                       children: [
-                        ReticulumActivityBadge(nodeNum: entry.nodeNum),
+                        if (AppFeatureFlags.isReticulumTunnelEnabled)
+                          ReticulumActivityBadge(nodeNum: entry.nodeNum),
                         if (disclosure.showPrimaryTrait)
                           TraitBadge(
                             trait: traitResult.primary,
