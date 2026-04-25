@@ -122,11 +122,14 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
     final scoredTraits = ref.watch(nodeDexScoredTraitsProvider(widget.nodeNum));
     final reduceMotion = ref.watch(reduceMotionEnabledProvider);
     final summary = ref.watch(nodeSummaryProvider(widget.nodeNum));
+    // Use .value (not .asData?.value) so the count stays visible across
+    // refreshes — asData returns null during AsyncLoading, which causes the
+    // sticky-header trailing count to disappear/reappear and visibly nudges
+    // the layout on Android.
     final timelineEventCount = ref
         .watch(nodeActivityTimelineProvider(widget.nodeNum))
-        .asData
-        ?.value
-        .length;
+        .value
+        ?.length;
 
     if (entry == null) {
       return GlassScaffold.body(

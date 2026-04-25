@@ -59,10 +59,10 @@ class _NodeActivityTimelineState extends ConsumerState<NodeActivityTimeline> {
 
     // Preserve previous data across refreshes so the list doesn't get replaced
     // by a spinner each time a watched dependency (messages, signals, presence,
-    // nodedex entry) changes. Without this, every refresh transitions
-    // data → loading → data and the Material CircularProgressIndicator flashes
-    // through on Android.
-    final allEvents = asyncEvents.asData?.value;
+    // nodedex entry) changes. AsyncValue.value returns the prior value during
+    // AsyncLoading; asData would return null mid-refresh and flash the Material
+    // spinner on Android.
+    final allEvents = asyncEvents.value;
 
     if (allEvents == null) {
       if (asyncEvents.hasError) {

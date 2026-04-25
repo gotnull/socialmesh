@@ -64179,6 +64179,384 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'RNS last seen'**
   String get nodeDexRnsActivityLastSeen;
+
+  /// Tile title for opening the Reticulum capture library.
+  ///
+  /// In en, this message translates to:
+  /// **'Open capture library'**
+  String get reticulumDiagOpenLibrary;
+
+  /// Tile subtitle for opening the Reticulum capture library.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse, label, and import captures'**
+  String get reticulumDiagOpenLibrarySubtitle;
+
+  /// Title for the Reticulum capture library screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture Library'**
+  String get reticulumLibraryTitle;
+
+  /// Section header above the capture list.
+  ///
+  /// In en, this message translates to:
+  /// **'CAPTURES'**
+  String get reticulumLibrarySectionCaptures;
+
+  /// Animated empty-state title prefix for the library screen.
+  ///
+  /// In en, this message translates to:
+  /// **'No '**
+  String get reticulumLibraryEmptyTitlePrefix;
+
+  /// Animated empty-state highlighted keyword.
+  ///
+  /// In en, this message translates to:
+  /// **'captures'**
+  String get reticulumLibraryEmptyTitleKeyword;
+
+  /// Animated empty-state title suffix.
+  ///
+  /// In en, this message translates to:
+  /// **' yet'**
+  String get reticulumLibraryEmptyTitleSuffix;
+
+  /// Cycling tagline on the empty library screen.
+  ///
+  /// In en, this message translates to:
+  /// **'No SMRC capture files have been recorded or imported.'**
+  String get reticulumLibraryEmptyTagline1;
+
+  /// Cycling tagline on the empty library screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle \'Capture to disk\' on the diagnostics screen to start recording.'**
+  String get reticulumLibraryEmptyTagline2;
+
+  /// Cycling tagline on the empty library screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Or import a .bin capture from another Socialmesh device.'**
+  String get reticulumLibraryEmptyTagline3;
+
+  /// Action button for importing an external capture file.
+  ///
+  /// In en, this message translates to:
+  /// **'Import .bin file'**
+  String get reticulumLibraryImport;
+
+  /// Action button for re-scanning the capture directory.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get reticulumLibraryRefresh;
+
+  /// Badge label for harness-generated captures.
+  ///
+  /// In en, this message translates to:
+  /// **'HARNESS'**
+  String get reticulumLibraryKindHarness;
+
+  /// Badge label for captures eligible as real-mesh inputs.
+  ///
+  /// In en, this message translates to:
+  /// **'REAL CANDIDATE'**
+  String get reticulumLibraryKindReal;
+
+  /// Badge label for captures that fail SMRC validation.
+  ///
+  /// In en, this message translates to:
+  /// **'INVALID'**
+  String get reticulumLibraryKindInvalid;
+
+  /// Badge label for captures with an unsupported SMRC version.
+  ///
+  /// In en, this message translates to:
+  /// **'UNSUPPORTED'**
+  String get reticulumLibraryKindUnsupported;
+
+  /// Subtitle showing record count for a capture.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} records'**
+  String reticulumLibraryRecords(int count);
+
+  /// Subtitle showing distinct source count for a capture.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} sources'**
+  String reticulumLibrarySources(int count);
+
+  /// Placeholder when a capture has no first/last-seen timestamp.
+  ///
+  /// In en, this message translates to:
+  /// **'No timestamp'**
+  String get reticulumLibraryNoTimestamp;
+
+  /// Snackbar shown when a capture imports successfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported {filename}'**
+  String reticulumLibraryImportSuccess(String filename);
+
+  /// Snackbar shown when an imported file's checksum matches an existing capture.
+  ///
+  /// In en, this message translates to:
+  /// **'Already in library: {filename}'**
+  String reticulumLibraryImportDuplicate(String filename);
+
+  /// Snackbar for invalid-magic import rejection.
+  ///
+  /// In en, this message translates to:
+  /// **'File is not a valid SMRC capture'**
+  String get reticulumLibraryImportInvalid;
+
+  /// Snackbar for unsupported-version import rejection.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsupported SMRC version'**
+  String get reticulumLibraryImportUnsupported;
+
+  /// Snackbar for I/O errors during import.
+  ///
+  /// In en, this message translates to:
+  /// **'Import failed'**
+  String get reticulumLibraryImportError;
+
+  /// Title for the capture detail/edit screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture detail'**
+  String get reticulumDetailTitle;
+
+  /// Section header for the read-only summary table.
+  ///
+  /// In en, this message translates to:
+  /// **'SUMMARY'**
+  String get reticulumDetailSectionSummary;
+
+  /// Info-table label for the capture filename.
+  ///
+  /// In en, this message translates to:
+  /// **'Filename'**
+  String get reticulumDetailFilename;
+
+  /// Info-table label for the capture provenance kind.
+  ///
+  /// In en, this message translates to:
+  /// **'Kind'**
+  String get reticulumDetailKind;
+
+  /// Info-table label for the SMRC record count.
+  ///
+  /// In en, this message translates to:
+  /// **'Records'**
+  String get reticulumDetailRecordCount;
+
+  /// Info-table label for the earliest record timestamp.
+  ///
+  /// In en, this message translates to:
+  /// **'First seen'**
+  String get reticulumDetailFirstSeen;
+
+  /// Info-table label for the latest record timestamp.
+  ///
+  /// In en, this message translates to:
+  /// **'Last seen'**
+  String get reticulumDetailLastSeen;
+
+  /// Info-table label for the distinct-source-nodeId count.
+  ///
+  /// In en, this message translates to:
+  /// **'Distinct sources'**
+  String get reticulumDetailDistinctSources;
+
+  /// Info-table label for whether any record carries the SHRN magic.
+  ///
+  /// In en, this message translates to:
+  /// **'Contains harness magic'**
+  String get reticulumDetailContainsHarness;
+
+  /// Info-table label for the file's SHA-256 checksum.
+  ///
+  /// In en, this message translates to:
+  /// **'SHA-256'**
+  String get reticulumDetailChecksum;
+
+  /// Info-table label for the file creation timestamp.
+  ///
+  /// In en, this message translates to:
+  /// **'Created at'**
+  String get reticulumDetailCreatedAt;
+
+  /// Info-table label for when the classifier last ran.
+  ///
+  /// In en, this message translates to:
+  /// **'Classified at'**
+  String get reticulumDetailClassifiedAt;
+
+  /// Section header for the editable provenance fields.
+  ///
+  /// In en, this message translates to:
+  /// **'PROVENANCE'**
+  String get reticulumDetailSectionProvenance;
+
+  /// Field label for capture source/origin.
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get reticulumDetailSource;
+
+  /// Source option for captures recorded on this device.
+  ///
+  /// In en, this message translates to:
+  /// **'Local'**
+  String get reticulumDetailSourceLocal;
+
+  /// Source option for captures imported via share sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared'**
+  String get reticulumDetailSourceShared;
+
+  /// Source option for captures imported via AirDrop specifically.
+  ///
+  /// In en, this message translates to:
+  /// **'AirDrop'**
+  String get reticulumDetailSourceAirdrop;
+
+  /// Source option for manually-supplied captures.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual'**
+  String get reticulumDetailSourceManual;
+
+  /// Field label for the Meshtastic device hardware model.
+  ///
+  /// In en, this message translates to:
+  /// **'Device model'**
+  String get reticulumDetailDeviceModel;
+
+  /// Placeholder text for the device model field.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Heltec V3'**
+  String get reticulumDetailDeviceModelHint;
+
+  /// Field label for the Meshtastic firmware build.
+  ///
+  /// In en, this message translates to:
+  /// **'Firmware version'**
+  String get reticulumDetailFirmwareVersion;
+
+  /// Placeholder for the firmware version field.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 2.5.5.f8c10b8'**
+  String get reticulumDetailFirmwareVersionHint;
+
+  /// Field label for the LoRa region setting at capture time.
+  ///
+  /// In en, this message translates to:
+  /// **'Region'**
+  String get reticulumDetailRegion;
+
+  /// Placeholder for the region field.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. ANZ'**
+  String get reticulumDetailRegionHint;
+
+  /// Field label for the Meshtastic channel index.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel index'**
+  String get reticulumDetailChannelIndex;
+
+  /// Placeholder for the channel index field.
+  ///
+  /// In en, this message translates to:
+  /// **'0–7'**
+  String get reticulumDetailChannelIndexHint;
+
+  /// Field label for free-form notes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get reticulumDetailNotes;
+
+  /// Placeholder for the notes field.
+  ///
+  /// In en, this message translates to:
+  /// **'Where, when, why'**
+  String get reticulumDetailNotesHint;
+
+  /// Submit button for the provenance edit form.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get reticulumDetailSave;
+
+  /// Snackbar shown after a successful provenance save.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get reticulumDetailSaveSuccess;
+
+  /// Action button for sharing the capture file.
+  ///
+  /// In en, this message translates to:
+  /// **'Share capture'**
+  String get reticulumDetailShare;
+
+  /// Action button for deleting a capture + sidecar.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete capture'**
+  String get reticulumDetailDelete;
+
+  /// Confirmation sheet title for capture deletion.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this capture?'**
+  String get reticulumDetailDeleteConfirm;
+
+  /// Confirmation sheet body for capture deletion.
+  ///
+  /// In en, this message translates to:
+  /// **'The capture file and its metadata sidecar are removed permanently.'**
+  String get reticulumDetailDeleteConfirmDescription;
+
+  /// Confirmation sheet primary action for capture deletion.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get reticulumDetailDeleteConfirmAction;
+
+  /// Confirmation sheet secondary action for capture deletion.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get reticulumDetailDeleteCancel;
+
+  /// Boolean true rendering in info tables.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get reticulumDetailTrue;
+
+  /// Boolean false rendering in info tables.
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get reticulumDetailFalse;
+
+  /// Placeholder shown when an editable field is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get reticulumDetailNoneSet;
 }
 
 class _AppLocalizationsDelegate

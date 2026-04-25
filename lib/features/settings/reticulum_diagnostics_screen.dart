@@ -21,6 +21,7 @@ import '../../services/protocol/reticulum/reticulum_capture_writer.dart';
 import '../../services/protocol/reticulum/reticulum_flags.dart';
 import '../../services/protocol/reticulum/reticulum_stats.dart';
 import '../../utils/snackbar.dart';
+import 'reticulum_capture_library_screen.dart';
 import 'reticulum_replay_screen.dart';
 
 class ReticulumDiagnosticsScreen extends ConsumerStatefulWidget {
@@ -60,6 +61,15 @@ class _ReticulumDiagnosticsScreenState
     );
   }
 
+  void _openLibrary() {
+    HapticFeedback.selectionClick();
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const ReticulumCaptureLibraryScreen(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final flags = ref.watch(reticulumFlagsProvider);
@@ -89,6 +99,8 @@ class _ReticulumDiagnosticsScreenState
                 ),
                 const SizedBox(height: AppTheme.spacing16),
                 _ReplaySection(onOpen: _openReplay),
+                const SizedBox(height: AppTheme.spacing16),
+                _LibrarySection(onOpen: _openLibrary),
                 const SizedBox(height: AppTheme.spacing24),
               ],
             ),
@@ -343,6 +355,24 @@ class _ReplaySection extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _LibrarySection extends StatelessWidget {
+  const _LibrarySection({required this.onOpen});
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onOpen,
+      child: _SettingsTile(
+        icon: Icons.library_books_outlined,
+        title: context.l10n.reticulumDiagOpenLibrary,
+        subtitle: context.l10n.reticulumDiagOpenLibrarySubtitle,
+        trailing: Icon(Icons.chevron_right, color: context.textTertiary),
+      ),
     );
   }
 }

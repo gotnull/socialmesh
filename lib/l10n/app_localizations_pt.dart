@@ -36771,4 +36771,207 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get nodeDexRnsActivityLastSeen => 'RNS last seen';
+
+  @override
+  String get reticulumDiagOpenLibrary => 'Open capture library';
+
+  @override
+  String get reticulumDiagOpenLibrarySubtitle =>
+      'Browse, label, and import captures';
+
+  @override
+  String get reticulumLibraryTitle => 'Capture Library';
+
+  @override
+  String get reticulumLibrarySectionCaptures => 'CAPTURES';
+
+  @override
+  String get reticulumLibraryEmptyTitlePrefix => 'No ';
+
+  @override
+  String get reticulumLibraryEmptyTitleKeyword => 'captures';
+
+  @override
+  String get reticulumLibraryEmptyTitleSuffix => ' yet';
+
+  @override
+  String get reticulumLibraryEmptyTagline1 =>
+      'No SMRC capture files have been recorded or imported.';
+
+  @override
+  String get reticulumLibraryEmptyTagline2 =>
+      'Toggle \'Capture to disk\' on the diagnostics screen to start recording.';
+
+  @override
+  String get reticulumLibraryEmptyTagline3 =>
+      'Or import a .bin capture from another Socialmesh device.';
+
+  @override
+  String get reticulumLibraryImport => 'Import .bin file';
+
+  @override
+  String get reticulumLibraryRefresh => 'Refresh';
+
+  @override
+  String get reticulumLibraryKindHarness => 'HARNESS';
+
+  @override
+  String get reticulumLibraryKindReal => 'REAL CANDIDATE';
+
+  @override
+  String get reticulumLibraryKindInvalid => 'INVALID';
+
+  @override
+  String get reticulumLibraryKindUnsupported => 'UNSUPPORTED';
+
+  @override
+  String reticulumLibraryRecords(int count) {
+    return '$count records';
+  }
+
+  @override
+  String reticulumLibrarySources(int count) {
+    return '$count sources';
+  }
+
+  @override
+  String get reticulumLibraryNoTimestamp => 'No timestamp';
+
+  @override
+  String reticulumLibraryImportSuccess(String filename) {
+    return 'Imported $filename';
+  }
+
+  @override
+  String reticulumLibraryImportDuplicate(String filename) {
+    return 'Already in library: $filename';
+  }
+
+  @override
+  String get reticulumLibraryImportInvalid =>
+      'File is not a valid SMRC capture';
+
+  @override
+  String get reticulumLibraryImportUnsupported => 'Unsupported SMRC version';
+
+  @override
+  String get reticulumLibraryImportError => 'Import failed';
+
+  @override
+  String get reticulumDetailTitle => 'Capture detail';
+
+  @override
+  String get reticulumDetailSectionSummary => 'SUMMARY';
+
+  @override
+  String get reticulumDetailFilename => 'Filename';
+
+  @override
+  String get reticulumDetailKind => 'Kind';
+
+  @override
+  String get reticulumDetailRecordCount => 'Records';
+
+  @override
+  String get reticulumDetailFirstSeen => 'First seen';
+
+  @override
+  String get reticulumDetailLastSeen => 'Last seen';
+
+  @override
+  String get reticulumDetailDistinctSources => 'Distinct sources';
+
+  @override
+  String get reticulumDetailContainsHarness => 'Contains harness magic';
+
+  @override
+  String get reticulumDetailChecksum => 'SHA-256';
+
+  @override
+  String get reticulumDetailCreatedAt => 'Created at';
+
+  @override
+  String get reticulumDetailClassifiedAt => 'Classified at';
+
+  @override
+  String get reticulumDetailSectionProvenance => 'PROVENANCE';
+
+  @override
+  String get reticulumDetailSource => 'Source';
+
+  @override
+  String get reticulumDetailSourceLocal => 'Local';
+
+  @override
+  String get reticulumDetailSourceShared => 'Shared';
+
+  @override
+  String get reticulumDetailSourceAirdrop => 'AirDrop';
+
+  @override
+  String get reticulumDetailSourceManual => 'Manual';
+
+  @override
+  String get reticulumDetailDeviceModel => 'Device model';
+
+  @override
+  String get reticulumDetailDeviceModelHint => 'e.g. Heltec V3';
+
+  @override
+  String get reticulumDetailFirmwareVersion => 'Firmware version';
+
+  @override
+  String get reticulumDetailFirmwareVersionHint => 'e.g. 2.5.5.f8c10b8';
+
+  @override
+  String get reticulumDetailRegion => 'Region';
+
+  @override
+  String get reticulumDetailRegionHint => 'e.g. ANZ';
+
+  @override
+  String get reticulumDetailChannelIndex => 'Channel index';
+
+  @override
+  String get reticulumDetailChannelIndexHint => '0–7';
+
+  @override
+  String get reticulumDetailNotes => 'Notes';
+
+  @override
+  String get reticulumDetailNotesHint => 'Where, when, why';
+
+  @override
+  String get reticulumDetailSave => 'Save';
+
+  @override
+  String get reticulumDetailSaveSuccess => 'Saved';
+
+  @override
+  String get reticulumDetailShare => 'Share capture';
+
+  @override
+  String get reticulumDetailDelete => 'Delete capture';
+
+  @override
+  String get reticulumDetailDeleteConfirm => 'Delete this capture?';
+
+  @override
+  String get reticulumDetailDeleteConfirmDescription =>
+      'The capture file and its metadata sidecar are removed permanently.';
+
+  @override
+  String get reticulumDetailDeleteConfirmAction => 'Delete';
+
+  @override
+  String get reticulumDetailDeleteCancel => 'Cancel';
+
+  @override
+  String get reticulumDetailTrue => 'Yes';
+
+  @override
+  String get reticulumDetailFalse => 'No';
+
+  @override
+  String get reticulumDetailNoneSet => 'Not set';
 }

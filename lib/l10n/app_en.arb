@@ -48900,5 +48900,277 @@
     "nodeDexRnsActivityLastSeen": "RNS last seen",
     "@nodeDexRnsActivityLastSeen": {
         "description": "Node-detail info row label for the most recent fragment time from this source."
+    },
+    "reticulumDiagOpenLibrary": "Open capture library",
+    "@reticulumDiagOpenLibrary": {
+        "description": "Tile title for opening the Reticulum capture library."
+    },
+    "reticulumDiagOpenLibrarySubtitle": "Browse, label, and import captures",
+    "@reticulumDiagOpenLibrarySubtitle": {
+        "description": "Tile subtitle for opening the Reticulum capture library."
+    },
+    "reticulumLibraryTitle": "Capture Library",
+    "@reticulumLibraryTitle": {
+        "description": "Title for the Reticulum capture library screen."
+    },
+    "reticulumLibrarySectionCaptures": "CAPTURES",
+    "@reticulumLibrarySectionCaptures": {
+        "description": "Section header above the capture list."
+    },
+    "reticulumLibraryEmptyTitlePrefix": "No ",
+    "@reticulumLibraryEmptyTitlePrefix": {
+        "description": "Animated empty-state title prefix for the library screen."
+    },
+    "reticulumLibraryEmptyTitleKeyword": "captures",
+    "@reticulumLibraryEmptyTitleKeyword": {
+        "description": "Animated empty-state highlighted keyword."
+    },
+    "reticulumLibraryEmptyTitleSuffix": " yet",
+    "@reticulumLibraryEmptyTitleSuffix": {
+        "description": "Animated empty-state title suffix."
+    },
+    "reticulumLibraryEmptyTagline1": "No SMRC capture files have been recorded or imported.",
+    "@reticulumLibraryEmptyTagline1": {
+        "description": "Cycling tagline on the empty library screen."
+    },
+    "reticulumLibraryEmptyTagline2": "Toggle 'Capture to disk' on the diagnostics screen to start recording.",
+    "@reticulumLibraryEmptyTagline2": {
+        "description": "Cycling tagline on the empty library screen."
+    },
+    "reticulumLibraryEmptyTagline3": "Or import a .bin capture from another Socialmesh device.",
+    "@reticulumLibraryEmptyTagline3": {
+        "description": "Cycling tagline on the empty library screen."
+    },
+    "reticulumLibraryImport": "Import .bin file",
+    "@reticulumLibraryImport": {
+        "description": "Action button for importing an external capture file."
+    },
+    "reticulumLibraryRefresh": "Refresh",
+    "@reticulumLibraryRefresh": {
+        "description": "Action button for re-scanning the capture directory."
+    },
+    "reticulumLibraryKindHarness": "HARNESS",
+    "@reticulumLibraryKindHarness": {
+        "description": "Badge label for harness-generated captures."
+    },
+    "reticulumLibraryKindReal": "REAL CANDIDATE",
+    "@reticulumLibraryKindReal": {
+        "description": "Badge label for captures eligible as real-mesh inputs."
+    },
+    "reticulumLibraryKindInvalid": "INVALID",
+    "@reticulumLibraryKindInvalid": {
+        "description": "Badge label for captures that fail SMRC validation."
+    },
+    "reticulumLibraryKindUnsupported": "UNSUPPORTED",
+    "@reticulumLibraryKindUnsupported": {
+        "description": "Badge label for captures with an unsupported SMRC version."
+    },
+    "reticulumLibraryRecords": "{count} records",
+    "@reticulumLibraryRecords": {
+        "description": "Subtitle showing record count for a capture.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "reticulumLibrarySources": "{count} sources",
+    "@reticulumLibrarySources": {
+        "description": "Subtitle showing distinct source count for a capture.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "reticulumLibraryNoTimestamp": "No timestamp",
+    "@reticulumLibraryNoTimestamp": {
+        "description": "Placeholder when a capture has no first/last-seen timestamp."
+    },
+    "reticulumLibraryImportSuccess": "Imported {filename}",
+    "@reticulumLibraryImportSuccess": {
+        "description": "Snackbar shown when a capture imports successfully.",
+        "placeholders": {
+            "filename": {
+                "type": "String"
+            }
+        }
+    },
+    "reticulumLibraryImportDuplicate": "Already in library: {filename}",
+    "@reticulumLibraryImportDuplicate": {
+        "description": "Snackbar shown when an imported file's checksum matches an existing capture.",
+        "placeholders": {
+            "filename": {
+                "type": "String"
+            }
+        }
+    },
+    "reticulumLibraryImportInvalid": "File is not a valid SMRC capture",
+    "@reticulumLibraryImportInvalid": {
+        "description": "Snackbar for invalid-magic import rejection."
+    },
+    "reticulumLibraryImportUnsupported": "Unsupported SMRC version",
+    "@reticulumLibraryImportUnsupported": {
+        "description": "Snackbar for unsupported-version import rejection."
+    },
+    "reticulumLibraryImportError": "Import failed",
+    "@reticulumLibraryImportError": {
+        "description": "Snackbar for I/O errors during import."
+    },
+    "reticulumDetailTitle": "Capture detail",
+    "@reticulumDetailTitle": {
+        "description": "Title for the capture detail/edit screen."
+    },
+    "reticulumDetailSectionSummary": "SUMMARY",
+    "@reticulumDetailSectionSummary": {
+        "description": "Section header for the read-only summary table."
+    },
+    "reticulumDetailFilename": "Filename",
+    "@reticulumDetailFilename": {
+        "description": "Info-table label for the capture filename."
+    },
+    "reticulumDetailKind": "Kind",
+    "@reticulumDetailKind": {
+        "description": "Info-table label for the capture provenance kind."
+    },
+    "reticulumDetailRecordCount": "Records",
+    "@reticulumDetailRecordCount": {
+        "description": "Info-table label for the SMRC record count."
+    },
+    "reticulumDetailFirstSeen": "First seen",
+    "@reticulumDetailFirstSeen": {
+        "description": "Info-table label for the earliest record timestamp."
+    },
+    "reticulumDetailLastSeen": "Last seen",
+    "@reticulumDetailLastSeen": {
+        "description": "Info-table label for the latest record timestamp."
+    },
+    "reticulumDetailDistinctSources": "Distinct sources",
+    "@reticulumDetailDistinctSources": {
+        "description": "Info-table label for the distinct-source-nodeId count."
+    },
+    "reticulumDetailContainsHarness": "Contains harness magic",
+    "@reticulumDetailContainsHarness": {
+        "description": "Info-table label for whether any record carries the SHRN magic."
+    },
+    "reticulumDetailChecksum": "SHA-256",
+    "@reticulumDetailChecksum": {
+        "description": "Info-table label for the file's SHA-256 checksum."
+    },
+    "reticulumDetailCreatedAt": "Created at",
+    "@reticulumDetailCreatedAt": {
+        "description": "Info-table label for the file creation timestamp."
+    },
+    "reticulumDetailClassifiedAt": "Classified at",
+    "@reticulumDetailClassifiedAt": {
+        "description": "Info-table label for when the classifier last ran."
+    },
+    "reticulumDetailSectionProvenance": "PROVENANCE",
+    "@reticulumDetailSectionProvenance": {
+        "description": "Section header for the editable provenance fields."
+    },
+    "reticulumDetailSource": "Source",
+    "@reticulumDetailSource": {
+        "description": "Field label for capture source/origin."
+    },
+    "reticulumDetailSourceLocal": "Local",
+    "@reticulumDetailSourceLocal": {
+        "description": "Source option for captures recorded on this device."
+    },
+    "reticulumDetailSourceShared": "Shared",
+    "@reticulumDetailSourceShared": {
+        "description": "Source option for captures imported via share sheet."
+    },
+    "reticulumDetailSourceAirdrop": "AirDrop",
+    "@reticulumDetailSourceAirdrop": {
+        "description": "Source option for captures imported via AirDrop specifically."
+    },
+    "reticulumDetailSourceManual": "Manual",
+    "@reticulumDetailSourceManual": {
+        "description": "Source option for manually-supplied captures."
+    },
+    "reticulumDetailDeviceModel": "Device model",
+    "@reticulumDetailDeviceModel": {
+        "description": "Field label for the Meshtastic device hardware model."
+    },
+    "reticulumDetailDeviceModelHint": "e.g. Heltec V3",
+    "@reticulumDetailDeviceModelHint": {
+        "description": "Placeholder text for the device model field."
+    },
+    "reticulumDetailFirmwareVersion": "Firmware version",
+    "@reticulumDetailFirmwareVersion": {
+        "description": "Field label for the Meshtastic firmware build."
+    },
+    "reticulumDetailFirmwareVersionHint": "e.g. 2.5.5.f8c10b8",
+    "@reticulumDetailFirmwareVersionHint": {
+        "description": "Placeholder for the firmware version field."
+    },
+    "reticulumDetailRegion": "Region",
+    "@reticulumDetailRegion": {
+        "description": "Field label for the LoRa region setting at capture time."
+    },
+    "reticulumDetailRegionHint": "e.g. ANZ",
+    "@reticulumDetailRegionHint": {
+        "description": "Placeholder for the region field."
+    },
+    "reticulumDetailChannelIndex": "Channel index",
+    "@reticulumDetailChannelIndex": {
+        "description": "Field label for the Meshtastic channel index."
+    },
+    "reticulumDetailChannelIndexHint": "0–7",
+    "@reticulumDetailChannelIndexHint": {
+        "description": "Placeholder for the channel index field."
+    },
+    "reticulumDetailNotes": "Notes",
+    "@reticulumDetailNotes": {
+        "description": "Field label for free-form notes."
+    },
+    "reticulumDetailNotesHint": "Where, when, why",
+    "@reticulumDetailNotesHint": {
+        "description": "Placeholder for the notes field."
+    },
+    "reticulumDetailSave": "Save",
+    "@reticulumDetailSave": {
+        "description": "Submit button for the provenance edit form."
+    },
+    "reticulumDetailSaveSuccess": "Saved",
+    "@reticulumDetailSaveSuccess": {
+        "description": "Snackbar shown after a successful provenance save."
+    },
+    "reticulumDetailShare": "Share capture",
+    "@reticulumDetailShare": {
+        "description": "Action button for sharing the capture file."
+    },
+    "reticulumDetailDelete": "Delete capture",
+    "@reticulumDetailDelete": {
+        "description": "Action button for deleting a capture + sidecar."
+    },
+    "reticulumDetailDeleteConfirm": "Delete this capture?",
+    "@reticulumDetailDeleteConfirm": {
+        "description": "Confirmation sheet title for capture deletion."
+    },
+    "reticulumDetailDeleteConfirmDescription": "The capture file and its metadata sidecar are removed permanently.",
+    "@reticulumDetailDeleteConfirmDescription": {
+        "description": "Confirmation sheet body for capture deletion."
+    },
+    "reticulumDetailDeleteConfirmAction": "Delete",
+    "@reticulumDetailDeleteConfirmAction": {
+        "description": "Confirmation sheet primary action for capture deletion."
+    },
+    "reticulumDetailDeleteCancel": "Cancel",
+    "@reticulumDetailDeleteCancel": {
+        "description": "Confirmation sheet secondary action for capture deletion."
+    },
+    "reticulumDetailTrue": "Yes",
+    "@reticulumDetailTrue": {
+        "description": "Boolean true rendering in info tables."
+    },
+    "reticulumDetailFalse": "No",
+    "@reticulumDetailFalse": {
+        "description": "Boolean false rendering in info tables."
+    },
+    "reticulumDetailNoneSet": "Not set",
+    "@reticulumDetailNoneSet": {
+        "description": "Placeholder shown when an editable field is empty."
     }
 }
