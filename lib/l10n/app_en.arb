@@ -49305,9 +49305,9 @@
     "@reticulumBridgeHostLabel": {
         "description": "Input label for the rnsd host (IP or DNS name)."
     },
-    "reticulumBridgeHostHint": "127.0.0.1",
+    "reticulumBridgeHostHint": "rnsd host or IP",
     "@reticulumBridgeHostHint": {
-        "description": "Placeholder for the host input field."
+        "description": "Placeholder for the host input field. Avoid embedding the literal loopback IP — the codebase audit forbids hardcoded 127.0.0.1 in source, including ARB-derived generated files."
     },
     "reticulumBridgePortLabel": "Port",
     "@reticulumBridgePortLabel": {
@@ -49368,5 +49368,61 @@
     "reticulumBridgeTotalUptime": "Total uptime",
     "@reticulumBridgeTotalUptime": {
         "description": "Cumulative connected-time across all sessions in the lifetime of this provider."
+    },
+    "reticulumBridgeRxOnlyTitle": "RX-only",
+    "@reticulumBridgeRxOnlyTitle": {
+        "description": "Banner pill label clarifying the bridge does not transmit onto LoRa."
+    },
+    "reticulumBridgeRxOnlyMessage": "Socialmesh forwards reassembled RNS frames received over the air. No RNS frames are ever transmitted onto LoRa.",
+    "@reticulumBridgeRxOnlyMessage": {
+        "description": "Body text of the RX-only banner."
+    },
+    "reticulumBridgeLastForwardLabel": "Last forwarded",
+    "@reticulumBridgeLastForwardLabel": {
+        "description": "Row label for the wall-clock instant of the most recent successful frame forward."
+    },
+    "reticulumBridgeNeverForwarded": "Never",
+    "@reticulumBridgeNeverForwarded": {
+        "description": "Placeholder shown when no frame has ever been forwarded."
+    },
+    "reticulumBridgeRetryInLabel": "Next retry in",
+    "@reticulumBridgeRetryInLabel": {
+        "description": "Row label for the seconds remaining until the next reconnect attempt."
+    },
+    "reticulumBridgeBackoffAttemptLabel": "Backoff attempt",
+    "@reticulumBridgeBackoffAttemptLabel": {
+        "description": "Row label for the current exponential-backoff exponent (resets on connect)."
+    },
+    "reticulumBridgeConsecutiveErrorsLabel": "Consecutive errors",
+    "@reticulumBridgeConsecutiveErrorsLabel": {
+        "description": "Row label for the consecutive-failure counter (out of auto-disable threshold)."
+    },
+    "reticulumBridgeAutoDisabledTitle": "Bridge auto-disabled",
+    "@reticulumBridgeAutoDisabledTitle": {
+        "description": "Banner title shown when the bridge stopped retrying after repeated failures."
+    },
+    "reticulumBridgeAutoDisabledMessage": "Too many consecutive connect failures. Tap re-enable to try again, or check the host and port.",
+    "@reticulumBridgeAutoDisabledMessage": {
+        "description": "Banner body for the auto-disabled state."
+    },
+    "reticulumBridgeReEnable": "Re-enable",
+    "@reticulumBridgeReEnable": {
+        "description": "Button on the auto-disabled banner that clears the latch and reconnects."
+    },
+    "reticulumBridgeSectionSessionLog": "SESSION LOG",
+    "@reticulumBridgeSectionSessionLog": {
+        "description": "Section header for the bounded session-log ring buffer."
+    },
+    "reticulumBridgeSessionLogEmpty": "No bridge events yet.",
+    "@reticulumBridgeSessionLogEmpty": {
+        "description": "Placeholder shown when the session log is empty."
+    },
+    "reticulumBridgeCopyDiagnostics": "Copy diagnostics",
+    "@reticulumBridgeCopyDiagnostics": {
+        "description": "Button label that copies a single multi-line debug blob to the clipboard."
+    },
+    "reticulumBridgeCopiedSnack": "Diagnostics copied to clipboard",
+    "@reticulumBridgeCopiedSnack": {
+        "description": "Snackbar shown after the diagnostics blob is copied."
     }
 }

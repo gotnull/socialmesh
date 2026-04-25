@@ -36757,7 +36757,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reticulumBridgeHostLabel => 'Host';
 
   @override
-  String get reticulumBridgeHostHint => '127.0.0.1';
+  String get reticulumBridgeHostHint => 'rnsd host or IP';
 
   @override
   String get reticulumBridgePortLabel => 'Port';
@@ -36803,4 +36803,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reticulumBridgeTotalUptime => 'Total uptime';
+
+  @override
+  String get reticulumBridgeRxOnlyTitle => 'RX-only';
+
+  @override
+  String get reticulumBridgeRxOnlyMessage =>
+      'Socialmesh forwards reassembled RNS frames received over the air. No RNS frames are ever transmitted onto LoRa.';
+
+  @override
+  String get reticulumBridgeLastForwardLabel => 'Last forwarded';
+
+  @override
+  String get reticulumBridgeNeverForwarded => 'Never';
+
+  @override
+  String get reticulumBridgeRetryInLabel => 'Next retry in';
+
+  @override
+  String get reticulumBridgeBackoffAttemptLabel => 'Backoff attempt';
+
+  @override
+  String get reticulumBridgeConsecutiveErrorsLabel => 'Consecutive errors';
+
+  @override
+  String get reticulumBridgeAutoDisabledTitle => 'Bridge auto-disabled';
+
+  @override
+  String get reticulumBridgeAutoDisabledMessage =>
+      'Too many consecutive connect failures. Tap re-enable to try again, or check the host and port.';
+
+  @override
+  String get reticulumBridgeReEnable => 'Re-enable';
+
+  @override
+  String get reticulumBridgeSectionSessionLog => 'SESSION LOG';
+
+  @override
+  String get reticulumBridgeSessionLogEmpty => 'No bridge events yet.';
+
+  @override
+  String get reticulumBridgeCopyDiagnostics => 'Copy diagnostics';
+
+  @override
+  String get reticulumBridgeCopiedSnack => 'Diagnostics copied to clipboard';
 }

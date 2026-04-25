@@ -28,8 +28,35 @@ const int kReticulumBridgeQueueDepth = 32;
 const Duration kReticulumBridgeBackoffStart = Duration(seconds: 1);
 const Duration kReticulumBridgeBackoffCap = Duration(seconds: 60);
 
+/// Auto-disable threshold: after this many consecutive connect failures
+/// with zero successful connects in between, the service stops
+/// retrying and surfaces an `autoDisabled` flag. The UI re-engages
+/// via `clearAutoDisable`. Prevents indefinite retry loops on a
+/// permanently bad endpoint (battery + log-spam mitigation).
+const int kReticulumBridgeAutoDisableThreshold = 10;
+
+/// Maximum number of session-log entries the service retains. Bounded
+/// ring buffer; oldest entry evicted on overflow.
+const int kReticulumBridgeLogCapacity = 100;
+
 /// Coarse connection state surfaced to the UI / provider.
 enum ReticulumBridgeStatusKind { disconnected, connecting, connected, error }
+
+/// Severity of a bridge log entry. Maps to UI styling (info →
+/// textSecondary, warning → warningYellow, error → semanticDanger).
+enum ReticulumBridgeLogLevel { info, warning, error }
+
+class ReticulumBridgeLogEntry {
+  const ReticulumBridgeLogEntry({
+    required this.timestampMs,
+    required this.level,
+    required this.message,
+  });
+
+  final int timestampMs;
+  final ReticulumBridgeLogLevel level;
+  final String message;
+}
 
 class ReticulumBridgeStatus {
   const ReticulumBridgeStatus({required this.kind, this.lastError});
@@ -157,12 +184,16 @@ class ReticulumBridgeService {
     Duration backoffStart = kReticulumBridgeBackoffStart,
     Duration backoffCap = kReticulumBridgeBackoffCap,
     int outboundQueueDepth = kReticulumBridgeQueueDepth,
+    int autoDisableThreshold = kReticulumBridgeAutoDisableThreshold,
+    int logCapacity = kReticulumBridgeLogCapacity,
     math.Random? random,
     DateTime Function()? clock,
   }) : _socketFactory = socketFactory,
        _backoffStart = backoffStart,
        _backoffCap = backoffCap,
        _outboundQueueDepth = outboundQueueDepth,
+       _autoDisableThreshold = autoDisableThreshold,
+       _logCapacity = logCapacity,
        _random = random ?? math.Random(),
        _clock = clock ?? DateTime.now;
 
@@ -170,12 +201,19 @@ class ReticulumBridgeService {
   final Duration _backoffStart;
   final Duration _backoffCap;
   final int _outboundQueueDepth;
+  final int _autoDisableThreshold;
+  final int _logCapacity;
   final math.Random _random;
   final DateTime Function() _clock;
 
   final Queue<Uint8List> _queue = Queue<Uint8List>();
   final StreamController<ReticulumBridgeStatus> _statusController =
       StreamController<ReticulumBridgeStatus>.broadcast();
+
+  /// Bounded session-log ring buffer. Oldest at the head; eviction
+  /// kicks in when length exceeds [_logCapacity].
+  final Queue<ReticulumBridgeLogEntry> _logEntries =
+      Queue<ReticulumBridgeLogEntry>();
 
   ReticulumBridgeStatus _status = ReticulumBridgeStatus.disconnected;
   ReticulumBridgeCounters _counters = ReticulumBridgeCounters.empty;
@@ -184,15 +222,19 @@ class ReticulumBridgeService {
   bool _draining = false;
   bool _disposed = false;
   bool _userDisconnected = false;
+  bool _autoDisabled = false;
+  int _consecutiveConnectErrors = 0;
 
   String? _host;
   int? _port;
 
   int _backoffAttempt = 0;
   Duration? _lastBackoffDelay;
+  DateTime? _nextRetryAt;
 
   DateTime? _sessionStart;
   Duration _accumulatedUptime = Duration.zero;
+  DateTime? _lastForwardAt;
 
   Stream<ReticulumBridgeStatus> get statusStream => _statusController.stream;
   ReticulumBridgeStatus get status => _status;
@@ -208,6 +250,35 @@ class ReticulumBridgeService {
   /// Exposed for tests asserting that `connect()` success clears the
   /// previous failure history.
   int get currentBackoffAttempt => _backoffAttempt;
+
+  /// Wall-clock instant a retry timer is scheduled to fire, or null
+  /// when no retry is pending. UI can compute remaining time as
+  /// `nextRetryAt.difference(now)`.
+  DateTime? get nextRetryAt => _nextRetryAt;
+
+  /// Wall-clock instant of the last successful frame forward, or
+  /// null if no frame has ever been forwarded.
+  DateTime? get lastForwardAt => _lastForwardAt;
+
+  /// Number of connect failures since the last successful connect.
+  /// Resets to 0 on success. When this reaches [_autoDisableThreshold]
+  /// the service flips [autoDisabled] true and stops retrying.
+  int get consecutiveConnectErrors => _consecutiveConnectErrors;
+
+  /// `true` when repeated failures crossed the auto-disable threshold
+  /// and the service stopped retrying. The provider should mirror
+  /// this into the persistent enable flag and surface it in the UI.
+  /// Cleared by [clearAutoDisable].
+  bool get autoDisabled => _autoDisabled;
+
+  /// Threshold the service uses for auto-disable. Exposed so the UI
+  /// can render `attempt N of M`.
+  int get autoDisableThreshold => _autoDisableThreshold;
+
+  /// Snapshot of the session log ring buffer. Returned in append
+  /// order (oldest first). The list is unmodifiable.
+  List<ReticulumBridgeLogEntry> get logEntries =>
+      List.unmodifiable(_logEntries);
 
   /// Time spent in `connected` state across the lifetime of this
   /// service, including the current session if connected. Increments
@@ -292,11 +363,15 @@ class ReticulumBridgeService {
   // ── internals ──────────────────────────────────────────────────
 
   Future<void> _attemptConnect() async {
-    if (_disposed || _userDisconnected) return;
+    if (_disposed || _userDisconnected || _autoDisabled) return;
     _setStatus(
       const ReticulumBridgeStatus(kind: ReticulumBridgeStatusKind.connecting),
     );
     _counters = _counters._add(connectAttempts: 1);
+    _appendLog(
+      ReticulumBridgeLogLevel.info,
+      'Connecting to tcp://$_host:$_port',
+    );
     try {
       final socket = await _socketFactory(_host!, _port!);
       if (_disposed || _userDisconnected) {
@@ -308,23 +383,73 @@ class ReticulumBridgeService {
       _socket = socket;
       _backoffAttempt = 0;
       _lastBackoffDelay = null;
+      _nextRetryAt = null;
+      _consecutiveConnectErrors = 0;
       _sessionStart = _clock();
       _setStatus(
         const ReticulumBridgeStatus(kind: ReticulumBridgeStatusKind.connected),
+      );
+      _appendLog(
+        ReticulumBridgeLogLevel.info,
+        'Connected to tcp://$_host:$_port',
       );
       // Auto-reconnect when the socket closes for any reason.
       unawaited(socket.done.then((_) => _onSocketClosed('peer_closed')));
       _scheduleDrain();
     } catch (e) {
       _counters = _counters._add(connectErrors: 1);
+      _consecutiveConnectErrors++;
+      final formatted = _formatError(e);
+      _appendLog(
+        ReticulumBridgeLogLevel.error,
+        'Connect failed ($_consecutiveConnectErrors/'
+        '$_autoDisableThreshold): $formatted',
+      );
+      if (_consecutiveConnectErrors >= _autoDisableThreshold) {
+        _autoDisabled = true;
+        _retryTimer?.cancel();
+        _retryTimer = null;
+        _nextRetryAt = null;
+        _appendLog(
+          ReticulumBridgeLogLevel.warning,
+          'Auto-disabled after $_consecutiveConnectErrors consecutive '
+          'failures. Tap re-enable to try again.',
+        );
+        _setStatus(
+          ReticulumBridgeStatus(
+            kind: ReticulumBridgeStatusKind.error,
+            lastError: formatted,
+          ),
+        );
+        return;
+      }
       _setStatus(
         ReticulumBridgeStatus(
           kind: ReticulumBridgeStatusKind.error,
-          lastError: _formatError(e),
+          lastError: formatted,
         ),
       );
       _scheduleRetry();
     }
+  }
+
+  /// Clears the auto-disable latch and re-engages connection attempts.
+  /// Called from the UI when the user explicitly retries after a
+  /// repeated-failure shutdown. No-op if the service is currently
+  /// connected or wasn't auto-disabled.
+  Future<void> clearAutoDisable() async {
+    if (!_autoDisabled || _disposed) return;
+    _autoDisabled = false;
+    _consecutiveConnectErrors = 0;
+    _appendLog(
+      ReticulumBridgeLogLevel.info,
+      'Auto-disable cleared by user; resuming connection attempts.',
+    );
+    if (_userDisconnected || _host == null || _port == null) {
+      _emitChange();
+      return;
+    }
+    await _attemptConnect();
   }
 
   /// Wrap an underlying error with the destination we were trying to
@@ -349,6 +474,7 @@ class ReticulumBridgeService {
     _socket = null;
     _accumulateUptime();
     if (_userDisconnected) {
+      _appendLog(ReticulumBridgeLogLevel.info, 'Disconnected by user.');
       _setStatus(
         const ReticulumBridgeStatus(
           kind: ReticulumBridgeStatusKind.disconnected,
@@ -356,6 +482,10 @@ class ReticulumBridgeService {
       );
       return;
     }
+    _appendLog(
+      ReticulumBridgeLogLevel.warning,
+      'Connection lost: $reason. Will retry.',
+    );
     _setStatus(
       ReticulumBridgeStatus(
         kind: ReticulumBridgeStatusKind.error,
@@ -384,11 +514,25 @@ class ReticulumBridgeService {
   }
 
   void _scheduleRetry() {
-    if (_disposed || _userDisconnected) return;
+    if (_disposed || _userDisconnected || _autoDisabled) return;
     final delay = _nextBackoff();
     _lastBackoffDelay = delay;
+    _nextRetryAt = _clock().add(delay);
     _retryTimer?.cancel();
     _retryTimer = Timer(delay, _attemptConnect);
+  }
+
+  void _appendLog(ReticulumBridgeLogLevel level, String message) {
+    _logEntries.add(
+      ReticulumBridgeLogEntry(
+        timestampMs: _clock().millisecondsSinceEpoch,
+        level: level,
+        message: message,
+      ),
+    );
+    while (_logEntries.length > _logCapacity) {
+      _logEntries.removeFirst();
+    }
   }
 
   /// Full-jitter exponential backoff:
@@ -435,9 +579,14 @@ class ReticulumBridgeService {
         try {
           await _socket!.write(wire);
           _counters = _counters._add(forwarded: 1);
+          _lastForwardAt = _clock();
           _emitChange();
         } catch (e) {
           _counters = _counters._add(droppedFramingError: 1);
+          _appendLog(
+            ReticulumBridgeLogLevel.error,
+            'Write failed: ${_formatError(e)}',
+          );
           _emitChange();
           // Write errors mean the socket is dead; tear down and let
           // auto-reconnect take over.

@@ -64756,10 +64756,10 @@ abstract class AppLocalizations {
   /// **'Host'**
   String get reticulumBridgeHostLabel;
 
-  /// Placeholder for the host input field.
+  /// Placeholder for the host input field. Avoid embedding the literal loopback IP — the codebase audit forbids hardcoded 127.0.0.1 in source, including ARB-derived generated files.
   ///
   /// In en, this message translates to:
-  /// **'127.0.0.1'**
+  /// **'rnsd host or IP'**
   String get reticulumBridgeHostHint;
 
   /// Input label for the rnsd TCP port.
@@ -64851,6 +64851,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Total uptime'**
   String get reticulumBridgeTotalUptime;
+
+  /// Banner pill label clarifying the bridge does not transmit onto LoRa.
+  ///
+  /// In en, this message translates to:
+  /// **'RX-only'**
+  String get reticulumBridgeRxOnlyTitle;
+
+  /// Body text of the RX-only banner.
+  ///
+  /// In en, this message translates to:
+  /// **'Socialmesh forwards reassembled RNS frames received over the air. No RNS frames are ever transmitted onto LoRa.'**
+  String get reticulumBridgeRxOnlyMessage;
+
+  /// Row label for the wall-clock instant of the most recent successful frame forward.
+  ///
+  /// In en, this message translates to:
+  /// **'Last forwarded'**
+  String get reticulumBridgeLastForwardLabel;
+
+  /// Placeholder shown when no frame has ever been forwarded.
+  ///
+  /// In en, this message translates to:
+  /// **'Never'**
+  String get reticulumBridgeNeverForwarded;
+
+  /// Row label for the seconds remaining until the next reconnect attempt.
+  ///
+  /// In en, this message translates to:
+  /// **'Next retry in'**
+  String get reticulumBridgeRetryInLabel;
+
+  /// Row label for the current exponential-backoff exponent (resets on connect).
+  ///
+  /// In en, this message translates to:
+  /// **'Backoff attempt'**
+  String get reticulumBridgeBackoffAttemptLabel;
+
+  /// Row label for the consecutive-failure counter (out of auto-disable threshold).
+  ///
+  /// In en, this message translates to:
+  /// **'Consecutive errors'**
+  String get reticulumBridgeConsecutiveErrorsLabel;
+
+  /// Banner title shown when the bridge stopped retrying after repeated failures.
+  ///
+  /// In en, this message translates to:
+  /// **'Bridge auto-disabled'**
+  String get reticulumBridgeAutoDisabledTitle;
+
+  /// Banner body for the auto-disabled state.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many consecutive connect failures. Tap re-enable to try again, or check the host and port.'**
+  String get reticulumBridgeAutoDisabledMessage;
+
+  /// Button on the auto-disabled banner that clears the latch and reconnects.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-enable'**
+  String get reticulumBridgeReEnable;
+
+  /// Section header for the bounded session-log ring buffer.
+  ///
+  /// In en, this message translates to:
+  /// **'SESSION LOG'**
+  String get reticulumBridgeSectionSessionLog;
+
+  /// Placeholder shown when the session log is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No bridge events yet.'**
+  String get reticulumBridgeSessionLogEmpty;
+
+  /// Button label that copies a single multi-line debug blob to the clipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy diagnostics'**
+  String get reticulumBridgeCopyDiagnostics;
+
+  /// Snackbar shown after the diagnostics blob is copied.
+  ///
+  /// In en, this message translates to:
+  /// **'Diagnostics copied to clipboard'**
+  String get reticulumBridgeCopiedSnack;
 }
 
 class _AppLocalizationsDelegate

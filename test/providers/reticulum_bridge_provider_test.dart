@@ -351,4 +351,158 @@ void main() {
       },
     );
   });
+
+  group('ReticulumBridgeProvider — hardening surface', () {
+    test('lastForwardAt + log entries propagate into UI state', () async {
+      final factory = _FakeFactory();
+      factory.queueSocket(_FakeBridgeSocket());
+      final ctrl = StreamController<ReticulumFrame>.broadcast();
+      addTearDown(ctrl.close);
+      final c = _makeContainer(factory: factory, frames: ctrl.stream);
+
+      await c.read(reticulumBridgeProvider.future);
+      await c.read(reticulumFlagsProvider.notifier).setReassemblyEnabled(true);
+      await c.read(reticulumFlagsProvider.notifier).setBridgeEnabled(true);
+      await _pump();
+
+      ctrl.add(_frame(0));
+      await _pump();
+
+      final s = c.read(reticulumBridgeProvider).value!;
+      expect(s.lastForwardAt, isNotNull);
+      // Initial connecting + connected lifecycle entries must show.
+      expect(s.logEntries, isNotEmpty);
+      expect(
+        s.logEntries.any((e) => e.message.contains('Connected to tcp://')),
+        isTrue,
+      );
+    });
+
+    test(
+      'autoDisabled propagates and forces bridgeEnabled flag false',
+      () async {
+        final factory = _FakeFactory();
+        // Threshold = 2, queue 3 errors so service flips autoDisabled
+        // after the 2nd error (and never tries the 3rd).
+        for (var i = 0; i < 3; i++) {
+          factory.queueError(StateError('boom $i'));
+        }
+        final ctrl = StreamController<ReticulumFrame>.broadcast();
+        addTearDown(ctrl.close);
+
+        final c = ProviderContainer(
+          overrides: [
+            reticulumBridgeSocketFactoryProvider.overrideWithValue(
+              factory.connect,
+            ),
+            reticulumBridgeFrameSourceProvider.overrideWithValue(ctrl.stream),
+            reticulumBridgeAutoDisableThresholdProvider.overrideWithValue(2),
+          ],
+        );
+        addTearDown(c.dispose);
+
+        await c.read(reticulumBridgeProvider.future);
+        await c
+            .read(reticulumFlagsProvider.notifier)
+            .setReassemblyEnabled(true);
+        await c.read(reticulumFlagsProvider.notifier).setBridgeEnabled(true);
+        // Pump enough turns for: first connect attempt + retry +
+        // second connect attempt → autoDisabled.
+        // Poll until the auto-disable latch fires or we hit the
+        // bound. Backoff is 0–1000ms + 0–2000ms in worst case.
+        for (var i = 0; i < 400; i++) {
+          if (c.read(reticulumBridgeProvider).value?.autoDisabled ?? false) {
+            break;
+          }
+          await Future<void>.delayed(const Duration(milliseconds: 10));
+        }
+
+        final s = c.read(reticulumBridgeProvider).value!;
+        expect(s.autoDisabled, isTrue);
+        expect(s.consecutiveConnectErrors, 2);
+        expect(s.autoDisableThreshold, 2);
+        // Mirror into persistent flag.
+        expect(s.enabled, isFalse);
+        expect(c.read(reticulumFlagsProvider).bridgeEnabled, isFalse);
+      },
+    );
+
+    test(
+      'clearAutoDisable re-enables bridge and re-flips persistent flag',
+      () async {
+        final factory = _FakeFactory();
+        // Two errors → autoDisabled, then one good socket on
+        // re-engage.
+        factory.queueError(StateError('a'));
+        factory.queueError(StateError('b'));
+        factory.queueSocket(_FakeBridgeSocket());
+
+        final ctrl = StreamController<ReticulumFrame>.broadcast();
+        addTearDown(ctrl.close);
+
+        final c = ProviderContainer(
+          overrides: [
+            reticulumBridgeSocketFactoryProvider.overrideWithValue(
+              factory.connect,
+            ),
+            reticulumBridgeFrameSourceProvider.overrideWithValue(ctrl.stream),
+            reticulumBridgeAutoDisableThresholdProvider.overrideWithValue(2),
+          ],
+        );
+        addTearDown(c.dispose);
+
+        await c.read(reticulumBridgeProvider.future);
+        await c
+            .read(reticulumFlagsProvider.notifier)
+            .setReassemblyEnabled(true);
+        await c.read(reticulumFlagsProvider.notifier).setBridgeEnabled(true);
+        // Poll until the auto-disable latch fires or we hit the
+        // bound. Backoff is 0–1000ms + 0–2000ms in worst case.
+        for (var i = 0; i < 400; i++) {
+          if (c.read(reticulumBridgeProvider).value?.autoDisabled ?? false) {
+            break;
+          }
+          await Future<void>.delayed(const Duration(milliseconds: 10));
+        }
+        expect(c.read(reticulumBridgeProvider).value!.autoDisabled, isTrue);
+
+        await c.read(reticulumBridgeProvider.notifier).clearAutoDisable();
+        await _pump();
+
+        final s = c.read(reticulumBridgeProvider).value!;
+        expect(s.autoDisabled, isFalse);
+        expect(s.status.kind, ReticulumBridgeStatusKind.connected);
+        expect(s.enabled, isTrue);
+        expect(c.read(reticulumFlagsProvider).bridgeEnabled, isTrue);
+      },
+    );
+
+    test(
+      'buildDiagnosticsBlob includes endpoint, status, counters, log',
+      () async {
+        final factory = _FakeFactory();
+        factory.queueSocket(_FakeBridgeSocket());
+        final ctrl = StreamController<ReticulumFrame>.broadcast();
+        addTearDown(ctrl.close);
+        final c = _makeContainer(factory: factory, frames: ctrl.stream);
+
+        await c.read(reticulumBridgeProvider.future);
+        await c
+            .read(reticulumFlagsProvider.notifier)
+            .setReassemblyEnabled(true);
+        await c.read(reticulumFlagsProvider.notifier).setBridgeEnabled(true);
+        await _pump();
+
+        final blob = c
+            .read(reticulumBridgeProvider.notifier)
+            .buildDiagnosticsBlob();
+        expect(blob, contains('# Reticulum Bridge Diagnostics'));
+        expect(blob, contains('endpoint: tcp://'));
+        expect(blob, contains('status:   connected'));
+        expect(blob, contains('counters:'));
+        expect(blob, contains('forwarded:'));
+        expect(blob, contains('log (oldest first'));
+      },
+    );
+  });
 }
