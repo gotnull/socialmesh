@@ -332,6 +332,69 @@ void main() {
     );
   });
 
+  group('Derived metrics', () {
+    test(
+      'avgFragmentsPerFrame is the running mean across emitted frames',
+      () async {
+        final reasm = ReticulumReassembler();
+        addTearDown(reasm.dispose);
+        // Frame A: N=1
+        reasm.onFragment(
+          _frag(fromNode: 1, index: 0, position: -1, body: [0x00]),
+        );
+        // Frame B: N=3
+        reasm.onFragment(
+          _frag(fromNode: 1, index: 1, position: 1, body: [0x00]),
+        );
+        reasm.onFragment(
+          _frag(fromNode: 1, index: 1, position: 2, body: [0x00]),
+        );
+        reasm.onFragment(
+          _frag(fromNode: 1, index: 1, position: -3, body: [0x00]),
+        );
+        expect(reasm.stats.framesEmitted, 2);
+        // (1 + 3) / 2 = 2.0
+        expect(reasm.stats.avgFragmentsPerFrame, closeTo(2.0, 0.0001));
+      },
+    );
+
+    test('activeBuffers + bufferedBytes reflect live state', () async {
+      final reasm = ReticulumReassembler();
+      addTearDown(reasm.dispose);
+      reasm.onFragment(
+        _frag(fromNode: 1, index: 0, position: 1, body: [0x00, 0x00, 0x00]),
+      );
+      expect(reasm.stats.activeBuffers, 1);
+      expect(reasm.stats.bufferedBytes, 3);
+      reasm.onFragment(
+        _frag(fromNode: 2, index: 0, position: 1, body: [0x00, 0x00]),
+      );
+      expect(reasm.stats.activeBuffers, 2);
+      expect(reasm.stats.bufferedBytes, 5);
+    });
+
+    test('framesPerSecond uses 60s rolling window, decays on tick', () async {
+      var nowMs = 1_000_000_000;
+      final reasm = ReticulumReassembler(
+        clock: () => DateTime.fromMillisecondsSinceEpoch(nowMs),
+      );
+      addTearDown(reasm.dispose);
+      // Emit 6 frames at +1s intervals.
+      for (var i = 0; i < 6; i++) {
+        reasm.onFragment(
+          _frag(fromNode: i, index: 0, position: -1, body: [0x00]),
+        );
+        nowMs += 1000;
+      }
+      // 6 frames / 60s window = 0.1 fps.
+      expect(reasm.stats.framesPerSecond, closeTo(6 / 60.0, 0.001));
+      // Advance well past 60s. Tick prunes the window.
+      nowMs += 120_000;
+      reasm.tick();
+      expect(reasm.stats.framesPerSecond, 0.0);
+    });
+  });
+
   group('Stats success rate', () {
     test('framesEmitted / totalAttempted', () async {
       final reasm = ReticulumReassembler();

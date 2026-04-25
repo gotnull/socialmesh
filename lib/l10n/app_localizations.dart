@@ -64557,6 +64557,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not set'**
   String get reticulumDetailNoneSet;
+
+  /// Section header for Phase 2 reassembler counters.
+  ///
+  /// In en, this message translates to:
+  /// **'REASSEMBLY'**
+  String get reticulumDiagSectionReassembly;
+
+  /// Lifetime count of fully reassembled RNS frames.
+  ///
+  /// In en, this message translates to:
+  /// **'Frames reassembled'**
+  String get reticulumDiagFramesReassembled;
+
+  /// Reassembled-frame rate over the rolling 60-second window.
+  ///
+  /// In en, this message translates to:
+  /// **'Frames/sec (60s)'**
+  String get reticulumDiagFramesPerSecond;
+
+  /// Running mean of fragment count across emitted frames.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg fragments per frame'**
+  String get reticulumDiagAvgFragmentsPerFrame;
+
+  /// Frames emitted divided by total reassembly attempts.
+  ///
+  /// In en, this message translates to:
+  /// **'Success rate %'**
+  String get reticulumDiagSuccessRate;
+
+  /// Counter: fragments rejected because the 2-byte header could not be parsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Dropped — decode error'**
+  String get reticulumDiagDroppedDecodeError;
+
+  /// Counter: partial frames dropped after the inactivity TTL elapsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Dropped — inactivity timeout'**
+  String get reticulumDiagDroppedTimeoutInactivity;
+
+  /// Counter: partial frames dropped after the absolute TTL elapsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Dropped — absolute TTL'**
+  String get reticulumDiagDroppedTimeoutAbsolute;
+
+  /// Counter: buffers evicted because of concurrent-buffer or fragment-count caps.
+  ///
+  /// In en, this message translates to:
+  /// **'Dropped — overflow'**
+  String get reticulumDiagDroppedOverflow;
+
+  /// Counter: frames dropped because their assembled body would exceed the size cap.
+  ///
+  /// In en, this message translates to:
+  /// **'Dropped — oversize'**
+  String get reticulumDiagDroppedOversize;
+
+  /// Counter: fragment retransmissions silently overwritten.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate fragments'**
+  String get reticulumDiagDuplicateFragments;
+
+  /// Live gauge: partial buffers held in memory right now.
+  ///
+  /// In en, this message translates to:
+  /// **'Active buffers'**
+  String get reticulumDiagActiveBuffers;
+
+  /// Live gauge: total fragment-body bytes pinned in memory across all buffers.
+  ///
+  /// In en, this message translates to:
+  /// **'Buffered bytes'**
+  String get reticulumDiagBufferedBytes;
 }
 
 class _AppLocalizationsDelegate

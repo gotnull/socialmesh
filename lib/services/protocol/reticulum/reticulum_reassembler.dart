@@ -63,6 +63,18 @@ class ReticulumReassembler {
 
   int _globalBytes = 0;
 
+  /// Wall-clock timestamps (ms) of every emitted frame, used for the
+  /// 60 s rolling-window `framesPerSecond` derived metric. Pruned in
+  /// [_pruneEmissionWindow] on every state-change.
+  final Queue<int> _emittedTimestampsMs = Queue<int>();
+
+  /// Sum of `fragmentCount` over every emitted frame, used to compute
+  /// `avgFragmentsPerFrame`.
+  int _totalFragmentsEmitted = 0;
+
+  /// Rolling-window width for `framesPerSecond`, in seconds.
+  static const int _windowSeconds = 60;
+
   final StreamController<ReticulumFrame> _framesController =
       StreamController<ReticulumFrame>.broadcast();
   final StreamController<ReticulumReassemblerStats> _statsController =
@@ -91,11 +103,11 @@ class ReticulumReassembler {
     try {
       header = _parser.parse(event.payload);
     } on ReticulumFragmentDecodeError catch (e) {
-      _bumpStats(droppedDecodeError: 1);
+      _emitStats(droppedDecodeError: 1);
       ReticulumSafeLog.decodeError(reason: e.reason);
       return;
     } catch (e) {
-      _bumpStats(droppedDecodeError: 1);
+      _emitStats(droppedDecodeError: 1);
       ReticulumSafeLog.decodeError(reason: 'parser_exception: $e');
       return;
     }
@@ -122,7 +134,7 @@ class ReticulumReassembler {
       if (bodyLen > _maxFrameSizeBytes) {
         // Single fragment alone exceeds frame-size cap. Drop without
         // ever creating a buffer.
-        _bumpStats(droppedOversize: 1);
+        _emitStats(droppedOversize: 1);
         ReticulumSafeLog.event(
           'reasm_oversize_first_fragment from=0x${event.fromNode.toRadixString(16)} '
           'index=${header.index} body_len=$bodyLen',
@@ -139,7 +151,7 @@ class ReticulumReassembler {
     if (!buffer.fragments.containsKey(fragNum) &&
         buffer.fragments.length >= _maxFragmentsPerBuffer) {
       _dropBuffer(key, buffer, 'overflow_fragments');
-      _bumpStats(droppedOverflow: 1);
+      _emitStats(droppedOverflow: 1);
       return;
     }
 
@@ -149,7 +161,7 @@ class ReticulumReassembler {
     final delta = bodyLen - priorSize;
     if (buffer.totalBytes + delta > _maxFrameSizeBytes) {
       _dropBuffer(key, buffer, 'oversize');
-      _bumpStats(droppedOversize: 1);
+      _emitStats(droppedOversize: 1);
       return;
     }
 
@@ -172,15 +184,14 @@ class ReticulumReassembler {
       buffer.totalCount = fragNum;
     }
 
-    _bumpStats(duplicate: isDuplicate ? 1 : 0);
-
     // Try to emit if complete.
     if (buffer.totalCount != null && _bufferComplete(buffer)) {
       final body = _assembleBuffer(buffer);
+      final n = buffer.totalCount!;
       final frame = ReticulumFrame(
         fromNode: event.fromNode,
         index: header.index,
-        fragmentCount: buffer.totalCount!,
+        fragmentCount: n,
         body: body,
         firstSeenMs: buffer.firstSeenMs,
         lastSeenMs: nowMs,
@@ -188,13 +199,17 @@ class ReticulumReassembler {
       // Remove from buffers + memory accounting.
       _globalBytes -= buffer.totalBytes;
       _buffers.remove(key);
-      _bumpStats(emitted: 1);
+      // Track for derived metrics.
+      _emittedTimestampsMs.add(nowMs);
+      _totalFragmentsEmitted += n;
       ReticulumSafeLog.event(
         'reasm_emit from=0x${event.fromNode.toRadixString(16)} '
-        'index=${header.index} N=${frame.fragmentCount} '
-        'body_len=${frame.bodyLen}',
+        'index=${header.index} N=$n body_len=${frame.bodyLen}',
       );
       _framesController.add(frame);
+      _emitStats(emitted: 1, duplicate: isDuplicate ? 1 : 0);
+    } else {
+      _emitStats(duplicate: isDuplicate ? 1 : 0);
     }
   }
 
@@ -219,12 +234,19 @@ class ReticulumReassembler {
     for (final k in keysToAbsolute) {
       final buf = _buffers[k]!;
       _dropBuffer(k, buf, 'timeout_absolute');
-      _bumpStats(droppedTimeoutAbsolute: 1);
+      _emitStats(droppedTimeoutAbsolute: 1);
     }
     for (final k in keysToInactivity) {
       final buf = _buffers[k]!;
       _dropBuffer(k, buf, 'timeout_inactivity');
-      _bumpStats(droppedTimeoutInactivity: 1);
+      _emitStats(droppedTimeoutInactivity: 1);
+    }
+    // Emit a fresh snapshot regardless of whether anything dropped —
+    // keeps `framesPerSecond` decaying toward zero on the UI when
+    // emissions stop, and keeps `activeBuffers` / `bufferedBytes`
+    // gauges fresh under the 1 Hz Timer that drives this method.
+    if (keysToAbsolute.isEmpty && keysToInactivity.isEmpty) {
+      _emitStats();
     }
   }
 
@@ -250,7 +272,7 @@ class ReticulumReassembler {
     final firstKey = _buffers.keys.first;
     final buf = _buffers[firstKey]!;
     _dropBuffer(firstKey, buf, reason);
-    _bumpStats(droppedOverflow: 1);
+    _emitStats(droppedOverflow: 1);
   }
 
   void _dropBuffer(int key, _Buffer buffer, String reason) {
@@ -280,7 +302,7 @@ class ReticulumReassembler {
     return builder.toBytes();
   }
 
-  void _bumpStats({
+  void _emitStats({
     int emitted = 0,
     int duplicate = 0,
     int droppedOverflow = 0,
@@ -290,8 +312,16 @@ class ReticulumReassembler {
     int droppedDecodeError = 0,
   }) {
     final s = _stats;
+    final newFramesEmitted = s.framesEmitted + emitted;
+    _pruneEmissionWindow();
+    final framesPerSecond = _emittedTimestampsMs.isEmpty
+        ? 0.0
+        : _emittedTimestampsMs.length / _windowSeconds;
+    final avgFragmentsPerFrame = newFramesEmitted == 0
+        ? 0.0
+        : _totalFragmentsEmitted / newFramesEmitted;
     _stats = ReticulumReassemblerStats(
-      framesEmitted: s.framesEmitted + emitted,
+      framesEmitted: newFramesEmitted,
       duplicateFragments: s.duplicateFragments + duplicate,
       droppedOverflow: s.droppedOverflow + droppedOverflow,
       droppedOversize: s.droppedOversize + droppedOversize,
@@ -299,8 +329,21 @@ class ReticulumReassembler {
           s.droppedTimeoutInactivity + droppedTimeoutInactivity,
       droppedTimeoutAbsolute: s.droppedTimeoutAbsolute + droppedTimeoutAbsolute,
       droppedDecodeError: s.droppedDecodeError + droppedDecodeError,
+      avgFragmentsPerFrame: avgFragmentsPerFrame,
+      framesPerSecond: framesPerSecond,
+      activeBuffers: _buffers.length,
+      bufferedBytes: _globalBytes,
     );
     _statsController.add(_stats);
+  }
+
+  void _pruneEmissionWindow() {
+    if (_emittedTimestampsMs.isEmpty) return;
+    final cutoff = _clock().millisecondsSinceEpoch - _windowSeconds * 1000;
+    while (_emittedTimestampsMs.isNotEmpty &&
+        _emittedTimestampsMs.first < cutoff) {
+      _emittedTimestampsMs.removeFirst();
+    }
   }
 }
 
@@ -333,6 +376,10 @@ class ReticulumReassemblerStats {
     this.droppedTimeoutInactivity = 0,
     this.droppedTimeoutAbsolute = 0,
     this.droppedDecodeError = 0,
+    this.avgFragmentsPerFrame = 0.0,
+    this.framesPerSecond = 0.0,
+    this.activeBuffers = 0,
+    this.bufferedBytes = 0,
   });
 
   static const empty = ReticulumReassemblerStats();
@@ -344,6 +391,21 @@ class ReticulumReassemblerStats {
   final int droppedTimeoutInactivity;
   final int droppedTimeoutAbsolute;
   final int droppedDecodeError;
+
+  /// Running mean of `fragmentCount` across emitted frames. Stays at
+  /// `0.0` until the first frame is emitted.
+  final double avgFragmentsPerFrame;
+
+  /// Frames emitted per second across the last 60 s of wall-clock.
+  /// Decays toward zero when emissions stop (`tick()` prunes).
+  final double framesPerSecond;
+
+  /// Number of partial buffers held in memory right now.
+  final int activeBuffers;
+
+  /// Total `body.length` bytes pinned in partial buffers right now.
+  /// Bounded by `kGlobalMemoryCapBytes` (256 KiB by default).
+  final int bufferedBytes;
 
   /// Total number of frames the reassembler has *attempted* to
   /// reassemble, completed or otherwise. Useful for the success-rate

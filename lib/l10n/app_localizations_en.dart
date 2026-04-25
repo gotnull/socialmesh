@@ -36649,4 +36649,44 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reticulumDetailNoneSet => 'Not set';
+
+  @override
+  String get reticulumDiagSectionReassembly => 'REASSEMBLY';
+
+  @override
+  String get reticulumDiagFramesReassembled => 'Frames reassembled';
+
+  @override
+  String get reticulumDiagFramesPerSecond => 'Frames/sec (60s)';
+
+  @override
+  String get reticulumDiagAvgFragmentsPerFrame => 'Avg fragments per frame';
+
+  @override
+  String get reticulumDiagSuccessRate => 'Success rate %';
+
+  @override
+  String get reticulumDiagDroppedDecodeError => 'Dropped — decode error';
+
+  @override
+  String get reticulumDiagDroppedTimeoutInactivity =>
+      'Dropped — inactivity timeout';
+
+  @override
+  String get reticulumDiagDroppedTimeoutAbsolute => 'Dropped — absolute TTL';
+
+  @override
+  String get reticulumDiagDroppedOverflow => 'Dropped — overflow';
+
+  @override
+  String get reticulumDiagDroppedOversize => 'Dropped — oversize';
+
+  @override
+  String get reticulumDiagDuplicateFragments => 'Duplicate fragments';
+
+  @override
+  String get reticulumDiagActiveBuffers => 'Active buffers';
+
+  @override
+  String get reticulumDiagBufferedBytes => 'Buffered bytes';
 }

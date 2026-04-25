@@ -19,6 +19,7 @@ import '../../core/widgets/section_header.dart';
 import '../../providers/reticulum_providers.dart';
 import '../../services/protocol/reticulum/reticulum_capture_writer.dart';
 import '../../services/protocol/reticulum/reticulum_flags.dart';
+import '../../services/protocol/reticulum/reticulum_reassembler.dart';
 import '../../services/protocol/reticulum/reticulum_stats.dart';
 import '../../utils/snackbar.dart';
 import 'reticulum_capture_library_screen.dart';
@@ -74,6 +75,7 @@ class _ReticulumDiagnosticsScreenState
   Widget build(BuildContext context) {
     final flags = ref.watch(reticulumFlagsProvider);
     final stats = ref.watch(reticulumStatsProvider);
+    final reasmStats = ref.watch(reticulumReassemblerStatsProvider);
     final writer = ref.watch(reticulumCaptureWriterProvider);
 
     return GestureDetector(
@@ -90,6 +92,10 @@ class _ReticulumDiagnosticsScreenState
                   _EmptyState()
                 else
                   _OverviewSection(stats: stats),
+                if (flags.reassemblyEnabled) ...[
+                  const SizedBox(height: AppTheme.spacing16),
+                  _ReassemblySection(stats: reasmStats),
+                ],
                 const SizedBox(height: AppTheme.spacing16),
                 _CaptureSection(
                   flags: flags,
@@ -253,6 +259,96 @@ class _OverviewSection extends StatelessWidget {
                 label: context.l10n.reticulumDiagFragmentsPerSecond,
                 value: _formatRate(stats.fragmentsPerSecond),
                 icon: Icons.speed_outlined,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// -----------------------------------------------------------------------------
+
+class _ReassemblySection extends StatelessWidget {
+  const _ReassemblySection({required this.stats});
+  final ReticulumReassemblerStats stats;
+
+  String _fmtRate(double v) => v.toStringAsFixed(2);
+
+  String _fmtPercent(double v01) => '${(v01 * 100).toStringAsFixed(1)}%';
+
+  String _fmtAvg(double v) => v.toStringAsFixed(2);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SectionTitle(title: context.l10n.reticulumDiagSectionReassembly),
+          InfoTable(
+            rows: [
+              InfoTableRow(
+                label: context.l10n.reticulumDiagFramesReassembled,
+                value: '${stats.framesEmitted}',
+                icon: Icons.merge_outlined,
+              ),
+              InfoTableRow(
+                label: context.l10n.reticulumDiagFramesPerSecond,
+                value: _fmtRate(stats.framesPerSecond),
+                icon: Icons.speed_outlined,
+              ),
+              InfoTableRow(
+                label: context.l10n.reticulumDiagAvgFragmentsPerFrame,
+                value: _fmtAvg(stats.avgFragmentsPerFrame),
+                icon: Icons.linear_scale,
+              ),
+              InfoTableRow(
+                label: context.l10n.reticulumDiagSuccessRate,
+                value: _fmtPercent(stats.successRate),
+                icon: Icons.check_circle_outline,
+              ),
+              InfoTableRow(
+                label: context.l10n.reticulumDiagDroppedDecodeError,
+                value: '${stats.droppedDecodeError}',
+                icon: Icons.error_outline,
+              ),
+              InfoTableRow(
+                label: context.l10n.reticulumDiagDroppedTimeoutInactivity,
+                value: '${stats.droppedTimeoutInactivity}',
+                icon: Icons.hourglass_disabled_outlined,
+              ),
+              InfoTableRow(
+                label: context.l10n.reticulumDiagDroppedTimeoutAbsolute,
+                value: '${stats.droppedTimeoutAbsolute}',
+                icon: Icons.timer_off_outlined,
+              ),
+              InfoTableRow(
+                label: context.l10n.reticulumDiagDroppedOverflow,
+                value: '${stats.droppedOverflow}',
+                icon: Icons.dynamic_feed_outlined,
+              ),
+              InfoTableRow(
+                label: context.l10n.reticulumDiagDroppedOversize,
+                value: '${stats.droppedOversize}',
+                icon: Icons.straighten_outlined,
+              ),
+              InfoTableRow(
+                label: context.l10n.reticulumDiagDuplicateFragments,
+                value: '${stats.duplicateFragments}',
+                icon: Icons.content_copy_outlined,
+              ),
+              InfoTableRow(
+                label: context.l10n.reticulumDiagActiveBuffers,
+                value: '${stats.activeBuffers}',
+                icon: Icons.storage_outlined,
+              ),
+              InfoTableRow(
+                label: context.l10n.reticulumDiagBufferedBytes,
+                value: '${stats.bufferedBytes}',
+                icon: Icons.data_array,
               ),
             ],
           ),

@@ -49172,5 +49172,57 @@
     "reticulumDetailNoneSet": "Not set",
     "@reticulumDetailNoneSet": {
         "description": "Placeholder shown when an editable field is empty."
+    },
+    "reticulumDiagSectionReassembly": "REASSEMBLY",
+    "@reticulumDiagSectionReassembly": {
+        "description": "Section header for Phase 2 reassembler counters."
+    },
+    "reticulumDiagFramesReassembled": "Frames reassembled",
+    "@reticulumDiagFramesReassembled": {
+        "description": "Lifetime count of fully reassembled RNS frames."
+    },
+    "reticulumDiagFramesPerSecond": "Frames/sec (60s)",
+    "@reticulumDiagFramesPerSecond": {
+        "description": "Reassembled-frame rate over the rolling 60-second window."
+    },
+    "reticulumDiagAvgFragmentsPerFrame": "Avg fragments per frame",
+    "@reticulumDiagAvgFragmentsPerFrame": {
+        "description": "Running mean of fragment count across emitted frames."
+    },
+    "reticulumDiagSuccessRate": "Success rate %",
+    "@reticulumDiagSuccessRate": {
+        "description": "Frames emitted divided by total reassembly attempts."
+    },
+    "reticulumDiagDroppedDecodeError": "Dropped — decode error",
+    "@reticulumDiagDroppedDecodeError": {
+        "description": "Counter: fragments rejected because the 2-byte header could not be parsed."
+    },
+    "reticulumDiagDroppedTimeoutInactivity": "Dropped — inactivity timeout",
+    "@reticulumDiagDroppedTimeoutInactivity": {
+        "description": "Counter: partial frames dropped after the inactivity TTL elapsed."
+    },
+    "reticulumDiagDroppedTimeoutAbsolute": "Dropped — absolute TTL",
+    "@reticulumDiagDroppedTimeoutAbsolute": {
+        "description": "Counter: partial frames dropped after the absolute TTL elapsed."
+    },
+    "reticulumDiagDroppedOverflow": "Dropped — overflow",
+    "@reticulumDiagDroppedOverflow": {
+        "description": "Counter: buffers evicted because of concurrent-buffer or fragment-count caps."
+    },
+    "reticulumDiagDroppedOversize": "Dropped — oversize",
+    "@reticulumDiagDroppedOversize": {
+        "description": "Counter: frames dropped because their assembled body would exceed the size cap."
+    },
+    "reticulumDiagDuplicateFragments": "Duplicate fragments",
+    "@reticulumDiagDuplicateFragments": {
+        "description": "Counter: fragment retransmissions silently overwritten."
+    },
+    "reticulumDiagActiveBuffers": "Active buffers",
+    "@reticulumDiagActiveBuffers": {
+        "description": "Live gauge: partial buffers held in memory right now."
+    },
+    "reticulumDiagBufferedBytes": "Buffered bytes",
+    "@reticulumDiagBufferedBytes": {
+        "description": "Live gauge: total fragment-body bytes pinned in memory across all buffers."
     }
 }
