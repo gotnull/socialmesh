@@ -320,11 +320,28 @@ class ReticulumBridgeService {
       _setStatus(
         ReticulumBridgeStatus(
           kind: ReticulumBridgeStatusKind.error,
-          lastError: e.toString(),
+          lastError: _formatError(e),
         ),
       );
       _scheduleRetry();
     }
+  }
+
+  /// Wrap an underlying error with the destination we were trying to
+  /// reach. The OS-level `SocketException` text often includes the
+  /// local ephemeral source port (which changes each retry), so the
+  /// destination is the durable signal users actually want.
+  String _formatError(Object underlying) {
+    final dest = _host == null || _port == null ? '?' : 'tcp://$_host:$_port';
+    final raw = underlying.toString();
+    // Strip the misleading "address = ..., port = ..." suffix that
+    // SocketException appends — those are the LOCAL bind, not the
+    // destination, and they confuse users.
+    final cleaned = raw.replaceAll(
+      RegExp(r',\s*address\s*=\s*[^,)]+,\s*port\s*=\s*\d+'),
+      '',
+    );
+    return '$dest — $cleaned';
   }
 
   void _onSocketClosed(String reason) {
@@ -342,7 +359,7 @@ class ReticulumBridgeService {
     _setStatus(
       ReticulumBridgeStatus(
         kind: ReticulumBridgeStatusKind.error,
-        lastError: reason,
+        lastError: _formatError(reason),
       ),
     );
     _scheduleRetry();
@@ -453,7 +470,7 @@ class ReticulumBridgeService {
     _setStatus(
       ReticulumBridgeStatus(
         kind: ReticulumBridgeStatusKind.error,
-        lastError: reason,
+        lastError: _formatError(reason),
       ),
     );
     _scheduleRetry();

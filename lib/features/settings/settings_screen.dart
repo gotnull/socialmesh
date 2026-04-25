@@ -549,7 +549,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             ),
           ),
         if (AppFeatureFlags.isReticulumTunnelEnabled &&
-            ref.watch(reticulumFlagsProvider).diagnosticsEnabled &&
             ref.watch(reticulumFlagsProvider).reassemblyEnabled)
           _SearchableSettingItem(
             icon: Icons.cable,
