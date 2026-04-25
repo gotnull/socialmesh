@@ -14,17 +14,24 @@ class RnsCompanionHealth {
     required this.ok,
     required this.service,
     required this.version,
+    required this.mode,
   });
 
   final bool ok;
   final String service;
   final String version;
 
+  /// Identifier of the active data source on the companion side
+  /// (`"stub"` or `"live"`). Defaults to `"unknown"` when the
+  /// companion is older than v0.2 and doesn't emit the field.
+  final String mode;
+
   factory RnsCompanionHealth.fromJson(Map<String, dynamic> json) {
     return RnsCompanionHealth(
       ok: json['ok'] as bool,
       service: json['service'] as String,
       version: json['version'] as String,
+      mode: (json['mode'] as String?) ?? 'unknown',
     );
   }
 
@@ -32,6 +39,7 @@ class RnsCompanionHealth {
     'ok': ok,
     'service': service,
     'version': version,
+    'mode': mode,
   };
 }
 

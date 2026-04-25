@@ -49572,6 +49572,47 @@
             "version": {"type": "String", "example": "0.1"}
         }
     },
+    "rnsCompanionStatusConnectedWithMode": "Connected · v{version} · {mode}",
+    "@rnsCompanionStatusConnectedWithMode": {
+        "description": "Status-pill text including version + active data source mode (LIVE / STUB).",
+        "placeholders": {
+            "version": {"type": "String", "example": "0.1"},
+            "mode": {"type": "String", "example": "LIVE"}
+        }
+    },
+    "rnsCompanionLastAnnounceLabel": "Last announce",
+    "@rnsCompanionLastAnnounceLabel": {
+        "description": "Label preceding the time-since-last-announce gauge."
+    },
+    "rnsCompanionLastAnnounceNever": "no announces yet",
+    "@rnsCompanionLastAnnounceNever": {
+        "description": "Shown by the time-since gauge when zero services have been seen."
+    },
+    "rnsCompanionLastAnnounceJustNow": "just now",
+    "@rnsCompanionLastAnnounceJustNow": {
+        "description": "Time-since label when the most recent announce was within ~5 seconds."
+    },
+    "rnsCompanionLastAnnounceSeconds": "{n}s ago",
+    "@rnsCompanionLastAnnounceSeconds": {
+        "description": "Time-since label, sub-minute granularity.",
+        "placeholders": {
+            "n": {"type": "int", "example": "12"}
+        }
+    },
+    "rnsCompanionLastAnnounceMinutes": "{n}m ago",
+    "@rnsCompanionLastAnnounceMinutes": {
+        "description": "Time-since label, minutes granularity.",
+        "placeholders": {
+            "n": {"type": "int", "example": "5"}
+        }
+    },
+    "rnsCompanionLastAnnounceHours": "{n}h ago",
+    "@rnsCompanionLastAnnounceHours": {
+        "description": "Time-since label, hours granularity.",
+        "placeholders": {
+            "n": {"type": "int", "example": "2"}
+        }
+    },
     "rnsCompanionStatusUnreachable": "Unreachable",
     "@rnsCompanionStatusUnreachable": {
         "description": "Status-pill text when /health fails."

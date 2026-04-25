@@ -89,6 +89,7 @@ void main() {
             'ok': true,
             'service': 'rns_companion',
             'version': '0.1',
+            'mode': 'stub',
           }),
           200,
         );
@@ -97,6 +98,38 @@ void main() {
       expect(h.ok, isTrue);
       expect(h.service, 'rns_companion');
       expect(h.version, '0.1');
+      expect(h.mode, 'stub');
+    });
+
+    test('getHealth tolerates missing mode field (older companion)', () async {
+      final mock = MockClient(
+        (_) async => http.Response(
+          jsonEncode(<String, dynamic>{
+            'ok': true,
+            'service': 'rns_companion',
+            'version': '0.1',
+          }),
+          200,
+        ),
+      );
+      final h = await _client(mock).getHealth();
+      expect(h.mode, 'unknown');
+    });
+
+    test('getHealth recognises live mode', () async {
+      final mock = MockClient(
+        (_) async => http.Response(
+          jsonEncode(<String, dynamic>{
+            'ok': true,
+            'service': 'rns_companion',
+            'version': '0.1',
+            'mode': 'live',
+          }),
+          200,
+        ),
+      );
+      final h = await _client(mock).getHealth();
+      expect(h.mode, 'live');
     });
   });
 

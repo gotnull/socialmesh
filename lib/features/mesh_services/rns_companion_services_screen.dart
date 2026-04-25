@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
+import 'package:flutter/cupertino.dart' show CupertinoSliverRefreshControl;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -39,12 +40,23 @@ class RnsCompanionServicesScreen extends ConsumerWidget {
         ),
       ],
       slivers: [
+        CupertinoSliverRefreshControl(
+          onRefresh: () async {
+            HapticFeedback.selectionClick();
+            ref.invalidate(rnsCompanionHealthProvider);
+            ref.invalidate(rnsCompanionServicesProvider);
+            // Wait for the next frame so the indicator stays visible
+            // long enough to feel responsive.
+            await Future<void>.delayed(const Duration(milliseconds: 250));
+          },
+        ),
         SliverPadding(
           padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing8),
           sliver: SliverList.list(
             children: [
               const _ExperimentalHeader(),
               const _ConnectionStatusPill(),
+              const _LastAnnounceChip(),
               ...asyncServices.when(
                 data: (services) {
                   if (services.isEmpty) {
@@ -160,7 +172,12 @@ class _ConnectionStatusPill extends ConsumerWidget {
       data: (h) => (
         color: context.accentColor,
         icon: Icons.check_circle_outline,
-        label: context.l10n.rnsCompanionStatusConnectedWithVersion(h.version),
+        label: h.mode == 'unknown'
+            ? context.l10n.rnsCompanionStatusConnectedWithVersion(h.version)
+            : context.l10n.rnsCompanionStatusConnectedWithMode(
+                h.version,
+                h.mode.toUpperCase(),
+              ),
       ),
       error: (_, _) => (
         color: SemanticColors.error,
@@ -218,6 +235,68 @@ class _ConnectionStatusPill extends ConsumerWidget {
         ),
       ),
     );
+  }
+}
+
+class _LastAnnounceChip extends ConsumerWidget {
+  const _LastAnnounceChip();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final asyncServices = ref.watch(rnsCompanionServicesProvider);
+    final services = asyncServices.value;
+    if (services == null) {
+      // Loading or error — the connection pill above already covers
+      // these states. Render nothing to avoid duplicate noise.
+      return const SizedBox.shrink();
+    }
+
+    final String label;
+    if (services.isEmpty) {
+      label =
+          '${context.l10n.rnsCompanionLastAnnounceLabel}: '
+          '${context.l10n.rnsCompanionLastAnnounceNever}';
+    } else {
+      final mostRecent = services
+          .map((s) => s.lastSeen)
+          .reduce((a, b) => a > b ? a : b);
+      final ageSeconds =
+          DateTime.now().millisecondsSinceEpoch ~/ 1000 - mostRecent;
+      label =
+          '${context.l10n.rnsCompanionLastAnnounceLabel}: '
+          '${_fmtAge(context, ageSeconds)}';
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppTheme.spacing16,
+        0,
+        AppTheme.spacing16,
+        AppTheme.spacing12,
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.schedule, size: 14, color: context.textTertiary),
+          const SizedBox(width: AppTheme.spacing4),
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(fontSize: 11, color: context.textTertiary),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _fmtAge(BuildContext context, int seconds) {
+    final s = seconds.clamp(0, 1 << 31);
+    if (s < 5) return context.l10n.rnsCompanionLastAnnounceJustNow;
+    if (s < 60) return context.l10n.rnsCompanionLastAnnounceSeconds(s);
+    if (s < 3600) {
+      return context.l10n.rnsCompanionLastAnnounceMinutes(s ~/ 60);
+    }
+    return context.l10n.rnsCompanionLastAnnounceHours(s ~/ 3600);
   }
 }
 

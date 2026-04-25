@@ -37291,5 +37291,34 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String rnsCompanionStatusConnectedWithMode(String version, String mode) {
+    return 'Connected · v$version · $mode';
+  }
+
+  @override
+  String get rnsCompanionLastAnnounceLabel => 'Last announce';
+
+  @override
+  String get rnsCompanionLastAnnounceNever => 'no announces yet';
+
+  @override
+  String get rnsCompanionLastAnnounceJustNow => 'just now';
+
+  @override
+  String rnsCompanionLastAnnounceSeconds(int n) {
+    return '${n}s ago';
+  }
+
+  @override
+  String rnsCompanionLastAnnounceMinutes(int n) {
+    return '${n}m ago';
+  }
+
+  @override
+  String rnsCompanionLastAnnounceHours(int n) {
+    return '${n}h ago';
+  }
+
+  @override
   String get rnsCompanionStatusUnreachable => 'Unreachable';
 }

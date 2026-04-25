@@ -65152,6 +65152,48 @@ abstract class AppLocalizations {
   /// **'Connected · v{version}'**
   String rnsCompanionStatusConnectedWithVersion(String version);
 
+  /// Status-pill text including version + active data source mode (LIVE / STUB).
+  ///
+  /// In en, this message translates to:
+  /// **'Connected · v{version} · {mode}'**
+  String rnsCompanionStatusConnectedWithMode(String version, String mode);
+
+  /// Label preceding the time-since-last-announce gauge.
+  ///
+  /// In en, this message translates to:
+  /// **'Last announce'**
+  String get rnsCompanionLastAnnounceLabel;
+
+  /// Shown by the time-since gauge when zero services have been seen.
+  ///
+  /// In en, this message translates to:
+  /// **'no announces yet'**
+  String get rnsCompanionLastAnnounceNever;
+
+  /// Time-since label when the most recent announce was within ~5 seconds.
+  ///
+  /// In en, this message translates to:
+  /// **'just now'**
+  String get rnsCompanionLastAnnounceJustNow;
+
+  /// Time-since label, sub-minute granularity.
+  ///
+  /// In en, this message translates to:
+  /// **'{n}s ago'**
+  String rnsCompanionLastAnnounceSeconds(int n);
+
+  /// Time-since label, minutes granularity.
+  ///
+  /// In en, this message translates to:
+  /// **'{n}m ago'**
+  String rnsCompanionLastAnnounceMinutes(int n);
+
+  /// Time-since label, hours granularity.
+  ///
+  /// In en, this message translates to:
+  /// **'{n}h ago'**
+  String rnsCompanionLastAnnounceHours(int n);
+
   /// Status-pill text when /health fails.
   ///
   /// In en, this message translates to:
