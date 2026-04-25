@@ -79,4 +79,69 @@ class ReticulumSafeLog {
     if (offset != null) buf.write(' offset=$offset');
     AppLogging.reticulum(buf.toString());
   }
+
+  /// Fragment header successfully parsed. Surfaces the wire-level view
+  /// (raw signed `position`, derived `fragmentNumber`, `isLast` flag)
+  /// before the reassembler decides what to do with it.
+  static void header({
+    required int fromNode,
+    required int index,
+    required int position,
+    required bool isLast,
+    required int fragmentNumber,
+    required int bodyLen,
+  }) {
+    AppLogging.reticulum(
+      'frag_header '
+      'from=0x${fromNode.toRadixString(16)} '
+      'index=$index '
+      'position=$position '
+      'fragNum=$fragmentNumber '
+      'isLast=$isLast '
+      'body_len=$bodyLen',
+    );
+  }
+
+  /// First fragment of a frame created a fresh reassembly buffer.
+  static void bufferOpen({
+    required int key,
+    required int fromNode,
+    required int index,
+    required int fragNum,
+    required int bodyLen,
+  }) {
+    AppLogging.reticulum(
+      'reasm_buffer_open '
+      'key=0x${key.toRadixString(16)} '
+      'from=0x${fromNode.toRadixString(16)} '
+      'index=$index '
+      'fragNum=$fragNum '
+      'body_len=$bodyLen',
+    );
+  }
+
+  /// Subsequent fragment merged into an existing buffer. `have` is the
+  /// fragment count after this insert; `totalN` is the known frame size
+  /// (`null` until the last-fragment marker is seen).
+  static void bufferAdd({
+    required int key,
+    required int fragNum,
+    required int bodyLen,
+    required int have,
+    int? totalN,
+    required bool duplicate,
+  }) {
+    final buf = StringBuffer('reasm_buffer_add ')
+      ..write('key=0x${key.toRadixString(16)} ')
+      ..write('fragNum=$fragNum ')
+      ..write('body_len=$bodyLen ')
+      ..write('have=$have/');
+    if (totalN == null) {
+      buf.write('?');
+    } else {
+      buf.write(totalN);
+    }
+    buf.write(' duplicate=$duplicate');
+    AppLogging.reticulum(buf.toString());
+  }
 }

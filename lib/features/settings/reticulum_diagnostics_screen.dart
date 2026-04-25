@@ -41,6 +41,11 @@ class _ReticulumDiagnosticsScreenState
     await ref.read(reticulumFlagsProvider.notifier).setCaptureEnabled(value);
   }
 
+  Future<void> _toggleReassembly(bool value) async {
+    HapticFeedback.selectionClick();
+    await ref.read(reticulumFlagsProvider.notifier).setReassemblyEnabled(value);
+  }
+
   Future<void> _shareCaptures() async {
     HapticFeedback.selectionClick();
     final writer = ref.read(reticulumCaptureWriterProvider);
@@ -92,10 +97,12 @@ class _ReticulumDiagnosticsScreenState
                   _EmptyState()
                 else
                   _OverviewSection(stats: stats),
-                if (flags.reassemblyEnabled) ...[
-                  const SizedBox(height: AppTheme.spacing16),
-                  _ReassemblySection(stats: reasmStats),
-                ],
+                const SizedBox(height: AppTheme.spacing16),
+                _ReassemblySection(
+                  enabled: flags.reassemblyEnabled,
+                  stats: reasmStats,
+                  onToggle: _toggleReassembly,
+                ),
                 const SizedBox(height: AppTheme.spacing16),
                 _CaptureSection(
                   flags: flags,
@@ -271,8 +278,14 @@ class _OverviewSection extends StatelessWidget {
 // -----------------------------------------------------------------------------
 
 class _ReassemblySection extends StatelessWidget {
-  const _ReassemblySection({required this.stats});
+  const _ReassemblySection({
+    required this.enabled,
+    required this.stats,
+    required this.onToggle,
+  });
+  final bool enabled;
   final ReticulumReassemblerStats stats;
+  final ValueChanged<bool> onToggle;
 
   String _fmtRate(double v) => v.toStringAsFixed(2);
 
@@ -282,78 +295,105 @@ class _ReassemblySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SectionTitle(title: context.l10n.reticulumDiagSectionReassembly),
-          InfoTable(
-            rows: [
-              InfoTableRow(
-                label: context.l10n.reticulumDiagFramesReassembled,
-                value: '${stats.framesEmitted}',
-                icon: Icons.merge_outlined,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionHeader(title: context.l10n.reticulumDiagSectionReassembly),
+        _SettingsTile(
+          icon: Icons.merge_outlined,
+          iconColor: enabled ? context.accentColor : null,
+          title: context.l10n.reticulumDiagReassemblyEnable,
+          subtitle: context.l10n.reticulumDiagReassemblyEnableSubtitle,
+          trailing: ThemedSwitch(value: enabled, onChanged: onToggle),
+        ),
+        if (!enabled)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppTheme.spacing16,
+              AppTheme.spacing8,
+              AppTheme.spacing16,
+              AppTheme.spacing8,
+            ),
+            child: Text(
+              context.l10n.reticulumDiagReassemblyDisabledHint,
+              style: TextStyle(
+                fontSize: 12,
+                color: context.textTertiary,
+                height: 1.4,
               ),
-              InfoTableRow(
-                label: context.l10n.reticulumDiagFramesPerSecond,
-                value: _fmtRate(stats.framesPerSecond),
-                icon: Icons.speed_outlined,
-              ),
-              InfoTableRow(
-                label: context.l10n.reticulumDiagAvgFragmentsPerFrame,
-                value: _fmtAvg(stats.avgFragmentsPerFrame),
-                icon: Icons.linear_scale,
-              ),
-              InfoTableRow(
-                label: context.l10n.reticulumDiagSuccessRate,
-                value: _fmtPercent(stats.successRate),
-                icon: Icons.check_circle_outline,
-              ),
-              InfoTableRow(
-                label: context.l10n.reticulumDiagDroppedDecodeError,
-                value: '${stats.droppedDecodeError}',
-                icon: Icons.error_outline,
-              ),
-              InfoTableRow(
-                label: context.l10n.reticulumDiagDroppedTimeoutInactivity,
-                value: '${stats.droppedTimeoutInactivity}',
-                icon: Icons.hourglass_disabled_outlined,
-              ),
-              InfoTableRow(
-                label: context.l10n.reticulumDiagDroppedTimeoutAbsolute,
-                value: '${stats.droppedTimeoutAbsolute}',
-                icon: Icons.timer_off_outlined,
-              ),
-              InfoTableRow(
-                label: context.l10n.reticulumDiagDroppedOverflow,
-                value: '${stats.droppedOverflow}',
-                icon: Icons.dynamic_feed_outlined,
-              ),
-              InfoTableRow(
-                label: context.l10n.reticulumDiagDroppedOversize,
-                value: '${stats.droppedOversize}',
-                icon: Icons.straighten_outlined,
-              ),
-              InfoTableRow(
-                label: context.l10n.reticulumDiagDuplicateFragments,
-                value: '${stats.duplicateFragments}',
-                icon: Icons.content_copy_outlined,
-              ),
-              InfoTableRow(
-                label: context.l10n.reticulumDiagActiveBuffers,
-                value: '${stats.activeBuffers}',
-                icon: Icons.storage_outlined,
-              ),
-              InfoTableRow(
-                label: context.l10n.reticulumDiagBufferedBytes,
-                value: '${stats.bufferedBytes}',
-                icon: Icons.data_array,
-              ),
-            ],
+            ),
+          ),
+        if (enabled) ...[
+          const SizedBox(height: AppTheme.spacing8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+            child: InfoTable(
+              rows: [
+                InfoTableRow(
+                  label: context.l10n.reticulumDiagFramesReassembled,
+                  value: '${stats.framesEmitted}',
+                  icon: Icons.merge_outlined,
+                ),
+                InfoTableRow(
+                  label: context.l10n.reticulumDiagFramesPerSecond,
+                  value: _fmtRate(stats.framesPerSecond),
+                  icon: Icons.speed_outlined,
+                ),
+                InfoTableRow(
+                  label: context.l10n.reticulumDiagAvgFragmentsPerFrame,
+                  value: _fmtAvg(stats.avgFragmentsPerFrame),
+                  icon: Icons.linear_scale,
+                ),
+                InfoTableRow(
+                  label: context.l10n.reticulumDiagSuccessRate,
+                  value: _fmtPercent(stats.successRate),
+                  icon: Icons.check_circle_outline,
+                ),
+                InfoTableRow(
+                  label: context.l10n.reticulumDiagDroppedDecodeError,
+                  value: '${stats.droppedDecodeError}',
+                  icon: Icons.error_outline,
+                ),
+                InfoTableRow(
+                  label: context.l10n.reticulumDiagDroppedTimeoutInactivity,
+                  value: '${stats.droppedTimeoutInactivity}',
+                  icon: Icons.hourglass_disabled_outlined,
+                ),
+                InfoTableRow(
+                  label: context.l10n.reticulumDiagDroppedTimeoutAbsolute,
+                  value: '${stats.droppedTimeoutAbsolute}',
+                  icon: Icons.timer_off_outlined,
+                ),
+                InfoTableRow(
+                  label: context.l10n.reticulumDiagDroppedOverflow,
+                  value: '${stats.droppedOverflow}',
+                  icon: Icons.dynamic_feed_outlined,
+                ),
+                InfoTableRow(
+                  label: context.l10n.reticulumDiagDroppedOversize,
+                  value: '${stats.droppedOversize}',
+                  icon: Icons.straighten_outlined,
+                ),
+                InfoTableRow(
+                  label: context.l10n.reticulumDiagDuplicateFragments,
+                  value: '${stats.duplicateFragments}',
+                  icon: Icons.content_copy_outlined,
+                ),
+                InfoTableRow(
+                  label: context.l10n.reticulumDiagActiveBuffers,
+                  value: '${stats.activeBuffers}',
+                  icon: Icons.storage_outlined,
+                ),
+                InfoTableRow(
+                  label: context.l10n.reticulumDiagBufferedBytes,
+                  value: '${stats.bufferedBytes}',
+                  icon: Icons.data_array,
+                ),
+              ],
+            ),
           ),
         ],
-      ),
+      ],
     );
   }
 }

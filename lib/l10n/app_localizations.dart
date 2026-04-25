@@ -64564,6 +64564,24 @@ abstract class AppLocalizations {
   /// **'REASSEMBLY'**
   String get reticulumDiagSectionReassembly;
 
+  /// Toggle label for enabling the Phase 2 fragment reassembler.
+  ///
+  /// In en, this message translates to:
+  /// **'Reassemble fragments'**
+  String get reticulumDiagReassemblyEnable;
+
+  /// Subtitle for the reassembly enable toggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Combine fragments into whole RNS frames in memory'**
+  String get reticulumDiagReassemblyEnableSubtitle;
+
+  /// Helper text shown under the reassembly toggle when it is off.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable to start counting frames; raw fragments still flow into capture and the overview above.'**
+  String get reticulumDiagReassemblyDisabledHint;
+
   /// Lifetime count of fully reassembled RNS frames.
   ///
   /// In en, this message translates to:

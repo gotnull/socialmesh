@@ -36979,6 +36979,17 @@ class AppLocalizationsPt extends AppLocalizations {
   String get reticulumDiagSectionReassembly => 'REASSEMBLY';
 
   @override
+  String get reticulumDiagReassemblyEnable => 'Reassemble fragments';
+
+  @override
+  String get reticulumDiagReassemblyEnableSubtitle =>
+      'Combine fragments into whole RNS frames in memory';
+
+  @override
+  String get reticulumDiagReassemblyDisabledHint =>
+      'Enable to start counting frames; raw fragments still flow into capture and the overview above.';
+
+  @override
   String get reticulumDiagFramesReassembled => 'Frames reassembled';
 
   @override

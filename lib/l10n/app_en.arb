@@ -49177,6 +49177,18 @@
     "@reticulumDiagSectionReassembly": {
         "description": "Section header for Phase 2 reassembler counters."
     },
+    "reticulumDiagReassemblyEnable": "Reassemble fragments",
+    "@reticulumDiagReassemblyEnable": {
+        "description": "Toggle label for enabling the Phase 2 fragment reassembler."
+    },
+    "reticulumDiagReassemblyEnableSubtitle": "Combine fragments into whole RNS frames in memory",
+    "@reticulumDiagReassemblyEnableSubtitle": {
+        "description": "Subtitle for the reassembly enable toggle."
+    },
+    "reticulumDiagReassemblyDisabledHint": "Enable to start counting frames; raw fragments still flow into capture and the overview above.",
+    "@reticulumDiagReassemblyDisabledHint": {
+        "description": "Helper text shown under the reassembly toggle when it is off."
+    },
     "reticulumDiagFramesReassembled": "Frames reassembled",
     "@reticulumDiagFramesReassembled": {
         "description": "Lifetime count of fully reassembled RNS frames."

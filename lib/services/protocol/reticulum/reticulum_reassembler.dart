@@ -117,7 +117,17 @@ class ReticulumReassembler {
     final fragNum = header.fragmentNumber;
     final bodyLen = header.body.length;
 
+    ReticulumSafeLog.header(
+      fromNode: event.fromNode,
+      index: header.index,
+      position: header.position,
+      isLast: header.isLast,
+      fragmentNumber: fragNum,
+      bodyLen: bodyLen,
+    );
+
     var buffer = _buffers[key];
+    final isNewBuffer = buffer == null;
     if (buffer == null) {
       // Drop oldest if we'd exceed concurrent-buffer cap.
       while (_buffers.length >= _maxConcurrentBuffers) {
@@ -183,6 +193,24 @@ class ReticulumReassembler {
       // but if a duplicate-with-different-N arrives, prefer the latest.
       buffer.totalCount = fragNum;
     }
+
+    if (isNewBuffer) {
+      ReticulumSafeLog.bufferOpen(
+        key: key,
+        fromNode: event.fromNode,
+        index: header.index,
+        fragNum: fragNum,
+        bodyLen: bodyLen,
+      );
+    }
+    ReticulumSafeLog.bufferAdd(
+      key: key,
+      fragNum: fragNum,
+      bodyLen: bodyLen,
+      have: buffer.fragments.length,
+      totalN: buffer.totalCount,
+      duplicate: isDuplicate,
+    );
 
     // Try to emit if complete.
     if (buffer.totalCount != null && _bufferComplete(buffer)) {

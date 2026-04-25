@@ -31,6 +31,37 @@ void main() {
         mode: 'realtime',
       );
       ReticulumSafeLog.decodeError(reason: 'truncated', offset: 27);
+      ReticulumSafeLog.header(
+        fromNode: 0xa6960864,
+        index: 6,
+        position: -1,
+        isLast: true,
+        fragmentNumber: 1,
+        bodyLen: 183,
+      );
+      ReticulumSafeLog.bufferOpen(
+        key: 0xa696086406,
+        fromNode: 0xa6960864,
+        index: 6,
+        fragNum: 1,
+        bodyLen: 183,
+      );
+      ReticulumSafeLog.bufferAdd(
+        key: 0xa696086406,
+        fragNum: 1,
+        bodyLen: 183,
+        have: 1,
+        totalN: 1,
+        duplicate: false,
+      );
+      ReticulumSafeLog.bufferAdd(
+        key: 0xa696086400,
+        fragNum: 2,
+        bodyLen: 141,
+        have: 1,
+        totalN: null,
+        duplicate: false,
+      );
     });
   });
 }
