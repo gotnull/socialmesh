@@ -3476,21 +3476,20 @@ final protocolServiceProvider = Provider<ProtocolService>((ref) {
   };
 
   // Reticulum subsystem: dispatch port-76 fragment events to the
-  // capture writer and the NodeDex bridge. Both providers are
-  // instantiated lazily via ref.read on first fragment; once read they
-  // stay alive for the lifetime of the container.
+  // capture writer, NodeDex bridge, and stats notifier. All three are
+  // pushed-to from this single listener; none of them ref.watch
+  // protocolServiceProvider, which keeps the provider DAG acyclic.
   //
-  // Eagerly init the stats notifier so it subscribes to the fragment
-  // broadcast stream from app boot, not just when the diagnostics UI is
-  // first opened. Without this, fragments that arrive before any UI
-  // watches reticulumStatsProvider are missed by stats (the broadcast
-  // stream does not replay), which drops the NodeDex RNS badge.
+  // Eagerly init the stats notifier so it's alive (and its tick timer
+  // is running) from app boot, not just when the diagnostics UI is
+  // first opened.
   ref.read(reticulumStatsProvider.notifier);
 
   final reticulumSub = service.reticulumFragmentStream.listen((event) {
     try {
       ref.read(reticulumCaptureWriterProvider).write(event);
       ref.read(reticulumNodeDexBridgeProvider).onFragment(event);
+      ref.read(reticulumStatsProvider.notifier).recordFragment(event);
     } catch (e) {
       AppLogging.reticulum('pipeline_dispatch_error error=$e');
     }

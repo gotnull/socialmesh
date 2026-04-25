@@ -963,6 +963,18 @@ class ProtocolService {
   Stream<ReticulumFragmentEvent> get reticulumFragmentStream =>
       _reticulumFragmentController.stream;
 
+  /// Inject a replayed fragment event into the live broadcast stream.
+  /// Used by the replay tool so capture files are replayed through the
+  /// same pipeline as live traffic — every consumer (stats, capture
+  /// writer, NodeDex bridge) sees the event identically to a real RF
+  /// arrival. The live ingress path uses the same private controller;
+  /// this getter exists solely to bridge replay traffic from the UI
+  /// layer without exposing the controller itself.
+  void injectReplayedReticulumFragment(ReticulumFragmentEvent event) {
+    if (_reticulumFragmentController.isClosed) return;
+    _reticulumFragmentController.add(event);
+  }
+
   /// Stream of incoming SM file transfer packets (FILE_OFFER, FILE_CHUNK,
   /// FILE_NACK, FILE_ACK). Consumers subscribe instead of setting a callback.
   Stream<SmFileTransferEvent> get fileTransferStream =>

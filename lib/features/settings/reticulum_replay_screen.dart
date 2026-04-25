@@ -14,6 +14,7 @@ import '../../core/theme.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/info_table.dart';
 import '../../core/widgets/section_header.dart';
+import '../../providers/app_providers.dart';
 import '../../providers/reticulum_providers.dart';
 import '../../services/protocol/reticulum/reticulum_capture_replay.dart';
 import '../../services/protocol/reticulum/reticulum_fragment_event.dart';
@@ -82,9 +83,30 @@ class _ReticulumReplayScreenState extends ConsumerState<ReticulumReplayScreen>
       );
       return;
     }
+    // Attach the engine→live-stream forwarder up front so both timed
+    // playback and step-mode emissions are mirrored into the protocol
+    // service's broadcast stream. Without this every replayed event
+    // would be visible only to the replay screen's progress UI.
+    //
+    // The same listener also resets the running/paused flags when the
+    // engine reaches the last record so the controls revert from
+    // Pause→Start without requiring a manual tap on Stop.
+    final protocol = ref.read(protocolServiceProvider);
+    final sub = engine.stream.listen((event) {
+      protocol.injectReplayedReticulumFragment(event);
+      if (!mounted) return;
+      safeSetState(() {
+        _emittedCount = engine.currentIndex;
+        if (engine.isDone) {
+          _isRunning = false;
+          _isPaused = false;
+        }
+      });
+    });
     safeSetState(() {
       _selectedFile = file;
       _engine = engine;
+      _engineSub = sub;
       _emittedCount = 0;
       _isRunning = false;
       _isPaused = false;
@@ -113,11 +135,9 @@ class _ReticulumReplayScreenState extends ConsumerState<ReticulumReplayScreen>
     final engine = _engine;
     if (engine == null) return;
     HapticFeedback.selectionClick();
-    _engineSub = engine.stream.listen((_) {
-      safeSetState(() {
-        _emittedCount = engine.currentIndex;
-      });
-    });
+    // Subscription that forwards engine events into the live broadcast
+    // stream is already attached in `_selectFile` so it covers both
+    // timed and step modes.
     await engine.start();
     safeSetState(() {
       _isRunning = true;

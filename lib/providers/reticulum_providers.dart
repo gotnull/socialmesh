@@ -118,23 +118,27 @@ final reticulumNodeDexBridgeProvider = Provider<ReticulumNodeDexBridge>((ref) {
   );
 });
 
-/// Stats notifier — wraps [ReticulumStatsRecorder] and pumps state
-/// changes to UI consumers. Auto-disposed when the UI stops watching.
+/// Stats notifier — pure state container around [ReticulumStatsRecorder].
+///
+/// Fragment events are pushed in via [recordFragment] from the dispatch
+/// loop in `protocolServiceProvider`, NOT pulled from the stream by the
+/// notifier itself. That inversion is deliberate: if the notifier
+/// subscribed to `protocolServiceProvider.reticulumFragmentStream`
+/// directly, eagerly initializing the notifier from inside
+/// `protocolServiceProvider`'s factory would create a circular
+/// dependency between the two providers.
 class ReticulumStatsNotifier extends Notifier<ReticulumStats> {
+  ReticulumStatsRecorder? _recorder;
   StreamSubscription<ReticulumStats>? _statsSub;
-  StreamSubscription<ReticulumFragmentEvent>? _fragmentSub;
   Timer? _refreshTimer;
 
   @override
   ReticulumStats build() {
     final recorder = ReticulumStatsRecorder();
+    _recorder = recorder;
     _statsSub = recorder.stats.listen((snapshot) {
       state = snapshot;
     });
-    final protocol = ref.watch(protocolServiceProvider);
-    _fragmentSub = protocol.reticulumFragmentStream.listen(
-      recorder.recordFragment,
-    );
     // Tick once a second so fragments/sec decays toward zero in the UI
     // when traffic stops, without waiting for the next fragment.
     _refreshTimer = Timer.periodic(
@@ -144,10 +148,16 @@ class ReticulumStatsNotifier extends Notifier<ReticulumStats> {
     ref.onDispose(() {
       _refreshTimer?.cancel();
       _statsSub?.cancel();
-      _fragmentSub?.cancel();
+      _recorder = null;
       unawaited(recorder.dispose());
     });
     return ReticulumStats.empty;
+  }
+
+  /// Push a fragment into the recorder. Wired by the dispatch loop in
+  /// `protocolServiceProvider`. No-ops after dispose.
+  void recordFragment(ReticulumFragmentEvent event) {
+    _recorder?.recordFragment(event);
   }
 }
 
