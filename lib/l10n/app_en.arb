@@ -42833,6 +42833,10 @@
     "@sipDmSendButton": {
         "description": "Tooltip for the DM send button."
     },
+    "sipDmJumpToLatest": "Jump to latest",
+    "@sipDmJumpToLatest": {
+        "description": "Affordance shown when the user is scrolled up in a SIP DM conversation and can jump back to the newest messages."
+    },
     "sipDmEmptyState": "No messages yet",
     "@sipDmEmptyState": {
         "description": "Empty state text when no messages in DM thread."

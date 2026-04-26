@@ -5477,6 +5477,15 @@ class ProtocolService {
       return;
     }
 
+    // Overlay v0.2 link frames ride inside the same mrrpData carrier
+    // but use msg_type 0x20..0x2A — outside the MRRP v0.1 codec table.
+    // The dispatcher routes them via OverlayLinkCodec.isLinkFrame(); the
+    // overlay layer logs its own ingress. Skip MRRP trace decoding to
+    // avoid spurious "unknown msg_type" + "decode=failed" log noise.
+    if (OverlayLinkCodec.isLinkFrame(sipFrame.payload)) {
+      return;
+    }
+
     final mrrpFrame = MrrpCodec.decode(sipFrame.payload);
     if (mrrpFrame == null) {
       AppLogging.mrrp(
@@ -5508,6 +5517,14 @@ class ProtocolService {
   void _logOutgoingMrrpPacket(pb.MeshPacket packet, Uint8List payload) {
     final sipFrame = SipCodec.decode(payload);
     if (sipFrame == null || sipFrame.msgType != SipMessageType.mrrpData) {
+      return;
+    }
+
+    // Overlay v0.2 link frames ride inside the same mrrpData carrier
+    // (msg_type 0x20..0x2A). The overlay egress path logs its own TX;
+    // skip MRRP trace decoding to avoid spurious "unknown msg_type" +
+    // "decode=failed" log noise.
+    if (OverlayLinkCodec.isLinkFrame(sipFrame.payload)) {
       return;
     }
 

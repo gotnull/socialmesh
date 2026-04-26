@@ -25,6 +25,7 @@ import '../../core/theme.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../core/widgets/jump_to_latest_pill.dart';
 import '../../features/messaging/widgets/chat_composer.dart';
 import '../../features/nodedex/models/nodedex_entry.dart';
 import '../../features/nodedex/models/sigil_evolution.dart';
@@ -70,25 +71,55 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
   /// Timer to dismiss the typing indicator after the display duration.
   Timer? _typingDismissTimer;
 
+  /// Whether the jump-to-latest affordance is visible. True when the
+  /// user has scrolled the message list up far enough that they're no
+  /// longer reading the bottom (most-recent) entry.
+  bool _showJumpToLatest = false;
+
+  /// Distance in pixels from the bottom within which we still consider
+  /// the user "at the latest". Mirrors the messaging screen's threshold
+  /// so the affordance feels consistent across chat surfaces.
+  static const double _atBottomThresholdPx = 120;
+
   @override
   void initState() {
     super.initState();
     _messageController.addListener(_onTextChanged);
+    _scrollController.addListener(_onScroll);
 
     // Auto-focus the input field when entering the DM screen.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _inputFocusNode.requestFocus();
     });
+
+    // Land at the latest message on every entry/re-entry. Without this,
+    // popping back to the DM screen from the SIP hub leaves the list
+    // halfway up because the controller starts at offset 0 and the
+    // CustomScrollView builds top-down.
+    _scrollToBottom(animate: false);
   }
 
   @override
   void dispose() {
     _messageController.removeListener(_onTextChanged);
+    _scrollController.removeListener(_onScroll);
     _messageController.dispose();
     _scrollController.dispose();
     _inputFocusNode.dispose();
     _typingDismissTimer?.cancel();
     super.dispose();
+  }
+
+  /// Toggle [_showJumpToLatest] based on the user's current scroll
+  /// position relative to the bottom of the message list.
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final position = _scrollController.position;
+    final distanceFromBottom = position.maxScrollExtent - position.pixels;
+    final shouldShow = distanceFromBottom > _atBottomThresholdPx;
+    if (shouldShow != _showJumpToLatest && mounted) {
+      setState(() => _showJumpToLatest = shouldShow);
+    }
   }
 
   /// Send a typing indicator when the user starts composing.
@@ -179,16 +210,47 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
     showErrorSnackBar(context, message);
   }
 
-  void _scrollToBottom() {
+  /// Maximum number of frames to retry [_scrollToBottom] while the
+  /// layout settles. At 60 fps that's ~500 ms — long enough to outlast
+  /// the route push transition, but bounded so we don't loop forever
+  /// when the chat is genuinely empty (or shorter than the viewport).
+  static const int _scrollToBottomMaxAttempts = 30;
+
+  void _scrollToBottom({bool animate = true, int attempt = 0}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
+      if (!mounted) return;
+      // Layout may not be settled yet — controller not attached, or
+      // the ListView's maxScrollExtent is still 0 because items
+      // haven't been laid out. Retry on the next frame until we have
+      // a usable position or we hit the attempt cap.
+      final hasUsablePosition =
+          _scrollController.hasClients &&
+          _scrollController.position.maxScrollExtent > 0;
+      if (!hasUsablePosition) {
+        if (attempt < _scrollToBottomMaxAttempts) {
+          _scrollToBottom(animate: animate, attempt: attempt + 1);
+        }
+        return;
+      }
+      final position = _scrollController.position;
+      if (animate) {
         _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
+          position.maxScrollExtent,
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeOut,
         );
+      } else {
+        _scrollController.jumpTo(position.maxScrollExtent);
       }
     });
+  }
+
+  void _jumpToLatest() {
+    ref.read(hapticServiceProvider).trigger(HapticType.light);
+    _scrollToBottom(animate: true);
+    if (mounted) {
+      setState(() => _showJumpToLatest = false);
+    }
   }
 
   void _onClose() {
@@ -416,11 +478,13 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
         ? (dm.getHistory(widget.sessionTag) ?? <SipDmHistoryEntry>[])
         : <SipDmHistoryEntry>[];
 
+    final hasContent = history.isNotEmpty || peerIsTyping;
+
     return GestureDetector(
       onTap: _dismissKeyboard,
-      child: GlassScaffold(
+      child: GlassScaffold.body(
         title: title,
-        controller: _scrollController,
+        hasScrollBody: true,
         resizeToAvoidBottomInset:
             false, // We handle keyboard insets manually in _buildInputBar
         bottomNavigationBar: _buildInputBar(context, session),
@@ -445,42 +509,77 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
               },
             ),
         ],
-        slivers: [
-          // Pinned session info bar with frosted-glass effect
-          if (session != null)
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: _SessionInfoBarDelegate(session: session),
-            ),
-
-          // Messages
-          if (history.isNotEmpty || peerIsTyping)
-            SliverPadding(
-              padding: const EdgeInsets.all(AppTheme.spacing16),
-              sliver: SliverList.builder(
-                itemCount: history.length + (peerIsTyping ? 1 : 0),
-                itemBuilder: (context, index) {
-                  // Typing indicator at the end
-                  if (index == history.length) {
-                    return const _TypingIndicatorBubble();
-                  }
-                  final entry = history[index];
-                  return GestureDetector(
-                    onLongPress: () => _showMessageMenu(entry),
-                    child: _MessageBubble(
-                      entry: entry,
-                      peerNodeId: session!.peerNodeId,
+        // Body layout mirrors the messaging screen: a Column with the
+        // session info bar fixed at top, then an Expanded Stack that
+        // holds the chat list with the JumpToLatestPill overlaid on
+        // top. The pill is a Positioned sibling of the list so the
+        // chat extends right up to the input bar — the pill floats
+        // transparently above the most recent messages, identical to
+        // how the messaging screen handles its jump affordance.
+        body: Column(
+          children: [
+            if (session != null)
+              ClipRect(
+                clipBehavior: Clip.hardEdge,
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(
+                    sigmaX: _kInfoBarBlurSigma,
+                    sigmaY: _kInfoBarBlurSigma,
+                  ),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: context.background.withValues(
+                        alpha: _kInfoBarBackgroundAlpha,
+                      ),
+                      border: Border(
+                        bottom: BorderSide(
+                          color: context.border.withValues(alpha: 0.3),
+                        ),
+                      ),
                     ),
-                  );
-                },
+                    child: _SessionInfoBar(session: session),
+                  ),
+                ),
               ),
-            )
-          else
-            SliverFillRemaining(
-              hasScrollBody: false,
-              child: _buildEmptyState(context),
+            Expanded(
+              child: Stack(
+                children: [
+                  if (hasContent)
+                    ListView.builder(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.all(AppTheme.spacing16),
+                      itemCount: history.length + (peerIsTyping ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index == history.length) {
+                          return const _TypingIndicatorBubble();
+                        }
+                        final entry = history[index];
+                        return GestureDetector(
+                          onLongPress: () => _showMessageMenu(entry),
+                          child: _MessageBubble(
+                            entry: entry,
+                            peerNodeId: session!.peerNodeId,
+                          ),
+                        );
+                      },
+                    )
+                  else
+                    _buildEmptyState(context),
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: AppTheme.spacing12,
+                    child: JumpToLatestPill(
+                      visible: _showJumpToLatest,
+                      onTap: _jumpToLatest,
+                      label: l10n.sipDmJumpToLatest,
+                    ),
+                  ),
+                ],
+              ),
             ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -644,54 +743,6 @@ const double _kInfoBarBlurSigma = 20.0;
 
 /// Background opacity for the frosted-glass container.
 const double _kInfoBarBackgroundAlpha = 0.8;
-
-/// Fixed extent: vertical padding (12+12) + avatar height (32) + divider (1).
-const double _kInfoBarExtent = 57.0;
-
-class _SessionInfoBarDelegate extends SliverPersistentHeaderDelegate {
-  final SipDmSession session;
-
-  _SessionInfoBarDelegate({required this.session});
-
-  @override
-  double get minExtent => _kInfoBarExtent;
-
-  @override
-  double get maxExtent => _kInfoBarExtent;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    return ClipRect(
-      clipBehavior: Clip.hardEdge,
-      child: BackdropFilter(
-        filter: ImageFilter.blur(
-          sigmaX: _kInfoBarBlurSigma,
-          sigmaY: _kInfoBarBlurSigma,
-        ),
-        child: Container(
-          decoration: BoxDecoration(
-            color: context.background.withValues(
-              alpha: _kInfoBarBackgroundAlpha,
-            ),
-            border: Border(
-              bottom: BorderSide(color: context.border.withValues(alpha: 0.3)),
-            ),
-          ),
-          child: _SessionInfoBar(session: session),
-        ),
-      ),
-    );
-  }
-
-  @override
-  bool shouldRebuild(covariant _SessionInfoBarDelegate oldDelegate) =>
-      session.sessionTag != oldDelegate.session.sessionTag ||
-      session.status != oldDelegate.session.status;
-}
 
 // =============================================================================
 // Session info bar content — sigil + hex ID + status badge

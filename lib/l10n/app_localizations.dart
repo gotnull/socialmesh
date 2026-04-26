@@ -56180,6 +56180,12 @@ abstract class AppLocalizations {
   /// **'Send'**
   String get sipDmSendButton;
 
+  /// Affordance shown when the user is scrolled up in a SIP DM conversation and can jump back to the newest messages.
+  ///
+  /// In en, this message translates to:
+  /// **'Jump to latest'**
+  String get sipDmJumpToLatest;
+
   /// Empty state text when no messages in DM thread.
   ///
   /// In en, this message translates to:

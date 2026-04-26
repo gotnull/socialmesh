@@ -347,7 +347,9 @@ class SipHandshakeManager {
     AppLogging.sip(
       'SIP_HS: <- HS_CHALLENGE from '
       'node=0x${peerNodeId.toRadixString(16)}, '
-      'server_nonce=${_hexPrefix(challenge.serverNonce)}\n'
+      'server_nonce=${_hexPrefix(challenge.serverNonce)}',
+    );
+    AppLogging.sip(
       'SIP_HS: -> HS_RESPONSE, session_tag=0x${tag.toRadixString(16)}',
     );
 
@@ -414,8 +416,11 @@ class SipHandshakeManager {
     _counters?.recordHandshakeCompleted();
 
     AppLogging.sip(
-      'SIP_HS: <- HS_ACCEPT, session_tag=0x${accept.sessionTag.toRadixString(16)}, '
-      'dm_ttl=${accept.dmTtlS}s\n'
+      'SIP_HS: <- HS_ACCEPT, '
+      'session_tag=0x${accept.sessionTag.toRadixString(16)}, '
+      'dm_ttl=${accept.dmTtlS}s',
+    );
+    AppLogging.sip(
       'SIP_HS: handshake COMPLETE with '
       'node=0x${peerNodeId.toRadixString(16)}',
     );
@@ -801,9 +806,15 @@ class SipHandshakeManager {
     _counters?.recordHandshakeCompleted();
 
     AppLogging.sip(
-      'SIP_HS: <- HS_RESPONSE, session_tag=0x${expectedTag.toRadixString(16)}\n'
-      'SIP_HS: -> HS_ACCEPT, session_tag=0x${expectedTag.toRadixString(16)}, '
-      'dm_ttl=${SipConstants.dmTtlDefaultS}s\n'
+      'SIP_HS: <- HS_RESPONSE, '
+      'session_tag=0x${expectedTag.toRadixString(16)}',
+    );
+    AppLogging.sip(
+      'SIP_HS: -> HS_ACCEPT, '
+      'session_tag=0x${expectedTag.toRadixString(16)}, '
+      'dm_ttl=${SipConstants.dmTtlDefaultS}s',
+    );
+    AppLogging.sip(
       'SIP_HS: handshake COMPLETE with '
       'node=0x${peerNodeId.toRadixString(16)}',
     );

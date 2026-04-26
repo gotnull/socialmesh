@@ -31945,6 +31945,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sipDmSendButton => 'Send';
 
   @override
+  String get sipDmJumpToLatest => 'Jump to latest';
+
+  @override
   String get sipDmEmptyState => 'No messages yet';
 
   @override

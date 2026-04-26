@@ -32271,6 +32271,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get sipDmSendButton => 'Enviar';
 
   @override
+  String get sipDmJumpToLatest => 'Jump to latest';
+
+  @override
   String get sipDmEmptyState => 'Sem mensagens ainda';
 
   @override

@@ -29,6 +29,7 @@ import '../../mesh_services/screens/service_creation_wizard.dart';
 import '../../mesh_services/widgets/instance_detail_sheet.dart';
 import '../../mesh_services/widgets/mesh_service_instance_card.dart';
 
+import '../../../core/constants.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/section_header.dart';
@@ -39,6 +40,14 @@ import '../../../services/haptic_service.dart';
 /// create CTA, and the instance list. Designed to slot between the
 /// Incoming Requests and Peers sections of the SIP hub's sliver list.
 List<Widget> buildYourServicesSlivers(BuildContext context, WidgetRef ref) {
+  // Mesh Services (Create Service + instance list) is gated behind
+  // MESH_SERVICES_ENABLED. When the flag is off, the entire section is
+  // hidden from the SIP hub so the feature ships independently of the
+  // SIP handshake release.
+  if (!AppFeatureFlags.isMeshServicesEnabled) {
+    return const <Widget>[];
+  }
+
   final async = ref.watch(localServicesSummaryProvider);
   final items = async.asData?.value ?? const <MeshServiceInstance>[];
 

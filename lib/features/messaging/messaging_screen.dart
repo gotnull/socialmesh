@@ -36,6 +36,7 @@ import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/linkified_text.dart';
 import '../../core/widgets/search_filter_header.dart';
 import '../../core/widgets/ico_help_system.dart';
+import '../../core/widgets/jump_to_latest_pill.dart';
 
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/status_filter_chip.dart';
@@ -2454,69 +2455,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                             left: 0,
                             right: 0,
                             bottom: AppTheme.spacing12,
-                            child: IgnorePointer(
-                              ignoring: !_showJumpToLatest,
-                              child: AnimatedOpacity(
-                                duration:
-                                    MediaQuery.maybeOf(
-                                          context,
-                                        )?.disableAnimations ??
-                                        false
-                                    ? Duration.zero
-                                    : const Duration(milliseconds: 180),
-                                opacity: _showJumpToLatest ? 1 : 0,
-                                child: Center(
-                                  child: BouncyTap(
-                                    onTap: _jumpToLatest,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: AppTheme.spacing14,
-                                        vertical: AppTheme.spacing10,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: context.card.withValues(
-                                          alpha: 0.96,
-                                        ),
-                                        borderRadius: BorderRadius.circular(
-                                          AppTheme.radius16,
-                                        ),
-                                        border: Border.all(
-                                          color: context.border,
-                                        ),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withValues(
-                                              alpha: 0.18,
-                                            ),
-                                            blurRadius: 18,
-                                            offset: const Offset(0, 8),
-                                          ),
-                                        ],
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            Icons.arrow_downward_rounded,
-                                            size: 18,
-                                            color: context.accentColor,
-                                          ),
-                                          const SizedBox(
-                                            width: AppTheme.spacing8,
-                                          ),
-                                          Text(
-                                            context.l10n.messagingJumpToLatest,
-                                            style: TextStyle(
-                                              color: context.textPrimary,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
+                            child: JumpToLatestPill(
+                              visible: _showJumpToLatest,
+                              onTap: _jumpToLatest,
+                              label: context.l10n.messagingJumpToLatest,
                             ),
                           ),
                         ],
