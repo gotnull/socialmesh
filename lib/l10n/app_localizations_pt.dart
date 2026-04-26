@@ -32475,36 +32475,36 @@ class AppLocalizationsPt extends AppLocalizations {
   String get sipHubDecline => 'Recusar';
 
   @override
-  String get sipHubEmptyTitle => 'Sem pares por perto';
+  String get sipHubEmptyTitle => 'À procura de vizinhos';
 
   @override
   String get sipHubEmptyDescription =>
-      'Toque em Pesquisar para procurar outros utilizadores Handshake na mesh.';
+      'Toque em Procurar pessoas para enviar uma chamada aos outros utilizadores Handshake na tua mesh. Qualquer pessoa ao alcance com a app aberta responde em poucos segundos.';
 
   @override
-  String get sipHubScanningTitlePrefix => 'Sem pares ';
+  String get sipHubScanningTitlePrefix => 'À procura de ';
 
   @override
-  String get sipHubScanningTitleKeyword => 'próximos';
+  String get sipHubScanningTitleKeyword => 'vizinhos';
 
   @override
   String get sipHubScanningTitleSuffix => '';
 
   @override
   String get sipHubScanningTagline1 =>
-      'Escuta beacons Socialmesh na mesh rádio';
+      'À escuta na tua mesh por outros utilizadores Handshake.\nMantém o nó ligado e os pares próximos vão aparecer aqui.';
 
   @override
   String get sipHubScanningTagline2 =>
-      'Toque em Pesquisar para enviar uma chamada — ativa pares próximos';
+      'Toque em Procurar pessoas para enviar uma chamada rápida.\nOs utilizadores Handshake próximos costumam responder em poucos segundos.';
 
   @override
   String get sipHubScanningTagline3 =>
-      'Os pares respondem anonimamente — sem conta necessária';
+      'Os pares aparecem automaticamente quando os seus beacons\nchegam ao teu nó — não precisas de tocar em nada para os encontrar.';
 
   @override
   String get sipHubScanningTagline4 =>
-      'Encontrou um? Inicie um handshake para começar a conversar';
+      'A descoberta funciona enquanto a app estiver aberta e o nó ativo.\nMove-te ou volta a procurar se não houver ninguém por agora.';
 
   @override
   String get sipHubHelp => 'Ajuda';

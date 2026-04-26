@@ -32494,36 +32494,36 @@ class AppLocalizationsIt extends AppLocalizations {
   String get sipHubDecline => 'Rifiuta';
 
   @override
-  String get sipHubEmptyTitle => 'Nessun peer nelle vicinanze';
+  String get sipHubEmptyTitle => 'In cerca di vicini';
 
   @override
   String get sipHubEmptyDescription =>
-      'Tocca Scansiona per cercare altri utenti Handshake sulla mesh.';
+      'Tocca Cerca persone per inviare un rollcall agli altri utenti Handshake sulla tua mesh. Chiunque sia in portata con l\'app aperta risponderà in pochi secondi.';
 
   @override
-  String get sipHubScanningTitlePrefix => 'Nessun peer nelle ';
+  String get sipHubScanningTitlePrefix => 'In cerca di ';
 
   @override
-  String get sipHubScanningTitleKeyword => 'vicinanze';
+  String get sipHubScanningTitleKeyword => 'vicini';
 
   @override
   String get sipHubScanningTitleSuffix => '';
 
   @override
   String get sipHubScanningTagline1 =>
-      'Ascolta i beacon Socialmesh sulla mesh radio';
+      'In ascolto sulla tua mesh per altri utenti Handshake.\nMantieni il nodo connesso e i peer nelle vicinanze appariranno qui.';
 
   @override
   String get sipHubScanningTagline2 =>
-      'Tocca Scansiona per inviare un rollcall — attiva i peer vicini';
+      'Tocca Cerca persone per inviare un rapido rollcall.\nGli utenti Handshake vicini di solito rispondono in pochi secondi.';
 
   @override
   String get sipHubScanningTagline3 =>
-      'I peer rispondono in modo anonimo — nessun account necessario';
+      'I peer compaiono automaticamente quando i loro beacon\nraggiungono il tuo nodo — non serve fare niente per trovarli.';
 
   @override
   String get sipHubScanningTagline4 =>
-      'Ne hai trovato uno? Avvia un handshake per iniziare a chattare';
+      'La discovery è attiva quando l\'app è aperta e il nodo è connesso.\nSposta il dispositivo o riprova se al momento non c\'è nessuno.';
 
   @override
   String get sipHubHelp => 'Aiuto';
