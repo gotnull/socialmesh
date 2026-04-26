@@ -32149,32 +32149,36 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sipHubDecline => 'Decline';
 
   @override
-  String get sipHubEmptyTitle => 'No peers nearby';
+  String get sipHubEmptyTitle => 'Looking for neighbors';
 
   @override
   String get sipHubEmptyDescription =>
-      'Tap Scan to look for other Handshake users on the mesh.';
+      'Tap Look for people to send a roll-call to other Handshake users on your mesh. Anyone in range with the app open will reply within a few seconds.';
 
   @override
-  String get sipHubScanningTitlePrefix => 'No peers ';
+  String get sipHubScanningTitlePrefix => 'Looking for ';
 
   @override
-  String get sipHubScanningTitleKeyword => 'nearby';
+  String get sipHubScanningTitleKeyword => 'neighbors';
 
   @override
   String get sipHubScanningTitleSuffix => '';
 
   @override
-  String get sipHubScanningTagline1 => 'Listening for nearby users…';
+  String get sipHubScanningTagline1 =>
+      'Listening on your mesh for other Handshake users.\nKeep your node connected and any peers nearby will surface here.';
 
   @override
-  String get sipHubScanningTagline2 => 'Tap Look for people to send a signal…';
+  String get sipHubScanningTagline2 =>
+      'Tap Look for people to send a quick roll-call.\nNearby Handshake users typically reply within a few seconds.';
 
   @override
-  String get sipHubScanningTagline3 => 'Others will appear when found…';
+  String get sipHubScanningTagline3 =>
+      'Peers show up automatically when their discovery beacons\nreach your node — no need to tap anything to find them.';
 
   @override
-  String get sipHubScanningTagline4 => 'Keep the app open to discover more…';
+  String get sipHubScanningTagline4 =>
+      'Discovery runs while the app is open and your node is active.\nMove around or scan again if no one is around just yet.';
 
   @override
   String get sipHubHelp => 'Help';

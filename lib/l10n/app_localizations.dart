@@ -56516,28 +56516,28 @@ abstract class AppLocalizations {
   /// **'Decline'**
   String get sipHubDecline;
 
-  /// Empty state title when no SIP peers are found.
+  /// Empty state title when no SIP peers have been discovered yet.
   ///
   /// In en, this message translates to:
-  /// **'No peers nearby'**
+  /// **'Looking for neighbors'**
   String get sipHubEmptyTitle;
 
-  /// Empty state description when no SIP peers are found.
+  /// Empty state description when no SIP peers have been discovered yet.
   ///
   /// In en, this message translates to:
-  /// **'Tap Scan to look for other Handshake users on the mesh.'**
+  /// **'Tap Look for people to send a roll-call to other Handshake users on your mesh. Anyone in range with the app open will reply within a few seconds.'**
   String get sipHubEmptyDescription;
 
   /// Prefix for the animated SIP Hub scanning empty state title (trailing space separates from keyword).
   ///
   /// In en, this message translates to:
-  /// **'No peers '**
+  /// **'Looking for '**
   String get sipHubScanningTitlePrefix;
 
   /// Keyword for the animated SIP Hub scanning empty state title (gradient-animated).
   ///
   /// In en, this message translates to:
-  /// **'nearby'**
+  /// **'neighbors'**
   String get sipHubScanningTitleKeyword;
 
   /// Suffix for the animated SIP Hub scanning empty state title.
@@ -56546,28 +56546,28 @@ abstract class AppLocalizations {
   /// **''**
   String get sipHubScanningTitleSuffix;
 
-  /// SIP Hub animated scanning state tagline 1.
+  /// SIP Hub animated scanning state tagline 1. Two lines separated by \n; describes the passive-listening behaviour.
   ///
   /// In en, this message translates to:
-  /// **'Listening for nearby users…'**
+  /// **'Listening on your mesh for other Handshake users.\nKeep your node connected and any peers nearby will surface here.'**
   String get sipHubScanningTagline1;
 
-  /// SIP Hub animated scanning state tagline 2.
+  /// SIP Hub animated scanning state tagline 2. Two lines separated by \n; prompts the user to take an action.
   ///
   /// In en, this message translates to:
-  /// **'Tap Look for people to send a signal…'**
+  /// **'Tap Look for people to send a quick roll-call.\nNearby Handshake users typically reply within a few seconds.'**
   String get sipHubScanningTagline2;
 
-  /// SIP Hub animated scanning state tagline 3.
+  /// SIP Hub animated scanning state tagline 3. Two lines separated by \n; explains background discovery.
   ///
   /// In en, this message translates to:
-  /// **'Others will appear when found…'**
+  /// **'Peers show up automatically when their discovery beacons\nreach your node — no need to tap anything to find them.'**
   String get sipHubScanningTagline3;
 
-  /// SIP Hub animated scanning state tagline 4.
+  /// SIP Hub animated scanning state tagline 4. Two lines separated by \n; offers a tip when the area is quiet.
   ///
   /// In en, this message translates to:
-  /// **'Keep the app open to discover more…'**
+  /// **'Discovery runs while the app is open and your node is active.\nMove around or scan again if no one is around just yet.'**
   String get sipHubScanningTagline4;
 
   /// Help overflow menu item label for the SIP Hub screen.

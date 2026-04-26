@@ -43124,19 +43124,19 @@
     "@sipHubDecline": {
         "description": "Decline button label for incoming handshake requests."
     },
-    "sipHubEmptyTitle": "No peers nearby",
+    "sipHubEmptyTitle": "Looking for neighbors",
     "@sipHubEmptyTitle": {
-        "description": "Empty state title when no SIP peers are found."
+        "description": "Empty state title when no SIP peers have been discovered yet."
     },
-    "sipHubEmptyDescription": "Tap Scan to look for other Handshake users on the mesh.",
+    "sipHubEmptyDescription": "Tap Look for people to send a roll-call to other Handshake users on your mesh. Anyone in range with the app open will reply within a few seconds.",
     "@sipHubEmptyDescription": {
-        "description": "Empty state description when no SIP peers are found."
+        "description": "Empty state description when no SIP peers have been discovered yet."
     },
-    "sipHubScanningTitlePrefix": "No peers ",
+    "sipHubScanningTitlePrefix": "Looking for ",
     "@sipHubScanningTitlePrefix": {
         "description": "Prefix for the animated SIP Hub scanning empty state title (trailing space separates from keyword)."
     },
-    "sipHubScanningTitleKeyword": "nearby",
+    "sipHubScanningTitleKeyword": "neighbors",
     "@sipHubScanningTitleKeyword": {
         "description": "Keyword for the animated SIP Hub scanning empty state title (gradient-animated)."
     },
@@ -43144,21 +43144,21 @@
     "@sipHubScanningTitleSuffix": {
         "description": "Suffix for the animated SIP Hub scanning empty state title."
     },
-    "sipHubScanningTagline1": "Listening for nearby users…",
+    "sipHubScanningTagline1": "Listening on your mesh for other Handshake users.\nKeep your node connected and any peers nearby will surface here.",
     "@sipHubScanningTagline1": {
-        "description": "SIP Hub animated scanning state tagline 1."
+        "description": "SIP Hub animated scanning state tagline 1. Two lines separated by \\n; describes the passive-listening behaviour."
     },
-    "sipHubScanningTagline2": "Tap Look for people to send a signal…",
+    "sipHubScanningTagline2": "Tap Look for people to send a quick roll-call.\nNearby Handshake users typically reply within a few seconds.",
     "@sipHubScanningTagline2": {
-        "description": "SIP Hub animated scanning state tagline 2."
+        "description": "SIP Hub animated scanning state tagline 2. Two lines separated by \\n; prompts the user to take an action."
     },
-    "sipHubScanningTagline3": "Others will appear when found…",
+    "sipHubScanningTagline3": "Peers show up automatically when their discovery beacons\nreach your node — no need to tap anything to find them.",
     "@sipHubScanningTagline3": {
-        "description": "SIP Hub animated scanning state tagline 3."
+        "description": "SIP Hub animated scanning state tagline 3. Two lines separated by \\n; explains background discovery."
     },
-    "sipHubScanningTagline4": "Keep the app open to discover more…",
+    "sipHubScanningTagline4": "Discovery runs while the app is open and your node is active.\nMove around or scan again if no one is around just yet.",
     "@sipHubScanningTagline4": {
-        "description": "SIP Hub animated scanning state tagline 4."
+        "description": "SIP Hub animated scanning state tagline 4. Two lines separated by \\n; offers a tip when the area is quiet."
     },
     "sipHubHelp": "Help",
     "@sipHubHelp": {
