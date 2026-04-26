@@ -8404,6 +8404,12 @@ abstract class AppLocalizations {
   /// **'TRY IT'**
   String get drawerBadgeTryIt;
 
+  /// Snackbar shown when a node-required screen is auto-popped because the device disconnected mid-session.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnected from your node — reconnect to continue.'**
+  String get requiresConnectionGuardDisconnected;
+
   /// Label for the Device Management menu tile in the enterprise drawer section.
   ///
   /// In en, this message translates to:
@@ -56240,23 +56246,23 @@ abstract class AppLocalizations {
   /// **'Draw a quick sketch — kept tiny so it fits on the mesh.'**
   String get sipInkComposerHint;
 
-  /// Live indicator of points used in a SIP Ink sketch.
+  /// Hint replacing sipInkComposerHint when the user has drawn past the SIP Ink budget — explains that overflow strokes are visible but will be dropped on send.
   ///
   /// In en, this message translates to:
-  /// **'Mesh-safe sketch: {points} / {maxPoints} points'**
+  /// **'Strokes past the dashed line won\'t fit on the mesh and won\'t be sent.'**
+  String get sipInkComposerHintOver;
+
+  /// Live indicator of simplified points used in a SIP Ink sketch versus the maximum.
+  ///
+  /// In en, this message translates to:
+  /// **'{points} / {maxPoints} points'**
   String sipInkPointBudget(int points, int maxPoints);
 
-  /// Live indicator of encoded payload size for a SIP Ink sketch.
+  /// Live indicator of encoded payload size used versus the maximum for a SIP Ink sketch.
   ///
   /// In en, this message translates to:
-  /// **'Payload: {bytes} B'**
-  String sipInkPayloadBytes(int bytes);
-
-  /// Placeholder shown for the SIP Ink payload counter when no encodable sketch is on the canvas yet.
-  ///
-  /// In en, this message translates to:
-  /// **'Payload: —'**
-  String get sipInkPayloadPending;
+  /// **'{bytes} / {maxBytes} B'**
+  String sipInkPayloadUsage(int bytes, int maxBytes);
 
   /// Button to clear the SIP Ink canvas.
   ///
@@ -56269,6 +56275,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Undo'**
   String get sipInkUndo;
+
+  /// Quoted text shown when a user replies to a sketch — ink has no plaintext body, so this placeholder stands in for the quote in both the local reply indicator and the recipient's wire-encoded quote prefix.
+  ///
+  /// In en, this message translates to:
+  /// **'🎨 Sketch'**
+  String get sipDmInkReplyPlaceholder;
 
   /// Snackbar shown when the user attempts to send a sketch to a peer that hasn't advertised SIP Ink support.
   ///

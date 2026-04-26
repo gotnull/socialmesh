@@ -207,10 +207,13 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
 
     final haptics = ref.read(hapticServiceProvider);
 
-    // If replying, format the message with the quote prefix.
+    // If replying, format the message with the quote prefix. Ink
+    // entries have no plaintext body — substitute the localized
+    // placeholder so the recipient sees a meaningful quote block
+    // instead of an empty `>` line.
     final messageText = _replyingToEntry != null
         ? SipDmManager.formatReplyMessage(
-            quotedText: SipDmManager.extractReplyBody(_replyingToEntry!.text),
+            quotedText: _replyingQuoteText(_replyingToEntry!),
             replyText: text,
           )
         : text;
@@ -309,9 +312,26 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
 
   void _onReply(SipDmHistoryEntry entry) {
     ref.read(hapticServiceProvider).trigger(HapticType.light);
-    setState(() => _replyingToEntry = entry);
-    // Focus the input field so the user can start typing immediately.
+    setState(() {
+      _replyingToEntry = entry;
+      // Replies always compose as text — sketch payloads can't carry
+      // a quote prefix (the wire format has no provision for it), so
+      // forcing Text mode keeps the reply path uniform regardless of
+      // what's being replied to. The user's sketch draft lives in
+      // [_sketchDraft] and is preserved.
+      _composerMode = _SipDmComposerMode.text;
+    });
     _inputFocusNode.requestFocus();
+  }
+
+  /// Quoted text to display in the reply indicator and embed in the
+  /// wire-encoded `> ... \n ...` prefix. Ink entries fall back to a
+  /// localized placeholder since they have no plaintext body.
+  String _replyingQuoteText(SipDmHistoryEntry entry) {
+    if (entry.contentType == SipDmContentType.ink) {
+      return context.l10n.sipDmInkReplyPlaceholder;
+    }
+    return SipDmManager.extractReplyBody(entry.text);
   }
 
   void _cancelReply() {
@@ -789,9 +809,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
                               ),
                             ),
                             Text(
-                              SipDmManager.extractReplyBody(
-                                _replyingToEntry!.text,
-                              ),
+                              _replyingQuoteText(_replyingToEntry!),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(

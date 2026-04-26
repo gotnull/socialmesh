@@ -11,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/countdown_banner.dart';
+import '../../core/widgets/requires_connection_guard.dart';
 import '../../core/widgets/top_status_banner.dart';
 import '../../core/widgets/user_avatar.dart';
 
@@ -841,9 +842,16 @@ class _MainShellState extends ConsumerState<MainShell> {
                                 const SubscriptionScreen(),
                               );
                             } else if (item.screen != null) {
-                              // Push screen with back button for consistent navigation
-                              // If upsell is enabled, the screen handles gating on actions
-                              navigateFromDrawer(context, item.screen!);
+                              // Push screen with back button for consistent navigation.
+                              // Wrap node-required screens in `RequiresConnectionGuard`
+                              // so an in-session disconnect pops them back to the
+                              // previous route — the drawer-level gate prevents entry,
+                              // and this gate enforces the same invariant if the
+                              // device drops while the user is inside the screen.
+                              final pushed = item.requiresConnection
+                                  ? RequiresConnectionGuard(child: item.screen!)
+                                  : item.screen!;
+                              navigateFromDrawer(context, pushed);
                             }
                           },
                   ),

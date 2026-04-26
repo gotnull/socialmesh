@@ -3,10 +3,16 @@
 
 /// Sketch-mode composer for SIP DM threads.
 ///
-/// Owns the local stroke buffer (the sketch draft), runs the
-/// simplifier on every change so the live point/byte counters reflect
-/// what would actually go on the wire, and routes the encoded payload
-/// through `SipDmRouter.sendSketch`.
+/// Owns the local stroke buffer (the sketch draft) and the in-progress
+/// active stroke. On every gesture tick, runs the simplifier to find
+/// the largest prefix of the active stroke that still fits the
+/// airtime budget — anything past that point is the "overflow" tail
+/// rendered as a dashed red cue and discarded on stroke end.
+///
+/// Counters reflect the committed (sendable) state. Crossing into
+/// overflow triggers a single medium-impact haptic and turns the
+/// counters / canvas border red, then reverts when the user lifts and
+/// the overflow tail is dropped.
 library;
 
 import 'package:flutter/material.dart';
@@ -27,9 +33,6 @@ import '../../../services/protocol/sip/sip_ink_simplifier.dart';
 import '../../../utils/snackbar.dart';
 import 'sip_ink_canvas.dart';
 
-/// Composer mode body for the sketch tab. Used inside a parent that
-/// owns the [Text|Sketch] mode-switcher and stitches this widget in
-/// place of the text composer when the user is drawing.
 class SipInkComposer extends ConsumerStatefulWidget {
   /// Active SIP DM session this sketch will be sent to.
   final int sessionTag;
@@ -67,31 +70,45 @@ class _SipInkComposerState extends ConsumerState<SipInkComposer>
   static const int _strokeWidth = 2;
   static const int _canvasSize = SipInkConstants.canvas64;
 
-  /// Cached simplifier output for the current draft. Re-computed on
-  /// every stroke change.
-  SipInkSketch? _simplifiedSketch;
+  /// Raw float points of the in-progress stroke.
+  List<({double x, double y})> _activeRaw = const [];
 
-  /// Cached encoded bytes; null when the sketch is empty or didn't
-  /// fit the airtime budget at any tolerance.
+  /// Index of the last point in [_activeRaw] that still fits the
+  /// budget. -1 means "no committed prefix yet".
+  int _committedBoundary = -1;
+
+  /// Set on the first overflow event of a stroke so the haptic only
+  /// fires once per stroke.
+  bool _overflowHapticFiredThisStroke = false;
+
+  /// Cached simplifier output for whatever is currently committed
+  /// (completed strokes + active prefix up to [_committedBoundary]).
+  SipInkSketch? _simplifiedSketch;
   Uint8List? _encodedBytes;
 
-  /// True while a send is in progress. Disables further input.
   bool _sending = false;
 
   @override
   void initState() {
     super.initState();
-    _resimplify();
+    _resimplifyCommitted();
   }
 
-  void _resimplify() {
-    if (widget.draft.isEmpty) {
+  // ---------------------------------------------------------------
+  // Simplifier evaluation
+  // ---------------------------------------------------------------
+
+  /// Re-run the simplifier on whatever is currently committed.
+  /// Drives the live byte/point counters between strokes.
+  void _resimplifyCommitted() {
+    final committedStrokes = _committedRawStrokes();
+    if (committedStrokes.isEmpty) {
       _simplifiedSketch = null;
       _encodedBytes = null;
       return;
     }
     final result = SipInkSimplifier.simplify(
-      rawStrokes: widget.draft,
+      rawStrokes: committedStrokes,
       canvasSize: _canvasSize,
     );
     if (result.isOk) {
@@ -103,31 +120,145 @@ class _SipInkComposerState extends ConsumerState<SipInkComposer>
     }
   }
 
-  void _onStrokeFinished(SipInkRawStroke stroke) {
-    if (widget.draft.length >= SipInkConstants.maxStrokes) return;
+  /// Build the raw stroke list that's currently committed: the
+  /// finalised draft plus the active stroke's committed prefix (when
+  /// it has at least 2 points).
+  List<SipInkRawStroke> _committedRawStrokes() {
+    final committedActiveLen = _committedBoundary + 1;
+    if (committedActiveLen < SipInkConstants.minPointsPerStroke) {
+      return widget.draft;
+    }
+    return [
+      ...widget.draft,
+      SipInkRawStroke(
+        width: _strokeWidth,
+        points: _activeRaw.sublist(0, committedActiveLen),
+      ),
+    ];
+  }
+
+  /// Try to extend the committed prefix to include all of [_activeRaw].
+  /// Updates [_committedBoundary] and the cached simplified state.
+  void _evaluateActiveStroke() {
+    final candidate = SipInkRawStroke(width: _strokeWidth, points: _activeRaw);
+    final fullResult = SipInkSimplifier.simplify(
+      rawStrokes: [...widget.draft, candidate],
+      canvasSize: _canvasSize,
+    );
+    if (fullResult.isOk) {
+      _committedBoundary = _activeRaw.length - 1;
+      _simplifiedSketch = fullResult.sketch;
+      _encodedBytes = SipInkEncoder.encode(fullResult.sketch!).bytes;
+      return;
+    }
+    // Active stroke as a whole doesn't fit. Keep [_committedBoundary]
+    // wherever it was. Re-derive the simplified state from the
+    // committed-only stroke set so the counters still update.
+    if (!_overflowHapticFiredThisStroke) {
+      _overflowHapticFiredThisStroke = true;
+      HapticFeedback.mediumImpact();
+      AppLogging.sipInk(
+        'overflow_started raw_points=${_activeRaw.length} '
+        'committed_boundary=$_committedBoundary',
+      );
+    }
+    _resimplifyCommitted();
+  }
+
+  // ---------------------------------------------------------------
+  // Stroke gesture handlers (called by SipInkCanvas)
+  // ---------------------------------------------------------------
+
+  void _onStrokeStart(({double x, double y}) p) {
+    if (widget.draft.length >= SipInkConstants.maxStrokes) {
+      // Already at max strokes — gesture is consumed but produces no
+      // committed output. Visualise immediately as overflow.
+      setState(() {
+        _activeRaw = [p];
+        _committedBoundary = -1;
+        _overflowHapticFiredThisStroke = true;
+        HapticFeedback.mediumImpact();
+      });
+      return;
+    }
     setState(() {
-      widget.draft.add(stroke);
-      _resimplify();
+      _activeRaw = [p];
+      _committedBoundary = -1;
+      _overflowHapticFiredThisStroke = false;
+      _evaluateActiveStroke();
+    });
+  }
+
+  void _onStrokeUpdate(({double x, double y}) p) {
+    if (_activeRaw.isEmpty) return;
+    if (widget.draft.length >= SipInkConstants.maxStrokes) {
+      setState(() {
+        _activeRaw = [..._activeRaw, p];
+      });
+      return;
+    }
+    setState(() {
+      _activeRaw = [..._activeRaw, p];
+      _evaluateActiveStroke();
+    });
+  }
+
+  void _onStrokeEnd() {
+    setState(() {
+      // Single-tap dot: only one raw point was captured. Synthesize a
+      // 1-pixel companion so the simplifier (which requires
+      // [SipInkConstants.minPointsPerStroke]) keeps it as a 2-point
+      // stroke. The painter draws a 2-point near-zero-length line as
+      // a small dot via its rounded stroke caps.
+      if (_activeRaw.length == 1 &&
+          widget.draft.length < SipInkConstants.maxStrokes) {
+        final p = _activeRaw.first;
+        final canvasMax = (_canvasSize - 1).toDouble();
+        final companion = (x: p.x + 1 <= canvasMax ? p.x + 1 : p.x - 1, y: p.y);
+        _activeRaw = [..._activeRaw, companion];
+        _evaluateActiveStroke();
+      }
+      final commitLen = _committedBoundary + 1;
+      if (commitLen >= SipInkConstants.minPointsPerStroke &&
+          widget.draft.length < SipInkConstants.maxStrokes) {
+        widget.draft.add(
+          SipInkRawStroke(
+            width: _strokeWidth,
+            points: List.of(_activeRaw.sublist(0, commitLen)),
+          ),
+        );
+      }
+      _activeRaw = const [];
+      _committedBoundary = -1;
+      _overflowHapticFiredThisStroke = false;
+      _resimplifyCommitted();
     });
     widget.onDraftChanged();
   }
+
+  // ---------------------------------------------------------------
+  // Toolbar handlers
+  // ---------------------------------------------------------------
 
   void _onUndo() {
     if (widget.draft.isEmpty) return;
     ref.read(hapticServiceProvider).trigger(HapticType.light);
     setState(() {
       widget.draft.removeLast();
-      _resimplify();
+      _resimplifyCommitted();
     });
     widget.onDraftChanged();
   }
 
   void _onClear() {
-    if (widget.draft.isEmpty) return;
+    if (widget.draft.isEmpty && _activeRaw.isEmpty) return;
     ref.read(hapticServiceProvider).trigger(HapticType.medium);
     setState(() {
       widget.draft.clear();
-      _resimplify();
+      _activeRaw = const [];
+      _committedBoundary = -1;
+      _overflowHapticFiredThisStroke = false;
+      _resimplifyCommitted();
     });
     widget.onDraftChanged();
   }
@@ -160,7 +291,10 @@ class _SipInkComposerState extends ConsumerState<SipInkComposer>
     ref.read(hapticServiceProvider).trigger(HapticType.light);
     setState(() {
       widget.draft.clear();
-      _resimplify();
+      _activeRaw = const [];
+      _committedBoundary = -1;
+      _overflowHapticFiredThisStroke = false;
+      _resimplifyCommitted();
     });
     widget.onDraftChanged();
     widget.onSent();
@@ -181,12 +315,44 @@ class _SipInkComposerState extends ConsumerState<SipInkComposer>
     showErrorSnackBar(context, message);
   }
 
+  // ---------------------------------------------------------------
+  // Build
+  // ---------------------------------------------------------------
+
+  /// Slice of the active stroke that fits the budget — what the
+  /// painter draws as solid.
+  List<({double x, double y})> get _activeCommittedSlice {
+    if (_committedBoundary < 0) return const [];
+    return _activeRaw.sublist(0, _committedBoundary + 1);
+  }
+
+  /// Slice of the active stroke that doesn't fit — drawn dashed in
+  /// red. Includes the boundary point so the line stays connected.
+  List<({double x, double y})> get _activeOverflowSlice {
+    if (_committedBoundary >= _activeRaw.length - 1) return const [];
+    final start = _committedBoundary < 0 ? 0 : _committedBoundary;
+    return _activeRaw.sublist(start);
+  }
+
+  bool get _isOverBudget =>
+      _committedBoundary < _activeRaw.length - 1 && _activeRaw.isNotEmpty;
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final hasDraft = widget.draft.isNotEmpty;
     final canSend = widget.enabled && _encodedBytes != null && !_sending;
     final pointCount = _simplifiedSketch?.totalPointCount ?? 0;
+    final byteCount = _encodedBytes?.length ?? 0;
+    final overBudget = _isOverBudget;
+    final errorColor = Theme.of(context).colorScheme.error;
+    final counterColor = overBudget ? errorColor : context.textSecondary;
+    final hintText = overBudget
+        ? l10n.sipInkComposerHintOver
+        : l10n.sipInkComposerHint;
+    final hintColor = overBudget
+        ? errorColor.withValues(alpha: 0.9)
+        : context.textTertiary;
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -197,9 +363,10 @@ class _SipInkComposerState extends ConsumerState<SipInkComposer>
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            l10n.sipInkComposerHint,
-            style: TextStyle(fontSize: 11, color: context.textTertiary),
+          AnimatedDefaultTextStyle(
+            duration: const Duration(milliseconds: 150),
+            style: TextStyle(fontSize: 11, color: hintColor),
+            child: Text(hintText),
           ),
           const SizedBox(height: AppTheme.spacing8),
           Center(
@@ -209,10 +376,15 @@ class _SipInkComposerState extends ConsumerState<SipInkComposer>
                 aspectRatio: 1,
                 child: SipInkCanvas(
                   strokes: widget.draft,
+                  activeCommitted: _activeCommittedSlice,
+                  activeOverflow: _activeOverflowSlice,
+                  isOverBudget: overBudget,
                   enabled: widget.enabled && !_sending,
                   strokeWidth: _strokeWidth,
                   canvasSize: _canvasSize,
-                  onStrokeFinished: _onStrokeFinished,
+                  onStrokeStart: _onStrokeStart,
+                  onStrokeUpdate: _onStrokeUpdate,
+                  onStrokeEnd: _onStrokeEnd,
                 ),
               ),
             ),
@@ -222,32 +394,18 @@ class _SipInkComposerState extends ConsumerState<SipInkComposer>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      l10n.sipInkPointBudget(
-                        pointCount,
-                        SipInkConstants.maxTotalPoints,
-                      ),
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: context.textSecondary,
-                      ),
-                    ),
-                    Text(
-                      _encodedBytes != null
-                          ? l10n.sipInkPayloadBytes(_encodedBytes!.length)
-                          : l10n.sipInkPayloadPending,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: _encodedBytes != null || !hasDraft
-                            ? context.textTertiary
-                            : Theme.of(context).colorScheme.error,
-                      ),
-                    ),
-                  ],
+                child: AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 150),
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: overBudget ? FontWeight.w600 : FontWeight.w400,
+                    color: counterColor,
+                  ),
+                  child: Text(
+                    '${l10n.sipInkPointBudget(pointCount, SipInkConstants.maxTotalPoints)}'
+                    '  ·  '
+                    '${l10n.sipInkPayloadUsage(byteCount, SipInkConstants.maxPayloadBytes)}',
+                  ),
                 ),
               ),
               _ToolbarButton(
@@ -259,7 +417,9 @@ class _SipInkComposerState extends ConsumerState<SipInkComposer>
               _ToolbarButton(
                 icon: Icons.delete_outline,
                 tooltip: l10n.sipInkClear,
-                onTap: hasDraft && !_sending ? _onClear : null,
+                onTap: (hasDraft || _activeRaw.isNotEmpty) && !_sending
+                    ? _onClear
+                    : null,
               ),
               const SizedBox(width: AppTheme.spacing8),
               _SendButton(onTap: canSend ? _onSend : null),

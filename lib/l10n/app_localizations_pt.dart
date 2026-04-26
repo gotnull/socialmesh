@@ -4754,6 +4754,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get drawerBadgeTryIt => 'TESTE';
 
   @override
+  String get requiresConnectionGuardDisconnected =>
+      'Disconnected from your node — reconnect to continue.';
+
+  @override
   String get drawerEnterpriseDeviceManagement =>
       'Gerenciamento de Dispositivos';
 
@@ -32306,23 +32310,27 @@ class AppLocalizationsPt extends AppLocalizations {
       'Draw a quick sketch — kept tiny so it fits on the mesh.';
 
   @override
+  String get sipInkComposerHintOver =>
+      'Strokes past the dashed line won\'t fit on the mesh and won\'t be sent.';
+
+  @override
   String sipInkPointBudget(int points, int maxPoints) {
-    return 'Mesh-safe sketch: $points / $maxPoints points';
+    return '$points / $maxPoints points';
   }
 
   @override
-  String sipInkPayloadBytes(int bytes) {
-    return 'Payload: $bytes B';
+  String sipInkPayloadUsage(int bytes, int maxBytes) {
+    return '$bytes / $maxBytes B';
   }
-
-  @override
-  String get sipInkPayloadPending => 'Payload: —';
 
   @override
   String get sipInkClear => 'Clear';
 
   @override
   String get sipInkUndo => 'Undo';
+
+  @override
+  String get sipDmInkReplyPlaceholder => '🎨 Sketch';
 
   @override
   String get sipInkUnsupportedPeer => 'This peer can\'t receive sketches yet.';

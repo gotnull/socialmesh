@@ -62,6 +62,11 @@ class SipInkBubble extends StatelessWidget {
             sketch: result.sketch,
             canvasSize: result.sketch?.canvasSize ?? SipInkConstants.canvas64,
             color: isOutbound ? context.accentColor : context.textPrimary,
+            // Bubbles never carry overflow points — the payload is
+            // already clamped to budget by the time it crosses the
+            // wire. Keep a sensible non-null colour for the painter
+            // contract.
+            overflowColor: Theme.of(context).colorScheme.error,
           ),
           size: Size(size, size),
         ),

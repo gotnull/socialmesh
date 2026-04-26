@@ -6211,6 +6211,10 @@
     "@drawerBadgeTryIt": {
         "description": "Badge label for premium features available to try in the drawer."
     },
+    "requiresConnectionGuardDisconnected": "Disconnected from your node — reconnect to continue.",
+    "@requiresConnectionGuardDisconnected": {
+        "description": "Snackbar shown when a node-required screen is auto-popped because the device disconnected mid-session."
+    },
     "drawerEnterpriseDeviceManagement": "Device Management",
     "@drawerEnterpriseDeviceManagement": {
         "description": "Label for the Device Management menu tile in the enterprise drawer section."
@@ -42879,9 +42883,13 @@
     "@sipInkComposerHint": {
         "description": "Hint shown above the SIP Ink canvas explaining the airtime constraint."
     },
-    "sipInkPointBudget": "Mesh-safe sketch: {points} / {maxPoints} points",
+    "sipInkComposerHintOver": "Strokes past the dashed line won't fit on the mesh and won't be sent.",
+    "@sipInkComposerHintOver": {
+        "description": "Hint replacing sipInkComposerHint when the user has drawn past the SIP Ink budget — explains that overflow strokes are visible but will be dropped on send."
+    },
+    "sipInkPointBudget": "{points} / {maxPoints} points",
     "@sipInkPointBudget": {
-        "description": "Live indicator of points used in a SIP Ink sketch.",
+        "description": "Live indicator of simplified points used in a SIP Ink sketch versus the maximum.",
         "placeholders": {
             "points": {
                 "type": "int",
@@ -42893,19 +42901,19 @@
             }
         }
     },
-    "sipInkPayloadBytes": "Payload: {bytes} B",
-    "@sipInkPayloadBytes": {
-        "description": "Live indicator of encoded payload size for a SIP Ink sketch.",
+    "sipInkPayloadUsage": "{bytes} / {maxBytes} B",
+    "@sipInkPayloadUsage": {
+        "description": "Live indicator of encoded payload size used versus the maximum for a SIP Ink sketch.",
         "placeholders": {
             "bytes": {
                 "type": "int",
                 "example": "62"
+            },
+            "maxBytes": {
+                "type": "int",
+                "example": "180"
             }
         }
-    },
-    "sipInkPayloadPending": "Payload: —",
-    "@sipInkPayloadPending": {
-        "description": "Placeholder shown for the SIP Ink payload counter when no encodable sketch is on the canvas yet."
     },
     "sipInkClear": "Clear",
     "@sipInkClear": {
@@ -42914,6 +42922,10 @@
     "sipInkUndo": "Undo",
     "@sipInkUndo": {
         "description": "Button to remove the last stroke from the SIP Ink canvas."
+    },
+    "sipDmInkReplyPlaceholder": "🎨 Sketch",
+    "@sipDmInkReplyPlaceholder": {
+        "description": "Quoted text shown when a user replies to a sketch — ink has no plaintext body, so this placeholder stands in for the quote in both the local reply indicator and the recipient's wire-encoded quote prefix."
     },
     "sipInkUnsupportedPeer": "This peer can't receive sketches yet.",
     "@sipInkUnsupportedPeer": {
