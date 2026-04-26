@@ -325,10 +325,13 @@ class SipHandshakeManager {
       return null;
     }
 
-    if (session.isTimedOut) {
-      _failSession(peerNodeId, 'timeout');
-      return null;
-    }
+    // Note: NO synchronous `isTimedOut` check here. The Timer-based
+    // `_scheduleSessionExpiry` is the sole timeout authority. Receiving
+    // a wire-level reply for a session still in `_sessions` means the
+    // peer believes the session is alive — accepting it (even if our
+    // local clock passed the 60s mark by milliseconds) avoids the
+    // millisecond-tight race that left iOS with a "Could not connect"
+    // state while the peer happily considered the session established.
 
     final challenge = SipHsMessages.decodeChallenge(frame.payload);
     if (challenge == null) return null;
@@ -407,10 +410,9 @@ class SipHandshakeManager {
       return null;
     }
 
-    if (session.isTimedOut) {
-      _failSession(peerNodeId, 'timeout');
-      return null;
-    }
+    // Note: NO synchronous `isTimedOut` check. See [handleChallenge]
+    // for rationale — the Timer is the sole authority and the peer's
+    // HS_ACCEPT arriving means the wire-level handshake completed.
 
     final accept = SipHsMessages.decodeAccept(frame.payload);
     if (accept == null) return null;
@@ -776,10 +778,8 @@ class SipHandshakeManager {
       return null;
     }
 
-    if (session.isTimedOut) {
-      _failSession(peerNodeId, 'timeout');
-      return null;
-    }
+    // Note: NO synchronous `isTimedOut` check. See [handleChallenge]
+    // for rationale.
 
     final response = SipHsMessages.decodeResponse(frame.payload);
     if (response == null) return null;

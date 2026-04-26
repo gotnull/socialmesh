@@ -17,6 +17,8 @@ import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/bottom_action_bar.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/gradient_border_container.dart';
+import '../../../core/widgets/info_table.dart';
+import '../../../core/widgets/section_header.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/profile_providers.dart';
 import '../../../providers/social_providers.dart';
@@ -774,108 +776,92 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
   }
 
   Widget _buildSpecsSection(ShopProduct product) {
+    final accent = context.accentColor;
+    final rows = <InfoTableRow>[
+      if (product.chipset != null)
+        InfoTableRow(
+          label: context.l10n.productDetailChipset,
+          value: product.chipset!,
+          icon: Icons.memory,
+          iconColor: accent,
+        ),
+      if (product.loraChip != null)
+        InfoTableRow(
+          label: context.l10n.productDetailLoraChip,
+          value: product.loraChip!,
+          icon: Icons.radio,
+          iconColor: accent,
+        ),
+      if (product.frequencyBands.isNotEmpty)
+        InfoTableRow(
+          label: context.l10n.productDetailFrequencyBands,
+          value: product.frequencyBands.map((f) => f.label).join(', '),
+          icon: Icons.cell_tower,
+          iconColor: accent,
+        ),
+      if (product.batteryCapacity != null)
+        InfoTableRow(
+          label: context.l10n.productDetailBattery,
+          value: product.batteryCapacity!,
+          icon: Icons.battery_charging_full,
+          iconColor: accent,
+        ),
+      if (product.dimensions != null)
+        InfoTableRow(
+          label: context.l10n.productDetailDimensions,
+          value: product.dimensions!,
+          icon: Icons.straighten,
+          iconColor: accent,
+        ),
+      if (product.weight != null)
+        InfoTableRow(
+          label: context.l10n.productDetailWeight,
+          value: product.weight!,
+          icon: Icons.scale,
+          iconColor: accent,
+        ),
+      if (product.hardwareVersion != null)
+        InfoTableRow(
+          label: context.l10n.productDetailHardwareVersion,
+          value: product.hardwareVersion!,
+          icon: Icons.developer_board,
+          iconColor: accent,
+        ),
+      if (product.firmwareVersion != null)
+        InfoTableRow(
+          label: context.l10n.productDetailFirmware,
+          value: product.firmwareVersion!,
+          icon: Icons.system_update,
+          iconColor: accent,
+        ),
+    ];
+
     return Padding(
       padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                context.l10n.productDetailTechSpecs,
-                style: TextStyle(
-                  color: context.textPrimary,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              if (product.vendorVerified)
-                DeviceShopInfoPill(
-                  label: context.l10n.productDetailVendorVerified,
-                  color: context.accentColor,
-                ),
-            ],
+          SectionTitle(
+            title: context.l10n.productDetailTechSpecs,
+            trailing: product.vendorVerified
+                ? DeviceShopInfoPill(
+                    label: context.l10n.productDetailVendorVerified,
+                    color: accent,
+                  )
+                : null,
           ),
           if (product.vendorVerified && product.approvedAt != null) ...[
-            const SizedBox(height: AppTheme.spacing6),
-            Text(
-              context.l10n.productDetailVerifiedOn(
-                _formatDate(product.approvedAt!),
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
+              child: Text(
+                context.l10n.productDetailVerifiedOn(
+                  _formatDate(product.approvedAt!),
+                ),
+                style: TextStyle(color: context.textTertiary, fontSize: 11),
               ),
-              style: TextStyle(color: context.textTertiary, fontSize: 11),
             ),
           ],
-          const SizedBox(height: AppTheme.spacing16),
-          GradientBorderContainer(
-            borderRadius: AppTheme.radius16,
-            borderWidth: 1,
-            accentOpacity: 0.22,
-            child: Column(
-              children: [
-                if (product.chipset != null)
-                  _specRow(context.l10n.productDetailChipset, product.chipset!),
-                if (product.loraChip != null)
-                  _specRow(
-                    context.l10n.productDetailLoraChip,
-                    product.loraChip!,
-                  ),
-                if (product.frequencyBands.isNotEmpty)
-                  _specRow(
-                    context.l10n.productDetailFrequencyBands,
-                    product.frequencyBands.map((f) => f.label).join(', '),
-                  ),
-                if (product.batteryCapacity != null)
-                  _specRow(
-                    context.l10n.productDetailBattery,
-                    product.batteryCapacity!,
-                  ),
-                if (product.dimensions != null)
-                  _specRow(
-                    context.l10n.productDetailDimensions,
-                    product.dimensions!,
-                  ),
-                if (product.weight != null)
-                  _specRow(context.l10n.productDetailWeight, product.weight!),
-                if (product.hardwareVersion != null)
-                  _specRow(
-                    context.l10n.productDetailHardwareVersion,
-                    product.hardwareVersion!,
-                  ),
-                if (product.firmwareVersion != null)
-                  _specRow(
-                    context.l10n.productDetailFirmware,
-                    product.firmwareVersion!,
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _specRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: TextStyle(color: context.textSecondary, fontSize: 14),
-          ),
-          Flexible(
-            child: Text(
-              value,
-              style: TextStyle(
-                color: context.textPrimary,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-              textAlign: TextAlign.end,
-            ),
-          ),
+          InfoTable(rows: rows),
         ],
       ),
     );

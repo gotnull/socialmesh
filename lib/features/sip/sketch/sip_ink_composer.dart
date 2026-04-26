@@ -139,27 +139,57 @@ class _SipInkComposerState extends ConsumerState<SipInkComposer>
 
   /// Try to extend the committed prefix to include all of [_activeRaw].
   /// Updates [_committedBoundary] and the cached simplified state.
+  ///
+  /// Three outcomes:
+  /// 1. Candidate accepted — simplifier kept the in-progress stroke
+  ///    in its output. Advance the boundary; cache the sketch.
+  /// 2. Candidate dropped (typically a 1-point gesture-start that
+  ///    fails the simplifier's `minPointsPerStroke` check) but the
+  ///    simplifier otherwise succeeded — boundary stays put, sketch
+  ///    is cached, and we DO NOT fire the overflow haptic. Doing so
+  ///    would zap the user on every stroke-start, which the
+  ///    in-the-field log surfaced (logs.txt:478).
+  /// 3. Real failure (`budgetExceeded` / `tooManyStrokes`) — fire
+  ///    the medium-impact haptic once per stroke and re-derive the
+  ///    simplified state from completed-only strokes.
   void _evaluateActiveStroke() {
     final candidate = SipInkRawStroke(width: _strokeWidth, points: _activeRaw);
     final fullResult = SipInkSimplifier.simplify(
       rawStrokes: [...widget.draft, candidate],
       canvasSize: _canvasSize,
     );
-    if (fullResult.isOk) {
+
+    final expectedStrokeCount = widget.draft.length + 1;
+    final candidateAccepted =
+        fullResult.isOk &&
+        fullResult.sketch!.strokes.length == expectedStrokeCount;
+
+    if (candidateAccepted) {
       _committedBoundary = _activeRaw.length - 1;
       _simplifiedSketch = fullResult.sketch;
       _encodedBytes = SipInkEncoder.encode(fullResult.sketch!).bytes;
       return;
     }
-    // Active stroke as a whole doesn't fit. Keep [_committedBoundary]
-    // wherever it was. Re-derive the simplified state from the
-    // committed-only stroke set so the counters still update.
-    if (!_overflowHapticFiredThisStroke) {
+
+    if (fullResult.isOk) {
+      // Candidate dropped (too short / degenerate). Boundary stays.
+      // Counters reflect the completed-only state.
+      _simplifiedSketch = fullResult.sketch;
+      _encodedBytes = SipInkEncoder.encode(fullResult.sketch!).bytes;
+      return;
+    }
+
+    final error = fullResult.error;
+    final isRealOverflow =
+        error == SipInkSimplifyError.budgetExceeded ||
+        error == SipInkSimplifyError.tooManyStrokes;
+
+    if (isRealOverflow && !_overflowHapticFiredThisStroke) {
       _overflowHapticFiredThisStroke = true;
       HapticFeedback.mediumImpact();
       AppLogging.sipInk(
         'overflow_started raw_points=${_activeRaw.length} '
-        'committed_boundary=$_committedBoundary',
+        'committed_boundary=$_committedBoundary error=${error?.name}',
       );
     }
     _resimplifyCommitted();
@@ -341,7 +371,6 @@ class _SipInkComposerState extends ConsumerState<SipInkComposer>
     final byteCount = _encodedBytes?.length ?? 0;
     final overBudget = _isOverBudget;
     final errorColor = Theme.of(context).colorScheme.error;
-    final counterColor = overBudget ? errorColor : context.textSecondary;
     final hintText = overBudget
         ? l10n.sipInkComposerHintOver
         : l10n.sipInkComposerHint;
@@ -388,18 +417,28 @@ class _SipInkComposerState extends ConsumerState<SipInkComposer>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
-                child: AnimatedDefaultTextStyle(
-                  duration: const Duration(milliseconds: 150),
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: overBudget ? FontWeight.w600 : FontWeight.w400,
-                    color: counterColor,
-                  ),
-                  child: Text(
-                    '${l10n.sipInkPointBudget(pointCount, SipInkConstants.maxTotalPoints)}'
-                    '  ·  '
-                    '${l10n.sipInkPayloadUsage(byteCount, SipInkConstants.maxPayloadBytes)}',
-                  ),
+                child: Wrap(
+                  spacing: AppTheme.spacing6,
+                  runSpacing: AppTheme.spacing4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    _BudgetChip(
+                      icon: Icons.gesture,
+                      label: l10n.sipInkPointBudget(
+                        pointCount,
+                        SipInkConstants.maxTotalPoints,
+                      ),
+                      isOver: overBudget,
+                    ),
+                    _BudgetChip(
+                      icon: Icons.data_usage,
+                      label: l10n.sipInkPayloadUsage(
+                        byteCount,
+                        SipInkConstants.maxPayloadBytes,
+                      ),
+                      isOver: overBudget,
+                    ),
+                  ],
                 ),
               ),
               _ToolbarButton(
@@ -418,6 +457,62 @@ class _SipInkComposerState extends ConsumerState<SipInkComposer>
               const SizedBox(width: AppTheme.spacing8),
               _SendButton(onTap: canSend ? _onSend : null),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Pill-shaped chip showing one budget counter (points or bytes).
+///
+/// Compact, icon + small label, subtle card background, soft border.
+/// Tints to the theme's error color (and bumps weight) when the
+/// composer is over the airtime budget.
+class _BudgetChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool isOver;
+
+  const _BudgetChip({
+    required this.icon,
+    required this.label,
+    required this.isOver,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final errorColor = Theme.of(context).colorScheme.error;
+    final fg = isOver ? errorColor : context.textSecondary;
+    final bg = isOver
+        ? errorColor.withValues(alpha: 0.10)
+        : context.card.withValues(alpha: 0.6);
+    final borderColor = isOver
+        ? errorColor.withValues(alpha: 0.45)
+        : context.border.withValues(alpha: 0.45);
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 150),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing8,
+        vertical: AppTheme.spacing4,
+      ),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+        border: Border.all(color: borderColor),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: fg),
+          const SizedBox(width: AppTheme.spacing4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: isOver ? FontWeight.w600 : FontWeight.w500,
+              color: fg,
+            ),
           ),
         ],
       ),

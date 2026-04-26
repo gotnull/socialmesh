@@ -333,15 +333,17 @@ class SipDmRouter {
     }
 
     // Mirror plaintext bookkeeping: append to local history so the
-    // sender's own timeline renders the message they just sent.
+    // sender's own timeline renders the message they just sent. Use
+    // [SipDmManager.parseReplyToText] for the quote — historically
+    // this branch incorrectly used `extractReplyBody`, which returns
+    // the BODY (the user's reply text) and stored that as the quote,
+    // making the sender's local bubble appear to reply to itself.
     session.messages.add(
       SipDmHistoryEntry(
         text: text,
         timestampMs: nowS * 1000,
         direction: SipDmDirection.outbound,
-        replyToText: SipDmManager.extractReplyBody(text) != text
-            ? SipDmManager.extractReplyBody(text)
-            : null,
+        replyToText: SipDmManager.parseReplyToText(text),
       ),
     );
     dm.onStateChanged?.call();

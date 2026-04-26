@@ -740,7 +740,7 @@ class SipDmManager {
         text: text,
         timestampMs: nowS * 1000,
         direction: SipDmDirection.outbound,
-        replyToText: _parseReplyToText(text),
+        replyToText: parseReplyToText(text),
       ),
     );
 
@@ -899,7 +899,7 @@ class SipDmManager {
         text: message.text,
         timestampMs: frame.timestampS * 1000,
         direction: SipDmDirection.inbound,
-        replyToText: _parseReplyToText(message.text),
+        replyToText: parseReplyToText(message.text),
       ),
     );
 
@@ -1052,11 +1052,20 @@ class SipDmManager {
   /// to the original message "Hello".
   static const String _quotePrefix = '> ';
 
-  /// Parse the reply-to text from a message, if present.
+  /// Parse the reply-to text (the quoted portion) from a wire-encoded
+  /// reply message body.
   ///
-  /// Returns the quoted text (without prefix) if the message starts with
-  /// `> quoted\n`, or null if no quote is present.
-  static String? _parseReplyToText(String text) {
+  /// Returns the quoted text (without the `> ` prefix) if the message
+  /// starts with `> quoted\n`, or null if no quote is present.
+  ///
+  /// Public so the secure-DM router can populate
+  /// [SipDmHistoryEntry.replyToText] consistently with [buildDmMessage] /
+  /// [handleInboundDm] when it builds its own history entry around a
+  /// secure-encrypted text body. Without this, the secure path
+  /// previously used [extractReplyBody] (which returns the BODY) and
+  /// stored that as the quote — making the sender's local bubble
+  /// render the user's own reply text in the quote box.
+  static String? parseReplyToText(String text) {
     if (!text.startsWith(_quotePrefix)) return null;
     final newlineIdx = text.indexOf('\n');
     if (newlineIdx < 0) return null;

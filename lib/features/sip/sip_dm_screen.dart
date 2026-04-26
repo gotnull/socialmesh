@@ -399,7 +399,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
       setState(() => _highlightedTimestampMs = null);
     });
 
-    final key = GlobalObjectKey(target.timestampMs);
+    final key = GlobalObjectKey(target);
     final ctx = key.currentContext;
     if (ctx != null) {
       Scrollable.ensureVisible(
@@ -740,8 +740,14 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
                         return GestureDetector(
                           // GlobalObjectKey lets _onReplyQuoteTap find
                           // and ensureVisible this bubble even when
-                          // it's off-screen.
-                          key: GlobalObjectKey(entry.timestampMs),
+                          // it's off-screen. Keyed on the entry
+                          // instance (identity) rather than
+                          // `entry.timestampMs` because two messages
+                          // sent in the same second collide on the
+                          // millisecond-rounded timestamp and Flutter
+                          // throws "Multiple widgets used the same
+                          // GlobalKey" — see logs.txt regression.
+                          key: GlobalObjectKey(entry),
                           onLongPress: () => _showMessageMenu(entry),
                           child: _MessageBubble(
                             entry: entry,
@@ -1231,149 +1237,164 @@ class _MessageBubble extends ConsumerWidget {
             maxWidth: MediaQuery.of(context).size.width * 0.75,
           ),
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 250),
+            duration: const Duration(milliseconds: 200),
             curve: Curves.easeOut,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(AppTheme.radius12),
-              boxShadow: isHighlighted
-                  ? [
-                      BoxShadow(
-                        color: context.accentColor.withValues(alpha: 0.5),
-                        blurRadius: 16,
-                        spreadRadius: 1,
-                      ),
-                    ]
-                  : const [],
+              border: Border.all(
+                color: isHighlighted ? context.accentColor : Colors.transparent,
+                width: 1.5,
+              ),
             ),
-            child: Column(
-              crossAxisAlignment: isOutbound
-                  ? CrossAxisAlignment.end
-                  : CrossAxisAlignment.start,
-              children: [
-                if (isInk)
-                  Column(
-                    crossAxisAlignment: isOutbound
-                        ? CrossAxisAlignment.end
-                        : CrossAxisAlignment.start,
-                    children: [
-                      SipInkBubble(
-                        payload: entry.payload!,
-                        isOutbound: isOutbound,
-                      ),
-                      const SizedBox(height: AppTheme.spacing2),
-                      Text(
-                        _formatTime(entry.timestampMs),
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: context.textTertiary,
-                        ),
-                      ),
-                    ],
-                  )
-                else
-                  // Message bubble
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppTheme.spacing12,
-                      vertical: AppTheme.spacing8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isOutbound
-                          ? context.accentColor.withValues(alpha: 0.15)
-                          : context.card,
-                      borderRadius: BorderRadius.only(
-                        topLeft: const Radius.circular(AppTheme.radius12),
-                        topRight: const Radius.circular(AppTheme.radius12),
-                        bottomLeft: isOutbound
-                            ? const Radius.circular(AppTheme.radius12)
-                            : const Radius.circular(AppTheme.radius4),
-                        bottomRight: isOutbound
-                            ? const Radius.circular(AppTheme.radius4)
-                            : const Radius.circular(AppTheme.radius12),
-                      ),
-                      border: isOutbound
-                          ? null
-                          : Border.all(
-                              color: context.border.withValues(alpha: 0.5),
-                            ),
-                    ),
-                    child: Column(
+            child: TweenAnimationBuilder<double>(
+              // Restart the shake each time we transition into the
+              // highlighted state. Subtle: a damped horizontal sine
+              // over ~360ms, max ±3px, three half-cycles before it
+              // settles. The static accent border above is the
+              // persistent visual cue; the shake just nudges the eye.
+              key: ValueKey(isHighlighted),
+              tween: Tween(begin: 0.0, end: 1.0),
+              duration: const Duration(milliseconds: 360),
+              builder: (context, value, child) {
+                final shake = isHighlighted && value < 1.0
+                    ? math.sin(value * math.pi * 3) * 3.0 * (1 - value)
+                    : 0.0;
+                if (shake == 0.0) return child!;
+                return Transform.translate(
+                  offset: Offset(shake, 0),
+                  child: child,
+                );
+              },
+              child: Column(
+                crossAxisAlignment: isOutbound
+                    ? CrossAxisAlignment.end
+                    : CrossAxisAlignment.start,
+                children: [
+                  if (isInk)
+                    Column(
                       crossAxisAlignment: isOutbound
                           ? CrossAxisAlignment.end
                           : CrossAxisAlignment.start,
                       children: [
-                        // Quoted reply block — tappable, jumps to /
-                        // glows the original message when matched.
-                        if (replyTo != null) ...[
-                          GestureDetector(
-                            behavior: HitTestBehavior.opaque,
-                            onTap: onReplyQuoteTap,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: AppTheme.spacing8,
-                                vertical: AppTheme.spacing4,
-                              ),
-                              decoration: BoxDecoration(
-                                border: Border(
-                                  left: BorderSide(
-                                    color: context.accentColor,
-                                    width: 2,
-                                  ),
-                                ),
-                                color: context.accentColor.withValues(
-                                  alpha: 0.06,
-                                ),
-                              ),
-                              child: Text(
-                                replyTo,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: context.textTertiary,
-                                  fontStyle: FontStyle.italic,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: AppTheme.spacing4),
-                        ],
-                        Text(
-                          bodyText,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: context.textPrimary,
-                          ),
+                        SipInkBubble(
+                          payload: entry.payload!,
+                          isOutbound: isOutbound,
                         ),
                         const SizedBox(height: AppTheme.spacing2),
                         Text(
-                          _formatTime(entry.timestampMs),
+                          _formatTime(context, entry.timestampMs),
                           style: TextStyle(
                             fontSize: 10,
                             color: context.textTertiary,
                           ),
                         ),
                       ],
-                    ),
-                  ),
-
-                // Reaction row — Telegram-style pills below the bubble
-                AnimatedSize(
-                  duration: const Duration(milliseconds: 200),
-                  curve: Curves.easeOut,
-                  alignment: isOutbound
-                      ? Alignment.centerRight
-                      : Alignment.centerLeft,
-                  child: hasReactions
-                      ? Padding(
-                          padding: const EdgeInsets.only(
-                            top: AppTheme.spacing4,
+                    )
+                  else
+                    // Message bubble
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.spacing12,
+                        vertical: AppTheme.spacing8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isOutbound
+                            ? context.accentColor.withValues(alpha: 0.15)
+                            : context.card,
+                        borderRadius: BorderRadius.only(
+                          topLeft: const Radius.circular(AppTheme.radius12),
+                          topRight: const Radius.circular(AppTheme.radius12),
+                          bottomLeft: isOutbound
+                              ? const Radius.circular(AppTheme.radius12)
+                              : const Radius.circular(AppTheme.radius4),
+                          bottomRight: isOutbound
+                              ? const Radius.circular(AppTheme.radius4)
+                              : const Radius.circular(AppTheme.radius12),
+                        ),
+                        border: isOutbound
+                            ? null
+                            : Border.all(
+                                color: context.border.withValues(alpha: 0.5),
+                              ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: isOutbound
+                            ? CrossAxisAlignment.end
+                            : CrossAxisAlignment.start,
+                        children: [
+                          // Quoted reply block — tappable, jumps to /
+                          // glows the original message when matched.
+                          if (replyTo != null) ...[
+                            GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTap: onReplyQuoteTap,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: AppTheme.spacing8,
+                                  vertical: AppTheme.spacing4,
+                                ),
+                                decoration: BoxDecoration(
+                                  border: Border(
+                                    left: BorderSide(
+                                      color: context.accentColor,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  color: context.accentColor.withValues(
+                                    alpha: 0.06,
+                                  ),
+                                ),
+                                child: Text(
+                                  replyTo,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: context.textTertiary,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: AppTheme.spacing4),
+                          ],
+                          Text(
+                            bodyText,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: context.textPrimary,
+                            ),
                           ),
-                          child: _buildReactionRow(context, ref, isOutbound),
-                        )
-                      : const SizedBox.shrink(),
-                ),
-              ],
+                          const SizedBox(height: AppTheme.spacing2),
+                          Text(
+                            _formatTime(context, entry.timestampMs),
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: context.textTertiary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                  // Reaction row — Telegram-style pills below the bubble
+                  AnimatedSize(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeOut,
+                    alignment: isOutbound
+                        ? Alignment.centerRight
+                        : Alignment.centerLeft,
+                    child: hasReactions
+                        ? Padding(
+                            padding: const EdgeInsets.only(
+                              top: AppTheme.spacing4,
+                            ),
+                            child: _buildReactionRow(context, ref, isOutbound),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -1550,10 +1571,14 @@ class _MessageBubble extends ConsumerWidget {
     );
   }
 
-  String _formatTime(int ms) {
+  String _formatTime(BuildContext context, int ms) {
+    // Use MaterialLocalizations via TimeOfDay.format(context). This
+    // respects the user's locale (en_US -> "3:43 PM", de_DE -> "15:43",
+    // etc.) AND the platform 24-hour preference reported by
+    // MediaQuery.alwaysUse24HourFormat. No hand-rolled padding,
+    // no AM/PM heuristics.
     final dt = DateTime.fromMillisecondsSinceEpoch(ms);
-    return '${dt.hour.toString().padLeft(2, '0')}:'
-        '${dt.minute.toString().padLeft(2, '0')}';
+    return TimeOfDay.fromDateTime(dt).format(context);
   }
 }
 
