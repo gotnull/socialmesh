@@ -367,8 +367,44 @@ class OverlayLinkEngine {
   ) async {
     final existing = await _store.getByLinkId(frame.linkId);
     if (existing != null && !existing.isTerminal) {
+      if (existing.peerNodeNum != senderNodeNum) {
+        // Cross-peer linkId collision: a different peer is asking to
+        // open a link using a linkId that already belongs to a
+        // non-terminal record for someone else. Reject
+        // deterministically; NEVER mutate the existing record to
+        // point at the new peer — doing so silently re-attributes
+        // the link in the store and poisons every downstream lookup
+        // that resolves "this linkId → this peer" (notably
+        // `resolveSecureInboundDmSession`, which then fails to
+        // route decrypted DMs to the right SIP DM thread).
+        //
+        // Build the rejection via `_buildRejectionFrame` rather than
+        // `_newLinkFrame(record: existing)` so we don't leak the
+        // existing record's seq/peer_persona_hint state to the
+        // wrong peer.
+        AppLogging.overlay(
+          'overlay_link_collision_cross_peer '
+          'linkId=0x${frame.linkId.toRadixString(16)} '
+          'existing_peer=${existing.peerNodeNum} '
+          'inbound_peer=$senderNodeNum '
+          '— rejecting inbound LINK_OPEN, existing record preserved',
+        );
+        await _sendFrame(
+          _buildRejectionFrame(
+            linkId: frame.linkId,
+            reason: OverlayLinkCloseReason.collision,
+          ),
+          senderNodeNum,
+        );
+        return;
+      }
+      // Same peer + same linkId: typically a peer retransmit (or
+      // duplicate LINK_OPEN). Pre-existing behaviour is to reject
+      // as collision; preserve that here. A future refinement may
+      // re-emit LINK_OPEN_OK idempotently when state permits.
       AppLogging.overlay(
-        'LINK_OPEN collision linkId=0x${frame.linkId.toRadixString(16)}',
+        'LINK_OPEN collision linkId=0x${frame.linkId.toRadixString(16)} '
+        'same_peer=$senderNodeNum',
       );
       await _sendFrame(
         _newLinkFrame(

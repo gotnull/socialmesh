@@ -33283,6 +33283,8 @@
   "sipHubHandshaking": "Handshake in corso…",
   "sipHubHelp": "Aiuto",
   "sipHubIncomingRequestFrom": "{peerName} vuole connettersi",
+  "sipHubIncomingRequestWantsToConnect": "vuole connettersi",
+  "sipHubIncomingRequestLiveLabel": "In tempo reale",
   "sipHubLastSeen": "Visto {time}",
   "sipHubMessagePreview": "{name}: {message}",
   "sipHubNoMessages": "Nessun messaggio",

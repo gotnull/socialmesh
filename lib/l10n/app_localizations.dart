@@ -56504,6 +56504,18 @@ abstract class AppLocalizations {
   /// **'{peerName} wants to connect'**
   String sipHubIncomingRequestFrom(String peerName);
 
+  /// Subtitle shown below the peer name and hex ID on the incoming handshake request card.
+  ///
+  /// In en, this message translates to:
+  /// **'wants to connect'**
+  String get sipHubIncomingRequestWantsToConnect;
+
+  /// Tiny pulsing badge on the incoming handshake request card indicating the request is current and time-sensitive.
+  ///
+  /// In en, this message translates to:
+  /// **'Live'**
+  String get sipHubIncomingRequestLiveLabel;
+
   /// Accept button label for incoming handshake requests.
   ///
   /// In en, this message translates to:

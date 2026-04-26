@@ -32143,6 +32143,12 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get sipHubIncomingRequestWantsToConnect => 'wants to connect';
+
+  @override
+  String get sipHubIncomingRequestLiveLabel => 'Live';
+
+  @override
   String get sipHubAccept => 'Accept';
 
   @override

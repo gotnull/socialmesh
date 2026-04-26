@@ -32469,6 +32469,12 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get sipHubIncomingRequestWantsToConnect => 'quer ligar-se';
+
+  @override
+  String get sipHubIncomingRequestLiveLabel => 'Em direto';
+
+  @override
   String get sipHubAccept => 'Aceitar';
 
   @override

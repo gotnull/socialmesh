@@ -23,6 +23,7 @@ import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../core/widgets/gradient_border_container.dart';
 import '../../core/widgets/section_header.dart';
 import '../../features/nodedex/models/nodedex_entry.dart';
 import '../../features/nodedex/models/sigil_evolution.dart';
@@ -93,7 +94,13 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
       if (autoScan) {
         _startAutoScanTimer();
         _radarController.repeat();
-        _performScan();
+        // Screen-restore scan: NOT user-initiated (the user is just
+        // navigating back into the hub with auto-scan already on).
+        // force=false so the resume-suppression window — which fires
+        // for ~10s after the app/screen comes to foreground —
+        // actually does its job. The periodic timer will pick up
+        // within 60s.
+        _performScan(force: false);
       }
     });
   }
@@ -114,7 +121,11 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
     ref.read(sipAutoScanProvider.notifier).setEnabled(nowEnabled);
     setState(() {
       if (nowEnabled) {
-        _performScan();
+        // First scan after the user enables auto-scan is user-
+        // initiated by the toggle tap → force=true so it goes out
+        // promptly. Subsequent ticks from the periodic timer use
+        // force=false (see _startAutoScanTimer).
+        _performScan(force: true);
         _startAutoScanTimer();
         _radarController.repeat();
         showSuccessSnackBar(context, l10n.sipAutoScanEnabled);
@@ -131,21 +142,35 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
   void _startAutoScanTimer() {
     _autoScanTimer?.cancel();
     _autoScanTimer = Timer.periodic(_kAutoScanInterval, (_) {
-      if (mounted) _performScan();
+      // Periodic background ticks must NOT use `force: true`. That
+      // flag is for explicit user taps and bypasses the resume-
+      // suppression window + the cooldown jitter — both of which
+      // exist precisely to keep automatic emissions airtime-clean.
+      // Letting the periodic tick honour the soft gates means it
+      // skips ticks during congestion / the 10s post-resume window
+      // and picks up the 0–5s anti-thundering-herd jitter so a
+      // populated mesh of auto-scanning devices doesn't fire all
+      // their ROLLCALL_REQs on the same instant.
+      if (mounted) _performScan(force: false);
     });
   }
 
   void _onScan() {
     ref.read(hapticServiceProvider).trigger(HapticType.light);
-    _performScan();
+    // User-initiated taps are explicit intent — bypass the cooldown
+    // / resume-suppression so the request goes out promptly. The
+    // hard byte budget still gates this.
+    _performScan(force: true);
   }
 
-  void _performScan() {
+  void _performScan({required bool force}) {
     final discovery = ref.read(sipDiscoveryProvider);
-    AppLogging.sip('SIP_HUB: scan tapped, discovery=${discovery != null}');
+    AppLogging.sip(
+      'SIP_HUB: scan triggered, discovery=${discovery != null} force=$force',
+    );
     if (discovery == null) return;
 
-    final outbound = discovery.buildRollcallReq(force: true);
+    final outbound = discovery.buildRollcallReq(force: force);
     if (outbound != null) {
       final protocol = ref.read(protocolServiceProvider);
       protocol.sendSipPacket(outbound.encoded);
@@ -605,112 +630,250 @@ class _IncomingRequestTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final accent = context.accentColor;
     final entry = ref.watch(nodeDexEntryProvider(peerNodeId));
     final nodes = ref.watch(nodesProvider);
     final node = nodes[peerNodeId];
+    final patinaResult = ref.watch(nodeDexPatinaProvider(peerNodeId));
+    final traitResult = ref.watch(nodeDexTraitProvider(peerNodeId));
     final displayName =
         entry?.localNickname ??
         entry?.sipDisplayName ??
         node?.displayName ??
         entry?.lastKnownName ??
         NodeDisplayNameResolver.defaultName(peerNodeId);
+    final hexId =
+        '!${peerNodeId.toRadixString(16).toUpperCase().padLeft(4, '0')}';
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
-      child: Container(
-        decoration: BoxDecoration(
-          color: context.card,
-          borderRadius: BorderRadius.circular(AppTheme.radius12),
-          border: Border.all(
-            color: AccentColors.orange.withValues(alpha: 0.4),
-            width: 1,
-          ),
+      child: GradientBorderContainer(
+        borderRadius: AppTheme.radius12,
+        borderWidth: 2,
+        accentOpacity: 0.3,
+        backgroundColor: context.card,
+        padding: const EdgeInsets.all(AppTheme.spacing14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Live header strip — pulsing dot + uppercase label
+            Row(
+              children: [
+                _LivePulseDot(color: accent),
+                const SizedBox(width: AppTheme.spacing8),
+                Text(
+                  l10n.sipHubIncomingRequestLiveLabel.toUpperCase(),
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: accent,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppTheme.spacing12),
+
+            // Identity row — sigil avatar + name/hex/subtitle stack
+            Row(
+              children: [
+                _buildAvatar(context, entry, patinaResult, traitResult),
+                const SizedBox(width: AppTheme.spacing12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              displayName,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: context.textPrimary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: AppTheme.spacing6),
+                          Text(
+                            hexId,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: context.textTertiary,
+                              fontFamily: AppTheme.fontFamily,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppTheme.spacing4),
+                      Text(
+                        l10n.sipHubIncomingRequestWantsToConnect,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: context.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppTheme.spacing14),
+
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: () {
+                      AppLogging.sip(
+                        'SIP_HUB: Accept tapped for '
+                        'peer=0x${peerNodeId.toRadixString(16)}',
+                      );
+                      ref
+                          .read(hapticServiceProvider)
+                          .trigger(HapticType.medium);
+                      ref
+                          .read(protocolServiceProvider)
+                          .acceptSipHandshake(peerNodeId);
+                    },
+                    icon: const Icon(Icons.check, size: 16),
+                    label: Text(l10n.sipHubAccept),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AccentColors.green,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size.fromHeight(36),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.spacing12,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppTheme.spacing8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      ref.read(hapticServiceProvider).trigger(HapticType.light);
+                      ref
+                          .read(protocolServiceProvider)
+                          .declineSipHandshake(peerNodeId);
+                    },
+                    icon: const Icon(Icons.close, size: 16),
+                    label: Text(l10n.sipHubDecline),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AccentColors.red,
+                      side: BorderSide(
+                        color: AccentColors.red.withValues(alpha: 0.6),
+                      ),
+                      minimumSize: const Size.fromHeight(36),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.spacing12,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(AppTheme.spacing12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.wifi_tethering,
-                    size: 16,
-                    color: AccentColors.orange,
-                  ),
-                  const SizedBox(width: AppTheme.spacing6),
-                  Expanded(
-                    child: Text(
-                      l10n.sipHubIncomingRequestFrom(displayName),
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: context.textPrimary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppTheme.spacing12),
-              Row(
-                children: [
-                  Expanded(
-                    child: FilledButton.icon(
-                      onPressed: () {
-                        AppLogging.sip(
-                          'SIP_HUB: Accept tapped for '
-                          'peer=0x${peerNodeId.toRadixString(16)}',
-                        );
-                        ref
-                            .read(hapticServiceProvider)
-                            .trigger(HapticType.medium);
-                        ref
-                            .read(protocolServiceProvider)
-                            .acceptSipHandshake(peerNodeId);
-                      },
-                      icon: const Icon(Icons.check, size: 16),
-                      label: Text(l10n.sipHubAccept),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AccentColors.green,
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size.fromHeight(36),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppTheme.spacing12,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: AppTheme.spacing8),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        ref
-                            .read(hapticServiceProvider)
-                            .trigger(HapticType.light);
-                        ref
-                            .read(protocolServiceProvider)
-                            .declineSipHandshake(peerNodeId);
-                      },
-                      icon: const Icon(Icons.close, size: 16),
-                      label: Text(l10n.sipHubDecline),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AccentColors.red,
-                        side: BorderSide(
-                          color: AccentColors.red.withValues(alpha: 0.6),
-                        ),
-                        minimumSize: const Size.fromHeight(36),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppTheme.spacing12,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+      ),
+    );
+  }
+
+  Widget _buildAvatar(
+    BuildContext context,
+    NodeDexEntry? entry,
+    PatinaResult patinaResult,
+    TraitResult traitResult,
+  ) {
+    if (entry?.sigil != null) {
+      return SigilAvatar(
+        sigil: entry!.sigil,
+        nodeNum: peerNodeId,
+        size: 48,
+        evolution: SigilEvolution.fromPatina(
+          patinaResult.score,
+          trait: traitResult.primary,
+        ),
+      );
+    }
+
+    return Container(
+      width: 48,
+      height: 48,
+      decoration: BoxDecoration(
+        color: context.accentColor.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+      ),
+      child: Icon(
+        Icons.wifi_tethering,
+        size: 24,
+        color: context.accentColor.withValues(alpha: 0.7),
+      ),
+    );
+  }
+}
+
+/// Pulsing dot indicator used on the incoming-request card to convey that
+/// the request is live and time-sensitive (matches the Signals banner).
+class _LivePulseDot extends StatefulWidget {
+  final Color color;
+
+  const _LivePulseDot({required this.color});
+
+  @override
+  State<_LivePulseDot> createState() => _LivePulseDotState();
+}
+
+class _LivePulseDotState extends State<_LivePulseDot>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+    _animation = Tween<double>(
+      begin: 0.5,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+    _controller.repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, _) {
+        return Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: widget.color,
+            boxShadow: [
+              BoxShadow(
+                color: widget.color.withValues(alpha: _animation.value * 0.6),
+                blurRadius: 8 * _animation.value,
+                spreadRadius: 2 * _animation.value,
               ),
             ],
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

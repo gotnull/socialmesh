@@ -43116,6 +43116,14 @@
             }
         }
     },
+    "sipHubIncomingRequestWantsToConnect": "wants to connect",
+    "@sipHubIncomingRequestWantsToConnect": {
+        "description": "Subtitle shown below the peer name and hex ID on the incoming handshake request card."
+    },
+    "sipHubIncomingRequestLiveLabel": "Live",
+    "@sipHubIncomingRequestLiveLabel": {
+        "description": "Tiny pulsing badge on the incoming handshake request card indicating the request is current and time-sensitive."
+    },
     "sipHubAccept": "Accept",
     "@sipHubAccept": {
         "description": "Accept button label for incoming handshake requests."

@@ -32488,6 +32488,12 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get sipHubIncomingRequestWantsToConnect => 'vuole connettersi';
+
+  @override
+  String get sipHubIncomingRequestLiveLabel => 'In tempo reale';
+
+  @override
   String get sipHubAccept => 'Accetta';
 
   @override

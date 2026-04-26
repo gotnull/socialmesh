@@ -595,6 +595,60 @@ class _GateFail extends _GateResult {
 // Secure inbound DM ingress
 // =============================================================================
 
+/// Resolve which [SipDmSession] should receive a decrypted secure
+/// inbound DM payload.
+///
+/// Primary path — match by the `peerNodeNum` carried on the link
+/// store record for the inbound `linkId`. That's the authoritative
+/// pairing when overlay link state is consistent.
+///
+/// Recovery path — when the canonical lookup yields no session AND
+/// exactly one DM session is active, route the frame to that session
+/// and emit `secure_decrypt_recovered`. This salvages the multi-device
+/// cross-peer linkId-collision scenario where the link store's
+/// `peerNodeNum` is stale from a prior link to a different peer (the
+/// AEAD decrypt has already succeeded by the time we get here, so
+/// the secure session keys are authoritatively tied to whichever
+/// peer the frame really came from). With 0 or 2+ sessions we refuse
+/// to guess and emit `secure_decrypt_dropped reason=no_dm_session`.
+///
+/// This is a recovery path, NOT normal routing — the underlying
+/// poisoned link record is fixed in `OverlayLinkEngine._handleLinkOpen`
+/// (cross-peer linkId collisions are now rejected at LINK_OPEN time).
+/// Public so the regression test can pin both branches.
+SipDmSession? resolveSecureInboundDmSession({
+  required SipDmManager dm,
+  required int linkRecordPeerNodeId,
+  required int linkId,
+}) {
+  final byPeer = dm.activeSessions
+      .where((s) => s.peerNodeId == linkRecordPeerNodeId)
+      .fold<SipDmSession?>(null, (_, s) => s);
+  if (byPeer != null) return byPeer;
+
+  final candidates = dm.activeSessions;
+  if (candidates.length == 1) {
+    final fallback = candidates.first;
+    AppLogging.sip(
+      'SIP_DM: secure_decrypt_recovered '
+      'linkId=0x${linkId.toRadixString(16)} '
+      'record_peer=0x${linkRecordPeerNodeId.toRadixString(16)} '
+      'session_peer=0x${fallback.peerNodeId.toRadixString(16)} '
+      'session_tag=0x${fallback.sessionTag.toRadixString(16)} '
+      '— link store reported a stale peer for this linkId; falling '
+      'back to the only active DM session',
+    );
+    return fallback;
+  }
+
+  AppLogging.sip(
+    'SIP_DM: secure_decrypt_dropped reason=no_dm_session '
+    'peer=0x${linkRecordPeerNodeId.toRadixString(16)} '
+    'active_sessions=${candidates.length}',
+  );
+  return null;
+}
+
 /// Subscribes to [OverlaySecureSessionManager.inbound] and routes
 /// decrypted DM / reaction payloads into the existing plaintext DM
 /// ingress path by rebuilding a synthetic [SipFrame].
@@ -643,16 +697,12 @@ Future<void> _handleSecureDmInbound({
   }
   final peerNodeId = record.peerNodeNum as int;
 
-  final dmSession = dm.activeSessions
-      .where((s) => s.peerNodeId == peerNodeId)
-      .fold<SipDmSession?>(null, (_, s) => s);
-  if (dmSession == null) {
-    AppLogging.sip(
-      'SIP_DM: secure_decrypt_dropped reason=no_dm_session '
-      'peer=0x${peerNodeId.toRadixString(16)}',
-    );
-    return;
-  }
+  final dmSession = resolveSecureInboundDmSession(
+    dm: dm,
+    linkRecordPeerNodeId: peerNodeId,
+    linkId: payload.linkId,
+  );
+  if (dmSession == null) return;
 
   switch (payload.subtype) {
     case OverlaySecureDataSubtype.dmText:
