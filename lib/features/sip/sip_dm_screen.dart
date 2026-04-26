@@ -60,7 +60,7 @@ class SipDmScreen extends ConsumerStatefulWidget {
 }
 
 class _SipDmScreenState extends ConsumerState<SipDmScreen>
-    with LifecycleSafeMixin {
+    with LifecycleSafeMixin, WidgetsBindingObserver {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final FocusNode _inputFocusNode = FocusNode();
@@ -84,6 +84,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _messageController.addListener(_onTextChanged);
     _scrollController.addListener(_onScroll);
 
@@ -101,6 +102,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _messageController.removeListener(_onTextChanged);
     _scrollController.removeListener(_onScroll);
     _messageController.dispose();
@@ -108,6 +110,21 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
     _inputFocusNode.dispose();
     _typingDismissTimer?.cancel();
     super.dispose();
+  }
+
+  @override
+  void didChangeMetrics() {
+    super.didChangeMetrics();
+    // The keyboard opening/closing or the screen rotating changes the
+    // ListView's `maxScrollExtent`. The ScrollController preserves
+    // `pixels`, so a user who was anchored to the latest message ends
+    // up "a little up" once new content space appears below them.
+    // Re-anchor on every metric change while the user was at-bottom
+    // (no jump-to-latest pill showing). This is the canonical fix for
+    // the navigate-away-and-back regression: the keyboard re-shows on
+    // re-entry and shifts the bottom out from under the controller.
+    if (!mounted || _showJumpToLatest) return;
+    _scrollToBottom(animate: false);
   }
 
   /// Toggle [_showJumpToLatest] based on the user's current scroll
