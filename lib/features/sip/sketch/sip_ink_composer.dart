@@ -319,15 +319,10 @@ class _SipInkComposerState extends ConsumerState<SipInkComposer>
   // Build
   // ---------------------------------------------------------------
 
-  /// Slice of the active stroke that fits the budget — what the
-  /// painter draws as solid.
-  List<({double x, double y})> get _activeCommittedSlice {
-    if (_committedBoundary < 0) return const [];
-    return _activeRaw.sublist(0, _committedBoundary + 1);
-  }
-
   /// Slice of the active stroke that doesn't fit — drawn dashed in
   /// red. Includes the boundary point so the line stays connected.
+  /// The committed prefix lives in `_simplifiedSketch` (already
+  /// rendered by the canvas) so we no longer paint it as raw points.
   List<({double x, double y})> get _activeOverflowSlice {
     if (_committedBoundary >= _activeRaw.length - 1) return const [];
     final start = _committedBoundary < 0 ? 0 : _committedBoundary;
@@ -375,8 +370,7 @@ class _SipInkComposerState extends ConsumerState<SipInkComposer>
               child: AspectRatio(
                 aspectRatio: 1,
                 child: SipInkCanvas(
-                  strokes: widget.draft,
-                  activeCommitted: _activeCommittedSlice,
+                  simplifiedSketch: _simplifiedSketch,
                   activeOverflow: _activeOverflowSlice,
                   isOverBudget: overBudget,
                   enabled: widget.enabled && !_sending,

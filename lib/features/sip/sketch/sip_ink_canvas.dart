@@ -14,20 +14,20 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme.dart';
 import '../../../services/protocol/sip/sip_ink_payload.dart';
-import '../../../services/protocol/sip/sip_ink_simplifier.dart';
 import 'sip_ink_painter.dart';
 
 class SipInkCanvas extends StatelessWidget {
-  /// Strokes already finalised in the current draft.
-  final List<SipInkRawStroke> strokes;
-
-  /// Committed prefix of the active in-progress stroke (the portion
-  /// that fits the airtime budget). Empty when nothing has been
-  /// committed yet for the active stroke.
-  final List<({double x, double y})> activeCommitted;
+  /// Live simplified sketch. Includes both the finalised draft and
+  /// the committed prefix of any in-progress stroke — i.e. exactly
+  /// what would travel on the wire if the user stopped drawing right
+  /// now. WYSIWYG: the user sees the real wire-truth, not the raw
+  /// finger trace.
+  final SipInkSketch? simplifiedSketch;
 
   /// Overflow tail of the active in-progress stroke (drawn but won't
-  /// be sent). Empty when the stroke fits.
+  /// be sent). Raw float points so the cue stays smooth even though
+  /// the committed portion is already simplified. Empty when the
+  /// stroke fits the budget.
   final List<({double x, double y})> activeOverflow;
 
   /// True while the user is over-budget. Tints the canvas border red
@@ -49,8 +49,7 @@ class SipInkCanvas extends StatelessWidget {
 
   const SipInkCanvas({
     super.key,
-    required this.strokes,
-    required this.activeCommitted,
+    required this.simplifiedSketch,
     required this.activeOverflow,
     required this.isOverBudget,
     required this.canvasSize,
@@ -124,16 +123,15 @@ class SipInkCanvas extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppTheme.radius12),
                 child: CustomPaint(
                   painter: SipInkPainter(
-                    sketch: SipInkSketch(
-                      canvasSize: canvasSize,
-                      strokes: _toRenderedStrokes(strokes),
-                    ),
+                    // Paint the simplified (sendable) state directly —
+                    // not the raw finger trace. This is the WYSIWYG
+                    // promise: the user sees what would go on the
+                    // wire, including how aggressive the simplifier
+                    // had to get to fit the budget.
+                    sketch: simplifiedSketch,
                     canvasSize: canvasSize,
                     color: context.textPrimary,
                     overflowColor: overflowColor.withValues(alpha: 0.7),
-                    activePoints: activeCommitted.isEmpty
-                        ? null
-                        : activeCommitted,
                     activeOverflowPoints: activeOverflow.isEmpty
                         ? null
                         : activeOverflow,
@@ -147,26 +145,5 @@ class SipInkCanvas extends StatelessWidget {
         );
       },
     );
-  }
-
-  /// Quick-and-dirty quantisation of raw float strokes into a sketch
-  /// for live preview. Bypasses the full simplifier on every paint so
-  /// gestures stay smooth — the simplifier still drives the budget
-  /// counter and the committed/overflow split via the parent.
-  List<SipInkStroke> _toRenderedStrokes(List<SipInkRawStroke> raws) {
-    final out = <SipInkStroke>[];
-    for (final raw in raws) {
-      if (raw.points.length < 2) continue;
-      final pts = raw.points
-          .map(
-            (p) => SipInkPoint(
-              p.x.clamp(0.0, (canvasSize - 1).toDouble()).round(),
-              p.y.clamp(0.0, (canvasSize - 1).toDouble()).round(),
-            ),
-          )
-          .toList(growable: false);
-      out.add(SipInkStroke(width: raw.width, points: pts));
-    }
-    return out;
   }
 }
