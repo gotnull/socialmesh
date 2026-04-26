@@ -22,6 +22,7 @@ import '../../core/logging.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/gradient_border_container.dart';
 import '../../core/widgets/section_header.dart';
@@ -37,6 +38,7 @@ import '../../core/constants.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/age_eligibility_provider.dart';
 import '../../providers/help_providers.dart';
+import '../../providers/peer_safety_providers.dart';
 import '../../providers/sip_providers.dart';
 import '../../services/haptic_service.dart';
 import '../../services/protocol/sip/sip_codec.dart';
@@ -75,7 +77,8 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
   int _scanStartEpoch = -1;
   String _lastLogSignature = '';
 
-  /// Continuous rotation controller for the radar icon when auto-scan is on.
+  // Rotates while a scan is in flight (manual or auto-scan tick).
+  // Idle between ticks even when auto-scan is on — green tint signals "armed".
   late final AnimationController _radarController;
 
   @override
@@ -93,7 +96,6 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
       final autoScan = ref.read(sipAutoScanProvider);
       if (autoScan) {
         _startAutoScanTimer();
-        _radarController.repeat();
         // Screen-restore scan: NOT user-initiated (the user is just
         // navigating back into the hub with auto-scan already on).
         // force=false so the resume-suppression window — which fires
@@ -119,24 +121,17 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
     final wasEnabled = ref.read(sipAutoScanProvider);
     final nowEnabled = !wasEnabled;
     ref.read(sipAutoScanProvider.notifier).setEnabled(nowEnabled);
-    setState(() {
-      if (nowEnabled) {
-        // First scan after the user enables auto-scan is user-
-        // initiated by the toggle tap → force=true so it goes out
-        // promptly. Subsequent ticks from the periodic timer use
-        // force=false (see _startAutoScanTimer).
-        _performScan(force: true);
-        _startAutoScanTimer();
-        _radarController.repeat();
-        showSuccessSnackBar(context, l10n.sipAutoScanEnabled);
-      } else {
-        _autoScanTimer?.cancel();
-        _autoScanTimer = null;
-        _radarController.stop();
-        _radarController.reset();
-        showInfoSnackBar(context, l10n.sipAutoScanDisabled);
-      }
-    });
+    if (nowEnabled) {
+      // Turning ON → fire an immediate user-initiated scan and arm
+      // the periodic timer. Subsequent timer ticks use force=false.
+      _performScan(force: true);
+      _startAutoScanTimer();
+      showSuccessSnackBar(context, l10n.sipAutoScanEnabled);
+    } else {
+      _autoScanTimer?.cancel();
+      _autoScanTimer = null;
+      showInfoSnackBar(context, l10n.sipAutoScanDisabled);
+    }
   }
 
   void _startAutoScanTimer() {
@@ -171,31 +166,39 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
     if (discovery == null) return;
 
     final outbound = discovery.buildRollcallReq(force: force);
-    if (outbound != null) {
-      final protocol = ref.read(protocolServiceProvider);
-      protocol.sendSipPacket(outbound.encoded);
-      AppLogging.sip(
-        'SIP_HUB: ROLLCALL_REQ dispatched ${outbound.encoded.length}B',
-      );
-      setState(() => _scanning = true);
-      // Record epoch at scan start; stop scanning when it bumps (peers arrive).
-      _scanStartEpoch = ref.read(sipPeerCacheEpochProvider);
-      // Poll the discovery engine's scan window state instead of using a fixed
-      // timeout. The engine tracks the real expiry; we add a grace period after
-      // the window closes for the last response to propagate back over the mesh.
-      _scanTimeoutTimer?.cancel();
-      _scanTimeoutTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-        final d = ref.read(sipDiscoveryProvider);
-        if (d == null || !d.isInScanWindow) {
-          _scanTimeoutTimer?.cancel();
-          // Grace period: responses sent just before the window closed are
-          // still in flight. Wait for mesh propagation before giving up.
-          Future.delayed(const Duration(seconds: 5), () {
-            if (mounted && _scanning) setState(() => _scanning = false);
-          });
-        }
-      });
-    }
+    if (outbound == null) return;
+
+    final protocol = ref.read(protocolServiceProvider);
+    protocol.sendSipPacket(outbound.encoded);
+    AppLogging.sip(
+      'SIP_HUB: ROLLCALL_REQ dispatched ${outbound.encoded.length}B',
+    );
+    setState(() => _scanning = true);
+    _radarController.repeat();
+    // Record epoch at scan start; stop scanning when it bumps (peers arrive).
+    _scanStartEpoch = ref.read(sipPeerCacheEpochProvider);
+    // Poll the discovery engine's scan window state instead of using a fixed
+    // timeout. The engine tracks the real expiry; we add a grace period after
+    // the window closes for the last response to propagate back over the mesh.
+    _scanTimeoutTimer?.cancel();
+    _scanTimeoutTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      final d = ref.read(sipDiscoveryProvider);
+      if (d == null || !d.isInScanWindow) {
+        _scanTimeoutTimer?.cancel();
+        // Grace period: responses sent just before the window closed are
+        // still in flight. Wait for mesh propagation before giving up.
+        Future.delayed(const Duration(seconds: 5), () {
+          if (mounted && _scanning) _stopScan();
+        });
+      }
+    });
+  }
+
+  void _stopScan() {
+    if (!_scanning) return;
+    setState(() => _scanning = false);
+    _radarController.stop();
+    _radarController.reset();
   }
 
   /// Called from build — checks if peers arrived since scan started.
@@ -205,7 +208,7 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
       // after a brief delay for perceived smoothness.
       _scanTimeoutTimer?.cancel();
       Future.delayed(const Duration(milliseconds: 500), () {
-        if (mounted) setState(() => _scanning = false);
+        if (mounted) _stopScan();
       });
     }
   }
@@ -335,15 +338,44 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
     // Filter out peers that already have an active DM session —
     // those appear under Conversations only (issue 3).
     final sessionNodeIds = sessions.map((s) => s.peerNodeId).toSet();
+
+    // Trust + Safety render-layer filter: blocked peers are hidden
+    // from every active list (Incoming requests, Conversations,
+    // Discovered peers). They surface only inside the collapsed
+    // Blocked section, which exposes an explicit Unblock affordance.
+    //
+    // This is a pure render filter — no protocol or session state
+    // is mutated here. The protocol layer already silently drops
+    // future inbound HELLO / DM / MRRP frames from blocked peers
+    // (Phase 6/7), so blocked entries shouldn't normally appear in
+    // these lists at steady state. The filter is defense-in-depth
+    // for in-flight frames + sessions opened before the block.
+    final blockedNodeIds = ref.watch(blockedPeerNodeIdsProvider);
+    final blockedSet = blockedNodeIds.toSet();
+    final filteredPendingRequests = pendingRequestNodeIds
+        .where((id) => !blockedSet.contains(id))
+        .toList(growable: false);
+    final filteredSessions = sessions
+        .where((s) => !blockedSet.contains(s.peerNodeId))
+        .toList(growable: false);
     final unconnectedPeers = peers
-        .where((p) => !sessionNodeIds.contains(p.nodeId))
+        .where(
+          (p) =>
+              !sessionNodeIds.contains(p.nodeId) &&
+              !blockedSet.contains(p.nodeId),
+        )
         .toList();
 
     final hasPeers = unconnectedPeers.isNotEmpty;
-    final hasSessions = sessions.isNotEmpty;
-    final hasPendingRequests = pendingRequestNodeIds.isNotEmpty;
+    final hasSessions = filteredSessions.isNotEmpty;
+    final hasPendingRequests = filteredPendingRequests.isNotEmpty;
+    final hasBlocked = blockedNodeIds.isNotEmpty;
     final isEmpty =
-        !hasPeers && !hasSessions && !_scanning && !hasPendingRequests;
+        !hasPeers &&
+        !hasSessions &&
+        !_scanning &&
+        !hasPendingRequests &&
+        !hasBlocked;
 
     // lint-allow: haptic-feedback — keyboard dismissal, not interactive action
     return HelpTourController(
@@ -354,27 +386,31 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
         child: GlassScaffold(
           title: l10n.sipHubTitle,
           actions: [
-            // Scan button — hidden during scans, rotates when auto-scan on
-            if (!_scanning)
-              IconButton(
-                icon: AnimatedBuilder(
-                  animation: _radarController,
-                  builder: (context, child) => Transform.rotate(
-                    angle: _radarController.value * 2 * 3.14159265,
-                    child: child,
-                  ),
-                  child: Icon(
-                    Icons.radar,
-                    size: 22,
-                    color: autoScanEnabled ? AccentColors.green : null,
-                  ),
+            // Radar — single primary action: tap toggles auto-discovery.
+            // Always visible. Color tracks auto-scan state; rotation tracks
+            // an in-flight scan (manual or auto-scan tick).
+            IconButton(
+              icon: AnimatedBuilder(
+                animation: _radarController,
+                builder: (context, child) => Transform.rotate(
+                  angle: _radarController.value * 2 * 3.14159265,
+                  child: child,
                 ),
-                tooltip: l10n.sipDiscoveryScanButton,
-                onPressed: autoScanEnabled ? _toggleAutoScan : _onScan,
+                child: Icon(
+                  Icons.radar,
+                  size: 22,
+                  color: autoScanEnabled ? AccentColors.green : null,
+                ),
               ),
+              tooltip: l10n.sipAutoScanToggle,
+              onPressed: _toggleAutoScan,
+            ),
             // Overflow menu
             AppBarOverflowMenu<String>(
               onSelected: (value) {
+                if (value == 'scannow') {
+                  _onScan(); // lint-allow: hardcoded-string
+                }
                 if (value == 'autoscan') {
                   _toggleAutoScan(); // lint-allow: hardcoded-string
                 }
@@ -393,6 +429,16 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
                 }
               },
               itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'scannow', // lint-allow: hardcoded-string
+                  enabled: !_scanning,
+                  child: ListTile(
+                    leading: const Icon(Icons.radar),
+                    title: Text(l10n.sipScanNow),
+                    contentPadding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
                 PopupMenuItem(
                   value: 'autoscan', // lint-allow: hardcoded-string
                   child: ListTile(
@@ -449,8 +495,9 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
               : _buildContentSlivers(
                   context,
                   unconnectedPeers,
-                  sessions,
-                  pendingRequestNodeIds,
+                  filteredSessions,
+                  filteredPendingRequests,
+                  blockedNodeIds,
                 ),
         ),
       ),
@@ -509,6 +556,7 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
     List<SipPeerCapability> peers,
     List<SipDmSession> sessions,
     List<int> pendingRequestNodeIds,
+    List<int> blockedPeerNodeIds,
   ) {
     final shouldRestrict = ref
         .read(ageSafetyPolicyProvider)
@@ -609,6 +657,22 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
             ),
           ),
       ],
+
+      // Blocked section — collapsed by default, last in the list.
+      // Render-layer only: tapping rows here only exposes Unblock,
+      // never re-opens a session or sends a wire frame.
+      if (blockedPeerNodeIds.isNotEmpty)
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(
+            AppTheme.spacing16,
+            AppTheme.spacing12,
+            AppTheme.spacing16,
+            0,
+          ),
+          sliver: SliverToBoxAdapter(
+            child: _BlockedPeersSection(blockedPeerNodeIds: blockedPeerNodeIds),
+          ),
+        ),
 
       // Bottom safe area
       SliverToBoxAdapter(
@@ -722,7 +786,21 @@ class _IncomingRequestTile extends ConsumerWidget {
                 ),
               ],
             ),
-            const SizedBox(height: AppTheme.spacing14),
+            const SizedBox(height: AppTheme.spacing12),
+
+            // Consent body — explains what tapping Accept enables. The
+            // user must understand this is a privacy-bearing decision,
+            // not a "friend request."
+            Text(
+              l10n.sipHubConsentBody,
+              style: TextStyle(
+                fontSize: 12,
+                height: 1.4,
+                color: context.textTertiary,
+              ),
+            ),
+
+            const SizedBox(height: AppTheme.spacing12),
 
             Row(
               children: [
@@ -739,6 +817,18 @@ class _IncomingRequestTile extends ConsumerWidget {
                       ref
                           .read(protocolServiceProvider)
                           .acceptSipHandshake(peerNodeId);
+                      // T+S: mark first-contact ONLY when the local
+                      // user explicitly taps Accept. NOT on inbound
+                      // HELLO / DECLINE / ACCEPT alone — those don't
+                      // carry consent. The mark gates the
+                      // first-contact warning banner so it doesn't
+                      // re-pop on subsequent re-handshakes.
+                      ref
+                          .read(peerSafetyManagerProvider.notifier)
+                          .markFirstHandshake(
+                            peerNodeId,
+                            DateTime.now().millisecondsSinceEpoch,
+                          );
                     },
                     icon: const Icon(Icons.check, size: 16),
                     label: Text(l10n.sipHubAccept),
@@ -747,12 +837,12 @@ class _IncomingRequestTile extends ConsumerWidget {
                       foregroundColor: Colors.white,
                       minimumSize: const Size.fromHeight(36),
                       padding: const EdgeInsets.symmetric(
-                        horizontal: AppTheme.spacing12,
+                        horizontal: AppTheme.spacing8,
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: AppTheme.spacing8),
+                const SizedBox(width: AppTheme.spacing6),
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () {
@@ -770,7 +860,25 @@ class _IncomingRequestTile extends ConsumerWidget {
                       ),
                       minimumSize: const Size.fromHeight(36),
                       padding: const EdgeInsets.symmetric(
-                        horizontal: AppTheme.spacing12,
+                        horizontal: AppTheme.spacing8,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppTheme.spacing6),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _onBlock(context, ref),
+                    icon: const Icon(Icons.block, size: 16),
+                    label: Text(l10n.sipHubBlock),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: SemanticColors.error,
+                      side: BorderSide(
+                        color: SemanticColors.error.withValues(alpha: 0.6),
+                      ),
+                      minimumSize: const Size.fromHeight(36),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.spacing8,
                       ),
                     ),
                   ),
@@ -814,6 +922,40 @@ class _IncomingRequestTile extends ConsumerWidget {
         color: context.accentColor.withValues(alpha: 0.7),
       ),
     );
+  }
+
+  Future<void> _onBlock(BuildContext context, WidgetRef ref) async {
+    // Capture every ref-derived reference before the first await.
+    // This avoids any "ref used after await without mounted check"
+    // class of bug — ref is a long-lived ConsumerWidget handle, but
+    // the lint rule is mechanical and flags any post-await read.
+    ref.read(hapticServiceProvider).trigger(HapticType.heavy);
+    final manager = ref.read(peerSafetyManagerProvider.notifier);
+    final protocol = ref.read(protocolServiceProvider);
+    final l10n = context.l10n;
+    final confirmed = await AppBottomSheet.showConfirm(
+      context: context,
+      title: l10n.sipHubBlockConfirmTitle,
+      message: l10n.sipHubBlockConfirmBody,
+      confirmLabel: l10n.sipHubBlockConfirmAction,
+      cancelLabel: l10n.sipHubBlockConfirmCancel,
+      isDestructive: true,
+    );
+    if (confirmed != true) return;
+
+    AppLogging.sip(
+      'SIP_HUB: Block confirmed for '
+      'peer=0x${peerNodeId.toRadixString(16)} — silent drop, '
+      'no HS_DECLINE',
+    );
+    // Persist the block first so any in-flight or retransmitted
+    // HELLO from this peer hits the protocol-layer safety gate
+    // and is silently dropped before reaching consent UI again.
+    await manager.block(peerNodeId, reasonCode: 'consent_block');
+    // Silently clear the pending consent prompt without sending
+    // HS_DECLINE — the peer must see no wire-level confirmation
+    // that we exist or saw the request.
+    protocol.cancelSipHandshake(peerNodeId);
   }
 }
 
@@ -1798,5 +1940,237 @@ class _ShimmerPeerPlaceholderState extends State<_ShimmerPeerPlaceholder>
         );
       },
     );
+  }
+}
+
+// =============================================================================
+// Blocked peers section — collapsed by default, exposes Unblock only.
+//
+// Hard rules (Phase 10):
+//   - Render-layer only: building this section MUST NOT mutate any
+//     protocol or session state. The tiles read from
+//     blockedPeerNodeIdsProvider + nodeDexEntryProvider, nothing else.
+//   - Unblock is gated by an AppBottomSheet.showConfirm sheet so the
+//     user has a chance to review the consequence before the safety
+//     gate re-opens.
+//   - The section auto-hides when blockedPeerNodeIds is empty, so a
+//     freshly-installed app or a cleared block list never shows the
+//     header.
+// =============================================================================
+
+class _BlockedPeersSection extends ConsumerWidget {
+  final List<int> blockedPeerNodeIds;
+
+  const _BlockedPeersSection({required this.blockedPeerNodeIds});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    return Container(
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+        border: Border.all(color: context.border.withValues(alpha: 0.4)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Theme(
+        data: Theme.of(context).copyWith(
+          dividerColor: Colors.transparent,
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+          hoverColor: Colors.transparent,
+        ),
+        child: ExpansionTile(
+          // initiallyExpanded false per spec — section is collapsed
+          // by default to avoid drawing attention to blocked peers
+          // every time the user opens SIP Hub.
+          tilePadding: const EdgeInsets.symmetric(
+            horizontal: AppTheme.spacing16,
+            vertical: AppTheme.spacing4,
+          ),
+          childrenPadding: const EdgeInsets.fromLTRB(
+            AppTheme.spacing12,
+            0,
+            AppTheme.spacing12,
+            AppTheme.spacing12,
+          ),
+          iconColor: context.textSecondary,
+          collapsedIconColor: context.textSecondary,
+          leading: Icon(
+            Icons.block,
+            color: SemanticColors.error.withValues(alpha: 0.7),
+            size: 20,
+          ),
+          title: Row(
+            children: [
+              Text(
+                l10n.sipHubSectionBlocked,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: context.textPrimary,
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing6),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.spacing6,
+                  vertical: 1,
+                ),
+                decoration: BoxDecoration(
+                  color: context.background,
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
+                ),
+                child: Text(
+                  '${blockedPeerNodeIds.length}',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: context.textTertiary,
+                    fontFamily: AppTheme.fontFamily,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: AppTheme.spacing2),
+            child: Text(
+              l10n.sipHubBlockedEmptySubtitle,
+              style: TextStyle(fontSize: 12, color: context.textTertiary),
+            ),
+          ),
+          children: [
+            for (final nodeId in blockedPeerNodeIds)
+              _BlockedPeerTile(peerNodeId: nodeId),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _BlockedPeerTile extends ConsumerWidget {
+  final int peerNodeId;
+
+  const _BlockedPeerTile({required this.peerNodeId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final entry = ref.watch(nodeDexEntryProvider(peerNodeId));
+    final nodes = ref.watch(nodesProvider);
+    final node = nodes[peerNodeId];
+    final displayName =
+        entry?.localNickname ??
+        entry?.sipDisplayName ??
+        node?.displayName ??
+        entry?.lastKnownName ??
+        NodeDisplayNameResolver.defaultName(peerNodeId);
+    final hexId =
+        '!${peerNodeId.toRadixString(16).toUpperCase().padLeft(4, '0')}';
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing4),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: SemanticColors.error.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(AppTheme.radius8),
+            ),
+            child: Icon(
+              Icons.block,
+              color: SemanticColors.error.withValues(alpha: 0.7),
+              size: 18,
+            ),
+          ),
+          const SizedBox(width: AppTheme.spacing12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        displayName,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: context.textPrimary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: AppTheme.spacing6),
+                    Text(
+                      hexId,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: context.textTertiary,
+                        fontFamily: AppTheme.fontFamily,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppTheme.spacing2),
+                Text(
+                  l10n.sipHubBlockedPeerSubtitle,
+                  style: TextStyle(fontSize: 11, color: context.textTertiary),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppTheme.spacing8),
+          OutlinedButton(
+            onPressed: () => _onUnblock(context, ref),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size(0, 32),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spacing12,
+              ),
+              foregroundColor: AccentColors.green,
+              side: BorderSide(
+                color: AccentColors.green.withValues(alpha: 0.6),
+              ),
+            ),
+            child: Text(
+              l10n.sipHubUnblockAction,
+              style: const TextStyle(fontSize: 12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _onUnblock(BuildContext context, WidgetRef ref) async {
+    // Capture every ref-derived reference before the first await —
+    // satisfies the async-safety lint and keeps the unblock path
+    // robust against widget unmount mid-confirm.
+    ref.read(hapticServiceProvider).trigger(HapticType.medium);
+    final manager = ref.read(peerSafetyManagerProvider.notifier);
+    final l10n = context.l10n;
+    final confirmed = await AppBottomSheet.showConfirm(
+      context: context,
+      title: l10n.sipHubUnblockConfirmTitle,
+      message: l10n.sipHubUnblockConfirmBody,
+      confirmLabel: l10n.sipHubUnblockConfirmAction,
+      cancelLabel: l10n.sipHubUnblockConfirmCancel,
+      // Unblocking is non-destructive — it re-opens the safety gate
+      // and restores the peer's ability to reach the user. The
+      // confirm sheet exists for review, not warning.
+      isDestructive: false,
+    );
+    if (confirmed != true) return;
+    AppLogging.sip(
+      'SIP_HUB: Unblock confirmed for '
+      'peer=0x${peerNodeId.toRadixString(16)}',
+    );
+    await manager.unblock(peerNodeId);
   }
 }

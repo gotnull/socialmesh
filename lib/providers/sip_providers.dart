@@ -24,6 +24,7 @@ import '../services/protocol/sip/sip_keypair.dart';
 import '../services/protocol/overlay/overlay_link_models.dart';
 import '../services/protocol/overlay/overlay_types.dart';
 import '../services/protocol/sip/sip_rate_limiter.dart';
+import 'peer_safety_providers.dart';
 import '../services/protocol/sip/sip_replay_cache.dart';
 import '../services/protocol/sip/sip_types.dart';
 import '../services/notifications/notification_service.dart';
@@ -502,7 +503,16 @@ final sipDmManagerProvider = Provider<SipDmManager?>((ref) {
 
   final limiter = ref.watch(sipRateLimiterProvider);
   final counters = ref.watch(sipCountersProvider);
-  final manager = SipDmManager(rateLimiter: limiter, counters: counters);
+  // Hot-path Trust + Safety gate: every inbound and outbound DM
+  // handler consults this synchronously. Default-safe — returns
+  // false (everything allowed) until `peerSafetyManagerProvider`
+  // finishes building.
+  final safetyGate = ref.watch(peerSafetyGateProvider);
+  final manager = SipDmManager(
+    rateLimiter: limiter,
+    counters: counters,
+    safetyGate: safetyGate,
+  );
 
   // Bump epoch so UI rebuilds when sessions are created or messages arrive.
   // Deferred via microtask for the same reason as onPeersChanged above.

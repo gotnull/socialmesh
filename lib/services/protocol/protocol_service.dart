@@ -40,6 +40,7 @@ import 'socialmesh/sm_presence.dart';
 import 'socialmesh/sm_signal.dart';
 import 'sip/mrrp_codec.dart';
 import 'sip/mrrp_engine.dart';
+import 'sip/peer_safety_gate.dart';
 import 'sip/sip_codec.dart';
 import 'sip/sip_constants.dart';
 import 'sip/sip_counters.dart';
@@ -533,6 +534,12 @@ class ProtocolService {
   SipDmManager? _sipDm;
   SipCounters? _sipCounters;
 
+  /// Local Trust + Safety gate. Defaults to a no-op so existing
+  /// tests / cold-start frames are never blocked accidentally;
+  /// the providers layer wires the live `peerSafetyGateProvider`
+  /// adapter via [attachPeerSafetyGate] once the manager loads.
+  PeerSafetyGate _safetyGate = const NoopPeerSafetyGate();
+
   /// Shared SIP rate limiter. When attached, HS_HELLO retransmits (and
   /// any future handshake/identity sends routed through this service)
   /// will consult + record against the byte budget rather than bypassing
@@ -692,6 +699,17 @@ class ProtocolService {
     _sipCounters = counters;
     if (counters != null) {
       AppLogging.sip('ProtocolService: SipCounters attached');
+    }
+  }
+
+  /// Attach the local Trust + Safety gate. Hot-path consulted on
+  /// every inbound handshake handler to silently drop frames from
+  /// blocked peers. Pass `null` to revert to the no-op default
+  /// (e.g. on disposal).
+  void attachPeerSafetyGate(PeerSafetyGate? gate) {
+    _safetyGate = gate ?? const NoopPeerSafetyGate();
+    if (gate != null) {
+      AppLogging.sip('ProtocolService: PeerSafetyGate attached');
     }
   }
 
@@ -5699,6 +5717,18 @@ class ProtocolService {
     }
   }
 
+  /// Silently drop a pending SIP handshake request from [peerNodeId].
+  ///
+  /// Unlike [declineSipHandshake], this emits NO wire frame — the peer
+  /// sees nothing different from "node unreachable." Used by the Block
+  /// path in the consent prompt: combined with
+  /// `PeerSafetyManager.block`, future HELLOs from this peer hit the
+  /// protocol-layer safety gate and are dropped before reaching the
+  /// pending-requests queue.
+  void cancelSipHandshake(int peerNodeId) {
+    _sipHandshake?.cancelHandshake(peerNodeId);
+  }
+
   // ---------------------------------------------------------------------------
   // SIP-1 Handshake dispatch
   // ---------------------------------------------------------------------------
@@ -5713,6 +5743,14 @@ class ProtocolService {
       AppLogging.sip('SIP_RX: no SipHandshakeManager — dropping HS_HELLO');
       return;
     }
+
+    // T+S guard: silent drop. A blocked peer's HS_HELLO must not
+    // queue into _pendingRequests, must not show a consent prompt,
+    // must not fire a notification, and must NOT emit a wire
+    // response (no HS_DECLINE — that confirms we exist + saw the
+    // request). The peer sees nothing different from "node
+    // unreachable." No info-level log mentions the peer node id.
+    if (_safetyGate.isBlocked(senderNodeId)) return;
 
     _sipCounters?.recordHandshakeInitiated();
 
@@ -5809,6 +5847,12 @@ class ProtocolService {
     final hs = _sipHandshake;
     if (hs == null) return;
 
+    // T+S guard: silent drop. A blocked peer's HS_DECLINE is
+    // dropped before any state mutation or notification. Skipping
+    // `hs.handleDecline` avoids a cooldown side-effect being
+    // attributed to a peer the user has chosen not to interact with.
+    if (_safetyGate.isBlocked(senderNodeId)) return;
+
     hs.handleDecline(senderNodeId, frame);
 
     () async {
@@ -5830,6 +5874,17 @@ class ProtocolService {
     final hs = _sipHandshake;
     final dm = _sipDm;
     if (hs == null) return;
+
+    // T+S guard: silent drop. A blocked peer's HS_ACCEPT must not
+    // create a DM session, must not fire the completion
+    // notification, and must not invoke `onSipHandshakeComplete`
+    // (which auto-opens an overlay link). We DO consume the result
+    // so it doesn't pile up in `_completed` forever — but we drop
+    // it on the floor immediately afterwards.
+    if (_safetyGate.isBlocked(peerNodeId)) {
+      hs.consumeResult(peerNodeId);
+      return;
+    }
 
     final result = hs.consumeResult(peerNodeId);
     if (result == null) return;

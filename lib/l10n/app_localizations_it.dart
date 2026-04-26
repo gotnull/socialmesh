@@ -32308,6 +32308,14 @@ class AppLocalizationsIt extends AppLocalizations {
       'Budget airtime esaurito. Riprova più tardi.';
 
   @override
+  String get sipDmPeerBlocked =>
+      'Hai bloccato questo nodo — sbloccalo dal SIP Hub per inviare di nuovo messaggi.';
+
+  @override
+  String get sipDmPeerRateLimited =>
+      'Stai inviando troppo velocemente — rallenta un momento.';
+
+  @override
   String get sipDmSessionClosed => 'Questa sessione è stata chiusa.';
 
   @override
@@ -32317,6 +32325,65 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get sipDmCloseAction => 'Chiudi sessione';
+
+  @override
+  String get sipDmMenuMute => 'Silenzia notifiche';
+
+  @override
+  String get sipDmMenuUnmute => 'Riattiva notifiche';
+
+  @override
+  String get sipDmMenuBlock => 'Blocca';
+
+  @override
+  String get sipDmMenuResetSecure => 'Reimposta sessione sicura';
+
+  @override
+  String get sipDmMenuRemove => 'Rimuovi conversazione';
+
+  @override
+  String get sipDmBlockConfirmTitle => 'Bloccare questo nodo?';
+
+  @override
+  String get sipDmBlockConfirmBody =>
+      'I messaggi futuri e le richieste di handshake da questo nodo verranno scartati silenziosamente. Non riceveranno notifiche. La cronologia delle conversazioni esistenti rimane su questo dispositivo — usa Rimuovi conversazione per cancellarla.';
+
+  @override
+  String get sipDmBlockConfirmAction => 'Blocca';
+
+  @override
+  String get sipDmResetConfirmTitle => 'Reimpostare la sessione sicura?';
+
+  @override
+  String get sipDmResetConfirmBody =>
+      'Elimina le chiavi end-to-end correnti con questo nodo. Il prossimo messaggio negozierà nuove chiavi. La cronologia dei messaggi rimane intatta.';
+
+  @override
+  String get sipDmResetConfirmAction => 'Reimposta';
+
+  @override
+  String get sipDmRemoveConfirmTitle => 'Rimuovere questa conversazione?';
+
+  @override
+  String get sipDmRemoveConfirmBody =>
+      'Elimina tutti i messaggi di questa conversazione da questo dispositivo. Il nodo non viene avvisato e può ancora inviarti nuovi messaggi a meno che tu non lo blocchi. Questa operazione non può essere annullata.';
+
+  @override
+  String get sipDmRemoveConfirmAction => 'Rimuovi';
+
+  @override
+  String get sipDmConfirmCancel => 'Annulla';
+
+  @override
+  String get sipDmActionMutedSnack =>
+      'Notifiche silenziate per questa conversazione';
+
+  @override
+  String get sipDmActionUnmutedSnack => 'Notifiche riattivate';
+
+  @override
+  String get sipDmActionResetSnack =>
+      'Sessione sicura reimpostata — il prossimo messaggio negozierà nuove chiavi';
 
   @override
   String get sipDmComposerModeText => 'Text';
@@ -32452,6 +32519,33 @@ class AppLocalizationsIt extends AppLocalizations {
   String get sipHubSectionIncomingRequests => 'Richieste in arrivo';
 
   @override
+  String get sipHubSectionBlocked => 'Bloccati';
+
+  @override
+  String get sipHubBlockedEmptySubtitle =>
+      'Tocca per espandere e rivedere chi hai bloccato';
+
+  @override
+  String get sipHubUnblockAction => 'Sblocca';
+
+  @override
+  String get sipHubUnblockConfirmTitle => 'Sbloccare questo nodo?';
+
+  @override
+  String get sipHubUnblockConfirmBody =>
+      'Questo nodo potrà inviarti di nuovo richieste di handshake, messaggi e schizzi. La cronologia delle tue conversazioni precedenti con loro non viene modificata.';
+
+  @override
+  String get sipHubUnblockConfirmAction => 'Sblocca';
+
+  @override
+  String get sipHubUnblockConfirmCancel => 'Annulla';
+
+  @override
+  String get sipHubBlockedPeerSubtitle =>
+      'Traffico in entrata scartato silenziosamente';
+
+  @override
   String get sipHubSectionYourServices => 'Your Services';
 
   @override
@@ -32498,6 +32592,40 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get sipHubDecline => 'Rifiuta';
+
+  @override
+  String get sipHubBlock => 'Blocca';
+
+  @override
+  String get sipHubConsentBody =>
+      'Accettando, questo nodo potrà inviarti messaggi diretti e schizzi crittografati sulla rete mesh. Puoi silenziare, bloccare o rimuovere la conversazione in qualsiasi momento.';
+
+  @override
+  String get sipHubBlockConfirmTitle => 'Bloccare questo nodo?';
+
+  @override
+  String get sipHubBlockConfirmBody =>
+      'I messaggi futuri e le richieste di handshake da questo nodo verranno scartati silenziosamente. Non riceveranno notifiche — vedranno il tuo nodo come irraggiungibile. Potrai sbloccarlo in seguito dalle impostazioni di Sicurezza.';
+
+  @override
+  String get sipHubBlockConfirmAction => 'Blocca';
+
+  @override
+  String get sipHubBlockConfirmCancel => 'Annulla';
+
+  @override
+  String get meshExplorerBlockConfirmTitle => 'Bloccare questo nodo?';
+
+  @override
+  String get meshExplorerBlockConfirmBody =>
+      'I messaggi futuri e le richieste di handshake da questo nodo verranno scartati silenziosamente. Non riceveranno notifiche. Potrai sbloccarlo in seguito dalle impostazioni di Sicurezza.';
+
+  @override
+  String get sipDmFirstContactBannerTitle => 'Primo contatto';
+
+  @override
+  String get sipDmFirstContactBannerBody =>
+      'È la tua prima conversazione con questo nodo. Accetta messaggi solo da chi ti fidi sulla rete mesh. Tocca per ignorare.';
 
   @override
   String get sipHubEmptyTitle => 'In cerca di vicini';
@@ -32597,6 +32725,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get sipAutoScanToggle => 'Scansione automatica';
+
+  @override
+  String get sipScanNow => 'Scansiona ora';
 
   @override
   String get sipScanningIndicator => 'Scansione…';

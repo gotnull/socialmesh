@@ -14,6 +14,7 @@ import 'dart:typed_data';
 import '../../../core/logging.dart';
 import 'mrrp_advert_engine.dart';
 import 'mrrp_codec.dart';
+import 'peer_safety_gate.dart';
 import 'mrrp_constants.dart';
 import 'mrrp_counters.dart';
 import 'mrrp_dedup_cache.dart';
@@ -33,6 +34,21 @@ class MrrpEngine {
   final MrrpDispatcher dispatcher;
   final MrrpDedupCache dedupCache;
   final MrrpSendCallback? onSend;
+
+  /// Local Trust + Safety gate. Defaults to a no-op so existing
+  /// tests run unchanged. The providers layer wires the live
+  /// `peerSafetyGateProvider` adapter via [attachPeerSafetyGate]
+  /// once the manager loads.
+  PeerSafetyGate _safetyGate = const NoopPeerSafetyGate();
+
+  /// Attach the local Trust + Safety gate. Hot-path consulted on
+  /// every inbound MRRP frame at [_routeFrame] to silently drop
+  /// content originating from blocked peers (request, response,
+  /// service advert, directory request/response — all of them).
+  /// Pass `null` to revert to the no-op default.
+  void attachPeerSafetyGate(PeerSafetyGate? gate) {
+    _safetyGate = gate ?? const NoopPeerSafetyGate();
+  }
 
   /// Instrumentation counters (optional, injected by provider layer).
   MrrpCounters? counters;
@@ -198,6 +214,13 @@ class MrrpEngine {
   }
 
   void _routeFrame(MrrpFrame frame, int senderNodeId, int frameSizeBytes) {
+    // T+S guard: silent drop of every MRRP frame originating from a
+    // blocked peer — request, response, advert, dirReq, dirResp.
+    // Pending outbound requests addressed to a peer the user blocks
+    // mid-flight time out locally rather than getting their answer
+    // delivered. No info-level log line carrying the peer node id.
+    if (_safetyGate.isBlocked(senderNodeId)) return;
+
     // Record inbound traffic event.
     _recordTraffic(
       'RX', // lint-allow: hardcoded-string

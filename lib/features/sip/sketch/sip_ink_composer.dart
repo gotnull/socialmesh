@@ -337,6 +337,11 @@ class _SipInkComposerState extends ConsumerState<SipInkComposer>
       return;
     }
     final message = switch (outcome.error) {
+      // T+S: same mapping as text DM — sketch-specific text would
+      // confuse users who muted/blocked once and now hit the same
+      // gate here.
+      SipDmSendError.peerBlocked => l10n.sipDmPeerBlocked,
+      SipDmSendError.peerRateLimited => l10n.sipDmPeerRateLimited,
       SipDmSendError.budgetExhausted => l10n.sipDmBudgetExhausted,
       SipDmSendError.sessionClosed => l10n.sipDmSessionClosed,
       SipDmSendError.sessionNotFound => l10n.sipDmSessionClosed,

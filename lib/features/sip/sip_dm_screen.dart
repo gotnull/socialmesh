@@ -21,12 +21,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/l10n_extension.dart';
+import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/jump_to_latest_pill.dart';
+import '../../core/widgets/status_banner.dart';
 import '../../features/messaging/widgets/chat_composer.dart';
 import '../../features/sip/sketch/sip_ink_bubble.dart';
 import '../../features/sip/sketch/sip_ink_composer.dart';
@@ -39,6 +41,8 @@ import '../../features/nodedex/screens/nodedex_detail_screen.dart';
 import '../../features/nodedex/widgets/sigil_painter.dart';
 import '../../features/nodes/node_display_name_resolver.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/overlay_providers.dart';
+import '../../providers/peer_safety_providers.dart';
 import '../../providers/sip_dm_secure_router.dart';
 import '../../providers/sip_providers.dart';
 import '../../services/haptic_service.dart';
@@ -252,6 +256,17 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
     if (!mounted) return;
     final l10n = context.l10n;
     final message = switch (error) {
+      // T+S: per-peer block. Surfaced as a distinct snackbar so the
+      // user can recognise self-imposed state (vs. a generic
+      // "couldn't send" failure) and reach for the SIP Hub Blocked
+      // section to unblock.
+      SipDmSendError.peerBlocked => l10n.sipDmPeerBlocked,
+      // T+S: per-peer × per-kind token bucket (text 6/60s, sketch
+      // 2/60s, reaction 6/60s). Distinct from the global airtime
+      // budget below.
+      SipDmSendError.peerRateLimited => l10n.sipDmPeerRateLimited,
+      // Global SIP airtime cap (1024 bytes / 60s, shared across
+      // SIP / MRRP / overlay).
       SipDmSendError.budgetExhausted => l10n.sipDmBudgetExhausted,
       SipDmSendError.textTooLong => l10n.sipDmTextTooLong(
         SipDmConstants.maxDmTextBytes,
@@ -317,6 +332,230 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
       ref.read(protocolServiceProvider).sendSipPacket(encoded);
     }
     if (mounted) Navigator.of(context).pop();
+  }
+
+  // ---------------------------------------------------------------------
+  // Trust + Safety overflow actions (Mute / Block / Reset / Remove)
+  //
+  // Hard separation, per Phase 9 spec:
+  //   - Mute  = notifications only. Reversible toggle. No confirm.
+  //             Inbound DMs still arrive and are stored.
+  //   - Block = persist block via PeerSafetyManager. Future inbound
+  //             HELLO / DM / MRRP frames hit the protocol-layer
+  //             safety gate and are silently dropped. Local
+  //             conversation history is PRESERVED — to wipe history
+  //             too, the user must also choose Remove.
+  //   - Reset = drop the in-memory secure (X25519) session for the
+  //             canonical overlay link with this peer. Next outbound
+  //             DM renegotiates fresh keys. No history wipe. The
+  //             underlying overlay link stays open.
+  //   - Remove = clear local message history + drop the local
+  //              session entry. Emits NO wire frame (no DM_CLOSE).
+  //              Peer is not notified.
+  //
+  // All destructive actions (Block, Reset, Remove) go through
+  // AppBottomSheet.showConfirm with isDestructive: true.
+  // ---------------------------------------------------------------------
+
+  Widget _buildOverflowMenu(BuildContext context, SipDmSession session) {
+    final l10n = context.l10n;
+    // Watch the manager so the Mute label flips immediately when
+    // mute state changes elsewhere (e.g. Mesh Explorer tap).
+    ref.watch(peerSafetyManagerProvider);
+    final isMuted = ref
+        .read(peerSafetyManagerProvider.notifier)
+        .isMuted(session.peerNodeId);
+
+    return AppBarOverflowMenu<String>(
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: 'mute',
+          child: ListTile(
+            leading: Icon(
+              isMuted ? Icons.notifications_active : Icons.notifications_off,
+            ),
+            title: Text(isMuted ? l10n.sipDmMenuUnmute : l10n.sipDmMenuMute),
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+          ),
+        ),
+        PopupMenuItem(
+          value: 'block',
+          child: ListTile(
+            leading: Icon(
+              Icons.block,
+              color: SemanticColors.error.withValues(alpha: 0.85),
+            ),
+            title: Text(l10n.sipDmMenuBlock),
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+          ),
+        ),
+        PopupMenuItem(
+          value: 'reset_secure',
+          child: ListTile(
+            leading: const Icon(Icons.lock_reset),
+            title: Text(l10n.sipDmMenuResetSecure),
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+          ),
+        ),
+        PopupMenuItem(
+          value: 'remove',
+          child: ListTile(
+            leading: Icon(
+              Icons.delete_outline,
+              color: SemanticColors.error.withValues(alpha: 0.85),
+            ),
+            title: Text(l10n.sipDmMenuRemove),
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+          ),
+        ),
+        const PopupMenuDivider(),
+        PopupMenuItem(
+          value: 'close',
+          child: ListTile(
+            leading: const Icon(Icons.close),
+            title: Text(l10n.sipDmCloseAction),
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+          ),
+        ),
+      ],
+      onSelected: (value) {
+        switch (value) {
+          case 'mute':
+            _onToggleMute(session);
+          case 'block':
+            _onBlockPeer(session);
+          case 'reset_secure':
+            _onResetSecureSession(session);
+          case 'remove':
+            _onRemoveConversation(session);
+          case 'close':
+            _onClose();
+        }
+      },
+    );
+  }
+
+  Future<void> _onToggleMute(SipDmSession session) async {
+    final manager = ref.read(peerSafetyManagerProvider.notifier);
+    final wasMuted = manager.isMuted(session.peerNodeId);
+    ref.read(hapticServiceProvider).trigger(HapticType.selection);
+    final l10n = context.l10n;
+
+    if (wasMuted) {
+      await manager.unmute(session.peerNodeId);
+      if (!mounted) return;
+      showInfoSnackBar(context, l10n.sipDmActionUnmutedSnack);
+    } else {
+      await manager.mute(session.peerNodeId);
+      if (!mounted) return;
+      showInfoSnackBar(context, l10n.sipDmActionMutedSnack);
+    }
+  }
+
+  Future<void> _onBlockPeer(SipDmSession session) async {
+    final l10n = context.l10n;
+    final manager = ref.read(peerSafetyManagerProvider.notifier);
+    final navigator = Navigator.of(context);
+    ref.read(hapticServiceProvider).trigger(HapticType.heavy);
+
+    final confirmed = await AppBottomSheet.showConfirm(
+      context: context,
+      title: l10n.sipDmBlockConfirmTitle,
+      message: l10n.sipDmBlockConfirmBody,
+      confirmLabel: l10n.sipDmBlockConfirmAction,
+      cancelLabel: l10n.sipDmConfirmCancel,
+      isDestructive: true,
+    );
+    if (confirmed != true) return;
+
+    AppLogging.sip(
+      'SIP_DM: Block confirmed via overflow for '
+      'peer=0x${session.peerNodeId.toRadixString(16)} '
+      '— history preserved, no wire frame',
+    );
+    // History is intentionally preserved per Phase 9 spec. The user
+    // must explicitly Remove to wipe local conversation.
+    await manager.block(session.peerNodeId, reasonCode: 'dm_overflow_block');
+    if (!mounted) return;
+    navigator.pop();
+  }
+
+  Future<void> _onResetSecureSession(SipDmSession session) async {
+    final l10n = context.l10n;
+    ref.read(hapticServiceProvider).trigger(HapticType.medium);
+
+    final confirmed = await AppBottomSheet.showConfirm(
+      context: context,
+      title: l10n.sipDmResetConfirmTitle,
+      message: l10n.sipDmResetConfirmBody,
+      confirmLabel: l10n.sipDmResetConfirmAction,
+      cancelLabel: l10n.sipDmConfirmCancel,
+      isDestructive: true,
+    );
+    if (confirmed != true) return;
+
+    // Look up the canonical overlay link for this peer. If none
+    // exists yet (peer never advertised secure, or link was torn
+    // down) Reset is a no-op — the next outbound DM falls back to
+    // plaintext via the existing router gates.
+    final store = await ref.read(overlayLinkStoreProvider.future);
+    final records = await store.getNonTerminalForPeerNode(session.peerNodeId);
+    if (records.isEmpty) {
+      AppLogging.sip(
+        'SIP_DM: Reset secure — no canonical link for '
+        'peer=0x${session.peerNodeId.toRadixString(16)} (no-op)',
+      );
+      if (!mounted) return;
+      showInfoSnackBar(context, l10n.sipDmActionResetSnack);
+      return;
+    }
+    final canonical = records.first;
+
+    final secureMgr = await ref.read(
+      overlaySecureSessionManagerProvider.future,
+    );
+    final dropped = secureMgr.resetSession(canonical.linkId);
+    AppLogging.sip(
+      'SIP_DM: Reset secure for peer=0x'
+      '${session.peerNodeId.toRadixString(16)} '
+      'linkId=0x${canonical.linkId.toRadixString(16)} '
+      'dropped=$dropped',
+    );
+    if (!mounted) return;
+    showInfoSnackBar(context, l10n.sipDmActionResetSnack);
+  }
+
+  Future<void> _onRemoveConversation(SipDmSession session) async {
+    final l10n = context.l10n;
+    final dm = ref.read(sipDmManagerProvider);
+    final navigator = Navigator.of(context);
+    ref.read(hapticServiceProvider).trigger(HapticType.heavy);
+
+    final confirmed = await AppBottomSheet.showConfirm(
+      context: context,
+      title: l10n.sipDmRemoveConfirmTitle,
+      message: l10n.sipDmRemoveConfirmBody,
+      confirmLabel: l10n.sipDmRemoveConfirmAction,
+      cancelLabel: l10n.sipDmConfirmCancel,
+      isDestructive: true,
+    );
+    if (confirmed != true) return;
+
+    if (dm == null) return;
+    final removed = dm.removeSessionLocally(widget.sessionTag);
+    AppLogging.sip(
+      'SIP_DM: Remove conversation for '
+      'peer=0x${session.peerNodeId.toRadixString(16)} '
+      'tag=0x${widget.sessionTag.toRadixString(16)} removed=$removed '
+      '— no wire frame',
+    );
+    if (!mounted) return;
+    navigator.pop();
   }
 
   void _onReply(SipDmHistoryEntry entry) {
@@ -671,27 +910,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
         resizeToAvoidBottomInset:
             false, // We handle keyboard insets manually in _buildInputBar
         bottomNavigationBar: _buildInputBar(context, session),
-        actions: [
-          if (session != null)
-            AppBarOverflowMenu<String>(
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: 'close', // lint-allow: hardcoded-string
-                  child: ListTile(
-                    leading: const Icon(Icons.close),
-                    title: Text(l10n.sipDmCloseAction),
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-              ],
-              onSelected: (value) {
-                if (value == 'close') {
-                  _onClose(); // lint-allow: hardcoded-string
-                }
-              },
-            ),
-        ],
+        actions: [if (session != null) _buildOverflowMenu(context, session)],
         // Body layout mirrors the messaging screen: a Column with the
         // session info bar fixed at top, then an Expanded Stack that
         // holds the chat list with the JumpToLatestPill overlaid on
@@ -724,6 +943,8 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
                   ),
                 ),
               ),
+            if (session != null)
+              _FirstContactBanner(peerNodeId: session.peerNodeId),
             Expanded(
               child: Stack(
                 children: [
@@ -1063,6 +1284,63 @@ const double _kInfoBarBlurSigma = 20.0;
 const double _kInfoBarBackgroundAlpha = 0.8;
 
 // =============================================================================
+// First-contact banner — only shown when the local user hasn't yet
+// explicitly accepted a handshake from this peer (e.g. they initiated
+// the handshake themselves) AND hasn't tapped to dismiss the banner.
+//
+// Tap-to-dismiss persists locally via [FirstContactBannerDismissals]
+// (SharedPreferences). Dismissal does NOT mutate any protocol state
+// — it never calls markFirstHandshake, never changes the safety
+// state, never sends any wire frame.
+// =============================================================================
+
+class _FirstContactBanner extends ConsumerWidget {
+  final int peerNodeId;
+
+  const _FirstContactBanner({required this.peerNodeId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Watch the manager state so the banner disappears immediately
+    // once the user accepts a handshake (which sets hasFirstContact).
+    ref.watch(peerSafetyManagerProvider);
+    ref.watch(firstContactBannerDismissalsProvider);
+
+    final mgr = ref.read(peerSafetyManagerProvider.notifier);
+    final dismissals = ref.read(firstContactBannerDismissalsProvider.notifier);
+
+    final hasFirstContact = mgr.hasFirstContact(peerNodeId);
+    final isDismissed = dismissals.isDismissed(peerNodeId);
+    if (hasFirstContact || isDismissed) {
+      return const SizedBox.shrink();
+    }
+
+    final l10n = context.l10n;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppTheme.spacing16,
+        AppTheme.spacing8,
+        AppTheme.spacing16,
+        0,
+      ),
+      child: StatusBanner.warning(
+        title: l10n.sipDmFirstContactBannerTitle,
+        subtitle: l10n.sipDmFirstContactBannerBody,
+        icon: Icons.shield_outlined,
+        onTap: () {
+          ref.read(hapticServiceProvider).trigger(HapticType.light);
+          dismissals.dismiss(peerNodeId);
+        },
+        onDismiss: () {
+          ref.read(hapticServiceProvider).trigger(HapticType.light);
+          dismissals.dismiss(peerNodeId);
+        },
+      ),
+    );
+  }
+}
+
+// =============================================================================
 // Session info bar content — sigil + hex ID + status badge
 // =============================================================================
 
@@ -1236,49 +1514,113 @@ class _MessageBubble extends ConsumerWidget {
           constraints: BoxConstraints(
             maxWidth: MediaQuery.of(context).size.width * 0.75,
           ),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeOut,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppTheme.radius12),
-              border: Border.all(
-                color: isHighlighted ? context.accentColor : Colors.transparent,
-                width: 1.5,
-              ),
-            ),
-            child: TweenAnimationBuilder<double>(
-              // Restart the shake each time we transition into the
-              // highlighted state. Subtle: a damped horizontal sine
-              // over ~360ms, max ±3px, three half-cycles before it
-              // settles. The static accent border above is the
-              // persistent visual cue; the shake just nudges the eye.
-              key: ValueKey(isHighlighted),
-              tween: Tween(begin: 0.0, end: 1.0),
-              duration: const Duration(milliseconds: 360),
-              builder: (context, value, child) {
-                final shake = isHighlighted && value < 1.0
-                    ? math.sin(value * math.pi * 3) * 3.0 * (1 - value)
-                    : 0.0;
-                if (shake == 0.0) return child!;
-                return Transform.translate(
-                  offset: Offset(shake, 0),
-                  child: child,
-                );
-              },
-              child: Column(
-                crossAxisAlignment: isOutbound
-                    ? CrossAxisAlignment.end
-                    : CrossAxisAlignment.start,
-                children: [
-                  if (isInk)
-                    Column(
+          child: Column(
+            crossAxisAlignment: isOutbound
+                ? CrossAxisAlignment.end
+                : CrossAxisAlignment.start,
+            children: [
+              // Bubble body — wrapped in the highlight halo (border + blink
+              // + shake). Reactions are deliberately OUTSIDE the halo so
+              // the accent ring frames the message itself, not the
+              // floating reaction pill below it.
+              if (isInk)
+                Column(
+                  crossAxisAlignment: isOutbound
+                      ? CrossAxisAlignment.end
+                      : CrossAxisAlignment.start,
+                  children: [
+                    _HighlightHalo(
+                      isHighlighted: isHighlighted,
+                      child: SipInkBubble(
+                        payload: entry.payload!,
+                        isOutbound: isOutbound,
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spacing2),
+                    Text(
+                      _formatTime(context, entry.timestampMs),
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: context.textTertiary,
+                      ),
+                    ),
+                  ],
+                )
+              else
+                _HighlightHalo(
+                  isHighlighted: isHighlighted,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spacing12,
+                      vertical: AppTheme.spacing8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isOutbound
+                          ? context.accentColor.withValues(alpha: 0.15)
+                          : context.card,
+                      borderRadius: BorderRadius.only(
+                        topLeft: const Radius.circular(AppTheme.radius12),
+                        topRight: const Radius.circular(AppTheme.radius12),
+                        bottomLeft: isOutbound
+                            ? const Radius.circular(AppTheme.radius12)
+                            : const Radius.circular(AppTheme.radius4),
+                        bottomRight: isOutbound
+                            ? const Radius.circular(AppTheme.radius4)
+                            : const Radius.circular(AppTheme.radius12),
+                      ),
+                      border: isOutbound
+                          ? null
+                          : Border.all(
+                              color: context.border.withValues(alpha: 0.5),
+                            ),
+                    ),
+                    child: Column(
                       crossAxisAlignment: isOutbound
                           ? CrossAxisAlignment.end
                           : CrossAxisAlignment.start,
                       children: [
-                        SipInkBubble(
-                          payload: entry.payload!,
-                          isOutbound: isOutbound,
+                        // Quoted reply block — tappable, jumps to /
+                        // glows the original message when matched.
+                        if (replyTo != null) ...[
+                          GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: onReplyQuoteTap,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppTheme.spacing8,
+                                vertical: AppTheme.spacing4,
+                              ),
+                              decoration: BoxDecoration(
+                                border: Border(
+                                  left: BorderSide(
+                                    color: context.accentColor,
+                                    width: 2,
+                                  ),
+                                ),
+                                color: context.accentColor.withValues(
+                                  alpha: 0.06,
+                                ),
+                              ),
+                              child: Text(
+                                replyTo,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: context.textTertiary,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: AppTheme.spacing4),
+                        ],
+                        Text(
+                          bodyText,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: context.textPrimary,
+                          ),
                         ),
                         const SizedBox(height: AppTheme.spacing2),
                         Text(
@@ -1289,113 +1631,27 @@ class _MessageBubble extends ConsumerWidget {
                           ),
                         ),
                       ],
-                    )
-                  else
-                    // Message bubble
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppTheme.spacing12,
-                        vertical: AppTheme.spacing8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isOutbound
-                            ? context.accentColor.withValues(alpha: 0.15)
-                            : context.card,
-                        borderRadius: BorderRadius.only(
-                          topLeft: const Radius.circular(AppTheme.radius12),
-                          topRight: const Radius.circular(AppTheme.radius12),
-                          bottomLeft: isOutbound
-                              ? const Radius.circular(AppTheme.radius12)
-                              : const Radius.circular(AppTheme.radius4),
-                          bottomRight: isOutbound
-                              ? const Radius.circular(AppTheme.radius4)
-                              : const Radius.circular(AppTheme.radius12),
-                        ),
-                        border: isOutbound
-                            ? null
-                            : Border.all(
-                                color: context.border.withValues(alpha: 0.5),
-                              ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: isOutbound
-                            ? CrossAxisAlignment.end
-                            : CrossAxisAlignment.start,
-                        children: [
-                          // Quoted reply block — tappable, jumps to /
-                          // glows the original message when matched.
-                          if (replyTo != null) ...[
-                            GestureDetector(
-                              behavior: HitTestBehavior.opaque,
-                              onTap: onReplyQuoteTap,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: AppTheme.spacing8,
-                                  vertical: AppTheme.spacing4,
-                                ),
-                                decoration: BoxDecoration(
-                                  border: Border(
-                                    left: BorderSide(
-                                      color: context.accentColor,
-                                      width: 2,
-                                    ),
-                                  ),
-                                  color: context.accentColor.withValues(
-                                    alpha: 0.06,
-                                  ),
-                                ),
-                                child: Text(
-                                  replyTo,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: context.textTertiary,
-                                    fontStyle: FontStyle.italic,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: AppTheme.spacing4),
-                          ],
-                          Text(
-                            bodyText,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: context.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: AppTheme.spacing2),
-                          Text(
-                            _formatTime(context, entry.timestampMs),
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: context.textTertiary,
-                            ),
-                          ),
-                        ],
-                      ),
                     ),
-
-                  // Reaction row — Telegram-style pills below the bubble
-                  AnimatedSize(
-                    duration: const Duration(milliseconds: 200),
-                    curve: Curves.easeOut,
-                    alignment: isOutbound
-                        ? Alignment.centerRight
-                        : Alignment.centerLeft,
-                    child: hasReactions
-                        ? Padding(
-                            padding: const EdgeInsets.only(
-                              top: AppTheme.spacing4,
-                            ),
-                            child: _buildReactionRow(context, ref, isOutbound),
-                          )
-                        : const SizedBox.shrink(),
                   ),
-                ],
+                ),
+
+              // Reaction row — Telegram-style pills below the bubble.
+              // Intentionally rendered outside _HighlightHalo so taps on a
+              // reply quote frame the original message, not its reactions.
+              AnimatedSize(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOut,
+                alignment: isOutbound
+                    ? Alignment.centerRight
+                    : Alignment.centerLeft,
+                child: hasReactions
+                    ? Padding(
+                        padding: const EdgeInsets.only(top: AppTheme.spacing4),
+                        child: _buildReactionRow(context, ref, isOutbound),
+                      )
+                    : const SizedBox.shrink(),
               ),
-            ),
+            ],
           ),
         ),
       ),
@@ -1579,6 +1835,97 @@ class _MessageBubble extends ConsumerWidget {
     // no AM/PM heuristics.
     final dt = DateTime.fromMillisecondsSinceEpoch(ms);
     return TimeOfDay.fromDateTime(dt).format(context);
+  }
+}
+
+// =============================================================================
+// Highlight halo — accent-blink + damped-shake wrapper used to draw the eye
+// to a message bubble after the user taps a reply quote pointing at it.
+// Always reserves a 1.5px border so layout doesn't jump when triggered.
+// =============================================================================
+
+class _HighlightHalo extends StatefulWidget {
+  final bool isHighlighted;
+  final Widget child;
+
+  const _HighlightHalo({required this.isHighlighted, required this.child});
+
+  @override
+  State<_HighlightHalo> createState() => _HighlightHaloState();
+}
+
+class _HighlightHaloState extends State<_HighlightHalo>
+    with SingleTickerProviderStateMixin {
+  // Total halo duration: shake settles in the first ~360ms, border blinks
+  // for the full 1200ms (3 pulses) so the user has time to register the
+  // jump after the list scrolls into view.
+  static const Duration _haloDuration = Duration(milliseconds: 1200);
+  static const double _shakeWindow = 0.30; // first 30% of the timeline
+  static const double _shakeAmplitude = 4.0;
+  static const int _blinkPulses = 3;
+
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: _haloDuration);
+    if (widget.isHighlighted) _controller.forward(from: 0);
+  }
+
+  @override
+  void didUpdateWidget(covariant _HighlightHalo old) {
+    super.didUpdateWidget(old);
+    if (widget.isHighlighted && !old.isHighlighted) {
+      _controller.forward(from: 0);
+    } else if (!widget.isHighlighted && old.isHighlighted) {
+      _controller.stop();
+      _controller.value = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final t = _controller.value;
+        final active = widget.isHighlighted;
+
+        // Damped horizontal sine confined to the first _shakeWindow of the
+        // timeline, then settles to zero.
+        final shake = active && t < _shakeWindow
+            ? math.sin((t / _shakeWindow) * math.pi * 3) *
+                  _shakeAmplitude *
+                  (1 - t / _shakeWindow)
+            : 0.0;
+
+        // Blink: |sin(t·π·N)| gives N pulses across [0,1]. Final pulse
+        // fades naturally as the controller completes.
+        final blink = active ? math.sin(t * math.pi * _blinkPulses).abs() : 0.0;
+
+        return Transform.translate(
+          offset: Offset(shake, 0),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
+              border: Border.all(
+                color: context.accentColor.withValues(alpha: blink),
+                width: 1.5,
+              ),
+            ),
+            child: child,
+          ),
+        );
+      },
+      child: widget.child,
+    );
   }
 }
 

@@ -21,6 +21,7 @@ import 'sip_codec.dart';
 import 'sip_constants.dart';
 import 'sip_counters.dart';
 import 'sip_frame.dart';
+import 'peer_safety_gate.dart';
 import 'sip_ink_constants.dart';
 import 'sip_ink_decoder.dart';
 import 'sip_ink_payload.dart';
@@ -191,6 +192,16 @@ enum SipDmSendError {
   /// sketch. Almost always a programmer error — the simplifier owns
   /// this contract.
   invalidSketch,
+
+  /// Trust + Safety: the local user has blocked this peer. Outbound
+  /// is refused locally — the wire is silent so we don't even leak
+  /// "I tried to send" to the blocked peer.
+  peerBlocked,
+
+  /// Trust + Safety: per-peer rate limit hit (token bucket exhausted
+  /// for this peer × kind). Distinct from `budgetExhausted`, which is
+  /// the global SIP airtime ceiling.
+  peerRateLimited,
 }
 
 /// Manages ephemeral DM sessions and message exchange.
@@ -203,17 +214,30 @@ class SipDmManager {
   ///
   /// [rateLimiter] is used to enforce the SIP airtime budget.
   /// [clock] can be injected for testing (returns ms since epoch).
+  /// [safetyGate] is the local Trust + Safety gate consulted on
+  /// every inbound and outbound private-DM handler. Defaults to a
+  /// no-op so unit tests that don't care about block state keep
+  /// working unchanged. Production wires the
+  /// `peerSafetyGateProvider` adapter here.
   SipDmManager({
     required SipRateLimiter rateLimiter,
     SipCounters? counters,
     int Function()? clock,
+    PeerSafetyGate? safetyGate,
   }) : _rateLimiter = rateLimiter,
        _counters = counters,
-       _clock = clock ?? _defaultClock;
+       _clock = clock ?? _defaultClock,
+       _safetyGate = safetyGate ?? const NoopPeerSafetyGate();
 
   final SipRateLimiter _rateLimiter;
   final SipCounters? _counters;
   final int Function() _clock;
+  final PeerSafetyGate _safetyGate;
+
+  /// Whether [peerNodeId] is locally blocked. Hot-path sync — used
+  /// by every inbound + outbound handler to short-circuit. Returns
+  /// false when no gate has been wired (default-safe).
+  bool _isPeerBlocked(int peerNodeId) => _safetyGate.isBlocked(peerNodeId);
 
   /// Called whenever DM state changes (session created, message received, etc.)
   /// so the UI layer can rebuild.
@@ -385,6 +409,13 @@ class SipDmManager {
     final session = _sessions[sessionTag];
     if (session == null) return;
 
+    // T+S guard: silent drop. A blocked peer cannot mutate local
+    // session state, so swallow the CLOSE without flipping status
+    // and without firing onStateChanged. No log line at info — the
+    // brief explicitly forbids info-level logs that contain the
+    // peer node id on inbound drops.
+    if (_isPeerBlocked(session.peerNodeId)) return;
+
     session.status = SipDmSessionStatus.closed;
     AppLogging.sip(
       'SIP_DM: <- CLOSE from peer, '
@@ -423,6 +454,11 @@ class SipDmManager {
     final session = _sessions[sessionTag];
     if (session == null || session.isExpired(_clock())) return null;
     if (session.status != SipDmSessionStatus.active) return null;
+
+    // T+S guard: silent suppression. The user is typing in the
+    // composer; we don't bother them with feedback. The blocked
+    // peer simply never sees the typing indicator.
+    if (_isPeerBlocked(session.peerNodeId)) return null;
 
     // Rate limit: max one per _typingSendIntervalMs.
     final lastSent = _typingSentAt[sessionTag] ?? 0;
@@ -472,6 +508,11 @@ class SipDmManager {
     }
     if (session.status != SipDmSessionStatus.active) return;
 
+    // T+S guard: silent drop. Don't surface "is typing" UI for a
+    // blocked peer — that would leak presence even when block is
+    // supposed to render the peer invisible.
+    if (_isPeerBlocked(session.peerNodeId)) return;
+
     _peerTyping[sessionTag] = _clock() + _typingDisplayDurationMs;
 
     AppLogging.sip(
@@ -506,6 +547,11 @@ class SipDmManager {
     final session = _sessions[sessionTag];
     if (session == null || session.isExpired(_clock())) return null;
     if (session.status != SipDmSessionStatus.active) return null;
+
+    // T+S guard: outbound reaction to a blocked peer is silently
+    // suppressed at the wire. Local toggle (off→on without sending)
+    // happens at the router/UI layer.
+    if (_isPeerBlocked(session.peerNodeId)) return null;
 
     final payload = SipDmMessages.encodeReaction(
       emojiIndex: emojiIndex,
@@ -560,6 +606,11 @@ class SipDmManager {
     }
     if (session.status != SipDmSessionStatus.active) return;
 
+    // T+S guard: silent drop. Reactions mutate prior history entries
+    // (entry.peerReaction =) — a blocked peer must not be allowed
+    // to retroactively annotate the local thread.
+    if (_isPeerBlocked(session.peerNodeId)) return;
+
     final reaction = SipDmMessages.decodeReaction(frame.payload);
     if (reaction == null) return;
 
@@ -602,6 +653,13 @@ class SipDmManager {
     final session = _sessions[sessionTag];
     if (session == null || session.isExpired(_clock())) return null;
     if (session.status != SipDmSessionStatus.active) return null;
+
+    // T+S guard: outbound to a blocked peer is silently suppressed
+    // at the wire. The UI fall-back at the call site (sip_dm_screen
+    // `_onDelete`) already handles a null return by removing the
+    // message locally only — that's the correct semantic for "I
+    // blocked them and want this gone from my history."
+    if (_isPeerBlocked(session.peerNodeId)) return null;
 
     final payload = SipDmMessages.encodeDelete(
       targetTimestampS: targetEntry.timestampMs ~/ 1000,
@@ -655,6 +713,11 @@ class SipDmManager {
     }
     if (session.status != SipDmSessionStatus.active) return;
 
+    // T+S guard: silent drop. A blocked peer cannot remove
+    // messages from the local user's history — that would let them
+    // retroactively erase evidence of past behaviour.
+    if (_isPeerBlocked(session.peerNodeId)) return;
+
     final targetTimestampS = SipDmMessages.decodeDelete(frame.payload);
     if (targetTimestampS == null) return;
 
@@ -691,6 +754,14 @@ class SipDmManager {
 
     if (session.status != SipDmSessionStatus.active) {
       return SipDmSendResult.fail(SipDmSendError.sessionClosed);
+    }
+
+    // T+S guard (defence-in-depth). The router-level gate normally
+    // catches outbound to a blocked peer, but the builder is also
+    // reachable from the secure-router's plaintext fallback path
+    // and from tests; failing here keeps the wire silent regardless.
+    if (_isPeerBlocked(session.peerNodeId)) {
+      return SipDmSendResult.fail(SipDmSendError.peerBlocked);
     }
 
     if (text.isEmpty) {
@@ -779,6 +850,11 @@ class SipDmManager {
 
     if (session.status != SipDmSessionStatus.active) {
       return SipDmSendResult.fail(SipDmSendError.sessionClosed);
+    }
+
+    // T+S guard (defence-in-depth). Same rationale as buildDmMessage.
+    if (_isPeerBlocked(session.peerNodeId)) {
+      return SipDmSendResult.fail(SipDmSendError.peerBlocked);
     }
 
     if (inkPayload.isEmpty) {
@@ -889,6 +965,13 @@ class SipDmManager {
       return null;
     }
 
+    // T+S guard: silent drop. No log line containing the peer node
+    // id at info level — drops a blocked peer's DM without
+    // mutating history, firing typing-clear, or invoking the
+    // notification callback. The wire is silent on our side too:
+    // nothing goes out.
+    if (_isPeerBlocked(session.peerNodeId)) return null;
+
     final message = SipDmMessages.decodeDm(frame.payload);
     if (message == null) return null;
 
@@ -954,6 +1037,10 @@ class SipDmManager {
       return null;
     }
 
+    // T+S guard: silent drop. No log at info level — the peer node
+    // id stays out of logs on inbound block hits.
+    if (_isPeerBlocked(session.peerNodeId)) return null;
+
     final result = SipInkDecoder.decode(frame.payload);
     if (!result.isOk) {
       AppLogging.sipInk(
@@ -998,6 +1085,40 @@ class SipDmManager {
     _peerTyping.clear();
     _typingSentAt.clear();
     AppLogging.sip('SIP_DM: all sessions cleared');
+  }
+
+  /// Local-only removal of a session and its message history.
+  ///
+  /// Differs from [closeSession] in two ways:
+  ///   1. Emits NO wire frame — the peer is not notified. Used by the
+  ///      Trust + Safety "Remove conversation" action which should
+  ///      have zero airtime cost and zero observable effect on the
+  ///      peer.
+  ///   2. Drops the session entry entirely from the manager (and the
+  ///      typing state for that peer if it was the only session).
+  ///
+  /// Returns true if a session was found and removed, false otherwise.
+  bool removeSessionLocally(int sessionTag) {
+    final session = _sessions.remove(sessionTag);
+    if (session == null) return false;
+    session.messages.clear();
+    // Clear typing state only if no other session for this peer
+    // remains tracked — the peer's typing flag is keyed by peer
+    // node id, not by session tag.
+    final peerHasOtherSessions = _sessions.values.any(
+      (s) => s.peerNodeId == session.peerNodeId,
+    );
+    if (!peerHasOtherSessions) {
+      _peerTyping.remove(session.peerNodeId);
+      _typingSentAt.remove(session.peerNodeId);
+    }
+    AppLogging.sip(
+      'SIP_DM: session removed locally (no DM_CLOSE), '
+      'tag=0x${sessionTag.toRadixString(16)}, '
+      'peer=0x${session.peerNodeId.toRadixString(16)}',
+    );
+    onStateChanged?.call();
+    return true;
   }
 
   /// Number of currently tracked sessions (including expired not yet cleaned).

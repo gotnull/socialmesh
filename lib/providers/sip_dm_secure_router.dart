@@ -30,6 +30,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/logging.dart';
 import '../services/protocol/overlay/overlay_secure_session_manager.dart';
 import '../services/protocol/overlay/overlay_types.dart';
+import '../services/protocol/sip/peer_rate_limiter.dart';
 import '../services/protocol/sip/sip_codec.dart';
 import '../services/protocol/sip/sip_constants.dart';
 import '../services/protocol/sip/sip_dm.dart';
@@ -38,6 +39,7 @@ import '../services/protocol/sip/sip_messages_dm.dart';
 import '../services/protocol/sip/sip_types.dart';
 import 'app_providers.dart';
 import 'overlay_providers.dart';
+import 'peer_safety_providers.dart';
 import 'sip_providers.dart';
 
 /// Which transport a DM send actually used.
@@ -129,6 +131,22 @@ class SipDmRouter {
       return const SipDmRouterOutcome.fail(SipDmSendError.sessionNotFound);
     }
 
+    // T+S gate stack (in canonical order):
+    //   1. hard safety gate
+    //   2. peer capability + session state (existing — handled inside
+    //      `_evaluateGate` and the plaintext/secure send paths)
+    //   3. per-peer rate gate
+    //   4. global SipRateLimiter (handled inside `buildDmMessage`)
+    //   5. send
+    if (_ref.read(peerSafetyGateProvider).isBlocked(session.peerNodeId)) {
+      return const SipDmRouterOutcome.fail(SipDmSendError.peerBlocked);
+    }
+    if (!_ref
+        .read(peerRateLimiterProvider)
+        .tryAcquire(session.peerNodeId, PeerRateKind.text)) {
+      return const SipDmRouterOutcome.fail(SipDmSendError.peerRateLimited);
+    }
+
     final gate = await _evaluateGate(session.peerNodeId);
     if (gate is _GatePass) {
       return _sendSecureText(
@@ -202,6 +220,20 @@ class SipDmRouter {
       );
     }
 
+    // T+S gate stack (canonical order — see sendText for the full
+    // rationale). Block check fires AFTER the peer-feature gate so
+    // we don't re-leak the unsupported-peer signal to a blocked
+    // peer; both terminate the send before the global limiter is
+    // touched.
+    if (_ref.read(peerSafetyGateProvider).isBlocked(session.peerNodeId)) {
+      return const SipDmRouterOutcome.fail(SipDmSendError.peerBlocked);
+    }
+    if (!_ref
+        .read(peerRateLimiterProvider)
+        .tryAcquire(session.peerNodeId, PeerRateKind.sketch)) {
+      return const SipDmRouterOutcome.fail(SipDmSendError.peerRateLimited);
+    }
+
     final gate = await _evaluateGate(session.peerNodeId);
     if (gate is _GatePass) {
       return _sendSecureSketch(
@@ -231,6 +263,16 @@ class SipDmRouter {
     final session = dm.getSession(sessionTag);
     if (session == null) {
       return const SipDmRouterOutcome.fail(SipDmSendError.sessionNotFound);
+    }
+
+    // T+S gate stack — same as sendText.
+    if (_ref.read(peerSafetyGateProvider).isBlocked(session.peerNodeId)) {
+      return const SipDmRouterOutcome.fail(SipDmSendError.peerBlocked);
+    }
+    if (!_ref
+        .read(peerRateLimiterProvider)
+        .tryAcquire(session.peerNodeId, PeerRateKind.reaction)) {
+      return const SipDmRouterOutcome.fail(SipDmSendError.peerRateLimited);
     }
 
     final gate = await _evaluateGate(session.peerNodeId);
@@ -703,6 +745,16 @@ Future<void> _handleSecureDmInbound({
     linkId: payload.linkId,
   );
   if (dmSession == null) return;
+
+  // T+S guard: silent drop of secure DM payloads from blocked
+  // peers. Fires AFTER `resolveSecureInboundDmSession` so the
+  // recovery path (which uses the only-active-session fallback for
+  // poisoned link records) has produced the authoritative peer
+  // node id. Defence-in-depth — the SipDmManager.handleInbound*
+  // guards would also catch this, but stopping here keeps the
+  // peer node id out of any `secure_decrypt_ok` log line.
+  final safetyGate = ref.read(peerSafetyGateProvider);
+  if (safetyGate.isBlocked(dmSession.peerNodeId)) return;
 
   switch (payload.subtype) {
     case OverlaySecureDataSubtype.dmText:

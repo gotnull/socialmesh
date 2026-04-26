@@ -42851,7 +42851,15 @@
     },
     "sipDmBudgetExhausted": "Sending paused — mesh bandwidth limit reached. Try again shortly.",
     "@sipDmBudgetExhausted": {
-        "description": "Error when DM send fails due to rate limiting."
+        "description": "Error shown when a DM send fails because the global SIP airtime budget (1024 bytes / 60s) is exhausted. Distinct from per-peer rate limiting — this is the shared mesh budget."
+    },
+    "sipDmPeerBlocked": "You've blocked this node — unblock from SIP Hub to send messages again.",
+    "@sipDmPeerBlocked": {
+        "description": "Error shown when a DM send fails because the local user has blocked the recipient. Surfaces the unblock path (SIP Hub Blocked section) so the user can recover from the state if they hit it accidentally."
+    },
+    "sipDmPeerRateLimited": "Sending too fast — slow down for a moment.",
+    "@sipDmPeerRateLimited": {
+        "description": "Error shown when a DM send fails because the per-peer × per-kind token bucket (text 6/60s, sketch 2/60s, reaction 6/60s) ran out. Distinct from sipDmBudgetExhausted, which is the global airtime cap."
     },
     "sipDmSessionClosed": "This conversation has ended.",
     "@sipDmSessionClosed": {
@@ -42870,6 +42878,78 @@
     "sipDmCloseAction": "Close Session",
     "@sipDmCloseAction": {
         "description": "Action to close a DM session."
+    },
+    "sipDmMenuMute": "Mute notifications",
+    "@sipDmMenuMute": {
+        "description": "Overflow menu item that silences notifications for this peer's messages. Inbound DMs still arrive and are stored — only the system notification is suppressed. Reversible toggle."
+    },
+    "sipDmMenuUnmute": "Unmute notifications",
+    "@sipDmMenuUnmute": {
+        "description": "Overflow menu item shown when this peer is currently muted. Re-enables notifications for inbound messages from this peer."
+    },
+    "sipDmMenuBlock": "Block",
+    "@sipDmMenuBlock": {
+        "description": "Overflow menu item that persistently blocks the peer. Future inbound HELLO / DM / MRRP frames are silently dropped at the protocol layer. Local conversation history is preserved."
+    },
+    "sipDmMenuResetSecure": "Reset secure session",
+    "@sipDmMenuResetSecure": {
+        "description": "Overflow menu item that drops the in-memory secure (X25519) session keys for this peer. The next outbound DM will renegotiate fresh ephemeral keys. No history is wiped, the underlying overlay link stays open."
+    },
+    "sipDmMenuRemove": "Remove conversation",
+    "@sipDmMenuRemove": {
+        "description": "Overflow menu item that wipes the local DM history with this peer and tears down the local session. Emits no wire frame — peer is not notified. Local-only."
+    },
+    "sipDmBlockConfirmTitle": "Block this node?",
+    "@sipDmBlockConfirmTitle": {
+        "description": "Title of the confirmation sheet for the Block action in the DM overflow menu."
+    },
+    "sipDmBlockConfirmBody": "Future messages and handshake requests from this node will be silently dropped. They won't be notified. Your existing conversation history stays on this device — use Remove conversation to clear it.",
+    "@sipDmBlockConfirmBody": {
+        "description": "Body of the DM overflow Block confirmation. Calls out that history is preserved (different from Remove)."
+    },
+    "sipDmBlockConfirmAction": "Block",
+    "@sipDmBlockConfirmAction": {
+        "description": "Destructive confirm button label inside the DM Block confirmation sheet."
+    },
+    "sipDmResetConfirmTitle": "Reset secure session?",
+    "@sipDmResetConfirmTitle": {
+        "description": "Title of the confirmation sheet for the Reset Secure Session action in the DM overflow menu."
+    },
+    "sipDmResetConfirmBody": "Drops the current end-to-end keys with this peer. The next message you send will renegotiate fresh keys. Your message history stays untouched.",
+    "@sipDmResetConfirmBody": {
+        "description": "Body of the Reset Secure Session confirmation sheet. Emphasises history preservation and the renegotiation moment."
+    },
+    "sipDmResetConfirmAction": "Reset",
+    "@sipDmResetConfirmAction": {
+        "description": "Destructive confirm button label inside the Reset Secure Session sheet."
+    },
+    "sipDmRemoveConfirmTitle": "Remove this conversation?",
+    "@sipDmRemoveConfirmTitle": {
+        "description": "Title of the confirmation sheet for the Remove Conversation action in the DM overflow menu."
+    },
+    "sipDmRemoveConfirmBody": "Deletes every message in this conversation from this device. The peer is not notified and can still send you new messages unless you also Block them. This cannot be undone.",
+    "@sipDmRemoveConfirmBody": {
+        "description": "Body of the Remove Conversation confirmation sheet. Calls out local-only deletion + ability to combine with Block."
+    },
+    "sipDmRemoveConfirmAction": "Remove",
+    "@sipDmRemoveConfirmAction": {
+        "description": "Destructive confirm button label inside the Remove Conversation sheet."
+    },
+    "sipDmConfirmCancel": "Cancel",
+    "@sipDmConfirmCancel": {
+        "description": "Cancel button label shared by Block / Reset / Remove confirmation sheets in the DM overflow menu."
+    },
+    "sipDmActionMutedSnack": "Notifications muted for this conversation",
+    "@sipDmActionMutedSnack": {
+        "description": "Confirmation snackbar shown after the user mutes this peer from the DM overflow menu."
+    },
+    "sipDmActionUnmutedSnack": "Notifications re-enabled",
+    "@sipDmActionUnmutedSnack": {
+        "description": "Confirmation snackbar shown after the user unmutes this peer."
+    },
+    "sipDmActionResetSnack": "Secure session reset — next message will renegotiate keys",
+    "@sipDmActionResetSnack": {
+        "description": "Confirmation snackbar shown after the user resets the secure session."
     },
     "sipDmComposerModeText": "Text",
     "@sipDmComposerModeText": {
@@ -43050,6 +43130,38 @@
     "@sipHubSectionIncomingRequests": {
         "description": "Section header for pending handshake consent requests."
     },
+    "sipHubSectionBlocked": "Blocked",
+    "@sipHubSectionBlocked": {
+        "description": "Section header for the collapsed list of locally-blocked peers in SIP Hub. The section appears only when at least one peer is blocked. Tapping the row expands the list and exposes per-peer Unblock affordances."
+    },
+    "sipHubBlockedEmptySubtitle": "Tap to expand and review who you've blocked",
+    "@sipHubBlockedEmptySubtitle": {
+        "description": "Subtitle on the collapsed Blocked section header explaining what tapping does. Shown alongside the count of blocked peers."
+    },
+    "sipHubUnblockAction": "Unblock",
+    "@sipHubUnblockAction": {
+        "description": "Button label inside the Blocked section that, when tapped, unblocks the corresponding peer after a confirmation sheet."
+    },
+    "sipHubUnblockConfirmTitle": "Unblock this node?",
+    "@sipHubUnblockConfirmTitle": {
+        "description": "Title of the confirmation sheet when the user taps Unblock in the SIP Hub Blocked section."
+    },
+    "sipHubUnblockConfirmBody": "This node will be able to send you handshake requests, messages, and sketches again. Your previous conversation history with them is unchanged.",
+    "@sipHubUnblockConfirmBody": {
+        "description": "Body of the SIP Hub Unblock confirmation sheet. Calls out that history is preserved and that future inbound traffic from the peer will reach the user again."
+    },
+    "sipHubUnblockConfirmAction": "Unblock",
+    "@sipHubUnblockConfirmAction": {
+        "description": "Confirm button label inside the Unblock confirmation sheet. Marked as a non-destructive primary action."
+    },
+    "sipHubUnblockConfirmCancel": "Cancel",
+    "@sipHubUnblockConfirmCancel": {
+        "description": "Cancel button label inside the Unblock confirmation sheet."
+    },
+    "sipHubBlockedPeerSubtitle": "Inbound traffic silently dropped",
+    "@sipHubBlockedPeerSubtitle": {
+        "description": "Subtitle under each blocked peer's row explaining the local effect of the block."
+    },
     "sipHubSectionYourServices": "Your Services",
     "@sipHubSectionYourServices": {
         "description": "Section header on the SIP hub for the user's own local mesh services."
@@ -43131,6 +43243,46 @@
     "sipHubDecline": "Decline",
     "@sipHubDecline": {
         "description": "Decline button label for incoming handshake requests."
+    },
+    "sipHubBlock": "Block",
+    "@sipHubBlock": {
+        "description": "Block button label on the incoming handshake request card. Blocking silently drops the pending request and persists a local block — no HS_DECLINE is sent on the wire."
+    },
+    "sipHubConsentBody": "Accepting lets this node send you encrypted direct messages and sketches over the mesh. You can mute, block, or remove the conversation at any time.",
+    "@sipHubConsentBody": {
+        "description": "Body copy explaining what tapping Accept on a handshake request authorises. Shown above Accept / Decline / Block on the incoming request card."
+    },
+    "sipHubBlockConfirmTitle": "Block this node?",
+    "@sipHubBlockConfirmTitle": {
+        "description": "Title of the confirmation sheet shown when the user taps Block on an incoming handshake request."
+    },
+    "sipHubBlockConfirmBody": "Future messages and handshake requests from this node will be silently dropped. They won't be notified — they'll see your node as unreachable. You can unblock from Trust & Safety settings later.",
+    "@sipHubBlockConfirmBody": {
+        "description": "Body of the Block confirmation sheet shown on the SIP Hub incoming handshake request card."
+    },
+    "sipHubBlockConfirmAction": "Block",
+    "@sipHubBlockConfirmAction": {
+        "description": "Destructive confirm button label inside the Block confirmation sheet."
+    },
+    "sipHubBlockConfirmCancel": "Cancel",
+    "@sipHubBlockConfirmCancel": {
+        "description": "Cancel button label inside the Block confirmation sheet."
+    },
+    "meshExplorerBlockConfirmTitle": "Block this node?",
+    "@meshExplorerBlockConfirmTitle": {
+        "description": "Title of the confirmation sheet shown when the user taps Block in the Mesh Explorer peer detail sheet."
+    },
+    "meshExplorerBlockConfirmBody": "Future messages and handshake requests from this node will be silently dropped. They won't be notified. You can unblock from Trust & Safety settings later.",
+    "@meshExplorerBlockConfirmBody": {
+        "description": "Body of the Block confirmation sheet shown in the Mesh Explorer peer detail sheet."
+    },
+    "sipDmFirstContactBannerTitle": "First contact",
+    "@sipDmFirstContactBannerTitle": {
+        "description": "Title of the banner shown above the DM thread the first time the user opens a session with a new peer. Reminds the user that this is someone they haven't talked to before."
+    },
+    "sipDmFirstContactBannerBody": "This is your first conversation with this node. Only accept messages from people you trust on the mesh. Tap to dismiss.",
+    "@sipDmFirstContactBannerBody": {
+        "description": "Body of the first-contact banner. Encourages skepticism and explains tap-to-dismiss."
     },
     "sipHubEmptyTitle": "Looking for neighbors",
     "@sipHubEmptyTitle": {
@@ -43262,6 +43414,10 @@
     "sipAutoScanToggle": "Auto-scan",
     "@sipAutoScanToggle": {
         "description": "Label for the auto-scan toggle in the overflow menu."
+    },
+    "sipScanNow": "Scan now",
+    "@sipScanNow": {
+        "description": "Overflow menu item to trigger a one-shot SIP scan, regardless of auto-scan state."
     },
     "sipScanningIndicator": "Scanning…",
     "@sipScanningIndicator": {

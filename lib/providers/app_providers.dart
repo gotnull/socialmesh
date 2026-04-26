@@ -58,6 +58,7 @@ import 'age_eligibility_provider.dart';
 import 'file_transfer_providers.dart';
 import 'mqtt_client_proxy_providers.dart';
 import 'muted_channels_provider.dart';
+import 'peer_safety_providers.dart';
 import '../services/messaging/dm_retry_coordinator.dart';
 import '../features/settings/background_connection_screen.dart'
     show kLiveActivityEnabled;
@@ -3431,6 +3432,12 @@ final protocolServiceProvider = Provider<ProtocolService>((ref) {
   final transport = ref.watch(transportProvider);
   final dedupeStore = ref.watch(meshPacketDedupeStoreProvider);
   final service = ProtocolService(transport, dedupeStore: dedupeStore);
+
+  // Trust + Safety gate. The adapter holds a closure that re-reads
+  // the live `PeerSafetyManager` on each call, so changing block
+  // state here propagates to the protocol layer without needing
+  // this provider to rebuild. `ref.read` (not watch) is deliberate.
+  service.attachPeerSafetyGate(ref.read(peerSafetyGateProvider));
 
   service.onIdentityUpdate =
       ({

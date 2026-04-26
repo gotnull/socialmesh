@@ -56204,11 +56204,23 @@ abstract class AppLocalizations {
   /// **'Send a message to start the conversation.'**
   String get sipDmEmptyDescription;
 
-  /// Error when DM send fails due to rate limiting.
+  /// Error shown when a DM send fails because the global SIP airtime budget (1024 bytes / 60s) is exhausted. Distinct from per-peer rate limiting — this is the shared mesh budget.
   ///
   /// In en, this message translates to:
   /// **'Sending paused — mesh bandwidth limit reached. Try again shortly.'**
   String get sipDmBudgetExhausted;
+
+  /// Error shown when a DM send fails because the local user has blocked the recipient. Surfaces the unblock path (SIP Hub Blocked section) so the user can recover from the state if they hit it accidentally.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve blocked this node — unblock from SIP Hub to send messages again.'**
+  String get sipDmPeerBlocked;
+
+  /// Error shown when a DM send fails because the per-peer × per-kind token bucket (text 6/60s, sketch 2/60s, reaction 6/60s) ran out. Distinct from sipDmBudgetExhausted, which is the global airtime cap.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending too fast — slow down for a moment.'**
+  String get sipDmPeerRateLimited;
 
   /// Message when trying to send on a closed session.
   ///
@@ -56227,6 +56239,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Close Session'**
   String get sipDmCloseAction;
+
+  /// Overflow menu item that silences notifications for this peer's messages. Inbound DMs still arrive and are stored — only the system notification is suppressed. Reversible toggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute notifications'**
+  String get sipDmMenuMute;
+
+  /// Overflow menu item shown when this peer is currently muted. Re-enables notifications for inbound messages from this peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute notifications'**
+  String get sipDmMenuUnmute;
+
+  /// Overflow menu item that persistently blocks the peer. Future inbound HELLO / DM / MRRP frames are silently dropped at the protocol layer. Local conversation history is preserved.
+  ///
+  /// In en, this message translates to:
+  /// **'Block'**
+  String get sipDmMenuBlock;
+
+  /// Overflow menu item that drops the in-memory secure (X25519) session keys for this peer. The next outbound DM will renegotiate fresh ephemeral keys. No history is wiped, the underlying overlay link stays open.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset secure session'**
+  String get sipDmMenuResetSecure;
+
+  /// Overflow menu item that wipes the local DM history with this peer and tears down the local session. Emits no wire frame — peer is not notified. Local-only.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove conversation'**
+  String get sipDmMenuRemove;
+
+  /// Title of the confirmation sheet for the Block action in the DM overflow menu.
+  ///
+  /// In en, this message translates to:
+  /// **'Block this node?'**
+  String get sipDmBlockConfirmTitle;
+
+  /// Body of the DM overflow Block confirmation. Calls out that history is preserved (different from Remove).
+  ///
+  /// In en, this message translates to:
+  /// **'Future messages and handshake requests from this node will be silently dropped. They won\'t be notified. Your existing conversation history stays on this device — use Remove conversation to clear it.'**
+  String get sipDmBlockConfirmBody;
+
+  /// Destructive confirm button label inside the DM Block confirmation sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Block'**
+  String get sipDmBlockConfirmAction;
+
+  /// Title of the confirmation sheet for the Reset Secure Session action in the DM overflow menu.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset secure session?'**
+  String get sipDmResetConfirmTitle;
+
+  /// Body of the Reset Secure Session confirmation sheet. Emphasises history preservation and the renegotiation moment.
+  ///
+  /// In en, this message translates to:
+  /// **'Drops the current end-to-end keys with this peer. The next message you send will renegotiate fresh keys. Your message history stays untouched.'**
+  String get sipDmResetConfirmBody;
+
+  /// Destructive confirm button label inside the Reset Secure Session sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get sipDmResetConfirmAction;
+
+  /// Title of the confirmation sheet for the Remove Conversation action in the DM overflow menu.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this conversation?'**
+  String get sipDmRemoveConfirmTitle;
+
+  /// Body of the Remove Conversation confirmation sheet. Calls out local-only deletion + ability to combine with Block.
+  ///
+  /// In en, this message translates to:
+  /// **'Deletes every message in this conversation from this device. The peer is not notified and can still send you new messages unless you also Block them. This cannot be undone.'**
+  String get sipDmRemoveConfirmBody;
+
+  /// Destructive confirm button label inside the Remove Conversation sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get sipDmRemoveConfirmAction;
+
+  /// Cancel button label shared by Block / Reset / Remove confirmation sheets in the DM overflow menu.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get sipDmConfirmCancel;
+
+  /// Confirmation snackbar shown after the user mutes this peer from the DM overflow menu.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications muted for this conversation'**
+  String get sipDmActionMutedSnack;
+
+  /// Confirmation snackbar shown after the user unmutes this peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications re-enabled'**
+  String get sipDmActionUnmutedSnack;
+
+  /// Confirmation snackbar shown after the user resets the secure session.
+  ///
+  /// In en, this message translates to:
+  /// **'Secure session reset — next message will renegotiate keys'**
+  String get sipDmActionResetSnack;
 
   /// Label for the text composer mode in the SIP DM composer mode switcher.
   ///
@@ -56444,6 +56564,54 @@ abstract class AppLocalizations {
   /// **'Connection requests'**
   String get sipHubSectionIncomingRequests;
 
+  /// Section header for the collapsed list of locally-blocked peers in SIP Hub. The section appears only when at least one peer is blocked. Tapping the row expands the list and exposes per-peer Unblock affordances.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked'**
+  String get sipHubSectionBlocked;
+
+  /// Subtitle on the collapsed Blocked section header explaining what tapping does. Shown alongside the count of blocked peers.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to expand and review who you\'ve blocked'**
+  String get sipHubBlockedEmptySubtitle;
+
+  /// Button label inside the Blocked section that, when tapped, unblocks the corresponding peer after a confirmation sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Unblock'**
+  String get sipHubUnblockAction;
+
+  /// Title of the confirmation sheet when the user taps Unblock in the SIP Hub Blocked section.
+  ///
+  /// In en, this message translates to:
+  /// **'Unblock this node?'**
+  String get sipHubUnblockConfirmTitle;
+
+  /// Body of the SIP Hub Unblock confirmation sheet. Calls out that history is preserved and that future inbound traffic from the peer will reach the user again.
+  ///
+  /// In en, this message translates to:
+  /// **'This node will be able to send you handshake requests, messages, and sketches again. Your previous conversation history with them is unchanged.'**
+  String get sipHubUnblockConfirmBody;
+
+  /// Confirm button label inside the Unblock confirmation sheet. Marked as a non-destructive primary action.
+  ///
+  /// In en, this message translates to:
+  /// **'Unblock'**
+  String get sipHubUnblockConfirmAction;
+
+  /// Cancel button label inside the Unblock confirmation sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get sipHubUnblockConfirmCancel;
+
+  /// Subtitle under each blocked peer's row explaining the local effect of the block.
+  ///
+  /// In en, this message translates to:
+  /// **'Inbound traffic silently dropped'**
+  String get sipHubBlockedPeerSubtitle;
+
   /// Section header on the SIP hub for the user's own local mesh services.
   ///
   /// In en, this message translates to:
@@ -56527,6 +56695,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Decline'**
   String get sipHubDecline;
+
+  /// Block button label on the incoming handshake request card. Blocking silently drops the pending request and persists a local block — no HS_DECLINE is sent on the wire.
+  ///
+  /// In en, this message translates to:
+  /// **'Block'**
+  String get sipHubBlock;
+
+  /// Body copy explaining what tapping Accept on a handshake request authorises. Shown above Accept / Decline / Block on the incoming request card.
+  ///
+  /// In en, this message translates to:
+  /// **'Accepting lets this node send you encrypted direct messages and sketches over the mesh. You can mute, block, or remove the conversation at any time.'**
+  String get sipHubConsentBody;
+
+  /// Title of the confirmation sheet shown when the user taps Block on an incoming handshake request.
+  ///
+  /// In en, this message translates to:
+  /// **'Block this node?'**
+  String get sipHubBlockConfirmTitle;
+
+  /// Body of the Block confirmation sheet shown on the SIP Hub incoming handshake request card.
+  ///
+  /// In en, this message translates to:
+  /// **'Future messages and handshake requests from this node will be silently dropped. They won\'t be notified — they\'ll see your node as unreachable. You can unblock from Trust & Safety settings later.'**
+  String get sipHubBlockConfirmBody;
+
+  /// Destructive confirm button label inside the Block confirmation sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Block'**
+  String get sipHubBlockConfirmAction;
+
+  /// Cancel button label inside the Block confirmation sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get sipHubBlockConfirmCancel;
+
+  /// Title of the confirmation sheet shown when the user taps Block in the Mesh Explorer peer detail sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Block this node?'**
+  String get meshExplorerBlockConfirmTitle;
+
+  /// Body of the Block confirmation sheet shown in the Mesh Explorer peer detail sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Future messages and handshake requests from this node will be silently dropped. They won\'t be notified. You can unblock from Trust & Safety settings later.'**
+  String get meshExplorerBlockConfirmBody;
+
+  /// Title of the banner shown above the DM thread the first time the user opens a session with a new peer. Reminds the user that this is someone they haven't talked to before.
+  ///
+  /// In en, this message translates to:
+  /// **'First contact'**
+  String get sipDmFirstContactBannerTitle;
+
+  /// Body of the first-contact banner. Encourages skepticism and explains tap-to-dismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'This is your first conversation with this node. Only accept messages from people you trust on the mesh. Tap to dismiss.'**
+  String get sipDmFirstContactBannerBody;
 
   /// Empty state title when no SIP peers have been discovered yet.
   ///
@@ -56689,6 +56917,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Auto-scan'**
   String get sipAutoScanToggle;
+
+  /// Overflow menu item to trigger a one-shot SIP scan, regardless of auto-scan state.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan now'**
+  String get sipScanNow;
 
   /// Label shown while a SIP scan is in progress.
   ///

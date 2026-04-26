@@ -31,6 +31,7 @@ import '../services/protocol/sip/mrrp_traffic_event.dart';
 import '../services/protocol/sip/mrrp_types.dart';
 import '../services/protocol/sip/sip_types.dart';
 import 'app_providers.dart';
+import 'peer_safety_providers.dart';
 import 'sip_providers.dart';
 import '../features/incidents/providers/mesh_incident_providers.dart';
 import '../features/pet/models/remote_pet_share_status.dart';
@@ -411,6 +412,11 @@ final mrrpEngineProvider = Provider<MrrpEngine?>((ref) {
     dedupCache: dedupCache,
     onSend: sendViaSip,
   );
+
+  // Trust + Safety gate. Hot-path consulted at `_routeFrame` to
+  // silently drop every MRRP frame originating from a blocked peer
+  // — request, response, advert, dirReq, dirResp.
+  engine.attachPeerSafetyGate(ref.read(peerSafetyGateProvider));
 
   // Wire counters and traffic event callback on engine.
   engine.counters = counters;

@@ -31971,6 +31971,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Sending paused — mesh bandwidth limit reached. Try again shortly.';
 
   @override
+  String get sipDmPeerBlocked =>
+      'You\'ve blocked this node — unblock from SIP Hub to send messages again.';
+
+  @override
+  String get sipDmPeerRateLimited =>
+      'Sending too fast — slow down for a moment.';
+
+  @override
   String get sipDmSessionClosed => 'This conversation has ended.';
 
   @override
@@ -31980,6 +31988,65 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sipDmCloseAction => 'Close Session';
+
+  @override
+  String get sipDmMenuMute => 'Mute notifications';
+
+  @override
+  String get sipDmMenuUnmute => 'Unmute notifications';
+
+  @override
+  String get sipDmMenuBlock => 'Block';
+
+  @override
+  String get sipDmMenuResetSecure => 'Reset secure session';
+
+  @override
+  String get sipDmMenuRemove => 'Remove conversation';
+
+  @override
+  String get sipDmBlockConfirmTitle => 'Block this node?';
+
+  @override
+  String get sipDmBlockConfirmBody =>
+      'Future messages and handshake requests from this node will be silently dropped. They won\'t be notified. Your existing conversation history stays on this device — use Remove conversation to clear it.';
+
+  @override
+  String get sipDmBlockConfirmAction => 'Block';
+
+  @override
+  String get sipDmResetConfirmTitle => 'Reset secure session?';
+
+  @override
+  String get sipDmResetConfirmBody =>
+      'Drops the current end-to-end keys with this peer. The next message you send will renegotiate fresh keys. Your message history stays untouched.';
+
+  @override
+  String get sipDmResetConfirmAction => 'Reset';
+
+  @override
+  String get sipDmRemoveConfirmTitle => 'Remove this conversation?';
+
+  @override
+  String get sipDmRemoveConfirmBody =>
+      'Deletes every message in this conversation from this device. The peer is not notified and can still send you new messages unless you also Block them. This cannot be undone.';
+
+  @override
+  String get sipDmRemoveConfirmAction => 'Remove';
+
+  @override
+  String get sipDmConfirmCancel => 'Cancel';
+
+  @override
+  String get sipDmActionMutedSnack =>
+      'Notifications muted for this conversation';
+
+  @override
+  String get sipDmActionUnmutedSnack => 'Notifications re-enabled';
+
+  @override
+  String get sipDmActionResetSnack =>
+      'Secure session reset — next message will renegotiate keys';
 
   @override
   String get sipDmComposerModeText => 'Text';
@@ -32115,6 +32182,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sipHubSectionIncomingRequests => 'Connection requests';
 
   @override
+  String get sipHubSectionBlocked => 'Blocked';
+
+  @override
+  String get sipHubBlockedEmptySubtitle =>
+      'Tap to expand and review who you\'ve blocked';
+
+  @override
+  String get sipHubUnblockAction => 'Unblock';
+
+  @override
+  String get sipHubUnblockConfirmTitle => 'Unblock this node?';
+
+  @override
+  String get sipHubUnblockConfirmBody =>
+      'This node will be able to send you handshake requests, messages, and sketches again. Your previous conversation history with them is unchanged.';
+
+  @override
+  String get sipHubUnblockConfirmAction => 'Unblock';
+
+  @override
+  String get sipHubUnblockConfirmCancel => 'Cancel';
+
+  @override
+  String get sipHubBlockedPeerSubtitle => 'Inbound traffic silently dropped';
+
+  @override
   String get sipHubSectionYourServices => 'Your Services';
 
   @override
@@ -32161,6 +32254,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sipHubDecline => 'Decline';
+
+  @override
+  String get sipHubBlock => 'Block';
+
+  @override
+  String get sipHubConsentBody =>
+      'Accepting lets this node send you encrypted direct messages and sketches over the mesh. You can mute, block, or remove the conversation at any time.';
+
+  @override
+  String get sipHubBlockConfirmTitle => 'Block this node?';
+
+  @override
+  String get sipHubBlockConfirmBody =>
+      'Future messages and handshake requests from this node will be silently dropped. They won\'t be notified — they\'ll see your node as unreachable. You can unblock from Trust & Safety settings later.';
+
+  @override
+  String get sipHubBlockConfirmAction => 'Block';
+
+  @override
+  String get sipHubBlockConfirmCancel => 'Cancel';
+
+  @override
+  String get meshExplorerBlockConfirmTitle => 'Block this node?';
+
+  @override
+  String get meshExplorerBlockConfirmBody =>
+      'Future messages and handshake requests from this node will be silently dropped. They won\'t be notified. You can unblock from Trust & Safety settings later.';
+
+  @override
+  String get sipDmFirstContactBannerTitle => 'First contact';
+
+  @override
+  String get sipDmFirstContactBannerBody =>
+      'This is your first conversation with this node. Only accept messages from people you trust on the mesh. Tap to dismiss.';
 
   @override
   String get sipHubEmptyTitle => 'Looking for neighbors';
@@ -32260,6 +32387,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sipAutoScanToggle => 'Auto-scan';
+
+  @override
+  String get sipScanNow => 'Scan now';
 
   @override
   String get sipScanningIndicator => 'Scanning…';
