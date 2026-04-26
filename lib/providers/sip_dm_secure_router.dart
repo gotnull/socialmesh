@@ -63,18 +63,34 @@ enum SipDmFallbackReason {
   secureStackUnavailable,
 }
 
+/// Why a SIP Ink send was hard-blocked at the router (no fallback).
+///
+/// Distinct from [SipDmFallbackReason] because these are terminal —
+/// e.g. no point falling back to plaintext when the peer has not
+/// advertised support for the type at all.
+enum SipDmInkBlockReason {
+  /// Peer has not advertised `dmInkV1` in its CAP_RESP. Sending would
+  /// be wasted airtime; the peer would drop the unknown msg_type.
+  peerUnsupported,
+
+  /// SIP discovery has not surfaced a peer entry for the session yet.
+  peerUnknown,
+}
+
 /// Result of a routed DM send.
 class SipDmRouterOutcome {
   final bool isOk;
   final SipDmTransport? transport;
   final SipDmFallbackReason? fallbackReason;
   final SipDmSendError? error;
+  final SipDmInkBlockReason? inkBlockReason;
 
   const SipDmRouterOutcome._({
     required this.isOk,
     this.transport,
     this.fallbackReason,
     this.error,
+    this.inkBlockReason,
   });
 
   const SipDmRouterOutcome.ok({
@@ -84,6 +100,11 @@ class SipDmRouterOutcome {
 
   const SipDmRouterOutcome.fail(SipDmSendError error)
     : this._(isOk: false, error: error);
+
+  const SipDmRouterOutcome.failInk({
+    required SipDmInkBlockReason reason,
+    required SipDmSendError error,
+  }) : this._(isOk: false, error: error, inkBlockReason: reason);
 }
 
 /// Single entry point the UI uses for DM send. Not a `Notifier` —
@@ -120,6 +141,79 @@ class SipDmRouter {
     return _sendPlaintextText(
       sessionTag: sessionTag,
       text: text,
+      fallbackReason: (gate as _GateFail).reason,
+    );
+  }
+
+  /// Send a SIP Ink (sketch) message.
+  ///
+  /// [inkPayload] must be the byte sequence produced by
+  /// `SipInkEncoder.encode`. The router enforces:
+  ///   1. peer has advertised `dmInkV1` (terminal block on miss),
+  ///   2. session is active and known,
+  ///   3. encoded size + envelope fits the rate limiter,
+  ///   4. secure-when-all-true gate same as [sendText].
+  ///
+  /// Returns `SipDmRouterOutcome.failInk(...)` when the peer does not
+  /// support sketches — the UI should disable the Sketch tab in that
+  /// case so this branch is defence-in-depth, not the primary gate.
+  Future<SipDmRouterOutcome> sendSketch({
+    required int sessionTag,
+    required Uint8List inkPayload,
+  }) async {
+    final dm = _ref.read(sipDmManagerProvider);
+    if (dm == null) {
+      return const SipDmRouterOutcome.fail(SipDmSendError.sessionNotFound);
+    }
+    final session = dm.getSession(sessionTag);
+    if (session == null) {
+      return const SipDmRouterOutcome.fail(SipDmSendError.sessionNotFound);
+    }
+
+    // Hard peer-feature gate. Distinct from the secure gate because
+    // this is "peer can't render sketches at all" — falling back to
+    // plaintext over a non-supporting peer just wastes airtime.
+    final discovery = _ref.read(sipDiscoveryProvider);
+    if (discovery == null) {
+      return const SipDmRouterOutcome.failInk(
+        reason: SipDmInkBlockReason.peerUnknown,
+        error: SipDmSendError.peerUnsupported,
+      );
+    }
+    final peer = discovery.getPeer(session.peerNodeId);
+    if (peer == null) {
+      AppLogging.sipInk(
+        'send_blocked reason=peer_unknown peer=0x'
+        '${session.peerNodeId.toRadixString(16)}',
+      );
+      return const SipDmRouterOutcome.failInk(
+        reason: SipDmInkBlockReason.peerUnknown,
+        error: SipDmSendError.peerUnsupported,
+      );
+    }
+    if (!peer.supportsDmInkV1) {
+      AppLogging.sipInk(
+        'send_blocked reason=peer_unsupported peer=0x'
+        '${session.peerNodeId.toRadixString(16)}',
+      );
+      return const SipDmRouterOutcome.failInk(
+        reason: SipDmInkBlockReason.peerUnsupported,
+        error: SipDmSendError.peerUnsupported,
+      );
+    }
+
+    final gate = await _evaluateGate(session.peerNodeId);
+    if (gate is _GatePass) {
+      return _sendSecureSketch(
+        sessionTag: sessionTag,
+        peerNodeId: session.peerNodeId,
+        linkId: gate.linkId,
+        inkPayload: inkPayload,
+      );
+    }
+    return _sendPlaintextSketch(
+      sessionTag: sessionTag,
+      inkPayload: inkPayload,
       fallbackReason: (gate as _GateFail).reason,
     );
   }
@@ -312,6 +406,70 @@ class SipDmRouter {
     return const SipDmRouterOutcome.ok(transport: SipDmTransport.secure);
   }
 
+  Future<SipDmRouterOutcome> _sendSecureSketch({
+    required int sessionTag,
+    required int peerNodeId,
+    required int linkId,
+    required Uint8List inkPayload,
+  }) async {
+    final dm = _ref.read(sipDmManagerProvider)!;
+    final session = dm.getSession(sessionTag)!;
+    if (session.status != SipDmSessionStatus.active) {
+      return const SipDmRouterOutcome.fail(SipDmSendError.sessionClosed);
+    }
+    if (inkPayload.isEmpty) {
+      return const SipDmRouterOutcome.fail(SipDmSendError.emptyText);
+    }
+
+    final nowS = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    final wrapped = SipDmMessages.encodeSecureDmInk(
+      inkPayload: inkPayload,
+      timestampS: nowS,
+    );
+    if (wrapped == null) {
+      return const SipDmRouterOutcome.fail(SipDmSendError.textTooLong);
+    }
+
+    final manager = await _ref.read(overlaySecureSessionManagerProvider.future);
+    final sent = await manager.sendEncrypted(
+      linkId,
+      wrapped,
+      subtype: OverlaySecureDataSubtype.dmInk,
+    );
+    if (!sent) {
+      AppLogging.sipInk(
+        'secure_send_rejected mid_flight linkId=0x'
+        '${linkId.toRadixString(16)} — falling back to plaintext',
+      );
+      return _sendPlaintextSketch(
+        sessionTag: sessionTag,
+        inkPayload: inkPayload,
+        fallbackReason: SipDmFallbackReason.sessionNotEstablished,
+      );
+    }
+
+    // Mirror plaintext bookkeeping so the sender's own timeline
+    // renders the sketch immediately.
+    session.messages.add(
+      SipDmHistoryEntry(
+        text: '',
+        timestampMs: nowS * 1000,
+        direction: SipDmDirection.outbound,
+        contentType: SipDmContentType.ink,
+        payload: Uint8List.fromList(inkPayload),
+      ),
+    );
+    dm.onStateChanged?.call();
+
+    AppLogging.sipInk(
+      'secure_selected tag=0x${sessionTag.toRadixString(16)} '
+      'linkId=0x${linkId.toRadixString(16)} subtype=dmInk '
+      'peer=0x${peerNodeId.toRadixString(16)} '
+      'payload_bytes=${inkPayload.length} envelope_bytes=${wrapped.length}',
+    );
+    return const SipDmRouterOutcome.ok(transport: SipDmTransport.secure);
+  }
+
   // ---------------------------------------------------------------
   // Plaintext fallback paths (unchanged semantics vs pre-Phase-2)
   // ---------------------------------------------------------------
@@ -339,6 +497,40 @@ class SipDmRouter {
     AppLogging.sip(
       'SIP_DM: plaintext_selected tag=0x${sessionTag.toRadixString(16)} '
       'subtype=dmText reason=${fallbackReason.name}',
+    );
+    return SipDmRouterOutcome.ok(
+      transport: SipDmTransport.plaintext,
+      fallbackReason: fallbackReason,
+    );
+  }
+
+  Future<SipDmRouterOutcome> _sendPlaintextSketch({
+    required int sessionTag,
+    required Uint8List inkPayload,
+    required SipDmFallbackReason fallbackReason,
+  }) async {
+    final dm = _ref.read(sipDmManagerProvider)!;
+    final result = dm.buildInkMessage(
+      sessionTag: sessionTag,
+      inkPayload: inkPayload,
+    );
+    if (!result.isOk) {
+      return SipDmRouterOutcome.fail(result.error ?? SipDmSendError.emptyText);
+    }
+    final encoded = SipCodec.encode(result.frame!);
+    if (encoded == null) {
+      return const SipDmRouterOutcome.fail(SipDmSendError.textTooLong);
+    }
+    final protocol = _ref.read(protocolServiceProvider);
+    await protocol.sendSipPacket(encoded);
+    _ref
+        .read(sipCountersProvider)
+        .recordTx(result.frame!.msgType, encoded.length);
+
+    AppLogging.sipInk(
+      'plaintext_selected tag=0x${sessionTag.toRadixString(16)} '
+      'subtype=dmInk reason=${fallbackReason.name} '
+      'payload_bytes=${inkPayload.length} frame_bytes=${encoded.length}',
     );
     return SipDmRouterOutcome.ok(
       transport: SipDmTransport.plaintext,
@@ -480,6 +672,28 @@ Future<void> _handleSecureDmInbound({
         'SIP_DM: secure_decrypt_ok linkId=0x${payload.linkId.toRadixString(16)} '
         'subtype=dmText peer=0x${peerNodeId.toRadixString(16)} '
         'len=${decoded.message.rawPayload.length}B',
+      );
+      return;
+
+    case OverlaySecureDataSubtype.dmInk:
+      final decoded = SipDmMessages.decodeSecureDmInk(payload.cleartext);
+      if (decoded == null) {
+        AppLogging.sipInk(
+          'secure_decrypt_dropped reason=malformed subtype=dmInk',
+        );
+        return;
+      }
+      final frame = _synthesizeDmFrame(
+        sessionTag: dmSession.sessionTag,
+        timestampS: decoded.timestampS,
+        body: decoded.inkPayload,
+        msgType: SipMessageType.dmInk,
+      );
+      dm.handleInboundInk(frame);
+      AppLogging.sipInk(
+        'secure_decrypt_ok linkId=0x${payload.linkId.toRadixString(16)} '
+        'subtype=dmInk peer=0x${peerNodeId.toRadixString(16)} '
+        'bytes=${decoded.inkPayload.length}',
       );
       return;
 

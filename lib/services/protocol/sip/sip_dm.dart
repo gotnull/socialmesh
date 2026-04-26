@@ -21,6 +21,9 @@ import 'sip_codec.dart';
 import 'sip_constants.dart';
 import 'sip_counters.dart';
 import 'sip_frame.dart';
+import 'sip_ink_constants.dart';
+import 'sip_ink_decoder.dart';
+import 'sip_ink_payload.dart';
 import 'sip_messages_dm.dart';
 import 'sip_rate_limiter.dart';
 import 'sip_types.dart';
@@ -83,9 +86,23 @@ enum SipDmDirection {
   inbound,
 }
 
+/// What kind of payload a [SipDmHistoryEntry] carries.
+///
+/// Stored explicitly on every entry so renderers branch on the field
+/// rather than inferring type from string contents — see
+/// `feedback_implementation_standards`.
+enum SipDmContentType {
+  /// UTF-8 text body (the historical default).
+  text,
+
+  /// SIP Ink v1 binary sketch payload — see [SipInkConstants].
+  ink,
+}
+
 /// A single message in the DM history.
 class SipDmHistoryEntry {
-  /// The text content.
+  /// Text content. For [SipDmContentType.ink] entries this is the
+  /// empty string; the rendered representation comes from [payload].
   final String text;
 
   /// Timestamp of the message (ms since epoch).
@@ -93,6 +110,17 @@ class SipDmHistoryEntry {
 
   /// Whether this message was sent or received.
   final SipDmDirection direction;
+
+  /// Payload kind. Renderers MUST switch on this field; do not infer
+  /// type from [text] or [payload] heuristics.
+  final SipDmContentType contentType;
+
+  /// Raw binary payload for non-text content.
+  ///
+  /// For [SipDmContentType.ink] this is the SIP Ink v1 byte sequence
+  /// (decoded by `SipInkDecoder.decode`). For [SipDmContentType.text]
+  /// this is null.
+  final Uint8List? payload;
 
   /// The text being replied to, if this is a quote-reply.
   final String? replyToText;
@@ -107,6 +135,8 @@ class SipDmHistoryEntry {
     required this.text,
     required this.timestampMs,
     required this.direction,
+    this.contentType = SipDmContentType.text,
+    this.payload,
     this.replyToText,
     this.localReaction,
     this.peerReaction,
@@ -152,6 +182,15 @@ enum SipDmSendError {
 
   /// Encoding failed.
   encodingFailed,
+
+  /// SIP Ink: peer has not advertised `dmInkV1` support, so a sketch
+  /// frame would be silently dropped on their side.
+  peerUnsupported,
+
+  /// SIP Ink: the supplied payload failed to decode as a valid v1
+  /// sketch. Almost always a programmer error — the simplifier owns
+  /// this contract.
+  invalidSketch,
 }
 
 /// Manages ephemeral DM sessions and message exchange.
@@ -714,6 +753,101 @@ class SipDmManager {
   }
 
   // ---------------------------------------------------------------------------
+  // Ink (sketch) sending
+  // ---------------------------------------------------------------------------
+
+  /// Build a DM_INK frame for the given session.
+  ///
+  /// [inkPayload] is the byte sequence produced by `SipInkEncoder.encode`.
+  /// The caller (typically the SIP DM router) is responsible for the
+  /// peer-feature gate — we only validate session state, payload size,
+  /// and the airtime budget here.
+  ///
+  /// Returns a [SipDmSendResult] with either the frame or an error.
+  /// On success the message is appended to the session history with
+  /// [SipDmContentType.ink] and the original encoded bytes preserved
+  /// for re-rendering.
+  SipDmSendResult buildInkMessage({
+    required int sessionTag,
+    required Uint8List inkPayload,
+  }) {
+    final session = _sessions[sessionTag];
+    if (session == null || session.isExpired(_clock())) {
+      if (session != null) _expireSession(sessionTag);
+      return SipDmSendResult.fail(SipDmSendError.sessionNotFound);
+    }
+
+    if (session.status != SipDmSessionStatus.active) {
+      return SipDmSendResult.fail(SipDmSendError.sessionClosed);
+    }
+
+    if (inkPayload.isEmpty) {
+      return SipDmSendResult.fail(SipDmSendError.emptyText);
+    }
+
+    if (inkPayload.length > SipInkConstants.maxPayloadBytes) {
+      AppLogging.sipInk(
+        'send_blocked reason=payload_too_large bytes=${inkPayload.length} '
+        'max=${SipInkConstants.maxPayloadBytes}',
+      );
+      return SipDmSendResult.fail(SipDmSendError.textTooLong);
+    }
+
+    // Defensive: ensure the bytes parse as a v1 sketch. This catches
+    // any caller that hands us a hand-crafted blob without going
+    // through the simplifier+encoder pipeline.
+    final parsed = SipInkDecoder.decode(inkPayload);
+    if (!parsed.isOk) {
+      AppLogging.sipInk(
+        'send_blocked reason=invalid_sketch detail=${parsed.error?.name}',
+      );
+      return SipDmSendResult.fail(SipDmSendError.invalidSketch);
+    }
+
+    final frameSize = SipConstants.sipWrapperMin + inkPayload.length;
+    if (!_rateLimiter.canSend(frameSize)) {
+      AppLogging.sipInk(
+        'send_blocked reason=budget tag=0x${sessionTag.toRadixString(16)}',
+      );
+      _counters?.recordBudgetThrottle();
+      return SipDmSendResult.fail(SipDmSendError.budgetExhausted);
+    }
+
+    _rateLimiter.recordSend(frameSize);
+
+    final nowS = _clock() ~/ 1000;
+    final frame = SipFrame(
+      versionMajor: SipConstants.sipVersionMajor,
+      versionMinor: SipConstants.sipVersionMinor,
+      msgType: SipMessageType.dmInk,
+      flags: 0,
+      headerLen: SipConstants.sipWrapperMin,
+      sessionId: sessionTag,
+      nonce: SipCodec.generateNonce(),
+      timestampS: nowS,
+      payloadLen: inkPayload.length,
+      payload: inkPayload,
+    );
+
+    session.messages.add(
+      SipDmHistoryEntry(
+        text: '',
+        timestampMs: nowS * 1000,
+        direction: SipDmDirection.outbound,
+        contentType: SipDmContentType.ink,
+        payload: Uint8List.fromList(inkPayload),
+      ),
+    );
+
+    AppLogging.sipInk(
+      'send_attempt tag=0x${sessionTag.toRadixString(16)} '
+      'payload_bytes=${inkPayload.length} frame_bytes=$frameSize',
+    );
+
+    return SipDmSendResult.ok(frame);
+  }
+
+  // ---------------------------------------------------------------------------
   // Message receiving
   // ---------------------------------------------------------------------------
 
@@ -780,6 +914,75 @@ class SipDmManager {
     onStateChanged?.call();
 
     return message;
+  }
+
+  /// Handle an inbound DM_INK frame.
+  ///
+  /// Returns the parsed [SipInkSketch] when accepted into history, or
+  /// null when the frame is dropped (unknown session, expired session,
+  /// closed session, malformed payload). The raw bytes are stored on
+  /// the history entry so the renderer can decode again per build.
+  SipInkSketch? handleInboundInk(SipFrame frame) {
+    if (frame.msgType != SipMessageType.dmInk) {
+      AppLogging.sipInk('handleInboundInk called with wrong msg_type');
+      return null;
+    }
+
+    final sessionTag = frame.sessionId;
+    final session = _sessions[sessionTag];
+
+    if (session == null) {
+      AppLogging.sipInk(
+        'inbound_dropped reason=unknown_session '
+        'tag=0x${sessionTag.toRadixString(16)}',
+      );
+      return null;
+    }
+
+    if (session.isExpired(_clock())) {
+      _expireSession(sessionTag);
+      AppLogging.sipInk(
+        'inbound_dropped reason=expired tag=0x${sessionTag.toRadixString(16)}',
+      );
+      return null;
+    }
+
+    if (session.status != SipDmSessionStatus.active) {
+      AppLogging.sipInk(
+        'inbound_dropped reason=closed tag=0x${sessionTag.toRadixString(16)}',
+      );
+      return null;
+    }
+
+    final result = SipInkDecoder.decode(frame.payload);
+    if (!result.isOk) {
+      AppLogging.sipInk(
+        'inbound_dropped reason=malformed detail=${result.error?.name} '
+        'tag=0x${sessionTag.toRadixString(16)} bytes=${frame.payload.length}',
+      );
+      return null;
+    }
+
+    session.messages.add(
+      SipDmHistoryEntry(
+        text: '',
+        timestampMs: frame.timestampS * 1000,
+        direction: SipDmDirection.inbound,
+        contentType: SipDmContentType.ink,
+        payload: Uint8List.fromList(frame.payload),
+      ),
+    );
+
+    _clearPeerTyping(sessionTag);
+
+    AppLogging.sipInk(
+      'inbound_ok tag=0x${sessionTag.toRadixString(16)} '
+      'bytes=${frame.payload.length} strokes=${result.sketch!.strokes.length} '
+      'points=${result.sketch!.totalPointCount}',
+    );
+
+    onStateChanged?.call();
+    return result.sketch;
   }
 
   // ---------------------------------------------------------------------------

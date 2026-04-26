@@ -42867,6 +42867,66 @@
     "@sipDmCloseAction": {
         "description": "Action to close a DM session."
     },
+    "sipDmComposerModeText": "Text",
+    "@sipDmComposerModeText": {
+        "description": "Label for the text composer mode in the SIP DM composer mode switcher."
+    },
+    "sipDmComposerModeSketch": "Sketch",
+    "@sipDmComposerModeSketch": {
+        "description": "Label for the SIP Ink sketch composer mode in the SIP DM composer mode switcher."
+    },
+    "sipInkComposerHint": "Draw a quick sketch — kept tiny so it fits on the mesh.",
+    "@sipInkComposerHint": {
+        "description": "Hint shown above the SIP Ink canvas explaining the airtime constraint."
+    },
+    "sipInkPointBudget": "Mesh-safe sketch: {points} / {maxPoints} points",
+    "@sipInkPointBudget": {
+        "description": "Live indicator of points used in a SIP Ink sketch.",
+        "placeholders": {
+            "points": {
+                "type": "int",
+                "example": "32"
+            },
+            "maxPoints": {
+                "type": "int",
+                "example": "64"
+            }
+        }
+    },
+    "sipInkPayloadBytes": "Payload: {bytes} B",
+    "@sipInkPayloadBytes": {
+        "description": "Live indicator of encoded payload size for a SIP Ink sketch.",
+        "placeholders": {
+            "bytes": {
+                "type": "int",
+                "example": "62"
+            }
+        }
+    },
+    "sipInkPayloadPending": "Payload: —",
+    "@sipInkPayloadPending": {
+        "description": "Placeholder shown for the SIP Ink payload counter when no encodable sketch is on the canvas yet."
+    },
+    "sipInkClear": "Clear",
+    "@sipInkClear": {
+        "description": "Button to clear the SIP Ink canvas."
+    },
+    "sipInkUndo": "Undo",
+    "@sipInkUndo": {
+        "description": "Button to remove the last stroke from the SIP Ink canvas."
+    },
+    "sipInkUnsupportedPeer": "This peer can't receive sketches yet.",
+    "@sipInkUnsupportedPeer": {
+        "description": "Snackbar shown when the user attempts to send a sketch to a peer that hasn't advertised SIP Ink support."
+    },
+    "sipInkUnsupportedSketch": "Unsupported sketch",
+    "@sipInkUnsupportedSketch": {
+        "description": "Fallback caption shown in place of a SIP Ink sketch bubble when the payload can't be decoded."
+    },
+    "sipInkBlocked": "Sketch can't fit on the mesh — simplify your strokes.",
+    "@sipInkBlocked": {
+        "description": "Error shown when a sketch can't be reduced to fit the airtime budget."
+    },
     "sipDmOpenAction": "Open DM",
     "@sipDmOpenAction": {
         "description": "Button label to open an ephemeral DM with a peer."

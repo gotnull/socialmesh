@@ -89,6 +89,12 @@ class SipPeerCapability {
   bool get supportsOverlaySecureV03 =>
       (features & SipFeatureBits.overlaySecureV03) ==
       SipFeatureBits.overlaySecureV03;
+
+  /// Whether this peer advertised SIP Ink v1 sketch DM support
+  /// (DM_INK / 0x45). Senders MUST check this before transmitting an
+  /// ink frame; peers without the bit drop unknown msg_type silently.
+  bool get supportsDmInkV1 =>
+      (features & SipFeatureBits.dmInkV1) == SipFeatureBits.dmInkV1;
 }
 
 /// Outbound SIP frame ready to send via the transport.

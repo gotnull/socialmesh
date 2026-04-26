@@ -267,10 +267,25 @@ abstract final class SipConstants {
   // ---------------------------------------------------------------------------
 
   /// Handshake timeout -- must complete within this duration.
+  ///
+  /// Wire-frozen: this value is sent to the peer in `HS_CHALLENGE.expires_in_s`
+  /// per `docs/sip/SIP_V0_1.md` §7.3 / §7.4 and bounds the initiator's
+  /// HELLO_SENT, RESPONSE_SENT, and the responder's CHALLENGE_SENT states.
+  /// Do not change without a protocol version bump.
   static const Duration handshakeTimeout = Duration(seconds: 60);
 
   /// Raw seconds for handshake timeout.
   static const int handshakeTimeoutS = 60;
+
+  /// Local-only lifetime of an inbound HS_HELLO that's queued for user
+  /// consent. Kept distinct from [handshakeTimeout] (which is wire-bound)
+  /// because the consent UI must outlast the peer's retransmit budget —
+  /// otherwise a user who takes longer than 60 s to tap Accept finds the
+  /// pending request silently expired and their tap rejected with
+  /// `acceptHandshake — no valid pending request`. The pending entry's
+  /// timestamp is also refreshed on every duplicate HELLO retransmit so
+  /// the prompt stays alive while the peer is still trying.
+  static const Duration pendingConsentTimeout = Duration(minutes: 5);
 
   /// Per-peer cooldown after a handshake failure or timeout.
   ///

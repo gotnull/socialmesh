@@ -5376,6 +5376,8 @@ class ProtocolService {
         _handleSipDmDelete(frame);
       case SipMessageType.dmClose:
         _handleSipDmClose(frame);
+      case SipMessageType.dmInk:
+        _handleSipDmInk(frame);
 
       // ----- SIP-0: CAP_REQ / CAP_RESP (informational) -----
       case SipMessageType.capReq:
@@ -6041,6 +6043,15 @@ class ProtocolService {
     }
 
     dm.handleInboundClose(frame);
+  }
+
+  void _handleSipDmInk(SipFrame frame) {
+    final dm = _sipDm;
+    if (dm == null) {
+      AppLogging.sipInk('rx_dropped reason=no_dm_manager');
+      return;
+    }
+    dm.handleInboundInk(frame);
   }
 
   /// Send a file transfer packet as broadcast on PRIVATE_APP (portnum 256).

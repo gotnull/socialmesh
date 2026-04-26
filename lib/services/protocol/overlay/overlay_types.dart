@@ -134,7 +134,12 @@ enum OverlaySecureDataSubtype {
   dmReaction(0x03),
 
   /// Phase 2+: encrypted MRRP RPC envelope.
-  rpcEnvelope(0x04);
+  rpcEnvelope(0x04),
+
+  /// Phase 2: encrypted DM_INK sketch payload. Body is a v1 SIP Ink
+  /// envelope (timestamp_s ‖ ink_bytes) — see
+  /// `SipDmMessages.encodeSecureDmInk`.
+  dmInk(0x05);
 
   const OverlaySecureDataSubtype(this.code);
 

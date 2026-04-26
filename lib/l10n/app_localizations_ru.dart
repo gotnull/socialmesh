@@ -31970,6 +31970,45 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sipDmCloseAction => 'Close Session';
 
   @override
+  String get sipDmComposerModeText => 'Text';
+
+  @override
+  String get sipDmComposerModeSketch => 'Sketch';
+
+  @override
+  String get sipInkComposerHint =>
+      'Draw a quick sketch — kept tiny so it fits on the mesh.';
+
+  @override
+  String sipInkPointBudget(int points, int maxPoints) {
+    return 'Mesh-safe sketch: $points / $maxPoints points';
+  }
+
+  @override
+  String sipInkPayloadBytes(int bytes) {
+    return 'Payload: $bytes B';
+  }
+
+  @override
+  String get sipInkPayloadPending => 'Payload: —';
+
+  @override
+  String get sipInkClear => 'Clear';
+
+  @override
+  String get sipInkUndo => 'Undo';
+
+  @override
+  String get sipInkUnsupportedPeer => 'This peer can\'t receive sketches yet.';
+
+  @override
+  String get sipInkUnsupportedSketch => 'Unsupported sketch';
+
+  @override
+  String get sipInkBlocked =>
+      'Sketch can\'t fit on the mesh — simplify your strokes.';
+
+  @override
   String get sipDmOpenAction => 'Open DM';
 
   @override

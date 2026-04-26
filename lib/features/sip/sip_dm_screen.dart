@@ -27,6 +27,8 @@ import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/jump_to_latest_pill.dart';
 import '../../features/messaging/widgets/chat_composer.dart';
+import '../../features/sip/sketch/sip_ink_bubble.dart';
+import '../../features/sip/sketch/sip_ink_composer.dart';
 import '../../features/nodedex/models/nodedex_entry.dart';
 import '../../features/nodedex/models/sigil_evolution.dart';
 import '../../features/nodedex/providers/nodedex_providers.dart';
@@ -40,6 +42,7 @@ import '../../providers/sip_dm_secure_router.dart';
 import '../../providers/sip_providers.dart';
 import '../../services/haptic_service.dart';
 import '../../services/protocol/sip/sip_dm.dart';
+import '../../services/protocol/sip/sip_ink_simplifier.dart';
 import '../../services/protocol/sip/sip_messages_dm.dart';
 import '../../services/protocol/text_message_payload_budget.dart';
 import '../../utils/snackbar.dart';
@@ -59,6 +62,13 @@ class SipDmScreen extends ConsumerStatefulWidget {
   ConsumerState<SipDmScreen> createState() => _SipDmScreenState();
 }
 
+/// Composer modes available in an accepted SIP DM session.
+///
+/// `text` is the historical default. `sketch` activates the SIP Ink
+/// canvas instead of the text input. The mode is screen-local — no
+/// provider, since switching is purely UI state.
+enum _SipDmComposerMode { text, sketch }
+
 class _SipDmScreenState extends ConsumerState<SipDmScreen>
     with LifecycleSafeMixin, WidgetsBindingObserver {
   final TextEditingController _messageController = TextEditingController();
@@ -68,6 +78,14 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
   /// The message being replied to, or null if not replying.
   SipDmHistoryEntry? _replyingToEntry;
 
+  /// Active composer mode. Defaults to text.
+  _SipDmComposerMode _composerMode = _SipDmComposerMode.text;
+
+  /// Persistent sketch draft. Survives mode switches so the user can
+  /// flip back from text to sketch and find their strokes intact.
+  /// Cleared after a successful send by the SIP Ink composer.
+  final List<SipInkRawStroke> _sketchDraft = [];
+
   /// Timer to dismiss the typing indicator after the display duration.
   Timer? _typingDismissTimer;
 
@@ -75,6 +93,13 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
   /// user has scrolled the message list up far enough that they're no
   /// longer reading the bottom (most-recent) entry.
   bool _showJumpToLatest = false;
+
+  /// History length on the previous build. Null means "first build, no
+  /// comparison yet". Used to detect new inbound messages and auto-
+  /// scroll when the user is parked at the bottom — important in
+  /// sketch mode where the canvas occupies vertical space and a
+  /// freshly arrived sketch otherwise lands off-screen.
+  int? _lastHistoryLength;
 
   /// Distance in pixels from the bottom within which we still consider
   /// the user "at the latest". Mirrors the messaging screen's threshold
@@ -495,6 +520,23 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
         ? (dm.getHistory(widget.sessionTag) ?? <SipDmHistoryEntry>[])
         : <SipDmHistoryEntry>[];
 
+    // Auto-scroll to latest on inbound additions when the user is
+    // parked at the bottom. Outbound sends already trigger
+    // _scrollToBottom from _sendMessage / SipInkComposer.onSent, so
+    // we only need to handle inbound here. Initial build is skipped
+    // (initState already lands at bottom non-animated).
+    if (_lastHistoryLength != null &&
+        history.length > _lastHistoryLength! &&
+        history.isNotEmpty &&
+        history.last.direction == SipDmDirection.inbound &&
+        !_showJumpToLatest) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _scrollToBottom(animate: true);
+      });
+    }
+    _lastHistoryLength = history.length;
+
     final hasContent = history.isNotEmpty || peerIsTyping;
 
     return GestureDetector(
@@ -636,10 +678,21 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
     );
   }
 
+  bool _peerSupportsInk(SipDmSession? session) {
+    if (session == null) return false;
+    final discovery = ref.read(sipDiscoveryProvider);
+    final peer = discovery?.getPeer(session.peerNodeId);
+    return peer?.supportsDmInkV1 ?? false;
+  }
+
   Widget _buildInputBar(BuildContext context, SipDmSession? session) {
-    final l10n = context.l10n;
     final enabled =
         session != null && session.status == SipDmSessionStatus.active;
+    final peerSupportsInk = _peerSupportsInk(session);
+    final showSketch =
+        _composerMode == _SipDmComposerMode.sketch &&
+        enabled &&
+        peerSupportsInk;
 
     return AnimatedPadding(
       duration: const Duration(milliseconds: 100),
@@ -659,91 +712,202 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Reply indicator (animated slide-in)
-              AnimatedSize(
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.easeOut,
-                child: _replyingToEntry != null
-                    ? Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppTheme.spacing16,
-                          vertical: AppTheme.spacing8,
-                        ),
-                        color: context.accentColor.withValues(alpha: 0.1),
-                        child: Row(
+              if (enabled && peerSupportsInk)
+                Padding(
+                  padding: const EdgeInsets.only(
+                    top: AppTheme.spacing8,
+                    left: AppTheme.spacing16,
+                    right: AppTheme.spacing16,
+                  ),
+                  child: _ComposerModeSwitcher(
+                    mode: _composerMode,
+                    onChanged: (mode) {
+                      if (mode == _composerMode) return;
+                      ref.read(hapticServiceProvider).trigger(HapticType.light);
+                      setState(() {
+                        _composerMode = mode;
+                        if (mode == _SipDmComposerMode.sketch) {
+                          _inputFocusNode.unfocus();
+                        }
+                      });
+                    },
+                  ),
+                ),
+              if (showSketch)
+                SipInkComposer(
+                  sessionTag: widget.sessionTag,
+                  enabled: enabled,
+                  draft: _sketchDraft,
+                  onDraftChanged: () {
+                    if (mounted) setState(() {});
+                  },
+                  onSent: () {
+                    _scrollToBottom();
+                  },
+                )
+              else
+                _buildTextInputBlock(context, enabled),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextInputBlock(BuildContext context, bool enabled) {
+    final l10n = context.l10n;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Reply indicator (animated slide-in)
+        AnimatedSize(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+          child: _replyingToEntry != null
+              ? Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.spacing16,
+                    vertical: AppTheme.spacing8,
+                  ),
+                  color: context.accentColor.withValues(alpha: 0.1),
+                  child: Row(
+                    children: [
+                      Icon(Icons.reply, size: 16, color: context.accentColor),
+                      const SizedBox(width: AppTheme.spacing8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
-                              Icons.reply,
-                              size: 16,
-                              color: context.accentColor,
-                            ),
-                            const SizedBox(width: AppTheme.spacing8),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    l10n.sipDmReplyingTo,
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                      color: context.accentColor,
-                                    ),
-                                  ),
-                                  Text(
-                                    SipDmManager.extractReplyBody(
-                                      _replyingToEntry!.text,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: context.textSecondary,
-                                    ),
-                                  ),
-                                ],
+                            Text(
+                              l10n.sipDmReplyingTo,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: context.accentColor,
                               ),
                             ),
-                            GestureDetector(
-                              onTap: _cancelReply,
-                              child: Icon(
-                                Icons.close,
-                                size: 18,
-                                color: context.textTertiary,
+                            Text(
+                              SipDmManager.extractReplyBody(
+                                _replyingToEntry!.text,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: context.textSecondary,
                               ),
                             ),
                           ],
                         ),
-                      )
-                    : const SizedBox.shrink(),
-              ),
-
-              // Input field — reuses ChatComposer for consistent UX
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppTheme.spacing8,
-                  vertical: AppTheme.spacing8,
-                ),
-                child: ChatComposer(
-                  controller: _messageController,
-                  focusNode: _inputFocusNode,
-                  onSend: _sendMessage,
-                  hintText: l10n.sipDmInputHint,
-                  maxLength: SipDmConstants.maxDmTextBytes,
-                  maxLines: 4,
-                  enabled: enabled,
-                  sendTooltip: l10n.sipDmSendButton,
-                  budgetResolver: _measureSipDmBudget,
-                  budgetLabelBuilder: (context, budget) =>
-                      context.l10n.messagingComposerByteCounter(
-                        budget.utf8Bytes,
-                        budget.maxUtf8Bytes,
                       ),
+                      GestureDetector(
+                        onTap: _cancelReply,
+                        child: Icon(
+                          Icons.close,
+                          size: 18,
+                          color: context.textTertiary,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : const SizedBox.shrink(),
+        ),
+
+        // Input field — reuses ChatComposer for consistent UX
+        Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppTheme.spacing8,
+            vertical: AppTheme.spacing8,
+          ),
+          child: ChatComposer(
+            controller: _messageController,
+            focusNode: _inputFocusNode,
+            onSend: _sendMessage,
+            hintText: l10n.sipDmInputHint,
+            maxLength: SipDmConstants.maxDmTextBytes,
+            maxLines: 4,
+            enabled: enabled,
+            sendTooltip: l10n.sipDmSendButton,
+            budgetResolver: _measureSipDmBudget,
+            budgetLabelBuilder: (context, budget) =>
+                context.l10n.messagingComposerByteCounter(
+                  budget.utf8Bytes,
+                  budget.maxUtf8Bytes,
                 ),
-              ),
-            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Compact pill-style segmented control for the SIP DM composer.
+///
+/// Renders two equal-width segments [Text | Sketch]. The selected
+/// segment is filled with the accent colour; the other is transparent.
+class _ComposerModeSwitcher extends StatelessWidget {
+  final _SipDmComposerMode mode;
+  final ValueChanged<_SipDmComposerMode> onChanged;
+
+  const _ComposerModeSwitcher({required this.mode, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Container(
+      decoration: BoxDecoration(
+        color: context.background.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+        border: Border.all(color: context.border.withValues(alpha: 0.5)),
+      ),
+      padding: const EdgeInsets.all(AppTheme.spacing2),
+      child: Row(
+        children: [
+          _segment(
+            context,
+            _SipDmComposerMode.text,
+            l10n.sipDmComposerModeText,
+          ),
+          _segment(
+            context,
+            _SipDmComposerMode.sketch,
+            l10n.sipDmComposerModeSketch,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _segment(
+    BuildContext context,
+    _SipDmComposerMode value,
+    String label,
+  ) {
+    final isSelected = mode == value;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => onChanged(value),
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing8),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? context.accentColor.withValues(alpha: 0.18)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(AppTheme.radius10),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: isSelected ? context.accentColor : context.textSecondary,
+            ),
           ),
         ),
       ),
@@ -911,6 +1075,8 @@ class _MessageBubble extends ConsumerWidget {
     final bodyText = SipDmManager.extractReplyBody(entry.text);
     final hasReactions =
         entry.localReaction != null || entry.peerReaction != null;
+    final isInk =
+        entry.contentType == SipDmContentType.ink && entry.payload != null;
 
     return Align(
       alignment: isOutbound ? Alignment.centerRight : Alignment.centerLeft,
@@ -925,72 +1091,15 @@ class _MessageBubble extends ConsumerWidget {
                 ? CrossAxisAlignment.end
                 : CrossAxisAlignment.start,
             children: [
-              // Message bubble
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppTheme.spacing12,
-                  vertical: AppTheme.spacing8,
-                ),
-                decoration: BoxDecoration(
-                  color: isOutbound
-                      ? context.accentColor.withValues(alpha: 0.15)
-                      : context.card,
-                  borderRadius: BorderRadius.only(
-                    topLeft: const Radius.circular(AppTheme.radius12),
-                    topRight: const Radius.circular(AppTheme.radius12),
-                    bottomLeft: isOutbound
-                        ? const Radius.circular(AppTheme.radius12)
-                        : const Radius.circular(AppTheme.radius4),
-                    bottomRight: isOutbound
-                        ? const Radius.circular(AppTheme.radius4)
-                        : const Radius.circular(AppTheme.radius12),
-                  ),
-                  border: isOutbound
-                      ? null
-                      : Border.all(
-                          color: context.border.withValues(alpha: 0.5),
-                        ),
-                ),
-                child: Column(
+              if (isInk)
+                Column(
                   crossAxisAlignment: isOutbound
                       ? CrossAxisAlignment.end
                       : CrossAxisAlignment.start,
                   children: [
-                    // Quoted reply block
-                    if (replyTo != null) ...[
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppTheme.spacing8,
-                          vertical: AppTheme.spacing4,
-                        ),
-                        decoration: BoxDecoration(
-                          border: Border(
-                            left: BorderSide(
-                              color: context.accentColor,
-                              width: 2,
-                            ),
-                          ),
-                          color: context.accentColor.withValues(alpha: 0.06),
-                        ),
-                        child: Text(
-                          replyTo,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: context.textTertiary,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: AppTheme.spacing4),
-                    ],
-                    Text(
-                      bodyText,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: context.textPrimary,
-                      ),
+                    SipInkBubble(
+                      payload: entry.payload!,
+                      isOutbound: isOutbound,
                     ),
                     const SizedBox(height: AppTheme.spacing2),
                     Text(
@@ -1001,8 +1110,86 @@ class _MessageBubble extends ConsumerWidget {
                       ),
                     ),
                   ],
+                )
+              else
+                // Message bubble
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.spacing12,
+                    vertical: AppTheme.spacing8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isOutbound
+                        ? context.accentColor.withValues(alpha: 0.15)
+                        : context.card,
+                    borderRadius: BorderRadius.only(
+                      topLeft: const Radius.circular(AppTheme.radius12),
+                      topRight: const Radius.circular(AppTheme.radius12),
+                      bottomLeft: isOutbound
+                          ? const Radius.circular(AppTheme.radius12)
+                          : const Radius.circular(AppTheme.radius4),
+                      bottomRight: isOutbound
+                          ? const Radius.circular(AppTheme.radius4)
+                          : const Radius.circular(AppTheme.radius12),
+                    ),
+                    border: isOutbound
+                        ? null
+                        : Border.all(
+                            color: context.border.withValues(alpha: 0.5),
+                          ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: isOutbound
+                        ? CrossAxisAlignment.end
+                        : CrossAxisAlignment.start,
+                    children: [
+                      // Quoted reply block
+                      if (replyTo != null) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppTheme.spacing8,
+                            vertical: AppTheme.spacing4,
+                          ),
+                          decoration: BoxDecoration(
+                            border: Border(
+                              left: BorderSide(
+                                color: context.accentColor,
+                                width: 2,
+                              ),
+                            ),
+                            color: context.accentColor.withValues(alpha: 0.06),
+                          ),
+                          child: Text(
+                            replyTo,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: context.textTertiary,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: AppTheme.spacing4),
+                      ],
+                      Text(
+                        bodyText,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: context.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: AppTheme.spacing2),
+                      Text(
+                        _formatTime(entry.timestampMs),
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: context.textTertiary,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
 
               // Reaction row — Telegram-style pills below the bubble
               AnimatedSize(

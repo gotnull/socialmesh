@@ -274,6 +274,86 @@ abstract final class SipDmMessages {
       ),
     );
   }
+
+  // ---------------------------------------------------------------------------
+  // Secure DM ink envelope (Phase 2)
+  //
+  // Wire layout inside `LINK_SECURE_DATA` subtype 0x05:
+  //   timestamp_s(4 BE) ‖ sip_ink_v1_payload[]
+  //
+  // The inner `sip_ink_v1_payload` is the same byte sequence that
+  // travels in plaintext DM_INK (0x45) frames. Receiver reconstructs a
+  // synthetic SIP frame and feeds it through `handleInboundInk`.
+  // ---------------------------------------------------------------------------
+
+  /// Prefix-overhead (bytes) added by the secure DM ink envelope.
+  static const int secureDmInkOverhead = 4;
+
+  /// Encode a secure DM ink payload. Prepends [timestampS] (seconds) to
+  /// [inkPayload] so the receiver can reconstruct a synthetic SIP
+  /// frame with the original sender time.
+  ///
+  /// Returns null if the timestamp is out of range, the ink payload is
+  /// empty, or the combined size exceeds the DM byte cap.
+  static Uint8List? encodeSecureDmInk({
+    required Uint8List inkPayload,
+    required int timestampS,
+  }) {
+    if (timestampS < 0 || timestampS > 0xFFFFFFFF) return null;
+    if (inkPayload.isEmpty) return null;
+    if (inkPayload.length > SipDmConstants.maxDmTextBytes) {
+      AppLogging.sip(
+        'SIP_DM: encodeSecureDmInk rejected: ${inkPayload.length}B > '
+        '${SipDmConstants.maxDmTextBytes}B max',
+      );
+      return null;
+    }
+    final out = Uint8List(secureDmInkOverhead + inkPayload.length);
+    ByteData.sublistView(out).setUint32(0, timestampS, Endian.big);
+    out.setRange(secureDmInkOverhead, out.length, inkPayload);
+    return out;
+  }
+
+  /// Decode a secure DM ink payload into its timestamp + raw ink
+  /// bytes. Returns null when too short or oversized; the inner ink
+  /// payload itself is parsed by `SipInkDecoder.decode` further down
+  /// the pipeline.
+  static SecureDmInkDecoded? decodeSecureDmInk(Uint8List payload) {
+    if (payload.length <= secureDmInkOverhead) {
+      AppLogging.sip(
+        'SIP_DM: decodeSecureDmInk rejected: ${payload.length}B too short',
+      );
+      return null;
+    }
+    if (payload.length - secureDmInkOverhead > SipDmConstants.maxDmTextBytes) {
+      AppLogging.sip(
+        'SIP_DM: decodeSecureDmInk rejected: '
+        '${payload.length - secureDmInkOverhead}B > '
+        '${SipDmConstants.maxDmTextBytes}B max',
+      );
+      return null;
+    }
+    final timestampS = ByteData.sublistView(
+      payload,
+      0,
+      secureDmInkOverhead,
+    ).getUint32(0, Endian.big);
+    final inkPayload = Uint8List.sublistView(payload, secureDmInkOverhead);
+    return SecureDmInkDecoded(
+      timestampS: timestampS,
+      inkPayload: Uint8List.fromList(inkPayload),
+    );
+  }
+}
+
+/// Parsed result of a secure DM ink payload.
+class SecureDmInkDecoded {
+  final int timestampS;
+  final Uint8List inkPayload;
+  const SecureDmInkDecoded({
+    required this.timestampS,
+    required this.inkPayload,
+  });
 }
 
 /// Parsed result of a secure DM text payload.

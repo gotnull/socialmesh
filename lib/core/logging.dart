@@ -84,6 +84,7 @@ class AppLogging {
   static bool? _taskSyncLoggingEnabled;
   static bool? _fileTransferLoggingEnabled;
   static bool? _sipLoggingEnabled;
+  static bool? _sipInkLoggingEnabled;
   static bool? _mrrpDebugEnabled;
   static bool? _mrrpHarnessDebugEnabled;
   static bool? _meshExplorerDebugEnabled;
@@ -616,6 +617,18 @@ class AppLogging {
     if (sipLoggingEnabled) debugPrint('SIP: $message');
   }
 
+  /// SIP Ink (sketch) observability logging.
+  /// Enable with SIP_INK_LOGGING_ENABLED=true in .env file.
+  static bool get sipInkLoggingEnabled {
+    _sipInkLoggingEnabled ??=
+        _safeGetEnv('SIP_INK_LOGGING_ENABLED')?.toLowerCase() == 'true';
+    return _sipInkLoggingEnabled!;
+  }
+
+  static void sipInk(String message) {
+    if (sipInkLoggingEnabled) debugPrint('SIP_INK: $message');
+  }
+
   /// Reticulum tunnel (Meshtastic portnum 76) observability logging.
   /// Enable with RETICULUM_LOGGING_ENABLED=true in .env file.
   static bool get reticulumLoggingEnabled {
@@ -871,6 +884,7 @@ class AppLogging {
     _taskSyncLoggingEnabled = null;
     _fileTransferLoggingEnabled = null;
     _sipLoggingEnabled = null;
+    _sipInkLoggingEnabled = null;
     _mrrpDebugEnabled = null;
     _mrrpHarnessDebugEnabled = null;
     _meshExplorerDebugEnabled = null;

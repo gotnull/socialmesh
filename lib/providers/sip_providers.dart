@@ -247,6 +247,10 @@ final sipDiscoveryProvider = Provider<SipDiscovery?>((ref) {
     if (flags.linkEnabled) bits |= SipFeatureBits.overlayLinkV02;
     if (flags.resourceActive) bits |= SipFeatureBits.overlayResourceV02;
     if (flags.secureActive) bits |= SipFeatureBits.overlaySecureV03;
+    // SIP Ink v1 is unconditionally supported by this build; advertise
+    // the bit so peers can gate sketch sends on us. See
+    // docs/sip/SIP_V0_1.md §6 (v0.2 amendment).
+    bits |= SipFeatureBits.dmInkV1;
     return bits;
   };
 

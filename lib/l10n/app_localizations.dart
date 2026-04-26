@@ -56222,6 +56222,72 @@ abstract class AppLocalizations {
   /// **'Close Session'**
   String get sipDmCloseAction;
 
+  /// Label for the text composer mode in the SIP DM composer mode switcher.
+  ///
+  /// In en, this message translates to:
+  /// **'Text'**
+  String get sipDmComposerModeText;
+
+  /// Label for the SIP Ink sketch composer mode in the SIP DM composer mode switcher.
+  ///
+  /// In en, this message translates to:
+  /// **'Sketch'**
+  String get sipDmComposerModeSketch;
+
+  /// Hint shown above the SIP Ink canvas explaining the airtime constraint.
+  ///
+  /// In en, this message translates to:
+  /// **'Draw a quick sketch — kept tiny so it fits on the mesh.'**
+  String get sipInkComposerHint;
+
+  /// Live indicator of points used in a SIP Ink sketch.
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh-safe sketch: {points} / {maxPoints} points'**
+  String sipInkPointBudget(int points, int maxPoints);
+
+  /// Live indicator of encoded payload size for a SIP Ink sketch.
+  ///
+  /// In en, this message translates to:
+  /// **'Payload: {bytes} B'**
+  String sipInkPayloadBytes(int bytes);
+
+  /// Placeholder shown for the SIP Ink payload counter when no encodable sketch is on the canvas yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Payload: —'**
+  String get sipInkPayloadPending;
+
+  /// Button to clear the SIP Ink canvas.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get sipInkClear;
+
+  /// Button to remove the last stroke from the SIP Ink canvas.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get sipInkUndo;
+
+  /// Snackbar shown when the user attempts to send a sketch to a peer that hasn't advertised SIP Ink support.
+  ///
+  /// In en, this message translates to:
+  /// **'This peer can\'t receive sketches yet.'**
+  String get sipInkUnsupportedPeer;
+
+  /// Fallback caption shown in place of a SIP Ink sketch bubble when the payload can't be decoded.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsupported sketch'**
+  String get sipInkUnsupportedSketch;
+
+  /// Error shown when a sketch can't be reduced to fit the airtime budget.
+  ///
+  /// In en, this message translates to:
+  /// **'Sketch can\'t fit on the mesh — simplify your strokes.'**
+  String get sipInkBlocked;
+
   /// Button label to open an ephemeral DM with a peer.
   ///
   /// In en, this message translates to:

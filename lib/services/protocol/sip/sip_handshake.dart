@@ -80,6 +80,15 @@ class _HandshakeSession {
   /// the session leaves [SipHandshakeState.helloSent].
   final List<Timer> retransmitTimers = [];
 
+  /// One-shot timer that fails the session at [SipConstants.handshakeTimeout]
+  /// if no terminal state has been reached. Without it, a session that
+  /// stalls in `helloSent` (peer never responds) lingers forever because
+  /// `_cleanExpired` is only invoked when `initiateHandshake` or
+  /// `handleHello` is called for some other peer — there's no traffic
+  /// trigger on a dead-end handshake. Symptom from the field: chip stuck
+  /// on "Connecting…" after the 8s/20s/40s retransmit schedule completes.
+  Timer? expiryTimer;
+
   _HandshakeSession({required this.peerNodeId}) : startedAt = DateTime.now();
 
   bool get isTimedOut {
@@ -92,16 +101,32 @@ class _PendingHandshake {
   final int peerNodeId;
   final SipHsHello hello;
   final SipFrame originalFrame;
-  final DateTime receivedAt;
+
+  /// Timestamp of the most recent HELLO observation. Refreshed on every
+  /// duplicate retransmit while the entry is still alive so the consent
+  /// prompt stays open as long as the peer is still trying to reach us.
+  DateTime lastObservedAt;
 
   _PendingHandshake({
     required this.peerNodeId,
     required this.hello,
     required this.originalFrame,
-  }) : receivedAt = DateTime.now();
+  }) : lastObservedAt = DateTime.now();
 
+  /// Refresh the observation timestamp. Called when a duplicate HELLO
+  /// arrives from the same peer while consent is still pending.
+  void touch() {
+    lastObservedAt = DateTime.now();
+  }
+
+  /// Pending consent has its own local-only timeout
+  /// ([SipConstants.pendingConsentTimeout]) decoupled from the
+  /// wire-bound [SipConstants.handshakeTimeout]. The consent UI must
+  /// outlast the peer's 60-second retransmit budget — otherwise the
+  /// user's late Accept tap is silently dropped.
   bool get isExpired =>
-      DateTime.now().difference(receivedAt) > SipConstants.handshakeTimeout;
+      DateTime.now().difference(lastObservedAt) >
+      SipConstants.pendingConsentTimeout;
 }
 
 /// Wrapper for completed handshake results with TTL tracking.
@@ -281,6 +306,7 @@ class SipHandshakeManager {
 
     session.helloFrame = frame;
     _scheduleHelloRetransmits(peerNodeId);
+    _scheduleSessionExpiry(peerNodeId);
 
     return frame;
   }
@@ -523,11 +549,16 @@ class SipHandshakeManager {
       return;
     }
 
-    // Already pending consent — ignore duplicate.
-    if (_pendingRequests.containsKey(peerNodeId)) {
+    // Already pending consent — refresh the entry's observation
+    // timestamp so the consent UI stays alive while the peer keeps
+    // retransmitting, then ignore the duplicate frame itself.
+    final existingPending = _pendingRequests[peerNodeId];
+    if (existingPending != null) {
+      existingPending.touch();
       AppLogging.sip(
         'SIP_HS: duplicate HELLO ignored for '
-        'peer=0x${peerNodeId.toRadixString(16)} (already pending approval)',
+        'peer=0x${peerNodeId.toRadixString(16)} (already pending approval, '
+        'consent window refreshed)',
       );
       return;
     }
@@ -614,6 +645,10 @@ class SipHandshakeManager {
     session.localEphemeralPub = _generateEphemeralPub();
     session.state = SipHandshakeState.challengeSent;
     _sessions[peerNodeId] = session;
+    // Mirror the initiator's expiry timer. Without it, a responder
+    // session that never receives HS_RESPONSE (peer disappears,
+    // network drops the response) lingers forever in `challengeSent`.
+    _scheduleSessionExpiry(peerNodeId);
 
     final challenge = SipHsChallenge(
       serverNonce: session.serverNonce!,
@@ -801,6 +836,7 @@ class SipHandshakeManager {
     );
 
     _putCompleted(peerNodeId, result);
+    _cancelRetransmits(peerNodeId);
     _sessions.remove(peerNodeId);
     _failCooldownMs.remove(peerNodeId);
     _counters?.recordHandshakeCompleted();
@@ -979,6 +1015,28 @@ class SipHandshakeManager {
     }
   }
 
+  /// Schedule a one-shot timer that fails the session at
+  /// [SipConstants.handshakeTimeout]. Without this, a stalled session
+  /// (e.g. peer never sends HS_CHALLENGE, or our HS_RESPONSE is lost)
+  /// lingers in a non-terminal state forever because `_cleanExpired`
+  /// is only invoked from `initiateHandshake` and `handleHello`. The
+  /// timer is cancelled by `_cancelRetransmits` (called from every
+  /// state-leaving path) and by `_failSession` directly.
+  void _scheduleSessionExpiry(int peerNodeId) {
+    final session = _sessions[peerNodeId];
+    if (session == null) return;
+    session.expiryTimer?.cancel();
+    session.expiryTimer = Timer(SipConstants.handshakeTimeout, () {
+      final current = _sessions[peerNodeId];
+      if (current == null) return;
+      // Terminal states already drop the session from `_sessions` via
+      // `_failSession` / `handleAccept` / `handleResponse`, so this
+      // null check is sufficient — anything still here at the timeout
+      // boundary is a stalled handshake worth failing.
+      _failSession(peerNodeId, 'timeout');
+    });
+  }
+
   void _onRetransmitTick(int peerNodeId) {
     final session = _sessions[peerNodeId];
     if (session == null) return;
@@ -993,7 +1051,10 @@ class SipHandshakeManager {
     onHelloRetransmit?.call(peerNodeId, frame);
   }
 
-  /// Cancel any scheduled HELLO retransmit timers for [peerNodeId].
+  /// Cancel any scheduled HELLO retransmit timers for [peerNodeId] and
+  /// the per-session expiry timer. Called from every state-leaving
+  /// path (terminal success, failure, simultaneous-open tie-break,
+  /// session removal) so timers don't outlive the session.
   void _cancelRetransmits(int peerNodeId) {
     final session = _sessions[peerNodeId];
     if (session == null) return;
@@ -1001,6 +1062,8 @@ class SipHandshakeManager {
       timer.cancel();
     }
     session.retransmitTimers.clear();
+    session.expiryTimer?.cancel();
+    session.expiryTimer = null;
   }
 
   Uint8List _generateNonce16() {
