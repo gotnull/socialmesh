@@ -32517,6 +32517,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get sipDmComposerModeSignal => 'Signal';
 
   @override
+  String get sipDmComposerSheetTitle => 'Compor';
+
+  @override
+  String get sipDmComposerSheetTooltip => 'Abrir opções de composição';
+
+  @override
   String get sipSignalPanelTitle => 'Send a signal';
 
   @override

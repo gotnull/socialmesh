@@ -86,58 +86,75 @@ class SipInkCanvas extends StatelessWidget {
         return SizedBox(
           width: side,
           height: side,
-          child: Listener(
-            // Raw pointer events instead of GestureDetector pan
-            // recognisers — a single tap (no movement) needs to land
-            // a dot, which onPanStart alone doesn't reliably catch
-            // because of gesture-arena resolution. Listener fires
-            // pointerDown/Move/Up regardless and never competes for
-            // the arena, so taps and drags both work.
-            onPointerDown: enabled
-                ? (event) {
-                    final p = _toCanvas(event.localPosition, size);
-                    if (p == null) return;
-                    onStrokeStart(p);
-                  }
-                : null,
-            onPointerMove: enabled
-                ? (event) {
-                    final p = _toCanvas(event.localPosition, size);
-                    if (p == null) return;
-                    onStrokeUpdate(p);
-                  }
-                : null,
-            onPointerUp: enabled ? (_) => onStrokeEnd() : null,
-            onPointerCancel: enabled ? (_) => onStrokeEnd() : null,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 150),
-              decoration: BoxDecoration(
-                color: context.background,
-                borderRadius: BorderRadius.circular(AppTheme.radius12),
-                border: Border.all(
-                  color: borderColor,
-                  width: isOverBudget ? 1.5 : 1.0,
-                ),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(AppTheme.radius12),
-                child: CustomPaint(
-                  painter: SipInkPainter(
-                    // Paint the simplified (sendable) state directly —
-                    // not the raw finger trace. This is the WYSIWYG
-                    // promise: the user sees what would go on the
-                    // wire, including how aggressive the simplifier
-                    // had to get to fit the budget.
-                    sketch: simplifiedSketch,
-                    canvasSize: canvasSize,
-                    color: context.textPrimary,
-                    overflowColor: overflowColor.withValues(alpha: 0.7),
-                    activeOverflowPoints: activeOverflow.isEmpty
-                        ? null
-                        : activeOverflow,
-                    activeWidth: strokeWidth,
+          // GestureDetector with empty pan handlers claims the
+          // vertical-drag gesture in the gesture arena. Without this,
+          // when the canvas is hosted inside a DraggableScrollableSheet
+          // (the rich-composer bottom sheet), every stroke is captured
+          // by the sheet's drag-handle and the user can't draw —
+          // they just drag the sheet around. The Listener inside still
+          // fires regardless of arena outcome (it's a low-level
+          // pointer hook, not a gesture recogniser), so drawing works.
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onVerticalDragStart: (_) {},
+            onVerticalDragUpdate: (_) {},
+            onVerticalDragEnd: (_) {},
+            onHorizontalDragStart: (_) {},
+            onHorizontalDragUpdate: (_) {},
+            onHorizontalDragEnd: (_) {},
+            child: Listener(
+              // Raw pointer events instead of GestureDetector pan
+              // recognisers — a single tap (no movement) needs to land
+              // a dot, which onPanStart alone doesn't reliably catch
+              // because of gesture-arena resolution. Listener fires
+              // pointerDown/Move/Up regardless and never competes for
+              // the arena, so taps and drags both work.
+              onPointerDown: enabled
+                  ? (event) {
+                      final p = _toCanvas(event.localPosition, size);
+                      if (p == null) return;
+                      onStrokeStart(p);
+                    }
+                  : null,
+              onPointerMove: enabled
+                  ? (event) {
+                      final p = _toCanvas(event.localPosition, size);
+                      if (p == null) return;
+                      onStrokeUpdate(p);
+                    }
+                  : null,
+              onPointerUp: enabled ? (_) => onStrokeEnd() : null,
+              onPointerCancel: enabled ? (_) => onStrokeEnd() : null,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                decoration: BoxDecoration(
+                  color: context.background,
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
+                  border: Border.all(
+                    color: borderColor,
+                    width: isOverBudget ? 1.5 : 1.0,
                   ),
-                  size: size,
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
+                  child: CustomPaint(
+                    painter: SipInkPainter(
+                      // Paint the simplified (sendable) state directly —
+                      // not the raw finger trace. This is the WYSIWYG
+                      // promise: the user sees what would go on the
+                      // wire, including how aggressive the simplifier
+                      // had to get to fit the budget.
+                      sketch: simplifiedSketch,
+                      canvasSize: canvasSize,
+                      color: context.textPrimary,
+                      overflowColor: overflowColor.withValues(alpha: 0.7),
+                      activeOverflowPoints: activeOverflow.isEmpty
+                          ? null
+                          : activeOverflow,
+                      activeWidth: strokeWidth,
+                    ),
+                    size: size,
+                  ),
                 ),
               ),
             ),

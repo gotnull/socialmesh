@@ -7,12 +7,11 @@
 /// to mock the entire DM stack.
 ///
 /// Hard rules pinned here:
-///   - The composer-mode enum carries `signal` alongside text /
-///     sketch / play.
+///   - The rich-composer tab enum carries `signal` alongside `sketch`
+///     and `play` (text is the always-on inline composer, intentionally
+///     not in this enum).
 ///   - The Signal tab is gated by `enabled && peerSupportsSignal &&
 ///     !peerBlocked` — same shape as the Play tab.
-///   - The composer-mode switcher renders the Signal segment
-///     conditionally on `showSignal`.
 ///   - The bubble dispatcher routes `SipDmContentType.signal` entries
 ///     to `SipSignalBubble` and skips the reactions / reply-quote
 ///     affordances.
@@ -36,13 +35,16 @@ void main() {
   ).readAsStringSync();
 
   group('Composer mode integration', () {
-    test('enum carries text, sketch, play, AND signal', () {
+    test('rich-composer tab enum includes signal', () {
       expect(
         RegExp(
-          r'enum\s+_SipDmComposerMode\s*\{\s*text\s*,\s*sketch\s*,\s*play\s*,\s*signal',
+          r'enum\s+_RichComposerTab\s*\{\s*sketch\s*,\s*play\s*,\s*signal\s*\}',
         ).hasMatch(screenSrc),
         isTrue,
-        reason: 'composer enum must include all four modes',
+        reason:
+            'Signal must be a tab inside the rich-composer sheet '
+            'alongside Sketch and Play. Text is intentionally absent — '
+            'it is the always-on inline composer.',
       );
     });
 
@@ -59,50 +61,22 @@ void main() {
       );
     });
 
-    test('composer body keeps every rich panel mounted across tab toggles', () {
-      // Switching Signal → Text → Signal must NOT dispose the
-      // SipSignalComposerPanel's State (would lose phrase draft and
-      // tap-Morse buffer). The current architecture stacks the three
-      // rich panels (Sketch / Play / Signal) inside an IndexedStack
-      // wrapped in a single Visibility(visible: !isText,
-      // maintainState: true). State preservation comes from two
-      // sources:
-      //   1. The outer Visibility keeps the IndexedStack subtree
-      //      mounted while in text mode (visible: false +
-      //      maintainState: true) so drafts survive Text ↔ rich
-      //      toggles.
-      //   2. IndexedStack does not unmount inactive children, so
-      //      drafts survive Sketch ↔ Play ↔ Signal toggles too.
-      // The IndexedStack also unifies the three panels' rendered
-      // height to the tallest child, killing the height-jolt the
-      // user was seeing on tab swap.
+    test('Signal panel renders inside the rich-composer sheet, not inline', () {
+      // After the inline-mode-switcher → bottom-sheet refactor, the
+      // signal panel is one of the IndexedStack children INSIDE
+      // `_RichComposerSheet`. Pin both the host and the construction.
       expect(
-        screenSrc.contains('maintainState: true'),
+        screenSrc.contains('class _RichComposerSheet'),
         isTrue,
         reason:
-            'Composer must use Visibility(maintainState: true) on its '
-            'rich-panel wrapper so mode toggles don\'t dispose State.',
-      );
-      expect(
-        RegExp(r'Visibility\(\s*visible: !isText').hasMatch(screenSrc),
-        isTrue,
-        reason:
-            'Rich-panel group must be wrapped in a Visibility keyed off '
-            '!isText so all three panels stay mounted across Text ↔ rich '
-            'toggles.',
-      );
-      expect(
-        screenSrc.contains('IndexedStack('),
-        isTrue,
-        reason:
-            'Sketch / Play / Signal must share an IndexedStack so their '
-            'rendered heights match (no jolt on tab swap) and inactive '
-            'panels stay mounted (drafts survive).',
+            'Sketch / Play / Signal live inside _RichComposerSheet now; '
+            'the inline _ComposerModeSwitcher was removed because the '
+            'inline height transitions caused the user-reported jolt.',
       );
       expect(
         screenSrc.contains('SipSignalComposerPanel(sessionTag:'),
         isTrue,
-        reason: 'Signal panel must still be one of the IndexedStack children.',
+        reason: 'Signal panel is one of the IndexedStack children.',
       );
     });
 
@@ -121,7 +95,8 @@ void main() {
         isTrue,
         reason:
             'sip_dm_screen.build must watch sipPeerCacheEpochProvider so '
-            'the tab strip reacts to peer-capability updates.',
+            'the trigger / sheet tab strip reacts to peer-capability '
+            'updates.',
       );
     });
 
@@ -133,35 +108,23 @@ void main() {
       );
     });
 
-    test('blocked peer triggers a fallback to text mode (no orphan tab)', () {
+    test('the rich-composer trigger only appears when at least one rich '
+        'tab is reachable', () {
+      // The trigger button on the inline ChatComposer is gated by
+      // `showComposerTrigger = showSketchTab || showPlayTab ||
+      // showSignalTab` — peers without any rich cap see no attach
+      // button at all.
       expect(
-        screenSrc.contains(
-          '_composerMode == _SipDmComposerMode.signal && !showSignalTab',
-        ),
+        RegExp(
+          r'showComposerTrigger\s*=\s*'
+          r'showSketchTab\s*\|\|\s*showPlayTab\s*\|\|\s*showSignalTab',
+        ).hasMatch(screenSrc),
         isTrue,
       );
     });
 
-    test('switcher takes a showSignal flag + renders the Signal label', () {
-      expect(screenSrc.contains('required this.showSignal'), isTrue);
+    test('signal label still uses the existing ARB key', () {
       expect(screenSrc.contains('l10n.sipDmComposerModeSignal'), isTrue);
-      expect(screenSrc.contains('showSignal: showSignalTab'), isTrue);
-    });
-
-    test('Signal body branch routes to SipSignalComposerPanel', () {
-      // Pin the construction site without freezing the exact arg
-      // tail — the panel takes additional optional callbacks (e.g.
-      // onSubModeChanged for the chat-jump wiring), so we assert the
-      // construction is wired with the session tag rather than a
-      // single fixed-shape literal.
-      expect(
-        screenSrc.contains('SipSignalComposerPanel(') &&
-            screenSrc.contains('sessionTag: widget.sessionTag'),
-        isTrue,
-        reason:
-            'Signal mode must surface the dedicated composer panel — '
-            'no overload of text / sketch / play surfaces',
-      );
     });
   });
 

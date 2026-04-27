@@ -40712,5 +40712,7 @@
   "sipSignalMorseTapInvalidNote": "Sequências desconhecidas aparecem como ? — são ignoradas no envio.",
   "sipSignalToneExampleCloseEncounters": "Contatos imediatos",
   "sipSignalToneExampleHint": "Experimente o exemplo",
-  "sipDmSignalReplyPlaceholder": "📡 Sinal"
+  "sipDmSignalReplyPlaceholder": "📡 Sinal",
+  "sipDmComposerSheetTitle": "Compor",
+  "sipDmComposerSheetTooltip": "Abrir opções de composição"
 }

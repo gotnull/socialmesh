@@ -2572,9 +2572,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                             ),
                         leading: GestureDetector(
                           onTap: () => _showQuickResponses(),
+                          // 48×48 mirrors the send button on the right
+                          // of the composer so the leading and trailing
+                          // affordances are visually balanced — same
+                          // circle size, same icon size.
                           child: Container(
-                            width: 40,
-                            height: 40,
+                            width: 48,
+                            height: 48,
                             decoration: BoxDecoration(
                               color: context.background,
                               shape: BoxShape.circle,

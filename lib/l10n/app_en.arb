@@ -43139,6 +43139,14 @@
     "@sipDmComposerModeSignal": {
         "description": "Signal tab label in the DM composer mode switcher. Visible only when the peer supports SIP Signal v1 and is not blocked. Signal is musical-phrase + Morse — 'Close Encounters over LoRa.'"
     },
+    "sipDmComposerSheetTitle": "Compose",
+    "@sipDmComposerSheetTitle": {
+        "description": "Header at the top of the rich-composer bottom sheet — houses the Sketch / Play / Signal tabs separately from the always-on text input."
+    },
+    "sipDmComposerSheetTooltip": "Open compose options",
+    "@sipDmComposerSheetTooltip": {
+        "description": "Tooltip on the leading attach-style icon in the chat input row that opens the rich-composer bottom sheet (Sketch / Play / Signal)."
+    },
     "sipSignalPanelTitle": "Send a signal",
     "@sipSignalPanelTitle": {
         "description": "Header inside the Signal composer panel."

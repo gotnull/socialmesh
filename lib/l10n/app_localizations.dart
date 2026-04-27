@@ -56630,6 +56630,18 @@ abstract class AppLocalizations {
   /// **'Signal'**
   String get sipDmComposerModeSignal;
 
+  /// Header at the top of the rich-composer bottom sheet — houses the Sketch / Play / Signal tabs separately from the always-on text input.
+  ///
+  /// In en, this message translates to:
+  /// **'Compose'**
+  String get sipDmComposerSheetTitle;
+
+  /// Tooltip on the leading attach-style icon in the chat input row that opens the rich-composer bottom sheet (Sketch / Play / Signal).
+  ///
+  /// In en, this message translates to:
+  /// **'Open compose options'**
+  String get sipDmComposerSheetTooltip;
+
   /// Header inside the Signal composer panel.
   ///
   /// In en, this message translates to:

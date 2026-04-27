@@ -77,10 +77,12 @@ class SipDmScreen extends ConsumerStatefulWidget {
 
 /// Composer modes available in an accepted SIP DM session.
 ///
-/// `text` is the historical default. `sketch` activates the SIP Ink
-/// canvas instead of the text input. The mode is screen-local — no
-/// provider, since switching is purely UI state.
-enum _SipDmComposerMode { text, sketch, play, signal }
+/// Tab inside the rich-composer bottom sheet. Text is intentionally
+/// NOT in this enum — the text input stays as the always-on inline
+/// composer, separate from the sheet, so swapping between rich modes
+/// no longer jolts the chat list above. The sheet hosts only the
+/// rich attachment surfaces (sketch / play / signal).
+enum _RichComposerTab { sketch, play, signal }
 
 class _SipDmScreenState extends ConsumerState<SipDmScreen>
     with LifecycleSafeMixin, WidgetsBindingObserver {
@@ -91,13 +93,21 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
   /// The message being replied to, or null if not replying.
   SipDmHistoryEntry? _replyingToEntry;
 
-  /// Active composer mode. Defaults to text.
-  _SipDmComposerMode _composerMode = _SipDmComposerMode.text;
-
-  /// Persistent sketch draft. Survives mode switches so the user can
-  /// flip back from text to sketch and find their strokes intact.
+  /// Persistent sketch draft. Lifted to screen state so it survives
+  /// the rich-composer sheet being dismissed and reopened — the
+  /// user's strokes are intact when they return to the Sketch tab.
   /// Cleared after a successful send by the SIP Ink composer.
   final List<SipInkRawStroke> _sketchDraft = [];
+
+  /// Last-active tab inside the rich-composer sheet. Persisted at
+  /// screen level so reopening the sheet lands on the same tab the
+  /// user was on, instead of always defaulting to Sketch.
+  _RichComposerTab _lastRichTab = _RichComposerTab.sketch;
+
+  /// True while the rich-composer sheet is visible. Used by the
+  /// trigger button to grey itself out and to suppress double-opens
+  /// from rapid taps.
+  bool _composerSheetOpen = false;
 
   /// Timer to dismiss the typing indicator after the display duration.
   Timer? _typingDismissTimer;
@@ -126,29 +136,13 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
   /// so the affordance feels consistent across chat surfaces.
   static const double _atBottomThresholdPx = 120;
 
-  /// Single entry point for changing the active composer mode. Owns
-  /// the keyboard focus side-effect so every caller (chip-tap,
-  /// chat-window tap-to-return-to-text, _onReply) gets identical
-  /// behaviour: switching to Text raises the keyboard, switching to
-  /// any other mode dismisses it.
-  ///
-  /// Focus is requested in a post-frame callback because the text
-  /// input is wrapped in a Visibility that doesn't flip its `visible`
-  /// flag until the rebuild AFTER this setState — calling
-  /// requestFocus inside setState lands on a still-hidden widget and
-  /// iOS silently drops it.
-  void _switchComposerMode(_SipDmComposerMode mode) {
-    if (mode == _composerMode) return;
-    setState(() {
-      _composerMode = mode;
+  /// Raise the keyboard on the inline text input. Used by the reply
+  /// flow and the tap-on-chat-surface affordance. Post-frame so the
+  /// focus request lands after any pending rebuild.
+  void _focusTextInput() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _inputFocusNode.requestFocus();
     });
-    if (mode == _SipDmComposerMode.text) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _inputFocusNode.requestFocus();
-      });
-    } else {
-      _inputFocusNode.unfocus();
-    }
   }
 
   @override
@@ -633,14 +627,11 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
     setState(() {
       _replyingToEntry = entry;
     });
-    // Replies always compose as text — sketch payloads can't carry
-    // a quote prefix (the wire format has no provision for it), so
-    // forcing Text mode keeps the reply path uniform regardless of
-    // what's being replied to. The user's sketch draft lives in
-    // [_sketchDraft] and is preserved. [_switchComposerMode] owns
-    // the post-frame focus request so the keyboard rises after the
-    // text input becomes visible.
-    _switchComposerMode(_SipDmComposerMode.text);
+    // Replies always compose as text — sketch / signal / play
+    // payloads can't carry a quote prefix (the wire formats have no
+    // provision for it). The text input is always inline, so just
+    // raise the keyboard.
+    _focusTextInput();
   }
 
   /// Quoted text to display in the reply indicator and embed in the
@@ -1104,21 +1095,17 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
             if (session != null)
               _FirstContactBanner(peerNodeId: session.peerNodeId),
             Expanded(
-              // Tapping the chat surface returns the composer to Text
-              // mode. Drafts on the active non-Text panel survive in
-              // their respective State holders (_textController +
-              // _sketchDraft live on this State; play state is in
-              // providers). Signal Tone/Morse drafts are panel-local
-              // and reset on tab switch — see KNOWN_LIMITS.
+              // Tapping the chat surface raises the keyboard on the
+              // text input — it's always inline now, so this is purely
+              // a "refocus the input if the keyboard was dismissed"
+              // affordance.
               //
               // `translucent` so the gesture fires on empty-space taps
               // AND propagates through to bubble GestureDetectors for
               // long-press.
               child: GestureDetector(
                 behavior: HitTestBehavior.translucent,
-                onTap: _composerMode == _SipDmComposerMode.text
-                    ? null
-                    : () => _switchComposerMode(_SipDmComposerMode.text),
+                onTap: _focusTextInput,
                 child: Stack(
                   children: [
                     if (hasContent)
@@ -1265,9 +1252,9 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
     final peerSupportsInk = _peerSupportsInk(session);
     final peerSupportsPlay = _peerSupportsPlay(session);
     final peerSupportsSignal = _peerSupportsSignal(session);
-    // T+S: hide the Play / Signal tabs when the peer is blocked.
-    // Defence-in-depth on top of the router-level peerBlocked guard —
-    // keeps the affordance honest about the locked-in "no further
+    // T+S: hide the rich-composer attach options when the peer is
+    // blocked. Defence-in-depth on top of the router-level peerBlocked
+    // guard — keeps the trigger honest about the locked-in "no further
     // outbound" rule.
     final peerBlocked =
         session != null &&
@@ -1278,21 +1265,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
     final showSketchTab = enabled && peerSupportsInk;
     final showPlayTab = enabled && peerSupportsPlay && !peerBlocked;
     final showSignalTab = enabled && peerSupportsSignal && !peerBlocked;
-    final showAnyTabs = showSketchTab || showPlayTab || showSignalTab;
-
-    // Auto-fall-back the active mode if the previously-selected tab
-    // is no longer available (e.g. peer just got blocked while Play
-    // tab was open). Routes the user back to text rather than
-    // stranding them on a hidden tab.
-    if (_composerMode == _SipDmComposerMode.sketch && !showSketchTab) {
-      _composerMode = _SipDmComposerMode.text;
-    }
-    if (_composerMode == _SipDmComposerMode.play && !showPlayTab) {
-      _composerMode = _SipDmComposerMode.text;
-    }
-    if (_composerMode == _SipDmComposerMode.signal && !showSignalTab) {
-      _composerMode = _SipDmComposerMode.text;
-    }
+    final showComposerTrigger = showSketchTab || showPlayTab || showSignalTab;
 
     return AnimatedPadding(
       duration: const Duration(milliseconds: 100),
@@ -1309,56 +1282,14 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
         child: SafeArea(
           top: false,
           bottom: MediaQuery.of(context).viewInsets.bottom == 0,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (showAnyTabs)
-                Padding(
-                  padding: const EdgeInsets.only(
-                    top: AppTheme.spacing8,
-                    left: AppTheme.spacing16,
-                    right: AppTheme.spacing16,
-                  ),
-                  child: _ComposerModeSwitcher(
-                    mode: _composerMode,
-                    showSketch: showSketchTab,
-                    showPlay: showPlayTab,
-                    showSignal: showSignalTab,
-                    onChanged: (mode) {
-                      if (mode == _composerMode) return;
-                      ref.read(hapticServiceProvider).trigger(HapticType.light);
-                      // Drafts are intentionally NOT cleared here:
-                      // both _textController and _sketchDraft live on
-                      // the State so switching tabs preserves both
-                      // compose surfaces. Keyboard focus side-effect
-                      // is owned by [_switchComposerMode].
-                      //
-                      // Chip tap is a pure mode switch — bubble jumps
-                      // happen only when the user taps a reply quote.
-                      _switchComposerMode(mode);
-                    },
-                  ),
-                ),
-              // Composer mode body — IndexedStack so every currently-
-              // visible panel stays mounted while only one is shown.
-              // This preserves Signal phrase / tap-Morse / type-Morse
-              // drafts (and play / sketch state) across tab toggles
-              // without lifting all that state up to this State class.
-              //
-              // The children list is rebuilt only when tab visibility
-              // changes (peer goes blocked, session closed, etc.) — a
-              // mode toggle within the same visibility config keeps
-              // every child's Element identity intact, so each panel's
-              // State survives.
-              _buildComposerStack(
-                context: context,
-                session: session,
-                enabled: enabled,
-                showSketchTab: showSketchTab,
-                showPlayTab: showPlayTab,
-                showSignalTab: showSignalTab,
-              ),
-            ],
+          child: _buildTextInputBlock(
+            context: context,
+            session: session,
+            enabled: enabled,
+            showSketchTab: showSketchTab,
+            showPlayTab: showPlayTab,
+            showSignalTab: showSignalTab,
+            showComposerTrigger: showComposerTrigger,
           ),
         ),
       ),
@@ -1374,116 +1305,21 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
     _jumpToLatestWhere((e) => e.contentType == SipDmContentType.play);
   }
 
-  /// Build the composer body. Text mode renders the chat-input block;
-  /// the three rich modes (Sketch / Play / Signal) share an
-  /// `IndexedStack` so their composer surfaces line up to a single
-  /// uniform height — the tallest of the three — and tab swaps stop
-  /// jolting the chat list up and down.
-  ///
-  /// State preservation:
-  ///   - The outer `Visibility(visible: isText, maintainState: true)`
-  ///     keeps the text input mounted so the reply target / cursor
-  ///     position survive tab swaps.
-  ///   - The outer `Visibility(visible: !isText, maintainState: true)`
-  ///     wraps the IndexedStack so its children stay mounted even
-  ///     while text mode is showing — phrase notes, tap-Morse buffer,
-  ///     sketch strokes, and pending Play offers all persist across
-  ///     every direction of toggle.
-  ///   - Within the IndexedStack, swapping the active index does NOT
-  ///     unmount the inactive children, so swapping Sketch ↔ Play ↔
-  ///     Signal preserves all three drafts.
-  ///
-  /// Hidden tabs (peer doesn't advertise the cap, session closed,
-  /// peer blocked) drop out of the IndexedStack child list entirely,
-  /// so the uniform height collapses to the tallest *available* mode
-  /// rather than reserving room for an unreachable keypad.
-  Widget _buildComposerStack({
+  /// Render the always-on text input row plus its reply-quote chip
+  /// and (when any rich tab is reachable) a leading attach button
+  /// that opens the rich-composer bottom sheet. Sketch / Play /
+  /// Signal live entirely in that sheet now — the inline composer
+  /// only ever changes height for the reply-quote chip, so swapping
+  /// "modes" can no longer jolt the chat list above.
+  Widget _buildTextInputBlock({
     required BuildContext context,
     required SipDmSession? session,
     required bool enabled,
     required bool showSketchTab,
     required bool showPlayTab,
     required bool showSignalTab,
+    required bool showComposerTrigger,
   }) {
-    final isText = _composerMode == _SipDmComposerMode.text;
-
-    final richChildren = <Widget>[];
-    final richIndex = <_SipDmComposerMode, int>{};
-    if (showSketchTab) {
-      richIndex[_SipDmComposerMode.sketch] = richChildren.length;
-      richChildren.add(
-        SipInkComposer(
-          sessionTag: widget.sessionTag,
-          enabled: enabled,
-          draft: _sketchDraft,
-          onDraftChanged: () {
-            if (mounted) setState(() {});
-          },
-          onSent: _scrollToBottom,
-        ),
-      );
-    }
-    if (showPlayTab && session != null) {
-      richIndex[_SipDmComposerMode.play] = richChildren.length;
-      richChildren.add(
-        _PlayComposerPanel(
-          sessionTag: widget.sessionTag,
-          peerNodeId: session.peerNodeId,
-          onJumpToLatestGame: _jumpToLatestPlayBubble,
-        ),
-      );
-    }
-    if (showSignalTab) {
-      richIndex[_SipDmComposerMode.signal] = richChildren.length;
-      richChildren.add(SipSignalComposerPanel(sessionTag: widget.sessionTag));
-    }
-
-    // If the current rich mode is no longer in the visible set (peer
-    // just got blocked, etc.), pin the IndexedStack to slot 0 so it
-    // stays in bounds; the auto-fallback in _buildInputBar will route
-    // _composerMode back to text on the next frame.
-    final activeRichIndex = richIndex[_composerMode] ?? 0;
-
-    // AnimatedSize smooths the height delta between Text mode (a few
-    // hundred ms of input row) and the rich modes (~Signal-tallest).
-    // Without it, the chat list above snaps to its new constraints in
-    // a single frame and the bottom panel appears to "shoot up" before
-    // settling. Anchoring at bottomCenter pins the action-button row
-    // (where the user's finger just was) and reveals the panel content
-    // upward.
-    return AnimatedSize(
-      duration: const Duration(milliseconds: 220),
-      curve: Curves.easeOutCubic,
-      alignment: Alignment.bottomCenter,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Visibility(
-            visible: isText,
-            maintainState: true,
-            child: _buildTextInputBlock(context, enabled),
-          ),
-          if (richChildren.isNotEmpty)
-            Visibility(
-              visible: !isText,
-              maintainState: true,
-              child: IndexedStack(
-                // Aligning to topCenter keeps the active panel anchored
-                // at the top of the shared-height window, so shorter
-                // panels (Sketch, Play) leave the empty slack at the
-                // bottom rather than centring with awkward gaps above
-                // and below.
-                alignment: Alignment.topCenter,
-                index: activeRichIndex,
-                children: richChildren,
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTextInputBlock(BuildContext context, bool enabled) {
     final l10n = context.l10n;
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -1543,7 +1379,9 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
               : const SizedBox.shrink(),
         ),
 
-        // Input field — reuses ChatComposer for consistent UX
+        // Input field — reuses ChatComposer for consistent UX. The
+        // leading slot hosts the attach trigger that opens the rich-
+        // composer bottom sheet (Sketch / Play / Signal).
         Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: AppTheme.spacing8,
@@ -1564,10 +1402,104 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
                   budget.utf8Bytes,
                   budget.maxUtf8Bytes,
                 ),
+            leading: showComposerTrigger
+                ? _ComposerSheetTrigger(
+                    enabled: enabled && !_composerSheetOpen,
+                    tooltip: l10n.sipDmComposerSheetTooltip,
+                    onTap: () => _openComposerSheet(
+                      session: session,
+                      enabled: enabled,
+                      showSketchTab: showSketchTab,
+                      showPlayTab: showPlayTab,
+                      showSignalTab: showSignalTab,
+                    ),
+                  )
+                : null,
           ),
         ),
       ],
     );
+  }
+
+  /// Open the rich-composer bottom sheet. Hosts a Sketch / Play /
+  /// Signal tab switcher and the active panel — completely separate
+  /// from the inline text input so the chat list never resizes when
+  /// the user switches between rich modes.
+  ///
+  /// Sketch drafts persist across open/close because [_sketchDraft]
+  /// lives at screen scope. Play state is provider-backed so it
+  /// persists naturally. Signal local drafts (phrase notes /
+  /// tap-Morse buffer) are lost on each open — see KNOWN_LIMITS.
+  Future<void> _openComposerSheet({
+    required SipDmSession? session,
+    required bool enabled,
+    required bool showSketchTab,
+    required bool showPlayTab,
+    required bool showSignalTab,
+  }) async {
+    if (_composerSheetOpen) return;
+    setState(() => _composerSheetOpen = true);
+    ref.read(hapticServiceProvider).trigger(HapticType.light);
+    _inputFocusNode.unfocus();
+    try {
+      await AppBottomSheet.showScrollable<void>(
+        context: context,
+        // Tight initial — ~58% of screen height fits Sketch / Play
+        // exactly with no wasted slack below the action row. Signal's
+        // 3-octave pad grid is taller; the user drags up to 0.95 for
+        // it (drag-pill is right at the top of the sheet card).
+        initialChildSize: 0.58,
+        minChildSize: 0.4,
+        maxChildSize: 0.95,
+        title: context.l10n.sipDmComposerSheetTitle,
+        builder: (controller) => _RichComposerSheet(
+          sessionTag: widget.sessionTag,
+          peerNodeId: session?.peerNodeId,
+          enabled: enabled,
+          showSketchTab: showSketchTab,
+          showPlayTab: showPlayTab,
+          showSignalTab: showSignalTab,
+          sketchDraft: _sketchDraft,
+          onSketchDraftChanged: () {
+            if (mounted) setState(() {});
+          },
+          onSketchSent: _scrollToBottom,
+          onJumpToLatestGame: () {
+            // Pop the sheet first so the highlight pulse is visible.
+            Navigator.of(context).maybePop();
+            _jumpToLatestPlayBubble();
+          },
+          initialTab: _resolveInitialRichTab(
+            showSketchTab: showSketchTab,
+            showPlayTab: showPlayTab,
+            showSignalTab: showSignalTab,
+          ),
+          onTabChanged: (tab) => _lastRichTab = tab,
+          scrollController: controller,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _composerSheetOpen = false);
+    }
+  }
+
+  /// Pick the tab to land on when the sheet opens. Prefers the
+  /// last-active tab if it's still reachable, otherwise the first
+  /// available in display order (Sketch → Play → Signal).
+  _RichComposerTab _resolveInitialRichTab({
+    required bool showSketchTab,
+    required bool showPlayTab,
+    required bool showSignalTab,
+  }) {
+    bool reachable(_RichComposerTab tab) => switch (tab) {
+      _RichComposerTab.sketch => showSketchTab,
+      _RichComposerTab.play => showPlayTab,
+      _RichComposerTab.signal => showSignalTab,
+    };
+    if (reachable(_lastRichTab)) return _lastRichTab;
+    if (showSketchTab) return _RichComposerTab.sketch;
+    if (showPlayTab) return _RichComposerTab.play;
+    return _RichComposerTab.signal;
   }
 }
 
@@ -1876,36 +1808,208 @@ class _GameInProgressBanner extends StatelessWidget {
   }
 }
 
-/// Dynamic equal-width segmented switcher for the DM composer modes.
+/// Leading attach-style icon shown next to the chat input. Tapping
+/// it opens the rich-composer bottom sheet that hosts Sketch / Play /
+/// Signal as tabs. Hidden entirely when the peer has no rich caps.
 ///
-/// Renders Text + whichever non-text modes the peer + safety state
-/// makes available:
-///   - Sketch when the peer advertises dmInkV1,
-///   - Play when the peer advertises dmPlayV1 AND is not blocked
-///     AND the session is active.
-///
-/// The selected segment is filled with the accent colour; the others
-/// are transparent. Hide-when-unsupported gating mirrors today's
-/// behaviour — peers without any non-text capability see no switcher
-/// at all (the parent collapses it).
-class _ComposerModeSwitcher extends StatelessWidget {
-  final _SipDmComposerMode mode;
-  final ValueChanged<_SipDmComposerMode> onChanged;
-  final bool showSketch;
-  final bool showPlay;
-  final bool showSignal;
+/// Visual mirrors the messaging quick-responses button (40×40 with a
+/// `context.background` circle backdrop) so the two surfaces feel
+/// like the same family — accent-tinted icon to signal it's the
+/// "extras" entry point rather than the bolt-style quick replies.
+class _ComposerSheetTrigger extends StatelessWidget {
+  final bool enabled;
+  final String tooltip;
+  final VoidCallback onTap;
 
-  const _ComposerModeSwitcher({
-    required this.mode,
-    required this.onChanged,
-    required this.showSketch,
-    required this.showPlay,
-    required this.showSignal,
+  const _ComposerSheetTrigger({
+    required this.enabled,
+    required this.tooltip,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final fg = enabled
+        ? context.accentColor
+        : context.textTertiary.withValues(alpha: 0.5);
+    return Tooltip(
+      message: tooltip,
+      child: GestureDetector(
+        onTap: enabled ? onTap : null,
+        behavior: HitTestBehavior.opaque,
+        // 48×48 mirrors the send button on the right of the composer
+        // so the leading and trailing affordances are visually
+        // balanced — same circle size, same icon size.
+        child: Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: context.background,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(Icons.add, color: fg, size: 20),
+        ),
+      ),
+    );
+  }
+}
+
+/// Bottom-sheet host for the three rich composer surfaces. The sheet
+/// tab-switches internally between Sketch / Play / Signal without
+/// resizing the inline text input above. State preservation:
+///   - Sketch draft lives at screen scope (passed in via [sketchDraft]),
+///     so closing+reopening the sheet keeps strokes intact.
+///   - Play state is provider-backed, so an active game is always
+///     visible when the user re-opens the Play tab.
+///   - Signal panel state (phrase notes, tap-Morse buffer) is panel-
+///     local — drafts reset each time the sheet opens. Lifting them
+///     to screen scope is tracked in KNOWN_LIMITS.
+class _RichComposerSheet extends ConsumerStatefulWidget {
+  final int sessionTag;
+  final int? peerNodeId;
+  final bool enabled;
+  final bool showSketchTab;
+  final bool showPlayTab;
+  final bool showSignalTab;
+  final List<SipInkRawStroke> sketchDraft;
+  final VoidCallback onSketchDraftChanged;
+  final VoidCallback onSketchSent;
+  final VoidCallback onJumpToLatestGame;
+  final _RichComposerTab initialTab;
+  final ValueChanged<_RichComposerTab> onTabChanged;
+  final ScrollController scrollController;
+
+  const _RichComposerSheet({
+    required this.sessionTag,
+    required this.peerNodeId,
+    required this.enabled,
+    required this.showSketchTab,
+    required this.showPlayTab,
+    required this.showSignalTab,
+    required this.sketchDraft,
+    required this.onSketchDraftChanged,
+    required this.onSketchSent,
+    required this.onJumpToLatestGame,
+    required this.initialTab,
+    required this.onTabChanged,
+    required this.scrollController,
+  });
+
+  @override
+  ConsumerState<_RichComposerSheet> createState() => _RichComposerSheetState();
+}
+
+class _RichComposerSheetState extends ConsumerState<_RichComposerSheet> {
+  late _RichComposerTab _activeTab = widget.initialTab;
+
+  void _selectTab(_RichComposerTab tab) {
+    if (tab == _activeTab) return;
+    ref.read(hapticServiceProvider).trigger(HapticType.selection);
+    setState(() => _activeTab = tab);
+    widget.onTabChanged(tab);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = context.l10n;
+
+    // Build the IndexedStack child list in display order, tracking
+    // each tab's index so the active-tab lookup survives any tab
+    // being hidden by peer-cap gates.
+    final children = <Widget>[];
+    final indices = <_RichComposerTab, int>{};
+    if (widget.showSketchTab) {
+      indices[_RichComposerTab.sketch] = children.length;
+      children.add(
+        SipInkComposer(
+          sessionTag: widget.sessionTag,
+          enabled: widget.enabled,
+          draft: widget.sketchDraft,
+          onDraftChanged: widget.onSketchDraftChanged,
+          onSent: widget.onSketchSent,
+        ),
+      );
+    }
+    if (widget.showPlayTab && widget.peerNodeId != null) {
+      indices[_RichComposerTab.play] = children.length;
+      children.add(
+        _PlayComposerPanel(
+          sessionTag: widget.sessionTag,
+          peerNodeId: widget.peerNodeId!,
+          onJumpToLatestGame: widget.onJumpToLatestGame,
+        ),
+      );
+    }
+    if (widget.showSignalTab) {
+      indices[_RichComposerTab.signal] = children.length;
+      children.add(SipSignalComposerPanel(sessionTag: widget.sessionTag));
+    }
+
+    final activeIndex = indices[_activeTab] ?? 0;
+
+    return SingleChildScrollView(
+      controller: widget.scrollController,
+      padding: const EdgeInsets.fromLTRB(
+        AppTheme.spacing16,
+        0,
+        AppTheme.spacing16,
+        AppTheme.spacing16,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _RichComposerTabBar(
+            activeTab: _activeTab,
+            showSketch: widget.showSketchTab,
+            showPlay: widget.showPlayTab,
+            showSignal: widget.showSignalTab,
+            sketchLabel: l10n.sipDmComposerModeSketch,
+            playLabel: l10n.sipDmComposerModePlay,
+            signalLabel: l10n.sipDmComposerModeSignal,
+            onChanged: _selectTab,
+          ),
+          const SizedBox(height: AppTheme.spacing12),
+          if (children.isNotEmpty)
+            IndexedStack(
+              alignment: Alignment.topCenter,
+              index: activeIndex,
+              children: children,
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Equal-width segmented switcher used INSIDE the rich-composer
+/// sheet. Mirrors the previous inline switcher's look (accent fill
+/// on selected, transparent on others) but only carries the three
+/// rich modes — text isn't an option here, it's the always-on
+/// inline composer.
+class _RichComposerTabBar extends StatelessWidget {
+  final _RichComposerTab activeTab;
+  final bool showSketch;
+  final bool showPlay;
+  final bool showSignal;
+  final String sketchLabel;
+  final String playLabel;
+  final String signalLabel;
+  final ValueChanged<_RichComposerTab> onChanged;
+
+  const _RichComposerTabBar({
+    required this.activeTab,
+    required this.showSketch,
+    required this.showPlay,
+    required this.showSignal,
+    required this.sketchLabel,
+    required this.playLabel,
+    required this.signalLabel,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         color: context.background.withValues(alpha: 0.6),
@@ -1915,50 +2019,28 @@ class _ComposerModeSwitcher extends StatelessWidget {
       padding: const EdgeInsets.all(AppTheme.spacing2),
       child: Row(
         children: [
-          _segment(
-            context,
-            _SipDmComposerMode.text,
-            l10n.sipDmComposerModeText,
-          ),
           if (showSketch)
-            _segment(
-              context,
-              _SipDmComposerMode.sketch,
-              l10n.sipDmComposerModeSketch,
-            ),
-          if (showPlay)
-            _segment(
-              context,
-              _SipDmComposerMode.play,
-              l10n.sipDmComposerModePlay,
-            ),
+            _segment(context, _RichComposerTab.sketch, sketchLabel),
+          if (showPlay) _segment(context, _RichComposerTab.play, playLabel),
           if (showSignal)
-            _segment(
-              context,
-              _SipDmComposerMode.signal,
-              l10n.sipDmComposerModeSignal,
-            ),
+            _segment(context, _RichComposerTab.signal, signalLabel),
         ],
       ),
     );
   }
 
-  Widget _segment(
-    BuildContext context,
-    _SipDmComposerMode value,
-    String label,
-  ) {
-    final isSelected = mode == value;
+  Widget _segment(BuildContext context, _RichComposerTab tab, String label) {
+    final selected = tab == activeTab;
     return Expanded(
       child: GestureDetector(
-        onTap: () => onChanged(value),
+        onTap: () => onChanged(tab),
         behavior: HitTestBehavior.opaque,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           alignment: Alignment.center,
           padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing8),
           decoration: BoxDecoration(
-            color: isSelected
+            color: selected
                 ? context.accentColor.withValues(alpha: 0.18)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(AppTheme.radius10),
@@ -1968,7 +2050,7 @@ class _ComposerModeSwitcher extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: isSelected ? context.accentColor : context.textSecondary,
+              color: selected ? context.accentColor : context.textSecondary,
               fontFamily: AppTheme.fontFamily,
             ),
           ),

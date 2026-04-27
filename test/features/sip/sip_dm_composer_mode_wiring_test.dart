@@ -1,25 +1,25 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Pins the Pattern-A composer-mode integration that surfaced SIP
-/// Play as a first-class tab inside the existing DM session UI.
+/// Pins the rich-composer bottom-sheet integration that replaced the
+/// inline mode switcher.
 ///
 /// Hard rules:
-///   - The composer mode enum carries `text`, `sketch`, AND `play`.
-///   - `_ComposerModeSwitcher` exposes Sketch + Play tabs based on
-///     `showSketch` / `showPlay` props — caller-controlled visibility
-///     so peer-feature gating + T+S blocking can hide individual
-///     tabs without forking the widget.
-///   - The Play tab is hidden (not just disabled) when the peer
-///     lacks `dmPlayV1` OR is blocked OR the session is inactive.
-///   - The Play panel dispatches into the existing `showSipPlayPicker`
-///     sheet — no new offer surface.
-///   - Switching modes must NOT clear `_textController` or
-///     `_sketchDraft` (drafts are State fields that persist across
-///     rebuilds; nowhere in the build does `setState` reset them).
+///   - Text input is the always-on inline composer; Sketch / Play /
+///     Signal live exclusively in `_RichComposerSheet`.
+///   - The rich-composer trigger appears only when at least one rich
+///     tab is reachable (peer caps, T+S block, session active).
+///   - The sheet's tab visibility mirrors the trigger's gating —
+///     hidden caps drop their tab from the row inside the sheet.
+///   - The Play panel inside the sheet still routes through
+///     `sendSipPlayOffer` + per-game `_GameOfferCard` widgets —
+///     no fork of the offer surface.
+///   - Drafts that survive sheet open/close must be lifted to screen
+///     scope: `_sketchDraft` is the canonical example. `_textController`
+///     is unaffected by the sheet (text is inline).
 ///   - The empty-state body copy mentions text, sketches, and games.
 ///   - The standalone `_PlayComposerCta` (pre-integration helper)
-///     must NOT exist — Play is exclusively reached via the tab.
+///     must NOT exist — Play is exclusively reached via the sheet.
 library;
 
 import 'dart:io';
@@ -29,38 +29,49 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   final src = File('lib/features/sip/sip_dm_screen.dart').readAsStringSync();
 
-  group('Composer mode enum', () {
-    test('enum carries text, sketch, AND play', () {
+  group('Sheet host architecture', () {
+    test('rich-composer tab enum carries sketch, play, signal — no text', () {
       expect(
         RegExp(
-          r'enum\s+_SipDmComposerMode\s*\{\s*text\s*,\s*sketch\s*,\s*play',
+          r'enum\s+_RichComposerTab\s*\{\s*sketch\s*,\s*play\s*,\s*signal\s*\}',
         ).hasMatch(src),
         isTrue,
         reason:
-            'composer enum must include all three modes — Pattern A '
-            'integration replaces the old Text|Sketch dichotomy',
+            'the rich-composer sheet hosts only the three attachment '
+            'modes — text is the always-on inline composer and is '
+            'intentionally absent from this enum.',
+      );
+    });
+
+    test('inline text input wires the leading attach trigger only when at '
+        'least one rich tab is reachable', () {
+      expect(
+        src.contains('showComposerTrigger'),
+        isTrue,
+        reason:
+            '_buildTextInputBlock derives a single boolean from the '
+            'three peer-cap gates and uses it to show/hide the '
+            'leading attach button on ChatComposer.',
+      );
+      expect(src.contains('_ComposerSheetTrigger('), isTrue);
+      expect(src.contains('l10n.sipDmComposerSheetTooltip'), isTrue);
+    });
+
+    test('opening the sheet routes through AppBottomSheet.showScrollable', () {
+      expect(src.contains('AppBottomSheet.showScrollable'), isTrue);
+      expect(src.contains('l10n.sipDmComposerSheetTitle'), isTrue);
+      expect(
+        src.contains('_RichComposerSheet('),
+        isTrue,
+        reason:
+            'the sheet body is a dedicated widget so its scroll '
+            'controller can be wired into a SingleChildScrollView.',
       );
     });
   });
 
-  group('Composer mode switcher', () {
-    test('switcher accepts showSketch + showPlay flags + uses Play '
-        'ARB label', () {
-      expect(src.contains('required this.showSketch'), isTrue);
-      expect(src.contains('required this.showPlay'), isTrue);
-      expect(src.contains('l10n.sipDmComposerModePlay'), isTrue);
-    });
-
-    test('switcher renders all three labels via ARB keys, not literals', () {
-      expect(src.contains('l10n.sipDmComposerModeText'), isTrue);
-      expect(src.contains('l10n.sipDmComposerModeSketch'), isTrue);
-      expect(src.contains('l10n.sipDmComposerModePlay'), isTrue);
-    });
-  });
-
-  group('Play tab gating', () {
-    test('Play tab is gated by enabled + peerSupportsPlay + !peerBlocked', () {
-      // The build derives showPlayTab from those three signals.
+  group('Tab gating', () {
+    test('Play tab visibility = enabled && peerSupportsPlay && !peerBlocked', () {
       expect(
         RegExp(
           r'showPlayTab\s*=\s*enabled\s*&&\s*peerSupportsPlay\s*&&\s*!peerBlocked',
@@ -80,16 +91,10 @@ void main() {
       );
     });
 
-    test('blocked peer triggers a fallback to text mode (no orphan tab)', () {
-      // When the user is on the Play tab and the peer becomes
-      // blocked, the build flips the active mode to text on the
-      // next rebuild rather than stranding them on a hidden tab.
-      expect(
-        src.contains(
-          '_composerMode == _SipDmComposerMode.play && !showPlayTab',
-        ),
-        isTrue,
-      );
+    test('the rich tab bar uses the same three ARB labels as before', () {
+      expect(src.contains('l10n.sipDmComposerModeSketch'), isTrue);
+      expect(src.contains('l10n.sipDmComposerModePlay'), isTrue);
+      expect(src.contains('l10n.sipDmComposerModeSignal'), isTrue);
     });
   });
 
@@ -109,9 +114,6 @@ void main() {
     );
 
     test('panel routes through sendSipPlayOffer + per-game cards', () {
-      // The intermediate picker bottom sheet was replaced by per-game
-      // cards rendered directly inside _PlayComposerPanel. Pin the
-      // single offer-dispatch helper used by every card.
       expect(src.contains('sendSipPlayOffer('), isTrue);
       expect(src.contains('_GameOfferCard('), isTrue);
       expect(src.contains('SipPlayRegistry.games'), isTrue);
@@ -132,43 +134,44 @@ void main() {
   });
 
   group('Draft preservation', () {
-    test('switching modes does NOT clear _textController or _sketchDraft', () {
-      // Search the onChanged callback inside _ComposerModeSwitcher
-      // construction for any `.clear()` / `.text = ''` / `_sketchDraft =`
-      // assignments. None of those should appear in the mode-switch
-      // path. We isolate the switcher block to keep the assertion
-      // narrow.
-      final start = src.indexOf('_ComposerModeSwitcher(');
+    test('sketch draft is lifted to screen scope so it survives sheet '
+        'open/close cycles', () {
+      // The screen owns _sketchDraft and passes it into both the
+      // sheet host and the SipInkComposer inside.
+      expect(
+        RegExp(
+          r'List<SipInkRawStroke>\s+_sketchDraft\s*=\s*\[\]',
+        ).hasMatch(src),
+        isTrue,
+      );
+      expect(src.contains('sketchDraft: _sketchDraft'), isTrue);
+    });
+
+    test('opening the sheet does NOT touch the text controller or '
+        'sketch draft', () {
+      // Find the _openComposerSheet body and ensure it doesn't reset
+      // either draft.
+      final start = src.indexOf('Future<void> _openComposerSheet(');
       expect(start, greaterThan(0));
-      final end = src.indexOf(',\n                    ),', start);
+      final end = src.indexOf('\n  }\n', start);
       expect(end, greaterThan(start));
       final block = src.substring(start, end);
-
       expect(
-        block.contains('_textController.clear'),
+        block.contains('_messageController.clear'),
         isFalse,
-        reason: 'mode switch must NOT clear the text draft',
+        reason: 'opening the rich sheet must NOT clear text input',
       );
       expect(
-        block.contains('_textController.text ='),
+        block.contains('_sketchDraft.clear'),
         isFalse,
-        reason: 'mode switch must NOT overwrite the text controller',
-      );
-      expect(
-        block.contains('_sketchDraft ='),
-        isFalse,
-        reason: 'mode switch must NOT reset the sketch draft',
+        reason: 'opening the rich sheet must NOT discard sketch strokes',
       );
     });
   });
 
   group('Empty state', () {
     test('body copy mentions text, sketches, and games', () {
-      // Read the ARB directly — the screen renders this through
-      // l10n.sipDmEmptyDescription so we pin the source-of-truth.
       final arb = File('lib/l10n/app_en.arb').readAsStringSync();
-      // Locate the value next to the key to avoid matching the
-      // metadata description.
       final match = RegExp(
         r'"sipDmEmptyDescription"\s*:\s*"([^"]+)"',
       ).firstMatch(arb);
