@@ -108,10 +108,13 @@ void main() {
       },
     );
 
-    test('panel routes through the existing showSipPlayPicker sheet', () {
-      // Pin that the picker is the dispatch path — keeps a single
-      // offer-creation surface across CTA refactors.
-      expect(src.contains('showSipPlayPicker('), isTrue);
+    test('panel routes through sendSipPlayOffer + per-game cards', () {
+      // The intermediate picker bottom sheet was replaced by per-game
+      // cards rendered directly inside _PlayComposerPanel. Pin the
+      // single offer-dispatch helper used by every card.
+      expect(src.contains('sendSipPlayOffer('), isTrue);
+      expect(src.contains('_GameOfferCard('), isTrue);
+      expect(src.contains('SipPlayRegistry.games'), isTrue);
     });
 
     test('panel renders the Play header + airtime subtitle + TTT card '

@@ -32072,6 +32072,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sipPlayPanelTttSizeBadge => 'Tiny moves • ~7 bytes';
 
   @override
+  String get sipPlayPanelC4Supporting =>
+      'Drop discs into a column. First to four-in-a-row wins.';
+
+  @override
+  String get sipPlayPanelC4SizeBadge => 'Tiny moves • ~7 bytes';
+
+  @override
   String get sipPlayPanelGameInProgressTitle => 'Game in progress';
 
   @override
@@ -32106,6 +32113,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get sipPlayGameTicTacToeDescription =>
       'Classic 3x3. You place X if you offered, O if you accepted.';
+
+  @override
+  String get sipPlayGameConnectFour => 'Connect Four';
+
+  @override
+  String get sipPlayGameConnectFourDescription =>
+      '6x7 grid. Drop discs into a column. First to four-in-a-row wins.';
 
   @override
   String get sipPlayUnsupportedGame => 'Unsupported game';

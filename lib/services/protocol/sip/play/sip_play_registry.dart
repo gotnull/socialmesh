@@ -48,6 +48,14 @@ abstract final class SipPlayRegistry {
       // `ttt_codec.dart`.
       maxMovePayloadBytes: 1,
     ),
+    SipPlayGameDescriptor(
+      gameType: SipPlayGameType.connectFour,
+      labelId: 'connectFour',
+      // 1-byte move payload (disc nibble | column nibble) — landing
+      // row is derived by the receiver from gravity, not transmitted.
+      // See `c4_codec.dart`.
+      maxMovePayloadBytes: 1,
+    ),
   ];
 
   /// Lookup by strongly-typed enum.

@@ -4,6 +4,9 @@
 import 'dart:typed_data';
 
 import '../../../../core/logging.dart';
+import 'games/connectfour/c4_codec.dart';
+import 'games/connectfour/c4_payload.dart';
+import 'games/connectfour/c4_rules.dart';
 import 'games/tictactoe/ttt_codec.dart';
 import 'games/tictactoe/ttt_payload.dart';
 import 'games/tictactoe/ttt_rules.dart';
@@ -67,7 +70,14 @@ enum SipPlayInstanceStatus {
 
 /// Derived per-instance state. Built by [SipPlayEngine.replay] from
 /// the entry log; mutated nowhere else.
-class SipPlayInstanceState {
+///
+/// Sealed hierarchy: every concrete instance is one of the per-game
+/// subclasses ([TttInstanceState], future C4InstanceState, ...) or
+/// the catch-all [UnsupportedInstanceState] for unknown game-type
+/// codes. Consumers use Dart 3 sealed-switch to destructure on the
+/// runtime type — the compiler enforces exhaustiveness so adding a
+/// new game can't silently miss a render path.
+sealed class SipPlayInstanceState {
   /// Wire game-type byte. Held as raw int so unsupported codes can
   /// still be represented.
   final int gameTypeCode;
@@ -78,6 +88,34 @@ class SipPlayInstanceState {
   /// Lifecycle status.
   final SipPlayInstanceStatus status;
 
+  /// Highest seq applied. Receivers enforce
+  /// `incoming.seq == lastAppliedSeq + 1` strictly.
+  final int lastAppliedSeq;
+
+  const SipPlayInstanceState({
+    required this.gameTypeCode,
+    required this.instanceId,
+    required this.status,
+    required this.lastAppliedSeq,
+  });
+
+  /// Convenience: is the local user the side whose turn it is?
+  /// Game-specific — each subclass compares its own turn-marker
+  /// against its own localMark/localDisc/etc.
+  bool get isLocalTurn;
+
+  /// Convenience: terminal states allow no further moves. Pure
+  /// function of [status], so shared on the base.
+  bool get isTerminal => switch (status) {
+    SipPlayInstanceStatus.pendingOffer || SipPlayInstanceStatus.active => false,
+    _ => true,
+  };
+}
+
+/// Per-instance state for a Tic-Tac-Toe game. Carries the 9-cell
+/// board and the X/O role markers; [SipPlayEngine.replay] constructs
+/// this whenever the locked `gameTypeCode` resolves to TTT.
+class TttInstanceState extends SipPlayInstanceState {
   /// Local mark (X = offerer, O = acceptor). Null until both ends
   /// have committed (i.e. status >= active or terminal-after-active).
   final TttMark? localMark;
@@ -85,45 +123,93 @@ class SipPlayInstanceState {
   /// Remote mark. Null in the same conditions as [localMark].
   final TttMark? remoteMark;
 
-  /// Current TTT board. Only meaningful for the TTT renderer; other
-  /// games would hold their own state. Held here for v1 simplicity —
-  /// future games will refactor this onto a per-game state object.
+  /// Current TTT board.
   final TttBoard board;
 
   /// Whose turn it is when status is `active`. Null otherwise.
   final TttMark? turn;
 
-  /// Highest seq applied. Receivers enforce
-  /// `incoming.seq == lastAppliedSeq + 1` strictly.
-  final int lastAppliedSeq;
-
   /// Winner mark when status is `won`. Null otherwise.
   final TttMark? winner;
 
-  const SipPlayInstanceState({
-    required this.gameTypeCode,
-    required this.instanceId,
-    required this.status,
+  const TttInstanceState({
+    required super.gameTypeCode,
+    required super.instanceId,
+    required super.status,
+    required super.lastAppliedSeq,
     required this.localMark,
     required this.remoteMark,
     required this.board,
     required this.turn,
-    required this.lastAppliedSeq,
     required this.winner,
   });
 
-  /// Convenience: is the local user the side whose turn it is?
+  @override
   bool get isLocalTurn =>
       status == SipPlayInstanceStatus.active &&
       turn != null &&
       localMark != null &&
       turn == localMark;
+}
 
-  /// Convenience: terminal states allow no further moves.
-  bool get isTerminal => switch (status) {
-    SipPlayInstanceStatus.pendingOffer || SipPlayInstanceStatus.active => false,
-    _ => true,
-  };
+/// Per-instance state for a Connect Four game. Carries the 6×7 board
+/// and the red/yellow role markers; [SipPlayEngine.replay] constructs
+/// this whenever the locked `gameTypeCode` resolves to C4.
+///
+/// Note: `localDisc` / `remoteDisc` are wire-side names; the UI
+/// rendering layer treats them as opaque "local-side" / "peer-side"
+/// markers and chooses themed colours rather than hard-coded
+/// red/yellow. See `c4_payload.dart` for the convention.
+class C4InstanceState extends SipPlayInstanceState {
+  /// Local disc colour. Null until both ends have committed.
+  final C4Disc? localDisc;
+
+  /// Remote disc colour. Null in the same conditions as [localDisc].
+  final C4Disc? remoteDisc;
+
+  /// Current C4 board.
+  final C4Board board;
+
+  /// Whose turn it is when status is `active`. Null otherwise.
+  final C4Disc? turn;
+
+  /// Winner disc when status is `won`. Null otherwise.
+  final C4Disc? winner;
+
+  const C4InstanceState({
+    required super.gameTypeCode,
+    required super.instanceId,
+    required super.status,
+    required super.lastAppliedSeq,
+    required this.localDisc,
+    required this.remoteDisc,
+    required this.board,
+    required this.turn,
+    required this.winner,
+  });
+
+  @override
+  bool get isLocalTurn =>
+      status == SipPlayInstanceStatus.active &&
+      turn != null &&
+      localDisc != null &&
+      turn == localDisc;
+}
+
+/// Per-instance state when the receiver doesn't recognise the
+/// `gameTypeCode`. The status is locked to
+/// [SipPlayInstanceStatus.unsupported]; no game-specific board is
+/// carried because we have no rules to apply. Renderers show the
+/// safe fallback UX.
+class UnsupportedInstanceState extends SipPlayInstanceState {
+  const UnsupportedInstanceState({
+    required super.gameTypeCode,
+    required super.instanceId,
+    required super.lastAppliedSeq,
+  }) : super(status: SipPlayInstanceStatus.unsupported);
+
+  @override
+  bool get isLocalTurn => false;
 }
 
 /// Pure-replay SIP Play engine.
@@ -153,6 +239,12 @@ class SipPlayEngine {
   /// `entries` is the time-ordered list of SIP Play entries belonging
   /// to ONE `(sessionTag, instanceId)` pair. Caller filters; the
   /// engine assumes single-instance input.
+  ///
+  /// Dispatches by the locked `gameTypeCode` to the per-game replay
+  /// implementation. The lifecycle (offer / accept / decline /
+  /// resign) is shared across games via [_LifecycleProcessor]; only
+  /// the `move` branch and the role-marker assignment differ per
+  /// game.
   static SipPlayInstanceState replay(List<SipPlayEntry> entries) {
     if (entries.isEmpty) {
       // Pre-offer placeholder. Callers shouldn't normally hit this —
@@ -177,257 +269,295 @@ class SipPlayEngine {
         'instance=0x${instanceId.toRadixString(16)} '
         'gameType=0x${gameTypeCode.toRadixString(16)}',
       );
-      return SipPlayInstanceState(
+      return UnsupportedInstanceState(
         gameTypeCode: gameTypeCode,
         instanceId: instanceId,
-        status: SipPlayInstanceStatus.unsupported,
-        localMark: null,
-        remoteMark: null,
-        board: TttBoard.empty(),
-        turn: null,
         lastAppliedSeq: -1,
-        winner: null,
       );
     }
 
-    var status = SipPlayInstanceStatus.pendingOffer;
+    final type = SipPlayGameType.fromCode(gameTypeCode);
+    switch (type) {
+      case SipPlayGameType.ticTacToe:
+        return _replayTtt(entries, instanceId, gameTypeCode);
+      case SipPlayGameType.connectFour:
+        return _replayC4(entries, instanceId, gameTypeCode);
+      case null:
+        // isSupported guard above already rejects unknown codes; this
+        // arm is unreachable at runtime but keeps the switch
+        // exhaustive (Dart 3 doesn't infer nullable through registry
+        // lookup + null-coalescing-style guards).
+        return UnsupportedInstanceState(
+          gameTypeCode: gameTypeCode,
+          instanceId: instanceId,
+          lastAppliedSeq: -1,
+        );
+    }
+  }
+
+  /// Per-game replay for Tic-Tac-Toe. Walks the entry log, defers
+  /// every non-move action to the shared [_LifecycleProcessor], and
+  /// owns the TTT-specific move handling + role assignment.
+  static TttInstanceState _replayTtt(
+    List<SipPlayEntry> entries,
+    int instanceId,
+    int gameTypeCode,
+  ) {
+    final lc = _LifecycleProcessor(instanceId: instanceId);
     TttMark? localMark;
     TttMark? remoteMark;
     var board = TttBoard.empty();
     TttMark? turn;
-    var lastAppliedSeq = -1;
     TttMark? winner;
-    SipPlayEntryDirection? offerDirection;
 
     for (var i = 0; i < entries.length; i += 1) {
       final entry = entries[i];
       final env = entry.envelope;
-
-      // Ignore envelopes that do not match the locked instance id
-      // (defence-in-depth — caller should have filtered already).
       if (env.instanceId != instanceId) continue;
       if (env.gameTypeCode != gameTypeCode) continue;
 
-      // Reserved-in-v1 sync action: drop without state change. See
-      // SipPlayConstants enum dartdoc.
-      if (env.action == SipPlayAction.sync) {
-        AppLogging.sipPlay(
-          'replay_drop reason=sync_reserved_in_v1 '
-          'instance=0x${instanceId.toRadixString(16)} '
-          'seq=${env.seq}',
-        );
-        continue;
-      }
-
-      switch (env.action) {
-        case SipPlayAction.offer:
-          if (i != 0) {
-            // Only the first envelope in a log can be an offer; a
-            // later "offer" envelope is corrupt input.
-            AppLogging.sipPlay(
-              'replay_drop reason=duplicate_offer '
-              'instance=0x${instanceId.toRadixString(16)} seq=${env.seq}',
-            );
-            continue;
-          }
-          if (env.seq != 0) {
-            AppLogging.sipPlay(
-              'replay_drop reason=offer_seq_nonzero '
-              'instance=0x${instanceId.toRadixString(16)} seq=${env.seq}',
-            );
-            continue;
-          }
-          offerDirection = entry.direction;
-          // Mark assignment is locked at accept time. Until then we
-          // only know the candidate offerer's perspective.
-          lastAppliedSeq = 0;
-
-        case SipPlayAction.accept:
-          if (status != SipPlayInstanceStatus.pendingOffer) {
-            AppLogging.sipPlay(
-              'replay_drop reason=accept_in_wrong_status status=${status.name} '
-              'seq=${env.seq}',
-            );
-            continue;
-          }
-          if (offerDirection == null) {
-            AppLogging.sipPlay(
-              'replay_drop reason=accept_without_offer seq=${env.seq}',
-            );
-            continue;
-          }
-          if (entry.direction == offerDirection) {
-            // Local can't accept its own offer — that would be a
-            // corrupt log. Drop.
-            AppLogging.sipPlay(
-              'replay_drop reason=accept_from_offerer seq=${env.seq}',
-            );
-            continue;
-          }
-          if (env.seq != lastAppliedSeq + 1) {
-            AppLogging.sipPlay(
-              'replay_drop reason=accept_seq_mismatch '
-              'expected=${lastAppliedSeq + 1} got=${env.seq}',
-            );
-            continue;
-          }
+      final outcome = lc.process(entry: entry, entryIndex: i);
+      if (outcome == _LifecycleOutcome.dropped) continue;
+      if (outcome == _LifecycleOutcome.consumed) {
+        if (lc.justAccepted) {
           // Lock marks: offerer plays X (and moves first); acceptor
           // plays O. Both sides reach this conclusion identically
-          // from the entry log — the engine just stamps it onto the
-          // local-side perspective.
-          if (offerDirection == SipPlayEntryDirection.outbound) {
+          // from the entry log.
+          if (lc.offerDirection == SipPlayEntryDirection.outbound) {
             localMark = TttMark.x;
             remoteMark = TttMark.o;
           } else {
             localMark = TttMark.o;
             remoteMark = TttMark.x;
           }
-          status = SipPlayInstanceStatus.active;
           turn = TttMark.x;
-          lastAppliedSeq = env.seq;
-
-        case SipPlayAction.decline:
-          if (status != SipPlayInstanceStatus.pendingOffer) {
-            AppLogging.sipPlay(
-              'replay_drop reason=decline_in_wrong_status '
-              'status=${status.name} seq=${env.seq}',
-            );
-            continue;
-          }
-          if (offerDirection == null) continue;
-          if (entry.direction == offerDirection) {
-            AppLogging.sipPlay(
-              'replay_drop reason=decline_from_offerer seq=${env.seq}',
-            );
-            continue;
-          }
-          if (env.seq != lastAppliedSeq + 1) {
-            AppLogging.sipPlay(
-              'replay_drop reason=decline_seq_mismatch '
-              'expected=${lastAppliedSeq + 1} got=${env.seq}',
-            );
-            continue;
-          }
-          status = entry.direction == SipPlayEntryDirection.outbound
-              ? SipPlayInstanceStatus.declinedByLocal
-              : SipPlayInstanceStatus.declinedByRemote;
-          lastAppliedSeq = env.seq;
-
-        case SipPlayAction.move:
-          if (status != SipPlayInstanceStatus.active) {
-            AppLogging.sipPlay(
-              'replay_drop reason=move_in_wrong_status status=${status.name} '
-              'seq=${env.seq}',
-            );
-            continue;
-          }
-          if (env.seq <= lastAppliedSeq) {
-            AppLogging.sipPlay(
-              'replay_drop reason=duplicate_or_replay '
-              'last=$lastAppliedSeq got=${env.seq}',
-            );
-            continue;
-          }
-          if (env.seq != lastAppliedSeq + 1) {
-            AppLogging.sipPlay(
-              'replay_drop reason=move_seq_mismatch '
-              'expected=${lastAppliedSeq + 1} got=${env.seq}',
-            );
-            continue;
-          }
-          final move = TttCodec.decodeMove(env.gamePayload);
-          if (move == null) {
-            AppLogging.sipPlay(
-              'replay_drop reason=ttt_payload_malformed seq=${env.seq}',
-            );
-            continue;
-          }
-          // Sender's mark must equal the deterministic mark for the
-          // direction. Catches a malicious or buggy peer claiming
-          // the wrong mark.
-          final expectedMarkForSender =
-              entry.direction == SipPlayEntryDirection.outbound
-              ? localMark
-              : remoteMark;
-          if (move.mark != expectedMarkForSender) {
-            AppLogging.sipPlay(
-              'replay_drop reason=mark_mismatch '
-              'expected=${expectedMarkForSender?.name} got=${move.mark.name}',
-            );
-            continue;
-          }
-          // Must be sender's turn AND the cell must be empty.
-          if (move.mark != turn) {
-            AppLogging.sipPlay(
-              'replay_drop reason=not_senders_turn turn=${turn?.name} '
-              'mark=${move.mark.name} seq=${env.seq}',
-            );
-            continue;
-          }
-          if (!board.isLegalMove(move.cell)) {
-            AppLogging.sipPlay(
-              'replay_drop reason=cell_occupied cell=${move.cell} '
-              'seq=${env.seq}',
-            );
-            continue;
-          }
-          board = board.apply(move.cell, move.mark);
-          lastAppliedSeq = env.seq;
-          // Recompute status post-move.
-          final w = board.winner;
-          if (w != null) {
-            status = SipPlayInstanceStatus.won;
-            winner = w;
-            turn = null;
-          } else if (board.isDraw) {
-            status = SipPlayInstanceStatus.draw;
-            turn = null;
-          } else {
-            turn = move.mark.opponent;
-          }
-
-        case SipPlayAction.resign:
-          if (status != SipPlayInstanceStatus.active) {
-            AppLogging.sipPlay(
-              'replay_drop reason=resign_in_wrong_status '
-              'status=${status.name} seq=${env.seq}',
-            );
-            continue;
-          }
-          if (env.seq != lastAppliedSeq + 1) {
-            AppLogging.sipPlay(
-              'replay_drop reason=resign_seq_mismatch '
-              'expected=${lastAppliedSeq + 1} got=${env.seq}',
-            );
-            continue;
-          }
-          status = entry.direction == SipPlayEntryDirection.outbound
-              ? SipPlayInstanceStatus.resignedByLocal
-              : SipPlayInstanceStatus.resignedByRemote;
-          lastAppliedSeq = env.seq;
+        }
+        if (lc.status == SipPlayInstanceStatus.resignedByLocal ||
+            lc.status == SipPlayInstanceStatus.resignedByRemote) {
           turn = null;
+        }
+        continue;
+      }
+      // outcome == delegate → caller handles move action.
 
-        case SipPlayAction.sync:
-          // Already handled above (reserved-in-v1 drop).
-          break;
+      // Move-specific seq + status guards (same shape as lifecycle but
+      // here we own the post-move winner/draw state machine).
+      if (lc.status != SipPlayInstanceStatus.active) {
+        AppLogging.sipPlay(
+          'replay_drop reason=move_in_wrong_status status=${lc.status.name} '
+          'seq=${env.seq}',
+        );
+        continue;
+      }
+      if (env.seq <= lc.lastAppliedSeq) {
+        AppLogging.sipPlay(
+          'replay_drop reason=duplicate_or_replay '
+          'last=${lc.lastAppliedSeq} got=${env.seq}',
+        );
+        continue;
+      }
+      if (env.seq != lc.lastAppliedSeq + 1) {
+        AppLogging.sipPlay(
+          'replay_drop reason=move_seq_mismatch '
+          'expected=${lc.lastAppliedSeq + 1} got=${env.seq}',
+        );
+        continue;
+      }
+      final move = TttCodec.decodeMove(env.gamePayload);
+      if (move == null) {
+        AppLogging.sipPlay(
+          'replay_drop reason=ttt_payload_malformed seq=${env.seq}',
+        );
+        continue;
+      }
+      // Sender's mark must equal the deterministic mark for the
+      // direction. Catches a malicious or buggy peer claiming the
+      // wrong mark.
+      final expectedMarkForSender =
+          entry.direction == SipPlayEntryDirection.outbound
+          ? localMark
+          : remoteMark;
+      if (move.mark != expectedMarkForSender) {
+        AppLogging.sipPlay(
+          'replay_drop reason=mark_mismatch '
+          'expected=${expectedMarkForSender?.name} got=${move.mark.name}',
+        );
+        continue;
+      }
+      if (move.mark != turn) {
+        AppLogging.sipPlay(
+          'replay_drop reason=not_senders_turn turn=${turn?.name} '
+          'mark=${move.mark.name} seq=${env.seq}',
+        );
+        continue;
+      }
+      if (!board.isLegalMove(move.cell)) {
+        AppLogging.sipPlay(
+          'replay_drop reason=cell_occupied cell=${move.cell} '
+          'seq=${env.seq}',
+        );
+        continue;
+      }
+      board = board.apply(move.cell, move.mark);
+      lc.lastAppliedSeq = env.seq;
+      final w = board.winner;
+      if (w != null) {
+        lc.status = SipPlayInstanceStatus.won;
+        winner = w;
+        turn = null;
+      } else if (board.isDraw) {
+        lc.status = SipPlayInstanceStatus.draw;
+        turn = null;
+      } else {
+        turn = move.mark.opponent;
       }
     }
 
-    return SipPlayInstanceState(
+    return TttInstanceState(
       gameTypeCode: gameTypeCode,
       instanceId: instanceId,
-      status: status,
+      status: lc.status,
       localMark: localMark,
       remoteMark: remoteMark,
       board: board,
       turn: turn,
-      lastAppliedSeq: lastAppliedSeq,
+      lastAppliedSeq: lc.lastAppliedSeq,
       winner: winner,
     );
   }
 
+  /// Per-game replay for Connect Four. Mirrors [_replayTtt] step for
+  /// step but with C4 types (column → row via gravity, 4-in-a-row win
+  /// detection). The lifecycle is identical to TTT and lives in the
+  /// shared [_LifecycleProcessor].
+  static C4InstanceState _replayC4(
+    List<SipPlayEntry> entries,
+    int instanceId,
+    int gameTypeCode,
+  ) {
+    final lc = _LifecycleProcessor(instanceId: instanceId);
+    C4Disc? localDisc;
+    C4Disc? remoteDisc;
+    var board = C4Board.empty();
+    C4Disc? turn;
+    C4Disc? winner;
+
+    for (var i = 0; i < entries.length; i += 1) {
+      final entry = entries[i];
+      final env = entry.envelope;
+      if (env.instanceId != instanceId) continue;
+      if (env.gameTypeCode != gameTypeCode) continue;
+
+      final outcome = lc.process(entry: entry, entryIndex: i);
+      if (outcome == _LifecycleOutcome.dropped) continue;
+      if (outcome == _LifecycleOutcome.consumed) {
+        if (lc.justAccepted) {
+          // Offerer plays red (and moves first); acceptor plays
+          // yellow. Same offerer-first-mover rule as TTT.
+          if (lc.offerDirection == SipPlayEntryDirection.outbound) {
+            localDisc = C4Disc.red;
+            remoteDisc = C4Disc.yellow;
+          } else {
+            localDisc = C4Disc.yellow;
+            remoteDisc = C4Disc.red;
+          }
+          turn = C4Disc.red;
+        }
+        if (lc.status == SipPlayInstanceStatus.resignedByLocal ||
+            lc.status == SipPlayInstanceStatus.resignedByRemote) {
+          turn = null;
+        }
+        continue;
+      }
+
+      if (lc.status != SipPlayInstanceStatus.active) {
+        AppLogging.sipPlay(
+          'replay_drop reason=move_in_wrong_status status=${lc.status.name} '
+          'seq=${env.seq}',
+        );
+        continue;
+      }
+      if (env.seq <= lc.lastAppliedSeq) {
+        AppLogging.sipPlay(
+          'replay_drop reason=duplicate_or_replay '
+          'last=${lc.lastAppliedSeq} got=${env.seq}',
+        );
+        continue;
+      }
+      if (env.seq != lc.lastAppliedSeq + 1) {
+        AppLogging.sipPlay(
+          'replay_drop reason=move_seq_mismatch '
+          'expected=${lc.lastAppliedSeq + 1} got=${env.seq}',
+        );
+        continue;
+      }
+      final move = C4Codec.decodeMove(env.gamePayload);
+      if (move == null) {
+        AppLogging.sipPlay(
+          'replay_drop reason=c4_payload_malformed seq=${env.seq}',
+        );
+        continue;
+      }
+      final expectedDiscForSender =
+          entry.direction == SipPlayEntryDirection.outbound
+          ? localDisc
+          : remoteDisc;
+      if (move.disc != expectedDiscForSender) {
+        AppLogging.sipPlay(
+          'replay_drop reason=disc_mismatch '
+          'expected=${expectedDiscForSender?.name} got=${move.disc.name}',
+        );
+        continue;
+      }
+      if (move.disc != turn) {
+        AppLogging.sipPlay(
+          'replay_drop reason=not_senders_turn turn=${turn?.name} '
+          'disc=${move.disc.name} seq=${env.seq}',
+        );
+        continue;
+      }
+      if (!board.isLegalMove(move.column)) {
+        AppLogging.sipPlay(
+          'replay_drop reason=column_full column=${move.column} '
+          'seq=${env.seq}',
+        );
+        continue;
+      }
+      board = board.apply(move.column, move.disc);
+      lc.lastAppliedSeq = env.seq;
+      final w = board.winner;
+      if (w != null) {
+        lc.status = SipPlayInstanceStatus.won;
+        winner = w;
+        turn = null;
+      } else if (board.isDraw) {
+        lc.status = SipPlayInstanceStatus.draw;
+        turn = null;
+      } else {
+        turn = move.disc.opponent;
+      }
+    }
+
+    return C4InstanceState(
+      gameTypeCode: gameTypeCode,
+      instanceId: instanceId,
+      status: lc.status,
+      localDisc: localDisc,
+      remoteDisc: remoteDisc,
+      board: board,
+      turn: turn,
+      lastAppliedSeq: lc.lastAppliedSeq,
+      winner: winner,
+    );
+  }
+
+  /// Defensive placeholder for the empty-entries edge case (callers
+  /// shouldn't normally hit this — they hold an instance only after
+  /// the offer envelope has been appended). Returns a TTT state in
+  /// the pendingOffer status with an empty board because TTT is the
+  /// default game type when the engine has no envelope to lock from.
   static SipPlayInstanceState _emptyState(int gameTypeCode, int instanceId) {
-    return SipPlayInstanceState(
+    return TttInstanceState(
       gameTypeCode: gameTypeCode,
       instanceId: instanceId,
       status: SipPlayInstanceStatus.pendingOffer,
@@ -474,5 +604,174 @@ class SipPlayEngine {
       return null;
     }
     return SipPlayEntry(envelope: result.envelope!, direction: direction);
+  }
+}
+
+/// What happened to a single SIP Play entry as the shared
+/// [_LifecycleProcessor] inspected it.
+enum _LifecycleOutcome {
+  /// The entry was a valid lifecycle action (offer / accept / decline
+  /// / resign). Per-game state machinery is up to date with whatever
+  /// the processor mutated; the caller skips to the next entry.
+  consumed,
+
+  /// The entry was malformed for the current state (wrong status,
+  /// wrong seq, sync action in v1, etc.). Already drop-logged. Caller
+  /// skips to the next entry.
+  dropped,
+
+  /// The entry is a `move`. Lifecycle has nothing to say — the caller
+  /// must decode the per-game move payload and apply it.
+  delegate,
+}
+
+/// Game-agnostic lifecycle state-machine for SIP Play. Encapsulates
+/// the offer / accept / decline / resign branches that are identical
+/// across every game; per-game replay walks the entries and only
+/// owns the `move` action + role (mark / disc) assignment at the
+/// moment [_LifecycleProcessor.justAccepted] flips true.
+///
+/// Mutates [status], [lastAppliedSeq], [offerDirection],
+/// [justAccepted] in place for each call to [process].
+class _LifecycleProcessor {
+  final int instanceId;
+
+  SipPlayInstanceStatus status = SipPlayInstanceStatus.pendingOffer;
+  int lastAppliedSeq = -1;
+  SipPlayEntryDirection? offerDirection;
+
+  /// True for exactly one [process] call: the one that transitioned
+  /// the instance from `pendingOffer` to `active`. Per-game replay
+  /// reads this to know when to stamp role markers (TttMark.x / O,
+  /// C4Disc.red / yellow). Reset to false on every subsequent call.
+  bool justAccepted = false;
+
+  _LifecycleProcessor({required this.instanceId});
+
+  _LifecycleOutcome process({
+    required SipPlayEntry entry,
+    required int entryIndex,
+  }) {
+    justAccepted = false;
+    final env = entry.envelope;
+
+    // Reserved-in-v1 sync action: drop without state change.
+    if (env.action == SipPlayAction.sync) {
+      AppLogging.sipPlay(
+        'replay_drop reason=sync_reserved_in_v1 '
+        'instance=0x${instanceId.toRadixString(16)} '
+        'seq=${env.seq}',
+      );
+      return _LifecycleOutcome.dropped;
+    }
+
+    switch (env.action) {
+      case SipPlayAction.offer:
+        if (entryIndex != 0) {
+          AppLogging.sipPlay(
+            'replay_drop reason=duplicate_offer '
+            'instance=0x${instanceId.toRadixString(16)} seq=${env.seq}',
+          );
+          return _LifecycleOutcome.dropped;
+        }
+        if (env.seq != 0) {
+          AppLogging.sipPlay(
+            'replay_drop reason=offer_seq_nonzero '
+            'instance=0x${instanceId.toRadixString(16)} seq=${env.seq}',
+          );
+          return _LifecycleOutcome.dropped;
+        }
+        offerDirection = entry.direction;
+        lastAppliedSeq = 0;
+        return _LifecycleOutcome.consumed;
+
+      case SipPlayAction.accept:
+        if (status != SipPlayInstanceStatus.pendingOffer) {
+          AppLogging.sipPlay(
+            'replay_drop reason=accept_in_wrong_status status=${status.name} '
+            'seq=${env.seq}',
+          );
+          return _LifecycleOutcome.dropped;
+        }
+        if (offerDirection == null) {
+          AppLogging.sipPlay(
+            'replay_drop reason=accept_without_offer seq=${env.seq}',
+          );
+          return _LifecycleOutcome.dropped;
+        }
+        if (entry.direction == offerDirection) {
+          AppLogging.sipPlay(
+            'replay_drop reason=accept_from_offerer seq=${env.seq}',
+          );
+          return _LifecycleOutcome.dropped;
+        }
+        if (env.seq != lastAppliedSeq + 1) {
+          AppLogging.sipPlay(
+            'replay_drop reason=accept_seq_mismatch '
+            'expected=${lastAppliedSeq + 1} got=${env.seq}',
+          );
+          return _LifecycleOutcome.dropped;
+        }
+        status = SipPlayInstanceStatus.active;
+        lastAppliedSeq = env.seq;
+        justAccepted = true;
+        return _LifecycleOutcome.consumed;
+
+      case SipPlayAction.decline:
+        if (status != SipPlayInstanceStatus.pendingOffer) {
+          AppLogging.sipPlay(
+            'replay_drop reason=decline_in_wrong_status '
+            'status=${status.name} seq=${env.seq}',
+          );
+          return _LifecycleOutcome.dropped;
+        }
+        if (offerDirection == null) return _LifecycleOutcome.dropped;
+        if (entry.direction == offerDirection) {
+          AppLogging.sipPlay(
+            'replay_drop reason=decline_from_offerer seq=${env.seq}',
+          );
+          return _LifecycleOutcome.dropped;
+        }
+        if (env.seq != lastAppliedSeq + 1) {
+          AppLogging.sipPlay(
+            'replay_drop reason=decline_seq_mismatch '
+            'expected=${lastAppliedSeq + 1} got=${env.seq}',
+          );
+          return _LifecycleOutcome.dropped;
+        }
+        status = entry.direction == SipPlayEntryDirection.outbound
+            ? SipPlayInstanceStatus.declinedByLocal
+            : SipPlayInstanceStatus.declinedByRemote;
+        lastAppliedSeq = env.seq;
+        return _LifecycleOutcome.consumed;
+
+      case SipPlayAction.resign:
+        if (status != SipPlayInstanceStatus.active) {
+          AppLogging.sipPlay(
+            'replay_drop reason=resign_in_wrong_status '
+            'status=${status.name} seq=${env.seq}',
+          );
+          return _LifecycleOutcome.dropped;
+        }
+        if (env.seq != lastAppliedSeq + 1) {
+          AppLogging.sipPlay(
+            'replay_drop reason=resign_seq_mismatch '
+            'expected=${lastAppliedSeq + 1} got=${env.seq}',
+          );
+          return _LifecycleOutcome.dropped;
+        }
+        status = entry.direction == SipPlayEntryDirection.outbound
+            ? SipPlayInstanceStatus.resignedByLocal
+            : SipPlayInstanceStatus.resignedByRemote;
+        lastAppliedSeq = env.seq;
+        return _LifecycleOutcome.consumed;
+
+      case SipPlayAction.move:
+        return _LifecycleOutcome.delegate;
+
+      case SipPlayAction.sync:
+        // Already handled above (reserved-in-v1 drop).
+        return _LifecycleOutcome.dropped;
+    }
   }
 }

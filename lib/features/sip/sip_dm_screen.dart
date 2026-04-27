@@ -51,11 +51,12 @@ import '../../providers/sip_dm_secure_router.dart';
 import '../../providers/sip_play_providers.dart';
 import '../../providers/sip_providers.dart';
 import '../../services/haptic_service.dart';
+import '../../services/protocol/sip/play/sip_play_constants.dart';
 import '../../services/protocol/sip/play/sip_play_engine.dart';
+import '../../services/protocol/sip/play/sip_play_registry.dart';
 import '../../services/protocol/sip/sip_dm.dart';
 import '../../services/protocol/sip/sip_ink_simplifier.dart';
 import '../../services/protocol/sip/sip_messages_dm.dart';
-import '../../services/protocol/sip/signal/sip_signal_codec.dart';
 import '../../services/protocol/text_message_payload_budget.dart';
 import '../../utils/snackbar.dart';
 
@@ -124,6 +125,31 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
   /// the user "at the latest". Mirrors the messaging screen's threshold
   /// so the affordance feels consistent across chat surfaces.
   static const double _atBottomThresholdPx = 120;
+
+  /// Single entry point for changing the active composer mode. Owns
+  /// the keyboard focus side-effect so every caller (chip-tap,
+  /// chat-window tap-to-return-to-text, _onReply) gets identical
+  /// behaviour: switching to Text raises the keyboard, switching to
+  /// any other mode dismisses it.
+  ///
+  /// Focus is requested in a post-frame callback because the text
+  /// input is wrapped in a Visibility that doesn't flip its `visible`
+  /// flag until the rebuild AFTER this setState — calling
+  /// requestFocus inside setState lands on a still-hidden widget and
+  /// iOS silently drops it.
+  void _switchComposerMode(_SipDmComposerMode mode) {
+    if (mode == _composerMode) return;
+    setState(() {
+      _composerMode = mode;
+    });
+    if (mode == _SipDmComposerMode.text) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _inputFocusNode.requestFocus();
+      });
+    } else {
+      _inputFocusNode.unfocus();
+    }
+  }
 
   @override
   void initState() {
@@ -606,14 +632,15 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
     ref.read(hapticServiceProvider).trigger(HapticType.light);
     setState(() {
       _replyingToEntry = entry;
-      // Replies always compose as text — sketch payloads can't carry
-      // a quote prefix (the wire format has no provision for it), so
-      // forcing Text mode keeps the reply path uniform regardless of
-      // what's being replied to. The user's sketch draft lives in
-      // [_sketchDraft] and is preserved.
-      _composerMode = _SipDmComposerMode.text;
     });
-    _inputFocusNode.requestFocus();
+    // Replies always compose as text — sketch payloads can't carry
+    // a quote prefix (the wire format has no provision for it), so
+    // forcing Text mode keeps the reply path uniform regardless of
+    // what's being replied to. The user's sketch draft lives in
+    // [_sketchDraft] and is preserved. [_switchComposerMode] owns
+    // the post-frame focus request so the keyboard rises after the
+    // text input becomes visible.
+    _switchComposerMode(_SipDmComposerMode.text);
   }
 
   /// Quoted text to display in the reply indicator and embed in the
@@ -1091,11 +1118,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
                 behavior: HitTestBehavior.translucent,
                 onTap: _composerMode == _SipDmComposerMode.text
                     ? null
-                    : () {
-                        setState(() {
-                          _composerMode = _SipDmComposerMode.text;
-                        });
-                      },
+                    : () => _switchComposerMode(_SipDmComposerMode.text),
                 child: Stack(
                   children: [
                     if (hasContent)
@@ -1170,33 +1193,46 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
   Widget _buildEmptyState(BuildContext context) {
     final l10n = context.l10n;
 
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppTheme.spacing32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.chat_bubble_outline,
-              size: 48,
-              color: context.textTertiary.withValues(alpha: 0.4),
-            ),
-            const SizedBox(height: AppTheme.spacing12),
-            Text(
-              l10n.sipDmEmptyState,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: context.textSecondary,
+    // Centered when there's room, scrollable when there isn't.
+    // The chat body is `Expanded` inside a Column whose height
+    // shrinks as the bottom composer panel grows (Sketch / Play /
+    // Signal mode each push more vertical content into the
+    // `bottomNavigationBar` slot). Without the scroll wrapper the
+    // 48px icon + 32px-all-around padding produces a ~164 px
+    // intrinsic minimum that overflows the chat body on shorter
+    // Android screens, which surfaces as the yellow/black hazard
+    // stripes near "No messages yet". `SingleChildScrollView` lets
+    // the column scroll inside the available space; on tall iPhones
+    // there's plenty of room and nothing scrolls.
+    return SingleChildScrollView(
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(AppTheme.spacing32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.chat_bubble_outline,
+                size: 48,
+                color: context.textTertiary.withValues(alpha: 0.4),
               ),
-            ),
-            const SizedBox(height: AppTheme.spacing4),
-            Text(
-              l10n.sipDmEmptyDescription,
-              style: TextStyle(fontSize: 13, color: context.textTertiary),
-              textAlign: TextAlign.center,
-            ),
-          ],
+              const SizedBox(height: AppTheme.spacing12),
+              Text(
+                l10n.sipDmEmptyState,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: context.textSecondary,
+                ),
+              ),
+              const SizedBox(height: AppTheme.spacing4),
+              Text(
+                l10n.sipDmEmptyDescription,
+                style: TextStyle(fontSize: 13, color: context.textTertiary),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1291,48 +1327,15 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
                     onChanged: (mode) {
                       if (mode == _composerMode) return;
                       ref.read(hapticServiceProvider).trigger(HapticType.light);
-                      setState(() {
-                        _composerMode = mode;
-                        // Drafts are intentionally NOT cleared here:
-                        // both _textController and _sketchDraft live
-                        // on the State so switching tabs preserves
-                        // both compose surfaces.
-                      });
-                      // Keyboard focus tracks the active mode. The
-                      // request runs in a post-frame callback because
-                      // the text input is wrapped in a Visibility that
-                      // doesn't flip its `visible` flag until the
-                      // rebuild after this setState — calling
-                      // requestFocus inside setState lands on a still-
-                      // hidden widget and iOS silently drops it.
-                      if (mode == _SipDmComposerMode.text) {
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          if (mounted) _inputFocusNode.requestFocus();
-                        });
-                      } else {
-                        _inputFocusNode.unfocus();
-                      }
-                      // Reveal the latest bubble of the selected
-                      // medium so the chip tap both opens the
-                      // composer surface AND points at the running
-                      // conversation in that medium. Play has its
-                      // own dedicated "Jump to game" banner inside
-                      // the play composer panel, so the chip stays
-                      // a pure mode switch there. Text never lands
-                      // anywhere — the user has the typing cursor.
-                      switch (mode) {
-                        case _SipDmComposerMode.text:
-                        case _SipDmComposerMode.play:
-                          break;
-                        case _SipDmComposerMode.sketch:
-                          _jumpToLatestWhere(
-                            (e) => e.contentType == SipDmContentType.ink,
-                          );
-                        case _SipDmComposerMode.signal:
-                          _jumpToLatestWhere(
-                            (e) => e.contentType == SipDmContentType.signal,
-                          );
-                      }
+                      // Drafts are intentionally NOT cleared here:
+                      // both _textController and _sketchDraft live on
+                      // the State so switching tabs preserves both
+                      // compose surfaces. Keyboard focus side-effect
+                      // is owned by [_switchComposerMode].
+                      //
+                      // Chip tap is a pure mode switch — bubble jumps
+                      // happen only when the user taps a reply quote.
+                      _switchComposerMode(mode);
                     },
                   ),
                 ),
@@ -1439,20 +1442,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
           Visibility(
             visible: isSignal,
             maintainState: true,
-            child: SipSignalComposerPanel(
-              sessionTag: widget.sessionTag,
-              onSubModeChanged: (kind) {
-                _jumpToLatestWhere((e) {
-                  if (e.contentType != SipDmContentType.signal) return false;
-                  final payload = e.payload;
-                  if (payload == null || payload.isEmpty) return false;
-                  final result = SipSignalCodec.decode(
-                    Uint8List.fromList(payload),
-                  );
-                  return result.isOk && result.envelope!.kind == kind;
-                });
-              },
-            ),
+            child: SipSignalComposerPanel(sessionTag: widget.sessionTag),
           ),
       ],
     );
@@ -1611,53 +1601,93 @@ class _PlayComposerPanel extends ConsumerWidget {
       );
     }
 
-    // Default mode: header + subtitle + game cards (currently just
-    // Tic-Tac-Toe). Visible only when no active game exists.
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppTheme.spacing16,
-        AppTheme.spacing12,
-        AppTheme.spacing16,
-        AppTheme.spacing12,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            l10n.sipPlayPanelTitle,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: context.textPrimary,
+    // Default mode: header + subtitle + one card per registered
+    // game. Visible only when no active game exists. The panel sits
+    // in the Scaffold's `bottomNavigationBar` slot which doesn't
+    // bound its height — on shorter Android screens N game cards +
+    // the header pushed the panel past the remaining vertical room
+    // and the chat-body Column overflowed by the card delta. Cap at
+    // a fraction of the screen and scroll inside so the chat list
+    // always keeps a minimum slice; on tall iPhones the natural
+    // height stays under the cap and the panel renders identically.
+    final maxPanelHeight = MediaQuery.of(context).size.height * 0.6;
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxHeight: maxPanelHeight),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(
+          AppTheme.spacing16,
+          AppTheme.spacing12,
+          AppTheme.spacing16,
+          AppTheme.spacing12,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              l10n.sipPlayPanelTitle,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: context.textPrimary,
+              ),
             ),
-          ),
-          const SizedBox(height: AppTheme.spacing4),
-          Text(
-            l10n.sipPlayPanelSubtitle,
-            style: TextStyle(fontSize: 12, color: context.textTertiary),
-          ),
-          const SizedBox(height: AppTheme.spacing12),
-          _TicTacToeCard(
-            onTap: () => showSipPlayPicker(
-              context: context,
-              ref: ref,
-              sessionTag: sessionTag,
+            const SizedBox(height: AppTheme.spacing4),
+            Text(
+              l10n.sipPlayPanelSubtitle,
+              style: TextStyle(fontSize: 12, color: context.textTertiary),
             ),
-          ),
-        ],
+            const SizedBox(height: AppTheme.spacing12),
+            // Render one card per registered game. Tapping a card sends
+            // the offer envelope directly — no intermediate picker sheet
+            // (the chip-tap path already commits the user to "Play
+            // something", so a second confirmation sheet is just churn).
+            for (var i = 0; i < SipPlayRegistry.games.length; i += 1) ...[
+              if (i > 0) const SizedBox(height: AppTheme.spacing8),
+              _GameOfferCard(
+                descriptor: SipPlayRegistry.games[i],
+                onTap: () => sendSipPlayOffer(
+                  context: context,
+                  ref: ref,
+                  sessionTag: sessionTag,
+                  gameType: SipPlayRegistry.games[i].gameType,
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
 }
 
-class _TicTacToeCard extends StatelessWidget {
+/// One game's offer card on the SIP Play composer panel. Pulls the
+/// per-game label, supporting copy, size badge, and icon from the
+/// game-type → ARB switch so adding a new game means one ARB triple
+/// + one switch arm; the rest of the panel iterates the registry
+/// generically.
+class _GameOfferCard extends StatelessWidget {
+  final SipPlayGameDescriptor descriptor;
   final VoidCallback onTap;
-  const _TicTacToeCard({required this.onTap});
+  const _GameOfferCard({required this.descriptor, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final (title, supporting, sizeBadge, icon) = switch (descriptor.gameType) {
+      SipPlayGameType.ticTacToe => (
+        l10n.sipPlayGameTicTacToe,
+        l10n.sipPlayPanelTttSupporting,
+        l10n.sipPlayPanelTttSizeBadge,
+        Icons.grid_3x3,
+      ),
+      SipPlayGameType.connectFour => (
+        l10n.sipPlayGameConnectFour,
+        l10n.sipPlayPanelC4Supporting,
+        l10n.sipPlayPanelC4SizeBadge,
+        Icons.view_column_outlined,
+      ),
+    };
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppTheme.radius12),
@@ -1678,7 +1708,7 @@ class _TicTacToeCard extends StatelessWidget {
                 color: context.accentColor.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(AppTheme.radius10),
               ),
-              child: Icon(Icons.grid_3x3, size: 20, color: context.accentColor),
+              child: Icon(icon, size: 20, color: context.accentColor),
             ),
             const SizedBox(width: AppTheme.spacing12),
             Expanded(
@@ -1687,12 +1717,11 @@ class _TicTacToeCard extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      // Title is Flexible so the longer
-                      // "Tiny moves • ~7 bytes" badge can't push it
-                      // off-screen on narrow devices (iPhone SE).
+                      // Title is Flexible so the size badge can't push
+                      // it off-screen on narrow devices (iPhone SE).
                       Flexible(
                         child: Text(
-                          l10n.sipPlayGameTicTacToe,
+                          title,
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -1703,12 +1732,12 @@ class _TicTacToeCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: AppTheme.spacing8),
-                      _SizeBadge(label: l10n.sipPlayPanelTttSizeBadge),
+                      _SizeBadge(label: sizeBadge),
                     ],
                   ),
                   const SizedBox(height: AppTheme.spacing2),
                   Text(
-                    l10n.sipPlayPanelTttSupporting,
+                    supporting,
                     style: TextStyle(
                       fontSize: 12,
                       color: context.textSecondary,

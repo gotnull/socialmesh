@@ -102,19 +102,29 @@ final sipPlayInstanceStateProvider =
         return null;
       }
       final state = SipPlayEngine.replay(entries);
-      final cellsStr = state.board.cells
-          .map((m) => m == null ? '_' : m.name)
-          .join(',');
+      // Per-game cell formatting: TTT prints the 9-cell grid, future
+      // games (C4 etc.) print their own. Switch on the sealed subtype
+      // so adding a new game forces a compiler error here unless it
+      // supplies its own log line.
+      final perGameDetails = switch (state) {
+        TttInstanceState s =>
+          'localMark=${s.localMark?.name ?? "null"} '
+              'turn=${s.turn?.name ?? "null"} '
+              'cells=[${s.board.cells.map((m) => m?.name ?? "_").join(",")}]',
+        C4InstanceState s =>
+          'localDisc=${s.localDisc?.name ?? "null"} '
+              'turn=${s.turn?.name ?? "null"} '
+              'moveCount=${s.board.moveCount}',
+        UnsupportedInstanceState _ => 'unsupported',
+      };
       AppLogging.sipPlay(
         'STATE_PROVIDER_DERIVED '
         'sessionTag=${key.sessionTag} '
         'instance=0x${state.instanceId.toRadixString(16)} '
         'entries=${entries.length} '
         'status=${state.status.name} '
-        'localMark=${state.localMark?.name ?? "null"} '
-        'turn=${state.turn?.name ?? "null"} '
         'lastAppliedSeq=${state.lastAppliedSeq} '
-        'cells=[$cellsStr] epoch=$epoch',
+        '$perGameDetails epoch=$epoch',
       );
       return state;
     });

@@ -27,7 +27,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../../../../core/l10n/l10n_extension.dart';
 import '../../../../../core/logging.dart';
 import '../../../../../core/theme.dart';
 import '../../../../../services/protocol/sip/play/games/tictactoe/ttt_payload.dart';
@@ -503,95 +502,7 @@ class _TttMarkPainter extends CustomPainter {
   }
 }
 
-/// Build the user-facing status caption for an active or terminal
-/// TTT instance. Pure helper — no localization context needed at the
-/// call site beyond a [BuildContext].
-String tttStatusCaption({
-  required BuildContext context,
-  required bool isLocalTurn,
-  required bool localWon,
-  required bool remoteWon,
-  required bool draw,
-  required bool localResigned,
-  required bool remoteResigned,
-  required bool localDeclined,
-  required bool remoteDeclined,
-}) {
-  final l10n = context.l10n;
-  if (localWon) return l10n.sipPlayStatusYouWon;
-  if (remoteWon) return l10n.sipPlayStatusTheyWon;
-  if (draw) return l10n.sipPlayStatusDraw;
-  if (localResigned) return l10n.sipPlayStatusYouResigned;
-  if (remoteResigned) return l10n.sipPlayStatusTheyResigned;
-  if (localDeclined) return l10n.sipPlayStatusYouDeclined;
-  if (remoteDeclined) return l10n.sipPlayStatusTheyDeclined;
-  return isLocalTurn ? l10n.sipPlayStatusYourTurn : l10n.sipPlayStatusTheirTurn;
-}
-
-/// Small dot that pulses when it's the local user's turn — a subtle
-/// "your move" cue placed inline with the status caption. Pure
-/// presentation; no business logic.
-class TttTurnPulseDot extends StatefulWidget {
-  final Color color;
-  final double size;
-
-  const TttTurnPulseDot({super.key, required this.color, this.size = 8});
-
-  @override
-  State<TttTurnPulseDot> createState() => _TttTurnPulseDotState();
-}
-
-class _TttTurnPulseDotState extends State<TttTurnPulseDot>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ctl;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    )..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _ctl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _ctl,
-      builder: (context, _) {
-        final t = Curves.easeInOut.transform(_ctl.value);
-        return SizedBox(
-          width: widget.size + 6,
-          height: widget.size + 6,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Container(
-                width: widget.size + 4 * t,
-                height: widget.size + 4 * t,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: widget.color.withValues(alpha: 0.25 * (1.0 - t)),
-                ),
-              ),
-              Container(
-                width: widget.size,
-                height: widget.size,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: widget.color,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
+// Game-agnostic status caption + turn pulse helpers moved to
+// `lib/features/sip/play/play_status_caption.dart` so Connect Four
+// and any future game can reuse them without importing the TTT
+// widget file.

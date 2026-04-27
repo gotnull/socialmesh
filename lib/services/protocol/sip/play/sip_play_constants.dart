@@ -51,7 +51,10 @@ abstract final class SipPlayConstants {
 /// (no crash, no state mutation).
 enum SipPlayGameType {
   /// Tic-Tac-Toe v1 — 3x3 grid, classic rules.
-  ticTacToe(0x01);
+  ticTacToe(0x01),
+
+  /// Connect Four v1 — 6x7 grid, gravity-fed discs, 4-in-a-row wins.
+  connectFour(0x02);
 
   const SipPlayGameType(this.code);
   final int code;

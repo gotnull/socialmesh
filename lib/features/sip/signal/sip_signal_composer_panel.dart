@@ -49,18 +49,7 @@ enum _MorseInputMode {
 class SipSignalComposerPanel extends ConsumerStatefulWidget {
   final int sessionTag;
 
-  /// Fires when the user toggles between the Tone and Morse sub-modes
-  /// inside the panel. The DM screen uses this to scroll the chat to
-  /// the most recent bubble of the corresponding signal kind so the
-  /// composer surface and the timeline stay aligned (mirrors how the
-  /// top-level Signal chip jumps to the latest signal of any kind).
-  final void Function(SipSignalKind kind)? onSubModeChanged;
-
-  const SipSignalComposerPanel({
-    super.key,
-    required this.sessionTag,
-    this.onSubModeChanged,
-  });
+  const SipSignalComposerPanel({super.key, required this.sessionTag});
 
   @override
   ConsumerState<SipSignalComposerPanel> createState() =>
@@ -100,16 +89,35 @@ class _SipSignalComposerPanelState extends ConsumerState<SipSignalComposerPanel>
   // Send guard so the user can't double-tap Send mid-flight.
   bool _sending = false;
 
+  // Vertical scroll position of the pad grid. The grid renders 36
+  // chromatic notes across 9 rows; on first build we land near C4
+  // (row 3) so the historical "home" octave is one tap away while
+  // both lower (C3..B3) and upper (C5..B5) ranges are reachable by
+  // scroll. `_padMinMidi` / `_padCols` / `_padRowCount` are the
+  // single source of truth for the pad layout — see `_padMidiAt`.
+  final ScrollController _padScrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
     AppLogging.sipSignal(
       'composer_opened tag=0x${widget.sessionTag.toRadixString(16)}',
     );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (!_padScrollController.hasClients) return;
+      // Center C4 (row 3) in the visible window. Row pixel height
+      // mirrors `_padRowPx` below; offsetting by two rows places the
+      // C4 row second from top so the user sees lower-octave hints
+      // above it without losing C4's prominence.
+      const initialRowOffset = 2;
+      _padScrollController.jumpTo(initialRowOffset * _padRowPx);
+    });
   }
 
   @override
   void dispose() {
+    _padScrollController.dispose();
     _morseController.dispose();
     super.dispose();
   }
@@ -213,14 +221,6 @@ class _SipSignalComposerPanelState extends ConsumerState<SipSignalComposerPanel>
           if (_subMode == mode) return;
           ref.read(hapticServiceProvider).trigger(HapticType.selection);
           setState(() => _subMode = mode);
-          // Bubble the kind up to the DM screen so it can scroll the
-          // chat to the latest matching signal — same behaviour the
-          // top-level Signal chip provides, just narrowed to the
-          // sub-mode the user just chose.
-          final kind = mode == _SignalSubMode.tone
-              ? SipSignalKind.phrase
-              : SipSignalKind.morse;
-          widget.onSubModeChanged?.call(kind);
         },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
@@ -250,18 +250,78 @@ class _SipSignalComposerPanelState extends ConsumerState<SipSignalComposerPanel>
   // Tone sub-mode
   // ---------------------------------------------------------------
 
-  /// 8 pad notes — two octaves of a C major run, spaced widely enough
-  /// for thumb taps on an iPhone Pro.
-  static const List<int> _padMidi = [
-    60, // C4
-    62, // D4
-    64, // E4
-    65, // F4
-    67, // G4
-    69, // A4
-    71, // B4
-    72, // C5
-  ];
+  /// Pad grid covers three chromatic octaves so motifs that dip below
+  /// or above C4..C5 (most famously the Close Encounters phrase, which
+  /// drops to C3 and G3) can be tapped directly. The grid renders as
+  /// a vertically scrolling 4-column strip with top + bottom edge
+  /// fades; initial scroll position lands near C4 (see [initState]).
+  static const int _padMinMidi = 48; // C3
+  static const int _padMaxMidi = 83; // B5
+  static const int _padCols = 4;
+  // 36 notes / 4 cols = 9 rows.
+  static const int _padRowCount =
+      ((_padMaxMidi - _padMinMidi + 1) + _padCols - 1) ~/ _padCols;
+  // Per-row pixel height — `_PadButton` is 38 px tall, `EdgeInsets.all(2)`
+  // adds 4 px and the row separator below adds another 4 px. Pinned as
+  // a constant so the initial-scroll math in [initState] stays in sync
+  // with the actual rendered geometry.
+  static const double _padRowPx = 38 + 4 + 4;
+  // Visible window — ~3.4 rows, leaves room above and below the
+  // current octave so the scroll affordance is obvious.
+  static const double _padScrollWindowPx = _padRowPx * 3.4;
+
+  int _padMidiAt(int row, int col) => _padMinMidi + row * _padCols + col;
+
+  /// Vertically scrolling pad grid with top + bottom edge fades. The
+  /// fade is implemented via a `ShaderMask` with `BlendMode.dstIn` so
+  /// the transparent gradient stops cut into the alpha of the cells
+  /// themselves — gives a clean scroll affordance without a visible
+  /// scrollbar or hard clip.
+  Widget _buildPadScroller(BuildContext context, bool isFull) {
+    return SizedBox(
+      height: _padScrollWindowPx,
+      child: ShaderMask(
+        shaderCallback: (rect) {
+          return const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            // Transparent ends + opaque middle = top/bottom fade.
+            colors: [
+              Colors.transparent,
+              Colors.black,
+              Colors.black,
+              Colors.transparent,
+            ],
+            stops: [0.0, 0.08, 0.92, 1.0],
+          ).createShader(rect);
+        },
+        blendMode: BlendMode.dstIn,
+        child: ListView.builder(
+          controller: _padScrollController,
+          padding: EdgeInsets.zero,
+          itemCount: _padRowCount,
+          itemExtent: _padRowPx,
+          itemBuilder: (context, rowIdx) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: AppTheme.spacing4),
+              child: Row(
+                children: [
+                  for (var col = 0; col < _padCols; col += 1)
+                    Expanded(
+                      child: _PadButton(
+                        label: midiNoteName(_padMidiAt(rowIdx, col)),
+                        onTap: () => _onPadTap(_padMidiAt(rowIdx, col)),
+                        enabled: !isFull,
+                      ),
+                    ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
 
   Widget _buildToneBody(BuildContext context) {
     final l10n = context.l10n;
@@ -367,23 +427,12 @@ class _SipSignalComposerPanelState extends ConsumerState<SipSignalComposerPanel>
           ),
         ),
         const SizedBox(height: AppTheme.spacing8),
-        // 4×2 pad grid. Pads disable when phrase is full — Clear /
-        // Preview / Send remain active so the user can never wedge.
-        for (var row = 0; row < 2; row += 1) ...[
-          Row(
-            children: [
-              for (var col = 0; col < 4; col += 1)
-                Expanded(
-                  child: _PadButton(
-                    label: midiNoteName(_padMidi[row * 4 + col]),
-                    onTap: () => _onPadTap(_padMidi[row * 4 + col]),
-                    enabled: !isFull,
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: AppTheme.spacing4),
-        ],
+        // Vertically scrolling pad grid — 3 chromatic octaves
+        // (C3..B5). Edge fades hint at scroll affordance without
+        // drawing a hard scrollbar. Pads disable when phrase is full;
+        // Clear / Preview / Send remain active so the user can never
+        // wedge.
+        _buildPadScroller(context, isFull),
         if (isFull) ...[
           const SizedBox(height: AppTheme.spacing4),
           _PhraseFullBadge(

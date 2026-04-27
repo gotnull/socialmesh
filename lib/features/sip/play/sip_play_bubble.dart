@@ -34,6 +34,9 @@ import '../../../services/audio/sip_play_sound_service.dart';
 import '../../../providers/sip_providers.dart';
 import '../../../services/haptic_service.dart';
 import '../../../services/protocol/sip/sip_dm.dart';
+import '../../../services/protocol/sip/play/games/connectfour/c4_codec.dart';
+import '../../../services/protocol/sip/play/games/connectfour/c4_payload.dart';
+import '../../../services/protocol/sip/play/games/connectfour/c4_rules.dart';
 import '../../../services/protocol/sip/play/games/tictactoe/ttt_codec.dart';
 import '../../../services/protocol/sip/play/games/tictactoe/ttt_payload.dart';
 import '../../../services/protocol/sip/play/sip_play_codec.dart';
@@ -42,7 +45,9 @@ import '../../../services/protocol/sip/play/sip_play_engine.dart';
 import '../../../services/protocol/sip/play/sip_play_payload.dart';
 import '../../../services/protocol/sip/play/sip_play_registry.dart';
 import '../../../utils/snackbar.dart';
+import 'games/connectfour/c4_board_widget.dart';
 import 'games/tictactoe/ttt_board_widget.dart';
+import 'play_status_caption.dart';
 
 class SipPlayBubble extends ConsumerWidget {
   /// SIP DM session this play instance belongs to.
@@ -132,12 +137,17 @@ class SipPlayBubble extends ConsumerWidget {
         .read(peerSafetyManagerProvider.notifier)
         .isBlocked(peerNodeId);
 
+    final perGameLog = switch (state) {
+      TttInstanceState s => 'localMark=${s.localMark?.name ?? "null"}',
+      C4InstanceState s => 'localDisc=${s.localDisc?.name ?? "null"}',
+      UnsupportedInstanceState _ => 'unsupported',
+    };
     AppLogging.sipPlay(
       'BUBBLE_BUILD sessionTag=$sessionTag '
       'peer=0x${peerNodeId.toRadixString(16)} '
       'instance=0x${state.instanceId.toRadixString(16)} '
       'status=${state.status.name} '
-      'localMark=${state.localMark?.name ?? "null"} '
+      '$perGameLog '
       'isLocalTurn=${state.isLocalTurn} '
       'lastAppliedSeq=${state.lastAppliedSeq} '
       'peerBlocked=$isPeerBlocked',
@@ -187,31 +197,76 @@ class _DispatchBody extends ConsumerWidget {
       'instance=0x${state.instanceId.toRadixString(16)} '
       'peerBlocked=$peerBlocked',
     );
-    switch (state.status) {
+    // Outer switch: sealed-state subtype. The compiler enforces
+    // exhaustiveness so adding a new game (C4 etc.) forces a render
+    // path here. Inner switch: lifecycle status, scoped to the now-
+    // narrowed game subclass.
+    return switch (state) {
+      UnsupportedInstanceState _ => _UnsupportedFallback(),
+      TttInstanceState s => _dispatchTtt(context, ref, s),
+      C4InstanceState s => _dispatchC4(context, ref, s),
+    };
+  }
+
+  /// Pendingoffer rows are game-agnostic — they only access fields on
+  /// the sealed base. Both [_dispatchTtt] and [_dispatchC4] use them.
+  Widget _pendingOfferRow(
+    BuildContext context,
+    WidgetRef ref,
+    SipPlayInstanceState s,
+  ) {
+    final isOutbound = _readFirstOfferDirectionIsOutbound(
+      ref,
+      sessionTag,
+      s.instanceId,
+    );
+    AppLogging.sipPlay(
+      'DISPATCH_PENDING_OFFER isOutbound=$isOutbound '
+      'instance=0x${s.instanceId.toRadixString(16)}',
+    );
+    return isOutbound
+        ? const _OutgoingOfferRow()
+        : _IncomingOfferRow(
+            state: s,
+            sessionTag: sessionTag,
+            peerNodeId: peerNodeId,
+            peerBlocked: peerBlocked,
+          );
+  }
+
+  Widget _dispatchC4(BuildContext context, WidgetRef ref, C4InstanceState s) {
+    switch (s.status) {
       case SipPlayInstanceStatus.unsupported:
+        return _UnsupportedFallback();
+      case SipPlayInstanceStatus.pendingOffer:
+        return _pendingOfferRow(context, ref, s);
+      case SipPlayInstanceStatus.declinedByLocal:
+      case SipPlayInstanceStatus.declinedByRemote:
+      case SipPlayInstanceStatus.active:
+      case SipPlayInstanceStatus.resignedByLocal:
+      case SipPlayInstanceStatus.resignedByRemote:
+      case SipPlayInstanceStatus.won:
+      case SipPlayInstanceStatus.draw:
+        return _C4BoardSection(
+          state: s,
+          sessionTag: sessionTag,
+          peerBlocked: peerBlocked,
+          entryTimestampMs: entryTimestampMs,
+          onDismiss: onDismiss,
+        );
+    }
+  }
+
+  Widget _dispatchTtt(BuildContext context, WidgetRef ref, TttInstanceState s) {
+    switch (s.status) {
+      case SipPlayInstanceStatus.unsupported:
+        // Not reachable here (sealed switch already routed unsupported
+        // states to _UnsupportedFallback before construction), but the
+        // case is kept for status-switch exhaustiveness.
         return _UnsupportedFallback();
 
       case SipPlayInstanceStatus.pendingOffer:
-        // localMark is null pre-accept, so we can't tell offerer from
-        // acceptor by mark alone — disambiguate via the offer
-        // envelope's direction.
-        final isOutbound = _readFirstOfferDirectionIsOutbound(
-          ref,
-          sessionTag,
-          state.instanceId,
-        );
-        AppLogging.sipPlay(
-          'DISPATCH_PENDING_OFFER isOutbound=$isOutbound '
-          'instance=0x${state.instanceId.toRadixString(16)}',
-        );
-        return isOutbound
-            ? _OutgoingOfferRow(state: state)
-            : _IncomingOfferRow(
-                state: state,
-                sessionTag: sessionTag,
-                peerNodeId: peerNodeId,
-                peerBlocked: peerBlocked,
-              );
+        return _pendingOfferRow(context, ref, s);
 
       case SipPlayInstanceStatus.declinedByLocal:
       case SipPlayInstanceStatus.declinedByRemote:
@@ -220,8 +275,8 @@ class _DispatchBody extends ConsumerWidget {
       case SipPlayInstanceStatus.resignedByRemote:
       case SipPlayInstanceStatus.won:
       case SipPlayInstanceStatus.draw:
-        return _BoardSection(
-          state: state,
+        return _TttBoardSection(
+          state: s,
           sessionTag: sessionTag,
           peerBlocked: peerBlocked,
           entryTimestampMs: entryTimestampMs,
@@ -268,8 +323,7 @@ bool _readFirstOfferDirectionIsOutbound(
 }
 
 class _OutgoingOfferRow extends StatelessWidget {
-  final SipPlayInstanceState state;
-  const _OutgoingOfferRow({required this.state});
+  const _OutgoingOfferRow();
 
   @override
   Widget build(BuildContext context) {
@@ -318,6 +372,9 @@ class _OutgoingOfferRow extends StatelessWidget {
 ///   - on failure the flag clears, both buttons re-enable, and we
 ///     surface a snackbar with the typed error.
 class _IncomingOfferRow extends ConsumerStatefulWidget {
+  // Game-agnostic: only reads `gameTypeCode`, `instanceId`, and
+  // `lastAppliedSeq` from the base class — the offer-response
+  // envelope it builds is the same shape for every game.
   final SipPlayInstanceState state;
   final int sessionTag;
   final int peerNodeId;
@@ -521,13 +578,13 @@ class _IncomingOfferRowState extends ConsumerState<_IncomingOfferRow>
 /// UI. The instant the engine state advances and the cell shows the
 /// expected mark, `didUpdateWidget` clears the overlay. If the send
 /// fails the overlay clears too because the engine never saw it.
-class _BoardSection extends ConsumerStatefulWidget {
-  final SipPlayInstanceState state;
+class _TttBoardSection extends ConsumerStatefulWidget {
+  final TttInstanceState state;
   final int sessionTag;
   final bool peerBlocked;
   final int entryTimestampMs;
   final VoidCallback? onDismiss;
-  const _BoardSection({
+  const _TttBoardSection({
     required this.state,
     required this.sessionTag,
     required this.entryTimestampMs,
@@ -536,10 +593,10 @@ class _BoardSection extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<_BoardSection> createState() => _BoardSectionState();
+  ConsumerState<_TttBoardSection> createState() => _TttBoardSectionState();
 }
 
-class _BoardSectionState extends ConsumerState<_BoardSection>
+class _TttBoardSectionState extends ConsumerState<_TttBoardSection>
     with LifecycleSafeMixin {
   /// Optimistic-overlay move. Never mutated by the engine — set when
   /// the user taps a legal cell, cleared when the engine state
@@ -553,7 +610,7 @@ class _BoardSectionState extends ConsumerState<_BoardSection>
   bool _interactionLock = false;
 
   @override
-  void didUpdateWidget(covariant _BoardSection oldWidget) {
+  void didUpdateWidget(covariant _TttBoardSection oldWidget) {
     super.didUpdateWidget(oldWidget);
 
     // Audio cues on lifecycle transitions. The engine state is the
@@ -616,7 +673,7 @@ class _BoardSectionState extends ConsumerState<_BoardSection>
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final state = widget.state;
-    final caption = tttStatusCaption(
+    final caption = playStatusCaption(
       context: context,
       isLocalTurn: state.isLocalTurn,
       localWon:
@@ -677,7 +734,7 @@ class _BoardSectionState extends ConsumerState<_BoardSection>
             const SizedBox(width: AppTheme.spacing8),
             if (state.isLocalTurn &&
                 state.status == SipPlayInstanceStatus.active)
-              TttTurnPulseDot(color: context.accentColor),
+              PlayTurnPulseDot(color: context.accentColor),
             const SizedBox(width: AppTheme.spacing4),
             Expanded(
               child: Text(
@@ -902,6 +959,422 @@ class _BoardSectionState extends ConsumerState<_BoardSection>
     // Success path: engine state will rebuild this widget; clearing
     // is handled in didUpdateWidget once the cell shows the target
     // mark.
+  }
+
+  void _clearPending() {
+    if (!mounted) return;
+    setState(() {
+      _pendingMove = null;
+      _interactionLock = false;
+    });
+  }
+
+  Future<void> _confirmResign() async {
+    final l10n = context.l10n;
+    final state = widget.state;
+    ref.read(hapticServiceProvider).trigger(HapticType.heavy);
+    final router = ref.read(sipDmRouterProvider);
+
+    final confirmed = await AppBottomSheet.showConfirm(
+      context: context,
+      title: l10n.sipPlayResignConfirmTitle,
+      message: l10n.sipPlayResignConfirmBody,
+      confirmLabel: l10n.sipPlayResignConfirmAction,
+      cancelLabel: l10n.sipPlayResignConfirmCancel,
+      isDestructive: true,
+    );
+    if (confirmed != true) return;
+
+    final envelope = SipPlayEnvelope(
+      typeAndVersion: SipPlayConstants.envelopeTypeAndVersionV1,
+      gameTypeCode: state.gameTypeCode,
+      instanceId: state.instanceId,
+      action: SipPlayAction.resign,
+      seq: state.lastAppliedSeq + 1,
+      gamePayload: Uint8List(0),
+    );
+    final bytes = SipPlayCodec.encode(envelope);
+    if (bytes == null) return;
+    final outcome = await router.sendPlay(
+      sessionTag: widget.sessionTag,
+      playPayload: bytes,
+    );
+    if (!mounted) return;
+    if (!outcome.isOk) {
+      AppLogging.sipPlay(
+        'resign_blocked reason=${outcome.error?.name} '
+        'instance=0x${state.instanceId.toRadixString(16)}',
+      );
+    }
+  }
+}
+
+/// Active / terminal Connect Four board view with optimistic move
+/// handling. Mirrors [_TttBoardSection]'s lifecycle 1:1 — same audio
+/// cues, same pending-overlay + interaction-lock pattern, same
+/// dismiss + resign affordances. Differences are confined to the
+/// inner board widget (column-tap C4 grid instead of cell-tap TTT
+/// grid), the move encoding (C4Codec), and the pending-resolution
+/// check (compare against the disc that lands at gravity row, not a
+/// fixed cell index).
+class _C4BoardSection extends ConsumerStatefulWidget {
+  final C4InstanceState state;
+  final int sessionTag;
+  final bool peerBlocked;
+  final int entryTimestampMs;
+  final VoidCallback? onDismiss;
+  const _C4BoardSection({
+    required this.state,
+    required this.sessionTag,
+    required this.entryTimestampMs,
+    required this.onDismiss,
+    required this.peerBlocked,
+  });
+
+  @override
+  ConsumerState<_C4BoardSection> createState() => _C4BoardSectionState();
+}
+
+class _C4BoardSectionState extends ConsumerState<_C4BoardSection>
+    with LifecycleSafeMixin {
+  C4Move? _pendingMove;
+  bool _interactionLock = false;
+
+  @override
+  void didUpdateWidget(covariant _C4BoardSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    final prevStatus = oldWidget.state.status;
+    final nextStatus = widget.state.status;
+    final instanceHex = '0x${widget.state.instanceId.toRadixString(16)}';
+    if (prevStatus != nextStatus) {
+      AppLogging.sipPlay(
+        'BOARD_STATUS_CHANGE instance=$instanceHex '
+        '${prevStatus.name}->${nextStatus.name}',
+      );
+      if (prevStatus == SipPlayInstanceStatus.pendingOffer &&
+          nextStatus == SipPlayInstanceStatus.active) {
+        ref.read(sipPlaySoundServiceProvider).play(SipPlaySoundCue.gameStart);
+      }
+      if (nextStatus == SipPlayInstanceStatus.declinedByLocal ||
+          nextStatus == SipPlayInstanceStatus.declinedByRemote) {
+        ref
+            .read(sipPlaySoundServiceProvider)
+            .play(SipPlaySoundCue.rejectedDeclined);
+      }
+    }
+    if (oldWidget.state.lastAppliedSeq != widget.state.lastAppliedSeq) {
+      AppLogging.sipPlay(
+        'BOARD_SEQ_ADVANCE instance=$instanceHex '
+        '${oldWidget.state.lastAppliedSeq}->${widget.state.lastAppliedSeq} '
+        'turn=${widget.state.turn?.name ?? "null"} '
+        'isLocalTurn=${widget.state.isLocalTurn}',
+      );
+    }
+
+    final pending = _pendingMove;
+    if (pending == null) return;
+    // Engine state caught up — the disc with our pending colour has
+    // landed somewhere in the targeted column. Find the topmost disc
+    // there: if it's our pending mark, the move resolved.
+    final topRow = _topFilledRow(widget.state.board, pending.column);
+    final topDisc = topRow == null
+        ? null
+        : widget.state.board.cellAt(topRow, pending.column);
+    if (topDisc == pending.disc) {
+      AppLogging.sipPlay(
+        'PLAY_MOVE_RESOLVED instance=$instanceHex column=${pending.column}',
+      );
+      _pendingMove = null;
+      _interactionLock = false;
+    } else {
+      AppLogging.sipPlay(
+        'PLAY_MOVE_PENDING_HOLDS instance=$instanceHex '
+        'column=${pending.column} expected=${pending.disc.name} '
+        'actual=${topDisc?.name ?? "null"}',
+      );
+    }
+  }
+
+  int? _topFilledRow(C4Board board, int column) {
+    for (var r = 0; r < C4Board.rows; r += 1) {
+      if (board.cellAt(r, column) != null) return r;
+    }
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final state = widget.state;
+    final caption = playStatusCaption(
+      context: context,
+      isLocalTurn: state.isLocalTurn,
+      localWon:
+          state.status == SipPlayInstanceStatus.won &&
+          state.winner == state.localDisc,
+      remoteWon:
+          state.status == SipPlayInstanceStatus.won &&
+          state.winner == state.remoteDisc,
+      draw: state.status == SipPlayInstanceStatus.draw,
+      localResigned: state.status == SipPlayInstanceStatus.resignedByLocal,
+      remoteResigned: state.status == SipPlayInstanceStatus.resignedByRemote,
+      localDeclined: state.status == SipPlayInstanceStatus.declinedByLocal,
+      remoteDeclined: state.status == SipPlayInstanceStatus.declinedByRemote,
+    );
+
+    final boardEnabled =
+        !widget.peerBlocked &&
+        state.status == SipPlayInstanceStatus.active &&
+        state.isLocalTurn &&
+        _pendingMove == null;
+
+    final canResign =
+        state.status == SipPlayInstanceStatus.active && !widget.peerBlocked;
+
+    final isDeclined =
+        state.status == SipPlayInstanceStatus.declinedByLocal ||
+        state.status == SipPlayInstanceStatus.declinedByRemote;
+
+    AppLogging.sipPlay(
+      'BOARD_SECTION_BUILD instance=0x${state.instanceId.toRadixString(16)} '
+      'game=c4 boardEnabled=$boardEnabled '
+      'peerBlocked=${widget.peerBlocked} '
+      'statusActive=${state.status == SipPlayInstanceStatus.active} '
+      'status=${state.status.name} '
+      'isLocalTurn=${state.isLocalTurn} '
+      'turn=${state.turn?.name ?? "null"} '
+      'localDisc=${state.localDisc?.name ?? "null"} '
+      'pendingColumn=${_pendingMove?.column ?? "null"} '
+      'interactionLock=$_interactionLock',
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              l10n.sipPlayGameConnectFour,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: context.textPrimary,
+                fontFamily: AppTheme.fontFamily,
+              ),
+            ),
+            const SizedBox(width: AppTheme.spacing8),
+            if (state.isLocalTurn &&
+                state.status == SipPlayInstanceStatus.active)
+              PlayTurnPulseDot(color: context.accentColor),
+            const SizedBox(width: AppTheme.spacing4),
+            Expanded(
+              child: Text(
+                caption,
+                textAlign: TextAlign.right,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color:
+                      state.isLocalTurn &&
+                          state.status == SipPlayInstanceStatus.active
+                      ? context.accentColor
+                      : context.textSecondary,
+                  fontFamily: AppTheme.fontFamily,
+                ),
+              ),
+            ),
+            if (canResign)
+              Padding(
+                padding: const EdgeInsets.only(left: AppTheme.spacing4),
+                child: SizedBox(
+                  width: 28,
+                  height: 28,
+                  child: IconButton(
+                    onPressed: _confirmResign,
+                    padding: EdgeInsets.zero,
+                    iconSize: 16,
+                    splashRadius: 18,
+                    tooltip: l10n.sipPlayResign,
+                    icon: Icon(
+                      Icons.flag_outlined,
+                      color: SemanticColors.error.withValues(alpha: 0.85),
+                    ),
+                  ),
+                ),
+              ),
+            if (isDeclined && widget.onDismiss != null)
+              Padding(
+                padding: const EdgeInsets.only(left: AppTheme.spacing4),
+                child: SizedBox(
+                  width: 28,
+                  height: 28,
+                  child: IconButton(
+                    onPressed: widget.onDismiss,
+                    padding: EdgeInsets.zero,
+                    iconSize: 16,
+                    splashRadius: 18,
+                    tooltip: l10n.sipDmActionDelete,
+                    icon: Icon(
+                      Icons.close_rounded,
+                      color: context.textTertiary,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+        if (state.status != SipPlayInstanceStatus.declinedByLocal &&
+            state.status != SipPlayInstanceStatus.declinedByRemote) ...[
+          const SizedBox(height: AppTheme.spacing8),
+          C4BoardWidget(
+            board: state.board,
+            localDisc: state.localDisc,
+            enabled: boardEnabled,
+            pendingMove: _pendingMove,
+            onColumnTap: _onColumnTap,
+          ),
+        ],
+        if (isDeclined) ...[
+          const SizedBox(height: AppTheme.spacing4),
+          Text(
+            TimeOfDay.fromDateTime(
+              DateTime.fromMillisecondsSinceEpoch(widget.entryTimestampMs),
+            ).format(context),
+            style: TextStyle(
+              fontSize: 10,
+              color: context.textTertiary,
+              fontFamily: AppTheme.fontFamily,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  void _onColumnTap(int column) {
+    final state = widget.state;
+    final instanceHex = '0x${state.instanceId.toRadixString(16)}';
+    AppLogging.sipPlay(
+      'PLAY_MOVE_TAP_ENTER instance=$instanceHex column=$column '
+      'interactionLock=$_interactionLock '
+      'localDisc=${state.localDisc?.name ?? "null"} '
+      'isLocalTurn=${state.isLocalTurn} '
+      'turn=${state.turn?.name ?? "null"} '
+      'status=${state.status.name} '
+      'columnFull=${!state.board.isLegalMove(column)}',
+    );
+    if (_interactionLock) {
+      AppLogging.sipPlay(
+        'PLAY_MOVE_TAP_IGNORED reason=interactionLock '
+        'instance=$instanceHex column=$column',
+      );
+      return;
+    }
+    if (state.localDisc == null) {
+      AppLogging.sipPlay(
+        'PLAY_MOVE_TAP_IGNORED reason=noLocalDisc '
+        'instance=$instanceHex column=$column status=${state.status.name}',
+      );
+      return;
+    }
+    if (!state.isLocalTurn) {
+      AppLogging.sipPlay(
+        'PLAY_MOVE_TAP_IGNORED reason=notLocalTurn '
+        'instance=$instanceHex column=$column '
+        'turn=${state.turn?.name ?? "null"} '
+        'localDisc=${state.localDisc?.name ?? "null"} '
+        'status=${state.status.name}',
+      );
+      return;
+    }
+    if (!state.board.isLegalMove(column)) {
+      AppLogging.sipPlay(
+        'PLAY_MOVE_TAP_IGNORED reason=columnFull '
+        'instance=$instanceHex column=$column',
+      );
+      return;
+    }
+
+    final disc = state.localDisc!;
+    AppLogging.sipPlay(
+      'PLAY_MOVE_TAP instance=$instanceHex column=$column pending=true',
+    );
+    setState(() {
+      _pendingMove = C4Move(column: column, disc: disc);
+      _interactionLock = true;
+    });
+    _sendMove(column: column, disc: disc);
+  }
+
+  Future<void> _sendMove({required int column, required C4Disc disc}) async {
+    final l10n = context.l10n;
+    final state = widget.state;
+    ref.read(hapticServiceProvider).trigger(HapticType.selection);
+    final router = ref.read(sipDmRouterProvider);
+
+    final movePayload = C4Codec.encodeMove(C4Move(column: column, disc: disc));
+    if (movePayload == null) {
+      AppLogging.sipPlay(
+        'move_encode_failed column=$column '
+        'instance=0x${state.instanceId.toRadixString(16)}',
+      );
+      _clearPending();
+      return;
+    }
+
+    final envelope = SipPlayEnvelope(
+      typeAndVersion: SipPlayConstants.envelopeTypeAndVersionV1,
+      gameTypeCode: state.gameTypeCode,
+      instanceId: state.instanceId,
+      action: SipPlayAction.move,
+      seq: state.lastAppliedSeq + 1,
+      gamePayload: movePayload,
+    );
+    final bytes = SipPlayCodec.encode(envelope);
+    if (bytes == null) {
+      AppLogging.sipPlay(
+        'move_envelope_encode_failed '
+        'instance=0x${state.instanceId.toRadixString(16)}',
+      );
+      _clearPending();
+      return;
+    }
+    AppLogging.sipPlay(
+      'move_attempt instance=0x${state.instanceId.toRadixString(16)} '
+      'column=$column seq=${envelope.seq} bytes=${bytes.length}',
+    );
+
+    final outcome = await router.sendPlay(
+      sessionTag: widget.sessionTag,
+      playPayload: bytes,
+    );
+    if (!mounted) {
+      AppLogging.sipPlay(
+        'move_after_send_unmounted '
+        'instance=0x${state.instanceId.toRadixString(16)} column=$column',
+      );
+      return;
+    }
+    if (!outcome.isOk) {
+      final message = switch (outcome.error) {
+        SipDmSendError.peerBlocked => l10n.sipDmPeerBlocked,
+        SipDmSendError.peerRateLimited => l10n.sipDmPeerRateLimited,
+        SipDmSendError.budgetExhausted => l10n.sipDmBudgetExhausted,
+        _ => l10n.sipDmSessionClosed,
+      };
+      AppLogging.sipPlay(
+        'move_blocked reason=${outcome.error?.name} '
+        'instance=0x${state.instanceId.toRadixString(16)} column=$column',
+      );
+      _clearPending();
+      showErrorSnackBar(context, message);
+      return;
+    }
+    AppLogging.sipPlay(
+      'move_send_ok instance=0x${state.instanceId.toRadixString(16)} '
+      'column=$column seq=${envelope.seq} bytes=${bytes.length}',
+    );
   }
 
   void _clearPending() {

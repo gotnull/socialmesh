@@ -42979,6 +42979,14 @@
     "@sipPlayPanelTttSizeBadge": {
         "description": "Optional badge on the Tic-Tac-Toe card calling out how compact each move is on the wire. Phrased as user-facing value (compact mesh moves) rather than internal metric — earlier 'B' shorthand read like a glitch."
     },
+    "sipPlayPanelC4Supporting": "Drop discs into a column. First to four-in-a-row wins.",
+    "@sipPlayPanelC4Supporting": {
+        "description": "Supporting copy on the Connect Four card inside the Play composer panel."
+    },
+    "sipPlayPanelC4SizeBadge": "Tiny moves • ~7 bytes",
+    "@sipPlayPanelC4SizeBadge": {
+        "description": "Optional badge on the Connect Four card calling out how compact each move is on the wire. C4 moves are 1 byte (column only — landing row is derived) so the envelope is the same 7 bytes as TTT."
+    },
     "sipPlayPanelGameInProgressTitle": "Game in progress",
     "@sipPlayPanelGameInProgressTitle": {
         "description": "Banner title shown inside the Play panel when at least one non-terminal SIP Play instance exists in this session."
@@ -43022,6 +43030,14 @@
     "sipPlayGameTicTacToeDescription": "Classic 3x3. You place X if you offered, O if you accepted.",
     "@sipPlayGameTicTacToeDescription": {
         "description": "One-line description of Tic-Tac-Toe shown under its name in the picker."
+    },
+    "sipPlayGameConnectFour": "Connect Four",
+    "@sipPlayGameConnectFour": {
+        "description": "Display name for the Connect Four game in the SIP Play picker and game bubbles."
+    },
+    "sipPlayGameConnectFourDescription": "6x7 grid. Drop discs into a column. First to four-in-a-row wins.",
+    "@sipPlayGameConnectFourDescription": {
+        "description": "One-line description of Connect Four shown under its name in the picker."
     },
     "sipPlayUnsupportedGame": "Unsupported game",
     "@sipPlayUnsupportedGame": {

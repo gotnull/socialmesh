@@ -1,14 +1,18 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Bottom sheet game picker for SIP Play.
-///
-/// Lists all registered games (currently just Tic-Tac-Toe) and, on
-/// tap, sends a SIP Play `offer` envelope through the DM router to
-/// the current session. The session's timeline then renders an
-/// outgoing offer bubble; the receiver gets an inbound offer bubble
-/// with Accept / Decline controls.
-library;
+// Public helper for sending a SIP Play `offer` envelope. The Play
+// composer panel now renders one card per registered game directly
+// (no intermediate picker bottom sheet), so this file is a single
+// dispatch function — the per-game cards each call this on tap.
+//
+// Caller is responsible for verifying that:
+//   - the session is active,
+//   - the peer advertises `dmPlayV1`,
+//   - the peer is not blocked.
+// The router re-checks these as defence-in-depth, but hiding the
+// composer mode entry point when those don't hold avoids a UI that
+// immediately fails.
 
 import 'dart:math' as math;
 import 'dart:typed_data';
@@ -18,143 +22,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/logging.dart';
-import '../../../core/theme.dart';
-import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../providers/sip_dm_secure_router.dart';
 import '../../../services/haptic_service.dart';
 import '../../../services/protocol/sip/sip_dm.dart';
 import '../../../services/protocol/sip/play/sip_play_codec.dart';
 import '../../../services/protocol/sip/play/sip_play_constants.dart';
 import '../../../services/protocol/sip/play/sip_play_payload.dart';
-import '../../../services/protocol/sip/play/sip_play_registry.dart';
 import '../../../utils/snackbar.dart';
 
-/// Open the picker and, on user selection, send the offer envelope.
-/// Caller is responsible for verifying that:
-///   - the session is active,
-///   - the peer advertises `dmPlayV1`,
-///   - the peer is not blocked.
-/// (The router re-checks these as defence-in-depth, but hiding the
-/// composer mode entry point when those don't hold avoids a sheet
-/// that immediately fails.)
-void showSipPlayPicker({
-  required BuildContext context,
-  required WidgetRef ref,
-  required int sessionTag,
-}) {
-  final l10n = context.l10n;
-  AppBottomSheet.show<void>(
-    context: context,
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing4),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            l10n.sipPlayPickerTitle,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: context.textPrimary,
-              fontFamily: AppTheme.fontFamily,
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing6),
-          Text(
-            l10n.sipPlayPickerSubtitle,
-            style: TextStyle(
-              fontSize: 13,
-              color: context.textSecondary,
-              fontFamily: AppTheme.fontFamily,
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing16),
-          for (final descriptor in SipPlayRegistry.games)
-            _GameRow(
-              descriptor: descriptor,
-              onTap: () {
-                Navigator.of(context).pop();
-                _sendOffer(
-                  context: context,
-                  ref: ref,
-                  sessionTag: sessionTag,
-                  gameType: descriptor.gameType,
-                );
-              },
-            ),
-          const SizedBox(height: AppTheme.spacing8),
-        ],
-      ),
-    ),
-  );
-}
-
-class _GameRow extends StatelessWidget {
-  final SipPlayGameDescriptor descriptor;
-  final VoidCallback onTap;
-  const _GameRow({required this.descriptor, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final (label, body) = switch (descriptor.gameType) {
-      SipPlayGameType.ticTacToe => (
-        l10n.sipPlayGameTicTacToe,
-        l10n.sipPlayGameTicTacToeDescription,
-      ),
-    };
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing4),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-        child: Container(
-          padding: const EdgeInsets.all(AppTheme.spacing12),
-          decoration: BoxDecoration(
-            color: context.card,
-            borderRadius: BorderRadius.circular(AppTheme.radius12),
-            border: Border.all(color: context.border.withValues(alpha: 0.4)),
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.grid_3x3, size: 28, color: context.accentColor),
-              const SizedBox(width: AppTheme.spacing12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      label,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: context.textPrimary,
-                        fontFamily: AppTheme.fontFamily,
-                      ),
-                    ),
-                    const SizedBox(height: AppTheme.spacing2),
-                    Text(
-                      body,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: context.textSecondary,
-                        fontFamily: AppTheme.fontFamily,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(Icons.chevron_right, size: 20, color: context.textTertiary),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-Future<void> _sendOffer({
+/// Send a SIP Play `offer` envelope for [gameType] to the active DM
+/// session [sessionTag]. Used by the per-game cards in
+/// `_PlayComposerPanel`. Generates a fresh `u16` instanceId per
+/// offer.
+Future<void> sendSipPlayOffer({
   required BuildContext context,
   required WidgetRef ref,
   required int sessionTag,

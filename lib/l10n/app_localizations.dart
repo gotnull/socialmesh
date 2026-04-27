@@ -56390,6 +56390,18 @@ abstract class AppLocalizations {
   /// **'Tiny moves • ~7 bytes'**
   String get sipPlayPanelTttSizeBadge;
 
+  /// Supporting copy on the Connect Four card inside the Play composer panel.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop discs into a column. First to four-in-a-row wins.'**
+  String get sipPlayPanelC4Supporting;
+
+  /// Optional badge on the Connect Four card calling out how compact each move is on the wire. C4 moves are 1 byte (column only — landing row is derived) so the envelope is the same 7 bytes as TTT.
+  ///
+  /// In en, this message translates to:
+  /// **'Tiny moves • ~7 bytes'**
+  String get sipPlayPanelC4SizeBadge;
+
   /// Banner title shown inside the Play panel when at least one non-terminal SIP Play instance exists in this session.
   ///
   /// In en, this message translates to:
@@ -56455,6 +56467,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Classic 3x3. You place X if you offered, O if you accepted.'**
   String get sipPlayGameTicTacToeDescription;
+
+  /// Display name for the Connect Four game in the SIP Play picker and game bubbles.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect Four'**
+  String get sipPlayGameConnectFour;
+
+  /// One-line description of Connect Four shown under its name in the picker.
+  ///
+  /// In en, this message translates to:
+  /// **'6x7 grid. Drop discs into a column. First to four-in-a-row wins.'**
+  String get sipPlayGameConnectFourDescription;
 
   /// Title shown on a SIP Play bubble whose gameType is not registered in this build. Renders a safe fallback so unknown games never crash the timeline.
   ///

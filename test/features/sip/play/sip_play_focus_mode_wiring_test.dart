@@ -55,9 +55,11 @@ void main() {
         reason: 'Focus-mode body must surface the resume banner',
       );
       expect(
-        block.contains('_TicTacToeCard'),
+        block.contains('_GameOfferCard'),
         isFalse,
-        reason: 'Focus-mode must hide the TTT card to prevent duplicates',
+        reason:
+            'Focus-mode must hide the per-game offer cards to prevent '
+            'duplicates while a game is active',
       );
       expect(
         block.contains('sipPlayPanelTitle'),
@@ -67,10 +69,15 @@ void main() {
     });
 
     test('default mode (no active instance) renders title + subtitle '
-        '+ TTT card', () {
+        '+ per-game offer cards', () {
       expect(screenSrc.contains('l10n.sipPlayPanelTitle'), isTrue);
       expect(screenSrc.contains('l10n.sipPlayPanelSubtitle'), isTrue);
-      expect(screenSrc.contains('_TicTacToeCard('), isTrue);
+      // The panel iterates SipPlayRegistry.games and renders one
+      // _GameOfferCard per descriptor — no single TTT-specific card,
+      // no intermediate picker sheet.
+      expect(screenSrc.contains('_GameOfferCard('), isTrue);
+      expect(screenSrc.contains('SipPlayRegistry.games'), isTrue);
+      expect(screenSrc.contains('sendSipPlayOffer('), isTrue);
     });
 
     test('hasActiveInstance is derived from the engine state', () {
