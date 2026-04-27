@@ -318,15 +318,17 @@ final sipDiscoveryProvider = Provider<SipDiscovery?>((ref) {
   discovery.start();
 
   // Detach when this provider is disposed (SIP disabled or page torn down).
+  // Capture `hsManager` from above by closure — Riverpod 3.x forbids
+  // `ref.read` inside lifecycle callbacks, and the manager reference
+  // is stable for the lifetime of this provider.
   ref.onDispose(() {
     discovery.dispose();
     protocol.attachSipDiscovery(null);
     protocol.attachSipCounters(null);
     protocol.attachSipRateLimiter(null);
     protocol.onSipHandshakeComplete = null;
-    final mgr = ref.read(sipHandshakeProvider);
-    mgr?.onHandshakeFailed = null;
-    mgr?.onHandshakeDeclined = null;
+    hsManager?.onHandshakeFailed = null;
+    hsManager?.onHandshakeDeclined = null;
   });
 
   return discovery;
