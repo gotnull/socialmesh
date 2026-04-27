@@ -10,6 +10,8 @@
 /// `overrideSinkForTest` so we never touch the audio backend.
 library;
 
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/services/audio/sip_signal_synth_service.dart';
 import 'package:socialmesh/services/protocol/sip/signal/sip_signal_constants.dart';
@@ -51,8 +53,9 @@ void main() {
       const padMidi = [60, 62, 64, 65, 67, 69, 71, 72];
       for (final m in padMidi) {
         // Fire-and-forget — composer pad-tap doesn't await.
-        // ignore: unawaited_futures
-        service.playToneTap(midi: m, instrument: SipSignalInstrument.sine);
+        unawaited(
+          service.playToneTap(midi: m, instrument: SipSignalInstrument.sine),
+        );
       }
       // Drain the microtask queue so every override-sink dispatch
       // resolves.
