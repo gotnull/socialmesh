@@ -1374,25 +1374,29 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
     _jumpToLatestWhere((e) => e.contentType == SipDmContentType.play);
   }
 
-  /// Build the composer body. Every currently-visible mode is kept
-  /// mounted (so its State persists across tab toggles), but
-  /// invisible panels take zero layout space.
+  /// Build the composer body. Text mode renders the chat-input block;
+  /// the three rich modes (Sketch / Play / Signal) share an
+  /// `IndexedStack` so their composer surfaces line up to a single
+  /// uniform height — the tallest of the three — and tab swaps stop
+  /// jolting the chat list up and down.
   ///
-  /// Why not `IndexedStack`: that primitive sizes the stack to the
-  /// tallest child, so the chat list would shrink to leave room for
-  /// the (hidden) Signal keypad even in Text mode. `Visibility` with
-  /// `maintainState: true` solves both halves — the StatefulElement
-  /// for each panel stays alive (drafts survive: phrase notes,
-  /// tap-Morse buffer, sketch strokes), but `visible: false` swaps
-  /// the rendered subtree for `SizedBox.shrink()` so layout collapses
-  /// to the active panel only.
+  /// State preservation:
+  ///   - The outer `Visibility(visible: isText, maintainState: true)`
+  ///     keeps the text input mounted so the reply target / cursor
+  ///     position survive tab swaps.
+  ///   - The outer `Visibility(visible: !isText, maintainState: true)`
+  ///     wraps the IndexedStack so its children stay mounted even
+  ///     while text mode is showing — phrase notes, tap-Morse buffer,
+  ///     sketch strokes, and pending Play offers all persist across
+  ///     every direction of toggle.
+  ///   - Within the IndexedStack, swapping the active index does NOT
+  ///     unmount the inactive children, so swapping Sketch ↔ Play ↔
+  ///     Signal preserves all three drafts.
   ///
-  /// The text input is always present (no peer-cap gate). The other
-  /// panels mount only when their tab is visible. If the current
-  /// `_composerMode` points to a tab that just got hidden (peer
-  /// blocked, session closed), the auto-fallback in `_buildInputBar`
-  /// already routes back to text — this widget just renders whatever
-  /// `_composerMode` says.
+  /// Hidden tabs (peer doesn't advertise the cap, session closed,
+  /// peer blocked) drop out of the IndexedStack child list entirely,
+  /// so the uniform height collapses to the tallest *available* mode
+  /// rather than reserving room for an unreachable keypad.
   Widget _buildComposerStack({
     required BuildContext context,
     required SipDmSession? session,
@@ -1402,49 +1406,80 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
     required bool showSignalTab,
   }) {
     final isText = _composerMode == _SipDmComposerMode.text;
-    final isSketch = _composerMode == _SipDmComposerMode.sketch;
-    final isPlay = _composerMode == _SipDmComposerMode.play;
-    final isSignal = _composerMode == _SipDmComposerMode.signal;
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Visibility(
-          visible: isText,
-          maintainState: true,
-          child: _buildTextInputBlock(context, enabled),
+    final richChildren = <Widget>[];
+    final richIndex = <_SipDmComposerMode, int>{};
+    if (showSketchTab) {
+      richIndex[_SipDmComposerMode.sketch] = richChildren.length;
+      richChildren.add(
+        SipInkComposer(
+          sessionTag: widget.sessionTag,
+          enabled: enabled,
+          draft: _sketchDraft,
+          onDraftChanged: () {
+            if (mounted) setState(() {});
+          },
+          onSent: _scrollToBottom,
         ),
-        if (showSketchTab)
+      );
+    }
+    if (showPlayTab && session != null) {
+      richIndex[_SipDmComposerMode.play] = richChildren.length;
+      richChildren.add(
+        _PlayComposerPanel(
+          sessionTag: widget.sessionTag,
+          peerNodeId: session.peerNodeId,
+          onJumpToLatestGame: _jumpToLatestPlayBubble,
+        ),
+      );
+    }
+    if (showSignalTab) {
+      richIndex[_SipDmComposerMode.signal] = richChildren.length;
+      richChildren.add(SipSignalComposerPanel(sessionTag: widget.sessionTag));
+    }
+
+    // If the current rich mode is no longer in the visible set (peer
+    // just got blocked, etc.), pin the IndexedStack to slot 0 so it
+    // stays in bounds; the auto-fallback in _buildInputBar will route
+    // _composerMode back to text on the next frame.
+    final activeRichIndex = richIndex[_composerMode] ?? 0;
+
+    // AnimatedSize smooths the height delta between Text mode (a few
+    // hundred ms of input row) and the rich modes (~Signal-tallest).
+    // Without it, the chat list above snaps to its new constraints in
+    // a single frame and the bottom panel appears to "shoot up" before
+    // settling. Anchoring at bottomCenter pins the action-button row
+    // (where the user's finger just was) and reveals the panel content
+    // upward.
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      alignment: Alignment.bottomCenter,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
           Visibility(
-            visible: isSketch,
+            visible: isText,
             maintainState: true,
-            child: SipInkComposer(
-              sessionTag: widget.sessionTag,
-              enabled: enabled,
-              draft: _sketchDraft,
-              onDraftChanged: () {
-                if (mounted) setState(() {});
-              },
-              onSent: _scrollToBottom,
+            child: _buildTextInputBlock(context, enabled),
+          ),
+          if (richChildren.isNotEmpty)
+            Visibility(
+              visible: !isText,
+              maintainState: true,
+              child: IndexedStack(
+                // Aligning to topCenter keeps the active panel anchored
+                // at the top of the shared-height window, so shorter
+                // panels (Sketch, Play) leave the empty slack at the
+                // bottom rather than centring with awkward gaps above
+                // and below.
+                alignment: Alignment.topCenter,
+                index: activeRichIndex,
+                children: richChildren,
+              ),
             ),
-          ),
-        if (showPlayTab)
-          Visibility(
-            visible: isPlay,
-            maintainState: true,
-            child: _PlayComposerPanel(
-              sessionTag: widget.sessionTag,
-              peerNodeId: session!.peerNodeId,
-              onJumpToLatestGame: _jumpToLatestPlayBubble,
-            ),
-          ),
-        if (showSignalTab)
-          Visibility(
-            visible: isSignal,
-            maintainState: true,
-            child: SipSignalComposerPanel(sessionTag: widget.sessionTag),
-          ),
-      ],
+        ],
+      ),
     );
   }
 

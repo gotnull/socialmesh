@@ -106,6 +106,10 @@ import 'features/globe/globe_screen.dart';
 import 'features/reachability/mesh_reachability_screen.dart';
 import 'features/feedback/my_bug_reports_screen.dart';
 import 'features/admin/bug_reports/admin_bug_reports_screen.dart';
+import 'features/sip/sip_hub_screen.dart';
+import 'features/sip/sip_dm_screen.dart';
+import 'providers/sip_providers.dart';
+import 'services/protocol/sip/sip_dm.dart';
 import 'features/social/screens/post_detail_screen.dart';
 import 'features/social/screens/profile_social_screen.dart';
 import 'features/signals/screens/signal_detail_screen.dart';
@@ -1327,18 +1331,41 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
           .onNotificationNavigation
           .listen(_handlePushNotificationNavigation);
 
-      // Also listen for foreground local notification taps
-      // Payload format is 'type' or 'type|deepLink'
+      // Also listen for foreground local notification taps. Two
+      // payload conventions exist:
+      //   1. `type|deepLink` — used by FCM payloads converted into
+      //      local notifications (announcements, etc.). The deep link
+      //      itself can contain `:` (e.g. `https://...`), so the `|`
+      //      separator is what splits type from link.
+      //   2. `type:targetId[:more]` — the historical NotificationService
+      //      convention for SIP handshake / peer-found / pet / aether /
+      //      TAK / firmware notifications. First segment is the type,
+      //      rest is the target identifier.
+      // Both feed the same `_handlePushNotificationNavigation`
+      // dispatcher, so we normalise here.
       _localNotificationTapSubscription = NotificationService()
           .onPushNotificationTap
           .listen((payload) {
-            final parts = payload.split('|');
-            final type = parts.first;
-            final deepLink = parts.length > 1
-                ? parts.sublist(1).join('|')
-                : null;
+            String type;
+            String? targetId;
+            String? deepLink;
+            if (payload.contains('|')) {
+              final parts = payload.split('|');
+              type = parts.first;
+              deepLink = parts.length > 1 ? parts.sublist(1).join('|') : null;
+            } else if (payload.contains(':')) {
+              final parts = payload.split(':');
+              type = parts.first;
+              targetId = parts.length > 1 ? parts.sublist(1).join(':') : null;
+            } else {
+              type = payload;
+            }
             _handlePushNotificationNavigation(
-              NotificationNavigation(type: type, deepLink: deepLink),
+              NotificationNavigation(
+                type: type,
+                targetId: targetId,
+                deepLink: deepLink,
+              ),
             );
           });
 
@@ -1430,10 +1457,65 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
           }
           break;
 
+        case 'sip_handshake':
+          // Handshake completed → land on the DM thread for the
+          // matching peer if a session already exists. If the user
+          // taps very early (session not yet created) or after the
+          // session was cleaned up, fall back to the SIP hub so they
+          // can re-enter from the peer card.
+          _routeToSipHandshakeCompleted(navigator, nav.targetId);
+          break;
+
+        case 'sip_handshake_request':
+        case 'sip_handshake_declined':
+        case 'sip_peer_found':
+          // The SIP hub already surfaces:
+          //   - inbound HS_HELLO consent banners (request),
+          //   - declined-handshake state on the peer card (declined),
+          //   - newly-discovered peers in the nearby section (found).
+          // Push the hub so any of those land in front of the user.
+          // Consent is still a manual tap — never auto-accepted.
+          navigator.push(
+            MaterialPageRoute(builder: (_) => const SipHubScreen()),
+          );
+          break;
+
         default:
           AppLogging.notifications('🔔 Unknown notification type: ${nav.type}');
       }
     });
+  }
+
+  /// Resolve the SIP DM session for [peerNodeIdStr] and push
+  /// `SipDmScreen`. Falls back to `SipHubScreen` when the peer ID is
+  /// missing or no active session matches — the hub is always a safe
+  /// landing.
+  void _routeToSipHandshakeCompleted(
+    NavigatorState navigator,
+    String? peerNodeIdStr,
+  ) {
+    final peerNodeId = peerNodeIdStr != null
+        ? int.tryParse(peerNodeIdStr)
+        : null;
+    if (peerNodeId != null) {
+      final sessions = ref.read(sipActiveSessionsProvider);
+      final match = sessions
+          .where((s) => s.peerNodeId == peerNodeId)
+          .fold<SipDmSession?>(null, (_, s) => s);
+      if (match != null) {
+        navigator.push(
+          MaterialPageRoute(
+            builder: (_) => SipDmScreen(sessionTag: match.sessionTag),
+          ),
+        );
+        return;
+      }
+      AppLogging.notifications(
+        '🔔 sip_handshake tap: no active session for peer $peerNodeId, '
+        'falling back to hub',
+      );
+    }
+    navigator.push(MaterialPageRoute(builder: (_) => const SipHubScreen()));
   }
 
   Future<void> _loadAccentColor() async {

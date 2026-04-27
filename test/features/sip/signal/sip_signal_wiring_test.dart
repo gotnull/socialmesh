@@ -59,40 +59,50 @@ void main() {
       );
     });
 
-    test('composer body keeps every visible panel mounted via Visibility + '
-        'maintainState so Signal drafts survive tab toggles', () {
-      // Switching from Signal → Text → Signal used to dispose the
-      // SipSignalComposerPanel's State, losing the phrase draft and
-      // the tap-Morse buffer. The fix wraps each panel in
-      // `Visibility(maintainState: true)`: visible: false swaps the
-      // rendered subtree for SizedBox.shrink (zero layout cost) but
-      // the StatefulElement stays alive so all panel-local fields
-      // (and TextEditingControllers) survive.
+    test('composer body keeps every rich panel mounted across tab toggles', () {
+      // Switching Signal → Text → Signal must NOT dispose the
+      // SipSignalComposerPanel's State (would lose phrase draft and
+      // tap-Morse buffer). The current architecture stacks the three
+      // rich panels (Sketch / Play / Signal) inside an IndexedStack
+      // wrapped in a single Visibility(visible: !isText,
+      // maintainState: true). State preservation comes from two
+      // sources:
+      //   1. The outer Visibility keeps the IndexedStack subtree
+      //      mounted while in text mode (visible: false +
+      //      maintainState: true) so drafts survive Text ↔ rich
+      //      toggles.
+      //   2. IndexedStack does not unmount inactive children, so
+      //      drafts survive Sketch ↔ Play ↔ Signal toggles too.
+      // The IndexedStack also unifies the three panels' rendered
+      // height to the tallest child, killing the height-jolt the
+      // user was seeing on tab swap.
       expect(
         screenSrc.contains('maintainState: true'),
         isTrue,
         reason:
-            'Composer panels must use Visibility(maintainState: true) so '
-            'mode toggles don\'t dispose their State.',
+            'Composer must use Visibility(maintainState: true) on its '
+            'rich-panel wrapper so mode toggles don\'t dispose State.',
       );
       expect(
-        RegExp(r'Visibility\(\s*visible: isSignal').hasMatch(screenSrc),
+        RegExp(r'Visibility\(\s*visible: !isText').hasMatch(screenSrc),
         isTrue,
         reason:
-            'Signal panel must be wrapped in a Visibility keyed off '
-            'isSignal so it stays mounted while another tab is active.',
+            'Rich-panel group must be wrapped in a Visibility keyed off '
+            '!isText so all three panels stay mounted across Text ↔ rich '
+            'toggles.',
       );
-      // IndexedStack would size to the tallest child even when
-      // hidden — we picked Visibility to avoid that. Pin that the
-      // composer source doesn't construct one (the doc comment may
-      // mention the type, so we look for the constructor call).
       expect(
         screenSrc.contains('IndexedStack('),
-        isFalse,
+        isTrue,
         reason:
-            'Composer must not construct IndexedStack (it sizes to the '
-            'tallest child, eating chat-list vertical space). Use '
-            'Visibility + maintainState instead.',
+            'Sketch / Play / Signal must share an IndexedStack so their '
+            'rendered heights match (no jolt on tab swap) and inactive '
+            'panels stay mounted (drafts survive).',
+      );
+      expect(
+        screenSrc.contains('SipSignalComposerPanel(sessionTag:'),
+        isTrue,
+        reason: 'Signal panel must still be one of the IndexedStack children.',
       );
     });
 
