@@ -1912,7 +1912,16 @@ final nodeDexSortedEntriesProvider = Provider<List<(NodeDexEntry, MeshNode?)>>((
     final (entryB, nodeB) = b;
 
     return switch (sort) {
-      NodeDexSortOrder.lastSeen => entryB.lastSeen.compareTo(entryA.lastSeen),
+      // Sort by the canonical "last received any packet" timestamp
+      // (live MeshNode.lastHeard), falling back to the encounter
+      // tracker's lastSeen when the device no longer knows about the
+      // node. Sorting purely on entry.lastSeen would have the album
+      // disagree with the nodes-list bucketing, since the encounter
+      // tracker only updates on presence-active transitions.
+      NodeDexSortOrder.lastSeen =>
+        (nodeB?.lastHeard ?? entryB.lastSeen).compareTo(
+          nodeA?.lastHeard ?? entryA.lastSeen,
+        ),
       NodeDexSortOrder.firstSeen => entryB.firstSeen.compareTo(
         entryA.firstSeen,
       ),
