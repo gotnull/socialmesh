@@ -250,6 +250,171 @@ class SipDmRouter {
     );
   }
 
+  /// Send a SIP Play (turn-based mini-game) action.
+  ///
+  /// [playPayload] must be the byte sequence produced by
+  /// `SipPlayCodec.encode` (a v1 SIP Play envelope). The router enforces:
+  ///   1. peer has advertised `dmPlayV1` (terminal block on miss),
+  ///   2. session is active and known,
+  ///   3. T+S block + per-peer rate gate (PeerRateKind.play),
+  ///   4. encoded size + envelope fits the rate limiter,
+  ///   5. secure-when-all-true gate same as [sendText].
+  ///
+  /// Returns `SipDmRouterOutcome.failInk(...)` shape (reusing
+  /// [SipDmInkBlockReason] — peer-feature gate is the same family of
+  /// terminal failure) when the peer does not advertise SIP Play.
+  /// The UI should hide the Play composer mode when this fails.
+  Future<SipDmRouterOutcome> sendPlay({
+    required int sessionTag,
+    required Uint8List playPayload,
+  }) async {
+    final dm = _ref.read(sipDmManagerProvider);
+    if (dm == null) {
+      return const SipDmRouterOutcome.fail(SipDmSendError.sessionNotFound);
+    }
+    final session = dm.getSession(sessionTag);
+    if (session == null) {
+      return const SipDmRouterOutcome.fail(SipDmSendError.sessionNotFound);
+    }
+
+    // Hard peer-feature gate. Distinct from the secure gate — peers
+    // without dmPlayV1 silently drop unknown 0x46 frames, so sending
+    // would be wasted airtime.
+    final discovery = _ref.read(sipDiscoveryProvider);
+    if (discovery == null) {
+      return const SipDmRouterOutcome.failInk(
+        reason: SipDmInkBlockReason.peerUnknown,
+        error: SipDmSendError.peerUnsupported,
+      );
+    }
+    final peer = discovery.getPeer(session.peerNodeId);
+    if (peer == null) {
+      AppLogging.sipPlay(
+        'send_blocked reason=peer_unknown peer=0x'
+        '${session.peerNodeId.toRadixString(16)}',
+      );
+      return const SipDmRouterOutcome.failInk(
+        reason: SipDmInkBlockReason.peerUnknown,
+        error: SipDmSendError.peerUnsupported,
+      );
+    }
+    if (!peer.supportsDmPlayV1) {
+      AppLogging.sipPlay(
+        'send_blocked reason=peer_unsupported peer=0x'
+        '${session.peerNodeId.toRadixString(16)}',
+      );
+      return const SipDmRouterOutcome.failInk(
+        reason: SipDmInkBlockReason.peerUnsupported,
+        error: SipDmSendError.peerUnsupported,
+      );
+    }
+
+    // T+S gate stack — canonical order, matches sendText/sendSketch.
+    if (_ref.read(peerSafetyGateProvider).isBlocked(session.peerNodeId)) {
+      return const SipDmRouterOutcome.fail(SipDmSendError.peerBlocked);
+    }
+    if (!_ref
+        .read(peerRateLimiterProvider)
+        .tryAcquire(session.peerNodeId, PeerRateKind.play)) {
+      return const SipDmRouterOutcome.fail(SipDmSendError.peerRateLimited);
+    }
+
+    final gate = await _evaluateGate(session.peerNodeId);
+    if (gate is _GatePass) {
+      return _sendSecurePlay(
+        sessionTag: sessionTag,
+        peerNodeId: session.peerNodeId,
+        linkId: gate.linkId,
+        playPayload: playPayload,
+      );
+    }
+    return _sendPlaintextPlay(
+      sessionTag: sessionTag,
+      playPayload: playPayload,
+      fallbackReason: (gate as _GateFail).reason,
+    );
+  }
+
+  /// Send a SIP Signal (musical phrase or Morse) envelope.
+  ///
+  /// [signalPayload] must be the byte sequence produced by
+  /// `SipSignalCodec.encodePhrase` or `SipSignalCodec.encodeMorse`.
+  /// The router enforces:
+  ///   1. peer has advertised `dmSignalV1` (terminal block on miss),
+  ///   2. session is active and known,
+  ///   3. T+S block + per-peer rate gate (PeerRateKind.signal),
+  ///   4. encoded size + envelope fits the rate limiter,
+  ///   5. secure-when-all-true gate same as [sendText].
+  Future<SipDmRouterOutcome> sendSignal({
+    required int sessionTag,
+    required Uint8List signalPayload,
+  }) async {
+    final dm = _ref.read(sipDmManagerProvider);
+    if (dm == null) {
+      return const SipDmRouterOutcome.fail(SipDmSendError.sessionNotFound);
+    }
+    final session = dm.getSession(sessionTag);
+    if (session == null) {
+      return const SipDmRouterOutcome.fail(SipDmSendError.sessionNotFound);
+    }
+
+    // Hard peer-feature gate. Distinct from the secure gate — peers
+    // without dmSignalV1 silently drop unknown 0x47 frames.
+    final discovery = _ref.read(sipDiscoveryProvider);
+    if (discovery == null) {
+      return const SipDmRouterOutcome.failInk(
+        reason: SipDmInkBlockReason.peerUnknown,
+        error: SipDmSendError.peerUnsupported,
+      );
+    }
+    final peer = discovery.getPeer(session.peerNodeId);
+    if (peer == null) {
+      AppLogging.sipSignal(
+        'send_blocked reason=peer_unknown peer=0x'
+        '${session.peerNodeId.toRadixString(16)}',
+      );
+      return const SipDmRouterOutcome.failInk(
+        reason: SipDmInkBlockReason.peerUnknown,
+        error: SipDmSendError.peerUnsupported,
+      );
+    }
+    if (!peer.supportsDmSignalV1) {
+      AppLogging.sipSignal(
+        'send_blocked reason=peer_unsupported peer=0x'
+        '${session.peerNodeId.toRadixString(16)}',
+      );
+      return const SipDmRouterOutcome.failInk(
+        reason: SipDmInkBlockReason.peerUnsupported,
+        error: SipDmSendError.peerUnsupported,
+      );
+    }
+
+    // T+S gate stack — canonical order, matches sendText/sendSketch/sendPlay.
+    if (_ref.read(peerSafetyGateProvider).isBlocked(session.peerNodeId)) {
+      return const SipDmRouterOutcome.fail(SipDmSendError.peerBlocked);
+    }
+    if (!_ref
+        .read(peerRateLimiterProvider)
+        .tryAcquire(session.peerNodeId, PeerRateKind.signal)) {
+      return const SipDmRouterOutcome.fail(SipDmSendError.peerRateLimited);
+    }
+
+    final gate = await _evaluateGate(session.peerNodeId);
+    if (gate is _GatePass) {
+      return _sendSecureSignal(
+        sessionTag: sessionTag,
+        peerNodeId: session.peerNodeId,
+        linkId: gate.linkId,
+        signalPayload: signalPayload,
+      );
+    }
+    return _sendPlaintextSignal(
+      sessionTag: sessionTag,
+      signalPayload: signalPayload,
+      fallbackReason: (gate as _GateFail).reason,
+    );
+  }
+
   /// Send a DM reaction. Same routing rules as [sendText].
   Future<SipDmRouterOutcome> sendReaction({
     required int sessionTag,
@@ -582,6 +747,205 @@ class SipDmRouter {
     );
   }
 
+  Future<SipDmRouterOutcome> _sendSecurePlay({
+    required int sessionTag,
+    required int peerNodeId,
+    required int linkId,
+    required Uint8List playPayload,
+  }) async {
+    final dm = _ref.read(sipDmManagerProvider)!;
+    final session = dm.getSession(sessionTag)!;
+    if (session.status != SipDmSessionStatus.active) {
+      return const SipDmRouterOutcome.fail(SipDmSendError.sessionClosed);
+    }
+    if (playPayload.isEmpty) {
+      return const SipDmRouterOutcome.fail(SipDmSendError.emptyText);
+    }
+
+    final nowS = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    final wrapped = SipDmMessages.encodeSecureDmPlay(
+      playPayload: playPayload,
+      timestampS: nowS,
+    );
+    if (wrapped == null) {
+      return const SipDmRouterOutcome.fail(SipDmSendError.textTooLong);
+    }
+
+    final manager = await _ref.read(overlaySecureSessionManagerProvider.future);
+    final sent = await manager.sendEncrypted(
+      linkId,
+      wrapped,
+      subtype: OverlaySecureDataSubtype.dmPlay,
+    );
+    if (!sent) {
+      AppLogging.sipPlay(
+        'secure_send_rejected mid_flight linkId=0x'
+        '${linkId.toRadixString(16)} — falling back to plaintext',
+      );
+      return _sendPlaintextPlay(
+        sessionTag: sessionTag,
+        playPayload: playPayload,
+        fallbackReason: SipDmFallbackReason.sessionNotEstablished,
+      );
+    }
+
+    // Mirror plaintext bookkeeping so the sender's own timeline
+    // renders the game move immediately. The engine derives state
+    // from the entry stream regardless of which transport carried
+    // the bytes.
+    session.messages.add(
+      SipDmHistoryEntry(
+        text: '',
+        timestampMs: nowS * 1000,
+        direction: SipDmDirection.outbound,
+        contentType: SipDmContentType.play,
+        payload: Uint8List.fromList(playPayload),
+      ),
+    );
+    dm.onStateChanged?.call();
+
+    AppLogging.sipPlay(
+      'secure_selected tag=0x${sessionTag.toRadixString(16)} '
+      'linkId=0x${linkId.toRadixString(16)} subtype=dmPlay '
+      'peer=0x${peerNodeId.toRadixString(16)} '
+      'payload_bytes=${playPayload.length} envelope_bytes=${wrapped.length}',
+    );
+    return const SipDmRouterOutcome.ok(transport: SipDmTransport.secure);
+  }
+
+  Future<SipDmRouterOutcome> _sendPlaintextPlay({
+    required int sessionTag,
+    required Uint8List playPayload,
+    required SipDmFallbackReason fallbackReason,
+  }) async {
+    final dm = _ref.read(sipDmManagerProvider)!;
+    final result = dm.buildPlayMessage(
+      sessionTag: sessionTag,
+      playPayload: playPayload,
+    );
+    if (!result.isOk) {
+      return SipDmRouterOutcome.fail(result.error ?? SipDmSendError.emptyText);
+    }
+    final encoded = SipCodec.encode(result.frame!);
+    if (encoded == null) {
+      return const SipDmRouterOutcome.fail(SipDmSendError.textTooLong);
+    }
+    final protocol = _ref.read(protocolServiceProvider);
+    await protocol.sendSipPacket(encoded);
+    _ref
+        .read(sipCountersProvider)
+        .recordTx(result.frame!.msgType, encoded.length);
+
+    AppLogging.sipPlay(
+      'plaintext_selected tag=0x${sessionTag.toRadixString(16)} '
+      'subtype=dmPlay reason=${fallbackReason.name} '
+      'payload_bytes=${playPayload.length} frame_bytes=${encoded.length}',
+    );
+    return SipDmRouterOutcome.ok(
+      transport: SipDmTransport.plaintext,
+      fallbackReason: fallbackReason,
+    );
+  }
+
+  Future<SipDmRouterOutcome> _sendSecureSignal({
+    required int sessionTag,
+    required int peerNodeId,
+    required int linkId,
+    required Uint8List signalPayload,
+  }) async {
+    final dm = _ref.read(sipDmManagerProvider)!;
+    final session = dm.getSession(sessionTag)!;
+    if (session.status != SipDmSessionStatus.active) {
+      return const SipDmRouterOutcome.fail(SipDmSendError.sessionClosed);
+    }
+    if (signalPayload.isEmpty) {
+      return const SipDmRouterOutcome.fail(SipDmSendError.emptyText);
+    }
+
+    final nowS = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    final wrapped = SipDmMessages.encodeSecureDmSignal(
+      signalPayload: signalPayload,
+      timestampS: nowS,
+    );
+    if (wrapped == null) {
+      return const SipDmRouterOutcome.fail(SipDmSendError.textTooLong);
+    }
+
+    final manager = await _ref.read(overlaySecureSessionManagerProvider.future);
+    final sent = await manager.sendEncrypted(
+      linkId,
+      wrapped,
+      subtype: OverlaySecureDataSubtype.dmSignal,
+    );
+    if (!sent) {
+      AppLogging.sipSignal(
+        'secure_send_rejected mid_flight linkId=0x'
+        '${linkId.toRadixString(16)} — falling back to plaintext',
+      );
+      return _sendPlaintextSignal(
+        sessionTag: sessionTag,
+        signalPayload: signalPayload,
+        fallbackReason: SipDmFallbackReason.sessionNotEstablished,
+      );
+    }
+
+    // Mirror plaintext bookkeeping so the sender's own timeline
+    // renders the signal immediately. The receiver dedupes by
+    // (sequenceId, payloadHash) so a sender-side echo is irrelevant.
+    session.messages.add(
+      SipDmHistoryEntry(
+        text: '',
+        timestampMs: nowS * 1000,
+        direction: SipDmDirection.outbound,
+        contentType: SipDmContentType.signal,
+        payload: Uint8List.fromList(signalPayload),
+      ),
+    );
+    dm.onStateChanged?.call();
+
+    AppLogging.sipSignal(
+      'secure_selected tag=0x${sessionTag.toRadixString(16)} '
+      'linkId=0x${linkId.toRadixString(16)} subtype=dmSignal '
+      'peer=0x${peerNodeId.toRadixString(16)} '
+      'payload_bytes=${signalPayload.length} envelope_bytes=${wrapped.length}',
+    );
+    return const SipDmRouterOutcome.ok(transport: SipDmTransport.secure);
+  }
+
+  Future<SipDmRouterOutcome> _sendPlaintextSignal({
+    required int sessionTag,
+    required Uint8List signalPayload,
+    required SipDmFallbackReason fallbackReason,
+  }) async {
+    final dm = _ref.read(sipDmManagerProvider)!;
+    final result = dm.buildSignalMessage(
+      sessionTag: sessionTag,
+      signalPayload: signalPayload,
+    );
+    if (!result.isOk) {
+      return SipDmRouterOutcome.fail(result.error ?? SipDmSendError.emptyText);
+    }
+    final encoded = SipCodec.encode(result.frame!);
+    if (encoded == null) {
+      return const SipDmRouterOutcome.fail(SipDmSendError.textTooLong);
+    }
+    final protocol = _ref.read(protocolServiceProvider);
+    await protocol.sendSipPacket(encoded);
+    _ref
+        .read(sipCountersProvider)
+        .recordTx(result.frame!.msgType, encoded.length);
+
+    AppLogging.sipSignal(
+      'plaintext_selected tag=0x${sessionTag.toRadixString(16)} '
+      'subtype=dmSignal reason=${fallbackReason.name} '
+      'payload_bytes=${signalPayload.length} frame_bytes=${encoded.length}',
+    );
+    return SipDmRouterOutcome.ok(
+      transport: SipDmTransport.plaintext,
+      fallbackReason: fallbackReason,
+    );
+  }
+
   Future<SipDmRouterOutcome> _sendPlaintextReaction({
     required int sessionTag,
     required int emojiIndex,
@@ -798,6 +1162,50 @@ Future<void> _handleSecureDmInbound({
         'secure_decrypt_ok linkId=0x${payload.linkId.toRadixString(16)} '
         'subtype=dmInk peer=0x${peerNodeId.toRadixString(16)} '
         'bytes=${decoded.inkPayload.length}',
+      );
+      return;
+
+    case OverlaySecureDataSubtype.dmPlay:
+      final decoded = SipDmMessages.decodeSecureDmPlay(payload.cleartext);
+      if (decoded == null) {
+        AppLogging.sipPlay(
+          'secure_decrypt_dropped reason=malformed subtype=dmPlay',
+        );
+        return;
+      }
+      final frame = _synthesizeDmFrame(
+        sessionTag: dmSession.sessionTag,
+        timestampS: decoded.timestampS,
+        body: decoded.playPayload,
+        msgType: SipMessageType.dmPlay,
+      );
+      dm.handleInboundPlay(frame);
+      AppLogging.sipPlay(
+        'secure_decrypt_ok linkId=0x${payload.linkId.toRadixString(16)} '
+        'subtype=dmPlay peer=0x${peerNodeId.toRadixString(16)} '
+        'bytes=${decoded.playPayload.length}',
+      );
+      return;
+
+    case OverlaySecureDataSubtype.dmSignal:
+      final decoded = SipDmMessages.decodeSecureDmSignal(payload.cleartext);
+      if (decoded == null) {
+        AppLogging.sipSignal(
+          'secure_decrypt_dropped reason=malformed subtype=dmSignal',
+        );
+        return;
+      }
+      final frame = _synthesizeDmFrame(
+        sessionTag: dmSession.sessionTag,
+        timestampS: decoded.timestampS,
+        body: decoded.signalPayload,
+        msgType: SipMessageType.dmSignal,
+      );
+      dm.handleInboundSignal(frame);
+      AppLogging.sipSignal(
+        'secure_decrypt_ok linkId=0x${payload.linkId.toRadixString(16)} '
+        'subtype=dmSignal peer=0x${peerNodeId.toRadixString(16)} '
+        'bytes=${decoded.signalPayload.length}',
       );
       return;
 

@@ -42804,9 +42804,9 @@
     "@sipHandshakeFailed": {
         "description": "Status text when handshake fails."
     },
-    "sipHandshakePendingLabel": "Request sent",
+    "sipHandshakePendingLabel": "Wants to connect",
     "@sipHandshakePendingLabel": {
-        "description": "Chip label shown on a peer tile when they have sent an incoming handshake request awaiting user action."
+        "description": "Chip label shown on a peer tile when they have sent an incoming handshake request awaiting user action. Phrasing reads as incoming, matching the consent card heading."
     },
     "sipRequestIdentity": "Request Identity",
     "@sipRequestIdentity": {
@@ -42845,7 +42845,7 @@
     "@sipDmEmptyState": {
         "description": "Empty state text when no messages in DM thread."
     },
-    "sipDmEmptyDescription": "Send a message to start the conversation.",
+    "sipDmEmptyDescription": "Send text, sketches, or start a tiny game.",
     "@sipDmEmptyDescription": {
         "description": "Description for the DM empty state."
     },
@@ -42891,9 +42891,9 @@
     "@sipDmMenuBlock": {
         "description": "Overflow menu item that persistently blocks the peer. Future inbound HELLO / DM / MRRP frames are silently dropped at the protocol layer. Local conversation history is preserved."
     },
-    "sipDmMenuResetSecure": "Reset secure session",
+    "sipDmMenuResetSecure": "Reset secure connection",
     "@sipDmMenuResetSecure": {
-        "description": "Overflow menu item that drops the in-memory secure (X25519) session keys for this peer. The next outbound DM will renegotiate fresh ephemeral keys. No history is wiped, the underlying overlay link stays open."
+        "description": "Overflow menu item that drops the in-memory secure (X25519) session keys for this peer. The next outbound DM will renegotiate fresh ephemeral keys. No history is wiped, the underlying overlay link stays open. 'Connection' rather than 'session' to keep wording aligned with the rest of the secure-link UX."
     },
     "sipDmMenuRemove": "Remove conversation",
     "@sipDmMenuRemove": {
@@ -42951,13 +42951,339 @@
     "@sipDmActionResetSnack": {
         "description": "Confirmation snackbar shown after the user resets the secure session."
     },
+    "sipPlayComposerLabel": "Play",
+    "@sipPlayComposerLabel": {
+        "description": "Tab label inside the DM composer that opens the SIP Play game picker. Shown only when the peer advertises dmPlayV1."
+    },
+    "sipPlayPanelTitle": "Play a game",
+    "@sipPlayPanelTitle": {
+        "description": "Header inside the Play composer panel — the panel shown when the user selects the Play tab."
+    },
+    "sipPlayPanelSubtitle": "Tiny turn-based games sent as mesh-safe moves.",
+    "@sipPlayPanelSubtitle": {
+        "description": "Body copy under the Play panel title explaining the airtime model."
+    },
+    "sipPlayPanelTttSupporting": "Send only tiny moves over the mesh.",
+    "@sipPlayPanelTttSupporting": {
+        "description": "Supporting copy on the Tic-Tac-Toe card inside the Play composer panel."
+    },
+    "sipPlayPanelTttSizeBadge": "Tiny moves • ~7 bytes",
+    "@sipPlayPanelTttSizeBadge": {
+        "description": "Optional badge on the Tic-Tac-Toe card calling out how compact each move is on the wire. Phrased as user-facing value (compact mesh moves) rather than internal metric — earlier 'B' shorthand read like a glitch."
+    },
+    "sipPlayPanelGameInProgressTitle": "Game in progress",
+    "@sipPlayPanelGameInProgressTitle": {
+        "description": "Banner title shown inside the Play panel when at least one non-terminal SIP Play instance exists in this session."
+    },
+    "sipPlayPanelGameInProgressBody": "Scroll to your active game in the conversation, or start another.",
+    "@sipPlayPanelGameInProgressBody": {
+        "description": "Body of the Game in Progress banner inside the Play panel."
+    },
+    "sipPlayPanelGameInProgressJump": "Jump to game",
+    "@sipPlayPanelGameInProgressJump": {
+        "description": "Button label that scrolls the chat to the latest active SIP Play bubble."
+    },
+    "sipDmOverflowSectionPreferences": "PREFERENCES",
+    "@sipDmOverflowSectionPreferences": {
+        "description": "Uppercase section header inside the DM overflow menu grouping Mute. Rendered as a disabled label row, never tappable."
+    },
+    "sipDmOverflowSectionSafety": "SAFETY",
+    "@sipDmOverflowSectionSafety": {
+        "description": "Uppercase section header inside the DM overflow menu grouping Block. Rendered as a disabled label row, never tappable."
+    },
+    "sipDmOverflowSectionSession": "SESSION",
+    "@sipDmOverflowSectionSession": {
+        "description": "Uppercase section header inside the DM overflow menu grouping Reset secure connection and Close session."
+    },
+    "sipDmOverflowSectionData": "DATA",
+    "@sipDmOverflowSectionData": {
+        "description": "Uppercase section header inside the DM overflow menu grouping Remove conversation."
+    },
+    "sipPlayPickerTitle": "Choose a game",
+    "@sipPlayPickerTitle": {
+        "description": "Title of the SIP Play picker bottom sheet."
+    },
+    "sipPlayPickerSubtitle": "Tap a game to send an offer to this conversation. Both sides need to accept before play starts.",
+    "@sipPlayPickerSubtitle": {
+        "description": "Body copy beneath the picker title explaining the offer/accept flow."
+    },
+    "sipPlayGameTicTacToe": "Tic-Tac-Toe",
+    "@sipPlayGameTicTacToe": {
+        "description": "Display name for the Tic-Tac-Toe game in the SIP Play picker and game bubbles."
+    },
+    "sipPlayGameTicTacToeDescription": "Classic 3x3. You place X if you offered, O if you accepted.",
+    "@sipPlayGameTicTacToeDescription": {
+        "description": "One-line description of Tic-Tac-Toe shown under its name in the picker."
+    },
+    "sipPlayUnsupportedGame": "Unsupported game",
+    "@sipPlayUnsupportedGame": {
+        "description": "Title shown on a SIP Play bubble whose gameType is not registered in this build. Renders a safe fallback so unknown games never crash the timeline."
+    },
+    "sipPlayUnsupportedGameBody": "This conversation includes a game your build doesn't recognize. The original sender's app may be newer.",
+    "@sipPlayUnsupportedGameBody": {
+        "description": "Body copy on the unsupported-game fallback bubble."
+    },
+    "sipPlayMalformedTitle": "Game data unreadable",
+    "@sipPlayMalformedTitle": {
+        "description": "Title of the bubble shown when a SIP Play envelope fails to decode (truncated, version mismatch, etc.). State is unchanged — the bubble is informational only."
+    },
+    "sipPlayOfferOutgoingTitle": "You offered Tic-Tac-Toe",
+    "@sipPlayOfferOutgoingTitle": {
+        "description": "Title on a SIP Play bubble shown to the offerer after they sent an offer. Status switches to active when the peer accepts."
+    },
+    "sipPlayOfferIncomingTitle": "Tic-Tac-Toe — they want to play",
+    "@sipPlayOfferIncomingTitle": {
+        "description": "Title on a SIP Play bubble for an inbound offer awaiting Accept / Decline."
+    },
+    "sipPlayOfferAccept": "Accept",
+    "@sipPlayOfferAccept": {
+        "description": "Accept button on an inbound SIP Play offer bubble."
+    },
+    "sipPlayOfferDecline": "Decline",
+    "@sipPlayOfferDecline": {
+        "description": "Decline button on an inbound SIP Play offer bubble."
+    },
+    "sipPlayResign": "Resign",
+    "@sipPlayResign": {
+        "description": "Button shown beside the active TTT board that ends the game and concedes."
+    },
+    "sipPlayResignConfirmTitle": "Resign this game?",
+    "@sipPlayResignConfirmTitle": {
+        "description": "Title of the confirmation sheet shown when the user taps Resign on an active SIP Play game."
+    },
+    "sipPlayResignConfirmBody": "Resigning ends the game. The other player wins. You can offer a new game any time.",
+    "@sipPlayResignConfirmBody": {
+        "description": "Body of the Resign confirmation sheet."
+    },
+    "sipPlayResignConfirmAction": "Resign",
+    "@sipPlayResignConfirmAction": {
+        "description": "Destructive confirm button on the Resign sheet."
+    },
+    "sipPlayResignConfirmCancel": "Cancel",
+    "@sipPlayResignConfirmCancel": {
+        "description": "Cancel button on the Resign sheet."
+    },
+    "sipPlayStatusYourTurn": "Your turn",
+    "@sipPlayStatusYourTurn": {
+        "description": "Status caption on the active TTT board when it's the local user's turn."
+    },
+    "sipPlayStatusTheirTurn": "Their turn",
+    "@sipPlayStatusTheirTurn": {
+        "description": "Status caption on the active TTT board when it's the remote peer's turn."
+    },
+    "sipPlayStatusYouWon": "You won",
+    "@sipPlayStatusYouWon": {
+        "description": "Terminal status caption when the local user wins."
+    },
+    "sipPlayStatusTheyWon": "They won",
+    "@sipPlayStatusTheyWon": {
+        "description": "Terminal status caption when the remote peer wins."
+    },
+    "sipPlayStatusDraw": "Draw",
+    "@sipPlayStatusDraw": {
+        "description": "Terminal status caption when the TTT board fills with no winner."
+    },
+    "sipPlayStatusYouResigned": "You resigned",
+    "@sipPlayStatusYouResigned": {
+        "description": "Terminal status caption when the local user resigned."
+    },
+    "sipPlayStatusTheyResigned": "They resigned",
+    "@sipPlayStatusTheyResigned": {
+        "description": "Terminal status caption when the remote peer resigned."
+    },
+    "sipPlayStatusYouDeclined": "You declined the offer",
+    "@sipPlayStatusYouDeclined": {
+        "description": "Terminal status caption when the local user declined an inbound offer."
+    },
+    "sipPlayStatusTheyDeclined": "They declined the offer",
+    "@sipPlayStatusTheyDeclined": {
+        "description": "Terminal status caption when the remote peer declined our outbound offer."
+    },
     "sipDmComposerModeText": "Text",
     "@sipDmComposerModeText": {
         "description": "Label for the text composer mode in the SIP DM composer mode switcher."
     },
     "sipDmComposerModeSketch": "Sketch",
     "@sipDmComposerModeSketch": {
-        "description": "Label for the SIP Ink sketch composer mode in the SIP DM composer mode switcher."
+        "description": "Sketch tab label in the DM composer mode switcher."
+    },
+    "sipDmComposerModePlay": "Play",
+    "@sipDmComposerModePlay": {
+        "description": "Play tab label in the DM composer mode switcher. Visible only when the peer supports SIP Play and is not blocked."
+    },
+    "sipDmComposerModeSignal": "Signal",
+    "@sipDmComposerModeSignal": {
+        "description": "Signal tab label in the DM composer mode switcher. Visible only when the peer supports SIP Signal v1 and is not blocked. Signal is musical-phrase + Morse — 'Close Encounters over LoRa.'"
+    },
+    "sipSignalPanelTitle": "Send a signal",
+    "@sipSignalPanelTitle": {
+        "description": "Header inside the Signal composer panel."
+    },
+    "sipSignalPanelSubtitle": "A short musical phrase or a Morse message — synthesized locally on both sides.",
+    "@sipSignalPanelSubtitle": {
+        "description": "Body copy under the Signal panel title explaining the no-audio-on-the-wire model."
+    },
+    "sipSignalSubModeTone": "Tone",
+    "@sipSignalSubModeTone": {
+        "description": "Sub-mode label for the musical-phrase composer."
+    },
+    "sipSignalSubModeMorse": "Morse",
+    "@sipSignalSubModeMorse": {
+        "description": "Sub-mode label for the Morse composer."
+    },
+    "sipSignalToneEmpty": "Tap pads to compose a phrase",
+    "@sipSignalToneEmpty": {
+        "description": "Placeholder shown above the pad grid when no notes have been added yet."
+    },
+    "sipSignalToneInstrument": "Instrument",
+    "@sipSignalToneInstrument": {
+        "description": "Label for the instrument chip row inside the Tone composer."
+    },
+    "sipSignalInstrumentSine": "Sine",
+    "@sipSignalInstrumentSine": {
+        "description": "Display name for the Sine instrument."
+    },
+    "sipSignalInstrumentBell": "Bell",
+    "@sipSignalInstrumentBell": {
+        "description": "Display name for the Bell instrument."
+    },
+    "sipSignalInstrumentPluck": "Pluck",
+    "@sipSignalInstrumentPluck": {
+        "description": "Display name for the Pluck instrument."
+    },
+    "sipSignalInstrumentChirp": "Chirp",
+    "@sipSignalInstrumentChirp": {
+        "description": "Display name for the Chirp instrument."
+    },
+    "sipSignalActionClear": "Clear",
+    "@sipSignalActionClear": {
+        "description": "Button that wipes the local Signal draft (notes or Morse text)."
+    },
+    "sipSignalActionPreview": "Preview",
+    "@sipSignalActionPreview": {
+        "description": "Button that plays the current Signal draft locally without sending."
+    },
+    "sipSignalActionSend": "Send",
+    "@sipSignalActionSend": {
+        "description": "Button that transmits the Signal draft over the SIP DM session."
+    },
+    "sipSignalReplay": "Replay",
+    "@sipSignalReplay": {
+        "description": "Button on a Signal bubble that resynthesizes and plays the signal locally."
+    },
+    "sipSignalToneSizeBadge": "Tiny signal • ~20–32 bytes",
+    "@sipSignalToneSizeBadge": {
+        "description": "Static payload-size hint retained for legacy callers. The composer footer now shows the live encoded size via sipSignalSizeBytes."
+    },
+    "sipSignalMorseSizeBadge": "Tiny Morse • ~20–60 bytes",
+    "@sipSignalMorseSizeBadge": {
+        "description": "Static payload-size hint retained for legacy callers. The composer footer now shows the live encoded size via sipSignalSizeBytes."
+    },
+    "sipSignalSizeBytes": "Signal • {bytes} B",
+    "@sipSignalSizeBytes": {
+        "description": "Live encoded-size readout in the composer footer. Updates per keystroke / pad tap.",
+        "placeholders": {
+            "bytes": { "type": "int", "example": "28" }
+        }
+    },
+    "sipSignalSizeOverBudget": "Signal • {bytes} B — too large to send",
+    "@sipSignalSizeOverBudget": {
+        "description": "Composer footer when the encoded envelope exceeds maxEnvelopeBytes. Send is disabled in this state.",
+        "placeholders": {
+            "bytes": { "type": "int", "example": "72" }
+        }
+    },
+    "sipSignalToneFull": "{count}/{max} notes • Phrase full",
+    "@sipSignalToneFull": {
+        "description": "Badge shown above the tone pads when the phrase has reached its hard cap. Note pads are disabled but Clear / Preview / Send remain active.",
+        "placeholders": {
+            "count": { "type": "int", "example": "8" },
+            "max": { "type": "int", "example": "8" }
+        }
+    },
+    "sipSignalMorseInputTap": "Tap",
+    "@sipSignalMorseInputTap": {
+        "description": "Toggle label for the tap-first Morse input mode (dots, dashes, Letter, Space)."
+    },
+    "sipSignalMorseInputType": "Type",
+    "@sipSignalMorseInputType": {
+        "description": "Toggle label for the type-text Morse input mode (TextField helper)."
+    },
+    "sipSignalMorseTapHint": "Tap dots and dashes — Letter finalises a glyph, Space adds a word gap.",
+    "@sipSignalMorseTapHint": {
+        "description": "Helper line below the tap-Morse keypad explaining the input model."
+    },
+    "sipSignalMorseTapEmpty": "Decoded message will appear here.",
+    "@sipSignalMorseTapEmpty": {
+        "description": "Placeholder shown above the tap-Morse keypad before any input."
+    },
+    "sipSignalMorseTapDecodedLabel": "Decoded",
+    "@sipSignalMorseTapDecodedLabel": {
+        "description": "Section label above the live decoded-text preview in tap-Morse mode."
+    },
+    "sipSignalMorseTapPatternLabel": "Morse",
+    "@sipSignalMorseTapPatternLabel": {
+        "description": "Section label above the live Morse-pattern preview in tap-Morse mode."
+    },
+    "sipSignalMorseTapDot": "Dot",
+    "@sipSignalMorseTapDot": {
+        "description": "Tooltip / accessibility label for the dot tap-Morse key."
+    },
+    "sipSignalMorseTapDash": "Dash",
+    "@sipSignalMorseTapDash": {
+        "description": "Tooltip / accessibility label for the dash tap-Morse key."
+    },
+    "sipSignalMorseTapLetter": "Letter",
+    "@sipSignalMorseTapLetter": {
+        "description": "Label for the tap-Morse key that finalises the current dot/dash token into a letter."
+    },
+    "sipSignalMorseTapSpace": "Space",
+    "@sipSignalMorseTapSpace": {
+        "description": "Label for the tap-Morse key that finalises the current letter and adds a word gap."
+    },
+    "sipSignalMorseTapBackspace": "Back",
+    "@sipSignalMorseTapBackspace": {
+        "description": "Label for the tap-Morse backspace key — removes the most recent symbol or separator."
+    },
+    "sipSignalMorseTapInvalidNote": "Unknown sequences are shown as ? — they're skipped on send.",
+    "@sipSignalMorseTapInvalidNote": {
+        "description": "Inline notice when the tap-Morse input contains tokens not in the international Morse table."
+    },
+    "sipSignalToneExampleCloseEncounters": "Close Encounters",
+    "@sipSignalToneExampleCloseEncounters": {
+        "description": "Label for the example button that loads the iconic 5-note 'Close Encounters of the Third Kind' motif into the Tone phrase composer."
+    },
+    "sipSignalToneExampleHint": "Try the example",
+    "@sipSignalToneExampleHint": {
+        "description": "Helper line above the Close Encounters example button when the Tone phrase is empty."
+    },
+    "sipDmSignalReplyPlaceholder": "📡 Signal",
+    "@sipDmSignalReplyPlaceholder": {
+        "description": "Placeholder shown in the reply quote when replying to a SIP Signal entry. Mirrors how sketch replies use sipDmInkReplyPlaceholder — Signal envelopes carry no plaintext body to quote."
+    },
+    "sipSignalMorseHint": "Type up to 40 characters. A–Z, 0–9, space, and . , ? ! / @ are supported.",
+    "@sipSignalMorseHint": {
+        "description": "Helper text below the Morse text input."
+    },
+    "sipSignalMorsePlaceholder": "Type your message…",
+    "@sipSignalMorsePlaceholder": {
+        "description": "Placeholder for the Morse text input."
+    },
+    "sipSignalMorseUnsupportedNote": "Some characters won't be sent — only A–Z, 0–9, space, and . , ? ! / @ are allowed.",
+    "@sipSignalMorseUnsupportedNote": {
+        "description": "Inline notice shown when the user types unsupported characters."
+    },
+    "sipSignalBubblePhraseLabel": "Phrase",
+    "@sipSignalBubblePhraseLabel": {
+        "description": "Section label inside an inbound Signal bubble for the musical-phrase variant."
+    },
+    "sipSignalBubbleMorseLabel": "Morse",
+    "@sipSignalBubbleMorseLabel": {
+        "description": "Section label inside an inbound Signal bubble for the Morse variant."
+    },
+    "sipSignalBubbleMalformed": "Signal can't be read",
+    "@sipSignalBubbleMalformed": {
+        "description": "Fallback bubble title when an inbound Signal envelope fails to decode. State is informational only — never crashes ingest."
     },
     "sipInkComposerHint": "Draw a quick sketch — kept tiny so it fits on the mesh.",
     "@sipInkComposerHint": {

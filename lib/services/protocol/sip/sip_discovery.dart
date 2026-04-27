@@ -95,6 +95,22 @@ class SipPeerCapability {
   /// ink frame; peers without the bit drop unknown msg_type silently.
   bool get supportsDmInkV1 =>
       (features & SipFeatureBits.dmInkV1) == SipFeatureBits.dmInkV1;
+
+  /// Whether this peer advertised SIP Play v1 turn-based mini-game
+  /// support (DM_PLAY / 0x46). Senders MUST check this before
+  /// transmitting a play frame; peers without the bit drop unknown
+  /// msg_type silently. The Play tab/CTA in the DM composer is hidden
+  /// when this returns false.
+  bool get supportsDmPlayV1 =>
+      (features & SipFeatureBits.dmPlayV1) == SipFeatureBits.dmPlayV1;
+
+  /// Whether this peer advertised SIP Signal v1 musical-phrase + Morse
+  /// support (DM_SIGNAL / 0x47). Senders MUST check this before
+  /// transmitting a signal frame; peers without the bit drop unknown
+  /// msg_type silently. The Signal tab in the DM composer is hidden
+  /// when this returns false.
+  bool get supportsDmSignalV1 =>
+      (features & SipFeatureBits.dmSignalV1) == SipFeatureBits.dmSignalV1;
 }
 
 /// Outbound SIP frame ready to send via the transport.

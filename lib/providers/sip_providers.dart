@@ -34,6 +34,8 @@ import 'mesh_explorer_providers.dart';
 import 'overlay_providers.dart';
 import 'sip_dm_secure_router.dart';
 import 'sip_nodedex_bridge.dart';
+import 'sip_play_providers.dart';
+import '../services/audio/sip_play_sound_service.dart';
 
 /// Whether SIP is enabled (sourced from SmFeatureFlag).
 ///
@@ -252,6 +254,14 @@ final sipDiscoveryProvider = Provider<SipDiscovery?>((ref) {
     // the bit so peers can gate sketch sends on us. See
     // docs/sip/SIP_V0_1.md §6 (v0.2 amendment).
     bits |= SipFeatureBits.dmInkV1;
+    // SIP Play v1 (turn-based mini-game framework) is unconditionally
+    // supported by this build; advertise the bit so peers can gate
+    // dmPlay sends + show the Play CTA.
+    bits |= SipFeatureBits.dmPlayV1;
+    // SIP Signal v1 (musical phrase + Morse) is unconditionally
+    // supported by this build; advertise the bit so peers can gate
+    // dmSignal sends + show the Signal tab.
+    bits |= SipFeatureBits.dmSignalV1;
     return bits;
   };
 
@@ -280,6 +290,28 @@ final sipDiscoveryProvider = Provider<SipDiscovery?>((ref) {
   // are logged but never block DM readiness.
   protocol.onSipHandshakeComplete = (peerNodeId) {
     _autoOpenOverlayLink(ref, peerNodeId, discovery, pendingAutoOpens);
+    // Audio cue: handshake completed → connection_succeeded.mp3.
+    // Fire-and-forget; failures are logged inside the service.
+    ref
+        .read(sipPlaySoundServiceProvider)
+        .play(SipPlaySoundCue.connectionSucceeded);
+  };
+
+  // Hook the new SipHandshakeManager failure / decline callbacks
+  // (added for the SIP Play SFX layer) onto sound playback. The
+  // handshake manager itself suppresses the failure callback for
+  // user-initiated cancels (Block / cancelHandshake reason='cancelled')
+  // so a Block tap stays silent.
+  final hsManager = ref.read(sipHandshakeProvider);
+  hsManager?.onHandshakeFailed = (peerNodeId) {
+    ref
+        .read(sipPlaySoundServiceProvider)
+        .play(SipPlaySoundCue.connectionFailed);
+  };
+  hsManager?.onHandshakeDeclined = (peerNodeId) {
+    ref
+        .read(sipPlaySoundServiceProvider)
+        .play(SipPlaySoundCue.rejectedDeclined);
   };
 
   // Start periodic CAP_BEACON broadcast.
@@ -292,6 +324,9 @@ final sipDiscoveryProvider = Provider<SipDiscovery?>((ref) {
     protocol.attachSipCounters(null);
     protocol.attachSipRateLimiter(null);
     protocol.onSipHandshakeComplete = null;
+    final mgr = ref.read(sipHandshakeProvider);
+    mgr?.onHandshakeFailed = null;
+    mgr?.onHandshakeDeclined = null;
   });
 
   return discovery;

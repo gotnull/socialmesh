@@ -32271,7 +32271,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get sipHandshakeFailed => 'Handshake fallito';
 
   @override
-  String get sipHandshakePendingLabel => 'Richiesta in attesa';
+  String get sipHandshakePendingLabel => 'Vuole connettersi';
 
   @override
   String get sipRequestIdentity => 'Richiedi identità';
@@ -32386,10 +32386,265 @@ class AppLocalizationsIt extends AppLocalizations {
       'Sessione sicura reimpostata — il prossimo messaggio negozierà nuove chiavi';
 
   @override
+  String get sipPlayComposerLabel => 'Play';
+
+  @override
+  String get sipPlayPanelTitle => 'Play a game';
+
+  @override
+  String get sipPlayPanelSubtitle =>
+      'Tiny turn-based games sent as mesh-safe moves.';
+
+  @override
+  String get sipPlayPanelTttSupporting => 'Send only tiny moves over the mesh.';
+
+  @override
+  String get sipPlayPanelTttSizeBadge => 'Tiny moves • ~7 bytes';
+
+  @override
+  String get sipPlayPanelGameInProgressTitle => 'Game in progress';
+
+  @override
+  String get sipPlayPanelGameInProgressBody =>
+      'Scroll to your active game in the conversation, or start another.';
+
+  @override
+  String get sipPlayPanelGameInProgressJump => 'Jump to game';
+
+  @override
+  String get sipDmOverflowSectionPreferences => 'PREFERENCES';
+
+  @override
+  String get sipDmOverflowSectionSafety => 'SAFETY';
+
+  @override
+  String get sipDmOverflowSectionSession => 'SESSION';
+
+  @override
+  String get sipDmOverflowSectionData => 'DATA';
+
+  @override
+  String get sipPlayPickerTitle => 'Choose a game';
+
+  @override
+  String get sipPlayPickerSubtitle =>
+      'Tap a game to send an offer to this conversation. Both sides need to accept before play starts.';
+
+  @override
+  String get sipPlayGameTicTacToe => 'Tic-Tac-Toe';
+
+  @override
+  String get sipPlayGameTicTacToeDescription =>
+      'Classic 3x3. You place X if you offered, O if you accepted.';
+
+  @override
+  String get sipPlayUnsupportedGame => 'Unsupported game';
+
+  @override
+  String get sipPlayUnsupportedGameBody =>
+      'This conversation includes a game your build doesn\'t recognize. The original sender\'s app may be newer.';
+
+  @override
+  String get sipPlayMalformedTitle => 'Game data unreadable';
+
+  @override
+  String get sipPlayOfferOutgoingTitle => 'You offered Tic-Tac-Toe';
+
+  @override
+  String get sipPlayOfferIncomingTitle => 'Tic-Tac-Toe — they want to play';
+
+  @override
+  String get sipPlayOfferAccept => 'Accept';
+
+  @override
+  String get sipPlayOfferDecline => 'Decline';
+
+  @override
+  String get sipPlayResign => 'Resign';
+
+  @override
+  String get sipPlayResignConfirmTitle => 'Resign this game?';
+
+  @override
+  String get sipPlayResignConfirmBody =>
+      'Resigning ends the game. The other player wins. You can offer a new game any time.';
+
+  @override
+  String get sipPlayResignConfirmAction => 'Resign';
+
+  @override
+  String get sipPlayResignConfirmCancel => 'Cancel';
+
+  @override
+  String get sipPlayStatusYourTurn => 'Your turn';
+
+  @override
+  String get sipPlayStatusTheirTurn => 'Their turn';
+
+  @override
+  String get sipPlayStatusYouWon => 'You won';
+
+  @override
+  String get sipPlayStatusTheyWon => 'They won';
+
+  @override
+  String get sipPlayStatusDraw => 'Draw';
+
+  @override
+  String get sipPlayStatusYouResigned => 'You resigned';
+
+  @override
+  String get sipPlayStatusTheyResigned => 'They resigned';
+
+  @override
+  String get sipPlayStatusYouDeclined => 'You declined the offer';
+
+  @override
+  String get sipPlayStatusTheyDeclined => 'They declined the offer';
+
+  @override
   String get sipDmComposerModeText => 'Text';
 
   @override
   String get sipDmComposerModeSketch => 'Sketch';
+
+  @override
+  String get sipDmComposerModePlay => 'Play';
+
+  @override
+  String get sipDmComposerModeSignal => 'Signal';
+
+  @override
+  String get sipSignalPanelTitle => 'Send a signal';
+
+  @override
+  String get sipSignalPanelSubtitle =>
+      'A short musical phrase or a Morse message — synthesized locally on both sides.';
+
+  @override
+  String get sipSignalSubModeTone => 'Tone';
+
+  @override
+  String get sipSignalSubModeMorse => 'Morse';
+
+  @override
+  String get sipSignalToneEmpty => 'Tap pads to compose a phrase';
+
+  @override
+  String get sipSignalToneInstrument => 'Instrument';
+
+  @override
+  String get sipSignalInstrumentSine => 'Sine';
+
+  @override
+  String get sipSignalInstrumentBell => 'Bell';
+
+  @override
+  String get sipSignalInstrumentPluck => 'Pluck';
+
+  @override
+  String get sipSignalInstrumentChirp => 'Chirp';
+
+  @override
+  String get sipSignalActionClear => 'Clear';
+
+  @override
+  String get sipSignalActionPreview => 'Preview';
+
+  @override
+  String get sipSignalActionSend => 'Send';
+
+  @override
+  String get sipSignalReplay => 'Replay';
+
+  @override
+  String get sipSignalToneSizeBadge => 'Tiny signal • ~20–32 bytes';
+
+  @override
+  String get sipSignalMorseSizeBadge => 'Tiny Morse • ~20–60 bytes';
+
+  @override
+  String sipSignalSizeBytes(int bytes) {
+    return 'Segnale • $bytes B';
+  }
+
+  @override
+  String sipSignalSizeOverBudget(int bytes) {
+    return 'Segnale • $bytes B — troppo grande per inviare';
+  }
+
+  @override
+  String sipSignalToneFull(int count, int max) {
+    return '$count/$max note • Frase piena';
+  }
+
+  @override
+  String get sipSignalMorseInputTap => 'Tap';
+
+  @override
+  String get sipSignalMorseInputType => 'Scrivi';
+
+  @override
+  String get sipSignalMorseTapHint =>
+      'Tocca punti e linee — Lettera completa un glifo, Spazio aggiunge una pausa tra parole.';
+
+  @override
+  String get sipSignalMorseTapEmpty =>
+      'Il messaggio decodificato apparirà qui.';
+
+  @override
+  String get sipSignalMorseTapDecodedLabel => 'Decodificato';
+
+  @override
+  String get sipSignalMorseTapPatternLabel => 'Morse';
+
+  @override
+  String get sipSignalMorseTapDot => 'Punto';
+
+  @override
+  String get sipSignalMorseTapDash => 'Linea';
+
+  @override
+  String get sipSignalMorseTapLetter => 'Lettera';
+
+  @override
+  String get sipSignalMorseTapSpace => 'Spazio';
+
+  @override
+  String get sipSignalMorseTapBackspace => 'Indietro';
+
+  @override
+  String get sipSignalMorseTapInvalidNote =>
+      'Le sequenze sconosciute appaiono come ? — vengono ignorate all\'invio.';
+
+  @override
+  String get sipSignalToneExampleCloseEncounters => 'Incontri ravvicinati';
+
+  @override
+  String get sipSignalToneExampleHint => 'Prova l\'esempio';
+
+  @override
+  String get sipDmSignalReplyPlaceholder => '📡 Segnale';
+
+  @override
+  String get sipSignalMorseHint =>
+      'Type up to 40 characters. A–Z, 0–9, space, and . , ? ! / @ are supported.';
+
+  @override
+  String get sipSignalMorsePlaceholder => 'Type your message…';
+
+  @override
+  String get sipSignalMorseUnsupportedNote =>
+      'Some characters won\'t be sent — only A–Z, 0–9, space, and . , ? ! / @ are allowed.';
+
+  @override
+  String get sipSignalBubblePhraseLabel => 'Phrase';
+
+  @override
+  String get sipSignalBubbleMorseLabel => 'Morse';
+
+  @override
+  String get sipSignalBubbleMalformed => 'Signal can\'t be read';
 
   @override
   String get sipInkComposerHint =>

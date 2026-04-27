@@ -76,6 +76,23 @@ class _HandshakeSession {
   /// idempotent retries without breaking nonce binding.
   SipFrame? helloFrame;
 
+  /// Cached HS_CHALLENGE frame for peer-driven re-emit while the session
+  /// sits in [SipHandshakeState.challengeSent]. If the original CHALLENGE
+  /// is dropped on the radio, the peer keeps retransmitting HS_HELLO;
+  /// each duplicate HELLO with a matching client_nonce signals our
+  /// CHALLENGE never arrived and is the trigger to re-send the cached
+  /// frame. Reusing the same wrapper nonce/timestamp/payload is
+  /// intentional — the peer (which never saw the original) processes it
+  /// normally, and we never rotate the server nonce mid-attempt.
+  SipFrame? challengeFrame;
+
+  /// Wall-clock timestamp (ms) of the last peer-driven HS_CHALLENGE
+  /// re-emit. Throttles re-emits to at most one per
+  /// [SipHandshakeManager._kChallengeReemitMinInterval] per session, so
+  /// a flurry of duplicate HELLOs (multi-hop rebroadcast, mesh echo)
+  /// can't burn airtime.
+  int? lastChallengeReemitMs;
+
   /// Timers scheduled to retransmit [helloFrame]. Cancelled whenever
   /// the session leaves [SipHandshakeState.helloSent].
   final List<Timer> retransmitTimers = [];
@@ -201,6 +218,16 @@ class SipHandshakeManager {
     Duration(seconds: 40),
   ];
 
+  /// Minimum interval between peer-driven HS_CHALLENGE re-emits per
+  /// session. The initiator's HS_HELLO retransmit cadence is 8s/20s/40s,
+  /// so a 4 s gate guarantees we re-emit at most once per inbound HELLO
+  /// without spamming when the mesh duplicates a single HELLO. No
+  /// blind timer-driven CHALLENGE retransmit exists by design — the
+  /// peer's continuing HELLO retransmits ARE the proof the previous
+  /// CHALLENGE was lost, and that signal is more airtime-efficient than
+  /// a fixed schedule.
+  static const Duration _kChallengeReemitMinInterval = Duration(seconds: 4);
+
   /// Called whenever any session state changes (progress, accept, fail).
   void Function()? onStateChanged;
 
@@ -214,6 +241,33 @@ class SipHandshakeManager {
   /// transmitting the frame (same replay-accounted path as the original
   /// send).
   void Function(int peerNodeId, SipFrame frame)? onHelloRetransmit;
+
+  /// Called when a cached HS_CHALLENGE should be re-emitted because the
+  /// peer is still HELLO-retransmitting against an active
+  /// [SipHandshakeState.challengeSent] session — proof our previous
+  /// CHALLENGE was lost on the radio. The caller is responsible for
+  /// encoding and transmitting the frame on the same rate-limited path
+  /// as the original send.
+  void Function(int peerNodeId, SipFrame frame)? onChallengeReemit;
+
+  /// Called when a handshake fails for a NON-user-initiated reason —
+  /// timeout, replayed nonce, mismatched session_tag, etc. The
+  /// `'cancelled'` reason (explicit user cancel via [cancelHandshake])
+  /// is intentionally suppressed so e.g. a Block tap doesn't fire a
+  /// failure SFX.
+  ///
+  /// Provider-layer hook used to play the connection-failed sound
+  /// effect. Fire-and-forget; exceptions are swallowed by the caller.
+  void Function(int peerNodeId)? onHandshakeFailed;
+
+  /// Called when a handshake transitions to [SipHandshakeState.declined]
+  /// from EITHER direction:
+  ///   - local user tapped Decline ([declineHandshake]),
+  ///   - remote peer sent HS_DECLINE in response to our HS_HELLO
+  ///     ([handleDecline]).
+  ///
+  /// Provider-layer hook used to play the rejected/declined SFX.
+  void Function(int peerNodeId)? onHandshakeDeclined;
 
   /// Whether DMs are available (handshakes accepted).
   ///
@@ -230,7 +284,15 @@ class SipHandshakeManager {
   ///
   /// Returns the HS_HELLO [SipFrame] to send, or null if a session
   /// already exists for this peer.
-  SipFrame? initiateHandshake(int peerNodeId) {
+  ///
+  /// [overrideCooldown] bypasses the per-peer post-failure cooldown.
+  /// Pass `true` ONLY for an explicit user-initiated retry — typically
+  /// when the user taps a peer whose tile is rendering the
+  /// `failed` / `timedOut` state. The cooldown exists to throttle
+  /// automatic retransmits (and to soften double-tap accidents); it
+  /// must not lock the user out of a deliberate retry. Default is
+  /// `false` so every other call site keeps the original throttling.
+  SipFrame? initiateHandshake(int peerNodeId, {bool overrideCooldown = false}) {
     // Privacy gate: block handshake initiation when DM not available.
     if (!isDmAvailable) {
       AppLogging.sip(
@@ -254,18 +316,28 @@ class SipHandshakeManager {
       return null;
     }
 
-    // Enforce per-peer cooldown after failure/timeout.
+    // Enforce per-peer cooldown after failure/timeout — unless the
+    // caller explicitly overrides (user-initiated retry).
     final cooldownUntilMs = _failCooldownMs[peerNodeId];
     if (cooldownUntilMs != null) {
       final nowMs = _clock().millisecondsSinceEpoch;
       if (nowMs < cooldownUntilMs) {
-        final remainingS = (cooldownUntilMs - nowMs) ~/ 1000;
-        AppLogging.sip(
-          'SIP_HS: handshake initiation to '
-          'node=0x${peerNodeId.toRadixString(16)} blocked by '
-          'cooldown, ${remainingS}s remaining',
-        );
-        return null;
+        if (overrideCooldown) {
+          final remainingS = (cooldownUntilMs - nowMs) ~/ 1000;
+          AppLogging.sip(
+            'SIP_HS: cooldown overridden by explicit user retry for '
+            'node=0x${peerNodeId.toRadixString(16)} '
+            '(${remainingS}s remained)',
+          );
+        } else {
+          final remainingS = (cooldownUntilMs - nowMs) ~/ 1000;
+          AppLogging.sip(
+            'SIP_HS: handshake initiation to '
+            'node=0x${peerNodeId.toRadixString(16)} blocked by '
+            'cooldown, ${remainingS}s remaining',
+          );
+          return null;
+        }
       }
       _failCooldownMs.remove(peerNodeId);
     }
@@ -528,6 +600,44 @@ class SipHandshakeManager {
       }
     }
 
+    // Peer-driven HS_CHALLENGE re-emit. If we are sitting in
+    // [SipHandshakeState.challengeSent] and the peer is still
+    // retransmitting the SAME HS_HELLO (matching client_nonce), our
+    // previous CHALLENGE was lost on the radio — the peer wouldn't keep
+    // HELLOing if they had it. Re-send the cached frame on the same
+    // rate-limited path. Throttled to one re-emit per
+    // [_kChallengeReemitMinInterval] per session so multi-hop rebroadcast
+    // can't trigger a flurry. We do NOT rotate the server nonce, rebuild
+    // the session, or reset the expiry timer — the handshake remains the
+    // same attempt.
+    if (existing != null &&
+        existing.state == SipHandshakeState.challengeSent &&
+        existing.clientNonce != null &&
+        existing.challengeFrame != null &&
+        _bytesEqual(hello.clientNonce, existing.clientNonce!)) {
+      final nowMs = _clock().millisecondsSinceEpoch;
+      final lastMs = existing.lastChallengeReemitMs;
+      if (lastMs == null ||
+          nowMs - lastMs >= _kChallengeReemitMinInterval.inMilliseconds) {
+        existing.lastChallengeReemitMs = nowMs;
+        AppLogging.sip(
+          'SIP_HS: peer-driven re-emit of HS_CHALLENGE to '
+          'node=0x${peerNodeId.toRadixString(16)} '
+          '(duplicate HELLO in challengeSent — previous CHALLENGE lost)',
+        );
+        onChallengeReemit?.call(peerNodeId, existing.challengeFrame!);
+      } else {
+        final remainingMs =
+            _kChallengeReemitMinInterval.inMilliseconds - (nowMs - lastMs);
+        AppLogging.sip(
+          'SIP_HS: HS_CHALLENGE re-emit throttled for '
+          'peer=0x${peerNodeId.toRadixString(16)} '
+          '(${remainingMs}ms remaining)',
+        );
+      }
+      return;
+    }
+
     // Duplicate HELLO absorption: if we are already past the HELLO stage,
     // absorb the duplicate without restarting. This prevents multi-hop
     // rebroadcast from forking the state machine.
@@ -666,7 +776,7 @@ class SipHandshakeManager {
       'server_nonce=${_hexPrefix(session.serverNonce!)}',
     );
 
-    return SipFrame(
+    final frame = SipFrame(
       versionMajor: SipConstants.sipVersionMajor,
       versionMinor: SipConstants.sipVersionMinor,
       msgType: SipMessageType.hsChallenge,
@@ -678,6 +788,13 @@ class SipHandshakeManager {
       payloadLen: payload.length,
       payload: payload,
     );
+
+    // Cache for peer-driven re-emit (see [handleHello] challengeSent
+    // branch). Same wrapper nonce/timestamp/payload on re-send is
+    // intentional — the peer never saw the original.
+    session.challengeFrame = frame;
+
+    return frame;
   }
 
   /// User declined the incoming handshake request from [peerNodeId].
@@ -696,6 +813,16 @@ class SipHandshakeManager {
     }
 
     onStateChanged?.call();
+    final declineHook = onHandshakeDeclined;
+    if (declineHook != null) {
+      try {
+        declineHook(peerNodeId);
+      } catch (e, st) {
+        AppLogging.sip(
+          'SIP_HS: onHandshakeDeclined hook threw (ignored): $e\n$st',
+        );
+      }
+    }
 
     AppLogging.sip(
       'SIP_HS: user DECLINED handshake from '
@@ -749,6 +876,16 @@ class SipHandshakeManager {
       _clock().millisecondsSinceEpoch + _kTerminalDisplayMs,
     );
     onStateChanged?.call();
+    final declineHook = onHandshakeDeclined;
+    if (declineHook != null) {
+      try {
+        declineHook(peerNodeId);
+      } catch (e, st) {
+        AppLogging.sip(
+          'SIP_HS: onHandshakeDeclined hook threw (ignored): $e\n$st',
+        );
+      }
+    }
 
     final decline = SipHsMessages.decodeDecline(frame.payload);
     final reason = decline?.reason ?? 0xFF;
@@ -971,6 +1108,22 @@ class SipHandshakeManager {
       'node=0x${peerNodeId.toRadixString(16)}: $reason, '
       'cooldown=${cooldownMs ~/ 1000}s',
     );
+
+    // Fire the failure SFX hook for non-user-cancelled failures only.
+    // Block / Cancel paths reach `_failSession` with reason='cancelled'
+    // and must NOT play a sound — the user already chose silent action.
+    if (reason != 'cancelled') {
+      final failHook = onHandshakeFailed;
+      if (failHook != null) {
+        try {
+          failHook(peerNodeId);
+        } catch (e, st) {
+          AppLogging.sip(
+            'SIP_HS: onHandshakeFailed hook threw (ignored): $e\n$st',
+          );
+        }
+      }
+    }
   }
 
   void _cleanExpired() {

@@ -344,6 +344,140 @@ abstract final class SipDmMessages {
       inkPayload: Uint8List.fromList(inkPayload),
     );
   }
+
+  // ---------------------------------------------------------------------------
+  // Secure DM Play envelope — same shape as secure DM Ink: a 4-byte
+  // big-endian sender timestamp prefix, followed by the v1 SIP Play
+  // envelope bytes (typeAndVersion ‖ gameType ‖ instanceId ‖ action ‖
+  // seq ‖ game-payload). Travels in
+  // OverlaySecureDataSubtype.dmPlay frames; receiver reconstructs a
+  // synthetic SIP DM_PLAY (0x46) frame and feeds it through
+  // `handleInboundPlay`.
+  // ---------------------------------------------------------------------------
+
+  /// Prefix-overhead (bytes) added by the secure DM play envelope.
+  static const int secureDmPlayOverhead = 4;
+
+  /// Encode a secure DM play payload. Prepends [timestampS] (seconds)
+  /// to [playPayload] so the receiver reconstructs a synthetic SIP
+  /// frame with the original sender time.
+  ///
+  /// Returns null when the timestamp is out of range, the play
+  /// payload is empty, or the combined size exceeds the DM byte cap.
+  static Uint8List? encodeSecureDmPlay({
+    required Uint8List playPayload,
+    required int timestampS,
+  }) {
+    if (timestampS < 0 || timestampS > 0xFFFFFFFF) return null;
+    if (playPayload.isEmpty) return null;
+    if (playPayload.length > SipDmConstants.maxDmTextBytes) {
+      AppLogging.sip(
+        'SIP_DM: encodeSecureDmPlay rejected: ${playPayload.length}B > '
+        '${SipDmConstants.maxDmTextBytes}B max',
+      );
+      return null;
+    }
+    final out = Uint8List(secureDmPlayOverhead + playPayload.length);
+    ByteData.sublistView(out).setUint32(0, timestampS, Endian.big);
+    out.setRange(secureDmPlayOverhead, out.length, playPayload);
+    return out;
+  }
+
+  /// Decode a secure DM play payload into its timestamp + raw envelope
+  /// bytes. Returns null when too short or oversized; the envelope
+  /// itself is parsed by `SipPlayCodec.decode` further down.
+  static SecureDmPlayDecoded? decodeSecureDmPlay(Uint8List payload) {
+    if (payload.length <= secureDmPlayOverhead) {
+      AppLogging.sip(
+        'SIP_DM: decodeSecureDmPlay rejected: ${payload.length}B too short',
+      );
+      return null;
+    }
+    if (payload.length - secureDmPlayOverhead > SipDmConstants.maxDmTextBytes) {
+      AppLogging.sip(
+        'SIP_DM: decodeSecureDmPlay rejected: '
+        '${payload.length - secureDmPlayOverhead}B > '
+        '${SipDmConstants.maxDmTextBytes}B max',
+      );
+      return null;
+    }
+    final timestampS = ByteData.sublistView(
+      payload,
+      0,
+      secureDmPlayOverhead,
+    ).getUint32(0, Endian.big);
+    final playPayload = Uint8List.sublistView(payload, secureDmPlayOverhead);
+    return SecureDmPlayDecoded(
+      timestampS: timestampS,
+      playPayload: Uint8List.fromList(playPayload),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Secure DM Signal envelope — same shape as secure DM Play / Ink:
+  // a 4-byte big-endian sender timestamp prefix followed by the v1
+  // SIP Signal envelope bytes. Travels in
+  // OverlaySecureDataSubtype.dmSignal frames; receiver reconstructs
+  // a synthetic DM_SIGNAL (0x47) frame and feeds it through
+  // `handleInboundSignal`.
+  // ---------------------------------------------------------------------------
+
+  /// Prefix-overhead (bytes) added by the secure DM signal envelope.
+  static const int secureDmSignalOverhead = 4;
+
+  /// Encode a secure DM signal payload. Prepends [timestampS] (seconds)
+  /// to [signalPayload].
+  static Uint8List? encodeSecureDmSignal({
+    required Uint8List signalPayload,
+    required int timestampS,
+  }) {
+    if (timestampS < 0 || timestampS > 0xFFFFFFFF) return null;
+    if (signalPayload.isEmpty) return null;
+    if (signalPayload.length > SipDmConstants.maxDmTextBytes) {
+      AppLogging.sip(
+        'SIP_DM: encodeSecureDmSignal rejected: ${signalPayload.length}B > '
+        '${SipDmConstants.maxDmTextBytes}B max',
+      );
+      return null;
+    }
+    final out = Uint8List(secureDmSignalOverhead + signalPayload.length);
+    ByteData.sublistView(out).setUint32(0, timestampS, Endian.big);
+    out.setRange(secureDmSignalOverhead, out.length, signalPayload);
+    return out;
+  }
+
+  /// Decode a secure DM signal payload into timestamp + raw envelope
+  /// bytes. The envelope itself is parsed by `SipSignalCodec.decode`.
+  static SecureDmSignalDecoded? decodeSecureDmSignal(Uint8List payload) {
+    if (payload.length <= secureDmSignalOverhead) {
+      AppLogging.sip(
+        'SIP_DM: decodeSecureDmSignal rejected: ${payload.length}B too short',
+      );
+      return null;
+    }
+    if (payload.length - secureDmSignalOverhead >
+        SipDmConstants.maxDmTextBytes) {
+      AppLogging.sip(
+        'SIP_DM: decodeSecureDmSignal rejected: '
+        '${payload.length - secureDmSignalOverhead}B > '
+        '${SipDmConstants.maxDmTextBytes}B max',
+      );
+      return null;
+    }
+    final timestampS = ByteData.sublistView(
+      payload,
+      0,
+      secureDmSignalOverhead,
+    ).getUint32(0, Endian.big);
+    final signalPayload = Uint8List.sublistView(
+      payload,
+      secureDmSignalOverhead,
+    );
+    return SecureDmSignalDecoded(
+      timestampS: timestampS,
+      signalPayload: Uint8List.fromList(signalPayload),
+    );
+  }
 }
 
 /// Parsed result of a secure DM ink payload.
@@ -353,6 +487,26 @@ class SecureDmInkDecoded {
   const SecureDmInkDecoded({
     required this.timestampS,
     required this.inkPayload,
+  });
+}
+
+/// Parsed result of a secure DM play payload.
+class SecureDmPlayDecoded {
+  final int timestampS;
+  final Uint8List playPayload;
+  const SecureDmPlayDecoded({
+    required this.timestampS,
+    required this.playPayload,
+  });
+}
+
+/// Parsed result of a secure DM signal payload.
+class SecureDmSignalDecoded {
+  final int timestampS;
+  final Uint8List signalPayload;
+  const SecureDmSignalDecoded({
+    required this.timestampS,
+    required this.signalPayload,
   });
 }
 

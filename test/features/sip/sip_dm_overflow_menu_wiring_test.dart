@@ -217,5 +217,86 @@ void main() {
       expect(menu.contains("value: 'remove'"), isTrue);
       expect(menu.contains("value: 'close'"), isTrue);
     });
+
+    test('groups actions under PREFERENCES / SAFETY / SESSION / DATA '
+        'section headers in that order', () {
+      // Pin the visual hierarchy added in the SIP Play UX integration
+      // pass: section headers are non-interactive label rows that
+      // group the existing five actions.
+      final menuStart = src.indexOf('Widget _buildOverflowMenu(');
+      final menuEnd = src.indexOf('Future<void> _onToggleMute(', menuStart);
+      final menu = src.substring(menuStart, menuEnd);
+
+      final preferencesIdx = menu.indexOf(
+        'l10n.sipDmOverflowSectionPreferences',
+      );
+      final safetyIdx = menu.indexOf('l10n.sipDmOverflowSectionSafety');
+      final sessionIdx = menu.indexOf('l10n.sipDmOverflowSectionSession');
+      final dataIdx = menu.indexOf('l10n.sipDmOverflowSectionData');
+      expect(preferencesIdx, greaterThan(0));
+      expect(safetyIdx, greaterThan(preferencesIdx));
+      expect(sessionIdx, greaterThan(safetyIdx));
+      expect(dataIdx, greaterThan(sessionIdx));
+    });
+
+    test('Mute sits inside PREFERENCES; Block inside SAFETY; '
+        'Reset + Close inside SESSION; Remove inside DATA', () {
+      final menuStart = src.indexOf('Widget _buildOverflowMenu(');
+      final menuEnd = src.indexOf('Future<void> _onToggleMute(', menuStart);
+      final menu = src.substring(menuStart, menuEnd);
+
+      final preferencesIdx = menu.indexOf(
+        'l10n.sipDmOverflowSectionPreferences',
+      );
+      final safetyIdx = menu.indexOf('l10n.sipDmOverflowSectionSafety');
+      final sessionIdx = menu.indexOf('l10n.sipDmOverflowSectionSession');
+      final dataIdx = menu.indexOf('l10n.sipDmOverflowSectionData');
+
+      final muteIdx = menu.indexOf("value: 'mute'");
+      final blockIdx = menu.indexOf("value: 'block'");
+      final resetIdx = menu.indexOf("value: 'reset_secure'");
+      final closeIdx = menu.indexOf("value: 'close'");
+      final removeIdx = menu.indexOf("value: 'remove'");
+
+      // Mute lives between PREFERENCES and SAFETY headers.
+      expect(muteIdx, greaterThan(preferencesIdx));
+      expect(muteIdx, lessThan(safetyIdx));
+      // Block lives between SAFETY and SESSION.
+      expect(blockIdx, greaterThan(safetyIdx));
+      expect(blockIdx, lessThan(sessionIdx));
+      // Reset + Close both live in SESSION (between SESSION and DATA).
+      expect(resetIdx, greaterThan(sessionIdx));
+      expect(resetIdx, lessThan(dataIdx));
+      expect(closeIdx, greaterThan(sessionIdx));
+      expect(closeIdx, lessThan(dataIdx));
+      // Remove lives in DATA (after the DATA header).
+      expect(removeIdx, greaterThan(dataIdx));
+    });
+
+    test('Mute label is dynamic — flips to Unmute when peer is muted', () {
+      // The build computes isMuted then conditionally picks the
+      // ARB key. Pin the conditional so a refactor cannot collapse
+      // it back to a single static label.
+      expect(
+        RegExp(
+          r'isMuted\s*\?\s*l10n\.sipDmMenuUnmute\s*:\s*l10n\.sipDmMenuMute',
+        ).hasMatch(src),
+        isTrue,
+        reason:
+            'Mute / Unmute label must be conditional on isMuted — '
+            'a flat label would break the toggle UX',
+      );
+    });
+
+    test('Block / Reset / Remove all route through their respective '
+        'destructive confirm sheets (semantics not merged)', () {
+      // Each action handler must reach its own confirm sheet — the
+      // grouping refactor must not have collapsed them into one
+      // generic confirm path. Verify by scanning each handler body
+      // for its dedicated ARB title key.
+      expect(src.contains('l10n.sipDmBlockConfirmTitle'), isTrue);
+      expect(src.contains('l10n.sipDmResetConfirmTitle'), isTrue);
+      expect(src.contains('l10n.sipDmRemoveConfirmTitle'), isTrue);
+    });
   });
 }

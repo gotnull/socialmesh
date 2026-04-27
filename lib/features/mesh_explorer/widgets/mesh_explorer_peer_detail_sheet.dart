@@ -432,7 +432,7 @@ class _ActionButtons extends ConsumerWidget {
 
     final handshake = ref.read(sipHandshakeProvider);
     if (handshake == null) {
-      showErrorSnackBar(context, l10n.sipHandshakeFailed);
+      // Chip is the single source of truth — no redundant snackbar.
       return;
     }
 
@@ -445,7 +445,18 @@ class _ActionButtons extends ConsumerWidget {
       return;
     }
 
-    final frame = handshake.initiateHandshake(peer.nodeId);
+    // Explicit user retry from a terminal state overrides the
+    // 120s post-failure cooldown — the cooldown is meant to throttle
+    // automatic retransmits, not block deliberate user retries.
+    final isUserRetry =
+        currentState == SipHandshakeState.failed ||
+        currentState == SipHandshakeState.timedOut ||
+        currentState == SipHandshakeState.declined;
+
+    final frame = handshake.initiateHandshake(
+      peer.nodeId,
+      overrideCooldown: isUserRetry,
+    );
     if (frame == null) {
       showWarningSnackBar(context, l10n.meshExplorerHandshakeCooldown);
       return;
@@ -453,7 +464,6 @@ class _ActionButtons extends ConsumerWidget {
 
     final encoded = SipCodec.encode(frame);
     if (encoded == null) {
-      showErrorSnackBar(context, l10n.sipHandshakeFailed);
       return;
     }
 

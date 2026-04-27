@@ -652,6 +652,15 @@ class ProtocolService {
         // byte budget instead of bypassing it.
         sendSipGated(encoded, SipMessageType.hsHello);
       };
+      handshake.onChallengeReemit = (peerNodeId, frame) {
+        final encoded = SipCodec.encode(frame);
+        if (encoded == null) return;
+        // Same gated path as the original CHALLENGE — re-emits respect
+        // the SIP byte budget. Reused frame keeps the wrapper nonce
+        // stable so the peer (which never saw the dropped original)
+        // accepts it normally.
+        sendSipGated(encoded, SipMessageType.hsChallenge);
+      };
       AppLogging.sip('ProtocolService: SipHandshakeManager attached');
     }
   }
@@ -5396,6 +5405,10 @@ class ProtocolService {
         _handleSipDmClose(frame);
       case SipMessageType.dmInk:
         _handleSipDmInk(frame);
+      case SipMessageType.dmPlay:
+        _handleSipDmPlay(frame);
+      case SipMessageType.dmSignal:
+        _handleSipDmSignal(frame);
 
       // ----- SIP-0: CAP_REQ / CAP_RESP (informational) -----
       case SipMessageType.capReq:
@@ -6107,6 +6120,24 @@ class ProtocolService {
       return;
     }
     dm.handleInboundInk(frame);
+  }
+
+  void _handleSipDmPlay(SipFrame frame) {
+    final dm = _sipDm;
+    if (dm == null) {
+      AppLogging.sipPlay('rx_dropped reason=no_dm_manager');
+      return;
+    }
+    dm.handleInboundPlay(frame);
+  }
+
+  void _handleSipDmSignal(SipFrame frame) {
+    final dm = _sipDm;
+    if (dm == null) {
+      AppLogging.sipSignal('rx_dropped reason=no_dm_manager');
+      return;
+    }
+    dm.handleInboundSignal(frame);
   }
 
   /// Send a file transfer packet as broadcast on PRIVATE_APP (portnum 256).

@@ -30,6 +30,10 @@ import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/jump_to_latest_pill.dart';
 import '../../core/widgets/status_banner.dart';
 import '../../features/messaging/widgets/chat_composer.dart';
+import '../../features/sip/play/sip_play_bubble.dart';
+import '../../features/sip/signal/sip_signal_bubble.dart';
+import '../../features/sip/signal/sip_signal_composer_panel.dart';
+import '../../features/sip/play/sip_play_picker.dart';
 import '../../features/sip/sketch/sip_ink_bubble.dart';
 import '../../features/sip/sketch/sip_ink_composer.dart';
 import '../../features/nodedex/models/nodedex_entry.dart';
@@ -44,6 +48,7 @@ import '../../providers/app_providers.dart';
 import '../../providers/overlay_providers.dart';
 import '../../providers/peer_safety_providers.dart';
 import '../../providers/sip_dm_secure_router.dart';
+import '../../providers/sip_play_providers.dart';
 import '../../providers/sip_providers.dart';
 import '../../services/haptic_service.dart';
 import '../../services/protocol/sip/sip_dm.dart';
@@ -72,7 +77,7 @@ class SipDmScreen extends ConsumerStatefulWidget {
 /// `text` is the historical default. `sketch` activates the SIP Ink
 /// canvas instead of the text input. The mode is screen-local — no
 /// provider, since switching is purely UI state.
-enum _SipDmComposerMode { text, sketch }
+enum _SipDmComposerMode { text, sketch, play, signal }
 
 class _SipDmScreenState extends ConsumerState<SipDmScreen>
     with LifecycleSafeMixin, WidgetsBindingObserver {
@@ -366,8 +371,19 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
         .read(peerSafetyManagerProvider.notifier)
         .isMuted(session.peerNodeId);
 
+    // Visual hierarchy (semantics unchanged from Phase 9):
+    //   PREFERENCES  -> Mute / Unmute notifications
+    //   SAFETY       -> Block
+    //   SESSION      -> Reset secure connection, Close session
+    //   DATA         -> Remove conversation
+    //
+    // Section headers are non-interactive `enabled: false` items so
+    // taps fall through cleanly. The five existing action values
+    // ('mute', 'block', 'reset_secure', 'remove', 'close') are
+    // preserved byte-for-byte — overflow wiring tests still pin them.
     return AppBarOverflowMenu<String>(
       itemBuilder: (context) => [
+        _sectionHeader(context, l10n.sipDmOverflowSectionPreferences),
         PopupMenuItem(
           value: 'mute',
           child: ListTile(
@@ -379,6 +395,8 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
             contentPadding: EdgeInsets.zero,
           ),
         ),
+        const PopupMenuDivider(),
+        _sectionHeader(context, l10n.sipDmOverflowSectionSafety),
         PopupMenuItem(
           value: 'block',
           child: ListTile(
@@ -391,6 +409,8 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
             contentPadding: EdgeInsets.zero,
           ),
         ),
+        const PopupMenuDivider(),
+        _sectionHeader(context, l10n.sipDmOverflowSectionSession),
         PopupMenuItem(
           value: 'reset_secure',
           child: ListTile(
@@ -401,6 +421,17 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
           ),
         ),
         PopupMenuItem(
+          value: 'close',
+          child: ListTile(
+            leading: const Icon(Icons.close),
+            title: Text(l10n.sipDmCloseAction),
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+          ),
+        ),
+        const PopupMenuDivider(),
+        _sectionHeader(context, l10n.sipDmOverflowSectionData),
+        PopupMenuItem(
           value: 'remove',
           child: ListTile(
             leading: Icon(
@@ -408,16 +439,6 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
               color: SemanticColors.error.withValues(alpha: 0.85),
             ),
             title: Text(l10n.sipDmMenuRemove),
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-          ),
-        ),
-        const PopupMenuDivider(),
-        PopupMenuItem(
-          value: 'close',
-          child: ListTile(
-            leading: const Icon(Icons.close),
-            title: Text(l10n.sipDmCloseAction),
             dense: true,
             contentPadding: EdgeInsets.zero,
           ),
@@ -437,6 +458,27 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
             _onClose();
         }
       },
+    );
+  }
+
+  /// Non-interactive section label inside the DM overflow popup.
+  /// Rendered as a disabled `PopupMenuItem` so any stray tap falls
+  /// through without triggering an action.
+  PopupMenuItem<String> _sectionHeader(BuildContext context, String label) {
+    return PopupMenuItem<String>(
+      enabled: false,
+      height: 28,
+      padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: context.textTertiary,
+          letterSpacing: 1.2,
+          fontFamily: AppTheme.fontFamily,
+        ),
+      ),
     );
   }
 
@@ -573,11 +615,16 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
   }
 
   /// Quoted text to display in the reply indicator and embed in the
-  /// wire-encoded `> ... \n ...` prefix. Ink entries fall back to a
-  /// localized placeholder since they have no plaintext body.
+  /// wire-encoded `> ... \n ...` prefix. Ink and Signal entries fall
+  /// back to localised placeholders since they carry no plaintext
+  /// body — the placeholder lets `_findReplyTarget` walk back to the
+  /// matching content type without an explicit reference.
   String _replyingQuoteText(SipDmHistoryEntry entry) {
     if (entry.contentType == SipDmContentType.ink) {
       return context.l10n.sipDmInkReplyPlaceholder;
+    }
+    if (entry.contentType == SipDmContentType.signal) {
+      return context.l10n.sipDmSignalReplyPlaceholder;
     }
     return SipDmManager.extractReplyBody(entry.text);
   }
@@ -599,7 +646,9 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
     if (replyToText == null || replyToText.isEmpty) return null;
 
     final inkPlaceholder = context.l10n.sipDmInkReplyPlaceholder;
+    final signalPlaceholder = context.l10n.sipDmSignalReplyPlaceholder;
     final isInkReply = replyToText == inkPlaceholder;
+    final isSignalReply = replyToText == signalPlaceholder;
     final probe = replyToText.endsWith('...')
         ? replyToText.substring(0, replyToText.length - 3)
         : replyToText;
@@ -608,6 +657,8 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
       final candidate = history[i];
       if (isInkReply) {
         if (candidate.contentType == SipDmContentType.ink) return candidate;
+      } else if (isSignalReply) {
+        if (candidate.contentType == SipDmContentType.signal) return candidate;
       } else {
         if (candidate.contentType != SipDmContentType.text) continue;
         final body = SipDmManager.extractReplyBody(candidate.text);
@@ -863,6 +914,16 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
     final session = dm?.getSession(widget.sessionTag);
     ref.watch(sipDmEpochProvider); // Rebuild on new messages
     ref.watch(sipDmTypingEpochProvider); // Rebuild on typing indicators
+    // Rebuild when the peer's advertised capabilities change. Without
+    // this, the Sketch / Play / Signal tabs stay hidden until the next
+    // unrelated rebuild even after the peer's CAP_BEACON or
+    // ROLLCALL_RESP arrives with the full feature bitmap. Field-bug
+    // root cause from the Android-vs-iOS asymmetry: passive discovery
+    // inserts a `features=sip0` placeholder, the real caps arrive
+    // moments later (logs show the `caps updated` line), but
+    // `_peerSupportsSignal`/`Play`/`Ink` only re-runs when the screen
+    // rebuilds for some other reason.
+    ref.watch(sipPeerCacheEpochProvider);
 
     // Auto-pop when the peer closes the session remotely.
     ref.listen<int>(sipDmEpochProvider, (_, epoch) {
@@ -946,55 +1007,76 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
             if (session != null)
               _FirstContactBanner(peerNodeId: session.peerNodeId),
             Expanded(
-              child: Stack(
-                children: [
-                  if (hasContent)
-                    ListView.builder(
-                      controller: _scrollController,
-                      padding: const EdgeInsets.all(AppTheme.spacing16),
-                      itemCount: history.length + (peerIsTyping ? 1 : 0),
-                      itemBuilder: (context, index) {
-                        if (index == history.length) {
-                          return const _TypingIndicatorBubble();
-                        }
-                        final entry = history[index];
-                        return GestureDetector(
-                          // GlobalObjectKey lets _onReplyQuoteTap find
-                          // and ensureVisible this bubble even when
-                          // it's off-screen. Keyed on the entry
-                          // instance (identity) rather than
-                          // `entry.timestampMs` because two messages
-                          // sent in the same second collide on the
-                          // millisecond-rounded timestamp and Flutter
-                          // throws "Multiple widgets used the same
-                          // GlobalKey" — see logs.txt regression.
-                          key: GlobalObjectKey(entry),
-                          onLongPress: () => _showMessageMenu(entry),
-                          child: _MessageBubble(
-                            entry: entry,
-                            peerNodeId: session!.peerNodeId,
-                            isHighlighted:
-                                entry.timestampMs == _highlightedTimestampMs,
-                            onReplyQuoteTap: entry.replyToText != null
-                                ? () => _onReplyQuoteTap(entry, history)
-                                : null,
-                          ),
-                        );
+              // Tapping the chat surface returns the composer to Text
+              // mode. Drafts on the active non-Text panel survive in
+              // their respective State holders (_textController +
+              // _sketchDraft live on this State; play state is in
+              // providers). Signal Tone/Morse drafts are panel-local
+              // and reset on tab switch — see KNOWN_LIMITS.
+              //
+              // `translucent` so the gesture fires on empty-space taps
+              // AND propagates through to bubble GestureDetectors for
+              // long-press.
+              child: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onTap: _composerMode == _SipDmComposerMode.text
+                    ? null
+                    : () {
+                        setState(() {
+                          _composerMode = _SipDmComposerMode.text;
+                        });
                       },
-                    )
-                  else
-                    _buildEmptyState(context),
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: AppTheme.spacing12,
-                    child: JumpToLatestPill(
-                      visible: _showJumpToLatest,
-                      onTap: _jumpToLatest,
-                      label: l10n.sipDmJumpToLatest,
+                child: Stack(
+                  children: [
+                    if (hasContent)
+                      ListView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.all(AppTheme.spacing16),
+                        itemCount: history.length + (peerIsTyping ? 1 : 0),
+                        itemBuilder: (context, index) {
+                          if (index == history.length) {
+                            return const _TypingIndicatorBubble();
+                          }
+                          final entry = history[index];
+                          return GestureDetector(
+                            // GlobalObjectKey lets _onReplyQuoteTap find
+                            // and ensureVisible this bubble even when
+                            // it's off-screen. Keyed on the entry
+                            // instance (identity) rather than
+                            // `entry.timestampMs` because two messages
+                            // sent in the same second collide on the
+                            // millisecond-rounded timestamp and Flutter
+                            // throws "Multiple widgets used the same
+                            // GlobalKey" — see logs.txt regression.
+                            key: GlobalObjectKey(entry),
+                            onLongPress: () => _showMessageMenu(entry),
+                            child: _MessageBubble(
+                              entry: entry,
+                              peerNodeId: session!.peerNodeId,
+                              sessionTag: widget.sessionTag,
+                              isHighlighted:
+                                  entry.timestampMs == _highlightedTimestampMs,
+                              onReplyQuoteTap: entry.replyToText != null
+                                  ? () => _onReplyQuoteTap(entry, history)
+                                  : null,
+                            ),
+                          );
+                        },
+                      )
+                    else
+                      _buildEmptyState(context),
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: AppTheme.spacing12,
+                      child: JumpToLatestPill(
+                        visible: _showJumpToLatest,
+                        onTap: _jumpToLatest,
+                        label: l10n.sipDmJumpToLatest,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],
@@ -1045,14 +1127,54 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
     return peer?.supportsDmInkV1 ?? false;
   }
 
+  bool _peerSupportsPlay(SipDmSession? session) {
+    if (session == null) return false;
+    final discovery = ref.read(sipDiscoveryProvider);
+    final peer = discovery?.getPeer(session.peerNodeId);
+    return peer?.supportsDmPlayV1 ?? false;
+  }
+
+  bool _peerSupportsSignal(SipDmSession? session) {
+    if (session == null) return false;
+    final discovery = ref.read(sipDiscoveryProvider);
+    final peer = discovery?.getPeer(session.peerNodeId);
+    return peer?.supportsDmSignalV1 ?? false;
+  }
+
   Widget _buildInputBar(BuildContext context, SipDmSession? session) {
     final enabled =
         session != null && session.status == SipDmSessionStatus.active;
     final peerSupportsInk = _peerSupportsInk(session);
-    final showSketch =
-        _composerMode == _SipDmComposerMode.sketch &&
-        enabled &&
-        peerSupportsInk;
+    final peerSupportsPlay = _peerSupportsPlay(session);
+    final peerSupportsSignal = _peerSupportsSignal(session);
+    // T+S: hide the Play / Signal tabs when the peer is blocked.
+    // Defence-in-depth on top of the router-level peerBlocked guard —
+    // keeps the affordance honest about the locked-in "no further
+    // outbound" rule.
+    final peerBlocked =
+        session != null &&
+        ref.watch(peerSafetyManagerProvider).value != null &&
+        ref
+            .read(peerSafetyManagerProvider.notifier)
+            .isBlocked(session.peerNodeId);
+    final showSketchTab = enabled && peerSupportsInk;
+    final showPlayTab = enabled && peerSupportsPlay && !peerBlocked;
+    final showSignalTab = enabled && peerSupportsSignal && !peerBlocked;
+    final showAnyTabs = showSketchTab || showPlayTab || showSignalTab;
+
+    // Auto-fall-back the active mode if the previously-selected tab
+    // is no longer available (e.g. peer just got blocked while Play
+    // tab was open). Routes the user back to text rather than
+    // stranding them on a hidden tab.
+    if (_composerMode == _SipDmComposerMode.sketch && !showSketchTab) {
+      _composerMode = _SipDmComposerMode.text;
+    }
+    if (_composerMode == _SipDmComposerMode.play && !showPlayTab) {
+      _composerMode = _SipDmComposerMode.text;
+    }
+    if (_composerMode == _SipDmComposerMode.signal && !showSignalTab) {
+      _composerMode = _SipDmComposerMode.text;
+    }
 
     return AnimatedPadding(
       duration: const Duration(milliseconds: 100),
@@ -1072,7 +1194,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (enabled && peerSupportsInk)
+              if (showAnyTabs)
                 Padding(
                   padding: const EdgeInsets.only(
                     top: AppTheme.spacing8,
@@ -1081,36 +1203,131 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
                   ),
                   child: _ComposerModeSwitcher(
                     mode: _composerMode,
+                    showSketch: showSketchTab,
+                    showPlay: showPlayTab,
+                    showSignal: showSignalTab,
                     onChanged: (mode) {
                       if (mode == _composerMode) return;
                       ref.read(hapticServiceProvider).trigger(HapticType.light);
                       setState(() {
                         _composerMode = mode;
-                        if (mode == _SipDmComposerMode.sketch) {
+                        // Drafts are intentionally NOT cleared here:
+                        // both _textController and _sketchDraft live
+                        // on the State so switching tabs preserves
+                        // both compose surfaces. Only the keyboard
+                        // focus moves out of the text input when the
+                        // user leaves the Text tab.
+                        if (mode != _SipDmComposerMode.text) {
                           _inputFocusNode.unfocus();
                         }
                       });
                     },
                   ),
                 ),
-              if (showSketch)
-                SipInkComposer(
-                  sessionTag: widget.sessionTag,
-                  enabled: enabled,
-                  draft: _sketchDraft,
-                  onDraftChanged: () {
-                    if (mounted) setState(() {});
-                  },
-                  onSent: () {
-                    _scrollToBottom();
-                  },
-                )
-              else
-                _buildTextInputBlock(context, enabled),
+              // Composer mode body — IndexedStack so every currently-
+              // visible panel stays mounted while only one is shown.
+              // This preserves Signal phrase / tap-Morse / type-Morse
+              // drafts (and play / sketch state) across tab toggles
+              // without lifting all that state up to this State class.
+              //
+              // The children list is rebuilt only when tab visibility
+              // changes (peer goes blocked, session closed, etc.) — a
+              // mode toggle within the same visibility config keeps
+              // every child's Element identity intact, so each panel's
+              // State survives.
+              _buildComposerStack(
+                context: context,
+                session: session,
+                enabled: enabled,
+                showSketchTab: showSketchTab,
+                showPlayTab: showPlayTab,
+                showSignalTab: showSignalTab,
+              ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  /// Scroll the message list to the latest SIP Play bubble. Best-
+  /// effort — the list scrolls to bottom, where the most recently
+  /// updated game bubble naturally lives.
+  void _jumpToLatestPlayBubble() {
+    _scrollToBottom(animate: true);
+  }
+
+  /// Build the composer body. Every currently-visible mode is kept
+  /// mounted (so its State persists across tab toggles), but
+  /// invisible panels take zero layout space.
+  ///
+  /// Why not `IndexedStack`: that primitive sizes the stack to the
+  /// tallest child, so the chat list would shrink to leave room for
+  /// the (hidden) Signal keypad even in Text mode. `Visibility` with
+  /// `maintainState: true` solves both halves — the StatefulElement
+  /// for each panel stays alive (drafts survive: phrase notes,
+  /// tap-Morse buffer, sketch strokes), but `visible: false` swaps
+  /// the rendered subtree for `SizedBox.shrink()` so layout collapses
+  /// to the active panel only.
+  ///
+  /// The text input is always present (no peer-cap gate). The other
+  /// panels mount only when their tab is visible. If the current
+  /// `_composerMode` points to a tab that just got hidden (peer
+  /// blocked, session closed), the auto-fallback in `_buildInputBar`
+  /// already routes back to text — this widget just renders whatever
+  /// `_composerMode` says.
+  Widget _buildComposerStack({
+    required BuildContext context,
+    required SipDmSession? session,
+    required bool enabled,
+    required bool showSketchTab,
+    required bool showPlayTab,
+    required bool showSignalTab,
+  }) {
+    final isText = _composerMode == _SipDmComposerMode.text;
+    final isSketch = _composerMode == _SipDmComposerMode.sketch;
+    final isPlay = _composerMode == _SipDmComposerMode.play;
+    final isSignal = _composerMode == _SipDmComposerMode.signal;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Visibility(
+          visible: isText,
+          maintainState: true,
+          child: _buildTextInputBlock(context, enabled),
+        ),
+        if (showSketchTab)
+          Visibility(
+            visible: isSketch,
+            maintainState: true,
+            child: SipInkComposer(
+              sessionTag: widget.sessionTag,
+              enabled: enabled,
+              draft: _sketchDraft,
+              onDraftChanged: () {
+                if (mounted) setState(() {});
+              },
+              onSent: _scrollToBottom,
+            ),
+          ),
+        if (showPlayTab)
+          Visibility(
+            visible: isPlay,
+            maintainState: true,
+            child: _PlayComposerPanel(
+              sessionTag: widget.sessionTag,
+              peerNodeId: session!.peerNodeId,
+              onJumpToLatestGame: _jumpToLatestPlayBubble,
+            ),
+          ),
+        if (showSignalTab)
+          Visibility(
+            visible: isSignal,
+            maintainState: true,
+            child: SipSignalComposerPanel(sessionTag: widget.sessionTag),
+          ),
+      ],
     );
   }
 
@@ -1202,15 +1419,293 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
   }
 }
 
-/// Compact pill-style segmented control for the SIP DM composer.
+/// Inline Play composer panel — shown when the user selects the Play
+/// tab in the DM composer mode switcher.
 ///
-/// Renders two equal-width segments [Text | Sketch]. The selected
-/// segment is filled with the accent colour; the other is transparent.
+/// Pure UI dispatcher:
+///   - "Play a game" header + airtime-friendly subtitle,
+///   - Tic-Tac-Toe card with supporting copy + a "7 B moves" badge
+///     calling out the move payload size,
+///   - "Game in progress" banner with a Jump-to-game affordance when
+///     a non-terminal SIP Play instance exists in this session,
+///   - Tap on the TTT card opens the existing `SipPlayPicker` sheet
+///     (which is what dispatches the offer through the router).
+///
+/// The panel never sends anything itself and never mutates engine
+/// state. It strictly orchestrates UI dispatch into existing surfaces.
+class _PlayComposerPanel extends ConsumerWidget {
+  final int sessionTag;
+  final int peerNodeId;
+
+  /// Called when the user taps "Jump to game" — the parent screen
+  /// scrolls the chat to the latest play bubble.
+  final VoidCallback onJumpToLatestGame;
+
+  const _PlayComposerPanel({
+    required this.sessionTag,
+    required this.peerNodeId,
+    required this.onJumpToLatestGame,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    // Watch the play instance ids for this session so the
+    // "Game in progress" banner appears as soon as an offer lands.
+    final instanceIds = ref.watch(sipPlayInstanceIdsProvider(sessionTag));
+    final hasActiveInstance = instanceIds.any((id) {
+      final state = ref.read(
+        sipPlayInstanceStateProvider((sessionTag: sessionTag, instanceId: id)),
+      );
+      return state != null && !state.isTerminal;
+    });
+
+    // Focus mode: when a non-terminal SIP Play instance exists in
+    // this session, the panel collapses to ONLY the resume banner.
+    // Hides the "Play a game" header, subtitle, and Tic-Tac-Toe card
+    // so the visible composer area shrinks and the active board
+    // bubble (which lives inline in the chat timeline) stays
+    // unobscured. Also prevents starting a duplicate game while one
+    // is in flight — the registry's "one active per peer" rule.
+    if (hasActiveInstance) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppTheme.spacing16,
+          AppTheme.spacing12,
+          AppTheme.spacing16,
+          AppTheme.spacing12,
+        ),
+        child: _GameInProgressBanner(onJump: onJumpToLatestGame),
+      );
+    }
+
+    // Default mode: header + subtitle + game cards (currently just
+    // Tic-Tac-Toe). Visible only when no active game exists.
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppTheme.spacing16,
+        AppTheme.spacing12,
+        AppTheme.spacing16,
+        AppTheme.spacing12,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            l10n.sipPlayPanelTitle,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: context.textPrimary,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing4),
+          Text(
+            l10n.sipPlayPanelSubtitle,
+            style: TextStyle(fontSize: 12, color: context.textTertiary),
+          ),
+          const SizedBox(height: AppTheme.spacing12),
+          _TicTacToeCard(
+            onTap: () => showSipPlayPicker(
+              context: context,
+              ref: ref,
+              sessionTag: sessionTag,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TicTacToeCard extends StatelessWidget {
+  final VoidCallback onTap;
+  const _TicTacToeCard({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppTheme.radius12),
+      child: Container(
+        padding: const EdgeInsets.all(AppTheme.spacing12),
+        decoration: BoxDecoration(
+          color: context.background.withValues(alpha: 0.6),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
+          border: Border.all(color: context.border.withValues(alpha: 0.5)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: context.accentColor.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(AppTheme.radius10),
+              ),
+              child: Icon(Icons.grid_3x3, size: 20, color: context.accentColor),
+            ),
+            const SizedBox(width: AppTheme.spacing12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      // Title is Flexible so the longer
+                      // "Tiny moves • ~7 bytes" badge can't push it
+                      // off-screen on narrow devices (iPhone SE).
+                      Flexible(
+                        child: Text(
+                          l10n.sipPlayGameTicTacToe,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: context.textPrimary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: AppTheme.spacing8),
+                      _SizeBadge(label: l10n.sipPlayPanelTttSizeBadge),
+                    ],
+                  ),
+                  const SizedBox(height: AppTheme.spacing2),
+                  Text(
+                    l10n.sipPlayPanelTttSupporting,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: context.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, size: 18, color: context.textTertiary),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SizeBadge extends StatelessWidget {
+  final String label;
+  const _SizeBadge({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing6,
+        vertical: 1,
+      ),
+      decoration: BoxDecoration(
+        color: context.accentColor.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          color: context.accentColor,
+          fontFamily: AppTheme.fontFamily,
+        ),
+      ),
+    );
+  }
+}
+
+class _GameInProgressBanner extends StatelessWidget {
+  final VoidCallback onJump;
+  const _GameInProgressBanner({required this.onJump});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spacing12),
+      decoration: BoxDecoration(
+        color: context.accentColor.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+        border: Border.all(color: context.accentColor.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.flag, size: 18, color: context.accentColor),
+          const SizedBox(width: AppTheme.spacing8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.sipPlayPanelGameInProgressTitle,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: context.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spacing2),
+                Text(
+                  l10n.sipPlayPanelGameInProgressBody,
+                  style: TextStyle(fontSize: 11, color: context.textSecondary),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppTheme.spacing8),
+          TextButton(
+            onPressed: onJump,
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spacing8,
+                vertical: AppTheme.spacing4,
+              ),
+              minimumSize: const Size(0, 28),
+            ),
+            child: Text(
+              l10n.sipPlayPanelGameInProgressJump,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Dynamic equal-width segmented switcher for the DM composer modes.
+///
+/// Renders Text + whichever non-text modes the peer + safety state
+/// makes available:
+///   - Sketch when the peer advertises dmInkV1,
+///   - Play when the peer advertises dmPlayV1 AND is not blocked
+///     AND the session is active.
+///
+/// The selected segment is filled with the accent colour; the others
+/// are transparent. Hide-when-unsupported gating mirrors today's
+/// behaviour — peers without any non-text capability see no switcher
+/// at all (the parent collapses it).
 class _ComposerModeSwitcher extends StatelessWidget {
   final _SipDmComposerMode mode;
   final ValueChanged<_SipDmComposerMode> onChanged;
+  final bool showSketch;
+  final bool showPlay;
+  final bool showSignal;
 
-  const _ComposerModeSwitcher({required this.mode, required this.onChanged});
+  const _ComposerModeSwitcher({
+    required this.mode,
+    required this.onChanged,
+    required this.showSketch,
+    required this.showPlay,
+    required this.showSignal,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1229,11 +1724,24 @@ class _ComposerModeSwitcher extends StatelessWidget {
             _SipDmComposerMode.text,
             l10n.sipDmComposerModeText,
           ),
-          _segment(
-            context,
-            _SipDmComposerMode.sketch,
-            l10n.sipDmComposerModeSketch,
-          ),
+          if (showSketch)
+            _segment(
+              context,
+              _SipDmComposerMode.sketch,
+              l10n.sipDmComposerModeSketch,
+            ),
+          if (showPlay)
+            _segment(
+              context,
+              _SipDmComposerMode.play,
+              l10n.sipDmComposerModePlay,
+            ),
+          if (showSignal)
+            _segment(
+              context,
+              _SipDmComposerMode.signal,
+              l10n.sipDmComposerModeSignal,
+            ),
         ],
       ),
     );
@@ -1481,6 +1989,12 @@ class _MessageBubble extends ConsumerWidget {
   final SipDmHistoryEntry entry;
   final int peerNodeId;
 
+  /// SIP DM session tag — only consumed by the SIP Play branch so
+  /// the play bubble can dispatch moves through the router. Threaded
+  /// here rather than reading from a provider so the bubble has no
+  /// hidden lookup paths.
+  final int sessionTag;
+
   /// True when the user just tapped a reply quote pointing at this
   /// bubble — paints a brief accent halo to draw the eye to it.
   final bool isHighlighted;
@@ -1492,6 +2006,7 @@ class _MessageBubble extends ConsumerWidget {
   const _MessageBubble({
     required this.entry,
     required this.peerNodeId,
+    required this.sessionTag,
     this.isHighlighted = false,
     this.onReplyQuoteTap,
   });
@@ -1505,6 +2020,38 @@ class _MessageBubble extends ConsumerWidget {
         entry.localReaction != null || entry.peerReaction != null;
     final isInk =
         entry.contentType == SipDmContentType.ink && entry.payload != null;
+    final isPlay =
+        entry.contentType == SipDmContentType.play && entry.payload != null;
+    final isSignal =
+        entry.contentType == SipDmContentType.signal && entry.payload != null;
+
+    if (isPlay) {
+      // SIP Play bubble owns its own status / board / controls. It
+      // skips the reactions row and reply-quote affordances — games
+      // are not reaction targets in v1.
+      return SipPlayBubble(
+        sessionTag: sessionTag,
+        peerNodeId: peerNodeId,
+        entryPayload: entry.payload!,
+      );
+    }
+
+    if (isSignal) {
+      // SIP Signal bubble shows phrase or Morse + Replay. Skips
+      // reactions / reply quote affordances.
+      return Align(
+        alignment: isOutbound ? Alignment.centerRight : Alignment.centerLeft,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.78,
+          ),
+          child: SipSignalBubble(
+            entryPayload: entry.payload!,
+            isOutbound: isOutbound,
+          ),
+        ),
+      );
+    }
 
     return Align(
       alignment: isOutbound ? Alignment.centerRight : Alignment.centerLeft,

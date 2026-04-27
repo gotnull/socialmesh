@@ -36,7 +36,7 @@ import '../../../core/logging.dart';
 
 /// Send kind tracked by the limiter. Each kind has its own bucket
 /// per peer.
-enum PeerRateKind { text, sketch, reaction }
+enum PeerRateKind { text, sketch, reaction, play, signal }
 
 /// Tunable policy. Values are ms-based so tests can drive the clock.
 class PeerRatePolicy {
@@ -61,6 +61,26 @@ class PeerRatePolicy {
   /// Burst capacity for reactions.
   final int reactionBurst;
 
+  /// Sustained allowance per [windowMs] for SIP Play game actions
+  /// (offer/accept/decline/move/resign). Same shape as text DMs —
+  /// a move is a single tap so users can't naturally exceed text
+  /// rates, but we keep a dedicated bucket so a flurry of moves
+  /// doesn't starve text DM and vice versa.
+  final int playPerWindow;
+
+  /// Burst capacity for SIP Play actions.
+  final int playBurst;
+
+  /// Sustained allowance per [windowMs] for SIP Signal sends
+  /// (musical phrase + Morse). Tighter than text/play because
+  /// signal payloads are slightly larger AND each send produces
+  /// audible output on the receiver — bursts of multiple signals
+  /// in seconds would feel spammy.
+  final int signalPerWindow;
+
+  /// Burst capacity for SIP Signal sends.
+  final int signalBurst;
+
   /// Idle bucket eviction interval (ms). After this much inactivity
   /// for a peer × kind, the bucket is dropped.
   final int idleEvictionMs;
@@ -73,6 +93,10 @@ class PeerRatePolicy {
     this.sketchBurst = 1,
     this.reactionPerWindow = 6,
     this.reactionBurst = 3,
+    this.playPerWindow = 6,
+    this.playBurst = 3,
+    this.signalPerWindow = 4,
+    this.signalBurst = 2,
     this.idleEvictionMs = 5 * 60 * 1000,
   });
 
@@ -86,6 +110,10 @@ class PeerRatePolicy {
         return sketchBurst;
       case PeerRateKind.reaction:
         return reactionBurst;
+      case PeerRateKind.play:
+        return playBurst;
+      case PeerRateKind.signal:
+        return signalBurst;
     }
   }
 
@@ -95,6 +123,8 @@ class PeerRatePolicy {
       PeerRateKind.text => textPerWindow,
       PeerRateKind.sketch => sketchPerWindow,
       PeerRateKind.reaction => reactionPerWindow,
+      PeerRateKind.play => playPerWindow,
+      PeerRateKind.signal => signalPerWindow,
     };
     return perWindow / windowMs;
   }

@@ -85,6 +85,8 @@ class AppLogging {
   static bool? _fileTransferLoggingEnabled;
   static bool? _sipLoggingEnabled;
   static bool? _sipInkLoggingEnabled;
+  static bool? _sipPlayLoggingEnabled;
+  static bool? _sipSignalLoggingEnabled;
   static bool? _mrrpDebugEnabled;
   static bool? _mrrpHarnessDebugEnabled;
   static bool? _meshExplorerDebugEnabled;
@@ -629,6 +631,32 @@ class AppLogging {
     if (sipInkLoggingEnabled) debugPrint('SIP_INK: $message');
   }
 
+  /// SIP Play turn-based mini-game observability logging.
+  /// Enable with SIP_PLAY_LOGGING_ENABLED=true in .env file.
+  static bool get sipPlayLoggingEnabled {
+    _sipPlayLoggingEnabled ??=
+        _safeGetEnv('SIP_PLAY_LOGGING_ENABLED')?.toLowerCase() == 'true';
+    return _sipPlayLoggingEnabled!;
+  }
+
+  static void sipPlay(String message) {
+    if (sipPlayLoggingEnabled) debugPrint('SIP_PLAY: $message');
+  }
+
+  /// SIP Signal (musical phrase + Morse) observability logging.
+  /// Enable with SIP_SIGNAL_LOGGING_ENABLED=true in .env file.
+  /// Never log waveform samples — only structural events (compose,
+  /// encode size, send attempts, dedupe drops, decode failures).
+  static bool get sipSignalLoggingEnabled {
+    _sipSignalLoggingEnabled ??=
+        _safeGetEnv('SIP_SIGNAL_LOGGING_ENABLED')?.toLowerCase() == 'true';
+    return _sipSignalLoggingEnabled!;
+  }
+
+  static void sipSignal(String message) {
+    if (sipSignalLoggingEnabled) debugPrint('SIP_SIGNAL: $message');
+  }
+
   /// Reticulum tunnel (Meshtastic portnum 76) observability logging.
   /// Enable with RETICULUM_LOGGING_ENABLED=true in .env file.
   static bool get reticulumLoggingEnabled {
@@ -885,6 +913,8 @@ class AppLogging {
     _fileTransferLoggingEnabled = null;
     _sipLoggingEnabled = null;
     _sipInkLoggingEnabled = null;
+    _sipPlayLoggingEnabled = null;
+    _sipSignalLoggingEnabled = null;
     _mrrpDebugEnabled = null;
     _mrrpHarnessDebugEnabled = null;
     _meshExplorerDebugEnabled = null;

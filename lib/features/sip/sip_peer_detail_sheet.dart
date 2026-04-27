@@ -452,7 +452,7 @@ class _HandshakeButton extends ConsumerWidget {
 
     final handshake = ref.read(sipHandshakeProvider);
     if (handshake == null) {
-      showErrorSnackBar(context, localL10n.sipHandshakeFailed);
+      // Chip is the single source of truth — no redundant snackbar.
       return;
     }
 
@@ -464,7 +464,6 @@ class _HandshakeButton extends ConsumerWidget {
 
     final encoded = SipCodec.encode(frame);
     if (encoded == null) {
-      showErrorSnackBar(context, localL10n.sipHandshakeFailed);
       return;
     }
 

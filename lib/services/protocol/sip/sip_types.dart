@@ -41,6 +41,8 @@ enum SipMessageType {
   dmDelete(0x43),
   dmClose(0x44),
   dmInk(0x45),
+  dmPlay(0x46),
+  dmSignal(0x47),
 
   // MRRP (Mesh Request/Response Protocol)
   mrrpData(0x50),
@@ -154,6 +156,25 @@ abstract final class SipFeatureBits {
   /// gate `dmInk` transmission on the peer advertising this bit.
   /// See `docs/sip/SIP_V0_1.md` §6 "DM_INK (v0.2 amendment)".
   static const int dmInkV1 = 1 << 11;
+
+  /// SIP Play v1 turn-based mini-game frames (DM_PLAY / 0x46)
+  /// supported. Carries a compact binary game-action envelope
+  /// inside an existing accepted SIP DM session. Builds without
+  /// this bit drop unknown 0x46 frames silently. Senders MUST gate
+  /// `dmPlay` transmission on the peer advertising this bit. The
+  /// game catalogue is local-only — adding a new game does not
+  /// bump this bit; an unsupported `gameType` value is rendered as
+  /// a safe unsupported fallback by the receiver.
+  static const int dmPlayV1 = 1 << 12;
+
+  /// SIP Signal v1 musical-phrase + Morse signal frames
+  /// (DM_SIGNAL / 0x47) supported. Carries a compact binary phrase
+  /// or Morse envelope; the receiver synthesizes the actual audio
+  /// locally — NO audio samples are ever placed on the wire.
+  /// Builds without this bit drop unknown 0x47 frames silently.
+  /// Senders MUST gate `dmSignal` transmission on the peer
+  /// advertising this bit.
+  static const int dmSignalV1 = 1 << 13;
 
   /// All features in v0.1.
   static const int allV01 = sip0 | sip1 | sip3; // 0x000B

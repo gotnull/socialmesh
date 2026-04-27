@@ -22,6 +22,12 @@ import 'sip_constants.dart';
 import 'sip_counters.dart';
 import 'sip_frame.dart';
 import 'peer_safety_gate.dart';
+import 'play/sip_play_codec.dart';
+import 'play/sip_play_constants.dart';
+import 'play/sip_play_payload.dart';
+import 'signal/sip_signal_codec.dart';
+import 'signal/sip_signal_constants.dart';
+import 'signal/sip_signal_payload.dart';
 import 'sip_ink_constants.dart';
 import 'sip_ink_decoder.dart';
 import 'sip_ink_payload.dart';
@@ -98,6 +104,21 @@ enum SipDmContentType {
 
   /// SIP Ink v1 binary sketch payload — see [SipInkConstants].
   ink,
+
+  /// SIP Play v1 binary game-action envelope. The payload bytes are
+  /// the encoded [SipPlayEnvelope] (typeAndVersion ‖ gameType ‖
+  /// instanceId ‖ action ‖ seq ‖ game-payload). Renderers MUST NOT
+  /// infer this type from payload bytes — it is set explicitly when
+  /// the entry is appended via the dmPlay path.
+  play,
+
+  /// SIP Signal v1 binary musical-phrase or Morse envelope. The
+  /// payload bytes are the encoded `SipSignalEnvelope`
+  /// (typeAndVersion ‖ signalKind ‖ sequenceId ‖ kind-specific
+  /// payload). The receiver synthesizes audio locally — no audio
+  /// samples ever travel on the wire. Set explicitly when the entry
+  /// is appended via the dmSignal path.
+  signal,
 }
 
 /// A single message in the DM history.
@@ -820,6 +841,13 @@ class SipDmManager {
       'session=0x${sessionTag.toRadixString(16)}',
     );
 
+    // Bump the DM epoch so providers that derive UI state from the
+    // session history (sip_dm_screen, sip_play, sip_signal) rebuild on
+    // the sender's own outbound entry. Mirrors the inbound `handleDm` path
+    // and the secure router's `_sendSecure*` helpers — without this call
+    // the plaintext path silently desyncs the local view.
+    onStateChanged?.call();
+
     return SipDmSendResult.ok(frame);
   }
 
@@ -919,6 +947,8 @@ class SipDmManager {
       'send_attempt tag=0x${sessionTag.toRadixString(16)} '
       'payload_bytes=${inkPayload.length} frame_bytes=$frameSize',
     );
+
+    onStateChanged?.call();
 
     return SipDmSendResult.ok(frame);
   }
@@ -1073,6 +1103,402 @@ class SipDmManager {
   }
 
   // ---------------------------------------------------------------------------
+  // SIP Play (turn-based mini-game framework)
+  // ---------------------------------------------------------------------------
+
+  /// Build a DM_PLAY frame for the given session.
+  ///
+  /// [playPayload] is the byte sequence produced by `SipPlayCodec.encode`
+  /// (a v1 SIP Play envelope). The caller (typically the SIP DM router)
+  /// is responsible for the peer-feature gate — we only validate
+  /// session state, payload size, and the airtime budget here.
+  ///
+  /// On success the message is appended to the session history with
+  /// [SipDmContentType.play] and the original encoded bytes preserved
+  /// so the engine can replay them deterministically.
+  SipDmSendResult buildPlayMessage({
+    required int sessionTag,
+    required Uint8List playPayload,
+  }) {
+    final session = _sessions[sessionTag];
+    if (session == null || session.isExpired(_clock())) {
+      if (session != null) _expireSession(sessionTag);
+      return SipDmSendResult.fail(SipDmSendError.sessionNotFound);
+    }
+
+    if (session.status != SipDmSessionStatus.active) {
+      return SipDmSendResult.fail(SipDmSendError.sessionClosed);
+    }
+
+    // T+S guard (defence-in-depth). Same rationale as buildDmMessage /
+    // buildInkMessage. A blocked peer mid-game must not get any further
+    // wire traffic from us — the router-level gate is the primary
+    // block, this is the belt.
+    if (_isPeerBlocked(session.peerNodeId)) {
+      return SipDmSendResult.fail(SipDmSendError.peerBlocked);
+    }
+
+    if (playPayload.isEmpty) {
+      return SipDmSendResult.fail(SipDmSendError.emptyText);
+    }
+
+    if (playPayload.length > SipPlayConstants.maxEnvelopeBytes) {
+      AppLogging.sipPlay(
+        'send_blocked reason=envelope_too_large bytes=${playPayload.length} '
+        'max=${SipPlayConstants.maxEnvelopeBytes}',
+      );
+      return SipDmSendResult.fail(SipDmSendError.textTooLong);
+    }
+
+    // Defensive: ensure the bytes parse as a valid v1 envelope. Catches
+    // any caller that hands us a hand-crafted blob without going through
+    // the codec pipeline. Unknown gameType codes are NOT rejected here —
+    // those produce a structured "unsupported game" UX downstream.
+    final parsed = SipPlayCodec.decode(playPayload);
+    if (!parsed.isOk) {
+      AppLogging.sipPlay(
+        'send_blocked reason=invalid_envelope detail=${parsed.error?.name}',
+      );
+      return SipDmSendResult.fail(SipDmSendError.invalidSketch);
+    }
+
+    final frameSize = SipConstants.sipWrapperMin + playPayload.length;
+    if (!_rateLimiter.canSend(frameSize)) {
+      AppLogging.sipPlay(
+        'send_blocked reason=budget tag=0x${sessionTag.toRadixString(16)}',
+      );
+      _counters?.recordBudgetThrottle();
+      return SipDmSendResult.fail(SipDmSendError.budgetExhausted);
+    }
+
+    _rateLimiter.recordSend(frameSize);
+
+    final nowS = _clock() ~/ 1000;
+    final frame = SipFrame(
+      versionMajor: SipConstants.sipVersionMajor,
+      versionMinor: SipConstants.sipVersionMinor,
+      msgType: SipMessageType.dmPlay,
+      flags: 0,
+      headerLen: SipConstants.sipWrapperMin,
+      sessionId: sessionTag,
+      nonce: SipCodec.generateNonce(),
+      timestampS: nowS,
+      payloadLen: playPayload.length,
+      payload: playPayload,
+    );
+
+    session.messages.add(
+      SipDmHistoryEntry(
+        text: '',
+        timestampMs: nowS * 1000,
+        direction: SipDmDirection.outbound,
+        contentType: SipDmContentType.play,
+        payload: Uint8List.fromList(playPayload),
+      ),
+    );
+
+    AppLogging.sipPlay(
+      'send_attempt tag=0x${sessionTag.toRadixString(16)} '
+      'gameType=0x${parsed.envelope!.gameTypeCode.toRadixString(16)} '
+      'instance=0x${parsed.envelope!.instanceId.toRadixString(16)} '
+      'action=${parsed.envelope!.action.name} '
+      'seq=${parsed.envelope!.seq} '
+      'payload_bytes=${playPayload.length} frame_bytes=$frameSize',
+    );
+
+    // Outbound replay-driving entry — bump epoch so the SIP Play engine
+    // re-derives `_DispatchBody` (offer→active for accept, →declinedByLocal
+    // for decline, board update for move). Without this the plaintext
+    // path leaves the bubble stuck on the loading spinner / pending tap.
+    onStateChanged?.call();
+
+    return SipDmSendResult.ok(frame);
+  }
+
+  /// Handle an inbound DM_PLAY frame.
+  ///
+  /// Returns the parsed [SipPlayEnvelope] when accepted into history,
+  /// or null when the frame is dropped (unknown session, expired,
+  /// closed, blocked peer, malformed payload). The raw bytes are
+  /// stored on the history entry so the engine can replay them.
+  ///
+  /// **State changes are deferred to the engine.** This method only
+  /// appends the entry; the engine is responsible for deriving game
+  /// state from the entry stream. Strict-seq enforcement, duplicate
+  /// detection, and turn validation all live in the engine — adding
+  /// them here would split state authority between two layers.
+  SipPlayEnvelope? handleInboundPlay(SipFrame frame) {
+    if (frame.msgType != SipMessageType.dmPlay) {
+      AppLogging.sipPlay('handleInboundPlay called with wrong msg_type');
+      return null;
+    }
+
+    final sessionTag = frame.sessionId;
+    final session = _sessions[sessionTag];
+
+    if (session == null) {
+      AppLogging.sipPlay(
+        'inbound_dropped reason=unknown_session '
+        'tag=0x${sessionTag.toRadixString(16)}',
+      );
+      return null;
+    }
+
+    if (session.isExpired(_clock())) {
+      _expireSession(sessionTag);
+      AppLogging.sipPlay(
+        'inbound_dropped reason=expired tag=0x${sessionTag.toRadixString(16)}',
+      );
+      return null;
+    }
+
+    if (session.status != SipDmSessionStatus.active) {
+      AppLogging.sipPlay(
+        'inbound_dropped reason=closed tag=0x${sessionTag.toRadixString(16)}',
+      );
+      return null;
+    }
+
+    // T+S guard: silent drop. Mirror handleInboundInk — no info-level
+    // log including the peer node id, no entry append, no engine
+    // invocation. The peer's game stays "frozen" on our side without
+    // any auto-resign or state mutation, exactly as the user locked
+    // in the Phase 11 review.
+    if (_isPeerBlocked(session.peerNodeId)) return null;
+
+    final result = SipPlayCodec.decode(frame.payload);
+    if (!result.isOk) {
+      AppLogging.sipPlay(
+        'inbound_dropped reason=malformed detail=${result.error?.name} '
+        'tag=0x${sessionTag.toRadixString(16)} bytes=${frame.payload.length}',
+      );
+      return null;
+    }
+
+    session.messages.add(
+      SipDmHistoryEntry(
+        text: '',
+        timestampMs: frame.timestampS * 1000,
+        direction: SipDmDirection.inbound,
+        contentType: SipDmContentType.play,
+        payload: Uint8List.fromList(frame.payload),
+      ),
+    );
+
+    AppLogging.sipPlay(
+      'inbound_ok tag=0x${sessionTag.toRadixString(16)} '
+      'gameType=0x${result.envelope!.gameTypeCode.toRadixString(16)} '
+      'instance=0x${result.envelope!.instanceId.toRadixString(16)} '
+      'action=${result.envelope!.action.name} '
+      'seq=${result.envelope!.seq} '
+      'bytes=${frame.payload.length}',
+    );
+
+    onStateChanged?.call();
+    return result.envelope;
+  }
+
+  // ---------------------------------------------------------------------------
+  // SIP Signal (musical phrase + Morse)
+  // ---------------------------------------------------------------------------
+
+  /// Per-(sessionTag) ring of recent inbound `(sequenceId, payloadHash)`
+  /// pairs. Keeps a 32-entry FIFO so the same signal seen twice
+  /// (retransmit, MQTT bridge replay, etc.) doesn't double-play.
+  /// Cleared with the rest of the session on `reset` /
+  /// `removeSessionLocally`.
+  final Map<int, List<({int seq, int hash})>> _inboundSignalDedupe = {};
+  static const int _kSignalDedupeRingBytes = 32;
+
+  bool _markInboundSignalSeen({
+    required int sessionTag,
+    required int sequenceId,
+    required int payloadHash,
+  }) {
+    final ring = _inboundSignalDedupe.putIfAbsent(sessionTag, () => []);
+    for (final entry in ring) {
+      if (entry.seq == sequenceId && entry.hash == payloadHash) {
+        return false; // already seen
+      }
+    }
+    ring.add((seq: sequenceId, hash: payloadHash));
+    if (ring.length > _kSignalDedupeRingBytes) {
+      ring.removeAt(0);
+    }
+    return true;
+  }
+
+  /// Build a DM_SIGNAL frame for the given session.
+  ///
+  /// [signalPayload] is the byte sequence produced by
+  /// `SipSignalCodec.encodePhrase` or `SipSignalCodec.encodeMorse`.
+  /// On success the message is appended to the session history with
+  /// [SipDmContentType.signal] and the original encoded bytes
+  /// preserved so the bubble can re-render + replay deterministically.
+  SipDmSendResult buildSignalMessage({
+    required int sessionTag,
+    required Uint8List signalPayload,
+  }) {
+    final session = _sessions[sessionTag];
+    if (session == null || session.isExpired(_clock())) {
+      if (session != null) _expireSession(sessionTag);
+      return SipDmSendResult.fail(SipDmSendError.sessionNotFound);
+    }
+    if (session.status != SipDmSessionStatus.active) {
+      return SipDmSendResult.fail(SipDmSendError.sessionClosed);
+    }
+    // T+S guard (defence-in-depth). Same rationale as buildDmMessage.
+    if (_isPeerBlocked(session.peerNodeId)) {
+      return SipDmSendResult.fail(SipDmSendError.peerBlocked);
+    }
+    if (signalPayload.isEmpty) {
+      return SipDmSendResult.fail(SipDmSendError.emptyText);
+    }
+    if (signalPayload.length > SipSignalConstants.maxEnvelopeBytes) {
+      AppLogging.sipSignal(
+        'send_blocked reason=envelope_too_large bytes=${signalPayload.length}',
+      );
+      return SipDmSendResult.fail(SipDmSendError.textTooLong);
+    }
+    // Defence-in-depth: validate bytes parse as a v1 envelope.
+    final parsed = SipSignalCodec.decode(signalPayload);
+    if (!parsed.isOk) {
+      AppLogging.sipSignal(
+        'send_blocked reason=invalid_envelope detail=${parsed.error?.name}',
+      );
+      return SipDmSendResult.fail(SipDmSendError.invalidSketch);
+    }
+
+    final frameSize = SipConstants.sipWrapperMin + signalPayload.length;
+    if (!_rateLimiter.canSend(frameSize)) {
+      AppLogging.sipSignal(
+        'send_blocked reason=budget tag=0x${sessionTag.toRadixString(16)}',
+      );
+      _counters?.recordBudgetThrottle();
+      return SipDmSendResult.fail(SipDmSendError.budgetExhausted);
+    }
+    _rateLimiter.recordSend(frameSize);
+
+    final nowS = _clock() ~/ 1000;
+    final frame = SipFrame(
+      versionMajor: SipConstants.sipVersionMajor,
+      versionMinor: SipConstants.sipVersionMinor,
+      msgType: SipMessageType.dmSignal,
+      flags: 0,
+      headerLen: SipConstants.sipWrapperMin,
+      sessionId: sessionTag,
+      nonce: SipCodec.generateNonce(),
+      timestampS: nowS,
+      payloadLen: signalPayload.length,
+      payload: signalPayload,
+    );
+
+    session.messages.add(
+      SipDmHistoryEntry(
+        text: '',
+        timestampMs: nowS * 1000,
+        direction: SipDmDirection.outbound,
+        contentType: SipDmContentType.signal,
+        payload: Uint8List.fromList(signalPayload),
+      ),
+    );
+
+    AppLogging.sipSignal(
+      'send_attempt tag=0x${sessionTag.toRadixString(16)} '
+      'kind=${parsed.envelope!.kind.name} '
+      'seq=0x${parsed.envelope!.sequenceId.toRadixString(16)} '
+      'payload_bytes=${signalPayload.length} frame_bytes=$frameSize',
+    );
+
+    onStateChanged?.call();
+
+    return SipDmSendResult.ok(frame);
+  }
+
+  /// Handle an inbound DM_SIGNAL frame.
+  ///
+  /// Returns the parsed [SipSignalEnvelope] when accepted into history,
+  /// or null when dropped (unknown session, blocked peer, malformed
+  /// payload, duplicate). Dedupe combines `sequenceId` with a
+  /// FNV-1a hash of the payload bytes — both must match a previous
+  /// entry for the same session for the inbound to be silently
+  /// dropped.
+  SipSignalEnvelope? handleInboundSignal(SipFrame frame) {
+    if (frame.msgType != SipMessageType.dmSignal) {
+      AppLogging.sipSignal('handleInboundSignal called with wrong msg_type');
+      return null;
+    }
+    final sessionTag = frame.sessionId;
+    final session = _sessions[sessionTag];
+    if (session == null) {
+      AppLogging.sipSignal(
+        'inbound_dropped reason=unknown_session '
+        'tag=0x${sessionTag.toRadixString(16)}',
+      );
+      return null;
+    }
+    if (session.isExpired(_clock())) {
+      _expireSession(sessionTag);
+      AppLogging.sipSignal(
+        'inbound_dropped reason=expired tag=0x${sessionTag.toRadixString(16)}',
+      );
+      return null;
+    }
+    if (session.status != SipDmSessionStatus.active) {
+      AppLogging.sipSignal(
+        'inbound_dropped reason=closed tag=0x${sessionTag.toRadixString(16)}',
+      );
+      return null;
+    }
+    // T+S guard: silent drop. No info-level log mentioning peer node id.
+    if (_isPeerBlocked(session.peerNodeId)) return null;
+
+    final result = SipSignalCodec.decode(frame.payload);
+    if (!result.isOk) {
+      AppLogging.sipSignal(
+        'inbound_dropped reason=malformed detail=${result.error?.name} '
+        'tag=0x${sessionTag.toRadixString(16)} bytes=${frame.payload.length}',
+      );
+      return null;
+    }
+
+    final payloadHash = payloadHashForDedupe(Uint8List.fromList(frame.payload));
+    final isFresh = _markInboundSignalSeen(
+      sessionTag: sessionTag,
+      sequenceId: result.envelope!.sequenceId,
+      payloadHash: payloadHash,
+    );
+    if (!isFresh) {
+      AppLogging.sipSignal(
+        'inbound_dropped reason=duplicate '
+        'tag=0x${sessionTag.toRadixString(16)} '
+        'seq=0x${result.envelope!.sequenceId.toRadixString(16)}',
+      );
+      return null;
+    }
+
+    session.messages.add(
+      SipDmHistoryEntry(
+        text: '',
+        timestampMs: frame.timestampS * 1000,
+        direction: SipDmDirection.inbound,
+        contentType: SipDmContentType.signal,
+        payload: Uint8List.fromList(frame.payload),
+      ),
+    );
+
+    AppLogging.sipSignal(
+      'inbound_ok tag=0x${sessionTag.toRadixString(16)} '
+      'kind=${result.envelope!.kind.name} '
+      'seq=0x${result.envelope!.sequenceId.toRadixString(16)} '
+      'bytes=${frame.payload.length}',
+    );
+
+    onStateChanged?.call();
+    return result.envelope;
+  }
+
+  // ---------------------------------------------------------------------------
   // Cleanup
   // ---------------------------------------------------------------------------
 
@@ -1084,6 +1510,7 @@ class SipDmManager {
     _sessions.clear();
     _peerTyping.clear();
     _typingSentAt.clear();
+    _inboundSignalDedupe.clear();
     AppLogging.sip('SIP_DM: all sessions cleared');
   }
 
@@ -1102,6 +1529,7 @@ class SipDmManager {
     final session = _sessions.remove(sessionTag);
     if (session == null) return false;
     session.messages.clear();
+    _inboundSignalDedupe.remove(sessionTag);
     // Clear typing state only if no other session for this peer
     // remains tracked — the peer's typing flag is keyed by peer
     // node id, not by session tag.

@@ -56144,10 +56144,10 @@ abstract class AppLocalizations {
   /// **'Could not connect'**
   String get sipHandshakeFailed;
 
-  /// Chip label shown on a peer tile when they have sent an incoming handshake request awaiting user action.
+  /// Chip label shown on a peer tile when they have sent an incoming handshake request awaiting user action. Phrasing reads as incoming, matching the consent card heading.
   ///
   /// In en, this message translates to:
-  /// **'Request sent'**
+  /// **'Wants to connect'**
   String get sipHandshakePendingLabel;
 
   /// Button label to request identity from a SIP peer.
@@ -56201,7 +56201,7 @@ abstract class AppLocalizations {
   /// Description for the DM empty state.
   ///
   /// In en, this message translates to:
-  /// **'Send a message to start the conversation.'**
+  /// **'Send text, sketches, or start a tiny game.'**
   String get sipDmEmptyDescription;
 
   /// Error shown when a DM send fails because the global SIP airtime budget (1024 bytes / 60s) is exhausted. Distinct from per-peer rate limiting — this is the shared mesh budget.
@@ -56258,10 +56258,10 @@ abstract class AppLocalizations {
   /// **'Block'**
   String get sipDmMenuBlock;
 
-  /// Overflow menu item that drops the in-memory secure (X25519) session keys for this peer. The next outbound DM will renegotiate fresh ephemeral keys. No history is wiped, the underlying overlay link stays open.
+  /// Overflow menu item that drops the in-memory secure (X25519) session keys for this peer. The next outbound DM will renegotiate fresh ephemeral keys. No history is wiped, the underlying overlay link stays open. 'Connection' rather than 'session' to keep wording aligned with the rest of the secure-link UX.
   ///
   /// In en, this message translates to:
-  /// **'Reset secure session'**
+  /// **'Reset secure connection'**
   String get sipDmMenuResetSecure;
 
   /// Overflow menu item that wipes the local DM history with this peer and tears down the local session. Emits no wire frame — peer is not notified. Local-only.
@@ -56348,17 +56348,491 @@ abstract class AppLocalizations {
   /// **'Secure session reset — next message will renegotiate keys'**
   String get sipDmActionResetSnack;
 
+  /// Tab label inside the DM composer that opens the SIP Play game picker. Shown only when the peer advertises dmPlayV1.
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get sipPlayComposerLabel;
+
+  /// Header inside the Play composer panel — the panel shown when the user selects the Play tab.
+  ///
+  /// In en, this message translates to:
+  /// **'Play a game'**
+  String get sipPlayPanelTitle;
+
+  /// Body copy under the Play panel title explaining the airtime model.
+  ///
+  /// In en, this message translates to:
+  /// **'Tiny turn-based games sent as mesh-safe moves.'**
+  String get sipPlayPanelSubtitle;
+
+  /// Supporting copy on the Tic-Tac-Toe card inside the Play composer panel.
+  ///
+  /// In en, this message translates to:
+  /// **'Send only tiny moves over the mesh.'**
+  String get sipPlayPanelTttSupporting;
+
+  /// Optional badge on the Tic-Tac-Toe card calling out how compact each move is on the wire. Phrased as user-facing value (compact mesh moves) rather than internal metric — earlier 'B' shorthand read like a glitch.
+  ///
+  /// In en, this message translates to:
+  /// **'Tiny moves • ~7 bytes'**
+  String get sipPlayPanelTttSizeBadge;
+
+  /// Banner title shown inside the Play panel when at least one non-terminal SIP Play instance exists in this session.
+  ///
+  /// In en, this message translates to:
+  /// **'Game in progress'**
+  String get sipPlayPanelGameInProgressTitle;
+
+  /// Body of the Game in Progress banner inside the Play panel.
+  ///
+  /// In en, this message translates to:
+  /// **'Scroll to your active game in the conversation, or start another.'**
+  String get sipPlayPanelGameInProgressBody;
+
+  /// Button label that scrolls the chat to the latest active SIP Play bubble.
+  ///
+  /// In en, this message translates to:
+  /// **'Jump to game'**
+  String get sipPlayPanelGameInProgressJump;
+
+  /// Uppercase section header inside the DM overflow menu grouping Mute. Rendered as a disabled label row, never tappable.
+  ///
+  /// In en, this message translates to:
+  /// **'PREFERENCES'**
+  String get sipDmOverflowSectionPreferences;
+
+  /// Uppercase section header inside the DM overflow menu grouping Block. Rendered as a disabled label row, never tappable.
+  ///
+  /// In en, this message translates to:
+  /// **'SAFETY'**
+  String get sipDmOverflowSectionSafety;
+
+  /// Uppercase section header inside the DM overflow menu grouping Reset secure connection and Close session.
+  ///
+  /// In en, this message translates to:
+  /// **'SESSION'**
+  String get sipDmOverflowSectionSession;
+
+  /// Uppercase section header inside the DM overflow menu grouping Remove conversation.
+  ///
+  /// In en, this message translates to:
+  /// **'DATA'**
+  String get sipDmOverflowSectionData;
+
+  /// Title of the SIP Play picker bottom sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a game'**
+  String get sipPlayPickerTitle;
+
+  /// Body copy beneath the picker title explaining the offer/accept flow.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a game to send an offer to this conversation. Both sides need to accept before play starts.'**
+  String get sipPlayPickerSubtitle;
+
+  /// Display name for the Tic-Tac-Toe game in the SIP Play picker and game bubbles.
+  ///
+  /// In en, this message translates to:
+  /// **'Tic-Tac-Toe'**
+  String get sipPlayGameTicTacToe;
+
+  /// One-line description of Tic-Tac-Toe shown under its name in the picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Classic 3x3. You place X if you offered, O if you accepted.'**
+  String get sipPlayGameTicTacToeDescription;
+
+  /// Title shown on a SIP Play bubble whose gameType is not registered in this build. Renders a safe fallback so unknown games never crash the timeline.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsupported game'**
+  String get sipPlayUnsupportedGame;
+
+  /// Body copy on the unsupported-game fallback bubble.
+  ///
+  /// In en, this message translates to:
+  /// **'This conversation includes a game your build doesn\'t recognize. The original sender\'s app may be newer.'**
+  String get sipPlayUnsupportedGameBody;
+
+  /// Title of the bubble shown when a SIP Play envelope fails to decode (truncated, version mismatch, etc.). State is unchanged — the bubble is informational only.
+  ///
+  /// In en, this message translates to:
+  /// **'Game data unreadable'**
+  String get sipPlayMalformedTitle;
+
+  /// Title on a SIP Play bubble shown to the offerer after they sent an offer. Status switches to active when the peer accepts.
+  ///
+  /// In en, this message translates to:
+  /// **'You offered Tic-Tac-Toe'**
+  String get sipPlayOfferOutgoingTitle;
+
+  /// Title on a SIP Play bubble for an inbound offer awaiting Accept / Decline.
+  ///
+  /// In en, this message translates to:
+  /// **'Tic-Tac-Toe — they want to play'**
+  String get sipPlayOfferIncomingTitle;
+
+  /// Accept button on an inbound SIP Play offer bubble.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get sipPlayOfferAccept;
+
+  /// Decline button on an inbound SIP Play offer bubble.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get sipPlayOfferDecline;
+
+  /// Button shown beside the active TTT board that ends the game and concedes.
+  ///
+  /// In en, this message translates to:
+  /// **'Resign'**
+  String get sipPlayResign;
+
+  /// Title of the confirmation sheet shown when the user taps Resign on an active SIP Play game.
+  ///
+  /// In en, this message translates to:
+  /// **'Resign this game?'**
+  String get sipPlayResignConfirmTitle;
+
+  /// Body of the Resign confirmation sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Resigning ends the game. The other player wins. You can offer a new game any time.'**
+  String get sipPlayResignConfirmBody;
+
+  /// Destructive confirm button on the Resign sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Resign'**
+  String get sipPlayResignConfirmAction;
+
+  /// Cancel button on the Resign sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get sipPlayResignConfirmCancel;
+
+  /// Status caption on the active TTT board when it's the local user's turn.
+  ///
+  /// In en, this message translates to:
+  /// **'Your turn'**
+  String get sipPlayStatusYourTurn;
+
+  /// Status caption on the active TTT board when it's the remote peer's turn.
+  ///
+  /// In en, this message translates to:
+  /// **'Their turn'**
+  String get sipPlayStatusTheirTurn;
+
+  /// Terminal status caption when the local user wins.
+  ///
+  /// In en, this message translates to:
+  /// **'You won'**
+  String get sipPlayStatusYouWon;
+
+  /// Terminal status caption when the remote peer wins.
+  ///
+  /// In en, this message translates to:
+  /// **'They won'**
+  String get sipPlayStatusTheyWon;
+
+  /// Terminal status caption when the TTT board fills with no winner.
+  ///
+  /// In en, this message translates to:
+  /// **'Draw'**
+  String get sipPlayStatusDraw;
+
+  /// Terminal status caption when the local user resigned.
+  ///
+  /// In en, this message translates to:
+  /// **'You resigned'**
+  String get sipPlayStatusYouResigned;
+
+  /// Terminal status caption when the remote peer resigned.
+  ///
+  /// In en, this message translates to:
+  /// **'They resigned'**
+  String get sipPlayStatusTheyResigned;
+
+  /// Terminal status caption when the local user declined an inbound offer.
+  ///
+  /// In en, this message translates to:
+  /// **'You declined the offer'**
+  String get sipPlayStatusYouDeclined;
+
+  /// Terminal status caption when the remote peer declined our outbound offer.
+  ///
+  /// In en, this message translates to:
+  /// **'They declined the offer'**
+  String get sipPlayStatusTheyDeclined;
+
   /// Label for the text composer mode in the SIP DM composer mode switcher.
   ///
   /// In en, this message translates to:
   /// **'Text'**
   String get sipDmComposerModeText;
 
-  /// Label for the SIP Ink sketch composer mode in the SIP DM composer mode switcher.
+  /// Sketch tab label in the DM composer mode switcher.
   ///
   /// In en, this message translates to:
   /// **'Sketch'**
   String get sipDmComposerModeSketch;
+
+  /// Play tab label in the DM composer mode switcher. Visible only when the peer supports SIP Play and is not blocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get sipDmComposerModePlay;
+
+  /// Signal tab label in the DM composer mode switcher. Visible only when the peer supports SIP Signal v1 and is not blocked. Signal is musical-phrase + Morse — 'Close Encounters over LoRa.'
+  ///
+  /// In en, this message translates to:
+  /// **'Signal'**
+  String get sipDmComposerModeSignal;
+
+  /// Header inside the Signal composer panel.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a signal'**
+  String get sipSignalPanelTitle;
+
+  /// Body copy under the Signal panel title explaining the no-audio-on-the-wire model.
+  ///
+  /// In en, this message translates to:
+  /// **'A short musical phrase or a Morse message — synthesized locally on both sides.'**
+  String get sipSignalPanelSubtitle;
+
+  /// Sub-mode label for the musical-phrase composer.
+  ///
+  /// In en, this message translates to:
+  /// **'Tone'**
+  String get sipSignalSubModeTone;
+
+  /// Sub-mode label for the Morse composer.
+  ///
+  /// In en, this message translates to:
+  /// **'Morse'**
+  String get sipSignalSubModeMorse;
+
+  /// Placeholder shown above the pad grid when no notes have been added yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap pads to compose a phrase'**
+  String get sipSignalToneEmpty;
+
+  /// Label for the instrument chip row inside the Tone composer.
+  ///
+  /// In en, this message translates to:
+  /// **'Instrument'**
+  String get sipSignalToneInstrument;
+
+  /// Display name for the Sine instrument.
+  ///
+  /// In en, this message translates to:
+  /// **'Sine'**
+  String get sipSignalInstrumentSine;
+
+  /// Display name for the Bell instrument.
+  ///
+  /// In en, this message translates to:
+  /// **'Bell'**
+  String get sipSignalInstrumentBell;
+
+  /// Display name for the Pluck instrument.
+  ///
+  /// In en, this message translates to:
+  /// **'Pluck'**
+  String get sipSignalInstrumentPluck;
+
+  /// Display name for the Chirp instrument.
+  ///
+  /// In en, this message translates to:
+  /// **'Chirp'**
+  String get sipSignalInstrumentChirp;
+
+  /// Button that wipes the local Signal draft (notes or Morse text).
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get sipSignalActionClear;
+
+  /// Button that plays the current Signal draft locally without sending.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get sipSignalActionPreview;
+
+  /// Button that transmits the Signal draft over the SIP DM session.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get sipSignalActionSend;
+
+  /// Button on a Signal bubble that resynthesizes and plays the signal locally.
+  ///
+  /// In en, this message translates to:
+  /// **'Replay'**
+  String get sipSignalReplay;
+
+  /// Static payload-size hint retained for legacy callers. The composer footer now shows the live encoded size via sipSignalSizeBytes.
+  ///
+  /// In en, this message translates to:
+  /// **'Tiny signal • ~20–32 bytes'**
+  String get sipSignalToneSizeBadge;
+
+  /// Static payload-size hint retained for legacy callers. The composer footer now shows the live encoded size via sipSignalSizeBytes.
+  ///
+  /// In en, this message translates to:
+  /// **'Tiny Morse • ~20–60 bytes'**
+  String get sipSignalMorseSizeBadge;
+
+  /// Live encoded-size readout in the composer footer. Updates per keystroke / pad tap.
+  ///
+  /// In en, this message translates to:
+  /// **'Signal • {bytes} B'**
+  String sipSignalSizeBytes(int bytes);
+
+  /// Composer footer when the encoded envelope exceeds maxEnvelopeBytes. Send is disabled in this state.
+  ///
+  /// In en, this message translates to:
+  /// **'Signal • {bytes} B — too large to send'**
+  String sipSignalSizeOverBudget(int bytes);
+
+  /// Badge shown above the tone pads when the phrase has reached its hard cap. Note pads are disabled but Clear / Preview / Send remain active.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}/{max} notes • Phrase full'**
+  String sipSignalToneFull(int count, int max);
+
+  /// Toggle label for the tap-first Morse input mode (dots, dashes, Letter, Space).
+  ///
+  /// In en, this message translates to:
+  /// **'Tap'**
+  String get sipSignalMorseInputTap;
+
+  /// Toggle label for the type-text Morse input mode (TextField helper).
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get sipSignalMorseInputType;
+
+  /// Helper line below the tap-Morse keypad explaining the input model.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap dots and dashes — Letter finalises a glyph, Space adds a word gap.'**
+  String get sipSignalMorseTapHint;
+
+  /// Placeholder shown above the tap-Morse keypad before any input.
+  ///
+  /// In en, this message translates to:
+  /// **'Decoded message will appear here.'**
+  String get sipSignalMorseTapEmpty;
+
+  /// Section label above the live decoded-text preview in tap-Morse mode.
+  ///
+  /// In en, this message translates to:
+  /// **'Decoded'**
+  String get sipSignalMorseTapDecodedLabel;
+
+  /// Section label above the live Morse-pattern preview in tap-Morse mode.
+  ///
+  /// In en, this message translates to:
+  /// **'Morse'**
+  String get sipSignalMorseTapPatternLabel;
+
+  /// Tooltip / accessibility label for the dot tap-Morse key.
+  ///
+  /// In en, this message translates to:
+  /// **'Dot'**
+  String get sipSignalMorseTapDot;
+
+  /// Tooltip / accessibility label for the dash tap-Morse key.
+  ///
+  /// In en, this message translates to:
+  /// **'Dash'**
+  String get sipSignalMorseTapDash;
+
+  /// Label for the tap-Morse key that finalises the current dot/dash token into a letter.
+  ///
+  /// In en, this message translates to:
+  /// **'Letter'**
+  String get sipSignalMorseTapLetter;
+
+  /// Label for the tap-Morse key that finalises the current letter and adds a word gap.
+  ///
+  /// In en, this message translates to:
+  /// **'Space'**
+  String get sipSignalMorseTapSpace;
+
+  /// Label for the tap-Morse backspace key — removes the most recent symbol or separator.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get sipSignalMorseTapBackspace;
+
+  /// Inline notice when the tap-Morse input contains tokens not in the international Morse table.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown sequences are shown as ? — they\'re skipped on send.'**
+  String get sipSignalMorseTapInvalidNote;
+
+  /// Label for the example button that loads the iconic 5-note 'Close Encounters of the Third Kind' motif into the Tone phrase composer.
+  ///
+  /// In en, this message translates to:
+  /// **'Close Encounters'**
+  String get sipSignalToneExampleCloseEncounters;
+
+  /// Helper line above the Close Encounters example button when the Tone phrase is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Try the example'**
+  String get sipSignalToneExampleHint;
+
+  /// Placeholder shown in the reply quote when replying to a SIP Signal entry. Mirrors how sketch replies use sipDmInkReplyPlaceholder — Signal envelopes carry no plaintext body to quote.
+  ///
+  /// In en, this message translates to:
+  /// **'📡 Signal'**
+  String get sipDmSignalReplyPlaceholder;
+
+  /// Helper text below the Morse text input.
+  ///
+  /// In en, this message translates to:
+  /// **'Type up to 40 characters. A–Z, 0–9, space, and . , ? ! / @ are supported.'**
+  String get sipSignalMorseHint;
+
+  /// Placeholder for the Morse text input.
+  ///
+  /// In en, this message translates to:
+  /// **'Type your message…'**
+  String get sipSignalMorsePlaceholder;
+
+  /// Inline notice shown when the user types unsupported characters.
+  ///
+  /// In en, this message translates to:
+  /// **'Some characters won\'t be sent — only A–Z, 0–9, space, and . , ? ! / @ are allowed.'**
+  String get sipSignalMorseUnsupportedNote;
+
+  /// Section label inside an inbound Signal bubble for the musical-phrase variant.
+  ///
+  /// In en, this message translates to:
+  /// **'Phrase'**
+  String get sipSignalBubblePhraseLabel;
+
+  /// Section label inside an inbound Signal bubble for the Morse variant.
+  ///
+  /// In en, this message translates to:
+  /// **'Morse'**
+  String get sipSignalBubbleMorseLabel;
+
+  /// Fallback bubble title when an inbound Signal envelope fails to decode. State is informational only — never crashes ingest.
+  ///
+  /// In en, this message translates to:
+  /// **'Signal can\'t be read'**
+  String get sipSignalBubbleMalformed;
 
   /// Hint shown above the SIP Ink canvas explaining the airtime constraint.
   ///

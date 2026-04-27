@@ -139,7 +139,19 @@ enum OverlaySecureDataSubtype {
   /// Phase 2: encrypted DM_INK sketch payload. Body is a v1 SIP Ink
   /// envelope (timestamp_s ‖ ink_bytes) — see
   /// `SipDmMessages.encodeSecureDmInk`.
-  dmInk(0x05);
+  dmInk(0x05),
+
+  /// Phase 2: encrypted DM_PLAY game-action payload. Body is a v1
+  /// SIP Play envelope (typeAndVersion ‖ gameType ‖ instanceId ‖
+  /// action ‖ seq ‖ game-payload). See
+  /// `lib/services/protocol/sip/play/sip_play_codec.dart`.
+  dmPlay(0x06),
+
+  /// Phase 2: encrypted DM_SIGNAL musical-phrase + Morse payload.
+  /// Body is a v1 SIP Signal envelope (typeAndVersion ‖ signalKind
+  /// ‖ sequenceId ‖ kind-specific payload). See
+  /// `lib/services/protocol/sip/signal/sip_signal_codec.dart`.
+  dmSignal(0x07);
 
   const OverlaySecureDataSubtype(this.code);
 

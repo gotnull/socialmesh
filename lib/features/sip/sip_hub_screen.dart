@@ -216,7 +216,6 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
   /// Initiate handshake directly with a peer (no detail sheet).
   void _initiateHandshake(SipPeerCapability peer) {
     final localContext = context;
-    final localL10n = localContext.l10n;
     final haptics = ref.read(hapticServiceProvider);
     haptics.trigger(HapticType.medium);
 
@@ -236,7 +235,9 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
 
     final handshake = ref.read(sipHandshakeProvider);
     if (handshake == null) {
-      showErrorSnackBar(localContext, localL10n.sipHandshakeFailed);
+      // No snackbar — the per-peer chip is the single source of truth for
+      // handshake state. A redundant "Could not connect" overlay on top of
+      // the same red chip just adds noise.
       return;
     }
 
@@ -268,12 +269,31 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
       return;
     }
 
-    final frame = handshake.initiateHandshake(peer.nodeId);
-    if (frame == null) return;
+    // Explicit user retry from a terminal state — override the
+    // 120s post-failure cooldown so the tap actually does something.
+    // The cooldown exists to throttle automatic retransmits, not to
+    // lock the user out for two minutes when they deliberately tap
+    // a "Could not connect" tile.
+    final isUserRetry =
+        currentState == SipHandshakeState.failed ||
+        currentState == SipHandshakeState.timedOut ||
+        currentState == SipHandshakeState.declined;
+
+    final frame = handshake.initiateHandshake(
+      peer.nodeId,
+      overrideCooldown: isUserRetry,
+    );
+    if (frame == null) {
+      // Defence-in-depth: even with the override the manager can still
+      // refuse (DM not available, lingering session entry). The chip
+      // remains in its current state — a snackbar layered on top would
+      // duplicate that signal and was reported as "extremely annoying"
+      // during the simultaneous-open retry flow.
+      return;
+    }
 
     final encoded = SipCodec.encode(frame);
     if (encoded == null) {
-      showErrorSnackBar(localContext, localL10n.sipHandshakeFailed);
       return;
     }
 
@@ -1184,14 +1204,18 @@ class _PeerTileState extends ConsumerState<_PeerTile>
                       ),
                       const SizedBox(height: AppTheme.spacing6),
 
-                      // Status row: handshake state + last seen
-                      Row(
+                      // Status row: handshake state + last seen.
+                      // Wrap so long labels (e.g. "Could not connect")
+                      // can flow to a second line on narrow screens
+                      // instead of overflowing the row.
+                      Wrap(
+                        spacing: AppTheme.spacing8,
+                        runSpacing: AppTheme.spacing4,
                         children: [
                           _HandshakeChip(
                             state: hsState,
                             hasDmSession: hasDmSession,
                           ),
-                          const SizedBox(width: AppTheme.spacing8),
                           _LastSeenChip(lastSeenMs: widget.peer.lastSeenMs),
                         ],
                       ),
