@@ -49,7 +49,18 @@ enum _MorseInputMode {
 class SipSignalComposerPanel extends ConsumerStatefulWidget {
   final int sessionTag;
 
-  const SipSignalComposerPanel({super.key, required this.sessionTag});
+  /// Fires when the user toggles between the Tone and Morse sub-modes
+  /// inside the panel. The DM screen uses this to scroll the chat to
+  /// the most recent bubble of the corresponding signal kind so the
+  /// composer surface and the timeline stay aligned (mirrors how the
+  /// top-level Signal chip jumps to the latest signal of any kind).
+  final void Function(SipSignalKind kind)? onSubModeChanged;
+
+  const SipSignalComposerPanel({
+    super.key,
+    required this.sessionTag,
+    this.onSubModeChanged,
+  });
 
   @override
   ConsumerState<SipSignalComposerPanel> createState() =>
@@ -185,6 +196,14 @@ class _SipSignalComposerPanelState extends ConsumerState<SipSignalComposerPanel>
           if (_subMode == mode) return;
           ref.read(hapticServiceProvider).trigger(HapticType.selection);
           setState(() => _subMode = mode);
+          // Bubble the kind up to the DM screen so it can scroll the
+          // chat to the latest matching signal — same behaviour the
+          // top-level Signal chip provides, just narrowed to the
+          // sub-mode the user just chose.
+          final kind = mode == _SignalSubMode.tone
+              ? SipSignalKind.phrase
+              : SipSignalKind.morse;
+          widget.onSubModeChanged?.call(kind);
         },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),

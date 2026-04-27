@@ -28,6 +28,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../../core/l10n/l10n_extension.dart';
+import '../../../../../core/logging.dart';
 import '../../../../../core/theme.dart';
 import '../../../../../services/protocol/sip/play/games/tictactoe/ttt_payload.dart';
 import '../../../../../services/protocol/sip/play/games/tictactoe/ttt_rules.dart';
@@ -101,6 +102,16 @@ class _TttBoardWidgetState extends State<TttBoardWidget>
   @override
   Widget build(BuildContext context) {
     final accent = context.accentColor;
+    final cellsStr = widget.board.cells
+        .map((m) => m == null ? '_' : (m == TttMark.x ? 'X' : 'O'))
+        .join('');
+    AppLogging.sipPlay(
+      'TTT_BOARD_BUILD enabled=${widget.enabled} '
+      'localMark=${widget.localMark?.name ?? "null"} '
+      'pendingCell=${widget.pendingMove?.cell ?? "null"} '
+      'pendingMark=${widget.pendingMove?.mark.name ?? "null"} '
+      'cells=$cellsStr',
+    );
     return AspectRatio(
       aspectRatio: 1,
       child: DecoratedBox(
@@ -263,58 +274,77 @@ class _CellState extends State<_Cell> with TickerProviderStateMixin {
 
     return Padding(
       padding: const EdgeInsets.all(AppTheme.spacing2),
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTapDown: _canTap ? (_) => _press.forward() : null,
-        onTapCancel: _canTap ? () => _press.reverse() : null,
-        onTap: _canTap
-            ? () {
-                // Press feedback first, then propagate. The parent
-                // owns the actual send + pending overlay.
-                HapticFeedback.lightImpact();
-                _animateTap();
-                widget.onTap();
-              }
-            : null,
-        child: AnimatedBuilder(
-          animation: _press,
-          builder: (context, child) {
-            // Map 0..1 → 1.0..0.96 for the press dip.
-            final scale = 1.0 - (_press.value * 0.04);
-            return Transform.scale(scale: scale, child: child);
-          },
-          child: _CellSurface(
-            isInteractive: _canTap,
-            child: AnimatedBuilder(
-              animation: Listenable.merge([_drawIn, widget.pulse]),
-              builder: (context, _) {
-                if (widget.isPending && widget.pendingMark != null) {
-                  // Ghost overlay: same painter at reduced alpha,
-                  // gently pulsing.
-                  final pulseT = 0.6 + (widget.pulse.value * 0.4);
+      child: Listener(
+        // Raw pointer-down observer — fires regardless of _canTap.
+        // Lets us prove a tap physically reached the cell even when
+        // the gesture detector below has its callbacks nulled out.
+        // Behaviour-neutral: Listener does not consume the event.
+        behavior: HitTestBehavior.translucent,
+        onPointerDown: (event) {
+          AppLogging.sipPlay(
+            'TTT_CELL_POINTER_DOWN idx=${widget.index} '
+            'mark=${widget.mark?.name ?? "null"} '
+            'isPending=${widget.isPending} '
+            'enabled=${widget.enabled} canTap=$_canTap',
+          );
+        },
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTapDown: _canTap ? (_) => _press.forward() : null,
+          onTapCancel: _canTap ? () => _press.reverse() : null,
+          onTap: _canTap
+              ? () {
+                  AppLogging.sipPlay('TTT_CELL_TAP_FIRED idx=${widget.index}');
+                  // Press feedback first, then propagate. The parent
+                  // owns the actual send + pending overlay.
+                  HapticFeedback.lightImpact();
+                  _animateTap();
+                  widget.onTap();
+                }
+              : null,
+          child: AnimatedBuilder(
+            animation: _press,
+            builder: (context, child) {
+              // Map 0..1 → 1.0..0.96 for the press dip.
+              final scale = 1.0 - (_press.value * 0.04);
+              return Transform.scale(scale: scale, child: child);
+            },
+            child: _CellSurface(
+              isInteractive: _canTap,
+              child: AnimatedBuilder(
+                animation: Listenable.merge([_drawIn, widget.pulse]),
+                builder: (context, _) {
+                  if (widget.isPending && widget.pendingMark != null) {
+                    // Ghost overlay: same painter at reduced alpha,
+                    // gently pulsing.
+                    final pulseT = 0.6 + (widget.pulse.value * 0.4);
+                    return Semantics(
+                      label: _semanticsLabel(
+                        widget.pendingMark!,
+                        pending: true,
+                      ),
+                      child: CustomPaint(
+                        painter: _TttMarkPainter(
+                          mark: widget.pendingMark!,
+                          progress: 1.0,
+                          color: widget.accent.withValues(alpha: 0.5 * pulseT),
+                        ),
+                      ),
+                    );
+                  }
+                  if (mark == null) return const SizedBox.shrink();
                   return Semantics(
-                    label: _semanticsLabel(widget.pendingMark!, pending: true),
+                    label: _semanticsLabel(mark, pending: false),
                     child: CustomPaint(
                       painter: _TttMarkPainter(
-                        mark: widget.pendingMark!,
-                        progress: 1.0,
-                        color: widget.accent.withValues(alpha: 0.5 * pulseT),
+                        mark: mark,
+                        progress: Curves.easeOutCubic.transform(_drawIn.value),
+                        color: markColor,
                       ),
                     ),
                   );
-                }
-                if (mark == null) return const SizedBox.shrink();
-                return Semantics(
-                  label: _semanticsLabel(mark, pending: false),
-                  child: CustomPaint(
-                    painter: _TttMarkPainter(
-                      mark: mark,
-                      progress: Curves.easeOutCubic.transform(_drawIn.value),
-                      color: markColor,
-                    ),
-                  ),
-                );
-              },
+                },
+              ),
             ),
           ),
         ),

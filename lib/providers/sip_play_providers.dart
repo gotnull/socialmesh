@@ -13,6 +13,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/logging.dart';
 import '../services/audio/sip_play_sound_service.dart';
 import '../services/audio/sip_signal_synth_service.dart';
 import '../services/protocol/sip/play/sip_play_constants.dart';
@@ -53,13 +54,27 @@ final sipPlayInstanceStateProvider =
       // Watching `sipDmEpochProvider` so the derived state recomputes on
       // any DM history change (matches how text/sketch UI follows the
       // session). Cheap — the engine replay is O(N) over a small log.
-      ref.watch(sipDmEpochProvider);
+      final epoch = ref.watch(sipDmEpochProvider);
 
       final dm = ref.read(sipDmManagerProvider);
-      if (dm == null) return null;
+      if (dm == null) {
+        AppLogging.sipPlay(
+          'STATE_PROVIDER_NULL reason=noDmManager '
+          'sessionTag=${key.sessionTag} '
+          'instance=0x${key.instanceId.toRadixString(16)}',
+        );
+        return null;
+      }
 
       final history = dm.getHistory(key.sessionTag);
-      if (history == null) return null;
+      if (history == null) {
+        AppLogging.sipPlay(
+          'STATE_PROVIDER_NULL reason=noHistory '
+          'sessionTag=${key.sessionTag} '
+          'instance=0x${key.instanceId.toRadixString(16)}',
+        );
+        return null;
+      }
 
       final entries = <SipPlayEntry>[];
       for (final entry in history) {
@@ -77,8 +92,31 @@ final sipPlayInstanceStateProvider =
         entries.add(decoded);
       }
 
-      if (entries.isEmpty) return null;
-      return SipPlayEngine.replay(entries);
+      if (entries.isEmpty) {
+        AppLogging.sipPlay(
+          'STATE_PROVIDER_NULL reason=noEntries '
+          'sessionTag=${key.sessionTag} '
+          'instance=0x${key.instanceId.toRadixString(16)} '
+          'historyLen=${history.length} epoch=$epoch',
+        );
+        return null;
+      }
+      final state = SipPlayEngine.replay(entries);
+      final cellsStr = state.board.cells
+          .map((m) => m == null ? '_' : m.name)
+          .join(',');
+      AppLogging.sipPlay(
+        'STATE_PROVIDER_DERIVED '
+        'sessionTag=${key.sessionTag} '
+        'instance=0x${state.instanceId.toRadixString(16)} '
+        'entries=${entries.length} '
+        'status=${state.status.name} '
+        'localMark=${state.localMark?.name ?? "null"} '
+        'turn=${state.turn?.name ?? "null"} '
+        'lastAppliedSeq=${state.lastAppliedSeq} '
+        'cells=[$cellsStr] epoch=$epoch',
+      );
+      return state;
     });
 
 /// All SIP Play instance ids present in a session's history, in the
@@ -94,6 +132,13 @@ final sipPlayInstanceIdsProvider = Provider.family<List<int>, int>((
   final history = dm.getHistory(sessionTag);
   if (history == null) return const <int>[];
 
+  // Only emit instances whose offer envelope is still in the history.
+  // If a peer / legacy delete removed the offer, the engine state log
+  // is incoherent for that instance (replay is stuck in pendingOffer
+  // forever), and the "Jump to game" banner / inline bubble dispatch
+  // would point at a game that no longer has any visible card.
+  // Filtering at the source keeps every consumer of this provider in
+  // sync with what the timeline can actually render.
   final seen = <int>{};
   final out = <int>[];
   for (final entry in history) {
@@ -107,6 +152,7 @@ final sipPlayInstanceIdsProvider = Provider.family<List<int>, int>((
           : SipPlayEntryDirection.inbound,
     );
     if (decoded == null) continue;
+    if (decoded.envelope.action != SipPlayAction.offer) continue;
     final id = decoded.envelope.instanceId;
     if (seen.add(id)) out.add(id);
   }

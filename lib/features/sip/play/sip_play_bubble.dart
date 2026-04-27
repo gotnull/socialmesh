@@ -68,6 +68,11 @@ class SipPlayBubble extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final header = parsePlayHeaderForUi(entryPayload);
     if (header == null) {
+      AppLogging.sipPlay(
+        'BUBBLE_FALLBACK reason=malformedHeader '
+        'sessionTag=$sessionTag peer=0x${peerNodeId.toRadixString(16)} '
+        'payloadBytes=${entryPayload.length}',
+      );
       return _MalformedFallback();
     }
 
@@ -79,6 +84,11 @@ class SipPlayBubble extends ConsumerWidget {
     }
 
     if (!SipPlayRegistry.isSupported(header.gameTypeCode)) {
+      AppLogging.sipPlay(
+        'BUBBLE_FALLBACK reason=unsupportedGame '
+        'gameType=0x${header.gameTypeCode.toRadixString(16)} '
+        'instance=0x${header.instanceId.toRadixString(16)}',
+      );
       return _UnsupportedFallback();
     }
 
@@ -92,6 +102,11 @@ class SipPlayBubble extends ConsumerWidget {
       // Race: history entry exists but engine hasn't seen it. Render
       // the malformed fallback rather than blanking — the user gets
       // a hint something is off without a crash.
+      AppLogging.sipPlay(
+        'BUBBLE_FALLBACK reason=stateNull '
+        'sessionTag=$sessionTag '
+        'instance=0x${header.instanceId.toRadixString(16)}',
+      );
       return _MalformedFallback();
     }
 
@@ -102,6 +117,17 @@ class SipPlayBubble extends ConsumerWidget {
     final isPeerBlocked = ref
         .read(peerSafetyManagerProvider.notifier)
         .isBlocked(peerNodeId);
+
+    AppLogging.sipPlay(
+      'BUBBLE_BUILD sessionTag=$sessionTag '
+      'peer=0x${peerNodeId.toRadixString(16)} '
+      'instance=0x${state.instanceId.toRadixString(16)} '
+      'status=${state.status.name} '
+      'localMark=${state.localMark?.name ?? "null"} '
+      'isLocalTurn=${state.isLocalTurn} '
+      'lastAppliedSeq=${state.lastAppliedSeq} '
+      'peerBlocked=$isPeerBlocked',
+    );
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: AppTheme.spacing6),
@@ -136,6 +162,11 @@ class _DispatchBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    AppLogging.sipPlay(
+      'DISPATCH status=${state.status.name} '
+      'instance=0x${state.instanceId.toRadixString(16)} '
+      'peerBlocked=$peerBlocked',
+    );
     switch (state.status) {
       case SipPlayInstanceStatus.unsupported:
         return _UnsupportedFallback();
@@ -148,6 +179,10 @@ class _DispatchBody extends ConsumerWidget {
           ref,
           sessionTag,
           state.instanceId,
+        );
+        AppLogging.sipPlay(
+          'DISPATCH_PENDING_OFFER isOutbound=$isOutbound '
+          'instance=0x${state.instanceId.toRadixString(16)}',
         );
         return isOutbound
             ? _OutgoingOfferRow(state: state)
@@ -495,7 +530,12 @@ class _BoardSectionState extends ConsumerState<_BoardSection>
     // transition regardless of how many rebuilds happen between.
     final prevStatus = oldWidget.state.status;
     final nextStatus = widget.state.status;
+    final instanceHex = '0x${widget.state.instanceId.toRadixString(16)}';
     if (prevStatus != nextStatus) {
+      AppLogging.sipPlay(
+        'BOARD_STATUS_CHANGE instance=$instanceHex '
+        '${prevStatus.name}->${nextStatus.name}',
+      );
       // pendingOffer → active = "game starts" for both sides.
       if (prevStatus == SipPlayInstanceStatus.pendingOffer &&
           nextStatus == SipPlayInstanceStatus.active) {
@@ -511,6 +551,14 @@ class _BoardSectionState extends ConsumerState<_BoardSection>
             .play(SipPlaySoundCue.rejectedDeclined);
       }
     }
+    if (oldWidget.state.lastAppliedSeq != widget.state.lastAppliedSeq) {
+      AppLogging.sipPlay(
+        'BOARD_SEQ_ADVANCE instance=$instanceHex '
+        '${oldWidget.state.lastAppliedSeq}->${widget.state.lastAppliedSeq} '
+        'turn=${widget.state.turn?.name ?? "null"} '
+        'isLocalTurn=${widget.state.isLocalTurn}',
+      );
+    }
 
     final pending = _pendingMove;
     if (pending == null) return;
@@ -519,11 +567,16 @@ class _BoardSectionState extends ConsumerState<_BoardSection>
     final boardCell = widget.state.board.cells[pending.cell];
     if (boardCell == pending.mark) {
       AppLogging.sipPlay(
-        'PLAY_MOVE_RESOLVED instance=0x'
-        '${widget.state.instanceId.toRadixString(16)} cell=${pending.cell}',
+        'PLAY_MOVE_RESOLVED instance=$instanceHex cell=${pending.cell}',
       );
       _pendingMove = null;
       _interactionLock = false;
+    } else {
+      AppLogging.sipPlay(
+        'PLAY_MOVE_PENDING_HOLDS instance=$instanceHex '
+        'cell=${pending.cell} expected=${pending.mark.name} '
+        'actual=${boardCell?.name ?? "null"}',
+      );
     }
   }
 
@@ -555,6 +608,19 @@ class _BoardSectionState extends ConsumerState<_BoardSection>
 
     final canResign =
         state.status == SipPlayInstanceStatus.active && !widget.peerBlocked;
+
+    AppLogging.sipPlay(
+      'BOARD_SECTION_BUILD instance=0x${state.instanceId.toRadixString(16)} '
+      'boardEnabled=$boardEnabled '
+      'peerBlocked=${widget.peerBlocked} '
+      'statusActive=${state.status == SipPlayInstanceStatus.active} '
+      'status=${state.status.name} '
+      'isLocalTurn=${state.isLocalTurn} '
+      'turn=${state.turn?.name ?? "null"} '
+      'localMark=${state.localMark?.name ?? "null"} '
+      'pendingMoveCell=${_pendingMove?.cell ?? "null"} '
+      'interactionLock=$_interactionLock',
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -612,9 +678,13 @@ class _BoardSectionState extends ConsumerState<_BoardSection>
               ),
           ],
         ),
-        const SizedBox(height: AppTheme.spacing8),
+        // The header→board spacer renders only when the board itself
+        // does. On terminal-declined cards the board is hidden, and
+        // an orphan spacer would leave the card visibly bottom-heavy
+        // (more whitespace under the header than above it).
         if (state.status != SipPlayInstanceStatus.declinedByLocal &&
-            state.status != SipPlayInstanceStatus.declinedByRemote)
+            state.status != SipPlayInstanceStatus.declinedByRemote) ...[
+          const SizedBox(height: AppTheme.spacing8),
           TttBoardWidget(
             board: state.board,
             localMark: state.localMark,
@@ -622,21 +692,60 @@ class _BoardSectionState extends ConsumerState<_BoardSection>
             pendingMove: _pendingMove,
             onCellTap: _onCellTap,
           ),
+        ],
       ],
     );
   }
 
   void _onCellTap(int cell) {
-    if (_interactionLock) return;
     final state = widget.state;
-    if (state.localMark == null) return;
-    if (!state.isLocalTurn) return;
-    if (!state.board.isLegalMove(cell)) return;
+    final instanceHex = '0x${state.instanceId.toRadixString(16)}';
+    AppLogging.sipPlay(
+      'PLAY_MOVE_TAP_ENTER instance=$instanceHex cell=$cell '
+      'interactionLock=$_interactionLock '
+      'localMark=${state.localMark?.name ?? "null"} '
+      'isLocalTurn=${state.isLocalTurn} '
+      'turn=${state.turn?.name ?? "null"} '
+      'status=${state.status.name} '
+      'cellMark=${state.board.cells[cell]?.name ?? "null"} '
+      'isLegal=${state.board.isLegalMove(cell)}',
+    );
+    if (_interactionLock) {
+      AppLogging.sipPlay(
+        'PLAY_MOVE_TAP_IGNORED reason=interactionLock '
+        'instance=$instanceHex cell=$cell',
+      );
+      return;
+    }
+    if (state.localMark == null) {
+      AppLogging.sipPlay(
+        'PLAY_MOVE_TAP_IGNORED reason=noLocalMark '
+        'instance=$instanceHex cell=$cell status=${state.status.name}',
+      );
+      return;
+    }
+    if (!state.isLocalTurn) {
+      AppLogging.sipPlay(
+        'PLAY_MOVE_TAP_IGNORED reason=notLocalTurn '
+        'instance=$instanceHex cell=$cell '
+        'turn=${state.turn?.name ?? "null"} '
+        'localMark=${state.localMark?.name ?? "null"} '
+        'status=${state.status.name}',
+      );
+      return;
+    }
+    if (!state.board.isLegalMove(cell)) {
+      AppLogging.sipPlay(
+        'PLAY_MOVE_TAP_IGNORED reason=illegalMove '
+        'instance=$instanceHex cell=$cell '
+        'cellMark=${state.board.cells[cell]?.name ?? "null"}',
+      );
+      return;
+    }
 
     final mark = state.localMark!;
     AppLogging.sipPlay(
-      'PLAY_MOVE_TAP instance=0x${state.instanceId.toRadixString(16)} '
-      'cell=$cell pending=true',
+      'PLAY_MOVE_TAP instance=$instanceHex cell=$cell pending=true',
     );
     setState(() {
       _pendingMove = TttMove(cell: cell, mark: mark);
@@ -687,7 +796,13 @@ class _BoardSectionState extends ConsumerState<_BoardSection>
       sessionTag: widget.sessionTag,
       playPayload: bytes,
     );
-    if (!mounted) return;
+    if (!mounted) {
+      AppLogging.sipPlay(
+        'move_after_send_unmounted '
+        'instance=0x${state.instanceId.toRadixString(16)} cell=$cell',
+      );
+      return;
+    }
     if (!outcome.isOk) {
       final message = switch (outcome.error) {
         SipDmSendError.peerBlocked => l10n.sipDmPeerBlocked,
@@ -697,7 +812,7 @@ class _BoardSectionState extends ConsumerState<_BoardSection>
       };
       AppLogging.sipPlay(
         'move_blocked reason=${outcome.error?.name} '
-        'instance=0x${state.instanceId.toRadixString(16)}',
+        'instance=0x${state.instanceId.toRadixString(16)} cell=$cell',
       );
       // Send failed — engine state never advanced, so the pending
       // overlay must be cleared explicitly here. didUpdateWidget
@@ -706,7 +821,12 @@ class _BoardSectionState extends ConsumerState<_BoardSection>
       // overlay would otherwise stick forever.
       _clearPending();
       showErrorSnackBar(context, message);
+      return;
     }
+    AppLogging.sipPlay(
+      'move_send_ok instance=0x${state.instanceId.toRadixString(16)} '
+      'cell=$cell seq=${envelope.seq} bytes=${bytes.length}',
+    );
     // Success path: engine state will rebuild this widget; clearing
     // is handled in didUpdateWidget once the cell shows the target
     // mark.

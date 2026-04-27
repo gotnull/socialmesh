@@ -268,12 +268,15 @@ class _MorseBubbleBodyState extends ConsumerState<_MorseBubbleBody> {
               ),
             ),
             const Spacer(),
+            // No instrument chip on Morse bubbles — the receiver
+            // decodes the rhythm, not the timbre, so labelling the
+            // tone (Sine / Bell / etc.) is noise and was being read
+            // as a Morse-format detail. Phrase bubbles still surface
+            // it because the timbre is part of the musical content.
             Text(
               '${morse.speedWpm} WPM',
               style: TextStyle(fontSize: 11, color: context.textTertiary),
             ),
-            const SizedBox(width: AppTheme.spacing6),
-            _InstrumentChipReadout(instrument: morse.toneInstrument),
           ],
         ),
         const SizedBox(height: AppTheme.spacing6),

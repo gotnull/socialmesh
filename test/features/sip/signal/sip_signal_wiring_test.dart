@@ -139,10 +139,14 @@ void main() {
     });
 
     test('Signal body branch routes to SipSignalComposerPanel', () {
+      // Pin the construction site without freezing the exact arg
+      // tail — the panel takes additional optional callbacks (e.g.
+      // onSubModeChanged for the chat-jump wiring), so we assert the
+      // construction is wired with the session tag rather than a
+      // single fixed-shape literal.
       expect(
-        screenSrc.contains(
-          'SipSignalComposerPanel(sessionTag: widget.sessionTag)',
-        ),
+        screenSrc.contains('SipSignalComposerPanel(') &&
+            screenSrc.contains('sessionTag: widget.sessionTag'),
         isTrue,
         reason:
             'Signal mode must surface the dedicated composer panel — '

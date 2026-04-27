@@ -54,6 +54,7 @@ import '../../services/haptic_service.dart';
 import '../../services/protocol/sip/sip_dm.dart';
 import '../../services/protocol/sip/sip_ink_simplifier.dart';
 import '../../services/protocol/sip/sip_messages_dm.dart';
+import '../../services/protocol/sip/signal/sip_signal_codec.dart';
 import '../../services/protocol/text_message_payload_budget.dart';
 import '../../utils/snackbar.dart';
 
@@ -679,7 +680,19 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
   ) {
     final target = _findReplyTarget(replyEntry, history);
     if (target == null) return;
+    _jumpAndHighlightEntry(target, history);
+  }
 
+  /// Scroll the chat list so [target] is visible and pulse the
+  /// highlight halo on it for ~1.8 s. If the target's render object
+  /// is mounted we use `Scrollable.ensureVisible` directly; otherwise
+  /// we animate to an index-ratio approximation, then retry once the
+  /// real bubble is in the layout tree. Used by the reply-quote tap
+  /// path and by the composer chip jump-to-latest behaviour.
+  void _jumpAndHighlightEntry(
+    SipDmHistoryEntry target,
+    List<SipDmHistoryEntry> history,
+  ) {
     ref.read(hapticServiceProvider).trigger(HapticType.light);
 
     setState(() => _highlightedTimestampMs = target.timestampMs);
@@ -726,6 +739,29 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
         alignment: 0.3,
       );
     });
+  }
+
+  /// Single entry point for "find the latest entry matching this
+  /// predicate and bring it into view". All chip / sub-mode / banner
+  /// jump paths (sketch chip, signal chip, signal sub-mode toggle,
+  /// "Jump to game" banner) flow through here so the find→highlight
+  /// pipeline is defined exactly once.
+  ///
+  /// The predicate is supplied per-call so callers stay declarative:
+  ///   `_jumpToLatestWhere((e) => e.contentType == SipDmContentType.ink)`
+  ///
+  /// No-op when the session has no entries, no entries match, or the
+  /// DM manager isn't attached.
+  void _jumpToLatestWhere(bool Function(SipDmHistoryEntry entry) test) {
+    final dm = ref.read(sipDmManagerProvider);
+    final history = dm?.getHistory(widget.sessionTag);
+    if (history == null || history.isEmpty) return;
+    for (var i = history.length - 1; i >= 0; i--) {
+      if (test(history[i])) {
+        _jumpAndHighlightEntry(history[i], history);
+        return;
+      }
+    }
   }
 
   void _cancelReply() {
@@ -1038,6 +1074,16 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
                             return const _TypingIndicatorBubble();
                           }
                           final entry = history[index];
+                          // SIP Play bubbles own their own affordances
+                          // (Accept / Decline / Resign / cell taps) and
+                          // are not reaction / reply / delete targets.
+                          // Suppress the generic message-action sheet
+                          // for them — the actions don't apply, and
+                          // letting users delete a play entry leaves
+                          // the engine state log incoherent (later
+                          // entries reference the deleted offer).
+                          final suppressLongPress =
+                              entry.contentType == SipDmContentType.play;
                           return GestureDetector(
                             // GlobalObjectKey lets _onReplyQuoteTap find
                             // and ensureVisible this bubble even when
@@ -1049,7 +1095,9 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
                             // throws "Multiple widgets used the same
                             // GlobalKey" — see logs.txt regression.
                             key: GlobalObjectKey(entry),
-                            onLongPress: () => _showMessageMenu(entry),
+                            onLongPress: suppressLongPress
+                                ? null
+                                : () => _showMessageMenu(entry),
                             child: _MessageBubble(
                               entry: entry,
                               peerNodeId: session!.peerNodeId,
@@ -1221,6 +1269,27 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
                           _inputFocusNode.unfocus();
                         }
                       });
+                      // Reveal the latest bubble of the selected
+                      // medium so the chip tap both opens the
+                      // composer surface AND points at the running
+                      // conversation in that medium. Play has its
+                      // own dedicated "Jump to game" banner inside
+                      // the play composer panel, so the chip stays
+                      // a pure mode switch there. Text never lands
+                      // anywhere — the user has the typing cursor.
+                      switch (mode) {
+                        case _SipDmComposerMode.text:
+                        case _SipDmComposerMode.play:
+                          break;
+                        case _SipDmComposerMode.sketch:
+                          _jumpToLatestWhere(
+                            (e) => e.contentType == SipDmContentType.ink,
+                          );
+                        case _SipDmComposerMode.signal:
+                          _jumpToLatestWhere(
+                            (e) => e.contentType == SipDmContentType.signal,
+                          );
+                      }
                     },
                   ),
                 ),
@@ -1250,11 +1319,13 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
     );
   }
 
-  /// Scroll the message list to the latest SIP Play bubble. Best-
-  /// effort — the list scrolls to bottom, where the most recently
-  /// updated game bubble naturally lives.
+  /// Scroll the message list to the latest SIP Play bubble and
+  /// briefly pulse the highlight halo on it. Routes through the
+  /// shared [_jumpToLatestWhere] pipeline so the Play "Jump to game"
+  /// banner gets the same find→ensureVisible→highlight treatment
+  /// every other chip jump uses.
   void _jumpToLatestPlayBubble() {
-    _scrollToBottom(animate: true);
+    _jumpToLatestWhere((e) => e.contentType == SipDmContentType.play);
   }
 
   /// Build the composer body. Every currently-visible mode is kept
@@ -1325,7 +1396,20 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
           Visibility(
             visible: isSignal,
             maintainState: true,
-            child: SipSignalComposerPanel(sessionTag: widget.sessionTag),
+            child: SipSignalComposerPanel(
+              sessionTag: widget.sessionTag,
+              onSubModeChanged: (kind) {
+                _jumpToLatestWhere((e) {
+                  if (e.contentType != SipDmContentType.signal) return false;
+                  final payload = e.payload;
+                  if (payload == null || payload.isEmpty) return false;
+                  final result = SipSignalCodec.decode(
+                    Uint8List.fromList(payload),
+                  );
+                  return result.isOk && result.envelope!.kind == kind;
+                });
+              },
+            ),
           ),
       ],
     );
