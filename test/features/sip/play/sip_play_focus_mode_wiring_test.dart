@@ -73,17 +73,27 @@ void main() {
       expect(screenSrc.contains('_TicTacToeCard('), isTrue);
     });
 
-    test('hasActiveInstance is derived from the engine state — '
-        'isTerminal is the gate', () {
+    test('hasActiveInstance is derived from the engine state', () {
       // Pure-replay invariant: the panel does NOT maintain its own
       // "is there a game running" flag. It reads SipPlayInstanceState
-      // and checks isTerminal.
+      // off the provider and decides from `state.status`. The exact
+      // predicate has tightened over time — initially `!isTerminal`,
+      // now `status == active` so a pending offer (peer hasn't
+      // accepted yet) doesn't surface "Game in progress" — but the
+      // wiring contract is "engine state, not a UI flag", which the
+      // assertions below pin.
       expect(
-        screenSrc.contains('!state.isTerminal'),
+        screenSrc.contains('sipPlayInstanceStateProvider'),
+        isTrue,
+        reason: 'must read state from the provider',
+      );
+      expect(
+        screenSrc.contains('state.status == SipPlayInstanceStatus.active') ||
+            screenSrc.contains('!state.isTerminal'),
         isTrue,
         reason:
-            'active-instance detection must consult engine state, not '
-            'a local UI flag',
+            'active-instance gate must be expressed in terms of '
+            'engine status (active / non-terminal), not a local flag',
       );
     });
   });

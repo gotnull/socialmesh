@@ -182,6 +182,7 @@ class _PhraseBubbleBodyState extends ConsumerState<_PhraseBubbleBody> {
                 fontWeight: FontWeight.w600,
                 color: context.textTertiary,
                 letterSpacing: 0.6,
+                fontFamily: AppTheme.fontFamily,
               ),
             ),
             const Spacer(),
@@ -265,6 +266,7 @@ class _MorseBubbleBodyState extends ConsumerState<_MorseBubbleBody> {
                 fontWeight: FontWeight.w600,
                 color: context.textTertiary,
                 letterSpacing: 0.6,
+                fontFamily: AppTheme.fontFamily,
               ),
             ),
             const Spacer(),
@@ -275,7 +277,11 @@ class _MorseBubbleBodyState extends ConsumerState<_MorseBubbleBody> {
             // it because the timbre is part of the musical content.
             Text(
               '${morse.speedWpm} WPM',
-              style: TextStyle(fontSize: 11, color: context.textTertiary),
+              style: TextStyle(
+                fontSize: 11,
+                color: context.textTertiary,
+                fontFamily: AppTheme.fontFamily,
+              ),
             ),
           ],
         ),
@@ -343,6 +349,7 @@ class _InstrumentChipReadout extends StatelessWidget {
           fontSize: 11,
           fontWeight: FontWeight.w600,
           color: context.accentColor,
+          fontFamily: AppTheme.fontFamily,
         ),
       ),
     );
@@ -410,7 +417,11 @@ class _MalformedBubble extends StatelessWidget {
           Expanded(
             child: Text(
               l10n.sipSignalBubbleMalformed,
-              style: TextStyle(fontSize: 13, color: context.textSecondary),
+              style: TextStyle(
+                fontSize: 13,
+                color: context.textSecondary,
+                fontFamily: AppTheme.fontFamily,
+              ),
             ),
           ),
         ],

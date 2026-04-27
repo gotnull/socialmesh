@@ -57,12 +57,17 @@ void showSipPlayPicker({
               fontSize: 18,
               fontWeight: FontWeight.w600,
               color: context.textPrimary,
+              fontFamily: AppTheme.fontFamily,
             ),
           ),
           const SizedBox(height: AppTheme.spacing6),
           Text(
             l10n.sipPlayPickerSubtitle,
-            style: TextStyle(fontSize: 13, color: context.textSecondary),
+            style: TextStyle(
+              fontSize: 13,
+              color: context.textSecondary,
+              fontFamily: AppTheme.fontFamily,
+            ),
           ),
           const SizedBox(height: AppTheme.spacing16),
           for (final descriptor in SipPlayRegistry.games)
@@ -125,6 +130,7 @@ class _GameRow extends StatelessWidget {
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
                         color: context.textPrimary,
+                        fontFamily: AppTheme.fontFamily,
                       ),
                     ),
                     const SizedBox(height: AppTheme.spacing2),
@@ -133,6 +139,7 @@ class _GameRow extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 12,
                         color: context.textSecondary,
+                        fontFamily: AppTheme.fontFamily,
                       ),
                     ),
                   ],

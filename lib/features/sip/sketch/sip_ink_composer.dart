@@ -394,7 +394,11 @@ class _SipInkComposerState extends ConsumerState<SipInkComposer>
         children: [
           AnimatedDefaultTextStyle(
             duration: const Duration(milliseconds: 150),
-            style: TextStyle(fontSize: 11, color: hintColor),
+            style: TextStyle(
+              fontSize: 11,
+              color: hintColor,
+              fontFamily: AppTheme.fontFamily,
+            ),
             child: Text(hintText),
           ),
           const SizedBox(height: AppTheme.spacing8),
@@ -517,6 +521,7 @@ class _BudgetChip extends StatelessWidget {
               fontSize: 11,
               fontWeight: isOver ? FontWeight.w600 : FontWeight.w500,
               color: fg,
+              fontFamily: AppTheme.fontFamily,
             ),
           ),
         ],

@@ -26940,6 +26940,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mqttProxyDiagnosticsCopied => 'Diagnostics copied to clipboard';
 
   @override
+  String get mqttProxyBannerNotConnectedTitle => 'MQTT proxy not connected';
+
+  @override
+  String get mqttProxyBannerNotConnectedHint =>
+      'The app couldn\'t reach the broker. Check the diagnostics below for the last error.';
+
+  @override
   String get securityConfigTitle => 'Security';
 
   @override

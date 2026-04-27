@@ -57,11 +57,25 @@ class SipPlayBubble extends ConsumerWidget {
   /// further entries arrive.
   final Uint8List entryPayload;
 
+  /// Wall-clock timestamp (ms since epoch) of the offer entry that
+  /// produced this bubble. Surfaced on terminal cards (declined /
+  /// resigned / won / draw) so the user can see when the game ended.
+  final int entryTimestampMs;
+
+  /// Optional dismiss callback. When non-null the terminal-decline
+  /// card renders an explicit close (×) button on the right; tapping
+  /// it should remove the underlying offer entry from the session
+  /// history (the only general long-press menu is suppressed for
+  /// play bubbles, so terminal cards otherwise have no way out).
+  final VoidCallback? onDismiss;
+
   const SipPlayBubble({
     super.key,
     required this.sessionTag,
     required this.peerNodeId,
     required this.entryPayload,
+    required this.entryTimestampMs,
+    this.onDismiss,
   });
 
   @override
@@ -142,6 +156,8 @@ class SipPlayBubble extends ConsumerWidget {
         sessionTag: sessionTag,
         peerNodeId: peerNodeId,
         peerBlocked: isPeerBlocked,
+        entryTimestampMs: entryTimestampMs,
+        onDismiss: onDismiss,
       ),
     );
   }
@@ -152,12 +168,16 @@ class _DispatchBody extends ConsumerWidget {
   final int sessionTag;
   final int peerNodeId;
   final bool peerBlocked;
+  final int entryTimestampMs;
+  final VoidCallback? onDismiss;
 
   const _DispatchBody({
     required this.state,
     required this.sessionTag,
     required this.peerNodeId,
     required this.peerBlocked,
+    required this.entryTimestampMs,
+    required this.onDismiss,
   });
 
   @override
@@ -204,6 +224,8 @@ class _DispatchBody extends ConsumerWidget {
           state: state,
           sessionTag: sessionTag,
           peerBlocked: peerBlocked,
+          entryTimestampMs: entryTimestampMs,
+          onDismiss: onDismiss,
         );
     }
   }
@@ -266,12 +288,17 @@ class _OutgoingOfferRow extends StatelessWidget {
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: context.textPrimary,
+                  fontFamily: AppTheme.fontFamily,
                 ),
               ),
               const SizedBox(height: AppTheme.spacing2),
               Text(
                 l10n.sipPlayPickerSubtitle,
-                style: TextStyle(fontSize: 11, color: context.textTertiary),
+                style: TextStyle(
+                  fontSize: 11,
+                  color: context.textTertiary,
+                  fontFamily: AppTheme.fontFamily,
+                ),
               ),
             ],
           ),
@@ -338,6 +365,7 @@ class _IncomingOfferRowState extends ConsumerState<_IncomingOfferRow>
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: context.textPrimary,
+                  fontFamily: AppTheme.fontFamily,
                 ),
               ),
             ),
@@ -497,9 +525,13 @@ class _BoardSection extends ConsumerStatefulWidget {
   final SipPlayInstanceState state;
   final int sessionTag;
   final bool peerBlocked;
+  final int entryTimestampMs;
+  final VoidCallback? onDismiss;
   const _BoardSection({
     required this.state,
     required this.sessionTag,
+    required this.entryTimestampMs,
+    required this.onDismiss,
     required this.peerBlocked,
   });
 
@@ -609,6 +641,10 @@ class _BoardSectionState extends ConsumerState<_BoardSection>
     final canResign =
         state.status == SipPlayInstanceStatus.active && !widget.peerBlocked;
 
+    final isDeclined =
+        state.status == SipPlayInstanceStatus.declinedByLocal ||
+        state.status == SipPlayInstanceStatus.declinedByRemote;
+
     AppLogging.sipPlay(
       'BOARD_SECTION_BUILD instance=0x${state.instanceId.toRadixString(16)} '
       'boardEnabled=$boardEnabled '
@@ -635,6 +671,7 @@ class _BoardSectionState extends ConsumerState<_BoardSection>
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
                 color: context.textPrimary,
+                fontFamily: AppTheme.fontFamily,
               ),
             ),
             const SizedBox(width: AppTheme.spacing8),
@@ -654,6 +691,7 @@ class _BoardSectionState extends ConsumerState<_BoardSection>
                           state.status == SipPlayInstanceStatus.active
                       ? context.accentColor
                       : context.textSecondary,
+                  fontFamily: AppTheme.fontFamily,
                 ),
               ),
             ),
@@ -676,6 +714,25 @@ class _BoardSectionState extends ConsumerState<_BoardSection>
                   ),
                 ),
               ),
+            if (isDeclined && widget.onDismiss != null)
+              Padding(
+                padding: const EdgeInsets.only(left: AppTheme.spacing4),
+                child: SizedBox(
+                  width: 28,
+                  height: 28,
+                  child: IconButton(
+                    onPressed: widget.onDismiss,
+                    padding: EdgeInsets.zero,
+                    iconSize: 16,
+                    splashRadius: 18,
+                    tooltip: l10n.sipDmActionDelete,
+                    icon: Icon(
+                      Icons.close_rounded,
+                      color: context.textTertiary,
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
         // The header→board spacer renders only when the board itself
@@ -691,6 +748,21 @@ class _BoardSectionState extends ConsumerState<_BoardSection>
             enabled: boardEnabled,
             pendingMove: _pendingMove,
             onCellTap: _onCellTap,
+          ),
+        ],
+        if (isDeclined) ...[
+          const SizedBox(height: AppTheme.spacing4),
+          Text(
+            // Format with the user's locale + 24/12-hour preference,
+            // matching the style text bubbles use just below the body.
+            TimeOfDay.fromDateTime(
+              DateTime.fromMillisecondsSinceEpoch(widget.entryTimestampMs),
+            ).format(context),
+            style: TextStyle(
+              fontSize: 10,
+              color: context.textTertiary,
+              fontFamily: AppTheme.fontFamily,
+            ),
           ),
         ],
       ],
@@ -903,7 +975,11 @@ class _MalformedFallback extends StatelessWidget {
           Expanded(
             child: Text(
               l10n.sipPlayMalformedTitle,
-              style: TextStyle(fontSize: 13, color: context.textSecondary),
+              style: TextStyle(
+                fontSize: 13,
+                color: context.textSecondary,
+                fontFamily: AppTheme.fontFamily,
+              ),
             ),
           ),
         ],
@@ -938,12 +1014,17 @@ class _UnsupportedFallback extends StatelessWidget {
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                     color: context.textPrimary,
+                    fontFamily: AppTheme.fontFamily,
                   ),
                 ),
                 const SizedBox(height: AppTheme.spacing2),
                 Text(
                   l10n.sipPlayUnsupportedGameBody,
-                  style: TextStyle(fontSize: 12, color: context.textTertiary),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: context.textTertiary,
+                    fontFamily: AppTheme.fontFamily,
+                  ),
                 ),
               ],
             ),

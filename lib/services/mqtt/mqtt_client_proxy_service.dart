@@ -13,6 +13,7 @@ library;
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
 import 'package:typed_data/typed_data.dart' show Uint8Buffer;
@@ -115,6 +116,71 @@ class MqttProxyDiagnostics {
 }
 
 // ---------------------------------------------------------------------------
+// Connect args — used for idempotency checks (settled + in-flight)
+// ---------------------------------------------------------------------------
+
+/// Snapshot of the parameters used for a [MqttClientProxyService.connect]
+/// invocation. Used internally to short-circuit redundant connect calls
+/// when (a) the service is already settled with these exact args and the
+/// live socket agrees, or (b) an in-flight attempt with these exact args
+/// is already running.
+///
+/// The password is intentionally NOT part of equality — credentials must
+/// not influence reconnect decisions and must never be logged via the
+/// generated `toString`.
+class _ConnectArgs {
+  const _ConnectArgs({
+    required this.host,
+    required this.port,
+    required this.tlsEnabled,
+    required this.hasAuth,
+    required this.username,
+    required this.topicPrefix,
+    required this.shouldSubscribe,
+    required this.nodeUserId,
+  });
+
+  final String host;
+  final int port;
+  final bool tlsEnabled;
+  final bool hasAuth;
+  final String username;
+  final String topicPrefix;
+  final bool shouldSubscribe;
+  final String? nodeUserId;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is _ConnectArgs &&
+          other.host == host &&
+          other.port == port &&
+          other.tlsEnabled == tlsEnabled &&
+          other.hasAuth == hasAuth &&
+          other.username == username &&
+          other.topicPrefix == topicPrefix &&
+          other.shouldSubscribe == shouldSubscribe &&
+          other.nodeUserId == nodeUserId;
+
+  @override
+  int get hashCode => Object.hash(
+    host,
+    port,
+    tlsEnabled,
+    hasAuth,
+    username,
+    topicPrefix,
+    shouldSubscribe,
+    nodeUserId,
+  );
+
+  @override
+  String toString() =>
+      '_ConnectArgs(host: $host, port: $port, tls: $tlsEnabled, ' // lint-allow: hardcoded-string
+      'auth: $hasAuth, topic: $topicPrefix, sub: $shouldSubscribe)'; // lint-allow: hardcoded-string
+}
+
+// ---------------------------------------------------------------------------
 // Callback for sending ToRadio messages back to the device
 // ---------------------------------------------------------------------------
 
@@ -147,6 +213,20 @@ class MqttClientProxyService {
   Timer? _reconnectTimer;
   bool _disposed = false;
   bool _intentionalDisconnect = false;
+
+  // Idempotency state — see _ConnectArgs.
+  // _lastConnectArgs: the args of the currently settled connection.
+  // _pendingConnectArgs: the args of an in-flight connect attempt.
+  _ConnectArgs? _lastConnectArgs;
+  _ConnectArgs? _pendingConnectArgs;
+
+  // Test-only seam: lets unit tests simulate "live socket connected"
+  // without holding a real MqttServerClient. Always false in production.
+  bool _debugSimulateLiveSocket = false;
+
+  // Test observability: counts how many times connect() proceeded past
+  // the idempotency short-circuits and started actual destructive work.
+  int _debugConnectAttemptsStarted = 0;
 
   // Diagnostics state
   bool _isConnected = false;
@@ -191,6 +271,43 @@ class MqttClientProxyService {
   /// Whether the proxy is currently connected.
   bool get isConnected => _isConnected;
 
+  /// Test-only: number of times [connect] proceeded past idempotency
+  /// short-circuits and started actual reconnect work.
+  @visibleForTesting
+  int get debugConnectAttemptsStarted => _debugConnectAttemptsStarted;
+
+  /// Test-only: primes the service into a "settled connected" state
+  /// without holding a real [MqttServerClient]. Lets unit tests verify
+  /// that an immediately-following [connect] call with matching args
+  /// short-circuits as a no-op, without requiring a live broker.
+  @visibleForTesting
+  void debugMarkSettledForTest({
+    required String host,
+    required int port,
+    required bool tlsEnabled,
+    required String username,
+    required String topicPrefix,
+    required bool shouldSubscribe,
+    String? nodeUserId,
+  }) {
+    _isConnected = true;
+    _brokerHost = host;
+    _brokerPort = port;
+    _tlsEnabled = tlsEnabled;
+    _hasAuth = username.isNotEmpty;
+    _lastConnectArgs = _ConnectArgs(
+      host: host,
+      port: port,
+      tlsEnabled: tlsEnabled,
+      hasAuth: username.isNotEmpty,
+      username: username,
+      topicPrefix: topicPrefix,
+      shouldSubscribe: shouldSubscribe,
+      nodeUserId: nodeUserId,
+    );
+    _debugSimulateLiveSocket = true;
+  }
+
   /// Sets the callback for forwarding broker messages to the device.
   void setOnBrokerMessage(OnBrokerMessageFn fn) {
     _onBrokerMessage = fn;
@@ -215,16 +332,6 @@ class MqttClientProxyService {
     bool shouldSubscribe = false,
   }) async {
     if (_disposed) return;
-    if (_isConnecting) {
-      AppLogging.mqttProxy('Connect already in progress, ignoring duplicate');
-      return;
-    }
-    _isConnecting = true;
-    _intentionalDisconnect = false;
-
-    _lastConnectAttempt = DateTime.now();
-    _lastError = null;
-    _emitDiagnostics();
 
     // Parse host and port from address field.
     // Address may be "host:port" or just "host".
@@ -255,6 +362,60 @@ class MqttClientProxyService {
     if (useTls && !userSpecifiedPort && port == 1883) {
       port = 8883;
     }
+
+    final newArgs = _ConnectArgs(
+      host: host,
+      port: port,
+      tlsEnabled: useTls,
+      hasAuth: username.isNotEmpty,
+      username: username,
+      topicPrefix: topicPrefix,
+      shouldSubscribe: shouldSubscribe,
+      nodeUserId: nodeUserId,
+    );
+
+    // Settled idempotency: already connected with these exact args AND
+    // the live socket agrees. The third clause guards iOS background
+    // socket teardown where _isConnected may be stale `true`.
+    final liveSocketConnected =
+        _client?.connectionStatus?.state == MqttConnectionState.connected ||
+        _debugSimulateLiveSocket;
+    if (_isConnected && _lastConnectArgs == newArgs && liveSocketConnected) {
+      AppLogging.mqttProxy(
+        'connect: idempotent no-op (settled, args match $newArgs)',
+      );
+      _emitDiagnostics();
+      return;
+    }
+
+    // In-flight idempotency: an attempt with these exact args is already
+    // running. Coalesce — let the first attempt finish; do not start a
+    // duplicate destructive reconnect.
+    if (_isConnecting && _pendingConnectArgs == newArgs) {
+      AppLogging.mqttProxy(
+        'connect: in-flight attempt with same args; coalescing',
+      );
+      _emitDiagnostics();
+      return;
+    }
+
+    // Generic safety: an attempt with DIFFERENT args is already running.
+    // Reject duplicates while in-flight (preserves the original guard).
+    if (_isConnecting) {
+      AppLogging.mqttProxy(
+        'connect: already in progress (different args); ignoring',
+      );
+      return;
+    }
+
+    _isConnecting = true;
+    _pendingConnectArgs = newArgs;
+    _debugConnectAttemptsStarted++;
+    _intentionalDisconnect = false;
+
+    _lastConnectAttempt = DateTime.now();
+    _lastError = null;
+    _emitDiagnostics();
 
     _brokerHost = host;
     _brokerPort = port;
@@ -316,6 +477,7 @@ class MqttClientProxyService {
       if (status?.state == MqttConnectionState.connected) {
         AppLogging.mqttProxy('Connected to broker $host:$port');
         _isConnected = true;
+        _lastConnectArgs = newArgs;
         _lastConnectedAt = DateTime.now();
         _reconnectAttempts = 0;
         _lastError = null;
@@ -348,6 +510,7 @@ class MqttClientProxyService {
         AppLogging.mqttProxyError(errorMsg);
         _lastError = errorMsg;
         _isConnected = false;
+        _lastConnectArgs = null;
         await _disconnectClient();
         _emitDiagnostics();
       }
@@ -357,6 +520,7 @@ class MqttClientProxyService {
       AppLogging.mqttProxyError(errorMsg);
       _lastError = _sanitizeError(e.toString());
       _isConnected = false;
+      _lastConnectArgs = null;
       await _disconnectClient();
       _emitDiagnostics();
     } on SocketException catch (e) {
@@ -365,6 +529,7 @@ class MqttClientProxyService {
       AppLogging.mqttProxyError(errorMsg);
       _lastError = _sanitizeError(e.message);
       _isConnected = false;
+      _lastConnectArgs = null;
       await _disconnectClient();
       _emitDiagnostics();
     } on HandshakeException catch (e) {
@@ -373,6 +538,7 @@ class MqttClientProxyService {
       AppLogging.mqttProxyError(errorMsg);
       _lastError = _sanitizeError(e.message);
       _isConnected = false;
+      _lastConnectArgs = null;
       await _disconnectClient();
       _emitDiagnostics();
     } catch (e) {
@@ -381,10 +547,12 @@ class MqttClientProxyService {
       AppLogging.mqttProxyError(errorMsg);
       _lastError = _sanitizeError(e.toString());
       _isConnected = false;
+      _lastConnectArgs = null;
       await _disconnectClient();
       _emitDiagnostics();
     } finally {
       _isConnecting = false;
+      _pendingConnectArgs = null;
     }
   }
 
@@ -461,6 +629,8 @@ class MqttClientProxyService {
     _isConnected = false;
     _lastDisconnectedAt = DateTime.now();
     _subscribedTopic = null;
+    _lastConnectArgs = null;
+    _debugSimulateLiveSocket = false;
     AppLogging.mqttProxy('Disconnected from broker');
     _emitDiagnostics();
   }

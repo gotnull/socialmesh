@@ -47632,6 +47632,18 @@ abstract class AppLocalizations {
   /// **'Diagnostics copied to clipboard'**
   String get mqttProxyDiagnosticsCopied;
 
+  /// Status banner title when client proxy is enabled but the bridge is not connected to the broker
+  ///
+  /// In en, this message translates to:
+  /// **'MQTT proxy not connected'**
+  String get mqttProxyBannerNotConnectedTitle;
+
+  /// Status banner body shown when the client proxy bridge is not connected and there is no specific error to display
+  ///
+  /// In en, this message translates to:
+  /// **'The app couldn\'t reach the broker. Check the diagnostics below for the last error.'**
+  String get mqttProxyBannerNotConnectedHint;
+
   /// Screen or section title
   ///
   /// In en, this message translates to:

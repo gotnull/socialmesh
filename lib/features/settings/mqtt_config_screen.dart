@@ -197,6 +197,15 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
           ref
               .read(countdownProvider.notifier)
               .startDeviceRebootCountdown(reason: 'MQTT config saved');
+          // Belt-and-suspender: trigger an immediate proxy refresh in
+          // addition to the cache-emission path the auto-connect provider
+          // already listens to. Idempotent connect makes the duplicate a
+          // no-op when args match the in-flight or settled connection.
+          unawaited(
+            ref
+                .read(mqttClientProxyControllerProvider)
+                .refresh(reason: 'save-flow'),
+          );
         }
         safeNavigatorPop();
       }
@@ -615,8 +624,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                         },
                       ),
                     ),
-                    if (_proxyToClientEnabled &&
-                        ref.watch(adminModeEnabledProvider))
+                    if (_enabled || _proxyToClientEnabled)
                       _buildProxyDiagnostics(),
                     _SettingsTile(
                       icon: Icons.map_outlined,
@@ -652,10 +660,25 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
     final none = l10n.mqttProxyNoneLabel;
     final dateFmt = AppTimeFormat.withDatePrefix(context, 'd MMM,');
 
+    final showNotConnectedBanner = _proxyToClientEnabled && !diag.isConnected;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(height: AppTheme.spacing16),
+        if (showNotConnectedBanner)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: diag.lastError != null
+                ? StatusBanner.error(
+                    title: l10n.mqttProxyBannerNotConnectedTitle,
+                    subtitle: diag.lastError!,
+                  )
+                : StatusBanner.warning(
+                    title: l10n.mqttProxyBannerNotConnectedTitle,
+                    subtitle: l10n.mqttProxyBannerNotConnectedHint,
+                  ),
+          ),
         _SectionHeader(title: l10n.mqttProxySectionDiagnostics),
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),

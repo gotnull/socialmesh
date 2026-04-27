@@ -314,32 +314,54 @@ class _CellState extends State<_Cell> with TickerProviderStateMixin {
               child: AnimatedBuilder(
                 animation: Listenable.merge([_drawIn, widget.pulse]),
                 builder: (context, _) {
+                  // CustomPaint with no child takes Size.zero by default
+                  // and the parent Container's `alignment: center` hands
+                  // it loose constraints — without a SizedBox.expand the
+                  // painter renders at 0×0 and the X/O strokes are
+                  // invisible. Wrapping forces it to fill the cell's
+                  // padded inner box.
                   if (widget.isPending && widget.pendingMark != null) {
                     // Ghost overlay: same painter at reduced alpha,
                     // gently pulsing.
                     final pulseT = 0.6 + (widget.pulse.value * 0.4);
+                    AppLogging.sipPlay(
+                      'TTT_CELL_PAINT_PENDING idx=${widget.index} '
+                      'mark=${widget.pendingMark!.name} pulseT=$pulseT',
+                    );
                     return Semantics(
                       label: _semanticsLabel(
                         widget.pendingMark!,
                         pending: true,
                       ),
-                      child: CustomPaint(
-                        painter: _TttMarkPainter(
-                          mark: widget.pendingMark!,
-                          progress: 1.0,
-                          color: widget.accent.withValues(alpha: 0.5 * pulseT),
+                      child: SizedBox.expand(
+                        child: CustomPaint(
+                          painter: _TttMarkPainter(
+                            mark: widget.pendingMark!,
+                            progress: 1.0,
+                            color: widget.accent.withValues(
+                              alpha: 0.5 * pulseT,
+                            ),
+                          ),
                         ),
                       ),
                     );
                   }
                   if (mark == null) return const SizedBox.shrink();
+                  final progress = Curves.easeOutCubic.transform(_drawIn.value);
+                  AppLogging.sipPlay(
+                    'TTT_CELL_PAINT_MARK idx=${widget.index} '
+                    'mark=${mark.name} progress=${progress.toStringAsFixed(2)} '
+                    'drawIn=${_drawIn.value.toStringAsFixed(2)}',
+                  );
                   return Semantics(
                     label: _semanticsLabel(mark, pending: false),
-                    child: CustomPaint(
-                      painter: _TttMarkPainter(
-                        mark: mark,
-                        progress: Curves.easeOutCubic.transform(_drawIn.value),
-                        color: markColor,
+                    child: SizedBox.expand(
+                      child: CustomPaint(
+                        painter: _TttMarkPainter(
+                          mark: mark,
+                          progress: progress,
+                          color: markColor,
+                        ),
                       ),
                     ),
                   );

@@ -20487,6 +20487,14 @@
   "@mqttConfigSaved": {
     "description": "Text displayed in MQTT configuration"
   },
+  "mqttProxyBannerNotConnectedTitle": "Proxy MQTT não conectado",
+  "@mqttProxyBannerNotConnectedTitle": {
+    "description": "Status banner title when client proxy is enabled but the bridge is not connected to the broker"
+  },
+  "mqttProxyBannerNotConnectedHint": "O app não conseguiu acessar o broker. Verifique o diagnóstico abaixo para o último erro.",
+  "@mqttProxyBannerNotConnectedHint": {
+    "description": "Status banner body shown when the client proxy bridge is not connected and there is no specific error to display"
+  },
   "mqttConfigSectionAuth": "AUTENTICAÇÃO",
   "@mqttConfigSectionAuth": {
     "description": "Text displayed in MQTT configuration"

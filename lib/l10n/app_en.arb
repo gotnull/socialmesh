@@ -36516,6 +36516,14 @@
     "@mqttProxyDiagnosticsCopied": {
         "description": "Snackbar message after copying diagnostics"
     },
+    "mqttProxyBannerNotConnectedTitle": "MQTT proxy not connected",
+    "@mqttProxyBannerNotConnectedTitle": {
+        "description": "Status banner title when client proxy is enabled but the bridge is not connected to the broker"
+    },
+    "mqttProxyBannerNotConnectedHint": "The app couldn't reach the broker. Check the diagnostics below for the last error.",
+    "@mqttProxyBannerNotConnectedHint": {
+        "description": "Status banner body shown when the client proxy bridge is not connected and there is no specific error to display"
+    },
     "securityConfigTitle": "Security",
     "@securityConfigTitle": {
         "description": "Screen or section title"

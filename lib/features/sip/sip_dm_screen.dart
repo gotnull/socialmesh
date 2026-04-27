@@ -51,6 +51,7 @@ import '../../providers/sip_dm_secure_router.dart';
 import '../../providers/sip_play_providers.dart';
 import '../../providers/sip_providers.dart';
 import '../../services/haptic_service.dart';
+import '../../services/protocol/sip/play/sip_play_engine.dart';
 import '../../services/protocol/sip/sip_dm.dart';
 import '../../services/protocol/sip/sip_ink_simplifier.dart';
 import '../../services/protocol/sip/sip_messages_dm.dart';
@@ -646,26 +647,59 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
     final replyToText = replyEntry.replyToText;
     if (replyToText == null || replyToText.isEmpty) return null;
 
-    final inkPlaceholder = context.l10n.sipDmInkReplyPlaceholder;
-    final signalPlaceholder = context.l10n.sipDmSignalReplyPlaceholder;
-    final isInkReply = replyToText == inkPlaceholder;
-    final isSignalReply = replyToText == signalPlaceholder;
+    // Detect ink / signal replies by their emoji prefix rather than
+    // string-equality against the localised placeholder. The wire
+    // carries whatever locale the SENDER composed in (e.g. Italian
+    // "📡 Segnale"), but the READER might be in English ("📡 Signal").
+    // String-equality silently failed for cross-locale or mid-session
+    // locale changes; the emoji is the locale-stable signature.
+    const inkEmoji = '🎨';
+    const signalEmoji = '📡';
+    final isInkReply = replyToText.startsWith(inkEmoji);
+    final isSignalReply = replyToText.startsWith(signalEmoji);
     final probe = replyToText.endsWith('...')
         ? replyToText.substring(0, replyToText.length - 3)
         : replyToText;
 
+    AppLogging.sip(
+      'REPLY_QUOTE_LOOKUP replyIdx=$replyIdx '
+      'replyToText="$replyToText" isInk=$isInkReply isSignal=$isSignalReply',
+    );
+
     for (var i = replyIdx - 1; i >= 0; i--) {
       final candidate = history[i];
       if (isInkReply) {
-        if (candidate.contentType == SipDmContentType.ink) return candidate;
+        if (candidate.contentType == SipDmContentType.ink) {
+          AppLogging.sip(
+            'REPLY_QUOTE_MATCH kind=ink targetIdx=$i '
+            'targetTs=${candidate.timestampMs}',
+          );
+          return candidate;
+        }
       } else if (isSignalReply) {
-        if (candidate.contentType == SipDmContentType.signal) return candidate;
+        if (candidate.contentType == SipDmContentType.signal) {
+          AppLogging.sip(
+            'REPLY_QUOTE_MATCH kind=signal targetIdx=$i '
+            'targetTs=${candidate.timestampMs}',
+          );
+          return candidate;
+        }
       } else {
         if (candidate.contentType != SipDmContentType.text) continue;
         final body = SipDmManager.extractReplyBody(candidate.text);
-        if (probe.isNotEmpty && body.startsWith(probe)) return candidate;
+        if (probe.isNotEmpty && body.startsWith(probe)) {
+          AppLogging.sip(
+            'REPLY_QUOTE_MATCH kind=text targetIdx=$i '
+            'targetTs=${candidate.timestampMs}',
+          );
+          return candidate;
+        }
       }
     }
+    AppLogging.sip(
+      'REPLY_QUOTE_MISS replyToText="$replyToText" '
+      'isInk=$isInkReply isSignal=$isSignalReply',
+    );
     return null;
   }
 
@@ -1262,13 +1296,22 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
                         // Drafts are intentionally NOT cleared here:
                         // both _textController and _sketchDraft live
                         // on the State so switching tabs preserves
-                        // both compose surfaces. Only the keyboard
-                        // focus moves out of the text input when the
-                        // user leaves the Text tab.
-                        if (mode != _SipDmComposerMode.text) {
-                          _inputFocusNode.unfocus();
-                        }
+                        // both compose surfaces.
                       });
+                      // Keyboard focus tracks the active mode. The
+                      // request runs in a post-frame callback because
+                      // the text input is wrapped in a Visibility that
+                      // doesn't flip its `visible` flag until the
+                      // rebuild after this setState — calling
+                      // requestFocus inside setState lands on a still-
+                      // hidden widget and iOS silently drops it.
+                      if (mode == _SipDmComposerMode.text) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (mounted) _inputFocusNode.requestFocus();
+                        });
+                      } else {
+                        _inputFocusNode.unfocus();
+                      }
                       // Reveal the latest bubble of the selected
                       // medium so the chip tap both opens the
                       // composer surface AND points at the running
@@ -1535,13 +1578,18 @@ class _PlayComposerPanel extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     // Watch the play instance ids for this session so the
-    // "Game in progress" banner appears as soon as an offer lands.
+    // "Game in progress" banner reacts in real time. Banner shows
+    // ONLY when at least one instance is in the `active` state —
+    // a `pendingOffer` is not "in progress" yet (the peer hasn't
+    // accepted) and a "Jump to game" affordance there is misleading.
+    // Terminal instances (declined / resigned / won / draw) don't
+    // qualify either.
     final instanceIds = ref.watch(sipPlayInstanceIdsProvider(sessionTag));
     final hasActiveInstance = instanceIds.any((id) {
       final state = ref.read(
         sipPlayInstanceStateProvider((sessionTag: sessionTag, instanceId: id)),
       );
-      return state != null && !state.isTerminal;
+      return state != null && state.status == SipPlayInstanceStatus.active;
     });
 
     // Focus mode: when a non-terminal SIP Play instance exists in
@@ -1857,6 +1905,7 @@ class _ComposerModeSwitcher extends StatelessWidget {
               fontSize: 12,
               fontWeight: FontWeight.w600,
               color: isSelected ? context.accentColor : context.textSecondary,
+              fontFamily: AppTheme.fontFamily,
             ),
           ),
         ),
@@ -2112,11 +2161,19 @@ class _MessageBubble extends ConsumerWidget {
     if (isPlay) {
       // SIP Play bubble owns its own status / board / controls. It
       // skips the reactions row and reply-quote affordances — games
-      // are not reaction targets in v1.
+      // are not reaction targets in v1. Terminal-decline cards get
+      // an explicit dismiss button that removes the offer entry from
+      // session history; the instance-id provider is offer-gated, so
+      // dropping the offer effectively retires the whole instance
+      // from the timeline + Play tab.
       return SipPlayBubble(
         sessionTag: sessionTag,
         peerNodeId: peerNodeId,
         entryPayload: entry.payload!,
+        entryTimestampMs: entry.timestampMs,
+        onDismiss: () {
+          ref.read(sipDmManagerProvider)?.removeMessage(sessionTag, entry);
+        },
       );
     }
 
