@@ -11448,6 +11448,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get nodedexLastSeenStatLabel => 'Last Seen';
 
   @override
+  String get nodedexLastHeard => 'Last heard';
+
+  @override
   String nodedexLastSeenAtTime(String date, String time) {
     return '$date at $time';
   }

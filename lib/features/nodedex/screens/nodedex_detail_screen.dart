@@ -25,6 +25,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../utils/time_format.dart';
+import '../../../utils/timestamp_validation.dart';
 
 import '../../../providers/accessibility_providers.dart';
 
@@ -1340,6 +1341,20 @@ class _DiscoveryStatsCard extends StatelessWidget {
         ? context.l10n.nodedexKnownForOneDayAgo
         : context.l10n.nodedexKnownForDaysAgo(ageDays);
 
+    // Canonical "last received any packet" timestamp from the live
+    // MeshNode model. Distinct from `entry.lastSeen` which is the
+    // NodeDex encounter tracker's record of the last time presence
+    // transitioned to active — encounter only updates on transition,
+    // so it can lag the radio's last_heard by hours or days.
+    final liveLastHeard = node?.lastHeard;
+    final liveLastHeardLabel =
+        liveLastHeard != null && TimestampValidation.isPlausible(liveLastHeard)
+        ? context.l10n.nodedexLastSeenAtTime(
+            dateFormat.format(liveLastHeard),
+            timeFormat.format(liveLastHeard),
+          )
+        : null;
+
     return _CardContainer(
       title: context.l10n.nodedexDiscoveryTitle,
       icon: Icons.explore_outlined,
@@ -1351,6 +1366,12 @@ class _DiscoveryStatsCard extends StatelessWidget {
             value: firstSeen,
             icon: Icons.calendar_today_outlined,
           ),
+          if (liveLastHeardLabel != null)
+            _InfoRow(
+              label: context.l10n.nodedexLastHeard,
+              value: liveLastHeardLabel,
+              icon: Icons.access_time,
+            ),
           _InfoRow(
             label: context.l10n.nodedexLastSeen,
             value: context.l10n.nodedexLastSeenAtTime(lastSeen, lastSeenTime),

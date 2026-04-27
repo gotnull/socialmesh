@@ -20077,17 +20077,23 @@ abstract class AppLocalizations {
   /// **'last {relative}'**
   String nodedexLastRelative(String relative);
 
-  /// Text displayed in node management
+  /// NodeDex 'last presence-active encounter' label. Distinct from the device-level 'Last heard' (= time we last received any packet from the node) — encounter only updates when presence transitions to active, so it can lag the radio's last_heard by hours or days.
   ///
   /// In en, this message translates to:
-  /// **'Last Seen'**
+  /// **'Last encounter'**
   String get nodedexLastSeen;
 
-  /// Label in node management
+  /// NodeDex 'last presence-active encounter' label. See nodedexLastSeen for the disambiguation against 'Last heard'.
   ///
   /// In en, this message translates to:
-  /// **'Last Seen'**
+  /// **'Last encounter'**
   String get nodedexLastSeenStatLabel;
+
+  /// Canonical 'last received any packet' label, sourced from MeshNode.lastHeard. Used in NodeDex alongside the encounter label so the user can see both the radio-level signal and the encounter-level signal.
+  ///
+  /// In en, this message translates to:
+  /// **'Last heard'**
+  String get nodedexLastHeard;
 
   /// Text in node management Parameters: {date} = formatted date/time, {time} = formatted date/time.
   ///
@@ -20821,10 +20827,10 @@ abstract class AppLocalizations {
   /// **'First Discovered'**
   String get nodedexSortFirstDiscovered;
 
-  /// Text displayed in node management
+  /// NodeDex sort order — sorts by the encounter timestamp, not the radio last_heard.
   ///
   /// In en, this message translates to:
-  /// **'Last Seen'**
+  /// **'Last encounter'**
   String get nodedexSortLastSeen;
 
   /// Text displayed in node management

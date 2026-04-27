@@ -11446,10 +11446,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get nodedexLastSeen => 'Last Seen';
+  String get nodedexLastSeen => 'Last encounter';
 
   @override
-  String get nodedexLastSeenStatLabel => 'Last Seen';
+  String get nodedexLastSeenStatLabel => 'Last encounter';
+
+  @override
+  String get nodedexLastHeard => 'Last heard';
 
   @override
   String nodedexLastSeenAtTime(String date, String time) {
@@ -11883,7 +11886,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nodedexSortFirstDiscovered => 'First Discovered';
 
   @override
-  String get nodedexSortLastSeen => 'Last Seen';
+  String get nodedexSortLastSeen => 'Last encounter';
 
   @override
   String get nodedexSortLongestRange => 'Longest Range';

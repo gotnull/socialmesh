@@ -24191,7 +24191,8 @@
     },
     "description": "Text in node management Parameters: {relative}."
   },
-  "nodedexLastSeen": "Ultimo avvistamento",
+  "nodedexLastSeen": "Ultimo incontro",
+  "nodedexLastHeard": "Ultimo segnale",
   "@nodedexLastSeen": {
     "description": "Text displayed in node management"
   },
@@ -24207,7 +24208,7 @@
     },
     "description": "Text in node management Parameters: {date} = formatted date/time, {time} = formatted date/time."
   },
-  "nodedexLastSeenStatLabel": "Ultima visione",
+  "nodedexLastSeenStatLabel": "Ultimo incontro",
   "@nodedexLastSeenStatLabel": {
     "description": "Label in node management"
   },
@@ -24830,7 +24831,7 @@
   "@nodedexSortFirstDiscovered": {
     "description": "Text displayed in node management"
   },
-  "nodedexSortLastSeen": "Ultimo avvistamento",
+  "nodedexSortLastSeen": "Ultimo incontro",
   "@nodedexSortLastSeen": {
     "description": "Text displayed in node management"
   },

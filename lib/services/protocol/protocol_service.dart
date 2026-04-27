@@ -4364,12 +4364,22 @@ class ProtocolService {
       AppLogging.protocol('NodeInfo has no deviceMetrics');
     }
 
+    final existingNode = _nodes[nodeInfo.num];
+
     // Use the device's lastHeard timestamp when available.
     // NodeInfo.lastHeard is a uint32 Unix timestamp (seconds) recording
-    // when the DEVICE last received a packet from this node.  Using
+    // when the DEVICE last received a packet from this node. Using
     // DateTime.now() here would reset every node's "Last Heard" to the
-    // reconnection time, which is misleading.
-    final DateTime deviceLastHeard;
+    // reconnection time, which is misleading — the user sees "Seen 2m
+    // ago" + a 3-day-old absolute timestamp because presence ages from
+    // the fabricated "now" while the displayed timestamp is the same
+    // fabricated value (just rendered absolutely).
+    //
+    // When the firmware reports nothing or an implausible value, prefer
+    // the existing node's lastHeard (preserves what we already knew
+    // from a prior session) and otherwise leave it null so the UI can
+    // hide the row / show "Unknown".
+    final DateTime? deviceLastHeard;
     if (nodeInfo.hasLastHeard() && nodeInfo.lastHeard > 0) {
       final lastHeardEpoch = nodeInfo.lastHeard;
       final nowEpoch = DateTime.now().millisecondsSinceEpoch ~/ 1000;
@@ -4383,21 +4393,29 @@ class ProtocolService {
           '(${deviceLastHeard.toIso8601String()})',
         );
       } else {
-        deviceLastHeard = DateTime.now();
+        // Implausible firmware timestamp — fall back to whatever we
+        // already had, NOT to "now".
+        deviceLastHeard = existingNode?.lastHeard;
         final driftSeconds = lastHeardEpoch - nowEpoch;
         AppLogging.protocol(
           'NodeInfo ${nodeInfo.num}: implausible lastHeard=$lastHeardEpoch '
-          '(drift=${driftSeconds}s vs phone) — using phone time',
+          '(drift=${driftSeconds}s vs phone) — preserving prior '
+          '${deviceLastHeard?.toIso8601String() ?? 'null'}',
         );
       }
     } else {
-      deviceLastHeard = DateTime.now();
+      // No firmware lastHeard at all (e.g. the device has the node in
+      // its NodeDB from sync but never received a packet from it).
+      // Fabricating "now" here is what produced the field-bug where
+      // every freshly-imported node showed "Seen now" with the import
+      // time as its absolute timestamp. Preserve any existing value;
+      // otherwise leave it null.
+      deviceLastHeard = existingNode?.lastHeard;
       AppLogging.protocol(
-        'NodeInfo ${nodeInfo.num}: no device lastHeard, falling back to now',
+        'NodeInfo ${nodeInfo.num}: no device lastHeard — preserving prior '
+        '${deviceLastHeard?.toIso8601String() ?? 'null'}',
       );
     }
-
-    final existingNode = _nodes[nodeInfo.num];
 
     // Generate consistent color from node number
     final colors = [
