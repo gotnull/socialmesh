@@ -451,10 +451,34 @@ class _TttMarkPainter extends CustomPainter {
 
     final t1 = (t * 2).clamp(0.0, 1.0);
     final t2 = ((t - 0.5) * 2).clamp(0.0, 1.0);
-    canvas.drawLine(start1, Offset.lerp(start1, end1, t1)!, paint);
+
+    // Composite both diagonals through a transient layer so the
+    // crossing point doesn't double-blend the stroke alpha. Two
+    // overlapping translucent strokes at alpha=0.85 would otherwise
+    // composite to ~0.978 alpha at the intersection — visibly darker
+    // than the surrounding strokes (the user spotted this on the
+    // peer's mark, where textPrimary @ 0.85 is the source). Inside
+    // the layer we draw at full opacity using the colour's RGB so
+    // overlapping pixels stay opaque (no compounding), then the
+    // layer composites onto the canvas exactly once at the original
+    // alpha. The composite paint's RGB is irrelevant under the
+    // default srcOver blend mode — only its alpha governs the
+    // layer's overall opacity.
+    final layerRect = Offset.zero & size;
+    final compositePaint = Paint()
+      ..color = Color.fromARGB((paint.color.a * 255).round(), 0, 0, 0);
+    canvas.saveLayer(layerRect, compositePaint);
+    final innerPaint = Paint()
+      ..color = paint.color.withAlpha(255)
+      ..strokeWidth = paint.strokeWidth
+      ..strokeCap = paint.strokeCap
+      ..strokeJoin = paint.strokeJoin
+      ..style = paint.style;
+    canvas.drawLine(start1, Offset.lerp(start1, end1, t1)!, innerPaint);
     if (t2 > 0) {
-      canvas.drawLine(start2, Offset.lerp(start2, end2, t2)!, paint);
+      canvas.drawLine(start2, Offset.lerp(start2, end2, t2)!, innerPaint);
     }
+    canvas.restore();
   }
 
   void _paintO(Canvas canvas, Size size, Paint paint, double t) {

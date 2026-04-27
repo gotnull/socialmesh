@@ -117,47 +117,59 @@ class _SipSignalComposerPanelState extends ConsumerState<SipSignalComposerPanel>
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppTheme.spacing16,
-        AppTheme.spacing12,
-        AppTheme.spacing16,
-        AppTheme.spacing12,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            l10n.sipSignalPanelTitle,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: context.textPrimary,
-              fontFamily: AppTheme.fontFamily,
+    // The panel sits in the Scaffold's `bottomNavigationBar` slot,
+    // which does not bound its height. On shorter Android screens the
+    // Morse keypad + sub-mode switcher + title push the panel past the
+    // remaining vertical room and the chat-body Column overflows by
+    // ~50 px. Cap at a fraction of the screen and scroll inside so the
+    // chat list always keeps a minimum slice; on tall iPhones the
+    // natural height stays under the cap and the panel renders
+    // identically.
+    final maxPanelHeight = MediaQuery.of(context).size.height * 0.6;
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxHeight: maxPanelHeight),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(
+          AppTheme.spacing16,
+          AppTheme.spacing12,
+          AppTheme.spacing16,
+          AppTheme.spacing12,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              l10n.sipSignalPanelTitle,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: context.textPrimary,
+                fontFamily: AppTheme.fontFamily,
+              ),
             ),
-          ),
-          const SizedBox(height: AppTheme.spacing4),
-          Text(
-            l10n.sipSignalPanelSubtitle,
-            style: TextStyle(
-              fontSize: 12,
-              color: context.textTertiary,
-              fontFamily: AppTheme.fontFamily,
+            const SizedBox(height: AppTheme.spacing4),
+            Text(
+              l10n.sipSignalPanelSubtitle,
+              style: TextStyle(
+                fontSize: 12,
+                color: context.textTertiary,
+                fontFamily: AppTheme.fontFamily,
+              ),
             ),
-          ),
-          const SizedBox(height: AppTheme.spacing12),
-          _buildSubModeSwitcher(context),
-          const SizedBox(height: AppTheme.spacing12),
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 180),
-            child: _subMode == _SignalSubMode.tone
-                ? _buildToneBody(context)
-                : _buildMorseBody(context),
-          ),
-          const SizedBox(height: AppTheme.spacing12),
-          _buildActionRow(context),
-        ],
+            const SizedBox(height: AppTheme.spacing12),
+            _buildSubModeSwitcher(context),
+            const SizedBox(height: AppTheme.spacing12),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 180),
+              child: _subMode == _SignalSubMode.tone
+                  ? _buildToneBody(context)
+                  : _buildMorseBody(context),
+            ),
+            const SizedBox(height: AppTheme.spacing12),
+            _buildActionRow(context),
+          ],
+        ),
       ),
     );
   }
