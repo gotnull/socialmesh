@@ -140,12 +140,24 @@ class _SipInkComposerState extends ConsumerState<SipInkComposer>
   /// Try to extend the committed prefix to include all of [_activeRaw].
   /// Updates [_committedBoundary] and the cached simplified state.
   ///
-  /// Only `budgetExceeded` / `tooManyStrokes` keep the boundary
-  /// pinned — those are the real overflow cases. Every other path
-  /// (candidate accepted, candidate dropped as too-short, or `empty`
-  /// because nothing survived the gesture-start window) advances the
-  /// boundary so [_isOverBudget] does not false-positive on the first
-  /// point of a fresh stroke.
+  /// Three outcomes:
+  /// 1. Candidate accepted — simplifier kept the in-progress stroke
+  ///    in its output. Advance the boundary; cache the sketch.
+  /// 2. Candidate dropped (typically a 1-point gesture-start that
+  ///    fails the simplifier's `minPointsPerStroke` check) but the
+  ///    simplifier otherwise succeeded — boundary stays put, sketch
+  ///    is cached. Crucially we do NOT advance the boundary here:
+  ///    the dropped candidate's points are NOT in the cached sketch,
+  ///    so claiming they're committed would let `_resimplifyCommitted`
+  ///    feed them back into the simplifier on the next over-budget
+  ///    frame, where they can fail and null out the sketch.
+  /// 3. Real failure (`budgetExceeded` / `tooManyStrokes`) — fire
+  ///    the medium-impact haptic once per stroke and re-derive the
+  ///    simplified state from completed-only strokes. The
+  ///    `_overflowHapticFiredThisStroke` flag is the single source of
+  ///    truth for "user crossed the budget on this stroke" — both the
+  ///    haptic and the red-state UI gate on it, so a candidate drop
+  ///    on the first frame can't falsely trip the red banner.
   void _evaluateActiveStroke() {
     final candidate = SipInkRawStroke(width: _strokeWidth, points: _activeRaw);
     final fullResult = SipInkSimplifier.simplify(
@@ -153,34 +165,40 @@ class _SipInkComposerState extends ConsumerState<SipInkComposer>
       canvasSize: _canvasSize,
     );
 
+    final expectedStrokeCount = widget.draft.length + 1;
+    final candidateAccepted =
+        fullResult.isOk &&
+        fullResult.sketch!.strokes.length == expectedStrokeCount;
+
+    if (candidateAccepted) {
+      _committedBoundary = _activeRaw.length - 1;
+      _simplifiedSketch = fullResult.sketch;
+      _encodedBytes = SipInkEncoder.encode(fullResult.sketch!).bytes;
+      return;
+    }
+
+    if (fullResult.isOk) {
+      // Candidate dropped (too short / degenerate). Boundary stays.
+      // Counters reflect the completed-only state.
+      _simplifiedSketch = fullResult.sketch;
+      _encodedBytes = SipInkEncoder.encode(fullResult.sketch!).bytes;
+      return;
+    }
+
     final error = fullResult.error;
     final isRealOverflow =
         error == SipInkSimplifyError.budgetExceeded ||
         error == SipInkSimplifyError.tooManyStrokes;
 
-    if (isRealOverflow) {
-      if (!_overflowHapticFiredThisStroke) {
-        _overflowHapticFiredThisStroke = true;
-        HapticFeedback.mediumImpact();
-        AppLogging.sipInk(
-          'overflow_started raw_points=${_activeRaw.length} '
-          'committed_boundary=$_committedBoundary error=${error?.name}',
-        );
-      }
-      _resimplifyCommitted();
-      return;
+    if (isRealOverflow && !_overflowHapticFiredThisStroke) {
+      _overflowHapticFiredThisStroke = true;
+      HapticFeedback.mediumImpact();
+      AppLogging.sipInk(
+        'overflow_started raw_points=${_activeRaw.length} '
+        'committed_boundary=$_committedBoundary error=${error?.name}',
+      );
     }
-
-    // Every active point fits the budget — advance the boundary even
-    // if the simplifier dropped the candidate as degenerate (`empty`
-    // error on a fresh sketch, or sub-`minPointsPerStroke` candidate).
-    _committedBoundary = _activeRaw.length - 1;
-    if (fullResult.isOk) {
-      _simplifiedSketch = fullResult.sketch;
-      _encodedBytes = SipInkEncoder.encode(fullResult.sketch!).bytes;
-    } else {
-      _resimplifyCommitted();
-    }
+    _resimplifyCommitted();
   }
 
   // ---------------------------------------------------------------
@@ -352,8 +370,17 @@ class _SipInkComposerState extends ConsumerState<SipInkComposer>
     return _activeRaw.sublist(start);
   }
 
+  /// True only when the simplifier has explicitly rejected the active
+  /// stroke for budget reasons on this gesture (`budgetExceeded` /
+  /// `tooManyStrokes` — see `_evaluateActiveStroke`). Tracking this
+  /// via the haptic flag avoids a false-positive that the geometric
+  /// `boundary < activeRaw.length - 1` predicate trips on the first
+  /// point of a fresh stroke: the simplifier needs at least
+  /// [SipInkConstants.minPointsPerStroke] before it can decide either
+  /// way, so during gesture-start the boundary lags behind activeRaw
+  /// purely by definition — that's not "over budget".
   bool get _isOverBudget =>
-      _committedBoundary < _activeRaw.length - 1 && _activeRaw.isNotEmpty;
+      _overflowHapticFiredThisStroke && _activeRaw.isNotEmpty;
 
   @override
   Widget build(BuildContext context) {
