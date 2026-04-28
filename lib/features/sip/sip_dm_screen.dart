@@ -1740,92 +1740,112 @@ class _GameOfferCardState extends State<_GameOfferCard> {
     // and hide the chevron + size badge so the user reads the card
     // as committed-but-pending. UX #1 — the prior tiny 18-pt spinner
     // inside the leading icon was easy to miss.
+    //
+    // The card uses `Ink` (not a plain `Container`) so the wrapping
+    // `InkWell` can render its tap ripple — `Container` is opaque
+    // and obscures the Material surface that ripples paint onto, so
+    // taps fire silently with no visual feedback. `Ink` is the
+    // purpose-built primitive: it draws the decoration as a Material
+    // surface that `InkWell` can ripple over. Without this, on iOS
+    // the user sees exactly nothing happen between tap-down and the
+    // network completion ~200 ms later.
+    final cardBody = Padding(
+      padding: const EdgeInsets.all(AppTheme.spacing12),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: context.accentColor.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(AppTheme.radius10),
+            ),
+            child: _sending
+                ? SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        context.accentColor,
+                      ),
+                    ),
+                  )
+                : Icon(icon, size: 20, color: context.accentColor),
+          ),
+          const SizedBox(width: AppTheme.spacing12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    // Title is Flexible so the size badge can't push
+                    // it off-screen on narrow devices (iPhone SE).
+                    Flexible(
+                      child: Text(
+                        _sending ? l10n.sipPlayPanelCardSending : title,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: context.textPrimary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (!_sending) ...[
+                      const SizedBox(width: AppTheme.spacing8),
+                      _SizeBadge(label: sizeBadge),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: AppTheme.spacing2),
+                Text(
+                  supporting,
+                  style: TextStyle(fontSize: 12, color: context.textSecondary),
+                ),
+              ],
+            ),
+          ),
+          if (!_sending)
+            Icon(Icons.chevron_right, size: 18, color: context.textTertiary),
+        ],
+      ),
+    );
     final card = AnimatedOpacity(
       opacity: _sending ? 0.5 : 1.0,
       duration: const Duration(milliseconds: 150),
-      child: Container(
-        padding: const EdgeInsets.all(AppTheme.spacing12),
-        decoration: BoxDecoration(
-          color: context.background.withValues(alpha: 0.6),
-          borderRadius: BorderRadius.circular(AppTheme.radius12),
-          border: Border.all(color: context.border.withValues(alpha: 0.5)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: context.accentColor.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(AppTheme.radius10),
-              ),
-              child: _sending
-                  ? SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          context.accentColor,
-                        ),
-                      ),
-                    )
-                  : Icon(icon, size: 20, color: context.accentColor),
-            ),
-            const SizedBox(width: AppTheme.spacing12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      // Title is Flexible so the size badge can't push
-                      // it off-screen on narrow devices (iPhone SE).
-                      Flexible(
-                        child: Text(
-                          _sending ? l10n.sipPlayPanelCardSending : title,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: context.textPrimary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (!_sending) ...[
-                        const SizedBox(width: AppTheme.spacing8),
-                        _SizeBadge(label: sizeBadge),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: AppTheme.spacing2),
-                  Text(
-                    supporting,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: context.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (!_sending)
-              Icon(Icons.chevron_right, size: 18, color: context.textTertiary),
-          ],
+      child: Material(
+        // Transparent so the parent compose-panel chrome shows
+        // through unchanged; Material is here purely so InkWell
+        // ripples have a surface to paint onto.
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+        child: Ink(
+          decoration: BoxDecoration(
+            color: context.background.withValues(alpha: 0.6),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
+            border: Border.all(color: context.border.withValues(alpha: 0.5)),
+          ),
+          child: InkWell(
+            onTap: _sending ? null : _handleTap,
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
+            // Explicit overlay states so the ripple is visible on
+            // dark backgrounds where the default theme ripple alpha
+            // is too low to read.
+            highlightColor: context.accentColor.withValues(alpha: 0.08),
+            splashColor: context.accentColor.withValues(alpha: 0.16),
+            child: cardBody,
+          ),
         ),
       ),
     );
-    // Disable the InkWell while sending so a stray second tap during
-    // the in-flight window doesn't fire a second offer.
-    return _sending
-        ? IgnorePointer(child: card)
-        : InkWell(
-            onTap: _handleTap,
-            borderRadius: BorderRadius.circular(AppTheme.radius12),
-            child: card,
-          );
+    // Disable pointer events while sending so a stray second tap
+    // during the in-flight window doesn't fire a second offer (the
+    // `onTap: null` above also disables it; this is defence-in-depth).
+    return _sending ? IgnorePointer(child: card) : card;
   }
 }
 

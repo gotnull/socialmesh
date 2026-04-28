@@ -43,6 +43,18 @@ abstract final class _Tuning {
 
   /// Slow pulse rate for the optimistic-pending ghost disc.
   static const Duration pendingPulse = Duration(milliseconds: 1400);
+
+  /// Top "lip" of plastic above the playable rows, expressed as a
+  /// fraction of one cell height. The lip is the region where a
+  /// freshly-tapped disc starts the drop animation: it's drawn
+  /// behind the board face with NO hole punched through it, so the
+  /// disc is fully invisible at the start of the drop and only
+  /// emerges once it enters the first hole below. Without this lip
+  /// the column starts directly at hole 0 and the disc can't ever
+  /// be "behind the board" at start — it always pokes into hole 0
+  /// from frame zero. 0.6 of a cell gives the disc room to sit
+  /// fully hidden plus a small reveal animation as it enters.
+  static const double lipFraction = 0.6;
 }
 
 class C4BoardWidget extends StatefulWidget {
@@ -117,7 +129,11 @@ class _C4BoardWidgetState extends State<C4BoardWidget>
       'moveCount=${widget.board.moveCount}',
     );
     return AspectRatio(
-      aspectRatio: C4Board.cols / C4Board.rows,
+      // Cols : (rows + lip) — the extra `lipFraction` of a row
+      // worth of vertical space at the top is the "drop slot"
+      // where a freshly-tapped disc starts its descent. Cells stay
+      // approximately square at the new ratio.
+      aspectRatio: C4Board.cols / (C4Board.rows + _Tuning.lipFraction),
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: context.background,
@@ -392,13 +408,23 @@ class _C4ColumnPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final cellHeight = size.height / C4Board.rows;
+    // Vertical layout: the column has a top "lip" of plastic above
+    // the playable rows. The disc starts its drop animation
+    // somewhere in the lip area (fully hidden by the board face),
+    // then descends into hole 0 and the rest of the column. Total
+    // height = (rows + lipFraction) cells.
+    final cellHeight = size.height / (C4Board.rows + _Tuning.lipFraction);
     final cellWidth = size.width;
+    final lipHeight = cellHeight * _Tuning.lipFraction;
     // Hole radius — what the user reads as the "disc size" once the
     // board face is overlaid. Same size as the disc itself; the
     // depth cue comes from the hole inner-shadow + the disc radial
     // gradient, not from a size mismatch.
     final holeRadius = (cellWidth.clamp(0.0, cellHeight) * 0.85) / 2;
+    // Convert a logical row index (0..rows-1) to its hole-centre y
+    // coordinate. Used by the painter, the drop animation, and the
+    // pending-overlay positioning.
+    double rowCentreY(int row) => lipHeight + (row + 0.5) * cellHeight;
 
     // 1. Shaft background. What shows through every hole when no
     //    disc is there. Drawn over the entire column so the drop
@@ -425,19 +451,20 @@ class _C4ColumnPainter extends CustomPainter {
 
       double cy;
       if (row == topSettledRow && dropProgress < 1.0) {
-        // Falling disc: start fully ABOVE the column so the disc
-        // is hidden behind the board face (or off-canvas) at frame
-        // zero, then descends through the holes. With `startY = 0`
-        // the disc's bottom half pokes into hole 0 immediately,
-        // making the drop look like a teleport rather than a fall.
-        // `-holeRadius` puts the disc's bottom edge exactly at the
-        // column's top edge initially; the board face hides any
-        // overshoot below that.
-        final finalY = (row + 0.5) * cellHeight;
-        final startY = -holeRadius;
+        // Falling disc: start the drop near the top of the column
+        // (inside the lip area, where the board face has NO hole),
+        // so the disc is fully hidden behind the plastic at frame
+        // zero. As the animation progresses, the disc descends
+        // through the lip and emerges only when it reaches hole 0.
+        // `holeRadius` as the start cy puts the disc fully inside
+        // the lip if `lipHeight >= 2*holeRadius` — when the lip is
+        // smaller, we still start the disc as high as it can go
+        // while staying inside the column bounds.
+        final finalY = rowCentreY(row);
+        final startY = holeRadius;
         cy = startY + (finalY - startY) * dropProgress;
       } else {
-        cy = (row + 0.5) * cellHeight;
+        cy = rowCentreY(row);
       }
       _paintDisc(
         canvas,
@@ -455,7 +482,7 @@ class _C4ColumnPainter extends CustomPainter {
     //    board face hides it.
     if (pendingDisc != null && pendingLandingRow != null) {
       final pulseT = 0.6 + (pulseValue * 0.4);
-      final cy = (pendingLandingRow! + 0.5) * cellHeight;
+      final cy = rowCentreY(pendingLandingRow!);
       _paintDisc(
         canvas,
         Offset(cellWidth / 2, cy),
@@ -479,7 +506,7 @@ class _C4ColumnPainter extends CustomPainter {
     final innerShadowRingRadius = holeRadius - innerShadowStroke / 2;
     if (innerShadowRingRadius > 0) {
       for (var row = 0; row < C4Board.rows; row += 1) {
-        final centre = Offset(cellWidth / 2, (row + 0.5) * cellHeight);
+        final centre = Offset(cellWidth / 2, rowCentreY(row));
         canvas.drawCircle(centre, innerShadowRingRadius, innerShadowPaint);
       }
     }
@@ -492,7 +519,7 @@ class _C4ColumnPainter extends CustomPainter {
     final boardFacePath = Path()..fillType = PathFillType.evenOdd;
     boardFacePath.addRect(Offset.zero & size);
     for (var row = 0; row < C4Board.rows; row += 1) {
-      final centre = Offset(cellWidth / 2, (row + 0.5) * cellHeight);
+      final centre = Offset(cellWidth / 2, rowCentreY(row));
       boardFacePath.addOval(
         Rect.fromCircle(center: centre, radius: holeRadius),
       );

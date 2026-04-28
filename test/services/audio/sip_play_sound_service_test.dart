@@ -59,14 +59,19 @@ void main() {
       );
     });
 
-    test('all four cues exist (full enum coverage)', () {
+    test('all five cues exist (full enum coverage)', () {
       // Defensive: pin every enum value name + count so a future
       // refactor that drops or renames a cue forces a test update.
-      expect(SipPlaySoundCue.values.length, equals(4));
+      // `consentRequested` was added so the user gets an audible
+      // cue when an inbound HS_HELLO surfaces the Accept / Decline
+      // prompt — distinct from `connectionSucceeded` (which fires
+      // *after* the handshake completes).
+      expect(SipPlaySoundCue.values.length, equals(5));
       expect(
         SipPlaySoundCue.values.map((c) => c.name).toSet(),
         equals({
           'gameStart',
+          'consentRequested',
           'connectionSucceeded',
           'connectionFailed',
           'rejectedDeclined',
