@@ -40,6 +40,9 @@ AGENTS.md
 /tools/
 /tool/l10n_audit.py
 
+# Local Rust experiments (cargo build artifacts) — not part of the app
+/tapo/
+
 # Firebase Hosting content (landing page, legal docs, admin tools)
 /web/
 /web-admin-redirect/
