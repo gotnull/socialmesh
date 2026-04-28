@@ -403,7 +403,13 @@ class _C4ColumnPainter extends CustomPainter {
     // 1. Shaft background. What shows through every hole when no
     //    disc is there. Drawn over the entire column so the drop
     //    animation has a continuous "behind the board" surface.
-    final shaftPaint = Paint()..color = cellBg;
+    //    Darken the shaft significantly relative to the board face
+    //    so the punched-out holes read as recessed cutouts — when
+    //    shaft and board face are the same colour the entire panel
+    //    looks flat and the disc appears to be "on" the surface
+    //    rather than visible through the holes.
+    final shaftPaint = Paint()
+      ..color = Color.alphaBlend(Colors.black.withValues(alpha: 0.45), cellBg);
     canvas.drawRect(Offset.zero & size, shaftPaint);
 
     // 2. Settled discs. The TOP-most settled row gets the drop
@@ -419,14 +425,16 @@ class _C4ColumnPainter extends CustomPainter {
 
       double cy;
       if (row == topSettledRow && dropProgress < 1.0) {
-        // Falling disc: animate from "half-out the top" down to
-        // its final row centre. Starting `cy` at 0 (the column's
-        // top edge) puts the disc's centre on that edge — top half
-        // sits above the column, bottom half pokes into the first
-        // hole. Looks like the disc was poised at the top, then
-        // released.
+        // Falling disc: start fully ABOVE the column so the disc
+        // is hidden behind the board face (or off-canvas) at frame
+        // zero, then descends through the holes. With `startY = 0`
+        // the disc's bottom half pokes into hole 0 immediately,
+        // making the drop look like a teleport rather than a fall.
+        // `-holeRadius` puts the disc's bottom edge exactly at the
+        // column's top edge initially; the board face hides any
+        // overshoot below that.
         final finalY = (row + 0.5) * cellHeight;
-        const startY = 0.0;
+        final startY = -holeRadius;
         cy = startY + (finalY - startY) * dropProgress;
       } else {
         cy = (row + 0.5) * cellHeight;
