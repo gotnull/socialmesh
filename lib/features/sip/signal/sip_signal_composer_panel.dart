@@ -125,60 +125,67 @@ class _SipSignalComposerPanelState extends ConsumerState<SipSignalComposerPanel>
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    // The panel sits in the Scaffold's `bottomNavigationBar` slot,
-    // which does not bound its height. On shorter Android screens the
-    // Morse keypad + sub-mode switcher + title push the panel past the
-    // remaining vertical room and the chat-body Column overflows by
-    // ~50 px. Cap at a fraction of the screen and scroll inside so the
-    // chat list always keeps a minimum slice; on tall iPhones the
-    // natural height stays under the cap and the panel renders
-    // identically.
-    final maxPanelHeight = MediaQuery.of(context).size.height * 0.6;
-    return ConstrainedBox(
-      constraints: BoxConstraints(maxHeight: maxPanelHeight),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(
-          AppTheme.spacing16,
-          AppTheme.spacing12,
-          AppTheme.spacing16,
-          AppTheme.spacing12,
+    // The panel now lives inside the rich-composer
+    // [DraggableScrollableSheet] (see `_RichComposerSheet`), which
+    // sizes its content area to whatever the user has dragged the
+    // sheet to. We FILL that area: tab body scrolls inside a
+    // [Flexible], action bar sticks to the bottom edge.
+    //
+    // The previous `ConstrainedBox(maxHeight: screen * 0.6)` was a
+    // relic from when the panel sat in the Scaffold's
+    // `bottomNavigationBar` slot. In the new sheet host that cap
+    // truncated the panel below the sheet's actual bottom edge — the
+    // sticky action row appeared mid-sheet with dead empty space
+    // below it. Removed.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.max,
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(
+              AppTheme.spacing16,
+              AppTheme.spacing12,
+              AppTheme.spacing16,
+              AppTheme.spacing12,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  l10n.sipSignalPanelTitle,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: context.textPrimary,
+                    fontFamily: AppTheme.fontFamily,
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spacing4),
+                Text(
+                  l10n.sipSignalPanelSubtitle,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: context.textTertiary,
+                    fontFamily: AppTheme.fontFamily,
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spacing12),
+                _buildSubModeSwitcher(context),
+                const SizedBox(height: AppTheme.spacing12),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 180),
+                  child: _subMode == _SignalSubMode.tone
+                      ? _buildToneBody(context)
+                      : _buildMorseBody(context),
+                ),
+              ],
+            ),
+          ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              l10n.sipSignalPanelTitle,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: context.textPrimary,
-                fontFamily: AppTheme.fontFamily,
-              ),
-            ),
-            const SizedBox(height: AppTheme.spacing4),
-            Text(
-              l10n.sipSignalPanelSubtitle,
-              style: TextStyle(
-                fontSize: 12,
-                color: context.textTertiary,
-                fontFamily: AppTheme.fontFamily,
-              ),
-            ),
-            const SizedBox(height: AppTheme.spacing12),
-            _buildSubModeSwitcher(context),
-            const SizedBox(height: AppTheme.spacing12),
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 180),
-              child: _subMode == _SignalSubMode.tone
-                  ? _buildToneBody(context)
-                  : _buildMorseBody(context),
-            ),
-            const SizedBox(height: AppTheme.spacing12),
-            _buildActionRow(context),
-          ],
-        ),
-      ),
+        _buildStickyActionBar(context),
+      ],
     );
   }
 
@@ -863,40 +870,66 @@ class _SipSignalComposerPanelState extends ConsumerState<SipSignalComposerPanel>
   // Actions
   // ---------------------------------------------------------------
 
-  Widget _buildActionRow(BuildContext context) {
+  /// Sticky bottom action bar — pinned to the bottom edge of the
+  /// compose panel so the user can always see and tap Clear / Preview
+  /// / Send regardless of how tall the inner body grows. Three full-
+  /// width tap targets, equal weight, with the live byte badge
+  /// stacked above on its own row so it doesn't compete for
+  /// horizontal space. A top divider separates the bar visually from
+  /// the scrollable body above.
+  Widget _buildStickyActionBar(BuildContext context) {
     final l10n = context.l10n;
     final bytes = _liveEncodedBytes();
     final canSend = _canSend();
     final hasContent = _hasDraftToClear();
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        // Live byte indicator — sits inline on the left so the row
-        // doesn't burn an extra line on a static label. Shrinks to zero
-        // width when the draft is empty.
-        Expanded(child: _SignalSizeBadge(bytes: bytes)),
-        const SizedBox(width: AppTheme.spacing8),
-        _IconActionButton(
-          tooltip: l10n.sipSignalActionClear,
-          icon: Icons.delete_outline,
-          onPressed: hasContent ? _onClear : null,
-          tone: _IconActionTone.destructive,
-        ),
-        const SizedBox(width: AppTheme.spacing8),
-        _IconActionButton(
-          tooltip: l10n.sipSignalActionPreview,
-          icon: Icons.play_arrow_rounded,
-          onPressed: canSend ? _onPreview : null,
-        ),
-        const SizedBox(width: AppTheme.spacing8),
-        _IconActionButton(
-          tooltip: l10n.sipSignalActionSend,
-          icon: Icons.send_rounded,
-          onPressed: (canSend && !_sending) ? _onSend : null,
-          tone: _IconActionTone.primary,
-          showProgress: _sending,
-        ),
-      ],
+    // No BoxDecoration — see SipInkComposer's sticky bar for the
+    // rationale (tinted bg + divider read as a stranded rectangle
+    // when the sheet is dragged). Plain padding only.
+    return Padding(
+      padding: const EdgeInsets.all(AppTheme.spacing4),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Byte indicator on its own row above the buttons. Stays
+          // visible across draft sizes; the buttons below get the
+          // full panel width.
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
+            child: _SignalSizeBadge(bytes: bytes),
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: _StickyActionButton(
+                  tooltip: l10n.sipSignalActionClear,
+                  icon: Icons.delete_outline,
+                  onPressed: hasContent ? _onClear : null,
+                  tone: _IconActionTone.destructive,
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing8),
+              Expanded(
+                child: _StickyActionButton(
+                  tooltip: l10n.sipSignalActionPreview,
+                  icon: Icons.play_arrow_rounded,
+                  onPressed: canSend ? _onPreview : null,
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing8),
+              Expanded(
+                child: _StickyActionButton(
+                  tooltip: l10n.sipSignalActionSend,
+                  icon: Icons.send_rounded,
+                  onPressed: (canSend && !_sending) ? _onSend : null,
+                  tone: _IconActionTone.primary,
+                  showProgress: _sending,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -1019,6 +1052,9 @@ class _SipSignalComposerPanelState extends ConsumerState<SipSignalComposerPanel>
     if (_sending) return;
     final l10n = context.l10n;
     final router = ref.read(sipDmRouterProvider);
+    // Capture navigator pre-await so we can dismiss the compose
+    // sheet on success without re-touching `context` afterwards.
+    final navigator = Navigator.of(context);
     ref.read(hapticServiceProvider).trigger(HapticType.medium);
 
     final bytes = _encodeDraft();
@@ -1053,6 +1089,9 @@ class _SipSignalComposerPanelState extends ConsumerState<SipSignalComposerPanel>
       _morseController.clear();
       _tapMorsePattern = '';
     });
+    // Auto-dismiss the compose sheet on success — matches the
+    // sketch + Play offer flows for consistent send-and-close UX.
+    navigator.maybePop();
   }
 
   // ---------------------------------------------------------------
@@ -1472,14 +1511,22 @@ class _SignalSizeBadge extends StatelessWidget {
 /// destructive vs primary via the tooltip alone.
 enum _IconActionTone { neutral, destructive, primary }
 
-class _IconActionButton extends StatelessWidget {
+/// Full-width sticky-bottom-bar action button. Used by
+/// [_buildStickyActionBar]; replaced the old fixed-44pt
+/// [_IconActionButton] when the action row was pulled out of the
+/// scrollable body and pinned to the bottom edge of the compose
+/// panel. Same tone palette, but fills its parent's width
+/// (via the wrapping [Expanded]) so three of these laid in a Row
+/// span the entire compose-panel width with equal weight. Height is
+/// fixed at 44 to match thumb-target guidance.
+class _StickyActionButton extends StatelessWidget {
   final IconData icon;
   final String tooltip;
   final VoidCallback? onPressed;
   final _IconActionTone tone;
   final bool showProgress;
 
-  const _IconActionButton({
+  const _StickyActionButton({
     required this.icon,
     required this.tooltip,
     required this.onPressed,
@@ -1507,7 +1554,6 @@ class _IconActionButton extends StatelessWidget {
     return Tooltip(
       message: tooltip,
       child: SizedBox(
-        width: 44,
         height: 44,
         child: Material(
           color: disabled ? bg.withValues(alpha: 0.4) : bg,
@@ -1536,7 +1582,7 @@ class _IconActionButton extends StatelessWidget {
                       )
                     : Icon(
                         icon,
-                        size: 20,
+                        size: 22,
                         color: disabled ? fg.withValues(alpha: 0.4) : fg,
                       ),
               ),

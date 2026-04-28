@@ -303,6 +303,12 @@ class _SipInkComposerState extends ConsumerState<SipInkComposer>
     final bytes = _encodedBytes;
     if (bytes == null || _sending) return;
 
+    // Capture the navigator BEFORE the await — needed to dismiss
+    // the compose sheet on success without tripping the
+    // `use_build_context_synchronously` lint or risking the context
+    // having been deactivated by the time the future resolves.
+    final navigator = Navigator.of(context);
+
     setState(() => _sending = true);
     AppLogging.sipInk(
       'composer_send_attempt tag=0x${widget.sessionTag.toRadixString(16)} '
@@ -334,6 +340,11 @@ class _SipInkComposerState extends ConsumerState<SipInkComposer>
     });
     widget.onDraftChanged();
     widget.onSent();
+    // Auto-dismiss the compose sheet on success — matches the
+    // SIP Play offer flow. `maybePop` is a no-op if the topmost
+    // route isn't the compose sheet, so this is safe to call
+    // unconditionally.
+    navigator.maybePop();
   }
 
   void _showSendError(SipDmRouterOutcome outcome) {
@@ -398,88 +409,187 @@ class _SipInkComposerState extends ConsumerState<SipInkComposer>
         ? errorColor.withValues(alpha: 0.9)
         : context.textTertiary;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppTheme.spacing16,
-        vertical: AppTheme.spacing8,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          AnimatedDefaultTextStyle(
-            duration: const Duration(milliseconds: 150),
-            style: TextStyle(
-              fontSize: 11,
-              color: hintColor,
-              fontFamily: AppTheme.fontFamily,
-            ),
-            child: Text(hintText),
-          ),
-          const SizedBox(height: AppTheme.spacing8),
-          Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 280, maxHeight: 280),
-              child: AspectRatio(
-                aspectRatio: 1,
-                child: SipInkCanvas(
-                  simplifiedSketch: _simplifiedSketch,
-                  activeOverflow: _activeOverflowSlice,
-                  isOverBudget: overBudget,
-                  enabled: widget.enabled && !_sending,
-                  strokeWidth: _strokeWidth,
-                  canvasSize: _canvasSize,
-                  onStrokeStart: _onStrokeStart,
-                  onStrokeUpdate: _onStrokeUpdate,
-                  onStrokeEnd: _onStrokeEnd,
+    // Body (scrollable) + sticky full-width action bar at the
+    // bottom — mirrors the Signal composer panel for consistency.
+    // Action bar pinned to the BOTTOM of the available area, body
+    // fills everything above. `Expanded` (not `Flexible`) so the
+    // body always fills its slot — `Flexible` would let the body
+    // shrink to its natural size, which leaves dead space between
+    // the canvas and the action row when the parent sheet is
+    // taller than the canvas needs.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.max,
+      children: [
+        Expanded(
+          // Centre the canvas in BOTH axes inside the available
+          // vertical slot. The body still scrolls if the parent sheet
+          // is dragged smaller than the canvas needs (`SingleChild
+          // ScrollView` outer), but `LayoutBuilder` + a
+          // `ConstrainedBox(minHeight: viewport)` lets the inner
+          // `Column` grow to the full viewport height when there's
+          // headroom — only then does `mainAxisAlignment.center`
+          // visually centre the hint + canvas as a group rather than
+          // hugging the top edge. This is the canonical Flutter
+          // recipe for "centre inside a scroll view".
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(
+                  AppTheme.spacing16,
+                  AppTheme.spacing8,
+                  AppTheme.spacing16,
+                  AppTheme.spacing8,
                 ),
-              ),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    // Subtract the vertical padding above so the
+                    // intrinsic Column matches the visible viewport
+                    // exactly — otherwise the centring would float
+                    // slightly off-axis by spacing16.
+                    minHeight: constraints.maxHeight - AppTheme.spacing8 * 2,
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      AnimatedDefaultTextStyle(
+                        duration: const Duration(milliseconds: 150),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: hintColor,
+                          fontFamily: AppTheme.fontFamily,
+                        ),
+                        child: Text(hintText, textAlign: TextAlign.center),
+                      ),
+                      const SizedBox(height: AppTheme.spacing8),
+                      Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(
+                            maxWidth: 280,
+                            maxHeight: 280,
+                          ),
+                          child: AspectRatio(
+                            aspectRatio: 1,
+                            child: SipInkCanvas(
+                              simplifiedSketch: _simplifiedSketch,
+                              activeOverflow: _activeOverflowSlice,
+                              isOverBudget: overBudget,
+                              enabled: widget.enabled && !_sending,
+                              strokeWidth: _strokeWidth,
+                              canvasSize: _canvasSize,
+                              onStrokeStart: _onStrokeStart,
+                              onStrokeUpdate: _onStrokeUpdate,
+                              onStrokeEnd: _onStrokeEnd,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        _buildStickyActionBar(
+          context: context,
+          pointCount: pointCount,
+          byteCount: byteCount,
+          overBudget: overBudget,
+          hasDraft: hasDraft,
+          canSend: canSend,
+        ),
+      ],
+    );
+  }
+
+  /// Sticky bottom action bar — pinned to the bottom of the compose
+  /// panel so Undo / Clear / Send are always reachable regardless of
+  /// the canvas / chip-row vertical footprint. Mirrors the Signal
+  /// composer's `_buildStickyActionBar` so the two composer modes
+  /// read in the same visual language.
+  Widget _buildStickyActionBar({
+    required BuildContext context,
+    required int pointCount,
+    required int byteCount,
+    required bool overBudget,
+    required bool hasDraft,
+    required bool canSend,
+  }) {
+    final l10n = context.l10n;
+    // No BoxDecoration — earlier we drew a tinted background +
+    // top-divider here to visually anchor the action row to the
+    // sheet's bottom edge. In a DraggableScrollableSheet the row
+    // moves with the sheet on drag, and the tinted rectangle reads
+    // as a stranded box rather than a fixed bar — uglier than just
+    // letting the buttons sit transparently on the sheet's own
+    // surface. Padding is symmetric and tight; the sheet's
+    // safe-area inset provides the visual gap below.
+    return Padding(
+      padding: const EdgeInsets.all(AppTheme.spacing4),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Budget chips (points + bytes) above the buttons.
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
+            child: Wrap(
+              spacing: AppTheme.spacing6,
+              runSpacing: AppTheme.spacing4,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                _BudgetChip(
+                  icon: Icons.gesture,
+                  label: l10n.sipInkPointBudget(
+                    pointCount,
+                    SipInkConstants.maxTotalPoints,
+                  ),
+                  isOver: overBudget,
+                ),
+                _BudgetChip(
+                  icon: Icons.data_usage,
+                  label: l10n.sipInkPayloadUsage(
+                    byteCount,
+                    SipInkConstants.maxPayloadBytes,
+                  ),
+                  isOver: overBudget,
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: AppTheme.spacing8),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
-                child: Wrap(
-                  spacing: AppTheme.spacing6,
-                  runSpacing: AppTheme.spacing4,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    _BudgetChip(
-                      icon: Icons.gesture,
-                      label: l10n.sipInkPointBudget(
-                        pointCount,
-                        SipInkConstants.maxTotalPoints,
-                      ),
-                      isOver: overBudget,
-                    ),
-                    _BudgetChip(
-                      icon: Icons.data_usage,
-                      label: l10n.sipInkPayloadUsage(
-                        byteCount,
-                        SipInkConstants.maxPayloadBytes,
-                      ),
-                      isOver: overBudget,
-                    ),
-                  ],
+                child: _StickyActionButton(
+                  icon: Icons.undo,
+                  tooltip: l10n.sipInkUndo,
+                  onPressed: hasDraft && !_sending ? _onUndo : null,
                 ),
               ),
-              _ToolbarButton(
-                icon: Icons.undo,
-                tooltip: l10n.sipInkUndo,
-                onTap: hasDraft && !_sending ? _onUndo : null,
-              ),
-              const SizedBox(width: AppTheme.spacing4),
-              _ToolbarButton(
-                icon: Icons.delete_outline,
-                tooltip: l10n.sipInkClear,
-                onTap: (hasDraft || _activeRaw.isNotEmpty) && !_sending
-                    ? _onClear
-                    : null,
+              const SizedBox(width: AppTheme.spacing8),
+              Expanded(
+                child: _StickyActionButton(
+                  icon: Icons.delete_outline,
+                  tooltip: l10n.sipInkClear,
+                  onPressed: (hasDraft || _activeRaw.isNotEmpty) && !_sending
+                      ? _onClear
+                      : null,
+                  tone: _StickyActionTone.destructive,
+                ),
               ),
               const SizedBox(width: AppTheme.spacing8),
-              _SendButton(onTap: canSend ? _onSend : null),
+              Expanded(
+                child: _StickyActionButton(
+                  icon: Icons.send_rounded,
+                  tooltip: l10n.sipInkSend,
+                  onPressed: canSend ? _onSend : null,
+                  tone: _StickyActionTone.primary,
+                  showProgress: _sending,
+                ),
+              ),
             ],
           ),
         ],
@@ -545,78 +655,91 @@ class _BudgetChip extends StatelessWidget {
   }
 }
 
-class _ToolbarButton extends StatelessWidget {
+/// Action-bar button tone — mirrors the Signal composer's
+/// `_IconActionTone` so the two composer panels render the same
+/// visual language (neutral / destructive / primary).
+enum _StickyActionTone { neutral, destructive, primary }
+
+/// Full-width sticky-bottom-bar action button — used by the sketch
+/// composer's bottom action row. Equivalent to the same-named widget
+/// in `sip_signal_composer_panel.dart`; both composers use the same
+/// shape so Sketch and Signal feel identical when the user taps
+/// between them. Each button fills its parent (via the wrapping
+/// [Expanded]) and is fixed at 44 pt height.
+class _StickyActionButton extends StatelessWidget {
   final IconData icon;
   final String tooltip;
-  final VoidCallback? onTap;
+  final VoidCallback? onPressed;
+  final _StickyActionTone tone;
+  final bool showProgress;
 
-  const _ToolbarButton({
+  const _StickyActionButton({
     required this.icon,
     required this.tooltip,
-    required this.onTap,
+    required this.onPressed,
+    this.tone = _StickyActionTone.neutral,
+    this.showProgress = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isEnabled = onTap != null;
+    final disabled = onPressed == null;
+    final accent = context.accentColor;
+    final (bg, border, fg) = switch (tone) {
+      _StickyActionTone.neutral => (
+        Colors.transparent,
+        context.border.withValues(alpha: 0.5),
+        context.textPrimary,
+      ),
+      _StickyActionTone.destructive => (
+        Colors.transparent,
+        AccentColors.red.withValues(alpha: 0.55),
+        AccentColors.red,
+      ),
+      _StickyActionTone.primary => (accent, accent, Colors.white),
+    };
     return Tooltip(
       message: tooltip,
-      child: GestureDetector(
-        onTap: isEnabled
-            ? () {
-                HapticFeedback.lightImpact();
-                onTap!();
-              }
-            : null,
-        child: Container(
-          width: 36,
-          height: 36,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: context.card.withValues(alpha: 0.6),
-            borderRadius: BorderRadius.circular(AppTheme.radius8),
-            border: Border.all(color: context.border.withValues(alpha: 0.5)),
+      child: SizedBox(
+        height: 44,
+        child: Material(
+          color: disabled ? bg.withValues(alpha: 0.4) : bg,
+          borderRadius: BorderRadius.circular(AppTheme.radius10),
+          child: InkWell(
+            onTap: onPressed == null
+                ? null
+                : () {
+                    HapticFeedback.lightImpact();
+                    onPressed!();
+                  },
+            borderRadius: BorderRadius.circular(AppTheme.radius10),
+            child: Ink(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(AppTheme.radius10),
+                border: Border.all(
+                  color: disabled ? border.withValues(alpha: 0.4) : border,
+                ),
+              ),
+              child: Center(
+                child: showProgress
+                    ? SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            disabled ? fg.withValues(alpha: 0.4) : fg,
+                          ),
+                        ),
+                      )
+                    : Icon(
+                        icon,
+                        size: 22,
+                        color: disabled ? fg.withValues(alpha: 0.4) : fg,
+                      ),
+              ),
+            ),
           ),
-          child: Icon(
-            icon,
-            size: 18,
-            color: isEnabled
-                ? context.textPrimary
-                : context.textTertiary.withValues(alpha: 0.4),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SendButton extends StatelessWidget {
-  final VoidCallback? onTap;
-  const _SendButton({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final accent = Theme.of(context).colorScheme.primary;
-    final enabled = onTap != null;
-    return GestureDetector(
-      onTap: enabled
-          ? () {
-              HapticFeedback.lightImpact();
-              onTap!();
-            }
-          : null,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        width: 48,
-        height: 48,
-        decoration: BoxDecoration(
-          color: enabled ? accent : accent.withValues(alpha: 0.3),
-          shape: BoxShape.circle,
-        ),
-        child: Icon(
-          Icons.send,
-          size: 20,
-          color: enabled ? Colors.white : Colors.white.withValues(alpha: 0.4),
         ),
       ),
     );

@@ -32821,6 +32821,15 @@ class AppLocalizationsIt extends AppLocalizations {
   String get sipDmSignalReplyPlaceholder => '📡 Segnale';
 
   @override
+  String get sipDmConversationPreviewPhrase => '🎵 Tono';
+
+  @override
+  String get sipDmConversationPreviewMorse => '📡 Morse';
+
+  @override
+  String get sipDmConversationPreviewGame => '🎮 Gioco';
+
+  @override
   String get sipSignalMorseHint =>
       'Type up to 40 characters. A–Z, 0–9, space, and . , ? ! / @ are supported.';
 
@@ -32863,6 +32872,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get sipInkUndo => 'Undo';
+
+  @override
+  String get sipInkSend => 'Send';
 
   @override
   String get sipDmInkReplyPlaceholder => '🎨 Sketch';

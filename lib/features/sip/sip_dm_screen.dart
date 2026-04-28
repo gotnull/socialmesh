@@ -1478,12 +1478,16 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
     try {
       await AppBottomSheet.showScrollable<void>(
         context: context,
-        // Tight initial — ~58% of screen height fits Sketch / Play
-        // exactly with no wasted slack below the action row. Signal's
-        // 3-octave pad grid is taller; the user drags up to 0.95 for
-        // it (drag-pill is right at the top of the sheet card).
-        initialChildSize: 0.58,
-        minChildSize: 0.4,
+        // 0.72 fits Sketch's 280×280 canvas + sticky action bar
+        // with no clipping at the bottom. Signal's piano grid is
+        // taller; the user drags up to 0.95 for it. Earlier 0.58
+        // chopped off the bottom of the canvas — the previous
+        // (scrolling) layout masked the issue because the user
+        // could scroll the sheet to see the cut-off region; the
+        // sticky-bar layout doesn't scroll the body to the
+        // viewport, so the canvas needs the height up-front.
+        initialChildSize: 0.72,
+        minChildSize: 0.5,
         maxChildSize: 0.95,
         title: context.l10n.sipDmComposerSheetTitle,
         builder: (controller) => _RichComposerSheet(
@@ -2075,17 +2079,35 @@ class _RichComposerSheetState extends ConsumerState<_RichComposerSheet> {
 
     final activeIndex = indices[_activeTab] ?? 0;
 
-    return SingleChildScrollView(
-      controller: widget.scrollController,
+    // Outer layout: tab selector pinned at the top, active composer
+    // body fills the remaining space. The body itself owns its own
+    // scrollable region + sticky bottom action bar (see
+    // SipInkComposer / SipSignalComposerPanel) so the action row
+    // stays visible at the sheet's bottom edge regardless of content
+    // size or sheet drag position.
+    //
+    // We DELIBERATELY don't wrap this in a SingleChildScrollView
+    // anymore — that previously turned the entire composer (tabs +
+    // body + action row) into one scrolling region, which dragged
+    // the "sticky" action row out of view as the user resized the
+    // bottom sheet. Each composer still attaches its inner scroll
+    // view to [widget.scrollController] so DraggableScrollableSheet's
+    // drag-to-resize still hands off naturally between sheet and
+    // body.
+    // Outer padding kept thin — vertical padding bottom=0 because
+    // the sticky action bar provides its own bottom inset. Removing
+    // the bottom-16 reclaims the height the sketch canvas was being
+    // clipped against.
+    return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppTheme.spacing16,
         0,
         AppTheme.spacing16,
-        AppTheme.spacing16,
+        0,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: MainAxisSize.max,
         children: [
           _RichComposerTabBar(
             activeTab: _activeTab,
@@ -2099,10 +2121,13 @@ class _RichComposerSheetState extends ConsumerState<_RichComposerSheet> {
           ),
           const SizedBox(height: AppTheme.spacing12),
           if (children.isNotEmpty)
-            IndexedStack(
-              alignment: Alignment.topCenter,
-              index: activeIndex,
-              children: children,
+            Expanded(
+              child: IndexedStack(
+                alignment: Alignment.topCenter,
+                sizing: StackFit.expand,
+                index: activeIndex,
+                children: children,
+              ),
             ),
         ],
       ),
@@ -2451,22 +2476,14 @@ class _MessageBubble extends ConsumerWidget {
       );
     }
 
-    if (isSignal) {
-      // SIP Signal bubble shows phrase or Morse + Replay. Skips
-      // reactions / reply quote affordances.
-      return Align(
-        alignment: isOutbound ? Alignment.centerRight : Alignment.centerLeft,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width * 0.78,
-          ),
-          child: SipSignalBubble(
-            entryPayload: entry.payload!,
-            isOutbound: isOutbound,
-          ),
-        ),
-      );
-    }
+    // SIP Signal bubbles fall through to the default branch below
+    // (handled alongside ink as a third bubble-content variant).
+    // Earlier they had a dedicated early-return that skipped the
+    // reaction row + reply-quote infrastructure — long-press still
+    // fired the action sheet, but any picked emoji had no widget
+    // to render against, so users saw nothing happen. Now signals
+    // share the same outer Column as text + ink, so reactions
+    // appear below the bubble like everywhere else.
 
     return Align(
       alignment: isOutbound ? Alignment.centerRight : Alignment.centerLeft,
@@ -2495,6 +2512,29 @@ class _MessageBubble extends ConsumerWidget {
                       isHighlighted: isHighlighted,
                       child: SipInkBubble(
                         payload: entry.payload!,
+                        isOutbound: isOutbound,
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spacing2),
+                    Text(
+                      _formatTime(context, entry.timestampMs),
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: context.textTertiary,
+                      ),
+                    ),
+                  ],
+                )
+              else if (isSignal)
+                Column(
+                  crossAxisAlignment: isOutbound
+                      ? CrossAxisAlignment.end
+                      : CrossAxisAlignment.start,
+                  children: [
+                    _HighlightHalo(
+                      isHighlighted: isHighlighted,
+                      child: SipSignalBubble(
+                        entryPayload: entry.payload!,
                         isOutbound: isOutbound,
                       ),
                     ),

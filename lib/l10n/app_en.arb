@@ -43570,6 +43570,18 @@
     "@sipDmSignalReplyPlaceholder": {
         "description": "Placeholder shown in the reply quote when replying to a SIP Signal entry. Mirrors how sketch replies use sipDmInkReplyPlaceholder — Signal envelopes carry no plaintext body to quote."
     },
+    "sipDmConversationPreviewPhrase": "🎵 Tone",
+    "@sipDmConversationPreviewPhrase": {
+        "description": "Conversation card preview line shown on the SIP Hub when the most recent DM entry is a SIP Signal phrase (musical tone). Replaces what would otherwise be an empty preview row because phrase entries carry no plaintext body."
+    },
+    "sipDmConversationPreviewMorse": "📡 Morse",
+    "@sipDmConversationPreviewMorse": {
+        "description": "Conversation card preview line shown on the SIP Hub when the most recent DM entry is a SIP Signal Morse message. Replaces the empty preview row because Morse entries carry no plaintext body."
+    },
+    "sipDmConversationPreviewGame": "🎮 Game",
+    "@sipDmConversationPreviewGame": {
+        "description": "Conversation card preview line shown on the SIP Hub when the most recent DM entry is a SIP Play envelope (Tic-Tac-Toe or Connect Four offer / move / accept / etc). Replaces the empty preview row because Play entries carry no plaintext body."
+    },
     "sipSignalMorseHint": "Type up to 40 characters. A–Z, 0–9, space, and . , ? ! / @ are supported.",
     "@sipSignalMorseHint": {
         "description": "Helper text below the Morse text input."
@@ -43637,6 +43649,10 @@
     "sipInkUndo": "Undo",
     "@sipInkUndo": {
         "description": "Button to remove the last stroke from the SIP Ink canvas."
+    },
+    "sipInkSend": "Send",
+    "@sipInkSend": {
+        "description": "Tooltip on the SIP Ink composer's Send button — fires when the user dispatches the encoded sketch as a DM_INK frame."
     },
     "sipDmInkReplyPlaceholder": "🎨 Sketch",
     "@sipDmInkReplyPlaceholder": {

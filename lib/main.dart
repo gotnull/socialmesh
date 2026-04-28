@@ -1473,11 +1473,21 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
           //   - inbound HS_HELLO consent banners (request),
           //   - declined-handshake state on the peer card (declined),
           //   - newly-discovered peers in the nearby section (found).
-          // Push the hub so any of those land in front of the user.
+          // Push the hub so any of those land in front of the user —
+          // unless the hub is ALREADY the topmost route, in which
+          // case a second push stacks a duplicate Handshake screen
+          // on top of the existing one (visible as two AppBars
+          // titled "Handshake" stacked) and tapping back lands the
+          // user back on the same screen they started on.
           // Consent is still a manual tap — never auto-accepted.
-          navigator.push(
-            MaterialPageRoute(builder: (_) => const SipHubScreen()),
-          );
+          if (!_topRouteIsSipHub(navigator)) {
+            navigator.push(
+              MaterialPageRoute(
+                builder: (_) => const SipHubScreen(),
+                settings: const RouteSettings(name: _kSipHubRouteName),
+              ),
+            );
+          }
           break;
 
         default:
@@ -1515,7 +1525,40 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
         'falling back to hub',
       );
     }
-    navigator.push(MaterialPageRoute(builder: (_) => const SipHubScreen()));
+    if (!_topRouteIsSipHub(navigator)) {
+      navigator.push(
+        MaterialPageRoute(
+          builder: (_) => const SipHubScreen(),
+          settings: const RouteSettings(name: _kSipHubRouteName),
+        ),
+      );
+    }
+  }
+
+  /// Route name used to identify a [SipHubScreen] in the navigator
+  /// stack. A named route lets [_topRouteIsSipHub] short-circuit
+  /// duplicate pushes when a notification tap arrives while the hub
+  /// is already on top — without it, a second push stacks an
+  /// identical Handshake screen and the user has to tap back twice
+  /// to return.
+  ///
+  /// Matches the `runtimeType.toString()` convention used by
+  /// `navigateFromDrawer` (see `main_shell.dart`) so that whether
+  /// the hub was reached via the drawer or pushed from a previous
+  /// notification, the same name is used.
+  static const String _kSipHubRouteName = 'SipHubScreen';
+
+  /// True if the topmost route on [navigator]'s stack is a
+  /// [SipHubScreen] (identified by the [_kSipHubRouteName] tag).
+  /// Uses `popUntil` with a stop-on-first-iteration predicate to
+  /// inspect the top route without modifying the stack.
+  bool _topRouteIsSipHub(NavigatorState navigator) {
+    var top = false;
+    navigator.popUntil((route) {
+      top = route.settings.name == _kSipHubRouteName;
+      return true; // stop iteration immediately, no actual pop
+    });
+    return top;
   }
 
   Future<void> _loadAccentColor() async {

@@ -46,6 +46,7 @@ import '../../services/protocol/sip/sip_types.dart';
 import '../../services/protocol/sip/sip_discovery.dart';
 import '../../services/protocol/sip/sip_dm.dart';
 import '../../services/protocol/sip/sip_handshake.dart';
+import '../../services/protocol/sip/signal/sip_signal_constants.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/animated_empty_state.dart';
 import '../../core/widgets/ico_help_system.dart';
@@ -1532,17 +1533,23 @@ class _ConversationTile extends ConsumerWidget {
           border: Border.all(color: context.border),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(AppTheme.spacing14),
+          padding: const EdgeInsets.all(AppTheme.spacing12),
           child: Row(
+            // Avatar top-aligned with the first text row, matching
+            // Nodes screen + NodeDex card convention. Default Row
+            // alignment is `center`, which floats the sigil halfway
+            // down the card and made the layout feel airy.
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Avatar with evolution
               _buildAvatar(context, entry, patinaResult, traitResult),
-              const SizedBox(width: AppTheme.spacing14),
+              const SizedBox(width: AppTheme.spacing12),
 
               // Name + last message + badges
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     // Name row with timestamp
                     Row(
@@ -1571,25 +1578,25 @@ class _ConversationTile extends ConsumerWidget {
                           ),
                       ],
                     ),
-                    const SizedBox(height: AppTheme.spacing4),
-
-                    // Last message preview or empty hint
-                    Text(
-                      lastMessage != null
-                          ? lastMessage.text
-                          : l10n.sipHubNoMessages,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: lastMessage != null
-                            ? context.textSecondary
-                            : context.textTertiary,
-                        fontStyle: lastMessage != null
-                            ? FontStyle.normal
-                            : FontStyle.italic,
+                    // Last message preview — only when there IS a
+                    // message. The italic "No messages yet" line was
+                    // adding a near-invisible row of vertical space
+                    // that made empty conversations look bloated;
+                    // dropping it tightens the card without losing
+                    // information (the Connected badge below already
+                    // signals the conversation exists).
+                    if (lastMessage != null) ...[
+                      const SizedBox(height: AppTheme.spacing4),
+                      Text(
+                        _previewForLastMessage(context, lastMessage),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: context.textSecondary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                    ],
                     const SizedBox(height: AppTheme.spacing6),
 
                     // Session badges row
@@ -1726,6 +1733,41 @@ class _ConversationTile extends ConsumerWidget {
         node?.displayName ??
         entry?.lastKnownName ??
         NodeDisplayNameResolver.defaultName(nodeId);
+  }
+
+  // Conversation card preview line. Text entries render their body
+  // verbatim; non-text entries (sketches, signal envelopes, play
+  // envelopes) carry no plaintext, so the bare `entry.text` was
+  // empty and produced a hollow row beneath the peer name. Substitute
+  // a localised emoji label per content type. For signal we peek the
+  // envelope's `signalKind` byte directly (offset 1) rather than
+  // running the full codec — the preview only needs a coarse label
+  // and we want to stay safe on truncated/malformed payloads.
+  static String _previewForLastMessage(
+    BuildContext context,
+    SipDmHistoryEntry entry,
+  ) {
+    final l10n = context.l10n;
+    switch (entry.contentType) {
+      case SipDmContentType.text:
+        return entry.text;
+      case SipDmContentType.ink:
+        return l10n.sipDmInkReplyPlaceholder;
+      case SipDmContentType.signal:
+        final payload = entry.payload;
+        if (payload != null && payload.length > 1) {
+          final kind = SipSignalKind.fromCode(payload[1]);
+          if (kind == SipSignalKind.phrase) {
+            return l10n.sipDmConversationPreviewPhrase;
+          }
+          if (kind == SipSignalKind.morse) {
+            return l10n.sipDmConversationPreviewMorse;
+          }
+        }
+        return l10n.sipDmSignalReplyPlaceholder;
+      case SipDmContentType.play:
+        return l10n.sipDmConversationPreviewGame;
+    }
   }
 }
 

@@ -57158,6 +57158,24 @@ abstract class AppLocalizations {
   /// **'📡 Signal'**
   String get sipDmSignalReplyPlaceholder;
 
+  /// Conversation card preview line shown on the SIP Hub when the most recent DM entry is a SIP Signal phrase (musical tone). Replaces what would otherwise be an empty preview row because phrase entries carry no plaintext body.
+  ///
+  /// In en, this message translates to:
+  /// **'🎵 Tone'**
+  String get sipDmConversationPreviewPhrase;
+
+  /// Conversation card preview line shown on the SIP Hub when the most recent DM entry is a SIP Signal Morse message. Replaces the empty preview row because Morse entries carry no plaintext body.
+  ///
+  /// In en, this message translates to:
+  /// **'📡 Morse'**
+  String get sipDmConversationPreviewMorse;
+
+  /// Conversation card preview line shown on the SIP Hub when the most recent DM entry is a SIP Play envelope (Tic-Tac-Toe or Connect Four offer / move / accept / etc). Replaces the empty preview row because Play entries carry no plaintext body.
+  ///
+  /// In en, this message translates to:
+  /// **'🎮 Game'**
+  String get sipDmConversationPreviewGame;
+
   /// Helper text below the Morse text input.
   ///
   /// In en, this message translates to:
@@ -57229,6 +57247,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Undo'**
   String get sipInkUndo;
+
+  /// Tooltip on the SIP Ink composer's Send button — fires when the user dispatches the encoded sketch as a DM_INK frame.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get sipInkSend;
 
   /// Quoted text shown when a user replies to a sketch — ink has no plaintext body, so this placeholder stands in for the quote in both the local reply indicator and the recipient's wire-encoded quote prefix.
   ///

@@ -286,15 +286,38 @@ class DeviceStatusButton extends ConsumerWidget {
 /// Helper to navigate from drawer items.
 /// Closes drawer first, then navigates after a brief delay to ensure
 /// the drawer close animation completes smoothly.
+///
+/// The pushed route is tagged with [routeName] (defaulting to
+/// `screen.runtimeType.toString()`). This lets push-from-notification
+/// handlers (in `main.dart`) detect when the destination screen is
+/// already on top of the stack and skip the duplicate push — without
+/// it, tapping a notification while the corresponding screen is
+/// already visible stacks an identical second copy on top, requiring
+/// two back taps to return to the previous context.
+///
+/// Callers wrapping [screen] in `RequiresConnectionGuard` (or any
+/// other guard widget) MUST pass [routeName] explicitly with the
+/// inner screen's type name, since the wrapped widget's runtimeType
+/// would otherwise come back as `'RequiresConnectionGuard'` and the
+/// notification dedupe would never match.
 @visibleForTesting
-void navigateFromDrawer(BuildContext context, Widget screen) {
+void navigateFromDrawer(
+  BuildContext context,
+  Widget screen, {
+  String? routeName,
+}) {
   Navigator.of(context).pop(); // Close drawer
   // Use post-frame callback to ensure drawer animation completes
   WidgetsBinding.instance.addPostFrameCallback((_) {
     if (context.mounted) {
-      Navigator.of(
-        context,
-      ).push(MaterialPageRoute<void>(builder: (_) => screen));
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => screen,
+          settings: RouteSettings(
+            name: routeName ?? screen.runtimeType.toString(),
+          ),
+        ),
+      );
     }
   });
 }
@@ -851,7 +874,16 @@ class _MainShellState extends ConsumerState<MainShell> {
                               final pushed = item.requiresConnection
                                   ? RequiresConnectionGuard(child: item.screen!)
                                   : item.screen!;
-                              navigateFromDrawer(context, pushed);
+                              // Pass the INNER screen's runtime type as
+                              // the route name so notification dedupe
+                              // (in `main.dart`) recognises the route
+                              // even though it's wrapped in
+                              // `RequiresConnectionGuard`.
+                              navigateFromDrawer(
+                                context,
+                                pushed,
+                                routeName: item.screen!.runtimeType.toString(),
+                              );
                             }
                           },
                   ),
