@@ -396,12 +396,16 @@ class _C4ColumnPainter extends CustomPainter {
 
       double cy;
       if (row == topSettledRow && dropProgress < 1.0) {
-        // Falling disc: animate from y above the column down to
-        // its final row centre.
+        // Falling disc: animate from "half-out the top" down to
+        // its final row centre. Starting `cy` at 0 (the column's
+        // top edge) puts the disc's centre on that edge — top half
+        // sits above the column, bottom half pokes into the first
+        // hole. Looks like the disc was poised at the top, then
+        // released. Starting fully above (cy = -cellHeight * 0.5)
+        // made the disc travel an extra row before becoming visible
+        // and felt off-pace.
         final finalY = (row + 0.5) * cellHeight;
-        // Start from y=0 (above the visible column) so the disc
-        // appears to drop in from outside.
-        final startY = -cellHeight * 0.5;
+        const startY = 0.0;
         cy = startY + (finalY - startY) * dropProgress;
       } else {
         cy = (row + 0.5) * cellHeight;

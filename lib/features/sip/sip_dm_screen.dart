@@ -109,6 +109,13 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
   /// from rapid taps.
   bool _composerSheetOpen = false;
 
+  /// Mirrors `_inputFocusNode.hasFocus` so the chat surface can react
+  /// to keyboard-up vs keyboard-down state. When true, a tap anywhere
+  /// in the chat list dismisses the keyboard AND is absorbed (so a
+  /// game cell or bubble sitting under the user's finger doesn't fire
+  /// on that same tap — first tap dismisses, second tap interacts).
+  bool _inputHasFocus = false;
+
   /// Timer to dismiss the typing indicator after the display duration.
   Timer? _typingDismissTimer;
 
@@ -137,12 +144,20 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
   static const double _atBottomThresholdPx = 120;
 
   /// Raise the keyboard on the inline text input. Used by the reply
-  /// flow and the tap-on-chat-surface affordance. Post-frame so the
-  /// focus request lands after any pending rebuild.
+  /// flow. Post-frame so the focus request lands after any pending
+  /// rebuild.
   void _focusTextInput() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _inputFocusNode.requestFocus();
     });
+  }
+
+  /// Focus listener that mirrors hasFocus into [_inputHasFocus] state
+  /// so the chat-surface dismiss-keyboard wrapper can react.
+  void _onInputFocusChanged() {
+    final hasFocus = _inputFocusNode.hasFocus;
+    if (hasFocus == _inputHasFocus) return;
+    if (mounted) setState(() => _inputHasFocus = hasFocus);
   }
 
   @override
@@ -151,6 +166,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
     WidgetsBinding.instance.addObserver(this);
     _messageController.addListener(_onTextChanged);
     _scrollController.addListener(_onScroll);
+    _inputFocusNode.addListener(_onInputFocusChanged);
 
     // Auto-focus the input field when entering the DM screen.
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -169,6 +185,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
     WidgetsBinding.instance.removeObserver(this);
     _messageController.removeListener(_onTextChanged);
     _scrollController.removeListener(_onScroll);
+    _inputFocusNode.removeListener(_onInputFocusChanged);
     _messageController.dispose();
     _scrollController.dispose();
     _inputFocusNode.dispose();
@@ -1095,79 +1112,96 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
             if (session != null)
               _FirstContactBanner(peerNodeId: session.peerNodeId),
             Expanded(
-              // Tapping the chat surface raises the keyboard on the
-              // text input — it's always inline now, so this is purely
-              // a "refocus the input if the keyboard was dismissed"
-              // affordance.
+              // Tap-to-dismiss-keyboard. Standard chat UX — when the
+              // text input is focused (keyboard up), tapping anywhere
+              // in the chat list dismisses the keyboard AND absorbs
+              // that first tap so a tic-tac-toe cell or bubble
+              // underneath the user's finger doesn't fire on the same
+              // gesture. The user has to tap again to interact with
+              // the bubble, which matches iOS / iMessage / WhatsApp.
               //
-              // `translucent` so the gesture fires on empty-space taps
-              // AND propagates through to bubble GestureDetectors for
-              // long-press.
+              // When the keyboard is down, the GestureDetector has no
+              // tap handler and AbsorbPointer is transparent, so child
+              // bubble gestures (cell taps, long-press, reply-quote
+              // taps) all flow through unimpeded.
               child: GestureDetector(
                 behavior: HitTestBehavior.translucent,
-                onTap: _focusTextInput,
-                child: Stack(
-                  children: [
-                    if (hasContent)
-                      ListView.builder(
-                        controller: _scrollController,
-                        padding: const EdgeInsets.all(AppTheme.spacing16),
-                        itemCount: history.length + (peerIsTyping ? 1 : 0),
-                        itemBuilder: (context, index) {
-                          if (index == history.length) {
-                            return const _TypingIndicatorBubble();
-                          }
-                          final entry = history[index];
-                          // SIP Play bubbles own their own affordances
-                          // (Accept / Decline / Resign / cell taps) and
-                          // are not reaction / reply / delete targets.
-                          // Suppress the generic message-action sheet
-                          // for them — the actions don't apply, and
-                          // letting users delete a play entry leaves
-                          // the engine state log incoherent (later
-                          // entries reference the deleted offer).
-                          final suppressLongPress =
-                              entry.contentType == SipDmContentType.play;
-                          return GestureDetector(
-                            // GlobalObjectKey lets _onReplyQuoteTap find
-                            // and ensureVisible this bubble even when
-                            // it's off-screen. Keyed on the entry
-                            // instance (identity) rather than
-                            // `entry.timestampMs` because two messages
-                            // sent in the same second collide on the
-                            // millisecond-rounded timestamp and Flutter
-                            // throws "Multiple widgets used the same
-                            // GlobalKey" — see logs.txt regression.
-                            key: GlobalObjectKey(entry),
-                            onLongPress: suppressLongPress
-                                ? null
-                                : () => _showMessageMenu(entry),
-                            child: _MessageBubble(
-                              entry: entry,
-                              peerNodeId: session!.peerNodeId,
-                              sessionTag: widget.sessionTag,
-                              isHighlighted:
-                                  entry.timestampMs == _highlightedTimestampMs,
-                              onReplyQuoteTap: entry.replyToText != null
-                                  ? () => _onReplyQuoteTap(entry, history)
-                                  : null,
-                            ),
-                          );
-                        },
-                      )
-                    else
-                      _buildEmptyState(context),
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: AppTheme.spacing12,
-                      child: JumpToLatestPill(
-                        visible: _showJumpToLatest,
-                        onTap: _jumpToLatest,
-                        label: l10n.sipDmJumpToLatest,
+                onTap: _inputHasFocus
+                    ? () => FocusScope.of(context).unfocus()
+                    : null,
+                child: AbsorbPointer(
+                  // Absorb child gestures (cell taps, bubble taps)
+                  // ONLY while focused — the parent GestureDetector
+                  // above eats the tap to dismiss the keyboard, and
+                  // AbsorbPointer makes sure the same tap doesn't also
+                  // route to the game cell underneath. When unfocused,
+                  // AbsorbPointer is transparent and all child
+                  // gestures fire normally.
+                  absorbing: _inputHasFocus,
+                  child: Stack(
+                    children: [
+                      if (hasContent)
+                        ListView.builder(
+                          controller: _scrollController,
+                          padding: const EdgeInsets.all(AppTheme.spacing16),
+                          itemCount: history.length + (peerIsTyping ? 1 : 0),
+                          itemBuilder: (context, index) {
+                            if (index == history.length) {
+                              return const _TypingIndicatorBubble();
+                            }
+                            final entry = history[index];
+                            // SIP Play bubbles own their own affordances
+                            // (Accept / Decline / Resign / cell taps) and
+                            // are not reaction / reply / delete targets.
+                            // Suppress the generic message-action sheet
+                            // for them — the actions don't apply, and
+                            // letting users delete a play entry leaves
+                            // the engine state log incoherent (later
+                            // entries reference the deleted offer).
+                            final suppressLongPress =
+                                entry.contentType == SipDmContentType.play;
+                            return GestureDetector(
+                              // GlobalObjectKey lets _onReplyQuoteTap find
+                              // and ensureVisible this bubble even when
+                              // it's off-screen. Keyed on the entry
+                              // instance (identity) rather than
+                              // `entry.timestampMs` because two messages
+                              // sent in the same second collide on the
+                              // millisecond-rounded timestamp and Flutter
+                              // throws "Multiple widgets used the same
+                              // GlobalKey" — see logs.txt regression.
+                              key: GlobalObjectKey(entry),
+                              onLongPress: suppressLongPress
+                                  ? null
+                                  : () => _showMessageMenu(entry),
+                              child: _MessageBubble(
+                                entry: entry,
+                                peerNodeId: session!.peerNodeId,
+                                sessionTag: widget.sessionTag,
+                                isHighlighted:
+                                    entry.timestampMs ==
+                                    _highlightedTimestampMs,
+                                onReplyQuoteTap: entry.replyToText != null
+                                    ? () => _onReplyQuoteTap(entry, history)
+                                    : null,
+                              ),
+                            );
+                          },
+                        )
+                      else
+                        _buildEmptyState(context),
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: AppTheme.spacing12,
+                        child: JumpToLatestPill(
+                          visible: _showJumpToLatest,
+                          onTap: _jumpToLatest,
+                          label: l10n.sipDmJumpToLatest,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -1633,15 +1667,47 @@ class _PlayComposerPanel extends ConsumerWidget {
 /// game-type → ARB switch so adding a new game means one ARB triple
 /// + one switch arm; the rest of the panel iterates the registry
 /// generically.
-class _GameOfferCard extends StatelessWidget {
+///
+/// Stateful so it can render a spinner over the leading icon while
+/// the offer envelope is in-flight through the router. Without that,
+/// the card showed no feedback at all between tap and the engine
+/// transitioning to pendingOffer (which collapses the picker into
+/// the "Game in progress" banner) — the user perceived a hang
+/// followed by a janky panel swap.
+class _GameOfferCard extends StatefulWidget {
   final SipPlayGameDescriptor descriptor;
-  final VoidCallback onTap;
+  final Future<void> Function() onTap;
   const _GameOfferCard({required this.descriptor, required this.onTap});
+
+  @override
+  State<_GameOfferCard> createState() => _GameOfferCardState();
+}
+
+class _GameOfferCardState extends State<_GameOfferCard> {
+  bool _sending = false;
+
+  Future<void> _handleTap() async {
+    if (_sending) return;
+    setState(() => _sending = true);
+    try {
+      await widget.onTap();
+    } finally {
+      // Card may have been unmounted in the success case (engine
+      // transitions to pendingOffer → panel collapses to the "Game
+      // in progress" banner). Guard the setState.
+      if (mounted) setState(() => _sending = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final (title, supporting, sizeBadge, icon) = switch (descriptor.gameType) {
+    final (
+      title,
+      supporting,
+      sizeBadge,
+      icon,
+    ) = switch (widget.descriptor.gameType) {
       SipPlayGameType.ticTacToe => (
         l10n.sipPlayGameTicTacToe,
         l10n.sipPlayPanelTttSupporting,
@@ -1656,12 +1722,12 @@ class _GameOfferCard extends StatelessWidget {
       ),
     };
     return InkWell(
-      onTap: onTap,
+      onTap: _sending ? null : _handleTap,
       borderRadius: BorderRadius.circular(AppTheme.radius12),
       child: Container(
         padding: const EdgeInsets.all(AppTheme.spacing12),
         decoration: BoxDecoration(
-          color: context.background.withValues(alpha: 0.6),
+          color: context.background.withValues(alpha: _sending ? 0.4 : 0.6),
           borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(color: context.border.withValues(alpha: 0.5)),
         ),
@@ -1675,7 +1741,18 @@ class _GameOfferCard extends StatelessWidget {
                 color: context.accentColor.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(AppTheme.radius10),
               ),
-              child: Icon(icon, size: 20, color: context.accentColor),
+              child: _sending
+                  ? SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          context.accentColor,
+                        ),
+                      ),
+                    )
+                  : Icon(icon, size: 20, color: context.accentColor),
             ),
             const SizedBox(width: AppTheme.spacing12),
             Expanded(

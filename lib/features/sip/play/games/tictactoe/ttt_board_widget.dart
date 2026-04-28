@@ -22,8 +22,6 @@
 ///     a subtle inset ring.
 library;
 
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -35,7 +33,10 @@ import '../../../../../services/protocol/sip/play/games/tictactoe/ttt_rules.dart
 /// Animation tuning for the board. Centralised so tests + manual QA
 /// can find every duration in one place.
 abstract final class _Tuning {
-  static const Duration drawIn = Duration(milliseconds: 180);
+  /// Mark "place" animation. Drives the scale-pop + fade-in + halo
+  /// flash. Long enough that the halo decay reads as a beat of
+  /// feedback, short enough that the mark feels snappy.
+  static const Duration drawIn = Duration(milliseconds: 320);
   static const Duration cellPress = Duration(milliseconds: 120);
   static const Duration pendingPulse = Duration(milliseconds: 1400);
 }
@@ -323,10 +324,6 @@ class _CellState extends State<_Cell> with TickerProviderStateMixin {
                     // Ghost overlay: same painter at reduced alpha,
                     // gently pulsing.
                     final pulseT = 0.6 + (widget.pulse.value * 0.4);
-                    AppLogging.sipPlay(
-                      'TTT_CELL_PAINT_PENDING idx=${widget.index} '
-                      'mark=${widget.pendingMark!.name} pulseT=$pulseT',
-                    );
                     return Semantics(
                       label: _semanticsLabel(
                         widget.pendingMark!,
@@ -336,7 +333,11 @@ class _CellState extends State<_Cell> with TickerProviderStateMixin {
                         child: CustomPaint(
                           painter: _TttMarkPainter(
                             mark: widget.pendingMark!,
-                            progress: 1.0,
+                            // t = 1.0 → static fully-formed ghost
+                            // (no scale-pop / no halo). The pulse
+                            // controller already drives the alpha
+                            // shimmer for the pending overlay.
+                            t: 1.0,
                             color: widget.accent.withValues(
                               alpha: 0.5 * pulseT,
                             ),
@@ -346,19 +347,16 @@ class _CellState extends State<_Cell> with TickerProviderStateMixin {
                     );
                   }
                   if (mark == null) return const SizedBox.shrink();
-                  final progress = Curves.easeOutCubic.transform(_drawIn.value);
-                  AppLogging.sipPlay(
-                    'TTT_CELL_PAINT_MARK idx=${widget.index} '
-                    'mark=${mark.name} progress=${progress.toStringAsFixed(2)} '
-                    'drawIn=${_drawIn.value.toStringAsFixed(2)}',
-                  );
+                  // Pass the raw 0..1 timeline — the painter owns the
+                  // scale / alpha / halo envelopes so the curves stay
+                  // co-located with the rendering.
                   return Semantics(
                     label: _semanticsLabel(mark, pending: false),
                     child: SizedBox.expand(
                       child: CustomPaint(
                         painter: _TttMarkPainter(
                           mark: mark,
-                          progress: progress,
+                          t: _drawIn.value,
                           color: markColor,
                         ),
                       ),
@@ -407,62 +405,96 @@ class _CellSurface extends StatelessWidget {
   }
 }
 
-/// Custom painter for X / O strokes. Rounded caps. Progress 0..1 ramps
-/// up the stroke length so the mark "draws in" rather than popping.
+/// Custom painter for X / O. Renders the mark fully-formed and uses
+/// `t` (0..1) to drive a scale-pop + fade-in plus a brief radial
+/// halo behind the mark. The halo peaks early (~25%) and decays out
+/// by `t = 1`, giving a single clean "placed" beat instead of the
+/// older per-frame stroke-lerp which felt mechanical and was costly
+/// (saveLayer was running on every animation tick).
+///
+/// Pass `t = 1.0` for a static rendered mark with no animation
+/// (used by the pending-overlay branch — the parent's pulse
+/// controller modulates alpha on the mark colour itself).
 class _TttMarkPainter extends CustomPainter {
   final TttMark mark;
-  final double progress;
+  final double t;
   final Color color;
 
-  _TttMarkPainter({
-    required this.mark,
-    required this.progress,
-    required this.color,
-  });
+  _TttMarkPainter({required this.mark, required this.t, required this.color});
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (progress <= 0) return;
-    final shorter = math.min(size.width, size.height);
-    final stroke = shorter * 0.16;
-    final paint = Paint()
-      ..color = color
+    if (t <= 0) return;
+
+    // ── Halo behind the mark ──
+    // Triangle envelope: rise 0..0.25 → peak → decay 0.25..1. Skipped
+    // when t == 1 (static state) so the pending overlay and any
+    // post-animation rebuild don't paint a phantom glow.
+    final centre = Offset(size.width / 2, size.height / 2);
+    if (t < 1.0) {
+      const peakAt = 0.25;
+      final haloAlpha = t < peakAt
+          ? (t / peakAt)
+          : ((1 - t) / (1 - peakAt)).clamp(0.0, 1.0);
+      if (haloAlpha > 0.01) {
+        final r = size.shortestSide * (0.32 + 0.18 * t);
+        final haloPaint = Paint()
+          ..shader = RadialGradient(
+            colors: [
+              color.withValues(alpha: 0.55 * haloAlpha),
+              color.withValues(alpha: 0.0),
+            ],
+          ).createShader(Rect.fromCircle(center: centre, radius: r));
+        canvas.drawCircle(centre, r, haloPaint);
+      }
+    }
+
+    // ── Scale-pop + fade for the mark ──
+    // Fade reaches full alpha at ~70% of t so the mark is solid by
+    // the time the halo has decayed; scale uses easeOutBack for a
+    // small overshoot ("pop"), then settles to 1.0.
+    final alpha = (t / 0.7).clamp(0.0, 1.0);
+    final scale = 0.6 + 0.4 * Curves.easeOutBack.transform(t.clamp(0.0, 1.0));
+
+    canvas.save();
+    canvas.translate(centre.dx, centre.dy);
+    canvas.scale(scale);
+    canvas.translate(-centre.dx, -centre.dy);
+
+    final stroke = size.shortestSide * 0.16;
+    final paintColor = color.withValues(alpha: alpha * color.a);
+    final markPaint = Paint()
+      ..color = paintColor
       ..strokeWidth = stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
       ..style = PaintingStyle.stroke;
 
     if (mark == TttMark.x) {
-      _paintX(canvas, size, paint, progress);
+      _paintX(canvas, size, markPaint);
     } else {
-      _paintO(canvas, size, paint, progress);
+      _paintO(canvas, size, markPaint);
     }
+
+    canvas.restore();
   }
 
-  void _paintX(Canvas canvas, Size size, Paint paint, double t) {
-    // Two diagonals. Animate first stroke for the first half of t,
-    // second stroke for the second half — gives a writing feel.
+  void _paintX(Canvas canvas, Size size, Paint paint) {
     final pad = size.shortestSide * 0.18;
     final start1 = Offset(pad, pad);
     final end1 = Offset(size.width - pad, size.height - pad);
     final start2 = Offset(size.width - pad, pad);
     final end2 = Offset(pad, size.height - pad);
 
-    final t1 = (t * 2).clamp(0.0, 1.0);
-    final t2 = ((t - 0.5) * 2).clamp(0.0, 1.0);
-
     // Composite both diagonals through a transient layer so the
     // crossing point doesn't double-blend the stroke alpha. Two
     // overlapping translucent strokes at alpha=0.85 would otherwise
     // composite to ~0.978 alpha at the intersection — visibly darker
-    // than the surrounding strokes (the user spotted this on the
-    // peer's mark, where textPrimary @ 0.85 is the source). Inside
-    // the layer we draw at full opacity using the colour's RGB so
-    // overlapping pixels stay opaque (no compounding), then the
-    // layer composites onto the canvas exactly once at the original
-    // alpha. The composite paint's RGB is irrelevant under the
-    // default srcOver blend mode — only its alpha governs the
-    // layer's overall opacity.
+    // than the surrounding strokes. Inside the layer we draw at full
+    // opacity, then the layer composites onto the canvas once at the
+    // original alpha. Cheap now that we're not lerp'ing endpoints
+    // per frame — saveLayer runs at most ~10 times across the whole
+    // animation instead of every frame.
     final layerRect = Offset.zero & size;
     final compositePaint = Paint()
       ..color = Color.fromARGB((paint.color.a * 255).round(), 0, 0, 0);
@@ -473,32 +505,22 @@ class _TttMarkPainter extends CustomPainter {
       ..strokeCap = paint.strokeCap
       ..strokeJoin = paint.strokeJoin
       ..style = paint.style;
-    canvas.drawLine(start1, Offset.lerp(start1, end1, t1)!, innerPaint);
-    if (t2 > 0) {
-      canvas.drawLine(start2, Offset.lerp(start2, end2, t2)!, innerPaint);
-    }
+    canvas.drawLine(start1, end1, innerPaint);
+    canvas.drawLine(start2, end2, innerPaint);
     canvas.restore();
   }
 
-  void _paintO(Canvas canvas, Size size, Paint paint, double t) {
+  void _paintO(Canvas canvas, Size size, Paint paint) {
     final pad = size.shortestSide * 0.18;
     final rect = Rect.fromLTRB(pad, pad, size.width - pad, size.height - pad);
     final centre = rect.center;
     final radius = rect.shortestSide / 2;
-    // Sweep starts from top (-pi/2) and goes clockwise.
-    final sweep = 2 * math.pi * t;
-    final path = Path()
-      ..addArc(
-        Rect.fromCircle(center: centre, radius: radius),
-        -math.pi / 2,
-        sweep,
-      );
-    canvas.drawPath(path, paint);
+    canvas.drawCircle(centre, radius, paint);
   }
 
   @override
   bool shouldRepaint(covariant _TttMarkPainter old) {
-    return old.mark != mark || old.progress != progress || old.color != color;
+    return old.mark != mark || old.t != t || old.color != color;
   }
 }
 

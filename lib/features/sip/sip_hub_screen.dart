@@ -873,10 +873,15 @@ class _IncomingRequestTile extends ConsumerWidget {
                     },
                     icon: const Icon(Icons.close, size: 16),
                     label: Text(l10n.sipHubDecline),
+                    // Decline = mild "not this time" (handshake state
+                    // resets, peer can retry later). Orange to read
+                    // as "caution" rather than "danger" so it doesn't
+                    // collide visually with Block. The three buttons
+                    // form a green → orange → red severity ladder.
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: AccentColors.red,
+                      foregroundColor: AccentColors.orange,
                       side: BorderSide(
-                        color: AccentColors.red.withValues(alpha: 0.6),
+                        color: AccentColors.orange.withValues(alpha: 0.6),
                       ),
                       minimumSize: const Size.fromHeight(36),
                       padding: const EdgeInsets.symmetric(
@@ -891,10 +896,16 @@ class _IncomingRequestTile extends ConsumerWidget {
                     onPressed: () => _onBlock(context, ref),
                     icon: const Icon(Icons.block, size: 16),
                     label: Text(l10n.sipHubBlock),
+                    // Block = hard "never again" (T+S locks outbound,
+                    // suppresses future inbound consent). Keeps red
+                    // as the strongest severity signal in the trio.
+                    // Was previously SemanticColors.error which is
+                    // the same hex as AccentColors.red — same colour
+                    // as Decline, indistinguishable.
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: SemanticColors.error,
+                      foregroundColor: AccentColors.red,
                       side: BorderSide(
-                        color: SemanticColors.error.withValues(alpha: 0.6),
+                        color: AccentColors.red.withValues(alpha: 0.6),
                       ),
                       minimumSize: const Size.fromHeight(36),
                       padding: const EdgeInsets.symmetric(
