@@ -2773,42 +2773,54 @@
     "@automationImportElseActions": {
         "description": "Label for ELSE actions in import preview",
         "placeholders": {
-            "count": { "type": "int" }
+            "count": {
+                "type": "int"
+            }
         }
     },
     "automationImportThenActions": "THEN Actions ({count})",
     "@automationImportThenActions": {
         "description": "Label for THEN actions in import preview",
         "placeholders": {
-            "count": { "type": "int" }
+            "count": {
+                "type": "int"
+            }
         }
     },
     "automationSummaryElse": "else {actions}",
     "@automationSummaryElse": {
         "description": "Human-readable ELSE clause in automation summary",
         "placeholders": {
-            "actions": { "type": "String" }
+            "actions": {
+                "type": "String"
+            }
         }
     },
     "automationSummaryIf": "if {conditions}",
     "@automationSummaryIf": {
         "description": "Human-readable IF clause in automation summary",
         "placeholders": {
-            "conditions": { "type": "String" }
+            "conditions": {
+                "type": "String"
+            }
         }
     },
     "automationSummaryThen": "then {actions}",
     "@automationSummaryThen": {
         "description": "Human-readable THEN clause in automation summary",
         "placeholders": {
-            "actions": { "type": "String" }
+            "actions": {
+                "type": "String"
+            }
         }
     },
     "automationSummaryWhen": "When {trigger}",
     "@automationSummaryWhen": {
         "description": "Human-readable WHEN clause in automation summary",
         "placeholders": {
-            "trigger": { "type": "String" }
+            "trigger": {
+                "type": "String"
+            }
         }
     },
     "automationCardBranchThen": "THEN",
@@ -2823,29 +2835,39 @@
     "@automationCardConditionCount": {
         "description": "Condition count display in automation card",
         "placeholders": {
-            "count": { "type": "int" }
+            "count": {
+                "type": "int"
+            }
         }
     },
     "automationConditionConfigBatteryThreshold": "Battery threshold: {threshold}%",
     "@automationConditionConfigBatteryThreshold": {
         "description": "Battery threshold display in condition editor",
         "placeholders": {
-            "threshold": { "type": "int" }
+            "threshold": {
+                "type": "int"
+            }
         }
     },
     "automationConditionConfigDays": "Days: {days}",
     "@automationConditionConfigDays": {
         "description": "Days of week display in condition editor",
         "placeholders": {
-            "days": { "type": "String" }
+            "days": {
+                "type": "String"
+            }
         }
     },
     "automationConditionConfigTimeRange": "{start} – {end}",
     "@automationConditionConfigTimeRange": {
         "description": "Time range display in condition editor",
         "placeholders": {
-            "start": { "type": "String" },
-            "end": { "type": "String" }
+            "start": {
+                "type": "String"
+            },
+            "end": {
+                "type": "String"
+            }
         }
     },
     "automationEditorAddAction": "Add Action",
@@ -18855,6 +18877,174 @@
     "@regionSelectionRegionLora24Freq": {
         "description": "UI text: region selection region lora24 freq"
     },
+    "regionSelectionRegionPh433": "Philippines 433",
+    "@regionSelectionRegionPh433": {
+        "description": "UI text: region selection region Philippines 433MHz"
+    },
+    "regionSelectionRegionPh433Desc": "Philippines",
+    "@regionSelectionRegionPh433Desc": {
+        "description": "Description text"
+    },
+    "regionSelectionRegionPh433Freq": "433 MHz",
+    "@regionSelectionRegionPh433Freq": {
+        "description": "UI text: region selection region Philippines 433MHz freq"
+    },
+    "regionSelectionRegionPh868": "Philippines 868",
+    "@regionSelectionRegionPh868": {
+        "description": "UI text: region selection region Philippines 868MHz"
+    },
+    "regionSelectionRegionPh868Desc": "Philippines",
+    "@regionSelectionRegionPh868Desc": {
+        "description": "Description text"
+    },
+    "regionSelectionRegionPh868Freq": "868 MHz",
+    "@regionSelectionRegionPh868Freq": {
+        "description": "UI text: region selection region Philippines 868MHz freq"
+    },
+    "regionSelectionRegionPh915": "Philippines 915",
+    "@regionSelectionRegionPh915": {
+        "description": "UI text: region selection region Philippines 915MHz"
+    },
+    "regionSelectionRegionPh915Desc": "Philippines",
+    "@regionSelectionRegionPh915Desc": {
+        "description": "Description text"
+    },
+    "regionSelectionRegionPh915Freq": "915 MHz",
+    "@regionSelectionRegionPh915Freq": {
+        "description": "UI text: region selection region Philippines 915MHz freq"
+    },
+    "regionSelectionRegionAnz433": "ANZ 433",
+    "@regionSelectionRegionAnz433": {
+        "description": "UI text: region selection region Australia/New Zealand 433MHz"
+    },
+    "regionSelectionRegionAnz433Desc": "Australia, New Zealand",
+    "@regionSelectionRegionAnz433Desc": {
+        "description": "Description text"
+    },
+    "regionSelectionRegionAnz433Freq": "433 MHz",
+    "@regionSelectionRegionAnz433Freq": {
+        "description": "UI text: region selection region Australia/New Zealand 433MHz freq"
+    },
+    "regionSelectionRegionKz433": "Kazakhstan 433",
+    "@regionSelectionRegionKz433": {
+        "description": "UI text: region selection region Kazakhstan 433MHz"
+    },
+    "regionSelectionRegionKz433Desc": "Kazakhstan",
+    "@regionSelectionRegionKz433Desc": {
+        "description": "Description text"
+    },
+    "regionSelectionRegionKz433Freq": "433 MHz",
+    "@regionSelectionRegionKz433Freq": {
+        "description": "UI text: region selection region Kazakhstan 433MHz freq"
+    },
+    "regionSelectionRegionKz863": "Kazakhstan 863",
+    "@regionSelectionRegionKz863": {
+        "description": "UI text: region selection region Kazakhstan 863MHz"
+    },
+    "regionSelectionRegionKz863Desc": "Kazakhstan",
+    "@regionSelectionRegionKz863Desc": {
+        "description": "Description text"
+    },
+    "regionSelectionRegionKz863Freq": "863 MHz",
+    "@regionSelectionRegionKz863Freq": {
+        "description": "UI text: region selection region Kazakhstan 863MHz freq"
+    },
+    "regionSelectionRegionNp865": "Nepal 865",
+    "@regionSelectionRegionNp865": {
+        "description": "UI text: region selection region Nepal 865MHz"
+    },
+    "regionSelectionRegionNp865Desc": "Nepal",
+    "@regionSelectionRegionNp865Desc": {
+        "description": "Description text"
+    },
+    "regionSelectionRegionNp865Freq": "865 MHz",
+    "@regionSelectionRegionNp865Freq": {
+        "description": "UI text: region selection region Nepal 865MHz freq"
+    },
+    "regionSelectionRegionBr902": "Brazil 902",
+    "@regionSelectionRegionBr902": {
+        "description": "UI text: region selection region Brazil 902MHz"
+    },
+    "regionSelectionRegionBr902Desc": "Brazil",
+    "@regionSelectionRegionBr902Desc": {
+        "description": "Description text"
+    },
+    "regionSelectionRegionBr902Freq": "902 MHz",
+    "@regionSelectionRegionBr902Freq": {
+        "description": "UI text: region selection region Brazil 902MHz freq"
+    },
+    "regionSelectionRegionItu1_2m": "ITU R1 2m",
+    "@regionSelectionRegionItu1_2m": {
+        "description": "UI text: region selection ITU Region 1 Amateur Radio 2m band"
+    },
+    "regionSelectionRegionItu1_2mDesc": "ITU Region 1 amateur radio 2m band",
+    "@regionSelectionRegionItu1_2mDesc": {
+        "description": "Description text"
+    },
+    "regionSelectionRegionItu1_2mFreq": "144-146 MHz",
+    "@regionSelectionRegionItu1_2mFreq": {
+        "description": "UI text: region selection ITU R1 2m freq"
+    },
+    "regionSelectionRegionItu23_2m": "ITU R2/3 2m",
+    "@regionSelectionRegionItu23_2m": {
+        "description": "UI text: region selection ITU Region 2/3 Amateur Radio 2m band"
+    },
+    "regionSelectionRegionItu23_2mDesc": "ITU Region 2/3 amateur radio 2m band",
+    "@regionSelectionRegionItu23_2mDesc": {
+        "description": "Description text"
+    },
+    "regionSelectionRegionItu23_2mFreq": "144-148 MHz",
+    "@regionSelectionRegionItu23_2mFreq": {
+        "description": "UI text: region selection ITU R2/3 2m freq"
+    },
+    "regionSelectionRegionEu866": "EU 866",
+    "@regionSelectionRegionEu866": {
+        "description": "UI text: region selection EU 866MHz Short-Range Devices band"
+    },
+    "regionSelectionRegionEu866Desc": "European Union 866MHz SRD",
+    "@regionSelectionRegionEu866Desc": {
+        "description": "Description text"
+    },
+    "regionSelectionRegionEu866Freq": "866 MHz",
+    "@regionSelectionRegionEu866Freq": {
+        "description": "UI text: region selection EU 866 freq"
+    },
+    "regionSelectionRegionEu874": "EU 874",
+    "@regionSelectionRegionEu874": {
+        "description": "UI text: region selection EU 874MHz Short-Range Devices band"
+    },
+    "regionSelectionRegionEu874Desc": "European Union 874MHz SRD",
+    "@regionSelectionRegionEu874Desc": {
+        "description": "Description text"
+    },
+    "regionSelectionRegionEu874Freq": "874 MHz",
+    "@regionSelectionRegionEu874Freq": {
+        "description": "UI text: region selection EU 874 freq"
+    },
+    "regionSelectionRegionEu917": "EU 917",
+    "@regionSelectionRegionEu917": {
+        "description": "UI text: region selection EU 917MHz Short-Range Devices band"
+    },
+    "regionSelectionRegionEu917Desc": "European Union 917MHz SRD",
+    "@regionSelectionRegionEu917Desc": {
+        "description": "Description text"
+    },
+    "regionSelectionRegionEu917Freq": "917 MHz",
+    "@regionSelectionRegionEu917Freq": {
+        "description": "UI text: region selection EU 917 freq"
+    },
+    "regionSelectionRegionEuN868": "EU 868 Narrow",
+    "@regionSelectionRegionEuN868": {
+        "description": "UI text: region selection EU 868MHz band with narrow presets"
+    },
+    "regionSelectionRegionEuN868Desc": "European Union 868MHz narrow",
+    "@regionSelectionRegionEuN868Desc": {
+        "description": "Description text"
+    },
+    "regionSelectionRegionEuN868Freq": "868 MHz",
+    "@regionSelectionRegionEuN868Freq": {
+        "description": "UI text: region selection EU 868 narrow freq"
+    },
     "regionSelectionRegionMy433": "Malaysia 433",
     "@regionSelectionRegionMy433": {
         "description": "UI text: region selection region my433"
@@ -33139,49 +33329,13 @@
     "@radioConfigRegionEu868": {
         "description": "UI text: radio config region eu868"
     },
-    "radioConfigRegionChina": "China",
-    "@radioConfigRegionChina": {
-        "description": "UI text: radio config region china"
-    },
-    "radioConfigRegionJapan": "Japan",
-    "@radioConfigRegionJapan": {
-        "description": "UI text: radio config region japan"
-    },
     "radioConfigRegionAnz": "ANZ",
     "@radioConfigRegionAnz": {
         "description": "UI text: radio config region anz"
     },
-    "radioConfigRegionKorea": "Korea",
-    "@radioConfigRegionKorea": {
-        "description": "UI text: radio config region korea"
-    },
-    "radioConfigRegionTaiwan": "Taiwan",
-    "@radioConfigRegionTaiwan": {
-        "description": "UI text: radio config region taiwan"
-    },
-    "radioConfigRegionRussia": "Russia",
-    "@radioConfigRegionRussia": {
-        "description": "UI text: radio config region russia"
-    },
-    "radioConfigRegionIndia": "India",
-    "@radioConfigRegionIndia": {
-        "description": "UI text: radio config region india"
-    },
     "radioConfigRegionNz865": "NZ 865",
     "@radioConfigRegionNz865": {
         "description": "UI text: radio config region nz865"
-    },
-    "radioConfigRegionThailand": "Thailand",
-    "@radioConfigRegionThailand": {
-        "description": "UI text: radio config region thailand"
-    },
-    "radioConfigRegionUkraine433": "Ukraine 433",
-    "@radioConfigRegionUkraine433": {
-        "description": "UI text: radio config region ukraine433"
-    },
-    "radioConfigRegionUkraine868": "Ukraine 868",
-    "@radioConfigRegionUkraine868": {
-        "description": "UI text: radio config region ukraine868"
     },
     "radioConfigRegionMalaysia433": "Malaysia 433",
     "@radioConfigRegionMalaysia433": {
@@ -33190,10 +33344,6 @@
     "radioConfigRegionMalaysia919": "Malaysia 919",
     "@radioConfigRegionMalaysia919": {
         "description": "UI text: radio config region malaysia919"
-    },
-    "radioConfigRegionSingapore": "Singapore",
-    "@radioConfigRegionSingapore": {
-        "description": "UI text: radio config region singapore"
     },
     "radioConfigRegionLora24": "LoRa 2.4GHz",
     "@radioConfigRegionLora24": {
@@ -33278,6 +33428,38 @@
     "radioConfigPresetLongTurboDesc": "Long range with turbo speed",
     "@radioConfigPresetLongTurboDesc": {
         "description": "Description for long turbo modem preset"
+    },
+    "radioConfigPresetLiteFast": "Lite Fast",
+    "@radioConfigPresetLiteFast": {
+        "description": "Modem preset label: EU 866MHz SRD-compliant lite fast"
+    },
+    "radioConfigPresetLiteFastDesc": "EU 866MHz SRD, fast",
+    "@radioConfigPresetLiteFastDesc": {
+        "description": "Description for lite fast modem preset"
+    },
+    "radioConfigPresetLiteSlow": "Lite Slow",
+    "@radioConfigPresetLiteSlow": {
+        "description": "Modem preset label: EU 866MHz SRD-compliant lite slow"
+    },
+    "radioConfigPresetLiteSlowDesc": "EU 866MHz SRD, longer range",
+    "@radioConfigPresetLiteSlowDesc": {
+        "description": "Description for lite slow modem preset"
+    },
+    "radioConfigPresetNarrowFast": "Narrow Fast",
+    "@radioConfigPresetNarrowFast": {
+        "description": "Modem preset label: EU 868MHz narrow fast"
+    },
+    "radioConfigPresetNarrowFastDesc": "EU 868MHz narrow, fast",
+    "@radioConfigPresetNarrowFastDesc": {
+        "description": "Description for narrow fast modem preset"
+    },
+    "radioConfigPresetNarrowSlow": "Narrow Slow",
+    "@radioConfigPresetNarrowSlow": {
+        "description": "Modem preset label: EU 868MHz narrow slow"
+    },
+    "radioConfigPresetNarrowSlowDesc": "EU 868MHz narrow, longer range",
+    "@radioConfigPresetNarrowSlowDesc": {
+        "description": "Description for narrow slow modem preset"
     },
     "radioConfigPresetMustMatch": "All devices in the mesh must use the same preset",
     "@radioConfigPresetMustMatch": {
@@ -35249,17 +35431,32 @@
     "@dataExportDeviceConfigRestoreSummary": {
         "description": "Snackbar after a restore completes",
         "placeholders": {
-            "applied": {"type": "int", "format": "decimalPattern"},
-            "total": {"type": "int", "format": "decimalPattern"}
+            "applied": {
+                "type": "int",
+                "format": "decimalPattern"
+            },
+            "total": {
+                "type": "int",
+                "format": "decimalPattern"
+            }
         }
     },
     "dataExportDeviceConfigRestoreSummaryWithFailures": "Applied {applied} of {total}. {failed} failed.",
     "@dataExportDeviceConfigRestoreSummaryWithFailures": {
         "description": "Snackbar after a restore that had failures",
         "placeholders": {
-            "applied": {"type": "int", "format": "decimalPattern"},
-            "total": {"type": "int", "format": "decimalPattern"},
-            "failed": {"type": "int", "format": "decimalPattern"}
+            "applied": {
+                "type": "int",
+                "format": "decimalPattern"
+            },
+            "total": {
+                "type": "int",
+                "format": "decimalPattern"
+            },
+            "failed": {
+                "type": "int",
+                "format": "decimalPattern"
+            }
         }
     },
     "dataExportDeviceConfigRestoreNoSelection": "Select at least one section to restore.",
@@ -35270,28 +35467,38 @@
     "@dataExportDeviceConfigRestoreFromMetadata": {
         "description": "Restore sheet info row showing where the backup was taken",
         "placeholders": {
-            "metadata": {"type": "String"}
+            "metadata": {
+                "type": "String"
+            }
         }
     },
     "dataExportDeviceConfigRestoreCreatedAt": "Saved: {date}",
     "@dataExportDeviceConfigRestoreCreatedAt": {
         "description": "Restore sheet info row showing the backup timestamp",
         "placeholders": {
-            "date": {"type": "String"}
+            "date": {
+                "type": "String"
+            }
         }
     },
     "dataExportDeviceConfigRestoreChannelsCount": "{count, plural, =1{1 channel} other{{count} channels}}",
     "@dataExportDeviceConfigRestoreChannelsCount": {
         "description": "Restore sheet caption showing how many channels are in the bundle",
         "placeholders": {
-            "count": {"type": "int", "format": "decimalPattern"}
+            "count": {
+                "type": "int",
+                "format": "decimalPattern"
+            }
         }
     },
     "dataExportDeviceConfigRestoreModulesCount": "{count, plural, =1{1 module} other{{count} modules}}",
     "@dataExportDeviceConfigRestoreModulesCount": {
         "description": "Restore sheet caption showing how many module configs are in the bundle",
         "placeholders": {
-            "count": {"type": "int", "format": "decimalPattern"}
+            "count": {
+                "type": "int",
+                "format": "decimalPattern"
+            }
         }
     },
     "dataExportDeviceConfigRestoreRadioPresent": "Included",
@@ -43219,22 +43426,34 @@
     "@sipSignalSizeBytes": {
         "description": "Live encoded-size readout in the composer footer. Updates per keystroke / pad tap.",
         "placeholders": {
-            "bytes": { "type": "int", "example": "28" }
+            "bytes": {
+                "type": "int",
+                "example": "28"
+            }
         }
     },
     "sipSignalSizeOverBudget": "Signal • {bytes} B — too large to send",
     "@sipSignalSizeOverBudget": {
         "description": "Composer footer when the encoded envelope exceeds maxEnvelopeBytes. Send is disabled in this state.",
         "placeholders": {
-            "bytes": { "type": "int", "example": "72" }
+            "bytes": {
+                "type": "int",
+                "example": "72"
+            }
         }
     },
     "sipSignalToneFull": "{count}/{max} notes • Phrase full",
     "@sipSignalToneFull": {
         "description": "Badge shown above the tone pads when the phrase has reached its hard cap. Note pads are disabled but Clear / Preview / Send remain active.",
         "placeholders": {
-            "count": { "type": "int", "example": "8" },
-            "max": { "type": "int", "example": "8" }
+            "count": {
+                "type": "int",
+                "example": "8"
+            },
+            "max": {
+                "type": "int",
+                "example": "8"
+            }
         }
     },
     "sipSignalMorseInputTap": "Tap",
@@ -45122,7 +45341,6 @@
         "description": "Canonical mesh service type name for sensor services."
     },
     "meshServicesTypeSensorDescription": "Live measurements or telemetry people nearby can check",
-
     "meshServicesTypeGame": "Games",
     "@meshServicesTypeGame": {
         "description": "Canonical mesh service type name for mesh-games."
@@ -45139,7 +45357,6 @@
     "@meshServicesIntentGameDescription": {
         "description": "Intent-first description for the game capability in the creation flow."
     },
-
     "meshServicesIntentFeed": "Post an update",
     "@meshServicesIntentFeed": {
         "description": "Intent-first label for the feed capability in the creation flow."
@@ -45702,15 +45919,21 @@
     "@meshGamesRevision": {
         "description": "Revision counter label.",
         "placeholders": {
-            "revision": {"type": "int"}
+            "revision": {
+                "type": "int"
+            }
         }
     },
     "meshGamesSessionTitle": "{gameName} · {opponent}",
     "@meshGamesSessionTitle": {
         "description": "Title for a mesh game session shown in the services list. Combines the localized game type name with the opponent display name.",
         "placeholders": {
-            "gameName": {"type": "String"},
-            "opponent": {"type": "String"}
+            "gameName": {
+                "type": "String"
+            },
+            "opponent": {
+                "type": "String"
+            }
         }
     },
     "meshServicesTitleRequired": "Title is required",
@@ -47777,7 +48000,6 @@
         "description": "Summary row label: audience"
     },
     "serviceWizardReviewMeshHint": "People nearby will discover the headline first, then open the full details.",
-
     "meshServicesPreviewCardTitle": "Live preview",
     "@meshServicesPreviewCardTitle": {
         "description": "Section title for the live preview card in the mesh share composer."
@@ -48219,7 +48441,7 @@
     "@subscriptionGroupCommunication": {
         "description": "Group header for translation features in Complete Pack card"
     },
-    "subscriptionLifetimeReinforcement": "One-time purchase \u00b7 Lifetime access \u00b7 No subscription",
+    "subscriptionLifetimeReinforcement": "One-time purchase · Lifetime access · No subscription",
     "@subscriptionLifetimeReinforcement": {
         "description": "Reinforcement text below CTA on Complete Pack card"
     },
@@ -48301,7 +48523,6 @@
     "@whatsNewCtaOpenDeviceShop": {
         "description": "CTA button label to open the Device Shop screen from What's New."
     },
-
     "meshFeedTitle": "Mesh Feed",
     "@meshFeedTitle": {
         "description": "Title for the mesh feed screen."
@@ -49019,8 +49240,12 @@
     "@petDnaAlleleRatioValue": {
         "description": "Value format for an allele ratio row — the base letter, two spaces, percentage, percent sign. E.g. 'A  34%'.",
         "placeholders": {
-            "letter": {"type": "String"},
-            "percent": {"type": "int"}
+            "letter": {
+                "type": "String"
+            },
+            "percent": {
+                "type": "int"
+            }
         }
     },
     "petAdvisoryDormant": "Your pet's journey has ended. Tap [[Re-sigil]] to begin anew.",
@@ -50359,15 +50584,24 @@
     "@rnsCompanionStatusConnectedWithVersion": {
         "description": "Status-pill text including the companion's reported version.",
         "placeholders": {
-            "version": {"type": "String", "example": "0.1"}
+            "version": {
+                "type": "String",
+                "example": "0.1"
+            }
         }
     },
     "rnsCompanionStatusConnectedWithMode": "Connected · v{version} · {mode}",
     "@rnsCompanionStatusConnectedWithMode": {
         "description": "Status-pill text including version + active data source mode (LIVE / STUB).",
         "placeholders": {
-            "version": {"type": "String", "example": "0.1"},
-            "mode": {"type": "String", "example": "LIVE"}
+            "version": {
+                "type": "String",
+                "example": "0.1"
+            },
+            "mode": {
+                "type": "String",
+                "example": "LIVE"
+            }
         }
     },
     "rnsCompanionLastAnnounceLabel": "Last announce",
@@ -50386,21 +50620,30 @@
     "@rnsCompanionLastAnnounceSeconds": {
         "description": "Time-since label, sub-minute granularity.",
         "placeholders": {
-            "n": {"type": "int", "example": "12"}
+            "n": {
+                "type": "int",
+                "example": "12"
+            }
         }
     },
     "rnsCompanionLastAnnounceMinutes": "{n}m ago",
     "@rnsCompanionLastAnnounceMinutes": {
         "description": "Time-since label, minutes granularity.",
         "placeholders": {
-            "n": {"type": "int", "example": "5"}
+            "n": {
+                "type": "int",
+                "example": "5"
+            }
         }
     },
     "rnsCompanionLastAnnounceHours": "{n}h ago",
     "@rnsCompanionLastAnnounceHours": {
         "description": "Time-since label, hours granularity.",
         "placeholders": {
-            "n": {"type": "int", "example": "2"}
+            "n": {
+                "type": "int",
+                "example": "2"
+            }
         }
     },
     "rnsCompanionStatusUnreachable": "Unreachable",

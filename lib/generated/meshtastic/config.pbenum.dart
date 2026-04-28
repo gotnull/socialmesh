@@ -772,6 +772,33 @@ class Config_LoRaConfig_RegionCode extends $pb.ProtobufEnum {
   static const Config_LoRaConfig_RegionCode BR_902 =
       Config_LoRaConfig_RegionCode._(26, _omitEnumNames ? '' : 'BR_902');
 
+  ///
+  ///  ITU Region 1 Amateur Radio 2m band (144-146 MHz)
+  static const Config_LoRaConfig_RegionCode ITU1_2M =
+      Config_LoRaConfig_RegionCode._(27, _omitEnumNames ? '' : 'ITU1_2M');
+
+  ///
+  ///  ITU Region 2 / 3 Amateur Radio 2m band (144-148 MHz)
+  static const Config_LoRaConfig_RegionCode ITU23_2M =
+      Config_LoRaConfig_RegionCode._(28, _omitEnumNames ? '' : 'ITU23_2M');
+
+  ///
+  ///  EU 866MHz band (Band no. 47b of 2006/771/EC and subsequent amendments) for Non-specific short-range devices (SRD)
+  static const Config_LoRaConfig_RegionCode EU_866 =
+      Config_LoRaConfig_RegionCode._(29, _omitEnumNames ? '' : 'EU_866');
+
+  ///
+  ///  EU 874MHz and 917MHz bands (Band no. 1 and 4 of 2022/172/EC and subsequent amendments) for Non-specific short-range devices (SRD)
+  static const Config_LoRaConfig_RegionCode EU_874 =
+      Config_LoRaConfig_RegionCode._(30, _omitEnumNames ? '' : 'EU_874');
+  static const Config_LoRaConfig_RegionCode EU_917 =
+      Config_LoRaConfig_RegionCode._(31, _omitEnumNames ? '' : 'EU_917');
+
+  ///
+  ///  EU 868MHz band, with narrow presets
+  static const Config_LoRaConfig_RegionCode EU_N_868 =
+      Config_LoRaConfig_RegionCode._(32, _omitEnumNames ? '' : 'EU_N_868');
+
   static const $core.List<Config_LoRaConfig_RegionCode> values =
       <Config_LoRaConfig_RegionCode>[
     UNSET,
@@ -801,10 +828,16 @@ class Config_LoRaConfig_RegionCode extends $pb.ProtobufEnum {
     KZ_863,
     NP_865,
     BR_902,
+    ITU1_2M,
+    ITU23_2M,
+    EU_866,
+    EU_874,
+    EU_917,
+    EU_N_868,
   ];
 
   static final $core.List<Config_LoRaConfig_RegionCode?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 26);
+      $pb.ProtobufEnum.$_initByValueList(values, 32);
   static Config_LoRaConfig_RegionCode? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 
@@ -873,6 +906,35 @@ class Config_LoRaConfig_ModemPreset extends $pb.ProtobufEnum {
   static const Config_LoRaConfig_ModemPreset LONG_TURBO =
       Config_LoRaConfig_ModemPreset._(9, _omitEnumNames ? '' : 'LONG_TURBO');
 
+  ///
+  ///  Lite Fast
+  ///  Medium range preset optimized for EU 866MHz SRD band with 125kHz bandwidth.
+  ///  Comparable link budget to MEDIUM_FAST but compliant with Band no. 47b of 2006/771/EC.
+  static const Config_LoRaConfig_ModemPreset LITE_FAST =
+      Config_LoRaConfig_ModemPreset._(10, _omitEnumNames ? '' : 'LITE_FAST');
+
+  ///
+  ///  Lite Slow
+  ///  Medium-to-moderate range preset optimized for EU 866MHz SRD band with 125kHz bandwidth.
+  ///  Comparable link budget to LONG_FAST but compliant with Band no. 47b of 2006/771/EC.
+  static const Config_LoRaConfig_ModemPreset LITE_SLOW =
+      Config_LoRaConfig_ModemPreset._(11, _omitEnumNames ? '' : 'LITE_SLOW');
+
+  ///
+  ///  Narrow Fast
+  ///  Medium-to-moderate range preset optimized for EU 868MHz band with 62.5kHz bandwidth.
+  ///  Comparable link budget to SHORT_SLOW, but with half the data rate.
+  ///  Intended to avoid interference with other devices.
+  static const Config_LoRaConfig_ModemPreset NARROW_FAST =
+      Config_LoRaConfig_ModemPreset._(12, _omitEnumNames ? '' : 'NARROW_FAST');
+
+  ///
+  ///  Narrow Slow
+  ///  Moderate range preset optimized for EU 868MHz band with 62.5kHz bandwidth.
+  ///  Comparable link budget and data rate to LONG_FAST.
+  static const Config_LoRaConfig_ModemPreset NARROW_SLOW =
+      Config_LoRaConfig_ModemPreset._(13, _omitEnumNames ? '' : 'NARROW_SLOW');
+
   static const $core.List<Config_LoRaConfig_ModemPreset> values =
       <Config_LoRaConfig_ModemPreset>[
     LONG_FAST,
@@ -885,10 +947,14 @@ class Config_LoRaConfig_ModemPreset extends $pb.ProtobufEnum {
     LONG_MODERATE,
     SHORT_TURBO,
     LONG_TURBO,
+    LITE_FAST,
+    LITE_SLOW,
+    NARROW_FAST,
+    NARROW_SLOW,
   ];
 
   static final $core.List<Config_LoRaConfig_ModemPreset?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 9);
+      $pb.ProtobufEnum.$_initByValueList(values, 13);
   static Config_LoRaConfig_ModemPreset? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 

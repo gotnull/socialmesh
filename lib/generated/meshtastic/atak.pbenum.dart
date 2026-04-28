@@ -1511,5 +1511,43 @@ class TaskRequest_Status extends $pb.ProtobufEnum {
   const TaskRequest_Status._(super.value, super.name);
 }
 
+///
+///  Coarse sensor category, inferred from `model` on parse when the source
+///  XML doesn't label it. Receivers that render differently per sensor
+///  class (thermal overlay vs daylight cone) use this.
+class SensorFov_SensorType extends $pb.ProtobufEnum {
+  static const SensorFov_SensorType SensorType_Unspecified =
+      SensorFov_SensorType._(0, _omitEnumNames ? '' : 'SensorType_Unspecified');
+  static const SensorFov_SensorType SensorType_Camera =
+      SensorFov_SensorType._(1, _omitEnumNames ? '' : 'SensorType_Camera');
+  static const SensorFov_SensorType SensorType_Thermal =
+      SensorFov_SensorType._(2, _omitEnumNames ? '' : 'SensorType_Thermal');
+  static const SensorFov_SensorType SensorType_Laser =
+      SensorFov_SensorType._(3, _omitEnumNames ? '' : 'SensorType_Laser');
+  static const SensorFov_SensorType SensorType_Nvg =
+      SensorFov_SensorType._(4, _omitEnumNames ? '' : 'SensorType_Nvg');
+  static const SensorFov_SensorType SensorType_Rf =
+      SensorFov_SensorType._(5, _omitEnumNames ? '' : 'SensorType_Rf');
+  static const SensorFov_SensorType SensorType_Other =
+      SensorFov_SensorType._(6, _omitEnumNames ? '' : 'SensorType_Other');
+
+  static const $core.List<SensorFov_SensorType> values = <SensorFov_SensorType>[
+    SensorType_Unspecified,
+    SensorType_Camera,
+    SensorType_Thermal,
+    SensorType_Laser,
+    SensorType_Nvg,
+    SensorType_Rf,
+    SensorType_Other,
+  ];
+
+  static final $core.List<SensorFov_SensorType?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 6);
+  static SensorFov_SensorType? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const SensorFov_SensorType._(super.value, super.name);
+}
+
 const $core.bool _omitEnumNames =
     $core.bool.fromEnvironment('protobuf.omit_enum_names');

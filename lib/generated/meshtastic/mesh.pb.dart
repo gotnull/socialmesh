@@ -1307,6 +1307,8 @@ class RemoteShell extends $pb.GeneratedMessage {
     $core.int? cols,
     $core.int? rows,
     $core.int? flags,
+    $core.int? lastTxSeq,
+    $core.int? lastRxSeq,
   }) {
     final result = create();
     if (op != null) result.op = op;
@@ -1317,6 +1319,8 @@ class RemoteShell extends $pb.GeneratedMessage {
     if (cols != null) result.cols = cols;
     if (rows != null) result.rows = rows;
     if (flags != null) result.flags = flags;
+    if (lastTxSeq != null) result.lastTxSeq = lastTxSeq;
+    if (lastRxSeq != null) result.lastRxSeq = lastRxSeq;
     return result;
   }
 
@@ -1343,6 +1347,8 @@ class RemoteShell extends $pb.GeneratedMessage {
     ..aI(6, _omitFieldNames ? '' : 'cols', fieldType: $pb.PbFieldType.OU3)
     ..aI(7, _omitFieldNames ? '' : 'rows', fieldType: $pb.PbFieldType.OU3)
     ..aI(8, _omitFieldNames ? '' : 'flags', fieldType: $pb.PbFieldType.OU3)
+    ..aI(9, _omitFieldNames ? '' : 'lastTxSeq', fieldType: $pb.PbFieldType.OU3)
+    ..aI(10, _omitFieldNames ? '' : 'lastRxSeq', fieldType: $pb.PbFieldType.OU3)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1451,6 +1457,28 @@ class RemoteShell extends $pb.GeneratedMessage {
   $core.bool hasFlags() => $_has(7);
   @$pb.TagNumber(8)
   void clearFlags() => $_clearField(8);
+
+  ///
+  ///  The last sequence number TX'd.
+  @$pb.TagNumber(9)
+  $core.int get lastTxSeq => $_getIZ(8);
+  @$pb.TagNumber(9)
+  set lastTxSeq($core.int value) => $_setUnsignedInt32(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasLastTxSeq() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearLastTxSeq() => $_clearField(9);
+
+  ///
+  ///  The last sequence number RX'd.
+  @$pb.TagNumber(10)
+  $core.int get lastRxSeq => $_getIZ(9);
+  @$pb.TagNumber(10)
+  set lastRxSeq($core.int value) => $_setUnsignedInt32(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasLastRxSeq() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearLastRxSeq() => $_clearField(10);
 }
 
 ///

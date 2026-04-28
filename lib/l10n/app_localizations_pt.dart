@@ -13820,6 +13820,135 @@ class AppLocalizationsPt extends AppLocalizations {
   String get regionSelectionRegionLora24Freq => '2,4 GHz';
 
   @override
+  String get regionSelectionRegionPh433 => 'Filipinas 433';
+
+  @override
+  String get regionSelectionRegionPh433Desc => 'Filipinas';
+
+  @override
+  String get regionSelectionRegionPh433Freq => '433 MHz';
+
+  @override
+  String get regionSelectionRegionPh868 => 'Filipinas 868';
+
+  @override
+  String get regionSelectionRegionPh868Desc => 'Filipinas';
+
+  @override
+  String get regionSelectionRegionPh868Freq => '868 MHz';
+
+  @override
+  String get regionSelectionRegionPh915 => 'Filipinas 915';
+
+  @override
+  String get regionSelectionRegionPh915Desc => 'Filipinas';
+
+  @override
+  String get regionSelectionRegionPh915Freq => '915 MHz';
+
+  @override
+  String get regionSelectionRegionAnz433 => 'ANZ 433';
+
+  @override
+  String get regionSelectionRegionAnz433Desc => 'Austrália, Nova Zelândia';
+
+  @override
+  String get regionSelectionRegionAnz433Freq => '433 MHz';
+
+  @override
+  String get regionSelectionRegionKz433 => 'Cazaquistão 433';
+
+  @override
+  String get regionSelectionRegionKz433Desc => 'Cazaquistão';
+
+  @override
+  String get regionSelectionRegionKz433Freq => '433 MHz';
+
+  @override
+  String get regionSelectionRegionKz863 => 'Cazaquistão 863';
+
+  @override
+  String get regionSelectionRegionKz863Desc => 'Cazaquistão';
+
+  @override
+  String get regionSelectionRegionKz863Freq => '863 MHz';
+
+  @override
+  String get regionSelectionRegionNp865 => 'Nepal 865';
+
+  @override
+  String get regionSelectionRegionNp865Desc => 'Nepal';
+
+  @override
+  String get regionSelectionRegionNp865Freq => '865 MHz';
+
+  @override
+  String get regionSelectionRegionBr902 => 'Brasil 902';
+
+  @override
+  String get regionSelectionRegionBr902Desc => 'Brasil';
+
+  @override
+  String get regionSelectionRegionBr902Freq => '902 MHz';
+
+  @override
+  String get regionSelectionRegionItu1_2m => 'ITU R1 2m';
+
+  @override
+  String get regionSelectionRegionItu1_2mDesc =>
+      'Banda de radioamador 2m da Região 1 da UIT';
+
+  @override
+  String get regionSelectionRegionItu1_2mFreq => '144-146 MHz';
+
+  @override
+  String get regionSelectionRegionItu23_2m => 'ITU R2/3 2m';
+
+  @override
+  String get regionSelectionRegionItu23_2mDesc =>
+      'Banda de radioamador 2m da Região 2/3 da UIT';
+
+  @override
+  String get regionSelectionRegionItu23_2mFreq => '144-148 MHz';
+
+  @override
+  String get regionSelectionRegionEu866 => 'EU 866';
+
+  @override
+  String get regionSelectionRegionEu866Desc => 'União Europeia 866MHz SRD';
+
+  @override
+  String get regionSelectionRegionEu866Freq => '866 MHz';
+
+  @override
+  String get regionSelectionRegionEu874 => 'EU 874';
+
+  @override
+  String get regionSelectionRegionEu874Desc => 'União Europeia 874MHz SRD';
+
+  @override
+  String get regionSelectionRegionEu874Freq => '874 MHz';
+
+  @override
+  String get regionSelectionRegionEu917 => 'EU 917';
+
+  @override
+  String get regionSelectionRegionEu917Desc => 'União Europeia 917MHz SRD';
+
+  @override
+  String get regionSelectionRegionEu917Freq => '917 MHz';
+
+  @override
+  String get regionSelectionRegionEuN868 => 'EU 868 Estreito';
+
+  @override
+  String get regionSelectionRegionEuN868Desc =>
+      'União Europeia 868MHz estreito';
+
+  @override
+  String get regionSelectionRegionEuN868Freq => '868 MHz';
+
+  @override
   String get regionSelectionRegionMy433 => 'Malásia 433';
 
   @override
@@ -24508,46 +24637,16 @@ class AppLocalizationsPt extends AppLocalizations {
   String get radioConfigRegionEu868 => 'UE 868';
 
   @override
-  String get radioConfigRegionChina => 'China';
-
-  @override
-  String get radioConfigRegionJapan => 'Japão';
-
-  @override
   String get radioConfigRegionAnz => 'ANZ';
 
   @override
-  String get radioConfigRegionKorea => 'Coreia';
-
-  @override
-  String get radioConfigRegionTaiwan => 'Taiwan';
-
-  @override
-  String get radioConfigRegionRussia => 'Rússia';
-
-  @override
-  String get radioConfigRegionIndia => 'Índia';
-
-  @override
   String get radioConfigRegionNz865 => 'NZ 865';
-
-  @override
-  String get radioConfigRegionThailand => 'Tailândia';
-
-  @override
-  String get radioConfigRegionUkraine433 => 'Ucrânia 433';
-
-  @override
-  String get radioConfigRegionUkraine868 => 'Ucrânia 868';
 
   @override
   String get radioConfigRegionMalaysia433 => 'Malásia 433';
 
   @override
   String get radioConfigRegionMalaysia919 => 'Malásia 919';
-
-  @override
-  String get radioConfigRegionSingapore => 'Singapura';
 
   @override
   String get radioConfigRegionLora24 => 'LoRa 2.4GHz';
@@ -24613,6 +24712,31 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get radioConfigPresetLongTurboDesc => 'Long range with turbo speed';
+
+  @override
+  String get radioConfigPresetLiteFast => 'Lite Rápido';
+
+  @override
+  String get radioConfigPresetLiteFastDesc => 'EU 866MHz SRD, rápido';
+
+  @override
+  String get radioConfigPresetLiteSlow => 'Lite Lento';
+
+  @override
+  String get radioConfigPresetLiteSlowDesc => 'EU 866MHz SRD, maior alcance';
+
+  @override
+  String get radioConfigPresetNarrowFast => 'Estreito Rápido';
+
+  @override
+  String get radioConfigPresetNarrowFastDesc => 'EU 868MHz estreito, rápido';
+
+  @override
+  String get radioConfigPresetNarrowSlow => 'Estreito Lento';
+
+  @override
+  String get radioConfigPresetNarrowSlowDesc =>
+      'EU 868MHz estreito, maior alcance';
 
   @override
   String get radioConfigPresetMustMatch =>

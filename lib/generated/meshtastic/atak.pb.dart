@@ -1784,6 +1784,24 @@ class CasevacReport extends $pb.GeneratedMessage {
     $core.int? child,
     $core.int? terrainFlags,
     $core.String? frequency,
+    $core.String? title,
+    $core.String? medlineRemarks,
+    $core.int? urgentCount,
+    $core.int? urgentSurgicalCount,
+    $core.int? priorityCount,
+    $core.int? routineCount,
+    $core.int? convenienceCount,
+    $core.String? equipmentDetail,
+    $core.String? zoneProtectedCoord,
+    $core.String? terrainSlopeDir,
+    $core.String? terrainOtherDetail,
+    $core.String? markedBy,
+    $core.String? obstacles,
+    $core.String? windsAreFrom,
+    $core.String? friendlies,
+    $core.String? enemy,
+    $core.String? hlzRemarks,
+    $core.Iterable<ZMistEntry>? zmist,
   }) {
     final result = create();
     if (precedence != null) result.precedence = precedence;
@@ -1802,6 +1820,27 @@ class CasevacReport extends $pb.GeneratedMessage {
     if (child != null) result.child = child;
     if (terrainFlags != null) result.terrainFlags = terrainFlags;
     if (frequency != null) result.frequency = frequency;
+    if (title != null) result.title = title;
+    if (medlineRemarks != null) result.medlineRemarks = medlineRemarks;
+    if (urgentCount != null) result.urgentCount = urgentCount;
+    if (urgentSurgicalCount != null)
+      result.urgentSurgicalCount = urgentSurgicalCount;
+    if (priorityCount != null) result.priorityCount = priorityCount;
+    if (routineCount != null) result.routineCount = routineCount;
+    if (convenienceCount != null) result.convenienceCount = convenienceCount;
+    if (equipmentDetail != null) result.equipmentDetail = equipmentDetail;
+    if (zoneProtectedCoord != null)
+      result.zoneProtectedCoord = zoneProtectedCoord;
+    if (terrainSlopeDir != null) result.terrainSlopeDir = terrainSlopeDir;
+    if (terrainOtherDetail != null)
+      result.terrainOtherDetail = terrainOtherDetail;
+    if (markedBy != null) result.markedBy = markedBy;
+    if (obstacles != null) result.obstacles = obstacles;
+    if (windsAreFrom != null) result.windsAreFrom = windsAreFrom;
+    if (friendlies != null) result.friendlies = friendlies;
+    if (enemy != null) result.enemy = enemy;
+    if (hlzRemarks != null) result.hlzRemarks = hlzRemarks;
+    if (zmist != null) result.zmist.addAll(zmist);
     return result;
   }
 
@@ -1842,6 +1881,30 @@ class CasevacReport extends $pb.GeneratedMessage {
     ..aI(14, _omitFieldNames ? '' : 'terrainFlags',
         fieldType: $pb.PbFieldType.OU3)
     ..aOS(15, _omitFieldNames ? '' : 'frequency')
+    ..aOS(16, _omitFieldNames ? '' : 'title')
+    ..aOS(17, _omitFieldNames ? '' : 'medlineRemarks')
+    ..aI(18, _omitFieldNames ? '' : 'urgentCount',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(19, _omitFieldNames ? '' : 'urgentSurgicalCount',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(20, _omitFieldNames ? '' : 'priorityCount',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(21, _omitFieldNames ? '' : 'routineCount',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(22, _omitFieldNames ? '' : 'convenienceCount',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aOS(23, _omitFieldNames ? '' : 'equipmentDetail')
+    ..aOS(24, _omitFieldNames ? '' : 'zoneProtectedCoord')
+    ..aOS(25, _omitFieldNames ? '' : 'terrainSlopeDir')
+    ..aOS(26, _omitFieldNames ? '' : 'terrainOtherDetail')
+    ..aOS(27, _omitFieldNames ? '' : 'markedBy')
+    ..aOS(28, _omitFieldNames ? '' : 'obstacles')
+    ..aOS(29, _omitFieldNames ? '' : 'windsAreFrom')
+    ..aOS(30, _omitFieldNames ? '' : 'friendlies')
+    ..aOS(31, _omitFieldNames ? '' : 'enemy')
+    ..aOS(32, _omitFieldNames ? '' : 'hlzRemarks')
+    ..pPM<ZMistEntry>(33, _omitFieldNames ? '' : 'zmist',
+        subBuilder: ZMistEntry.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2029,6 +2092,343 @@ class CasevacReport extends $pb.GeneratedMessage {
   $core.bool hasFrequency() => $_has(14);
   @$pb.TagNumber(15)
   void clearFrequency() => $_clearField(15);
+
+  ///
+  ///  Short title / MEDEVAC identifier (e.g. "EAGLE.15.181230"). Usually the
+  ///  same as the envelope callsign but ATAK sometimes carries a distinct
+  ///  ops-number here.
+  @$pb.TagNumber(16)
+  $core.String get title => $_getSZ(15);
+  @$pb.TagNumber(16)
+  set title($core.String value) => $_setString(15, value);
+  @$pb.TagNumber(16)
+  $core.bool hasTitle() => $_has(15);
+  @$pb.TagNumber(16)
+  void clearTitle() => $_clearField(16);
+
+  ///
+  ///  Primary medline free-text — the single most clinically important line
+  ///  on a MEDLINE form (e.g. "2 urgent litter patients, smoke on approach").
+  ///  MUST be preserved under MTU pressure as long as any casevac is sent.
+  @$pb.TagNumber(17)
+  $core.String get medlineRemarks => $_getSZ(16);
+  @$pb.TagNumber(17)
+  set medlineRemarks($core.String value) => $_setString(16, value);
+  @$pb.TagNumber(17)
+  $core.bool hasMedlineRemarks() => $_has(16);
+  @$pb.TagNumber(17)
+  void clearMedlineRemarks() => $_clearField(17);
+
+  ///
+  ///  Line 3 (newer ATAK format): patient counts by precedence level.
+  ///  Coexists with the enum-style `precedence` field (tag 1) — older ATAK
+  ///  emits a single enum, newer ATAK emits these counts, and both can be
+  ///  set simultaneously. Senders populate whichever style(s) the source
+  ///  XML had; receivers prefer counts when non-zero.
+  @$pb.TagNumber(18)
+  $core.int get urgentCount => $_getIZ(17);
+  @$pb.TagNumber(18)
+  set urgentCount($core.int value) => $_setUnsignedInt32(17, value);
+  @$pb.TagNumber(18)
+  $core.bool hasUrgentCount() => $_has(17);
+  @$pb.TagNumber(18)
+  void clearUrgentCount() => $_clearField(18);
+
+  @$pb.TagNumber(19)
+  $core.int get urgentSurgicalCount => $_getIZ(18);
+  @$pb.TagNumber(19)
+  set urgentSurgicalCount($core.int value) => $_setUnsignedInt32(18, value);
+  @$pb.TagNumber(19)
+  $core.bool hasUrgentSurgicalCount() => $_has(18);
+  @$pb.TagNumber(19)
+  void clearUrgentSurgicalCount() => $_clearField(19);
+
+  @$pb.TagNumber(20)
+  $core.int get priorityCount => $_getIZ(19);
+  @$pb.TagNumber(20)
+  set priorityCount($core.int value) => $_setUnsignedInt32(19, value);
+  @$pb.TagNumber(20)
+  $core.bool hasPriorityCount() => $_has(19);
+  @$pb.TagNumber(20)
+  void clearPriorityCount() => $_clearField(20);
+
+  @$pb.TagNumber(21)
+  $core.int get routineCount => $_getIZ(20);
+  @$pb.TagNumber(21)
+  set routineCount($core.int value) => $_setUnsignedInt32(20, value);
+  @$pb.TagNumber(21)
+  $core.bool hasRoutineCount() => $_has(20);
+  @$pb.TagNumber(21)
+  void clearRoutineCount() => $_clearField(21);
+
+  @$pb.TagNumber(22)
+  $core.int get convenienceCount => $_getIZ(21);
+  @$pb.TagNumber(22)
+  set convenienceCount($core.int value) => $_setUnsignedInt32(21, value);
+  @$pb.TagNumber(22)
+  $core.bool hasConvenienceCount() => $_has(21);
+  @$pb.TagNumber(22)
+  void clearConvenienceCount() => $_clearField(22);
+
+  ///
+  ///  Line 4 supplementary: free-text description of non-standard equipment
+  ///  (e.g. "Blood warmer"). Pairs with the `equipment_flags` bitfield.
+  @$pb.TagNumber(23)
+  $core.String get equipmentDetail => $_getSZ(22);
+  @$pb.TagNumber(23)
+  set equipmentDetail($core.String value) => $_setString(22, value);
+  @$pb.TagNumber(23)
+  $core.bool hasEquipmentDetail() => $_has(22);
+  @$pb.TagNumber(23)
+  void clearEquipmentDetail() => $_clearField(23);
+
+  ///
+  ///  Line 1 override: MGRS grid when distinct from the event anchor point
+  ///  (e.g. "34T CQ 12345 67890"). Event lat/lon/hae still carries the
+  ///  numeric location; this field preserves the exact MGRS string the
+  ///  medic entered.
+  @$pb.TagNumber(24)
+  $core.String get zoneProtectedCoord => $_getSZ(23);
+  @$pb.TagNumber(24)
+  set zoneProtectedCoord($core.String value) => $_setString(23, value);
+  @$pb.TagNumber(24)
+  $core.bool hasZoneProtectedCoord() => $_has(23);
+  @$pb.TagNumber(24)
+  void clearZoneProtectedCoord() => $_clearField(24);
+
+  ///
+  ///  Line 9 supplementary: slope direction (e.g. "N", "NE", "SSW") when
+  ///  `terrain_flags` bit 0 (slope) is set.
+  @$pb.TagNumber(25)
+  $core.String get terrainSlopeDir => $_getSZ(24);
+  @$pb.TagNumber(25)
+  set terrainSlopeDir($core.String value) => $_setString(24, value);
+  @$pb.TagNumber(25)
+  $core.bool hasTerrainSlopeDir() => $_has(24);
+  @$pb.TagNumber(25)
+  void clearTerrainSlopeDir() => $_clearField(25);
+
+  ///
+  ///  Line 9 supplementary: free-text description of "other" terrain hazards
+  ///  (e.g. "Loose debris on west edge") when `terrain_flags` bit 5 (other)
+  ///  is set. Tier-2 strippable under MTU pressure.
+  @$pb.TagNumber(26)
+  $core.String get terrainOtherDetail => $_getSZ(25);
+  @$pb.TagNumber(26)
+  set terrainOtherDetail($core.String value) => $_setString(25, value);
+  @$pb.TagNumber(26)
+  $core.bool hasTerrainOtherDetail() => $_has(25);
+  @$pb.TagNumber(26)
+  void clearTerrainOtherDetail() => $_clearField(26);
+
+  ///
+  ///  Line 7 supplementary: how the zone is being marked right now
+  ///  (e.g. "Orange smoke", "VS-17 panel"). Complements the structured
+  ///  `hlz_marking` enum with a specific human-readable description.
+  @$pb.TagNumber(27)
+  $core.String get markedBy => $_getSZ(26);
+  @$pb.TagNumber(27)
+  set markedBy($core.String value) => $_setString(26, value);
+  @$pb.TagNumber(27)
+  $core.bool hasMarkedBy() => $_has(26);
+  @$pb.TagNumber(27)
+  void clearMarkedBy() => $_clearField(27);
+
+  ///
+  ///  Nearby obstacles on the approach (e.g. "Power lines north of HLZ").
+  @$pb.TagNumber(28)
+  $core.String get obstacles => $_getSZ(27);
+  @$pb.TagNumber(28)
+  set obstacles($core.String value) => $_setString(27, value);
+  @$pb.TagNumber(28)
+  $core.bool hasObstacles() => $_has(27);
+  @$pb.TagNumber(28)
+  void clearObstacles() => $_clearField(28);
+
+  ///
+  ///  Wind direction and speed (e.g. "270 at 12 kts").
+  @$pb.TagNumber(29)
+  $core.String get windsAreFrom => $_getSZ(28);
+  @$pb.TagNumber(29)
+  set windsAreFrom($core.String value) => $_setString(28, value);
+  @$pb.TagNumber(29)
+  $core.bool hasWindsAreFrom() => $_has(28);
+  @$pb.TagNumber(29)
+  void clearWindsAreFrom() => $_clearField(29);
+
+  ///
+  ///  Friendly forces posture near the pickup zone
+  ///  (e.g. "Squad east of HLZ").
+  @$pb.TagNumber(30)
+  $core.String get friendlies => $_getSZ(29);
+  @$pb.TagNumber(30)
+  set friendlies($core.String value) => $_setString(29, value);
+  @$pb.TagNumber(30)
+  $core.bool hasFriendlies() => $_has(29);
+  @$pb.TagNumber(30)
+  void clearFriendlies() => $_clearField(30);
+
+  ///
+  ///  Known or suspected enemy positions near the pickup zone
+  ///  (e.g. "Possible enemy on south ridge").
+  @$pb.TagNumber(31)
+  $core.String get enemy => $_getSZ(30);
+  @$pb.TagNumber(31)
+  set enemy($core.String value) => $_setString(30, value);
+  @$pb.TagNumber(31)
+  $core.bool hasEnemy() => $_has(30);
+  @$pb.TagNumber(31)
+  void clearEnemy() => $_clearField(31);
+
+  ///
+  ///  Free-text description of the HLZ itself
+  ///  (e.g. "Primary HLZ is soccer field").
+  @$pb.TagNumber(32)
+  $core.String get hlzRemarks => $_getSZ(31);
+  @$pb.TagNumber(32)
+  set hlzRemarks($core.String value) => $_setString(31, value);
+  @$pb.TagNumber(32)
+  $core.bool hasHlzRemarks() => $_has(31);
+  @$pb.TagNumber(32)
+  void clearHlzRemarks() => $_clearField(32);
+
+  ///
+  ///  Per-patient clinical records. Each entry is one patient's ZMIST card
+  ///  (Zap number / Mechanism / Injuries / Signs / Treatment). Repeatable —
+  ///  a mass-casualty event can carry 1-6 entries in practice, limited by
+  ///  the 237 B LoRa MTU.
+  @$pb.TagNumber(33)
+  $pb.PbList<ZMistEntry> get zmist => $_getList(32);
+}
+
+///
+///  Per-patient clinical summary record — one entry per patient in a CASEVAC.
+///  Maps directly to ATAK's <zMist> child element inside <zMistsMap>.
+///  All fields are optional free-text; senders populate what they have.
+class ZMistEntry extends $pb.GeneratedMessage {
+  factory ZMistEntry({
+    $core.String? title,
+    $core.String? z,
+    $core.String? m,
+    $core.String? i,
+    $core.String? s,
+    $core.String? t,
+  }) {
+    final result = create();
+    if (title != null) result.title = title;
+    if (z != null) result.z = z;
+    if (m != null) result.m = m;
+    if (i != null) result.i = i;
+    if (s != null) result.s = s;
+    if (t != null) result.t = t;
+    return result;
+  }
+
+  ZMistEntry._();
+
+  factory ZMistEntry.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ZMistEntry.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ZMistEntry',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'title')
+    ..aOS(2, _omitFieldNames ? '' : 'z')
+    ..aOS(3, _omitFieldNames ? '' : 'm')
+    ..aOS(4, _omitFieldNames ? '' : 'i')
+    ..aOS(5, _omitFieldNames ? '' : 's')
+    ..aOS(6, _omitFieldNames ? '' : 't')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ZMistEntry clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ZMistEntry copyWith(void Function(ZMistEntry) updates) =>
+      super.copyWith((message) => updates(message as ZMistEntry)) as ZMistEntry;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ZMistEntry create() => ZMistEntry._();
+  @$core.override
+  ZMistEntry createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ZMistEntry getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ZMistEntry>(create);
+  static ZMistEntry? _defaultInstance;
+
+  ///
+  ///  Patient identifier / sequence label (e.g. "ZMIST-1", "ZMIST-2").
+  @$pb.TagNumber(1)
+  $core.String get title => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set title($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasTitle() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearTitle() => $_clearField(1);
+
+  ///
+  ///  Zap number — unique patient tracking ID (often a terse code like
+  ///  "Gunshot" or a serial).
+  @$pb.TagNumber(2)
+  $core.String get z => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set z($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasZ() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearZ() => $_clearField(2);
+
+  ///
+  ///  Mechanism of injury (e.g. "Penetrating trauma", "Blast injury").
+  @$pb.TagNumber(3)
+  $core.String get m => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set m($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasM() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearM() => $_clearField(3);
+
+  ///
+  ///  Injuries observed (e.g. "Left thigh", "Concussion").
+  @$pb.TagNumber(4)
+  $core.String get i => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set i($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasI() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearI() => $_clearField(4);
+
+  ///
+  ///  Signs / vital stats (e.g. "Stable", "Priority", "BP 110/70").
+  @$pb.TagNumber(5)
+  $core.String get s => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set s($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasS() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearS() => $_clearField(5);
+
+  ///
+  ///  Treatment given (e.g. "Tourniquet 1810Z", "O2 administered").
+  @$pb.TagNumber(6)
+  $core.String get t => $_getSZ(5);
+  @$pb.TagNumber(6)
+  set t($core.String value) => $_setString(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasT() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearT() => $_clearField(6);
 }
 
 ///
@@ -2265,6 +2665,292 @@ class TaskRequest extends $pb.GeneratedMessage {
   void clearNote() => $_clearField(6);
 }
 
+///
+///  Weather annotation from <environment> CoT detail element.
+///
+///  Attaches to any TAKPacketV2 regardless of payload_variant — an Aircraft,
+///  PLI, or Marker can all carry observed conditions at the emitting station.
+///  ATAK-CIV ships an XSD for <environment> but no dedicated handler, so the
+///  element round-trips through the generic detail pipeline; this message
+///  promotes it to a first-class structured field.
+///
+///  Target wire cost: ~6-8 bytes compressed with a fully populated instance.
+///
+///  Named `TAKEnvironment` (not just `Environment`) because the bare name
+///  collides with `SwiftUI.Environment` — every SwiftUI view in a consuming
+///  iOS app uses the `@Environment` property wrapper, and importing the
+///  generated proto module would make `Environment` ambiguous in every one
+///  of those files. The `TAK` prefix matches the convention used by the
+///  outer `TAKPacketV2` wrapper and is unambiguous across all target
+///  languages (Swift, Kotlin, Python, TypeScript, C#).
+class TAKEnvironment extends $pb.GeneratedMessage {
+  factory TAKEnvironment({
+    $core.int? temperatureCX10,
+    $core.int? windDirectionDeg,
+    $core.int? windSpeedCmS,
+  }) {
+    final result = create();
+    if (temperatureCX10 != null) result.temperatureCX10 = temperatureCX10;
+    if (windDirectionDeg != null) result.windDirectionDeg = windDirectionDeg;
+    if (windSpeedCmS != null) result.windSpeedCmS = windSpeedCmS;
+    return result;
+  }
+
+  TAKEnvironment._();
+
+  factory TAKEnvironment.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory TAKEnvironment.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'TAKEnvironment',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aI(1, _omitFieldNames ? '' : 'temperatureCX10',
+        fieldType: $pb.PbFieldType.OS3)
+    ..aI(2, _omitFieldNames ? '' : 'windDirectionDeg',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(3, _omitFieldNames ? '' : 'windSpeedCmS',
+        fieldType: $pb.PbFieldType.OU3)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  TAKEnvironment clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  TAKEnvironment copyWith(void Function(TAKEnvironment) updates) =>
+      super.copyWith((message) => updates(message as TAKEnvironment))
+          as TAKEnvironment;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static TAKEnvironment create() => TAKEnvironment._();
+  @$core.override
+  TAKEnvironment createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static TAKEnvironment getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<TAKEnvironment>(create);
+  static TAKEnvironment? _defaultInstance;
+
+  ///
+  ///  Temperature in deci-degrees Celsius. 225 = 22.5°C.
+  ///  Range covers -50°C to +50°C (-500 to +500) which spans every realistic
+  ///  outdoor TAK deployment. sint32 because negative temps are common in
+  ///  cold-weather ops.
+  @$pb.TagNumber(1)
+  $core.int get temperatureCX10 => $_getIZ(0);
+  @$pb.TagNumber(1)
+  set temperatureCX10($core.int value) => $_setSignedInt32(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasTemperatureCX10() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearTemperatureCX10() => $_clearField(1);
+
+  ///
+  ///  Wind direction in whole degrees, 0-359. "Direction FROM" per
+  ///  meteorological convention (matches CoT / ATAK).
+  @$pb.TagNumber(2)
+  $core.int get windDirectionDeg => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set windDirectionDeg($core.int value) => $_setUnsignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasWindDirectionDeg() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearWindDirectionDeg() => $_clearField(2);
+
+  ///
+  ///  Wind speed in cm/s. Matches the unit of TAKPacketV2.speed for
+  ///  consistency. 1200 = 12.00 m/s = ~27 mph.
+  @$pb.TagNumber(3)
+  $core.int get windSpeedCmS => $_getIZ(2);
+  @$pb.TagNumber(3)
+  set windSpeedCmS($core.int value) => $_setUnsignedInt32(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasWindSpeedCmS() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearWindSpeedCmS() => $_clearField(3);
+}
+
+///
+///  Sensor field-of-view cone from <sensor> CoT detail element.
+///
+///  Encodes the 8 geometry attributes that ATAK-CIV's SensorDetailHandler
+///  reads from the wire; drops the 9 visual-styling attributes that are
+///  receiver-side render hints (fovAlpha, fovRed/Green/Blue, strokeColor,
+///  strokeWeight, displayMagneticReference, hideFov, fovLabels, rangeLines).
+///  The receiving ATAK client restores those from its own defaults, same as
+///  every other CoT carried over Meshtastic today.
+///
+///  Attaches to any TAKPacketV2 — a PLI with a sensor on the operator's head,
+///  an Aircraft with a FLIR turret, a Marker dropped on a UAV.
+///  Target wire cost: ~7-14 bytes compressed (dominated by model string).
+class SensorFov extends $pb.GeneratedMessage {
+  factory SensorFov({
+    SensorFov_SensorType? type,
+    $core.int? azimuthDeg,
+    $core.int? rangeM,
+    $core.int? fovHorizontalDeg,
+    $core.int? fovVerticalDeg,
+    $core.int? elevationDeg,
+    $core.int? rollDeg,
+    $core.String? model,
+  }) {
+    final result = create();
+    if (type != null) result.type = type;
+    if (azimuthDeg != null) result.azimuthDeg = azimuthDeg;
+    if (rangeM != null) result.rangeM = rangeM;
+    if (fovHorizontalDeg != null) result.fovHorizontalDeg = fovHorizontalDeg;
+    if (fovVerticalDeg != null) result.fovVerticalDeg = fovVerticalDeg;
+    if (elevationDeg != null) result.elevationDeg = elevationDeg;
+    if (rollDeg != null) result.rollDeg = rollDeg;
+    if (model != null) result.model = model;
+    return result;
+  }
+
+  SensorFov._();
+
+  factory SensorFov.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory SensorFov.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SensorFov',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aE<SensorFov_SensorType>(1, _omitFieldNames ? '' : 'type',
+        enumValues: SensorFov_SensorType.values)
+    ..aI(2, _omitFieldNames ? '' : 'azimuthDeg', fieldType: $pb.PbFieldType.OU3)
+    ..aI(3, _omitFieldNames ? '' : 'rangeM', fieldType: $pb.PbFieldType.OU3)
+    ..aI(4, _omitFieldNames ? '' : 'fovHorizontalDeg',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(5, _omitFieldNames ? '' : 'fovVerticalDeg',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(6, _omitFieldNames ? '' : 'elevationDeg',
+        fieldType: $pb.PbFieldType.OS3)
+    ..aI(7, _omitFieldNames ? '' : 'rollDeg', fieldType: $pb.PbFieldType.OS3)
+    ..aOS(8, _omitFieldNames ? '' : 'model')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SensorFov clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SensorFov copyWith(void Function(SensorFov) updates) =>
+      super.copyWith((message) => updates(message as SensorFov)) as SensorFov;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static SensorFov create() => SensorFov._();
+  @$core.override
+  SensorFov createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static SensorFov getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<SensorFov>(create);
+  static SensorFov? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  SensorFov_SensorType get type => $_getN(0);
+  @$pb.TagNumber(1)
+  set type(SensorFov_SensorType value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasType() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearType() => $_clearField(1);
+
+  ///
+  ///  Azimuth in whole degrees, 0-359. "Pointing direction" of the cone axis,
+  ///  measured clockwise from true north. Whole degrees match ATAK-CIV's
+  ///  SensorDetailHandler default (270°) and save varint bytes over centi-deg.
+  @$pb.TagNumber(2)
+  $core.int get azimuthDeg => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set azimuthDeg($core.int value) => $_setUnsignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasAzimuthDeg() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearAzimuthDeg() => $_clearField(2);
+
+  ///
+  ///  Maximum range of the cone in meters.
+  ///  Optional — if unset, receivers should use the ATAK-CIV default of 100m.
+  @$pb.TagNumber(3)
+  $core.int get rangeM => $_getIZ(2);
+  @$pb.TagNumber(3)
+  set rangeM($core.int value) => $_setUnsignedInt32(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasRangeM() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearRangeM() => $_clearField(3);
+
+  ///
+  ///  Horizontal field of view in whole degrees (cone's angular width).
+  ///  ATAK-CIV default is 45°.
+  @$pb.TagNumber(4)
+  $core.int get fovHorizontalDeg => $_getIZ(3);
+  @$pb.TagNumber(4)
+  set fovHorizontalDeg($core.int value) => $_setUnsignedInt32(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasFovHorizontalDeg() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearFovHorizontalDeg() => $_clearField(4);
+
+  ///
+  ///  Vertical field of view in whole degrees. ATAK-CIV default is 45°.
+  ///  Optional — a value of 0 means "not set / use horizontal FOV".
+  @$pb.TagNumber(5)
+  $core.int get fovVerticalDeg => $_getIZ(4);
+  @$pb.TagNumber(5)
+  set fovVerticalDeg($core.int value) => $_setUnsignedInt32(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasFovVerticalDeg() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearFovVerticalDeg() => $_clearField(5);
+
+  ///
+  ///  Elevation angle in whole degrees. Positive = up, negative = down.
+  ///  Range -90 to +90. sint32 for varint efficiency on small negatives.
+  @$pb.TagNumber(6)
+  $core.int get elevationDeg => $_getIZ(5);
+  @$pb.TagNumber(6)
+  set elevationDeg($core.int value) => $_setSignedInt32(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasElevationDeg() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearElevationDeg() => $_clearField(6);
+
+  ///
+  ///  Roll (camera tilt) in whole degrees, -180 to +180.
+  ///  Optional — use 0 if the sensor doesn't track roll.
+  @$pb.TagNumber(7)
+  $core.int get rollDeg => $_getIZ(6);
+  @$pb.TagNumber(7)
+  set rollDeg($core.int value) => $_setSignedInt32(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasRollDeg() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearRollDeg() => $_clearField(7);
+
+  ///
+  ///  Free-form device model identifier, e.g. "FLIR-Boson-640", "SEEK".
+  ///  Optional — empty string means "unknown model" (ATAK-CIV default).
+  @$pb.TagNumber(8)
+  $core.String get model => $_getSZ(7);
+  @$pb.TagNumber(8)
+  set model($core.String value) => $_setString(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasModel() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearModel() => $_clearField(8);
+}
+
 enum TAKPacketV2_PayloadVariant {
   pli,
   chat,
@@ -2311,6 +2997,8 @@ class TAKPacketV2 extends $pb.GeneratedMessage {
     $core.String? phone,
     $core.String? cotTypeStr,
     $core.String? remarks,
+    TAKEnvironment? environment,
+    SensorFov? sensorFov,
     $core.bool? pli,
     GeoChat? chat,
     AircraftTrack? aircraft,
@@ -2348,6 +3036,8 @@ class TAKPacketV2 extends $pb.GeneratedMessage {
     if (phone != null) result.phone = phone;
     if (cotTypeStr != null) result.cotTypeStr = cotTypeStr;
     if (remarks != null) result.remarks = remarks;
+    if (environment != null) result.environment = environment;
+    if (sensorFov != null) result.sensorFov = sensorFov;
     if (pli != null) result.pli = pli;
     if (chat != null) result.chat = chat;
     if (aircraft != null) result.aircraft = aircraft;
@@ -2421,6 +3111,10 @@ class TAKPacketV2 extends $pb.GeneratedMessage {
     ..aOS(22, _omitFieldNames ? '' : 'phone')
     ..aOS(23, _omitFieldNames ? '' : 'cotTypeStr')
     ..aOS(24, _omitFieldNames ? '' : 'remarks')
+    ..aOM<TAKEnvironment>(25, _omitFieldNames ? '' : 'environment',
+        subBuilder: TAKEnvironment.create)
+    ..aOM<SensorFov>(26, _omitFieldNames ? '' : 'sensorFov',
+        subBuilder: SensorFov.create)
     ..aOB(30, _omitFieldNames ? '' : 'pli')
     ..aOM<GeoChat>(31, _omitFieldNames ? '' : 'chat',
         subBuilder: GeoChat.create)
@@ -2758,52 +3452,80 @@ class TAKPacketV2 extends $pb.GeneratedMessage {
   void clearRemarks() => $_clearField(24);
 
   ///
+  ///  Observed weather conditions (temperature, wind). From <environment>.
+  ///  Type is `TAKEnvironment`, not `Environment`, to avoid colliding with
+  ///  SwiftUI's `@Environment` property wrapper in iOS consumers.
+  @$pb.TagNumber(25)
+  TAKEnvironment get environment => $_getN(24);
+  @$pb.TagNumber(25)
+  set environment(TAKEnvironment value) => $_setField(25, value);
+  @$pb.TagNumber(25)
+  $core.bool hasEnvironment() => $_has(24);
+  @$pb.TagNumber(25)
+  void clearEnvironment() => $_clearField(25);
+  @$pb.TagNumber(25)
+  TAKEnvironment ensureEnvironment() => $_ensure(24);
+
+  ///
+  ///  Sensor field-of-view cone (camera, FLIR, laser, etc.). From <sensor>.
+  @$pb.TagNumber(26)
+  SensorFov get sensorFov => $_getN(25);
+  @$pb.TagNumber(26)
+  set sensorFov(SensorFov value) => $_setField(26, value);
+  @$pb.TagNumber(26)
+  $core.bool hasSensorFov() => $_has(25);
+  @$pb.TagNumber(26)
+  void clearSensorFov() => $_clearField(26);
+  @$pb.TagNumber(26)
+  SensorFov ensureSensorFov() => $_ensure(25);
+
+  ///
   ///  Position report (true = PLI, no extra fields beyond the common ones above)
   @$pb.TagNumber(30)
-  $core.bool get pli => $_getBF(24);
+  $core.bool get pli => $_getBF(26);
   @$pb.TagNumber(30)
-  set pli($core.bool value) => $_setBool(24, value);
+  set pli($core.bool value) => $_setBool(26, value);
   @$pb.TagNumber(30)
-  $core.bool hasPli() => $_has(24);
+  $core.bool hasPli() => $_has(26);
   @$pb.TagNumber(30)
   void clearPli() => $_clearField(30);
 
   ///
   ///  ATAK GeoChat message
   @$pb.TagNumber(31)
-  GeoChat get chat => $_getN(25);
+  GeoChat get chat => $_getN(27);
   @$pb.TagNumber(31)
   set chat(GeoChat value) => $_setField(31, value);
   @$pb.TagNumber(31)
-  $core.bool hasChat() => $_has(25);
+  $core.bool hasChat() => $_has(27);
   @$pb.TagNumber(31)
   void clearChat() => $_clearField(31);
   @$pb.TagNumber(31)
-  GeoChat ensureChat() => $_ensure(25);
+  GeoChat ensureChat() => $_ensure(27);
 
   ///
   ///  Aircraft track data (ADS-B, military air)
   @$pb.TagNumber(32)
-  AircraftTrack get aircraft => $_getN(26);
+  AircraftTrack get aircraft => $_getN(28);
   @$pb.TagNumber(32)
   set aircraft(AircraftTrack value) => $_setField(32, value);
   @$pb.TagNumber(32)
-  $core.bool hasAircraft() => $_has(26);
+  $core.bool hasAircraft() => $_has(28);
   @$pb.TagNumber(32)
   void clearAircraft() => $_clearField(32);
   @$pb.TagNumber(32)
-  AircraftTrack ensureAircraft() => $_ensure(26);
+  AircraftTrack ensureAircraft() => $_ensure(28);
 
   ///
   ///  Generic CoT detail XML for unmapped types. Kept as a fallback for CoT
   ///  types not yet promoted to a typed variant; drawings, markers, ranging
   ///  tools, and routes have dedicated variants below and should not land here.
   @$pb.TagNumber(33)
-  $core.List<$core.int> get rawDetail => $_getN(27);
+  $core.List<$core.int> get rawDetail => $_getN(29);
   @$pb.TagNumber(33)
-  set rawDetail($core.List<$core.int> value) => $_setBytes(27, value);
+  set rawDetail($core.List<$core.int> value) => $_setBytes(29, value);
   @$pb.TagNumber(33)
-  $core.bool hasRawDetail() => $_has(27);
+  $core.bool hasRawDetail() => $_has(29);
   @$pb.TagNumber(33)
   void clearRawDetail() => $_clearField(33);
 
@@ -2811,94 +3533,94 @@ class TAKPacketV2 extends $pb.GeneratedMessage {
   ///  User-drawn tactical graphic: circle, rectangle, polygon, polyline,
   ///  telestration, ranging circle, or bullseye. See DrawnShape.
   @$pb.TagNumber(34)
-  DrawnShape get shape => $_getN(28);
+  DrawnShape get shape => $_getN(30);
   @$pb.TagNumber(34)
   set shape(DrawnShape value) => $_setField(34, value);
   @$pb.TagNumber(34)
-  $core.bool hasShape() => $_has(28);
+  $core.bool hasShape() => $_has(30);
   @$pb.TagNumber(34)
   void clearShape() => $_clearField(34);
   @$pb.TagNumber(34)
-  DrawnShape ensureShape() => $_ensure(28);
+  DrawnShape ensureShape() => $_ensure(30);
 
   ///
   ///  Fixed point of interest: spot marker, waypoint, checkpoint, 2525
   ///  symbol, or custom icon. See Marker.
   @$pb.TagNumber(35)
-  Marker get marker => $_getN(29);
+  Marker get marker => $_getN(31);
   @$pb.TagNumber(35)
   set marker(Marker value) => $_setField(35, value);
   @$pb.TagNumber(35)
-  $core.bool hasMarker() => $_has(29);
+  $core.bool hasMarker() => $_has(31);
   @$pb.TagNumber(35)
   void clearMarker() => $_clearField(35);
   @$pb.TagNumber(35)
-  Marker ensureMarker() => $_ensure(29);
+  Marker ensureMarker() => $_ensure(31);
 
   ///
   ///  Range and bearing measurement line. See RangeAndBearing.
   @$pb.TagNumber(36)
-  RangeAndBearing get rab => $_getN(30);
+  RangeAndBearing get rab => $_getN(32);
   @$pb.TagNumber(36)
   set rab(RangeAndBearing value) => $_setField(36, value);
   @$pb.TagNumber(36)
-  $core.bool hasRab() => $_has(30);
+  $core.bool hasRab() => $_has(32);
   @$pb.TagNumber(36)
   void clearRab() => $_clearField(36);
   @$pb.TagNumber(36)
-  RangeAndBearing ensureRab() => $_ensure(30);
+  RangeAndBearing ensureRab() => $_ensure(32);
 
   ///
   ///  Named route with ordered waypoints and control points. See Route.
   @$pb.TagNumber(37)
-  Route get route => $_getN(31);
+  Route get route => $_getN(33);
   @$pb.TagNumber(37)
   set route(Route value) => $_setField(37, value);
   @$pb.TagNumber(37)
-  $core.bool hasRoute() => $_has(31);
+  $core.bool hasRoute() => $_has(33);
   @$pb.TagNumber(37)
   void clearRoute() => $_clearField(37);
   @$pb.TagNumber(37)
-  Route ensureRoute() => $_ensure(31);
+  Route ensureRoute() => $_ensure(33);
 
   ///
   ///  9-line MEDEVAC request. See CasevacReport.
   @$pb.TagNumber(38)
-  CasevacReport get casevac => $_getN(32);
+  CasevacReport get casevac => $_getN(34);
   @$pb.TagNumber(38)
   set casevac(CasevacReport value) => $_setField(38, value);
   @$pb.TagNumber(38)
-  $core.bool hasCasevac() => $_has(32);
+  $core.bool hasCasevac() => $_has(34);
   @$pb.TagNumber(38)
   void clearCasevac() => $_clearField(38);
   @$pb.TagNumber(38)
-  CasevacReport ensureCasevac() => $_ensure(32);
+  CasevacReport ensureCasevac() => $_ensure(34);
 
   ///
   ///  Emergency beacon / 911 alert. See EmergencyAlert.
   @$pb.TagNumber(39)
-  EmergencyAlert get emergency => $_getN(33);
+  EmergencyAlert get emergency => $_getN(35);
   @$pb.TagNumber(39)
   set emergency(EmergencyAlert value) => $_setField(39, value);
   @$pb.TagNumber(39)
-  $core.bool hasEmergency() => $_has(33);
+  $core.bool hasEmergency() => $_has(35);
   @$pb.TagNumber(39)
   void clearEmergency() => $_clearField(39);
   @$pb.TagNumber(39)
-  EmergencyAlert ensureEmergency() => $_ensure(33);
+  EmergencyAlert ensureEmergency() => $_ensure(35);
 
   ///
   ///  Task / engage request. See TaskRequest.
   @$pb.TagNumber(40)
-  TaskRequest get task => $_getN(34);
+  TaskRequest get task => $_getN(36);
   @$pb.TagNumber(40)
   set task(TaskRequest value) => $_setField(40, value);
   @$pb.TagNumber(40)
-  $core.bool hasTask() => $_has(34);
+  $core.bool hasTask() => $_has(36);
   @$pb.TagNumber(40)
   void clearTask() => $_clearField(40);
   @$pb.TagNumber(40)
-  TaskRequest ensureTask() => $_ensure(34);
+  TaskRequest ensureTask() => $_ensure(36);
 }
 
 const $core.bool _omitFieldNames =

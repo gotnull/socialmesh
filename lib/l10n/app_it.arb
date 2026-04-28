@@ -4315,7 +4315,7 @@
   "@appearanceTimeFormatSystem": {
     "description": "Time format option name"
   },
-  "appearanceTimeFormatSystemDesc": "Segui le impostazioni dell\u2019orologio del dispositivo",
+  "appearanceTimeFormatSystemDesc": "Segui le impostazioni dell’orologio del dispositivo",
   "@appearanceTimeFormatSystemDesc": {
     "description": "Time format option description"
   },
@@ -28270,10 +28270,6 @@
   "@radioConfigRegionAnz": {
     "description": "UI text: radio config region anz"
   },
-  "radioConfigRegionChina": "Cina",
-  "@radioConfigRegionChina": {
-    "description": "UI text: radio config region china"
-  },
   "radioConfigRegionEu433": "EU 433",
   "@radioConfigRegionEu433": {
     "description": "UI text: radio config region eu433"
@@ -28281,18 +28277,6 @@
   "radioConfigRegionEu868": "EU 868",
   "@radioConfigRegionEu868": {
     "description": "UI text: radio config region eu868"
-  },
-  "radioConfigRegionIndia": "India",
-  "@radioConfigRegionIndia": {
-    "description": "UI text: radio config region india"
-  },
-  "radioConfigRegionJapan": "Giappone",
-  "@radioConfigRegionJapan": {
-    "description": "UI text: radio config region japan"
-  },
-  "radioConfigRegionKorea": "Corea",
-  "@radioConfigRegionKorea": {
-    "description": "UI text: radio config region korea"
   },
   "radioConfigRegionLora24": "LoRa 2.4GHz",
   "@radioConfigRegionLora24": {
@@ -28314,33 +28298,9 @@
   "@radioConfigRegionNz865": {
     "description": "UI text: radio config region nz865"
   },
-  "radioConfigRegionRussia": "Russia",
-  "@radioConfigRegionRussia": {
-    "description": "UI text: radio config region russia"
-  },
   "radioConfigRegionSelectHint": "Seleziona la regione corrispondente alle normative del tuo paese",
   "@radioConfigRegionSelectHint": {
     "description": "Input field hint text"
-  },
-  "radioConfigRegionSingapore": "Singapore",
-  "@radioConfigRegionSingapore": {
-    "description": "UI text: radio config region singapore"
-  },
-  "radioConfigRegionTaiwan": "Taiwan",
-  "@radioConfigRegionTaiwan": {
-    "description": "UI text: radio config region taiwan"
-  },
-  "radioConfigRegionThailand": "Thailandia",
-  "@radioConfigRegionThailand": {
-    "description": "UI text: radio config region thailand"
-  },
-  "radioConfigRegionUkraine433": "Ucraina 433",
-  "@radioConfigRegionUkraine433": {
-    "description": "UI text: radio config region ukraine433"
-  },
-  "radioConfigRegionUkraine868": "Ucraina 868",
-  "@radioConfigRegionUkraine868": {
-    "description": "UI text: radio config region ukraine868"
   },
   "radioConfigRegionUnset": "Non impostata",
   "@radioConfigRegionUnset": {
@@ -40715,5 +40675,205 @@
   "sipSignalToneExampleHint": "Prova l'esempio",
   "sipDmSignalReplyPlaceholder": "📡 Segnale",
   "sipDmComposerSheetTitle": "Componi",
-  "sipDmComposerSheetTooltip": "Apri opzioni di composizione"
+  "sipDmComposerSheetTooltip": "Apri opzioni di composizione",
+  "radioConfigPresetLiteFast": "Lite Veloce",
+  "@radioConfigPresetLiteFast": {
+    "description": "Modem preset label: EU 866MHz SRD-compliant lite fast"
+  },
+  "radioConfigPresetLiteFastDesc": "EU 866MHz SRD, veloce",
+  "@radioConfigPresetLiteFastDesc": {
+    "description": "Description for lite fast modem preset"
+  },
+  "radioConfigPresetLiteSlow": "Lite Lento",
+  "@radioConfigPresetLiteSlow": {
+    "description": "Modem preset label: EU 866MHz SRD-compliant lite slow"
+  },
+  "radioConfigPresetLiteSlowDesc": "EU 866MHz SRD, maggiore portata",
+  "@radioConfigPresetLiteSlowDesc": {
+    "description": "Description for lite slow modem preset"
+  },
+  "radioConfigPresetNarrowFast": "Stretto Veloce",
+  "@radioConfigPresetNarrowFast": {
+    "description": "Modem preset label: EU 868MHz narrow fast"
+  },
+  "radioConfigPresetNarrowFastDesc": "EU 868MHz stretto, veloce",
+  "@radioConfigPresetNarrowFastDesc": {
+    "description": "Description for narrow fast modem preset"
+  },
+  "radioConfigPresetNarrowSlow": "Stretto Lento",
+  "@radioConfigPresetNarrowSlow": {
+    "description": "Modem preset label: EU 868MHz narrow slow"
+  },
+  "radioConfigPresetNarrowSlowDesc": "EU 868MHz stretto, maggiore portata",
+  "@radioConfigPresetNarrowSlowDesc": {
+    "description": "Description for narrow slow modem preset"
+  },
+  "regionSelectionRegionPh433": "Filippine 433",
+  "@regionSelectionRegionPh433": {
+    "description": "UI text: region selection region Philippines 433MHz"
+  },
+  "regionSelectionRegionPh433Desc": "Filippine",
+  "@regionSelectionRegionPh433Desc": {
+    "description": "Description text"
+  },
+  "regionSelectionRegionPh433Freq": "433 MHz",
+  "@regionSelectionRegionPh433Freq": {
+    "description": "UI text: region selection region Philippines 433MHz freq"
+  },
+  "regionSelectionRegionPh868": "Filippine 868",
+  "@regionSelectionRegionPh868": {
+    "description": "UI text: region selection region Philippines 868MHz"
+  },
+  "regionSelectionRegionPh868Desc": "Filippine",
+  "@regionSelectionRegionPh868Desc": {
+    "description": "Description text"
+  },
+  "regionSelectionRegionPh868Freq": "868 MHz",
+  "@regionSelectionRegionPh868Freq": {
+    "description": "UI text: region selection region Philippines 868MHz freq"
+  },
+  "regionSelectionRegionPh915": "Filippine 915",
+  "@regionSelectionRegionPh915": {
+    "description": "UI text: region selection region Philippines 915MHz"
+  },
+  "regionSelectionRegionPh915Desc": "Filippine",
+  "@regionSelectionRegionPh915Desc": {
+    "description": "Description text"
+  },
+  "regionSelectionRegionPh915Freq": "915 MHz",
+  "@regionSelectionRegionPh915Freq": {
+    "description": "UI text: region selection region Philippines 915MHz freq"
+  },
+  "regionSelectionRegionAnz433": "ANZ 433",
+  "@regionSelectionRegionAnz433": {
+    "description": "UI text: region selection region Australia/New Zealand 433MHz"
+  },
+  "regionSelectionRegionAnz433Desc": "Australia, Nuova Zelanda",
+  "@regionSelectionRegionAnz433Desc": {
+    "description": "Description text"
+  },
+  "regionSelectionRegionAnz433Freq": "433 MHz",
+  "@regionSelectionRegionAnz433Freq": {
+    "description": "UI text: region selection region Australia/New Zealand 433MHz freq"
+  },
+  "regionSelectionRegionKz433": "Kazakistan 433",
+  "@regionSelectionRegionKz433": {
+    "description": "UI text: region selection region Kazakhstan 433MHz"
+  },
+  "regionSelectionRegionKz433Desc": "Kazakistan",
+  "@regionSelectionRegionKz433Desc": {
+    "description": "Description text"
+  },
+  "regionSelectionRegionKz433Freq": "433 MHz",
+  "@regionSelectionRegionKz433Freq": {
+    "description": "UI text: region selection region Kazakhstan 433MHz freq"
+  },
+  "regionSelectionRegionKz863": "Kazakistan 863",
+  "@regionSelectionRegionKz863": {
+    "description": "UI text: region selection region Kazakhstan 863MHz"
+  },
+  "regionSelectionRegionKz863Desc": "Kazakistan",
+  "@regionSelectionRegionKz863Desc": {
+    "description": "Description text"
+  },
+  "regionSelectionRegionKz863Freq": "863 MHz",
+  "@regionSelectionRegionKz863Freq": {
+    "description": "UI text: region selection region Kazakhstan 863MHz freq"
+  },
+  "regionSelectionRegionNp865": "Nepal 865",
+  "@regionSelectionRegionNp865": {
+    "description": "UI text: region selection region Nepal 865MHz"
+  },
+  "regionSelectionRegionNp865Desc": "Nepal",
+  "@regionSelectionRegionNp865Desc": {
+    "description": "Description text"
+  },
+  "regionSelectionRegionNp865Freq": "865 MHz",
+  "@regionSelectionRegionNp865Freq": {
+    "description": "UI text: region selection region Nepal 865MHz freq"
+  },
+  "regionSelectionRegionBr902": "Brasile 902",
+  "@regionSelectionRegionBr902": {
+    "description": "UI text: region selection region Brazil 902MHz"
+  },
+  "regionSelectionRegionBr902Desc": "Brasile",
+  "@regionSelectionRegionBr902Desc": {
+    "description": "Description text"
+  },
+  "regionSelectionRegionBr902Freq": "902 MHz",
+  "@regionSelectionRegionBr902Freq": {
+    "description": "UI text: region selection region Brazil 902MHz freq"
+  },
+  "regionSelectionRegionItu1_2m": "ITU R1 2m",
+  "@regionSelectionRegionItu1_2m": {
+    "description": "UI text: region selection ITU Region 1 Amateur Radio 2m band"
+  },
+  "regionSelectionRegionItu1_2mDesc": "Banda radioamatoriale 2m ITU Regione 1",
+  "@regionSelectionRegionItu1_2mDesc": {
+    "description": "Description text"
+  },
+  "regionSelectionRegionItu1_2mFreq": "144-146 MHz",
+  "@regionSelectionRegionItu1_2mFreq": {
+    "description": "UI text: region selection ITU R1 2m freq"
+  },
+  "regionSelectionRegionItu23_2m": "ITU R2/3 2m",
+  "@regionSelectionRegionItu23_2m": {
+    "description": "UI text: region selection ITU Region 2/3 Amateur Radio 2m band"
+  },
+  "regionSelectionRegionItu23_2mDesc": "Banda radioamatoriale 2m ITU Regione 2/3",
+  "@regionSelectionRegionItu23_2mDesc": {
+    "description": "Description text"
+  },
+  "regionSelectionRegionItu23_2mFreq": "144-148 MHz",
+  "@regionSelectionRegionItu23_2mFreq": {
+    "description": "UI text: region selection ITU R2/3 2m freq"
+  },
+  "regionSelectionRegionEu866": "EU 866",
+  "@regionSelectionRegionEu866": {
+    "description": "UI text: region selection EU 866MHz Short-Range Devices band"
+  },
+  "regionSelectionRegionEu866Desc": "Unione Europea 866MHz SRD",
+  "@regionSelectionRegionEu866Desc": {
+    "description": "Description text"
+  },
+  "regionSelectionRegionEu866Freq": "866 MHz",
+  "@regionSelectionRegionEu866Freq": {
+    "description": "UI text: region selection EU 866 freq"
+  },
+  "regionSelectionRegionEu874": "EU 874",
+  "@regionSelectionRegionEu874": {
+    "description": "UI text: region selection EU 874MHz Short-Range Devices band"
+  },
+  "regionSelectionRegionEu874Desc": "Unione Europea 874MHz SRD",
+  "@regionSelectionRegionEu874Desc": {
+    "description": "Description text"
+  },
+  "regionSelectionRegionEu874Freq": "874 MHz",
+  "@regionSelectionRegionEu874Freq": {
+    "description": "UI text: region selection EU 874 freq"
+  },
+  "regionSelectionRegionEu917": "EU 917",
+  "@regionSelectionRegionEu917": {
+    "description": "UI text: region selection EU 917MHz Short-Range Devices band"
+  },
+  "regionSelectionRegionEu917Desc": "Unione Europea 917MHz SRD",
+  "@regionSelectionRegionEu917Desc": {
+    "description": "Description text"
+  },
+  "regionSelectionRegionEu917Freq": "917 MHz",
+  "@regionSelectionRegionEu917Freq": {
+    "description": "UI text: region selection EU 917 freq"
+  },
+  "regionSelectionRegionEuN868": "EU 868 stretto",
+  "@regionSelectionRegionEuN868": {
+    "description": "UI text: region selection EU 868MHz band with narrow presets"
+  },
+  "regionSelectionRegionEuN868Desc": "Unione Europea 868MHz stretto",
+  "@regionSelectionRegionEuN868Desc": {
+    "description": "Description text"
+  },
+  "regionSelectionRegionEuN868Freq": "868 MHz",
+  "@regionSelectionRegionEuN868Freq": {
+    "description": "UI text: region selection EU 868 narrow freq"
+  }
 }

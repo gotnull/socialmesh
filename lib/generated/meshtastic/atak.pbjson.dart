@@ -896,6 +896,61 @@ const CasevacReport$json = {
     {'1': 'child', '3': 13, '4': 1, '5': 13, '10': 'child'},
     {'1': 'terrain_flags', '3': 14, '4': 1, '5': 13, '10': 'terrainFlags'},
     {'1': 'frequency', '3': 15, '4': 1, '5': 9, '10': 'frequency'},
+    {'1': 'title', '3': 16, '4': 1, '5': 9, '10': 'title'},
+    {'1': 'medline_remarks', '3': 17, '4': 1, '5': 9, '10': 'medlineRemarks'},
+    {'1': 'urgent_count', '3': 18, '4': 1, '5': 13, '10': 'urgentCount'},
+    {
+      '1': 'urgent_surgical_count',
+      '3': 19,
+      '4': 1,
+      '5': 13,
+      '10': 'urgentSurgicalCount'
+    },
+    {'1': 'priority_count', '3': 20, '4': 1, '5': 13, '10': 'priorityCount'},
+    {'1': 'routine_count', '3': 21, '4': 1, '5': 13, '10': 'routineCount'},
+    {
+      '1': 'convenience_count',
+      '3': 22,
+      '4': 1,
+      '5': 13,
+      '10': 'convenienceCount'
+    },
+    {'1': 'equipment_detail', '3': 23, '4': 1, '5': 9, '10': 'equipmentDetail'},
+    {
+      '1': 'zone_protected_coord',
+      '3': 24,
+      '4': 1,
+      '5': 9,
+      '10': 'zoneProtectedCoord'
+    },
+    {
+      '1': 'terrain_slope_dir',
+      '3': 25,
+      '4': 1,
+      '5': 9,
+      '10': 'terrainSlopeDir'
+    },
+    {
+      '1': 'terrain_other_detail',
+      '3': 26,
+      '4': 1,
+      '5': 9,
+      '10': 'terrainOtherDetail'
+    },
+    {'1': 'marked_by', '3': 27, '4': 1, '5': 9, '10': 'markedBy'},
+    {'1': 'obstacles', '3': 28, '4': 1, '5': 9, '10': 'obstacles'},
+    {'1': 'winds_are_from', '3': 29, '4': 1, '5': 9, '10': 'windsAreFrom'},
+    {'1': 'friendlies', '3': 30, '4': 1, '5': 9, '10': 'friendlies'},
+    {'1': 'enemy', '3': 31, '4': 1, '5': 9, '10': 'enemy'},
+    {'1': 'hlz_remarks', '3': 32, '4': 1, '5': 9, '10': 'hlzRemarks'},
+    {
+      '1': 'zmist',
+      '3': 33,
+      '4': 3,
+      '5': 11,
+      '6': '.meshtastic.ZMistEntry',
+      '10': 'zmist'
+    },
   ],
   '4': [
     CasevacReport_Precedence$json,
@@ -955,16 +1010,46 @@ final $typed_data.Uint8List casevacReportDescriptor = $convert.base64Decode(
     'dmlsaWFuEiYKD25vbl91c19taWxpdGFyeRgKIAEoDVINbm9uVXNNaWxpdGFyeRImCg9ub25fdX'
     'NfY2l2aWxpYW4YCyABKA1SDW5vblVzQ2l2aWxpYW4SEAoDZXB3GAwgASgNUgNlcHcSFAoFY2hp'
     'bGQYDSABKA1SBWNoaWxkEiMKDXRlcnJhaW5fZmxhZ3MYDiABKA1SDHRlcnJhaW5GbGFncxIcCg'
-    'lmcmVxdWVuY3kYDyABKAlSCWZyZXF1ZW5jeSKrAQoKUHJlY2VkZW5jZRIaChZQcmVjZWRlbmNl'
-    'X1Vuc3BlY2lmaWVkEAASFQoRUHJlY2VkZW5jZV9VcmdlbnQQARIdChlQcmVjZWRlbmNlX1VyZ2'
-    'VudFN1cmdpY2FsEAISFwoTUHJlY2VkZW5jZV9Qcmlvcml0eRADEhYKElByZWNlZGVuY2VfUm91'
-    'dGluZRAEEhoKFlByZWNlZGVuY2VfQ29udmVuaWVuY2UQBSKbAQoKSGx6TWFya2luZxIaChZIbH'
-    'pNYXJraW5nX1Vuc3BlY2lmaWVkEAASFQoRSGx6TWFya2luZ19QYW5lbHMQARIZChVIbHpNYXJr'
-    'aW5nX1B5cm9TaWduYWwQAhIUChBIbHpNYXJraW5nX1Ntb2tlEAMSEwoPSGx6TWFya2luZ19Ob2'
-    '5lEAQSFAoQSGx6TWFya2luZ19PdGhlchAFIpIBCghTZWN1cml0eRIYChRTZWN1cml0eV9VbnNw'
-    'ZWNpZmllZBAAEhQKEFNlY3VyaXR5X05vRW5lbXkQARIaChZTZWN1cml0eV9Qb3NzaWJsZUVuZW'
-    '15EAISGAoUU2VjdXJpdHlfRW5lbXlJbkFyZWEQAxIgChxTZWN1cml0eV9FbmVteUluQXJtZWRD'
-    'b250YWN0EAQ=');
+    'lmcmVxdWVuY3kYDyABKAlSCWZyZXF1ZW5jeRIUCgV0aXRsZRgQIAEoCVIFdGl0bGUSJwoPbWVk'
+    'bGluZV9yZW1hcmtzGBEgASgJUg5tZWRsaW5lUmVtYXJrcxIhCgx1cmdlbnRfY291bnQYEiABKA'
+    '1SC3VyZ2VudENvdW50EjIKFXVyZ2VudF9zdXJnaWNhbF9jb3VudBgTIAEoDVITdXJnZW50U3Vy'
+    'Z2ljYWxDb3VudBIlCg5wcmlvcml0eV9jb3VudBgUIAEoDVINcHJpb3JpdHlDb3VudBIjCg1yb3'
+    'V0aW5lX2NvdW50GBUgASgNUgxyb3V0aW5lQ291bnQSKwoRY29udmVuaWVuY2VfY291bnQYFiAB'
+    'KA1SEGNvbnZlbmllbmNlQ291bnQSKQoQZXF1aXBtZW50X2RldGFpbBgXIAEoCVIPZXF1aXBtZW'
+    '50RGV0YWlsEjAKFHpvbmVfcHJvdGVjdGVkX2Nvb3JkGBggASgJUhJ6b25lUHJvdGVjdGVkQ29v'
+    'cmQSKgoRdGVycmFpbl9zbG9wZV9kaXIYGSABKAlSD3RlcnJhaW5TbG9wZURpchIwChR0ZXJyYW'
+    'luX290aGVyX2RldGFpbBgaIAEoCVISdGVycmFpbk90aGVyRGV0YWlsEhsKCW1hcmtlZF9ieRgb'
+    'IAEoCVIIbWFya2VkQnkSHAoJb2JzdGFjbGVzGBwgASgJUglvYnN0YWNsZXMSJAoOd2luZHNfYX'
+    'JlX2Zyb20YHSABKAlSDHdpbmRzQXJlRnJvbRIeCgpmcmllbmRsaWVzGB4gASgJUgpmcmllbmRs'
+    'aWVzEhQKBWVuZW15GB8gASgJUgVlbmVteRIfCgtobHpfcmVtYXJrcxggIAEoCVIKaGx6UmVtYX'
+    'JrcxIsCgV6bWlzdBghIAMoCzIWLm1lc2h0YXN0aWMuWk1pc3RFbnRyeVIFem1pc3QiqwEKClBy'
+    'ZWNlZGVuY2USGgoWUHJlY2VkZW5jZV9VbnNwZWNpZmllZBAAEhUKEVByZWNlZGVuY2VfVXJnZW'
+    '50EAESHQoZUHJlY2VkZW5jZV9VcmdlbnRTdXJnaWNhbBACEhcKE1ByZWNlZGVuY2VfUHJpb3Jp'
+    'dHkQAxIWChJQcmVjZWRlbmNlX1JvdXRpbmUQBBIaChZQcmVjZWRlbmNlX0NvbnZlbmllbmNlEA'
+    'UimwEKCkhsek1hcmtpbmcSGgoWSGx6TWFya2luZ19VbnNwZWNpZmllZBAAEhUKEUhsek1hcmtp'
+    'bmdfUGFuZWxzEAESGQoVSGx6TWFya2luZ19QeXJvU2lnbmFsEAISFAoQSGx6TWFya2luZ19TbW'
+    '9rZRADEhMKD0hsek1hcmtpbmdfTm9uZRAEEhQKEEhsek1hcmtpbmdfT3RoZXIQBSKSAQoIU2Vj'
+    'dXJpdHkSGAoUU2VjdXJpdHlfVW5zcGVjaWZpZWQQABIUChBTZWN1cml0eV9Ob0VuZW15EAESGg'
+    'oWU2VjdXJpdHlfUG9zc2libGVFbmVteRACEhgKFFNlY3VyaXR5X0VuZW15SW5BcmVhEAMSIAoc'
+    'U2VjdXJpdHlfRW5lbXlJbkFybWVkQ29udGFjdBAE');
+
+@$core.Deprecated('Use zMistEntryDescriptor instead')
+const ZMistEntry$json = {
+  '1': 'ZMistEntry',
+  '2': [
+    {'1': 'title', '3': 1, '4': 1, '5': 9, '10': 'title'},
+    {'1': 'z', '3': 2, '4': 1, '5': 9, '10': 'z'},
+    {'1': 'm', '3': 3, '4': 1, '5': 9, '10': 'm'},
+    {'1': 'i', '3': 4, '4': 1, '5': 9, '10': 'i'},
+    {'1': 's', '3': 5, '4': 1, '5': 9, '10': 's'},
+    {'1': 't', '3': 6, '4': 1, '5': 9, '10': 't'},
+  ],
+};
+
+/// Descriptor for `ZMistEntry`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List zMistEntryDescriptor = $convert.base64Decode(
+    'CgpaTWlzdEVudHJ5EhQKBXRpdGxlGAEgASgJUgV0aXRsZRIMCgF6GAIgASgJUgF6EgwKAW0YAy'
+    'ABKAlSAW0SDAoBaRgEIAEoCVIBaRIMCgFzGAUgASgJUgFzEgwKAXQYBiABKAlSAXQ=');
 
 @$core.Deprecated('Use emergencyAlertDescriptor instead')
 const EmergencyAlert$json = {
@@ -1079,6 +1164,100 @@ final $typed_data.Uint8List taskRequestDescriptor = $convert.base64Decode(
     'AhIVChFTdGF0dXNfSW5Qcm9ncmVzcxADEhQKEFN0YXR1c19Db21wbGV0ZWQQBBIUChBTdGF0dX'
     'NfQ2FuY2VsbGVkEAU=');
 
+@$core.Deprecated('Use tAKEnvironmentDescriptor instead')
+const TAKEnvironment$json = {
+  '1': 'TAKEnvironment',
+  '2': [
+    {
+      '1': 'temperature_c_x10',
+      '3': 1,
+      '4': 1,
+      '5': 17,
+      '10': 'temperatureCX10'
+    },
+    {
+      '1': 'wind_direction_deg',
+      '3': 2,
+      '4': 1,
+      '5': 13,
+      '10': 'windDirectionDeg'
+    },
+    {'1': 'wind_speed_cm_s', '3': 3, '4': 1, '5': 13, '10': 'windSpeedCmS'},
+  ],
+};
+
+/// Descriptor for `TAKEnvironment`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List tAKEnvironmentDescriptor = $convert.base64Decode(
+    'Cg5UQUtFbnZpcm9ubWVudBIqChF0ZW1wZXJhdHVyZV9jX3gxMBgBIAEoEVIPdGVtcGVyYXR1cm'
+    'VDWDEwEiwKEndpbmRfZGlyZWN0aW9uX2RlZxgCIAEoDVIQd2luZERpcmVjdGlvbkRlZxIlCg93'
+    'aW5kX3NwZWVkX2NtX3MYAyABKA1SDHdpbmRTcGVlZENtUw==');
+
+@$core.Deprecated('Use sensorFovDescriptor instead')
+const SensorFov$json = {
+  '1': 'SensorFov',
+  '2': [
+    {
+      '1': 'type',
+      '3': 1,
+      '4': 1,
+      '5': 14,
+      '6': '.meshtastic.SensorFov.SensorType',
+      '10': 'type'
+    },
+    {'1': 'azimuth_deg', '3': 2, '4': 1, '5': 13, '10': 'azimuthDeg'},
+    {
+      '1': 'range_m',
+      '3': 3,
+      '4': 1,
+      '5': 13,
+      '9': 0,
+      '10': 'rangeM',
+      '17': true
+    },
+    {
+      '1': 'fov_horizontal_deg',
+      '3': 4,
+      '4': 1,
+      '5': 13,
+      '10': 'fovHorizontalDeg'
+    },
+    {'1': 'fov_vertical_deg', '3': 5, '4': 1, '5': 13, '10': 'fovVerticalDeg'},
+    {'1': 'elevation_deg', '3': 6, '4': 1, '5': 17, '10': 'elevationDeg'},
+    {'1': 'roll_deg', '3': 7, '4': 1, '5': 17, '10': 'rollDeg'},
+    {'1': 'model', '3': 8, '4': 1, '5': 9, '10': 'model'},
+  ],
+  '4': [SensorFov_SensorType$json],
+  '8': [
+    {'1': '_range_m'},
+  ],
+};
+
+@$core.Deprecated('Use sensorFovDescriptor instead')
+const SensorFov_SensorType$json = {
+  '1': 'SensorType',
+  '2': [
+    {'1': 'SensorType_Unspecified', '2': 0},
+    {'1': 'SensorType_Camera', '2': 1},
+    {'1': 'SensorType_Thermal', '2': 2},
+    {'1': 'SensorType_Laser', '2': 3},
+    {'1': 'SensorType_Nvg', '2': 4},
+    {'1': 'SensorType_Rf', '2': 5},
+    {'1': 'SensorType_Other', '2': 6},
+  ],
+};
+
+/// Descriptor for `SensorFov`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List sensorFovDescriptor = $convert.base64Decode(
+    'CglTZW5zb3JGb3YSNAoEdHlwZRgBIAEoDjIgLm1lc2h0YXN0aWMuU2Vuc29yRm92LlNlbnNvcl'
+    'R5cGVSBHR5cGUSHwoLYXppbXV0aF9kZWcYAiABKA1SCmF6aW11dGhEZWcSHAoHcmFuZ2VfbRgD'
+    'IAEoDUgAUgZyYW5nZU2IAQESLAoSZm92X2hvcml6b250YWxfZGVnGAQgASgNUhBmb3ZIb3Jpem'
+    '9udGFsRGVnEigKEGZvdl92ZXJ0aWNhbF9kZWcYBSABKA1SDmZvdlZlcnRpY2FsRGVnEiMKDWVs'
+    'ZXZhdGlvbl9kZWcYBiABKBFSDGVsZXZhdGlvbkRlZxIZCghyb2xsX2RlZxgHIAEoEVIHcm9sbE'
+    'RlZxIUCgVtb2RlbBgIIAEoCVIFbW9kZWwiqgEKClNlbnNvclR5cGUSGgoWU2Vuc29yVHlwZV9V'
+    'bnNwZWNpZmllZBAAEhUKEVNlbnNvclR5cGVfQ2FtZXJhEAESFgoSU2Vuc29yVHlwZV9UaGVybW'
+    'FsEAISFAoQU2Vuc29yVHlwZV9MYXNlchADEhIKDlNlbnNvclR5cGVfTnZnEAQSEQoNU2Vuc29y'
+    'VHlwZV9SZhAFEhQKEFNlbnNvclR5cGVfT3RoZXIQBkIKCghfcmFuZ2VfbQ==');
+
 @$core.Deprecated('Use tAKPacketV2Descriptor instead')
 const TAKPacketV2$json = {
   '1': 'TAKPacketV2',
@@ -1149,6 +1328,26 @@ const TAKPacketV2$json = {
     {'1': 'phone', '3': 22, '4': 1, '5': 9, '10': 'phone'},
     {'1': 'cot_type_str', '3': 23, '4': 1, '5': 9, '10': 'cotTypeStr'},
     {'1': 'remarks', '3': 24, '4': 1, '5': 9, '10': 'remarks'},
+    {
+      '1': 'environment',
+      '3': 25,
+      '4': 1,
+      '5': 11,
+      '6': '.meshtastic.TAKEnvironment',
+      '9': 1,
+      '10': 'environment',
+      '17': true
+    },
+    {
+      '1': 'sensor_fov',
+      '3': 26,
+      '4': 1,
+      '5': 11,
+      '6': '.meshtastic.SensorFov',
+      '9': 2,
+      '10': 'sensorFov',
+      '17': true
+    },
     {'1': 'pli', '3': 30, '4': 1, '5': 8, '9': 0, '10': 'pli'},
     {
       '1': 'chat',
@@ -1235,6 +1434,13 @@ const TAKPacketV2$json = {
   ],
   '8': [
     {'1': 'payload_variant'},
+    {'1': '_environment'},
+    {'1': '_sensor_fov'},
+  ],
+  '9': [
+    {'1': 27, '2': 28},
+    {'1': 28, '2': 29},
+    {'1': 29, '2': 30},
   ],
 };
 
@@ -1254,13 +1460,17 @@ final $typed_data.Uint8List tAKPacketV2Descriptor = $convert.base64Decode(
     'lvbhIdCgp0YWtfZGV2aWNlGBIgASgJUgl0YWtEZXZpY2USIQoMdGFrX3BsYXRmb3JtGBMgASgJ'
     'Ugt0YWtQbGF0Zm9ybRIVCgZ0YWtfb3MYFCABKAlSBXRha09zEhoKCGVuZHBvaW50GBUgASgJUg'
     'hlbmRwb2ludBIUCgVwaG9uZRgWIAEoCVIFcGhvbmUSIAoMY290X3R5cGVfc3RyGBcgASgJUgpj'
-    'b3RUeXBlU3RyEhgKB3JlbWFya3MYGCABKAlSB3JlbWFya3MSEgoDcGxpGB4gASgISABSA3BsaR'
-    'IpCgRjaGF0GB8gASgLMhMubWVzaHRhc3RpYy5HZW9DaGF0SABSBGNoYXQSNwoIYWlyY3JhZnQY'
-    'ICABKAsyGS5tZXNodGFzdGljLkFpcmNyYWZ0VHJhY2tIAFIIYWlyY3JhZnQSHwoKcmF3X2RldG'
-    'FpbBghIAEoDEgAUglyYXdEZXRhaWwSLgoFc2hhcGUYIiABKAsyFi5tZXNodGFzdGljLkRyYXdu'
-    'U2hhcGVIAFIFc2hhcGUSLAoGbWFya2VyGCMgASgLMhIubWVzaHRhc3RpYy5NYXJrZXJIAFIGbW'
-    'Fya2VyEi8KA3JhYhgkIAEoCzIbLm1lc2h0YXN0aWMuUmFuZ2VBbmRCZWFyaW5nSABSA3JhYhIp'
-    'CgVyb3V0ZRglIAEoCzIRLm1lc2h0YXN0aWMuUm91dGVIAFIFcm91dGUSNQoHY2FzZXZhYxgmIA'
-    'EoCzIZLm1lc2h0YXN0aWMuQ2FzZXZhY1JlcG9ydEgAUgdjYXNldmFjEjoKCWVtZXJnZW5jeRgn'
-    'IAEoCzIaLm1lc2h0YXN0aWMuRW1lcmdlbmN5QWxlcnRIAFIJZW1lcmdlbmN5Ei0KBHRhc2sYKC'
-    'ABKAsyFy5tZXNodGFzdGljLlRhc2tSZXF1ZXN0SABSBHRhc2tCEQoPcGF5bG9hZF92YXJpYW50');
+    'b3RUeXBlU3RyEhgKB3JlbWFya3MYGCABKAlSB3JlbWFya3MSQQoLZW52aXJvbm1lbnQYGSABKA'
+    'syGi5tZXNodGFzdGljLlRBS0Vudmlyb25tZW50SAFSC2Vudmlyb25tZW50iAEBEjkKCnNlbnNv'
+    'cl9mb3YYGiABKAsyFS5tZXNodGFzdGljLlNlbnNvckZvdkgCUglzZW5zb3JGb3aIAQESEgoDcG'
+    'xpGB4gASgISABSA3BsaRIpCgRjaGF0GB8gASgLMhMubWVzaHRhc3RpYy5HZW9DaGF0SABSBGNo'
+    'YXQSNwoIYWlyY3JhZnQYICABKAsyGS5tZXNodGFzdGljLkFpcmNyYWZ0VHJhY2tIAFIIYWlyY3'
+    'JhZnQSHwoKcmF3X2RldGFpbBghIAEoDEgAUglyYXdEZXRhaWwSLgoFc2hhcGUYIiABKAsyFi5t'
+    'ZXNodGFzdGljLkRyYXduU2hhcGVIAFIFc2hhcGUSLAoGbWFya2VyGCMgASgLMhIubWVzaHRhc3'
+    'RpYy5NYXJrZXJIAFIGbWFya2VyEi8KA3JhYhgkIAEoCzIbLm1lc2h0YXN0aWMuUmFuZ2VBbmRC'
+    'ZWFyaW5nSABSA3JhYhIpCgVyb3V0ZRglIAEoCzIRLm1lc2h0YXN0aWMuUm91dGVIAFIFcm91dG'
+    'USNQoHY2FzZXZhYxgmIAEoCzIZLm1lc2h0YXN0aWMuQ2FzZXZhY1JlcG9ydEgAUgdjYXNldmFj'
+    'EjoKCWVtZXJnZW5jeRgnIAEoCzIaLm1lc2h0YXN0aWMuRW1lcmdlbmN5QWxlcnRIAFIJZW1lcm'
+    'dlbmN5Ei0KBHRhc2sYKCABKAsyFy5tZXNodGFzdGljLlRhc2tSZXF1ZXN0SABSBHRhc2tCEQoP'
+    'cGF5bG9hZF92YXJpYW50Qg4KDF9lbnZpcm9ubWVudEINCgtfc2Vuc29yX2ZvdkoECBsQHEoECB'
+    'wQHUoECB0QHg==');

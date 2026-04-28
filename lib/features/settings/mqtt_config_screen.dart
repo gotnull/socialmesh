@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../utils/time_format.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
+import '../../core/meshtastic/region_metadata.dart' as region_metadata;
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
@@ -995,18 +996,10 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
 }
 
 /// Returns the duty cycle percentage for a given LoRa region.
-/// EU and UA regions are restricted to 10%. All others are 100% (unrestricted).
-int _dutyCycleForRegion(config_pbenum.Config_LoRaConfig_RegionCode region) {
-  switch (region) {
-    case config_pbenum.Config_LoRaConfig_RegionCode.EU_433:
-    case config_pbenum.Config_LoRaConfig_RegionCode.EU_868:
-    case config_pbenum.Config_LoRaConfig_RegionCode.UA_433:
-    case config_pbenum.Config_LoRaConfig_RegionCode.UA_868:
-      return 10;
-    default:
-      return 100;
-  }
-}
+/// Delegates to the centralized region metadata (single source of truth
+/// for regulatory data); see `lib/core/meshtastic/region_metadata.dart`.
+int _dutyCycleForRegion(config_pbenum.Config_LoRaConfig_RegionCode region) =>
+    region_metadata.dutyCycleForRegion(region);
 
 class _SectionHeader extends StatelessWidget {
   final String title;

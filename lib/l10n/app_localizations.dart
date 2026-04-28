@@ -24083,6 +24083,258 @@ abstract class AppLocalizations {
   /// **'2.4 GHz'**
   String get regionSelectionRegionLora24Freq;
 
+  /// UI text: region selection region Philippines 433MHz
+  ///
+  /// In en, this message translates to:
+  /// **'Philippines 433'**
+  String get regionSelectionRegionPh433;
+
+  /// Description text
+  ///
+  /// In en, this message translates to:
+  /// **'Philippines'**
+  String get regionSelectionRegionPh433Desc;
+
+  /// UI text: region selection region Philippines 433MHz freq
+  ///
+  /// In en, this message translates to:
+  /// **'433 MHz'**
+  String get regionSelectionRegionPh433Freq;
+
+  /// UI text: region selection region Philippines 868MHz
+  ///
+  /// In en, this message translates to:
+  /// **'Philippines 868'**
+  String get regionSelectionRegionPh868;
+
+  /// Description text
+  ///
+  /// In en, this message translates to:
+  /// **'Philippines'**
+  String get regionSelectionRegionPh868Desc;
+
+  /// UI text: region selection region Philippines 868MHz freq
+  ///
+  /// In en, this message translates to:
+  /// **'868 MHz'**
+  String get regionSelectionRegionPh868Freq;
+
+  /// UI text: region selection region Philippines 915MHz
+  ///
+  /// In en, this message translates to:
+  /// **'Philippines 915'**
+  String get regionSelectionRegionPh915;
+
+  /// Description text
+  ///
+  /// In en, this message translates to:
+  /// **'Philippines'**
+  String get regionSelectionRegionPh915Desc;
+
+  /// UI text: region selection region Philippines 915MHz freq
+  ///
+  /// In en, this message translates to:
+  /// **'915 MHz'**
+  String get regionSelectionRegionPh915Freq;
+
+  /// UI text: region selection region Australia/New Zealand 433MHz
+  ///
+  /// In en, this message translates to:
+  /// **'ANZ 433'**
+  String get regionSelectionRegionAnz433;
+
+  /// Description text
+  ///
+  /// In en, this message translates to:
+  /// **'Australia, New Zealand'**
+  String get regionSelectionRegionAnz433Desc;
+
+  /// UI text: region selection region Australia/New Zealand 433MHz freq
+  ///
+  /// In en, this message translates to:
+  /// **'433 MHz'**
+  String get regionSelectionRegionAnz433Freq;
+
+  /// UI text: region selection region Kazakhstan 433MHz
+  ///
+  /// In en, this message translates to:
+  /// **'Kazakhstan 433'**
+  String get regionSelectionRegionKz433;
+
+  /// Description text
+  ///
+  /// In en, this message translates to:
+  /// **'Kazakhstan'**
+  String get regionSelectionRegionKz433Desc;
+
+  /// UI text: region selection region Kazakhstan 433MHz freq
+  ///
+  /// In en, this message translates to:
+  /// **'433 MHz'**
+  String get regionSelectionRegionKz433Freq;
+
+  /// UI text: region selection region Kazakhstan 863MHz
+  ///
+  /// In en, this message translates to:
+  /// **'Kazakhstan 863'**
+  String get regionSelectionRegionKz863;
+
+  /// Description text
+  ///
+  /// In en, this message translates to:
+  /// **'Kazakhstan'**
+  String get regionSelectionRegionKz863Desc;
+
+  /// UI text: region selection region Kazakhstan 863MHz freq
+  ///
+  /// In en, this message translates to:
+  /// **'863 MHz'**
+  String get regionSelectionRegionKz863Freq;
+
+  /// UI text: region selection region Nepal 865MHz
+  ///
+  /// In en, this message translates to:
+  /// **'Nepal 865'**
+  String get regionSelectionRegionNp865;
+
+  /// Description text
+  ///
+  /// In en, this message translates to:
+  /// **'Nepal'**
+  String get regionSelectionRegionNp865Desc;
+
+  /// UI text: region selection region Nepal 865MHz freq
+  ///
+  /// In en, this message translates to:
+  /// **'865 MHz'**
+  String get regionSelectionRegionNp865Freq;
+
+  /// UI text: region selection region Brazil 902MHz
+  ///
+  /// In en, this message translates to:
+  /// **'Brazil 902'**
+  String get regionSelectionRegionBr902;
+
+  /// Description text
+  ///
+  /// In en, this message translates to:
+  /// **'Brazil'**
+  String get regionSelectionRegionBr902Desc;
+
+  /// UI text: region selection region Brazil 902MHz freq
+  ///
+  /// In en, this message translates to:
+  /// **'902 MHz'**
+  String get regionSelectionRegionBr902Freq;
+
+  /// UI text: region selection ITU Region 1 Amateur Radio 2m band
+  ///
+  /// In en, this message translates to:
+  /// **'ITU R1 2m'**
+  String get regionSelectionRegionItu1_2m;
+
+  /// Description text
+  ///
+  /// In en, this message translates to:
+  /// **'ITU Region 1 amateur radio 2m band'**
+  String get regionSelectionRegionItu1_2mDesc;
+
+  /// UI text: region selection ITU R1 2m freq
+  ///
+  /// In en, this message translates to:
+  /// **'144-146 MHz'**
+  String get regionSelectionRegionItu1_2mFreq;
+
+  /// UI text: region selection ITU Region 2/3 Amateur Radio 2m band
+  ///
+  /// In en, this message translates to:
+  /// **'ITU R2/3 2m'**
+  String get regionSelectionRegionItu23_2m;
+
+  /// Description text
+  ///
+  /// In en, this message translates to:
+  /// **'ITU Region 2/3 amateur radio 2m band'**
+  String get regionSelectionRegionItu23_2mDesc;
+
+  /// UI text: region selection ITU R2/3 2m freq
+  ///
+  /// In en, this message translates to:
+  /// **'144-148 MHz'**
+  String get regionSelectionRegionItu23_2mFreq;
+
+  /// UI text: region selection EU 866MHz Short-Range Devices band
+  ///
+  /// In en, this message translates to:
+  /// **'EU 866'**
+  String get regionSelectionRegionEu866;
+
+  /// Description text
+  ///
+  /// In en, this message translates to:
+  /// **'European Union 866MHz SRD'**
+  String get regionSelectionRegionEu866Desc;
+
+  /// UI text: region selection EU 866 freq
+  ///
+  /// In en, this message translates to:
+  /// **'866 MHz'**
+  String get regionSelectionRegionEu866Freq;
+
+  /// UI text: region selection EU 874MHz Short-Range Devices band
+  ///
+  /// In en, this message translates to:
+  /// **'EU 874'**
+  String get regionSelectionRegionEu874;
+
+  /// Description text
+  ///
+  /// In en, this message translates to:
+  /// **'European Union 874MHz SRD'**
+  String get regionSelectionRegionEu874Desc;
+
+  /// UI text: region selection EU 874 freq
+  ///
+  /// In en, this message translates to:
+  /// **'874 MHz'**
+  String get regionSelectionRegionEu874Freq;
+
+  /// UI text: region selection EU 917MHz Short-Range Devices band
+  ///
+  /// In en, this message translates to:
+  /// **'EU 917'**
+  String get regionSelectionRegionEu917;
+
+  /// Description text
+  ///
+  /// In en, this message translates to:
+  /// **'European Union 917MHz SRD'**
+  String get regionSelectionRegionEu917Desc;
+
+  /// UI text: region selection EU 917 freq
+  ///
+  /// In en, this message translates to:
+  /// **'917 MHz'**
+  String get regionSelectionRegionEu917Freq;
+
+  /// UI text: region selection EU 868MHz band with narrow presets
+  ///
+  /// In en, this message translates to:
+  /// **'EU 868 Narrow'**
+  String get regionSelectionRegionEuN868;
+
+  /// Description text
+  ///
+  /// In en, this message translates to:
+  /// **'European Union 868MHz narrow'**
+  String get regionSelectionRegionEuN868Desc;
+
+  /// UI text: region selection EU 868 narrow freq
+  ///
+  /// In en, this message translates to:
+  /// **'868 MHz'**
+  String get regionSelectionRegionEuN868Freq;
+
   /// UI text: region selection region my433
   ///
   /// In en, this message translates to:
@@ -42906,71 +43158,17 @@ abstract class AppLocalizations {
   /// **'EU 868'**
   String get radioConfigRegionEu868;
 
-  /// UI text: radio config region china
-  ///
-  /// In en, this message translates to:
-  /// **'China'**
-  String get radioConfigRegionChina;
-
-  /// UI text: radio config region japan
-  ///
-  /// In en, this message translates to:
-  /// **'Japan'**
-  String get radioConfigRegionJapan;
-
   /// UI text: radio config region anz
   ///
   /// In en, this message translates to:
   /// **'ANZ'**
   String get radioConfigRegionAnz;
 
-  /// UI text: radio config region korea
-  ///
-  /// In en, this message translates to:
-  /// **'Korea'**
-  String get radioConfigRegionKorea;
-
-  /// UI text: radio config region taiwan
-  ///
-  /// In en, this message translates to:
-  /// **'Taiwan'**
-  String get radioConfigRegionTaiwan;
-
-  /// UI text: radio config region russia
-  ///
-  /// In en, this message translates to:
-  /// **'Russia'**
-  String get radioConfigRegionRussia;
-
-  /// UI text: radio config region india
-  ///
-  /// In en, this message translates to:
-  /// **'India'**
-  String get radioConfigRegionIndia;
-
   /// UI text: radio config region nz865
   ///
   /// In en, this message translates to:
   /// **'NZ 865'**
   String get radioConfigRegionNz865;
-
-  /// UI text: radio config region thailand
-  ///
-  /// In en, this message translates to:
-  /// **'Thailand'**
-  String get radioConfigRegionThailand;
-
-  /// UI text: radio config region ukraine433
-  ///
-  /// In en, this message translates to:
-  /// **'Ukraine 433'**
-  String get radioConfigRegionUkraine433;
-
-  /// UI text: radio config region ukraine868
-  ///
-  /// In en, this message translates to:
-  /// **'Ukraine 868'**
-  String get radioConfigRegionUkraine868;
 
   /// UI text: radio config region malaysia433
   ///
@@ -42983,12 +43181,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Malaysia 919'**
   String get radioConfigRegionMalaysia919;
-
-  /// UI text: radio config region singapore
-  ///
-  /// In en, this message translates to:
-  /// **'Singapore'**
-  String get radioConfigRegionSingapore;
 
   /// UI text: radio config region lora24
   ///
@@ -43115,6 +43307,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Long range with turbo speed'**
   String get radioConfigPresetLongTurboDesc;
+
+  /// Modem preset label: EU 866MHz SRD-compliant lite fast
+  ///
+  /// In en, this message translates to:
+  /// **'Lite Fast'**
+  String get radioConfigPresetLiteFast;
+
+  /// Description for lite fast modem preset
+  ///
+  /// In en, this message translates to:
+  /// **'EU 866MHz SRD, fast'**
+  String get radioConfigPresetLiteFastDesc;
+
+  /// Modem preset label: EU 866MHz SRD-compliant lite slow
+  ///
+  /// In en, this message translates to:
+  /// **'Lite Slow'**
+  String get radioConfigPresetLiteSlow;
+
+  /// Description for lite slow modem preset
+  ///
+  /// In en, this message translates to:
+  /// **'EU 866MHz SRD, longer range'**
+  String get radioConfigPresetLiteSlowDesc;
+
+  /// Modem preset label: EU 868MHz narrow fast
+  ///
+  /// In en, this message translates to:
+  /// **'Narrow Fast'**
+  String get radioConfigPresetNarrowFast;
+
+  /// Description for narrow fast modem preset
+  ///
+  /// In en, this message translates to:
+  /// **'EU 868MHz narrow, fast'**
+  String get radioConfigPresetNarrowFastDesc;
+
+  /// Modem preset label: EU 868MHz narrow slow
+  ///
+  /// In en, this message translates to:
+  /// **'Narrow Slow'**
+  String get radioConfigPresetNarrowSlow;
+
+  /// Description for narrow slow modem preset
+  ///
+  /// In en, this message translates to:
+  /// **'EU 868MHz narrow, longer range'**
+  String get radioConfigPresetNarrowSlowDesc;
 
   /// UI text: radio config preset must match
   ///
