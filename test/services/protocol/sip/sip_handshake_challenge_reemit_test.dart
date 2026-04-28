@@ -50,14 +50,19 @@ SipHandshakeManager _newManager({int localNodeId = 0xBBBB}) {
 SipFrame _makeHello({
   required Uint8List clientNonce,
   required int wrapperNonce,
+  int targetNodeId = 0xBBBB,
 }) {
   final payload = SipHsMessages.encodeHello(
     SipHsHello(
+      targetNodeId: targetNodeId,
       clientNonce: clientNonce,
       clientEphemeralPub: Uint8List.fromList(List.generate(32, (i) => i + 32)),
       requestedFeatures: SipFeatureBits.allV01,
     ),
   );
+  if (payload == null) {
+    throw StateError('encodeHello returned null in test fixture');
+  }
   return SipFrame(
     versionMajor: SipConstants.sipVersionMajor,
     versionMinor: SipConstants.sipVersionMinor,

@@ -6820,6 +6820,18 @@ abstract class AppLocalizations {
   /// **'Device Logs'**
   String get debugScreenDeviceLogsTitle;
 
+  /// Snackbar shown when copy is tapped but the device log buffer is empty
+  ///
+  /// In en, this message translates to:
+  /// **'No device logs to copy'**
+  String get debugScreenDeviceNothingToCopy;
+
+  /// Snackbar shown when share is tapped but the device log buffer is empty
+  ///
+  /// In en, this message translates to:
+  /// **'No device logs to share'**
+  String get debugScreenDeviceNothingToShare;
+
   /// Device log search field hint text
   ///
   /// In en, this message translates to:
@@ -6909,6 +6921,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No log entries'**
   String get debugScreenNoLogEntries;
+
+  /// Snackbar shown when copy is tapped but the log buffer is empty
+  ///
+  /// In en, this message translates to:
+  /// **'No logs to copy'**
+  String get debugScreenNothingToCopy;
+
+  /// Snackbar shown when share is tapped but the log buffer is empty
+  ///
+  /// In en, this message translates to:
+  /// **'No logs to share'**
+  String get debugScreenNothingToShare;
 
   /// Search field hint text
   ///
@@ -56618,6 +56642,42 @@ abstract class AppLocalizations {
   /// **'Play'**
   String get sipPlayComposerLabel;
 
+  /// Replaces the game title on the picker card while the offer envelope is in-flight; pairs with a spinner.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending offer…'**
+  String get sipPlayPanelCardSending;
+
+  /// Snackbar shown when the user attempts to send a second offer for a game while the previous offer for the same game is still pending or active in this session.
+  ///
+  /// In en, this message translates to:
+  /// **'A game offer is already in progress'**
+  String get sipPlayDuplicateOfferBlocked;
+
+  /// Snackbar shown to the offerer once the offer envelope has been transmitted to the peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer sent'**
+  String get sipPlayLifecycleSent;
+
+  /// Snackbar shown to the offerer when the peer accepts the game offer.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer accepted'**
+  String get sipPlayLifecycleAccepted;
+
+  /// Snackbar shown to the offerer when the peer declines the game offer.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer declined'**
+  String get sipPlayLifecycleDeclined;
+
+  /// Snackbar shown to the offerer when the peer doesn't respond within the offer timeout window.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer expired'**
+  String get sipPlayLifecycleExpired;
+
   /// Header inside the Play composer panel — the panel shown when the user selects the Play tab.
   ///
   /// In en, this message translates to:
@@ -56750,17 +56810,17 @@ abstract class AppLocalizations {
   /// **'Game data unreadable'**
   String get sipPlayMalformedTitle;
 
-  /// Title on a SIP Play bubble shown to the offerer after they sent an offer. Status switches to active when the peer accepts.
+  /// Title on a SIP Play bubble shown to the offerer after they sent an offer. Status switches to active when the peer accepts. {game} is the localised game name (e.g. 'Tic-Tac-Toe', 'Connect Four').
   ///
   /// In en, this message translates to:
-  /// **'You offered Tic-Tac-Toe'**
-  String get sipPlayOfferOutgoingTitle;
+  /// **'You offered {game}'**
+  String sipPlayOfferOutgoingTitle(String game);
 
-  /// Title on a SIP Play bubble for an inbound offer awaiting Accept / Decline.
+  /// Title on a SIP Play bubble for an inbound offer awaiting Accept / Decline. {game} is the localised game name.
   ///
   /// In en, this message translates to:
-  /// **'Tic-Tac-Toe — they want to play'**
-  String get sipPlayOfferIncomingTitle;
+  /// **'{game} — they want to play'**
+  String sipPlayOfferIncomingTitle(String game);
 
   /// Accept button on an inbound SIP Play offer bubble.
   ///

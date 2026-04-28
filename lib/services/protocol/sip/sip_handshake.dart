@@ -351,12 +351,25 @@ class SipHandshakeManager {
     onStateChanged?.call();
 
     final hello = SipHsHello(
+      // SIP v0.2: stamp the directed peer so receivers that overhear
+      // this HELLO can drop it without surfacing a consent prompt.
+      // Spec: docs/sip/SIP_V0_2_TARGET_NODE_ID_PLAN.md §5.2.
+      targetNodeId: peerNodeId,
       clientNonce: session.clientNonce!,
       clientEphemeralPub: session.localEphemeralPub!,
       requestedFeatures: SipFeatureBits.allV01,
     );
 
     final payload = SipHsMessages.encodeHello(hello);
+    if (payload == null) {
+      AppLogging.sip(
+        'SIP_HS: HS_HELLO encode REJECTED for '
+        'node=0x${peerNodeId.toRadixString(16)} (encode returned null)',
+      );
+      _sessions.remove(peerNodeId);
+      onStateChanged?.call();
+      return null;
+    }
 
     AppLogging.sip(
       'SIP_HS: -> HS_HELLO to node=0x${peerNodeId.toRadixString(16)}, '
@@ -408,6 +421,17 @@ class SipHandshakeManager {
     final challenge = SipHsMessages.decodeChallenge(frame.payload);
     if (challenge == null) return null;
 
+    // SIP v0.2 target check (defence-in-depth). See handleHello.
+    if (challenge.targetNodeId != _localNodeId) {
+      AppLogging.sip(
+        'SIP_HS: dropping HS_CHALLENGE at manager '
+        'target=0x${challenge.targetNodeId.toRadixString(16)} '
+        'myNode=0x${_localNodeId.toRadixString(16)} '
+        'sender=0x${peerNodeId.toRadixString(16)} (not us)',
+      );
+      return null;
+    }
+
     // Verify echoed client nonce matches.
     if (!_bytesEqual(challenge.echoedClientNonce, session.clientNonce!)) {
       AppLogging.sip(
@@ -438,12 +462,22 @@ class SipHandshakeManager {
     onStateChanged?.call();
 
     final response = SipHsResponse(
+      // SIP v0.2: respond directly to the responder we got the
+      // challenge from. Same drop semantics on the receiver side.
+      targetNodeId: peerNodeId,
       echoedServerNonce: session.serverNonce!,
       echoedClientNonce: session.clientNonce!,
       sessionTag: tag,
     );
 
     final payload = SipHsMessages.encodeResponse(response);
+    if (payload == null) {
+      AppLogging.sip(
+        'SIP_HS: HS_RESPONSE encode REJECTED for '
+        'node=0x${peerNodeId.toRadixString(16)} (encode returned null)',
+      );
+      return null;
+    }
 
     AppLogging.sip(
       'SIP_HS: <- HS_CHALLENGE from '
@@ -488,6 +522,17 @@ class SipHandshakeManager {
 
     final accept = SipHsMessages.decodeAccept(frame.payload);
     if (accept == null) return null;
+
+    // SIP v0.2 target check (defence-in-depth). See handleHello.
+    if (accept.targetNodeId != _localNodeId) {
+      AppLogging.sip(
+        'SIP_HS: dropping HS_ACCEPT at manager '
+        'target=0x${accept.targetNodeId.toRadixString(16)} '
+        'myNode=0x${_localNodeId.toRadixString(16)} '
+        'sender=0x${peerNodeId.toRadixString(16)} (not us)',
+      );
+      return null;
+    }
 
     // Verify session tag matches.
     if (accept.sessionTag != session.sessionTag) {
@@ -562,6 +607,21 @@ class SipHandshakeManager {
 
     final hello = SipHsMessages.decodeHello(frame.payload);
     if (hello == null) return;
+
+    // SIP v0.2 target check (defence-in-depth). The protocol_service
+    // layer drops mismatched HELLOs before they reach the manager —
+    // this re-check covers any future ingress path that bypasses
+    // `_handleSipPacket` (test harness, alternate transport).
+    // Spec: docs/sip/SIP_V0_2_TARGET_NODE_ID_PLAN.md §5.2.
+    if (hello.targetNodeId != _localNodeId) {
+      AppLogging.sip(
+        'SIP_HS: dropping HS_HELLO at manager '
+        'target=0x${hello.targetNodeId.toRadixString(16)} '
+        'myNode=0x${_localNodeId.toRadixString(16)} '
+        'sender=0x${peerNodeId.toRadixString(16)} (not us)',
+      );
+      return;
+    }
 
     // Simultaneous-open detection: we already sent HS_HELLO to this peer.
     final existing = _sessions[peerNodeId];
@@ -749,7 +809,7 @@ class SipHandshakeManager {
   ///
   /// Shared by both consent-driven [acceptHandshake] and the
   /// simultaneous-open auto-accept path in [handleHello].
-  SipFrame _buildChallengeSession(int peerNodeId, SipHsHello hello) {
+  SipFrame? _buildChallengeSession(int peerNodeId, SipHsHello hello) {
     final session = _HandshakeSession(peerNodeId: peerNodeId);
     session.clientNonce = hello.clientNonce;
     session.peerEphemeralPub = hello.clientEphemeralPub;
@@ -763,6 +823,9 @@ class SipHandshakeManager {
     _scheduleSessionExpiry(peerNodeId);
 
     final challenge = SipHsChallenge(
+      // SIP v0.2: stamp the original initiator. The receiver-side
+      // target check drops on any other recipient.
+      targetNodeId: peerNodeId,
       serverNonce: session.serverNonce!,
       echoedClientNonce: session.clientNonce!,
       serverEphemeralPub: session.localEphemeralPub!,
@@ -770,6 +833,14 @@ class SipHandshakeManager {
     );
 
     final payload = SipHsMessages.encodeChallenge(challenge);
+    if (payload == null) {
+      AppLogging.sip(
+        'SIP_HS: HS_CHALLENGE encode REJECTED for '
+        'node=0x${peerNodeId.toRadixString(16)} (encode returned null)',
+      );
+      _sessions.remove(peerNodeId);
+      return null;
+    }
 
     AppLogging.sip(
       'SIP_HS: -> HS_CHALLENGE, '
@@ -831,10 +902,20 @@ class SipHandshakeManager {
     );
 
     final decline = SipHsDecline(
+      // SIP v0.2: stamp the original initiator. Receivers drop on
+      // any other recipient.
+      targetNodeId: peerNodeId,
       echoedClientNonce: pending.hello.clientNonce,
       reason: 0x00, // user declined
     );
     final payload = SipHsMessages.encodeDecline(decline);
+    if (payload == null) {
+      AppLogging.sip(
+        'SIP_HS: HS_DECLINE encode REJECTED for '
+        'node=0x${peerNodeId.toRadixString(16)} (encode returned null)',
+      );
+      return null;
+    }
 
     return SipFrame(
       versionMajor: SipConstants.sipVersionMajor,
@@ -866,6 +947,19 @@ class SipHandshakeManager {
       return;
     }
 
+    final decline = SipHsMessages.decodeDecline(frame.payload);
+    if (decline == null) return;
+    // SIP v0.2 target check (defence-in-depth). See handleHello.
+    if (decline.targetNodeId != _localNodeId) {
+      AppLogging.sip(
+        'SIP_HS: dropping HS_DECLINE at manager '
+        'target=0x${decline.targetNodeId.toRadixString(16)} '
+        'myNode=0x${_localNodeId.toRadixString(16)} '
+        'sender=0x${peerNodeId.toRadixString(16)} (not us)',
+      );
+      return;
+    }
+
     _cancelRetransmits(peerNodeId);
     _sessions.remove(peerNodeId);
     _counters?.recordHandshakeFailed();
@@ -887,13 +981,10 @@ class SipHandshakeManager {
       }
     }
 
-    final decline = SipHsMessages.decodeDecline(frame.payload);
-    final reason = decline?.reason ?? 0xFF;
-
     AppLogging.sip(
       'SIP_HS: HS_DECLINE from '
       'node=0x${peerNodeId.toRadixString(16)} '
-      '(reason=0x${reason.toRadixString(16)}) — session cleared, no cooldown',
+      '(reason=0x${decline.reason.toRadixString(16)}) — session cleared, no cooldown',
     );
   }
 
@@ -920,6 +1011,17 @@ class SipHandshakeManager {
 
     final response = SipHsMessages.decodeResponse(frame.payload);
     if (response == null) return null;
+
+    // SIP v0.2 target check (defence-in-depth). See handleHello.
+    if (response.targetNodeId != _localNodeId) {
+      AppLogging.sip(
+        'SIP_HS: dropping HS_RESPONSE at manager '
+        'target=0x${response.targetNodeId.toRadixString(16)} '
+        'myNode=0x${_localNodeId.toRadixString(16)} '
+        'sender=0x${peerNodeId.toRadixString(16)} (not us)',
+      );
+      return null;
+    }
 
     // Verify echoed nonces.
     if (!_bytesEqual(response.echoedServerNonce, session.serverNonce!)) {
@@ -958,12 +1060,23 @@ class SipHandshakeManager {
     onStateChanged?.call();
 
     final accept = SipHsAccept(
+      // SIP v0.2: stamp the original initiator. Receivers drop on
+      // any other recipient.
+      targetNodeId: peerNodeId,
       sessionTag: expectedTag,
       dmTtlS: SipConstants.dmTtlDefaultS,
       flags: 0,
     );
 
     final payload = SipHsMessages.encodeAccept(accept);
+    if (payload == null) {
+      AppLogging.sip(
+        'SIP_HS: HS_ACCEPT encode REJECTED for '
+        'node=0x${peerNodeId.toRadixString(16)} (encode returned null)',
+      );
+      _failSession(peerNodeId, 'accept_encode_failed');
+      return null;
+    }
 
     final result = SipHandshakeResult(
       sessionTag: expectedTag,

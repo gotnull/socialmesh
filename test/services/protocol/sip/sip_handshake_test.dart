@@ -17,6 +17,7 @@ void main() {
   group('SipHsMessages', () {
     test('HS_HELLO round-trip', () {
       final hello = SipHsHello(
+        targetNodeId: 0xB15E74DB,
         clientNonce: Uint8List.fromList(List.generate(16, (i) => i)),
         clientEphemeralPub: Uint8List.fromList(
           List.generate(32, (i) => i + 16),
@@ -24,17 +25,20 @@ void main() {
         requestedFeatures: SipFeatureBits.allV01,
       );
       final encoded = SipHsMessages.encodeHello(hello);
-      expect(encoded.length, 50);
+      expect(encoded, isNotNull);
+      expect(encoded!.length, 54);
 
       final decoded = SipHsMessages.decodeHello(encoded);
       expect(decoded, isNotNull);
-      expect(decoded!.clientNonce, equals(hello.clientNonce));
+      expect(decoded!.targetNodeId, 0xB15E74DB);
+      expect(decoded.clientNonce, equals(hello.clientNonce));
       expect(decoded.clientEphemeralPub, equals(hello.clientEphemeralPub));
       expect(decoded.requestedFeatures, SipFeatureBits.allV01);
     });
 
     test('HS_CHALLENGE round-trip', () {
       final challenge = SipHsChallenge(
+        targetNodeId: 0xB15E74DB,
         serverNonce: Uint8List.fromList(List.generate(16, (i) => i + 100)),
         echoedClientNonce: Uint8List.fromList(List.generate(16, (i) => i)),
         serverEphemeralPub: Uint8List.fromList(
@@ -43,11 +47,13 @@ void main() {
         expiresInS: 60,
       );
       final encoded = SipHsMessages.encodeChallenge(challenge);
-      expect(encoded.length, 68);
+      expect(encoded, isNotNull);
+      expect(encoded!.length, 72);
 
       final decoded = SipHsMessages.decodeChallenge(encoded);
       expect(decoded, isNotNull);
-      expect(decoded!.serverNonce, equals(challenge.serverNonce));
+      expect(decoded!.targetNodeId, 0xB15E74DB);
+      expect(decoded.serverNonce, equals(challenge.serverNonce));
       expect(decoded.echoedClientNonce, equals(challenge.echoedClientNonce));
       expect(decoded.serverEphemeralPub, equals(challenge.serverEphemeralPub));
       expect(decoded.expiresInS, 60);
@@ -55,6 +61,7 @@ void main() {
 
     test('HS_RESPONSE round-trip', () {
       final response = SipHsResponse(
+        targetNodeId: 0xB15E74DB,
         echoedServerNonce: Uint8List.fromList(
           List.generate(16, (i) => i + 100),
         ),
@@ -62,27 +69,32 @@ void main() {
         sessionTag: 0x12345678,
       );
       final encoded = SipHsMessages.encodeResponse(response);
-      expect(encoded.length, 36);
+      expect(encoded, isNotNull);
+      expect(encoded!.length, 40);
 
       final decoded = SipHsMessages.decodeResponse(encoded);
       expect(decoded, isNotNull);
-      expect(decoded!.echoedServerNonce, equals(response.echoedServerNonce));
+      expect(decoded!.targetNodeId, 0xB15E74DB);
+      expect(decoded.echoedServerNonce, equals(response.echoedServerNonce));
       expect(decoded.echoedClientNonce, equals(response.echoedClientNonce));
       expect(decoded.sessionTag, 0x12345678);
     });
 
     test('HS_ACCEPT round-trip', () {
       final accept = SipHsAccept(
+        targetNodeId: 0xB15E74DB,
         sessionTag: 0xDEADBEEF,
         dmTtlS: 86400,
         flags: 0,
       );
       final encoded = SipHsMessages.encodeAccept(accept);
-      expect(encoded.length, 9);
+      expect(encoded, isNotNull);
+      expect(encoded!.length, 13);
 
       final decoded = SipHsMessages.decodeAccept(encoded);
       expect(decoded, isNotNull);
-      expect(decoded!.sessionTag, 0xDEADBEEF);
+      expect(decoded!.targetNodeId, 0xB15E74DB);
+      expect(decoded.sessionTag, 0xDEADBEEF);
       expect(decoded.dmTtlS, 86400);
       expect(decoded.flags, 0);
     });
@@ -329,23 +341,27 @@ void main() {
       );
       await responder.handleResponse(0xAAAA, responseFrame!);
 
-      // Forge a bad accept with wrong session_tag.
+      // Forge a bad accept with wrong session_tag. The responder
+      // (0xBBBB) is sending the (forged) accept to the initiator
+      // (0xAAAA), so target_node_id = 0xAAAA.
       final badAccept = SipHsAccept(
+        targetNodeId: 0xAAAA,
         sessionTag: 0xDEADDEAD,
         dmTtlS: 86400,
         flags: 0,
       );
       final badPayload = SipHsMessages.encodeAccept(badAccept);
+      expect(badPayload, isNotNull);
       final badFrame = SipFrame(
         versionMajor: 0,
-        versionMinor: 1,
+        versionMinor: SipConstants.sipVersionMinor,
         msgType: SipMessageType.hsAccept,
         flags: SipFlags.isResponse,
         headerLen: SipConstants.sipWrapperMin,
         sessionId: 0xDEADDEAD,
         nonce: SipCodec.generateNonce(),
         timestampS: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-        payloadLen: badPayload.length,
+        payloadLen: badPayload!.length,
         payload: badPayload,
       );
 
@@ -495,26 +511,30 @@ void main() {
       expect(hello, isNotNull);
 
       // Receiving a HELLO from a peer with the same nodeId: localNodeId is NOT
-      // greater, so we yield.
+      // greater, so we yield. The peer (also nodeId) is sending the
+      // HELLO at our local node, so target_node_id = nodeId.
+      final fakePayload = SipHsMessages.encodeHello(
+        SipHsHello(
+          targetNodeId: nodeId,
+          clientNonce: Uint8List.fromList(List.generate(16, (i) => i + 50)),
+          clientEphemeralPub: Uint8List.fromList(
+            List.generate(32, (i) => i + 70),
+          ),
+          requestedFeatures: SipFeatureBits.allV01,
+        ),
+      );
+      expect(fakePayload, isNotNull);
       final fakeHello = SipFrame(
         versionMajor: 0,
-        versionMinor: 1,
+        versionMinor: SipConstants.sipVersionMinor,
         msgType: SipMessageType.hsHello,
         flags: 0,
         headerLen: SipConstants.sipWrapperMin,
         sessionId: 0,
         nonce: SipCodec.generateNonce(),
         timestampS: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-        payloadLen: 50,
-        payload: SipHsMessages.encodeHello(
-          SipHsHello(
-            clientNonce: Uint8List.fromList(List.generate(16, (i) => i + 50)),
-            clientEphemeralPub: Uint8List.fromList(
-              List.generate(32, (i) => i + 70),
-            ),
-            requestedFeatures: SipFeatureBits.allV01,
-          ),
-        ),
+        payloadLen: fakePayload!.length,
+        payload: fakePayload,
       );
 
       // With equal IDs, the else branch fires (not strictly greater).
@@ -533,9 +553,10 @@ void main() {
   // ---------------------------------------------------------------------------
 
   group('declineHandshake', () {
-    SipFrame makeHello({required int nonce}) {
+    SipFrame makeHello({required int nonce, int targetNodeId = 0x1111}) {
       final payload = SipHsMessages.encodeHello(
         SipHsHello(
+          targetNodeId: targetNodeId,
           clientNonce: Uint8List.fromList(List.generate(16, (i) => i)),
           clientEphemeralPub: Uint8List.fromList(
             List.generate(32, (i) => i + 16),
@@ -543,6 +564,7 @@ void main() {
           requestedFeatures: SipFeatureBits.allV01,
         ),
       );
+      expect(payload, isNotNull);
       return SipFrame(
         versionMajor: SipConstants.sipVersionMajor,
         versionMinor: SipConstants.sipVersionMinor,
@@ -552,7 +574,7 @@ void main() {
         sessionId: 0,
         nonce: nonce,
         timestampS: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-        payloadLen: payload.length,
+        payloadLen: payload!.length,
         payload: payload,
       );
     }
@@ -635,9 +657,16 @@ void main() {
 
   group('handleDecline', () {
     SipFrame makeDeclineFrame(Uint8List clientNonce) {
+      // The decline is sent by the responder back to the initiator
+      // (this manager's local node = 0x1111).
       final payload = SipHsMessages.encodeDecline(
-        SipHsDecline(echoedClientNonce: clientNonce, reason: 0x00),
+        SipHsDecline(
+          targetNodeId: 0x1111,
+          echoedClientNonce: clientNonce,
+          reason: 0x00,
+        ),
       );
+      expect(payload, isNotNull);
       return SipFrame(
         versionMajor: SipConstants.sipVersionMajor,
         versionMinor: SipConstants.sipVersionMinor,
@@ -647,7 +676,7 @@ void main() {
         sessionId: 0,
         nonce: SipCodec.generateNonce(),
         timestampS: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-        payloadLen: payload.length,
+        payloadLen: payload!.length,
         payload: payload,
       );
     }
@@ -777,9 +806,14 @@ void main() {
   // ---------------------------------------------------------------------------
 
   group('session expiry + pending-consent timeout', () {
-    SipFrame makeHello({required int nonce, int seed = 0}) {
+    SipFrame makeHello({
+      required int nonce,
+      int seed = 0,
+      int targetNodeId = 0x1111,
+    }) {
       final payload = SipHsMessages.encodeHello(
         SipHsHello(
+          targetNodeId: targetNodeId,
           clientNonce: Uint8List.fromList(List.generate(16, (i) => i + seed)),
           clientEphemeralPub: Uint8List.fromList(
             List.generate(32, (i) => i + 16 + seed),
@@ -787,6 +821,7 @@ void main() {
           requestedFeatures: SipFeatureBits.allV01,
         ),
       );
+      expect(payload, isNotNull);
       return SipFrame(
         versionMajor: SipConstants.sipVersionMajor,
         versionMinor: SipConstants.sipVersionMinor,
@@ -796,7 +831,7 @@ void main() {
         sessionId: 0,
         nonce: nonce,
         timestampS: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-        payloadLen: payload.length,
+        payloadLen: payload!.length,
         payload: payload,
       );
     }

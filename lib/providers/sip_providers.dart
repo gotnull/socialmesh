@@ -313,6 +313,19 @@ final sipDiscoveryProvider = Provider<SipDiscovery?>((ref) {
         .read(sipPlaySoundServiceProvider)
         .play(SipPlaySoundCue.rejectedDeclined);
   };
+  // Inbound HS_HELLO needing user consent. Play an audible cue so the
+  // user notices the Accept / Decline prompt while they're focused on
+  // other work — UX request after handshake-prompt was easy to miss.
+  // The handshake manager fires `onHandshakeRequest` from
+  // `_handleIncomingHello` after the request is queued in
+  // `_pendingRequests`, regardless of whether the app is foreground —
+  // the system notification handles background; this audio is the
+  // foreground cue.
+  hsManager?.onHandshakeRequest = (peerNodeId) {
+    ref
+        .read(sipPlaySoundServiceProvider)
+        .play(SipPlaySoundCue.consentRequested);
+  };
 
   // Start periodic CAP_BEACON broadcast.
   discovery.start();

@@ -3864,6 +3864,14 @@ class AppLocalizationsPt extends AppLocalizations {
   String get debugScreenDeviceLogsTitle => 'Logs do dispositivo';
 
   @override
+  String get debugScreenDeviceNothingToCopy =>
+      'Nenhum log do dispositivo para copiar';
+
+  @override
+  String get debugScreenDeviceNothingToShare =>
+      'Nenhum log do dispositivo para compartilhar';
+
+  @override
   String get debugScreenDeviceSearchHint => 'Buscar nos logs...';
 
   @override
@@ -3912,6 +3920,12 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get debugScreenNoLogEntries => 'Nenhuma entrada de log';
+
+  @override
+  String get debugScreenNothingToCopy => 'Nenhum log para copiar';
+
+  @override
+  String get debugScreenNothingToShare => 'Nenhum log para compartilhar';
 
   @override
   String get debugScreenSearchLogsHint => 'Buscar nos logs...';
@@ -32508,6 +32522,25 @@ class AppLocalizationsPt extends AppLocalizations {
   String get sipPlayComposerLabel => 'Play';
 
   @override
+  String get sipPlayPanelCardSending => 'Sending offer…';
+
+  @override
+  String get sipPlayDuplicateOfferBlocked =>
+      'A game offer is already in progress';
+
+  @override
+  String get sipPlayLifecycleSent => 'Offer sent';
+
+  @override
+  String get sipPlayLifecycleAccepted => 'Offer accepted';
+
+  @override
+  String get sipPlayLifecycleDeclined => 'Offer declined';
+
+  @override
+  String get sipPlayLifecycleExpired => 'Offer expired';
+
+  @override
   String get sipPlayPanelTitle => 'Play a game';
 
   @override
@@ -32581,10 +32614,14 @@ class AppLocalizationsPt extends AppLocalizations {
   String get sipPlayMalformedTitle => 'Game data unreadable';
 
   @override
-  String get sipPlayOfferOutgoingTitle => 'You offered Tic-Tac-Toe';
+  String sipPlayOfferOutgoingTitle(String game) {
+    return 'You offered $game';
+  }
 
   @override
-  String get sipPlayOfferIncomingTitle => 'Tic-Tac-Toe — they want to play';
+  String sipPlayOfferIncomingTitle(String game) {
+    return '$game — they want to play';
+  }
 
   @override
   String get sipPlayOfferAccept => 'Accept';

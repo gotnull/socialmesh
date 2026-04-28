@@ -5357,6 +5357,19 @@ class ProtocolService {
       return;
     }
 
+    // NOTE: a Meshtastic-layer destination filter (`packet.to !=
+    // myNodeNum`) is intentionally NOT performed here. Every SIP
+    // packet is sent with `packet.to == 0xFFFFFFFF` at the transport
+    // layer (see `sendSipPacket` and the dedicated send paths in
+    // this file), so the Meshtastic-layer destination is always
+    // broadcast and a transport-layer filter would give false
+    // confidence. Per-message addressing for handshake frames lives
+    // inside the SIP payload as `target_node_id` (SIP v0.2). The
+    // five `_handleSipHandshake*` methods below enforce the rule
+    // that `target_node_id == _myNodeNum` before any state mutation
+    // or consent UI runs. Spec:
+    // docs/sip/SIP_V0_2_TARGET_NODE_ID_PLAN.md §5.
+
     final frame = SipCodec.decode(payload);
     if (frame == null) {
       AppLogging.sip('SIP_RX: decode failed — dropping');
@@ -5764,6 +5777,43 @@ class ProtocolService {
   // SIP-1 Handshake dispatch
   // ---------------------------------------------------------------------------
 
+  /// Read the v0.2 `target_node_id` (u32 LE at offset 0) from a
+  /// handshake frame's payload and decide whether to drop. Returns
+  /// `true` if the frame should be dropped silently. Logs the
+  /// canonical drop line on every reject so the multi-node
+  /// regression test (plan §7.5) can assert exactly one entry per
+  /// overheard frame.
+  ///
+  /// Spec: docs/sip/SIP_V0_2_TARGET_NODE_ID_PLAN.md §5.2.
+  bool _shouldDropHandshakeForTarget(
+    int senderNodeId,
+    SipMessageType msgType,
+    SipFrame frame,
+  ) {
+    if (frame.payload.length < 4) {
+      AppLogging.sip(
+        'SIP_HS: dropping ${msgType.name} '
+        'sender=0x${senderNodeId.toRadixString(16)} '
+        '(payload too short to carry target_node_id)',
+      );
+      return true;
+    }
+    final targetNodeId = ByteData.sublistView(
+      frame.payload,
+    ).getUint32(0, Endian.little);
+    final myNodeNum = _myNodeNum;
+    if (myNodeNum == null || targetNodeId != myNodeNum) {
+      AppLogging.sip(
+        'SIP_HS: dropping ${msgType.name} '
+        'target=0x${targetNodeId.toRadixString(16)} '
+        'myNode=0x${myNodeNum?.toRadixString(16) ?? "null"} '
+        'sender=0x${senderNodeId.toRadixString(16)} (not us)',
+      );
+      return true;
+    }
+    return false;
+  }
+
   void _handleSipHandshakeHello(
     int senderNodeId,
     SipFrame frame,
@@ -5772,6 +5822,17 @@ class ProtocolService {
     final hs = _sipHandshake;
     if (hs == null) {
       AppLogging.sip('SIP_RX: no SipHandshakeManager — dropping HS_HELLO');
+      return;
+    }
+
+    // SIP v0.2 target check — drop overheard handshakes before any
+    // consent UI / notification / sound / state mutation runs.
+    // Spec: docs/sip/SIP_V0_2_TARGET_NODE_ID_PLAN.md §5.2.
+    if (_shouldDropHandshakeForTarget(
+      senderNodeId,
+      SipMessageType.hsHello,
+      frame,
+    )) {
       return;
     }
 
@@ -5835,6 +5896,20 @@ class ProtocolService {
     final hs = _sipHandshake;
     if (hs == null) return;
 
+    // SIP v0.2 target check — see _handleSipHandshakeHello.
+    if (_shouldDropHandshakeForTarget(
+      senderNodeId,
+      SipMessageType.hsChallenge,
+      frame,
+    )) {
+      return;
+    }
+
+    // T+S guard: silent drop. A blocked peer cannot drive our
+    // handshake state forward — no challenge response, no eventual
+    // complete notification. Mirrors the HELLO + DECLINE guards.
+    if (_safetyGate.isBlocked(senderNodeId)) return;
+
     hs.handleChallenge(senderNodeId, frame).then((responseFrame) {
       if (responseFrame != null) {
         final encoded = SipCodec.encode(responseFrame);
@@ -5848,6 +5923,19 @@ class ProtocolService {
   void _handleSipHandshakeResponse(int senderNodeId, SipFrame frame) {
     final hs = _sipHandshake;
     if (hs == null) return;
+
+    // SIP v0.2 target check — see _handleSipHandshakeHello.
+    if (_shouldDropHandshakeForTarget(
+      senderNodeId,
+      SipMessageType.hsResponse,
+      frame,
+    )) {
+      return;
+    }
+
+    // T+S guard: silent drop. Mirrors the HELLO + DECLINE guards —
+    // a blocked peer cannot complete a handshake against us.
+    if (_safetyGate.isBlocked(senderNodeId)) return;
 
     hs.handleResponse(senderNodeId, frame).then((acceptFrame) {
       if (acceptFrame != null) {
@@ -5865,6 +5953,19 @@ class ProtocolService {
     final hs = _sipHandshake;
     if (hs == null) return;
 
+    // SIP v0.2 target check — see _handleSipHandshakeHello.
+    if (_shouldDropHandshakeForTarget(
+      senderNodeId,
+      SipMessageType.hsAccept,
+      frame,
+    )) {
+      return;
+    }
+
+    // T+S guard: silent drop. Mirrors the HELLO + DECLINE guards —
+    // a blocked peer cannot complete a handshake against us.
+    if (_safetyGate.isBlocked(senderNodeId)) return;
+
     final result = hs.handleAccept(senderNodeId, frame);
     if (result != null) {
       // Initiator-side: handshake complete. Auto-create DM session.
@@ -5877,6 +5978,15 @@ class ProtocolService {
   void _handleSipHandshakeDecline(int senderNodeId, SipFrame frame) {
     final hs = _sipHandshake;
     if (hs == null) return;
+
+    // SIP v0.2 target check — see _handleSipHandshakeHello.
+    if (_shouldDropHandshakeForTarget(
+      senderNodeId,
+      SipMessageType.hsDecline,
+      frame,
+    )) {
+      return;
+    }
 
     // T+S guard: silent drop. A blocked peer's HS_DECLINE is
     // dropped before any state mutation or notification. Skipping

@@ -293,12 +293,20 @@ class _DeviceLogsScreenState extends ConsumerState<DeviceLogsScreen>
   void _shareLogs() {
     final logger = ref.read(deviceLoggerProvider);
     final content = logger.export();
+    if (content.trim().isEmpty) {
+      showInfoSnackBar(context, context.l10n.debugScreenDeviceNothingToShare);
+      return;
+    }
     shareText(content, subject: 'Socialmesh Device Logs', context: context);
   }
 
   void _copyToClipboard() {
     final logger = ref.read(deviceLoggerProvider);
     final content = logger.export();
+    if (content.trim().isEmpty) {
+      showInfoSnackBar(context, context.l10n.debugScreenDeviceNothingToCopy);
+      return;
+    }
     Clipboard.setData(ClipboardData(text: content));
     showSuccessSnackBar(context, context.l10n.debugScreenDeviceLogsCopied);
   }

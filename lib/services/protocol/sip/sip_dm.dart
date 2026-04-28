@@ -24,6 +24,7 @@ import 'sip_frame.dart';
 import 'peer_safety_gate.dart';
 import 'play/sip_play_codec.dart';
 import 'play/sip_play_constants.dart';
+import 'play/sip_play_engine.dart';
 import 'play/sip_play_payload.dart';
 import 'signal/sip_signal_codec.dart';
 import 'signal/sip_signal_constants.dart';
@@ -655,7 +656,16 @@ class SipDmManager {
   bool removeMessage(int sessionTag, SipDmHistoryEntry entry) {
     final session = _sessions[sessionTag];
     if (session == null) return false;
-    return session.messages.remove(entry);
+    final removed = session.messages.remove(entry);
+    if (removed) {
+      // Bump the DM epoch so the UI rebuilds and the deleted entry
+      // disappears from the timeline immediately. Without this, the
+      // local delete sat invisible until some other state change
+      // (typing, reaction, message arrival) forced a rebuild —
+      // perceived as the X being unresponsive.
+      onStateChanged?.call();
+    }
+    return removed;
   }
 
   // ---------------------------------------------------------------------------
@@ -1273,6 +1283,42 @@ class SipDmManager {
         'tag=0x${sessionTag.toRadixString(16)} bytes=${frame.payload.length}',
       );
       return null;
+    }
+
+    // Receiver-side duplicate-offer guard. Symmetric with the sender
+    // check in `sendSipPlayOffer`: refuse a second concurrent offer
+    // for the same gameType in the same session while a previous
+    // instance is still pendingOffer or active. Wire-level retransmits
+    // (or buggy peers) that produce two distinct instanceIds for the
+    // same game land here; we drop the second one rather than render
+    // two pending cards.
+    if (result.envelope!.action == SipPlayAction.offer) {
+      final priorEntries = <SipPlayEntry>[];
+      for (final m in session.messages) {
+        if (m.contentType != SipDmContentType.play) continue;
+        final p = m.payload;
+        if (p == null || p.isEmpty) continue;
+        final decoded = SipPlayEngine.decodeEntry(
+          payload: Uint8List.fromList(p),
+          direction: m.direction == SipDmDirection.outbound
+              ? SipPlayEntryDirection.outbound
+              : SipPlayEntryDirection.inbound,
+        );
+        if (decoded == null) continue;
+        priorEntries.add(decoded);
+      }
+      if (SipPlayEngine.hasNonTerminalInstanceForGameType(
+        entries: priorEntries,
+        gameTypeCode: result.envelope!.gameTypeCode,
+      )) {
+        AppLogging.sipPlay(
+          'inbound_dropped reason=duplicate_offer_active '
+          'tag=0x${sessionTag.toRadixString(16)} '
+          'gameType=0x${result.envelope!.gameTypeCode.toRadixString(16)} '
+          'instance=0x${result.envelope!.instanceId.toRadixString(16)}',
+        );
+        return null;
+      }
     }
 
     session.messages.add(

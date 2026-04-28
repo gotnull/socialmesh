@@ -23,6 +23,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../core/logging.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
@@ -111,12 +112,39 @@ class SipPlayBubble extends ConsumerWidget {
       return _UnsupportedFallback();
     }
 
-    final state = ref.watch(
-      sipPlayInstanceStateProvider((
-        sessionTag: sessionTag,
-        instanceId: header.instanceId,
-      )),
-    );
+    final stateKey = (sessionTag: sessionTag, instanceId: header.instanceId);
+    // Lifecycle feedback (UX #3): when an outbound offer's status
+    // transitions from pendingOffer to active or declinedByRemote,
+    // surface a one-shot snackbar. ref.listen fires once per state
+    // change rather than on every rebuild, so the snackbar doesn't
+    // duplicate. We restrict to outbound offers — the receiver
+    // already has visible UI feedback (the offer card morphs into
+    // the board for accept, into a decline card for decline).
+    ref.listen<SipPlayInstanceState?>(sipPlayInstanceStateProvider(stateKey), (
+      prev,
+      next,
+    ) {
+      if (prev?.status != SipPlayInstanceStatus.pendingOffer) return;
+      if (next == null) return;
+      final isOutbound = _readFirstOfferDirectionIsOutbound(
+        ref,
+        sessionTag,
+        header.instanceId,
+      );
+      if (!isOutbound) return;
+      final l10n = context.l10n;
+      switch (next.status) {
+        case SipPlayInstanceStatus.active:
+          showInfoSnackBar(context, l10n.sipPlayLifecycleAccepted);
+          break;
+        case SipPlayInstanceStatus.declinedByRemote:
+          showWarningSnackBar(context, l10n.sipPlayLifecycleDeclined);
+          break;
+        default:
+          break;
+      }
+    });
+    final state = ref.watch(sipPlayInstanceStateProvider(stateKey));
     if (state == null) {
       // Race: history entry exists but engine hasn't seen it. Render
       // the malformed fallback rather than blanking — the user gets
@@ -225,7 +253,7 @@ class _DispatchBody extends ConsumerWidget {
       'instance=0x${s.instanceId.toRadixString(16)}',
     );
     return isOutbound
-        ? const _OutgoingOfferRow()
+        ? _OutgoingOfferRow(state: s)
         : _IncomingOfferRow(
             state: s,
             sessionTag: sessionTag,
@@ -286,6 +314,27 @@ class _DispatchBody extends ConsumerWidget {
   }
 }
 
+/// Localised game name for an envelope's `gameTypeCode`. Falls back
+/// to the TTT name for unknown codes — the unsupported fallback path
+/// renders elsewhere, this is just defensive copy.
+String _gameNameFor(AppLocalizations l10n, int gameTypeCode) {
+  return switch (SipPlayGameType.fromCode(gameTypeCode)) {
+    SipPlayGameType.connectFour => l10n.sipPlayGameConnectFour,
+    SipPlayGameType.ticTacToe => l10n.sipPlayGameTicTacToe,
+    null => l10n.sipPlayGameTicTacToe,
+  };
+}
+
+/// Icon glyph that visually identifies the game on offer rows. Mirrors
+/// the picker-tile icon choices in `_GameOfferCard`.
+IconData _iconForGameType(int gameTypeCode) {
+  return switch (SipPlayGameType.fromCode(gameTypeCode)) {
+    SipPlayGameType.connectFour => Icons.view_column_outlined,
+    SipPlayGameType.ticTacToe => Icons.grid_3x3,
+    null => Icons.grid_3x3,
+  };
+}
+
 /// Was the offer envelope for [instanceId] sent by the local user?
 ///
 /// The engine doesn't expose offer direction on
@@ -323,21 +372,28 @@ bool _readFirstOfferDirectionIsOutbound(
 }
 
 class _OutgoingOfferRow extends StatelessWidget {
-  const _OutgoingOfferRow();
+  final SipPlayInstanceState state;
+  const _OutgoingOfferRow({required this.state});
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return Row(
       children: [
-        Icon(Icons.grid_3x3, size: 22, color: context.accentColor),
+        Icon(
+          _iconForGameType(state.gameTypeCode),
+          size: 22,
+          color: context.accentColor,
+        ),
         const SizedBox(width: AppTheme.spacing8),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                l10n.sipPlayOfferOutgoingTitle,
+                l10n.sipPlayOfferOutgoingTitle(
+                  _gameNameFor(l10n, state.gameTypeCode),
+                ),
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -413,11 +469,17 @@ class _IncomingOfferRowState extends ConsumerState<_IncomingOfferRow>
       children: [
         Row(
           children: [
-            Icon(Icons.grid_3x3, size: 22, color: context.accentColor),
+            Icon(
+              _iconForGameType(widget.state.gameTypeCode),
+              size: 22,
+              color: context.accentColor,
+            ),
             const SizedBox(width: AppTheme.spacing8),
             Expanded(
               child: Text(
-                l10n.sipPlayOfferIncomingTitle,
+                l10n.sipPlayOfferIncomingTitle(
+                  _gameNameFor(l10n, widget.state.gameTypeCode),
+                ),
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -529,10 +591,29 @@ class _IncomingOfferRowState extends ConsumerState<_IncomingOfferRow>
       if (mounted) setState(() => _responding = false);
       return;
     }
-    final outcome = await router.sendPlay(
-      sessionTag: widget.sessionTag,
-      playPayload: bytes,
-    );
+    final SipDmRouterOutcome outcome;
+    try {
+      outcome = await router.sendPlay(
+        sessionTag: widget.sessionTag,
+        playPayload: bytes,
+      );
+    } catch (err) {
+      // Defensive: if the send path throws synchronously (e.g. a
+      // native plugin dlopen failure on a misbuilt iOS Runner), the
+      // outcome-based branches below never fire and the spinner would
+      // remain forever. Always re-enable the buttons and surface a
+      // generic failure snackbar.
+      AppLogging.sipPlay(
+        'PLAY_${accept ? 'ACCEPT' : 'DECLINE'}_FAIL reason=throw '
+        'detail=${err.runtimeType} peer=$peerHex '
+        'instance=0x${widget.state.instanceId.toRadixString(16)}',
+      );
+      if (mounted) {
+        setState(() => _responding = false);
+        showErrorSnackBar(context, l10n.sipDmSessionClosed);
+      }
+      return;
+    }
     if (!mounted) return;
     if (!outcome.isOk) {
       AppLogging.sipPlay(
@@ -673,21 +754,6 @@ class _TttBoardSectionState extends ConsumerState<_TttBoardSection>
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final state = widget.state;
-    final caption = playStatusCaption(
-      context: context,
-      isLocalTurn: state.isLocalTurn,
-      localWon:
-          state.status == SipPlayInstanceStatus.won &&
-          state.winner == state.localMark,
-      remoteWon:
-          state.status == SipPlayInstanceStatus.won &&
-          state.winner == state.remoteMark,
-      draw: state.status == SipPlayInstanceStatus.draw,
-      localResigned: state.status == SipPlayInstanceStatus.resignedByLocal,
-      remoteResigned: state.status == SipPlayInstanceStatus.resignedByRemote,
-      localDeclined: state.status == SipPlayInstanceStatus.declinedByLocal,
-      remoteDeclined: state.status == SipPlayInstanceStatus.declinedByRemote,
-    );
 
     final boardEnabled =
         !widget.peerBlocked &&
@@ -737,18 +803,26 @@ class _TttBoardSectionState extends ConsumerState<_TttBoardSection>
               PlayTurnPulseDot(color: context.accentColor),
             const SizedBox(width: AppTheme.spacing4),
             Expanded(
-              child: Text(
-                caption,
-                textAlign: TextAlign.right,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color:
-                      state.isLocalTurn &&
-                          state.status == SipPlayInstanceStatus.active
-                      ? context.accentColor
-                      : context.textSecondary,
-                  fontFamily: AppTheme.fontFamily,
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: PlayStatusBanner(
+                  isLocalTurn: state.isLocalTurn,
+                  isActive: state.status == SipPlayInstanceStatus.active,
+                  localWon:
+                      state.status == SipPlayInstanceStatus.won &&
+                      state.winner == state.localMark,
+                  remoteWon:
+                      state.status == SipPlayInstanceStatus.won &&
+                      state.winner == state.remoteMark,
+                  draw: state.status == SipPlayInstanceStatus.draw,
+                  localResigned:
+                      state.status == SipPlayInstanceStatus.resignedByLocal,
+                  remoteResigned:
+                      state.status == SipPlayInstanceStatus.resignedByRemote,
+                  localDeclined:
+                      state.status == SipPlayInstanceStatus.declinedByLocal,
+                  remoteDeclined:
+                      state.status == SipPlayInstanceStatus.declinedByRemote,
                 ),
               ),
             ),
@@ -1107,21 +1181,6 @@ class _C4BoardSectionState extends ConsumerState<_C4BoardSection>
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final state = widget.state;
-    final caption = playStatusCaption(
-      context: context,
-      isLocalTurn: state.isLocalTurn,
-      localWon:
-          state.status == SipPlayInstanceStatus.won &&
-          state.winner == state.localDisc,
-      remoteWon:
-          state.status == SipPlayInstanceStatus.won &&
-          state.winner == state.remoteDisc,
-      draw: state.status == SipPlayInstanceStatus.draw,
-      localResigned: state.status == SipPlayInstanceStatus.resignedByLocal,
-      remoteResigned: state.status == SipPlayInstanceStatus.resignedByRemote,
-      localDeclined: state.status == SipPlayInstanceStatus.declinedByLocal,
-      remoteDeclined: state.status == SipPlayInstanceStatus.declinedByRemote,
-    );
 
     final boardEnabled =
         !widget.peerBlocked &&
@@ -1169,18 +1228,26 @@ class _C4BoardSectionState extends ConsumerState<_C4BoardSection>
               PlayTurnPulseDot(color: context.accentColor),
             const SizedBox(width: AppTheme.spacing4),
             Expanded(
-              child: Text(
-                caption,
-                textAlign: TextAlign.right,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color:
-                      state.isLocalTurn &&
-                          state.status == SipPlayInstanceStatus.active
-                      ? context.accentColor
-                      : context.textSecondary,
-                  fontFamily: AppTheme.fontFamily,
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: PlayStatusBanner(
+                  isLocalTurn: state.isLocalTurn,
+                  isActive: state.status == SipPlayInstanceStatus.active,
+                  localWon:
+                      state.status == SipPlayInstanceStatus.won &&
+                      state.winner == state.localDisc,
+                  remoteWon:
+                      state.status == SipPlayInstanceStatus.won &&
+                      state.winner == state.remoteDisc,
+                  draw: state.status == SipPlayInstanceStatus.draw,
+                  localResigned:
+                      state.status == SipPlayInstanceStatus.resignedByLocal,
+                  remoteResigned:
+                      state.status == SipPlayInstanceStatus.resignedByRemote,
+                  localDeclined:
+                      state.status == SipPlayInstanceStatus.declinedByLocal,
+                  remoteDeclined:
+                      state.status == SipPlayInstanceStatus.declinedByRemote,
                 ),
               ),
             ),

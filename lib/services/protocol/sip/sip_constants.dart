@@ -69,7 +69,22 @@ abstract final class SipConstants {
   static const int sipVersionMajor = 0;
 
   /// SIP protocol version (minor).
-  static const int sipVersionMinor = 1;
+  ///
+  /// v0.2 (2026-04): every handshake frame carries an explicit
+  /// `target_node_id` at offset 0 of its payload. v0.1 had no
+  /// addressing inside the SIP payload, so an overheard handshake
+  /// would surface a consent prompt on the wrong device. v0.1 is
+  /// removed in the same change that lands v0.2 — there is no dual
+  /// parser, no fallback, no migration. Senders MUST stamp the field;
+  /// receivers MUST drop frames whose target does not match the local
+  /// node id. Spec: `docs/sip/SIP_V0_2_TARGET_NODE_ID_PLAN.md`.
+  static const int sipVersionMinor = 2;
+
+  /// Sentinel `target_node_id` value reserved for "no specific
+  /// peer." HS_* frames MUST NOT carry this value — handshakes are
+  /// always directed. Keeping the sentinel named here so codec
+  /// assertions and the receiver guard refer to one constant.
+  static const int sipTargetNodeIdBroadcast = 0xFFFFFFFF;
 
   // ---------------------------------------------------------------------------
   // Airtime budget constants

@@ -3878,6 +3878,14 @@ class AppLocalizationsIt extends AppLocalizations {
   String get debugScreenDeviceLogsTitle => 'Log dispositivo';
 
   @override
+  String get debugScreenDeviceNothingToCopy =>
+      'Nessun log del dispositivo da copiare';
+
+  @override
+  String get debugScreenDeviceNothingToShare =>
+      'Nessun log del dispositivo da condividere';
+
+  @override
   String get debugScreenDeviceSearchHint => 'Cerca nei log...';
 
   @override
@@ -3926,6 +3934,12 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get debugScreenNoLogEntries => 'Nessuna voce di log';
+
+  @override
+  String get debugScreenNothingToCopy => 'Nessun log da copiare';
+
+  @override
+  String get debugScreenNothingToShare => 'Nessun log da condividere';
 
   @override
   String get debugScreenSearchLogsHint => 'Cerca nei log...';
@@ -32526,6 +32540,25 @@ class AppLocalizationsIt extends AppLocalizations {
   String get sipPlayComposerLabel => 'Play';
 
   @override
+  String get sipPlayPanelCardSending => 'Sending offer…';
+
+  @override
+  String get sipPlayDuplicateOfferBlocked =>
+      'A game offer is already in progress';
+
+  @override
+  String get sipPlayLifecycleSent => 'Offer sent';
+
+  @override
+  String get sipPlayLifecycleAccepted => 'Offer accepted';
+
+  @override
+  String get sipPlayLifecycleDeclined => 'Offer declined';
+
+  @override
+  String get sipPlayLifecycleExpired => 'Offer expired';
+
+  @override
   String get sipPlayPanelTitle => 'Play a game';
 
   @override
@@ -32599,10 +32632,14 @@ class AppLocalizationsIt extends AppLocalizations {
   String get sipPlayMalformedTitle => 'Game data unreadable';
 
   @override
-  String get sipPlayOfferOutgoingTitle => 'You offered Tic-Tac-Toe';
+  String sipPlayOfferOutgoingTitle(String game) {
+    return 'You offered $game';
+  }
 
   @override
-  String get sipPlayOfferIncomingTitle => 'Tic-Tac-Toe — they want to play';
+  String sipPlayOfferIncomingTitle(String game) {
+    return '$game — they want to play';
+  }
 
   @override
   String get sipPlayOfferAccept => 'Accept';

@@ -3831,6 +3831,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get debugScreenDeviceLogsTitle => 'Device Logs';
 
   @override
+  String get debugScreenDeviceNothingToCopy => 'No device logs to copy';
+
+  @override
+  String get debugScreenDeviceNothingToShare => 'No device logs to share';
+
+  @override
   String get debugScreenDeviceSearchHint => 'Search logs...';
 
   @override
@@ -3879,6 +3885,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get debugScreenNoLogEntries => 'No log entries';
+
+  @override
+  String get debugScreenNothingToCopy => 'No logs to copy';
+
+  @override
+  String get debugScreenNothingToShare => 'No logs to share';
 
   @override
   String get debugScreenSearchLogsHint => 'Search logs...';
@@ -32181,6 +32193,25 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sipPlayComposerLabel => 'Play';
 
   @override
+  String get sipPlayPanelCardSending => 'Sending offer…';
+
+  @override
+  String get sipPlayDuplicateOfferBlocked =>
+      'A game offer is already in progress';
+
+  @override
+  String get sipPlayLifecycleSent => 'Offer sent';
+
+  @override
+  String get sipPlayLifecycleAccepted => 'Offer accepted';
+
+  @override
+  String get sipPlayLifecycleDeclined => 'Offer declined';
+
+  @override
+  String get sipPlayLifecycleExpired => 'Offer expired';
+
+  @override
   String get sipPlayPanelTitle => 'Play a game';
 
   @override
@@ -32254,10 +32285,14 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sipPlayMalformedTitle => 'Game data unreadable';
 
   @override
-  String get sipPlayOfferOutgoingTitle => 'You offered Tic-Tac-Toe';
+  String sipPlayOfferOutgoingTitle(String game) {
+    return 'You offered $game';
+  }
 
   @override
-  String get sipPlayOfferIncomingTitle => 'Tic-Tac-Toe — they want to play';
+  String sipPlayOfferIncomingTitle(String game) {
+    return '$game — they want to play';
+  }
 
   @override
   String get sipPlayOfferAccept => 'Accept';

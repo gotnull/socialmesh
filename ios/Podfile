@@ -86,8 +86,60 @@ post_install do |installer|
     runner_project = Xcodeproj::Project.open(runner_path)
     runner_target = runner_project.targets.find { |t| t.name == 'Runner' }
     if runner_target
-      phase_name = '[Socialmesh] Re-sign Embedded Frameworks'
-      script_body = <<~SH
+      project_changed = false
+
+      # ----------------------------------------------------------------
+      # Phase 1: native-assets cache platform check (runs FIRST, before
+      # flutter assemble). Auto-purges a wrong-platform
+      # `objective_c.framework` from the build cache so the iPhone
+      # never ends up shipping a sim-arch dylib (and vice versa).
+      # Eliminates the "flutter clean before every iPhone rebuild"
+      # ritual that the cross-target cache contamination otherwise
+      # forces. See ios/Scripts/check_native_assets_platform.sh for
+      # the full rationale.
+      # ----------------------------------------------------------------
+      check_phase_name = '[Socialmesh] Check native-assets platform'
+      check_script_body = <<~SH
+        "${PROJECT_DIR}/Scripts/check_native_assets_platform.sh"
+      SH
+      existing_check = runner_target.shell_script_build_phases.find { |p| p.name == check_phase_name }
+      if existing_check
+        if existing_check.shell_script != check_script_body
+          existing_check.shell_script = check_script_body
+          project_changed = true
+        end
+      else
+        check_phase = runner_target.new_shell_script_build_phase(check_phase_name)
+        check_phase.shell_script = check_script_body
+        # Move to the very front of build_phases so it runs before
+        # flutter assemble (which lives inside the Flutter "Run Build
+        # Phase" script). new_shell_script_build_phase appends; we
+        # relocate it to position 0.
+        runner_target.build_phases.delete(check_phase)
+        runner_target.build_phases.unshift(check_phase)
+        project_changed = true
+      end
+      # Idempotency: even if the phase already existed, ensure it is
+      # at index 0. A merge or manual reorder may have moved it.
+      if existing_check
+        idx = runner_target.build_phases.index(existing_check)
+        if idx && idx != 0
+          runner_target.build_phases.delete(existing_check)
+          runner_target.build_phases.unshift(existing_check)
+          project_changed = true
+        end
+      end
+
+      # ----------------------------------------------------------------
+      # Phase 2: re-sign embedded frameworks (runs LAST, after Embed
+      # Pods Frameworks has copied the native asset into the bundle).
+      # `package:objective_c` ships its iOS framework adhoc-signed, so
+      # iOS device install fails with 0xe8008014 ("invalid signature")
+      # without this re-sign step. The simulator doesn't enforce
+      # signatures so this is a no-op for sim builds.
+      # ----------------------------------------------------------------
+      resign_phase_name = '[Socialmesh] Re-sign Embedded Frameworks'
+      resign_script_body = <<~SH
         # Workaround for package:objective_c shipping its iOS framework
         # adhoc-signed; iOS device install otherwise fails with 0xe8008014.
         # Re-sign every embedded framework with the build's signing identity.
@@ -106,17 +158,19 @@ post_install do |installer|
                    "$fw"
         done
       SH
-      existing = runner_target.shell_script_build_phases.find { |p| p.name == phase_name }
-      if existing
-        if existing.shell_script != script_body
-          existing.shell_script = script_body
-          runner_project.save
+      existing_resign = runner_target.shell_script_build_phases.find { |p| p.name == resign_phase_name }
+      if existing_resign
+        if existing_resign.shell_script != resign_script_body
+          existing_resign.shell_script = resign_script_body
+          project_changed = true
         end
       else
-        phase = runner_target.new_shell_script_build_phase(phase_name)
-        phase.shell_script = script_body
-        runner_project.save
+        resign_phase = runner_target.new_shell_script_build_phase(resign_phase_name)
+        resign_phase.shell_script = resign_script_body
+        project_changed = true
       end
+
+      runner_project.save if project_changed
     end
   end
 end

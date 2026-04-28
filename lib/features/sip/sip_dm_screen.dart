@@ -1687,10 +1687,24 @@ class _GameOfferCardState extends State<_GameOfferCard> {
   bool _sending = false;
 
   Future<void> _handleTap() async {
+    // Mutex against the rare frame-boundary double-tap: the
+    // bool flip happens synchronously before the first build
+    // re-renders with `onTap: null`, so a fast second tap inside
+    // the same frame previously slipped through and produced a
+    // duplicate offer. The early return guards that race.
     if (_sending) return;
     setState(() => _sending = true);
+    final navigator = Navigator.of(context);
     try {
       await widget.onTap();
+      // Auto-dismiss the rich-composer sheet once the offer is
+      // committed — leaving the user on the empty picker after a
+      // successful send was confusing (UX #2). The dispatcher
+      // collapsed the picker into a "Game in progress" banner
+      // anyway, but the bottom sheet stayed up; pop it explicitly.
+      if (mounted) {
+        navigator.maybePop();
+      }
     } finally {
       // Card may have been unmounted in the success case (engine
       // transitions to pendingOffer → panel collapses to the "Game
@@ -1721,13 +1735,18 @@ class _GameOfferCardState extends State<_GameOfferCard> {
         Icons.view_column_outlined,
       ),
     };
-    return InkWell(
-      onTap: _sending ? null : _handleTap,
-      borderRadius: BorderRadius.circular(AppTheme.radius12),
+    // While sending: dim the whole card, replace the icon with a
+    // spinner, replace the title with the "Sending offer…" caption,
+    // and hide the chevron + size badge so the user reads the card
+    // as committed-but-pending. UX #1 — the prior tiny 18-pt spinner
+    // inside the leading icon was easy to miss.
+    final card = AnimatedOpacity(
+      opacity: _sending ? 0.5 : 1.0,
+      duration: const Duration(milliseconds: 150),
       child: Container(
         padding: const EdgeInsets.all(AppTheme.spacing12),
         decoration: BoxDecoration(
-          color: context.background.withValues(alpha: _sending ? 0.4 : 0.6),
+          color: context.background.withValues(alpha: 0.6),
           borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(color: context.border.withValues(alpha: 0.5)),
         ),
@@ -1765,7 +1784,7 @@ class _GameOfferCardState extends State<_GameOfferCard> {
                       // it off-screen on narrow devices (iPhone SE).
                       Flexible(
                         child: Text(
-                          title,
+                          _sending ? l10n.sipPlayPanelCardSending : title,
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -1775,8 +1794,10 @@ class _GameOfferCardState extends State<_GameOfferCard> {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const SizedBox(width: AppTheme.spacing8),
-                      _SizeBadge(label: sizeBadge),
+                      if (!_sending) ...[
+                        const SizedBox(width: AppTheme.spacing8),
+                        _SizeBadge(label: sizeBadge),
+                      ],
                     ],
                   ),
                   const SizedBox(height: AppTheme.spacing2),
@@ -1790,11 +1811,21 @@ class _GameOfferCardState extends State<_GameOfferCard> {
                 ],
               ),
             ),
-            Icon(Icons.chevron_right, size: 18, color: context.textTertiary),
+            if (!_sending)
+              Icon(Icons.chevron_right, size: 18, color: context.textTertiary),
           ],
         ),
       ),
     );
+    // Disable the InkWell while sending so a stray second tap during
+    // the in-flight window doesn't fire a second offer.
+    return _sending
+        ? IgnorePointer(child: card)
+        : InkWell(
+            onTap: _handleTap,
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
+            child: card,
+          );
   }
 }
 

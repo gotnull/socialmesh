@@ -9266,6 +9266,14 @@
   "@debugScreenDeviceLogsTitle": {
     "description": "Screen title"
   },
+  "debugScreenDeviceNothingToCopy": "Nessun log del dispositivo da copiare",
+  "@debugScreenDeviceNothingToCopy": {
+    "description": "Snackbar shown when copy is tapped but the device log buffer is empty"
+  },
+  "debugScreenDeviceNothingToShare": "Nessun log del dispositivo da condividere",
+  "@debugScreenDeviceNothingToShare": {
+    "description": "Snackbar shown when share is tapped but the device log buffer is empty"
+  },
   "debugScreenDeviceSearchHint": "Cerca nei log...",
   "@debugScreenDeviceSearchHint": {
     "description": "Device log search field hint text"
@@ -9335,6 +9343,14 @@
   "debugScreenNoLogEntries": "Nessuna voce di log",
   "@debugScreenNoLogEntries": {
     "description": "Empty state title when no logs"
+  },
+  "debugScreenNothingToCopy": "Nessun log da copiare",
+  "@debugScreenNothingToCopy": {
+    "description": "Snackbar shown when copy is tapped but the log buffer is empty"
+  },
+  "debugScreenNothingToShare": "Nessun log da condividere",
+  "@debugScreenNothingToShare": {
+    "description": "Snackbar shown when share is tapped but the log buffer is empty"
   },
   "debugScreenSearchLogsHint": "Cerca nei log...",
   "@debugScreenSearchLogsHint": {

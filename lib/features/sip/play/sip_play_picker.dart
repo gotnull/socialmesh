@@ -23,11 +23,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/logging.dart';
 import '../../../providers/sip_dm_secure_router.dart';
+import '../../../providers/sip_providers.dart';
 import '../../../services/haptic_service.dart';
-import '../../../services/protocol/sip/sip_dm.dart';
 import '../../../services/protocol/sip/play/sip_play_codec.dart';
 import '../../../services/protocol/sip/play/sip_play_constants.dart';
+import '../../../services/protocol/sip/play/sip_play_engine.dart';
 import '../../../services/protocol/sip/play/sip_play_payload.dart';
+import '../../../services/protocol/sip/sip_dm.dart';
 import '../../../utils/snackbar.dart';
 
 /// Send a SIP Play `offer` envelope for [gameType] to the active DM
@@ -43,6 +45,45 @@ Future<void> sendSipPlayOffer({
   final l10n = context.l10n;
   final router = ref.read(sipDmRouterProvider);
   final haptics = ref.read(hapticServiceProvider);
+
+  // Sender-side duplicate guard. Refuse to create a second offer for
+  // a gameType while a previous instance of the same gameType is
+  // still pendingOffer or active in this session. The receiver-side
+  // handler in `SipDmManager.handleInboundPlay` enforces the same
+  // rule symmetrically. See SocialMesh issue: duplicate offer
+  // rendered twice when the user double-tapped the picker tile.
+  final dm = ref.read(sipDmManagerProvider);
+  final history = dm?.getHistory(sessionTag);
+  if (history != null) {
+    final entries = <SipPlayEntry>[];
+    for (final entry in history) {
+      if (entry.contentType != SipDmContentType.play) continue;
+      final payload = entry.payload;
+      if (payload == null || payload.isEmpty) continue;
+      final decoded = SipPlayEngine.decodeEntry(
+        payload: Uint8List.fromList(payload),
+        direction: entry.direction == SipDmDirection.outbound
+            ? SipPlayEntryDirection.outbound
+            : SipPlayEntryDirection.inbound,
+      );
+      if (decoded == null) continue;
+      entries.add(decoded);
+    }
+    if (SipPlayEngine.hasNonTerminalInstanceForGameType(
+      entries: entries,
+      gameTypeCode: gameType.code,
+    )) {
+      AppLogging.sipPlay(
+        'offer_send_blocked reason=duplicate_active_offer '
+        'gameType=${gameType.name} sessionTag=$sessionTag',
+      );
+      if (context.mounted) {
+        showWarningSnackBar(context, l10n.sipPlayDuplicateOfferBlocked);
+      }
+      return;
+    }
+  }
+
   await haptics.trigger(HapticType.medium);
 
   // u16 instance id — random per offer, scoped to (sessionTag, peer).
@@ -86,5 +127,11 @@ Future<void> sendSipPlayOffer({
       _ => l10n.sipDmSessionClosed,
     };
     showErrorSnackBar(context, message);
+    return;
   }
+  // Lifecycle feedback (UX #3): confirm to the offerer that the offer
+  // envelope is on the wire. Subsequent transitions ("Offer accepted"
+  // / "Offer declined") are snackbarred from `SipPlayBubble` once the
+  // engine derives the new status.
+  showInfoSnackBar(context, l10n.sipPlayLifecycleSent);
 }

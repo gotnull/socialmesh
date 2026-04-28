@@ -116,24 +116,32 @@ abstract final class SipTestVectors {
     detail: 0x00,
   );
 
-  /// HS_ACCEPT (msg_type=0x16, 29 bytes total)
+  /// HS_ACCEPT (msg_type=0x16, 35 bytes total — v0.2 layout)
+  ///
+  /// v0.2 prepends a 4-byte little-endian `target_node_id` (here
+  /// `0xB15E74DB`) and widens `dm_ttl_s` from 16 to 32 bits, growing
+  /// the payload from 7 to 13 bytes. Wrapper version_minor is now
+  /// `0x02`.
   static final Uint8List hsAccept = hexToBytes(
-    '53 4D 00 01 16 08 16 00 00 00 00 00 04 03 02 01'
-    '00 00 00 00 07 00 78 56 34 12 80 51 01',
+    '53 4D 00 02 16 08 16 00 00 00 00 00 04 03 02 01'
+    '00 00 00 00 0D 00 DB 74 5E B1 78 56 34 12 80 51'
+    '00 00 01',
   );
 
   /// Expected values for HS_ACCEPT.
   static const hsAcceptFields = (
     versionMajor: 0,
-    versionMinor: 1,
+    versionMinor: 2,
     msgTypeCode: 0x16,
     flags: 0x08,
     headerLen: 22,
     sessionId: 0,
     nonce: 0x01020304,
     timestampS: 0,
-    payloadLen: 7,
-    // Payload: session_tag=0x12345678, dm_ttl_s=0x5180 (20864), flags=0x01
+    payloadLen: 13,
+    // Payload: target_node_id=0xB15E74DB, session_tag=0x12345678,
+    // dm_ttl_s=0x00005180 (20864), flags=0x01
+    targetNodeId: 0xB15E74DB,
     sessionTag: 0x12345678,
   );
 

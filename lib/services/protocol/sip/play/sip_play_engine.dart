@@ -587,6 +587,35 @@ class SipPlayEngine {
     return out;
   }
 
+  /// Whether the given DM-play entry log contains any non-terminal
+  /// instance (`pendingOffer` or `active`) for [gameTypeCode]. Used by
+  /// the offer paths — both the sender (`sendSipPlayOffer`) and the
+  /// receiver (`SipDmManager.handleInboundPlay`) — to refuse a second
+  /// concurrent offer for the same game in the same session.
+  ///
+  /// Pure replay-based check: groups entries by instanceId, replays
+  /// each, and returns true if any active instance is currently in
+  /// pendingOffer or active status with a matching gameTypeCode.
+  /// Terminal states (won/draw/declined/resigned) do NOT block — the
+  /// user can offer a fresh game once the previous one has resolved.
+  static bool hasNonTerminalInstanceForGameType({
+    required List<SipPlayEntry> entries,
+    required int gameTypeCode,
+  }) {
+    final byInstance = groupByInstance(entries);
+    for (final instanceEntries in byInstance.values) {
+      if (instanceEntries.isEmpty) continue;
+      final firstGameType = instanceEntries.first.envelope.gameTypeCode;
+      if (firstGameType != gameTypeCode) continue;
+      final state = replay(instanceEntries);
+      if (state.status == SipPlayInstanceStatus.pendingOffer ||
+          state.status == SipPlayInstanceStatus.active) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   /// Decode raw SIP DM history payload bytes into a [SipPlayEntry],
   /// or return null on malformation. Convenience wrapper around
   /// [SipPlayCodec.decode] used by UI providers replaying entries

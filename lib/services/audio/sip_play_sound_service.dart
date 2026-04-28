@@ -12,6 +12,11 @@
 ///
 ///   - [playGameStart]            — SIP Play game transitions to active
 ///                                  (offer accepted by either side).
+///   - [consentRequested]         — Inbound SIP HS_HELLO arrives and
+///                                  the Accept / Decline prompt is
+///                                  about to appear. Plays an audible
+///                                  cue so the user notices when busy
+///                                  with other work.
 ///   - [playConnectionSucceeded]  — SIP Handshake reaches `accepted`
 ///                                  state and the DM session is live.
 ///   - [playConnectionFailed]     — SIP Handshake fails or times out
@@ -28,13 +33,14 @@ import 'package:just_audio/just_audio.dart';
 
 import '../../core/logging.dart';
 
-/// Strongly-typed identifier for the four SIP Play SFX. Keeps the
-/// public API testable without a real [just_audio] backend.
+/// Strongly-typed identifier for the SIP Play / SIP Handshake SFX.
+/// Keeps the public API testable without a real [just_audio] backend.
 enum SipPlaySoundCue {
   gameStart('assets/sounds/sip_play/play_game.mp3'),
-  connectionSucceeded('assets/sounds/sip_play/connection_succeeded.mp3'),
+  consentRequested('assets/sounds/sip_play/play_game.mp3'),
+  connectionSucceeded('assets/sounds/sip_play/rejected_declined.mp3'),
   connectionFailed('assets/sounds/sip_play/connection_failed.mp3'),
-  rejectedDeclined('assets/sounds/sip_play/rejected_declined.mp3');
+  rejectedDeclined('assets/sounds/sip_play/connection_succeeded.mp3');
 
   final String assetPath;
   const SipPlaySoundCue(this.assetPath);

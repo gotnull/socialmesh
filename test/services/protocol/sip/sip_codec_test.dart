@@ -263,7 +263,7 @@ void main() {
         expect(frame, isNotNull);
         expect(frame!.msgType, equals(SipMessageType.hsAccept));
         expect(frame.flags, equals(SipFlags.isResponse));
-        expect(frame.payloadLen, equals(7));
+        expect(frame.payloadLen, equals(13));
       });
 
       test('decodes TX_CHUNK correctly', () {

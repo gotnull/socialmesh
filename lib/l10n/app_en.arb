@@ -5084,6 +5084,14 @@
     "@debugScreenDeviceLogsTitle": {
         "description": "Screen title"
     },
+    "debugScreenDeviceNothingToCopy": "No device logs to copy",
+    "@debugScreenDeviceNothingToCopy": {
+        "description": "Snackbar shown when copy is tapped but the device log buffer is empty"
+    },
+    "debugScreenDeviceNothingToShare": "No device logs to share",
+    "@debugScreenDeviceNothingToShare": {
+        "description": "Snackbar shown when share is tapped but the device log buffer is empty"
+    },
     "debugScreenDeviceSearchHint": "Search logs...",
     "@debugScreenDeviceSearchHint": {
         "description": "Device log search field hint text"
@@ -5153,6 +5161,14 @@
     "debugScreenNoLogEntries": "No log entries",
     "@debugScreenNoLogEntries": {
         "description": "Empty state title when no logs"
+    },
+    "debugScreenNothingToCopy": "No logs to copy",
+    "@debugScreenNothingToCopy": {
+        "description": "Snackbar shown when copy is tapped but the log buffer is empty"
+    },
+    "debugScreenNothingToShare": "No logs to share",
+    "@debugScreenNothingToShare": {
+        "description": "Snackbar shown when share is tapped but the log buffer is empty"
     },
     "debugScreenSearchLogsHint": "Search logs...",
     "@debugScreenSearchLogsHint": {
@@ -43178,6 +43194,30 @@
     "@sipPlayComposerLabel": {
         "description": "Tab label inside the DM composer that opens the SIP Play game picker. Shown only when the peer advertises dmPlayV1."
     },
+    "sipPlayPanelCardSending": "Sending offer…",
+    "@sipPlayPanelCardSending": {
+        "description": "Replaces the game title on the picker card while the offer envelope is in-flight; pairs with a spinner."
+    },
+    "sipPlayDuplicateOfferBlocked": "A game offer is already in progress",
+    "@sipPlayDuplicateOfferBlocked": {
+        "description": "Snackbar shown when the user attempts to send a second offer for a game while the previous offer for the same game is still pending or active in this session."
+    },
+    "sipPlayLifecycleSent": "Offer sent",
+    "@sipPlayLifecycleSent": {
+        "description": "Snackbar shown to the offerer once the offer envelope has been transmitted to the peer."
+    },
+    "sipPlayLifecycleAccepted": "Offer accepted",
+    "@sipPlayLifecycleAccepted": {
+        "description": "Snackbar shown to the offerer when the peer accepts the game offer."
+    },
+    "sipPlayLifecycleDeclined": "Offer declined",
+    "@sipPlayLifecycleDeclined": {
+        "description": "Snackbar shown to the offerer when the peer declines the game offer."
+    },
+    "sipPlayLifecycleExpired": "Offer expired",
+    "@sipPlayLifecycleExpired": {
+        "description": "Snackbar shown to the offerer when the peer doesn't respond within the offer timeout window."
+    },
     "sipPlayPanelTitle": "Play a game",
     "@sipPlayPanelTitle": {
         "description": "Header inside the Play composer panel — the panel shown when the user selects the Play tab."
@@ -43266,13 +43306,23 @@
     "@sipPlayMalformedTitle": {
         "description": "Title of the bubble shown when a SIP Play envelope fails to decode (truncated, version mismatch, etc.). State is unchanged — the bubble is informational only."
     },
-    "sipPlayOfferOutgoingTitle": "You offered Tic-Tac-Toe",
+    "sipPlayOfferOutgoingTitle": "You offered {game}",
     "@sipPlayOfferOutgoingTitle": {
-        "description": "Title on a SIP Play bubble shown to the offerer after they sent an offer. Status switches to active when the peer accepts."
+        "description": "Title on a SIP Play bubble shown to the offerer after they sent an offer. Status switches to active when the peer accepts. {game} is the localised game name (e.g. 'Tic-Tac-Toe', 'Connect Four').",
+        "placeholders": {
+            "game": {
+                "type": "String"
+            }
+        }
     },
-    "sipPlayOfferIncomingTitle": "Tic-Tac-Toe — they want to play",
+    "sipPlayOfferIncomingTitle": "{game} — they want to play",
     "@sipPlayOfferIncomingTitle": {
-        "description": "Title on a SIP Play bubble for an inbound offer awaiting Accept / Decline."
+        "description": "Title on a SIP Play bubble for an inbound offer awaiting Accept / Decline. {game} is the localised game name.",
+        "placeholders": {
+            "game": {
+                "type": "String"
+            }
+        }
     },
     "sipPlayOfferAccept": "Accept",
     "@sipPlayOfferAccept": {

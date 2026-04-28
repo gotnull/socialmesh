@@ -60,7 +60,40 @@ enum SipMessageType {
     }
     return null;
   }
+
+  /// SIP v0.2 handshake message types — the five payloads that carry
+  /// `target_node_id` at offset 0 and require the strict per-handler
+  /// target check (see `docs/sip/SIP_V0_2_TARGET_NODE_ID_PLAN.md` §5.2).
+  /// Forward-compat: this set is closed; an opcode in
+  /// [isInHandshakeRange] that is not listed here is dropped at codec
+  /// entry as "unknown handshake" rather than dispatched.
+  bool get isHandshake =>
+      this == SipMessageType.hsHello ||
+      this == SipMessageType.hsChallenge ||
+      this == SipMessageType.hsResponse ||
+      this == SipMessageType.hsAccept ||
+      this == SipMessageType.hsDecline;
+
+  /// True if the wire opcode falls in the SIP-1 handshake reserved
+  /// range (0x13..0x17). Used together with [isHandshake] to enforce
+  /// closed-by-default rejection of unknown handshake-range opcodes.
+  bool get isInHandshakeRange => code >= 0x13 && code <= 0x17;
 }
+
+/// True if [code] is a handshake opcode the current build knows how
+/// to decode. Anything in the handshake range (0x13..0x17) that is
+/// not on this list MUST be rejected at the codec layer — the
+/// handshake surface is closed by default to forward-compat
+/// surprises and corrupted frames.
+bool isKnownHandshakeOpcode(int code) {
+  final type = SipMessageType.fromCode(code);
+  return type != null && type.isHandshake;
+}
+
+/// True if [code] is in the reserved SIP-1 handshake range
+/// (0x13..0x17). Helper for the codec's closed-by-default check
+/// when we have not yet matched [code] to an enum value.
+bool isHandshakeOpcodeRange(int code) => code >= 0x13 && code <= 0x17;
 
 /// SIP frame flags bitfield (byte 5 of the frame header).
 abstract final class SipFlags {
