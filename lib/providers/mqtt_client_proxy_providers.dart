@@ -17,7 +17,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/logging.dart';
 import '../generated/meshtastic/mesh.pb.dart' as pb;
+import '../models/mesh_models.dart' show ChannelConfig;
 import '../services/mqtt/mqtt_client_proxy_service.dart';
+import 'app_lifecycle_provider.dart';
 import 'app_providers.dart';
 
 // ---------------------------------------------------------------------------
@@ -95,13 +97,58 @@ final mqttClientProxyForwarderProvider = Provider<void>((ref) {
 // Proxy auto-connect (starts proxy when device MQTT config is received)
 // ---------------------------------------------------------------------------
 
-/// Watches the device's MQTT config stream and automatically connects
-/// the proxy when `proxyToClientEnabled` is true.
+/// Evaluates the proxy state from cached MQTT config and current channel
+/// downlink coverage, then either calls `connect` or `disconnect` on the
+/// service. Idempotent — safe to call from multiple triggers.
 ///
-/// This provider handles the lifecycle:
-/// - Connect when config arrives with proxy enabled
-/// - Disconnect when config arrives with proxy disabled
-/// - Reconnect when config changes (different broker, etc.)
+/// Reasons used in logs (kept short, structured): `initial-build`,
+/// `config-stream-emit`, `link-connected`, `app-resumed`,
+/// `downlink-flag-changed`, `manual` (controller), `save-flow` (UI).
+void _evaluateProxyState(Ref ref, String reason) {
+  final protocol = ref.read(protocolServiceProvider);
+  final proxyService = ref.read(mqttClientProxyServiceProvider);
+  final cfg = protocol.currentMqttConfig;
+
+  if (cfg == null) {
+    AppLogging.mqttProxy('evaluate($reason): no cached MQTT config; skipping');
+    return;
+  }
+
+  final root = cfg.root.isNotEmpty ? cfg.root : 'msh';
+  final topicPrefix = '$root/2/e'; // lint-allow: hardcoded-string
+
+  if (cfg.enabled && cfg.proxyToClientEnabled) {
+    final channels = ref.read(channelsProvider);
+    final hasAnyDownlinkEnabled = channels.any((ch) => ch.downlink);
+
+    final myNodeNum = protocol.myNodeNum;
+    final nodeUserId = myNodeNum != null
+        ? '!${myNodeNum.toRadixString(16).padLeft(8, '0')}' // lint-allow: hardcoded-string
+        : null;
+
+    AppLogging.mqttProxy(
+      'evaluate($reason): proxy enabled — connect '
+      '(subscribe: $hasAnyDownlinkEnabled)',
+    );
+
+    proxyService.connect(
+      address: cfg.address,
+      tlsEnabled: cfg.tlsEnabled,
+      username: cfg.username,
+      password: cfg.password,
+      topicPrefix: topicPrefix,
+      nodeUserId: nodeUserId,
+      shouldSubscribe: hasAnyDownlinkEnabled,
+    );
+  } else if (proxyService.isConnected) {
+    AppLogging.mqttProxy('evaluate($reason): proxy disabled — disconnect');
+    proxyService.disconnect();
+  }
+}
+
+/// Watches the device's MQTT config stream, BLE link state, app
+/// foreground state, and channel downlink coverage; triggers proxy
+/// reconnects via the shared evaluator.
 ///
 /// Per the official Meshtastic iOS app, the proxy only subscribes
 /// (receives inbound MQTT messages) when at least one channel has
@@ -109,57 +156,82 @@ final mqttClientProxyForwarderProvider = Provider<void>((ref) {
 /// from the MQTT broker to the device even when the user only intended
 /// to uplink, causing 0-hop MQTT delivery to appear as the primary
 /// transport path.
+///
+/// The evaluator is idempotent — `MqttClientProxyService.connect` short-
+/// circuits when the live socket already matches the requested args, so
+/// firing it from many triggers (cold start, save, link-connected,
+/// app-resumed, downlink-toggle, config emission) is safe.
 final mqttClientProxyAutoConnectProvider = Provider<void>((ref) {
+  // Watch only the stable singletons so the provider does not rebuild
+  // on every channel/config change. Channels and config are read inside
+  // the evaluator on demand.
   final protocol = ref.watch(protocolServiceProvider);
-  final proxyService = ref.watch(mqttClientProxyServiceProvider);
-  final channels = ref.watch(channelsProvider);
 
-  StreamSubscription<dynamic>? subscription;
+  // Cold-start seed: the broadcast `mqttConfigStream` does not replay,
+  // so a config that arrived before this provider mounted would be lost.
+  // Reading `currentMqttConfig` synchronously closes that race.
+  _evaluateProxyState(ref, 'initial-build');
 
-  subscription = protocol.mqttConfigStream.listen((mqttConfig) {
-    final root = mqttConfig.root.isNotEmpty ? mqttConfig.root : 'msh';
-    final topicPrefix = '$root/2/e'; // lint-allow: hardcoded-string
+  final subscription = protocol.mqttConfigStream.listen((_) {
+    _evaluateProxyState(ref, 'config-stream-emit');
+  });
 
-    if (mqttConfig.enabled && mqttConfig.proxyToClientEnabled) {
-      // Match the official Meshtastic iOS app: only subscribe (downlink)
-      // when at least one channel has downlinkEnabled == true.
-      final hasAnyDownlinkEnabled = channels.any((ch) => ch.downlink);
+  // BLE link transitions to connected → re-evaluate (covers radio
+  // reboot / BLE drop without a follow-up config emission).
+  ref.listen<bool>(isLinkConnectedProvider, (previous, isConnected) {
+    if (isConnected && previous != true) {
+      _evaluateProxyState(ref, 'link-connected');
+    }
+  });
 
-      AppLogging.mqttProxy(
-        'Device MQTT config received: proxy enabled, '
-        'connecting to broker '
-        '(subscribe: $hasAnyDownlinkEnabled)',
-      );
+  // App resumes to foreground → re-evaluate (covers iOS background
+  // socket teardown).
+  ref.listen<bool>(appLifecycleProvider, (previous, isForeground) {
+    if (isForeground && previous != true) {
+      _evaluateProxyState(ref, 'app-resumed');
+    }
+  });
 
-      // Determine node user ID for client identification
-      final myNodeNum = protocol.myNodeNum;
-      final nodeUserId = myNodeNum != null
-          ? '!${myNodeNum.toRadixString(16).padLeft(8, '0')}' // lint-allow: hardcoded-string
-          : null;
-
-      proxyService.connect(
-        address: mqttConfig.address,
-        tlsEnabled: mqttConfig.tlsEnabled,
-        username: mqttConfig.username,
-        password: mqttConfig.password,
-        topicPrefix: topicPrefix,
-        nodeUserId: nodeUserId,
-        shouldSubscribe: hasAnyDownlinkEnabled,
-      );
-    } else if (proxyService.isConnected) {
-      AppLogging.mqttProxy(
-        'Device MQTT config received: proxy disabled, '
-        'disconnecting from broker',
-      );
-      proxyService.disconnect();
+  // Channel downlink coverage transitions → re-evaluate. We deliberately
+  // ignore unrelated channel edits (name, PSK, uplink-only flag) so a
+  // routine channel rename does not trigger a destructive reconnect.
+  ref.listen<List<ChannelConfig>>(channelsProvider, (previous, next) {
+    final prevHas = previous?.any((c) => c.downlink) ?? false;
+    final nextHas = next.any((c) => c.downlink);
+    if (prevHas != nextHas) {
+      _evaluateProxyState(ref, 'downlink-flag-changed');
     }
   });
 
   ref.onDispose(() {
-    subscription?.cancel();
+    subscription.cancel();
     AppLogging.mqttProxy('Proxy auto-connect provider disposed');
   });
 });
+
+// ---------------------------------------------------------------------------
+// Controller — entry point for callers (e.g. settings screen save flow)
+// ---------------------------------------------------------------------------
+
+/// Façade exposing a one-line refresh entry point that shares the same
+/// evaluator path as the auto-connect provider. Use this when a UI
+/// action (e.g. saving MQTT settings) needs to belt-and-suspender the
+/// proxy state without depending on stream-replay timing.
+class MqttClientProxyController {
+  MqttClientProxyController(this._ref);
+  final Ref _ref;
+
+  /// Triggers an immediate evaluation of the proxy state from the
+  /// current cached MQTT config. Safe to call repeatedly — the
+  /// underlying connect/disconnect is idempotent.
+  Future<void> refresh({String reason = 'manual'}) async {
+    _evaluateProxyState(_ref, reason);
+  }
+}
+
+final mqttClientProxyControllerProvider = Provider<MqttClientProxyController>(
+  MqttClientProxyController.new,
+);
 
 // ---------------------------------------------------------------------------
 // Diagnostics provider

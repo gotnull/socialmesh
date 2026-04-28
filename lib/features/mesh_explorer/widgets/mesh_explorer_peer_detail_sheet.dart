@@ -13,8 +13,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/logging.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../features/nodedex/widgets/sigil_painter.dart';
 import '../../../providers/app_providers.dart';
+import '../../../providers/peer_safety_providers.dart';
 import '../../../providers/sip_providers.dart';
 import '../../../services/haptic_service.dart';
 import '../../../services/protocol/sip/sip_codec.dart';
@@ -408,6 +410,12 @@ class _ActionButtons extends ConsumerWidget {
     ref.read(hapticServiceProvider).trigger(HapticType.medium);
     final protocol = ref.read(protocolServiceProvider);
     protocol.acceptSipHandshake(peer.nodeId);
+    // T+S: mark first-contact ONLY when the local user explicitly
+    // taps Accept. Inbound HELLO / DECLINE / ACCEPT do NOT carry
+    // consent — the user-tap is the consent moment.
+    ref
+        .read(peerSafetyManagerProvider.notifier)
+        .markFirstHandshake(peer.nodeId, DateTime.now().millisecondsSinceEpoch);
     Navigator.of(context).pop();
   }
 
@@ -424,7 +432,7 @@ class _ActionButtons extends ConsumerWidget {
 
     final handshake = ref.read(sipHandshakeProvider);
     if (handshake == null) {
-      showErrorSnackBar(context, l10n.sipHandshakeFailed);
+      // Chip is the single source of truth — no redundant snackbar.
       return;
     }
 
@@ -437,7 +445,18 @@ class _ActionButtons extends ConsumerWidget {
       return;
     }
 
-    final frame = handshake.initiateHandshake(peer.nodeId);
+    // Explicit user retry from a terminal state overrides the
+    // 120s post-failure cooldown — the cooldown is meant to throttle
+    // automatic retransmits, not block deliberate user retries.
+    final isUserRetry =
+        currentState == SipHandshakeState.failed ||
+        currentState == SipHandshakeState.timedOut ||
+        currentState == SipHandshakeState.declined;
+
+    final frame = handshake.initiateHandshake(
+      peer.nodeId,
+      overrideCooldown: isUserRetry,
+    );
     if (frame == null) {
       showWarningSnackBar(context, l10n.meshExplorerHandshakeCooldown);
       return;
@@ -445,7 +464,6 @@ class _ActionButtons extends ConsumerWidget {
 
     final encoded = SipCodec.encode(frame);
     if (encoded == null) {
-      showErrorSnackBar(context, l10n.sipHandshakeFailed);
       return;
     }
 
@@ -487,6 +505,33 @@ class _ActionButtons extends ConsumerWidget {
   Future<void> _onBlock(BuildContext context, WidgetRef ref) async {
     final haptics = ref.read(hapticServiceProvider);
     await haptics.trigger(HapticType.heavy);
+    if (!context.mounted) return;
+
+    final l10n = context.l10n;
+    final confirmed = await AppBottomSheet.showConfirm(
+      context: context,
+      title: l10n.meshExplorerBlockConfirmTitle,
+      message: l10n.meshExplorerBlockConfirmBody,
+      confirmLabel: l10n.sipHubBlockConfirmAction,
+      cancelLabel: l10n.sipHubBlockConfirmCancel,
+      isDestructive: true,
+    );
+    if (confirmed != true) return;
+
+    AppLogging.sip(
+      'MESH_EXPLORER: Block confirmed for '
+      'peer=0x${peer.nodeId.toRadixString(16)}',
+    );
+    // Persist block. After this, future inbound HELLO / DM / MRRP
+    // frames from this peer hit the protocol-layer safety gate and
+    // are silently dropped before reaching consent UI / DM list.
+    await ref
+        .read(peerSafetyManagerProvider.notifier)
+        .block(peer.nodeId, reasonCode: 'mesh_explorer_block');
+    // Also clear any in-flight pending consent state — silent
+    // drop, no HS_DECLINE on the wire.
+    if (!context.mounted) return;
+    ref.read(protocolServiceProvider).cancelSipHandshake(peer.nodeId);
     if (context.mounted) Navigator.of(context).pop();
   }
 }

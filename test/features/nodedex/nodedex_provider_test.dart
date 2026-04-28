@@ -1269,6 +1269,137 @@ void main() {
   });
 
   // ===========================================================================
+  // recordEncounter (notifier-level — message-derived path)
+  // ===========================================================================
+
+  group('recordEncounter', () {
+    test(
+      'advances lastSeen and appends an encounter when timestamp is fresh',
+      () async {
+        final ctx = _createTestContainer(preInitStore: preInitStore);
+        addTearDown(ctx.container.dispose);
+
+        await _initProvider(ctx.container);
+
+        ctx.nodesNotifier.addNode(_makeNode(100));
+        await _pumpEventQueue();
+
+        final notifier = ctx.container.read(nodeDexProvider.notifier);
+        final before = ctx.container.read(nodeDexProvider)[100]!;
+        final fresh = before.lastSeen.add(const Duration(hours: 6));
+
+        final recorded = notifier.recordEncounter(100, timestamp: fresh);
+
+        final after = ctx.container.read(nodeDexProvider)[100]!;
+        expect(recorded, isTrue);
+        expect(after.lastSeen, equals(fresh));
+        expect(after.encounters.last.timestamp, equals(fresh));
+      },
+    );
+
+    test('is a no-op when timestamp is not newer than lastSeen', () async {
+      final ctx = _createTestContainer(preInitStore: preInitStore);
+      addTearDown(ctx.container.dispose);
+
+      await _initProvider(ctx.container);
+
+      ctx.nodesNotifier.addNode(_makeNode(100));
+      await _pumpEventQueue();
+
+      final notifier = ctx.container.read(nodeDexProvider.notifier);
+      final before = ctx.container.read(nodeDexProvider)[100]!;
+      final stale = before.lastSeen.subtract(const Duration(days: 1));
+
+      final recorded = notifier.recordEncounter(100, timestamp: stale);
+
+      final after = ctx.container.read(nodeDexProvider)[100]!;
+      expect(recorded, isFalse);
+      expect(after.lastSeen, equals(before.lastSeen));
+      expect(after.encounters.length, equals(before.encounters.length));
+    });
+
+    test('is a no-op for unknown node', () async {
+      final ctx = _createTestContainer(preInitStore: preInitStore);
+      addTearDown(ctx.container.dispose);
+
+      await _initProvider(ctx.container);
+
+      final recorded = ctx.container
+          .read(nodeDexProvider.notifier)
+          .recordEncounter(999, timestamp: clock.now());
+
+      expect(recorded, isFalse);
+      expect(ctx.container.read(nodeDexProvider).containsKey(999), isFalse);
+    });
+
+    test(
+      'does not inflate encounterCount within the entry-level cooldown window',
+      () async {
+        final ctx = _createTestContainer(preInitStore: preInitStore);
+        addTearDown(ctx.container.dispose);
+
+        await _initProvider(ctx.container);
+
+        ctx.nodesNotifier.addNode(_makeNode(100));
+        await _pumpEventQueue();
+
+        final notifier = ctx.container.read(nodeDexProvider.notifier);
+        final before = ctx.container.read(nodeDexProvider)[100]!;
+        final initialCount = before.encounterCount;
+        final base = before.lastSeen;
+
+        // Fire two messages 30 seconds apart — well inside the 5-minute
+        // entry-level cooldown. lastSeen advances both times, but the
+        // encounter count must not double-count.
+        notifier.recordEncounter(
+          100,
+          timestamp: base.add(const Duration(seconds: 30)),
+        );
+        notifier.recordEncounter(
+          100,
+          timestamp: base.add(const Duration(seconds: 60)),
+        );
+
+        final after = ctx.container.read(nodeDexProvider)[100]!;
+        expect(
+          after.encounterCount,
+          equals(initialCount),
+          reason:
+              'calls within cooldown must not bump encounterCount — chatty '
+              'channels would otherwise inflate the count',
+        );
+        expect(after.lastSeen, equals(base.add(const Duration(seconds: 60))));
+      },
+    );
+
+    test('message-derived encounter advances lastSeen even when the tick path '
+        'has not seen a fresh node.lastHeard', () async {
+      // Reproduces the bug: a node was last "encountered" via the tick
+      // path on day 1, but a channel message arrived on day 2 without
+      // the tick path ever observing a fresher node.lastHeard.
+      // Without this path, lastSeen would stay frozen on day 1.
+      final ctx = _createTestContainer(preInitStore: preInitStore);
+      addTearDown(ctx.container.dispose);
+
+      await _initProvider(ctx.container);
+
+      ctx.nodesNotifier.addNode(_makeNode(100));
+      await _pumpEventQueue();
+
+      final notifier = ctx.container.read(nodeDexProvider.notifier);
+      final tickLastSeen = ctx.container.read(nodeDexProvider)[100]!.lastSeen;
+      final messageTime = tickLastSeen.add(const Duration(days: 1));
+
+      notifier.recordMessage(100);
+      notifier.recordEncounter(100, timestamp: messageTime);
+
+      final entry = ctx.container.read(nodeDexProvider)[100]!;
+      expect(entry.messageCount, equals(1));
+      expect(entry.lastSeen, equals(messageTime));
+    });
+  });
+
+  // ===========================================================================
   // setSocialTag
   // ===========================================================================
 

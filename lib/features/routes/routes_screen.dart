@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../utils/text_sanitizer.dart';
 import '../../utils/time_format.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -248,7 +249,9 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen>
         return;
       }
 
-      final gpxContent = String.fromCharCodes(file.bytes!);
+      final gpxContent = sanitizeExternalText(
+        String.fromCharCodes(file.bytes!),
+      );
       final storage = storageAsync.value;
       if (storage == null) return;
 

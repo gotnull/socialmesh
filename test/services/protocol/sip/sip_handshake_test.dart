@@ -17,6 +17,7 @@ void main() {
   group('SipHsMessages', () {
     test('HS_HELLO round-trip', () {
       final hello = SipHsHello(
+        targetNodeId: 0xB15E74DB,
         clientNonce: Uint8List.fromList(List.generate(16, (i) => i)),
         clientEphemeralPub: Uint8List.fromList(
           List.generate(32, (i) => i + 16),
@@ -24,17 +25,20 @@ void main() {
         requestedFeatures: SipFeatureBits.allV01,
       );
       final encoded = SipHsMessages.encodeHello(hello);
-      expect(encoded.length, 50);
+      expect(encoded, isNotNull);
+      expect(encoded!.length, 54);
 
       final decoded = SipHsMessages.decodeHello(encoded);
       expect(decoded, isNotNull);
-      expect(decoded!.clientNonce, equals(hello.clientNonce));
+      expect(decoded!.targetNodeId, 0xB15E74DB);
+      expect(decoded.clientNonce, equals(hello.clientNonce));
       expect(decoded.clientEphemeralPub, equals(hello.clientEphemeralPub));
       expect(decoded.requestedFeatures, SipFeatureBits.allV01);
     });
 
     test('HS_CHALLENGE round-trip', () {
       final challenge = SipHsChallenge(
+        targetNodeId: 0xB15E74DB,
         serverNonce: Uint8List.fromList(List.generate(16, (i) => i + 100)),
         echoedClientNonce: Uint8List.fromList(List.generate(16, (i) => i)),
         serverEphemeralPub: Uint8List.fromList(
@@ -43,11 +47,13 @@ void main() {
         expiresInS: 60,
       );
       final encoded = SipHsMessages.encodeChallenge(challenge);
-      expect(encoded.length, 68);
+      expect(encoded, isNotNull);
+      expect(encoded!.length, 72);
 
       final decoded = SipHsMessages.decodeChallenge(encoded);
       expect(decoded, isNotNull);
-      expect(decoded!.serverNonce, equals(challenge.serverNonce));
+      expect(decoded!.targetNodeId, 0xB15E74DB);
+      expect(decoded.serverNonce, equals(challenge.serverNonce));
       expect(decoded.echoedClientNonce, equals(challenge.echoedClientNonce));
       expect(decoded.serverEphemeralPub, equals(challenge.serverEphemeralPub));
       expect(decoded.expiresInS, 60);
@@ -55,6 +61,7 @@ void main() {
 
     test('HS_RESPONSE round-trip', () {
       final response = SipHsResponse(
+        targetNodeId: 0xB15E74DB,
         echoedServerNonce: Uint8List.fromList(
           List.generate(16, (i) => i + 100),
         ),
@@ -62,27 +69,32 @@ void main() {
         sessionTag: 0x12345678,
       );
       final encoded = SipHsMessages.encodeResponse(response);
-      expect(encoded.length, 36);
+      expect(encoded, isNotNull);
+      expect(encoded!.length, 40);
 
       final decoded = SipHsMessages.decodeResponse(encoded);
       expect(decoded, isNotNull);
-      expect(decoded!.echoedServerNonce, equals(response.echoedServerNonce));
+      expect(decoded!.targetNodeId, 0xB15E74DB);
+      expect(decoded.echoedServerNonce, equals(response.echoedServerNonce));
       expect(decoded.echoedClientNonce, equals(response.echoedClientNonce));
       expect(decoded.sessionTag, 0x12345678);
     });
 
     test('HS_ACCEPT round-trip', () {
       final accept = SipHsAccept(
+        targetNodeId: 0xB15E74DB,
         sessionTag: 0xDEADBEEF,
         dmTtlS: 86400,
         flags: 0,
       );
       final encoded = SipHsMessages.encodeAccept(accept);
-      expect(encoded.length, 9);
+      expect(encoded, isNotNull);
+      expect(encoded!.length, 13);
 
       final decoded = SipHsMessages.decodeAccept(encoded);
       expect(decoded, isNotNull);
-      expect(decoded!.sessionTag, 0xDEADBEEF);
+      expect(decoded!.targetNodeId, 0xB15E74DB);
+      expect(decoded.sessionTag, 0xDEADBEEF);
       expect(decoded.dmTtlS, 86400);
       expect(decoded.flags, 0);
     });
@@ -329,23 +341,27 @@ void main() {
       );
       await responder.handleResponse(0xAAAA, responseFrame!);
 
-      // Forge a bad accept with wrong session_tag.
+      // Forge a bad accept with wrong session_tag. The responder
+      // (0xBBBB) is sending the (forged) accept to the initiator
+      // (0xAAAA), so target_node_id = 0xAAAA.
       final badAccept = SipHsAccept(
+        targetNodeId: 0xAAAA,
         sessionTag: 0xDEADDEAD,
         dmTtlS: 86400,
         flags: 0,
       );
       final badPayload = SipHsMessages.encodeAccept(badAccept);
+      expect(badPayload, isNotNull);
       final badFrame = SipFrame(
         versionMajor: 0,
-        versionMinor: 1,
+        versionMinor: SipConstants.sipVersionMinor,
         msgType: SipMessageType.hsAccept,
         flags: SipFlags.isResponse,
         headerLen: SipConstants.sipWrapperMin,
         sessionId: 0xDEADDEAD,
         nonce: SipCodec.generateNonce(),
         timestampS: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-        payloadLen: badPayload.length,
+        payloadLen: badPayload!.length,
         payload: badPayload,
       );
 
@@ -495,26 +511,30 @@ void main() {
       expect(hello, isNotNull);
 
       // Receiving a HELLO from a peer with the same nodeId: localNodeId is NOT
-      // greater, so we yield.
+      // greater, so we yield. The peer (also nodeId) is sending the
+      // HELLO at our local node, so target_node_id = nodeId.
+      final fakePayload = SipHsMessages.encodeHello(
+        SipHsHello(
+          targetNodeId: nodeId,
+          clientNonce: Uint8List.fromList(List.generate(16, (i) => i + 50)),
+          clientEphemeralPub: Uint8List.fromList(
+            List.generate(32, (i) => i + 70),
+          ),
+          requestedFeatures: SipFeatureBits.allV01,
+        ),
+      );
+      expect(fakePayload, isNotNull);
       final fakeHello = SipFrame(
         versionMajor: 0,
-        versionMinor: 1,
+        versionMinor: SipConstants.sipVersionMinor,
         msgType: SipMessageType.hsHello,
         flags: 0,
         headerLen: SipConstants.sipWrapperMin,
         sessionId: 0,
         nonce: SipCodec.generateNonce(),
         timestampS: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-        payloadLen: 50,
-        payload: SipHsMessages.encodeHello(
-          SipHsHello(
-            clientNonce: Uint8List.fromList(List.generate(16, (i) => i + 50)),
-            clientEphemeralPub: Uint8List.fromList(
-              List.generate(32, (i) => i + 70),
-            ),
-            requestedFeatures: SipFeatureBits.allV01,
-          ),
-        ),
+        payloadLen: fakePayload!.length,
+        payload: fakePayload,
       );
 
       // With equal IDs, the else branch fires (not strictly greater).
@@ -533,9 +553,10 @@ void main() {
   // ---------------------------------------------------------------------------
 
   group('declineHandshake', () {
-    SipFrame makeHello({required int nonce}) {
+    SipFrame makeHello({required int nonce, int targetNodeId = 0x1111}) {
       final payload = SipHsMessages.encodeHello(
         SipHsHello(
+          targetNodeId: targetNodeId,
           clientNonce: Uint8List.fromList(List.generate(16, (i) => i)),
           clientEphemeralPub: Uint8List.fromList(
             List.generate(32, (i) => i + 16),
@@ -543,6 +564,7 @@ void main() {
           requestedFeatures: SipFeatureBits.allV01,
         ),
       );
+      expect(payload, isNotNull);
       return SipFrame(
         versionMajor: SipConstants.sipVersionMajor,
         versionMinor: SipConstants.sipVersionMinor,
@@ -552,7 +574,7 @@ void main() {
         sessionId: 0,
         nonce: nonce,
         timestampS: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-        payloadLen: payload.length,
+        payloadLen: payload!.length,
         payload: payload,
       );
     }
@@ -635,9 +657,16 @@ void main() {
 
   group('handleDecline', () {
     SipFrame makeDeclineFrame(Uint8List clientNonce) {
+      // The decline is sent by the responder back to the initiator
+      // (this manager's local node = 0x1111).
       final payload = SipHsMessages.encodeDecline(
-        SipHsDecline(echoedClientNonce: clientNonce, reason: 0x00),
+        SipHsDecline(
+          targetNodeId: 0x1111,
+          echoedClientNonce: clientNonce,
+          reason: 0x00,
+        ),
       );
+      expect(payload, isNotNull);
       return SipFrame(
         versionMajor: SipConstants.sipVersionMajor,
         versionMinor: SipConstants.sipVersionMinor,
@@ -647,7 +676,7 @@ void main() {
         sessionId: 0,
         nonce: SipCodec.generateNonce(),
         timestampS: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-        payloadLen: payload.length,
+        payloadLen: payload!.length,
         payload: payload,
       );
     }
@@ -763,6 +792,189 @@ void main() {
       mgrA.reset();
       final retryB = mgrB.initiateHandshake(0x1111);
       expect(retryB, isNotNull, reason: 'B must be able to re-initiate');
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Session-expiry timer + pending-consent decoupling
+  //
+  // Regression coverage for the field bug where a peer sat on the consent
+  // prompt for ≥60s, the responder silently expired the pending request,
+  // the user's late Accept tap was rejected with "no valid pending
+  // request", and the initiator's helloSent session lingered forever
+  // because no traffic trigger reached `_cleanExpired`.
+  // ---------------------------------------------------------------------------
+
+  group('session expiry + pending-consent timeout', () {
+    SipFrame makeHello({
+      required int nonce,
+      int seed = 0,
+      int targetNodeId = 0x1111,
+    }) {
+      final payload = SipHsMessages.encodeHello(
+        SipHsHello(
+          targetNodeId: targetNodeId,
+          clientNonce: Uint8List.fromList(List.generate(16, (i) => i + seed)),
+          clientEphemeralPub: Uint8List.fromList(
+            List.generate(32, (i) => i + 16 + seed),
+          ),
+          requestedFeatures: SipFeatureBits.allV01,
+        ),
+      );
+      expect(payload, isNotNull);
+      return SipFrame(
+        versionMajor: SipConstants.sipVersionMajor,
+        versionMinor: SipConstants.sipVersionMinor,
+        msgType: SipMessageType.hsHello,
+        flags: 0,
+        headerLen: SipConstants.sipWrapperMin,
+        sessionId: 0,
+        nonce: nonce,
+        timestampS: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+        payloadLen: payload!.length,
+        payload: payload,
+      );
+    }
+
+    test('pendingConsentTimeout outlives wire-bound handshakeTimeout', () {
+      // The local consent UI lifetime must be strictly longer than the
+      // peer's retransmit budget; otherwise a user who taps Accept just
+      // after the 60s wire timeout finds the pending request gone.
+      expect(
+        SipConstants.pendingConsentTimeout,
+        greaterThan(SipConstants.handshakeTimeout),
+        reason: 'pending consent must outlast the wire handshake timeout',
+      );
+    });
+
+    test('stalled helloSent session auto-fails at handshakeTimeout', () {
+      // Without the per-session expiry timer, an initiator session that
+      // never receives HS_CHALLENGE (peer disappears, consent never
+      // tapped) sits in helloSent forever — chip stuck on "Connecting…".
+      FakeAsync().run((fake) {
+        final mgr = SipHandshakeManager(
+          replayCache: SipReplayCache(),
+          localNodeId: 0xAAAA,
+        );
+        mgr.isDmAvailable = true;
+
+        var stateChanges = 0;
+        mgr.onStateChanged = () => stateChanges++;
+
+        final hello = mgr.initiateHandshake(0x5555);
+        expect(hello, isNotNull);
+        expect(mgr.getState(0x5555), SipHandshakeState.helloSent);
+
+        // Drive past the wire handshake timeout. The expiry timer is
+        // governed by FakeAsync so it fires synchronously here.
+        fake.elapse(SipConstants.handshakeTimeout + const Duration(seconds: 1));
+
+        // Session should no longer be helloSent. _failSession sets a
+        // terminal display window so getState reports `failed` (not
+        // `idle`) until the window elapses.
+        expect(
+          mgr.getState(0x5555),
+          isNot(SipHandshakeState.helloSent),
+          reason:
+              'helloSent must transition out of inProgress when the '
+              'session-expiry timer fires',
+        );
+        expect(
+          stateChanges,
+          greaterThan(0),
+          reason:
+              'expiry must bump onStateChanged so the chip rebuilds out '
+              'of "Connecting…"',
+        );
+      });
+    });
+
+    test('duplicate HELLO refreshes the pending consent and keeps the request '
+        'visible to the user', () {
+      // Each retransmit from the peer should keep the consent prompt
+      // alive — without this, the responder silently drops the prompt
+      // mid-window even though the peer is still asking.
+      final mgr = SipHandshakeManager(
+        replayCache: SipReplayCache(),
+        localNodeId: 0x1111,
+      );
+      mgr.isDmAvailable = true;
+
+      const peerId = 0xAAAA;
+      mgr.handleHello(peerId, makeHello(nonce: 1));
+      expect(mgr.getState(peerId), SipHandshakeState.pendingApproval);
+
+      // A second HELLO with a different SipFrame nonce simulates a
+      // peer retransmit. The pending entry should still be there
+      // (refreshed), and getState should still report pendingApproval.
+      mgr.handleHello(peerId, makeHello(nonce: 2));
+      expect(
+        mgr.getState(peerId),
+        SipHandshakeState.pendingApproval,
+        reason: 'duplicate HELLO must not clear the pending entry',
+      );
+
+      // The pending request remains acceptable — late Accept tap
+      // succeeds, returning a HS_CHALLENGE frame.
+      final challenge = mgr.acceptHandshake(peerId);
+      expect(
+        challenge,
+        isNotNull,
+        reason: 'Accept tap on a refreshed pending must produce a challenge',
+      );
+      expect(challenge!.msgType, SipMessageType.hsChallenge);
+    });
+
+    test('successful handshake clears the per-session expiry timer', () {
+      // Regression: the expiry timer must not fire after a successful
+      // accept terminates the session, otherwise an established session
+      // would be reported as failed at the timeout boundary.
+      FakeAsync().run((fake) {
+        final mgrInit = SipHandshakeManager(
+          replayCache: SipReplayCache(),
+          localNodeId: 0xAAAA,
+        );
+        mgrInit.isDmAvailable = true;
+
+        final mgrResp = SipHandshakeManager(
+          replayCache: SipReplayCache(),
+          localNodeId: 0x5555,
+        );
+        mgrResp.isDmAvailable = true;
+
+        // Initiator → HS_HELLO → Responder queues for consent.
+        final hello = mgrInit.initiateHandshake(0x5555);
+        expect(hello, isNotNull);
+        mgrResp.handleHello(0xAAAA, hello!);
+        expect(mgrResp.getState(0xAAAA), SipHandshakeState.pendingApproval);
+
+        // Responder accepts → HS_CHALLENGE.
+        final challenge = mgrResp.acceptHandshake(0xAAAA);
+        expect(challenge, isNotNull);
+
+        // Initiator processes challenge → HS_RESPONSE. handleChallenge is
+        // async (computes session_tag); flush microtasks via FakeAsync so
+        // the future resolves synchronously inside the test.
+        SipFrame? response;
+        mgrInit.handleChallenge(0x5555, challenge!).then((v) => response = v);
+        fake.flushMicrotasks();
+        expect(response, isNotNull);
+
+        // Responder processes response → HS_ACCEPT, session completes.
+        final accept = mgrResp.handleResponse(0xAAAA, response!);
+        expect(accept, isNotNull);
+
+        // Both sides now in `accepted` state. Drive past handshakeTimeout
+        // and confirm the expiry timer didn't fail an already-completed
+        // session.
+        fake.elapse(SipConstants.handshakeTimeout + const Duration(seconds: 5));
+
+        expect(
+          mgrResp.getState(0xAAAA),
+          SipHandshakeState.accepted,
+          reason: 'completed session must not be failed by stale expiry timer',
+        );
+      });
     });
   });
 }

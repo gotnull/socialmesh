@@ -17,6 +17,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 
+import '../models/pet_base_allele.dart';
 import '../models/pet_enums.dart';
 import 'pet_render_model.dart' show PetSigilGeometry;
 
@@ -110,6 +111,28 @@ class PetDnaGeometry {
 
   final PetDnaDecodedTraits decoded;
 
+  /// Fixed-length seed-derived base sequence — the pet's "genetic
+  /// fingerprint" in DNA terms, its "resonance allele profile" in
+  /// NodePet terms. Same seed always produces the same sequence.
+  ///
+  /// The painter renders each sample position colored by its base in
+  /// this sequence (wrapping when the painter's sample count exceeds
+  /// the sequence length). The decoded traits panel surfaces the
+  /// dominant allele + ratios derived from this same sequence, so
+  /// what the user sees in the helix visually matches what they read
+  /// as their pet's identity.
+  final List<PetBaseAllele> alleleSequence;
+
+  /// Distribution of the four alleles across [alleleSequence]. Used
+  /// by the decoded traits panel to display ratio bars and the
+  /// dominant allele callout.
+  final PetAlleleDistribution alleleDistribution;
+
+  /// The majority allele. Shortcut for
+  /// [PetAlleleDistribution.dominant] so consumers don't need to
+  /// reach through two layers.
+  final PetBaseAllele dominantAllele;
+
   const PetDnaGeometry._({
     required this.dnaSeed,
     required this.stage,
@@ -122,6 +145,9 @@ class PetDnaGeometry {
     required this.coreGlyphAngles,
     required this.runeMarkerCount,
     required this.decoded,
+    required this.alleleSequence,
+    required this.alleleDistribution,
+    required this.dominantAllele,
   });
 
   /// Build the blueprint for the given identity. Pulls the precomputed
@@ -256,6 +282,14 @@ class PetDnaGeometry {
       signatureRotationDeg: signatureRotationDeg,
     );
 
+    // Resonance-allele profile — the pet's 32-step "genetic" sequence.
+    // The painter uses this to color every bead/rung in the helix; the
+    // decoded traits panel uses it to surface dominant allele + ratios.
+    final alleleSequence = List<PetBaseAllele>.unmodifiable(
+      deriveAlleleSequence(dnaSeed),
+    );
+    final alleleDistribution = PetAlleleDistribution.from(alleleSequence);
+
     return PetDnaGeometry._(
       dnaSeed: dnaSeed,
       stage: stage,
@@ -266,6 +300,9 @@ class PetDnaGeometry {
       twistCycles: twistCycles,
       strandCount: effectiveStrandCount,
       coreGlyphAngles: List<double>.unmodifiable(sigil.coreAngles),
+      alleleSequence: alleleSequence,
+      alleleDistribution: alleleDistribution,
+      dominantAllele: alleleDistribution.dominant,
       runeMarkerCount: runeCount,
       decoded: decoded,
     );

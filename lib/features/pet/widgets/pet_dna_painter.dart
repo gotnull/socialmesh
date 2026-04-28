@@ -1,24 +1,38 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// PetDnaPainter — alien genome-artifact renderer for the DNA Viewer.
+// PetDnaPainter — DNA Blueprint renderer for the DNA Viewer.
 //
-// Design intent (see docs/pet/NODE_PET_SYSTEM.md §10.2):
-//   - Sigil spine / gene relic / ritual artifact, NOT a chart.
-//   - Thick segmented strands with seed-derived width irregularity.
-//   - Glyph bonds (not plain rungs) connecting strand pairs via the
-//     central spine.
-//   - Core is suspended inside the structure via radiating support
-//     arms — structurally integrated, not pasted on.
-//   - Restrained atmosphere — radial haze, containment pillars,
-//     dark-chamber ambience. Tables support, not compete.
-//   - 2.5D only; no real 3D; deterministic under (dnaSeed, stage,
-//     branch).
+// Design intent:
+//   - Proper double-helix archetype. Two intertwined cylindrical
+//     strands with classic base-pair rungs — no ornamental "glyph
+//     bonds", no ritual-artifact decoration.
+//   - Seed-derived A/T/G/C base coloring per node. Every pet has a
+//     deterministic unique sequence along its helix, and the four
+//     base colors give the visual the liveliness a monotone helix
+//     can never have.
+//   - Depth-scaled bead nodes at every sample point are what sell
+//     the 3D perspective — near beads larger than far beads, sorted
+//     back-to-front so crossovers resolve naturally.
+//   - Backbone rendered as thick round-capped stroked lines between
+//     beads. Stroke width IS the tube diameter; no ribbon geometry,
+//     no shaders. Technique borrowed from
+//     Devkumar755/MyCodeDemos/dna_helix.dart as the user-requested
+//     reference.
+//   - No atmospheric clutter — soft branch-tinted radial backdrop
+//     only. The old chamber haze, containment pillars, central
+//     spine, core support arms, mutation nodes, and rune markers
+//     were competing with the helix and have been removed.
+//   - Sigil core glyph is preserved (identity representation) but
+//     smaller and sandwiched at the depth=0 seam so half the helix
+//     draws behind it and half in front.
+//   - Deterministic under (dnaSeed, stage, branch, twistCycles).
 
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../models/pet_base_allele.dart';
 import '../models/pet_enums.dart';
 import 'pet_dna_geometry.dart';
 import 'pet_render_model.dart' show PetRenderPalette;
@@ -42,402 +56,400 @@ class PetDnaPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    canvas.clipRect(Offset.zero & size);
+
     final center = Offset(size.width / 2, size.height / 2);
     final minSide = math.min(size.width, size.height);
-    final radius = minSide * geometry.radiusFactor;
-    final halfSpan = size.height * geometry.verticalSpanFactor * 0.5;
+    // Helix dominates the frame. Tuned so the strand extent sits at
+    // ~66% of minSide (enough room for thick strokes + depth-scaled
+    // beads at the edges without clipping).
+    final radius = minSide * 0.33;
+    // Helix terminus now sits comfortably inside the canvas rather
+    // than overshooting. Combined with the widened endFade below, the
+    // strands dissolve into the backdrop instead of reading as a hard
+    // clip against the top/bottom edges.
+    final halfSpan = size.height * 0.48;
     final phaseRot = phase * math.pi * 2 + userSpin;
 
-    _drawChamber(canvas, size, center, minSide, halfSpan);
-    _drawContainmentPillars(canvas, center, radius, halfSpan);
-    _drawSpine(canvas, center, halfSpan);
+    _drawBackdrop(canvas, size, minSide);
 
-    // Back pass — strands + bonds on the far side.
-    _drawStrandsPass(
-      canvas,
-      center,
-      radius,
-      halfSpan,
-      phaseRot,
-      isBackPass: true,
+    _drawHelix(
+      canvas: canvas,
+      center: center,
+      radius: radius,
+      halfSpan: halfSpan,
+      phaseRot: phaseRot,
+      minSide: minSide,
+      drawCoreLayerCallback: () => _drawCoreGlyph(canvas, center, minSide),
     );
-    _drawBondsPass(
-      canvas,
-      center,
-      radius,
-      halfSpan,
-      phaseRot,
-      isBackPass: true,
-    );
-
-    _drawCoreSupportArms(canvas, center, radius, halfSpan, phaseRot);
-    _drawCoreGlyph(canvas, center, minSide);
-
-    // Front pass — strands + bonds on the near side, crisp.
-    _drawBondsPass(
-      canvas,
-      center,
-      radius,
-      halfSpan,
-      phaseRot,
-      isBackPass: false,
-    );
-    _drawStrandsPass(
-      canvas,
-      center,
-      radius,
-      halfSpan,
-      phaseRot,
-      isBackPass: false,
-    );
-
-    _drawMutationNodes(canvas, center, radius, halfSpan, phaseRot);
-    _drawRuneMarkers(canvas, center, radius, halfSpan);
   }
 
-  // ------------------------------------------------------------------
-  // Atmosphere: chamber haze. A soft radial wash in the branch palette
-  // that gives the structure a contained "cradle-space" feel, plus a
-  // subtle darkening at the edges.
-  void _drawChamber(
-    Canvas canvas,
-    Size size,
-    Offset center,
-    double minSide,
-    double halfSpan,
-  ) {
-    // Branch-tinted glow, warmest near the core.
-    final hazeRect = Rect.fromCircle(center: center, radius: minSide * 0.55);
-    final hazePaint = Paint()
+  /// Soft radial branch-tinted backdrop. Replaces the old chamber
+  /// haze + containment pillars + spine, which were three competing
+  /// atmospheric layers. The helix is the subject now.
+  void _drawBackdrop(Canvas canvas, Size size, double minSide) {
+    final rect = Rect.fromCircle(
+      center: Offset(size.width / 2, size.height / 2),
+      radius: minSide * 0.6,
+    );
+    final paint = Paint()
       ..shader = RadialGradient(
         colors: [
-          palette.primary.withValues(alpha: 0.18),
+          palette.primary.withValues(alpha: 0.14),
           palette.primary.withValues(alpha: 0.04),
           palette.primary.withValues(alpha: 0.0),
         ],
         stops: const [0.0, 0.55, 1.0],
-      ).createShader(hazeRect);
-    canvas.drawRect(Offset.zero & size, hazePaint);
-
-    // Chamber floor — soft darkening at bottom for depth weight.
-    final floorRect = Rect.fromLTRB(
-      0,
-      center.dy + halfSpan * 0.6,
-      size.width,
-      size.height,
-    );
-    final floorPaint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [
-          Colors.black.withValues(alpha: 0.0),
-          Colors.black.withValues(alpha: 0.25),
-        ],
-      ).createShader(floorRect);
-    canvas.drawRect(floorRect, floorPaint);
-  }
-
-  // ------------------------------------------------------------------
-  // Containment pillars — two faint vertical lines with gradient fade
-  // flanking the structure. Reads as "this is held inside something".
-  void _drawContainmentPillars(
-    Canvas canvas,
-    Offset center,
-    double radius,
-    double halfSpan,
-  ) {
-    final pillarX = radius * 1.35;
-    for (final side in const [-1.0, 1.0]) {
-      final x = center.dx + side * pillarX;
-      final rect = Rect.fromLTRB(
-        x - 0.5,
-        center.dy - halfSpan,
-        x + 0.5,
-        center.dy + halfSpan,
-      );
-      final paint = Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Colors.white.withValues(alpha: 0.0),
-            Colors.white.withValues(alpha: 0.14),
-            Colors.white.withValues(alpha: 0.14),
-            Colors.white.withValues(alpha: 0.0),
-          ],
-          stops: const [0.0, 0.2, 0.8, 1.0],
-        ).createShader(rect);
-      canvas.drawRect(rect, paint);
-    }
-  }
-
-  // ------------------------------------------------------------------
-  // Central spine — subtle, vertical axis. Slightly brighter at core
-  // height to imply the core sits ON it.
-  void _drawSpine(Canvas canvas, Offset center, double halfSpan) {
-    final rect = Rect.fromLTRB(
-      center.dx - 0.5,
-      center.dy - halfSpan,
-      center.dx + 0.5,
-      center.dy + halfSpan,
-    );
-    final paint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [
-          Colors.white.withValues(alpha: 0.0),
-          Colors.white.withValues(alpha: 0.10),
-          Colors.white.withValues(alpha: 0.20),
-          Colors.white.withValues(alpha: 0.10),
-          Colors.white.withValues(alpha: 0.0),
-        ],
-        stops: const [0.0, 0.4, 0.5, 0.6, 1.0],
       ).createShader(rect);
-    canvas.drawRect(rect, paint);
+    canvas.drawRect(Offset.zero & size, paint);
   }
 
   // ------------------------------------------------------------------
-  // Strand rails — trapezoidal segments, width-jittered from the seed.
-  // Back pass uses dimmer fill + muted edge; front pass uses bright
-  // fill + sharp outline. This is the primary depth cue.
-  void _drawStrandsPass(
-    Canvas canvas,
-    Offset center,
-    double radius,
-    double halfSpan,
-    double phaseRot, {
-    required bool isBackPass,
-  }) {
-    final anchors = geometry.anchors;
-    final strandCount = geometry.strandCount;
-    final seed = geometry.dnaSeed;
-
-    // Per-segment width perturbation — seed-stable, gives organic
-    // irregularity. Width band: 0.75× .. 1.25× of the base.
-    final baseWidth = (radius * 0.065).clamp(5.0, 12.0);
-
-    for (var s = 0; s < strandCount; s++) {
-      final strandPhase = s * (math.pi * 2 / strandCount);
-
-      // Pre-compute endpoint positions + depth per anchor for this strand.
-      final pts = List<Offset>.generate(anchors.length, (i) {
-        final angle = anchors[i].angleA + strandPhase + phaseRot;
-        return Offset(
-          center.dx + math.cos(angle) * radius,
-          center.dy - halfSpan + anchors[i].t * halfSpan * 2,
-        );
-      });
-      final sins = List<double>.generate(anchors.length, (i) {
-        return math.sin(anchors[i].angleA + strandPhase + phaseRot);
-      });
-
-      for (var i = 0; i < anchors.length - 1; i++) {
-        final avgSin = (sins[i] + sins[i + 1]) * 0.5;
-        final segmentIsFront = avgSin >= 0;
-        final drawInThisPass = isBackPass ? !segmentIsFront : segmentIsFront;
-        if (!drawInThisPass) continue;
-
-        // Seed-jittered width — per (strand, segment).
-        final jitter = ((seed >> ((i + s * 3) & 31)) & 0x0F) / 15.0;
-        final widthA = baseWidth * (0.80 + 0.40 * jitter);
-        final jitterB = ((seed >> ((i + 1 + s * 3) & 31)) & 0x0F) / 15.0;
-        final widthB = baseWidth * (0.80 + 0.40 * jitterB);
-
-        final path = _buildSegmentPath(pts[i], pts[i + 1], widthA, widthB);
-
-        final fillPaint = Paint()
-          ..style = PaintingStyle.fill
-          ..color = isBackPass
-              ? palette.primary.withValues(alpha: 0.35)
-              : palette.primary.withValues(alpha: 0.92);
-        canvas.drawPath(path, fillPaint);
-
-        final edgePaint = Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeJoin = StrokeJoin.round
-          ..strokeWidth = isBackPass ? 0.8 : 1.3
-          ..color = isBackPass
-              ? palette.accent.withValues(alpha: 0.28)
-              : palette.accent.withValues(alpha: 0.85);
-        canvas.drawPath(path, edgePaint);
-      }
-    }
-  }
-
-  /// Build a trapezoidal ribbon from A to B with per-end widths.
-  /// Width is applied perpendicular to the segment axis.
-  Path _buildSegmentPath(Offset a, Offset b, double widthA, double widthB) {
-    final dx = b.dx - a.dx;
-    final dy = b.dy - a.dy;
-    final len = math.sqrt(dx * dx + dy * dy);
-    if (len < 0.0001) return Path();
-    final nx = -dy / len;
-    final ny = dx / len;
-    final aL = Offset(a.dx + nx * widthA / 2, a.dy + ny * widthA / 2);
-    final aR = Offset(a.dx - nx * widthA / 2, a.dy - ny * widthA / 2);
-    final bR = Offset(b.dx - nx * widthB / 2, b.dy - ny * widthB / 2);
-    final bL = Offset(b.dx + nx * widthB / 2, b.dy + ny * widthB / 2);
-    return Path()
-      ..moveTo(aL.dx, aL.dy)
-      ..lineTo(aR.dx, aR.dy)
-      ..lineTo(bR.dx, bR.dy)
-      ..lineTo(bL.dx, bL.dy)
-      ..close();
-  }
-
-  // ------------------------------------------------------------------
-  // Glyph bonds — where a plain rung would be, we instead draw an
-  // angled ligament arm on each side plus a central diamond/rune glyph
-  // at the spine. Splits at the spine so each half picks its pass.
+  // Helix — the premium double-helix render at the heart of the viewer.
   //
-  // Structure:
-  //   strand-A end ─◇ (glyph arm) ─╮
-  //                                ◆ (central rune at spine)
-  //   strand-B end ─◇ (glyph arm) ─╯
+  // Previously this was split into two passes (_drawStrandsPass +
+  // _drawBondsPass) with per-pass depth binary splits at the core
+  // glyph. That produced: (a) a single strand for Monad pets, (b)
+  // ornamental "glyph bonds" that didn't read as classic DNA rungs,
+  // and (c) coarse polyline kinks at helix turnaround points.
   //
-  // Only 2-strand helices get bonds (1- and 3-strand don't pair cleanly).
-  void _drawBondsPass(
-    Canvas canvas,
-    Offset center,
-    double radius,
-    double halfSpan,
-    double phaseRot, {
-    required bool isBackPass,
+  // This rewrite:
+  //   * Always renders at least 2 strands. The pet's decoded
+  //     strand-config trait (Monad/Dyad/Triad) still shows in the
+  //     Identity panel, but the viewer ALWAYS depicts the DNA
+  //     archetype — a helix with ≥ 2 intertwined strands.
+  //   * Bumps the visible twist count to at least 4 so the helix is
+  //     unambiguous at a glance regardless of the pet's "resonance"
+  //     trait (which can go as low as 2).
+  //   * Extends the parametric t range past [0, 1] by 10% so strands
+  //     run off-frame and clip at the canvas edge instead of
+  //     tapering to a point mid-canvas. Requires [canvas.clipRect]
+  //     in paint() to prevent bleed into neighbouring widgets.
+  //   * Draws classic DNA rungs — thin depth-shaded perpendicular
+  //     lines between adjacent strand samples at 3-per-twist cadence.
+  //     Shader-free alpha by midpoint depth; readable and cheap.
+  //   * Global painter's-algorithm z-sort across all strand micro-
+  //     segments + all rungs. Crossovers (one strand passing in front
+  //     of the other) are the natural outcome of depth-sorted draw
+  //     order, not a special case.
+  //   * Interleaves the core glyph + support arms at depth=0 via a
+  //     callback, preserving the "helix wrapping the sigil" sandwich
+  //     even though strand rendering is now unified.
+  void _drawHelix({
+    required Canvas canvas,
+    required Offset center,
+    required double radius,
+    required double halfSpan,
+    required double phaseRot,
+    required double minSide,
+    required VoidCallback drawCoreLayerCallback,
   }) {
-    if (geometry.strandCount != 2) return;
-    final anchors = geometry.anchors;
+    // Always 2-strand visual — Monad/Dyad/Triad lives in the decoded
+    // panel, but the DNA Blueprint archetype is universally a helix.
+    const visualStrandCount = 2;
+    // 3 twist cycles — fewer than before so each twist has breathing
+    // room and crossovers are unambiguous at a glance.
+    const visualTwistCycles = 3;
+    final baseAngle = geometry.anchors.first.angleA;
 
-    final armPaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round
-      ..strokeWidth = isBackPass ? 1.2 : 1.8
-      ..color = Colors.white.withValues(alpha: isBackPass ? 0.28 : 0.68);
-    final glyphFill = Paint()
-      ..style = PaintingStyle.fill
-      ..color = palette.accent.withValues(alpha: isBackPass ? 0.35 : 0.95);
-    final glyphStroke = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2
-      ..color = Colors.white.withValues(alpha: isBackPass ? 0.25 : 0.70);
+    // 14 samples per twist × 3 = 42 samples per strand. Dense enough
+    // to read as a smooth helix, sparse enough that each bead is
+    // visually distinct at its depth-scaled size.
+    const samplesPerTwist = 14;
+    const totalSamples = samplesPerTwist * visualTwistCycles;
 
-    final centralGlyphFill = Paint()
-      ..style = PaintingStyle.fill
-      ..color = palette.primary.withValues(alpha: isBackPass ? 0.35 : 0.95);
-    final centralGlyphStroke = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.4
-      ..color = palette.accent.withValues(alpha: isBackPass ? 0.30 : 0.90);
+    // Rendering proportions — thick, bold, dominant. These are the
+    // bumps the user explicitly asked for over the previous slim
+    // cord look.
+    final backboneStrokeWidth = (radius * 0.075).clamp(7.0, 16.0);
+    final baseNodeRadius = (radius * 0.065).clamp(6.0, 13.0);
+    final rungStrokeWidth = (radius * 0.045).clamp(4.0, 8.0);
 
-    for (var i = 0; i < anchors.length; i++) {
-      if (!anchors[i].hasRung) continue;
-      final a = anchors[i];
+    // ---- Allele-driven color scheme --------------------------------
+    //
+    // Each sample carries an allele (Aurora/Tether/Gale/Calm) from the
+    // pet's deterministic sequence. The allele's archetype color is
+    // what colors that sample's bead AND one half of any rung at that
+    // position. Complementary strand's sample carries the pairing
+    // complement (A↔T, G↔C), giving two-tone rungs.
+    //
+    // Backbones use strand-specific distinctive colors derived from the
+    // pet's dominant allele, so the two strands are never the same hue
+    // and crossovers are instantly readable.
+    final sequence = geometry.alleleSequence;
+    final dominant = geometry.dominantAllele;
 
-      final angleA = a.angleA + phaseRot;
-      final angleB = angleA + math.pi;
-      final xA = center.dx + math.cos(angleA) * radius;
-      final xB = center.dx + math.cos(angleB) * radius;
-      final y = center.dy - halfSpan + a.t * halfSpan * 2;
-      final frontA = math.sin(angleA) >= 0;
-      final frontB = math.sin(angleB) >= 0;
+    // Strand 0 backbone = dominant allele's archetype color, boosted to
+    // near-saturation for punch.
+    final strand0Backbone = _deepen(dominant.archetypeColor, 0.20);
+    // Strand 1 backbone = dominant's COMPLEMENT's archetype color. If
+    // the pet is Aurora-dominant, strand 0 is yellow-gold and strand 1
+    // is steady-emerald — always a high-contrast pair. This is also
+    // what ties the viewer's visual identity to the pet's allele
+    // profile: Gale-dominant pets look orange/lavender; Tether-
+    // dominant pets look emerald/gold; etc.
+    final strand1Backbone = _deepen(dominant.complement.archetypeColor, 0.20);
+    final strandBackbones = <Color>[strand0Backbone, strand1Backbone];
 
-      // Central rune — small diamond at the spine. We draw ONE of its
-      // halves per pass so it reads as threaded.
-      final runeSize = radius * 0.06;
-      final centralDiamond = Path()
-        ..moveTo(center.dx, y - runeSize)
-        ..lineTo(center.dx + runeSize * 0.55, y)
-        ..lineTo(center.dx, y + runeSize)
-        ..lineTo(center.dx - runeSize * 0.55, y)
-        ..close();
-      canvas.drawPath(centralDiamond, centralGlyphFill);
-      canvas.drawPath(centralDiamond, centralGlyphStroke);
+    PetBaseAllele alleleAtIndex(int i) => sequence[i % sequence.length];
 
-      // Arm A — angled ligament from strand endpoint to central rune
-      // with a mid-kink for machine-organic feel.
-      void drawArm(double xEnd, Offset endPt, double sign) {
-        // Kink halfway, pushed slightly vertical.
-        final midX = (xEnd + center.dx) * 0.5;
-        final midY = y + sign * runeSize * 0.4;
-        final armPath = Path()
-          ..moveTo(xEnd, y)
-          ..lineTo(midX, midY)
-          ..lineTo(center.dx + sign * runeSize * 0.55, y);
-        canvas.drawPath(armPath, armPaint);
+    // Weak perspective projection. Previously x was cos(angle)*radius
+    // which is the orthographic side view of a cylinder — mathematically
+    // a cylinder, so the result read as one. Treating sin(angle) as the
+    // z depth (already computed for sort order) and dividing the x
+    // coordinate by a focal-length ratio makes near-side samples spread
+    // further from the central axis than far-side samples. Focal 3.5
+    // gives nearest beads ~40% more spread than farthest — enough to
+    // read as a genuine 3D molecule without cartoonish distortion.
+    const perspectiveFocal = 3.5;
 
-        // Small glyph at the strand end — diamond bead.
-        final beadSize = radius * 0.028;
-        final beadPath = Path()
-          ..moveTo(xEnd, endPt.dy - beadSize)
-          ..lineTo(xEnd + beadSize * 0.6, endPt.dy)
-          ..lineTo(xEnd, endPt.dy + beadSize)
-          ..lineTo(xEnd - beadSize * 0.6, endPt.dy)
-          ..close();
-        canvas.drawPath(beadPath, glyphFill);
-        canvas.drawPath(beadPath, glyphStroke);
-      }
-
-      if (frontA == !isBackPass) {
-        drawArm(xA, Offset(xA, y), -1.0);
-      }
-      if (frontB == !isBackPass) {
-        drawArm(xB, Offset(xB, y), 1.0);
+    // Sample both strands. Strand 0 carries the raw sequence allele;
+    // strand 1 carries its complement (A↔T, G↔C).
+    final samples =
+        List<List<({Offset pt, double depth, PetBaseAllele allele})>>.generate(
+          visualStrandCount,
+          (_) => <({Offset pt, double depth, PetBaseAllele allele})>[],
+        );
+    for (var i = 0; i <= totalSamples; i++) {
+      final t = i / totalSamples;
+      final a0 = alleleAtIndex(i);
+      final a1 = a0.complement;
+      for (var s = 0; s < visualStrandCount; s++) {
+        final strandPhase = s * math.pi; // 180° offset for classic pair
+        final angle =
+            baseAngle +
+            t * visualTwistCycles * math.pi * 2 +
+            strandPhase +
+            phaseRot;
+        final z = math.sin(angle);
+        final pScale = perspectiveFocal / (perspectiveFocal - z);
+        samples[s].add((
+          pt: Offset(
+            center.dx + math.cos(angle) * radius * pScale,
+            center.dy - halfSpan + t * halfSpan * 2,
+          ),
+          depth: z,
+          allele: s == 0 ? a0 : a1,
+        ));
       }
     }
+
+    // End-fade factor per sample index — alpha tapers smoothly to 0
+    // over the outermost ~20% of samples at each end. The wider window
+    // (was ~8%) lets the strand visibly dissolve into the backdrop
+    // instead of popping at 90% alpha right at the canvas edge.
+    double endFade(int i) {
+      final frac = i / totalSamples;
+      final fade = math.min(
+        math.min(1.0, frac * 5.0),
+        math.min(1.0, (1.0 - frac) * 5.0),
+      );
+      return fade.clamp(0.0, 1.0);
+    }
+
+    // Build z-sorted draw ops. Three kinds:
+    //   1. Backbone segment — a round-capped stroked line between
+    //      consecutive samples on the same strand. The stroke width
+    //      IS the tube diameter; no ribbon geometry, no shader.
+    //   2. Rung — a stroked line between the two strands' samples at
+    //      every other index. Depth-alpha shaded.
+    //   3. Node bead — a filled circle at each sample, depth-scaled
+    //      (near beads bigger than far beads) which is what sells the
+    //      perspective / "round tube" illusion.
+    final ops = <({double depth, VoidCallback draw})>[];
+
+    // Backbones — round-capped stroked lines between consecutive
+    // samples on each strand. Each strand wears its own distinctive
+    // color (dominant-allele and its complement) so crossovers are
+    // immediately readable. Hard back/front alpha contrast: back
+    // strand at ~0.40 with desaturation toward dark neutral, front
+    // strand at full saturation + alpha 1.0.
+    for (var s = 0; s < visualStrandCount; s++) {
+      final strand = samples[s];
+      final strandColor = strandBackbones[s];
+      for (var i = 0; i < strand.length - 1; i++) {
+        final a = strand[i];
+        final b = strand[i + 1];
+        final avgDepth = (a.depth + b.depth) * 0.5;
+        final fade = (endFade(i) + endFade(i + 1)) * 0.5;
+        ops.add((
+          depth: avgDepth,
+          draw: () {
+            final depthNorm = (avgDepth + 1.0) * 0.5; // 0..1 back..front
+            // Hard contrast curve: back 0.40 alpha, front 1.0.
+            final alpha = ((0.40 + 0.60 * depthNorm) * fade).clamp(0.0, 1.0);
+            // Desaturate-to-dark for back-facing segments. At the very
+            // back (depth = -1) the strand appears 30% toward black;
+            // at the front (depth = +1) it's at full chroma.
+            final drawColor = Color.lerp(
+              Colors.black,
+              strandColor,
+              0.35 + 0.65 * depthNorm,
+            )!;
+            final paint = Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeCap = StrokeCap.round
+              ..strokeJoin = StrokeJoin.round
+              ..strokeWidth = backboneStrokeWidth
+              ..color = drawColor.withValues(alpha: alpha);
+            canvas.drawLine(a.pt, b.pt, paint);
+          },
+        ));
+      }
+    }
+
+    // Rungs — every other sample, TWO-TONE by allele pair. Each half
+    // of the rung is the archetype color of that strand's allele, so
+    // every rung literally reads as "aurora↔tether" or "gale↔calm".
+    //
+    // Rungs also fade to alpha 0 near the canvas center via a radial
+    // smoothstep. The Rive pet creature overlays the viewer at that
+    // exact spot, and rungs passing through its silhouette flickered
+    // against its animated edges. The fade window is tuned to the
+    // core glyph radius: rungs stay fully opaque beyond ~0.15 × minSide
+    // from center and dissolve cleanly inside the pet's halo.
+    final coreClearInner = minSide * 0.08;
+    final coreClearOuter = minSide * 0.15;
+    for (var i = 1; i < samples[0].length; i += 2) {
+      final a = samples[0][i];
+      final b = samples[1][i];
+      final midDepth = (a.depth + b.depth) * 0.5;
+      final fade = endFade(i);
+      final mid = Offset.lerp(a.pt, b.pt, 0.5)!;
+      final clearFade = _smoothstep(
+        coreClearInner,
+        coreClearOuter,
+        (mid - center).distance,
+      );
+      // Width-based fade. As the helix rotates through its edge-on
+      // position, both strand samples pass through the vertical
+      // centerline and the rung collapses to near-zero horizontal
+      // extent. Without this, the rung's two stroke caps overlap into
+      // a short blob that visually detaches from the beads and reads
+      // as a floating tail. Fade rung alpha to 0 when the endpoints
+      // are within ~stroke-width of each other; full alpha beyond 2×
+      // stroke width.
+      final rungSpan = (a.pt.dx - b.pt.dx).abs();
+      final widthFade = _smoothstep(
+        rungStrokeWidth * 0.6,
+        rungStrokeWidth * 2.0,
+        rungSpan,
+      );
+      ops.add((
+        depth: midDepth,
+        draw: () {
+          final midBright = (midDepth + 1.0) * 0.5;
+          final alpha =
+              ((0.70 + 0.30 * midBright) * fade * clearFade * widthFade).clamp(
+                0.0,
+                1.0,
+              );
+          // Butt caps (not round) — round caps extend past the bead
+          // endpoint by half the stroke width, which was reading as a
+          // stub poking out of the bead. Butt terminates flush.
+          final paint = Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeCap = StrokeCap.butt
+            ..strokeWidth = rungStrokeWidth;
+          canvas.drawLine(
+            a.pt,
+            mid,
+            paint..color = a.allele.archetypeColor.withValues(alpha: alpha),
+          );
+          canvas.drawLine(
+            mid,
+            b.pt,
+            paint..color = b.allele.archetypeColor.withValues(alpha: alpha),
+          );
+        },
+      ));
+    }
+
+    // Node beads — every OTHER sample (rung cadence), every strand.
+    // Density halved from "every sample" so adjacent same-strand beads
+    // are no longer 7px apart in y with wildly different depths —
+    // that configuration guaranteed visible z-sort swaps as the helix
+    // rotated. Rung endpoints now land exactly on beads (DNA-accurate
+    // base-pair nucleotides), and the remaining swaps are spaced far
+    // enough apart that they read as gentle orbit motion rather than
+    // pop-flickering.
+    //
+    // Scale 0.35..1.25 and alpha 0.10..1.0 — back beads are genuinely
+    // dust-mote faint; their sort-order flips are invisible because
+    // they're barely there. White rim + dark halo are gated to the
+    // front half only (decorPulse) so back beads don't carry 20% of
+    // extra visual weight from decoration the alpha can't suppress.
+    for (var s = 0; s < visualStrandCount; s++) {
+      for (var i = 1; i < samples[s].length; i += 2) {
+        final sample = samples[s][i];
+        final fade = endFade(i);
+        ops.add((
+          depth: sample.depth,
+          draw: () {
+            final depthNorm = (sample.depth + 1.0) * 0.5;
+            final scale = 0.35 + 0.90 * depthNorm; // 0.35..1.25
+            final nodeR = baseNodeRadius * scale;
+            final alpha = ((0.10 + 0.90 * depthNorm) * fade).clamp(0.0, 1.0);
+            final beadColor = sample.allele.archetypeColor;
+            // Decoration (rim + halo) fades in only for front-half
+            // beads. Back beads are bare colored dots — no rim, no
+            // halo — so their depth-sort order is visually irrelevant.
+            final decorPulse = _smoothstep(0.40, 0.75, depthNorm);
+            if (decorPulse > 0) {
+              canvas.drawCircle(
+                sample.pt,
+                nodeR + 1.5,
+                Paint()
+                  ..style = PaintingStyle.fill
+                  ..color = Colors.black.withValues(
+                    alpha: (alpha * 0.35 * decorPulse).clamp(0.0, 1.0),
+                  ),
+              );
+            }
+            canvas.drawCircle(
+              sample.pt,
+              nodeR,
+              Paint()
+                ..style = PaintingStyle.fill
+                ..color = beadColor.withValues(alpha: alpha),
+            );
+            if (decorPulse > 0) {
+              canvas.drawCircle(
+                sample.pt,
+                nodeR,
+                Paint()
+                  ..style = PaintingStyle.stroke
+                  ..strokeWidth = 1.4
+                  ..color = Colors.white.withValues(
+                    alpha: (alpha * 0.85 * decorPulse).clamp(0.0, 1.0),
+                  ),
+              );
+            }
+          },
+        ));
+      }
+    }
+
+    ops.sort((a, b) => a.depth.compareTo(b.depth));
+
+    // Interleave the core layer at the depth=0 seam — back-facing
+    // helix elements draw first, then the sigil core, then front-
+    // facing elements on top.
+    var coreDrawn = false;
+    for (final op in ops) {
+      if (!coreDrawn && op.depth >= 0) {
+        drawCoreLayerCallback();
+        coreDrawn = true;
+      }
+      op.draw();
+    }
+    if (!coreDrawn) drawCoreLayerCallback();
   }
 
   // ------------------------------------------------------------------
-  // Core support arms — thin lines radiating from the core to nearby
-  // helix anchor points, visually anchoring the core INSIDE the
-  // structure rather than floating on top of it.
-  void _drawCoreSupportArms(
-    Canvas canvas,
-    Offset center,
-    double radius,
-    double halfSpan,
-    double phaseRot,
-  ) {
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0
-      ..strokeCap = StrokeCap.round
-      ..color = palette.accent.withValues(alpha: 0.38);
-
-    // Pick 4 support arms, targeting anchors that are roughly equator
-    // -level (close to center vertically) so the arms aren't too long.
-    final anchors = geometry.anchors;
-    final equatorIndex = (anchors.length / 2).floor();
-    final candidateOffsets = const [-3, -1, 1, 3];
-    final coreEdgeR = radius * 0.20; // reach from core centre outward
-
-    for (final off in candidateOffsets) {
-      final idx = (equatorIndex + off).clamp(0, anchors.length - 1);
-      final a = anchors[idx];
-      // Two strand endpoints for this anchor.
-      for (final strandPhase in const [0.0, math.pi]) {
-        final angle = a.angleA + strandPhase + phaseRot;
-        final endPt = Offset(
-          center.dx + math.cos(angle) * radius * 0.70,
-          center.dy - halfSpan + a.t * halfSpan * 2,
-        );
-        // Start just outside the core glyph edge.
-        final startAngle = math.atan2(
-          endPt.dy - center.dy,
-          endPt.dx - center.dx,
-        );
-        final startPt = Offset(
-          center.dx + math.cos(startAngle) * coreEdgeR,
-          center.dy + math.sin(startAngle) * coreEdgeR,
-        );
-        canvas.drawLine(startPt, endPt, paint);
-      }
-    }
-  }
-
-  // ------------------------------------------------------------------
-  // Core genome glyph — large, integrated, glowing. This is the
+  // Core genome glyph — the pet's identity sigil. Smaller than before
+  // so it reads as a jewel inside the helix rather than competing
+  // with it.
   // creature's "identity sigil" at the centre of the artifact.
   void _drawCoreGlyph(Canvas canvas, Offset center, double minSide) {
     final angles = geometry.coreGlyphAngles;
@@ -445,7 +457,9 @@ class PetDnaPainter extends CustomPainter {
 
     // Bigger than the old version (0.065 → 0.11). Also rendered with
     // an outer glow ring, inner inscription, and bright edges.
-    final coreR = minSide * 0.11;
+    // Smaller than before (was 0.11) — the helix is the subject now,
+    // and the sigil sits inside it as a jewel, not a competing disc.
+    final coreR = minSide * 0.07;
 
     // Outer glow — large soft disc.
     final glowRect = Rect.fromCircle(center: center, radius: coreR * 2.2);
@@ -524,102 +538,23 @@ class PetDnaPainter extends CustomPainter {
     return Color.fromARGB((base.a * 255).round(), r, g, b);
   }
 
-  // ------------------------------------------------------------------
-  // Mutation nodes — larger accent-palette gems at seed-specific
-  // anchor positions. Gives each DNA an identifiable "signature
-  // mutation" position.
-  void _drawMutationNodes(
-    Canvas canvas,
-    Offset center,
-    double radius,
-    double halfSpan,
-    double phaseRot,
-  ) {
-    final anchors = geometry.anchors;
-    final seed = geometry.dnaSeed;
-
-    // Pick ~2-3 mutation positions deterministically. Bitmask:
-    // anchor index i is a mutation if bit `(i * 7) mod 30` is set
-    // AND the 3-stride filter hits.
-    for (var i = 2; i < anchors.length - 2; i++) {
-      final bit = ((seed >> ((i * 7) & 29)) & 0x01) == 1;
-      final stride = (i - 2) % 5 == 0;
-      if (!(bit && stride)) continue;
-
-      final a = anchors[i];
-      // Place the mutation on the more-front strand at this anchor.
-      final angleA = a.angleA + phaseRot;
-      final angleB = angleA + math.pi;
-      final useA = math.sin(angleA) >= math.sin(angleB);
-      final angle = useA ? angleA : angleB;
-      final pt = Offset(
-        center.dx + math.cos(angle) * radius,
-        center.dy - halfSpan + a.t * halfSpan * 2,
-      );
-
-      // Hexagonal gem.
-      final r = radius * 0.04;
-      final gem = Path();
-      for (var k = 0; k < 6; k++) {
-        final a2 = k * math.pi / 3;
-        final x = pt.dx + math.cos(a2) * r;
-        final y = pt.dy + math.sin(a2) * r;
-        if (k == 0) {
-          gem.moveTo(x, y);
-        } else {
-          gem.lineTo(x, y);
-        }
-      }
-      gem.close();
-
-      final fill = Paint()
-        ..style = PaintingStyle.fill
-        ..color = palette.petal.withValues(alpha: 0.95);
-      final stroke = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.4
-        ..color = Colors.white.withValues(alpha: 0.85);
-      canvas.drawPath(gem, fill);
-      canvas.drawPath(gem, stroke);
-    }
+  /// Hermite smoothstep in [edge0, edge1]. Returns a value in [0, 1]
+  /// with zero first-derivative at both endpoints — the classic
+  /// GLSL smoothstep. Used for the rung clear-zone around the pet so
+  /// the fade reads as a soft dissolve rather than a linear ramp.
+  double _smoothstep(double edge0, double edge1, double x) {
+    final t = ((x - edge0) / (edge1 - edge0)).clamp(0.0, 1.0);
+    return t * t * (3.0 - 2.0 * t);
   }
 
-  // ------------------------------------------------------------------
-  // Rune markers along the spine — fixed inscriptions, not
-  // phase-rotated. Tightened visual style: small chevron pair instead
-  // of plain crosses.
-  void _drawRuneMarkers(
-    Canvas canvas,
-    Offset center,
-    double radius,
-    double halfSpan,
-  ) {
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = 1.3
-      ..color = palette.accent.withValues(alpha: 0.60);
-
-    final markerOffset = radius * 1.22;
-    for (var i = 0; i < geometry.anchors.length; i++) {
-      final a = geometry.anchors[i];
-      if (!a.hasRuneMarker) continue;
-      final side = (i.isEven) ? -1.0 : 1.0;
-      final cx = center.dx + side * markerOffset;
-      final cy = center.dy - halfSpan + a.t * halfSpan * 2;
-      // Chevron pair pointing inward.
-      const armLen = 4.0;
-      const gap = 2.2;
-      final dir = -side; // point toward centre
-      final path = Path()
-        ..moveTo(cx - dir * armLen, cy - armLen)
-        ..lineTo(cx, cy)
-        ..lineTo(cx - dir * armLen, cy + armLen)
-        ..moveTo(cx - dir * (armLen + gap), cy - armLen)
-        ..lineTo(cx - dir * gap, cy)
-        ..lineTo(cx - dir * (armLen + gap), cy + armLen);
-      canvas.drawPath(path, paint);
-    }
+  /// Deepen a color toward saturation by lerping it slightly toward a
+  /// pure-chroma version of itself. Used on strand backbones so the
+  /// allele archetype colors read as bold, not pastel.
+  Color _deepen(Color base, double t) {
+    final r = (base.r * 255 * (1 - t * 0.2)).round().clamp(0, 255);
+    final g = (base.g * 255 * (1 - t * 0.2)).round().clamp(0, 255);
+    final b = (base.b * 255 * (1 - t * 0.2)).round().clamp(0, 255);
+    return Color.fromARGB((base.a * 255).round(), r, g, b);
   }
 
   @override

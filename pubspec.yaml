@@ -2,7 +2,7 @@ name: socialmesh
 description: "A mesh radio companion app for Meshtastic. Connect over BLE or USB, message off-grid, map your nodes, and explore the mesh — no internet required."
 publish_to: "none"
 
-version: 1.34.0+166
+version: 1.36.0+169
 
 environment:
   sdk: ^3.10.0
@@ -29,7 +29,7 @@ dependencies:
   fixnum: ^1.1.0
 
   # MQTT Client (for device client proxy mode)
-  mqtt_client: ^10.6.0
+  mqtt_client: ^10.11.11
   typed_data: ^1.4.0
 
   # Storage
@@ -47,11 +47,6 @@ dependencies:
 
   # Markdown rendering (Help Center knowledge base articles)
   flutter_markdown: ^0.7.6
-
-  # Rive — presentation layer for the NodePet home hero only. Gated via
-  # PET_RIVE_ENABLED; fallback path is PetCreature (custom painter). See
-  # docs/pet/NODE_PET_SYSTEM.md §9.13.
-  rive: ^0.13.20
 
   # UI/UX
   cupertino_icons: ^1.0.9
@@ -81,8 +76,8 @@ dependencies:
   open_mail_launcher: ^0.1.2
   connectivity_plus: ^7.1.1
   http: ^1.2.2
-  flutter_dotenv: ^6.0.0
-  flutter_local_notifications: ^20.1.0
+  flutter_dotenv: ^6.0.1
+  flutter_local_notifications: ^21.0.0
   just_audio: ^0.10.5
   record: ^6.0.0
   live_activities: ^2.4.7
@@ -90,7 +85,7 @@ dependencies:
   device_info_plus: ^12.4.0
 
   # In-App Purchases (RevenueCat)
-  purchases_flutter: ^10.0.0
+  purchases_flutter: ^10.0.1
 
   # Animations
   animations: ^2.1.2
@@ -130,8 +125,8 @@ dependencies:
 
   # Background scheduling
   workmanager: ^0.9.0
-  background_fetch: ^1.6.1
-  timezone: ^0.10.0
+  background_fetch: ^1.6.2
+  timezone: ^0.11.0
 
   # Background BLE foreground service (Android)
   flutter_foreground_task: ^9.2.2
@@ -142,7 +137,7 @@ dependencies:
   emoji_picker_flutter: ^4.4.0
   ffi: ^2.2.0
   flutter_image_compress: ^2.4.0
-  bonsoir: ^6.0.2
+  bonsoir: ^6.0.3
 
 dev_dependencies:
   flutter_test:
@@ -155,7 +150,7 @@ dev_dependencies:
   flutter_launcher_icons: ^0.14.3
 
   # Code generation (3.x to match riverpod 3.x)
-  build_runner: ^2.13.1
+  build_runner: ^2.14.0
   riverpod_generator: ^4.0.0+1
   json_serializable: ^6.9.5
 
@@ -199,6 +194,9 @@ flutter:
     - assets/globe/
     - assets/terrain/
     - assets/meshtastic_powered_landscape.png
+    # SIP Play + Handshake sound effects (Pixabay Content License —
+    # see assets/sounds/sip_play/ATTRIBUTION.md for source files).
+    - assets/sounds/sip_play/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

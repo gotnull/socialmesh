@@ -20,9 +20,12 @@ import '../../generated/meshtastic/channel.pb.dart' as channel_pb;
 import '../../generated/meshtastic/channel.pbenum.dart' as channel_pbenum;
 import '../../generated/meshtastic/portnums.pbenum.dart' as pn;
 import '../../generated/meshtastic/telemetry.pb.dart' as telemetry;
+import '../../core/constants.dart';
 import 'admin_ack_tracker.dart';
 import 'admin_target.dart';
 import 'mesh_packet_builder.dart';
+import 'reticulum/reticulum_fragment_event.dart';
+import 'reticulum/reticulum_safe_log.dart';
 import 'packet_framer.dart';
 import 'text_message_payload_budget.dart';
 import 'socialmesh/sm_capability_store.dart';
@@ -37,6 +40,7 @@ import 'socialmesh/sm_presence.dart';
 import 'socialmesh/sm_signal.dart';
 import 'sip/mrrp_codec.dart';
 import 'sip/mrrp_engine.dart';
+import 'sip/peer_safety_gate.dart';
 import 'sip/sip_codec.dart';
 import 'sip/sip_constants.dart';
 import 'sip/sip_counters.dart';
@@ -334,6 +338,7 @@ class ProtocolService {
   final StreamController<ChannelConfig> _channelController;
   final StreamController<DeviceError> _errorController;
   final StreamController<MeshSignalPacket> _signalController;
+  final StreamController<ReticulumFragmentEvent> _reticulumFragmentController;
   final StreamController<SmFileTransferEvent> _fileTransferController;
   final StreamController<int> _myNodeNumController;
   final StreamController<int> _rssiController;
@@ -529,6 +534,12 @@ class ProtocolService {
   SipDmManager? _sipDm;
   SipCounters? _sipCounters;
 
+  /// Local Trust + Safety gate. Defaults to a no-op so existing
+  /// tests / cold-start frames are never blocked accidentally;
+  /// the providers layer wires the live `peerSafetyGateProvider`
+  /// adapter via [attachPeerSafetyGate] once the manager loads.
+  PeerSafetyGate _safetyGate = const NoopPeerSafetyGate();
+
   /// Shared SIP rate limiter. When attached, HS_HELLO retransmits (and
   /// any future handshake/identity sends routed through this service)
   /// will consult + record against the byte budget rather than bypassing
@@ -641,6 +652,15 @@ class ProtocolService {
         // byte budget instead of bypassing it.
         sendSipGated(encoded, SipMessageType.hsHello);
       };
+      handshake.onChallengeReemit = (peerNodeId, frame) {
+        final encoded = SipCodec.encode(frame);
+        if (encoded == null) return;
+        // Same gated path as the original CHALLENGE — re-emits respect
+        // the SIP byte budget. Reused frame keeps the wrapper nonce
+        // stable so the peer (which never saw the dropped original)
+        // accepts it normally.
+        sendSipGated(encoded, SipMessageType.hsChallenge);
+      };
       AppLogging.sip('ProtocolService: SipHandshakeManager attached');
     }
   }
@@ -688,6 +708,17 @@ class ProtocolService {
     _sipCounters = counters;
     if (counters != null) {
       AppLogging.sip('ProtocolService: SipCounters attached');
+    }
+  }
+
+  /// Attach the local Trust + Safety gate. Hot-path consulted on
+  /// every inbound handshake handler to silently drop frames from
+  /// blocked peers. Pass `null` to revert to the no-op default
+  /// (e.g. on disposal).
+  void attachPeerSafetyGate(PeerSafetyGate? gate) {
+    _safetyGate = gate ?? const NoopPeerSafetyGate();
+    if (gate != null) {
+      AppLogging.sip('ProtocolService: PeerSafetyGate attached');
     }
   }
 
@@ -807,6 +838,8 @@ class ProtocolService {
        _channelController = StreamController<ChannelConfig>.broadcast(),
        _errorController = StreamController<DeviceError>.broadcast(),
        _signalController = StreamController<MeshSignalPacket>.broadcast(),
+       _reticulumFragmentController =
+           StreamController<ReticulumFragmentEvent>.broadcast(),
        _fileTransferController =
            StreamController<SmFileTransferEvent>.broadcast(),
        _myNodeNumController = StreamController<int>.broadcast(),
@@ -951,6 +984,24 @@ class ProtocolService {
 
   /// Stream of received mesh signal packets (PRIVATE_APP portnum)
   Stream<MeshSignalPacket> get signalStream => _signalController.stream;
+
+  /// Stream of inbound port-76 (`RETICULUM_TUNNEL_APP`) fragment events.
+  /// Phase 1 emits one event per packet with metadata + raw payload;
+  /// reassembly is deferred to a later phase.
+  Stream<ReticulumFragmentEvent> get reticulumFragmentStream =>
+      _reticulumFragmentController.stream;
+
+  /// Inject a replayed fragment event into the live broadcast stream.
+  /// Used by the replay tool so capture files are replayed through the
+  /// same pipeline as live traffic — every consumer (stats, capture
+  /// writer, NodeDex bridge) sees the event identically to a real RF
+  /// arrival. The live ingress path uses the same private controller;
+  /// this getter exists solely to bridge replay traffic from the UI
+  /// layer without exposing the controller itself.
+  void injectReplayedReticulumFragment(ReticulumFragmentEvent event) {
+    if (_reticulumFragmentController.isClosed) return;
+    _reticulumFragmentController.add(event);
+  }
 
   /// Stream of incoming SM file transfer packets (FILE_OFFER, FILE_CHUNK,
   /// FILE_NACK, FILE_ACK). Consumers subscribe instead of setting a callback.
@@ -2058,6 +2109,15 @@ class ProtocolService {
           case pn.PortNum.TRACEROUTE_APP:
             _handleTracerouteMessage(packet, data);
             break;
+          case pn.PortNum.RETICULUM_TUNNEL_APP:
+            // Gated by AppFeatureFlags.isReticulumTunnelEnabled. When
+            // false (default), the handler is a no-op and the broadcast
+            // controller never sees the event — saves the dispatch loop
+            // and downstream consumer cost on every port-76 packet.
+            if (AppFeatureFlags.isReticulumTunnelEnabled) {
+              _handleReticulumTunnelPacket(packet, data);
+            }
+            break;
           default:
             AppLogging.protocol(
               'Received message with portnum: ${data.portnum} '
@@ -2173,6 +2233,42 @@ class ProtocolService {
     }
   }
 
+  /// Handle inbound port-76 (`RETICULUM_TUNNEL_APP`) fragments.
+  ///
+  /// Phase 1 — protocol-intelligence foundation. We do not parse the
+  /// fragmentation framing (the wire format is undocumented and is
+  /// deliberately reverse-engineered from captures in a later phase).
+  /// Every payload becomes one [ReticulumFragmentEvent] carrying the
+  /// envelope metadata + raw payload bytes; downstream providers handle
+  /// capture, stats, and NodeDex bridging.
+  void _handleReticulumTunnelPacket(pb.MeshPacket packet, pb.Data data) {
+    try {
+      final payload = Uint8List.fromList(data.payload);
+      final event = ReticulumFragmentEvent(
+        timestampMs: DateTime.now().millisecondsSinceEpoch,
+        fromNode: packet.from,
+        toNode: packet.to,
+        packetId: packet.id,
+        channel: packet.channel,
+        rssi: packet.hasRxRssi() ? packet.rxRssi : null,
+        snr: packet.hasRxSnr() ? packet.rxSnr.toDouble() : null,
+        payload: payload,
+      );
+      ReticulumSafeLog.fragmentReceived(
+        fromNode: event.fromNode,
+        toNode: event.toNode,
+        packetId: event.packetId,
+        channel: event.channel,
+        payloadLen: event.payloadLen,
+        rssi: event.rssi,
+        snr: event.snr,
+      );
+      _reticulumFragmentController.add(event);
+    } catch (e) {
+      ReticulumSafeLog.event('handler_error error=$e');
+    }
+  }
+
   /// Handle incoming signal packets (PRIVATE_APP portnum)
   void _handleSignalMessage(pb.MeshPacket packet, pb.Data data) {
     try {
@@ -2205,7 +2301,7 @@ class ProtocolService {
 
       AppLogging.social(
         'Received mesh signal from !${packet.from.toRadixString(16)}: '
-        '"${signalPacket.content.length > 30 ? '${signalPacket.content.substring(0, 30)}...' : signalPacket.content}" '
+        '"${safeSubstring(signalPacket.content, 30)}" '
         '(ttl=${signalPacket.ttlMinutes}m)',
       );
 
@@ -4268,12 +4364,22 @@ class ProtocolService {
       AppLogging.protocol('NodeInfo has no deviceMetrics');
     }
 
+    final existingNode = _nodes[nodeInfo.num];
+
     // Use the device's lastHeard timestamp when available.
     // NodeInfo.lastHeard is a uint32 Unix timestamp (seconds) recording
-    // when the DEVICE last received a packet from this node.  Using
+    // when the DEVICE last received a packet from this node. Using
     // DateTime.now() here would reset every node's "Last Heard" to the
-    // reconnection time, which is misleading.
-    final DateTime deviceLastHeard;
+    // reconnection time, which is misleading — the user sees "Seen 2m
+    // ago" + a 3-day-old absolute timestamp because presence ages from
+    // the fabricated "now" while the displayed timestamp is the same
+    // fabricated value (just rendered absolutely).
+    //
+    // When the firmware reports nothing or an implausible value, prefer
+    // the existing node's lastHeard (preserves what we already knew
+    // from a prior session) and otherwise leave it null so the UI can
+    // hide the row / show "Unknown".
+    final DateTime? deviceLastHeard;
     if (nodeInfo.hasLastHeard() && nodeInfo.lastHeard > 0) {
       final lastHeardEpoch = nodeInfo.lastHeard;
       final nowEpoch = DateTime.now().millisecondsSinceEpoch ~/ 1000;
@@ -4287,21 +4393,29 @@ class ProtocolService {
           '(${deviceLastHeard.toIso8601String()})',
         );
       } else {
-        deviceLastHeard = DateTime.now();
+        // Implausible firmware timestamp — fall back to whatever we
+        // already had, NOT to "now".
+        deviceLastHeard = existingNode?.lastHeard;
         final driftSeconds = lastHeardEpoch - nowEpoch;
         AppLogging.protocol(
           'NodeInfo ${nodeInfo.num}: implausible lastHeard=$lastHeardEpoch '
-          '(drift=${driftSeconds}s vs phone) — using phone time',
+          '(drift=${driftSeconds}s vs phone) — preserving prior '
+          '${deviceLastHeard?.toIso8601String() ?? 'null'}',
         );
       }
     } else {
-      deviceLastHeard = DateTime.now();
+      // No firmware lastHeard at all (e.g. the device has the node in
+      // its NodeDB from sync but never received a packet from it).
+      // Fabricating "now" here is what produced the field-bug where
+      // every freshly-imported node showed "Seen now" with the import
+      // time as its absolute timestamp. Preserve any existing value;
+      // otherwise leave it null.
+      deviceLastHeard = existingNode?.lastHeard;
       AppLogging.protocol(
-        'NodeInfo ${nodeInfo.num}: no device lastHeard, falling back to now',
+        'NodeInfo ${nodeInfo.num}: no device lastHeard — preserving prior '
+        '${deviceLastHeard?.toIso8601String() ?? 'null'}',
       );
     }
-
-    final existingNode = _nodes[nodeInfo.num];
 
     // Generate consistent color from node number
     final colors = [
@@ -5017,7 +5131,7 @@ class ProtocolService {
       await _transport.send(_prepareForSend(bytes));
 
       AppLogging.social(
-        'Broadcast signal: "${content.length > 30 ? '${content.substring(0, 30)}...' : content}" '
+        'Broadcast signal: "${safeSubstring(content, 30)}" '
         '(ttl=${ttlMinutes}m, packetId=$packetId)',
       );
 
@@ -5243,6 +5357,19 @@ class ProtocolService {
       return;
     }
 
+    // NOTE: a Meshtastic-layer destination filter (`packet.to !=
+    // myNodeNum`) is intentionally NOT performed here. Every SIP
+    // packet is sent with `packet.to == 0xFFFFFFFF` at the transport
+    // layer (see `sendSipPacket` and the dedicated send paths in
+    // this file), so the Meshtastic-layer destination is always
+    // broadcast and a transport-layer filter would give false
+    // confidence. Per-message addressing for handshake frames lives
+    // inside the SIP payload as `target_node_id` (SIP v0.2). The
+    // five `_handleSipHandshake*` methods below enforce the rule
+    // that `target_node_id == _myNodeNum` before any state mutation
+    // or consent UI runs. Spec:
+    // docs/sip/SIP_V0_2_TARGET_NODE_ID_PLAN.md §5.
+
     final frame = SipCodec.decode(payload);
     if (frame == null) {
       AppLogging.sip('SIP_RX: decode failed — dropping');
@@ -5307,6 +5434,12 @@ class ProtocolService {
         _handleSipDmDelete(frame);
       case SipMessageType.dmClose:
         _handleSipDmClose(frame);
+      case SipMessageType.dmInk:
+        _handleSipDmInk(frame);
+      case SipMessageType.dmPlay:
+        _handleSipDmPlay(frame);
+      case SipMessageType.dmSignal:
+        _handleSipDmSignal(frame);
 
       // ----- SIP-0: CAP_REQ / CAP_RESP (informational) -----
       case SipMessageType.capReq:
@@ -5408,6 +5541,15 @@ class ProtocolService {
       return;
     }
 
+    // Overlay v0.2 link frames ride inside the same mrrpData carrier
+    // but use msg_type 0x20..0x2A — outside the MRRP v0.1 codec table.
+    // The dispatcher routes them via OverlayLinkCodec.isLinkFrame(); the
+    // overlay layer logs its own ingress. Skip MRRP trace decoding to
+    // avoid spurious "unknown msg_type" + "decode=failed" log noise.
+    if (OverlayLinkCodec.isLinkFrame(sipFrame.payload)) {
+      return;
+    }
+
     final mrrpFrame = MrrpCodec.decode(sipFrame.payload);
     if (mrrpFrame == null) {
       AppLogging.mrrp(
@@ -5439,6 +5581,14 @@ class ProtocolService {
   void _logOutgoingMrrpPacket(pb.MeshPacket packet, Uint8List payload) {
     final sipFrame = SipCodec.decode(payload);
     if (sipFrame == null || sipFrame.msgType != SipMessageType.mrrpData) {
+      return;
+    }
+
+    // Overlay v0.2 link frames ride inside the same mrrpData carrier
+    // (msg_type 0x20..0x2A). The overlay egress path logs its own TX;
+    // skip MRRP trace decoding to avoid spurious "unknown msg_type" +
+    // "decode=failed" log noise.
+    if (OverlayLinkCodec.isLinkFrame(sipFrame.payload)) {
       return;
     }
 
@@ -5611,9 +5761,58 @@ class ProtocolService {
     }
   }
 
+  /// Silently drop a pending SIP handshake request from [peerNodeId].
+  ///
+  /// Unlike [declineSipHandshake], this emits NO wire frame — the peer
+  /// sees nothing different from "node unreachable." Used by the Block
+  /// path in the consent prompt: combined with
+  /// `PeerSafetyManager.block`, future HELLOs from this peer hit the
+  /// protocol-layer safety gate and are dropped before reaching the
+  /// pending-requests queue.
+  void cancelSipHandshake(int peerNodeId) {
+    _sipHandshake?.cancelHandshake(peerNodeId);
+  }
+
   // ---------------------------------------------------------------------------
   // SIP-1 Handshake dispatch
   // ---------------------------------------------------------------------------
+
+  /// Read the v0.2 `target_node_id` (u32 LE at offset 0) from a
+  /// handshake frame's payload and decide whether to drop. Returns
+  /// `true` if the frame should be dropped silently. Logs the
+  /// canonical drop line on every reject so the multi-node
+  /// regression test (plan §7.5) can assert exactly one entry per
+  /// overheard frame.
+  ///
+  /// Spec: docs/sip/SIP_V0_2_TARGET_NODE_ID_PLAN.md §5.2.
+  bool _shouldDropHandshakeForTarget(
+    int senderNodeId,
+    SipMessageType msgType,
+    SipFrame frame,
+  ) {
+    if (frame.payload.length < 4) {
+      AppLogging.sip(
+        'SIP_HS: dropping ${msgType.name} '
+        'sender=0x${senderNodeId.toRadixString(16)} '
+        '(payload too short to carry target_node_id)',
+      );
+      return true;
+    }
+    final targetNodeId = ByteData.sublistView(
+      frame.payload,
+    ).getUint32(0, Endian.little);
+    final myNodeNum = _myNodeNum;
+    if (myNodeNum == null || targetNodeId != myNodeNum) {
+      AppLogging.sip(
+        'SIP_HS: dropping ${msgType.name} '
+        'target=0x${targetNodeId.toRadixString(16)} '
+        'myNode=0x${myNodeNum?.toRadixString(16) ?? "null"} '
+        'sender=0x${senderNodeId.toRadixString(16)} (not us)',
+      );
+      return true;
+    }
+    return false;
+  }
 
   void _handleSipHandshakeHello(
     int senderNodeId,
@@ -5626,34 +5825,66 @@ class ProtocolService {
       return;
     }
 
+    // SIP v0.2 target check — drop overheard handshakes before any
+    // consent UI / notification / sound / state mutation runs.
+    // Spec: docs/sip/SIP_V0_2_TARGET_NODE_ID_PLAN.md §5.2.
+    if (_shouldDropHandshakeForTarget(
+      senderNodeId,
+      SipMessageType.hsHello,
+      frame,
+    )) {
+      return;
+    }
+
+    // T+S guard: silent drop. A blocked peer's HS_HELLO must not
+    // queue into _pendingRequests, must not show a consent prompt,
+    // must not fire a notification, and must NOT emit a wire
+    // response (no HS_DECLINE — that confirms we exist + saw the
+    // request). The peer sees nothing different from "node
+    // unreachable." No info-level log mentions the peer node id.
+    if (_safetyGate.isBlocked(senderNodeId)) return;
+
     _sipCounters?.recordHandshakeInitiated();
+
+    // Suppress notification for HELLO retransmits: SipHandshakeManager
+    // dedupes against _pendingRequests / _completed, but the notification
+    // fires before that. Without this guard a peer that retransmits HELLO
+    // while the request sits awaiting consent re-pops the OS notification
+    // on every retry.
+    final existingState = hs.getState(senderNodeId);
+    final alreadyTracked =
+        existingState == SipHandshakeState.pendingApproval ||
+        existingState == SipHandshakeState.challengeSent ||
+        existingState == SipHandshakeState.accepted;
 
     // Show a notification prompting the user to respond.
     // Gated on master + DM notification preferences + minor contact restriction.
-    () async {
-      final prefs = await SharedPreferences.getInstance();
+    if (!alreadyTracked) {
+      () async {
+        final prefs = await SharedPreferences.getInstance();
 
-      // Minor contact restriction: confirmed teen/under-13 users should not
-      // receive unsolicited handshake requests. Auto-decline silently.
-      final ageGroup = prefs.getString('age_eligibility_age_group') ?? '';
-      if (ageGroup == 'under13' || ageGroup == 'teen') {
-        AppLogging.sip(
-          'SIP_HS: suppressing incoming HS_HELLO — minor contact restriction',
+        // Minor contact restriction: confirmed teen/under-13 users should not
+        // receive unsolicited handshake requests. Auto-decline silently.
+        final ageGroup = prefs.getString('age_eligibility_age_group') ?? '';
+        if (ageGroup == 'under13' || ageGroup == 'teen') {
+          AppLogging.sip(
+            'SIP_HS: suppressing incoming HS_HELLO — minor contact restriction',
+          );
+          hs.declineHandshake(senderNodeId);
+          return;
+        }
+
+        if (!(prefs.getBool('notifications_enabled') ?? true)) return;
+        if (!(prefs.getBool('dm_notifications_enabled') ?? true)) return;
+        final peerName =
+            _nodes[senderNodeId]?.displayName ??
+            NodeDisplayNameResolver.defaultName(senderNodeId);
+        NotificationService().showSipHandshakeRequestNotification(
+          peerName: peerName,
+          peerNodeId: senderNodeId,
         );
-        hs.declineHandshake(senderNodeId);
-        return;
-      }
-
-      if (!(prefs.getBool('notifications_enabled') ?? true)) return;
-      if (!(prefs.getBool('dm_notifications_enabled') ?? true)) return;
-      final peerName =
-          _nodes[senderNodeId]?.displayName ??
-          NodeDisplayNameResolver.defaultName(senderNodeId);
-      NotificationService().showSipHandshakeRequestNotification(
-        peerName: peerName,
-        peerNodeId: senderNodeId,
-      );
-    }();
+      }();
+    }
 
     // Queue the request for user consent — no automatic challenge response.
     // Consent is a hard privacy boundary and is required even on the
@@ -5664,6 +5895,20 @@ class ProtocolService {
   void _handleSipHandshakeChallenge(int senderNodeId, SipFrame frame) {
     final hs = _sipHandshake;
     if (hs == null) return;
+
+    // SIP v0.2 target check — see _handleSipHandshakeHello.
+    if (_shouldDropHandshakeForTarget(
+      senderNodeId,
+      SipMessageType.hsChallenge,
+      frame,
+    )) {
+      return;
+    }
+
+    // T+S guard: silent drop. A blocked peer cannot drive our
+    // handshake state forward — no challenge response, no eventual
+    // complete notification. Mirrors the HELLO + DECLINE guards.
+    if (_safetyGate.isBlocked(senderNodeId)) return;
 
     hs.handleChallenge(senderNodeId, frame).then((responseFrame) {
       if (responseFrame != null) {
@@ -5678,6 +5923,19 @@ class ProtocolService {
   void _handleSipHandshakeResponse(int senderNodeId, SipFrame frame) {
     final hs = _sipHandshake;
     if (hs == null) return;
+
+    // SIP v0.2 target check — see _handleSipHandshakeHello.
+    if (_shouldDropHandshakeForTarget(
+      senderNodeId,
+      SipMessageType.hsResponse,
+      frame,
+    )) {
+      return;
+    }
+
+    // T+S guard: silent drop. Mirrors the HELLO + DECLINE guards —
+    // a blocked peer cannot complete a handshake against us.
+    if (_safetyGate.isBlocked(senderNodeId)) return;
 
     hs.handleResponse(senderNodeId, frame).then((acceptFrame) {
       if (acceptFrame != null) {
@@ -5695,6 +5953,19 @@ class ProtocolService {
     final hs = _sipHandshake;
     if (hs == null) return;
 
+    // SIP v0.2 target check — see _handleSipHandshakeHello.
+    if (_shouldDropHandshakeForTarget(
+      senderNodeId,
+      SipMessageType.hsAccept,
+      frame,
+    )) {
+      return;
+    }
+
+    // T+S guard: silent drop. Mirrors the HELLO + DECLINE guards —
+    // a blocked peer cannot complete a handshake against us.
+    if (_safetyGate.isBlocked(senderNodeId)) return;
+
     final result = hs.handleAccept(senderNodeId, frame);
     if (result != null) {
       // Initiator-side: handshake complete. Auto-create DM session.
@@ -5707,6 +5978,21 @@ class ProtocolService {
   void _handleSipHandshakeDecline(int senderNodeId, SipFrame frame) {
     final hs = _sipHandshake;
     if (hs == null) return;
+
+    // SIP v0.2 target check — see _handleSipHandshakeHello.
+    if (_shouldDropHandshakeForTarget(
+      senderNodeId,
+      SipMessageType.hsDecline,
+      frame,
+    )) {
+      return;
+    }
+
+    // T+S guard: silent drop. A blocked peer's HS_DECLINE is
+    // dropped before any state mutation or notification. Skipping
+    // `hs.handleDecline` avoids a cooldown side-effect being
+    // attributed to a peer the user has chosen not to interact with.
+    if (_safetyGate.isBlocked(senderNodeId)) return;
 
     hs.handleDecline(senderNodeId, frame);
 
@@ -5729,6 +6015,17 @@ class ProtocolService {
     final hs = _sipHandshake;
     final dm = _sipDm;
     if (hs == null) return;
+
+    // T+S guard: silent drop. A blocked peer's HS_ACCEPT must not
+    // create a DM session, must not fire the completion
+    // notification, and must not invoke `onSipHandshakeComplete`
+    // (which auto-opens an overlay link). We DO consume the result
+    // so it doesn't pile up in `_completed` forever — but we drop
+    // it on the floor immediately afterwards.
+    if (_safetyGate.isBlocked(peerNodeId)) {
+      hs.consumeResult(peerNodeId);
+      return;
+    }
 
     final result = hs.consumeResult(peerNodeId);
     if (result == null) return;
@@ -5942,6 +6239,33 @@ class ProtocolService {
     }
 
     dm.handleInboundClose(frame);
+  }
+
+  void _handleSipDmInk(SipFrame frame) {
+    final dm = _sipDm;
+    if (dm == null) {
+      AppLogging.sipInk('rx_dropped reason=no_dm_manager');
+      return;
+    }
+    dm.handleInboundInk(frame);
+  }
+
+  void _handleSipDmPlay(SipFrame frame) {
+    final dm = _sipDm;
+    if (dm == null) {
+      AppLogging.sipPlay('rx_dropped reason=no_dm_manager');
+      return;
+    }
+    dm.handleInboundPlay(frame);
+  }
+
+  void _handleSipDmSignal(SipFrame frame) {
+    final dm = _sipDm;
+    if (dm == null) {
+      AppLogging.sipSignal('rx_dropped reason=no_dm_manager');
+      return;
+    }
+    dm.handleInboundSignal(frame);
   }
 
   /// Send a file transfer packet as broadcast on PRIVATE_APP (portnum 256).
@@ -6844,10 +7168,10 @@ class ProtocolService {
     try {
       // Validate and trim lengths
       final trimmedLong = longName != null
-          ? (longName.length > 36 ? longName.substring(0, 36) : longName)
+          ? safeTruncateCodeUnits(longName, 36)
           : null;
       final trimmedShort = shortName != null
-          ? (shortName.length > 4 ? shortName.substring(0, 4) : shortName)
+          ? safeTruncateCodeUnits(shortName, 4)
           : null;
 
       AppLogging.protocol(
@@ -9319,6 +9643,7 @@ class ProtocolService {
     await _channelController.close();
     await _errorController.close();
     await _signalController.close();
+    await _reticulumFragmentController.close();
     await _fileTransferController.close();
     await _deliveryController.close();
     await _regionController.close();

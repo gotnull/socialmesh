@@ -58,7 +58,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Before you write'), findsOneWidget);
-    expect(find.text('You’re sharing'), findsOneWidget);
+    expect(find.text('You\'re sharing'), findsOneWidget);
     expect(find.text('Audience'), findsNothing);
   });
 }

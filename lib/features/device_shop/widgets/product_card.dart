@@ -101,16 +101,16 @@ class _ProductCardState extends ConsumerState<ProductCard>
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppTheme.spacing12,
-                  AppTheme.spacing12,
-                  AppTheme.spacing12,
                   AppTheme.spacing10,
+                  AppTheme.spacing12,
+                  AppTheme.spacing8,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     _buildSellerRow(context),
-                    const SizedBox(height: AppTheme.spacing8),
+                    const SizedBox(height: AppTheme.spacing6),
                     Text(
                       widget.product.name,
                       maxLines: 2,
@@ -122,15 +122,15 @@ class _ProductCardState extends ConsumerState<ProductCard>
                         height: 1.2,
                       ),
                     ),
-                    const SizedBox(height: AppTheme.spacing8),
+                    const SizedBox(height: AppTheme.spacing6),
                     Wrap(
                       spacing: AppTheme.spacing6,
                       runSpacing: AppTheme.spacing6,
                       children: _metadata(context),
                     ),
-                    const SizedBox(height: AppTheme.spacing12),
+                    const Spacer(),
                     _buildPriceRow(context),
-                    const SizedBox(height: AppTheme.spacing8),
+                    const SizedBox(height: AppTheme.spacing6),
                     _buildFooter(context),
                   ],
                 ),

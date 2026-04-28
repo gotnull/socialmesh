@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/logging.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
+import '../../../utils/text_sanitizer.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/glass_scaffold.dart';
@@ -629,9 +630,7 @@ class _NodeBoardWizardScreenState extends ConsumerState<NodeBoardWizardScreen>
                 _ReviewRow(
                   // lint-allow: hardcoded-string
                   label: 'Welcome',
-                  value: _welcomeTextController.text.length > 80
-                      ? '${_welcomeTextController.text.substring(0, 80)}...'
-                      : _welcomeTextController.text,
+                  value: safeSubstring(_welcomeTextController.text, 80),
                 ),
             ],
           ),

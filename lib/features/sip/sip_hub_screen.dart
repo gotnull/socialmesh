@@ -14,7 +14,6 @@
 
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -23,7 +22,9 @@ import '../../core/logging.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../core/widgets/gradient_border_container.dart';
 import '../../core/widgets/section_header.dart';
 import '../../features/nodedex/models/nodedex_entry.dart';
 import '../../features/nodedex/models/sigil_evolution.dart';
@@ -37,7 +38,7 @@ import '../../core/constants.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/age_eligibility_provider.dart';
 import '../../providers/help_providers.dart';
-import '../../providers/overlay_providers.dart';
+import '../../providers/peer_safety_providers.dart';
 import '../../providers/sip_providers.dart';
 import '../../services/haptic_service.dart';
 import '../../services/protocol/sip/sip_codec.dart';
@@ -45,6 +46,7 @@ import '../../services/protocol/sip/sip_types.dart';
 import '../../services/protocol/sip/sip_discovery.dart';
 import '../../services/protocol/sip/sip_dm.dart';
 import '../../services/protocol/sip/sip_handshake.dart';
+import '../../services/protocol/sip/signal/sip_signal_constants.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/animated_empty_state.dart';
 import '../../core/widgets/ico_help_system.dart';
@@ -76,7 +78,8 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
   int _scanStartEpoch = -1;
   String _lastLogSignature = '';
 
-  /// Continuous rotation controller for the radar icon when auto-scan is on.
+  // Rotates while a scan is in flight (manual or auto-scan tick).
+  // Idle between ticks even when auto-scan is on — green tint signals "armed".
   late final AnimationController _radarController;
 
   @override
@@ -94,8 +97,13 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
       final autoScan = ref.read(sipAutoScanProvider);
       if (autoScan) {
         _startAutoScanTimer();
-        _radarController.repeat();
-        _performScan();
+        // Screen-restore scan: NOT user-initiated (the user is just
+        // navigating back into the hub with auto-scan already on).
+        // force=false so the resume-suppression window — which fires
+        // for ~10s after the app/screen comes to foreground —
+        // actually does its job. The periodic timer will pick up
+        // within 60s.
+        _performScan(force: false);
       }
     });
   }
@@ -114,65 +122,84 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
     final wasEnabled = ref.read(sipAutoScanProvider);
     final nowEnabled = !wasEnabled;
     ref.read(sipAutoScanProvider.notifier).setEnabled(nowEnabled);
-    setState(() {
-      if (nowEnabled) {
-        _performScan();
-        _startAutoScanTimer();
-        _radarController.repeat();
-        showSuccessSnackBar(context, l10n.sipAutoScanEnabled);
-      } else {
-        _autoScanTimer?.cancel();
-        _autoScanTimer = null;
-        _radarController.stop();
-        _radarController.reset();
-        showInfoSnackBar(context, l10n.sipAutoScanDisabled);
-      }
-    });
+    if (nowEnabled) {
+      // Turning ON → fire an immediate user-initiated scan and arm
+      // the periodic timer. Subsequent timer ticks use force=false.
+      _performScan(force: true);
+      _startAutoScanTimer();
+      showSuccessSnackBar(context, l10n.sipAutoScanEnabled);
+    } else {
+      _autoScanTimer?.cancel();
+      _autoScanTimer = null;
+      showInfoSnackBar(context, l10n.sipAutoScanDisabled);
+    }
   }
 
   void _startAutoScanTimer() {
     _autoScanTimer?.cancel();
     _autoScanTimer = Timer.periodic(_kAutoScanInterval, (_) {
-      if (mounted) _performScan();
+      // Periodic background ticks must NOT use `force: true`. That
+      // flag is for explicit user taps and bypasses the resume-
+      // suppression window + the cooldown jitter — both of which
+      // exist precisely to keep automatic emissions airtime-clean.
+      // Letting the periodic tick honour the soft gates means it
+      // skips ticks during congestion / the 10s post-resume window
+      // and picks up the 0–5s anti-thundering-herd jitter so a
+      // populated mesh of auto-scanning devices doesn't fire all
+      // their ROLLCALL_REQs on the same instant.
+      if (mounted) _performScan(force: false);
     });
   }
 
   void _onScan() {
     ref.read(hapticServiceProvider).trigger(HapticType.light);
-    _performScan();
+    // User-initiated taps are explicit intent — bypass the cooldown
+    // / resume-suppression so the request goes out promptly. The
+    // hard byte budget still gates this.
+    _performScan(force: true);
   }
 
-  void _performScan() {
+  void _performScan({required bool force}) {
     final discovery = ref.read(sipDiscoveryProvider);
-    AppLogging.sip('SIP_HUB: scan tapped, discovery=${discovery != null}');
+    AppLogging.sip(
+      'SIP_HUB: scan triggered, discovery=${discovery != null} force=$force',
+    );
     if (discovery == null) return;
 
-    final outbound = discovery.buildRollcallReq(force: true);
-    if (outbound != null) {
-      final protocol = ref.read(protocolServiceProvider);
-      protocol.sendSipPacket(outbound.encoded);
-      AppLogging.sip(
-        'SIP_HUB: ROLLCALL_REQ dispatched ${outbound.encoded.length}B',
-      );
-      setState(() => _scanning = true);
-      // Record epoch at scan start; stop scanning when it bumps (peers arrive).
-      _scanStartEpoch = ref.read(sipPeerCacheEpochProvider);
-      // Poll the discovery engine's scan window state instead of using a fixed
-      // timeout. The engine tracks the real expiry; we add a grace period after
-      // the window closes for the last response to propagate back over the mesh.
-      _scanTimeoutTimer?.cancel();
-      _scanTimeoutTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-        final d = ref.read(sipDiscoveryProvider);
-        if (d == null || !d.isInScanWindow) {
-          _scanTimeoutTimer?.cancel();
-          // Grace period: responses sent just before the window closed are
-          // still in flight. Wait for mesh propagation before giving up.
-          Future.delayed(const Duration(seconds: 5), () {
-            if (mounted && _scanning) setState(() => _scanning = false);
-          });
-        }
-      });
-    }
+    final outbound = discovery.buildRollcallReq(force: force);
+    if (outbound == null) return;
+
+    final protocol = ref.read(protocolServiceProvider);
+    protocol.sendSipPacket(outbound.encoded);
+    AppLogging.sip(
+      'SIP_HUB: ROLLCALL_REQ dispatched ${outbound.encoded.length}B',
+    );
+    setState(() => _scanning = true);
+    _radarController.repeat();
+    // Record epoch at scan start; stop scanning when it bumps (peers arrive).
+    _scanStartEpoch = ref.read(sipPeerCacheEpochProvider);
+    // Poll the discovery engine's scan window state instead of using a fixed
+    // timeout. The engine tracks the real expiry; we add a grace period after
+    // the window closes for the last response to propagate back over the mesh.
+    _scanTimeoutTimer?.cancel();
+    _scanTimeoutTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      final d = ref.read(sipDiscoveryProvider);
+      if (d == null || !d.isInScanWindow) {
+        _scanTimeoutTimer?.cancel();
+        // Grace period: responses sent just before the window closed are
+        // still in flight. Wait for mesh propagation before giving up.
+        Future.delayed(const Duration(seconds: 5), () {
+          if (mounted && _scanning) _stopScan();
+        });
+      }
+    });
+  }
+
+  void _stopScan() {
+    if (!_scanning) return;
+    setState(() => _scanning = false);
+    _radarController.stop();
+    _radarController.reset();
   }
 
   /// Called from build — checks if peers arrived since scan started.
@@ -182,7 +209,7 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
       // after a brief delay for perceived smoothness.
       _scanTimeoutTimer?.cancel();
       Future.delayed(const Duration(milliseconds: 500), () {
-        if (mounted) setState(() => _scanning = false);
+        if (mounted) _stopScan();
       });
     }
   }
@@ -190,7 +217,6 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
   /// Initiate handshake directly with a peer (no detail sheet).
   void _initiateHandshake(SipPeerCapability peer) {
     final localContext = context;
-    final localL10n = localContext.l10n;
     final haptics = ref.read(hapticServiceProvider);
     haptics.trigger(HapticType.medium);
 
@@ -210,7 +236,9 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
 
     final handshake = ref.read(sipHandshakeProvider);
     if (handshake == null) {
-      showErrorSnackBar(localContext, localL10n.sipHandshakeFailed);
+      // No snackbar — the per-peer chip is the single source of truth for
+      // handshake state. A redundant "Could not connect" overlay on top of
+      // the same red chip just adds noise.
       return;
     }
 
@@ -242,12 +270,31 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
       return;
     }
 
-    final frame = handshake.initiateHandshake(peer.nodeId);
-    if (frame == null) return;
+    // Explicit user retry from a terminal state — override the
+    // 120s post-failure cooldown so the tap actually does something.
+    // The cooldown exists to throttle automatic retransmits, not to
+    // lock the user out for two minutes when they deliberately tap
+    // a "Could not connect" tile.
+    final isUserRetry =
+        currentState == SipHandshakeState.failed ||
+        currentState == SipHandshakeState.timedOut ||
+        currentState == SipHandshakeState.declined;
+
+    final frame = handshake.initiateHandshake(
+      peer.nodeId,
+      overrideCooldown: isUserRetry,
+    );
+    if (frame == null) {
+      // Defence-in-depth: even with the override the manager can still
+      // refuse (DM not available, lingering session entry). The chip
+      // remains in its current state — a snackbar layered on top would
+      // duplicate that signal and was reported as "extremely annoying"
+      // during the simultaneous-open retry flow.
+      return;
+    }
 
     final encoded = SipCodec.encode(frame);
     if (encoded == null) {
-      showErrorSnackBar(localContext, localL10n.sipHandshakeFailed);
       return;
     }
 
@@ -312,15 +359,44 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
     // Filter out peers that already have an active DM session —
     // those appear under Conversations only (issue 3).
     final sessionNodeIds = sessions.map((s) => s.peerNodeId).toSet();
+
+    // Trust + Safety render-layer filter: blocked peers are hidden
+    // from every active list (Incoming requests, Conversations,
+    // Discovered peers). They surface only inside the collapsed
+    // Blocked section, which exposes an explicit Unblock affordance.
+    //
+    // This is a pure render filter — no protocol or session state
+    // is mutated here. The protocol layer already silently drops
+    // future inbound HELLO / DM / MRRP frames from blocked peers
+    // (Phase 6/7), so blocked entries shouldn't normally appear in
+    // these lists at steady state. The filter is defense-in-depth
+    // for in-flight frames + sessions opened before the block.
+    final blockedNodeIds = ref.watch(blockedPeerNodeIdsProvider);
+    final blockedSet = blockedNodeIds.toSet();
+    final filteredPendingRequests = pendingRequestNodeIds
+        .where((id) => !blockedSet.contains(id))
+        .toList(growable: false);
+    final filteredSessions = sessions
+        .where((s) => !blockedSet.contains(s.peerNodeId))
+        .toList(growable: false);
     final unconnectedPeers = peers
-        .where((p) => !sessionNodeIds.contains(p.nodeId))
+        .where(
+          (p) =>
+              !sessionNodeIds.contains(p.nodeId) &&
+              !blockedSet.contains(p.nodeId),
+        )
         .toList();
 
     final hasPeers = unconnectedPeers.isNotEmpty;
-    final hasSessions = sessions.isNotEmpty;
-    final hasPendingRequests = pendingRequestNodeIds.isNotEmpty;
+    final hasSessions = filteredSessions.isNotEmpty;
+    final hasPendingRequests = filteredPendingRequests.isNotEmpty;
+    final hasBlocked = blockedNodeIds.isNotEmpty;
     final isEmpty =
-        !hasPeers && !hasSessions && !_scanning && !hasPendingRequests;
+        !hasPeers &&
+        !hasSessions &&
+        !_scanning &&
+        !hasPendingRequests &&
+        !hasBlocked;
 
     // lint-allow: haptic-feedback — keyboard dismissal, not interactive action
     return HelpTourController(
@@ -331,27 +407,31 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
         child: GlassScaffold(
           title: l10n.sipHubTitle,
           actions: [
-            // Scan button — hidden during scans, rotates when auto-scan on
-            if (!_scanning)
-              IconButton(
-                icon: AnimatedBuilder(
-                  animation: _radarController,
-                  builder: (context, child) => Transform.rotate(
-                    angle: _radarController.value * 2 * 3.14159265,
-                    child: child,
-                  ),
-                  child: Icon(
-                    Icons.radar,
-                    size: 22,
-                    color: autoScanEnabled ? AccentColors.green : null,
-                  ),
+            // Radar — single primary action: tap toggles auto-discovery.
+            // Always visible. Color tracks auto-scan state; rotation tracks
+            // an in-flight scan (manual or auto-scan tick).
+            IconButton(
+              icon: AnimatedBuilder(
+                animation: _radarController,
+                builder: (context, child) => Transform.rotate(
+                  angle: _radarController.value * 2 * 3.14159265,
+                  child: child,
                 ),
-                tooltip: l10n.sipDiscoveryScanButton,
-                onPressed: autoScanEnabled ? _toggleAutoScan : _onScan,
+                child: Icon(
+                  Icons.radar,
+                  size: 22,
+                  color: autoScanEnabled ? AccentColors.green : null,
+                ),
               ),
+              tooltip: l10n.sipAutoScanToggle,
+              onPressed: _toggleAutoScan,
+            ),
             // Overflow menu
             AppBarOverflowMenu<String>(
               onSelected: (value) {
+                if (value == 'scannow') {
+                  _onScan(); // lint-allow: hardcoded-string
+                }
                 if (value == 'autoscan') {
                   _toggleAutoScan(); // lint-allow: hardcoded-string
                 }
@@ -370,6 +450,16 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
                 }
               },
               itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'scannow', // lint-allow: hardcoded-string
+                  enabled: !_scanning,
+                  child: ListTile(
+                    leading: const Icon(Icons.radar),
+                    title: Text(l10n.sipScanNow),
+                    contentPadding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
                 PopupMenuItem(
                   value: 'autoscan', // lint-allow: hardcoded-string
                   child: ListTile(
@@ -426,8 +516,9 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
               : _buildContentSlivers(
                   context,
                   unconnectedPeers,
-                  sessions,
-                  pendingRequestNodeIds,
+                  filteredSessions,
+                  filteredPendingRequests,
+                  blockedNodeIds,
                 ),
         ),
       ),
@@ -486,6 +577,7 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
     List<SipPeerCapability> peers,
     List<SipDmSession> sessions,
     List<int> pendingRequestNodeIds,
+    List<int> blockedPeerNodeIds,
   ) {
     final shouldRestrict = ref
         .read(ageSafetyPolicyProvider)
@@ -587,6 +679,22 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
           ),
       ],
 
+      // Blocked section — collapsed by default, last in the list.
+      // Render-layer only: tapping rows here only exposes Unblock,
+      // never re-opens a session or sends a wire frame.
+      if (blockedPeerNodeIds.isNotEmpty)
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(
+            AppTheme.spacing16,
+            AppTheme.spacing12,
+            AppTheme.spacing16,
+            0,
+          ),
+          sliver: SliverToBoxAdapter(
+            child: _BlockedPeersSection(blockedPeerNodeIds: blockedPeerNodeIds),
+          ),
+        ),
+
       // Bottom safe area
       SliverToBoxAdapter(
         child: SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
@@ -607,112 +715,328 @@ class _IncomingRequestTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final accent = context.accentColor;
     final entry = ref.watch(nodeDexEntryProvider(peerNodeId));
     final nodes = ref.watch(nodesProvider);
     final node = nodes[peerNodeId];
+    final patinaResult = ref.watch(nodeDexPatinaProvider(peerNodeId));
+    final traitResult = ref.watch(nodeDexTraitProvider(peerNodeId));
     final displayName =
         entry?.localNickname ??
         entry?.sipDisplayName ??
         node?.displayName ??
         entry?.lastKnownName ??
         NodeDisplayNameResolver.defaultName(peerNodeId);
+    final hexId =
+        '!${peerNodeId.toRadixString(16).toUpperCase().padLeft(4, '0')}';
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
-      child: Container(
-        decoration: BoxDecoration(
-          color: context.card,
-          borderRadius: BorderRadius.circular(AppTheme.radius12),
-          border: Border.all(
-            color: AccentColors.orange.withValues(alpha: 0.4),
-            width: 1,
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(AppTheme.spacing12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.wifi_tethering,
-                    size: 16,
-                    color: AccentColors.orange,
+      child: GradientBorderContainer(
+        borderRadius: AppTheme.radius12,
+        borderWidth: 2,
+        accentOpacity: 0.3,
+        backgroundColor: context.card,
+        padding: const EdgeInsets.all(AppTheme.spacing14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Live header strip — pulsing dot + uppercase label
+            Row(
+              children: [
+                _LivePulseDot(color: accent),
+                const SizedBox(width: AppTheme.spacing8),
+                Text(
+                  l10n.sipHubIncomingRequestLiveLabel.toUpperCase(),
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: accent,
+                    letterSpacing: 1.2,
                   ),
-                  const SizedBox(width: AppTheme.spacing6),
-                  Expanded(
-                    child: Text(
-                      l10n.sipHubIncomingRequestFrom(displayName),
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: context.textPrimary,
+                ),
+              ],
+            ),
+            const SizedBox(height: AppTheme.spacing12),
+
+            // Identity row — sigil avatar + name/hex/subtitle stack
+            Row(
+              children: [
+                _buildAvatar(context, entry, patinaResult, traitResult),
+                const SizedBox(width: AppTheme.spacing12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              displayName,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: context.textPrimary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: AppTheme.spacing6),
+                          Text(
+                            hexId,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: context.textTertiary,
+                              fontFamily: AppTheme.fontFamily,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
+                      const SizedBox(height: AppTheme.spacing4),
+                      Text(
+                        l10n.sipHubIncomingRequestWantsToConnect,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: context.textSecondary,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
+              ],
+            ),
+            const SizedBox(height: AppTheme.spacing12),
+
+            // Consent body — explains what tapping Accept enables. The
+            // user must understand this is a privacy-bearing decision,
+            // not a "friend request."
+            Text(
+              l10n.sipHubConsentBody,
+              style: TextStyle(
+                fontSize: 12,
+                height: 1.4,
+                color: context.textTertiary,
               ),
-              const SizedBox(height: AppTheme.spacing12),
-              Row(
-                children: [
-                  Expanded(
-                    child: FilledButton.icon(
-                      onPressed: () {
-                        AppLogging.sip(
-                          'SIP_HUB: Accept tapped for '
-                          'peer=0x${peerNodeId.toRadixString(16)}',
-                        );
-                        ref
-                            .read(hapticServiceProvider)
-                            .trigger(HapticType.medium);
-                        ref
-                            .read(protocolServiceProvider)
-                            .acceptSipHandshake(peerNodeId);
-                      },
-                      icon: const Icon(Icons.check, size: 16),
-                      label: Text(l10n.sipHubAccept),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AccentColors.green,
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size.fromHeight(36),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppTheme.spacing12,
-                        ),
+            ),
+
+            const SizedBox(height: AppTheme.spacing12),
+
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: () {
+                      AppLogging.sip(
+                        'SIP_HUB: Accept tapped for '
+                        'peer=0x${peerNodeId.toRadixString(16)}',
+                      );
+                      ref
+                          .read(hapticServiceProvider)
+                          .trigger(HapticType.medium);
+                      ref
+                          .read(protocolServiceProvider)
+                          .acceptSipHandshake(peerNodeId);
+                      // T+S: mark first-contact ONLY when the local
+                      // user explicitly taps Accept. NOT on inbound
+                      // HELLO / DECLINE / ACCEPT alone — those don't
+                      // carry consent. The mark gates the
+                      // first-contact warning banner so it doesn't
+                      // re-pop on subsequent re-handshakes.
+                      ref
+                          .read(peerSafetyManagerProvider.notifier)
+                          .markFirstHandshake(
+                            peerNodeId,
+                            DateTime.now().millisecondsSinceEpoch,
+                          );
+                    },
+                    icon: const Icon(Icons.check, size: 16),
+                    label: Text(l10n.sipHubAccept),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AccentColors.green,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size.fromHeight(36),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.spacing8,
                       ),
                     ),
                   ),
-                  const SizedBox(width: AppTheme.spacing8),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        ref
-                            .read(hapticServiceProvider)
-                            .trigger(HapticType.light);
-                        ref
-                            .read(protocolServiceProvider)
-                            .declineSipHandshake(peerNodeId);
-                      },
-                      icon: const Icon(Icons.close, size: 16),
-                      label: Text(l10n.sipHubDecline),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AccentColors.red,
-                        side: BorderSide(
-                          color: AccentColors.red.withValues(alpha: 0.6),
-                        ),
-                        minimumSize: const Size.fromHeight(36),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppTheme.spacing12,
-                        ),
+                ),
+                const SizedBox(width: AppTheme.spacing6),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      ref.read(hapticServiceProvider).trigger(HapticType.light);
+                      ref
+                          .read(protocolServiceProvider)
+                          .declineSipHandshake(peerNodeId);
+                    },
+                    icon: const Icon(Icons.close, size: 16),
+                    label: Text(l10n.sipHubDecline),
+                    // Decline = mild "not this time" (handshake state
+                    // resets, peer can retry later). Orange to read
+                    // as "caution" rather than "danger" so it doesn't
+                    // collide visually with Block. The three buttons
+                    // form a green → orange → red severity ladder.
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AccentColors.orange,
+                      side: BorderSide(
+                        color: AccentColors.orange.withValues(alpha: 0.6),
+                      ),
+                      minimumSize: const Size.fromHeight(36),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.spacing8,
                       ),
                     ),
                   ),
-                ],
+                ),
+                const SizedBox(width: AppTheme.spacing6),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _onBlock(context, ref),
+                    icon: const Icon(Icons.block, size: 16),
+                    label: Text(l10n.sipHubBlock),
+                    // Block = hard "never again" (T+S locks outbound,
+                    // suppresses future inbound consent). Keeps red
+                    // as the strongest severity signal in the trio.
+                    // Was previously SemanticColors.error which is
+                    // the same hex as AccentColors.red — same colour
+                    // as Decline, indistinguishable.
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AccentColors.red,
+                      side: BorderSide(
+                        color: AccentColors.red.withValues(alpha: 0.6),
+                      ),
+                      minimumSize: const Size.fromHeight(36),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.spacing8,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAvatar(
+    BuildContext context,
+    NodeDexEntry? entry,
+    PatinaResult patinaResult,
+    TraitResult traitResult,
+  ) {
+    // Always render a sigil — `SigilAvatar` falls back to
+    // `SigilGenerator.generate(nodeNum)` when `sigil` is null, so a
+    // peer with no stored NodeDex entry yet (brand-new install, just-
+    // discovered peer) still gets the constellation pattern. Matches
+    // every other call site in the codebase.
+    return SigilAvatar(
+      sigil: entry?.sigil,
+      nodeNum: peerNodeId,
+      size: 48,
+      evolution: SigilEvolution.fromPatina(
+        patinaResult.score,
+        trait: traitResult.primary,
+      ),
+    );
+  }
+
+  Future<void> _onBlock(BuildContext context, WidgetRef ref) async {
+    // Capture every ref-derived reference before the first await.
+    // This avoids any "ref used after await without mounted check"
+    // class of bug — ref is a long-lived ConsumerWidget handle, but
+    // the lint rule is mechanical and flags any post-await read.
+    ref.read(hapticServiceProvider).trigger(HapticType.heavy);
+    final manager = ref.read(peerSafetyManagerProvider.notifier);
+    final protocol = ref.read(protocolServiceProvider);
+    final l10n = context.l10n;
+    final confirmed = await AppBottomSheet.showConfirm(
+      context: context,
+      title: l10n.sipHubBlockConfirmTitle,
+      message: l10n.sipHubBlockConfirmBody,
+      confirmLabel: l10n.sipHubBlockConfirmAction,
+      cancelLabel: l10n.sipHubBlockConfirmCancel,
+      isDestructive: true,
+    );
+    if (confirmed != true) return;
+
+    AppLogging.sip(
+      'SIP_HUB: Block confirmed for '
+      'peer=0x${peerNodeId.toRadixString(16)} — silent drop, '
+      'no HS_DECLINE',
+    );
+    // Persist the block first so any in-flight or retransmitted
+    // HELLO from this peer hits the protocol-layer safety gate
+    // and is silently dropped before reaching consent UI again.
+    await manager.block(peerNodeId, reasonCode: 'consent_block');
+    // Silently clear the pending consent prompt without sending
+    // HS_DECLINE — the peer must see no wire-level confirmation
+    // that we exist or saw the request.
+    protocol.cancelSipHandshake(peerNodeId);
+  }
+}
+
+/// Pulsing dot indicator used on the incoming-request card to convey that
+/// the request is live and time-sensitive (matches the Signals banner).
+class _LivePulseDot extends StatefulWidget {
+  final Color color;
+
+  const _LivePulseDot({required this.color});
+
+  @override
+  State<_LivePulseDot> createState() => _LivePulseDotState();
+}
+
+class _LivePulseDotState extends State<_LivePulseDot>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+    _animation = Tween<double>(
+      begin: 0.5,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+    _controller.repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, _) {
+        return Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: widget.color,
+            boxShadow: [
+              BoxShadow(
+                color: widget.color.withValues(alpha: _animation.value * 0.6),
+                blurRadius: 8 * _animation.value,
+                spreadRadius: 2 * _animation.value,
               ),
             ],
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -881,14 +1205,18 @@ class _PeerTileState extends ConsumerState<_PeerTile>
                       ),
                       const SizedBox(height: AppTheme.spacing6),
 
-                      // Status row: handshake state + last seen
-                      Row(
+                      // Status row: handshake state + last seen.
+                      // Wrap so long labels (e.g. "Could not connect")
+                      // can flow to a second line on narrow screens
+                      // instead of overflowing the row.
+                      Wrap(
+                        spacing: AppTheme.spacing8,
+                        runSpacing: AppTheme.spacing4,
                         children: [
                           _HandshakeChip(
                             state: hsState,
                             hasDmSession: hasDmSession,
                           ),
-                          const SizedBox(width: AppTheme.spacing8),
                           _LastSeenChip(lastSeenMs: widget.peer.lastSeenMs),
                         ],
                       ),
@@ -898,10 +1226,6 @@ class _PeerTileState extends ConsumerState<_PeerTile>
                     ],
                   ),
                 ),
-
-                // Dev-only: Overlay v0.2 link opener. Only visible
-                // when OVERLAY_LINK_ENABLED=true in .env.
-                _OverlayLinkDevAction(peer: widget.peer),
 
                 // Chevron — chat icon when DM session exists
                 const SizedBox(width: AppTheme.spacing4),
@@ -928,29 +1252,18 @@ class _PeerTileState extends ConsumerState<_PeerTile>
     PatinaResult patinaResult,
     TraitResult traitResult,
   ) {
-    if (entry?.sigil != null) {
-      return SigilAvatar(
-        sigil: entry!.sigil,
-        nodeNum: widget.peer.nodeId,
-        size: 48,
-        evolution: SigilEvolution.fromPatina(
-          patinaResult.score,
-          trait: traitResult.primary,
-        ),
-      );
-    }
-
-    return Container(
-      width: 48,
-      height: 48,
-      decoration: BoxDecoration(
-        color: context.accentColor.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      child: Icon(
-        Icons.sensors,
-        size: 24,
-        color: context.accentColor.withValues(alpha: 0.7),
+    // Always render a sigil — `SigilAvatar` falls back to
+    // `SigilGenerator.generate(nodeNum)` when `sigil` is null, so a
+    // peer with no stored NodeDex entry yet (brand-new install, just-
+    // discovered peer) still gets the constellation pattern. Matches
+    // every other call site in the codebase.
+    return SigilAvatar(
+      sigil: entry?.sigil,
+      nodeNum: widget.peer.nodeId,
+      size: 48,
+      evolution: SigilEvolution.fromPatina(
+        patinaResult.score,
+        trait: traitResult.primary,
       ),
     );
   }
@@ -1220,17 +1533,23 @@ class _ConversationTile extends ConsumerWidget {
           border: Border.all(color: context.border),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(AppTheme.spacing14),
+          padding: const EdgeInsets.all(AppTheme.spacing12),
           child: Row(
+            // Avatar top-aligned with the first text row, matching
+            // Nodes screen + NodeDex card convention. Default Row
+            // alignment is `center`, which floats the sigil halfway
+            // down the card and made the layout feel airy.
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Avatar with evolution
               _buildAvatar(context, entry, patinaResult, traitResult),
-              const SizedBox(width: AppTheme.spacing14),
+              const SizedBox(width: AppTheme.spacing12),
 
               // Name + last message + badges
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     // Name row with timestamp
                     Row(
@@ -1259,25 +1578,25 @@ class _ConversationTile extends ConsumerWidget {
                           ),
                       ],
                     ),
-                    const SizedBox(height: AppTheme.spacing4),
-
-                    // Last message preview or empty hint
-                    Text(
-                      lastMessage != null
-                          ? lastMessage.text
-                          : l10n.sipHubNoMessages,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: lastMessage != null
-                            ? context.textSecondary
-                            : context.textTertiary,
-                        fontStyle: lastMessage != null
-                            ? FontStyle.normal
-                            : FontStyle.italic,
+                    // Last message preview — only when there IS a
+                    // message. The italic "No messages yet" line was
+                    // adding a near-invisible row of vertical space
+                    // that made empty conversations look bloated;
+                    // dropping it tightens the card without losing
+                    // information (the Connected badge below already
+                    // signals the conversation exists).
+                    if (lastMessage != null) ...[
+                      const SizedBox(height: AppTheme.spacing4),
+                      Text(
+                        _previewForLastMessage(context, lastMessage),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: context.textSecondary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                    ],
                     const SizedBox(height: AppTheme.spacing6),
 
                     // Session badges row
@@ -1287,7 +1606,6 @@ class _ConversationTile extends ConsumerWidget {
                       children: [
                         _buildConnectedBadge(context, l10n),
                         _buildSessionBadge(context, l10n),
-                        if (session.isPinned) _buildPinnedBadge(context, l10n),
                       ],
                     ),
                   ],
@@ -1314,29 +1632,18 @@ class _ConversationTile extends ConsumerWidget {
     PatinaResult patinaResult,
     TraitResult traitResult,
   ) {
-    if (entry?.sigil != null) {
-      return SigilAvatar(
-        sigil: entry!.sigil,
-        nodeNum: session.peerNodeId,
-        size: 48,
-        evolution: SigilEvolution.fromPatina(
-          patinaResult.score,
-          trait: traitResult.primary,
-        ),
-      );
-    }
-
-    return Container(
-      width: 48,
-      height: 48,
-      decoration: BoxDecoration(
-        color: context.accentColor.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      child: Icon(
-        Icons.chat_bubble_outline,
-        size: 22,
-        color: context.accentColor.withValues(alpha: 0.7),
+    // Always render a sigil — `SigilAvatar` falls back to
+    // `SigilGenerator.generate(nodeNum)` when `sigil` is null, so a
+    // peer with no stored NodeDex entry yet (brand-new install, just-
+    // discovered peer) still gets the constellation pattern. Matches
+    // every other call site in the codebase.
+    return SigilAvatar(
+      sigil: entry?.sigil,
+      nodeNum: session.peerNodeId,
+      size: 48,
+      evolution: SigilEvolution.fromPatina(
+        patinaResult.score,
+        trait: traitResult.primary,
       ),
     );
   }
@@ -1368,34 +1675,6 @@ class _ConversationTile extends ConsumerWidget {
           Text(
             timeText,
             style: TextStyle(fontSize: 10, color: context.textTertiary),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPinnedBadge(BuildContext context, dynamic l10n) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppTheme.spacing6,
-        vertical: AppTheme.spacing2,
-      ),
-      decoration: BoxDecoration(
-        color: context.accentColor.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(AppTheme.radius6),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.push_pin, size: 11, color: context.accentColor),
-          const SizedBox(width: AppTheme.spacing4),
-          Text(
-            l10n.sipHubSessionPinned,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w500,
-              color: context.accentColor,
-            ),
           ),
         ],
       ),
@@ -1454,6 +1733,41 @@ class _ConversationTile extends ConsumerWidget {
         node?.displayName ??
         entry?.lastKnownName ??
         NodeDisplayNameResolver.defaultName(nodeId);
+  }
+
+  // Conversation card preview line. Text entries render their body
+  // verbatim; non-text entries (sketches, signal envelopes, play
+  // envelopes) carry no plaintext, so the bare `entry.text` was
+  // empty and produced a hollow row beneath the peer name. Substitute
+  // a localised emoji label per content type. For signal we peek the
+  // envelope's `signalKind` byte directly (offset 1) rather than
+  // running the full codec — the preview only needs a coarse label
+  // and we want to stay safe on truncated/malformed payloads.
+  static String _previewForLastMessage(
+    BuildContext context,
+    SipDmHistoryEntry entry,
+  ) {
+    final l10n = context.l10n;
+    switch (entry.contentType) {
+      case SipDmContentType.text:
+        return entry.text;
+      case SipDmContentType.ink:
+        return l10n.sipDmInkReplyPlaceholder;
+      case SipDmContentType.signal:
+        final payload = entry.payload;
+        if (payload != null && payload.length > 1) {
+          final kind = SipSignalKind.fromCode(payload[1]);
+          if (kind == SipSignalKind.phrase) {
+            return l10n.sipDmConversationPreviewPhrase;
+          }
+          if (kind == SipSignalKind.morse) {
+            return l10n.sipDmConversationPreviewMorse;
+          }
+        }
+        return l10n.sipDmSignalReplyPlaceholder;
+      case SipDmContentType.play:
+        return l10n.sipDmConversationPreviewGame;
+    }
   }
 }
 
@@ -1674,57 +1988,233 @@ class _ShimmerPeerPlaceholderState extends State<_ShimmerPeerPlaceholder>
 }
 
 // =============================================================================
-// Overlay v0.2 dev-only link opener (inline on peer tile)
+// Blocked peers section — collapsed by default, exposes Unblock only.
+//
+// Hard rules (Phase 10):
+//   - Render-layer only: building this section MUST NOT mutate any
+//     protocol or session state. The tiles read from
+//     blockedPeerNodeIdsProvider + nodeDexEntryProvider, nothing else.
+//   - Unblock is gated by an AppBottomSheet.showConfirm sheet so the
+//     user has a chance to review the consequence before the safety
+//     gate re-opens.
+//   - The section auto-hides when blockedPeerNodeIds is empty, so a
+//     freshly-installed app or a cleared block list never shows the
+//     header.
 // =============================================================================
 
-/// Dev-only IconButton that calls [OverlayLinkEngine.openLocal] against
-/// the tile's peer. Renders only when `OVERLAY_LINK_ENABLED=true` in
-/// `.env`. The IconButton absorbs taps so the surrounding `BouncyTap`
-/// does not also trigger a handshake.
-class _OverlayLinkDevAction extends ConsumerWidget {
-  final SipPeerCapability peer;
+class _BlockedPeersSection extends ConsumerWidget {
+  final List<int> blockedPeerNodeIds;
 
-  const _OverlayLinkDevAction({required this.peer});
+  const _BlockedPeersSection({required this.blockedPeerNodeIds});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Debug-only diagnostic. Production builds auto-open the overlay
-    // link from _autoOpenOverlayLink after handshake completion, so no
-    // user-facing control is needed. Delete this widget once auto-open
-    // has been verified stable in the field.
-    if (!kDebugMode) return const SizedBox.shrink();
-    final flags = ref.watch(overlayFlagProvider);
-    if (!flags.linkEnabled) return const SizedBox.shrink();
+    final l10n = context.l10n;
+    return Container(
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+        border: Border.all(color: context.border.withValues(alpha: 0.4)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Theme(
+        data: Theme.of(context).copyWith(
+          dividerColor: Colors.transparent,
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+          hoverColor: Colors.transparent,
+        ),
+        child: ExpansionTile(
+          // initiallyExpanded false per spec — section is collapsed
+          // by default to avoid drawing attention to blocked peers
+          // every time the user opens SIP Hub.
+          tilePadding: const EdgeInsets.symmetric(
+            horizontal: AppTheme.spacing16,
+            vertical: AppTheme.spacing4,
+          ),
+          childrenPadding: const EdgeInsets.fromLTRB(
+            AppTheme.spacing12,
+            0,
+            AppTheme.spacing12,
+            AppTheme.spacing12,
+          ),
+          iconColor: context.textSecondary,
+          collapsedIconColor: context.textSecondary,
+          leading: Icon(
+            Icons.block,
+            color: SemanticColors.error.withValues(alpha: 0.7),
+            size: 20,
+          ),
+          title: Row(
+            children: [
+              Text(
+                l10n.sipHubSectionBlocked,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: context.textPrimary,
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing6),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.spacing6,
+                  vertical: 1,
+                ),
+                decoration: BoxDecoration(
+                  color: context.background,
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
+                ),
+                child: Text(
+                  '${blockedPeerNodeIds.length}',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: context.textTertiary,
+                    fontFamily: AppTheme.fontFamily,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: AppTheme.spacing2),
+            child: Text(
+              l10n.sipHubBlockedEmptySubtitle,
+              style: TextStyle(fontSize: 12, color: context.textTertiary),
+            ),
+          ),
+          children: [
+            for (final nodeId in blockedPeerNodeIds)
+              _BlockedPeerTile(peerNodeId: nodeId),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
-    return IconButton(
-      icon: const Icon(Icons.link, size: 18),
-      tooltip: 'Open Overlay Link (dev)', // lint-allow: hardcoded-string
-      visualDensity: VisualDensity.compact,
-      color: AccentColors.teal,
-      onPressed: () => _openLink(context, ref),
+class _BlockedPeerTile extends ConsumerWidget {
+  final int peerNodeId;
+
+  const _BlockedPeerTile({required this.peerNodeId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final entry = ref.watch(nodeDexEntryProvider(peerNodeId));
+    final nodes = ref.watch(nodesProvider);
+    final node = nodes[peerNodeId];
+    final displayName =
+        entry?.localNickname ??
+        entry?.sipDisplayName ??
+        node?.displayName ??
+        entry?.lastKnownName ??
+        NodeDisplayNameResolver.defaultName(peerNodeId);
+    final hexId =
+        '!${peerNodeId.toRadixString(16).toUpperCase().padLeft(4, '0')}';
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing4),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: SemanticColors.error.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(AppTheme.radius8),
+            ),
+            child: Icon(
+              Icons.block,
+              color: SemanticColors.error.withValues(alpha: 0.7),
+              size: 18,
+            ),
+          ),
+          const SizedBox(width: AppTheme.spacing12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        displayName,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: context.textPrimary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: AppTheme.spacing6),
+                    Text(
+                      hexId,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: context.textTertiary,
+                        fontFamily: AppTheme.fontFamily,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppTheme.spacing2),
+                Text(
+                  l10n.sipHubBlockedPeerSubtitle,
+                  style: TextStyle(fontSize: 11, color: context.textTertiary),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppTheme.spacing8),
+          OutlinedButton(
+            onPressed: () => _onUnblock(context, ref),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size(0, 32),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spacing12,
+              ),
+              foregroundColor: AccentColors.green,
+              side: BorderSide(
+                color: AccentColors.green.withValues(alpha: 0.6),
+              ),
+            ),
+            child: Text(
+              l10n.sipHubUnblockAction,
+              style: const TextStyle(fontSize: 12),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Future<void> _openLink(BuildContext context, WidgetRef ref) async {
+  Future<void> _onUnblock(BuildContext context, WidgetRef ref) async {
+    // Capture every ref-derived reference before the first await —
+    // satisfies the async-safety lint and keeps the unblock path
+    // robust against widget unmount mid-confirm.
     ref.read(hapticServiceProvider).trigger(HapticType.medium);
-    try {
-      final engine = await ref.read(overlayLinkEngineProvider.future);
-      final hint = Uint8List(8);
-      ByteData.view(hint.buffer).setUint32(0, peer.nodeId);
-      final record = await engine.openLocal(
-        peerPersonaHint: hint,
-        peerNodeNum: peer.nodeId,
-      );
-      if (!context.mounted) return;
-      showInfoSnackBar(
-        context,
-        // lint-allow: hardcoded-string
-        'Overlay link opening: 0x${record.linkId.toRadixString(16)}',
-      );
-    } catch (e) {
-      if (!context.mounted) return;
-      // lint-allow: hardcoded-string
-      showErrorSnackBar(context, 'Overlay link failed: $e');
-    }
+    final manager = ref.read(peerSafetyManagerProvider.notifier);
+    final l10n = context.l10n;
+    final confirmed = await AppBottomSheet.showConfirm(
+      context: context,
+      title: l10n.sipHubUnblockConfirmTitle,
+      message: l10n.sipHubUnblockConfirmBody,
+      confirmLabel: l10n.sipHubUnblockConfirmAction,
+      cancelLabel: l10n.sipHubUnblockConfirmCancel,
+      // Unblocking is non-destructive — it re-opens the safety gate
+      // and restores the peer's ability to reach the user. The
+      // confirm sheet exists for review, not warning.
+      isDestructive: false,
+    );
+    if (confirmed != true) return;
+    AppLogging.sip(
+      'SIP_HUB: Unblock confirmed for '
+      'peer=0x${peerNodeId.toRadixString(16)}',
+    );
+    await manager.unblock(peerNodeId);
   }
 }

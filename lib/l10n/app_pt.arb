@@ -4311,11 +4311,11 @@
   "@appearanceTimeFormat24hDesc": {
     "description": "Time format option description (example)"
   },
-  "appearanceTimeFormatSystem": "Padr\u00e3o do sistema",
+  "appearanceTimeFormatSystem": "Padrão do sistema",
   "@appearanceTimeFormatSystem": {
     "description": "Time format option name"
   },
-  "appearanceTimeFormatSystemDesc": "Seguir a configura\u00e7\u00e3o de rel\u00f3gio do dispositivo",
+  "appearanceTimeFormatSystemDesc": "Seguir a configuração de relógio do dispositivo",
   "@appearanceTimeFormatSystemDesc": {
     "description": "Time format option description"
   },
@@ -9266,6 +9266,14 @@
   "@debugScreenDeviceLogsTitle": {
     "description": "Screen title"
   },
+  "debugScreenDeviceNothingToCopy": "Nenhum log do dispositivo para copiar",
+  "@debugScreenDeviceNothingToCopy": {
+    "description": "Snackbar shown when copy is tapped but the device log buffer is empty"
+  },
+  "debugScreenDeviceNothingToShare": "Nenhum log do dispositivo para compartilhar",
+  "@debugScreenDeviceNothingToShare": {
+    "description": "Snackbar shown when share is tapped but the device log buffer is empty"
+  },
   "debugScreenDeviceSearchHint": "Buscar nos logs...",
   "@debugScreenDeviceSearchHint": {
     "description": "Device log search field hint text"
@@ -9335,6 +9343,14 @@
   "debugScreenNoLogEntries": "Nenhuma entrada de log",
   "@debugScreenNoLogEntries": {
     "description": "Empty state title when no logs"
+  },
+  "debugScreenNothingToCopy": "Nenhum log para copiar",
+  "@debugScreenNothingToCopy": {
+    "description": "Snackbar shown when copy is tapped but the log buffer is empty"
+  },
+  "debugScreenNothingToShare": "Nenhum log para compartilhar",
+  "@debugScreenNothingToShare": {
+    "description": "Snackbar shown when share is tapped but the log buffer is empty"
   },
   "debugScreenSearchLogsHint": "Buscar nos logs...",
   "@debugScreenSearchLogsHint": {
@@ -16023,9 +16039,9 @@
     "description": "Help bubble text for step signals_proximity"
   },
   "helpSipHubHandshakeBubble": "Quando vir um par, toque em **Handshake** para trocar identidade. Após o handshake pode abrir um **DM encriptado de ponta a ponta** — sem servidores, sem contas.",
-  "helpSipHubIntroBubble": "Bem-vindo ao **Socialmesh**! Este é o seu hub de descoberta de pares. Dispositivos próximos com Socialmesh aparecem aqui quando emitem sinais ou respondem a uma chamada.",
-  "helpSipHubOverviewDescription": "Descubra e converse com pares Socialmesh próximos",
-  "helpSipHubOverviewTitle": "Socialmesh",
+  "helpSipHubIntroBubble": "Bem-vindo ao **Handshake**! Este é o seu hub de descoberta de pares. Dispositivos próximos com Handshake aparecem aqui quando emitem sinais ou respondem a uma chamada.",
+  "helpSipHubOverviewDescription": "Descubra e converse com pares Handshake próximos",
+  "helpSipHubOverviewTitle": "Handshake",
   "helpSipHubPrivacyBubble": "Toda a descoberta é **anónima por padrão**. Os pares apenas revelam um ID ambiente rotativo de 4 bytes até que concordem mutuamente com um handshake.",
   "helpSipHubScanBubble": "Toque no **ícone de pesquisa** para enviar um pedido de chamada. Os pares próximos responderão em segundos. A pesquisa automática dispara a cada 60 segundos em segundo plano.",
   "helpTakAffiliationsBubble": "Cada entidade é colorida pela **afiliação padrão** — azul para amigo, vermelho para hostil, verde para neutro, amarelo para desconhecido. O ícone muda por dimensão também: terra, ar, mar ou espaço.",
@@ -20487,6 +20503,14 @@
   "@mqttConfigSaved": {
     "description": "Text displayed in MQTT configuration"
   },
+  "mqttProxyBannerNotConnectedTitle": "Proxy MQTT não conectado",
+  "@mqttProxyBannerNotConnectedTitle": {
+    "description": "Status banner title when client proxy is enabled but the bridge is not connected to the broker"
+  },
+  "mqttProxyBannerNotConnectedHint": "O app não conseguiu acessar o broker. Verifique o diagnóstico abaixo para o último erro.",
+  "@mqttProxyBannerNotConnectedHint": {
+    "description": "Status banner body shown when the client proxy bridge is not connected and there is no specific error to display"
+  },
   "mqttConfigSectionAuth": "AUTENTICAÇÃO",
   "@mqttConfigSectionAuth": {
     "description": "Text displayed in MQTT configuration"
@@ -24183,7 +24207,8 @@
     },
     "description": "Text in node management Parameters: {relative}."
   },
-  "nodedexLastSeen": "Último avistamento",
+  "nodedexLastSeen": "Último encontro",
+  "nodedexLastHeard": "Último sinal",
   "@nodedexLastSeen": {
     "description": "Text displayed in node management"
   },
@@ -24199,7 +24224,7 @@
     },
     "description": "Text in node management Parameters: {date} = formatted date/time, {time} = formatted date/time."
   },
-  "nodedexLastSeenStatLabel": "Última visão",
+  "nodedexLastSeenStatLabel": "Último encontro",
   "@nodedexLastSeenStatLabel": {
     "description": "Label in node management"
   },
@@ -24822,7 +24847,7 @@
   "@nodedexSortFirstDiscovered": {
     "description": "Text displayed in node management"
   },
-  "nodedexSortLastSeen": "Último avistamento",
+  "nodedexSortLastSeen": "Último encontro",
   "@nodedexSortLastSeen": {
     "description": "Text displayed in node management"
   },
@@ -25683,7 +25708,7 @@
   "notificationSipHandshakeRequestBody": "{peerName} quer iniciar uma conversa privada.",
   "notificationSipHandshakeRequestTitle": "Pedido de Chat",
   "notificationSipHandshakeTitle": "Chat Seguro Pronto",
-  "notificationSipPeerFoundBody": "Um par Socialmesh está ao alcance. Abra o Mesh Explorer para ligar.",
+  "notificationSipPeerFoundBody": "Um par Handshake está ao alcance. Abra o Handshake para ligar.",
   "notificationSipPeerFoundTitle": "Par encontrado nas proximidades",
   "offlineQueueMaxRetries": "Máximo de tentativas atingido: {error}",
   "@offlineQueueMaxRetries": {
@@ -28261,10 +28286,6 @@
   "@radioConfigRegionAnz": {
     "description": "UI text: radio config region anz"
   },
-  "radioConfigRegionChina": "China",
-  "@radioConfigRegionChina": {
-    "description": "UI text: radio config region china"
-  },
   "radioConfigRegionEu433": "UE 433",
   "@radioConfigRegionEu433": {
     "description": "UI text: radio config region eu433"
@@ -28272,18 +28293,6 @@
   "radioConfigRegionEu868": "UE 868",
   "@radioConfigRegionEu868": {
     "description": "UI text: radio config region eu868"
-  },
-  "radioConfigRegionIndia": "Índia",
-  "@radioConfigRegionIndia": {
-    "description": "UI text: radio config region india"
-  },
-  "radioConfigRegionJapan": "Japão",
-  "@radioConfigRegionJapan": {
-    "description": "UI text: radio config region japan"
-  },
-  "radioConfigRegionKorea": "Coreia",
-  "@radioConfigRegionKorea": {
-    "description": "UI text: radio config region korea"
   },
   "radioConfigRegionLora24": "LoRa 2.4GHz",
   "@radioConfigRegionLora24": {
@@ -28305,33 +28314,9 @@
   "@radioConfigRegionNz865": {
     "description": "UI text: radio config region nz865"
   },
-  "radioConfigRegionRussia": "Rússia",
-  "@radioConfigRegionRussia": {
-    "description": "UI text: radio config region russia"
-  },
   "radioConfigRegionSelectHint": "Selecione a região correspondente às regulamentações do seu país",
   "@radioConfigRegionSelectHint": {
     "description": "Input field hint text"
-  },
-  "radioConfigRegionSingapore": "Singapura",
-  "@radioConfigRegionSingapore": {
-    "description": "UI text: radio config region singapore"
-  },
-  "radioConfigRegionTaiwan": "Taiwan",
-  "@radioConfigRegionTaiwan": {
-    "description": "UI text: radio config region taiwan"
-  },
-  "radioConfigRegionThailand": "Tailândia",
-  "@radioConfigRegionThailand": {
-    "description": "UI text: radio config region thailand"
-  },
-  "radioConfigRegionUkraine433": "Ucrânia 433",
-  "@radioConfigRegionUkraine433": {
-    "description": "UI text: radio config region ukraine433"
-  },
-  "radioConfigRegionUkraine868": "Ucrânia 868",
-  "@radioConfigRegionUkraine868": {
-    "description": "UI text: radio config region ukraine868"
   },
   "radioConfigRegionUnset": "Não definida",
   "@radioConfigRegionUnset": {
@@ -29878,10 +29863,6 @@
   "@scannerEnableAutoReconnectTitle": {
     "description": "Title of the confirmation sheet for enabling auto-reconnect."
   },
-  "scannerEnableBluetoothHint": "Verifique se o Bluetooth está ativado e se seu dispositivo Meshtastic está ligado",
-  "@scannerEnableBluetoothHint": {
-    "description": "Helper text shown below the looking-for-devices message."
-  },
   "scannerEnableLabel": "Ativar",
   "@scannerEnableLabel": {
     "description": "Confirm label for the enable auto-reconnect sheet."
@@ -29893,10 +29874,6 @@
   "scannerGattConnectionFailed": "Falha na conexão. Isso pode acontecer se o dispositivo foi pareado anteriormente com outro app. Vá em Ajustes > Bluetooth, encontre o dispositivo Meshtastic, toque em \"Esquecer\" e tente novamente.",
   "@scannerGattConnectionFailed": {
     "description": "User-friendly error message for GATT_ERROR 133 or discovery failed BLE errors."
-  },
-  "scannerLookingForDevices": "Procurando dispositivos…",
-  "@scannerLookingForDevices": {
-    "description": "Large text shown when scan is not active and no devices are listed."
   },
   "scannerMeshCoreConnectionFailed": "Falha na conexão MeshCore",
   "@scannerMeshCoreConnectionFailed": {
@@ -29948,15 +29925,6 @@
   "@scannerScanningTitle": {
     "description": "Banner title shown while actively scanning for BLE devices."
   },
-  "scannerTipNoOtherApps": "Verifique se nenhum outro app (ex. app oficial Meshtastic) está conectado ao dispositivo",
-  "@scannerTipNoOtherApps": {
-    "description": "Troubleshooting tip: check no other apps are using the BLE connection."
-  },
-  "scannerTipNoOtherDevices": "Verifique se nenhum outro telefone ou tablet já está conectado ao dispositivo via Bluetooth",
-  "@scannerTipNoOtherDevices": {
-    "description": "Troubleshooting tip: check no other phones/tablets are paired."
-  },
-
   "scannerShowAllBleDevices": "Mostrar todos os dispositivos BLE",
   "@scannerShowAllBleDevices": {
     "description": "Text displayed in BLE scanner"
@@ -33255,13 +33223,14 @@
   "sipAutoScanDisabled": "Pesquisa automática desativada",
   "sipAutoScanEnabled": "Pesquisa automática ativada",
   "sipAutoScanToggle": "Pesquisa automática",
-  "sipBadgeLabel": "Socialmesh",
+  "sipScanNow": "Pesquisar agora",
+  "sipBadgeLabel": "Handshake",
   "sipChangedKeyWarning": "A chave de identidade deste par mudou. Verifique antes de confiar.",
   "sipConnecting": "A ligar…",
   "sipCountersTitle": "Contadores de Debug SIP",
   "sipDiscoveryDeviceClass": "Classe do dispositivo: {deviceClass}",
   "sipDiscoveryNoPeers": "Nenhum par Socialmesh detetado",
-  "sipDiscoveryNoPeersDescription": "Pares Socialmesh aparecerão aqui quando detetados via beacon ou chamada.",
+  "sipDiscoveryNoPeersDescription": "Pares Handshake aparecerão aqui quando detetados via beacon ou chamada.",
   "sipDiscoveryPeerAnonymous": "Par SIP",
   "sipDiscoveryPeersNearby": "{count} {count, plural, =1{par} other{pares}} Socialmesh por perto",
   "sipDiscoveryScanButton": "Pesquisar Socialmesh",
@@ -33282,44 +33251,42 @@
   "sipDmMessageCopied": "Mensagem copiada",
   "sipDmOpenAction": "Abrir DM",
   "sipDmPeerName": "Par {hexId}",
-  "sipDmPinAction": "Fixar Sessão",
-  "sipDmPinned": "Sessão fixada",
   "sipDmReplyingTo": "A responder a",
   "sipDmSendButton": "Enviar",
   "sipDmSessionClosed": "Esta sessão foi encerrada.",
   "sipDmSwipeToReply": "Deslize para responder",
   "sipDmTitle": "DM Efémero",
-  "sipDmUnpinAction": "Desafixar Sessão",
   "sipHandshakeAction": "Handshake",
   "sipHandshakeComplete": "Handshake concluído",
   "sipHandshakeFailed": "Handshake falhou",
   "sipHandshakeInProgress": "Handshake em progresso…",
-  "sipHandshakePendingLabel": "Pedido Pendente",
+  "sipHandshakePendingLabel": "Quer conectar-se",
   "sipHubAccept": "Aceitar",
   "sipHubConnected": "Ligado",
   "sipHubDecline": "Recusar",
-  "sipHubEmptyDescription": "Toque em Pesquisar para procurar outros utilizadores Socialmesh na mesh.",
-  "sipHubEmptyTitle": "Sem pares por perto",
+  "sipHubEmptyDescription": "Toque em Procurar pessoas para enviar uma chamada aos outros utilizadores Handshake na tua mesh. Qualquer pessoa ao alcance com a app aberta responde em poucos segundos.",
+  "sipHubEmptyTitle": "À procura de vizinhos",
   "sipHubHandshaking": "A fazer handshake…",
   "sipHubHelp": "Ajuda",
   "sipHubIncomingRequestFrom": "{peerName} quer ligar-se",
+  "sipHubIncomingRequestWantsToConnect": "quer ligar-se",
+  "sipHubIncomingRequestLiveLabel": "Em direto",
   "sipHubLastSeen": "Visto {time}",
   "sipHubMessagePreview": "{name}: {message}",
   "sipHubNoMessages": "Sem mensagens ainda",
   "sipHubReady": "Pronto para conversar",
-  "sipHubScanningTagline1": "Escuta beacons Socialmesh na mesh rádio",
-  "sipHubScanningTagline2": "Toque em Pesquisar para enviar uma chamada — ativa pares próximos",
-  "sipHubScanningTagline3": "Os pares respondem anonimamente — sem conta necessária",
-  "sipHubScanningTagline4": "Encontrou um? Inicie um handshake para começar a conversar",
-  "sipHubScanningTitleKeyword": "próximos",
-  "sipHubScanningTitlePrefix": "Sem pares ",
+  "sipHubScanningTagline1": "À escuta na tua mesh por outros utilizadores Handshake.\nMantém o nó ligado e os pares próximos vão aparecer aqui.",
+  "sipHubScanningTagline2": "Toque em Procurar pessoas para enviar uma chamada rápida.\nOs utilizadores Handshake próximos costumam responder em poucos segundos.",
+  "sipHubScanningTagline3": "Os pares aparecem automaticamente quando os seus beacons\nchegam ao teu nó — não precisas de tocar em nada para os encontrar.",
+  "sipHubScanningTagline4": "A descoberta funciona enquanto a app estiver aberta e o nó ativo.\nMove-te ou volta a procurar se não houver ninguém por agora.",
+  "sipHubScanningTitleKeyword": "vizinhos",
+  "sipHubScanningTitlePrefix": "À procura de ",
   "sipHubScanningTitleSuffix": "",
   "sipHubSectionConversations": "Conversas",
   "sipHubSectionIncomingRequests": "Pedidos Recebidos",
   "sipHubSectionPeers": "Pares Próximos",
   "sipHubSessionExpiry": "Expira em {time}",
-  "sipHubSessionPinned": "Fixado",
-  "sipHubTitle": "Socialmesh",
+  "sipHubTitle": "Handshake",
   "sipIdentityStateChangedKey": "Chave Alterada",
   "sipIdentityStatePinned": "Fixado",
   "sipIdentityStateStale": "Expirado",
@@ -40666,5 +40633,270 @@
       }
     },
     "description": "UI label Parameters: {uptime}."
+  },
+  "sipHubBlock": "Bloquear",
+  "sipHubConsentBody": "Aceitar permite que este nó lhe envie mensagens diretas e esboços criptografados pela rede mesh. Você pode silenciar, bloquear ou remover a conversa a qualquer momento.",
+  "sipHubBlockConfirmTitle": "Bloquear este nó?",
+  "sipHubBlockConfirmBody": "Mensagens futuras e pedidos de handshake deste nó serão descartados silenciosamente. Eles não serão notificados — verão seu nó como inacessível. Você pode desbloqueá-lo depois nas configurações de Segurança.",
+  "sipHubBlockConfirmAction": "Bloquear",
+  "sipHubBlockConfirmCancel": "Cancelar",
+  "meshExplorerBlockConfirmTitle": "Bloquear este nó?",
+  "meshExplorerBlockConfirmBody": "Mensagens futuras e pedidos de handshake deste nó serão descartados silenciosamente. Eles não serão notificados. Você pode desbloqueá-lo depois nas configurações de Segurança.",
+  "sipDmFirstContactBannerTitle": "Primeiro contato",
+  "sipDmFirstContactBannerBody": "Esta é sua primeira conversa com este nó. Aceite mensagens apenas de pessoas em quem confia na rede mesh. Toque para descartar.",
+  "sipDmMenuMute": "Silenciar notificações",
+  "sipDmMenuUnmute": "Reativar notificações",
+  "sipDmMenuBlock": "Bloquear",
+  "sipDmMenuResetSecure": "Reiniciar sessão segura",
+  "sipDmMenuRemove": "Remover conversa",
+  "sipDmBlockConfirmTitle": "Bloquear este nó?",
+  "sipDmBlockConfirmBody": "Mensagens futuras e pedidos de handshake deste nó serão descartados silenciosamente. Eles não serão notificados. Seu histórico de conversas existente permanece neste dispositivo — use Remover conversa para apagá-lo.",
+  "sipDmBlockConfirmAction": "Bloquear",
+  "sipDmResetConfirmTitle": "Reiniciar sessão segura?",
+  "sipDmResetConfirmBody": "Descarta as chaves end-to-end atuais com este nó. A próxima mensagem negociará chaves novas. Seu histórico de mensagens permanece intacto.",
+  "sipDmResetConfirmAction": "Reiniciar",
+  "sipDmRemoveConfirmTitle": "Remover esta conversa?",
+  "sipDmRemoveConfirmBody": "Apaga todas as mensagens desta conversa deste dispositivo. O nó não será notificado e ainda poderá enviar novas mensagens a menos que você também o bloqueie. Esta ação não pode ser desfeita.",
+  "sipDmRemoveConfirmAction": "Remover",
+  "sipDmConfirmCancel": "Cancelar",
+  "sipDmActionMutedSnack": "Notificações silenciadas para esta conversa",
+  "sipDmActionUnmutedSnack": "Notificações reativadas",
+  "sipDmActionResetSnack": "Sessão segura reiniciada — a próxima mensagem negociará chaves novas",
+  "sipHubSectionBlocked": "Bloqueados",
+  "sipHubBlockedEmptySubtitle": "Toque para expandir e revisar quem você bloqueou",
+  "sipHubUnblockAction": "Desbloquear",
+  "sipHubUnblockConfirmTitle": "Desbloquear este nó?",
+  "sipHubUnblockConfirmBody": "Este nó poderá enviar pedidos de handshake, mensagens e esboços novamente. Seu histórico de conversas anteriores com ele não é alterado.",
+  "sipHubUnblockConfirmAction": "Desbloquear",
+  "sipHubUnblockConfirmCancel": "Cancelar",
+  "sipHubBlockedPeerSubtitle": "Tráfego de entrada descartado silenciosamente",
+  "sipDmPeerBlocked": "Você bloqueou este nó — desbloqueie no SIP Hub para enviar mensagens novamente.",
+  "sipDmPeerRateLimited": "Enviando rápido demais — diminua o ritmo por um momento.",
+  "sipSignalSizeBytes": "Sinal • {bytes} B",
+  "sipSignalSizeOverBudget": "Sinal • {bytes} B — grande demais para enviar",
+  "sipSignalToneFull": "{count}/{max} notas • Frase cheia",
+  "sipSignalMorseInputTap": "Tocar",
+  "sipSignalMorseInputType": "Escrever",
+  "sipSignalMorseTapHint": "Toque pontos e traços — Letra finaliza um símbolo, Espaço adiciona uma pausa entre palavras.",
+  "sipSignalMorseTapEmpty": "A mensagem decodificada aparecerá aqui.",
+  "sipSignalMorseTapDecodedLabel": "Decodificado",
+  "sipSignalMorseTapPatternLabel": "Morse",
+  "sipSignalMorseTapDot": "Ponto",
+  "sipSignalMorseTapDash": "Traço",
+  "sipSignalMorseTapLetter": "Letra",
+  "sipSignalMorseTapSpace": "Espaço",
+  "sipSignalMorseTapBackspace": "Voltar",
+  "sipSignalMorseTapInvalidNote": "Sequências desconhecidas aparecem como ? — são ignoradas no envio.",
+  "sipSignalToneExampleCloseEncounters": "Contatos imediatos",
+  "sipSignalToneExampleHint": "Experimente o exemplo",
+  "sipDmSignalReplyPlaceholder": "📡 Sinal",
+  "sipDmConversationPreviewPhrase": "🎵 Tom",
+  "sipDmConversationPreviewMorse": "📡 Morse",
+  "sipDmConversationPreviewGame": "🎮 Jogo",
+  "sipDmComposerSheetTitle": "Compor",
+  "sipDmComposerSheetTooltip": "Abrir opções de composição",
+  "radioConfigPresetLiteFast": "Lite Rápido",
+  "@radioConfigPresetLiteFast": {
+    "description": "Modem preset label: EU 866MHz SRD-compliant lite fast"
+  },
+  "radioConfigPresetLiteFastDesc": "EU 866MHz SRD, rápido",
+  "@radioConfigPresetLiteFastDesc": {
+    "description": "Description for lite fast modem preset"
+  },
+  "radioConfigPresetLiteSlow": "Lite Lento",
+  "@radioConfigPresetLiteSlow": {
+    "description": "Modem preset label: EU 866MHz SRD-compliant lite slow"
+  },
+  "radioConfigPresetLiteSlowDesc": "EU 866MHz SRD, maior alcance",
+  "@radioConfigPresetLiteSlowDesc": {
+    "description": "Description for lite slow modem preset"
+  },
+  "radioConfigPresetNarrowFast": "Estreito Rápido",
+  "@radioConfigPresetNarrowFast": {
+    "description": "Modem preset label: EU 868MHz narrow fast"
+  },
+  "radioConfigPresetNarrowFastDesc": "EU 868MHz estreito, rápido",
+  "@radioConfigPresetNarrowFastDesc": {
+    "description": "Description for narrow fast modem preset"
+  },
+  "radioConfigPresetNarrowSlow": "Estreito Lento",
+  "@radioConfigPresetNarrowSlow": {
+    "description": "Modem preset label: EU 868MHz narrow slow"
+  },
+  "radioConfigPresetNarrowSlowDesc": "EU 868MHz estreito, maior alcance",
+  "@radioConfigPresetNarrowSlowDesc": {
+    "description": "Description for narrow slow modem preset"
+  },
+  "regionSelectionRegionPh433": "Filipinas 433",
+  "@regionSelectionRegionPh433": {
+    "description": "UI text: region selection region Philippines 433MHz"
+  },
+  "regionSelectionRegionPh433Desc": "Filipinas",
+  "@regionSelectionRegionPh433Desc": {
+    "description": "Description text"
+  },
+  "regionSelectionRegionPh433Freq": "433 MHz",
+  "@regionSelectionRegionPh433Freq": {
+    "description": "UI text: region selection region Philippines 433MHz freq"
+  },
+  "regionSelectionRegionPh868": "Filipinas 868",
+  "@regionSelectionRegionPh868": {
+    "description": "UI text: region selection region Philippines 868MHz"
+  },
+  "regionSelectionRegionPh868Desc": "Filipinas",
+  "@regionSelectionRegionPh868Desc": {
+    "description": "Description text"
+  },
+  "regionSelectionRegionPh868Freq": "868 MHz",
+  "@regionSelectionRegionPh868Freq": {
+    "description": "UI text: region selection region Philippines 868MHz freq"
+  },
+  "regionSelectionRegionPh915": "Filipinas 915",
+  "@regionSelectionRegionPh915": {
+    "description": "UI text: region selection region Philippines 915MHz"
+  },
+  "regionSelectionRegionPh915Desc": "Filipinas",
+  "@regionSelectionRegionPh915Desc": {
+    "description": "Description text"
+  },
+  "regionSelectionRegionPh915Freq": "915 MHz",
+  "@regionSelectionRegionPh915Freq": {
+    "description": "UI text: region selection region Philippines 915MHz freq"
+  },
+  "regionSelectionRegionAnz433": "ANZ 433",
+  "@regionSelectionRegionAnz433": {
+    "description": "UI text: region selection region Australia/New Zealand 433MHz"
+  },
+  "regionSelectionRegionAnz433Desc": "Austrália, Nova Zelândia",
+  "@regionSelectionRegionAnz433Desc": {
+    "description": "Description text"
+  },
+  "regionSelectionRegionAnz433Freq": "433 MHz",
+  "@regionSelectionRegionAnz433Freq": {
+    "description": "UI text: region selection region Australia/New Zealand 433MHz freq"
+  },
+  "regionSelectionRegionKz433": "Cazaquistão 433",
+  "@regionSelectionRegionKz433": {
+    "description": "UI text: region selection region Kazakhstan 433MHz"
+  },
+  "regionSelectionRegionKz433Desc": "Cazaquistão",
+  "@regionSelectionRegionKz433Desc": {
+    "description": "Description text"
+  },
+  "regionSelectionRegionKz433Freq": "433 MHz",
+  "@regionSelectionRegionKz433Freq": {
+    "description": "UI text: region selection region Kazakhstan 433MHz freq"
+  },
+  "regionSelectionRegionKz863": "Cazaquistão 863",
+  "@regionSelectionRegionKz863": {
+    "description": "UI text: region selection region Kazakhstan 863MHz"
+  },
+  "regionSelectionRegionKz863Desc": "Cazaquistão",
+  "@regionSelectionRegionKz863Desc": {
+    "description": "Description text"
+  },
+  "regionSelectionRegionKz863Freq": "863 MHz",
+  "@regionSelectionRegionKz863Freq": {
+    "description": "UI text: region selection region Kazakhstan 863MHz freq"
+  },
+  "regionSelectionRegionNp865": "Nepal 865",
+  "@regionSelectionRegionNp865": {
+    "description": "UI text: region selection region Nepal 865MHz"
+  },
+  "regionSelectionRegionNp865Desc": "Nepal",
+  "@regionSelectionRegionNp865Desc": {
+    "description": "Description text"
+  },
+  "regionSelectionRegionNp865Freq": "865 MHz",
+  "@regionSelectionRegionNp865Freq": {
+    "description": "UI text: region selection region Nepal 865MHz freq"
+  },
+  "regionSelectionRegionBr902": "Brasil 902",
+  "@regionSelectionRegionBr902": {
+    "description": "UI text: region selection region Brazil 902MHz"
+  },
+  "regionSelectionRegionBr902Desc": "Brasil",
+  "@regionSelectionRegionBr902Desc": {
+    "description": "Description text"
+  },
+  "regionSelectionRegionBr902Freq": "902 MHz",
+  "@regionSelectionRegionBr902Freq": {
+    "description": "UI text: region selection region Brazil 902MHz freq"
+  },
+  "regionSelectionRegionItu1_2m": "ITU R1 2m",
+  "@regionSelectionRegionItu1_2m": {
+    "description": "UI text: region selection ITU Region 1 Amateur Radio 2m band"
+  },
+  "regionSelectionRegionItu1_2mDesc": "Banda de radioamador 2m da Região 1 da UIT",
+  "@regionSelectionRegionItu1_2mDesc": {
+    "description": "Description text"
+  },
+  "regionSelectionRegionItu1_2mFreq": "144-146 MHz",
+  "@regionSelectionRegionItu1_2mFreq": {
+    "description": "UI text: region selection ITU R1 2m freq"
+  },
+  "regionSelectionRegionItu23_2m": "ITU R2/3 2m",
+  "@regionSelectionRegionItu23_2m": {
+    "description": "UI text: region selection ITU Region 2/3 Amateur Radio 2m band"
+  },
+  "regionSelectionRegionItu23_2mDesc": "Banda de radioamador 2m da Região 2/3 da UIT",
+  "@regionSelectionRegionItu23_2mDesc": {
+    "description": "Description text"
+  },
+  "regionSelectionRegionItu23_2mFreq": "144-148 MHz",
+  "@regionSelectionRegionItu23_2mFreq": {
+    "description": "UI text: region selection ITU R2/3 2m freq"
+  },
+  "regionSelectionRegionEu866": "EU 866",
+  "@regionSelectionRegionEu866": {
+    "description": "UI text: region selection EU 866MHz Short-Range Devices band"
+  },
+  "regionSelectionRegionEu866Desc": "União Europeia 866MHz SRD",
+  "@regionSelectionRegionEu866Desc": {
+    "description": "Description text"
+  },
+  "regionSelectionRegionEu866Freq": "866 MHz",
+  "@regionSelectionRegionEu866Freq": {
+    "description": "UI text: region selection EU 866 freq"
+  },
+  "regionSelectionRegionEu874": "EU 874",
+  "@regionSelectionRegionEu874": {
+    "description": "UI text: region selection EU 874MHz Short-Range Devices band"
+  },
+  "regionSelectionRegionEu874Desc": "União Europeia 874MHz SRD",
+  "@regionSelectionRegionEu874Desc": {
+    "description": "Description text"
+  },
+  "regionSelectionRegionEu874Freq": "874 MHz",
+  "@regionSelectionRegionEu874Freq": {
+    "description": "UI text: region selection EU 874 freq"
+  },
+  "regionSelectionRegionEu917": "EU 917",
+  "@regionSelectionRegionEu917": {
+    "description": "UI text: region selection EU 917MHz Short-Range Devices band"
+  },
+  "regionSelectionRegionEu917Desc": "União Europeia 917MHz SRD",
+  "@regionSelectionRegionEu917Desc": {
+    "description": "Description text"
+  },
+  "regionSelectionRegionEu917Freq": "917 MHz",
+  "@regionSelectionRegionEu917Freq": {
+    "description": "UI text: region selection EU 917 freq"
+  },
+  "regionSelectionRegionEuN868": "EU 868 Estreito",
+  "@regionSelectionRegionEuN868": {
+    "description": "UI text: region selection EU 868MHz band with narrow presets"
+  },
+  "regionSelectionRegionEuN868Desc": "União Europeia 868MHz estreito",
+  "@regionSelectionRegionEuN868Desc": {
+    "description": "Description text"
+  },
+  "regionSelectionRegionEuN868Freq": "868 MHz",
+  "@regionSelectionRegionEuN868Freq": {
+    "description": "UI text: region selection EU 868 narrow freq"
+  },
+  "requiresConnectionGuardReconnectingBanner": "Desconectado — reconectando…",
+  "@requiresConnectionGuardReconnectingBanner": {
+    "description": "Inline banner shown on a node-required screen during the grace window after a brief transport disconnect, while auto-reconnect is attempting recovery."
   }
 }

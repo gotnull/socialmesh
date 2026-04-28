@@ -34,6 +34,8 @@ import 'package:intl/intl.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
+import '../../../providers/app_providers.dart';
+import '../../../utils/timestamp_validation.dart';
 import '../models/nodedex_entry.dart';
 import '../services/patina_score.dart';
 import '../services/trait_engine.dart';
@@ -478,15 +480,30 @@ class _OrnamentLinePainter extends CustomPainter {
   bool shouldRepaint(_OrnamentLinePainter oldDelegate) => false;
 }
 
-class _StatsSection extends StatelessWidget {
+class _StatsSection extends ConsumerWidget {
   final NodeDexEntry entry;
   final double scale;
 
   const _StatsSection({required this.entry, required this.scale});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final dateFormat = DateFormat('dd MMM yyyy');
+
+    // Prefer the live MeshNode.lastHeard when the device still knows
+    // about this node — that's the canonical "any packet receipt"
+    // signal used by the node-detail "Last seen" pill and the nodes
+    // list bucketing. The encounter timestamp on the entry only
+    // updates when presence transitions to active (with cooldown), so
+    // it can lag the radio's last_heard by hours or days; reading the
+    // live node here keeps the album card flush with every other
+    // surface. Falls back to entry.lastSeen for nodes that have
+    // dropped out of the device's NodeDB (collected-but-now-absent).
+    final liveLastHeard = ref.watch(nodesProvider)[entry.nodeNum]?.lastHeard;
+    final canonicalLastSeen =
+        liveLastHeard != null && TimestampValidation.isPlausible(liveLastHeard)
+        ? liveLastHeard
+        : entry.lastSeen;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -513,7 +530,7 @@ class _StatsSection extends StatelessWidget {
         ),
         _StatRow(
           label: context.l10n.nodedexLastSeenStatLabel,
-          value: dateFormat.format(entry.lastSeen),
+          value: dateFormat.format(canonicalLastSeen),
           scale: scale,
         ),
         if (entry.maxDistanceSeen != null && entry.maxDistanceSeen! > 0)

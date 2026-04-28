@@ -130,12 +130,45 @@ void main() {
       expect(json['ln_ms'], equals(1700000000000));
     });
 
-    test('toJson omits localNickname when null', () {
+    test('toJson emits ln=null when cleared so Firestore merge clears it', () {
+      // Regression: when the user clears a nickname, the Firestore sync path
+      // uploads toJson() under SetOptions(merge: true). Firestore deep-merges
+      // nested maps, so a missing key preserves the stale cloud value. The
+      // key must be present with an explicit null to actually clear.
       final entry = makeEntry();
       final json = entry.toJson();
 
-      expect(json.containsKey('ln'), isFalse);
+      expect(json.containsKey('ln'), isTrue);
+      expect(json['ln'], isNull);
       expect(json.containsKey('ln_ms'), isFalse);
+    });
+
+    test('cleared nickname round-trips through Firestore-style merge', () {
+      // Simulates the end-to-end scenario: user sets a nickname, syncs, then
+      // clears it and syncs again. The merged cloud doc must not resurrect
+      // the stale value.
+      final original = makeEntry(
+        localNickname: 'Foo',
+        localNicknameUpdatedAtMs: 1000,
+      );
+      final cleared = original.copyWith(
+        clearLocalNickname: true,
+        localNicknameUpdatedAtMs: 2000,
+      );
+
+      // Firestore-style deep merge of the two payloads (later write wins
+      // per key, nested maps merged recursively).
+      final cloudDoc = <String, dynamic>{...original.toJson()};
+      for (final e in cleared.toJson().entries) {
+        cloudDoc[e.key] = e.value;
+      }
+
+      expect(cloudDoc['ln'], isNull);
+      expect(cloudDoc['ln_ms'], equals(2000));
+
+      final restored = NodeDexEntry.fromJson(cloudDoc);
+      expect(restored.localNickname, isNull);
+      expect(restored.localNicknameUpdatedAtMs, equals(2000));
     });
 
     test('fromJson parses localNickname', () {

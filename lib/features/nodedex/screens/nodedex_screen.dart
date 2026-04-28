@@ -52,6 +52,7 @@ import '../../settings/settings_screen.dart';
 import '../widgets/identity_overlay_painter.dart';
 import '../widgets/patina_stamp.dart';
 import '../widgets/sigil_painter.dart';
+import '../widgets/reticulum_activity_badge.dart';
 import '../widgets/trait_badge.dart';
 import '../widgets/trust_indicator.dart';
 import 'nodedex_detail_screen.dart';
@@ -1080,6 +1081,7 @@ class _NodeDexListTile extends ConsumerWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Sigil avatar
               SigilAvatar(
@@ -1133,6 +1135,8 @@ class _NodeDexListTile extends ConsumerWidget {
                       spacing: AppTheme.spacing4,
                       runSpacing: AppTheme.spacing4,
                       children: [
+                        if (AppFeatureFlags.isReticulumTunnelEnabled)
+                          ReticulumActivityBadge(nodeNum: entry.nodeNum),
                         if (disclosure.showPrimaryTrait)
                           TraitBadge(
                             trait: traitResult.primary,
@@ -1180,7 +1184,8 @@ class _NodeDexListTile extends ConsumerWidget {
                     _DiscoveryAgeBadge(entry: entry),
 
                     // User note preview
-                    if (entry.userNote != null) ...[
+                    if (entry.userNote != null &&
+                        entry.userNote!.trim().isNotEmpty) ...[
                       const SizedBox(height: AppTheme.spacing4),
                       Text(
                         entry.userNote!,

@@ -49,37 +49,41 @@ class _SignalMapViewState extends ConsumerState<SignalMapView>
   /// Programmatically focus on a specific signal: select the preview card
   /// and center/zoom the map to its location.
   void focusOnSignal(Post signal, {double zoom = 15.0}) {
-    if (signal.location == null) return;
+    final location = signal.location;
+    if (location == null) return;
+    final point = safeLatLng(location.latitude, location.longitude);
+    if (point == null) return;
 
     safeSetState(() {
       _selectedSignal = signal;
       _showSignalList = false;
     });
 
-    // Animate/map move to the location
-    _mapController.move(
-      LatLng(signal.location!.latitude, signal.location!.longitude),
-      zoom,
-    );
+    _mapController.safeMove(point, zoom);
   }
 
   List<Post> get _signalsWithLocation =>
       widget.signals.where((s) => s.location != null).toList();
 
   LatLng? get _center {
-    if (widget.initialCenter != null) return widget.initialCenter;
+    final initial = widget.initialCenter;
+    if (isFiniteLatLng(initial)) return initial;
 
-    final withLocation = _signalsWithLocation;
+    final withLocation = _signalsWithLocation
+        .where(
+          (s) =>
+              s.location!.latitude.isFinite && s.location!.longitude.isFinite,
+        )
+        .toList(growable: false);
     if (withLocation.isEmpty) return null;
 
-    // Calculate center from all signals
     double totalLat = 0;
     double totalLng = 0;
     for (final signal in withLocation) {
       totalLat += signal.location!.latitude;
       totalLng += signal.location!.longitude;
     }
-    return LatLng(
+    return safeLatLng(
       totalLat / withLocation.length,
       totalLng / withLocation.length,
     );
@@ -297,11 +301,13 @@ class _SignalMapViewState extends ConsumerState<SignalMapView>
                 _selectedSignal = signal;
                 _showSignalList = false;
               });
-              // Center map on selected signal
-              _mapController.move(
-                LatLng(signal.location!.latitude, signal.location!.longitude),
-                14.0,
-              );
+              final location = signal.location;
+              if (location != null) {
+                _mapController.safeMove(
+                  safeLatLng(location.latitude, location.longitude),
+                  14.0,
+                );
+              }
             },
             onClose: () => setState(() => _showSignalList = false),
           ),
@@ -378,7 +384,12 @@ class _SignalMapViewState extends ConsumerState<SignalMapView>
   }
 
   void _fitAllSignals() {
-    final signals = _signalsWithLocation;
+    final signals = _signalsWithLocation
+        .where(
+          (s) =>
+              s.location!.latitude.isFinite && s.location!.longitude.isFinite,
+        )
+        .toList(growable: false);
     if (signals.isEmpty) return;
 
     double minLat = signals.first.location!.latitude;
@@ -398,18 +409,17 @@ class _SignalMapViewState extends ConsumerState<SignalMapView>
     final latPadding = (maxLat - minLat) * 0.15;
     final lngPadding = (maxLng - minLng) * 0.15;
 
-    final bounds = LatLngBounds(
-      LatLng(minLat - latPadding, minLng - lngPadding),
-      LatLng(maxLat + latPadding, maxLng + lngPadding),
-    );
+    final sw = safeLatLng(minLat - latPadding, minLng - lngPadding);
+    final ne = safeLatLng(maxLat + latPadding, maxLng + lngPadding);
+    if (sw == null || ne == null) return;
 
     final cameraFit = CameraFit.bounds(
-      bounds: bounds,
+      bounds: LatLngBounds(sw, ne),
       padding: const EdgeInsets.all(AppTheme.spacing50),
     );
 
     final camera = cameraFit.fit(_mapController.camera);
-    _mapController.move(camera.center, camera.zoom.clamp(4.0, 16.0));
+    _mapController.safeMove(camera.center, camera.zoom.clamp(4.0, 16.0));
     HapticFeedback.lightImpact();
   }
 }

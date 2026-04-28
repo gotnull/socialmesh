@@ -115,10 +115,14 @@ class PetCareEngine {
 
     // Partial sub-tick between the last event and now — lets sleep/wake
     // edge transitions and call expiry fire even when no full care tick
-    // or stage boundary was crossed.
+    // or stage boundary was crossed. CRITICAL: do NOT bump lastTickAt
+    // here. `lastTickAt` must only advance when a real care tick fires,
+    // otherwise `nextCareTick = lastTickAt + careTickDuration` is pushed
+    // forward by every animation frame and decay never triggers. The
+    // transitions this applies (sleep/wake, call expiry) are idempotent
+    // given current state + now, so re-running them next frame is safe.
     if (now.isAfter(s.lastTickAt)) {
       s = _applyTimeOnlyTransitions(s, now);
-      s = s.copyWith(lastTickAt: now);
     }
     return s;
   }
@@ -236,15 +240,18 @@ class PetCareEngine {
     }
 
     // Call expiry → missed mistake.
+    //
+    // IMPORTANT: `totalCalls` was already incremented when the call
+    // STARTED (see _evaluateAttentionCall). Incrementing again here
+    // would double-count every missed call, deflating
+    // `attentionScore = answeredCalls / totalCalls` and biasing the
+    // adolescent→adult branch resolution away from Luminous.
     final call = next.activeCall;
     if (call != null && call.hasExpired(now)) {
       final acc = next.stageAccumulators;
       next = next.copyWith(
         activeCall: null,
-        stageAccumulators: acc.copyWith(
-          mistakes: acc.mistakes + 1,
-          totalCalls: acc.totalCalls + 1,
-        ),
+        stageAccumulators: acc.copyWith(mistakes: acc.mistakes + 1),
         recentEvents: _appendEvents(next.recentEvents, [
           CareEvent(at: now, kind: CareEventKind.callMissed),
           CareEvent(
@@ -356,12 +363,26 @@ class PetCareEngine {
       config.hygieneMaxOnField,
       state.hygieneArtefacts.length + days,
     );
-    final hygieneArtefacts = List<DateTime>.generate(
-      hygieneCount,
-      (i) => i < state.hygieneArtefacts.length
-          ? state.hygieneArtefacts[i]
-          : state.lastTickAt.add(Duration(days: i + 1)),
-    );
+    // Synthetic artefacts must land between `state.lastTickAt` and
+    // `now` — a previous bug used `i + 1` (full list index) as the
+    // day offset, which pushed high-index synthetics past `now` when
+    // there were pre-existing artefacts. Artefacts dated in the
+    // future never satisfy the stale check, so sickness would never
+    // trigger during catch-up.
+    final existingCount = state.hygieneArtefacts.length;
+    final newCount = hygieneCount - existingCount;
+    final hygieneArtefacts = List<DateTime>.generate(hygieneCount, (i) {
+      if (i < existingCount) return state.hygieneArtefacts[i];
+      // Distribute the `newCount` synthetic artefacts uniformly across
+      // the gap. Day offset = 1..newCount mapped proportionally into
+      // the gap so none land past `now`. Each lands at least 1 day
+      // after lastTickAt to keep the stale-check semantics honest.
+      final syntheticIndex = i - existingCount; // 0..newCount-1
+      final dayOffset = newCount <= 1
+          ? 1
+          : 1 + (syntheticIndex * (days - 1) ~/ (newCount - 1));
+      return state.lastTickAt.add(Duration(days: dayOffset));
+    });
 
     final events = <CareEvent>[
       for (var i = 0; i < addedMistakes; i++)
@@ -438,8 +459,6 @@ class PetCareEngine {
         return _applyResonate(base, now);
       case CareAction.stabilise:
         return _applyStabilise(base, now);
-      case CareAction.sync:
-        return _applySync(base, now);
       case CareAction.purge:
         return _applyPurge(base, now);
       case CareAction.dim:
@@ -556,7 +575,6 @@ class PetCareEngine {
     var next = _answerCallIfMatching(s, now, CallReason.lonely);
     next = next.copyWith(
       mood: _clampStat(next.mood + 3),
-      stability: _clampStat(next.stability + 1),
       recentEvents: _appendEvent(
         next.recentEvents,
         CareEvent(at: now, kind: CareEventKind.resonated),
@@ -583,39 +601,6 @@ class PetCareEngine {
       ),
     );
     return PetActionResult.applied(state: next, action: CareAction.stabilise);
-  }
-
-  PetActionResult _applySync(PetState s, DateTime now) {
-    // Sync is meaningful when there's an active attention call (of any
-    // reason — it counts as a discipline correction) OR when stability
-    // is below its ceiling. Otherwise "nothing to sync".
-    final hasCall = s.activeCall != null;
-    final stabilityCanRise = s.stability < config.statMax;
-    if (!hasCall && !stabilityCanRise) {
-      return PetActionResult.notNeeded(
-        state: s,
-        action: CareAction.sync,
-        reason: PetActionReason.nothingToSync,
-      );
-    }
-    var next = s;
-    if (hasCall) {
-      // Answer whatever call is active — Sync is the universal "I'm
-      // paying attention" tap.
-      next = _answerCallIfMatching(next, now, next.activeCall!.reason);
-    }
-    final acc = next.stageAccumulators;
-    next = next.copyWith(
-      stability: _clampStat(next.stability + 2),
-      stageAccumulators: acc.copyWith(
-        disciplineCorrections: acc.disciplineCorrections + 1,
-      ),
-      recentEvents: _appendEvent(
-        next.recentEvents,
-        CareEvent(at: now, kind: CareEventKind.synced),
-      ),
-    );
-    return PetActionResult.applied(state: next, action: CareAction.sync);
   }
 
   PetActionResult _applyPurge(PetState s, DateTime now) {

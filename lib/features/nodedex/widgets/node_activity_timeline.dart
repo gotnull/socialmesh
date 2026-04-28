@@ -57,89 +57,97 @@ class _NodeActivityTimelineState extends ConsumerState<NodeActivityTimeline> {
   Widget build(BuildContext context) {
     final asyncEvents = ref.watch(nodeActivityTimelineProvider(widget.nodeNum));
 
-    return asyncEvents.when(
-      loading: () => const Padding(
+    // Preserve previous data across refreshes so the list doesn't get replaced
+    // by a spinner each time a watched dependency (messages, signals, presence,
+    // nodedex entry) changes. AsyncValue.value returns the prior value during
+    // AsyncLoading; asData would return null mid-refresh and flash the Material
+    // spinner on Android.
+    final allEvents = asyncEvents.value;
+
+    if (allEvents == null) {
+      if (asyncEvents.hasError) {
+        return Padding(
+          padding: const EdgeInsets.all(AppTheme.spacing24),
+          child: Center(
+            child: Text(
+              context.l10n.nodedexTimelineCouldNotLoad,
+              style: TextStyle(fontSize: 13, color: context.textTertiary),
+            ),
+          ),
+        );
+      }
+      return const Padding(
         padding: EdgeInsets.all(AppTheme.spacing24),
         child: Center(child: CircularProgressIndicator.adaptive()),
-      ),
-      error: (e, st) => Padding(
-        padding: const EdgeInsets.all(AppTheme.spacing24),
-        child: Center(
-          child: Text(
-            context.l10n.nodedexTimelineCouldNotLoad,
-            style: TextStyle(fontSize: 13, color: context.textTertiary),
+      );
+    }
+
+    if (allEvents.isEmpty) {
+      return _EmptyTimeline(accentColor: widget.accentColor);
+    }
+
+    final pageSize = NodeDexConfig.timelinePageSize;
+    final totalPages = (allEvents.length / pageSize).ceil();
+
+    // Clamp current page to valid range.
+    var page = _currentPage;
+    if (page >= totalPages && totalPages > 0) {
+      page = totalPages - 1;
+    }
+
+    final startIndex = page * pageSize;
+    final endIndex = (startIndex + pageSize).clamp(0, allEvents.length);
+    final pageItems = allEvents.sublist(startIndex, endIndex);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (int i = 0; i < pageItems.length; i++)
+          _TimelineEventTile(
+            event: pageItems[i],
+            accentColor: widget.accentColor,
+            isFirst: i == 0,
+            isLast: i == pageItems.length - 1,
           ),
-        ),
-      ),
-      data: (allEvents) {
-        if (allEvents.isEmpty) {
-          return _EmptyTimeline(accentColor: widget.accentColor);
-        }
-
-        final pageSize = NodeDexConfig.timelinePageSize;
-        final totalPages = (allEvents.length / pageSize).ceil();
-
-        // Clamp current page to valid range.
-        var page = _currentPage;
-        if (page >= totalPages && totalPages > 0) {
-          page = totalPages - 1;
-        }
-
-        final startIndex = page * pageSize;
-        final endIndex = (startIndex + pageSize).clamp(0, allEvents.length);
-        final pageItems = allEvents.sublist(startIndex, endIndex);
-
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (int i = 0; i < pageItems.length; i++)
-              _TimelineEventTile(
-                event: pageItems[i],
+        // Pagination footer
+        if (totalPages > 1) ...[
+          const SizedBox(height: AppTheme.spacing12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _PaginationButton(
+                icon: Icons.chevron_left,
+                enabled: page > 0,
                 accentColor: widget.accentColor,
-                isFirst: i == 0,
-                isLast: i == pageItems.length - 1,
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  setState(() => _currentPage = page - 1);
+                },
               ),
-            // Pagination footer
-            if (totalPages > 1) ...[
-              const SizedBox(height: AppTheme.spacing12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _PaginationButton(
-                    icon: Icons.chevron_left,
-                    enabled: page > 0,
-                    accentColor: widget.accentColor,
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      setState(() => _currentPage = page - 1);
-                    },
-                  ),
-                  const SizedBox(width: AppTheme.spacing12),
-                  Text(
-                    '${page + 1} / $totalPages',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: context.textSecondary,
-                      fontFamily: AppTheme.fontFamily,
-                    ),
-                  ),
-                  const SizedBox(width: AppTheme.spacing12),
-                  _PaginationButton(
-                    icon: Icons.chevron_right,
-                    enabled: page < totalPages - 1,
-                    accentColor: widget.accentColor,
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      setState(() => _currentPage = page + 1);
-                    },
-                  ),
-                ],
+              const SizedBox(width: AppTheme.spacing12),
+              Text(
+                '${page + 1} / $totalPages',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: context.textSecondary,
+                  fontFamily: AppTheme.fontFamily,
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing12),
+              _PaginationButton(
+                icon: Icons.chevron_right,
+                enabled: page < totalPages - 1,
+                accentColor: widget.accentColor,
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  setState(() => _currentPage = page + 1);
+                },
               ),
             ],
-          ],
-        );
-      },
+          ),
+        ],
+      ],
     );
   }
 }

@@ -53,8 +53,11 @@ class FlightRouteMap extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    final depLatLng = LatLng(depAirport.latitude, depAirport.longitude);
-    final arrLatLng = LatLng(arrAirport.latitude, arrAirport.longitude);
+    final depLatLng = safeLatLng(depAirport.latitude, depAirport.longitude);
+    final arrLatLng = safeLatLng(arrAirport.latitude, arrAirport.longitude);
+    if (depLatLng == null || arrLatLng == null) {
+      return const SizedBox.shrink();
+    }
 
     // Compute the great-circle arc points
     final arcPoints = _greatCircleArc(depLatLng, arrLatLng, segments: 64);
@@ -77,7 +80,9 @@ class FlightRouteMap extends StatelessWidget {
           // The map
           FlutterMap(
             options: MapOptions(
-              initialCenter: bounds.center,
+              initialCenter: isFiniteLatLng(bounds.center)
+                  ? bounds.center
+                  : const LatLng(0, 0),
               initialZoom: _fitZoom(bounds, height),
               minZoom: 1.0,
               maxZoom: 12.0,
@@ -329,7 +334,7 @@ class FlightRouteMap extends StatelessWidget {
     var minLon = math.min(dep.longitude, arr.longitude);
     var maxLon = math.max(dep.longitude, arr.longitude);
 
-    if (live != null) {
+    if (live != null && live.latitude.isFinite && live.longitude.isFinite) {
       minLat = math.min(minLat, live.latitude);
       maxLat = math.max(maxLat, live.latitude);
       minLon = math.min(minLon, live.longitude);
@@ -340,10 +345,11 @@ class FlightRouteMap extends StatelessWidget {
     final latPad = math.max((maxLat - minLat) * 0.15, 0.5);
     final lonPad = math.max((maxLon - minLon) * 0.15, 0.5);
 
-    return LatLngBounds(
-      LatLng(minLat - latPad, minLon - lonPad),
-      LatLng(maxLat + latPad, maxLon + lonPad),
-    );
+    final sw =
+        safeLatLng(minLat - latPad, minLon - lonPad) ?? const LatLng(-45, -90);
+    final ne =
+        safeLatLng(maxLat + latPad, maxLon + lonPad) ?? const LatLng(45, 90);
+    return LatLngBounds(sw, ne);
   }
 
   /// Estimate a zoom level that fits the bounds within the given pixel height.

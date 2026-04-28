@@ -1939,112 +1939,64 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                   },
                 ),
 
-                if (_devices.isEmpty && !_scanning)
-                  Center(
-                    child: Column(
-                      children: [
-                        SizedBox(height: AppTheme.spacing100),
-                        SizedBox(
-                          width: 80,
-                          height: 80,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: context.textTertiary,
-                          ),
-                        ),
-                        SizedBox(height: AppTheme.spacing24),
-                        Text(
-                          context.l10n.scannerLookingForDevices,
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w500,
-                            color: context.textSecondary,
-                          ),
-                        ),
-                        SizedBox(height: AppTheme.spacing16),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 24),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _ScannerTip(
-                                icon: Icons.bluetooth,
-                                text: context.l10n.scannerEnableBluetoothHint,
-                              ),
-                              SizedBox(height: AppTheme.spacing10),
-                              _ScannerTip(
-                                icon: Icons.app_blocking_outlined,
-                                text: context.l10n.scannerTipNoOtherApps,
-                              ),
-                              SizedBox(height: AppTheme.spacing10),
-                              _ScannerTip(
-                                icon: Icons.devices_other,
-                                text: context.l10n.scannerTipNoOtherDevices,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                else
-                  Consumer(
-                    builder: (context, ref, child) {
-                      final showAllDevices = ref.watch(
-                        showAllBleDevicesProvider,
-                      );
-                      // Build filtered device list based on dev mode
-                      final filteredDevices = _buildDisplayDevices(
-                        showAllDevices: showAllDevices,
-                      );
-                      return Column(
-                        children: filteredDevices.map((device) {
-                          final detection = device.detectProtocol();
-                          final isUnknown =
-                              detection.protocolType ==
-                              MeshProtocolType.unknown;
-                          return Column(
-                            children: [
-                              _DeviceCard(
+                Consumer(
+                  builder: (context, ref, child) {
+                    final showAllDevices = ref.watch(showAllBleDevicesProvider);
+                    // Build filtered device list based on dev mode
+                    final filteredDevices = _buildDisplayDevices(
+                      showAllDevices: showAllDevices,
+                    );
+                    return Column(
+                      children: filteredDevices.map((device) {
+                        final detection = device.detectProtocol();
+                        final isUnknown =
+                            detection.protocolType == MeshProtocolType.unknown;
+                        return Column(
+                          children: [
+                            _DeviceCard(
+                              device: device,
+                              protocolType: detection.protocolType,
+                              showDebugInfo: showAllDevices,
+                              onTap: () {
+                                // Allow unknown devices only in dev mode
+                                if (isUnknown && !showAllDevices) {
+                                  return;
+                                }
+                                if (isUnknown) {
+                                  // Show warning dialog for unknown devices
+                                  _showUnknownDeviceWarning(
+                                    context,
+                                    device,
+                                    detection,
+                                  );
+                                } else {
+                                  _connect(device);
+                                }
+                              },
+                            ),
+                            if (device.rssi != null)
+                              _DeviceDetailsTable(
                                 device: device,
-                                protocolType: detection.protocolType,
-                                showDebugInfo: showAllDevices,
-                                onTap: () {
-                                  // Allow unknown devices only in dev mode
-                                  if (isUnknown && !showAllDevices) {
-                                    return;
-                                  }
-                                  if (isUnknown) {
-                                    // Show warning dialog for unknown devices
-                                    _showUnknownDeviceWarning(
-                                      context,
-                                      device,
-                                      detection,
-                                    );
-                                  } else {
-                                    _connect(device);
-                                  }
-                                },
+                                showAdvertisementData: showAllDevices,
                               ),
-                              if (device.rssi != null)
-                                _DeviceDetailsTable(
-                                  device: device,
-                                  showAdvertisementData: showAllDevices,
-                                ),
-                            ],
-                          );
-                        }).toList(),
-                      );
-                    },
-                  ),
+                          ],
+                        );
+                      }).toList(),
+                    );
+                  },
+                ),
 
                 // mDNS auto-discovered Wi-Fi radios
                 const SizedBox(height: AppTheme.spacing24),
                 Divider(color: context.border, height: 1),
                 const SizedBox(height: AppTheme.spacing16),
                 MdnsDiscoverySection(
-                  onConnectionSuccess: () {
+                  onConnectionSuccess: (device) {
                     if (!mounted) return;
+                    if (widget.isOnboarding) {
+                      Navigator.of(context).pop(device);
+                      return;
+                    }
                     final appState = ref.read(appInitProvider);
                     if (appState == AppInitState.needsScanner) {
                       ref.read(appInitProvider.notifier).setReady();
@@ -2060,8 +2012,12 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                 const SizedBox(height: AppTheme.spacing16),
                 NetworkConnectionSection(
                   compact: true,
-                  onConnectionSuccess: () {
+                  onConnectionSuccess: (device) {
                     if (!mounted) return;
+                    if (widget.isOnboarding) {
+                      Navigator.of(context).pop(device);
+                      return;
+                    }
                     final appState = ref.read(appInitProvider);
                     if (appState == AppInitState.needsScanner) {
                       ref.read(appInitProvider.notifier).setReady();
@@ -2157,34 +2113,6 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
           ),
         ],
       ),
-    );
-  }
-}
-
-class _ScannerTip extends StatelessWidget {
-  final IconData icon;
-  final String text;
-
-  const _ScannerTip({required this.icon, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 16, color: context.textTertiary),
-        SizedBox(width: AppTheme.spacing8),
-        Expanded(
-          child: Text(
-            text,
-            style: TextStyle(
-              fontSize: 13,
-              color: context.textTertiary,
-              height: 1.3,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

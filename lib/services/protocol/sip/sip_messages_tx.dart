@@ -14,6 +14,7 @@ library;
 import 'dart:typed_data';
 
 import '../../../core/logging.dart';
+import '../../../utils/text_sanitizer.dart';
 import 'sip_constants.dart';
 import 'sip_types.dart';
 
@@ -245,7 +246,9 @@ abstract final class SipTxMessages {
     final mimeLen = bd.getUint8(offset++);
     if (mimeLen > 24 || offset + mimeLen > payload.length) return null;
     final mime = mimeLen > 0
-        ? String.fromCharCodes(payload.sublist(offset, offset + mimeLen))
+        ? sanitizeExternalText(
+            String.fromCharCodes(payload.sublist(offset, offset + mimeLen)),
+          )
         : null;
     offset += mimeLen;
 
@@ -253,7 +256,9 @@ abstract final class SipTxMessages {
     final nameLen = bd.getUint8(offset++);
     if (nameLen > 32 || offset + nameLen > payload.length) return null;
     final filename = nameLen > 0
-        ? String.fromCharCodes(payload.sublist(offset, offset + nameLen))
+        ? sanitizeExternalText(
+            String.fromCharCodes(payload.sublist(offset, offset + nameLen)),
+          )
         : null;
     offset += nameLen;
 

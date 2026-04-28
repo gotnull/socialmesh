@@ -496,32 +496,6 @@ void main() {
       expect(result.error, equals(SipDmSendError.sessionNotFound));
     });
 
-    test('pinned session survives past TTL', () async {
-      const nodeA = 0xAABBCCDD;
-      const nodeB = 0x11223344;
-
-      final (resultA, _) = await completeHandshake(nodeA, nodeB);
-
-      dmManagerA.createSession(
-        sessionTag: resultA.sessionTag,
-        peerNodeId: nodeB,
-        ttlS: 10,
-      );
-
-      // Pin the session before TTL expires.
-      dmManagerA.pinSession(resultA.sessionTag);
-
-      // Advance past TTL.
-      nowMs[0] += 11000;
-
-      // Should still be able to send.
-      final result = dmManagerA.buildDmMessage(
-        sessionTag: resultA.sessionTag,
-        text: 'Still alive',
-      );
-      expect(result.isOk, isTrue);
-    });
-
     test('inbound DM on unknown session is dropped', () {
       final frame = SipFrame(
         versionMajor: SipConstants.sipVersionMajor,

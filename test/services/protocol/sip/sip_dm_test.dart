@@ -8,6 +8,9 @@ import 'package:socialmesh/services/protocol/sip/sip_codec.dart';
 import 'package:socialmesh/services/protocol/sip/sip_constants.dart';
 import 'package:socialmesh/services/protocol/sip/sip_dm.dart';
 import 'package:socialmesh/services/protocol/sip/sip_frame.dart';
+import 'package:socialmesh/services/protocol/sip/sip_ink_constants.dart';
+import 'package:socialmesh/services/protocol/sip/sip_ink_encoder.dart';
+import 'package:socialmesh/services/protocol/sip/sip_ink_payload.dart';
 import 'package:socialmesh/services/protocol/sip/sip_messages_dm.dart';
 import 'package:socialmesh/services/protocol/sip/sip_rate_limiter.dart';
 import 'package:socialmesh/services/protocol/sip/sip_types.dart';
@@ -113,7 +116,6 @@ void main() {
       expect(session!.sessionTag, equals(0x12345678));
       expect(session.peerNodeId, equals(0xABCD1234));
       expect(session.ttlS, equals(SipConstants.dmTtlDefaultS));
-      expect(session.isPinned, isFalse);
       expect(session.status, equals(SipDmSessionStatus.active));
       expect(session.messages, isEmpty);
     });
@@ -188,16 +190,6 @@ void main() {
       expect(dm.getSession(0x11), isNull);
     });
 
-    test('getSession returns active for pinned session past TTL', () {
-      dm.createSession(sessionTag: 0x11, peerNodeId: 0x22, ttlS: 60);
-      dm.pinSession(0x11);
-      // Advance past TTL
-      nowMs += 61 * 1000;
-      final session = dm.getSession(0x11);
-      expect(session, isNotNull);
-      expect(session!.isPinned, isTrue);
-    });
-
     test('activeSessions filters expired', () {
       dm.createSession(sessionTag: 0x11, peerNodeId: 0x22, ttlS: 60);
       dm.createSession(sessionTag: 0x33, peerNodeId: 0x44, ttlS: 120);
@@ -208,32 +200,6 @@ void main() {
       final active = dm.activeSessions;
       expect(active, hasLength(1));
       expect(active.first.sessionTag, equals(0x33));
-    });
-
-    test('pinSession returns true and prevents expiry', () {
-      dm.createSession(sessionTag: 0x11, peerNodeId: 0x22, ttlS: 10);
-      expect(dm.pinSession(0x11), isTrue);
-
-      nowMs += 20 * 1000; // Well past TTL
-      expect(dm.getSession(0x11), isNotNull);
-    });
-
-    test('pinSession returns false for unknown session', () {
-      expect(dm.pinSession(0x99), isFalse);
-    });
-
-    test('unpinSession returns true and re-enables expiry', () {
-      dm.createSession(sessionTag: 0x11, peerNodeId: 0x22, ttlS: 10);
-      dm.pinSession(0x11);
-      expect(dm.unpinSession(0x11), isTrue);
-
-      nowMs += 20 * 1000; // Past TTL
-      expect(dm.getSession(0x11), isNull);
-    });
-
-    test('unpinSession returns false when not pinned', () {
-      dm.createSession(sessionTag: 0x11, peerNodeId: 0x22);
-      expect(dm.unpinSession(0x11), isFalse);
     });
 
     test('closeSession marks session as closed and removes it', () {
@@ -508,6 +474,106 @@ void main() {
       expect(history[2].direction, equals(SipDmDirection.outbound));
       expect(history[2].text, equals('Out 2'));
     });
+
+    // -------------------------------------------------------------------------
+    // Multi-path mesh dedupe (per-session frame-nonce ring). Same wire
+    // frame can arrive twice when two relays both deliver it to the
+    // local BLE app. Without dedupe the message appends to history
+    // twice; the dedupe ring drops the second copy. See
+    // `_markInboundFrameSeen` in `sip_dm.dart`.
+    // -------------------------------------------------------------------------
+
+    /// Build an inbound DM_MSG frame with an explicit wire-nonce so
+    /// the dedupe behaviour can be exercised directly. Mirrors
+    /// `buildInboundDm` but takes `nonce` and `text` independently.
+    SipFrame buildInboundDmWithNonce(int sessionTag, String text, int nonce) {
+      final payload = SipDmMessages.encodeDm(text)!;
+      return SipFrame(
+        versionMajor: SipConstants.sipVersionMajor,
+        versionMinor: SipConstants.sipVersionMinor,
+        msgType: SipMessageType.dmMsg,
+        flags: 0,
+        headerLen: SipConstants.sipWrapperMin,
+        sessionId: sessionTag,
+        nonce: nonce,
+        timestampS: nowMs ~/ 1000,
+        payloadLen: payload.length,
+        payload: payload,
+      );
+    }
+
+    test('handleInboundDm drops second copy of same wire frame', () {
+      final frame = buildInboundDmWithNonce(0x12345678, 'Multi-path', 0xAA);
+
+      final first = dm.handleInboundDm(frame);
+      final second = dm.handleInboundDm(frame);
+
+      expect(first, isNotNull);
+      expect(second, isNull); // duplicate dropped
+      expect(dm.getHistory(0x12345678), hasLength(1));
+    });
+
+    test('handleInboundDm drops interleaved duplicate (A → B → A)', () {
+      // Plan §interleave: A first arrival, B different frame, A again
+      // (delayed via second mesh path) — the third call MUST drop.
+      final frameA = buildInboundDmWithNonce(0x12345678, 'A', 0xAA);
+      final frameB = buildInboundDmWithNonce(0x12345678, 'B', 0xBB);
+
+      final r1 = dm.handleInboundDm(frameA);
+      final r2 = dm.handleInboundDm(frameB);
+      final r3 = dm.handleInboundDm(frameA);
+
+      expect(r1, isNotNull);
+      expect(r2, isNotNull);
+      expect(r3, isNull); // duplicate dropped despite intervening B
+      final history = dm.getHistory(0x12345678)!;
+      expect(history, hasLength(2));
+      expect(history[0].text, equals('A'));
+      expect(history[1].text, equals('B'));
+    });
+
+    test(
+      'dedupe ring is per-session — same nonce on different sessions both pass',
+      () {
+        // Cross-session collision protection: even if two distinct
+        // sessions happened to see the same wire-nonce (improbable but
+        // possible), each session has its own ring and both should
+        // accept the first arrival.
+        dm.createSession(sessionTag: 0x77, peerNodeId: 0xAB);
+
+        final f1 = buildInboundDmWithNonce(
+          0x12345678,
+          'On session 1',
+          0xC0FFEE,
+        );
+        final f2 = buildInboundDmWithNonce(0x77, 'On session 2', 0xC0FFEE);
+
+        expect(dm.handleInboundDm(f1), isNotNull);
+        expect(dm.handleInboundDm(f2), isNotNull);
+        expect(dm.getHistory(0x12345678), hasLength(1));
+        expect(dm.getHistory(0x77), hasLength(1));
+      },
+    );
+
+    test('dedupe ring tolerates 32-entry burst then drops the 33rd', () {
+      // The ring is documented as 32 entries. Confirm a 33rd
+      // distinct frame is accepted (ring evicted oldest), AND a
+      // re-arrival of the FIRST frame is dropped while it's still
+      // within the ring window.
+      const tag = 0x12345678;
+      for (var i = 0; i < 32; i += 1) {
+        final f = buildInboundDmWithNonce(tag, 'msg $i', 0x1000 + i);
+        expect(dm.handleInboundDm(f), isNotNull, reason: 'fresh msg $i');
+      }
+      // Send the 33rd distinct frame — fits because ring evicts
+      // oldest when capacity is exceeded.
+      final fresh33 = buildInboundDmWithNonce(tag, 'msg 32', 0x2000);
+      expect(dm.handleInboundDm(fresh33), isNotNull);
+      // Replay msg-1 (still inside the ring, since msg-0 was just
+      // evicted) — must drop.
+      final replayMsg1 = buildInboundDmWithNonce(tag, 'msg 1', 0x1001);
+      expect(dm.handleInboundDm(replayMsg1), isNull);
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -532,17 +598,6 @@ void main() {
         ttlS: 60,
       );
       expect(session.isExpired(1000 + 60 * 1000), isTrue);
-    });
-
-    test('isExpired false when pinned', () {
-      final session = SipDmSession(
-        sessionTag: 0x11,
-        peerNodeId: 0x22,
-        createdAtMs: 1000,
-        ttlS: 60,
-        isPinned: true,
-      );
-      expect(session.isExpired(1000 + 120 * 1000), isFalse);
     });
 
     test('isExpired true when closed', () {
@@ -607,6 +662,215 @@ void main() {
       final receiverHistory = receiver.getHistory(0xAA)!;
       expect(receiverHistory, hasLength(1));
       expect(receiverHistory.first.direction, equals(SipDmDirection.inbound));
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // SIP Ink (sketch) DM round-trip
+  // ---------------------------------------------------------------------------
+  group('SIP Ink sketch DM', () {
+    SipInkSketch sampleSketch() => SipInkSketch(
+      canvasSize: SipInkConstants.canvas64,
+      strokes: [
+        SipInkStroke(
+          width: 2,
+          points: const [
+            SipInkPoint(10, 10),
+            SipInkPoint(13, 12),
+            SipInkPoint(15, 15),
+          ],
+        ),
+      ],
+    );
+
+    test('buildInkMessage produces valid DM_INK frame', () {
+      var nowMs = 1000000;
+      final rl = SipRateLimiter(
+        clock: () => DateTime.fromMillisecondsSinceEpoch(nowMs),
+      );
+      final dm = SipDmManager(rateLimiter: rl, clock: () => nowMs);
+      dm.createSession(sessionTag: 0x77, peerNodeId: 0x88);
+
+      final inkBytes = SipInkEncoder.encode(sampleSketch()).bytes!;
+      final result = dm.buildInkMessage(sessionTag: 0x77, inkPayload: inkBytes);
+      expect(result.isOk, isTrue);
+      final frame = result.frame!;
+      expect(frame.msgType, equals(SipMessageType.dmInk));
+      expect(frame.sessionId, equals(0x77));
+      expect(frame.payloadLen, equals(inkBytes.length));
+      expect(frame.payload, equals(inkBytes));
+    });
+
+    test('buildInkMessage adds ink history entry', () {
+      var nowMs = 1000000;
+      final rl = SipRateLimiter(
+        clock: () => DateTime.fromMillisecondsSinceEpoch(nowMs),
+      );
+      final dm = SipDmManager(rateLimiter: rl, clock: () => nowMs);
+      dm.createSession(sessionTag: 0x77, peerNodeId: 0x88);
+
+      final inkBytes = SipInkEncoder.encode(sampleSketch()).bytes!;
+      dm.buildInkMessage(sessionTag: 0x77, inkPayload: inkBytes);
+
+      final history = dm.getHistory(0x77)!;
+      expect(history, hasLength(1));
+      expect(history.first.contentType, equals(SipDmContentType.ink));
+      expect(history.first.text, isEmpty);
+      expect(history.first.payload, equals(inkBytes));
+      expect(history.first.direction, equals(SipDmDirection.outbound));
+    });
+
+    test('buildInkMessage records against budget', () {
+      var nowMs = 1000000;
+      final rl = SipRateLimiter(
+        clock: () => DateTime.fromMillisecondsSinceEpoch(nowMs),
+      );
+      final dm = SipDmManager(rateLimiter: rl, clock: () => nowMs);
+      dm.createSession(sessionTag: 0x77, peerNodeId: 0x88);
+
+      final inkBytes = SipInkEncoder.encode(sampleSketch()).bytes!;
+      final before = rl.usageFraction;
+      dm.buildInkMessage(sessionTag: 0x77, inkPayload: inkBytes);
+      expect(rl.usageFraction, greaterThan(before));
+    });
+
+    test('buildInkMessage rejects empty payload', () {
+      var nowMs = 1000000;
+      final rl = SipRateLimiter(
+        clock: () => DateTime.fromMillisecondsSinceEpoch(nowMs),
+      );
+      final dm = SipDmManager(rateLimiter: rl, clock: () => nowMs);
+      dm.createSession(sessionTag: 0x77, peerNodeId: 0x88);
+      final result = dm.buildInkMessage(
+        sessionTag: 0x77,
+        inkPayload: Uint8List(0),
+      );
+      expect(result.error, equals(SipDmSendError.emptyText));
+    });
+
+    test('buildInkMessage rejects malformed sketch payload', () {
+      var nowMs = 1000000;
+      final rl = SipRateLimiter(
+        clock: () => DateTime.fromMillisecondsSinceEpoch(nowMs),
+      );
+      final dm = SipDmManager(rateLimiter: rl, clock: () => nowMs);
+      dm.createSession(sessionTag: 0x77, peerNodeId: 0x88);
+      // Random bytes that don't parse as a v1 sketch.
+      final result = dm.buildInkMessage(
+        sessionTag: 0x77,
+        inkPayload: Uint8List.fromList([0xFF, 0xFF, 0xFF, 0xFF]),
+      );
+      expect(result.error, equals(SipDmSendError.invalidSketch));
+    });
+
+    test('buildInkMessage rejects unknown session', () {
+      var nowMs = 1000000;
+      final rl = SipRateLimiter(
+        clock: () => DateTime.fromMillisecondsSinceEpoch(nowMs),
+      );
+      final dm = SipDmManager(rateLimiter: rl, clock: () => nowMs);
+      final inkBytes = SipInkEncoder.encode(sampleSketch()).bytes!;
+      final result = dm.buildInkMessage(
+        sessionTag: 0xDEADBEEF,
+        inkPayload: inkBytes,
+      );
+      expect(result.error, equals(SipDmSendError.sessionNotFound));
+    });
+
+    test('handleInboundInk appends ink history entry', () {
+      var nowMs = 1000000;
+      final rl = SipRateLimiter(
+        clock: () => DateTime.fromMillisecondsSinceEpoch(nowMs),
+      );
+      final dm = SipDmManager(rateLimiter: rl, clock: () => nowMs);
+      dm.createSession(sessionTag: 0x77, peerNodeId: 0x88);
+
+      final inkBytes = SipInkEncoder.encode(sampleSketch()).bytes!;
+      final frame = SipFrame(
+        versionMajor: 0,
+        versionMinor: 1,
+        msgType: SipMessageType.dmInk,
+        flags: 0,
+        headerLen: SipConstants.sipWrapperMin,
+        sessionId: 0x77,
+        nonce: 0xABCDEF01,
+        timestampS: 1234567890,
+        payloadLen: inkBytes.length,
+        payload: inkBytes,
+      );
+
+      final sketch = dm.handleInboundInk(frame);
+      expect(sketch, isNotNull);
+      expect(sketch!.strokes, hasLength(1));
+
+      final history = dm.getHistory(0x77)!;
+      expect(history, hasLength(1));
+      expect(history.first.contentType, equals(SipDmContentType.ink));
+      expect(history.first.direction, equals(SipDmDirection.inbound));
+      expect(history.first.payload, equals(inkBytes));
+    });
+
+    test('handleInboundInk drops malformed payload silently', () {
+      var nowMs = 1000000;
+      final rl = SipRateLimiter(
+        clock: () => DateTime.fromMillisecondsSinceEpoch(nowMs),
+      );
+      final dm = SipDmManager(rateLimiter: rl, clock: () => nowMs);
+      dm.createSession(sessionTag: 0x77, peerNodeId: 0x88);
+
+      final frame = SipFrame(
+        versionMajor: 0,
+        versionMinor: 1,
+        msgType: SipMessageType.dmInk,
+        flags: 0,
+        headerLen: SipConstants.sipWrapperMin,
+        sessionId: 0x77,
+        nonce: 0,
+        timestampS: 1234567890,
+        payloadLen: 4,
+        payload: Uint8List.fromList([0xFF, 0xFF, 0xFF, 0xFF]),
+      );
+      expect(dm.handleInboundInk(frame), isNull);
+      expect(dm.getHistory(0x77), isEmpty);
+    });
+
+    test('full wire round-trip preserves the sketch bytes', () {
+      var nowMs = 1000000;
+      final senderRl = SipRateLimiter(
+        clock: () => DateTime.fromMillisecondsSinceEpoch(nowMs),
+      );
+      final sender = SipDmManager(rateLimiter: senderRl, clock: () => nowMs);
+      sender.createSession(sessionTag: 0xCC, peerNodeId: 0xDD);
+
+      final inkBytes = SipInkEncoder.encode(sampleSketch()).bytes!;
+      final send = sender.buildInkMessage(
+        sessionTag: 0xCC,
+        inkPayload: inkBytes,
+      );
+      expect(send.isOk, isTrue);
+
+      final wire = SipCodec.encode(send.frame!);
+      expect(wire, isNotNull);
+
+      final receiver = SipDmManager(
+        rateLimiter: SipRateLimiter(
+          clock: () => DateTime.fromMillisecondsSinceEpoch(nowMs),
+        ),
+        clock: () => nowMs,
+      );
+      receiver.createSession(sessionTag: 0xCC, peerNodeId: 0xEE);
+
+      final decoded = SipCodec.decode(wire!);
+      expect(decoded, isNotNull);
+      expect(decoded!.msgType, equals(SipMessageType.dmInk));
+      final sketch = receiver.handleInboundInk(decoded);
+      expect(sketch, isNotNull);
+
+      final senderEntry = sender.getHistory(0xCC)!.single;
+      final receiverEntry = receiver.getHistory(0xCC)!.single;
+      expect(senderEntry.payload, equals(receiverEntry.payload));
+      expect(senderEntry.contentType, equals(SipDmContentType.ink));
+      expect(receiverEntry.contentType, equals(SipDmContentType.ink));
     });
   });
 }

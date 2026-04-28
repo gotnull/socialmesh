@@ -11,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/countdown_banner.dart';
+import '../../core/widgets/requires_connection_guard.dart';
 import '../../core/widgets/top_status_banner.dart';
 import '../../core/widgets/user_avatar.dart';
 
@@ -73,7 +74,6 @@ import '../mrrp_harness/mrrp_harness_home_screen.dart';
 import '../mesh_explorer/mesh_explorer_screen.dart';
 import '../mesh_feed/screens/mesh_feed_screen.dart';
 import '../nodeboard/screens/nodeboard_list_screen.dart';
-import '../pet/screens/pet_home_screen.dart';
 import '../incidents/screens/mesh_incident_list_screen.dart';
 import '../tak/screens/tak_screen.dart';
 import '../../providers/activity_providers.dart';
@@ -286,15 +286,38 @@ class DeviceStatusButton extends ConsumerWidget {
 /// Helper to navigate from drawer items.
 /// Closes drawer first, then navigates after a brief delay to ensure
 /// the drawer close animation completes smoothly.
+///
+/// The pushed route is tagged with [routeName] (defaulting to
+/// `screen.runtimeType.toString()`). This lets push-from-notification
+/// handlers (in `main.dart`) detect when the destination screen is
+/// already on top of the stack and skip the duplicate push — without
+/// it, tapping a notification while the corresponding screen is
+/// already visible stacks an identical second copy on top, requiring
+/// two back taps to return to the previous context.
+///
+/// Callers wrapping [screen] in `RequiresConnectionGuard` (or any
+/// other guard widget) MUST pass [routeName] explicitly with the
+/// inner screen's type name, since the wrapped widget's runtimeType
+/// would otherwise come back as `'RequiresConnectionGuard'` and the
+/// notification dedupe would never match.
 @visibleForTesting
-void navigateFromDrawer(BuildContext context, Widget screen) {
+void navigateFromDrawer(
+  BuildContext context,
+  Widget screen, {
+  String? routeName,
+}) {
   Navigator.of(context).pop(); // Close drawer
   // Use post-frame callback to ensure drawer animation completes
   WidgetsBinding.instance.addPostFrameCallback((_) {
     if (context.mounted) {
-      Navigator.of(
-        context,
-      ).push(MaterialPageRoute<void>(builder: (_) => screen));
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => screen,
+          settings: RouteSettings(
+            name: routeName ?? screen.runtimeType.toString(),
+          ),
+        ),
+      );
     }
   });
 }
@@ -437,16 +460,6 @@ class _MainShellState extends ConsumerState<MainShell> {
         iconColor: AccentColors.orange,
         requiresConnection: false,
       ),
-    if (AppFeatureFlags.isPetEnabled)
-      DrawerMenuItem(
-        icon: Icons.egg_alt_outlined,
-        label: l10n.petDrawerLabel,
-        screen: const PetHomeScreen(),
-        iconColor: AccentColors.lavender,
-        requiresConnection: false,
-      ),
-
-    // Identity section — your social presence and interactions
     if (AppFeatureFlags.isSocialEnabled)
       DrawerMenuItem(
         icon: Icons.forum_outlined,
@@ -485,6 +498,7 @@ class _MainShellState extends ConsumerState<MainShell> {
         screen: const DeviceShopScreen(),
         iconColor: AccentColors.cyan,
         requiresConnection: false,
+        whatsNewBadgeKey: 'device_shop',
       ),
     if (AppFeatureFlags.isFileTransferEnabled)
       DrawerMenuItem(
@@ -851,9 +865,25 @@ class _MainShellState extends ConsumerState<MainShell> {
                                 const SubscriptionScreen(),
                               );
                             } else if (item.screen != null) {
-                              // Push screen with back button for consistent navigation
-                              // If upsell is enabled, the screen handles gating on actions
-                              navigateFromDrawer(context, item.screen!);
+                              // Push screen with back button for consistent navigation.
+                              // Wrap node-required screens in `RequiresConnectionGuard`
+                              // so an in-session disconnect pops them back to the
+                              // previous route — the drawer-level gate prevents entry,
+                              // and this gate enforces the same invariant if the
+                              // device drops while the user is inside the screen.
+                              final pushed = item.requiresConnection
+                                  ? RequiresConnectionGuard(child: item.screen!)
+                                  : item.screen!;
+                              // Pass the INNER screen's runtime type as
+                              // the route name so notification dedupe
+                              // (in `main.dart`) recognises the route
+                              // even though it's wrapped in
+                              // `RequiresConnectionGuard`.
+                              navigateFromDrawer(
+                                context,
+                                pushed,
+                                routeName: item.screen!.runtimeType.toString(),
+                              );
                             }
                           },
                   ),

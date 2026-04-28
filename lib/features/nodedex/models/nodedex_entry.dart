@@ -1430,9 +1430,14 @@ class NodeDexEntry {
       if (bestSnr != null) 'bs': bestSnr,
       if (bestRssi != null) 'br': bestRssi,
       'mc': messageCount,
-      if (socialTag != null) 'st': socialTag!.index,
+      // User-editable clearable fields are emitted unconditionally (as explicit
+      // null when cleared) so that Firestore set(merge: true) actually clears
+      // the cloud value instead of resurrecting the prior value on the next
+      // pull. The *_ms timestamps stay conditional — they only appear once the
+      // user has touched the field.
+      'st': socialTag?.index,
       if (socialTagUpdatedAtMs != null) 'st_ms': socialTagUpdatedAtMs,
-      if (userNote != null) 'un': userNote,
+      'un': userNote,
       if (userNoteUpdatedAtMs != null) 'un_ms': userNoteUpdatedAtMs,
       'enc': encounters.map((e) => e.toJson()).toList(),
       'sr': seenRegions.map((r) => r.toJson()).toList(),
@@ -1443,7 +1448,7 @@ class NodeDexEntry {
       if (lastKnownHardware != null) 'lkh': lastKnownHardware,
       if (lastKnownRole != null) 'lkr': lastKnownRole,
       if (lastKnownFirmware != null) 'lkf': lastKnownFirmware,
-      if (localNickname != null) 'ln': localNickname,
+      'ln': localNickname,
       if (localNicknameUpdatedAtMs != null) 'ln_ms': localNicknameUpdatedAtMs,
       if (sipCapable != null) 'sip_cap': sipCapable,
       if (sipPubkey != null) 'sip_pk': base64Encode(sipPubkey!),

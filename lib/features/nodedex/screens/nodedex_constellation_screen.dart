@@ -23,6 +23,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/logging.dart';
+import '../../../utils/text_sanitizer.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/ico_help_system.dart';
@@ -552,7 +553,7 @@ class _ConstellationPainter extends CustomPainter {
     String text,
     double alpha,
   ) {
-    final display = text.length > 14 ? '${text.substring(0, 12)}\u2026' : text;
+    final display = safeSubstring(text, 12);
 
     final style = ui.TextStyle(
       color: (isDark ? Colors.white : Colors.black).withValues(alpha: alpha),

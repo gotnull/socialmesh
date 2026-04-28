@@ -174,4 +174,179 @@ void main() {
       await expectLater(stream, emitsDone);
     });
   });
+
+  group('MqttClientProxyService idempotency', () {
+    late MqttClientProxyService service;
+
+    setUp(() {
+      service = MqttClientProxyService();
+    });
+
+    tearDown(() {
+      service.dispose();
+    });
+
+    test(
+      'sequential connect with identical args while settled is a no-op',
+      () async {
+        // Prime the service into a "settled connected" state without a
+        // real broker. The test seam simulates a live socket so the
+        // settled idempotency check passes its third clause.
+        service.debugMarkSettledForTest(
+          host: 'broker.example',
+          port: 1883,
+          tlsEnabled: false,
+          username: '',
+          topicPrefix: 'msh/2/e',
+          shouldSubscribe: false,
+        );
+
+        expect(service.debugConnectAttemptsStarted, 0);
+
+        // Calling connect with matching args must short-circuit before
+        // any destructive reconnect work begins.
+        await service.connect(
+          address: 'broker.example:1883',
+          tlsEnabled: false,
+          username: '',
+          password: '',
+          topicPrefix: 'msh/2/e',
+          shouldSubscribe: false,
+        );
+
+        expect(
+          service.debugConnectAttemptsStarted,
+          0,
+          reason: 'settled idempotent connect must not start reconnect work',
+        );
+        expect(service.isConnected, true);
+      },
+    );
+
+    test(
+      'sequential connect with different args while settled does start work',
+      () async {
+        service.debugMarkSettledForTest(
+          host: 'broker.example',
+          port: 1883,
+          tlsEnabled: false,
+          username: '',
+          topicPrefix: 'msh/2/e',
+          shouldSubscribe: false,
+        );
+
+        // Call connect with a different host — the settled check must
+        // fail (host mismatch), and a real attempt must start. We use
+        // an unroutable port that will fail fast so the test stays fast.
+        // Wrap in a future so we don't await the real broker timeout.
+        final future = service.connect(
+          address: '127.0.0.1:1', // unreachable; will fail
+          tlsEnabled: false,
+          username: '',
+          password: '',
+          topicPrefix: 'msh/2/e',
+          shouldSubscribe: false,
+        );
+
+        // The counter must increment immediately (synchronously, before
+        // the await on client.connect()).
+        expect(service.debugConnectAttemptsStarted, 1);
+
+        // Drain the failed connect so teardown is clean.
+        await future;
+      },
+    );
+
+    test(
+      'concurrent connects with identical args coalesce to one attempt',
+      () async {
+        // Fire two connect() calls back-to-back without awaiting the
+        // first. The second sees _isConnecting=true and pendingArgs
+        // matching, and short-circuits via the in-flight branch.
+        final f1 = service.connect(
+          address: '127.0.0.1:1',
+          tlsEnabled: false,
+          username: '',
+          password: '',
+          topicPrefix: 'msh/2/e',
+          shouldSubscribe: false,
+        );
+        final f2 = service.connect(
+          address: '127.0.0.1:1',
+          tlsEnabled: false,
+          username: '',
+          password: '',
+          topicPrefix: 'msh/2/e',
+          shouldSubscribe: false,
+        );
+
+        await Future.wait([f1, f2]);
+
+        expect(
+          service.debugConnectAttemptsStarted,
+          1,
+          reason: 'in-flight coalescing must produce exactly one attempt',
+        );
+      },
+    );
+
+    test('concurrent connects with different args reject the second', () async {
+      final f1 = service.connect(
+        address: '127.0.0.1:1',
+        tlsEnabled: false,
+        username: '',
+        password: '',
+        topicPrefix: 'msh/2/e',
+        shouldSubscribe: false,
+      );
+      // Different port → different args. The second must be rejected
+      // (preserves the original _isConnecting safety net).
+      final f2 = service.connect(
+        address: '127.0.0.1:2',
+        tlsEnabled: false,
+        username: '',
+        password: '',
+        topicPrefix: 'msh/2/e',
+        shouldSubscribe: false,
+      );
+
+      await Future.wait([f1, f2]);
+
+      expect(
+        service.debugConnectAttemptsStarted,
+        1,
+        reason: 'different-args duplicate must not start a second attempt',
+      );
+    });
+
+    test('disconnect clears settled args so next connect runs fully', () async {
+      service.debugMarkSettledForTest(
+        host: 'broker.example',
+        port: 1883,
+        tlsEnabled: false,
+        username: '',
+        topicPrefix: 'msh/2/e',
+        shouldSubscribe: false,
+      );
+      await service.disconnect();
+      expect(service.isConnected, false);
+
+      // After disconnect, the settled idempotency must NOT short-circuit
+      // — we are no longer settled.
+      await service.connect(
+        address: 'broker.example:1883',
+        tlsEnabled: false,
+        username: '',
+        password: '',
+        topicPrefix: 'msh/2/e',
+        shouldSubscribe: false,
+      );
+
+      expect(
+        service.debugConnectAttemptsStarted,
+        1,
+        reason: 'post-disconnect connect must NOT short-circuit',
+      );
+    });
+  });
 }

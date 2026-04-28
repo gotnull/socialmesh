@@ -404,6 +404,12 @@ class SipCounters {
         return 'DM_DELETE';
       case SipMessageType.dmClose:
         return 'DM_CLOSE';
+      case SipMessageType.dmInk:
+        return 'DM_INK';
+      case SipMessageType.dmPlay:
+        return 'DM_PLAY';
+      case SipMessageType.dmSignal:
+        return 'DM_SIGNAL';
       case SipMessageType.error:
         return 'ERROR';
       case SipMessageType.mrrpData:

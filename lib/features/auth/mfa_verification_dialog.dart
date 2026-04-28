@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/l10n_extension.dart';
+import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 
@@ -31,6 +32,10 @@ class MFAVerificationDialog extends ConsumerStatefulWidget {
     BuildContext context,
     MultiFactorResolver resolver,
   ) {
+    final hintKinds = resolver.hints
+        .map((h) => h.runtimeType.toString())
+        .join(',');
+    AppLogging.mfa('show() — ${resolver.hints.length} factor(s): [$hintKinds]');
     return AppBottomSheet.show<UserCredential>(
       context: context,
       isDismissible: false,
@@ -64,6 +69,7 @@ class _MFAVerificationDialogState extends ConsumerState<MFAVerificationDialog>
   }
 
   Future<void> _sendVerificationCode() async {
+    AppLogging.mfa('_sendVerificationCode — START');
     safeSetState(() {
       _isSendingCode = true;
       _errorMessage = null;
@@ -75,36 +81,62 @@ class _MFAVerificationDialogState extends ConsumerState<MFAVerificationDialog>
         .firstOrNull;
 
     if (phoneHint == null) {
+      AppLogging.mfa('_sendVerificationCode — ❌ no PhoneMultiFactorInfo hint');
       safeSetState(() {
         _isSendingCode = false;
         _errorMessage = context.l10n.authMfaNoPhoneFactorFound;
       });
       return;
     }
+    AppLogging.mfa(
+      '_sendVerificationCode — phone hint: '
+      '${_maskPhoneNumber(phoneHint.phoneNumber)} — calling verifyPhoneNumber',
+    );
 
     try {
       await FirebaseAuth.instance.verifyPhoneNumber(
         multiFactorSession: widget.resolver.session,
         multiFactorInfo: phoneHint,
         verificationCompleted: (credential) async {
-          // Auto-verification (Android only)
+          AppLogging.mfa(
+            'verifyPhoneNumber → verificationCompleted '
+            '(silent/auto — providerId=${credential.providerId}, '
+            'hasSmsCode=${credential.smsCode != null})',
+          );
           await _resolveWithCredential(credential);
         },
         verificationFailed: (e) {
+          AppLogging.mfa(
+            'verifyPhoneNumber → ❌ verificationFailed '
+            'code=${e.code} message=${e.message}',
+          );
           safeSetState(() {
             _isSendingCode = false;
             _errorMessage = friendlyMFAError(e, context.l10n);
           });
         },
         codeSent: (verificationId, resendToken) {
+          AppLogging.mfa(
+            'verifyPhoneNumber → codeSent (verificationId received, '
+            'len=${verificationId.length}, hasResendToken=${resendToken != null})',
+          );
           safeSetState(() {
             _verificationId = verificationId;
             _isSendingCode = false;
           });
         },
-        codeAutoRetrievalTimeout: (_) {},
+        codeAutoRetrievalTimeout: (verificationId) {
+          AppLogging.mfa(
+            'verifyPhoneNumber → codeAutoRetrievalTimeout '
+            '(verificationId len=${verificationId.length}, '
+            '_verificationId previously set=${_verificationId != null}, '
+            '_isSendingCode=$_isSendingCode)',
+          );
+        },
       );
+      AppLogging.mfa('verifyPhoneNumber — returned (callbacks dispatched)');
     } catch (e) {
+      AppLogging.mfa('verifyPhoneNumber — ❌ threw sync: $e');
       safeSetState(() {
         _isSendingCode = false;
         _errorMessage = friendlyMFAError(e, context.l10n);
@@ -112,14 +144,24 @@ class _MFAVerificationDialogState extends ConsumerState<MFAVerificationDialog>
     }
   }
 
+  /// Mask a phone number to ±4 trailing digits, keep country code.
+  String _maskPhoneNumber(String? phone) {
+    if (phone == null || phone.length < 5) return '<empty>';
+    final tail = phone.substring(phone.length - 4);
+    return '${phone.substring(0, phone.length > 6 ? 3 : 1)}***$tail';
+  }
+
   Future<void> _verifyCode() async {
     final code = _codeController.text.trim();
+    AppLogging.mfa('_verifyCode — START (len=${code.length})');
     if (code.length != 6) {
+      AppLogging.mfa('_verifyCode — ❌ invalid length');
       safeSetState(() => _errorMessage = context.l10n.authMfaEnterSixDigitCode);
       return;
     }
 
     if (_verificationId == null) {
+      AppLogging.mfa('_verifyCode — ❌ no verificationId');
       safeSetState(() => _errorMessage = context.l10n.authMfaNoVerificationId);
       return;
     }
@@ -138,18 +180,39 @@ class _MFAVerificationDialogState extends ConsumerState<MFAVerificationDialog>
   }
 
   Future<void> _resolveWithCredential(PhoneAuthCredential credential) async {
+    AppLogging.mfa(
+      '_resolveWithCredential — START '
+      '(mounted=$mounted, providerId=${credential.providerId})',
+    );
     try {
       final assertion = PhoneMultiFactorGenerator.getAssertion(credential);
+      AppLogging.mfa('_resolveWithCredential — calling resolver.resolveSignIn');
       final userCredential = await widget.resolver.resolveSignIn(assertion);
+      AppLogging.mfa(
+        '_resolveWithCredential — ✅ resolveSignIn returned '
+        '(uid=${userCredential.user?.uid}, mounted=$mounted)',
+      );
 
-      if (!mounted) return;
+      if (!mounted) {
+        AppLogging.mfa(
+          '_resolveWithCredential — ⚠️ dialog unmounted before pop, '
+          'credential dropped',
+        );
+        return;
+      }
       Navigator.of(context).pop(userCredential);
+      AppLogging.mfa('_resolveWithCredential — popped with credential');
     } on FirebaseAuthException catch (e) {
+      AppLogging.mfa(
+        '_resolveWithCredential — ❌ FirebaseAuthException '
+        'code=${e.code} message=${e.message}',
+      );
       safeSetState(() {
         _isVerifying = false;
         _errorMessage = friendlyMFAError(e, context.l10n);
       });
     } catch (e) {
+      AppLogging.mfa('_resolveWithCredential — ❌ $e');
       safeSetState(() {
         _isVerifying = false;
         _errorMessage = friendlyMFAError(e, context.l10n);

@@ -37,6 +37,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+import '../../../utils/text_sanitizer.dart';
 import '../providers/nodedex_providers.dart';
 import '../services/sigil_generator.dart';
 import 'cluster_engine.dart';
@@ -790,9 +791,7 @@ class ConstellationPainter extends CustomPainter {
       final (node, pos, alpha) = candidates[i];
       final r = _nodeRadius(node);
 
-      final displayName = node.displayName.length > _K.labelMaxChars
-          ? '${node.displayName.substring(0, _K.labelMaxChars)}\u2026'
-          : node.displayName;
+      final displayName = safeSubstring(node.displayName, _K.labelMaxChars);
 
       final textColor = (isDark ? Colors.white : Colors.black).withValues(
         alpha: alpha,

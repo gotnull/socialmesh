@@ -176,36 +176,6 @@ void main() {
     });
   });
 
-  group('Sync outcomes', () {
-    test('notNeeded(nothingToSync) when no call + stability at max', () {
-      final s = _stateAt(PetStage.juvenile, stability: _config.statMax);
-      final r = _engine.applyAction(s, CareAction.sync, t);
-      expect(r.outcome, PetActionOutcome.notNeeded);
-      expect(r.reason, PetActionReason.nothingToSync);
-    });
-
-    test('applied when stability is below max', () {
-      final s = _stateAt(PetStage.juvenile, stability: 5);
-      final r = _engine.applyAction(s, CareAction.sync, t);
-      expect(r.outcome, PetActionOutcome.applied);
-      expect(r.state.stability, greaterThan(5));
-    });
-
-    test('applied (answering call) at max stability when call is active', () {
-      var s = _stateAt(PetStage.juvenile, stability: _config.statMax);
-      s = s.copyWith(
-        activeCall: AttentionCall(
-          startedAt: t,
-          deadline: t.add(const Duration(hours: 2)),
-          reason: CallReason.lonely,
-        ),
-      );
-      final r = _engine.applyAction(s, CareAction.sync, t);
-      expect(r.outcome, PetActionOutcome.applied);
-      expect(r.state.activeCall, isNull);
-    });
-  });
-
   group('Purge outcomes', () {
     test('invalidInState(notSick) when not sick', () {
       final s = _stateAt(PetStage.juvenile);

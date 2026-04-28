@@ -12,6 +12,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/admin_config.dart';
 
+import '../core/constants.dart';
 import '../core/logging.dart';
 import '../core/safety/error_handler.dart';
 import '../core/transport.dart';
@@ -19,7 +20,9 @@ import '../dev/demo/demo.dart';
 import '../services/transport/ble_transport.dart';
 import '../services/transport/network_transport.dart';
 import '../services/transport/usb_transport.dart';
+import '../services/backup/device_config_backup_service.dart';
 import '../services/protocol/protocol_service.dart';
+import '../services/protocol/reticulum/reticulum_fragment_event.dart';
 import '../services/storage/storage_service.dart';
 import '../services/storage/message_database.dart';
 import '../services/mesh_packet_dedupe_store.dart';
@@ -38,9 +41,11 @@ import '../services/bug_report_service.dart';
 import '../services/config/mesh_firestore_config_service.dart';
 import '../features/automations/automation_providers.dart';
 import '../features/automations/automation_engine.dart';
+import '../features/nodedex/providers/nodedex_providers.dart';
 import '../features/widget_builder/storage/widget_storage_service.dart';
 import '../features/widget_builder/widget_sync_providers.dart';
 import 'cloud_sync_entitlement_providers.dart';
+import 'reticulum_providers.dart';
 import '../core/auth/claims_provider.dart';
 import '../models/mesh_models.dart';
 import '../generated/meshtastic/config.pbenum.dart' as config_pbenum;
@@ -53,6 +58,7 @@ import 'age_eligibility_provider.dart';
 import 'file_transfer_providers.dart';
 import 'mqtt_client_proxy_providers.dart';
 import 'muted_channels_provider.dart';
+import 'peer_safety_providers.dart';
 import '../services/messaging/dm_retry_coordinator.dart';
 import '../features/settings/background_connection_screen.dart'
     show kLiveActivityEnabled;
@@ -3427,6 +3433,12 @@ final protocolServiceProvider = Provider<ProtocolService>((ref) {
   final dedupeStore = ref.watch(meshPacketDedupeStoreProvider);
   final service = ProtocolService(transport, dedupeStore: dedupeStore);
 
+  // Trust + Safety gate. The adapter holds a closure that re-reads
+  // the live `PeerSafetyManager` on each call, so changing block
+  // state here propagates to the protocol layer without needing
+  // this provider to rebuild. `ref.read` (not watch) is deliberate.
+  service.attachPeerSafetyGate(ref.read(peerSafetyGateProvider));
+
   service.onIdentityUpdate =
       ({
         required int nodeNum,
@@ -3473,6 +3485,43 @@ final protocolServiceProvider = Provider<ProtocolService>((ref) {
     }
   };
 
+  // Reticulum subsystem: dispatch port-76 fragment events to the
+  // capture writer, NodeDex bridge, and stats notifier. All three are
+  // pushed-to from this single listener; none of them ref.watch
+  // protocolServiceProvider, which keeps the provider DAG acyclic.
+  //
+  // Gated by AppFeatureFlags.isReticulumTunnelEnabled. When the flag
+  // is off (default), no providers are instantiated and no
+  // subscription is created — the broadcast controller in ProtocolService
+  // exists but never has any listeners, and its handler is short-
+  // circuited at the switch in _handleMeshPacket. Net cost when off:
+  // a single boolean comparison per port-76 packet.
+  StreamSubscription<ReticulumFragmentEvent>? reticulumSub;
+  if (AppFeatureFlags.isReticulumTunnelEnabled) {
+    // Eagerly init the stats notifier so it's alive (and its tick
+    // timer is running) from app boot, not just when the diagnostics
+    // UI is first opened.
+    ref.read(reticulumStatsProvider.notifier);
+
+    reticulumSub = service.reticulumFragmentStream.listen((event) {
+      try {
+        ref.read(reticulumCaptureWriterProvider).write(event);
+        ref.read(reticulumNodeDexBridgeProvider).onFragment(event);
+        ref.read(reticulumStatsProvider.notifier).recordFragment(event);
+        // Phase 2: feed the reassembler when the per-user toggle is
+        // on. This is independent of the build-time env flag — the
+        // env flag gates the entire subsystem; this gates only the
+        // reassembly layer (since it produces RNS-frame events that
+        // a future Phase 3 bridge would consume).
+        if (ref.read(reticulumFlagsProvider).reassemblyEnabled) {
+          ref.read(reticulumReassemblerProvider).onFragment(event);
+        }
+      } catch (e) {
+        AppLogging.reticulum('pipeline_dispatch_error error=$e');
+      }
+    });
+  }
+
   // Keep the service alive for the lifetime of the app
   ref.onDispose(() {
     AppLogging.debug(
@@ -3480,6 +3529,7 @@ final protocolServiceProvider = Provider<ProtocolService>((ref) {
     );
     // Clear the callback when disposing
     NotificationService().onReactionSelected = null;
+    reticulumSub?.cancel();
     service.stop();
   });
 
@@ -4793,6 +4843,96 @@ class MessagesNotifier extends Notifier<List<Message>> {
     state = [...state, message];
     _storage?.saveMessage(message);
     _recordMessageSignature(message);
+    _recordNodeDexActivity(message);
+  }
+
+  /// Forward inbound traffic to NodeDex so the Discovery card's
+  /// `Messages` count and `Last Seen` reflect chat activity, not just
+  /// node-tick encounters. Outgoing messages (where `from == myNodeNum`)
+  /// are skipped, as are messages with no resolved sender.
+  ///
+  /// Receiving a text message is direct proof that the sender was
+  /// on-mesh at [Message.timestamp], independent of whether the
+  /// [nodesProvider] tick path observed a fresh `node.lastHeard` value
+  /// for that sender.
+  ///
+  /// Carries its own idempotency guard ([_nodeDexHookKey] +
+  /// [_nodeDexHookDedupWindow]) keyed on packet identity rather than
+  /// row identity. The foreground `_isDuplicateMessage` path catches
+  /// most duplicates before they reach this hook, but
+  /// [mergeBackgroundMessages] only checks id + 60s content dedup —
+  /// missing the `packetId` axis on purpose, since push payloads can
+  /// lack `packetId` and a `null == null` match would over-suppress
+  /// distinct messages. So a foreground UUID copy and a later
+  /// background-merged SHA1 copy of the same physical packet, separated
+  /// by more than 60s of timestamp skew, can both reach this hook. The
+  /// hook-local key uses `packetId` when present (with sender + recipient
+  /// + channel context to avoid cross-conversation collisions when packet
+  /// ids wrap or are reused) and falls back to a TTL-bounded sender +
+  /// channel + text signature otherwise.
+  static const Duration _nodeDexHookDedupWindow = Duration(minutes: 5);
+  final Map<String, DateTime> _nodeDexHookKeys = {};
+  int _nodeDexHookAcceptedCount = 0;
+
+  String _nodeDexHookKey(Message message) {
+    final to = message.to;
+    final channel = message.channel ?? '';
+    if (message.packetId != null) {
+      return 'pid:${message.from}:$to:$channel:${message.packetId}';
+    }
+    return 'sig:${message.from}:$to:$channel:${message.text}';
+  }
+
+  void _recordNodeDexActivity(Message message) {
+    final myNum = ref.read(myNodeNumProvider);
+    if (myNum != null && message.from == myNum) return;
+    if (message.from == 0) return;
+
+    final key = _nodeDexHookKey(message);
+    final now = DateTime.now();
+    final priorAt = _nodeDexHookKeys[key];
+    if (priorAt != null && now.difference(priorAt) <= _nodeDexHookDedupWindow) {
+      AppLogging.nodeDex(
+        'Skipping NodeDex hook (duplicate key=$key, '
+        'prior at ${priorAt.toIso8601String()})',
+      );
+      return;
+    }
+    _nodeDexHookKeys[key] = now;
+    _nodeDexHookKeys.removeWhere(
+      (_, ts) => now.difference(ts) > _nodeDexHookDedupWindow,
+    );
+    _nodeDexHookAcceptedCount++;
+
+    final notifier = ref.read(nodeDexProvider.notifier);
+    notifier.recordMessage(message.from);
+    final encounterRecorded = notifier.recordEncounter(
+      message.from,
+      timestamp: message.timestamp,
+    );
+
+    AppLogging.nodeDex(
+      'Inbound ${message.isBroadcast ? "channel" : "DM"} message → '
+      'NodeDex: from=${message.from}, '
+      'ts=${message.timestamp.toIso8601String()}, key=$key, '
+      'recordMessage=true, encounterRecorded=$encounterRecorded',
+    );
+  }
+
+  @visibleForTesting
+  void recordNodeDexActivityForTest(Message message) =>
+      _recordNodeDexActivity(message);
+
+  @visibleForTesting
+  int get nodeDexHookAcceptedCountForTest => _nodeDexHookAcceptedCount;
+
+  @visibleForTesting
+  Map<String, DateTime> get nodeDexHookKeysForTest => _nodeDexHookKeys;
+
+  @visibleForTesting
+  void resetNodeDexHookForTest() {
+    _nodeDexHookKeys.clear();
+    _nodeDexHookAcceptedCount = 0;
   }
 
   Future<void> _persistHiddenTapback(Message message) async {
@@ -4993,6 +5133,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
       }
       state = [...state, m];
       _recordMessageSignature(m);
+      _recordNodeDexActivity(m);
       inserted++;
     }
     if (inserted > 0) {
@@ -5691,6 +5832,22 @@ final channelsProvider =
     NotifierProvider<ChannelsNotifier, List<ChannelConfig>>(
       ChannelsNotifier.new,
     );
+
+/// Device-config backup service. Captures the current device's channels,
+/// LoRa/device/module config, and owner into a [DeviceConfigBundle], and
+/// applies one back to the device on restore. Backed by a thin gateway
+/// over [ProtocolService] so unit tests can fake the wire layer.
+final deviceConfigBackupServiceProvider = Provider<DeviceConfigBackupService>((
+  ref,
+) {
+  final protocol = ref.watch(protocolServiceProvider);
+  return DeviceConfigBackupService(
+    gateway: ProtocolServiceBackupGateway(
+      protocol,
+      () => ref.read(channelsProvider),
+    ),
+  );
+});
 
 // My node number - updates when received from device
 class MyNodeNumNotifier extends Notifier<int?> {

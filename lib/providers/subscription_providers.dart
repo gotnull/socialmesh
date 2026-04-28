@@ -24,7 +24,12 @@ final subscriptionServiceProvider = FutureProvider<PurchaseService>((
   ref,
 ) async {
   final service = PurchaseService();
-  await service.initialize();
+  // Configure RevenueCat directly under the Firebase UID when one is already
+  // available. This avoids the "configure anonymous → logIn(uid)" hop that
+  // creates a fresh alias edge on every cold start and eventually saturates
+  // RC's per-user alias chain (error code 23).
+  final appUserId = FirebaseAuth.instance.currentUser?.uid;
+  await service.initialize(appUserId: appUserId);
   return service;
 });
 
@@ -200,13 +205,22 @@ Future<PurchaseResult> purchaseProduct(WidgetRef ref, String productId) async {
   AppLogging.subscriptions(
     '💳 [PurchaseProduct] Starting purchase for: $productId',
   );
+
+  // Capture notifier references up front. WidgetRef becomes invalid when the
+  // calling widget unmounts (e.g. sheet dismissed mid-purchase), but the
+  // underlying notifiers live in the ProviderContainer and survive — so the
+  // finally block can always clear loading state.
+  final SubscriptionLoadingNotifier loadingNotifier;
+  final SubscriptionErrorNotifier errorNotifier;
   try {
-    ref.read(subscriptionLoadingProvider.notifier).setLoading(true);
-    ref.read(subscriptionErrorProvider.notifier).clear();
+    loadingNotifier = ref.read(subscriptionLoadingProvider.notifier);
+    errorNotifier = ref.read(subscriptionErrorProvider.notifier);
   } catch (_) {
-    // ref may already be disposed — abort early
     return PurchaseResult.error;
   }
+
+  loadingNotifier.setLoading(true);
+  errorNotifier.clear();
 
   try {
     final service = await ref.read(subscriptionServiceProvider.future);
@@ -240,18 +254,10 @@ Future<PurchaseResult> purchaseProduct(WidgetRef ref, String productId) async {
     return result;
   } catch (e) {
     AppLogging.subscriptions('💳 [PurchaseProduct] Error: $e');
-    try {
-      ref.read(subscriptionErrorProvider.notifier).setError(e.toString());
-    } catch (_) {
-      // ref may be disposed if the calling widget was unmounted
-    }
+    errorNotifier.setError(e.toString());
     return PurchaseResult.error;
   } finally {
-    try {
-      ref.read(subscriptionLoadingProvider.notifier).setLoading(false);
-    } catch (_) {
-      // ref may be disposed if the calling widget was unmounted
-    }
+    loadingNotifier.setLoading(false);
   }
 }
 
@@ -264,17 +270,22 @@ Future<bool> restorePurchases(WidgetRef ref) async {
     '💳 [RestorePurchases] ═══════════════════════════════════════════════',
   );
   AppLogging.subscriptions('💳 [RestorePurchases] Provider function called');
+
+  // Capture notifier references up front — see purchaseProduct for rationale.
+  final SubscriptionLoadingNotifier loadingNotifier;
+  final SubscriptionErrorNotifier errorNotifier;
+  try {
+    loadingNotifier = ref.read(subscriptionLoadingProvider.notifier);
+    errorNotifier = ref.read(subscriptionErrorProvider.notifier);
+  } catch (_) {
+    return false;
+  }
+
   AppLogging.subscriptions(
     '💳 [RestorePurchases] Setting loading state to true',
   );
-
-  try {
-    ref.read(subscriptionLoadingProvider.notifier).setLoading(true);
-    ref.read(subscriptionErrorProvider.notifier).clear();
-  } catch (_) {
-    // ref may already be disposed — abort early
-    return false;
-  }
+  loadingNotifier.setLoading(true);
+  errorNotifier.clear();
 
   try {
     AppLogging.subscriptions(
@@ -292,46 +303,24 @@ Future<bool> restorePurchases(WidgetRef ref) async {
       '💳 [RestorePurchases] State BEFORE restore: ${stateBefore.purchasedProductIds} (count: $purchaseCountBefore)',
     );
 
-    // IMPORTANT: Do restore FIRST, before logging in with Firebase UID
-    // This ensures we restore purchases from the anonymous ID that Google Play uses
-    AppLogging.subscriptions(
-      '💳 [RestorePurchases] Calling service.restorePurchases() FIRST (before Firebase login)...',
-    );
+    AppLogging.subscriptions('💳 [RestorePurchases] Calling restorePurchases');
     await service.restorePurchases();
-    AppLogging.subscriptions('💳 [RestorePurchases] Initial restore completed');
+    AppLogging.subscriptions('💳 [RestorePurchases] Restore completed');
 
-    // Now sync with Firebase Auth for cross-device consistency
-    // This transfers any restored purchases to the Firebase-linked customer
+    // Mirror restored purchases into Firestore so the admin panel and the
+    // cloud-sync entitlement service see them. Skipped when signed out —
+    // there's no Firestore document to mirror into. Non-fatal: a failure
+    // here MUST NOT revoke RC-backed access (RC is the source of truth).
+    // The result is logged with a stable MIRROR_SYNC_FAILED prefix on
+    // failure so it is observable without crashing the restore flow.
     final firebaseUser = FirebaseAuth.instance.currentUser;
     if (firebaseUser != null) {
-      AppLogging.subscriptions(
-        '💳 [RestorePurchases] Firebase user signed in: ${firebaseUser.uid}',
-      );
-      AppLogging.subscriptions(
-        '💳 [RestorePurchases] Syncing RevenueCat with Firebase UID...',
-      );
-      await service.logIn(firebaseUser.uid);
-      // Do another refresh after login to ensure state is synced
-      AppLogging.subscriptions(
-        '💳 [RestorePurchases] Refreshing after Firebase login...',
-      );
-      await service.refreshPurchases();
-
-      // Mirror purchases into Firestore so the admin panel and the
-      // cloud-sync entitlement service see them. Non-fatal: a failure here
-      // MUST NOT revoke RC-backed access (RC is the source of truth).
-      // The result is logged with a stable MIRROR_SYNC_FAILED prefix on
-      // failure so it is observable without crashing the restore flow.
       await _syncPurchasesToFirestoreSafe('RestorePurchases');
     } else {
       AppLogging.subscriptions(
-        '💳 [RestorePurchases] No Firebase user signed in (restore still works via store account)',
+        '💳 [RestorePurchases] No Firebase user — skipping Firestore mirror',
       );
     }
-
-    AppLogging.subscriptions(
-      '💳 [RestorePurchases] service.restorePurchases() completed',
-    );
 
     // Always refresh state after restore
     AppLogging.subscriptions(
@@ -384,21 +373,13 @@ Future<bool> restorePurchases(WidgetRef ref) async {
   } catch (e, stackTrace) {
     AppLogging.subscriptions('💳 [RestorePurchases] ❌ ERROR: $e');
     AppLogging.subscriptions('💳 [RestorePurchases] Stack trace: $stackTrace');
-    try {
-      ref.read(subscriptionErrorProvider.notifier).setError(e.toString());
-    } catch (_) {
-      // ref may be disposed if the calling widget was unmounted
-    }
+    errorNotifier.setError(e.toString());
     return false;
   } finally {
     AppLogging.subscriptions(
       '💳 [RestorePurchases] Setting loading state to false',
     );
-    try {
-      ref.read(subscriptionLoadingProvider.notifier).setLoading(false);
-    } catch (_) {
-      // ref may be disposed if the calling widget was unmounted
-    }
+    loadingNotifier.setLoading(false);
   }
 }
 

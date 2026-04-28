@@ -137,6 +137,26 @@ class NotificationService {
 
   bool _initialized = false;
 
+  /// Per-peer last-fire timestamp (ms since epoch) for notifications that
+  /// can be triggered multiple times by retransmits or rebroadcast paths
+  /// (CAP_RESP arriving via direct BLE + mesh rebroadcast, HS_DECLINE
+  /// retransmit, etc.). Keyed by `<eventName>:<peerNodeId>`. A 30 s
+  /// window matches the typical mesh retransmit cadence so a freshly
+  /// arrived peer or decline shows once, not three times.
+  final Map<String, int> _lastFiredMsByEventPeer = {};
+  static const Duration _kEventDedupeWindow = Duration(seconds: 30);
+
+  bool _shouldSuppressForDedupe(String eventName, int peerNodeId) {
+    final key = '$eventName:$peerNodeId';
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+    final lastMs = _lastFiredMsByEventPeer[key];
+    if (lastMs != null && nowMs - lastMs < _kEventDedupeWindow.inMilliseconds) {
+      return true;
+    }
+    _lastFiredMsByEventPeer[key] = nowMs;
+    return false;
+  }
+
   /// Callback to send reaction messages back to senders
   ReactionCallback? onReactionSelected;
 
@@ -1464,6 +1484,7 @@ class NotificationService {
       presentAlert: true,
       presentBadge: true,
       presentSound: playSound,
+      sound: playSound ? 'sip_handshake_accepted.caf' : null,
       threadIdentifier: 'sip_handshakes',
     );
 
@@ -1515,6 +1536,7 @@ class NotificationService {
       presentAlert: true,
       presentBadge: true,
       presentSound: playSound,
+      sound: playSound ? 'sip_handshake_request.caf' : null,
       threadIdentifier: 'sip_handshakes',
     );
 
@@ -1545,6 +1567,9 @@ class NotificationService {
     required int peerNodeId,
   }) async {
     if (!_initialized) return;
+    if (_shouldSuppressForDedupe('sip_handshake_declined', peerNodeId)) {
+      return;
+    }
 
     final androidDetails = AndroidNotificationDetails(
       'sip_handshakes',
@@ -1554,7 +1579,7 @@ class NotificationService {
       priority: Priority.defaultPriority,
       icon: '@mipmap/ic_launcher',
       groupKey: 'sip_handshakes',
-      playSound: false,
+      playSound: true,
       enableVibration: false,
       color: AccentColors.red,
     );
@@ -1562,7 +1587,8 @@ class NotificationService {
     final iosDetails = const DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: false,
-      presentSound: false,
+      presentSound: true,
+      sound: 'sip_handshake_declined.caf',
       threadIdentifier: 'sip_handshakes',
     );
 
@@ -1587,12 +1613,12 @@ class NotificationService {
     );
   }
 
-  /// Show notification when a new SIP peer is discovered nearby.
-  ///
-  /// Fires on the `sip_discovery` channel. Intended to run in the background
-  /// so the user knows to open Mesh Explorer and connect.
+  // Show notification when a new SIP peer is discovered nearby.
+  // Fires on the `sip_discovery` channel. Intended to run in the
+  // background so the user knows to open the Handshake screen and connect.
   Future<void> showSipPeerFoundNotification({required int peerNodeId}) async {
     if (!_initialized) return;
+    if (_shouldSuppressForDedupe('sip_peer_found', peerNodeId)) return;
 
     final androidDetails = AndroidNotificationDetails(
       'sip_discovery',
@@ -1620,7 +1646,7 @@ class NotificationService {
       macOS: iosDetails,
     );
 
-    final notificationId = (peerNodeId.abs() % 1000000) + 7000000;
+    final notificationId = (peerNodeId.abs() % 1000000) + 8000000;
 
     await _notifications.show(
       id: notificationId,

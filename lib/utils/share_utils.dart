@@ -3,6 +3,7 @@
 import 'dart:io';
 
 import 'package:flutter/widgets.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 /// Get a safe share position for iOS/iPadOS popover
@@ -62,5 +63,33 @@ Future<void> shareFiles(
     subject: subject,
     text: text,
     sharePositionOrigin: getSafeSharePosition(context, sharePositionOrigin),
+  );
+}
+
+/// Write [text] to a temp file with the given [filename] and share it as a
+/// proper file (gives the share sheet a real filename + MIME, so "Save to
+/// Files" / mail attachments work correctly on iOS).
+///
+/// Use this for any export larger than a snippet — CSV, GPX, JSON, etc.
+/// Plain `shareText` is fine for short copy-to-clipboard snippets but on
+/// iOS produces an untitled `.txt` when saved.
+Future<void> shareTextAsFile(
+  String text, {
+  required String filename,
+  String? mimeType,
+  String? subject,
+  BuildContext? context,
+  Rect? sharePositionOrigin,
+}) async {
+  // Resolve the share position before any await so we don't read the
+  // caller's BuildContext after an async gap.
+  final sharePosition = getSafeSharePosition(context, sharePositionOrigin);
+  final dir = await getTemporaryDirectory();
+  final file = File('${dir.path}/$filename');
+  await file.writeAsString(text);
+  await Share.shareXFiles(
+    [XFile(file.path, mimeType: mimeType)],
+    subject: subject,
+    sharePositionOrigin: sharePosition,
   );
 }

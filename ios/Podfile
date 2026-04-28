@@ -63,4 +63,114 @@ post_install do |installer|
 
 
   end
+
+  # Re-sign embedded frameworks workaround.
+  #
+  # `package:objective_c` (and other native-asset Dart FFI packages)
+  # ship their iOS frameworks adhoc-signed (TeamIdentifier=not set).
+  # iOS refuses to install adhoc-signed binaries on a physical device
+  # and surfaces the failure as `0xe8008014` ("invalid signature") on
+  # the embedded framework. The simulator doesn't enforce this so sim
+  # builds work fine.
+  #
+  # Fix: add a Run Script build phase to the Runner target that runs
+  # after Embed Frameworks and re-signs every framework in the
+  # frameworks folder with the build's signing identity. The .app's
+  # outer signature is then re-sealed by Xcode's normal "Sign on Copy"
+  # path, so install succeeds.
+  #
+  # This block is idempotent — if the phase already exists with the
+  # same body, no change is made.
+  runner_path = File.join(File.dirname(__FILE__), 'Runner.xcodeproj')
+  if File.exist?(runner_path)
+    runner_project = Xcodeproj::Project.open(runner_path)
+    runner_target = runner_project.targets.find { |t| t.name == 'Runner' }
+    if runner_target
+      project_changed = false
+
+      # ----------------------------------------------------------------
+      # Phase 1: native-assets cache platform check (runs FIRST, before
+      # flutter assemble). Auto-purges a wrong-platform
+      # `objective_c.framework` from the build cache so the iPhone
+      # never ends up shipping a sim-arch dylib (and vice versa).
+      # Eliminates the "flutter clean before every iPhone rebuild"
+      # ritual that the cross-target cache contamination otherwise
+      # forces. See ios/Scripts/check_native_assets_platform.sh for
+      # the full rationale.
+      # ----------------------------------------------------------------
+      check_phase_name = '[Socialmesh] Check native-assets platform'
+      check_script_body = <<~SH
+        "${PROJECT_DIR}/Scripts/check_native_assets_platform.sh"
+      SH
+      existing_check = runner_target.shell_script_build_phases.find { |p| p.name == check_phase_name }
+      if existing_check
+        if existing_check.shell_script != check_script_body
+          existing_check.shell_script = check_script_body
+          project_changed = true
+        end
+      else
+        check_phase = runner_target.new_shell_script_build_phase(check_phase_name)
+        check_phase.shell_script = check_script_body
+        # Move to the very front of build_phases so it runs before
+        # flutter assemble (which lives inside the Flutter "Run Build
+        # Phase" script). new_shell_script_build_phase appends; we
+        # relocate it to position 0.
+        runner_target.build_phases.delete(check_phase)
+        runner_target.build_phases.unshift(check_phase)
+        project_changed = true
+      end
+      # Idempotency: even if the phase already existed, ensure it is
+      # at index 0. A merge or manual reorder may have moved it.
+      if existing_check
+        idx = runner_target.build_phases.index(existing_check)
+        if idx && idx != 0
+          runner_target.build_phases.delete(existing_check)
+          runner_target.build_phases.unshift(existing_check)
+          project_changed = true
+        end
+      end
+
+      # ----------------------------------------------------------------
+      # Phase 2: re-sign embedded frameworks (runs LAST, after Embed
+      # Pods Frameworks has copied the native asset into the bundle).
+      # `package:objective_c` ships its iOS framework adhoc-signed, so
+      # iOS device install fails with 0xe8008014 ("invalid signature")
+      # without this re-sign step. The simulator doesn't enforce
+      # signatures so this is a no-op for sim builds.
+      # ----------------------------------------------------------------
+      resign_phase_name = '[Socialmesh] Re-sign Embedded Frameworks'
+      resign_script_body = <<~SH
+        # Workaround for package:objective_c shipping its iOS framework
+        # adhoc-signed; iOS device install otherwise fails with 0xe8008014.
+        # Re-sign every embedded framework with the build's signing identity.
+        set -e
+        if [ -z "${EXPANDED_CODE_SIGN_IDENTITY}" ]; then
+          echo "EXPANDED_CODE_SIGN_IDENTITY empty (simulator build) — skipping resign"
+          exit 0
+        fi
+        FRAMEWORKS_DIR="${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}"
+        [ -d "$FRAMEWORKS_DIR" ] || exit 0
+        find "$FRAMEWORKS_DIR" -maxdepth 1 -name "*.framework" -print0 | while IFS= read -r -d '' fw; do
+          echo "Re-signing $fw with ${EXPANDED_CODE_SIGN_IDENTITY}"
+          /usr/bin/codesign --force --sign "${EXPANDED_CODE_SIGN_IDENTITY}" \\
+                   --preserve-metadata=identifier,entitlements,flags \\
+                   --timestamp=none \\
+                   "$fw"
+        done
+      SH
+      existing_resign = runner_target.shell_script_build_phases.find { |p| p.name == resign_phase_name }
+      if existing_resign
+        if existing_resign.shell_script != resign_script_body
+          existing_resign.shell_script = resign_script_body
+          project_changed = true
+        end
+      else
+        resign_phase = runner_target.new_shell_script_build_phase(resign_phase_name)
+        resign_phase.shell_script = resign_script_body
+        project_changed = true
+      end
+
+      runner_project.save if project_changed
+    end
+  end
 end

@@ -547,6 +547,103 @@ void main() {
       expect(restored.socialTagUpdatedAtMs, isNull);
       expect(restored.userNoteUpdatedAtMs, isNull);
     });
+  });
+
+  // ===========================================================================
+  // Regression: Firestore set(merge: true) clear semantics
+  // ---------------------------------------------------------------------------
+  // Clearable user-editable fields (socialTag, userNote, localNickname) must
+  // be emitted as explicit null in toJson() so that the outbox upload path —
+  // which uses SetOptions(merge: true) with the payload nested under `data` —
+  // actually clears the cloud value. Firestore deep-merges nested maps, so a
+  // missing key preserves the stale value and it reappears on the next pull.
+  // ===========================================================================
+
+  group('regression — cleared fields survive Firestore merge', () {
+    Map<String, dynamic> firestoreMerge(
+      Map<String, dynamic> before,
+      Map<String, dynamic> after,
+    ) {
+      // Simulates a single level of Firestore set(merge: true) merging: each
+      // key in the new payload overwrites the same key in the old doc;
+      // missing keys are preserved. Sufficient for flat user-field keys.
+      return {...before, ...after};
+    }
+
+    test('cleared userNote clears in merged cloud doc', () {
+      final before = NodeDexEntry(
+        nodeNum: 42,
+        firstSeen: DateTime(2024, 1, 1),
+        lastSeen: DateTime(2024, 6, 1),
+        userNote: 'old note',
+        userNoteUpdatedAtMs: 1000,
+      ).toJson();
+      final after = NodeDexEntry(
+        nodeNum: 42,
+        firstSeen: DateTime(2024, 1, 1),
+        lastSeen: DateTime(2024, 6, 1),
+        userNote: null,
+        userNoteUpdatedAtMs: 2000,
+      ).toJson();
+
+      final merged = firestoreMerge(before, after);
+      expect(merged['un'], isNull);
+      expect(merged['un_ms'], equals(2000));
+
+      final restored = NodeDexEntry.fromJson(merged);
+      expect(restored.userNote, isNull);
+      expect(restored.userNoteUpdatedAtMs, equals(2000));
+    });
+
+    test('cleared socialTag clears in merged cloud doc', () {
+      final before = NodeDexEntry(
+        nodeNum: 42,
+        firstSeen: DateTime(2024, 1, 1),
+        lastSeen: DateTime(2024, 6, 1),
+        socialTag: NodeSocialTag.trustedNode,
+        socialTagUpdatedAtMs: 1000,
+      ).toJson();
+      final after = NodeDexEntry(
+        nodeNum: 42,
+        firstSeen: DateTime(2024, 1, 1),
+        lastSeen: DateTime(2024, 6, 1),
+        socialTag: null,
+        socialTagUpdatedAtMs: 2000,
+      ).toJson();
+
+      final merged = firestoreMerge(before, after);
+      expect(merged['st'], isNull);
+      expect(merged['st_ms'], equals(2000));
+
+      final restored = NodeDexEntry.fromJson(merged);
+      expect(restored.socialTag, isNull);
+      expect(restored.socialTagUpdatedAtMs, equals(2000));
+    });
+
+    test('cleared localNickname clears in merged cloud doc', () {
+      final before = NodeDexEntry(
+        nodeNum: 42,
+        firstSeen: DateTime(2024, 1, 1),
+        lastSeen: DateTime(2024, 6, 1),
+        localNickname: 'OldName',
+        localNicknameUpdatedAtMs: 1000,
+      ).toJson();
+      final after = NodeDexEntry(
+        nodeNum: 42,
+        firstSeen: DateTime(2024, 1, 1),
+        lastSeen: DateTime(2024, 6, 1),
+        localNickname: null,
+        localNicknameUpdatedAtMs: 2000,
+      ).toJson();
+
+      final merged = firestoreMerge(before, after);
+      expect(merged['ln'], isNull);
+      expect(merged['ln_ms'], equals(2000));
+
+      final restored = NodeDexEntry.fromJson(merged);
+      expect(restored.localNickname, isNull);
+      expect(restored.localNicknameUpdatedAtMs, equals(2000));
+    });
 
     test('full entry with all fields round-trips correctly', () {
       final entry = NodeDexEntry(

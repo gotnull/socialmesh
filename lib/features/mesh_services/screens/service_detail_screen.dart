@@ -17,6 +17,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/logging.dart';
 import '../../../core/l10n/l10n_extension.dart';
+import '../../../utils/text_sanitizer.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/delivery_progress_card.dart';
@@ -487,9 +488,11 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
       if (offset + titleLen > payload.length) break;
 
       final title = titleLen > 0
-          ? utf8.decode(
-              payload.sublist(offset, offset + titleLen),
-              allowMalformed: true,
+          ? sanitizeExternalText(
+              utf8.decode(
+                payload.sublist(offset, offset + titleLen),
+                allowMalformed: true,
+              ),
             )
           : '';
       offset += titleLen;
@@ -558,9 +561,11 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
     final titleLen = payload[offset++];
     if (offset + titleLen > payload.length) return null;
     final title = titleLen > 0
-        ? utf8.decode(
-            payload.sublist(offset, offset + titleLen),
-            allowMalformed: true,
+        ? sanitizeExternalText(
+            utf8.decode(
+              payload.sublist(offset, offset + titleLen),
+              allowMalformed: true,
+            ),
           )
         : '';
     offset += titleLen;
@@ -569,9 +574,11 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
     final descLen = payload[offset++];
     if (offset + descLen > payload.length) return null;
     final description = descLen > 0
-        ? utf8.decode(
-            payload.sublist(offset, offset + descLen),
-            allowMalformed: true,
+        ? sanitizeExternalText(
+            utf8.decode(
+              payload.sublist(offset, offset + descLen),
+              allowMalformed: true,
+            ),
           )
         : '';
     offset += descLen;

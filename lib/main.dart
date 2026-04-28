@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
+
 // lint-allow: scaffold — transient loader widgets, visible for milliseconds only
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -32,6 +34,7 @@ import 'core/accessibility_theme_adapter.dart';
 import 'l10n/app_localizations.dart';
 import 'core/l10n/l10n_extension.dart';
 import 'core/logging.dart';
+import 'core/logging/os_log_bridge.dart';
 import 'core/safety/error_handler.dart';
 import 'core/safety/lifecycle_mixin.dart';
 import 'features/debug/app_log_screen.dart' as app_log;
@@ -68,6 +71,7 @@ import 'models/social.dart';
 import 'services/app_intents/app_intents_service.dart';
 import 'services/deep_link_manager.dart';
 import 'utils/snackbar.dart';
+import 'utils/text_sanitizer.dart';
 import 'services/profile/profile_cloud_sync_service.dart';
 import 'services/privacy_consent_service.dart';
 import 'services/notifications/notification_service.dart';
@@ -102,6 +106,10 @@ import 'features/globe/globe_screen.dart';
 import 'features/reachability/mesh_reachability_screen.dart';
 import 'features/feedback/my_bug_reports_screen.dart';
 import 'features/admin/bug_reports/admin_bug_reports_screen.dart';
+import 'features/sip/sip_hub_screen.dart';
+import 'features/sip/sip_dm_screen.dart';
+import 'providers/sip_providers.dart';
+import 'services/protocol/sip/sip_dm.dart';
 import 'features/social/screens/post_detail_screen.dart';
 import 'features/social/screens/profile_social_screen.dart';
 import 'features/signals/screens/signal_detail_screen.dart';
@@ -128,6 +136,10 @@ Future<bool> get firebaseReady => firebaseReadyCompleter.future;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Tee debugPrint into iOS os_log so Dart logs are visible via MCP log
+  // capture. Debug + iOS only — no-op everywhere else.
+  OsLogBridge.setup();
 
   // Initialize centralized error handler FIRST - catches errors during startup
   AppErrorHandler.initialize();
@@ -182,6 +194,30 @@ Future<void> main() async {
       await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(false);
     } catch (_) {
       // Best-effort — if this fails, _initializeFirebaseServices will retry.
+    }
+
+    // iOS simulator cannot receive silent APN pushes, so Firebase Phone
+    // Auth falls back to reCAPTCHA via SFSafariViewController — which
+    // cascades our Flutter bottom sheet out of the visible view when it
+    // dismisses (UIKit unwinds the modal stack). Firebase's
+    // appVerificationDisabledForTesting skips both silent APN and
+    // reCAPTCHA when the phone is whitelisted in Firebase Console as a
+    // test number. Release builds strip this block entirely because
+    // kDebugMode is false — so shipped App Store binaries always run
+    // real APN + real reCAPTCHA + real SMS.
+    if (kDebugMode && Platform.isIOS) {
+      try {
+        await FirebaseAuth.instance.setSettings(
+          appVerificationDisabledForTesting: true,
+        );
+        AppLogging.mfa(
+          '⚠️ Debug iOS: appVerificationDisabledForTesting=true — '
+          'reCAPTCHA skipped; requires Firebase Console test phone '
+          'whitelist to sign in',
+        );
+      } catch (e) {
+        AppLogging.mfa('appVerificationDisabledForTesting failed: $e');
+      }
     }
 
     firebaseReadyCompleter.complete(true);
@@ -1230,37 +1266,15 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       final service = await ref.read(subscriptionServiceProvider.future);
       AppLogging.debug('💰 RevenueCat initialized');
 
-      // Deterministic bootstrap sequence (Play Billing 8 / RC 10.x):
-      //   1. configure                — done by service.initialize() above
-      //   2. syncPurchases (anonymous)— merge any store-held tokens into RC
-      //   3. logIn(firebaseUid)       — alias anonymous → identified
-      //   4. syncPurchases (identified)— attach receipt under the UID alias
-      //   5. refreshPurchases         — explicit deterministic state pull
-      // Anonymous users only need step 2.
+      // service.initialize() already called Purchases.configure() with the
+      // current Firebase UID (when signed in), so no logIn / pre-login
+      // syncPurchases hop is needed here. A single refresh pulls the latest
+      // entitlements; explicit Restore is exposed via the Restore button.
       final firebaseUser = FirebaseAuth.instance.currentUser;
       AppLogging.subscriptions(
         '💰 [Bootstrap] firebaseUser=${firebaseUser?.uid ?? "(anonymous)"}',
       );
-
-      AppLogging.subscriptions(
-        '💰 [Bootstrap] step 2: pre-login syncPurchases',
-      );
-      await service.syncPurchases();
-
-      if (firebaseUser != null) {
-        AppLogging.subscriptions(
-          '💰 [Bootstrap] step 3: logIn(${firebaseUser.uid})',
-        );
-        await service.logIn(firebaseUser.uid);
-
-        AppLogging.subscriptions(
-          '💰 [Bootstrap] step 4: post-login syncPurchases',
-        );
-        await service.syncPurchases();
-
-        AppLogging.subscriptions('💰 [Bootstrap] step 5: refreshPurchases');
-        await service.refreshPurchases();
-      }
+      await service.refreshPurchases();
       AppLogging.subscriptions('💰 [Bootstrap] complete');
 
       // Initialize cloud sync entitlement service AFTER purchases are
@@ -1317,18 +1331,41 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
           .onNotificationNavigation
           .listen(_handlePushNotificationNavigation);
 
-      // Also listen for foreground local notification taps
-      // Payload format is 'type' or 'type|deepLink'
+      // Also listen for foreground local notification taps. Two
+      // payload conventions exist:
+      //   1. `type|deepLink` — used by FCM payloads converted into
+      //      local notifications (announcements, etc.). The deep link
+      //      itself can contain `:` (e.g. `https://...`), so the `|`
+      //      separator is what splits type from link.
+      //   2. `type:targetId[:more]` — the historical NotificationService
+      //      convention for SIP handshake / peer-found / pet / aether /
+      //      TAK / firmware notifications. First segment is the type,
+      //      rest is the target identifier.
+      // Both feed the same `_handlePushNotificationNavigation`
+      // dispatcher, so we normalise here.
       _localNotificationTapSubscription = NotificationService()
           .onPushNotificationTap
           .listen((payload) {
-            final parts = payload.split('|');
-            final type = parts.first;
-            final deepLink = parts.length > 1
-                ? parts.sublist(1).join('|')
-                : null;
+            String type;
+            String? targetId;
+            String? deepLink;
+            if (payload.contains('|')) {
+              final parts = payload.split('|');
+              type = parts.first;
+              deepLink = parts.length > 1 ? parts.sublist(1).join('|') : null;
+            } else if (payload.contains(':')) {
+              final parts = payload.split(':');
+              type = parts.first;
+              targetId = parts.length > 1 ? parts.sublist(1).join(':') : null;
+            } else {
+              type = payload;
+            }
             _handlePushNotificationNavigation(
-              NotificationNavigation(type: type, deepLink: deepLink),
+              NotificationNavigation(
+                type: type,
+                targetId: targetId,
+                deepLink: deepLink,
+              ),
             );
           });
 
@@ -1420,10 +1457,108 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
           }
           break;
 
+        case 'sip_handshake':
+          // Handshake completed → land on the DM thread for the
+          // matching peer if a session already exists. If the user
+          // taps very early (session not yet created) or after the
+          // session was cleaned up, fall back to the SIP hub so they
+          // can re-enter from the peer card.
+          _routeToSipHandshakeCompleted(navigator, nav.targetId);
+          break;
+
+        case 'sip_handshake_request':
+        case 'sip_handshake_declined':
+        case 'sip_peer_found':
+          // The SIP hub already surfaces:
+          //   - inbound HS_HELLO consent banners (request),
+          //   - declined-handshake state on the peer card (declined),
+          //   - newly-discovered peers in the nearby section (found).
+          // Push the hub so any of those land in front of the user —
+          // unless the hub is ALREADY the topmost route, in which
+          // case a second push stacks a duplicate Handshake screen
+          // on top of the existing one (visible as two AppBars
+          // titled "Handshake" stacked) and tapping back lands the
+          // user back on the same screen they started on.
+          // Consent is still a manual tap — never auto-accepted.
+          if (!_topRouteIsSipHub(navigator)) {
+            navigator.push(
+              MaterialPageRoute(
+                builder: (_) => const SipHubScreen(),
+                settings: const RouteSettings(name: _kSipHubRouteName),
+              ),
+            );
+          }
+          break;
+
         default:
           AppLogging.notifications('🔔 Unknown notification type: ${nav.type}');
       }
     });
+  }
+
+  /// Resolve the SIP DM session for [peerNodeIdStr] and push
+  /// `SipDmScreen`. Falls back to `SipHubScreen` when the peer ID is
+  /// missing or no active session matches — the hub is always a safe
+  /// landing.
+  void _routeToSipHandshakeCompleted(
+    NavigatorState navigator,
+    String? peerNodeIdStr,
+  ) {
+    final peerNodeId = peerNodeIdStr != null
+        ? int.tryParse(peerNodeIdStr)
+        : null;
+    if (peerNodeId != null) {
+      final sessions = ref.read(sipActiveSessionsProvider);
+      final match = sessions
+          .where((s) => s.peerNodeId == peerNodeId)
+          .fold<SipDmSession?>(null, (_, s) => s);
+      if (match != null) {
+        navigator.push(
+          MaterialPageRoute(
+            builder: (_) => SipDmScreen(sessionTag: match.sessionTag),
+          ),
+        );
+        return;
+      }
+      AppLogging.notifications(
+        '🔔 sip_handshake tap: no active session for peer $peerNodeId, '
+        'falling back to hub',
+      );
+    }
+    if (!_topRouteIsSipHub(navigator)) {
+      navigator.push(
+        MaterialPageRoute(
+          builder: (_) => const SipHubScreen(),
+          settings: const RouteSettings(name: _kSipHubRouteName),
+        ),
+      );
+    }
+  }
+
+  /// Route name used to identify a [SipHubScreen] in the navigator
+  /// stack. A named route lets [_topRouteIsSipHub] short-circuit
+  /// duplicate pushes when a notification tap arrives while the hub
+  /// is already on top — without it, a second push stacks an
+  /// identical Handshake screen and the user has to tap back twice
+  /// to return.
+  ///
+  /// Matches the `runtimeType.toString()` convention used by
+  /// `navigateFromDrawer` (see `main_shell.dart`) so that whether
+  /// the hub was reached via the drawer or pushed from a previous
+  /// notification, the same name is used.
+  static const String _kSipHubRouteName = 'SipHubScreen';
+
+  /// True if the topmost route on [navigator]'s stack is a
+  /// [SipHubScreen] (identified by the [_kSipHubRouteName] tag).
+  /// Uses `popUntil` with a stop-on-first-iteration predicate to
+  /// inspect the top route without modifying the stack.
+  bool _topRouteIsSipHub(NavigatorState navigator) {
+    var top = false;
+    navigator.popUntil((route) {
+      top = route.settings.name == _kSipHubRouteName;
+      return true; // stop iteration immediately, no actual pop
+    });
+    return top;
   }
 
   Future<void> _loadAccentColor() async {
@@ -3744,8 +3879,8 @@ class _AppleTVGridCardState extends State<_AppleTVGridCard>
                       );
                       final visibleChars = (displayName.length * progress)
                           .round();
-                      final displayText = displayName.substring(
-                        0,
+                      final displayText = safeTruncateCodeUnits(
+                        displayName,
                         visibleChars,
                       );
                       return Text(
@@ -3989,7 +4124,7 @@ class _SplashNodeCardState extends State<_SplashNodeCard>
               child: Center(
                 child: shortName.isNotEmpty
                     ? Text(
-                        shortName.substring(0, shortName.length.clamp(0, 2)),
+                        safeTruncate(shortName, 2),
                         style: TextStyle(
                           color: context.accentColor,
                           fontSize: 12,

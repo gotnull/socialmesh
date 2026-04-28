@@ -3,6 +3,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../core/l10n/l10n_extension.dart';
+import '../../core/meshtastic/modem_preset_metadata.dart';
+import '../../core/meshtastic/region_metadata.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/ico_help_system.dart';
 import 'package:flutter/services.dart';
@@ -911,104 +913,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
   }
 
   Widget _buildRegionSelector() {
-    final regions = [
-      (
-        config_pbenum.Config_LoRaConfig_RegionCode.UNSET,
-        context.l10n.radioConfigRegionUnset,
-        context.l10n.radioConfigRegionNotConfigured,
-      ),
-      (
-        config_pbenum.Config_LoRaConfig_RegionCode.US,
-        context.l10n.radioConfigRegionUs,
-        '915MHz', // lint-allow: hardcoded-string
-      ),
-      (
-        config_pbenum.Config_LoRaConfig_RegionCode.EU_433,
-        context.l10n.radioConfigRegionEu433,
-        '433MHz', // lint-allow: hardcoded-string
-      ),
-      (
-        config_pbenum.Config_LoRaConfig_RegionCode.EU_868,
-        context.l10n.radioConfigRegionEu868,
-        '868MHz', // lint-allow: hardcoded-string
-      ),
-      (
-        config_pbenum.Config_LoRaConfig_RegionCode.CN,
-        context.l10n.radioConfigRegionChina,
-        '470MHz', // lint-allow: hardcoded-string
-      ),
-      (
-        config_pbenum.Config_LoRaConfig_RegionCode.JP,
-        context.l10n.radioConfigRegionJapan,
-        '920MHz', // lint-allow: hardcoded-string
-      ),
-      (
-        config_pbenum.Config_LoRaConfig_RegionCode.ANZ,
-        context.l10n.radioConfigRegionAnz,
-        '915MHz', // lint-allow: hardcoded-string
-      ),
-      (
-        config_pbenum.Config_LoRaConfig_RegionCode.KR,
-        context.l10n.radioConfigRegionKorea,
-        '920MHz', // lint-allow: hardcoded-string
-      ),
-      (
-        config_pbenum.Config_LoRaConfig_RegionCode.TW,
-        context.l10n.radioConfigRegionTaiwan,
-        '920MHz', // lint-allow: hardcoded-string
-      ),
-      (
-        config_pbenum.Config_LoRaConfig_RegionCode.RU,
-        context.l10n.radioConfigRegionRussia,
-        '868MHz', // lint-allow: hardcoded-string
-      ),
-      (
-        config_pbenum.Config_LoRaConfig_RegionCode.IN,
-        context.l10n.radioConfigRegionIndia,
-        '865MHz', // lint-allow: hardcoded-string
-      ),
-      (
-        config_pbenum.Config_LoRaConfig_RegionCode.NZ_865,
-        context.l10n.radioConfigRegionNz865,
-        '865MHz', // lint-allow: hardcoded-string
-      ),
-      (
-        config_pbenum.Config_LoRaConfig_RegionCode.TH,
-        context.l10n.radioConfigRegionThailand,
-        '920MHz', // lint-allow: hardcoded-string
-      ),
-      (
-        config_pbenum.Config_LoRaConfig_RegionCode.UA_433,
-        context.l10n.radioConfigRegionUkraine433,
-        '433MHz', // lint-allow: hardcoded-string
-      ),
-      (
-        config_pbenum.Config_LoRaConfig_RegionCode.UA_868,
-        context.l10n.radioConfigRegionUkraine868,
-        '868MHz', // lint-allow: hardcoded-string
-      ),
-      (
-        config_pbenum.Config_LoRaConfig_RegionCode.MY_433,
-        context.l10n.radioConfigRegionMalaysia433,
-        '433MHz', // lint-allow: hardcoded-string
-      ),
-      (
-        config_pbenum.Config_LoRaConfig_RegionCode.MY_919,
-        context.l10n.radioConfigRegionMalaysia919,
-        '919MHz', // lint-allow: hardcoded-string
-      ),
-      (
-        config_pbenum.Config_LoRaConfig_RegionCode.SG_923,
-        context.l10n.radioConfigRegionSingapore,
-        '923MHz', // lint-allow: hardcoded-string
-      ),
-      (
-        config_pbenum.Config_LoRaConfig_RegionCode.LORA_24,
-        context.l10n.radioConfigRegionLora24,
-        '2.4GHz', // lint-allow: hardcoded-string
-      ),
-    ];
-
+    final l = context.l10n;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       padding: const EdgeInsets.all(AppTheme.spacing16),
@@ -1020,7 +925,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            context.l10n.radioConfigRegionSelectHint,
+            l.radioConfigRegionSelectHint,
             style: TextStyle(color: context.textSecondary, fontSize: 13),
           ),
           SizedBox(height: AppTheme.spacing16),
@@ -1039,12 +944,17 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                 color: context.textPrimary,
                 fontFamily: AppTheme.fontFamily,
               ),
-              items: regions.map((r) {
+              items: kRegionMetadata.map((r) {
+                final label = r.radioConfigLabel(l);
+                final suffix =
+                    r.code == config_pbenum.Config_LoRaConfig_RegionCode.UNSET
+                    ? r.regionSelectionDescription(l)
+                    : r.frequency;
                 return DropdownMenuItem(
-                  value: r.$1,
+                  value: r.code,
                   child: Text(
-                    '${r.$2} (${r.$3})',
-                  ), // lint-allow: hardcoded-string
+                    '$label ($suffix)', // lint-allow: hardcoded-string
+                  ),
                 );
               }).toList(),
               value:
@@ -1063,49 +973,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
   }
 
   Widget _buildModemPresetSelector() {
-    final presets = [
-      (
-        config_pbenum.Config_LoRaConfig_ModemPreset.LONG_FAST,
-        context.l10n.radioConfigPresetLongFast,
-        context.l10n.radioConfigPresetLongFastDesc,
-      ),
-      (
-        config_pbenum.Config_LoRaConfig_ModemPreset.LONG_SLOW,
-        context.l10n.radioConfigPresetLongSlow,
-        context.l10n.radioConfigPresetLongSlowDesc,
-      ),
-      (
-        config_pbenum.Config_LoRaConfig_ModemPreset.VERY_LONG_SLOW,
-        context.l10n.radioConfigPresetVeryLongSlow,
-        context.l10n.radioConfigPresetVeryLongSlowDesc,
-      ),
-      (
-        config_pbenum.Config_LoRaConfig_ModemPreset.LONG_MODERATE,
-        context.l10n.radioConfigPresetLongModerate,
-        context.l10n.radioConfigPresetLongModerateDesc,
-      ),
-      (
-        config_pbenum.Config_LoRaConfig_ModemPreset.MEDIUM_FAST,
-        context.l10n.radioConfigPresetMediumFast,
-        context.l10n.radioConfigPresetMediumFastDesc,
-      ),
-      (
-        config_pbenum.Config_LoRaConfig_ModemPreset.MEDIUM_SLOW,
-        context.l10n.radioConfigPresetMediumSlow,
-        context.l10n.radioConfigPresetMediumSlowDesc,
-      ),
-      (
-        config_pbenum.Config_LoRaConfig_ModemPreset.SHORT_FAST,
-        context.l10n.radioConfigPresetShortFast,
-        context.l10n.radioConfigPresetShortFastDesc,
-      ),
-      (
-        config_pbenum.Config_LoRaConfig_ModemPreset.SHORT_SLOW,
-        context.l10n.radioConfigPresetShortSlow,
-        context.l10n.radioConfigPresetShortSlowDesc,
-      ),
-    ];
-
+    final l = context.l10n;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       padding: const EdgeInsets.all(AppTheme.spacing16),
@@ -1117,14 +985,14 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            context.l10n.radioConfigPresetMustMatch,
+            l.radioConfigPresetMustMatch,
             style: TextStyle(color: context.textSecondary, fontSize: 13),
           ),
           SizedBox(height: AppTheme.spacing16),
-          ...presets.map((p) {
-            final isSelected = _selectedModemPreset == p.$1;
+          ...kModemPresetMetadata.map((p) {
+            final isSelected = _selectedModemPreset == p.preset;
             return InkWell(
-              onTap: () => setState(() => _selectedModemPreset = p.$1),
+              onTap: () => setState(() => _selectedModemPreset = p.preset),
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Row(
@@ -1143,7 +1011,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            p.$2,
+                            p.label(l),
                             style: TextStyle(
                               color: isSelected
                                   ? context.textPrimary
@@ -1152,7 +1020,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                             ),
                           ),
                           Text(
-                            p.$3,
+                            p.description(l),
                             style: TextStyle(
                               color: context.textTertiary,
                               fontSize: 13,

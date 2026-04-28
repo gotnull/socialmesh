@@ -168,6 +168,32 @@ class OverlaySecureSessionManager {
     }
   }
 
+  /// User-driven reset of the secure session for [linkId] WITHOUT
+  /// closing the underlying overlay link.
+  ///
+  /// Drops the in-memory session entry (and its ephemeral X25519 keys
+  /// + tx/rx counters) so the next outbound `sendEncrypted` for the
+  /// same link triggers a fresh re-negotiation via `onLinkActivated`.
+  /// The link record itself stays intact — plaintext overlay
+  /// features (resource transfer etc.) keep flowing on the same
+  /// canonical linkId.
+  ///
+  /// Per `OVERLAY_V0_2.md` §25 secure-session state is in-memory
+  /// only: there is nothing on disk to clean up here. Returns `true`
+  /// if a session existed and was dropped, `false` when there was
+  /// nothing to reset (idempotent).
+  bool resetSession(int linkId) {
+    final removed = _sessions.remove(linkId) != null;
+    if (removed) {
+      AppLogging.overlay(
+        'SECURE session reset by user linkId=0x'
+        '${linkId.toRadixString(16)} '
+        '— next outbound will negotiate fresh keys',
+      );
+    }
+    return removed;
+  }
+
   // -----------------------------------------------------------------
   // Inbound handlers
   // -----------------------------------------------------------------

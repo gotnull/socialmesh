@@ -239,6 +239,10 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen>
   void _shareLog() {
     final logger = ref.read(appLoggerProvider);
     final content = logger.export();
+    if (content.trim().isEmpty) {
+      showInfoSnackBar(context, context.l10n.debugScreenNothingToShare);
+      return;
+    }
     shareText(content, subject: 'Socialmesh App Log', context: context);
   }
 
@@ -281,6 +285,10 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen>
   void _copyToClipboard() {
     final logger = ref.read(appLoggerProvider);
     final content = logger.export();
+    if (content.trim().isEmpty) {
+      showInfoSnackBar(context, context.l10n.debugScreenNothingToCopy);
+      return;
+    }
     Clipboard.setData(ClipboardData(text: content));
     showSuccessSnackBar(context, context.l10n.debugScreenLogCopied);
   }

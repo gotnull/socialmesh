@@ -1,0 +1,599 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
+
+/// Renders a Connect Four board for one [SipPlayInstanceState].
+///
+/// Pure renderer — every column tap dispatches up to a supplied
+/// `onColumnTap(column)` callback. The widget itself never sends a
+/// frame or mutates engine state; the parent [_C4BoardSection] is
+/// responsible for the optimistic-pending overlay, the interaction
+/// lock, and the router dispatch.
+///
+/// Ship-grade visual choices:
+///   - Custom-painted disc circles → consistent radius and pixel-
+///     perfect rendering at every device scale.
+///   - Column press feedback: 0.96 → 1.0 scale with 120 ms easeOut
+///     when a legal column is tapped.
+///   - Drop animation: 250 ms easeOutCubic from the top of the
+///     column down to the landing row, mimicking gravity.
+///   - Pending disc overlay: ghost disc at the targeted column's
+///     landing row, gently pulsing while the engine catches up.
+///   - Theme-driven colours: accent for the local player's discs,
+///     muted text-primary for the peer (no hard-coded red / yellow
+///     in render code — the wire enum names are spec-only).
+library;
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+import '../../../../../core/logging.dart';
+import '../../../../../core/theme.dart';
+import '../../../../../services/protocol/sip/play/games/connectfour/c4_payload.dart';
+import '../../../../../services/protocol/sip/play/games/connectfour/c4_rules.dart';
+
+/// Animation tuning for the board. Centralised so tests + manual QA
+/// can find every duration in one place.
+abstract final class _Tuning {
+  /// Time for a freshly-placed disc to fall from the top of its
+  /// column down to its landing row.
+  static const Duration drop = Duration(milliseconds: 250);
+
+  /// Press scale dip for column-tap feedback.
+  static const Duration columnPress = Duration(milliseconds: 120);
+
+  /// Slow pulse rate for the optimistic-pending ghost disc.
+  static const Duration pendingPulse = Duration(milliseconds: 1400);
+
+  /// Top "lip" of plastic above the playable rows, expressed as a
+  /// fraction of one cell height. The lip is the region where a
+  /// freshly-tapped disc starts the drop animation: it's drawn
+  /// behind the board face with NO hole punched through it, so the
+  /// disc is fully invisible at the start of the drop and only
+  /// emerges once it enters the first hole below. Without this lip
+  /// the column starts directly at hole 0 and the disc can't ever
+  /// be "behind the board" at start — it always pokes into hole 0
+  /// from frame zero. 0.6 of a cell gives the disc room to sit
+  /// fully hidden plus a small reveal animation as it enters.
+  static const double lipFraction = 0.6;
+}
+
+class C4BoardWidget extends StatefulWidget {
+  /// Current 6×7 state derived from the entry log.
+  final C4Board board;
+
+  /// Local user's disc colour. Null until the offer is accepted (the
+  /// parent hides the board widget in that window so this is
+  /// `null`-safe).
+  final C4Disc? localDisc;
+
+  /// True when local taps should produce a move. False during the
+  /// peer's turn, after a terminal state, when the peer is blocked,
+  /// or when an optimistic move is in flight (interaction lock).
+  final bool enabled;
+
+  /// Optimistic-move overlay. The parent sets this the moment the
+  /// user taps a legal column; once the engine state catches up the
+  /// parent clears it. While set, the targeted column renders the
+  /// ghost disc at the landing row and all other columns are
+  /// non-interactive — UI consistency without touching the
+  /// authoritative state.
+  final C4Move? pendingMove;
+
+  /// Called with column index 0..6 when the local user taps a
+  /// non-full, legal column. Caller is responsible for sending the
+  /// move envelope through the router and tracking the pending
+  /// overlay.
+  final void Function(int column) onColumnTap;
+
+  const C4BoardWidget({
+    super.key,
+    required this.board,
+    required this.localDisc,
+    required this.enabled,
+    required this.onColumnTap,
+    this.pendingMove,
+  });
+
+  @override
+  State<C4BoardWidget> createState() => _C4BoardWidgetState();
+}
+
+class _C4BoardWidgetState extends State<C4BoardWidget>
+    with TickerProviderStateMixin {
+  /// Ghost-disc pulse (0..1 sine) used to gently breathe the
+  /// optimistic overlay. Repeats while the pending move is
+  /// unresolved.
+  late final AnimationController _pulse;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulse = AnimationController(vsync: this, duration: _Tuning.pendingPulse)
+      ..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = context.accentColor;
+    AppLogging.sipPlay(
+      'C4_BOARD_BUILD enabled=${widget.enabled} '
+      'localDisc=${widget.localDisc?.name ?? "null"} '
+      'pendingColumn=${widget.pendingMove?.column ?? "null"} '
+      'pendingDisc=${widget.pendingMove?.disc.name ?? "null"} '
+      'moveCount=${widget.board.moveCount}',
+    );
+    return AspectRatio(
+      // Cols : (rows + lip) — the extra `lipFraction` of a row
+      // worth of vertical space at the top is the "drop slot"
+      // where a freshly-tapped disc starts its descent. Cells stay
+      // approximately square at the new ratio.
+      aspectRatio: C4Board.cols / (C4Board.rows + _Tuning.lipFraction),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: context.background,
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
+          border: Border.all(color: context.border.withValues(alpha: 0.5)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(AppTheme.spacing4),
+          child: Row(
+            children: [
+              for (var col = 0; col < C4Board.cols; col += 1)
+                Expanded(
+                  child: _Column(
+                    // Stable key so widget tests can target a specific
+                    // column deterministically.
+                    key: ValueKey<String>('c4_col_$col'),
+                    column: col,
+                    board: widget.board,
+                    localDisc: widget.localDisc,
+                    enabled: widget.enabled,
+                    isPending: widget.pendingMove?.column == col,
+                    pendingDisc: widget.pendingMove?.column == col
+                        ? widget.pendingMove!.disc
+                        : null,
+                    accent: accent,
+                    pulse: _pulse,
+                    onTap: () => widget.onColumnTap(col),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Column extends StatefulWidget {
+  final int column;
+  final C4Board board;
+  final C4Disc? localDisc;
+  final bool enabled;
+  final bool isPending;
+  final C4Disc? pendingDisc;
+  final Color accent;
+  final Animation<double> pulse;
+  final VoidCallback onTap;
+
+  const _Column({
+    super.key,
+    required this.column,
+    required this.board,
+    required this.localDisc,
+    required this.enabled,
+    required this.isPending,
+    required this.pendingDisc,
+    required this.accent,
+    required this.pulse,
+    required this.onTap,
+  });
+
+  @override
+  State<_Column> createState() => _ColumnState();
+}
+
+class _ColumnState extends State<_Column> with TickerProviderStateMixin {
+  /// Press scale 1.0 → 0.96 → 1.0 on a legal column tap.
+  late final AnimationController _press;
+
+  /// Drop animation 0 → 1 the first time a disc resolves into a new
+  /// row in this column. The animation is keyed off `_lastSettledRow`
+  /// — when the column gains a disc at a new row, we re-trigger.
+  late final AnimationController _drop;
+
+  /// Last row that has a disc in this column (snapshotted between
+  /// rebuilds so we can detect a new placement).
+  int? _lastSettledTopRow;
+
+  @override
+  void initState() {
+    super.initState();
+    _press = AnimationController(
+      vsync: this,
+      duration: _Tuning.columnPress,
+      value: 0,
+    );
+    _drop = AnimationController(vsync: this, duration: _Tuning.drop, value: 1);
+    _lastSettledTopRow = _topFilledRow(widget.board, widget.column);
+  }
+
+  @override
+  void didUpdateWidget(covariant _Column oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final newTop = _topFilledRow(widget.board, widget.column);
+    if (newTop != _lastSettledTopRow) {
+      _lastSettledTopRow = newTop;
+      if (newTop != null) {
+        _drop.forward(from: 0.0);
+      } else {
+        _drop.value = 1.0;
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _press.dispose();
+    _drop.dispose();
+    super.dispose();
+  }
+
+  Future<void> _animateTap() async {
+    await _press.animateTo(1.0, curve: Curves.easeOut);
+    if (!mounted) return;
+    await _press.animateBack(0.0, curve: Curves.easeOut);
+  }
+
+  bool get _canTap =>
+      widget.enabled &&
+      !widget.isPending &&
+      widget.board.isLegalMove(widget.column);
+
+  /// Top-filled row index in [column], or null for empty column.
+  /// Used to detect "a new disc just landed at a higher row" so we
+  /// can trigger the drop animation only on transitions.
+  int? _topFilledRow(C4Board board, int column) {
+    for (var r = 0; r < C4Board.rows; r += 1) {
+      if (board.cellAt(r, column) != null) return r;
+    }
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final pendingLandingRow = widget.isPending
+        ? widget.board.landingRowFor(widget.column)
+        : null;
+    return Padding(
+      padding: const EdgeInsets.all(AppTheme.spacing2),
+      child: Listener(
+        // Raw pointer-down observer — fires regardless of _canTap.
+        // Lets us prove a tap physically reached the column even when
+        // the gesture detector below has its callbacks nulled out.
+        // Behaviour-neutral: Listener does not consume the event.
+        behavior: HitTestBehavior.translucent,
+        onPointerDown: (event) {
+          AppLogging.sipPlay(
+            'C4_COLUMN_POINTER_DOWN col=${widget.column} '
+            'isPending=${widget.isPending} '
+            'enabled=${widget.enabled} '
+            'columnFull=${!widget.board.isLegalMove(widget.column)} '
+            'canTap=$_canTap',
+          );
+        },
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTapDown: _canTap ? (_) => _press.forward() : null,
+          onTapCancel: _canTap ? () => _press.reverse() : null,
+          onTap: _canTap
+              ? () {
+                  AppLogging.sipPlay(
+                    'C4_COLUMN_TAP_FIRED col=${widget.column}',
+                  );
+                  HapticFeedback.lightImpact();
+                  _animateTap();
+                  widget.onTap();
+                }
+              : null,
+          child: AnimatedBuilder(
+            animation: _press,
+            builder: (context, child) {
+              // Map 0..1 → 1.0..0.96 for the press dip.
+              final scale = 1.0 - (_press.value * 0.04);
+              return Transform.scale(scale: scale, child: child);
+            },
+            child: AnimatedBuilder(
+              animation: Listenable.merge([_drop, widget.pulse]),
+              builder: (context, _) {
+                return SizedBox.expand(
+                  child: CustomPaint(
+                    painter: _C4ColumnPainter(
+                      column: widget.column,
+                      board: widget.board,
+                      localDisc: widget.localDisc,
+                      pendingDisc: widget.pendingDisc,
+                      pendingLandingRow: pendingLandingRow,
+                      pulseValue: widget.pulse.value,
+                      dropProgress: Curves.easeOutCubic.transform(_drop.value),
+                      topSettledRow: _lastSettledTopRow,
+                      accent: widget.accent,
+                      mutedDisc: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium!.color!.withValues(alpha: 0.85),
+                      cellBg: context.card,
+                      // Board face matches the outer board container
+                      // colour so the column reads as one continuous
+                      // surface. Holes punched in this colour reveal
+                      // the cellBg "shaft" + any disc drawn below.
+                      boardFace: context.background,
+                      gridLine: context.border.withValues(alpha: 0.5),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Custom painter for one Connect Four column. Paints in z-order so
+/// the disc visually slides DOWN BEHIND the board face, only visible
+/// through the cell-holes — exactly like a physical Connect Four
+/// frame:
+///
+///   1. Shaft (`cellBg`) fills the column — what's seen through holes
+///      when no disc is there.
+///   2. Settled / dropping / pending discs are painted at their hole
+///      positions with a subtle radial gradient (top-left highlight,
+///      bottom-right shade) for ball-like depth.
+///   3. A faint inner-shadow ring is drawn just inside each hole edge
+///      so the disc reads as "set into" the hole rather than printed
+///      flat on the surface.
+///   4. The board face is painted last as a single rect with circular
+///      holes punched out via [PathFillType.evenOdd]. Anything above
+///      (between holes during the drop animation, edges of discs, etc.)
+///      is hidden by the board face — discs only show through the
+///      holes.
+///
+/// Does NOT draw across columns — each column is its own painter so
+/// the drop animation can be targeted to one column without
+/// re-painting the whole board.
+class _C4ColumnPainter extends CustomPainter {
+  final int column;
+  final C4Board board;
+  final C4Disc? localDisc;
+  final C4Disc? pendingDisc;
+  final int? pendingLandingRow;
+  final double pulseValue;
+  final double dropProgress;
+  final int? topSettledRow;
+  final Color accent;
+  final Color mutedDisc;
+  final Color cellBg;
+  final Color boardFace;
+  final Color gridLine;
+
+  _C4ColumnPainter({
+    required this.column,
+    required this.board,
+    required this.localDisc,
+    required this.pendingDisc,
+    required this.pendingLandingRow,
+    required this.pulseValue,
+    required this.dropProgress,
+    required this.topSettledRow,
+    required this.accent,
+    required this.mutedDisc,
+    required this.cellBg,
+    required this.boardFace,
+    required this.gridLine,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Vertical layout: the column has a top "lip" of plastic above
+    // the playable rows. The disc starts its drop animation
+    // somewhere in the lip area (fully hidden by the board face),
+    // then descends into hole 0 and the rest of the column. Total
+    // height = (rows + lipFraction) cells.
+    final cellHeight = size.height / (C4Board.rows + _Tuning.lipFraction);
+    final cellWidth = size.width;
+    final lipHeight = cellHeight * _Tuning.lipFraction;
+    // Hole radius — what the user reads as the "disc size" once the
+    // board face is overlaid. Same size as the disc itself; the
+    // depth cue comes from the hole inner-shadow + the disc radial
+    // gradient, not from a size mismatch.
+    final holeRadius = (cellWidth.clamp(0.0, cellHeight) * 0.85) / 2;
+    // Convert a logical row index (0..rows-1) to its hole-centre y
+    // coordinate. Used by the painter, the drop animation, and the
+    // pending-overlay positioning.
+    double rowCentreY(int row) => lipHeight + (row + 0.5) * cellHeight;
+
+    // 1. Shaft background. What shows through every hole when no
+    //    disc is there. Drawn over the entire column so the drop
+    //    animation has a continuous "behind the board" surface.
+    //    Darken the shaft significantly relative to the board face
+    //    so the punched-out holes read as recessed cutouts — when
+    //    shaft and board face are the same colour the entire panel
+    //    looks flat and the disc appears to be "on" the surface
+    //    rather than visible through the holes.
+    final shaftPaint = Paint()
+      ..color = Color.alphaBlend(Colors.black.withValues(alpha: 0.45), cellBg);
+    canvas.drawRect(Offset.zero & size, shaftPaint);
+
+    // 2. Settled discs. The TOP-most settled row gets the drop
+    //    animation: when dropProgress < 1, render it at its current
+    //    falling y-offset instead of its final row centre. The
+    //    falling disc is drawn UNDER the board face, so between
+    //    rows it slides behind the plastic and disappears, then
+    //    reappears as it reaches the next hole — the desired
+    //    "drop through" feel.
+    for (var row = 0; row < C4Board.rows; row += 1) {
+      final disc = board.cellAt(row, column);
+      if (disc == null) continue;
+
+      double cy;
+      if (row == topSettledRow && dropProgress < 1.0) {
+        // Falling disc: start the drop near the top of the column
+        // (inside the lip area, where the board face has NO hole),
+        // so the disc is fully hidden behind the plastic at frame
+        // zero. As the animation progresses, the disc descends
+        // through the lip and emerges only when it reaches hole 0.
+        // `holeRadius` as the start cy puts the disc fully inside
+        // the lip if `lipHeight >= 2*holeRadius` — when the lip is
+        // smaller, we still start the disc as high as it can go
+        // while staying inside the column bounds.
+        final finalY = rowCentreY(row);
+        final startY = holeRadius;
+        cy = startY + (finalY - startY) * dropProgress;
+      } else {
+        cy = rowCentreY(row);
+      }
+      _paintDisc(
+        canvas,
+        Offset(cellWidth / 2, cy),
+        holeRadius,
+        _discColour(disc),
+        opacity: 1.0,
+      );
+    }
+
+    // 3. Pending overlay: same-size ghost disc at the targeted
+    //    column's landing row, gently pulsing alpha. Drawn in the
+    //    same layer as settled discs (under the board face) so the
+    //    preview hole shows the ghost only — outside the hole the
+    //    board face hides it.
+    if (pendingDisc != null && pendingLandingRow != null) {
+      final pulseT = 0.6 + (pulseValue * 0.4);
+      final cy = rowCentreY(pendingLandingRow!);
+      _paintDisc(
+        canvas,
+        Offset(cellWidth / 2, cy),
+        holeRadius,
+        _discColour(pendingDisc!),
+        opacity: 0.5 * pulseT,
+      );
+    }
+
+    // 4. Inner shadow ring just inside the hole edge. Drawn as a
+    //    soft stroked ring at radius = holeRadius - strokeWidth so
+    //    the dark edge sits inside the hole — gives the disc the
+    //    "set into a recessed cup" look without darkening the disc
+    //    body. Subtle by design (alpha = 0.18). Drawn before the
+    //    board face so the face's hole boundary isn't disturbed.
+    final innerShadowStroke = holeRadius * 0.10;
+    final innerShadowPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = innerShadowStroke
+      ..color = Colors.black.withValues(alpha: 0.18);
+    final innerShadowRingRadius = holeRadius - innerShadowStroke / 2;
+    if (innerShadowRingRadius > 0) {
+      for (var row = 0; row < C4Board.rows; row += 1) {
+        final centre = Offset(cellWidth / 2, rowCentreY(row));
+        canvas.drawCircle(centre, innerShadowRingRadius, innerShadowPaint);
+      }
+    }
+
+    // 5. Board face with holes punched out. PathFillType.evenOdd
+    //    fills the outer rect and subtracts each cell-hole oval, so
+    //    the resulting shape is the plastic frame between cells.
+    //    Anything painted earlier in this column (discs, falling
+    //    disc, ghost) only shows through the hole regions.
+    final boardFacePath = Path()..fillType = PathFillType.evenOdd;
+    boardFacePath.addRect(Offset.zero & size);
+    for (var row = 0; row < C4Board.rows; row += 1) {
+      final centre = Offset(cellWidth / 2, rowCentreY(row));
+      boardFacePath.addOval(
+        Rect.fromCircle(center: centre, radius: holeRadius),
+      );
+    }
+    final boardFacePaint = Paint()..color = boardFace;
+    canvas.drawPath(boardFacePath, boardFacePaint);
+
+    // 6. Subtle grid divider on the LEFT edge of the column (skipped
+    //    on column 0 so the leftmost edge isn't double-bordered).
+    //    Painted on top of the board face so adjacent columns read
+    //    as discrete vertical channels.
+    if (column > 0) {
+      final linePaint = Paint()
+        ..color = gridLine
+        ..strokeWidth = 0.5;
+      canvas.drawLine(Offset.zero, Offset(0, size.height), linePaint);
+    }
+  }
+
+  /// Paint one disc at [centre] with [radius] using a subtle radial
+  /// gradient — top-left highlight + slight bottom-right shade — so
+  /// the disc reads as a 3D ball without going overboard. [opacity]
+  /// modulates the entire shader (used for the pulsing ghost).
+  void _paintDisc(
+    Canvas canvas,
+    Offset centre,
+    double radius,
+    Color baseColour, {
+    required double opacity,
+  }) {
+    // Light-source assumption: upper-left, ~30° off-axis. Gives a
+    // ball-like read without specular highlights (which would push
+    // into OOT territory).
+    final highlight = Color.lerp(
+      baseColour,
+      Colors.white,
+      0.22,
+    )!.withValues(alpha: opacity);
+    final mid = baseColour.withValues(alpha: opacity);
+    final shade = Color.lerp(
+      baseColour,
+      Colors.black,
+      0.20,
+    )!.withValues(alpha: opacity);
+    final shader = RadialGradient(
+      center: const Alignment(-0.35, -0.35),
+      radius: 0.95,
+      colors: [highlight, mid, shade],
+      stops: const [0.0, 0.55, 1.0],
+    ).createShader(Rect.fromCircle(center: centre, radius: radius));
+    canvas.drawCircle(centre, radius, Paint()..shader = shader);
+  }
+
+  /// Theme the disc colour by local-vs-peer, NOT by the wire-side
+  /// red/yellow naming. Mirrors how TTT picks the X/O colours.
+  Color _discColour(C4Disc disc) {
+    final isLocal = localDisc != null && disc == localDisc;
+    return isLocal ? accent : mutedDisc;
+  }
+
+  @override
+  bool shouldRepaint(covariant _C4ColumnPainter old) {
+    return old.column != column ||
+        old.board != board ||
+        old.localDisc != localDisc ||
+        old.pendingDisc != pendingDisc ||
+        old.pendingLandingRow != pendingLandingRow ||
+        old.pulseValue != pulseValue ||
+        old.dropProgress != dropProgress ||
+        old.topSettledRow != topSettledRow ||
+        old.accent != accent ||
+        old.mutedDisc != mutedDisc ||
+        old.cellBg != cellBg ||
+        old.boardFace != boardFace ||
+        old.gridLine != gridLine;
+  }
+}

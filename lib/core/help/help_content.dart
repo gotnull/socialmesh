@@ -1716,6 +1716,36 @@ class HelpContent {
             "**Device Info** shows live telemetry — battery level, hardware model, firmware version, and uptime. This data comes from the node directly and updates in real time.",
         icoMood: MeshBrainMood.approving,
       ),
+      HelpStep(
+        id: 'nodedex_trait_evidence',
+        bubbleText:
+            "**Trait Evidence** surfaces the concrete observations behind the primary trait — co-seen count, tenure, mobility, signal consistency, timing. These are the signals that drove the confidence score.",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'nodedex_additional_traits',
+        bubbleText:
+            "**Additional Traits** show other archetypes that also scored for this node. Nodes rarely fit a single archetype perfectly — secondary traits reveal nuance.",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'nodedex_pet_companion',
+        bubbleText:
+            "**Pet Companion** — your own NodePet lives locally with your node. Other nodes can appear here when they share a small companion summary.",
+        icoMood: MeshBrainMood.playful,
+      ),
+      HelpStep(
+        id: 'nodedex_mrrp_services',
+        bubbleText:
+            "**MRRP Services** are the capabilities this node advertises over the mesh — boards, profiles, meetups, and more. Each ID is a specific service the peer exposes.",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'nodedex_field_note',
+        bubbleText:
+            "The **Field Note** is a short, deterministic journal entry generated from the node's identity and primary trait. The same node always produces the same note — and it never travels over the mesh.",
+        icoMood: MeshBrainMood.playful,
+      ),
     ],
   );
 
@@ -1783,6 +1813,36 @@ class HelpContent {
         'Live telemetry from the node: battery percentage, hardware model, '
         'firmware version, channel utilization, and uptime. This data is only '
         'available when the node is actively heard on the mesh.',
+    'trait_evidence':
+        'The observations that most strongly support the primary trait '
+        'assigned above. Each bullet is a concrete signal drawn from encounter '
+        'history — co-seen connections, tenure, mobility, signal consistency, '
+        'and timing. These are the inputs that drove the confidence score.',
+    'additional_traits':
+        'Other behavioral archetypes that also scored for this node, ranked '
+        'by confidence. A node rarely fits a single archetype perfectly — '
+        'secondary traits reveal nuance, like an Anchor that also acts as a '
+        'Beacon, or a Drifter with Sentinel-like stretches.',
+    // Fallback copies for the [SectionInfoButton] existence check. The
+    // user-visible text comes from the ARB-backed resolver below; these
+    // strings are never displayed. Two keys — one per self-vs-remote
+    // branch — so [SectionInfoButton] opens the sheet in either case.
+    'pet_companion_self':
+        'Your NodePet lives with your node and evolves locally from your '
+        'care and mesh activity.',
+    'pet_companion_remote':
+        'If this node shares a companion summary, it can appear here. '
+        'Full companion state stays local to its owner.',
+    'mrrp_services':
+        'MRRP (Mesh Request-Response Protocol) services this node advertises. '
+        'Each service ID represents a capability the node exposes over the '
+        'mesh, such as a message board, profile exchange, or meetup '
+        'coordination. Tap any ID to learn more about that specific service.',
+    'field_note':
+        'A short, deterministic journal entry generated from this node\'s '
+        'identity and primary trait — like a naturalist\'s field observation. '
+        'The same node always produces the same note; it never changes, and '
+        'it never travels over the mesh.',
     // Album-specific section help
     'album_rarity':
         'Rarity tiers are computed from encounter count and inferred trait. '
@@ -2955,6 +3015,12 @@ class HelpContent {
     'activity_timeline' => l10n.helpNodeDexSectionActivityTimeline,
     'coseen' => l10n.helpNodeDexSectionCoseen,
     'device' => l10n.helpNodeDexSectionDevice,
+    'trait_evidence' => l10n.helpNodeDexSectionTraitEvidence,
+    'additional_traits' => l10n.helpNodeDexSectionAdditionalTraits,
+    'pet_companion_self' => l10n.helpNodeDexSectionPetCompanionSelf,
+    'pet_companion_remote' => l10n.helpNodeDexSectionPetCompanionRemote,
+    'mrrp_services' => l10n.helpNodeDexSectionMrrpServices,
+    'field_note' => l10n.helpNodeDexSectionFieldNote,
     'album_rarity' => l10n.helpNodeDexSectionAlbumRarity,
     'album_grouping' => l10n.helpNodeDexSectionAlbumGrouping,
     'album_explorer_title' => l10n.helpNodeDexSectionAlbumExplorerTitle,

@@ -17,33 +17,43 @@
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/logging.dart';
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/bottom_action_bar.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/scanline_overlay.dart';
 import '../../../core/widgets/status_banner.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../services/haptic_service.dart';
 import '../models/care_event.dart';
 import '../models/pet_action_result.dart';
+import '../models/pet_advisory.dart';
 import '../models/pet_enums.dart';
 import '../models/pet_state.dart';
+import '../providers/pet_debug_overrides.dart';
 import '../providers/pet_providers.dart';
+import '../services/pet_frame_profiler.dart';
 import '../services/pet_animation_tracker.dart';
-import '../../../core/constants.dart' show AppFeatureFlags;
-import '../services/pet_rive_adapter.dart';
 import '../widgets/pet_action_button.dart';
-import '../widgets/pet_creature_rive.dart';
-import '../widgets/pet_hatch_overlay.dart';
+import '../widgets/pet_actions_guide_sheet.dart';
+import '../widgets/pet_debug_overlay_sheet.dart';
 import '../widgets/pet_dna_viewer_sheet.dart';
+import '../widgets/pet_hatch_overlay.dart';
 import '../widgets/pet_inspect_sheet.dart';
+import '../widgets/pet_need_indicator.dart';
+import '../widgets/pet_onboarding_sheet.dart';
 import '../widgets/pet_sigil_painter.dart';
 import '../widgets/pet_stat_pip_row.dart';
+import '../widgets/pet_status_line.dart';
+import 'pet_timeline_screen.dart';
 
 class PetHomeScreen extends ConsumerWidget {
   const PetHomeScreen({super.key});
@@ -157,7 +167,7 @@ class _PetBody extends ConsumerStatefulWidget {
 }
 
 class _PetBodyState extends ConsumerState<_PetBody>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, LifecycleSafeMixin {
   /// Only fire one-shot effects for stage transitions that happened
   /// within this window. Older unacknowledged transitions are silently
   /// acknowledged so we never replay ancient history on first mount.
@@ -170,6 +180,16 @@ class _PetBodyState extends ConsumerState<_PetBody>
   _BannerSpec? _banner;
   int? _syncSessionNodeNum;
 
+  /// In-memory watermark of the most recent transition we've already
+  /// played an effect for, set synchronously in [_evaluateNewTransition]
+  /// before we kick the async `tracker.acknowledge` write. Guards
+  /// against SharedPreferences write latency: if the provider re-emits
+  /// before the disk write flushes, `latestUnacknowledged` would
+  /// otherwise return the same event and we'd replay the hatch overlay
+  /// + banner. Keyed to the current owner so a pet rekey resets it.
+  int? _playedOwnerNodeNum;
+  DateTime? _lastPlayedEventAt;
+
   // No-op reaction feedback — transient toast + creature bounce shown
   // when a tapped action resolved to capped / notNeeded / invalidInState.
   late final AnimationController _bounceController;
@@ -180,6 +200,10 @@ class _PetBodyState extends ConsumerState<_PetBody>
   @override
   void initState() {
     super.initState();
+    // Dev-gated frame profiler — logs build/raster durations while the
+    // pet hero is on screen when PET_LOGGING_ENABLED=true in .env.
+    // No-op for users without the flag.
+    PetFrameProfiler.start();
     _bounceController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 320),
@@ -194,11 +218,35 @@ class _PetBodyState extends ConsumerState<_PetBody>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _syncTrackerForCurrentOwner();
+      _maybeShowOnboarding();
     });
+  }
+
+  /// Show the three-card welcome sheet once, on the very first visit
+  /// to the pet home screen. The completion flag persists in
+  /// SharedPreferences; dismissing the sheet (by drag or Skip) also
+  /// counts as completion so we never re-nag the user.
+  Future<void> _maybeShowOnboarding() async {
+    final completedAsync = await ref.read(
+      petOnboardingCompletedProvider.future,
+    );
+    if (!mounted || completedAsync) return;
+    await AppBottomSheet.showScrollable<void>(
+      context: context,
+      initialChildSize: 0.75,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      builder: (controller) => PetOnboardingSheet(scrollController: controller),
+    );
+    // Whether the user tapped "Got it" (sets the flag inside the
+    // sheet) or swiped away, mark it completed so they're never
+    // shown this sheet again.
+    if (mounted) await markPetOnboardingCompleted(ref);
   }
 
   @override
   void dispose() {
+    PetFrameProfiler.stop();
     _bounceController.dispose();
     _noOpToastTimer?.cancel();
     super.dispose();
@@ -208,23 +256,28 @@ class _PetBodyState extends ConsumerState<_PetBody>
   void didUpdateWidget(covariant _PetBody old) {
     super.didUpdateWidget(old);
     if (old.state.ownerNodeNum != widget.state.ownerNodeNum) {
-      // Owner changed (rare — device swap) — reset local effect state.
+      // Owner changed (rare — device swap, or reSigil) — reset local
+      // effect state so the new owner's transitions fire cleanly.
       _hatchOverlayActive = false;
       _banner = null;
       _syncSessionNodeNum = null;
+      _playedOwnerNodeNum = null;
+      _lastPlayedEventAt = null;
     }
     _syncTrackerForCurrentOwner();
   }
 
-  /// Check the tracker and kick any pending effect. Guarded so it fires
-  /// at most once per (ownerNodeNum, mount session); the tracker itself
-  /// persists acknowledgment across restarts.
+  /// Check the tracker and kick any pending effect. First-mount only —
+  /// future transitions are detected by the [ref.listen] on
+  /// [ownPetProvider] inside [build], which fires on actual stage
+  /// changes. Calling this again on every [didUpdateWidget] was
+  /// replaying the hatch overlay whenever the provider re-emitted for
+  /// any reason (e.g. per-animation-tick state churn).
   void _syncTrackerForCurrentOwner() {
     final state = widget.state;
     if (_syncSessionNodeNum == state.ownerNodeNum) {
-      // Already synced once this mount — the watermark is authoritative
-      // from here; future transitions will arrive through ref.listen.
-      _evaluateNewTransition();
+      // Already synced this mount — nothing to do. The in-build
+      // ref.listen handles new transitions from here.
       return;
     }
     final trackerAsync = ref.read(petAnimationTrackerProvider);
@@ -246,8 +299,9 @@ class _PetBodyState extends ConsumerState<_PetBody>
       return;
     }
 
-    // Fresh event — acknowledge immediately so a provider rebuild can't
-    // replay the effect, then fire it asynchronously.
+    // Fresh event — acknowledge synchronously in-memory AND kick the
+    // async disk write, then fire the effect.
+    _markPlayed(state.ownerNodeNum, unack.at);
     unawaited(tracker.acknowledge(state.ownerNodeNum, unack.at));
     _playTransitionEffect(state, unack);
   }
@@ -262,8 +316,22 @@ class _PetBodyState extends ConsumerState<_PetBody>
     if (tracker == null) return;
     final unack = tracker.latestUnacknowledged(state);
     if (unack == null) return;
+    // In-memory guard: if we've already played this exact event (or a
+    // newer one) this session, don't replay. Beats the shared_prefs
+    // write race.
+    if (_playedOwnerNodeNum == state.ownerNodeNum &&
+        _lastPlayedEventAt != null &&
+        !unack.at.isAfter(_lastPlayedEventAt!)) {
+      return;
+    }
+    _markPlayed(state.ownerNodeNum, unack.at);
     unawaited(tracker.acknowledge(state.ownerNodeNum, unack.at));
     _playTransitionEffect(state, unack);
+  }
+
+  void _markPlayed(int ownerNodeNum, DateTime at) {
+    _playedOwnerNodeNum = ownerNodeNum;
+    _lastPlayedEventAt = at;
   }
 
   void _playTransitionEffect(PetState state, CareEvent event) {
@@ -365,8 +433,6 @@ class _PetBodyState extends ConsumerState<_PetBody>
         return l10n.petReasonStabilityAlreadyFull;
       case PetActionReason.nothingToClean:
         return l10n.petReasonNothingToClean;
-      case PetActionReason.nothingToSync:
-        return l10n.petReasonNothingToSync;
       case PetActionReason.alreadyAsleep:
         return l10n.petReasonAlreadyAsleep;
       case PetActionReason.asleep:
@@ -403,11 +469,32 @@ class _PetBodyState extends ConsumerState<_PetBody>
     final state = widget.state;
     final l10n = context.l10n;
     final engine = ref.watch(petCareEngineProvider);
-    final statMax = ref.watch(petConfigProvider).statMax;
+    final config = ref.watch(petConfigProvider);
+    final statMax = config.statMax;
     final mood = engine.deriveMood(state);
+    // Dev-only visual overrides. In release builds this provider always
+    // holds an empty PetDebugOverrides (no UI path writes to it), so
+    // every `??` below short-circuits to the real state.
+    final overrides = ref.watch(petDebugOverridesProvider);
+    final effectiveStage = overrides.stage ?? state.stage;
+    final effectiveBranch = overrides.branch ?? state.branch;
+    final effectiveMood = overrides.mood ?? mood;
+    final effectiveIsAsleep = overrides.isAsleep ?? state.isAsleep;
+    final effectiveIsSick = overrides.isSick ?? state.isSick;
+    final effectiveCallReason =
+        overrides.callReason ?? state.activeCall?.reason;
+    final effectiveIsCalling = effectiveCallReason != null;
     final now = DateTime.now();
     final ageDays = state.ageInDaysAt(now);
     final inSleepWindow = engine.isInSleepWindow(now);
+    // The primary "what should I tap right now?" advisory. Derived
+    // purely from state + config; drives the PetStatusLine above the
+    // creature AND the pulsing-button semantics in _ActionBar.
+    final advisory = computePrimaryAdvisory(
+      state: state,
+      config: config,
+      inSleepWindow: inSleepWindow,
+    );
 
     // Bottom cluster — goes into Scaffold.bottomNavigationBar via the
     // GlassScaffold passthrough. This is the one Flutter slot that is
@@ -456,6 +543,7 @@ class _PetBodyState extends ConsumerState<_PetBody>
           _ActionBar(
             state: state,
             inSleepWindow: inSleepWindow,
+            advisory: advisory,
             onResult: _onActionResult,
           ),
         ],
@@ -489,62 +577,64 @@ class _PetBodyState extends ConsumerState<_PetBody>
                 _DormantBanner(l10n: l10n),
                 const SizedBox(height: AppTheme.spacing16),
               ],
+              // Plain-language advisory — the single highest-priority
+              // "what to tap right now" for a first-time user. Always
+              // visible; reads "Thriving" when nothing's needed so the
+              // position itself is a stable signal to rest the eye on.
+              PetStatusLine(advisory: advisory),
+              const SizedBox(height: AppTheme.spacing16),
               Center(
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    AnimatedBuilder(
-                      animation: _bounceScale,
-                      builder: (context, child) => Transform.scale(
-                        scale: _bounceScale.value,
-                        child: child,
+                child: SizedBox(
+                  width: maxCreature.toDouble(),
+                  height: maxCreature.toDouble(),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Pocket-space ambience — faint horizontal scanlines
+                      // pinned behind the creature (static, no transforms
+                      // follow the pet). Matches the OG NodePet backdrop.
+                      const Positioned.fill(child: ScanlineOverlay()),
+                      AnimatedBuilder(
+                        animation: _bounceScale,
+                        builder: (context, child) => Transform.scale(
+                          scale: _bounceScale.value,
+                          child: child,
+                        ),
+                        child: PetCreature(
+                          dnaSeed: state.dnaSeed,
+                          stage: effectiveStage,
+                          branch: effectiveBranch,
+                          mood: effectiveMood,
+                          isAsleep: effectiveIsAsleep,
+                          isSick: effectiveIsSick,
+                          isCalling: effectiveIsCalling,
+                          hygieneArtefactCount: state.hygieneArtefacts.length,
+                          size: maxCreature.toDouble(),
+                          energy: state.energy,
+                          moodStat: state.mood,
+                          stability: state.stability,
+                          statMax: statMax,
+                          preferFrontFace: overrides.preferFrontFace ?? true,
+                        ),
                       ),
-                      child: AppFeatureFlags.isPetRiveEnabled
-                          ? PetCreatureRive(
-                              dnaSeed: state.dnaSeed,
-                              stage: state.stage,
-                              branch: state.branch,
-                              mood: mood,
-                              isAsleep: state.isAsleep,
-                              isSick: state.isSick,
-                              isCalling: state.activeCall != null,
-                              hygieneArtefactCount:
-                                  state.hygieneArtefacts.length,
-                              size: maxCreature.toDouble(),
-                              energy: state.energy,
-                              moodStat: state.mood,
-                              stability: state.stability,
-                              statMax: statMax,
-                              riveInputs: const PetRiveAdapter().buildInputs(
-                                state: state,
-                                derivedMood: mood,
-                                config: ref.read(petConfigProvider),
-                              ),
-                            )
-                          : PetCreature(
-                              dnaSeed: state.dnaSeed,
-                              stage: state.stage,
-                              branch: state.branch,
-                              mood: mood,
-                              isAsleep: state.isAsleep,
-                              isSick: state.isSick,
-                              isCalling: state.activeCall != null,
-                              hygieneArtefactCount:
-                                  state.hygieneArtefacts.length,
-                              size: maxCreature.toDouble(),
-                              energy: state.energy,
-                              moodStat: state.mood,
-                              stability: state.stability,
-                              statMax: statMax,
-                            ),
-                    ),
-                    if (_hatchOverlayActive)
-                      PetHatchOverlay(
-                        dnaSeed: state.dnaSeed,
-                        size: maxCreature.toDouble(),
-                        onComplete: _onOverlayComplete,
-                      ),
-                  ],
+                      // Floating thought-bubble indicator showing what
+                      // the pet wants. Hygiene is excluded because
+                      // dirt marks on the field already signal that
+                      // channel.
+                      if (effectiveCallReason != null &&
+                          effectiveCallReason != CallReason.hygiene)
+                        PetNeedIndicator(
+                          reason: effectiveCallReason,
+                          creatureSize: maxCreature.toDouble(),
+                        ),
+                      if (_hatchOverlayActive)
+                        PetHatchOverlay(
+                          dnaSeed: state.dnaSeed,
+                          size: maxCreature.toDouble(),
+                          onComplete: _onOverlayComplete,
+                        ),
+                    ],
+                  ),
                 ),
               ),
               _NoOpToastSlot(message: _noOpToastMessage),
@@ -579,8 +669,6 @@ class _PetBodyState extends ConsumerState<_PetBody>
                   fontFamily: AppTheme.fontFamily,
                 ),
               ),
-              const SizedBox(height: AppTheme.spacing12),
-              _DnaSeedChip(state: state),
             ],
           ),
         );
@@ -597,71 +685,89 @@ class _PetBodyState extends ConsumerState<_PetBody>
       title: l10n.petScreenTitle,
       centerTitle: true,
       physics: const NeverScrollableScrollPhysics(),
+      actions: [
+        IconButton(
+          tooltip: l10n.petTimelineScreenTitle,
+          icon: const Icon(Icons.timeline_outlined),
+          onPressed: () {
+            ref.read(hapticServiceProvider).buttonTap();
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const PetTimelineScreen(),
+              ),
+            );
+          },
+        ),
+        AppBarOverflowMenu<_PetOverflowAction>(
+          onSelected: (action) {
+            ref.read(hapticServiceProvider).buttonTap();
+            switch (action) {
+              case _PetOverflowAction.guide:
+                AppBottomSheet.showScrollable<void>(
+                  context: context,
+                  initialChildSize: 0.8,
+                  minChildSize: 0.4,
+                  maxChildSize: 0.95,
+                  builder: (controller) =>
+                      PetActionsGuideSheet(scrollController: controller),
+                );
+              case _PetOverflowAction.dnaViewer:
+                AppBottomSheet.showScrollable<void>(
+                  context: context,
+                  initialChildSize: 0.9,
+                  minChildSize: 0.5,
+                  maxChildSize: 0.95,
+                  builder: (controller) =>
+                      PetDnaViewerSheet(scrollController: controller),
+                );
+              case _PetOverflowAction.debugStates:
+                AppBottomSheet.showScrollable<void>(
+                  context: context,
+                  initialChildSize: 0.85,
+                  minChildSize: 0.5,
+                  maxChildSize: 0.95,
+                  builder: (controller) =>
+                      PetDebugOverlaySheet(scrollController: controller),
+                );
+            }
+          },
+          itemBuilder: (context) => [
+            PopupMenuItem<_PetOverflowAction>(
+              value: _PetOverflowAction.dnaViewer,
+              child: Row(
+                children: [
+                  const Icon(Icons.fingerprint, size: 18),
+                  const SizedBox(width: AppTheme.spacing12),
+                  Text(l10n.petDnaViewerOpenAction),
+                ],
+              ),
+            ),
+            PopupMenuItem<_PetOverflowAction>(
+              value: _PetOverflowAction.guide,
+              child: Row(
+                children: [
+                  const Icon(Icons.help_outline, size: 18),
+                  const SizedBox(width: AppTheme.spacing12),
+                  Text(l10n.petGuideSheetTitle),
+                ],
+              ),
+            ),
+            if (kDebugMode)
+              const PopupMenuItem<_PetOverflowAction>(
+                value: _PetOverflowAction.debugStates,
+                child: Row(
+                  children: [
+                    Icon(Icons.science_outlined, size: 18),
+                    SizedBox(width: AppTheme.spacing12),
+                    Text('Debug: pet states'), // lint-allow: hardcoded-string
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ],
       body: scrollBody,
       bottomNavigationBar: bottomCluster,
-    );
-  }
-}
-
-/// Tappable DNA-seed affordance shown below the creature's mood label.
-/// Opens the dedicated [PetDnaViewerSheet] — the pet renderer itself
-/// intentionally does NOT carry an inline helix; structural inspection
-/// lives in the viewer.
-class _DnaSeedChip extends StatelessWidget {
-  final PetState state;
-  const _DnaSeedChip({required this.state});
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final hex = '0x${state.dnaSeed.toRadixString(16).padLeft(8, '0')}';
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => AppBottomSheet.showScrollable<void>(
-          context: context,
-          initialChildSize: 0.9,
-          minChildSize: 0.5,
-          maxChildSize: 0.95,
-          builder: (controller) =>
-              PetDnaViewerSheet(scrollController: controller),
-        ),
-        borderRadius: BorderRadius.circular(AppTheme.radius16),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppTheme.spacing12,
-            vertical: AppTheme.spacing6,
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.fingerprint, size: 14, color: context.textTertiary),
-              const SizedBox(width: AppTheme.spacing6),
-              Text(
-                hex,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: context.textSecondary,
-                  letterSpacing: 0.8,
-                  fontFamily: AppTheme.fontFamily,
-                ),
-              ),
-              const SizedBox(width: AppTheme.spacing4),
-              Text(
-                l10n.petDnaViewerOpenAction,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: context.textTertiary,
-                  fontFamily: AppTheme.fontFamily,
-                ),
-              ),
-              const SizedBox(width: AppTheme.spacing4),
-              Icon(Icons.chevron_right, size: 14, color: context.textTertiary),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
@@ -921,12 +1027,20 @@ class _DormantBanner extends StatelessWidget {
 class _ActionBar extends ConsumerWidget {
   final PetState state;
   final bool inSleepWindow;
+
+  /// Advisory computed once at the parent level. Used to pulse the
+  /// button that matches `advisory.action` so the status line's
+  /// inline action name and the bottom-bar pulse reinforce each
+  /// other — user's eye follows the cue from sentence to button.
+  final PetAdvisory advisory;
+
   final Future<void> Function(PetActionResult result, HapticType applied)
   onResult;
 
   const _ActionBar({
     required this.state,
     required this.inSleepWindow,
+    required this.advisory,
     required this.onResult,
   });
 
@@ -960,6 +1074,7 @@ class _ActionBar extends ConsumerWidget {
           icon: Icons.auto_awesome_outlined,
           label: l10n.petActionReSigil,
           accent: AccentColors.yellow,
+          pulsing: advisory.action == PetAdvisoryAction.reSigil,
           onTap: run(controller.reSigil, HapticType.heavy),
         ),
       );
@@ -984,6 +1099,7 @@ class _ActionBar extends ConsumerWidget {
           label: l10n.petActionCharge,
           accent: AccentColors.yellow,
           dimmed: chargeDimmed,
+          pulsing: advisory.action == PetAdvisoryAction.charge,
           onTap: chargeUsable
               ? run(controller.charge, HapticType.medium)
               : null,
@@ -1002,6 +1118,7 @@ class _ActionBar extends ConsumerWidget {
           label: l10n.petActionResonate,
           accent: AccentColors.pink,
           dimmed: resonateDimmed,
+          pulsing: advisory.action == PetAdvisoryAction.resonate,
           onTap: resonateUsable
               ? run(controller.resonate, HapticType.medium)
               : null,
@@ -1014,6 +1131,7 @@ class _ActionBar extends ConsumerWidget {
             icon: Icons.cleaning_services_outlined,
             label: l10n.petActionStabilise,
             accent: AccentColors.teal,
+            pulsing: advisory.action == PetAdvisoryAction.stabilise,
             onTap: run(controller.stabilise, HapticType.medium),
           ),
         );
@@ -1025,22 +1143,8 @@ class _ActionBar extends ConsumerWidget {
             icon: Icons.healing_outlined,
             label: l10n.petActionPurge,
             accent: AccentColors.red,
-            pulsing: true,
+            pulsing: advisory.action == PetAdvisoryAction.purge,
             onTap: run(controller.purge, HapticType.heavy),
-          ),
-        );
-      }
-
-      if (!egg) {
-        final syncDimmed =
-            state.activeCall == null && state.stability >= statMax;
-        buttons.add(
-          PetActionButton(
-            icon: Icons.sync,
-            label: l10n.petActionSync,
-            accent: AccentColors.lavender,
-            dimmed: syncDimmed,
-            onTap: run(controller.sync, HapticType.light),
           ),
         );
       }
@@ -1052,6 +1156,7 @@ class _ActionBar extends ConsumerWidget {
             label: l10n.petActionDim,
             accent: AccentColors.indigo,
             dimmed: asleep,
+            pulsing: advisory.action == PetAdvisoryAction.dim && !asleep,
             // We still wire onTap while asleep so the user gets the
             // "Already resting" toast rather than a silent no-op.
             onTap: run(controller.dim, HapticType.light),
@@ -1158,3 +1263,5 @@ Color _moodColor(PetMood m) {
       return AccentColors.orange;
   }
 }
+
+enum _PetOverflowAction { guide, dnaViewer, debugStates }

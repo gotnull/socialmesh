@@ -6820,6 +6820,18 @@ abstract class AppLocalizations {
   /// **'Device Logs'**
   String get debugScreenDeviceLogsTitle;
 
+  /// Snackbar shown when copy is tapped but the device log buffer is empty
+  ///
+  /// In en, this message translates to:
+  /// **'No device logs to copy'**
+  String get debugScreenDeviceNothingToCopy;
+
+  /// Snackbar shown when share is tapped but the device log buffer is empty
+  ///
+  /// In en, this message translates to:
+  /// **'No device logs to share'**
+  String get debugScreenDeviceNothingToShare;
+
   /// Device log search field hint text
   ///
   /// In en, this message translates to:
@@ -6909,6 +6921,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No log entries'**
   String get debugScreenNoLogEntries;
+
+  /// Snackbar shown when copy is tapped but the log buffer is empty
+  ///
+  /// In en, this message translates to:
+  /// **'No logs to copy'**
+  String get debugScreenNothingToCopy;
+
+  /// Snackbar shown when share is tapped but the log buffer is empty
+  ///
+  /// In en, this message translates to:
+  /// **'No logs to share'**
+  String get debugScreenNothingToShare;
 
   /// Search field hint text
   ///
@@ -8403,6 +8427,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'TRY IT'**
   String get drawerBadgeTryIt;
+
+  /// Snackbar shown when a node-required screen is auto-popped because the device disconnected mid-session.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnected from your node — reconnect to continue.'**
+  String get requiresConnectionGuardDisconnected;
+
+  /// Inline banner shown on a node-required screen during the grace window after a brief transport disconnect, while auto-reconnect is attempting recovery. If reconnection fails within ~10s the user is popped back with the existing requiresConnectionGuardDisconnected snackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnected — reconnecting…'**
+  String get requiresConnectionGuardReconnectingBanner;
 
   /// Label for the Device Management menu tile in the enterprise drawer section.
   ///
@@ -10943,7 +10979,7 @@ abstract class AppLocalizations {
   /// Empty state title when all articles have been read.
   ///
   /// In en, this message translates to:
-  /// **'You’ve read everything!'**
+  /// **'You\'ve read everything!'**
   String get helpCenterReadEverything;
 
   /// Button label to reset all help progress.
@@ -20071,17 +20107,23 @@ abstract class AppLocalizations {
   /// **'last {relative}'**
   String nodedexLastRelative(String relative);
 
-  /// Text displayed in node management
+  /// NodeDex 'last presence-active encounter' label. Distinct from the device-level 'Last heard' (= time we last received any packet from the node) — encounter only updates when presence transitions to active, so it can lag the radio's last_heard by hours or days.
   ///
   /// In en, this message translates to:
-  /// **'Last Seen'**
+  /// **'Last encounter'**
   String get nodedexLastSeen;
 
-  /// Label in node management
+  /// NodeDex 'last presence-active encounter' label. See nodedexLastSeen for the disambiguation against 'Last heard'.
   ///
   /// In en, this message translates to:
-  /// **'Last Seen'**
+  /// **'Last encounter'**
   String get nodedexLastSeenStatLabel;
+
+  /// Canonical 'last received any packet' label, sourced from MeshNode.lastHeard. Used in NodeDex alongside the encounter label so the user can see both the radio-level signal and the encounter-level signal.
+  ///
+  /// In en, this message translates to:
+  /// **'Last heard'**
+  String get nodedexLastHeard;
 
   /// Text in node management Parameters: {date} = formatted date/time, {time} = formatted date/time.
   ///
@@ -20274,6 +20316,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Observation Timeline'**
   String get nodedexObservationTimelineTitle;
+
+  /// Card header for the bullet list explaining why the primary trait was assigned
+  ///
+  /// In en, this message translates to:
+  /// **'Trait Evidence'**
+  String get nodedexTraitEvidenceTitle;
 
   /// Text in node management Parameters: {date} = formatted date/time.
   ///
@@ -20809,10 +20857,10 @@ abstract class AppLocalizations {
   /// **'First Discovered'**
   String get nodedexSortFirstDiscovered;
 
-  /// Text displayed in node management
+  /// NodeDex sort order — sorts by the encounter timestamp, not the radio last_heard.
   ///
   /// In en, this message translates to:
-  /// **'Last Seen'**
+  /// **'Last encounter'**
   String get nodedexSortLastSeen;
 
   /// Text displayed in node management
@@ -21724,6 +21772,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'RF'**
   String get nodesScreenTransportRf;
+
+  /// Transport badge shown on the user's own device card when connected via WiFi/TCP.
+  ///
+  /// In en, this message translates to:
+  /// **'TCP'**
+  String get nodesScreenTransportTcp;
+
+  /// Transport badge shown on the user's own device card when connected via Bluetooth.
+  ///
+  /// In en, this message translates to:
+  /// **'BLE'**
+  String get nodesScreenTransportBle;
+
+  /// Transport badge shown on the user's own device card when connected via USB.
+  ///
+  /// In en, this message translates to:
+  /// **'USB'**
+  String get nodesScreenTransportUsb;
 
   /// Badge label on the user's own node card.
   ///
@@ -24047,6 +24113,258 @@ abstract class AppLocalizations {
   /// **'2.4 GHz'**
   String get regionSelectionRegionLora24Freq;
 
+  /// UI text: region selection region Philippines 433MHz
+  ///
+  /// In en, this message translates to:
+  /// **'Philippines 433'**
+  String get regionSelectionRegionPh433;
+
+  /// Description text
+  ///
+  /// In en, this message translates to:
+  /// **'Philippines'**
+  String get regionSelectionRegionPh433Desc;
+
+  /// UI text: region selection region Philippines 433MHz freq
+  ///
+  /// In en, this message translates to:
+  /// **'433 MHz'**
+  String get regionSelectionRegionPh433Freq;
+
+  /// UI text: region selection region Philippines 868MHz
+  ///
+  /// In en, this message translates to:
+  /// **'Philippines 868'**
+  String get regionSelectionRegionPh868;
+
+  /// Description text
+  ///
+  /// In en, this message translates to:
+  /// **'Philippines'**
+  String get regionSelectionRegionPh868Desc;
+
+  /// UI text: region selection region Philippines 868MHz freq
+  ///
+  /// In en, this message translates to:
+  /// **'868 MHz'**
+  String get regionSelectionRegionPh868Freq;
+
+  /// UI text: region selection region Philippines 915MHz
+  ///
+  /// In en, this message translates to:
+  /// **'Philippines 915'**
+  String get regionSelectionRegionPh915;
+
+  /// Description text
+  ///
+  /// In en, this message translates to:
+  /// **'Philippines'**
+  String get regionSelectionRegionPh915Desc;
+
+  /// UI text: region selection region Philippines 915MHz freq
+  ///
+  /// In en, this message translates to:
+  /// **'915 MHz'**
+  String get regionSelectionRegionPh915Freq;
+
+  /// UI text: region selection region Australia/New Zealand 433MHz
+  ///
+  /// In en, this message translates to:
+  /// **'ANZ 433'**
+  String get regionSelectionRegionAnz433;
+
+  /// Description text
+  ///
+  /// In en, this message translates to:
+  /// **'Australia, New Zealand'**
+  String get regionSelectionRegionAnz433Desc;
+
+  /// UI text: region selection region Australia/New Zealand 433MHz freq
+  ///
+  /// In en, this message translates to:
+  /// **'433 MHz'**
+  String get regionSelectionRegionAnz433Freq;
+
+  /// UI text: region selection region Kazakhstan 433MHz
+  ///
+  /// In en, this message translates to:
+  /// **'Kazakhstan 433'**
+  String get regionSelectionRegionKz433;
+
+  /// Description text
+  ///
+  /// In en, this message translates to:
+  /// **'Kazakhstan'**
+  String get regionSelectionRegionKz433Desc;
+
+  /// UI text: region selection region Kazakhstan 433MHz freq
+  ///
+  /// In en, this message translates to:
+  /// **'433 MHz'**
+  String get regionSelectionRegionKz433Freq;
+
+  /// UI text: region selection region Kazakhstan 863MHz
+  ///
+  /// In en, this message translates to:
+  /// **'Kazakhstan 863'**
+  String get regionSelectionRegionKz863;
+
+  /// Description text
+  ///
+  /// In en, this message translates to:
+  /// **'Kazakhstan'**
+  String get regionSelectionRegionKz863Desc;
+
+  /// UI text: region selection region Kazakhstan 863MHz freq
+  ///
+  /// In en, this message translates to:
+  /// **'863 MHz'**
+  String get regionSelectionRegionKz863Freq;
+
+  /// UI text: region selection region Nepal 865MHz
+  ///
+  /// In en, this message translates to:
+  /// **'Nepal 865'**
+  String get regionSelectionRegionNp865;
+
+  /// Description text
+  ///
+  /// In en, this message translates to:
+  /// **'Nepal'**
+  String get regionSelectionRegionNp865Desc;
+
+  /// UI text: region selection region Nepal 865MHz freq
+  ///
+  /// In en, this message translates to:
+  /// **'865 MHz'**
+  String get regionSelectionRegionNp865Freq;
+
+  /// UI text: region selection region Brazil 902MHz
+  ///
+  /// In en, this message translates to:
+  /// **'Brazil 902'**
+  String get regionSelectionRegionBr902;
+
+  /// Description text
+  ///
+  /// In en, this message translates to:
+  /// **'Brazil'**
+  String get regionSelectionRegionBr902Desc;
+
+  /// UI text: region selection region Brazil 902MHz freq
+  ///
+  /// In en, this message translates to:
+  /// **'902 MHz'**
+  String get regionSelectionRegionBr902Freq;
+
+  /// UI text: region selection ITU Region 1 Amateur Radio 2m band
+  ///
+  /// In en, this message translates to:
+  /// **'ITU R1 2m'**
+  String get regionSelectionRegionItu1_2m;
+
+  /// Description text
+  ///
+  /// In en, this message translates to:
+  /// **'ITU Region 1 amateur radio 2m band'**
+  String get regionSelectionRegionItu1_2mDesc;
+
+  /// UI text: region selection ITU R1 2m freq
+  ///
+  /// In en, this message translates to:
+  /// **'144-146 MHz'**
+  String get regionSelectionRegionItu1_2mFreq;
+
+  /// UI text: region selection ITU Region 2/3 Amateur Radio 2m band
+  ///
+  /// In en, this message translates to:
+  /// **'ITU R2/3 2m'**
+  String get regionSelectionRegionItu23_2m;
+
+  /// Description text
+  ///
+  /// In en, this message translates to:
+  /// **'ITU Region 2/3 amateur radio 2m band'**
+  String get regionSelectionRegionItu23_2mDesc;
+
+  /// UI text: region selection ITU R2/3 2m freq
+  ///
+  /// In en, this message translates to:
+  /// **'144-148 MHz'**
+  String get regionSelectionRegionItu23_2mFreq;
+
+  /// UI text: region selection EU 866MHz Short-Range Devices band
+  ///
+  /// In en, this message translates to:
+  /// **'EU 866'**
+  String get regionSelectionRegionEu866;
+
+  /// Description text
+  ///
+  /// In en, this message translates to:
+  /// **'European Union 866MHz SRD'**
+  String get regionSelectionRegionEu866Desc;
+
+  /// UI text: region selection EU 866 freq
+  ///
+  /// In en, this message translates to:
+  /// **'866 MHz'**
+  String get regionSelectionRegionEu866Freq;
+
+  /// UI text: region selection EU 874MHz Short-Range Devices band
+  ///
+  /// In en, this message translates to:
+  /// **'EU 874'**
+  String get regionSelectionRegionEu874;
+
+  /// Description text
+  ///
+  /// In en, this message translates to:
+  /// **'European Union 874MHz SRD'**
+  String get regionSelectionRegionEu874Desc;
+
+  /// UI text: region selection EU 874 freq
+  ///
+  /// In en, this message translates to:
+  /// **'874 MHz'**
+  String get regionSelectionRegionEu874Freq;
+
+  /// UI text: region selection EU 917MHz Short-Range Devices band
+  ///
+  /// In en, this message translates to:
+  /// **'EU 917'**
+  String get regionSelectionRegionEu917;
+
+  /// Description text
+  ///
+  /// In en, this message translates to:
+  /// **'European Union 917MHz SRD'**
+  String get regionSelectionRegionEu917Desc;
+
+  /// UI text: region selection EU 917 freq
+  ///
+  /// In en, this message translates to:
+  /// **'917 MHz'**
+  String get regionSelectionRegionEu917Freq;
+
+  /// UI text: region selection EU 868MHz band with narrow presets
+  ///
+  /// In en, this message translates to:
+  /// **'EU 868 Narrow'**
+  String get regionSelectionRegionEuN868;
+
+  /// Description text
+  ///
+  /// In en, this message translates to:
+  /// **'European Union 868MHz narrow'**
+  String get regionSelectionRegionEuN868Desc;
+
+  /// UI text: region selection EU 868 narrow freq
+  ///
+  /// In en, this message translates to:
+  /// **'868 MHz'**
+  String get regionSelectionRegionEuN868Freq;
+
   /// UI text: region selection region my433
   ///
   /// In en, this message translates to:
@@ -24899,12 +25217,6 @@ abstract class AppLocalizations {
   /// **'Enable Auto-Reconnect?'**
   String get scannerEnableAutoReconnectTitle;
 
-  /// Helper text shown below the looking-for-devices message.
-  ///
-  /// In en, this message translates to:
-  /// **'Make sure Bluetooth is enabled and your Meshtastic device is powered on'**
-  String get scannerEnableBluetoothHint;
-
   /// Confirm label for the enable auto-reconnect sheet.
   ///
   /// In en, this message translates to:
@@ -24916,12 +25228,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Connection failed. This can happen if the device was previously paired with another app. Go to Settings > Bluetooth, find the Meshtastic device, tap \"Forget\", then try again.'**
   String get scannerGattConnectionFailed;
-
-  /// Large text shown when scan is not active and no devices are listed.
-  ///
-  /// In en, this message translates to:
-  /// **'Looking for devices…'**
-  String get scannerLookingForDevices;
 
   /// Fallback error message when MeshCore connection fails with no specific message.
   ///
@@ -24982,18 +25288,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Scanning for nearby devices'**
   String get scannerScanningTitle;
-
-  /// Troubleshooting tip: check no other apps are using the BLE connection.
-  ///
-  /// In en, this message translates to:
-  /// **'Ensure no other app (e.g. official Meshtastic app) is connected to this device'**
-  String get scannerTipNoOtherApps;
-
-  /// Troubleshooting tip: check no other phones/tablets are paired.
-  ///
-  /// In en, this message translates to:
-  /// **'Ensure no other phone or tablet is already connected to the device via Bluetooth'**
-  String get scannerTipNoOtherDevices;
 
   /// Transport type label for BLE devices in the device card.
   ///
@@ -27134,7 +27428,7 @@ abstract class AppLocalizations {
   /// Title of the what's new settings tile.
   ///
   /// In en, this message translates to:
-  /// **'What’s New'**
+  /// **'What\'s New'**
   String get settingsTileWhatsNewTitle;
 
   /// Title of the settings screen.
@@ -41284,7 +41578,7 @@ abstract class AppLocalizations {
   /// Text displayed in appearance settings
   ///
   /// In en, this message translates to:
-  /// **'Your device’s default font'**
+  /// **'Your device\'s default font'**
   String get appearanceFontSystemDesc;
 
   /// Text displayed in appearance settings
@@ -41584,7 +41878,7 @@ abstract class AppLocalizations {
   /// Time format option description in appearance settings
   ///
   /// In en, this message translates to:
-  /// **'Follow your device’s clock setting'**
+  /// **'Follow your device\'s clock setting'**
   String get appearanceTimeFormatSystemDesc;
 
   /// Time format option name in appearance settings
@@ -42894,71 +43188,17 @@ abstract class AppLocalizations {
   /// **'EU 868'**
   String get radioConfigRegionEu868;
 
-  /// UI text: radio config region china
-  ///
-  /// In en, this message translates to:
-  /// **'China'**
-  String get radioConfigRegionChina;
-
-  /// UI text: radio config region japan
-  ///
-  /// In en, this message translates to:
-  /// **'Japan'**
-  String get radioConfigRegionJapan;
-
   /// UI text: radio config region anz
   ///
   /// In en, this message translates to:
   /// **'ANZ'**
   String get radioConfigRegionAnz;
 
-  /// UI text: radio config region korea
-  ///
-  /// In en, this message translates to:
-  /// **'Korea'**
-  String get radioConfigRegionKorea;
-
-  /// UI text: radio config region taiwan
-  ///
-  /// In en, this message translates to:
-  /// **'Taiwan'**
-  String get radioConfigRegionTaiwan;
-
-  /// UI text: radio config region russia
-  ///
-  /// In en, this message translates to:
-  /// **'Russia'**
-  String get radioConfigRegionRussia;
-
-  /// UI text: radio config region india
-  ///
-  /// In en, this message translates to:
-  /// **'India'**
-  String get radioConfigRegionIndia;
-
   /// UI text: radio config region nz865
   ///
   /// In en, this message translates to:
   /// **'NZ 865'**
   String get radioConfigRegionNz865;
-
-  /// UI text: radio config region thailand
-  ///
-  /// In en, this message translates to:
-  /// **'Thailand'**
-  String get radioConfigRegionThailand;
-
-  /// UI text: radio config region ukraine433
-  ///
-  /// In en, this message translates to:
-  /// **'Ukraine 433'**
-  String get radioConfigRegionUkraine433;
-
-  /// UI text: radio config region ukraine868
-  ///
-  /// In en, this message translates to:
-  /// **'Ukraine 868'**
-  String get radioConfigRegionUkraine868;
 
   /// UI text: radio config region malaysia433
   ///
@@ -42971,12 +43211,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Malaysia 919'**
   String get radioConfigRegionMalaysia919;
-
-  /// UI text: radio config region singapore
-  ///
-  /// In en, this message translates to:
-  /// **'Singapore'**
-  String get radioConfigRegionSingapore;
 
   /// UI text: radio config region lora24
   ///
@@ -43103,6 +43337,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Long range with turbo speed'**
   String get radioConfigPresetLongTurboDesc;
+
+  /// Modem preset label: EU 866MHz SRD-compliant lite fast
+  ///
+  /// In en, this message translates to:
+  /// **'Lite Fast'**
+  String get radioConfigPresetLiteFast;
+
+  /// Description for lite fast modem preset
+  ///
+  /// In en, this message translates to:
+  /// **'EU 866MHz SRD, fast'**
+  String get radioConfigPresetLiteFastDesc;
+
+  /// Modem preset label: EU 866MHz SRD-compliant lite slow
+  ///
+  /// In en, this message translates to:
+  /// **'Lite Slow'**
+  String get radioConfigPresetLiteSlow;
+
+  /// Description for lite slow modem preset
+  ///
+  /// In en, this message translates to:
+  /// **'EU 866MHz SRD, longer range'**
+  String get radioConfigPresetLiteSlowDesc;
+
+  /// Modem preset label: EU 868MHz narrow fast
+  ///
+  /// In en, this message translates to:
+  /// **'Narrow Fast'**
+  String get radioConfigPresetNarrowFast;
+
+  /// Description for narrow fast modem preset
+  ///
+  /// In en, this message translates to:
+  /// **'EU 868MHz narrow, fast'**
+  String get radioConfigPresetNarrowFastDesc;
+
+  /// Modem preset label: EU 868MHz narrow slow
+  ///
+  /// In en, this message translates to:
+  /// **'Narrow Slow'**
+  String get radioConfigPresetNarrowSlow;
+
+  /// Description for narrow slow modem preset
+  ///
+  /// In en, this message translates to:
+  /// **'EU 868MHz narrow, longer range'**
+  String get radioConfigPresetNarrowSlowDesc;
 
   /// UI text: radio config preset must match
   ///
@@ -45666,6 +45948,244 @@ abstract class AppLocalizations {
   /// **'N/A'**
   String get dataExportSnrNotAvailable;
 
+  /// Title of the privacy warning before complete export
+  ///
+  /// In en, this message translates to:
+  /// **'Save your export safely'**
+  String get dataExportCompleteWarningTitle;
+
+  /// Body of the privacy warning before complete export
+  ///
+  /// In en, this message translates to:
+  /// **'This file contains every direct message you\'ve sent and received, all node positions, and the full node list. Anyone with the file can read your messages and see where you\'ve been. Save it to a secure location.'**
+  String get dataExportCompleteWarningBody;
+
+  /// Confirm button on the complete-export privacy warning
+  ///
+  /// In en, this message translates to:
+  /// **'Export everything'**
+  String get dataExportCompleteWarningContinueBtn;
+
+  /// Cancel button on the complete-export privacy warning
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get dataExportCompleteWarningCancelBtn;
+
+  /// Section header for device config backup tiles on the Export Data screen
+  ///
+  /// In en, this message translates to:
+  /// **'Device Configuration'**
+  String get dataExportSectionDeviceConfig;
+
+  /// Tile title for exporting device config bundle (channels, LoRa, modules, owner)
+  ///
+  /// In en, this message translates to:
+  /// **'Backup Device Config'**
+  String get dataExportDeviceConfigBackupTitle;
+
+  /// Tile subtitle listing what the device config backup includes
+  ///
+  /// In en, this message translates to:
+  /// **'Channels, LoRa, modules, owner'**
+  String get dataExportDeviceConfigBackupSubtitle;
+
+  /// Tile title for restoring a previously-saved device config bundle
+  ///
+  /// In en, this message translates to:
+  /// **'Restore Device Config'**
+  String get dataExportDeviceConfigRestoreTitle;
+
+  /// Tile subtitle for the restore device config tile
+  ///
+  /// In en, this message translates to:
+  /// **'Apply a saved backup to this device'**
+  String get dataExportDeviceConfigRestoreSubtitle;
+
+  /// Format pill on the device config backup tile
+  ///
+  /// In en, this message translates to:
+  /// **'JSON'**
+  String get dataExportDeviceConfigFormatJson;
+
+  /// Format pill on the device config restore tile
+  ///
+  /// In en, this message translates to:
+  /// **'IMPORT'**
+  String get dataExportDeviceConfigFormatImport;
+
+  /// Title of the security warning shown before exporting a device config backup
+  ///
+  /// In en, this message translates to:
+  /// **'Save your backup safely'**
+  String get dataExportDeviceConfigBackupWarningTitle;
+
+  /// Body of the security warning shown before exporting a device config backup
+  ///
+  /// In en, this message translates to:
+  /// **'This file contains your channel keys (PSKs) and device settings. Anyone with the file can decrypt your channel traffic. Save it to a secure location.'**
+  String get dataExportDeviceConfigBackupWarningBody;
+
+  /// Button label to confirm exporting a device config backup
+  ///
+  /// In en, this message translates to:
+  /// **'Export backup'**
+  String get dataExportDeviceConfigBackupContinueBtn;
+
+  /// Button label to cancel an in-progress device config backup
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get dataExportDeviceConfigBackupCancelBtn;
+
+  /// Snackbar shown when device config backup is invoked without a connected device
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to a device before backing up its config.'**
+  String get dataExportDeviceConfigBackupNotConnected;
+
+  /// Snackbar after a device config backup that was partial
+  ///
+  /// In en, this message translates to:
+  /// **'Backup saved. {count, plural, =1{1 section was unavailable} other{{count} sections were unavailable}} and not included.'**
+  String dataExportDeviceConfigBackupPartial(int count);
+
+  /// Snackbar shown when device config backup capture fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to capture device config: {error}'**
+  String dataExportDeviceConfigBackupFailed(String error);
+
+  /// Share-sheet subject for a device config backup file
+  ///
+  /// In en, this message translates to:
+  /// **'Socialmesh Device Config Backup'**
+  String get dataExportDeviceConfigBackupShareSubject;
+
+  /// Title of the bottom sheet shown when restoring a device config bundle
+  ///
+  /// In en, this message translates to:
+  /// **'Restore Device Config'**
+  String get dataExportDeviceConfigRestoreSheetTitle;
+
+  /// Body text in the restore device config bottom sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which sections to apply to this device. Each section is sent to the device separately and may trigger a reboot.'**
+  String get dataExportDeviceConfigRestoreSheetBody;
+
+  /// Restore toggle label for channels (with PSKs)
+  ///
+  /// In en, this message translates to:
+  /// **'Channels'**
+  String get dataExportDeviceConfigRestoreToggleChannels;
+
+  /// Restore toggle label for LoRa, device, position, power, network, display, bluetooth
+  ///
+  /// In en, this message translates to:
+  /// **'Radio settings'**
+  String get dataExportDeviceConfigRestoreToggleRadio;
+
+  /// Restore toggle label for module configs (MQTT, telemetry, serial, etc.)
+  ///
+  /// In en, this message translates to:
+  /// **'Module configs'**
+  String get dataExportDeviceConfigRestoreToggleModules;
+
+  /// Restore toggle label for owner long/short name
+  ///
+  /// In en, this message translates to:
+  /// **'Owner name'**
+  String get dataExportDeviceConfigRestoreToggleOwner;
+
+  /// Button label that triggers the actual restore
+  ///
+  /// In en, this message translates to:
+  /// **'Apply restore'**
+  String get dataExportDeviceConfigRestoreApplyBtn;
+
+  /// Warning shown in the restore sheet when the bundle's nodeNum differs from the connected device
+  ///
+  /// In en, this message translates to:
+  /// **'This backup is from a different node. Channels and owner will be applied as-is.'**
+  String get dataExportDeviceConfigRestoreNodeMismatch;
+
+  /// Snackbar shown when the picked file fails to parse
+  ///
+  /// In en, this message translates to:
+  /// **'That file is not a valid Socialmesh device config backup.'**
+  String get dataExportDeviceConfigRestoreInvalidFile;
+
+  /// Snackbar shown when the parsed bundle is empty
+  ///
+  /// In en, this message translates to:
+  /// **'The backup file contains no sections to restore.'**
+  String get dataExportDeviceConfigRestoreEmpty;
+
+  /// Snackbar shown when restore is invoked without a connected device
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to a device before restoring its config.'**
+  String get dataExportDeviceConfigRestoreNotConnected;
+
+  /// Snackbar after a restore completes
+  ///
+  /// In en, this message translates to:
+  /// **'Applied {applied} of {total}.'**
+  String dataExportDeviceConfigRestoreSummary(int applied, int total);
+
+  /// Snackbar after a restore that had failures
+  ///
+  /// In en, this message translates to:
+  /// **'Applied {applied} of {total}. {failed} failed.'**
+  String dataExportDeviceConfigRestoreSummaryWithFailures(
+    int applied,
+    int total,
+    int failed,
+  );
+
+  /// Snackbar shown when the user taps Apply with no toggles enabled
+  ///
+  /// In en, this message translates to:
+  /// **'Select at least one section to restore.'**
+  String get dataExportDeviceConfigRestoreNoSelection;
+
+  /// Restore sheet info row showing where the backup was taken
+  ///
+  /// In en, this message translates to:
+  /// **'From: {metadata}'**
+  String dataExportDeviceConfigRestoreFromMetadata(String metadata);
+
+  /// Restore sheet info row showing the backup timestamp
+  ///
+  /// In en, this message translates to:
+  /// **'Saved: {date}'**
+  String dataExportDeviceConfigRestoreCreatedAt(String date);
+
+  /// Restore sheet caption showing how many channels are in the bundle
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 channel} other{{count} channels}}'**
+  String dataExportDeviceConfigRestoreChannelsCount(int count);
+
+  /// Restore sheet caption showing how many module configs are in the bundle
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 module} other{{count} modules}}'**
+  String dataExportDeviceConfigRestoreModulesCount(int count);
+
+  /// Restore sheet caption shown when a section is present in the bundle
+  ///
+  /// In en, this message translates to:
+  /// **'Included'**
+  String get dataExportDeviceConfigRestoreRadioPresent;
+
+  /// Restore sheet caption shown when a section is absent from the bundle
+  ///
+  /// In en, this message translates to:
+  /// **'Not in backup'**
+  String get dataExportDeviceConfigRestoreRadioMissing;
+
   /// Title for the developer tools screen
   ///
   /// In en, this message translates to:
@@ -47387,6 +47907,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Diagnostics copied to clipboard'**
   String get mqttProxyDiagnosticsCopied;
+
+  /// Status banner title when client proxy is enabled but the bridge is not connected to the broker
+  ///
+  /// In en, this message translates to:
+  /// **'MQTT proxy not connected'**
+  String get mqttProxyBannerNotConnectedTitle;
+
+  /// Status banner body shown when the client proxy bridge is not connected and there is no specific error to display
+  ///
+  /// In en, this message translates to:
+  /// **'The app couldn\'t reach the broker. Check the diagnostics below for the last error.'**
+  String get mqttProxyBannerNotConnectedHint;
 
   /// Screen or section title
   ///
@@ -53562,6 +54094,42 @@ abstract class AppLocalizations {
   /// **'Live telemetry from the node: battery percentage, hardware model, firmware version, channel utilization, and uptime. This data is only available when the node is actively heard on the mesh.'**
   String get helpNodeDexSectionDevice;
 
+  /// Section help text for trait_evidence in nodeDexSectionHelp
+  ///
+  /// In en, this message translates to:
+  /// **'The observations that most strongly support the primary trait assigned above. Each bullet is a concrete signal drawn from encounter history — co-seen connections, tenure, mobility, signal consistency, and timing. These are the inputs that drove the confidence score.'**
+  String get helpNodeDexSectionTraitEvidence;
+
+  /// Section help text for additional_traits in nodeDexSectionHelp
+  ///
+  /// In en, this message translates to:
+  /// **'Other behavioral archetypes that also scored for this node, ranked by confidence. A node rarely fits a single archetype perfectly — secondary traits reveal nuance, like an Anchor that also acts as a Beacon, or a Drifter with Sentinel-like stretches.'**
+  String get helpNodeDexSectionAdditionalTraits;
+
+  /// Info-sheet copy for the Companion card when the selected node is the user's own node. Explains that the companion is local-first.
+  ///
+  /// In en, this message translates to:
+  /// **'Your NodePet lives with your node and evolves locally from your care and mesh activity.'**
+  String get helpNodeDexSectionPetCompanionSelf;
+
+  /// Info-sheet copy for the Companion card when viewing a remote peer. Keeps expectations conservative while remote companion sharing is still alpha — avoids promising live updates or protocol details.
+  ///
+  /// In en, this message translates to:
+  /// **'If this node shares a companion summary, it can appear here. Full companion state stays local to its owner.'**
+  String get helpNodeDexSectionPetCompanionRemote;
+
+  /// Section help text for mrrp_services in nodeDexSectionHelp
+  ///
+  /// In en, this message translates to:
+  /// **'MRRP (Mesh Request-Response Protocol) services this node advertises. Each service ID represents a capability the node exposes over the mesh, such as a message board, profile exchange, or meetup coordination. Tap any ID to learn more about that specific service.'**
+  String get helpNodeDexSectionMrrpServices;
+
+  /// Section help text for field_note in nodeDexSectionHelp
+  ///
+  /// In en, this message translates to:
+  /// **'A short, deterministic journal entry generated from this node\'s identity and primary trait — like a naturalist\'s field observation. The same node always produces the same note; it never changes, and it never travels over the mesh.'**
+  String get helpNodeDexSectionFieldNote;
+
   /// Section help text for album_rarity in nodeDexSectionHelp
   ///
   /// In en, this message translates to:
@@ -55741,7 +56309,7 @@ abstract class AppLocalizations {
   /// Badge label shown on NodeDex entries for SIP-capable peers.
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh'**
+  /// **'Handshake'**
   String get sipBadgeLabel;
 
   /// SIP identity state label when no verified claim has been received.
@@ -55813,7 +56381,7 @@ abstract class AppLocalizations {
   /// Description for the empty state in Socialmesh discovery.
   ///
   /// In en, this message translates to:
-  /// **'People using Socialmesh will appear here when they’re in range.'**
+  /// **'People using Handshake will appear here when they\'re in range.'**
   String get sipDiscoveryNoPeersDescription;
 
   /// Button to trigger a Socialmesh rollcall scan.
@@ -55864,10 +56432,10 @@ abstract class AppLocalizations {
   /// **'Could not connect'**
   String get sipHandshakeFailed;
 
-  /// Chip label shown on a peer tile when they have sent an incoming handshake request awaiting user action.
+  /// Chip label shown on a peer tile when they have sent an incoming handshake request awaiting user action. Phrasing reads as incoming, matching the consent card heading.
   ///
   /// In en, this message translates to:
-  /// **'Request sent'**
+  /// **'Wants to connect'**
   String get sipHandshakePendingLabel;
 
   /// Button label to request identity from a SIP peer.
@@ -55894,12 +56462,6 @@ abstract class AppLocalizations {
   /// **'Expires in {time}'**
   String sipDmExpiry(String time);
 
-  /// Label when a DM session is pinned.
-  ///
-  /// In en, this message translates to:
-  /// **'Session pinned'**
-  String get sipDmPinned;
-
   /// Hint text for the DM message input field.
   ///
   /// In en, this message translates to:
@@ -55912,6 +56474,12 @@ abstract class AppLocalizations {
   /// **'Send'**
   String get sipDmSendButton;
 
+  /// Affordance shown when the user is scrolled up in a SIP DM conversation and can jump back to the newest messages.
+  ///
+  /// In en, this message translates to:
+  /// **'Jump to latest'**
+  String get sipDmJumpToLatest;
+
   /// Empty state text when no messages in DM thread.
   ///
   /// In en, this message translates to:
@@ -55921,14 +56489,26 @@ abstract class AppLocalizations {
   /// Description for the DM empty state.
   ///
   /// In en, this message translates to:
-  /// **'Send a message to start the conversation.'**
+  /// **'Send text, sketches, or start a tiny game.'**
   String get sipDmEmptyDescription;
 
-  /// Error when DM send fails due to rate limiting.
+  /// Error shown when a DM send fails because the global SIP airtime budget (1024 bytes / 60s) is exhausted. Distinct from per-peer rate limiting — this is the shared mesh budget.
   ///
   /// In en, this message translates to:
   /// **'Sending paused — mesh bandwidth limit reached. Try again shortly.'**
   String get sipDmBudgetExhausted;
+
+  /// Error shown when a DM send fails because the local user has blocked the recipient. Surfaces the unblock path (SIP Hub Blocked section) so the user can recover from the state if they hit it accidentally.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve blocked this node — unblock from SIP Hub to send messages again.'**
+  String get sipDmPeerBlocked;
+
+  /// Error shown when a DM send fails because the per-peer × per-kind token bucket (text 6/60s, sketch 2/60s, reaction 6/60s) ran out. Distinct from sipDmBudgetExhausted, which is the global airtime cap.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending too fast — slow down for a moment.'**
+  String get sipDmPeerRateLimited;
 
   /// Message when trying to send on a closed session.
   ///
@@ -55936,23 +56516,767 @@ abstract class AppLocalizations {
   /// **'This conversation has ended.'**
   String get sipDmSessionClosed;
 
-  /// Action to pin a DM session to prevent expiry.
+  /// Error when DM send fails because the encoded text exceeds the SIP DM payload cap.
   ///
   /// In en, this message translates to:
-  /// **'Pin Session'**
-  String get sipDmPinAction;
-
-  /// Action to unpin a DM session.
-  ///
-  /// In en, this message translates to:
-  /// **'Unpin Session'**
-  String get sipDmUnpinAction;
+  /// **'Message is too long. Trim it to fit the {maxBytes}-byte limit.'**
+  String sipDmTextTooLong(int maxBytes);
 
   /// Action to close a DM session.
   ///
   /// In en, this message translates to:
   /// **'Close Session'**
   String get sipDmCloseAction;
+
+  /// Overflow menu item that silences notifications for this peer's messages. Inbound DMs still arrive and are stored — only the system notification is suppressed. Reversible toggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute notifications'**
+  String get sipDmMenuMute;
+
+  /// Overflow menu item shown when this peer is currently muted. Re-enables notifications for inbound messages from this peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute notifications'**
+  String get sipDmMenuUnmute;
+
+  /// Overflow menu item that persistently blocks the peer. Future inbound HELLO / DM / MRRP frames are silently dropped at the protocol layer. Local conversation history is preserved.
+  ///
+  /// In en, this message translates to:
+  /// **'Block'**
+  String get sipDmMenuBlock;
+
+  /// Overflow menu item that drops the in-memory secure (X25519) session keys for this peer. The next outbound DM will renegotiate fresh ephemeral keys. No history is wiped, the underlying overlay link stays open. 'Connection' rather than 'session' to keep wording aligned with the rest of the secure-link UX.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset secure connection'**
+  String get sipDmMenuResetSecure;
+
+  /// Overflow menu item that wipes the local DM history with this peer and tears down the local session. Emits no wire frame — peer is not notified. Local-only.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove conversation'**
+  String get sipDmMenuRemove;
+
+  /// Title of the confirmation sheet for the Block action in the DM overflow menu.
+  ///
+  /// In en, this message translates to:
+  /// **'Block this node?'**
+  String get sipDmBlockConfirmTitle;
+
+  /// Body of the DM overflow Block confirmation. Calls out that history is preserved (different from Remove).
+  ///
+  /// In en, this message translates to:
+  /// **'Future messages and handshake requests from this node will be silently dropped. They won\'t be notified. Your existing conversation history stays on this device — use Remove conversation to clear it.'**
+  String get sipDmBlockConfirmBody;
+
+  /// Destructive confirm button label inside the DM Block confirmation sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Block'**
+  String get sipDmBlockConfirmAction;
+
+  /// Title of the confirmation sheet for the Reset Secure Session action in the DM overflow menu.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset secure session?'**
+  String get sipDmResetConfirmTitle;
+
+  /// Body of the Reset Secure Session confirmation sheet. Emphasises history preservation and the renegotiation moment.
+  ///
+  /// In en, this message translates to:
+  /// **'Drops the current end-to-end keys with this peer. The next message you send will renegotiate fresh keys. Your message history stays untouched.'**
+  String get sipDmResetConfirmBody;
+
+  /// Destructive confirm button label inside the Reset Secure Session sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get sipDmResetConfirmAction;
+
+  /// Title of the confirmation sheet for the Remove Conversation action in the DM overflow menu.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this conversation?'**
+  String get sipDmRemoveConfirmTitle;
+
+  /// Body of the Remove Conversation confirmation sheet. Calls out local-only deletion + ability to combine with Block.
+  ///
+  /// In en, this message translates to:
+  /// **'Deletes every message in this conversation from this device. The peer is not notified and can still send you new messages unless you also Block them. This cannot be undone.'**
+  String get sipDmRemoveConfirmBody;
+
+  /// Destructive confirm button label inside the Remove Conversation sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get sipDmRemoveConfirmAction;
+
+  /// Cancel button label shared by Block / Reset / Remove confirmation sheets in the DM overflow menu.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get sipDmConfirmCancel;
+
+  /// Confirmation snackbar shown after the user mutes this peer from the DM overflow menu.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications muted for this conversation'**
+  String get sipDmActionMutedSnack;
+
+  /// Confirmation snackbar shown after the user unmutes this peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications re-enabled'**
+  String get sipDmActionUnmutedSnack;
+
+  /// Confirmation snackbar shown after the user resets the secure session.
+  ///
+  /// In en, this message translates to:
+  /// **'Secure session reset — next message will renegotiate keys'**
+  String get sipDmActionResetSnack;
+
+  /// Tab label inside the DM composer that opens the SIP Play game picker. Shown only when the peer advertises dmPlayV1.
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get sipPlayComposerLabel;
+
+  /// Replaces the game title on the picker card while the offer envelope is in-flight; pairs with a spinner.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending offer…'**
+  String get sipPlayPanelCardSending;
+
+  /// Snackbar shown when the user attempts to send a second offer for a game while the previous offer for the same game is still pending or active in this session.
+  ///
+  /// In en, this message translates to:
+  /// **'A game offer is already in progress'**
+  String get sipPlayDuplicateOfferBlocked;
+
+  /// Snackbar shown to the offerer once the offer envelope has been transmitted to the peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer sent'**
+  String get sipPlayLifecycleSent;
+
+  /// Snackbar shown to the offerer when the peer accepts the game offer.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer accepted'**
+  String get sipPlayLifecycleAccepted;
+
+  /// Snackbar shown to the offerer when the peer declines the game offer.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer declined'**
+  String get sipPlayLifecycleDeclined;
+
+  /// Snackbar shown to the offerer when the peer doesn't respond within the offer timeout window.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer expired'**
+  String get sipPlayLifecycleExpired;
+
+  /// Header inside the Play composer panel — the panel shown when the user selects the Play tab.
+  ///
+  /// In en, this message translates to:
+  /// **'Play a game'**
+  String get sipPlayPanelTitle;
+
+  /// Body copy under the Play panel title explaining the airtime model.
+  ///
+  /// In en, this message translates to:
+  /// **'Tiny turn-based games sent as mesh-safe moves.'**
+  String get sipPlayPanelSubtitle;
+
+  /// Supporting copy on the Tic-Tac-Toe card inside the Play composer panel.
+  ///
+  /// In en, this message translates to:
+  /// **'Send only tiny moves over the mesh.'**
+  String get sipPlayPanelTttSupporting;
+
+  /// Optional badge on the Tic-Tac-Toe card calling out how compact each move is on the wire. Phrased as user-facing value (compact mesh moves) rather than internal metric — earlier 'B' shorthand read like a glitch.
+  ///
+  /// In en, this message translates to:
+  /// **'Tiny moves • ~7 bytes'**
+  String get sipPlayPanelTttSizeBadge;
+
+  /// Supporting copy on the Connect Four card inside the Play composer panel.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop discs into a column. First to four-in-a-row wins.'**
+  String get sipPlayPanelC4Supporting;
+
+  /// Optional badge on the Connect Four card calling out how compact each move is on the wire. C4 moves are 1 byte (column only — landing row is derived) so the envelope is the same 7 bytes as TTT.
+  ///
+  /// In en, this message translates to:
+  /// **'Tiny moves • ~7 bytes'**
+  String get sipPlayPanelC4SizeBadge;
+
+  /// Banner title shown inside the Play panel when at least one non-terminal SIP Play instance exists in this session.
+  ///
+  /// In en, this message translates to:
+  /// **'Game in progress'**
+  String get sipPlayPanelGameInProgressTitle;
+
+  /// Body of the Game in Progress banner inside the Play panel.
+  ///
+  /// In en, this message translates to:
+  /// **'Scroll to your active game in the conversation, or start another.'**
+  String get sipPlayPanelGameInProgressBody;
+
+  /// Button label that scrolls the chat to the latest active SIP Play bubble.
+  ///
+  /// In en, this message translates to:
+  /// **'Jump to game'**
+  String get sipPlayPanelGameInProgressJump;
+
+  /// Uppercase section header inside the DM overflow menu grouping Mute. Rendered as a disabled label row, never tappable.
+  ///
+  /// In en, this message translates to:
+  /// **'PREFERENCES'**
+  String get sipDmOverflowSectionPreferences;
+
+  /// Uppercase section header inside the DM overflow menu grouping Block. Rendered as a disabled label row, never tappable.
+  ///
+  /// In en, this message translates to:
+  /// **'SAFETY'**
+  String get sipDmOverflowSectionSafety;
+
+  /// Uppercase section header inside the DM overflow menu grouping Reset secure connection and Close session.
+  ///
+  /// In en, this message translates to:
+  /// **'SESSION'**
+  String get sipDmOverflowSectionSession;
+
+  /// Uppercase section header inside the DM overflow menu grouping Remove conversation.
+  ///
+  /// In en, this message translates to:
+  /// **'DATA'**
+  String get sipDmOverflowSectionData;
+
+  /// Title of the SIP Play picker bottom sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a game'**
+  String get sipPlayPickerTitle;
+
+  /// Body copy beneath the picker title explaining the offer/accept flow.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a game to send an offer to this conversation. Both sides need to accept before play starts.'**
+  String get sipPlayPickerSubtitle;
+
+  /// Display name for the Tic-Tac-Toe game in the SIP Play picker and game bubbles.
+  ///
+  /// In en, this message translates to:
+  /// **'Tic-Tac-Toe'**
+  String get sipPlayGameTicTacToe;
+
+  /// One-line description of Tic-Tac-Toe shown under its name in the picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Classic 3x3. You place X if you offered, O if you accepted.'**
+  String get sipPlayGameTicTacToeDescription;
+
+  /// Display name for the Connect Four game in the SIP Play picker and game bubbles.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect Four'**
+  String get sipPlayGameConnectFour;
+
+  /// One-line description of Connect Four shown under its name in the picker.
+  ///
+  /// In en, this message translates to:
+  /// **'6x7 grid. Drop discs into a column. First to four-in-a-row wins.'**
+  String get sipPlayGameConnectFourDescription;
+
+  /// Title shown on a SIP Play bubble whose gameType is not registered in this build. Renders a safe fallback so unknown games never crash the timeline.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsupported game'**
+  String get sipPlayUnsupportedGame;
+
+  /// Body copy on the unsupported-game fallback bubble.
+  ///
+  /// In en, this message translates to:
+  /// **'This conversation includes a game your build doesn\'t recognize. The original sender\'s app may be newer.'**
+  String get sipPlayUnsupportedGameBody;
+
+  /// Title of the bubble shown when a SIP Play envelope fails to decode (truncated, version mismatch, etc.). State is unchanged — the bubble is informational only.
+  ///
+  /// In en, this message translates to:
+  /// **'Game data unreadable'**
+  String get sipPlayMalformedTitle;
+
+  /// Title on a SIP Play bubble shown to the offerer after they sent an offer. Status switches to active when the peer accepts. {game} is the localised game name (e.g. 'Tic-Tac-Toe', 'Connect Four').
+  ///
+  /// In en, this message translates to:
+  /// **'You offered {game}'**
+  String sipPlayOfferOutgoingTitle(String game);
+
+  /// Title on a SIP Play bubble for an inbound offer awaiting Accept / Decline. {game} is the localised game name.
+  ///
+  /// In en, this message translates to:
+  /// **'{game} — they want to play'**
+  String sipPlayOfferIncomingTitle(String game);
+
+  /// Accept button on an inbound SIP Play offer bubble.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get sipPlayOfferAccept;
+
+  /// Decline button on an inbound SIP Play offer bubble.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get sipPlayOfferDecline;
+
+  /// Button shown beside the active TTT board that ends the game and concedes.
+  ///
+  /// In en, this message translates to:
+  /// **'Resign'**
+  String get sipPlayResign;
+
+  /// Title of the confirmation sheet shown when the user taps Resign on an active SIP Play game.
+  ///
+  /// In en, this message translates to:
+  /// **'Resign this game?'**
+  String get sipPlayResignConfirmTitle;
+
+  /// Body of the Resign confirmation sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Resigning ends the game. The other player wins. You can offer a new game any time.'**
+  String get sipPlayResignConfirmBody;
+
+  /// Destructive confirm button on the Resign sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Resign'**
+  String get sipPlayResignConfirmAction;
+
+  /// Cancel button on the Resign sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get sipPlayResignConfirmCancel;
+
+  /// Status caption on the active TTT board when it's the local user's turn.
+  ///
+  /// In en, this message translates to:
+  /// **'Your turn'**
+  String get sipPlayStatusYourTurn;
+
+  /// Status caption on the active TTT board when it's the remote peer's turn.
+  ///
+  /// In en, this message translates to:
+  /// **'Their turn'**
+  String get sipPlayStatusTheirTurn;
+
+  /// Terminal status caption when the local user wins.
+  ///
+  /// In en, this message translates to:
+  /// **'You won'**
+  String get sipPlayStatusYouWon;
+
+  /// Terminal status caption when the remote peer wins.
+  ///
+  /// In en, this message translates to:
+  /// **'They won'**
+  String get sipPlayStatusTheyWon;
+
+  /// Terminal status caption when the TTT board fills with no winner.
+  ///
+  /// In en, this message translates to:
+  /// **'Draw'**
+  String get sipPlayStatusDraw;
+
+  /// Terminal status caption when the local user resigned.
+  ///
+  /// In en, this message translates to:
+  /// **'You resigned'**
+  String get sipPlayStatusYouResigned;
+
+  /// Terminal status caption when the remote peer resigned.
+  ///
+  /// In en, this message translates to:
+  /// **'They resigned'**
+  String get sipPlayStatusTheyResigned;
+
+  /// Terminal status caption when the local user declined an inbound offer.
+  ///
+  /// In en, this message translates to:
+  /// **'You declined the offer'**
+  String get sipPlayStatusYouDeclined;
+
+  /// Terminal status caption when the remote peer declined our outbound offer.
+  ///
+  /// In en, this message translates to:
+  /// **'They declined the offer'**
+  String get sipPlayStatusTheyDeclined;
+
+  /// Label for the text composer mode in the SIP DM composer mode switcher.
+  ///
+  /// In en, this message translates to:
+  /// **'Text'**
+  String get sipDmComposerModeText;
+
+  /// Sketch tab label in the DM composer mode switcher.
+  ///
+  /// In en, this message translates to:
+  /// **'Sketch'**
+  String get sipDmComposerModeSketch;
+
+  /// Play tab label in the DM composer mode switcher. Visible only when the peer supports SIP Play and is not blocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get sipDmComposerModePlay;
+
+  /// Signal tab label in the DM composer mode switcher. Visible only when the peer supports SIP Signal v1 and is not blocked. Signal is musical-phrase + Morse — 'Close Encounters over LoRa.'
+  ///
+  /// In en, this message translates to:
+  /// **'Signal'**
+  String get sipDmComposerModeSignal;
+
+  /// Header at the top of the rich-composer bottom sheet — houses the Sketch / Play / Signal tabs separately from the always-on text input.
+  ///
+  /// In en, this message translates to:
+  /// **'Compose'**
+  String get sipDmComposerSheetTitle;
+
+  /// Tooltip on the leading attach-style icon in the chat input row that opens the rich-composer bottom sheet (Sketch / Play / Signal).
+  ///
+  /// In en, this message translates to:
+  /// **'Open compose options'**
+  String get sipDmComposerSheetTooltip;
+
+  /// Header inside the Signal composer panel.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a signal'**
+  String get sipSignalPanelTitle;
+
+  /// Body copy under the Signal panel title explaining the no-audio-on-the-wire model.
+  ///
+  /// In en, this message translates to:
+  /// **'A short musical phrase or a Morse message — synthesized locally on both sides.'**
+  String get sipSignalPanelSubtitle;
+
+  /// Sub-mode label for the musical-phrase composer.
+  ///
+  /// In en, this message translates to:
+  /// **'Tone'**
+  String get sipSignalSubModeTone;
+
+  /// Sub-mode label for the Morse composer.
+  ///
+  /// In en, this message translates to:
+  /// **'Morse'**
+  String get sipSignalSubModeMorse;
+
+  /// Placeholder shown above the pad grid when no notes have been added yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap pads to compose a phrase'**
+  String get sipSignalToneEmpty;
+
+  /// Label for the instrument chip row inside the Tone composer.
+  ///
+  /// In en, this message translates to:
+  /// **'Instrument'**
+  String get sipSignalToneInstrument;
+
+  /// Display name for the Sine instrument.
+  ///
+  /// In en, this message translates to:
+  /// **'Sine'**
+  String get sipSignalInstrumentSine;
+
+  /// Display name for the Bell instrument.
+  ///
+  /// In en, this message translates to:
+  /// **'Bell'**
+  String get sipSignalInstrumentBell;
+
+  /// Display name for the Pluck instrument.
+  ///
+  /// In en, this message translates to:
+  /// **'Pluck'**
+  String get sipSignalInstrumentPluck;
+
+  /// Display name for the Chirp instrument.
+  ///
+  /// In en, this message translates to:
+  /// **'Chirp'**
+  String get sipSignalInstrumentChirp;
+
+  /// Button that wipes the local Signal draft (notes or Morse text).
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get sipSignalActionClear;
+
+  /// Button that plays the current Signal draft locally without sending.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get sipSignalActionPreview;
+
+  /// Button that transmits the Signal draft over the SIP DM session.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get sipSignalActionSend;
+
+  /// Button on a Signal bubble that resynthesizes and plays the signal locally.
+  ///
+  /// In en, this message translates to:
+  /// **'Replay'**
+  String get sipSignalReplay;
+
+  /// Static payload-size hint retained for legacy callers. The composer footer now shows the live encoded size via sipSignalSizeBytes.
+  ///
+  /// In en, this message translates to:
+  /// **'Tiny signal • ~20–32 bytes'**
+  String get sipSignalToneSizeBadge;
+
+  /// Static payload-size hint retained for legacy callers. The composer footer now shows the live encoded size via sipSignalSizeBytes.
+  ///
+  /// In en, this message translates to:
+  /// **'Tiny Morse • ~20–60 bytes'**
+  String get sipSignalMorseSizeBadge;
+
+  /// Live encoded-size readout in the composer footer. Updates per keystroke / pad tap.
+  ///
+  /// In en, this message translates to:
+  /// **'Signal • {bytes} B'**
+  String sipSignalSizeBytes(int bytes);
+
+  /// Composer footer when the encoded envelope exceeds maxEnvelopeBytes. Send is disabled in this state.
+  ///
+  /// In en, this message translates to:
+  /// **'Signal • {bytes} B — too large to send'**
+  String sipSignalSizeOverBudget(int bytes);
+
+  /// Badge shown above the tone pads when the phrase has reached its hard cap. Note pads are disabled but Clear / Preview / Send remain active.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}/{max} notes • Phrase full'**
+  String sipSignalToneFull(int count, int max);
+
+  /// Toggle label for the tap-first Morse input mode (dots, dashes, Letter, Space).
+  ///
+  /// In en, this message translates to:
+  /// **'Tap'**
+  String get sipSignalMorseInputTap;
+
+  /// Toggle label for the type-text Morse input mode (TextField helper).
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get sipSignalMorseInputType;
+
+  /// Helper line below the tap-Morse keypad explaining the input model.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap dots and dashes — Letter finalises a glyph, Space adds a word gap.'**
+  String get sipSignalMorseTapHint;
+
+  /// Placeholder shown above the tap-Morse keypad before any input.
+  ///
+  /// In en, this message translates to:
+  /// **'Decoded message will appear here.'**
+  String get sipSignalMorseTapEmpty;
+
+  /// Section label above the live decoded-text preview in tap-Morse mode.
+  ///
+  /// In en, this message translates to:
+  /// **'Decoded'**
+  String get sipSignalMorseTapDecodedLabel;
+
+  /// Section label above the live Morse-pattern preview in tap-Morse mode.
+  ///
+  /// In en, this message translates to:
+  /// **'Morse'**
+  String get sipSignalMorseTapPatternLabel;
+
+  /// Tooltip / accessibility label for the dot tap-Morse key.
+  ///
+  /// In en, this message translates to:
+  /// **'Dot'**
+  String get sipSignalMorseTapDot;
+
+  /// Tooltip / accessibility label for the dash tap-Morse key.
+  ///
+  /// In en, this message translates to:
+  /// **'Dash'**
+  String get sipSignalMorseTapDash;
+
+  /// Label for the tap-Morse key that finalises the current dot/dash token into a letter.
+  ///
+  /// In en, this message translates to:
+  /// **'Letter'**
+  String get sipSignalMorseTapLetter;
+
+  /// Label for the tap-Morse key that finalises the current letter and adds a word gap.
+  ///
+  /// In en, this message translates to:
+  /// **'Space'**
+  String get sipSignalMorseTapSpace;
+
+  /// Label for the tap-Morse backspace key — removes the most recent symbol or separator.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get sipSignalMorseTapBackspace;
+
+  /// Inline notice when the tap-Morse input contains tokens not in the international Morse table.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown sequences are shown as ? — they\'re skipped on send.'**
+  String get sipSignalMorseTapInvalidNote;
+
+  /// Label for the example button that loads the iconic 5-note 'Close Encounters of the Third Kind' motif into the Tone phrase composer.
+  ///
+  /// In en, this message translates to:
+  /// **'Close Encounters'**
+  String get sipSignalToneExampleCloseEncounters;
+
+  /// Helper line above the Close Encounters example button when the Tone phrase is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Try the example'**
+  String get sipSignalToneExampleHint;
+
+  /// Placeholder shown in the reply quote when replying to a SIP Signal entry. Mirrors how sketch replies use sipDmInkReplyPlaceholder — Signal envelopes carry no plaintext body to quote.
+  ///
+  /// In en, this message translates to:
+  /// **'📡 Signal'**
+  String get sipDmSignalReplyPlaceholder;
+
+  /// Conversation card preview line shown on the SIP Hub when the most recent DM entry is a SIP Signal phrase (musical tone). Replaces what would otherwise be an empty preview row because phrase entries carry no plaintext body.
+  ///
+  /// In en, this message translates to:
+  /// **'🎵 Tone'**
+  String get sipDmConversationPreviewPhrase;
+
+  /// Conversation card preview line shown on the SIP Hub when the most recent DM entry is a SIP Signal Morse message. Replaces the empty preview row because Morse entries carry no plaintext body.
+  ///
+  /// In en, this message translates to:
+  /// **'📡 Morse'**
+  String get sipDmConversationPreviewMorse;
+
+  /// Conversation card preview line shown on the SIP Hub when the most recent DM entry is a SIP Play envelope (Tic-Tac-Toe or Connect Four offer / move / accept / etc). Replaces the empty preview row because Play entries carry no plaintext body.
+  ///
+  /// In en, this message translates to:
+  /// **'🎮 Game'**
+  String get sipDmConversationPreviewGame;
+
+  /// Helper text below the Morse text input.
+  ///
+  /// In en, this message translates to:
+  /// **'Type up to 40 characters. A–Z, 0–9, space, and . , ? ! / @ are supported.'**
+  String get sipSignalMorseHint;
+
+  /// Placeholder for the Morse text input.
+  ///
+  /// In en, this message translates to:
+  /// **'Type your message…'**
+  String get sipSignalMorsePlaceholder;
+
+  /// Inline notice shown when the user types unsupported characters.
+  ///
+  /// In en, this message translates to:
+  /// **'Some characters won\'t be sent — only A–Z, 0–9, space, and . , ? ! / @ are allowed.'**
+  String get sipSignalMorseUnsupportedNote;
+
+  /// Section label inside an inbound Signal bubble for the musical-phrase variant.
+  ///
+  /// In en, this message translates to:
+  /// **'Phrase'**
+  String get sipSignalBubblePhraseLabel;
+
+  /// Section label inside an inbound Signal bubble for the Morse variant.
+  ///
+  /// In en, this message translates to:
+  /// **'Morse'**
+  String get sipSignalBubbleMorseLabel;
+
+  /// Fallback bubble title when an inbound Signal envelope fails to decode. State is informational only — never crashes ingest.
+  ///
+  /// In en, this message translates to:
+  /// **'Signal can\'t be read'**
+  String get sipSignalBubbleMalformed;
+
+  /// Hint shown above the SIP Ink canvas explaining the airtime constraint.
+  ///
+  /// In en, this message translates to:
+  /// **'Draw a quick sketch — kept tiny so it fits on the mesh.'**
+  String get sipInkComposerHint;
+
+  /// Hint replacing sipInkComposerHint when the user has drawn past the SIP Ink budget — explains that overflow strokes are visible but will be dropped on send.
+  ///
+  /// In en, this message translates to:
+  /// **'Strokes past the dashed line won\'t fit on the mesh and won\'t be sent.'**
+  String get sipInkComposerHintOver;
+
+  /// Live indicator of simplified points used in a SIP Ink sketch versus the maximum.
+  ///
+  /// In en, this message translates to:
+  /// **'{points} / {maxPoints} points'**
+  String sipInkPointBudget(int points, int maxPoints);
+
+  /// Live indicator of encoded payload size used versus the maximum for a SIP Ink sketch.
+  ///
+  /// In en, this message translates to:
+  /// **'{bytes} / {maxBytes} B'**
+  String sipInkPayloadUsage(int bytes, int maxBytes);
+
+  /// Button to clear the SIP Ink canvas.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get sipInkClear;
+
+  /// Button to remove the last stroke from the SIP Ink canvas.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get sipInkUndo;
+
+  /// Tooltip on the SIP Ink composer's Send button — fires when the user dispatches the encoded sketch as a DM_INK frame.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get sipInkSend;
+
+  /// Quoted text shown when a user replies to a sketch — ink has no plaintext body, so this placeholder stands in for the quote in both the local reply indicator and the recipient's wire-encoded quote prefix.
+  ///
+  /// In en, this message translates to:
+  /// **'🎨 Sketch'**
+  String get sipDmInkReplyPlaceholder;
+
+  /// Snackbar shown when the user attempts to send a sketch to a peer that hasn't advertised SIP Ink support.
+  ///
+  /// In en, this message translates to:
+  /// **'This peer can\'t receive sketches yet.'**
+  String get sipInkUnsupportedPeer;
+
+  /// Fallback caption shown in place of a SIP Ink sketch bubble when the payload can't be decoded.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsupported sketch'**
+  String get sipInkUnsupportedSketch;
+
+  /// Error shown when a sketch can't be reduced to fit the airtime budget.
+  ///
+  /// In en, this message translates to:
+  /// **'Sketch can\'t fit on the mesh — simplify your strokes.'**
+  String get sipInkBlocked;
 
   /// Button label to open an ephemeral DM with a peer.
   ///
@@ -56077,7 +57401,7 @@ abstract class AppLocalizations {
   /// Title for the SIP Hub screen.
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh'**
+  /// **'Handshake'**
   String get sipHubTitle;
 
   /// Section header for discovered SIP peers.
@@ -56097,6 +57421,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Connection requests'**
   String get sipHubSectionIncomingRequests;
+
+  /// Section header for the collapsed list of locally-blocked peers in SIP Hub. The section appears only when at least one peer is blocked. Tapping the row expands the list and exposes per-peer Unblock affordances.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked'**
+  String get sipHubSectionBlocked;
+
+  /// Subtitle on the collapsed Blocked section header explaining what tapping does. Shown alongside the count of blocked peers.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to expand and review who you\'ve blocked'**
+  String get sipHubBlockedEmptySubtitle;
+
+  /// Button label inside the Blocked section that, when tapped, unblocks the corresponding peer after a confirmation sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Unblock'**
+  String get sipHubUnblockAction;
+
+  /// Title of the confirmation sheet when the user taps Unblock in the SIP Hub Blocked section.
+  ///
+  /// In en, this message translates to:
+  /// **'Unblock this node?'**
+  String get sipHubUnblockConfirmTitle;
+
+  /// Body of the SIP Hub Unblock confirmation sheet. Calls out that history is preserved and that future inbound traffic from the peer will reach the user again.
+  ///
+  /// In en, this message translates to:
+  /// **'This node will be able to send you handshake requests, messages, and sketches again. Your previous conversation history with them is unchanged.'**
+  String get sipHubUnblockConfirmBody;
+
+  /// Confirm button label inside the Unblock confirmation sheet. Marked as a non-destructive primary action.
+  ///
+  /// In en, this message translates to:
+  /// **'Unblock'**
+  String get sipHubUnblockConfirmAction;
+
+  /// Cancel button label inside the Unblock confirmation sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get sipHubUnblockConfirmCancel;
+
+  /// Subtitle under each blocked peer's row explaining the local effect of the block.
+  ///
+  /// In en, this message translates to:
+  /// **'Inbound traffic silently dropped'**
+  String get sipHubBlockedPeerSubtitle;
 
   /// Section header on the SIP hub for the user's own local mesh services.
   ///
@@ -56158,6 +57530,18 @@ abstract class AppLocalizations {
   /// **'{peerName} wants to connect'**
   String sipHubIncomingRequestFrom(String peerName);
 
+  /// Subtitle shown below the peer name and hex ID on the incoming handshake request card.
+  ///
+  /// In en, this message translates to:
+  /// **'wants to connect'**
+  String get sipHubIncomingRequestWantsToConnect;
+
+  /// Tiny pulsing badge on the incoming handshake request card indicating the request is current and time-sensitive.
+  ///
+  /// In en, this message translates to:
+  /// **'Live'**
+  String get sipHubIncomingRequestLiveLabel;
+
   /// Accept button label for incoming handshake requests.
   ///
   /// In en, this message translates to:
@@ -56170,28 +57554,88 @@ abstract class AppLocalizations {
   /// **'Decline'**
   String get sipHubDecline;
 
-  /// Empty state title when no SIP peers are found.
+  /// Block button label on the incoming handshake request card. Blocking silently drops the pending request and persists a local block — no HS_DECLINE is sent on the wire.
   ///
   /// In en, this message translates to:
-  /// **'No peers nearby'**
+  /// **'Block'**
+  String get sipHubBlock;
+
+  /// Body copy explaining what tapping Accept on a handshake request authorises. Shown above Accept / Decline / Block on the incoming request card.
+  ///
+  /// In en, this message translates to:
+  /// **'Accepting lets this node send you encrypted direct messages and sketches over the mesh. You can mute, block, or remove the conversation at any time.'**
+  String get sipHubConsentBody;
+
+  /// Title of the confirmation sheet shown when the user taps Block on an incoming handshake request.
+  ///
+  /// In en, this message translates to:
+  /// **'Block this node?'**
+  String get sipHubBlockConfirmTitle;
+
+  /// Body of the Block confirmation sheet shown on the SIP Hub incoming handshake request card.
+  ///
+  /// In en, this message translates to:
+  /// **'Future messages and handshake requests from this node will be silently dropped. They won\'t be notified — they\'ll see your node as unreachable. You can unblock from Trust & Safety settings later.'**
+  String get sipHubBlockConfirmBody;
+
+  /// Destructive confirm button label inside the Block confirmation sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Block'**
+  String get sipHubBlockConfirmAction;
+
+  /// Cancel button label inside the Block confirmation sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get sipHubBlockConfirmCancel;
+
+  /// Title of the confirmation sheet shown when the user taps Block in the Mesh Explorer peer detail sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Block this node?'**
+  String get meshExplorerBlockConfirmTitle;
+
+  /// Body of the Block confirmation sheet shown in the Mesh Explorer peer detail sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Future messages and handshake requests from this node will be silently dropped. They won\'t be notified. You can unblock from Trust & Safety settings later.'**
+  String get meshExplorerBlockConfirmBody;
+
+  /// Title of the banner shown above the DM thread the first time the user opens a session with a new peer. Reminds the user that this is someone they haven't talked to before.
+  ///
+  /// In en, this message translates to:
+  /// **'First contact'**
+  String get sipDmFirstContactBannerTitle;
+
+  /// Body of the first-contact banner. Encourages skepticism and explains tap-to-dismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'This is your first conversation with this node. Only accept messages from people you trust on the mesh. Tap to dismiss.'**
+  String get sipDmFirstContactBannerBody;
+
+  /// Empty state title when no SIP peers have been discovered yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Looking for neighbors'**
   String get sipHubEmptyTitle;
 
-  /// Empty state description when no SIP peers are found.
+  /// Empty state description when no SIP peers have been discovered yet.
   ///
   /// In en, this message translates to:
-  /// **'Tap Scan to look for other Socialmesh users on the mesh.'**
+  /// **'Tap Look for people to send a roll-call to other Handshake users on your mesh. Anyone in range with the app open will reply within a few seconds.'**
   String get sipHubEmptyDescription;
 
   /// Prefix for the animated SIP Hub scanning empty state title (trailing space separates from keyword).
   ///
   /// In en, this message translates to:
-  /// **'No peers '**
+  /// **'Looking for '**
   String get sipHubScanningTitlePrefix;
 
   /// Keyword for the animated SIP Hub scanning empty state title (gradient-animated).
   ///
   /// In en, this message translates to:
-  /// **'nearby'**
+  /// **'neighbors'**
   String get sipHubScanningTitleKeyword;
 
   /// Suffix for the animated SIP Hub scanning empty state title.
@@ -56200,28 +57644,28 @@ abstract class AppLocalizations {
   /// **''**
   String get sipHubScanningTitleSuffix;
 
-  /// SIP Hub animated scanning state tagline 1.
+  /// SIP Hub animated scanning state tagline 1. Two lines separated by \n; describes the passive-listening behaviour.
   ///
   /// In en, this message translates to:
-  /// **'Listening for nearby users…'**
+  /// **'Listening on your mesh for other Handshake users.\nKeep your node connected and any peers nearby will surface here.'**
   String get sipHubScanningTagline1;
 
-  /// SIP Hub animated scanning state tagline 2.
+  /// SIP Hub animated scanning state tagline 2. Two lines separated by \n; prompts the user to take an action.
   ///
   /// In en, this message translates to:
-  /// **'Tap Look for people to send a signal…'**
+  /// **'Tap Look for people to send a quick roll-call.\nNearby Handshake users typically reply within a few seconds.'**
   String get sipHubScanningTagline2;
 
-  /// SIP Hub animated scanning state tagline 3.
+  /// SIP Hub animated scanning state tagline 3. Two lines separated by \n; explains background discovery.
   ///
   /// In en, this message translates to:
-  /// **'Others will appear when found…'**
+  /// **'Peers show up automatically when their discovery beacons\nreach your node — no need to tap anything to find them.'**
   String get sipHubScanningTagline3;
 
-  /// SIP Hub animated scanning state tagline 4.
+  /// SIP Hub animated scanning state tagline 4. Two lines separated by \n; offers a tip when the area is quiet.
   ///
   /// In en, this message translates to:
-  /// **'Keep the app open to discover more…'**
+  /// **'Discovery runs while the app is open and your node is active.\nMove around or scan again if no one is around just yet.'**
   String get sipHubScanningTagline4;
 
   /// Help overflow menu item label for the SIP Hub screen.
@@ -56233,19 +57677,19 @@ abstract class AppLocalizations {
   /// Help topic title for the SIP Hub screen.
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh'**
+  /// **'Handshake'**
   String get helpSipHubOverviewTitle;
 
   /// Help topic description for the SIP Hub screen.
   ///
   /// In en, this message translates to:
-  /// **'Discover and chat with nearby Socialmesh peers'**
+  /// **'Discover and chat with nearby Handshake peers'**
   String get helpSipHubOverviewDescription;
 
   /// Help bubble: SIP Hub intro step.
   ///
   /// In en, this message translates to:
-  /// **'Welcome to **Socialmesh**! This is your peer discovery hub. Nearby devices running Socialmesh appear here once they beacon or respond to a rollcall.'**
+  /// **'Welcome to **Handshake**! This is your peer discovery hub. Nearby devices running Handshake appear here once they beacon or respond to a rollcall.'**
   String get helpSipHubIntroBubble;
 
   /// Help bubble: SIP Hub scan step.
@@ -56302,12 +57746,6 @@ abstract class AppLocalizations {
   /// **'Expires in {time}'**
   String sipHubSessionExpiry(String time);
 
-  /// Badge label for pinned sessions.
-  ///
-  /// In en, this message translates to:
-  /// **'Pinned'**
-  String get sipHubSessionPinned;
-
   /// Subtitle for conversations with no messages.
   ///
   /// In en, this message translates to:
@@ -56337,6 +57775,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Auto-scan'**
   String get sipAutoScanToggle;
+
+  /// Overflow menu item to trigger a one-shot SIP scan, regardless of auto-scan state.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan now'**
+  String get sipScanNow;
 
   /// Label shown while a SIP scan is in progress.
   ///
@@ -57529,7 +58973,7 @@ abstract class AppLocalizations {
   /// Notification body when a new SIP peer is discovered.
   ///
   /// In en, this message translates to:
-  /// **'A Socialmesh peer is in range. Open Mesh Explorer to connect.'**
+  /// **'A Handshake peer is in range. Open Handshake to connect.'**
   String get notificationSipPeerFoundBody;
 
   /// Notification channel name for SIP peer discovery alerts.
@@ -58393,7 +59837,7 @@ abstract class AppLocalizations {
   /// Loading text shown while fetching remote service instances via MRRP.
   ///
   /// In en, this message translates to:
-  /// **'Loading what’s being shared…'**
+  /// **'Loading what\'s being shared…'**
   String get serviceDetailFetchingInstances;
 
   /// Error text shown when a single MRRP request attempt to fetch remote instances fails.
@@ -61291,7 +62735,7 @@ abstract class AppLocalizations {
   /// Description for waiting-for-path phase
   ///
   /// In en, this message translates to:
-  /// **'The mesh hasn’t found a route yet. Delivery will continue automatically.'**
+  /// **'The mesh hasn\'t found a route yet. Delivery will continue automatically.'**
   String get deliveryPhaseWaitingForPathDesc;
 
   /// Delivery phase: data being relayed
@@ -61561,7 +63005,7 @@ abstract class AppLocalizations {
   /// Description for contacts audience
   ///
   /// In en, this message translates to:
-  /// **'Only people you’ve exchanged contacts with'**
+  /// **'Only people you\'ve exchanged contacts with'**
   String get serviceWizardAudienceContactsDesc;
 
   /// Review step title
@@ -61573,13 +63017,13 @@ abstract class AppLocalizations {
   /// Review step subtitle
   ///
   /// In en, this message translates to:
-  /// **'This is the shape of the share you’re about to compose.'**
+  /// **'This is the shape of the share you\'re about to compose.'**
   String get serviceWizardReviewSubtitle;
 
   /// Summary row label: service type
   ///
   /// In en, this message translates to:
-  /// **'You’re sharing'**
+  /// **'You\'re sharing'**
   String get serviceWizardReviewType;
 
   /// Summary row label: selected preset
@@ -62224,6 +63668,30 @@ abstract class AppLocalizations {
   /// **'Message reactions are now grouped by emoji — if five people send a thumbs-up, you see one compact chip instead of five. Long-press any reaction to see every sender.\n\nReactions also wrap to the next line instead of overflowing off-screen, keeping the conversation tidy.'**
   String get whatsNewReactionGroupingDescription;
 
+  /// Subtitle for the What's New popup for version 1.36.0.
+  ///
+  /// In en, this message translates to:
+  /// **'Version 1.36.0'**
+  String get whatsNewVersion1360Subtitle;
+
+  /// Title for the Device Shop feature in What's New.
+  ///
+  /// In en, this message translates to:
+  /// **'Device Shop'**
+  String get whatsNewDeviceShopTitle;
+
+  /// Description for the Device Shop feature in What's New.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse Meshtastic-compatible hardware from official partners and trusted sellers — all in one place. Filter by category, sort by price or new arrivals, and tap through to the seller\'s store to buy.\n\nPurchases happen on the seller\'s site; Socialmesh never handles payment, shipping, or returns. Find it in the drawer menu under Tools.'**
+  String get whatsNewDeviceShopDescription;
+
+  /// CTA button label to open the Device Shop screen from What's New.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Device Shop'**
+  String get whatsNewCtaOpenDeviceShop;
+
   /// Title for the mesh feed screen.
   ///
   /// In en, this message translates to:
@@ -62515,56 +63983,170 @@ abstract class AppLocalizations {
   /// Primary action label — replenishes the pet's energy.
   ///
   /// In en, this message translates to:
-  /// **'Charge'**
+  /// **'Feed'**
   String get petActionCharge;
 
   /// Secondary action label — hold-to-surge charges faster but raises instability.
   ///
   /// In en, this message translates to:
-  /// **'Surge'**
+  /// **'Overfeed'**
   String get petActionSurge;
 
   /// Action label — brief premium interaction that raises mood.
   ///
   /// In en, this message translates to:
-  /// **'Resonate'**
+  /// **'Play'**
   String get petActionResonate;
 
   /// Action label — clears a distortion artefact (hygiene analogue).
   ///
   /// In en, this message translates to:
-  /// **'Stabilise'**
+  /// **'Clean'**
   String get petActionStabilise;
-
-  /// Action label — corrects the pet during a discipline moment.
-  ///
-  /// In en, this message translates to:
-  /// **'Sync'**
-  String get petActionSync;
 
   /// Action label — medicine analogue; only valid while the pet is sick.
   ///
   /// In en, this message translates to:
-  /// **'Purge'**
+  /// **'Medicine'**
   String get petActionPurge;
 
   /// Action label — puts the pet to sleep during the sleep window.
   ///
   /// In en, this message translates to:
-  /// **'Dim'**
+  /// **'Sleep'**
   String get petActionDim;
 
   /// Action label — opens a sheet with detailed pet stats.
   ///
   /// In en, this message translates to:
-  /// **'Inspect'**
+  /// **'Status'**
   String get petActionInspect;
 
   /// Action label — restart a dormant pet from a fresh sigil seed.
   ///
   /// In en, this message translates to:
-  /// **'Re-sigil'**
+  /// **'Revive'**
   String get petActionReSigil;
+
+  /// Title of the first onboarding card.
+  ///
+  /// In en, this message translates to:
+  /// **'Meet your pet'**
+  String get petOnboardingPage1Title;
+
+  /// Body of the first onboarding card.
+  ///
+  /// In en, this message translates to:
+  /// **'A digital companion that hatches from your node\'s signature and grows over time. The better you care for it, the healthier it stays.'**
+  String get petOnboardingPage1Body;
+
+  /// Title of the second onboarding card — introduces the plain-language advisory line above the pet.
+  ///
+  /// In en, this message translates to:
+  /// **'The status line tells you what to do'**
+  String get petOnboardingPage2Title;
+
+  /// Body of the second onboarding card — explains the status line + pulsing-button cue.
+  ///
+  /// In en, this message translates to:
+  /// **'Above your pet, a single status line says exactly what it needs and names the button to tap — Charge when hungry, Resonate when lonely, Stabilise when messy, Purge when sick, Dim at bedtime. The matching button also pulses so you can\'t miss it.'**
+  String get petOnboardingPage2Body;
+
+  /// Title of the third onboarding card.
+  ///
+  /// In en, this message translates to:
+  /// **'Check in anytime'**
+  String get petOnboardingPage3Title;
+
+  /// Body of the third onboarding card.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap Inspect to see energy, mood, stability and recent events. Your pet won\'t time-out if you miss a day, but consistent care earns it a better branch — open the help sheet anytime for the full action guide.'**
+  String get petOnboardingPage3Body;
+
+  /// Next button on onboarding cards.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get petOnboardingNext;
+
+  /// Skip button on onboarding cards.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get petOnboardingSkip;
+
+  /// Final button on the last onboarding card.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get petOnboardingFinish;
+
+  /// Hint shown next to the help-icon chip on the last pet onboarding page; points at the help icon in the pet home screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Full action guide'**
+  String get petOnboardingHelpHint;
+
+  /// Title of the help sheet that explains every pet care action.
+  ///
+  /// In en, this message translates to:
+  /// **'Action Guide'**
+  String get petGuideSheetTitle;
+
+  /// Intro paragraph above the action list on the Pet help sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Each action does one specific thing. When the pet beeps for attention (pulsing icon), tap the matching action — Feed for hunger, Play for loneliness, Clean for a mess, Sleep for bedtime, or Medicine for sickness — and the beep clears automatically.'**
+  String get petGuideSheetIntro;
+
+  /// Help-sheet body text for the Charge action.
+  ///
+  /// In en, this message translates to:
+  /// **'Feeds the pet. +3 energy. Answers a Hungry call.'**
+  String get petActionChargeDescription;
+
+  /// Help-sheet body text for the Surge action.
+  ///
+  /// In en, this message translates to:
+  /// **'Overfeeds. Long-press Feed for +5 energy, but adds instability — too many overfeeds can make the pet sick. Answers a Hungry call.'**
+  String get petActionSurgeDescription;
+
+  /// Help-sheet body text for the Resonate action.
+  ///
+  /// In en, this message translates to:
+  /// **'Plays with the pet. +3 mood. Answers a Lonely call.'**
+  String get petActionResonateDescription;
+
+  /// Help-sheet body text for the Stabilise action.
+  ///
+  /// In en, this message translates to:
+  /// **'Cleans up. Removes the distortion artefact on the field. +2 stability. Answers a Hygiene call.'**
+  String get petActionStabiliseDescription;
+
+  /// Help-sheet body text for the Purge action.
+  ///
+  /// In en, this message translates to:
+  /// **'Medicine. Removes sickness and drops instability. Only valid while the pet is sick.'**
+  String get petActionPurgeDescription;
+
+  /// Help-sheet body text for the Dim action.
+  ///
+  /// In en, this message translates to:
+  /// **'Puts the pet to sleep. Only valid inside the sleep window (or when the pet is yawning). Answers a Bedtime call.'**
+  String get petActionDimDescription;
+
+  /// Help-sheet body text for the Inspect action.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens a read-only status sheet showing identity, stats, and recent events. No stat change.'**
+  String get petActionInspectDescription;
+
+  /// Help-sheet body text for the Re-sigil action.
+  ///
+  /// In en, this message translates to:
+  /// **'Revives a dormant pet with a fresh sigil. Only available after the pet has gone dormant.'**
+  String get petActionReSigilDescription;
 
   /// Life-cycle stage name.
   ///
@@ -62707,43 +64289,43 @@ abstract class AppLocalizations {
   /// Attention call banner copy.
   ///
   /// In en, this message translates to:
-  /// **'Low on energy — Charge or Surge to answer.'**
+  /// **'Low on energy — Feed or Overfeed to answer.'**
   String get petCallBannerHungry;
 
   /// Attention call banner copy.
   ///
   /// In en, this message translates to:
-  /// **'Wants attention — Resonate to answer.'**
+  /// **'Wants attention — Play to answer.'**
   String get petCallBannerLonely;
 
   /// Attention call banner copy.
   ///
   /// In en, this message translates to:
-  /// **'Feeling unwell — Purge to answer.'**
+  /// **'Feeling unwell — Medicine to answer.'**
   String get petCallBannerSick;
 
   /// Attention call banner copy.
   ///
   /// In en, this message translates to:
-  /// **'Field is unstable — Stabilise to clear.'**
+  /// **'Made a mess — Clean to remove.'**
   String get petCallBannerHygiene;
 
   /// Attention call banner copy.
   ///
   /// In en, this message translates to:
-  /// **'It\'s almost time to rest — Dim to answer.'**
+  /// **'It\'s almost time to rest — Sleep to answer.'**
   String get petCallBannerBedtime;
 
   /// Attention call banner copy.
   ///
   /// In en, this message translates to:
-  /// **'Restless — Resonate to answer.'**
+  /// **'Restless — Play to answer.'**
   String get petCallBannerBoredom;
 
   /// Title of the Inspect bottom sheet.
   ///
   /// In en, this message translates to:
-  /// **'Inspect'**
+  /// **'Status'**
   String get petInspectTitle;
 
   /// Inspect sheet section — identity block.
@@ -62893,49 +64475,49 @@ abstract class AppLocalizations {
   /// Recent-events entry: the user performed the Charge action.
   ///
   /// In en, this message translates to:
-  /// **'Charged'**
+  /// **'Fed'**
   String get petEventCharged;
 
   /// Recent-events entry: the user performed the Surge (long-press charge) action.
   ///
   /// In en, this message translates to:
-  /// **'Surged'**
+  /// **'Overfed'**
   String get petEventSurged;
 
   /// Recent-events entry: the user performed the Resonate action.
   ///
   /// In en, this message translates to:
-  /// **'Resonated'**
+  /// **'Played'**
   String get petEventResonated;
 
   /// Recent-events entry: the user performed the Stabilise action.
   ///
   /// In en, this message translates to:
-  /// **'Stabilised'**
+  /// **'Cleaned'**
   String get petEventStabilised;
 
   /// Recent-events entry: the user performed the Sync action.
   ///
   /// In en, this message translates to:
-  /// **'Synced'**
+  /// **'Answered'**
   String get petEventSynced;
 
   /// Recent-events entry: the user performed the Purge action.
   ///
   /// In en, this message translates to:
-  /// **'Purged'**
+  /// **'Gave medicine'**
   String get petEventPurged;
 
   /// Recent-events entry: the user performed the Dim action (put pet to sleep).
   ///
   /// In en, this message translates to:
-  /// **'Dimmed'**
+  /// **'Put to sleep'**
   String get petEventDimmed;
 
   /// Recent-events entry: the user opened the inspect sheet.
   ///
   /// In en, this message translates to:
-  /// **'Inspected'**
+  /// **'Checked status'**
   String get petEventInspected;
 
   /// Recent-events entry: a hygiene artefact (stale-field mark) appeared on the pet.
@@ -63013,7 +64595,7 @@ abstract class AppLocalizations {
   /// Recent-events entry: the user re-sigilled (started a new pet lineage after dormant).
   ///
   /// In en, this message translates to:
-  /// **'New sigil cast'**
+  /// **'Revived'**
   String get petEventReSigilled;
 
   /// Dormant-state headline on the Pet home screen.
@@ -63034,17 +64616,47 @@ abstract class AppLocalizations {
   /// **'Companion'**
   String get petCompanionSectionTitle;
 
-  /// Shown in the Companion card when we have no cached observation of this peer's pet.
+  /// Remote Companion empty-state shown when we have not received any pet summary from this node yet (first encounter, or no response since cold start).
   ///
   /// In en, this message translates to:
-  /// **'No sigil creature observed yet.'**
-  String get petCompanionUnknown;
+  /// **'No companion seen from this node yet.'**
+  String get petCompanionRemoteNoObservation;
 
-  /// Freshness label under a cached companion preview (age is a short string like '3h' or '2d').
+  /// Remote Companion empty-state shown when the node responded but declined to share or has no companion bound (covers both error responses and empty payloads — they look the same to the user).
+  ///
+  /// In en, this message translates to:
+  /// **'This node isn\'t sharing its companion.'**
+  String get petCompanionRemoteNotSharing;
+
+  /// Freshness label under a fresh cached companion preview (age is a short string like '3h' or '2d').
   ///
   /// In en, this message translates to:
   /// **'Observed {age} ago'**
   String petCompanionObservedRelative(String age);
+
+  /// Freshness label under a STALE cached companion preview (>12h old), emphasising that the data is old. Age is a short string like '3h' or '2d'.
+  ///
+  /// In en, this message translates to:
+  /// **'Last seen {age} ago'**
+  String petCompanionLastSeen(String age);
+
+  /// Action label shown on the Companion card when the selected node is the user's own node, opening the NodePet home screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open NodePet'**
+  String get petCompanionOpenAction;
+
+  /// Freshness-line replacement under the Companion card preview when the selected node is the user's own node.
+  ///
+  /// In en, this message translates to:
+  /// **'Your companion'**
+  String get petCompanionSelfYours;
+
+  /// Shown on the Companion card when the selected node is the user's own node but no pet state has been created locally yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Your companion hasn\'t hatched yet.'**
+  String get petCompanionSelfNoPet;
 
   /// Smoothed peer pet live-state label when the peer is currently on the mesh (last-seen under a minute).
   ///
@@ -63075,6 +64687,168 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Dormant'**
   String get petLiveStateDormant;
+
+  /// Section title in the DNA viewer's decoded panel for the 4 base alleles that make up the pet's genetic sequence.
+  ///
+  /// In en, this message translates to:
+  /// **'RESONANCE ALLELES'**
+  String get petDnaSectionAlleles;
+
+  /// Row label for the most-represented allele in the pet's sequence.
+  ///
+  /// In en, this message translates to:
+  /// **'Dominant'**
+  String get petDnaAlleleDominant;
+
+  /// Name of the Aurora allele (DNA base A), paired with Tether. Luminous-branch archetype.
+  ///
+  /// In en, this message translates to:
+  /// **'Aurora'**
+  String get petAlleleAurora;
+
+  /// Name of the Tether allele (DNA base T), paired with Aurora. Steady-branch archetype.
+  ///
+  /// In en, this message translates to:
+  /// **'Tether'**
+  String get petAlleleTether;
+
+  /// Name of the Gale allele (DNA base G), paired with Calm. Volatile-branch archetype.
+  ///
+  /// In en, this message translates to:
+  /// **'Gale'**
+  String get petAlleleGale;
+
+  /// Name of the Calm allele (DNA base C), paired with Gale. Dimmed-branch archetype.
+  ///
+  /// In en, this message translates to:
+  /// **'Calm'**
+  String get petAlleleCalm;
+
+  /// Value format for an allele ratio row — the base letter, two spaces, percentage, percent sign. E.g. 'A  34%'.
+  ///
+  /// In en, this message translates to:
+  /// **'{letter}  {percent}%'**
+  String petDnaAlleleRatioValue(String letter, int percent);
+
+  /// Status-line message when the pet has reached its terminal dormant stage. `[[…]]` brackets the action button name so the UI can render it in accent color.
+  ///
+  /// In en, this message translates to:
+  /// **'Your pet\'s journey has ended. Tap [[Re-sigil]] to begin anew.'**
+  String get petAdvisoryDormant;
+
+  /// Status-line message while the pet is still an egg. No action yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing to hatch…'**
+  String get petAdvisoryEgg;
+
+  /// Status-line message when the pet is sick (passive sickness, no attention call yet).
+  ///
+  /// In en, this message translates to:
+  /// **'Sick — tap [[Purge]] to heal.'**
+  String get petAdvisorySick;
+
+  /// Status-line message when an active attention call is firing for low energy.
+  ///
+  /// In en, this message translates to:
+  /// **'Hungry — tap [[Charge]] to feed.'**
+  String get petAdvisoryCallHungry;
+
+  /// Status-line message when an active attention call is firing for low mood.
+  ///
+  /// In en, this message translates to:
+  /// **'Lonely — tap [[Resonate]] to play.'**
+  String get petAdvisoryCallLonely;
+
+  /// Status-line message when an active attention call is firing because the pet is sick.
+  ///
+  /// In en, this message translates to:
+  /// **'Sick — tap [[Purge]] to heal.'**
+  String get petAdvisoryCallSick;
+
+  /// Status-line message when an active attention call is firing for accumulated hygiene artefacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Messy — tap [[Stabilise]] to clean up.'**
+  String get petAdvisoryCallHygiene;
+
+  /// Status-line message when an active attention call is firing during the sleep window.
+  ///
+  /// In en, this message translates to:
+  /// **'Bedtime — tap [[Dim]] to tuck in.'**
+  String get petAdvisoryCallBedtime;
+
+  /// Status-line message when an active attention call is firing for generic boredom.
+  ///
+  /// In en, this message translates to:
+  /// **'Bored — tap [[Resonate]] to engage.'**
+  String get petAdvisoryCallBoredom;
+
+  /// Status-line message when hygiene artefacts have reached the sickness threshold but the pet isn't sick yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Getting messy — tap [[Stabilise]] before they get sick.'**
+  String get petAdvisoryHygieneImminent;
+
+  /// Status-line warning when energy is below the call threshold but no call has fired yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Energy low — tap [[Charge]] soon.'**
+  String get petAdvisoryEnergyLow;
+
+  /// Status-line warning when mood is below the call threshold but no call has fired yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood low — tap [[Resonate]] soon.'**
+  String get petAdvisoryMoodLow;
+
+  /// Status-line nudge when there's at least one hygiene artefact but below the sickness threshold.
+  ///
+  /// In en, this message translates to:
+  /// **'Small mess — tap [[Stabilise]] when you can.'**
+  String get petAdvisoryHygieneMild;
+
+  /// Status-line message when the pet is asleep. No action.
+  ///
+  /// In en, this message translates to:
+  /// **'Resting peacefully.'**
+  String get petAdvisoryResting;
+
+  /// Status-line hint during the sleep window when the pet is awake.
+  ///
+  /// In en, this message translates to:
+  /// **'Bedtime — tap [[Dim]] to tuck in.'**
+  String get petAdvisoryBedtime;
+
+  /// Status-line message when the pet has no active needs.
+  ///
+  /// In en, this message translates to:
+  /// **'Thriving.'**
+  String get petAdvisoryThriving;
+
+  /// Empty-state title for the recent-events timeline on the pet inspect sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'No events yet'**
+  String get petRecentTimelineEmptyTitle;
+
+  /// Empty-state subtitle for the recent-events timeline on the pet inspect sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Care actions and milestones will appear here as you interact with your pet.'**
+  String get petRecentTimelineEmptySubtitle;
+
+  /// Day-group header on the recent-events timeline for events that happened on the current calendar day.
+  ///
+  /// In en, this message translates to:
+  /// **'TODAY'**
+  String get petRecentTimelineDayToday;
+
+  /// Day-group header on the recent-events timeline for events that happened on the previous calendar day.
+  ///
+  /// In en, this message translates to:
+  /// **'YESTERDAY'**
+  String get petRecentTimelineDayYesterday;
 
   /// Non-blocking banner title after the egg hatches.
   ///
@@ -63184,12 +64958,6 @@ abstract class AppLocalizations {
   /// **'Field is clean'**
   String get petReasonNothingToClean;
 
-  /// Toast when Sync is tapped and the pet has no active call and stability is at max.
-  ///
-  /// In en, this message translates to:
-  /// **'Nothing to sync'**
-  String get petReasonNothingToSync;
-
   /// Toast when Dim is tapped while the pet is already asleep.
   ///
   /// In en, this message translates to:
@@ -63231,6 +64999,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pet is still alive'**
   String get petReasonNotDormant;
+
+  /// App bar title for the Pet Lifecycle Timeline screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Lifecycle'**
+  String get petTimelineScreenTitle;
+
+  /// Header pill showing the total number of timeline events recorded for this pet.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 event} other{{count} events}}'**
+  String petTimelineEventCountPill(int count);
+
+  /// Section label for the origin node at the top of the lifecycle timeline.
+  ///
+  /// In en, this message translates to:
+  /// **'DNA forged'**
+  String get petTimelineOriginTitle;
+
+  /// Describes which base allele (Aurora / Tether / Gale / Calm) dominates the pet's DNA.
+  ///
+  /// In en, this message translates to:
+  /// **'{allele}-dominant'**
+  String petTimelineOriginDominant(String allele);
+
+  /// Small pill next to the current stage heading on the timeline.
+  ///
+  /// In en, this message translates to:
+  /// **'NOW'**
+  String get petTimelineNowPill;
+
+  /// Shown inside the current stage's section when nothing has happened yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Quiet stretch — no events yet.'**
+  String get petTimelineQuietCurrent;
+
+  /// Multiplier pill for grouped minor events, e.g. 3× for three charges within the grouping window.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}×'**
+  String petTimelineGroupedCount(int count);
+
+  /// Label for the upcoming stage node at the tail of the timeline.
+  ///
+  /// In en, this message translates to:
+  /// **'Next: {stageName}'**
+  String petTimelineUpcomingLabel(String stageName);
+
+  /// Shown below the upcoming label when the next stage is due now.
+  ///
+  /// In en, this message translates to:
+  /// **'imminent'**
+  String get petTimelineUpcomingImminent;
+
+  /// Shown below the upcoming label, formatted relative time until the next stage.
+  ///
+  /// In en, this message translates to:
+  /// **'in {duration}'**
+  String petTimelineUpcomingIn(String duration);
+
+  /// Compact duration: days only.
+  ///
+  /// In en, this message translates to:
+  /// **'{days}d'**
+  String petTimelineDurationDays(int days);
+
+  /// Compact duration: days and hours.
+  ///
+  /// In en, this message translates to:
+  /// **'{days}d {hours}h'**
+  String petTimelineDurationDaysHours(int days, int hours);
+
+  /// Compact duration: hours only.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h'**
+  String petTimelineDurationHours(int hours);
+
+  /// Compact duration: hours and minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h {minutes}m'**
+  String petTimelineDurationHoursMinutes(int hours, int minutes);
+
+  /// Compact duration: minutes only.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes}m'**
+  String petTimelineDurationMinutes(int minutes);
+
+  /// Compact duration fallback when less than a minute remains.
+  ///
+  /// In en, this message translates to:
+  /// **'moments'**
+  String get petTimelineDurationImminent;
+
+  /// Empty state title on the lifecycle timeline when no pet exists for this node.
+  ///
+  /// In en, this message translates to:
+  /// **'No pet yet'**
+  String get petTimelineEmptyTitle;
+
+  /// Empty state subtitle on the lifecycle timeline when no pet exists.
+  ///
+  /// In en, this message translates to:
+  /// **'Pair a device to begin your pet\'s story.'**
+  String get petTimelineEmptySubtitle;
+
+  /// Expanded detail for the hatched major event on the lifecycle timeline.
+  ///
+  /// In en, this message translates to:
+  /// **'Your pet emerged from its sigil and began its life cycle.'**
+  String get petTimelineDetailHatched;
+
+  /// Expanded detail for stage-advanced events.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced into {stageName}.'**
+  String petTimelineDetailStageAdvanced(String stageName);
+
+  /// Expanded detail for branch-resolved events.
+  ///
+  /// In en, this message translates to:
+  /// **'Branch resolved as {branchName} based on care patterns.'**
+  String petTimelineDetailBranchResolved(String branchName);
+
+  /// Expanded detail for the dormant-entered event.
+  ///
+  /// In en, this message translates to:
+  /// **'Entered dormancy. Its journey is complete.'**
+  String get petTimelineDetailDormantEntered;
+
+  /// Expanded detail for the re-sigilled event.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-sigilled — a new creature begins.'**
+  String get petTimelineDetailReSigilled;
+
+  /// Expanded detail for sickness-onset events.
+  ///
+  /// In en, this message translates to:
+  /// **'Fell ill. Use Purge to recover.'**
+  String get petTimelineDetailSicknessOnset;
+
+  /// Expanded detail for sickness-recovered events.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovered from sickness.'**
+  String get petTimelineDetailSicknessRecovered;
+
+  /// Expanded detail for purge events.
+  ///
+  /// In en, this message translates to:
+  /// **'Received medical care.'**
+  String get petTimelineDetailPurged;
+
+  /// Expanded detail for call-missed events.
+  ///
+  /// In en, this message translates to:
+  /// **'A call for attention went unanswered.'**
+  String get petTimelineDetailCallMissed;
+
+  /// Expanded detail for mistake-recorded events.
+  ///
+  /// In en, this message translates to:
+  /// **'A lapse in care was recorded against the stage accumulator.'**
+  String get petTimelineDetailMistakeRecorded;
 
   /// Android notification channel description for pet milestones.
   ///
@@ -63345,6 +65281,1350 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Restless — tap Resonate.'**
   String get notificationPetAttentionBoredomBody;
+
+  /// Title for the Reticulum tunnel diagnostics screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Reticulum Tunnel'**
+  String get reticulumDiagTitle;
+
+  /// Pill label marking the Reticulum diagnostics screen as experimental.
+  ///
+  /// In en, this message translates to:
+  /// **'Experimental'**
+  String get reticulumDiagExperimental;
+
+  /// Header description on the Reticulum diagnostics screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Socialmesh observes RNS traffic on the mesh; behavior may be incomplete while the wire format is being characterized.'**
+  String get reticulumDiagDescription;
+
+  /// Section header above the overview info table.
+  ///
+  /// In en, this message translates to:
+  /// **'OVERVIEW'**
+  String get reticulumDiagSectionOverview;
+
+  /// Info-table label for the lifetime fragment count.
+  ///
+  /// In en, this message translates to:
+  /// **'Fragments observed'**
+  String get reticulumDiagFragmentCount;
+
+  /// Info-table label for the most recent fragment timestamp.
+  ///
+  /// In en, this message translates to:
+  /// **'Last seen'**
+  String get reticulumDiagLastSeen;
+
+  /// Info-table label for the number of unique source nodes.
+  ///
+  /// In en, this message translates to:
+  /// **'Distinct sources'**
+  String get reticulumDiagDistinctSources;
+
+  /// Info-table label for the running mean payload size.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg fragment size'**
+  String get reticulumDiagAvgFragmentSize;
+
+  /// Info-table label for the rolling-window fragments-per-second rate.
+  ///
+  /// In en, this message translates to:
+  /// **'Fragments/sec (60s)'**
+  String get reticulumDiagFragmentsPerSecond;
+
+  /// Placeholder shown when no fragments have been observed yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Never'**
+  String get reticulumDiagNeverSeen;
+
+  /// Section header above the capture controls.
+  ///
+  /// In en, this message translates to:
+  /// **'CAPTURE'**
+  String get reticulumDiagSectionCapture;
+
+  /// Toggle title for enabling on-disk fragment capture.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture to disk'**
+  String get reticulumDiagCaptureEnable;
+
+  /// Subtitle for the capture toggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Append every fragment to a binary file for offline analysis'**
+  String get reticulumDiagCaptureEnableSubtitle;
+
+  /// Info-table label for the active capture filename.
+  ///
+  /// In en, this message translates to:
+  /// **'Current file'**
+  String get reticulumDiagCaptureCurrentFile;
+
+  /// Placeholder shown when capture is disabled.
+  ///
+  /// In en, this message translates to:
+  /// **'No active capture'**
+  String get reticulumDiagCaptureNoActiveFile;
+
+  /// Info-table label for the byte count in the active capture file.
+  ///
+  /// In en, this message translates to:
+  /// **'Bytes in current file'**
+  String get reticulumDiagCaptureBytes;
+
+  /// Action button label for sharing capture files.
+  ///
+  /// In en, this message translates to:
+  /// **'Share captures'**
+  String get reticulumDiagShareCaptures;
+
+  /// Snackbar shown when no capture files exist to share.
+  ///
+  /// In en, this message translates to:
+  /// **'No capture files yet'**
+  String get reticulumDiagShareNoFiles;
+
+  /// Section header for the replay tool entry.
+  ///
+  /// In en, this message translates to:
+  /// **'REPLAY'**
+  String get reticulumDiagSectionReplay;
+
+  /// Tile title for opening the replay screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open replay tool'**
+  String get reticulumDiagOpenReplay;
+
+  /// Tile subtitle for opening the replay screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-feed a captured file through the live decode path'**
+  String get reticulumDiagOpenReplaySubtitle;
+
+  /// Animated empty-state title prefix on the diagnostics screen.
+  ///
+  /// In en, this message translates to:
+  /// **'No '**
+  String get reticulumDiagEmptyTitlePrefix;
+
+  /// Animated empty-state highlighted keyword.
+  ///
+  /// In en, this message translates to:
+  /// **'RNS traffic'**
+  String get reticulumDiagEmptyTitleKeyword;
+
+  /// Animated empty-state title suffix.
+  ///
+  /// In en, this message translates to:
+  /// **' observed yet'**
+  String get reticulumDiagEmptyTitleSuffix;
+
+  /// First cycling tagline on the empty diagnostics screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening for fragmented Reticulum frames on port 76.'**
+  String get reticulumDiagEmptyTagline1;
+
+  /// Second cycling tagline on the empty diagnostics screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Bring this app within range of an RNS-bridged node.'**
+  String get reticulumDiagEmptyTagline2;
+
+  /// Third cycling tagline on the empty diagnostics screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Fragments are decoded but never reassembled in this build.'**
+  String get reticulumDiagEmptyTagline3;
+
+  /// Subtitle showing fragment count for a source node.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} fragments'**
+  String reticulumDiagSourceFragments(int count);
+
+  /// Title for the Reticulum replay screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Replay capture'**
+  String get reticulumReplayTitle;
+
+  /// Section header for the file picker on the replay screen.
+  ///
+  /// In en, this message translates to:
+  /// **'FILE'**
+  String get reticulumReplaySectionFile;
+
+  /// Button to choose a capture file for replay.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose capture file'**
+  String get reticulumReplayPickFile;
+
+  /// Empty-state message when no capture files exist.
+  ///
+  /// In en, this message translates to:
+  /// **'No capture files available'**
+  String get reticulumReplayNoFilesAvailable;
+
+  /// Info-table label for the selected capture filename.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture'**
+  String get reticulumReplayFileLabel;
+
+  /// Info-table label for the total record count in the capture.
+  ///
+  /// In en, this message translates to:
+  /// **'Records'**
+  String get reticulumReplayRecords;
+
+  /// Section header for the replay mode picker.
+  ///
+  /// In en, this message translates to:
+  /// **'MODE'**
+  String get reticulumReplaySectionMode;
+
+  /// Replay mode option: emit at original spacing.
+  ///
+  /// In en, this message translates to:
+  /// **'Realtime'**
+  String get reticulumReplayModeRealtime;
+
+  /// Replay mode option: emit at accelerated spacing.
+  ///
+  /// In en, this message translates to:
+  /// **'Accelerated'**
+  String get reticulumReplayModeAccelerated;
+
+  /// Replay mode option: caller-driven stepping.
+  ///
+  /// In en, this message translates to:
+  /// **'Step'**
+  String get reticulumReplayModeStep;
+
+  /// Label for the accelerated-mode speed multiplier field.
+  ///
+  /// In en, this message translates to:
+  /// **'Speed multiplier'**
+  String get reticulumReplaySpeedLabel;
+
+  /// Section header above replay control buttons.
+  ///
+  /// In en, this message translates to:
+  /// **'CONTROLS'**
+  String get reticulumReplaySectionControls;
+
+  /// Replay control button label.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get reticulumReplayStart;
+
+  /// Replay control button label.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get reticulumReplayPause;
+
+  /// Replay control button label.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get reticulumReplayResume;
+
+  /// Replay control button label.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get reticulumReplayStop;
+
+  /// Step-mode advance button label.
+  ///
+  /// In en, this message translates to:
+  /// **'Step once'**
+  String get reticulumReplayStep;
+
+  /// Section header above replay status info.
+  ///
+  /// In en, this message translates to:
+  /// **'STATUS'**
+  String get reticulumReplaySectionStatus;
+
+  /// Status line showing current replay position.
+  ///
+  /// In en, this message translates to:
+  /// **'Record {current} of {total}'**
+  String reticulumReplayProgress(int current, int total);
+
+  /// Error message when a chosen file fails magic-header validation.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected file is not a valid SMRC v1 capture'**
+  String get reticulumReplayInvalidFile;
+
+  /// Generic load-error snackbar message.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load capture'**
+  String get reticulumReplayLoadError;
+
+  /// Settings tile title for the Reticulum tunnel diagnostics screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Reticulum Tunnel'**
+  String get settingsReticulumTunnelTitle;
+
+  /// Settings tile subtitle for the Reticulum tunnel diagnostics screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Observe + capture port-76 RNS fragments'**
+  String get settingsReticulumTunnelSubtitle;
+
+  /// NodeDex node-tile badge for nodes emitting Reticulum-tunnel fragments.
+  ///
+  /// In en, this message translates to:
+  /// **'RNS'**
+  String get nodeDexRnsActivityBadge;
+
+  /// Node-detail info row label for the fragment count from this source.
+  ///
+  /// In en, this message translates to:
+  /// **'RNS fragments'**
+  String get nodeDexRnsActivityCount;
+
+  /// Node-detail info row label for the most recent fragment time from this source.
+  ///
+  /// In en, this message translates to:
+  /// **'RNS last seen'**
+  String get nodeDexRnsActivityLastSeen;
+
+  /// Tile title for opening the Reticulum capture library.
+  ///
+  /// In en, this message translates to:
+  /// **'Open capture library'**
+  String get reticulumDiagOpenLibrary;
+
+  /// Tile subtitle for opening the Reticulum capture library.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse, label, and import captures'**
+  String get reticulumDiagOpenLibrarySubtitle;
+
+  /// Title for the Reticulum capture library screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture Library'**
+  String get reticulumLibraryTitle;
+
+  /// Section header above the capture list.
+  ///
+  /// In en, this message translates to:
+  /// **'CAPTURES'**
+  String get reticulumLibrarySectionCaptures;
+
+  /// Animated empty-state title prefix for the library screen.
+  ///
+  /// In en, this message translates to:
+  /// **'No '**
+  String get reticulumLibraryEmptyTitlePrefix;
+
+  /// Animated empty-state highlighted keyword.
+  ///
+  /// In en, this message translates to:
+  /// **'captures'**
+  String get reticulumLibraryEmptyTitleKeyword;
+
+  /// Animated empty-state title suffix.
+  ///
+  /// In en, this message translates to:
+  /// **' yet'**
+  String get reticulumLibraryEmptyTitleSuffix;
+
+  /// Cycling tagline on the empty library screen.
+  ///
+  /// In en, this message translates to:
+  /// **'No SMRC capture files have been recorded or imported.'**
+  String get reticulumLibraryEmptyTagline1;
+
+  /// Cycling tagline on the empty library screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle \'Capture to disk\' on the diagnostics screen to start recording.'**
+  String get reticulumLibraryEmptyTagline2;
+
+  /// Cycling tagline on the empty library screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Or import a .bin capture from another Socialmesh device.'**
+  String get reticulumLibraryEmptyTagline3;
+
+  /// Action button for importing an external capture file.
+  ///
+  /// In en, this message translates to:
+  /// **'Import .bin file'**
+  String get reticulumLibraryImport;
+
+  /// Action button for re-scanning the capture directory.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get reticulumLibraryRefresh;
+
+  /// Badge label for harness-generated captures.
+  ///
+  /// In en, this message translates to:
+  /// **'HARNESS'**
+  String get reticulumLibraryKindHarness;
+
+  /// Badge label for captures eligible as real-mesh inputs.
+  ///
+  /// In en, this message translates to:
+  /// **'REAL CANDIDATE'**
+  String get reticulumLibraryKindReal;
+
+  /// Badge label for captures that fail SMRC validation.
+  ///
+  /// In en, this message translates to:
+  /// **'INVALID'**
+  String get reticulumLibraryKindInvalid;
+
+  /// Badge label for captures with an unsupported SMRC version.
+  ///
+  /// In en, this message translates to:
+  /// **'UNSUPPORTED'**
+  String get reticulumLibraryKindUnsupported;
+
+  /// Subtitle showing record count for a capture.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} records'**
+  String reticulumLibraryRecords(int count);
+
+  /// Subtitle showing distinct source count for a capture.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} sources'**
+  String reticulumLibrarySources(int count);
+
+  /// Placeholder when a capture has no first/last-seen timestamp.
+  ///
+  /// In en, this message translates to:
+  /// **'No timestamp'**
+  String get reticulumLibraryNoTimestamp;
+
+  /// Snackbar shown when a capture imports successfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported {filename}'**
+  String reticulumLibraryImportSuccess(String filename);
+
+  /// Snackbar shown when an imported file's checksum matches an existing capture.
+  ///
+  /// In en, this message translates to:
+  /// **'Already in library: {filename}'**
+  String reticulumLibraryImportDuplicate(String filename);
+
+  /// Snackbar for invalid-magic import rejection.
+  ///
+  /// In en, this message translates to:
+  /// **'File is not a valid SMRC capture'**
+  String get reticulumLibraryImportInvalid;
+
+  /// Snackbar for unsupported-version import rejection.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsupported SMRC version'**
+  String get reticulumLibraryImportUnsupported;
+
+  /// Snackbar for I/O errors during import.
+  ///
+  /// In en, this message translates to:
+  /// **'Import failed'**
+  String get reticulumLibraryImportError;
+
+  /// Title for the capture detail/edit screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture detail'**
+  String get reticulumDetailTitle;
+
+  /// Section header for the read-only summary table.
+  ///
+  /// In en, this message translates to:
+  /// **'SUMMARY'**
+  String get reticulumDetailSectionSummary;
+
+  /// Info-table label for the capture filename.
+  ///
+  /// In en, this message translates to:
+  /// **'Filename'**
+  String get reticulumDetailFilename;
+
+  /// Info-table label for the capture provenance kind.
+  ///
+  /// In en, this message translates to:
+  /// **'Kind'**
+  String get reticulumDetailKind;
+
+  /// Info-table label for the SMRC record count.
+  ///
+  /// In en, this message translates to:
+  /// **'Records'**
+  String get reticulumDetailRecordCount;
+
+  /// Info-table label for the earliest record timestamp.
+  ///
+  /// In en, this message translates to:
+  /// **'First seen'**
+  String get reticulumDetailFirstSeen;
+
+  /// Info-table label for the latest record timestamp.
+  ///
+  /// In en, this message translates to:
+  /// **'Last seen'**
+  String get reticulumDetailLastSeen;
+
+  /// Info-table label for the distinct-source-nodeId count.
+  ///
+  /// In en, this message translates to:
+  /// **'Distinct sources'**
+  String get reticulumDetailDistinctSources;
+
+  /// Info-table label for whether any record carries the SHRN magic.
+  ///
+  /// In en, this message translates to:
+  /// **'Contains harness magic'**
+  String get reticulumDetailContainsHarness;
+
+  /// Info-table label for the file's SHA-256 checksum.
+  ///
+  /// In en, this message translates to:
+  /// **'SHA-256'**
+  String get reticulumDetailChecksum;
+
+  /// Info-table label for the file creation timestamp.
+  ///
+  /// In en, this message translates to:
+  /// **'Created at'**
+  String get reticulumDetailCreatedAt;
+
+  /// Info-table label for when the classifier last ran.
+  ///
+  /// In en, this message translates to:
+  /// **'Classified at'**
+  String get reticulumDetailClassifiedAt;
+
+  /// Section header for the editable provenance fields.
+  ///
+  /// In en, this message translates to:
+  /// **'PROVENANCE'**
+  String get reticulumDetailSectionProvenance;
+
+  /// Field label for capture source/origin.
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get reticulumDetailSource;
+
+  /// Source option for captures recorded on this device.
+  ///
+  /// In en, this message translates to:
+  /// **'Local'**
+  String get reticulumDetailSourceLocal;
+
+  /// Source option for captures imported via share sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared'**
+  String get reticulumDetailSourceShared;
+
+  /// Source option for captures imported via AirDrop specifically.
+  ///
+  /// In en, this message translates to:
+  /// **'AirDrop'**
+  String get reticulumDetailSourceAirdrop;
+
+  /// Source option for manually-supplied captures.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual'**
+  String get reticulumDetailSourceManual;
+
+  /// Field label for the Meshtastic device hardware model.
+  ///
+  /// In en, this message translates to:
+  /// **'Device model'**
+  String get reticulumDetailDeviceModel;
+
+  /// Placeholder text for the device model field.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Heltec V3'**
+  String get reticulumDetailDeviceModelHint;
+
+  /// Field label for the Meshtastic firmware build.
+  ///
+  /// In en, this message translates to:
+  /// **'Firmware version'**
+  String get reticulumDetailFirmwareVersion;
+
+  /// Placeholder for the firmware version field.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 2.5.5.f8c10b8'**
+  String get reticulumDetailFirmwareVersionHint;
+
+  /// Field label for the LoRa region setting at capture time.
+  ///
+  /// In en, this message translates to:
+  /// **'Region'**
+  String get reticulumDetailRegion;
+
+  /// Placeholder for the region field.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. ANZ'**
+  String get reticulumDetailRegionHint;
+
+  /// Field label for the Meshtastic channel index.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel index'**
+  String get reticulumDetailChannelIndex;
+
+  /// Placeholder for the channel index field.
+  ///
+  /// In en, this message translates to:
+  /// **'0–7'**
+  String get reticulumDetailChannelIndexHint;
+
+  /// Field label for free-form notes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get reticulumDetailNotes;
+
+  /// Placeholder for the notes field.
+  ///
+  /// In en, this message translates to:
+  /// **'Where, when, why'**
+  String get reticulumDetailNotesHint;
+
+  /// Submit button for the provenance edit form.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get reticulumDetailSave;
+
+  /// Snackbar shown after a successful provenance save.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get reticulumDetailSaveSuccess;
+
+  /// Action button for sharing the capture file.
+  ///
+  /// In en, this message translates to:
+  /// **'Share capture'**
+  String get reticulumDetailShare;
+
+  /// Action button for deleting a capture + sidecar.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete capture'**
+  String get reticulumDetailDelete;
+
+  /// Confirmation sheet title for capture deletion.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this capture?'**
+  String get reticulumDetailDeleteConfirm;
+
+  /// Confirmation sheet body for capture deletion.
+  ///
+  /// In en, this message translates to:
+  /// **'The capture file and its metadata sidecar are removed permanently.'**
+  String get reticulumDetailDeleteConfirmDescription;
+
+  /// Confirmation sheet primary action for capture deletion.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get reticulumDetailDeleteConfirmAction;
+
+  /// Confirmation sheet secondary action for capture deletion.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get reticulumDetailDeleteCancel;
+
+  /// Boolean true rendering in info tables.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get reticulumDetailTrue;
+
+  /// Boolean false rendering in info tables.
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get reticulumDetailFalse;
+
+  /// Placeholder shown when an editable field is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get reticulumDetailNoneSet;
+
+  /// Section header for Phase 2 reassembler counters.
+  ///
+  /// In en, this message translates to:
+  /// **'REASSEMBLY'**
+  String get reticulumDiagSectionReassembly;
+
+  /// Toggle label for enabling the Phase 2 fragment reassembler.
+  ///
+  /// In en, this message translates to:
+  /// **'Reassemble fragments'**
+  String get reticulumDiagReassemblyEnable;
+
+  /// Subtitle for the reassembly enable toggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Combine fragments into whole RNS frames in memory'**
+  String get reticulumDiagReassemblyEnableSubtitle;
+
+  /// Helper text shown under the reassembly toggle when it is off.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable to start counting frames; raw fragments still flow into capture and the overview above.'**
+  String get reticulumDiagReassemblyDisabledHint;
+
+  /// Lifetime count of fully reassembled RNS frames.
+  ///
+  /// In en, this message translates to:
+  /// **'Frames reassembled'**
+  String get reticulumDiagFramesReassembled;
+
+  /// Reassembled-frame rate over the rolling 60-second window.
+  ///
+  /// In en, this message translates to:
+  /// **'Frames/sec (60s)'**
+  String get reticulumDiagFramesPerSecond;
+
+  /// Running mean of fragment count across emitted frames.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg fragments per frame'**
+  String get reticulumDiagAvgFragmentsPerFrame;
+
+  /// Frames emitted divided by total reassembly attempts.
+  ///
+  /// In en, this message translates to:
+  /// **'Success rate %'**
+  String get reticulumDiagSuccessRate;
+
+  /// Counter: fragments rejected because the 2-byte header could not be parsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Dropped — decode error'**
+  String get reticulumDiagDroppedDecodeError;
+
+  /// Counter: partial frames dropped after the inactivity TTL elapsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Dropped — inactivity timeout'**
+  String get reticulumDiagDroppedTimeoutInactivity;
+
+  /// Counter: partial frames dropped after the absolute TTL elapsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Dropped — absolute TTL'**
+  String get reticulumDiagDroppedTimeoutAbsolute;
+
+  /// Counter: buffers evicted because of concurrent-buffer or fragment-count caps.
+  ///
+  /// In en, this message translates to:
+  /// **'Dropped — overflow'**
+  String get reticulumDiagDroppedOverflow;
+
+  /// Counter: frames dropped because their assembled body would exceed the size cap.
+  ///
+  /// In en, this message translates to:
+  /// **'Dropped — oversize'**
+  String get reticulumDiagDroppedOversize;
+
+  /// Counter: fragment retransmissions silently overwritten.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate fragments'**
+  String get reticulumDiagDuplicateFragments;
+
+  /// Live gauge: partial buffers held in memory right now.
+  ///
+  /// In en, this message translates to:
+  /// **'Active buffers'**
+  String get reticulumDiagActiveBuffers;
+
+  /// Live gauge: total fragment-body bytes pinned in memory across all buffers.
+  ///
+  /// In en, this message translates to:
+  /// **'Buffered bytes'**
+  String get reticulumDiagBufferedBytes;
+
+  /// Search/settings tile title for the Reticulum TCP bridge configuration screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Reticulum Bridge'**
+  String get settingsReticulumBridgeTitle;
+
+  /// Settings tile subtitle for the Reticulum TCP bridge.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward reassembled RNS frames to a local rnsd over TCP'**
+  String get settingsReticulumBridgeSubtitle;
+
+  /// App-bar title of the Reticulum bridge configuration screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Reticulum Bridge'**
+  String get reticulumBridgeTitle;
+
+  /// One-line description shown in the experimental header of the bridge screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward reassembled RNS frames to a local rnsd over TCP. The bridge stays disconnected until reassembly is enabled.'**
+  String get reticulumBridgeDescription;
+
+  /// Banner shown when reassembly is off and the bridge cannot operate.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable reassembly first to start forwarding.'**
+  String get reticulumBridgeRequiresReassembly;
+
+  /// Section header for the bridge enable toggle and connection status.
+  ///
+  /// In en, this message translates to:
+  /// **'CONNECTION'**
+  String get reticulumBridgeSectionConnection;
+
+  /// Toggle label that switches the TCP bridge on or off.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable bridge'**
+  String get reticulumBridgeEnable;
+
+  /// Subtitle clarifying when the bridge will actually connect.
+  ///
+  /// In en, this message translates to:
+  /// **'Open a TCP connection to rnsd while reassembly is on'**
+  String get reticulumBridgeEnableSubtitle;
+
+  /// Row label for the current bridge connection state.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get reticulumBridgeStatusLabel;
+
+  /// Bridge status when no TCP connection is open.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnected'**
+  String get reticulumBridgeStatusDisconnected;
+
+  /// Bridge status while a TCP connect is in progress.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting…'**
+  String get reticulumBridgeStatusConnecting;
+
+  /// Bridge status when a TCP connection is open and forwarding.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get reticulumBridgeStatusConnected;
+
+  /// Bridge status when the most recent connect attempt failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get reticulumBridgeStatusError;
+
+  /// Row label for the message of the most recent connect / write failure.
+  ///
+  /// In en, this message translates to:
+  /// **'Last error'**
+  String get reticulumBridgeLastErrorLabel;
+
+  /// Placeholder shown for last error when none has occurred.
+  ///
+  /// In en, this message translates to:
+  /// **'—'**
+  String get reticulumBridgeNoLastError;
+
+  /// Section header for the host and port input fields.
+  ///
+  /// In en, this message translates to:
+  /// **'ENDPOINT'**
+  String get reticulumBridgeSectionEndpoint;
+
+  /// Input label for the rnsd host (IP or DNS name).
+  ///
+  /// In en, this message translates to:
+  /// **'Host'**
+  String get reticulumBridgeHostLabel;
+
+  /// Placeholder for the host input field. Avoid embedding the literal loopback IP — the codebase audit forbids hardcoded 127.0.0.1 in source, including ARB-derived generated files.
+  ///
+  /// In en, this message translates to:
+  /// **'rnsd host or IP'**
+  String get reticulumBridgeHostHint;
+
+  /// Input label for the rnsd TCP port.
+  ///
+  /// In en, this message translates to:
+  /// **'Port'**
+  String get reticulumBridgePortLabel;
+
+  /// Placeholder for the port input field.
+  ///
+  /// In en, this message translates to:
+  /// **'4242'**
+  String get reticulumBridgePortHint;
+
+  /// Bottom action button: persist host/port and enable the bridge.
+  ///
+  /// In en, this message translates to:
+  /// **'Save & connect'**
+  String get reticulumBridgeSaveAndConnect;
+
+  /// Section header for forwarded / dropped / errored counters.
+  ///
+  /// In en, this message translates to:
+  /// **'COUNTERS'**
+  String get reticulumBridgeSectionCounters;
+
+  /// Lifetime count of frames successfully written to rnsd.
+  ///
+  /// In en, this message translates to:
+  /// **'Frames forwarded'**
+  String get reticulumBridgeForwarded;
+
+  /// Counter for frames dropped because the TCP socket was not connected.
+  ///
+  /// In en, this message translates to:
+  /// **'Dropped — no connection'**
+  String get reticulumBridgeDroppedNoConnection;
+
+  /// Counter for frames dropped by the bounded outbound queue.
+  ///
+  /// In en, this message translates to:
+  /// **'Dropped — queue full'**
+  String get reticulumBridgeDroppedBackpressure;
+
+  /// Counter for frames dropped because encode/write failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Dropped — framing error'**
+  String get reticulumBridgeDroppedFramingError;
+
+  /// Lifetime count of failed TCP connect attempts.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect errors'**
+  String get reticulumBridgeConnectErrors;
+
+  /// Live gauge label for the outbound queue depth versus its capacity.
+  ///
+  /// In en, this message translates to:
+  /// **'Queue depth'**
+  String get reticulumBridgeQueueDepthLabel;
+
+  /// Row label describing how the queue handles overflow.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop policy'**
+  String get reticulumBridgeDropPolicyLabel;
+
+  /// Documented overflow behavior of the bounded outbound queue.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop newest when full'**
+  String get reticulumBridgeDropPolicyValue;
+
+  /// Section header for current-session and total-uptime gauges.
+  ///
+  /// In en, this message translates to:
+  /// **'UPTIME'**
+  String get reticulumBridgeSectionUptime;
+
+  /// Time the current TCP session has been connected; zero when not connected.
+  ///
+  /// In en, this message translates to:
+  /// **'Current session'**
+  String get reticulumBridgeCurrentSession;
+
+  /// Cumulative connected-time across all sessions in the lifetime of this provider.
+  ///
+  /// In en, this message translates to:
+  /// **'Total uptime'**
+  String get reticulumBridgeTotalUptime;
+
+  /// Banner pill label clarifying the bridge does not transmit onto LoRa.
+  ///
+  /// In en, this message translates to:
+  /// **'RX-only'**
+  String get reticulumBridgeRxOnlyTitle;
+
+  /// Body text of the RX-only banner.
+  ///
+  /// In en, this message translates to:
+  /// **'Socialmesh forwards reassembled RNS frames received over the air. No RNS frames are ever transmitted onto LoRa.'**
+  String get reticulumBridgeRxOnlyMessage;
+
+  /// Row label for the wall-clock instant of the most recent successful frame forward.
+  ///
+  /// In en, this message translates to:
+  /// **'Last forwarded'**
+  String get reticulumBridgeLastForwardLabel;
+
+  /// Placeholder shown when no frame has ever been forwarded.
+  ///
+  /// In en, this message translates to:
+  /// **'Never'**
+  String get reticulumBridgeNeverForwarded;
+
+  /// Row label for the seconds remaining until the next reconnect attempt.
+  ///
+  /// In en, this message translates to:
+  /// **'Next retry in'**
+  String get reticulumBridgeRetryInLabel;
+
+  /// Row label for the current exponential-backoff exponent (resets on connect).
+  ///
+  /// In en, this message translates to:
+  /// **'Backoff attempt'**
+  String get reticulumBridgeBackoffAttemptLabel;
+
+  /// Row label for the consecutive-failure counter (out of auto-disable threshold).
+  ///
+  /// In en, this message translates to:
+  /// **'Consecutive errors'**
+  String get reticulumBridgeConsecutiveErrorsLabel;
+
+  /// Banner title shown when the bridge stopped retrying after repeated failures.
+  ///
+  /// In en, this message translates to:
+  /// **'Bridge auto-disabled'**
+  String get reticulumBridgeAutoDisabledTitle;
+
+  /// Banner body for the auto-disabled state.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many consecutive connect failures. Tap re-enable to try again, or check the host and port.'**
+  String get reticulumBridgeAutoDisabledMessage;
+
+  /// Button on the auto-disabled banner that clears the latch and reconnects.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-enable'**
+  String get reticulumBridgeReEnable;
+
+  /// Section header for the bounded session-log ring buffer.
+  ///
+  /// In en, this message translates to:
+  /// **'SESSION LOG'**
+  String get reticulumBridgeSectionSessionLog;
+
+  /// Placeholder shown when the session log is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No bridge events yet.'**
+  String get reticulumBridgeSessionLogEmpty;
+
+  /// Button label that copies a single multi-line debug blob to the clipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy diagnostics'**
+  String get reticulumBridgeCopyDiagnostics;
+
+  /// Snackbar shown after the diagnostics blob is copied.
+  ///
+  /// In en, this message translates to:
+  /// **'Diagnostics copied to clipboard'**
+  String get reticulumBridgeCopiedSnack;
+
+  /// Settings tile title for the local RNS companion services screen.
+  ///
+  /// In en, this message translates to:
+  /// **'RNS Services (Companion)'**
+  String get settingsRnsCompanionTitle;
+
+  /// Settings tile subtitle for the local RNS companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse RNS / NomadNet content via the local companion service'**
+  String get settingsRnsCompanionSubtitle;
+
+  /// App-bar title of the companion-services list screen.
+  ///
+  /// In en, this message translates to:
+  /// **'RNS Services'**
+  String get rnsCompanionServicesTitle;
+
+  /// App-bar title of the per-service pages list screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Pages'**
+  String get rnsCompanionPagesTitle;
+
+  /// App-bar title of the page-body reader screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Page'**
+  String get rnsCompanionReaderTitle;
+
+  /// Connection hint shown above the services list explaining the local companion requirement.
+  ///
+  /// In en, this message translates to:
+  /// **'Requires rns_companion running on your computer at the configured URL.'**
+  String get rnsCompanionConnectionHint;
+
+  /// Pill label marking the companion screens as experimental.
+  ///
+  /// In en, this message translates to:
+  /// **'Experimental'**
+  String get rnsCompanionExperimental;
+
+  /// Empty-state heading when the companion returns zero services.
+  ///
+  /// In en, this message translates to:
+  /// **'No services'**
+  String get rnsCompanionEmptyTitle;
+
+  /// Empty-state body explaining the companion has no services to show.
+  ///
+  /// In en, this message translates to:
+  /// **'The companion is reachable but has no services yet.'**
+  String get rnsCompanionEmptyHint;
+
+  /// Empty-state animated tagline word 1.
+  ///
+  /// In en, this message translates to:
+  /// **'browse'**
+  String get rnsCompanionEmptyTagline1;
+
+  /// Empty-state animated tagline word 2.
+  ///
+  /// In en, this message translates to:
+  /// **'discover'**
+  String get rnsCompanionEmptyTagline2;
+
+  /// Empty-state animated tagline word 3.
+  ///
+  /// In en, this message translates to:
+  /// **'read'**
+  String get rnsCompanionEmptyTagline3;
+
+  /// Empty-state action button label.
+  ///
+  /// In en, this message translates to:
+  /// **'Reload'**
+  String get rnsCompanionEmptyAction;
+
+  /// Empty state when a service exposes zero pages.
+  ///
+  /// In en, this message translates to:
+  /// **'This service has no pages yet.'**
+  String get rnsCompanionPagesEmpty;
+
+  /// Retry button label shown on error states.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get rnsCompanionRetry;
+
+  /// Row label for an RNS service's destination hash.
+  ///
+  /// In en, this message translates to:
+  /// **'Destination'**
+  String get rnsCompanionServiceDestinationLabel;
+
+  /// Row label for an RNS service's category.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get rnsCompanionServiceTypeLabel;
+
+  /// Row label for an RNS service's last-seen timestamp.
+  ///
+  /// In en, this message translates to:
+  /// **'Last seen'**
+  String get rnsCompanionServiceLastSeenLabel;
+
+  /// Row label for a page's last-updated timestamp.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated'**
+  String get rnsCompanionPageUpdatedLabel;
+
+  /// Friendly text shown when the companion is unreachable.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot reach companion. Is the service running on your computer?'**
+  String get rnsCompanionErrorConnection;
+
+  /// Friendly text shown when the companion times out.
+  ///
+  /// In en, this message translates to:
+  /// **'Companion took too long to respond.'**
+  String get rnsCompanionErrorTimeout;
+
+  /// Friendly text shown when JSON decode or model parse fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Companion sent a response we couldn\'t read.'**
+  String get rnsCompanionErrorParse;
+
+  /// Friendly text shown when a service or page returns 404.
+  ///
+  /// In en, this message translates to:
+  /// **'Not found.'**
+  String get rnsCompanionErrorNotFound;
+
+  /// Catch-all error text for unexpected companion failures.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong talking to the companion.'**
+  String get rnsCompanionErrorGeneric;
+
+  /// App-bar title for the companion endpoint settings screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Companion Settings'**
+  String get rnsCompanionSettingsTitle;
+
+  /// Section header above the host/port fields.
+  ///
+  /// In en, this message translates to:
+  /// **'ENDPOINT'**
+  String get rnsCompanionSettingsSectionEndpoint;
+
+  /// Label for the host input.
+  ///
+  /// In en, this message translates to:
+  /// **'Host'**
+  String get rnsCompanionSettingsHostLabel;
+
+  /// Placeholder for the host input. Avoid embedding the literal loopback IP — the codebase audit forbids hardcoded 127.0.0.1 in source, including ARB-derived generated files.
+  ///
+  /// In en, this message translates to:
+  /// **'laptop IP or hostname'**
+  String get rnsCompanionSettingsHostHint;
+
+  /// Label for the port input.
+  ///
+  /// In en, this message translates to:
+  /// **'Port'**
+  String get rnsCompanionSettingsPortLabel;
+
+  /// Placeholder for the port input.
+  ///
+  /// In en, this message translates to:
+  /// **'8787'**
+  String get rnsCompanionSettingsPortHint;
+
+  /// Save button label on the companion settings screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get rnsCompanionSettingsSave;
+
+  /// Snackbar shown after saving the companion endpoint.
+  ///
+  /// In en, this message translates to:
+  /// **'Companion endpoint saved'**
+  String get rnsCompanionSettingsSavedSnack;
+
+  /// Hint text shown above the fields explaining LAN reachability.
+  ///
+  /// In en, this message translates to:
+  /// **'Tip: bind your companion server to 0.0.0.0 so the phone can reach it on your LAN.'**
+  String get rnsCompanionSettingsHint;
+
+  /// Status-pill text shown while the /health probe is in flight.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking…'**
+  String get rnsCompanionStatusChecking;
+
+  /// Status-pill text when the companion responds to /health.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get rnsCompanionStatusConnected;
+
+  /// Status-pill text including the companion's reported version.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected · v{version}'**
+  String rnsCompanionStatusConnectedWithVersion(String version);
+
+  /// Status-pill text including version + active data source mode (LIVE / STUB).
+  ///
+  /// In en, this message translates to:
+  /// **'Connected · v{version} · {mode}'**
+  String rnsCompanionStatusConnectedWithMode(String version, String mode);
+
+  /// Label preceding the time-since-last-announce gauge.
+  ///
+  /// In en, this message translates to:
+  /// **'Last announce'**
+  String get rnsCompanionLastAnnounceLabel;
+
+  /// Shown by the time-since gauge when zero services have been seen.
+  ///
+  /// In en, this message translates to:
+  /// **'no announces yet'**
+  String get rnsCompanionLastAnnounceNever;
+
+  /// Time-since label when the most recent announce was within ~5 seconds.
+  ///
+  /// In en, this message translates to:
+  /// **'just now'**
+  String get rnsCompanionLastAnnounceJustNow;
+
+  /// Time-since label, sub-minute granularity.
+  ///
+  /// In en, this message translates to:
+  /// **'{n}s ago'**
+  String rnsCompanionLastAnnounceSeconds(int n);
+
+  /// Time-since label, minutes granularity.
+  ///
+  /// In en, this message translates to:
+  /// **'{n}m ago'**
+  String rnsCompanionLastAnnounceMinutes(int n);
+
+  /// Time-since label, hours granularity.
+  ///
+  /// In en, this message translates to:
+  /// **'{n}h ago'**
+  String rnsCompanionLastAnnounceHours(int n);
+
+  /// Status-pill text when /health fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Unreachable'**
+  String get rnsCompanionStatusUnreachable;
 }
 
 class _AppLocalizationsDelegate

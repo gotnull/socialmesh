@@ -100,13 +100,25 @@ SipFrame _makeRollcallReqFrame({int nonce = 200, int timestampS = 1700000}) {
 }
 
 /// Helper: build a valid HS_HELLO SipFrame.
-SipFrame _makeHelloFrame({int nonce = 300, int timestampS = 1700000}) {
+///
+/// [targetNodeId] defaults to `0xB15E74DB`. Tests that pipe the frame
+/// through an `SipHandshakeManager` whose nodeId-match guard is in
+/// effect should pass the manager's `localNodeId` here.
+SipFrame _makeHelloFrame({
+  int nonce = 300,
+  int timestampS = 1700000,
+  int targetNodeId = 0xB15E74DB,
+}) {
   final hello = SipHsHello(
+    targetNodeId: targetNodeId,
     clientNonce: Uint8List.fromList(List.generate(16, (i) => i)),
     clientEphemeralPub: Uint8List.fromList(List.generate(32, (i) => i + 16)),
     requestedFeatures: SipFeatureBits.allV01,
   );
   final payload = SipHsMessages.encodeHello(hello);
+  if (payload == null) {
+    throw StateError('encodeHello returned null in test fixture');
+  }
   return SipFrame(
     versionMajor: SipConstants.sipVersionMajor,
     versionMinor: SipConstants.sipVersionMinor,
@@ -828,7 +840,7 @@ void main() {
       mgr.isDmAvailable = true;
 
       // First HELLO: queues for consent. Accept to move to challengeSent.
-      final hello1 = _makeHelloFrame(nonce: 500);
+      final hello1 = _makeHelloFrame(nonce: 500, targetNodeId: 0x1111);
       mgr.handleHello(0xAAAA, hello1);
       expect(mgr.getState(0xAAAA), SipHandshakeState.pendingApproval);
       mgr.acceptHandshake(0xAAAA);
@@ -836,7 +848,7 @@ void main() {
 
       // Duplicate HELLO (different nonce but same peer, session in progress):
       // absorbed without restarting the session.
-      final hello2 = _makeHelloFrame(nonce: 501);
+      final hello2 = _makeHelloFrame(nonce: 501, targetNodeId: 0x1111);
       mgr.handleHello(0xAAAA, hello2);
       // State unchanged.
       expect(mgr.getState(0xAAAA), SipHandshakeState.challengeSent);
@@ -870,7 +882,7 @@ void main() {
 
       // Responder has completed result pending. A stale HELLO should be
       // ignored.
-      final staleHello = _makeHelloFrame(nonce: 999);
+      final staleHello = _makeHelloFrame(nonce: 999, targetNodeId: 0xBBBB);
       responder.handleHello(0xAAAA, staleHello);
 
       // Completed result still intact.

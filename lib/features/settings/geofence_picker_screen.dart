@@ -158,7 +158,8 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen>
     bool setAsMonitored = false,
   }) {
     HapticFeedback.selectionClick();
-    final point = LatLng(nodeWithPos.latitude, nodeWithPos.longitude);
+    final point = safeLatLng(nodeWithPos.latitude, nodeWithPos.longitude);
+    if (point == null) return;
     safeSetState(() {
       _selectedNodeNum = nodeWithPos.node.nodeNum;
       _center = point;
@@ -168,7 +169,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen>
         _monitoredNodeName = nodeWithPos.node.displayName;
       }
     });
-    _mapController.move(point, 14.0);
+    _mapController.safeMove(point, 14.0);
   }
 
   Future<void> _getCurrentLocation() async {
@@ -201,13 +202,17 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen>
       );
       if (!mounted) return;
 
-      final newCenter = LatLng(position.latitude, position.longitude);
+      final newCenter = safeLatLng(position.latitude, position.longitude);
+      if (newCenter == null) {
+        safeSetState(() => _isLoadingLocation = false);
+        return;
+      }
       safeSetState(() {
         _center = newCenter;
         _isLoadingLocation = false;
       });
 
-      _mapController.move(newCenter, _mapController.camera.zoom);
+      _mapController.safeMove(newCenter, _mapController.camera.zoom);
     } catch (e) {
       if (mounted) {
         showErrorSnackBar(context, context.l10n.geofenceLocationFailed('$e'));
@@ -597,11 +602,11 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen>
             maxZoom: 18.0,
             onZoomIn: () {
               final newZoom = (_currentZoom + 1).clamp(3.0, 18.0);
-              _mapController.move(_mapController.camera.center, newZoom);
+              _mapController.safeMove(_mapController.camera.center, newZoom);
             },
             onZoomOut: () {
               final newZoom = (_currentZoom - 1).clamp(3.0, 18.0);
-              _mapController.move(_mapController.camera.center, newZoom);
+              _mapController.safeMove(_mapController.camera.center, newZoom);
             },
             onResetNorth: () {},
             showFitAll: false,

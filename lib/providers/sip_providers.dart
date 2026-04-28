@@ -24,6 +24,7 @@ import '../services/protocol/sip/sip_keypair.dart';
 import '../services/protocol/overlay/overlay_link_models.dart';
 import '../services/protocol/overlay/overlay_types.dart';
 import '../services/protocol/sip/sip_rate_limiter.dart';
+import 'peer_safety_providers.dart';
 import '../services/protocol/sip/sip_replay_cache.dart';
 import '../services/protocol/sip/sip_types.dart';
 import '../services/notifications/notification_service.dart';
@@ -33,6 +34,8 @@ import 'mesh_explorer_providers.dart';
 import 'overlay_providers.dart';
 import 'sip_dm_secure_router.dart';
 import 'sip_nodedex_bridge.dart';
+import 'sip_play_providers.dart';
+import '../services/audio/sip_play_sound_service.dart';
 
 /// Whether SIP is enabled (sourced from SmFeatureFlag).
 ///
@@ -153,6 +156,18 @@ final sipDiscoveryProvider = Provider<SipDiscovery?>((ref) {
     replayCache: replayCache,
   );
 
+  // Auto-open retry queue. When a SIP handshake completes before the
+  // peer's overlay capability has been observed (CAP_RESP / CAP_BEACON
+  // hasn't arrived yet), `_autoOpenOverlayLink` parks the peer here
+  // and the discovery callbacks drain it as soon as caps are observed.
+  // Without this, iOS in particular can race: handshake-complete fires
+  // before ROLLCALL_RESP populates the cache, auto-open silently noops,
+  // and the link only ever opens because the responder side bails us
+  // out. See logs.txt for the iOS-side `auto-open skipped: ... not in
+  // cache` symptom. Set is closure-scoped so it disposes with the
+  // provider.
+  final pendingAutoOpens = <int>{};
+
   // Invalidate peer/count providers when the cache changes so the UI rebuilds.
   // Deferred via microtask: attachSipDiscovery drains early frames
   // synchronously during provider init, which can trigger _upsertPeer.
@@ -161,6 +176,7 @@ final sipDiscoveryProvider = Provider<SipDiscovery?>((ref) {
   discovery.onPeersChanged = () {
     Future.microtask(() {
       ref.read(sipPeerCacheEpochProvider.notifier).bump();
+      _drainPendingAutoOpens(ref, discovery, pendingAutoOpens);
     });
   };
 
@@ -172,6 +188,7 @@ final sipDiscoveryProvider = Provider<SipDiscovery?>((ref) {
       sipBridgeMarkCapableFromRef(ref, nodeId);
       ref.read(newMeshPeerCountProvider.notifier).bump();
       NotificationService().showSipPeerFoundNotification(peerNodeId: nodeId);
+      _drainPendingAutoOpens(ref, discovery, pendingAutoOpens);
     });
   };
 
@@ -233,42 +250,98 @@ final sipDiscoveryProvider = Provider<SipDiscovery?>((ref) {
     if (flags.linkEnabled) bits |= SipFeatureBits.overlayLinkV02;
     if (flags.resourceActive) bits |= SipFeatureBits.overlayResourceV02;
     if (flags.secureActive) bits |= SipFeatureBits.overlaySecureV03;
+    // SIP Ink v1 is unconditionally supported by this build; advertise
+    // the bit so peers can gate sketch sends on us. See
+    // docs/sip/SIP_V0_1.md §6 (v0.2 amendment).
+    bits |= SipFeatureBits.dmInkV1;
+    // SIP Play v1 (turn-based mini-game framework) is unconditionally
+    // supported by this build; advertise the bit so peers can gate
+    // dmPlay sends + show the Play CTA.
+    bits |= SipFeatureBits.dmPlayV1;
+    // SIP Signal v1 (musical phrase + Morse) is unconditionally
+    // supported by this build; advertise the bit so peers can gate
+    // dmSignal sends + show the Signal tab.
+    bits |= SipFeatureBits.dmSignalV1;
     return bits;
   };
 
   // Overlay v0.2 lifecycle anchor. The attachment providers self-gate
   // on OVERLAY_LINK_ENABLED / OVERLAY_RESOURCE_ENABLED — when off, the
-  // futures resolve to null and nothing is wired. When on, this watch
-  // forces the FutureProviders to build so the ingress handlers attach
-  // onto ProtocolService alongside SIP.
-  ref.watch(overlayAttachmentProvider);
-  ref.watch(overlayResourceIngressProvider);
+  // futures resolve to null and nothing is wired. When on, listening
+  // (without watching) forces the FutureProviders to build so their
+  // attach side-effects run, but does NOT rebuild this provider when
+  // the AsyncValue transitions Loading → Data. Previously this was
+  // ref.watch and caused 4× SipDiscovery rebuilds during startup as
+  // each overlay future resolved — see the duplicated `SipDiscovery
+  // attached` lines in logs.txt.
+  ref.listen(overlayAttachmentProvider, (_, _) {});
+  ref.listen(overlayResourceIngressProvider, (_, _) {});
 
   // Phase 2 secure DM ingress. Self-gates on OVERLAY_SECURE_ENABLED —
   // when off, the future resolves immediately without subscribing.
   // When on, decrypted DM-text / DM-reaction payloads emitted by the
   // secure manager are synthesised into plaintext SIP frames and
   // routed through the existing dm.handleInbound* handlers.
-  ref.watch(sipSecureDmIngressProvider);
+  ref.listen(sipSecureDmIngressProvider, (_, _) {});
 
   // Wire the handshake-completion hook. On every successful SIP
   // handshake, attempt to auto-open an overlay v0.2 link in the
   // background when both peers support it. Fire-and-forget — failures
   // are logged but never block DM readiness.
   protocol.onSipHandshakeComplete = (peerNodeId) {
-    _autoOpenOverlayLink(ref, peerNodeId, discovery);
+    _autoOpenOverlayLink(ref, peerNodeId, discovery, pendingAutoOpens);
+    // Audio cue: handshake completed → connection_succeeded.mp3.
+    // Fire-and-forget; failures are logged inside the service.
+    ref
+        .read(sipPlaySoundServiceProvider)
+        .play(SipPlaySoundCue.connectionSucceeded);
+  };
+
+  // Hook the new SipHandshakeManager failure / decline callbacks
+  // (added for the SIP Play SFX layer) onto sound playback. The
+  // handshake manager itself suppresses the failure callback for
+  // user-initiated cancels (Block / cancelHandshake reason='cancelled')
+  // so a Block tap stays silent.
+  final hsManager = ref.read(sipHandshakeProvider);
+  hsManager?.onHandshakeFailed = (peerNodeId) {
+    ref
+        .read(sipPlaySoundServiceProvider)
+        .play(SipPlaySoundCue.connectionFailed);
+  };
+  hsManager?.onHandshakeDeclined = (peerNodeId) {
+    ref
+        .read(sipPlaySoundServiceProvider)
+        .play(SipPlaySoundCue.rejectedDeclined);
+  };
+  // Inbound HS_HELLO needing user consent. Play an audible cue so the
+  // user notices the Accept / Decline prompt while they're focused on
+  // other work — UX request after handshake-prompt was easy to miss.
+  // The handshake manager fires `onHandshakeRequest` from
+  // `_handleIncomingHello` after the request is queued in
+  // `_pendingRequests`, regardless of whether the app is foreground —
+  // the system notification handles background; this audio is the
+  // foreground cue.
+  hsManager?.onHandshakeRequest = (peerNodeId) {
+    ref
+        .read(sipPlaySoundServiceProvider)
+        .play(SipPlaySoundCue.consentRequested);
   };
 
   // Start periodic CAP_BEACON broadcast.
   discovery.start();
 
   // Detach when this provider is disposed (SIP disabled or page torn down).
+  // Capture `hsManager` from above by closure — Riverpod 3.x forbids
+  // `ref.read` inside lifecycle callbacks, and the manager reference
+  // is stable for the lifetime of this provider.
   ref.onDispose(() {
     discovery.dispose();
     protocol.attachSipDiscovery(null);
     protocol.attachSipCounters(null);
     protocol.attachSipRateLimiter(null);
     protocol.onSipHandshakeComplete = null;
+    hsManager?.onHandshakeFailed = null;
+    hsManager?.onHandshakeDeclined = null;
   });
 
   return discovery;
@@ -278,26 +351,41 @@ final sipDiscoveryProvider = Provider<SipDiscovery?>((ref) {
 /// support it. Invoked from [ProtocolService.onSipHandshakeComplete]
 /// after the SIP handshake + DM session are ready.
 ///
-/// Policy (strict — all must hold, otherwise silent no-op):
+/// Policy (strict — all must hold, otherwise no-op):
 /// - local `OVERLAY_LINK_ENABLED` is on;
 /// - peer's last-seen CAP_RESP advertised [SipFeatureBits.overlayLinkV02];
 /// - no non-terminal overlay link already exists for the peer.
 ///
+/// When the peer is not yet in the discovery cache or has not yet
+/// advertised overlay support, the peer is parked in [pendingAutoOpens]
+/// and retried on the next CAP_RESP / CAP_BEACON observation. This
+/// closes a race observed on iOS where handshake-complete fires before
+/// ROLLCALL_RESP populates the cache.
+///
 /// This runs fire-and-forget. Exceptions are logged and counted but
 /// never propagate to the SIP layer — chat must remain functional even
 /// if overlay misbehaves.
-void _autoOpenOverlayLink(Ref ref, int peerNodeId, SipDiscovery discovery) {
+void _autoOpenOverlayLink(
+  Ref ref,
+  int peerNodeId,
+  SipDiscovery discovery,
+  Set<int> pendingAutoOpens,
+) {
   final flags = ref.read(overlayFlagProvider);
   if (!flags.linkEnabled) return;
 
   final peer = discovery.getPeer(peerNodeId);
   if (peer == null || !peer.supportsOverlayLinkV02) {
+    pendingAutoOpens.add(peerNodeId);
     AppLogging.overlay(
-      'auto-open skipped: peer=0x${peerNodeId.toRadixString(16)} '
-      '${peer == null ? 'not in cache' : 'does not advertise overlay link'}',
+      'auto-open deferred: peer=0x${peerNodeId.toRadixString(16)} '
+      '${peer == null ? 'not in cache yet' : 'overlay capability not advertised yet'} '
+      '— will retry on peer-cache update',
     );
     return;
   }
+
+  pendingAutoOpens.remove(peerNodeId);
 
   // Project the peer's SIP-advertised overlay bits onto the overlay
   // link capability bitset. This hint is honoured by `openLocal` when
@@ -339,6 +427,31 @@ void _autoOpenOverlayLink(Ref ref, int peerNodeId, SipDiscovery discovery) {
       );
     }
   });
+}
+
+/// Drain the [pendingAutoOpens] set against the latest discovery cache.
+/// Invoked from `onPeerDiscovered` and `onPeersChanged`: every time a
+/// peer's caps land or update, retry any handshakes whose auto-open
+/// was deferred because the peer wasn't ready yet.
+void _drainPendingAutoOpens(
+  Ref ref,
+  SipDiscovery discovery,
+  Set<int> pendingAutoOpens,
+) {
+  if (pendingAutoOpens.isEmpty) return;
+  // Snapshot — _autoOpenOverlayLink may re-add to the set if still
+  // not ready, so iterate over a copy.
+  final snapshot = pendingAutoOpens.toList();
+  for (final nodeId in snapshot) {
+    final peer = discovery.getPeer(nodeId);
+    if (peer != null && peer.supportsOverlayLinkV02) {
+      AppLogging.overlay(
+        'auto-open retry: peer=0x${nodeId.toRadixString(16)} '
+        'now advertises overlay link',
+      );
+      _autoOpenOverlayLink(ref, nodeId, discovery, pendingAutoOpens);
+    }
+  }
 }
 
 /// SIP handshake manager — attached to protocol service for dispatch.
@@ -440,7 +553,16 @@ final sipDmManagerProvider = Provider<SipDmManager?>((ref) {
 
   final limiter = ref.watch(sipRateLimiterProvider);
   final counters = ref.watch(sipCountersProvider);
-  final manager = SipDmManager(rateLimiter: limiter, counters: counters);
+  // Hot-path Trust + Safety gate: every inbound and outbound DM
+  // handler consults this synchronously. Default-safe — returns
+  // false (everything allowed) until `peerSafetyManagerProvider`
+  // finishes building.
+  final safetyGate = ref.watch(peerSafetyGateProvider);
+  final manager = SipDmManager(
+    rateLimiter: limiter,
+    counters: counters,
+    safetyGate: safetyGate,
+  );
 
   // Bump epoch so UI rebuilds when sessions are created or messages arrive.
   // Deferred via microtask for the same reason as onPeersChanged above.

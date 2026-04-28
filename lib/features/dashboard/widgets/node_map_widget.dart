@@ -55,8 +55,11 @@ class NodeMapContent extends ConsumerWidget {
     final myNode = myNodeNum != null ? nodes[myNodeNum] : null;
     final LatLng center;
     final double zoom;
-    if (myNode?.hasPosition == true) {
-      center = LatLng(myNode!.latitude!, myNode.longitude!);
+    final myNodePoint = myNode?.hasPosition == true
+        ? safeLatLng(myNode!.latitude, myNode.longitude)
+        : null;
+    if (myNodePoint != null) {
+      center = myNodePoint;
       zoom = 13.0;
     } else {
       center = calculateNodesCenter(markerData);

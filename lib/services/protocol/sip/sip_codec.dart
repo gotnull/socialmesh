@@ -137,10 +137,34 @@ abstract final class SipCodec {
     }
 
     final msgTypeCode = bd.getUint8(4);
+    // Closed-by-default handshake surface: opcodes in the SIP-1
+    // handshake reserved range (0x13..0x17) that are not one of the
+    // five known handshake message types are dropped here, before
+    // the dispatcher ever sees them. Plan: §5.1a.
+    if (isHandshakeOpcodeRange(msgTypeCode) &&
+        !isKnownHandshakeOpcode(msgTypeCode)) {
+      AppLogging.sip(
+        'decode REJECTED: unknown handshake msg_type='
+        '0x${msgTypeCode.toRadixString(16)} '
+        '(handshake range reserved; closed-by-default)',
+      );
+      return null;
+    }
     final msgType = SipMessageType.fromCode(msgTypeCode);
     if (msgType == null) {
       AppLogging.sip(
         'decode REJECTED: unknown msg_type=0x${msgTypeCode.toRadixString(16)}',
+      );
+      return null;
+    }
+    // Strict version_minor enforcement for handshake frames. v0.2 is
+    // the only supported handshake wire format; v0.1 frames are
+    // dropped with no fallback. Plan: §5.1.
+    if (msgType.isHandshake && versionMinor != SipConstants.sipVersionMinor) {
+      AppLogging.sip(
+        'decode REJECTED: unsupported version_minor=$versionMinor '
+        'for msgType=${msgType.name} '
+        '(expected ${SipConstants.sipVersionMinor})',
       );
       return null;
     }

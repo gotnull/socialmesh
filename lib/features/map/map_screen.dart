@@ -284,8 +284,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
     );
 
     _animationController!.addListener(() {
-      _mapController.moveAndRotate(
-        LatLng(latTween.evaluate(animation), lngTween.evaluate(animation)),
+      _mapController.safeMoveAndRotate(
+        safeLatLng(latTween.evaluate(animation), lngTween.evaluate(animation)),
         zoomTween.evaluate(animation),
         rotationTween.evaluate(animation),
       );
@@ -310,7 +310,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
       // Skip tiny changes to reduce redraws (accounts for 360°/0° wrap)
       final diff = ((heading - _mapRotation + 540) % 360) - 180;
       if (diff.abs() < 1.0) return;
-      _mapController.moveAndRotate(
+      _mapController.safeMoveAndRotate(
         _mapController.camera.center,
         _currentZoom,
         heading,
@@ -781,7 +781,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
             (tracerouteBounds.southWest.longitude +
                 tracerouteBounds.northEast.longitude) /
             2;
-        center = LatLng(midLat, midLng);
+        center = safeLatLng(midLat, midLng) ?? center;
         // Rough zoom from bounds span — the map will refine in onMapReady
         final latSpan =
             tracerouteBounds.northEast.latitude -
@@ -803,7 +803,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
     } else if (widget.locationOnlyMode &&
         widget.initialLatitude != null &&
         widget.initialLongitude != null) {
-      center = LatLng(widget.initialLatitude!, widget.initialLongitude!);
+      center =
+          safeLatLng(widget.initialLatitude!, widget.initialLongitude!) ??
+          center;
       zoom = 15.0;
     } else if (nodesWithPosition.isNotEmpty) {
       final myNode = myNodeNum != null ? nodes[myNodeNum] : null;
@@ -812,21 +814,28 @@ class _MapScreenState extends ConsumerState<MapScreen>
           .firstOrNull;
 
       if (myNodeWithPos != null) {
-        center = LatLng(myNodeWithPos.latitude, myNodeWithPos.longitude);
+        center =
+            safeLatLng(myNodeWithPos.latitude, myNodeWithPos.longitude) ??
+            center;
         zoom = 14.0;
       } else if (myNode?.hasPosition == true) {
-        center = LatLng(myNode!.latitude!, myNode.longitude!);
+        center = safeLatLng(myNode!.latitude!, myNode.longitude!) ?? center;
         zoom = 14.0;
       } else {
-        double avgLat = 0, avgLng = 0;
-        for (final n in nodesWithPosition) {
-          avgLat += n.latitude;
-          avgLng += n.longitude;
+        final finiteNodes = nodesWithPosition
+            .where((n) => n.latitude.isFinite && n.longitude.isFinite)
+            .toList(growable: false);
+        if (finiteNodes.isNotEmpty) {
+          double avgLat = 0, avgLng = 0;
+          for (final n in finiteNodes) {
+            avgLat += n.latitude;
+            avgLng += n.longitude;
+          }
+          avgLat /= finiteNodes.length;
+          avgLng /= finiteNodes.length;
+          center = safeLatLng(avgLat, avgLng) ?? center;
+          zoom = 12.0;
         }
-        avgLat /= nodesWithPosition.length;
-        avgLng /= nodesWithPosition.length;
-        center = LatLng(avgLat, avgLng);
-        zoom = 12.0;
       }
     }
 
@@ -2568,14 +2577,17 @@ class _MapScreenState extends ConsumerState<MapScreen>
   }
 
   void _fitAllNodes(List<_NodeWithPosition> nodes) {
-    if (nodes.isEmpty) return;
+    final finite = nodes
+        .where((n) => n.latitude.isFinite && n.longitude.isFinite)
+        .toList(growable: false);
+    if (finite.isEmpty) return;
 
-    double minLat = nodes.first.latitude;
-    double maxLat = nodes.first.latitude;
-    double minLng = nodes.first.longitude;
-    double maxLng = nodes.first.longitude;
+    double minLat = finite.first.latitude;
+    double maxLat = finite.first.latitude;
+    double minLng = finite.first.longitude;
+    double maxLng = finite.first.longitude;
 
-    for (final n in nodes) {
+    for (final n in finite) {
       if (n.latitude < minLat) minLat = n.latitude;
       if (n.latitude > maxLat) maxLat = n.latitude;
       if (n.longitude < minLng) minLng = n.longitude;
@@ -2585,13 +2597,12 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final latPadding = (maxLat - minLat) * 0.15;
     final lngPadding = (maxLng - minLng) * 0.15;
 
-    final bounds = LatLngBounds(
-      LatLng(minLat - latPadding, minLng - lngPadding),
-      LatLng(maxLat + latPadding, maxLng + lngPadding),
-    );
+    final sw = safeLatLng(minLat - latPadding, minLng - lngPadding);
+    final ne = safeLatLng(maxLat + latPadding, maxLng + lngPadding);
+    if (sw == null || ne == null) return;
 
     final cameraFit = CameraFit.bounds(
-      bounds: bounds,
+      bounds: LatLngBounds(sw, ne),
       padding: const EdgeInsets.all(AppTheme.spacing50),
     );
 

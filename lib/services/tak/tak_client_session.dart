@@ -5,6 +5,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import '../../core/logging.dart';
+import '../../utils/text_sanitizer.dart';
 import 'tak_protocol_handler.dart';
 
 /// Connection state of a TAK client session.
@@ -128,7 +129,7 @@ class TakClientSession {
   }
 
   void _handleXmlCot(TakFrame frame) {
-    final xml = String.fromCharCodes(frame.payload);
+    final xml = sanitizeExternalText(String.fromCharCodes(frame.payload));
     _cotController.add(xml);
   }
 

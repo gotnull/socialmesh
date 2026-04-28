@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../utils/time_format.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
+import '../../core/meshtastic/region_metadata.dart' as region_metadata;
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
@@ -25,6 +26,7 @@ import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import '../../services/protocol/admin_target.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../core/widgets/info_table.dart';
 import '../../core/widgets/status_banner.dart';
 
 /// Screen for configuring MQTT module settings
@@ -197,6 +199,15 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
           ref
               .read(countdownProvider.notifier)
               .startDeviceRebootCountdown(reason: 'MQTT config saved');
+          // Belt-and-suspender: trigger an immediate proxy refresh in
+          // addition to the cache-emission path the auto-connect provider
+          // already listens to. Idempotent connect makes the duplicate a
+          // no-op when args match the in-flight or settled connection.
+          unawaited(
+            ref
+                .read(mqttClientProxyControllerProvider)
+                .refresh(reason: 'save-flow'),
+          );
         }
         safeNavigatorPop();
       }
@@ -615,8 +626,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                         },
                       ),
                     ),
-                    if (_proxyToClientEnabled &&
-                        ref.watch(adminModeEnabledProvider))
+                    if (_enabled || _proxyToClientEnabled)
                       _buildProxyDiagnostics(),
                     _SettingsTile(
                       icon: Icons.map_outlined,
@@ -652,81 +662,102 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
     final none = l10n.mqttProxyNoneLabel;
     final dateFmt = AppTimeFormat.withDatePrefix(context, 'd MMM,');
 
+    final showNotConnectedBanner = _proxyToClientEnabled && !diag.isConnected;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(height: AppTheme.spacing16),
-        _SectionHeader(title: l10n.mqttProxySectionDiagnostics),
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-          padding: const EdgeInsets.all(AppTheme.spacing16),
-          decoration: BoxDecoration(
-            color: context.card,
-            borderRadius: BorderRadius.circular(AppTheme.radius12),
+        if (showNotConnectedBanner)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: diag.lastError != null
+                ? StatusBanner.error(
+                    title: l10n.mqttProxyBannerNotConnectedTitle,
+                    subtitle: diag.lastError!,
+                  )
+                : StatusBanner.warning(
+                    title: l10n.mqttProxyBannerNotConnectedTitle,
+                    subtitle: l10n.mqttProxyBannerNotConnectedHint,
+                  ),
           ),
-          child: Column(
-            children: [
-              _DiagRow(
+        _SectionHeader(title: l10n.mqttProxySectionDiagnostics),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+          child: InfoTable(
+            rows: [
+              InfoTableRow(
                 label: l10n.mqttProxyStatusLabel,
                 value: diag.isConnected
                     ? l10n.mqttProxyStatusConnected
                     : l10n.mqttProxyStatusDisconnected,
-                valueColor: diag.isConnected
+                icon: Icons.circle,
+                iconColor: diag.isConnected
                     ? SemanticColors.success
                     : SemanticColors.error,
               ),
-              _DiagRow(
+              InfoTableRow(
                 label: l10n.mqttProxyBroker,
                 value: diag.brokerHost != null
                     ? '${diag.brokerHost}:${diag.brokerPort ?? 1883}'
                     : none,
+                icon: Icons.dns,
               ),
-              _DiagRow(
+              InfoTableRow(
                 label: l10n.mqttProxyTls,
                 value: diag.tlsEnabled
                     ? l10n.mqttProxyEnabled
                     : l10n.mqttProxyDisabled,
+                icon: Icons.lock_outline,
               ),
-              _DiagRow(
+              InfoTableRow(
                 label: l10n.mqttProxyAuth,
                 value: diag.hasAuth
                     ? l10n.mqttProxyConfigured
                     : l10n.mqttProxyNone,
+                icon: Icons.key_outlined,
               ),
-              _DiagRow(
+              InfoTableRow(
                 label: l10n.mqttProxyTopic,
                 value: diag.subscribedTopic ?? none,
+                icon: Icons.topic_outlined,
               ),
-              _DiagRow(
+              InfoTableRow(
                 label: l10n.mqttProxyLastConnectAttempt,
                 value: diag.lastConnectAttempt != null
                     ? dateFmt.format(diag.lastConnectAttempt!)
                     : none,
+                icon: Icons.schedule,
               ),
-              _DiagRow(
+              InfoTableRow(
                 label: l10n.mqttProxyLastConnectedAt,
                 value: diag.lastConnectedAt != null
                     ? dateFmt.format(diag.lastConnectedAt!)
                     : none,
+                icon: Icons.check_circle_outline,
               ),
-              _DiagRow(
+              InfoTableRow(
                 label: l10n.mqttProxyPublished,
                 value: diag.messagesPublished.toString(),
+                icon: Icons.upload,
               ),
-              _DiagRow(
+              InfoTableRow(
                 label: l10n.mqttProxyRelayed,
                 value: diag.messagesRelayed.toString(),
+                icon: Icons.download,
               ),
               if (diag.reconnectAttempts > 0)
-                _DiagRow(
+                InfoTableRow(
                   label: l10n.mqttProxyReconnects,
                   value: diag.reconnectAttempts.toString(),
+                  icon: Icons.refresh,
                 ),
               if (diag.lastError != null)
-                _DiagRow(
+                InfoTableRow(
                   label: l10n.mqttProxyLastError,
                   value: diag.lastError!,
-                  valueColor: SemanticColors.error,
+                  icon: Icons.error_outline,
+                  iconColor: SemanticColors.error,
                 ),
             ],
           ),
@@ -965,18 +996,10 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
 }
 
 /// Returns the duty cycle percentage for a given LoRa region.
-/// EU and UA regions are restricted to 10%. All others are 100% (unrestricted).
-int _dutyCycleForRegion(config_pbenum.Config_LoRaConfig_RegionCode region) {
-  switch (region) {
-    case config_pbenum.Config_LoRaConfig_RegionCode.EU_433:
-    case config_pbenum.Config_LoRaConfig_RegionCode.EU_868:
-    case config_pbenum.Config_LoRaConfig_RegionCode.UA_433:
-    case config_pbenum.Config_LoRaConfig_RegionCode.UA_868:
-      return 10;
-    default:
-      return 100;
-  }
-}
+/// Delegates to the centralized region metadata (single source of truth
+/// for regulatory data); see `lib/core/meshtastic/region_metadata.dart`.
+int _dutyCycleForRegion(config_pbenum.Config_LoRaConfig_RegionCode region) =>
+    region_metadata.dutyCycleForRegion(region);
 
 class _SectionHeader extends StatelessWidget {
   final String title;
@@ -1054,43 +1077,6 @@ class _SettingsTile extends StatelessWidget {
             if (trailing != null) trailing!,
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _DiagRow extends StatelessWidget {
-  final String label;
-  final String value;
-  final Color? valueColor;
-
-  const _DiagRow({required this.label, required this.value, this.valueColor});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Text(
-            label,
-            style: TextStyle(fontSize: 13, color: context.textSecondary),
-          ),
-          const Spacer(),
-          Flexible(
-            child: Text(
-              value,
-              textAlign: TextAlign.end,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: valueColor ?? context.textPrimary,
-              ),
-              overflow: TextOverflow.ellipsis,
-              maxLines: 2,
-            ),
-          ),
-        ],
       ),
     );
   }

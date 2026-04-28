@@ -40,6 +40,9 @@ enum SipMessageType {
   dmReaction(0x42),
   dmDelete(0x43),
   dmClose(0x44),
+  dmInk(0x45),
+  dmPlay(0x46),
+  dmSignal(0x47),
 
   // MRRP (Mesh Request/Response Protocol)
   mrrpData(0x50),
@@ -57,7 +60,40 @@ enum SipMessageType {
     }
     return null;
   }
+
+  /// SIP v0.2 handshake message types — the five payloads that carry
+  /// `target_node_id` at offset 0 and require the strict per-handler
+  /// target check (see `docs/sip/SIP_V0_2_TARGET_NODE_ID_PLAN.md` §5.2).
+  /// Forward-compat: this set is closed; an opcode in
+  /// [isInHandshakeRange] that is not listed here is dropped at codec
+  /// entry as "unknown handshake" rather than dispatched.
+  bool get isHandshake =>
+      this == SipMessageType.hsHello ||
+      this == SipMessageType.hsChallenge ||
+      this == SipMessageType.hsResponse ||
+      this == SipMessageType.hsAccept ||
+      this == SipMessageType.hsDecline;
+
+  /// True if the wire opcode falls in the SIP-1 handshake reserved
+  /// range (0x13..0x17). Used together with [isHandshake] to enforce
+  /// closed-by-default rejection of unknown handshake-range opcodes.
+  bool get isInHandshakeRange => code >= 0x13 && code <= 0x17;
 }
+
+/// True if [code] is a handshake opcode the current build knows how
+/// to decode. Anything in the handshake range (0x13..0x17) that is
+/// not on this list MUST be rejected at the codec layer — the
+/// handshake surface is closed by default to forward-compat
+/// surprises and corrupted frames.
+bool isKnownHandshakeOpcode(int code) {
+  final type = SipMessageType.fromCode(code);
+  return type != null && type.isHandshake;
+}
+
+/// True if [code] is in the reserved SIP-1 handshake range
+/// (0x13..0x17). Helper for the codec's closed-by-default check
+/// when we have not yet matched [code] to an enum value.
+bool isHandshakeOpcodeRange(int code) => code >= 0x13 && code <= 0x17;
 
 /// SIP frame flags bitfield (byte 5 of the frame header).
 abstract final class SipFlags {
@@ -147,6 +183,31 @@ abstract final class SipFeatureBits {
 
   /// Reserved for overlay v0.3 secure envelope. Never set today.
   static const int overlaySecureV03 = 1 << 10;
+
+  /// SIP Ink v1 sketch DM frames (DM_INK / 0x45) supported. Builds
+  /// without this bit drop unknown 0x45 frames silently. Senders MUST
+  /// gate `dmInk` transmission on the peer advertising this bit.
+  /// See `docs/sip/SIP_V0_1.md` §6 "DM_INK (v0.2 amendment)".
+  static const int dmInkV1 = 1 << 11;
+
+  /// SIP Play v1 turn-based mini-game frames (DM_PLAY / 0x46)
+  /// supported. Carries a compact binary game-action envelope
+  /// inside an existing accepted SIP DM session. Builds without
+  /// this bit drop unknown 0x46 frames silently. Senders MUST gate
+  /// `dmPlay` transmission on the peer advertising this bit. The
+  /// game catalogue is local-only — adding a new game does not
+  /// bump this bit; an unsupported `gameType` value is rendered as
+  /// a safe unsupported fallback by the receiver.
+  static const int dmPlayV1 = 1 << 12;
+
+  /// SIP Signal v1 musical-phrase + Morse signal frames
+  /// (DM_SIGNAL / 0x47) supported. Carries a compact binary phrase
+  /// or Morse envelope; the receiver synthesizes the actual audio
+  /// locally — NO audio samples are ever placed on the wire.
+  /// Builds without this bit drop unknown 0x47 frames silently.
+  /// Senders MUST gate `dmSignal` transmission on the peer
+  /// advertising this bit.
+  static const int dmSignalV1 = 1 << 13;
 
   /// All features in v0.1.
   static const int allV01 = sip0 | sip1 | sip3; // 0x000B

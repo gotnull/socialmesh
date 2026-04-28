@@ -1756,29 +1756,38 @@ class _TelemetryNavTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppTheme.spacing16,
-          vertical: 12,
-        ),
-        child: Row(
-          children: [
-            Icon(icon, size: 20, color: context.textSecondary),
-            const SizedBox(width: AppTheme.spacing12),
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: context.textPrimary,
+    // Wrap the InkWell in a transparent Material so the ripple paints
+    // on a surface that lives INSIDE the parent Container's clip
+    // region. Without this, the InkWell hunts up the tree for the
+    // nearest Material — which is the Scaffold's root Material above
+    // the clipped card — and the splash bleeds past the card's
+    // rounded corners on long-press.
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppTheme.spacing16,
+            vertical: 12,
+          ),
+          child: Row(
+            children: [
+              Icon(icon, size: 20, color: context.textSecondary),
+              const SizedBox(width: AppTheme.spacing12),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: context.textPrimary,
+                  ),
                 ),
               ),
-            ),
-            Icon(Icons.chevron_right, size: 18, color: context.textTertiary),
-          ],
+              Icon(Icons.chevron_right, size: 18, color: context.textTertiary),
+            ],
+          ),
         ),
       ),
     );

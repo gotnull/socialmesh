@@ -36,6 +36,7 @@ import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/linkified_text.dart';
 import '../../core/widgets/search_filter_header.dart';
 import '../../core/widgets/ico_help_system.dart';
+import '../../core/widgets/jump_to_latest_pill.dart';
 
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/status_filter_chip.dart';
@@ -686,11 +687,7 @@ class _ContactTile extends StatelessWidget {
           Stack(
             children: [
               NodeAvatar(
-                text:
-                    contact.shortName ??
-                    (contact.displayName.length >= 2
-                        ? contact.displayName.substring(0, 2)
-                        : contact.displayName),
+                text: contact.shortName ?? safeTruncate(contact.displayName, 2),
                 color: contact.avatarColor != null
                     ? Color(contact.avatarColor!)
                     : AppTheme.graphPurple,
@@ -2139,9 +2136,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                   )
                 else
                   NodeAvatar(
-                    text: widget.title.length >= 2
-                        ? widget.title.substring(0, 2)
-                        : widget.title,
+                    text: safeTruncate(widget.title, 2),
                     color: widget.avatarColor != null
                         ? Color(widget.avatarColor!)
                         : AppTheme.graphPurple,
@@ -2460,69 +2455,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                             left: 0,
                             right: 0,
                             bottom: AppTheme.spacing12,
-                            child: IgnorePointer(
-                              ignoring: !_showJumpToLatest,
-                              child: AnimatedOpacity(
-                                duration:
-                                    MediaQuery.maybeOf(
-                                          context,
-                                        )?.disableAnimations ??
-                                        false
-                                    ? Duration.zero
-                                    : const Duration(milliseconds: 180),
-                                opacity: _showJumpToLatest ? 1 : 0,
-                                child: Center(
-                                  child: BouncyTap(
-                                    onTap: _jumpToLatest,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: AppTheme.spacing14,
-                                        vertical: AppTheme.spacing10,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: context.card.withValues(
-                                          alpha: 0.96,
-                                        ),
-                                        borderRadius: BorderRadius.circular(
-                                          AppTheme.radius16,
-                                        ),
-                                        border: Border.all(
-                                          color: context.border,
-                                        ),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withValues(
-                                              alpha: 0.18,
-                                            ),
-                                            blurRadius: 18,
-                                            offset: const Offset(0, 8),
-                                          ),
-                                        ],
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            Icons.arrow_downward_rounded,
-                                            size: 18,
-                                            color: context.accentColor,
-                                          ),
-                                          const SizedBox(
-                                            width: AppTheme.spacing8,
-                                          ),
-                                          Text(
-                                            context.l10n.messagingJumpToLatest,
-                                            style: TextStyle(
-                                              color: context.textPrimary,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
+                            child: JumpToLatestPill(
+                              visible: _showJumpToLatest,
+                              onTap: _jumpToLatest,
+                              label: context.l10n.messagingJumpToLatest,
                             ),
                           ),
                         ],
@@ -2636,9 +2572,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                             ),
                         leading: GestureDetector(
                           onTap: () => _showQuickResponses(),
+                          // 48×48 mirrors the send button on the right
+                          // of the composer so the leading and trailing
+                          // affordances are visually balanced — same
+                          // circle size, same icon size.
                           child: Container(
-                            width: 40,
-                            height: 40,
+                            width: 48,
+                            height: 48,
                             decoration: BoxDecoration(
                               color: context.background,
                               shape: BoxShape.circle,
@@ -2792,7 +2732,7 @@ class _MessageBubble extends ConsumerWidget {
                 : 0,
           );
     }
-    return sanitized.length > 4 ? sanitized.substring(0, 4) : sanitized;
+    return safeTruncate(sanitized, 4);
   }
 
   /// Get icon data for message source (only for non-manual sources)
@@ -2894,9 +2834,7 @@ class _MessageBubble extends ConsumerWidget {
 
     final replyText =
         replyMessage?.text ?? context.l10n.messagingOriginalMessage;
-    final truncated = replyText.length > 60
-        ? '${replyText.substring(0, 60)}…'
-        : replyText;
+    final truncated = safeSubstring(replyText, 60);
 
     final quoteWidget = Container(
       width: double.infinity,

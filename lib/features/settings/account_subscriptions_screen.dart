@@ -1127,15 +1127,35 @@ class _AccountSubscriptionsScreenState
       await syncRevenueCatWithFirebase(ref);
     } on FirebaseAuthMultiFactorException catch (e) {
       AppLogging.subscriptions('║ 🔐 Google sign-in requires MFA');
+      AppLogging.mfa(
+        '_signInWithGoogle — caught FirebaseAuthMultiFactorException '
+        '(mounted=$mounted, hints=${e.resolver.hints.length})',
+      );
       if (mounted) {
         final credential = await MFAVerificationDialog.show(
           context,
           e.resolver,
         );
+        AppLogging.mfa(
+          '_signInWithGoogle — MFAVerificationDialog.show returned '
+          '(credential=${credential != null ? "non-null" : "null"}, '
+          'mounted=$mounted)',
+        );
         if (credential != null && mounted) {
           ref.invalidate(userProfileProvider);
           await syncRevenueCatWithFirebase(ref);
+          AppLogging.mfa(
+            '_signInWithGoogle — ✅ MFA resolved, profile invalidated',
+          );
+        } else if (credential == null) {
+          AppLogging.mfa(
+            '_signInWithGoogle — ⚠️ MFA dialog returned null — user not signed in',
+          );
         }
+      } else {
+        AppLogging.mfa(
+          '_signInWithGoogle — ⚠️ screen unmounted before MFA dialog could show',
+        );
       }
     } on FirebaseAuthException catch (e) {
       // User cancelled - don't show error

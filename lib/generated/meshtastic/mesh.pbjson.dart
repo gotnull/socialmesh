@@ -757,6 +757,8 @@ const RemoteShell$json = {
     {'1': 'cols', '3': 6, '4': 1, '5': 13, '10': 'cols'},
     {'1': 'rows', '3': 7, '4': 1, '5': 13, '10': 'rows'},
     {'1': 'flags', '3': 8, '4': 1, '5': 13, '10': 'flags'},
+    {'1': 'last_tx_seq', '3': 9, '4': 1, '5': 13, '10': 'lastTxSeq'},
+    {'1': 'last_rx_seq', '3': 10, '4': 1, '5': 13, '10': 'lastRxSeq'},
   ],
   '4': [RemoteShell_OpCode$json],
 };
@@ -786,9 +788,10 @@ final $typed_data.Uint8List remoteShellDescriptor = $convert.base64Decode(
     'RlUgJvcBIdCgpzZXNzaW9uX2lkGAIgASgNUglzZXNzaW9uSWQSEAoDc2VxGAMgASgNUgNzZXES'
     'FwoHYWNrX3NlcRgEIAEoDVIGYWNrU2VxEhgKB3BheWxvYWQYBSABKAxSB3BheWxvYWQSEgoEY2'
     '9scxgGIAEoDVIEY29scxISCgRyb3dzGAcgASgNUgRyb3dzEhQKBWZsYWdzGAggASgNUgVmbGFn'
-    'cyKPAQoGT3BDb2RlEgwKCE9QX1VOU0VUEAASCAoET1BFThABEgkKBUlOUFVUEAISCgoGUkVTSV'
-    'pFEAMSCQoFQ0xPU0UQBBIICgRQSU5HEAUSBwoDQUNLEAYSCwoHT1BFTl9PSxBAEgoKBk9VVFBV'
-    'VBBBEgoKBkNMT1NFRBBCEgkKBUVSUk9SEEMSCAoEUE9ORxBE');
+    'cxIeCgtsYXN0X3R4X3NlcRgJIAEoDVIJbGFzdFR4U2VxEh4KC2xhc3Rfcnhfc2VxGAogASgNUg'
+    'lsYXN0UnhTZXEijwEKBk9wQ29kZRIMCghPUF9VTlNFVBAAEggKBE9QRU4QARIJCgVJTlBVVBAC'
+    'EgoKBlJFU0laRRADEgkKBUNMT1NFEAQSCAoEUElORxAFEgcKA0FDSxAGEgsKB09QRU5fT0sQQB'
+    'IKCgZPVVRQVVQQQRIKCgZDTE9TRUQQQhIJCgVFUlJPUhBDEggKBFBPTkcQRA==');
 
 @$core.Deprecated('Use waypointDescriptor instead')
 const Waypoint$json = {

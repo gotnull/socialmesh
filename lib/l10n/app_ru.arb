@@ -5450,10 +5450,8 @@
     "scannerEnableAutoReconnectMessage": "Приложение будет автоматически подключаться к последнему использованному устройству при каждом запуске.",
     "scannerEnableAutoReconnectMessageWithDevice": "Приложение автоматически подключится к «{name}» сейчас и при каждом последующем запуске.",
     "scannerEnableAutoReconnectTitle": "Включить автоподключение?",
-    "scannerEnableBluetoothHint": "Убедитесь, что Bluetooth включён и устройство Meshtastic включено",
     "scannerEnableLabel": "Включить",
     "scannerGattConnectionFailed": "Ошибка подключения. Это может произойти, если устройство ранее было сопряжено с другим приложением. Перейдите в Настройки > Bluetooth, найдите устройство Meshtastic, нажмите «Забыть» и повторите попытку.",
-    "scannerLookingForDevices": "Поиск устройств…",
     "scannerMeshCoreConnectionFailed": "Ошибка подключения MeshCore",
     "scannerMeshCoreConnectionFailedWithError": "Ошибка подключения MeshCore: {error}",
     "scannerPairingInvalidatedError": "Телефон удалил сохранённые данные сопряжения для этого устройства. Перейдите в Настройки > Bluetooth, удалите «Meshtastic_XXXX» и повторите попытку.",
@@ -5464,8 +5462,6 @@
     "scannerRetryScan": "Повторить сканирование",
     "scannerScanningSubtitle": "Поиск устройств Meshtastic...",
     "scannerScanningTitle": "Сканирование ближайших устройств",
-    "scannerTipNoOtherApps": "Убедитесь, что к устройству не подключено другое приложение (напр. официальное приложение Meshtastic)",
-    "scannerTipNoOtherDevices": "Убедитесь, что к устройству не подключён другой телефон или планшет через Bluetooth",
     "scannerTransportBluetooth": "Bluetooth",
     "scannerTransportUsb": "USB",
     "scannerUnknownDeviceDescription": "Это устройство не определено как Meshtastic или MeshCore.",
@@ -8811,20 +8807,10 @@
     "radioConfigRegionUs": "US",
     "radioConfigRegionEu433": "EU 433",
     "radioConfigRegionEu868": "EU 868",
-    "radioConfigRegionChina": "Китай",
-    "radioConfigRegionJapan": "Япония",
     "radioConfigRegionAnz": "ANZ",
-    "radioConfigRegionKorea": "Корея",
-    "radioConfigRegionTaiwan": "Тайвань",
-    "radioConfigRegionRussia": "Россия",
-    "radioConfigRegionIndia": "Индия",
     "radioConfigRegionNz865": "NZ 865",
-    "radioConfigRegionThailand": "Таиланд",
-    "radioConfigRegionUkraine433": "Украина 433",
-    "radioConfigRegionUkraine868": "Украина 868",
     "radioConfigRegionMalaysia433": "Малайзия 433",
     "radioConfigRegionMalaysia919": "Малайзия 919",
-    "radioConfigRegionSingapore": "Сингапур",
     "radioConfigRegionLora24": "LoRa 2.4ГГц",
     "radioConfigPresetLongFast": "Дальний быстрый",
     "radioConfigPresetLongFastDesc": "Наибольший радиус с хорошей скоростью",
@@ -11502,10 +11488,6 @@
             }
         }
     },
-    "sipDmPinned": "Сессия закреплена",
-    "@sipDmPinned": {
-        "description": "Label when a DM session is pinned."
-    },
     "sipDmInputHint": "Сообщение…",
     "@sipDmInputHint": {
         "description": "Hint text for the DM message input field."
@@ -11529,14 +11511,6 @@
     "sipDmSessionClosed": "Этот разговор завершён.",
     "@sipDmSessionClosed": {
         "description": "Message when trying to send on a closed session."
-    },
-    "sipDmPinAction": "Закрепить сессию",
-    "@sipDmPinAction": {
-        "description": "Action to pin a DM session to prevent expiry."
-    },
-    "sipDmUnpinAction": "Открепить сессию",
-    "@sipDmUnpinAction": {
-        "description": "Action to unpin a DM session."
     },
     "sipDmCloseAction": "Закрыть сессию",
     "@sipDmCloseAction": {
@@ -11776,10 +11750,6 @@
                 "type": "String"
             }
         }
-    },
-    "sipHubSessionPinned": "Закреплено",
-    "@sipHubSessionPinned": {
-        "description": "Badge label for pinned sessions."
     },
     "sipHubNoMessages": "Пока нет сообщений",
     "@sipHubNoMessages": {

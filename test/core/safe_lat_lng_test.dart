@@ -76,4 +76,47 @@ void main() {
       expect(finiteMarkers(const []), isEmpty);
     });
   });
+
+  group('safeLatLngBounds', () {
+    test('returns bounds over finite points only', () {
+      final bounds = safeLatLngBounds([
+        const LatLng(10, 20),
+        LatLng(double.nan, double.nan),
+        const LatLng(30, 40),
+      ]);
+      expect(bounds, isNotNull);
+      expect(bounds!.southWest.latitude, 10);
+      expect(bounds.northEast.latitude, 30);
+    });
+
+    test('null when no finite points', () {
+      expect(safeLatLngBounds(const []), isNull);
+      expect(safeLatLngBounds([LatLng(double.nan, double.nan)]), isNull);
+    });
+  });
+
+  group('SafeMapControllerMove', () {
+    test('safeMove skips non-finite destinations', () {
+      final controller = MapController();
+      expect(controller.safeMove(null, 10), isFalse);
+      expect(controller.safeMove(LatLng(double.nan, 0), 10), isFalse);
+      expect(controller.safeMove(const LatLng(10, 20), double.nan), isFalse);
+    });
+
+    test('safeMoveAndRotate skips non-finite inputs', () {
+      final controller = MapController();
+      // Should not throw — we only assert it does not call into flutter_map
+      // with bad inputs. A unit-level check on the guard is sufficient here;
+      // integration-level behavior is covered by widget tests.
+      expect(() => controller.safeMoveAndRotate(null, 10, 0), returnsNormally);
+      expect(
+        () => controller.safeMoveAndRotate(
+          const LatLng(10, 20),
+          double.infinity,
+          0,
+        ),
+        returnsNormally,
+      );
+    });
+  });
 }

@@ -96,8 +96,12 @@ import '../../core/whats_new/whats_new_sheet.dart';
 // import '../social/screens/follow_requests_screen.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/constants.dart';
+import '../../providers/reticulum_providers.dart';
+import '../mesh_services/rns_companion_services_screen.dart';
 import '../tak/screens/tak_settings_screen.dart';
 import 'network_endpoints_screen.dart';
+import 'reticulum_bridge_screen.dart';
+import 'reticulum_diagnostics_screen.dart';
 import 'translation_settings_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -523,6 +527,70 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             MaterialPageRoute(builder: (_) => const NetworkEndpointsScreen()),
           ),
         ),
+        if (AppFeatureFlags.isReticulumTunnelEnabled)
+          _SearchableSettingItem(
+            icon: Icons.podcasts,
+            title: context.l10n.settingsReticulumTunnelTitle,
+            subtitle: context.l10n.settingsReticulumTunnelSubtitle,
+            keywords: const [
+              'reticulum',
+              'rns',
+              'tunnel',
+              'port 76',
+              'fragment',
+              'capture',
+              'observability',
+            ],
+            section: context.l10n.settingsSectionConnection,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const ReticulumDiagnosticsScreen(),
+              ),
+            ),
+          ),
+        if (AppFeatureFlags.isReticulumTunnelEnabled)
+          _SearchableSettingItem(
+            icon: Icons.menu_book_outlined,
+            title: context.l10n.settingsRnsCompanionTitle,
+            subtitle: context.l10n.settingsRnsCompanionSubtitle,
+            keywords: const [
+              'rns',
+              'reticulum',
+              'companion',
+              'nomadnet',
+              'pages',
+              'experimental',
+            ],
+            section: context.l10n.settingsSectionConnection,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const RnsCompanionServicesScreen(),
+              ),
+            ),
+          ),
+        if (AppFeatureFlags.isReticulumTunnelEnabled &&
+            ref.watch(reticulumFlagsProvider).reassemblyEnabled)
+          _SearchableSettingItem(
+            icon: Icons.cable,
+            title: context.l10n.settingsReticulumBridgeTitle,
+            subtitle: context.l10n.settingsReticulumBridgeSubtitle,
+            keywords: const [
+              'reticulum',
+              'rns',
+              'bridge',
+              'tcp',
+              'rnsd',
+              'forward',
+              'tunnel',
+            ],
+            section: context.l10n.settingsSectionConnection,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ReticulumBridgeScreen()),
+            ),
+          ),
 
         // TAK Gateway (feature-gated)
         if (AppFeatureFlags.isTakGatewayEnabled ||

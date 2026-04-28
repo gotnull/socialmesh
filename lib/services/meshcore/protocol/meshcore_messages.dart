@@ -9,6 +9,7 @@
 
 import 'dart:typed_data';
 
+import '../../../utils/text_sanitizer.dart';
 import 'meshcore_frame.dart';
 
 /// Parsed SELF_INFO response data.
@@ -445,7 +446,9 @@ ParseResult<MeshCoreChannelInfo> parseChannelInfo(Uint8List payload) {
   while (nameEnd < 33 && nameEnd < payload.length && payload[nameEnd] != 0) {
     nameEnd++;
   }
-  final name = String.fromCharCodes(payload.sublist(1, nameEnd));
+  final name = sanitizeExternalText(
+    String.fromCharCodes(payload.sublist(1, nameEnd)),
+  );
 
   // Read PSK (16 bytes at offset 33)
   final psk = Uint8List.fromList(payload.sublist(33, 49));

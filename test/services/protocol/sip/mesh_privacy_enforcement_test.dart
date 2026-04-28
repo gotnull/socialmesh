@@ -124,13 +124,20 @@ class _TestHandler implements MrrpServiceHandler {
 }
 
 /// Build a minimal HS_HELLO frame for testing.
-SipFrame _buildHelloFrame() {
+///
+/// [targetNodeId] defaults to `0xAAAA` because every test in this file
+/// drives an `SipHandshakeManager` whose `localNodeId` is `0xAAAA`.
+SipFrame _buildHelloFrame({int targetNodeId = 0xAAAA}) {
   final hello = SipHsHello(
+    targetNodeId: targetNodeId,
     clientNonce: Uint8List.fromList(List.generate(16, (i) => i)),
     clientEphemeralPub: Uint8List.fromList(List.generate(32, (i) => i + 16)),
     requestedFeatures: SipFeatureBits.allV01,
   );
   final payload = SipHsMessages.encodeHello(hello);
+  if (payload == null) {
+    throw StateError('encodeHello returned null in test fixture');
+  }
   return SipFrame(
     versionMajor: SipConstants.sipVersionMajor,
     versionMinor: SipConstants.sipVersionMinor,

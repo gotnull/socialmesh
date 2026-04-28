@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
+import '../../core/meshtastic/region_metadata.dart';
 import '../../core/theme.dart';
 import '../../services/storage/storage_service.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
@@ -43,117 +44,22 @@ class RegionInfo {
 
 /// Available regions with their frequency bands.
 /// Requires [BuildContext] because names, frequencies, and descriptions
-/// are localised.
-List<RegionInfo> getAvailableRegions(BuildContext context) => [
-  RegionInfo(
-    code: RegionCode.US,
-    name: context.l10n.regionSelectionRegionUs,
-    frequency: context.l10n.regionSelectionRegionUsFreq,
-    description: context.l10n.regionSelectionRegionUsDesc,
-  ),
-  RegionInfo(
-    code: RegionCode.EU_868,
-    name: context.l10n.regionSelectionRegionEu868,
-    frequency: context.l10n.regionSelectionRegionEu868Freq,
-    description: context.l10n.regionSelectionRegionEu868Desc,
-  ),
-  RegionInfo(
-    code: RegionCode.EU_433,
-    name: context.l10n.regionSelectionRegionEu433,
-    frequency: context.l10n.regionSelectionRegionEu433Freq,
-    description: context.l10n.regionSelectionRegionEu433Desc,
-  ),
-  RegionInfo(
-    code: RegionCode.ANZ,
-    name: context.l10n.regionSelectionRegionAnz,
-    frequency: context.l10n.regionSelectionRegionAnzFreq,
-    description: context.l10n.regionSelectionRegionAnzDesc,
-  ),
-  RegionInfo(
-    code: RegionCode.CN,
-    name: context.l10n.regionSelectionRegionCn,
-    frequency: context.l10n.regionSelectionRegionCnFreq,
-    description: context.l10n.regionSelectionRegionCnDesc,
-  ),
-  RegionInfo(
-    code: RegionCode.JP,
-    name: context.l10n.regionSelectionRegionJp,
-    frequency: context.l10n.regionSelectionRegionJpFreq,
-    description: context.l10n.regionSelectionRegionJpDesc,
-  ),
-  RegionInfo(
-    code: RegionCode.KR,
-    name: context.l10n.regionSelectionRegionKr,
-    frequency: context.l10n.regionSelectionRegionKrFreq,
-    description: context.l10n.regionSelectionRegionKrDesc,
-  ),
-  RegionInfo(
-    code: RegionCode.TW,
-    name: context.l10n.regionSelectionRegionTw,
-    frequency: context.l10n.regionSelectionRegionTwFreq,
-    description: context.l10n.regionSelectionRegionTwDesc,
-  ),
-  RegionInfo(
-    code: RegionCode.RU,
-    name: context.l10n.regionSelectionRegionRu,
-    frequency: context.l10n.regionSelectionRegionRuFreq,
-    description: context.l10n.regionSelectionRegionRuDesc,
-  ),
-  RegionInfo(
-    code: RegionCode.IN,
-    name: context.l10n.regionSelectionRegionIn,
-    frequency: context.l10n.regionSelectionRegionInFreq,
-    description: context.l10n.regionSelectionRegionInDesc,
-  ),
-  RegionInfo(
-    code: RegionCode.NZ_865,
-    name: context.l10n.regionSelectionRegionNz865,
-    frequency: context.l10n.regionSelectionRegionNz865Freq,
-    description: context.l10n.regionSelectionRegionNz865Desc,
-  ),
-  RegionInfo(
-    code: RegionCode.TH,
-    name: context.l10n.regionSelectionRegionTh,
-    frequency: context.l10n.regionSelectionRegionThFreq,
-    description: context.l10n.regionSelectionRegionThDesc,
-  ),
-  RegionInfo(
-    code: RegionCode.UA_433,
-    name: context.l10n.regionSelectionRegionUa433,
-    frequency: context.l10n.regionSelectionRegionUa433Freq,
-    description: context.l10n.regionSelectionRegionUa433Desc,
-  ),
-  RegionInfo(
-    code: RegionCode.UA_868,
-    name: context.l10n.regionSelectionRegionUa868,
-    frequency: context.l10n.regionSelectionRegionUa868Freq,
-    description: context.l10n.regionSelectionRegionUa868Desc,
-  ),
-  RegionInfo(
-    code: RegionCode.MY_433,
-    name: context.l10n.regionSelectionRegionMy433,
-    frequency: context.l10n.regionSelectionRegionMy433Freq,
-    description: context.l10n.regionSelectionRegionMy433Desc,
-  ),
-  RegionInfo(
-    code: RegionCode.MY_919,
-    name: context.l10n.regionSelectionRegionMy919,
-    frequency: context.l10n.regionSelectionRegionMy919Freq,
-    description: context.l10n.regionSelectionRegionMy919Desc,
-  ),
-  RegionInfo(
-    code: RegionCode.SG_923,
-    name: context.l10n.regionSelectionRegionSg923,
-    frequency: context.l10n.regionSelectionRegionSg923Freq,
-    description: context.l10n.regionSelectionRegionSg923Desc,
-  ),
-  RegionInfo(
-    code: RegionCode.LORA_24,
-    name: context.l10n.regionSelectionRegionLora24,
-    frequency: context.l10n.regionSelectionRegionLora24Freq,
-    description: context.l10n.regionSelectionRegionLora24Desc,
-  ),
-];
+/// are localised. Sourced from the centralized [kRegionMetadata]; UNSET
+/// is filtered out (only meaningful in the Radio Configuration picker
+/// as a "not yet configured" placeholder, not in the onboarding flow).
+List<RegionInfo> getAvailableRegions(BuildContext context) {
+  final l = context.l10n;
+  return [
+    for (final r in kRegionMetadata)
+      if (r.code != RegionCode.UNSET)
+        RegionInfo(
+          code: r.code,
+          name: r.regionSelectionName(l),
+          frequency: r.regionSelectionFrequency(l),
+          description: r.regionSelectionDescription(l),
+        ),
+  ];
+}
 
 const regionSelectionApplyButtonKey = Key('region_selection_apply_button');
 

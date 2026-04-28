@@ -1,5 +1,6 @@
 import Flutter
 import UIKit
+import os
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
@@ -51,6 +52,32 @@ import UIKit
     if #available(iOS 16.0, *) {
       if let controller = window?.rootViewController as? FlutterViewController {
         AppIntentsManager.shared.setup(with: controller)
+      }
+    }
+
+    // Dart → os_log bridge.
+    // Flutter's `print`/`debugPrint` goes to Dart VM stderr, which is
+    // invisible to `xcrun simctl log stream` and the xcodebuild MCP log
+    // capture tool. The Dart-side `OsLogBridge` installs a `debugPrint`
+    // tee that forwards every line through this channel so logs appear
+    // under subsystem `com.gotnull.socialmesh`, category `dart`.
+    // Gated in Dart by `kDebugMode` — release builds never invoke the
+    // channel, so this handler is harmless when present.
+    if let controller = window?.rootViewController as? FlutterViewController {
+      let dartLogger = Logger(subsystem: "com.gotnull.socialmesh", category: "dart")
+      let osLogChannel = FlutterMethodChannel(
+        name: "socialmesh/os_log",
+        binaryMessenger: controller.binaryMessenger
+      )
+      osLogChannel.setMethodCallHandler { call, result in
+        if call.method == "log",
+           let args = call.arguments as? [String: Any],
+           let msg = args["msg"] as? String {
+          dartLogger.log(level: .default, "\(msg, privacy: .public)")
+          result(nil)
+        } else {
+          result(FlutterMethodNotImplemented)
+        }
       }
     }
     

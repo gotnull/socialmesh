@@ -3831,6 +3831,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get debugScreenDeviceLogsTitle => 'Device Logs';
 
   @override
+  String get debugScreenDeviceNothingToCopy => 'No device logs to copy';
+
+  @override
+  String get debugScreenDeviceNothingToShare => 'No device logs to share';
+
+  @override
   String get debugScreenDeviceSearchHint => 'Search logs...';
 
   @override
@@ -3879,6 +3885,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get debugScreenNoLogEntries => 'No log entries';
+
+  @override
+  String get debugScreenNothingToCopy => 'No logs to copy';
+
+  @override
+  String get debugScreenNothingToShare => 'No logs to share';
 
   @override
   String get debugScreenSearchLogsHint => 'Search logs...';
@@ -4712,6 +4724,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get drawerBadgeTryIt => 'TRY IT';
+
+  @override
+  String get requiresConnectionGuardDisconnected =>
+      'Disconnected from your node — reconnect to continue.';
+
+  @override
+  String get requiresConnectionGuardReconnectingBanner =>
+      'Disconnected — reconnecting…';
 
   @override
   String get drawerEnterpriseDeviceManagement => 'Device Management';
@@ -6179,7 +6199,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'No articles match your search.\nTry different keywords.';
 
   @override
-  String get helpCenterReadEverything => 'You’ve read everything!';
+  String get helpCenterReadEverything => 'You\'ve read everything!';
 
   @override
   String get helpCenterResetAllProgress => 'Reset All Progress';
@@ -11442,10 +11462,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get nodedexLastSeen => 'Last Seen';
+  String get nodedexLastSeen => 'Last encounter';
 
   @override
-  String get nodedexLastSeenStatLabel => 'Last Seen';
+  String get nodedexLastSeenStatLabel => 'Last encounter';
+
+  @override
+  String get nodedexLastHeard => 'Last heard';
 
   @override
   String nodedexLastSeenAtTime(String date, String time) {
@@ -11560,6 +11583,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nodedexObservationTimelineTitle => 'Observation Timeline';
+
+  @override
+  String get nodedexTraitEvidenceTitle => 'Trait Evidence';
 
   @override
   String nodedexObservedDate(String date) {
@@ -11876,7 +11902,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nodedexSortFirstDiscovered => 'First Discovered';
 
   @override
-  String get nodedexSortLastSeen => 'Last Seen';
+  String get nodedexSortLastSeen => 'Last encounter';
 
   @override
   String get nodedexSortLongestRange => 'Longest Range';
@@ -12391,6 +12417,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nodesScreenTransportRf => 'RF';
+
+  @override
+  String get nodesScreenTransportTcp => 'TCP';
+
+  @override
+  String get nodesScreenTransportBle => 'BLE';
+
+  @override
+  String get nodesScreenTransportUsb => 'USB';
 
   @override
   String get nodesScreenYouBadge => 'YOU';
@@ -13696,6 +13731,134 @@ class AppLocalizationsEn extends AppLocalizations {
   String get regionSelectionRegionLora24Freq => '2.4 GHz';
 
   @override
+  String get regionSelectionRegionPh433 => 'Philippines 433';
+
+  @override
+  String get regionSelectionRegionPh433Desc => 'Philippines';
+
+  @override
+  String get regionSelectionRegionPh433Freq => '433 MHz';
+
+  @override
+  String get regionSelectionRegionPh868 => 'Philippines 868';
+
+  @override
+  String get regionSelectionRegionPh868Desc => 'Philippines';
+
+  @override
+  String get regionSelectionRegionPh868Freq => '868 MHz';
+
+  @override
+  String get regionSelectionRegionPh915 => 'Philippines 915';
+
+  @override
+  String get regionSelectionRegionPh915Desc => 'Philippines';
+
+  @override
+  String get regionSelectionRegionPh915Freq => '915 MHz';
+
+  @override
+  String get regionSelectionRegionAnz433 => 'ANZ 433';
+
+  @override
+  String get regionSelectionRegionAnz433Desc => 'Australia, New Zealand';
+
+  @override
+  String get regionSelectionRegionAnz433Freq => '433 MHz';
+
+  @override
+  String get regionSelectionRegionKz433 => 'Kazakhstan 433';
+
+  @override
+  String get regionSelectionRegionKz433Desc => 'Kazakhstan';
+
+  @override
+  String get regionSelectionRegionKz433Freq => '433 MHz';
+
+  @override
+  String get regionSelectionRegionKz863 => 'Kazakhstan 863';
+
+  @override
+  String get regionSelectionRegionKz863Desc => 'Kazakhstan';
+
+  @override
+  String get regionSelectionRegionKz863Freq => '863 MHz';
+
+  @override
+  String get regionSelectionRegionNp865 => 'Nepal 865';
+
+  @override
+  String get regionSelectionRegionNp865Desc => 'Nepal';
+
+  @override
+  String get regionSelectionRegionNp865Freq => '865 MHz';
+
+  @override
+  String get regionSelectionRegionBr902 => 'Brazil 902';
+
+  @override
+  String get regionSelectionRegionBr902Desc => 'Brazil';
+
+  @override
+  String get regionSelectionRegionBr902Freq => '902 MHz';
+
+  @override
+  String get regionSelectionRegionItu1_2m => 'ITU R1 2m';
+
+  @override
+  String get regionSelectionRegionItu1_2mDesc =>
+      'ITU Region 1 amateur radio 2m band';
+
+  @override
+  String get regionSelectionRegionItu1_2mFreq => '144-146 MHz';
+
+  @override
+  String get regionSelectionRegionItu23_2m => 'ITU R2/3 2m';
+
+  @override
+  String get regionSelectionRegionItu23_2mDesc =>
+      'ITU Region 2/3 amateur radio 2m band';
+
+  @override
+  String get regionSelectionRegionItu23_2mFreq => '144-148 MHz';
+
+  @override
+  String get regionSelectionRegionEu866 => 'EU 866';
+
+  @override
+  String get regionSelectionRegionEu866Desc => 'European Union 866MHz SRD';
+
+  @override
+  String get regionSelectionRegionEu866Freq => '866 MHz';
+
+  @override
+  String get regionSelectionRegionEu874 => 'EU 874';
+
+  @override
+  String get regionSelectionRegionEu874Desc => 'European Union 874MHz SRD';
+
+  @override
+  String get regionSelectionRegionEu874Freq => '874 MHz';
+
+  @override
+  String get regionSelectionRegionEu917 => 'EU 917';
+
+  @override
+  String get regionSelectionRegionEu917Desc => 'European Union 917MHz SRD';
+
+  @override
+  String get regionSelectionRegionEu917Freq => '917 MHz';
+
+  @override
+  String get regionSelectionRegionEuN868 => 'EU 868 Narrow';
+
+  @override
+  String get regionSelectionRegionEuN868Desc => 'European Union 868MHz narrow';
+
+  @override
+  String get regionSelectionRegionEuN868Freq => '868 MHz';
+
+  @override
   String get regionSelectionRegionMy433 => 'Malaysia 433';
 
   @override
@@ -14190,18 +14353,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scannerEnableAutoReconnectTitle => 'Enable Auto-Reconnect?';
 
   @override
-  String get scannerEnableBluetoothHint =>
-      'Make sure Bluetooth is enabled and your Meshtastic device is powered on';
-
-  @override
   String get scannerEnableLabel => 'Enable';
 
   @override
   String get scannerGattConnectionFailed =>
       'Connection failed. This can happen if the device was previously paired with another app. Go to Settings > Bluetooth, find the Meshtastic device, tap \"Forget\", then try again.';
-
-  @override
-  String get scannerLookingForDevices => 'Looking for devices…';
 
   @override
   String get scannerMeshCoreConnectionFailed => 'MeshCore connection failed';
@@ -14236,14 +14392,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get scannerScanningTitle => 'Scanning for nearby devices';
-
-  @override
-  String get scannerTipNoOtherApps =>
-      'Ensure no other app (e.g. official Meshtastic app) is connected to this device';
-
-  @override
-  String get scannerTipNoOtherDevices =>
-      'Ensure no other phone or tablet is already connected to the device via Bluetooth';
 
   @override
   String get scannerTransportBluetooth => 'Bluetooth';
@@ -15453,7 +15601,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Browse recent features and updates';
 
   @override
-  String get settingsTileWhatsNewTitle => 'What’s New';
+  String get settingsTileWhatsNewTitle => 'What\'s New';
 
   @override
   String get settingsTitle => 'Settings';
@@ -23364,7 +23512,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appearanceFontSystem => 'System';
 
   @override
-  String get appearanceFontSystemDesc => 'Your device’s default font';
+  String get appearanceFontSystemDesc => 'Your device\'s default font';
 
   @override
   String get appearanceFontAccessibility => 'Accessibility';
@@ -23527,7 +23675,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appearanceTimeFormatSystemDesc =>
-      'Follow your device’s clock setting';
+      'Follow your device\'s clock setting';
 
   @override
   String get appearanceTimeFormat12h => '12-hour';
@@ -24262,46 +24410,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get radioConfigRegionEu868 => 'EU 868';
 
   @override
-  String get radioConfigRegionChina => 'China';
-
-  @override
-  String get radioConfigRegionJapan => 'Japan';
-
-  @override
   String get radioConfigRegionAnz => 'ANZ';
 
   @override
-  String get radioConfigRegionKorea => 'Korea';
-
-  @override
-  String get radioConfigRegionTaiwan => 'Taiwan';
-
-  @override
-  String get radioConfigRegionRussia => 'Russia';
-
-  @override
-  String get radioConfigRegionIndia => 'India';
-
-  @override
   String get radioConfigRegionNz865 => 'NZ 865';
-
-  @override
-  String get radioConfigRegionThailand => 'Thailand';
-
-  @override
-  String get radioConfigRegionUkraine433 => 'Ukraine 433';
-
-  @override
-  String get radioConfigRegionUkraine868 => 'Ukraine 868';
 
   @override
   String get radioConfigRegionMalaysia433 => 'Malaysia 433';
 
   @override
   String get radioConfigRegionMalaysia919 => 'Malaysia 919';
-
-  @override
-  String get radioConfigRegionSingapore => 'Singapore';
 
   @override
   String get radioConfigRegionLora24 => 'LoRa 2.4GHz';
@@ -24365,6 +24483,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get radioConfigPresetLongTurboDesc => 'Long range with turbo speed';
+
+  @override
+  String get radioConfigPresetLiteFast => 'Lite Fast';
+
+  @override
+  String get radioConfigPresetLiteFastDesc => 'EU 866MHz SRD, fast';
+
+  @override
+  String get radioConfigPresetLiteSlow => 'Lite Slow';
+
+  @override
+  String get radioConfigPresetLiteSlowDesc => 'EU 866MHz SRD, longer range';
+
+  @override
+  String get radioConfigPresetNarrowFast => 'Narrow Fast';
+
+  @override
+  String get radioConfigPresetNarrowFastDesc => 'EU 868MHz narrow, fast';
+
+  @override
+  String get radioConfigPresetNarrowSlow => 'Narrow Slow';
+
+  @override
+  String get radioConfigPresetNarrowSlowDesc =>
+      'EU 868MHz narrow, longer range';
 
   @override
   String get radioConfigPresetMustMatch =>
@@ -25792,6 +25935,203 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dataExportSnrNotAvailable => 'N/A';
 
   @override
+  String get dataExportCompleteWarningTitle => 'Save your export safely';
+
+  @override
+  String get dataExportCompleteWarningBody =>
+      'This file contains every direct message you\'ve sent and received, all node positions, and the full node list. Anyone with the file can read your messages and see where you\'ve been. Save it to a secure location.';
+
+  @override
+  String get dataExportCompleteWarningContinueBtn => 'Export everything';
+
+  @override
+  String get dataExportCompleteWarningCancelBtn => 'Cancel';
+
+  @override
+  String get dataExportSectionDeviceConfig => 'Device Configuration';
+
+  @override
+  String get dataExportDeviceConfigBackupTitle => 'Backup Device Config';
+
+  @override
+  String get dataExportDeviceConfigBackupSubtitle =>
+      'Channels, LoRa, modules, owner';
+
+  @override
+  String get dataExportDeviceConfigRestoreTitle => 'Restore Device Config';
+
+  @override
+  String get dataExportDeviceConfigRestoreSubtitle =>
+      'Apply a saved backup to this device';
+
+  @override
+  String get dataExportDeviceConfigFormatJson => 'JSON';
+
+  @override
+  String get dataExportDeviceConfigFormatImport => 'IMPORT';
+
+  @override
+  String get dataExportDeviceConfigBackupWarningTitle =>
+      'Save your backup safely';
+
+  @override
+  String get dataExportDeviceConfigBackupWarningBody =>
+      'This file contains your channel keys (PSKs) and device settings. Anyone with the file can decrypt your channel traffic. Save it to a secure location.';
+
+  @override
+  String get dataExportDeviceConfigBackupContinueBtn => 'Export backup';
+
+  @override
+  String get dataExportDeviceConfigBackupCancelBtn => 'Cancel';
+
+  @override
+  String get dataExportDeviceConfigBackupNotConnected =>
+      'Connect to a device before backing up its config.';
+
+  @override
+  String dataExportDeviceConfigBackupPartial(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString sections were unavailable',
+      one: '1 section was unavailable',
+    );
+    return 'Backup saved. $_temp0 and not included.';
+  }
+
+  @override
+  String dataExportDeviceConfigBackupFailed(String error) {
+    return 'Failed to capture device config: $error';
+  }
+
+  @override
+  String get dataExportDeviceConfigBackupShareSubject =>
+      'Socialmesh Device Config Backup';
+
+  @override
+  String get dataExportDeviceConfigRestoreSheetTitle => 'Restore Device Config';
+
+  @override
+  String get dataExportDeviceConfigRestoreSheetBody =>
+      'Choose which sections to apply to this device. Each section is sent to the device separately and may trigger a reboot.';
+
+  @override
+  String get dataExportDeviceConfigRestoreToggleChannels => 'Channels';
+
+  @override
+  String get dataExportDeviceConfigRestoreToggleRadio => 'Radio settings';
+
+  @override
+  String get dataExportDeviceConfigRestoreToggleModules => 'Module configs';
+
+  @override
+  String get dataExportDeviceConfigRestoreToggleOwner => 'Owner name';
+
+  @override
+  String get dataExportDeviceConfigRestoreApplyBtn => 'Apply restore';
+
+  @override
+  String get dataExportDeviceConfigRestoreNodeMismatch =>
+      'This backup is from a different node. Channels and owner will be applied as-is.';
+
+  @override
+  String get dataExportDeviceConfigRestoreInvalidFile =>
+      'That file is not a valid Socialmesh device config backup.';
+
+  @override
+  String get dataExportDeviceConfigRestoreEmpty =>
+      'The backup file contains no sections to restore.';
+
+  @override
+  String get dataExportDeviceConfigRestoreNotConnected =>
+      'Connect to a device before restoring its config.';
+
+  @override
+  String dataExportDeviceConfigRestoreSummary(int applied, int total) {
+    final intl.NumberFormat appliedNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String appliedString = appliedNumberFormat.format(applied);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return 'Applied $appliedString of $totalString.';
+  }
+
+  @override
+  String dataExportDeviceConfigRestoreSummaryWithFailures(
+    int applied,
+    int total,
+    int failed,
+  ) {
+    final intl.NumberFormat appliedNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String appliedString = appliedNumberFormat.format(applied);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+    final intl.NumberFormat failedNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String failedString = failedNumberFormat.format(failed);
+
+    return 'Applied $appliedString of $totalString. $failedString failed.';
+  }
+
+  @override
+  String get dataExportDeviceConfigRestoreNoSelection =>
+      'Select at least one section to restore.';
+
+  @override
+  String dataExportDeviceConfigRestoreFromMetadata(String metadata) {
+    return 'From: $metadata';
+  }
+
+  @override
+  String dataExportDeviceConfigRestoreCreatedAt(String date) {
+    return 'Saved: $date';
+  }
+
+  @override
+  String dataExportDeviceConfigRestoreChannelsCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString channels',
+      one: '1 channel',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String dataExportDeviceConfigRestoreModulesCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString modules',
+      one: '1 module',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dataExportDeviceConfigRestoreRadioPresent => 'Included';
+
+  @override
+  String get dataExportDeviceConfigRestoreRadioMissing => 'Not in backup';
+
+  @override
   String get deviceMgmtTitle => 'Device Management';
 
   @override
@@ -26740,6 +27080,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mqttProxyDiagnosticsCopied => 'Diagnostics copied to clipboard';
+
+  @override
+  String get mqttProxyBannerNotConnectedTitle => 'MQTT proxy not connected';
+
+  @override
+  String get mqttProxyBannerNotConnectedHint =>
+      'The app couldn\'t reach the broker. Check the diagnostics below for the last error.';
 
   @override
   String get securityConfigTitle => 'Security';
@@ -30351,6 +30698,30 @@ class AppLocalizationsEn extends AppLocalizations {
       'Live telemetry from the node: battery percentage, hardware model, firmware version, channel utilization, and uptime. This data is only available when the node is actively heard on the mesh.';
 
   @override
+  String get helpNodeDexSectionTraitEvidence =>
+      'The observations that most strongly support the primary trait assigned above. Each bullet is a concrete signal drawn from encounter history — co-seen connections, tenure, mobility, signal consistency, and timing. These are the inputs that drove the confidence score.';
+
+  @override
+  String get helpNodeDexSectionAdditionalTraits =>
+      'Other behavioral archetypes that also scored for this node, ranked by confidence. A node rarely fits a single archetype perfectly — secondary traits reveal nuance, like an Anchor that also acts as a Beacon, or a Drifter with Sentinel-like stretches.';
+
+  @override
+  String get helpNodeDexSectionPetCompanionSelf =>
+      'Your NodePet lives with your node and evolves locally from your care and mesh activity.';
+
+  @override
+  String get helpNodeDexSectionPetCompanionRemote =>
+      'If this node shares a companion summary, it can appear here. Full companion state stays local to its owner.';
+
+  @override
+  String get helpNodeDexSectionMrrpServices =>
+      'MRRP (Mesh Request-Response Protocol) services this node advertises. Each service ID represents a capability the node exposes over the mesh, such as a message board, profile exchange, or meetup coordination. Tap any ID to learn more about that specific service.';
+
+  @override
+  String get helpNodeDexSectionFieldNote =>
+      'A short, deterministic journal entry generated from this node\'s identity and primary trait — like a naturalist\'s field observation. The same node always produces the same note; it never changes, and it never travels over the mesh.';
+
+  @override
   String get helpNodeDexSectionAlbumRarity =>
       'Rarity tiers are computed from encounter count and inferred trait. Common nodes have few encounters, while Legendary nodes combine rare traits with deep observation history. Rarity determines the card border color and holographic shimmer intensity.';
 
@@ -31635,7 +32006,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Connect your device to use this feature';
 
   @override
-  String get sipBadgeLabel => 'Socialmesh';
+  String get sipBadgeLabel => 'Handshake';
 
   @override
   String get sipIdentityStateUnverified => 'Unverified';
@@ -31681,7 +32052,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sipDiscoveryNoPeersDescription =>
-      'People using Socialmesh will appear here when they’re in range.';
+      'People using Handshake will appear here when they\'re in range.';
 
   @override
   String get sipDiscoveryScanButton => 'Look for people';
@@ -31712,7 +32083,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sipHandshakeFailed => 'Could not connect';
 
   @override
-  String get sipHandshakePendingLabel => 'Request sent';
+  String get sipHandshakePendingLabel => 'Wants to connect';
 
   @override
   String get sipRequestIdentity => 'Request Identity';
@@ -31729,36 +32100,454 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get sipDmPinned => 'Session pinned';
-
-  @override
   String get sipDmInputHint => 'Message…';
 
   @override
   String get sipDmSendButton => 'Send';
 
   @override
+  String get sipDmJumpToLatest => 'Jump to latest';
+
+  @override
   String get sipDmEmptyState => 'No messages yet';
 
   @override
   String get sipDmEmptyDescription =>
-      'Send a message to start the conversation.';
+      'Send text, sketches, or start a tiny game.';
 
   @override
   String get sipDmBudgetExhausted =>
       'Sending paused — mesh bandwidth limit reached. Try again shortly.';
 
   @override
+  String get sipDmPeerBlocked =>
+      'You\'ve blocked this node — unblock from SIP Hub to send messages again.';
+
+  @override
+  String get sipDmPeerRateLimited =>
+      'Sending too fast — slow down for a moment.';
+
+  @override
   String get sipDmSessionClosed => 'This conversation has ended.';
 
   @override
-  String get sipDmPinAction => 'Pin Session';
-
-  @override
-  String get sipDmUnpinAction => 'Unpin Session';
+  String sipDmTextTooLong(int maxBytes) {
+    return 'Message is too long. Trim it to fit the $maxBytes-byte limit.';
+  }
 
   @override
   String get sipDmCloseAction => 'Close Session';
+
+  @override
+  String get sipDmMenuMute => 'Mute notifications';
+
+  @override
+  String get sipDmMenuUnmute => 'Unmute notifications';
+
+  @override
+  String get sipDmMenuBlock => 'Block';
+
+  @override
+  String get sipDmMenuResetSecure => 'Reset secure connection';
+
+  @override
+  String get sipDmMenuRemove => 'Remove conversation';
+
+  @override
+  String get sipDmBlockConfirmTitle => 'Block this node?';
+
+  @override
+  String get sipDmBlockConfirmBody =>
+      'Future messages and handshake requests from this node will be silently dropped. They won\'t be notified. Your existing conversation history stays on this device — use Remove conversation to clear it.';
+
+  @override
+  String get sipDmBlockConfirmAction => 'Block';
+
+  @override
+  String get sipDmResetConfirmTitle => 'Reset secure session?';
+
+  @override
+  String get sipDmResetConfirmBody =>
+      'Drops the current end-to-end keys with this peer. The next message you send will renegotiate fresh keys. Your message history stays untouched.';
+
+  @override
+  String get sipDmResetConfirmAction => 'Reset';
+
+  @override
+  String get sipDmRemoveConfirmTitle => 'Remove this conversation?';
+
+  @override
+  String get sipDmRemoveConfirmBody =>
+      'Deletes every message in this conversation from this device. The peer is not notified and can still send you new messages unless you also Block them. This cannot be undone.';
+
+  @override
+  String get sipDmRemoveConfirmAction => 'Remove';
+
+  @override
+  String get sipDmConfirmCancel => 'Cancel';
+
+  @override
+  String get sipDmActionMutedSnack =>
+      'Notifications muted for this conversation';
+
+  @override
+  String get sipDmActionUnmutedSnack => 'Notifications re-enabled';
+
+  @override
+  String get sipDmActionResetSnack =>
+      'Secure session reset — next message will renegotiate keys';
+
+  @override
+  String get sipPlayComposerLabel => 'Play';
+
+  @override
+  String get sipPlayPanelCardSending => 'Sending offer…';
+
+  @override
+  String get sipPlayDuplicateOfferBlocked =>
+      'A game offer is already in progress';
+
+  @override
+  String get sipPlayLifecycleSent => 'Offer sent';
+
+  @override
+  String get sipPlayLifecycleAccepted => 'Offer accepted';
+
+  @override
+  String get sipPlayLifecycleDeclined => 'Offer declined';
+
+  @override
+  String get sipPlayLifecycleExpired => 'Offer expired';
+
+  @override
+  String get sipPlayPanelTitle => 'Play a game';
+
+  @override
+  String get sipPlayPanelSubtitle =>
+      'Tiny turn-based games sent as mesh-safe moves.';
+
+  @override
+  String get sipPlayPanelTttSupporting => 'Send only tiny moves over the mesh.';
+
+  @override
+  String get sipPlayPanelTttSizeBadge => 'Tiny moves • ~7 bytes';
+
+  @override
+  String get sipPlayPanelC4Supporting =>
+      'Drop discs into a column. First to four-in-a-row wins.';
+
+  @override
+  String get sipPlayPanelC4SizeBadge => 'Tiny moves • ~7 bytes';
+
+  @override
+  String get sipPlayPanelGameInProgressTitle => 'Game in progress';
+
+  @override
+  String get sipPlayPanelGameInProgressBody =>
+      'Scroll to your active game in the conversation, or start another.';
+
+  @override
+  String get sipPlayPanelGameInProgressJump => 'Jump to game';
+
+  @override
+  String get sipDmOverflowSectionPreferences => 'PREFERENCES';
+
+  @override
+  String get sipDmOverflowSectionSafety => 'SAFETY';
+
+  @override
+  String get sipDmOverflowSectionSession => 'SESSION';
+
+  @override
+  String get sipDmOverflowSectionData => 'DATA';
+
+  @override
+  String get sipPlayPickerTitle => 'Choose a game';
+
+  @override
+  String get sipPlayPickerSubtitle =>
+      'Tap a game to send an offer to this conversation. Both sides need to accept before play starts.';
+
+  @override
+  String get sipPlayGameTicTacToe => 'Tic-Tac-Toe';
+
+  @override
+  String get sipPlayGameTicTacToeDescription =>
+      'Classic 3x3. You place X if you offered, O if you accepted.';
+
+  @override
+  String get sipPlayGameConnectFour => 'Connect Four';
+
+  @override
+  String get sipPlayGameConnectFourDescription =>
+      '6x7 grid. Drop discs into a column. First to four-in-a-row wins.';
+
+  @override
+  String get sipPlayUnsupportedGame => 'Unsupported game';
+
+  @override
+  String get sipPlayUnsupportedGameBody =>
+      'This conversation includes a game your build doesn\'t recognize. The original sender\'s app may be newer.';
+
+  @override
+  String get sipPlayMalformedTitle => 'Game data unreadable';
+
+  @override
+  String sipPlayOfferOutgoingTitle(String game) {
+    return 'You offered $game';
+  }
+
+  @override
+  String sipPlayOfferIncomingTitle(String game) {
+    return '$game — they want to play';
+  }
+
+  @override
+  String get sipPlayOfferAccept => 'Accept';
+
+  @override
+  String get sipPlayOfferDecline => 'Decline';
+
+  @override
+  String get sipPlayResign => 'Resign';
+
+  @override
+  String get sipPlayResignConfirmTitle => 'Resign this game?';
+
+  @override
+  String get sipPlayResignConfirmBody =>
+      'Resigning ends the game. The other player wins. You can offer a new game any time.';
+
+  @override
+  String get sipPlayResignConfirmAction => 'Resign';
+
+  @override
+  String get sipPlayResignConfirmCancel => 'Cancel';
+
+  @override
+  String get sipPlayStatusYourTurn => 'Your turn';
+
+  @override
+  String get sipPlayStatusTheirTurn => 'Their turn';
+
+  @override
+  String get sipPlayStatusYouWon => 'You won';
+
+  @override
+  String get sipPlayStatusTheyWon => 'They won';
+
+  @override
+  String get sipPlayStatusDraw => 'Draw';
+
+  @override
+  String get sipPlayStatusYouResigned => 'You resigned';
+
+  @override
+  String get sipPlayStatusTheyResigned => 'They resigned';
+
+  @override
+  String get sipPlayStatusYouDeclined => 'You declined the offer';
+
+  @override
+  String get sipPlayStatusTheyDeclined => 'They declined the offer';
+
+  @override
+  String get sipDmComposerModeText => 'Text';
+
+  @override
+  String get sipDmComposerModeSketch => 'Sketch';
+
+  @override
+  String get sipDmComposerModePlay => 'Play';
+
+  @override
+  String get sipDmComposerModeSignal => 'Signal';
+
+  @override
+  String get sipDmComposerSheetTitle => 'Compose';
+
+  @override
+  String get sipDmComposerSheetTooltip => 'Open compose options';
+
+  @override
+  String get sipSignalPanelTitle => 'Send a signal';
+
+  @override
+  String get sipSignalPanelSubtitle =>
+      'A short musical phrase or a Morse message — synthesized locally on both sides.';
+
+  @override
+  String get sipSignalSubModeTone => 'Tone';
+
+  @override
+  String get sipSignalSubModeMorse => 'Morse';
+
+  @override
+  String get sipSignalToneEmpty => 'Tap pads to compose a phrase';
+
+  @override
+  String get sipSignalToneInstrument => 'Instrument';
+
+  @override
+  String get sipSignalInstrumentSine => 'Sine';
+
+  @override
+  String get sipSignalInstrumentBell => 'Bell';
+
+  @override
+  String get sipSignalInstrumentPluck => 'Pluck';
+
+  @override
+  String get sipSignalInstrumentChirp => 'Chirp';
+
+  @override
+  String get sipSignalActionClear => 'Clear';
+
+  @override
+  String get sipSignalActionPreview => 'Preview';
+
+  @override
+  String get sipSignalActionSend => 'Send';
+
+  @override
+  String get sipSignalReplay => 'Replay';
+
+  @override
+  String get sipSignalToneSizeBadge => 'Tiny signal • ~20–32 bytes';
+
+  @override
+  String get sipSignalMorseSizeBadge => 'Tiny Morse • ~20–60 bytes';
+
+  @override
+  String sipSignalSizeBytes(int bytes) {
+    return 'Signal • $bytes B';
+  }
+
+  @override
+  String sipSignalSizeOverBudget(int bytes) {
+    return 'Signal • $bytes B — too large to send';
+  }
+
+  @override
+  String sipSignalToneFull(int count, int max) {
+    return '$count/$max notes • Phrase full';
+  }
+
+  @override
+  String get sipSignalMorseInputTap => 'Tap';
+
+  @override
+  String get sipSignalMorseInputType => 'Type';
+
+  @override
+  String get sipSignalMorseTapHint =>
+      'Tap dots and dashes — Letter finalises a glyph, Space adds a word gap.';
+
+  @override
+  String get sipSignalMorseTapEmpty => 'Decoded message will appear here.';
+
+  @override
+  String get sipSignalMorseTapDecodedLabel => 'Decoded';
+
+  @override
+  String get sipSignalMorseTapPatternLabel => 'Morse';
+
+  @override
+  String get sipSignalMorseTapDot => 'Dot';
+
+  @override
+  String get sipSignalMorseTapDash => 'Dash';
+
+  @override
+  String get sipSignalMorseTapLetter => 'Letter';
+
+  @override
+  String get sipSignalMorseTapSpace => 'Space';
+
+  @override
+  String get sipSignalMorseTapBackspace => 'Back';
+
+  @override
+  String get sipSignalMorseTapInvalidNote =>
+      'Unknown sequences are shown as ? — they\'re skipped on send.';
+
+  @override
+  String get sipSignalToneExampleCloseEncounters => 'Close Encounters';
+
+  @override
+  String get sipSignalToneExampleHint => 'Try the example';
+
+  @override
+  String get sipDmSignalReplyPlaceholder => '📡 Signal';
+
+  @override
+  String get sipDmConversationPreviewPhrase => '🎵 Tone';
+
+  @override
+  String get sipDmConversationPreviewMorse => '📡 Morse';
+
+  @override
+  String get sipDmConversationPreviewGame => '🎮 Game';
+
+  @override
+  String get sipSignalMorseHint =>
+      'Type up to 40 characters. A–Z, 0–9, space, and . , ? ! / @ are supported.';
+
+  @override
+  String get sipSignalMorsePlaceholder => 'Type your message…';
+
+  @override
+  String get sipSignalMorseUnsupportedNote =>
+      'Some characters won\'t be sent — only A–Z, 0–9, space, and . , ? ! / @ are allowed.';
+
+  @override
+  String get sipSignalBubblePhraseLabel => 'Phrase';
+
+  @override
+  String get sipSignalBubbleMorseLabel => 'Morse';
+
+  @override
+  String get sipSignalBubbleMalformed => 'Signal can\'t be read';
+
+  @override
+  String get sipInkComposerHint =>
+      'Draw a quick sketch — kept tiny so it fits on the mesh.';
+
+  @override
+  String get sipInkComposerHintOver =>
+      'Strokes past the dashed line won\'t fit on the mesh and won\'t be sent.';
+
+  @override
+  String sipInkPointBudget(int points, int maxPoints) {
+    return '$points / $maxPoints points';
+  }
+
+  @override
+  String sipInkPayloadUsage(int bytes, int maxBytes) {
+    return '$bytes / $maxBytes B';
+  }
+
+  @override
+  String get sipInkClear => 'Clear';
+
+  @override
+  String get sipInkUndo => 'Undo';
+
+  @override
+  String get sipInkSend => 'Send';
+
+  @override
+  String get sipDmInkReplyPlaceholder => '🎨 Sketch';
+
+  @override
+  String get sipInkUnsupportedPeer => 'This peer can\'t receive sketches yet.';
+
+  @override
+  String get sipInkUnsupportedSketch => 'Unsupported sketch';
+
+  @override
+  String get sipInkBlocked =>
+      'Sketch can\'t fit on the mesh — simplify your strokes.';
 
   @override
   String get sipDmOpenAction => 'Open DM';
@@ -31839,7 +32628,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sipCountersTitle => 'SIP Debug Counters';
 
   @override
-  String get sipHubTitle => 'Socialmesh';
+  String get sipHubTitle => 'Handshake';
 
   @override
   String get sipHubSectionPeers => 'People';
@@ -31849,6 +32638,32 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sipHubSectionIncomingRequests => 'Connection requests';
+
+  @override
+  String get sipHubSectionBlocked => 'Blocked';
+
+  @override
+  String get sipHubBlockedEmptySubtitle =>
+      'Tap to expand and review who you\'ve blocked';
+
+  @override
+  String get sipHubUnblockAction => 'Unblock';
+
+  @override
+  String get sipHubUnblockConfirmTitle => 'Unblock this node?';
+
+  @override
+  String get sipHubUnblockConfirmBody =>
+      'This node will be able to send you handshake requests, messages, and sketches again. Your previous conversation history with them is unchanged.';
+
+  @override
+  String get sipHubUnblockConfirmAction => 'Unblock';
+
+  @override
+  String get sipHubUnblockConfirmCancel => 'Cancel';
+
+  @override
+  String get sipHubBlockedPeerSubtitle => 'Inbound traffic silently dropped';
 
   @override
   String get sipHubSectionYourServices => 'Your Services';
@@ -31887,52 +32702,96 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get sipHubIncomingRequestWantsToConnect => 'wants to connect';
+
+  @override
+  String get sipHubIncomingRequestLiveLabel => 'Live';
+
+  @override
   String get sipHubAccept => 'Accept';
 
   @override
   String get sipHubDecline => 'Decline';
 
   @override
-  String get sipHubEmptyTitle => 'No peers nearby';
+  String get sipHubBlock => 'Block';
+
+  @override
+  String get sipHubConsentBody =>
+      'Accepting lets this node send you encrypted direct messages and sketches over the mesh. You can mute, block, or remove the conversation at any time.';
+
+  @override
+  String get sipHubBlockConfirmTitle => 'Block this node?';
+
+  @override
+  String get sipHubBlockConfirmBody =>
+      'Future messages and handshake requests from this node will be silently dropped. They won\'t be notified — they\'ll see your node as unreachable. You can unblock from Trust & Safety settings later.';
+
+  @override
+  String get sipHubBlockConfirmAction => 'Block';
+
+  @override
+  String get sipHubBlockConfirmCancel => 'Cancel';
+
+  @override
+  String get meshExplorerBlockConfirmTitle => 'Block this node?';
+
+  @override
+  String get meshExplorerBlockConfirmBody =>
+      'Future messages and handshake requests from this node will be silently dropped. They won\'t be notified. You can unblock from Trust & Safety settings later.';
+
+  @override
+  String get sipDmFirstContactBannerTitle => 'First contact';
+
+  @override
+  String get sipDmFirstContactBannerBody =>
+      'This is your first conversation with this node. Only accept messages from people you trust on the mesh. Tap to dismiss.';
+
+  @override
+  String get sipHubEmptyTitle => 'Looking for neighbors';
 
   @override
   String get sipHubEmptyDescription =>
-      'Tap Scan to look for other Socialmesh users on the mesh.';
+      'Tap Look for people to send a roll-call to other Handshake users on your mesh. Anyone in range with the app open will reply within a few seconds.';
 
   @override
-  String get sipHubScanningTitlePrefix => 'No peers ';
+  String get sipHubScanningTitlePrefix => 'Looking for ';
 
   @override
-  String get sipHubScanningTitleKeyword => 'nearby';
+  String get sipHubScanningTitleKeyword => 'neighbors';
 
   @override
   String get sipHubScanningTitleSuffix => '';
 
   @override
-  String get sipHubScanningTagline1 => 'Listening for nearby users…';
+  String get sipHubScanningTagline1 =>
+      'Listening on your mesh for other Handshake users.\nKeep your node connected and any peers nearby will surface here.';
 
   @override
-  String get sipHubScanningTagline2 => 'Tap Look for people to send a signal…';
+  String get sipHubScanningTagline2 =>
+      'Tap Look for people to send a quick roll-call.\nNearby Handshake users typically reply within a few seconds.';
 
   @override
-  String get sipHubScanningTagline3 => 'Others will appear when found…';
+  String get sipHubScanningTagline3 =>
+      'Peers show up automatically when their discovery beacons\nreach your node — no need to tap anything to find them.';
 
   @override
-  String get sipHubScanningTagline4 => 'Keep the app open to discover more…';
+  String get sipHubScanningTagline4 =>
+      'Discovery runs while the app is open and your node is active.\nMove around or scan again if no one is around just yet.';
 
   @override
   String get sipHubHelp => 'Help';
 
   @override
-  String get helpSipHubOverviewTitle => 'Socialmesh';
+  String get helpSipHubOverviewTitle => 'Handshake';
 
   @override
   String get helpSipHubOverviewDescription =>
-      'Discover and chat with nearby Socialmesh peers';
+      'Discover and chat with nearby Handshake peers';
 
   @override
   String get helpSipHubIntroBubble =>
-      'Welcome to **Socialmesh**! This is your peer discovery hub. Nearby devices running Socialmesh appear here once they beacon or respond to a rollcall.';
+      'Welcome to **Handshake**! This is your peer discovery hub. Nearby devices running Handshake appear here once they beacon or respond to a rollcall.';
 
   @override
   String get helpSipHubScanBubble =>
@@ -31971,9 +32830,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get sipHubSessionPinned => 'Pinned';
-
-  @override
   String get sipHubNoMessages => 'No messages yet';
 
   @override
@@ -31989,6 +32845,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sipAutoScanToggle => 'Auto-scan';
+
+  @override
+  String get sipScanNow => 'Scan now';
 
   @override
   String get sipScanningIndicator => 'Scanning…';
@@ -32661,7 +33520,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationSipPeerFoundBody =>
-      'A Socialmesh peer is in range. Open Mesh Explorer to connect.';
+      'A Handshake peer is in range. Open Handshake to connect.';
 
   @override
   String get notificationChannelSipDiscovery => 'Peer Discovery';
@@ -33174,7 +34033,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not update this share right now.';
 
   @override
-  String get serviceDetailFetchingInstances => 'Loading what’s being shared…';
+  String get serviceDetailFetchingInstances => 'Loading what\'s being shared…';
 
   @override
   String get serviceDetailFetchFailed =>
@@ -34810,7 +35669,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deliveryPhaseWaitingForPathDesc =>
-      'The mesh hasn’t found a route yet. Delivery will continue automatically.';
+      'The mesh hasn\'t found a route yet. Delivery will continue automatically.';
 
   @override
   String get deliveryPhaseDelivering => 'Delivering';
@@ -34963,17 +35822,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serviceWizardAudienceContactsDesc =>
-      'Only people you’ve exchanged contacts with';
+      'Only people you\'ve exchanged contacts with';
 
   @override
   String get serviceWizardReviewTitle => 'Before you write';
 
   @override
   String get serviceWizardReviewSubtitle =>
-      'This is the shape of the share you’re about to compose.';
+      'This is the shape of the share you\'re about to compose.';
 
   @override
-  String get serviceWizardReviewType => 'You’re sharing';
+  String get serviceWizardReviewType => 'You\'re sharing';
 
   @override
   String get serviceWizardReviewPreset => 'Starting point';
@@ -35347,6 +36206,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'Message reactions are now grouped by emoji — if five people send a thumbs-up, you see one compact chip instead of five. Long-press any reaction to see every sender.\n\nReactions also wrap to the next line instead of overflowing off-screen, keeping the conversation tidy.';
 
   @override
+  String get whatsNewVersion1360Subtitle => 'Version 1.36.0';
+
+  @override
+  String get whatsNewDeviceShopTitle => 'Device Shop';
+
+  @override
+  String get whatsNewDeviceShopDescription =>
+      'Browse Meshtastic-compatible hardware from official partners and trusted sellers — all in one place. Filter by category, sort by price or new arrivals, and tap through to the seller\'s store to buy.\n\nPurchases happen on the seller\'s site; Socialmesh never handles payment, shipping, or returns. Find it in the drawer menu under Tools.';
+
+  @override
+  String get whatsNewCtaOpenDeviceShop => 'Open Device Shop';
+
+  @override
   String get meshFeedTitle => 'Mesh Feed';
 
   @override
@@ -35504,31 +36376,100 @@ class AppLocalizationsEn extends AppLocalizations {
   String get petScreenTitle => 'NodePet';
 
   @override
-  String get petActionCharge => 'Charge';
+  String get petActionCharge => 'Feed';
 
   @override
-  String get petActionSurge => 'Surge';
+  String get petActionSurge => 'Overfeed';
 
   @override
-  String get petActionResonate => 'Resonate';
+  String get petActionResonate => 'Play';
 
   @override
-  String get petActionStabilise => 'Stabilise';
+  String get petActionStabilise => 'Clean';
 
   @override
-  String get petActionSync => 'Sync';
+  String get petActionPurge => 'Medicine';
 
   @override
-  String get petActionPurge => 'Purge';
+  String get petActionDim => 'Sleep';
 
   @override
-  String get petActionDim => 'Dim';
+  String get petActionInspect => 'Status';
 
   @override
-  String get petActionInspect => 'Inspect';
+  String get petActionReSigil => 'Revive';
 
   @override
-  String get petActionReSigil => 'Re-sigil';
+  String get petOnboardingPage1Title => 'Meet your pet';
+
+  @override
+  String get petOnboardingPage1Body =>
+      'A digital companion that hatches from your node\'s signature and grows over time. The better you care for it, the healthier it stays.';
+
+  @override
+  String get petOnboardingPage2Title => 'The status line tells you what to do';
+
+  @override
+  String get petOnboardingPage2Body =>
+      'Above your pet, a single status line says exactly what it needs and names the button to tap — Charge when hungry, Resonate when lonely, Stabilise when messy, Purge when sick, Dim at bedtime. The matching button also pulses so you can\'t miss it.';
+
+  @override
+  String get petOnboardingPage3Title => 'Check in anytime';
+
+  @override
+  String get petOnboardingPage3Body =>
+      'Tap Inspect to see energy, mood, stability and recent events. Your pet won\'t time-out if you miss a day, but consistent care earns it a better branch — open the help sheet anytime for the full action guide.';
+
+  @override
+  String get petOnboardingNext => 'Next';
+
+  @override
+  String get petOnboardingSkip => 'Skip';
+
+  @override
+  String get petOnboardingFinish => 'Got it';
+
+  @override
+  String get petOnboardingHelpHint => 'Full action guide';
+
+  @override
+  String get petGuideSheetTitle => 'Action Guide';
+
+  @override
+  String get petGuideSheetIntro =>
+      'Each action does one specific thing. When the pet beeps for attention (pulsing icon), tap the matching action — Feed for hunger, Play for loneliness, Clean for a mess, Sleep for bedtime, or Medicine for sickness — and the beep clears automatically.';
+
+  @override
+  String get petActionChargeDescription =>
+      'Feeds the pet. +3 energy. Answers a Hungry call.';
+
+  @override
+  String get petActionSurgeDescription =>
+      'Overfeeds. Long-press Feed for +5 energy, but adds instability — too many overfeeds can make the pet sick. Answers a Hungry call.';
+
+  @override
+  String get petActionResonateDescription =>
+      'Plays with the pet. +3 mood. Answers a Lonely call.';
+
+  @override
+  String get petActionStabiliseDescription =>
+      'Cleans up. Removes the distortion artefact on the field. +2 stability. Answers a Hygiene call.';
+
+  @override
+  String get petActionPurgeDescription =>
+      'Medicine. Removes sickness and drops instability. Only valid while the pet is sick.';
+
+  @override
+  String get petActionDimDescription =>
+      'Puts the pet to sleep. Only valid inside the sleep window (or when the pet is yawning). Answers a Bedtime call.';
+
+  @override
+  String get petActionInspectDescription =>
+      'Opens a read-only status sheet showing identity, stats, and recent events. No stat change.';
+
+  @override
+  String get petActionReSigilDescription =>
+      'Revives a dormant pet with a fresh sigil. Only available after the pet has gone dormant.';
 
   @override
   String get petStageEgg => 'Egg';
@@ -35611,26 +36552,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get petCallBannerHungry =>
-      'Low on energy — Charge or Surge to answer.';
+      'Low on energy — Feed or Overfeed to answer.';
 
   @override
-  String get petCallBannerLonely => 'Wants attention — Resonate to answer.';
+  String get petCallBannerLonely => 'Wants attention — Play to answer.';
 
   @override
-  String get petCallBannerSick => 'Feeling unwell — Purge to answer.';
+  String get petCallBannerSick => 'Feeling unwell — Medicine to answer.';
 
   @override
-  String get petCallBannerHygiene => 'Field is unstable — Stabilise to clear.';
+  String get petCallBannerHygiene => 'Made a mess — Clean to remove.';
 
   @override
   String get petCallBannerBedtime =>
-      'It\'s almost time to rest — Dim to answer.';
+      'It\'s almost time to rest — Sleep to answer.';
 
   @override
-  String get petCallBannerBoredom => 'Restless — Resonate to answer.';
+  String get petCallBannerBoredom => 'Restless — Play to answer.';
 
   @override
-  String get petInspectTitle => 'Inspect';
+  String get petInspectTitle => 'Status';
 
   @override
   String get petInspectSectionIdentity => 'Identity';
@@ -35706,28 +36647,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get petEventHatched => 'Hatched';
 
   @override
-  String get petEventCharged => 'Charged';
+  String get petEventCharged => 'Fed';
 
   @override
-  String get petEventSurged => 'Surged';
+  String get petEventSurged => 'Overfed';
 
   @override
-  String get petEventResonated => 'Resonated';
+  String get petEventResonated => 'Played';
 
   @override
-  String get petEventStabilised => 'Stabilised';
+  String get petEventStabilised => 'Cleaned';
 
   @override
-  String get petEventSynced => 'Synced';
+  String get petEventSynced => 'Answered';
 
   @override
-  String get petEventPurged => 'Purged';
+  String get petEventPurged => 'Gave medicine';
 
   @override
-  String get petEventDimmed => 'Dimmed';
+  String get petEventDimmed => 'Put to sleep';
 
   @override
-  String get petEventInspected => 'Inspected';
+  String get petEventInspected => 'Checked status';
 
   @override
   String get petEventHygieneArtefactAppeared => 'Stale field formed';
@@ -35766,7 +36707,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get petEventDormantEntered => 'Gone dormant';
 
   @override
-  String get petEventReSigilled => 'New sigil cast';
+  String get petEventReSigilled => 'Revived';
 
   @override
   String get petDormantTitle => 'The sigil has gone quiet';
@@ -35779,12 +36720,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get petCompanionSectionTitle => 'Companion';
 
   @override
-  String get petCompanionUnknown => 'No sigil creature observed yet.';
+  String get petCompanionRemoteNoObservation =>
+      'No companion seen from this node yet.';
+
+  @override
+  String get petCompanionRemoteNotSharing =>
+      'This node isn\'t sharing its companion.';
 
   @override
   String petCompanionObservedRelative(String age) {
     return 'Observed $age ago';
   }
+
+  @override
+  String petCompanionLastSeen(String age) {
+    return 'Last seen $age ago';
+  }
+
+  @override
+  String get petCompanionOpenAction => 'Open NodePet';
+
+  @override
+  String get petCompanionSelfYours => 'Your companion';
+
+  @override
+  String get petCompanionSelfNoPet => 'Your companion hasn\'t hatched yet.';
 
   @override
   String get petLiveStateActive => 'Active';
@@ -35800,6 +36760,93 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get petLiveStateDormant => 'Dormant';
+
+  @override
+  String get petDnaSectionAlleles => 'RESONANCE ALLELES';
+
+  @override
+  String get petDnaAlleleDominant => 'Dominant';
+
+  @override
+  String get petAlleleAurora => 'Aurora';
+
+  @override
+  String get petAlleleTether => 'Tether';
+
+  @override
+  String get petAlleleGale => 'Gale';
+
+  @override
+  String get petAlleleCalm => 'Calm';
+
+  @override
+  String petDnaAlleleRatioValue(String letter, int percent) {
+    return '$letter  $percent%';
+  }
+
+  @override
+  String get petAdvisoryDormant =>
+      'Your pet\'s journey has ended. Tap [[Re-sigil]] to begin anew.';
+
+  @override
+  String get petAdvisoryEgg => 'Preparing to hatch…';
+
+  @override
+  String get petAdvisorySick => 'Sick — tap [[Purge]] to heal.';
+
+  @override
+  String get petAdvisoryCallHungry => 'Hungry — tap [[Charge]] to feed.';
+
+  @override
+  String get petAdvisoryCallLonely => 'Lonely — tap [[Resonate]] to play.';
+
+  @override
+  String get petAdvisoryCallSick => 'Sick — tap [[Purge]] to heal.';
+
+  @override
+  String get petAdvisoryCallHygiene => 'Messy — tap [[Stabilise]] to clean up.';
+
+  @override
+  String get petAdvisoryCallBedtime => 'Bedtime — tap [[Dim]] to tuck in.';
+
+  @override
+  String get petAdvisoryCallBoredom => 'Bored — tap [[Resonate]] to engage.';
+
+  @override
+  String get petAdvisoryHygieneImminent =>
+      'Getting messy — tap [[Stabilise]] before they get sick.';
+
+  @override
+  String get petAdvisoryEnergyLow => 'Energy low — tap [[Charge]] soon.';
+
+  @override
+  String get petAdvisoryMoodLow => 'Mood low — tap [[Resonate]] soon.';
+
+  @override
+  String get petAdvisoryHygieneMild =>
+      'Small mess — tap [[Stabilise]] when you can.';
+
+  @override
+  String get petAdvisoryResting => 'Resting peacefully.';
+
+  @override
+  String get petAdvisoryBedtime => 'Bedtime — tap [[Dim]] to tuck in.';
+
+  @override
+  String get petAdvisoryThriving => 'Thriving.';
+
+  @override
+  String get petRecentTimelineEmptyTitle => 'No events yet';
+
+  @override
+  String get petRecentTimelineEmptySubtitle =>
+      'Care actions and milestones will appear here as you interact with your pet.';
+
+  @override
+  String get petRecentTimelineDayToday => 'TODAY';
+
+  @override
+  String get petRecentTimelineDayYesterday => 'YESTERDAY';
 
   @override
   String get petHatchBannerTitle => 'Hatched';
@@ -35863,9 +36910,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get petReasonNothingToClean => 'Field is clean';
 
   @override
-  String get petReasonNothingToSync => 'Nothing to sync';
-
-  @override
   String get petReasonAlreadyAsleep => 'Already resting';
 
   @override
@@ -35885,6 +36929,127 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get petReasonNotDormant => 'Pet is still alive';
+
+  @override
+  String get petTimelineScreenTitle => 'Lifecycle';
+
+  @override
+  String petTimelineEventCountPill(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count events',
+      one: '1 event',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get petTimelineOriginTitle => 'DNA forged';
+
+  @override
+  String petTimelineOriginDominant(String allele) {
+    return '$allele-dominant';
+  }
+
+  @override
+  String get petTimelineNowPill => 'NOW';
+
+  @override
+  String get petTimelineQuietCurrent => 'Quiet stretch — no events yet.';
+
+  @override
+  String petTimelineGroupedCount(int count) {
+    return '$count×';
+  }
+
+  @override
+  String petTimelineUpcomingLabel(String stageName) {
+    return 'Next: $stageName';
+  }
+
+  @override
+  String get petTimelineUpcomingImminent => 'imminent';
+
+  @override
+  String petTimelineUpcomingIn(String duration) {
+    return 'in $duration';
+  }
+
+  @override
+  String petTimelineDurationDays(int days) {
+    return '${days}d';
+  }
+
+  @override
+  String petTimelineDurationDaysHours(int days, int hours) {
+    return '${days}d ${hours}h';
+  }
+
+  @override
+  String petTimelineDurationHours(int hours) {
+    return '${hours}h';
+  }
+
+  @override
+  String petTimelineDurationHoursMinutes(int hours, int minutes) {
+    return '${hours}h ${minutes}m';
+  }
+
+  @override
+  String petTimelineDurationMinutes(int minutes) {
+    return '${minutes}m';
+  }
+
+  @override
+  String get petTimelineDurationImminent => 'moments';
+
+  @override
+  String get petTimelineEmptyTitle => 'No pet yet';
+
+  @override
+  String get petTimelineEmptySubtitle =>
+      'Pair a device to begin your pet\'s story.';
+
+  @override
+  String get petTimelineDetailHatched =>
+      'Your pet emerged from its sigil and began its life cycle.';
+
+  @override
+  String petTimelineDetailStageAdvanced(String stageName) {
+    return 'Advanced into $stageName.';
+  }
+
+  @override
+  String petTimelineDetailBranchResolved(String branchName) {
+    return 'Branch resolved as $branchName based on care patterns.';
+  }
+
+  @override
+  String get petTimelineDetailDormantEntered =>
+      'Entered dormancy. Its journey is complete.';
+
+  @override
+  String get petTimelineDetailReSigilled =>
+      'Re-sigilled — a new creature begins.';
+
+  @override
+  String get petTimelineDetailSicknessOnset =>
+      'Fell ill. Use Purge to recover.';
+
+  @override
+  String get petTimelineDetailSicknessRecovered => 'Recovered from sickness.';
+
+  @override
+  String get petTimelineDetailPurged => 'Received medical care.';
+
+  @override
+  String get petTimelineDetailCallMissed =>
+      'A call for attention went unanswered.';
+
+  @override
+  String get petTimelineDetailMistakeRecorded =>
+      'A lapse in care was recorded against the stage accumulator.';
 
   @override
   String get notificationChannelPetMilestones =>
@@ -35952,4 +37117,728 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationPetAttentionBoredomBody => 'Restless — tap Resonate.';
+
+  @override
+  String get reticulumDiagTitle => 'Reticulum Tunnel';
+
+  @override
+  String get reticulumDiagExperimental => 'Experimental';
+
+  @override
+  String get reticulumDiagDescription =>
+      'Socialmesh observes RNS traffic on the mesh; behavior may be incomplete while the wire format is being characterized.';
+
+  @override
+  String get reticulumDiagSectionOverview => 'OVERVIEW';
+
+  @override
+  String get reticulumDiagFragmentCount => 'Fragments observed';
+
+  @override
+  String get reticulumDiagLastSeen => 'Last seen';
+
+  @override
+  String get reticulumDiagDistinctSources => 'Distinct sources';
+
+  @override
+  String get reticulumDiagAvgFragmentSize => 'Avg fragment size';
+
+  @override
+  String get reticulumDiagFragmentsPerSecond => 'Fragments/sec (60s)';
+
+  @override
+  String get reticulumDiagNeverSeen => 'Never';
+
+  @override
+  String get reticulumDiagSectionCapture => 'CAPTURE';
+
+  @override
+  String get reticulumDiagCaptureEnable => 'Capture to disk';
+
+  @override
+  String get reticulumDiagCaptureEnableSubtitle =>
+      'Append every fragment to a binary file for offline analysis';
+
+  @override
+  String get reticulumDiagCaptureCurrentFile => 'Current file';
+
+  @override
+  String get reticulumDiagCaptureNoActiveFile => 'No active capture';
+
+  @override
+  String get reticulumDiagCaptureBytes => 'Bytes in current file';
+
+  @override
+  String get reticulumDiagShareCaptures => 'Share captures';
+
+  @override
+  String get reticulumDiagShareNoFiles => 'No capture files yet';
+
+  @override
+  String get reticulumDiagSectionReplay => 'REPLAY';
+
+  @override
+  String get reticulumDiagOpenReplay => 'Open replay tool';
+
+  @override
+  String get reticulumDiagOpenReplaySubtitle =>
+      'Re-feed a captured file through the live decode path';
+
+  @override
+  String get reticulumDiagEmptyTitlePrefix => 'No ';
+
+  @override
+  String get reticulumDiagEmptyTitleKeyword => 'RNS traffic';
+
+  @override
+  String get reticulumDiagEmptyTitleSuffix => ' observed yet';
+
+  @override
+  String get reticulumDiagEmptyTagline1 =>
+      'Listening for fragmented Reticulum frames on port 76.';
+
+  @override
+  String get reticulumDiagEmptyTagline2 =>
+      'Bring this app within range of an RNS-bridged node.';
+
+  @override
+  String get reticulumDiagEmptyTagline3 =>
+      'Fragments are decoded but never reassembled in this build.';
+
+  @override
+  String reticulumDiagSourceFragments(int count) {
+    return '$count fragments';
+  }
+
+  @override
+  String get reticulumReplayTitle => 'Replay capture';
+
+  @override
+  String get reticulumReplaySectionFile => 'FILE';
+
+  @override
+  String get reticulumReplayPickFile => 'Choose capture file';
+
+  @override
+  String get reticulumReplayNoFilesAvailable => 'No capture files available';
+
+  @override
+  String get reticulumReplayFileLabel => 'Capture';
+
+  @override
+  String get reticulumReplayRecords => 'Records';
+
+  @override
+  String get reticulumReplaySectionMode => 'MODE';
+
+  @override
+  String get reticulumReplayModeRealtime => 'Realtime';
+
+  @override
+  String get reticulumReplayModeAccelerated => 'Accelerated';
+
+  @override
+  String get reticulumReplayModeStep => 'Step';
+
+  @override
+  String get reticulumReplaySpeedLabel => 'Speed multiplier';
+
+  @override
+  String get reticulumReplaySectionControls => 'CONTROLS';
+
+  @override
+  String get reticulumReplayStart => 'Start';
+
+  @override
+  String get reticulumReplayPause => 'Pause';
+
+  @override
+  String get reticulumReplayResume => 'Resume';
+
+  @override
+  String get reticulumReplayStop => 'Stop';
+
+  @override
+  String get reticulumReplayStep => 'Step once';
+
+  @override
+  String get reticulumReplaySectionStatus => 'STATUS';
+
+  @override
+  String reticulumReplayProgress(int current, int total) {
+    return 'Record $current of $total';
+  }
+
+  @override
+  String get reticulumReplayInvalidFile =>
+      'Selected file is not a valid SMRC v1 capture';
+
+  @override
+  String get reticulumReplayLoadError => 'Failed to load capture';
+
+  @override
+  String get settingsReticulumTunnelTitle => 'Reticulum Tunnel';
+
+  @override
+  String get settingsReticulumTunnelSubtitle =>
+      'Observe + capture port-76 RNS fragments';
+
+  @override
+  String get nodeDexRnsActivityBadge => 'RNS';
+
+  @override
+  String get nodeDexRnsActivityCount => 'RNS fragments';
+
+  @override
+  String get nodeDexRnsActivityLastSeen => 'RNS last seen';
+
+  @override
+  String get reticulumDiagOpenLibrary => 'Open capture library';
+
+  @override
+  String get reticulumDiagOpenLibrarySubtitle =>
+      'Browse, label, and import captures';
+
+  @override
+  String get reticulumLibraryTitle => 'Capture Library';
+
+  @override
+  String get reticulumLibrarySectionCaptures => 'CAPTURES';
+
+  @override
+  String get reticulumLibraryEmptyTitlePrefix => 'No ';
+
+  @override
+  String get reticulumLibraryEmptyTitleKeyword => 'captures';
+
+  @override
+  String get reticulumLibraryEmptyTitleSuffix => ' yet';
+
+  @override
+  String get reticulumLibraryEmptyTagline1 =>
+      'No SMRC capture files have been recorded or imported.';
+
+  @override
+  String get reticulumLibraryEmptyTagline2 =>
+      'Toggle \'Capture to disk\' on the diagnostics screen to start recording.';
+
+  @override
+  String get reticulumLibraryEmptyTagline3 =>
+      'Or import a .bin capture from another Socialmesh device.';
+
+  @override
+  String get reticulumLibraryImport => 'Import .bin file';
+
+  @override
+  String get reticulumLibraryRefresh => 'Refresh';
+
+  @override
+  String get reticulumLibraryKindHarness => 'HARNESS';
+
+  @override
+  String get reticulumLibraryKindReal => 'REAL CANDIDATE';
+
+  @override
+  String get reticulumLibraryKindInvalid => 'INVALID';
+
+  @override
+  String get reticulumLibraryKindUnsupported => 'UNSUPPORTED';
+
+  @override
+  String reticulumLibraryRecords(int count) {
+    return '$count records';
+  }
+
+  @override
+  String reticulumLibrarySources(int count) {
+    return '$count sources';
+  }
+
+  @override
+  String get reticulumLibraryNoTimestamp => 'No timestamp';
+
+  @override
+  String reticulumLibraryImportSuccess(String filename) {
+    return 'Imported $filename';
+  }
+
+  @override
+  String reticulumLibraryImportDuplicate(String filename) {
+    return 'Already in library: $filename';
+  }
+
+  @override
+  String get reticulumLibraryImportInvalid =>
+      'File is not a valid SMRC capture';
+
+  @override
+  String get reticulumLibraryImportUnsupported => 'Unsupported SMRC version';
+
+  @override
+  String get reticulumLibraryImportError => 'Import failed';
+
+  @override
+  String get reticulumDetailTitle => 'Capture detail';
+
+  @override
+  String get reticulumDetailSectionSummary => 'SUMMARY';
+
+  @override
+  String get reticulumDetailFilename => 'Filename';
+
+  @override
+  String get reticulumDetailKind => 'Kind';
+
+  @override
+  String get reticulumDetailRecordCount => 'Records';
+
+  @override
+  String get reticulumDetailFirstSeen => 'First seen';
+
+  @override
+  String get reticulumDetailLastSeen => 'Last seen';
+
+  @override
+  String get reticulumDetailDistinctSources => 'Distinct sources';
+
+  @override
+  String get reticulumDetailContainsHarness => 'Contains harness magic';
+
+  @override
+  String get reticulumDetailChecksum => 'SHA-256';
+
+  @override
+  String get reticulumDetailCreatedAt => 'Created at';
+
+  @override
+  String get reticulumDetailClassifiedAt => 'Classified at';
+
+  @override
+  String get reticulumDetailSectionProvenance => 'PROVENANCE';
+
+  @override
+  String get reticulumDetailSource => 'Source';
+
+  @override
+  String get reticulumDetailSourceLocal => 'Local';
+
+  @override
+  String get reticulumDetailSourceShared => 'Shared';
+
+  @override
+  String get reticulumDetailSourceAirdrop => 'AirDrop';
+
+  @override
+  String get reticulumDetailSourceManual => 'Manual';
+
+  @override
+  String get reticulumDetailDeviceModel => 'Device model';
+
+  @override
+  String get reticulumDetailDeviceModelHint => 'e.g. Heltec V3';
+
+  @override
+  String get reticulumDetailFirmwareVersion => 'Firmware version';
+
+  @override
+  String get reticulumDetailFirmwareVersionHint => 'e.g. 2.5.5.f8c10b8';
+
+  @override
+  String get reticulumDetailRegion => 'Region';
+
+  @override
+  String get reticulumDetailRegionHint => 'e.g. ANZ';
+
+  @override
+  String get reticulumDetailChannelIndex => 'Channel index';
+
+  @override
+  String get reticulumDetailChannelIndexHint => '0–7';
+
+  @override
+  String get reticulumDetailNotes => 'Notes';
+
+  @override
+  String get reticulumDetailNotesHint => 'Where, when, why';
+
+  @override
+  String get reticulumDetailSave => 'Save';
+
+  @override
+  String get reticulumDetailSaveSuccess => 'Saved';
+
+  @override
+  String get reticulumDetailShare => 'Share capture';
+
+  @override
+  String get reticulumDetailDelete => 'Delete capture';
+
+  @override
+  String get reticulumDetailDeleteConfirm => 'Delete this capture?';
+
+  @override
+  String get reticulumDetailDeleteConfirmDescription =>
+      'The capture file and its metadata sidecar are removed permanently.';
+
+  @override
+  String get reticulumDetailDeleteConfirmAction => 'Delete';
+
+  @override
+  String get reticulumDetailDeleteCancel => 'Cancel';
+
+  @override
+  String get reticulumDetailTrue => 'Yes';
+
+  @override
+  String get reticulumDetailFalse => 'No';
+
+  @override
+  String get reticulumDetailNoneSet => 'Not set';
+
+  @override
+  String get reticulumDiagSectionReassembly => 'REASSEMBLY';
+
+  @override
+  String get reticulumDiagReassemblyEnable => 'Reassemble fragments';
+
+  @override
+  String get reticulumDiagReassemblyEnableSubtitle =>
+      'Combine fragments into whole RNS frames in memory';
+
+  @override
+  String get reticulumDiagReassemblyDisabledHint =>
+      'Enable to start counting frames; raw fragments still flow into capture and the overview above.';
+
+  @override
+  String get reticulumDiagFramesReassembled => 'Frames reassembled';
+
+  @override
+  String get reticulumDiagFramesPerSecond => 'Frames/sec (60s)';
+
+  @override
+  String get reticulumDiagAvgFragmentsPerFrame => 'Avg fragments per frame';
+
+  @override
+  String get reticulumDiagSuccessRate => 'Success rate %';
+
+  @override
+  String get reticulumDiagDroppedDecodeError => 'Dropped — decode error';
+
+  @override
+  String get reticulumDiagDroppedTimeoutInactivity =>
+      'Dropped — inactivity timeout';
+
+  @override
+  String get reticulumDiagDroppedTimeoutAbsolute => 'Dropped — absolute TTL';
+
+  @override
+  String get reticulumDiagDroppedOverflow => 'Dropped — overflow';
+
+  @override
+  String get reticulumDiagDroppedOversize => 'Dropped — oversize';
+
+  @override
+  String get reticulumDiagDuplicateFragments => 'Duplicate fragments';
+
+  @override
+  String get reticulumDiagActiveBuffers => 'Active buffers';
+
+  @override
+  String get reticulumDiagBufferedBytes => 'Buffered bytes';
+
+  @override
+  String get settingsReticulumBridgeTitle => 'Reticulum Bridge';
+
+  @override
+  String get settingsReticulumBridgeSubtitle =>
+      'Forward reassembled RNS frames to a local rnsd over TCP';
+
+  @override
+  String get reticulumBridgeTitle => 'Reticulum Bridge';
+
+  @override
+  String get reticulumBridgeDescription =>
+      'Forward reassembled RNS frames to a local rnsd over TCP. The bridge stays disconnected until reassembly is enabled.';
+
+  @override
+  String get reticulumBridgeRequiresReassembly =>
+      'Enable reassembly first to start forwarding.';
+
+  @override
+  String get reticulumBridgeSectionConnection => 'CONNECTION';
+
+  @override
+  String get reticulumBridgeEnable => 'Enable bridge';
+
+  @override
+  String get reticulumBridgeEnableSubtitle =>
+      'Open a TCP connection to rnsd while reassembly is on';
+
+  @override
+  String get reticulumBridgeStatusLabel => 'Status';
+
+  @override
+  String get reticulumBridgeStatusDisconnected => 'Disconnected';
+
+  @override
+  String get reticulumBridgeStatusConnecting => 'Connecting…';
+
+  @override
+  String get reticulumBridgeStatusConnected => 'Connected';
+
+  @override
+  String get reticulumBridgeStatusError => 'Error';
+
+  @override
+  String get reticulumBridgeLastErrorLabel => 'Last error';
+
+  @override
+  String get reticulumBridgeNoLastError => '—';
+
+  @override
+  String get reticulumBridgeSectionEndpoint => 'ENDPOINT';
+
+  @override
+  String get reticulumBridgeHostLabel => 'Host';
+
+  @override
+  String get reticulumBridgeHostHint => 'rnsd host or IP';
+
+  @override
+  String get reticulumBridgePortLabel => 'Port';
+
+  @override
+  String get reticulumBridgePortHint => '4242';
+
+  @override
+  String get reticulumBridgeSaveAndConnect => 'Save & connect';
+
+  @override
+  String get reticulumBridgeSectionCounters => 'COUNTERS';
+
+  @override
+  String get reticulumBridgeForwarded => 'Frames forwarded';
+
+  @override
+  String get reticulumBridgeDroppedNoConnection => 'Dropped — no connection';
+
+  @override
+  String get reticulumBridgeDroppedBackpressure => 'Dropped — queue full';
+
+  @override
+  String get reticulumBridgeDroppedFramingError => 'Dropped — framing error';
+
+  @override
+  String get reticulumBridgeConnectErrors => 'Connect errors';
+
+  @override
+  String get reticulumBridgeQueueDepthLabel => 'Queue depth';
+
+  @override
+  String get reticulumBridgeDropPolicyLabel => 'Drop policy';
+
+  @override
+  String get reticulumBridgeDropPolicyValue => 'Drop newest when full';
+
+  @override
+  String get reticulumBridgeSectionUptime => 'UPTIME';
+
+  @override
+  String get reticulumBridgeCurrentSession => 'Current session';
+
+  @override
+  String get reticulumBridgeTotalUptime => 'Total uptime';
+
+  @override
+  String get reticulumBridgeRxOnlyTitle => 'RX-only';
+
+  @override
+  String get reticulumBridgeRxOnlyMessage =>
+      'Socialmesh forwards reassembled RNS frames received over the air. No RNS frames are ever transmitted onto LoRa.';
+
+  @override
+  String get reticulumBridgeLastForwardLabel => 'Last forwarded';
+
+  @override
+  String get reticulumBridgeNeverForwarded => 'Never';
+
+  @override
+  String get reticulumBridgeRetryInLabel => 'Next retry in';
+
+  @override
+  String get reticulumBridgeBackoffAttemptLabel => 'Backoff attempt';
+
+  @override
+  String get reticulumBridgeConsecutiveErrorsLabel => 'Consecutive errors';
+
+  @override
+  String get reticulumBridgeAutoDisabledTitle => 'Bridge auto-disabled';
+
+  @override
+  String get reticulumBridgeAutoDisabledMessage =>
+      'Too many consecutive connect failures. Tap re-enable to try again, or check the host and port.';
+
+  @override
+  String get reticulumBridgeReEnable => 'Re-enable';
+
+  @override
+  String get reticulumBridgeSectionSessionLog => 'SESSION LOG';
+
+  @override
+  String get reticulumBridgeSessionLogEmpty => 'No bridge events yet.';
+
+  @override
+  String get reticulumBridgeCopyDiagnostics => 'Copy diagnostics';
+
+  @override
+  String get reticulumBridgeCopiedSnack => 'Diagnostics copied to clipboard';
+
+  @override
+  String get settingsRnsCompanionTitle => 'RNS Services (Companion)';
+
+  @override
+  String get settingsRnsCompanionSubtitle =>
+      'Browse RNS / NomadNet content via the local companion service';
+
+  @override
+  String get rnsCompanionServicesTitle => 'RNS Services';
+
+  @override
+  String get rnsCompanionPagesTitle => 'Pages';
+
+  @override
+  String get rnsCompanionReaderTitle => 'Page';
+
+  @override
+  String get rnsCompanionConnectionHint =>
+      'Requires rns_companion running on your computer at the configured URL.';
+
+  @override
+  String get rnsCompanionExperimental => 'Experimental';
+
+  @override
+  String get rnsCompanionEmptyTitle => 'No services';
+
+  @override
+  String get rnsCompanionEmptyHint =>
+      'The companion is reachable but has no services yet.';
+
+  @override
+  String get rnsCompanionEmptyTagline1 => 'browse';
+
+  @override
+  String get rnsCompanionEmptyTagline2 => 'discover';
+
+  @override
+  String get rnsCompanionEmptyTagline3 => 'read';
+
+  @override
+  String get rnsCompanionEmptyAction => 'Reload';
+
+  @override
+  String get rnsCompanionPagesEmpty => 'This service has no pages yet.';
+
+  @override
+  String get rnsCompanionRetry => 'Retry';
+
+  @override
+  String get rnsCompanionServiceDestinationLabel => 'Destination';
+
+  @override
+  String get rnsCompanionServiceTypeLabel => 'Type';
+
+  @override
+  String get rnsCompanionServiceLastSeenLabel => 'Last seen';
+
+  @override
+  String get rnsCompanionPageUpdatedLabel => 'Updated';
+
+  @override
+  String get rnsCompanionErrorConnection =>
+      'Cannot reach companion. Is the service running on your computer?';
+
+  @override
+  String get rnsCompanionErrorTimeout => 'Companion took too long to respond.';
+
+  @override
+  String get rnsCompanionErrorParse =>
+      'Companion sent a response we couldn\'t read.';
+
+  @override
+  String get rnsCompanionErrorNotFound => 'Not found.';
+
+  @override
+  String get rnsCompanionErrorGeneric =>
+      'Something went wrong talking to the companion.';
+
+  @override
+  String get rnsCompanionSettingsTitle => 'Companion Settings';
+
+  @override
+  String get rnsCompanionSettingsSectionEndpoint => 'ENDPOINT';
+
+  @override
+  String get rnsCompanionSettingsHostLabel => 'Host';
+
+  @override
+  String get rnsCompanionSettingsHostHint => 'laptop IP or hostname';
+
+  @override
+  String get rnsCompanionSettingsPortLabel => 'Port';
+
+  @override
+  String get rnsCompanionSettingsPortHint => '8787';
+
+  @override
+  String get rnsCompanionSettingsSave => 'Save';
+
+  @override
+  String get rnsCompanionSettingsSavedSnack => 'Companion endpoint saved';
+
+  @override
+  String get rnsCompanionSettingsHint =>
+      'Tip: bind your companion server to 0.0.0.0 so the phone can reach it on your LAN.';
+
+  @override
+  String get rnsCompanionStatusChecking => 'Checking…';
+
+  @override
+  String get rnsCompanionStatusConnected => 'Connected';
+
+  @override
+  String rnsCompanionStatusConnectedWithVersion(String version) {
+    return 'Connected · v$version';
+  }
+
+  @override
+  String rnsCompanionStatusConnectedWithMode(String version, String mode) {
+    return 'Connected · v$version · $mode';
+  }
+
+  @override
+  String get rnsCompanionLastAnnounceLabel => 'Last announce';
+
+  @override
+  String get rnsCompanionLastAnnounceNever => 'no announces yet';
+
+  @override
+  String get rnsCompanionLastAnnounceJustNow => 'just now';
+
+  @override
+  String rnsCompanionLastAnnounceSeconds(int n) {
+    return '${n}s ago';
+  }
+
+  @override
+  String rnsCompanionLastAnnounceMinutes(int n) {
+    return '${n}m ago';
+  }
+
+  @override
+  String rnsCompanionLastAnnounceHours(int n) {
+    return '${n}h ago';
+  }
+
+  @override
+  String get rnsCompanionStatusUnreachable => 'Unreachable';
 }
