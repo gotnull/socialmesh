@@ -275,14 +275,11 @@ class _MorseBubbleBodyState extends ConsumerState<_MorseBubbleBody> {
             // tone (Sine / Bell / etc.) is noise and was being read
             // as a Morse-format detail. Phrase bubbles still surface
             // it because the timbre is part of the musical content.
-            Text(
-              '${morse.speedWpm} WPM',
-              style: TextStyle(
-                fontSize: 11,
-                color: context.textTertiary,
-                fontFamily: AppTheme.fontFamily,
-              ),
-            ),
+            // The speed (WPM) is shown as a chip in the same visual
+            // language as the phrase-bubble's instrument chip — the
+            // metadata family across signal types should read
+            // identically.
+            _WpmChipReadout(speedWpm: morse.speedWpm),
           ],
         ),
         const SizedBox(height: AppTheme.spacing6),
@@ -345,6 +342,38 @@ class _InstrumentChipReadout extends StatelessWidget {
       ),
       child: Text(
         instrumentLabel(context, instrument),
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: context.accentColor,
+          fontFamily: AppTheme.fontFamily,
+        ),
+      ),
+    );
+  }
+}
+
+/// Pill chip rendering the Morse speed in WPM. Mirrors
+/// [_InstrumentChipReadout] so phrase-bubble metadata and
+/// morse-bubble metadata read in the same visual language.
+class _WpmChipReadout extends StatelessWidget {
+  final int speedWpm;
+  const _WpmChipReadout({required this.speedWpm});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing8,
+        vertical: 2,
+      ),
+      decoration: BoxDecoration(
+        color: context.accentColor.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
+        border: Border.all(color: context.accentColor.withValues(alpha: 0.5)),
+      ),
+      child: Text(
+        '$speedWpm WPM',
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w600,
