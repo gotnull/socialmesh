@@ -23913,7 +23913,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get appearanceTimeFormatSystemDesc =>
-      'Segui le impostazioni dell’orologio del dispositivo';
+      'Segui le impostazioni dell\'orologio del dispositivo';
 
   @override
   String get appearanceTimeFormat12h => '12 ore';

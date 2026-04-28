@@ -23651,7 +23651,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get appearanceTimeFormatSystemDesc =>
-      'Follow your device’s clock setting';
+      'Follow your device\'s clock setting';
 
   @override
   String get appearanceTimeFormat12h => '12-hour';

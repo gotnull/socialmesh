@@ -4315,7 +4315,7 @@
   "@appearanceTimeFormatSystem": {
     "description": "Time format option name"
   },
-  "appearanceTimeFormatSystemDesc": "Segui le impostazioni dell’orologio del dispositivo",
+  "appearanceTimeFormatSystemDesc": "Segui le impostazioni dell'orologio del dispositivo",
   "@appearanceTimeFormatSystemDesc": {
     "description": "Time format option description"
   },

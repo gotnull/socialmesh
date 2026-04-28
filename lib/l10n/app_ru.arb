@@ -6447,7 +6447,7 @@
     "appearanceResetDialogConfirm": "Reset",
     "appearanceTimeFormat": "Time Format",
     "appearanceTimeFormatSystem": "System Default",
-    "appearanceTimeFormatSystemDesc": "Follow your device’s clock setting",
+    "appearanceTimeFormatSystemDesc": "Follow your device's clock setting",
     "appearanceTimeFormat12h": "12-hour",
     "appearanceTimeFormat12hDesc": "1:30 PM",
     "appearanceTimeFormat24h": "24-hour",
