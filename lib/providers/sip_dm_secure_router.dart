@@ -1253,8 +1253,20 @@ Future<void> _handleSecureDmInbound({
 /// Build a synthetic [SipFrame] for feeding decrypted secure DM /
 /// reaction bodies into the existing plaintext ingress path. Fields
 /// that the handlers read (msgType, sessionId, timestampS, payload)
-/// are populated; fields that aren't read (nonce, flags, headerLen,
+/// are populated; fields that aren't read (flags, headerLen,
 /// version) get sensible defaults.
+///
+/// `nonce` MUST be a fresh random per-call value — the plaintext
+/// ingress path runs each frame through the per-session frame-nonce
+/// dedupe ring (`SipDmManager._markInboundFrameSeen`), and a fixed
+/// nonce would cause the second secure frame in a session to look
+/// like a wire-level duplicate of the first and be dropped before
+/// reaching the engine. The overlay secure session already enforces
+/// its own replay window pre-decrypt, so by the time the synthesised
+/// frame reaches `handleInbound*`, multi-path duplicates have
+/// already been filtered upstream — the ring is harmless when the
+/// nonce is fresh, but catastrophic (silently drops every frame
+/// after the first) when it isn't.
 SipFrame _synthesizeDmFrame({
   required int sessionTag,
   required int timestampS,
@@ -1268,7 +1280,7 @@ SipFrame _synthesizeDmFrame({
     flags: 0,
     headerLen: SipConstants.sipWrapperMin,
     sessionId: sessionTag,
-    nonce: 0,
+    nonce: SipCodec.generateNonce(),
     timestampS: timestampS,
     payloadLen: body.length,
     payload: body,

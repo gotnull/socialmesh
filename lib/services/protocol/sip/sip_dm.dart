@@ -630,6 +630,7 @@ class SipDmManager {
 
     // Multi-path mesh dedupe (see _markInboundFrameSeen).
     if (!_markInboundFrameSeen(
+      peerNodeId: session.peerNodeId,
       sessionTag: sessionTag,
       frameNonce: frame.nonce,
     )) {
@@ -759,6 +760,7 @@ class SipDmManager {
 
     // Multi-path mesh dedupe (see _markInboundFrameSeen).
     if (!_markInboundFrameSeen(
+      peerNodeId: session.peerNodeId,
       sessionTag: sessionTag,
       frameNonce: frame.nonce,
     )) {
@@ -1016,6 +1018,7 @@ class SipDmManager {
 
     // Multi-path mesh dedupe (see _markInboundFrameSeen).
     if (!_markInboundFrameSeen(
+      peerNodeId: session.peerNodeId,
       sessionTag: sessionTag,
       frameNonce: frame.nonce,
     )) {
@@ -1104,6 +1107,7 @@ class SipDmManager {
     // Multi-path mesh dedupe — same wire frame sometimes arrives via
     // two relays. Drop the second copy before any UI mutation.
     if (!_markInboundFrameSeen(
+      peerNodeId: session.peerNodeId,
       sessionTag: sessionTag,
       frameNonce: frame.nonce,
     )) {
@@ -1329,6 +1333,7 @@ class SipDmManager {
     // creates a second offer for the same gameType while a previous
     // instance is still pending/active.
     if (!_markInboundFrameSeen(
+      peerNodeId: session.peerNodeId,
       sessionTag: sessionTag,
       frameNonce: frame.nonce,
     )) {
@@ -1445,27 +1450,43 @@ class SipDmManager {
     return true;
   }
 
-  /// Per-(sessionTag) ring of recent inbound SIP-wrapper nonces for
-  /// content-bearing DM frames (DM_MSG, DM_REACTION, DM_DELETE,
-  /// DM_INK, DM_PLAY). Multi-radio meshes can deliver the same wire
-  /// frame to a single device through more than one path (the local
-  /// node's paired radio + a relay neighbor's paired radio both
-  /// hand the same packet to the BLE app), and without dedupe the
-  /// app appends the message twice to history.
+  /// Per-(peerNodeId, sessionTag) ring of recent inbound SIP-wrapper
+  /// nonces for content-bearing DM frames (DM_MSG, DM_REACTION,
+  /// DM_DELETE, DM_INK, DM_PLAY). Multi-radio meshes can deliver the
+  /// same wire frame to a single device through more than one path
+  /// (the local node's paired radio + a relay neighbor's paired
+  /// radio both hand the same packet to the BLE app), and without
+  /// dedupe the app appends the message twice to history.
   ///
   /// `frame.nonce` is set per-encode by the original sender and is
   /// unique within a 1800 s window per [SipReplayCache] semantics, so
   /// it's a stable dedupe key for content frames in a given session.
   /// Idempotent paths (typing indicators, close acks) don't need
   /// this — re-running them is a no-op.
-  final Map<int, List<int>> _inboundFrameDedupe = {};
+  ///
+  /// **Best-effort dedupe, not replay protection.** A 32-entry ring
+  /// covers multi-path RF + BLE rebroadcast bursts but does NOT
+  /// defeat malicious replay or long-window duplication; cryptographic
+  /// replay protection lives in the overlay secure session, not here.
+  ///
+  /// **Key strengthening.** The outer key is `(peerNodeId, sessionTag)`
+  /// rather than `sessionTag` alone so that even if a session tag is
+  /// re-derived for a different peer (statistically improbable given
+  /// the 32 + 32 byte handshake-nonce inputs to the SHA-256 from
+  /// which the tag is derived, but defence-in-depth nonetheless), a
+  /// stale ring entry from a prior session with the same tag cannot
+  /// cause a false drop on the new peer's first frame.
+  final Map<({int peerNodeId, int sessionTag}), List<int>> _inboundFrameDedupe =
+      {};
   static const int _kFrameDedupeRingBytes = 32;
 
   bool _markInboundFrameSeen({
+    required int peerNodeId,
     required int sessionTag,
     required int frameNonce,
   }) {
-    final ring = _inboundFrameDedupe.putIfAbsent(sessionTag, () => []);
+    final key = (peerNodeId: peerNodeId, sessionTag: sessionTag);
+    final ring = _inboundFrameDedupe.putIfAbsent(key, () => []);
     if (ring.contains(frameNonce)) return false; // duplicate — drop
     ring.add(frameNonce);
     if (ring.length > _kFrameDedupeRingBytes) {
@@ -1677,7 +1698,10 @@ class SipDmManager {
     if (session == null) return false;
     session.messages.clear();
     _inboundSignalDedupe.remove(sessionTag);
-    _inboundFrameDedupe.remove(sessionTag);
+    _inboundFrameDedupe.remove((
+      peerNodeId: session.peerNodeId,
+      sessionTag: sessionTag,
+    ));
     // Clear typing state only if no other session for this peer
     // remains tracked — the peer's typing flag is keyed by peer
     // node id, not by session tag.
@@ -1734,11 +1758,17 @@ class SipDmManager {
         'after ${session.ttlS}s, cleaned up',
       );
     }
+    final peerNodeId = session?.peerNodeId;
     _sessions.remove(sessionTag);
     _peerTyping.remove(sessionTag);
     _typingSentAt.remove(sessionTag);
     _inboundSignalDedupe.remove(sessionTag);
-    _inboundFrameDedupe.remove(sessionTag);
+    if (peerNodeId != null) {
+      _inboundFrameDedupe.remove((
+        peerNodeId: peerNodeId,
+        sessionTag: sessionTag,
+      ));
+    }
   }
 
   // ---------------------------------------------------------------------------

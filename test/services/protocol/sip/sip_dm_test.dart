@@ -474,6 +474,106 @@ void main() {
       expect(history[2].direction, equals(SipDmDirection.outbound));
       expect(history[2].text, equals('Out 2'));
     });
+
+    // -------------------------------------------------------------------------
+    // Multi-path mesh dedupe (per-session frame-nonce ring). Same wire
+    // frame can arrive twice when two relays both deliver it to the
+    // local BLE app. Without dedupe the message appends to history
+    // twice; the dedupe ring drops the second copy. See
+    // `_markInboundFrameSeen` in `sip_dm.dart`.
+    // -------------------------------------------------------------------------
+
+    /// Build an inbound DM_MSG frame with an explicit wire-nonce so
+    /// the dedupe behaviour can be exercised directly. Mirrors
+    /// `buildInboundDm` but takes `nonce` and `text` independently.
+    SipFrame buildInboundDmWithNonce(int sessionTag, String text, int nonce) {
+      final payload = SipDmMessages.encodeDm(text)!;
+      return SipFrame(
+        versionMajor: SipConstants.sipVersionMajor,
+        versionMinor: SipConstants.sipVersionMinor,
+        msgType: SipMessageType.dmMsg,
+        flags: 0,
+        headerLen: SipConstants.sipWrapperMin,
+        sessionId: sessionTag,
+        nonce: nonce,
+        timestampS: nowMs ~/ 1000,
+        payloadLen: payload.length,
+        payload: payload,
+      );
+    }
+
+    test('handleInboundDm drops second copy of same wire frame', () {
+      final frame = buildInboundDmWithNonce(0x12345678, 'Multi-path', 0xAA);
+
+      final first = dm.handleInboundDm(frame);
+      final second = dm.handleInboundDm(frame);
+
+      expect(first, isNotNull);
+      expect(second, isNull); // duplicate dropped
+      expect(dm.getHistory(0x12345678), hasLength(1));
+    });
+
+    test('handleInboundDm drops interleaved duplicate (A → B → A)', () {
+      // Plan §interleave: A first arrival, B different frame, A again
+      // (delayed via second mesh path) — the third call MUST drop.
+      final frameA = buildInboundDmWithNonce(0x12345678, 'A', 0xAA);
+      final frameB = buildInboundDmWithNonce(0x12345678, 'B', 0xBB);
+
+      final r1 = dm.handleInboundDm(frameA);
+      final r2 = dm.handleInboundDm(frameB);
+      final r3 = dm.handleInboundDm(frameA);
+
+      expect(r1, isNotNull);
+      expect(r2, isNotNull);
+      expect(r3, isNull); // duplicate dropped despite intervening B
+      final history = dm.getHistory(0x12345678)!;
+      expect(history, hasLength(2));
+      expect(history[0].text, equals('A'));
+      expect(history[1].text, equals('B'));
+    });
+
+    test(
+      'dedupe ring is per-session — same nonce on different sessions both pass',
+      () {
+        // Cross-session collision protection: even if two distinct
+        // sessions happened to see the same wire-nonce (improbable but
+        // possible), each session has its own ring and both should
+        // accept the first arrival.
+        dm.createSession(sessionTag: 0x77, peerNodeId: 0xAB);
+
+        final f1 = buildInboundDmWithNonce(
+          0x12345678,
+          'On session 1',
+          0xC0FFEE,
+        );
+        final f2 = buildInboundDmWithNonce(0x77, 'On session 2', 0xC0FFEE);
+
+        expect(dm.handleInboundDm(f1), isNotNull);
+        expect(dm.handleInboundDm(f2), isNotNull);
+        expect(dm.getHistory(0x12345678), hasLength(1));
+        expect(dm.getHistory(0x77), hasLength(1));
+      },
+    );
+
+    test('dedupe ring tolerates 32-entry burst then drops the 33rd', () {
+      // The ring is documented as 32 entries. Confirm a 33rd
+      // distinct frame is accepted (ring evicted oldest), AND a
+      // re-arrival of the FIRST frame is dropped while it's still
+      // within the ring window.
+      const tag = 0x12345678;
+      for (var i = 0; i < 32; i += 1) {
+        final f = buildInboundDmWithNonce(tag, 'msg $i', 0x1000 + i);
+        expect(dm.handleInboundDm(f), isNotNull, reason: 'fresh msg $i');
+      }
+      // Send the 33rd distinct frame — fits because ring evicts
+      // oldest when capacity is exceeded.
+      final fresh33 = buildInboundDmWithNonce(tag, 'msg 32', 0x2000);
+      expect(dm.handleInboundDm(fresh33), isNotNull);
+      // Replay msg-1 (still inside the ring, since msg-0 was just
+      // evicted) — must drop.
+      final replayMsg1 = buildInboundDmWithNonce(tag, 'msg 1', 0x1001);
+      expect(dm.handleInboundDm(replayMsg1), isNull);
+    });
   });
 
   // ---------------------------------------------------------------------------
