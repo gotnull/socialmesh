@@ -139,13 +139,11 @@ void main() {
       expect(screenSrc.contains('SipSignalBubble('), isTrue);
     });
 
-    test('Signal bubble path skips reactions / reply-quote (consistent '
-        'with Ink + Play)', () {
-      // Pin the early return — Signal bubble uses its own minimal
-      // surface; the heavy text-bubble Column never wraps it.
+    test('Signal branch is wired alongside ink in the shared Column '
+        '(reactions + reply-quote render below)', () {
       expect(
         RegExp(
-          r'if\s*\(isSignal\)\s*\{[\s\S]{0,500}SipSignalBubble',
+          r'else\s+if\s*\(isSignal\)[\s\S]{0,500}SipSignalBubble',
         ).hasMatch(screenSrc),
         isTrue,
       );
