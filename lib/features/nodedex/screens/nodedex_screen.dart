@@ -1081,6 +1081,7 @@ class _NodeDexListTile extends ConsumerWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Sigil avatar
               SigilAvatar(

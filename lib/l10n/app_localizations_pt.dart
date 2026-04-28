@@ -4758,6 +4758,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Disconnected from your node — reconnect to continue.';
 
   @override
+  String get requiresConnectionGuardReconnectingBanner =>
+      'Desconectado — reconectando…';
+
+  @override
   String get drawerEnterpriseDeviceManagement =>
       'Gerenciamento de Dispositivos';
 

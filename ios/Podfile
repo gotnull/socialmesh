@@ -63,4 +63,60 @@ post_install do |installer|
 
 
   end
+
+  # Re-sign embedded frameworks workaround.
+  #
+  # `package:objective_c` (and other native-asset Dart FFI packages)
+  # ship their iOS frameworks adhoc-signed (TeamIdentifier=not set).
+  # iOS refuses to install adhoc-signed binaries on a physical device
+  # and surfaces the failure as `0xe8008014` ("invalid signature") on
+  # the embedded framework. The simulator doesn't enforce this so sim
+  # builds work fine.
+  #
+  # Fix: add a Run Script build phase to the Runner target that runs
+  # after Embed Frameworks and re-signs every framework in the
+  # frameworks folder with the build's signing identity. The .app's
+  # outer signature is then re-sealed by Xcode's normal "Sign on Copy"
+  # path, so install succeeds.
+  #
+  # This block is idempotent — if the phase already exists with the
+  # same body, no change is made.
+  runner_path = File.join(File.dirname(__FILE__), 'Runner.xcodeproj')
+  if File.exist?(runner_path)
+    runner_project = Xcodeproj::Project.open(runner_path)
+    runner_target = runner_project.targets.find { |t| t.name == 'Runner' }
+    if runner_target
+      phase_name = '[Socialmesh] Re-sign Embedded Frameworks'
+      script_body = <<~SH
+        # Workaround for package:objective_c shipping its iOS framework
+        # adhoc-signed; iOS device install otherwise fails with 0xe8008014.
+        # Re-sign every embedded framework with the build's signing identity.
+        set -e
+        if [ -z "${EXPANDED_CODE_SIGN_IDENTITY}" ]; then
+          echo "EXPANDED_CODE_SIGN_IDENTITY empty (simulator build) — skipping resign"
+          exit 0
+        fi
+        FRAMEWORKS_DIR="${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}"
+        [ -d "$FRAMEWORKS_DIR" ] || exit 0
+        find "$FRAMEWORKS_DIR" -maxdepth 1 -name "*.framework" -print0 | while IFS= read -r -d '' fw; do
+          echo "Re-signing $fw with ${EXPANDED_CODE_SIGN_IDENTITY}"
+          /usr/bin/codesign --force --sign "${EXPANDED_CODE_SIGN_IDENTITY}" \\
+                   --preserve-metadata=identifier,entitlements,flags \\
+                   --timestamp=none \\
+                   "$fw"
+        done
+      SH
+      existing = runner_target.shell_script_build_phases.find { |p| p.name == phase_name }
+      if existing
+        if existing.shell_script != script_body
+          existing.shell_script = script_body
+          runner_project.save
+        end
+      else
+        phase = runner_target.new_shell_script_build_phase(phase_name)
+        phase.shell_script = script_body
+        runner_project.save
+      end
+    end
+  end
 end

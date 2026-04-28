@@ -40875,5 +40875,9 @@
   "regionSelectionRegionEuN868Freq": "868 MHz",
   "@regionSelectionRegionEuN868Freq": {
     "description": "UI text: region selection EU 868 narrow freq"
+  },
+  "requiresConnectionGuardReconnectingBanner": "Desconectado — reconectando…",
+  "@requiresConnectionGuardReconnectingBanner": {
+    "description": "Inline banner shown on a node-required screen during the grace window after a brief transport disconnect, while auto-reconnect is attempting recovery."
   }
 }

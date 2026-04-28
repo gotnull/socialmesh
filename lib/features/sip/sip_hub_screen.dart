@@ -928,29 +928,18 @@ class _IncomingRequestTile extends ConsumerWidget {
     PatinaResult patinaResult,
     TraitResult traitResult,
   ) {
-    if (entry?.sigil != null) {
-      return SigilAvatar(
-        sigil: entry!.sigil,
-        nodeNum: peerNodeId,
-        size: 48,
-        evolution: SigilEvolution.fromPatina(
-          patinaResult.score,
-          trait: traitResult.primary,
-        ),
-      );
-    }
-
-    return Container(
-      width: 48,
-      height: 48,
-      decoration: BoxDecoration(
-        color: context.accentColor.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      child: Icon(
-        Icons.wifi_tethering,
-        size: 24,
-        color: context.accentColor.withValues(alpha: 0.7),
+    // Always render a sigil — `SigilAvatar` falls back to
+    // `SigilGenerator.generate(nodeNum)` when `sigil` is null, so a
+    // peer with no stored NodeDex entry yet (brand-new install, just-
+    // discovered peer) still gets the constellation pattern. Matches
+    // every other call site in the codebase.
+    return SigilAvatar(
+      sigil: entry?.sigil,
+      nodeNum: peerNodeId,
+      size: 48,
+      evolution: SigilEvolution.fromPatina(
+        patinaResult.score,
+        trait: traitResult.primary,
       ),
     );
   }
@@ -1262,29 +1251,18 @@ class _PeerTileState extends ConsumerState<_PeerTile>
     PatinaResult patinaResult,
     TraitResult traitResult,
   ) {
-    if (entry?.sigil != null) {
-      return SigilAvatar(
-        sigil: entry!.sigil,
-        nodeNum: widget.peer.nodeId,
-        size: 48,
-        evolution: SigilEvolution.fromPatina(
-          patinaResult.score,
-          trait: traitResult.primary,
-        ),
-      );
-    }
-
-    return Container(
-      width: 48,
-      height: 48,
-      decoration: BoxDecoration(
-        color: context.accentColor.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      child: Icon(
-        Icons.sensors,
-        size: 24,
-        color: context.accentColor.withValues(alpha: 0.7),
+    // Always render a sigil — `SigilAvatar` falls back to
+    // `SigilGenerator.generate(nodeNum)` when `sigil` is null, so a
+    // peer with no stored NodeDex entry yet (brand-new install, just-
+    // discovered peer) still gets the constellation pattern. Matches
+    // every other call site in the codebase.
+    return SigilAvatar(
+      sigil: entry?.sigil,
+      nodeNum: widget.peer.nodeId,
+      size: 48,
+      evolution: SigilEvolution.fromPatina(
+        patinaResult.score,
+        trait: traitResult.primary,
       ),
     );
   }
@@ -1647,29 +1625,18 @@ class _ConversationTile extends ConsumerWidget {
     PatinaResult patinaResult,
     TraitResult traitResult,
   ) {
-    if (entry?.sigil != null) {
-      return SigilAvatar(
-        sigil: entry!.sigil,
-        nodeNum: session.peerNodeId,
-        size: 48,
-        evolution: SigilEvolution.fromPatina(
-          patinaResult.score,
-          trait: traitResult.primary,
-        ),
-      );
-    }
-
-    return Container(
-      width: 48,
-      height: 48,
-      decoration: BoxDecoration(
-        color: context.accentColor.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      child: Icon(
-        Icons.chat_bubble_outline,
-        size: 22,
-        color: context.accentColor.withValues(alpha: 0.7),
+    // Always render a sigil — `SigilAvatar` falls back to
+    // `SigilGenerator.generate(nodeNum)` when `sigil` is null, so a
+    // peer with no stored NodeDex entry yet (brand-new install, just-
+    // discovered peer) still gets the constellation pattern. Matches
+    // every other call site in the codebase.
+    return SigilAvatar(
+      sigil: entry?.sigil,
+      nodeNum: session.peerNodeId,
+      size: 48,
+      evolution: SigilEvolution.fromPatina(
+        patinaResult.score,
+        trait: traitResult.primary,
       ),
     );
   }

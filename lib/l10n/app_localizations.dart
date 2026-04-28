@@ -8410,6 +8410,12 @@ abstract class AppLocalizations {
   /// **'Disconnected from your node — reconnect to continue.'**
   String get requiresConnectionGuardDisconnected;
 
+  /// Inline banner shown on a node-required screen during the grace window after a brief transport disconnect, while auto-reconnect is attempting recovery. If reconnection fails within ~10s the user is popped back with the existing requiresConnectionGuardDisconnected snackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnected — reconnecting…'**
+  String get requiresConnectionGuardReconnectingBanner;
+
   /// Label for the Device Management menu tile in the enterprise drawer section.
   ///
   /// In en, this message translates to:

@@ -4718,6 +4718,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Disconnected from your node — reconnect to continue.';
 
   @override
+  String get requiresConnectionGuardReconnectingBanner =>
+      'Disconnected — reconnecting…';
+
+  @override
   String get drawerEnterpriseDeviceManagement => 'Device Management';
 
   @override

@@ -349,6 +349,7 @@
 				DFB3BF32316542B73400B6C0 /* FlutterFire: "flutterfire upload-crashlytics-symbols" */,
 				688DA636C73DEB3A360CE409 /* [CP] Embed Pods Frameworks */,
 				33B79513130A668675830E43 /* [CP] Copy Pods Resources */,
+				26D800772C6C696E0B1725A7 /* [Socialmesh] Re-sign Embedded Frameworks */,
 			);
 			buildRules = (
 			);
@@ -481,6 +482,24 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		26D800772C6C696E0B1725A7 /* [Socialmesh] Re-sign Embedded Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "[Socialmesh] Re-sign Embedded Frameworks";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Workaround for package:objective_c shipping its iOS framework\n# adhoc-signed; iOS device install otherwise fails with 0xe8008014.\n# Re-sign every embedded framework with the build's signing identity.\nset -e\nif [ -z \"${EXPANDED_CODE_SIGN_IDENTITY}\" ]; then\n  echo \"EXPANDED_CODE_SIGN_IDENTITY empty (simulator build) — skipping resign\"\n  exit 0\nfi\nFRAMEWORKS_DIR=\"${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}\"\n[ -d \"$FRAMEWORKS_DIR\" ] || exit 0\nfind \"$FRAMEWORKS_DIR\" -maxdepth 1 -name \"*.framework\" -print0 | while IFS= read -r -d '' fw; do\n  echo \"Re-signing $fw with ${EXPANDED_CODE_SIGN_IDENTITY}\"\n  /usr/bin/codesign --force --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \\\n           --preserve-metadata=identifier,entitlements,flags \\\n           --timestamp=none \\\n           \"$fw\"\ndone\n";
+		};
 		33B79513130A668675830E43 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;

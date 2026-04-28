@@ -6237,6 +6237,10 @@
     "@requiresConnectionGuardDisconnected": {
         "description": "Snackbar shown when a node-required screen is auto-popped because the device disconnected mid-session."
     },
+    "requiresConnectionGuardReconnectingBanner": "Disconnected — reconnecting…",
+    "@requiresConnectionGuardReconnectingBanner": {
+        "description": "Inline banner shown on a node-required screen during the grace window after a brief transport disconnect, while auto-reconnect is attempting recovery. If reconnection fails within ~10s the user is popped back with the existing requiresConnectionGuardDisconnected snackbar."
+    },
     "drawerEnterpriseDeviceManagement": "Device Management",
     "@drawerEnterpriseDeviceManagement": {
         "description": "Label for the Device Management menu tile in the enterprise drawer section."

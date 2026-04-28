@@ -149,3 +149,6 @@ assets/widget_templates/*.json
 /scripts/package-lock.json
 android/key.properties
 .sandbox/
+
+# xcodebuild MCP per-developer session defaults (machine-local paths)
+.xcodebuildmcp/
