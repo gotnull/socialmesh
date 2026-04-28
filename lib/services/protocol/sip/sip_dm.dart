@@ -628,6 +628,19 @@ class SipDmManager {
     }
     if (session.status != SipDmSessionStatus.active) return;
 
+    // Multi-path mesh dedupe (see _markInboundFrameSeen).
+    if (!_markInboundFrameSeen(
+      sessionTag: sessionTag,
+      frameNonce: frame.nonce,
+    )) {
+      AppLogging.sip(
+        'SIP_DM: inbound REACTION dropped: duplicate_frame '
+        'session=0x${sessionTag.toRadixString(16)} '
+        'nonce=0x${frame.nonce.toRadixString(16)}',
+      );
+      return;
+    }
+
     // T+S guard: silent drop. Reactions mutate prior history entries
     // (entry.peerReaction =) — a blocked peer must not be allowed
     // to retroactively annotate the local thread.
@@ -743,6 +756,19 @@ class SipDmManager {
       return;
     }
     if (session.status != SipDmSessionStatus.active) return;
+
+    // Multi-path mesh dedupe (see _markInboundFrameSeen).
+    if (!_markInboundFrameSeen(
+      sessionTag: sessionTag,
+      frameNonce: frame.nonce,
+    )) {
+      AppLogging.sip(
+        'SIP_DM: inbound DELETE dropped: duplicate_frame '
+        'session=0x${sessionTag.toRadixString(16)} '
+        'nonce=0x${frame.nonce.toRadixString(16)}',
+      );
+      return;
+    }
 
     // T+S guard: silent drop. A blocked peer cannot remove
     // messages from the local user's history — that would let them
@@ -988,6 +1014,19 @@ class SipDmManager {
       return null;
     }
 
+    // Multi-path mesh dedupe (see _markInboundFrameSeen).
+    if (!_markInboundFrameSeen(
+      sessionTag: sessionTag,
+      frameNonce: frame.nonce,
+    )) {
+      AppLogging.sip(
+        'SIP_DM: inbound DM dropped: duplicate_frame '
+        'session=0x${sessionTag.toRadixString(16)} '
+        'nonce=0x${frame.nonce.toRadixString(16)}',
+      );
+      return null;
+    }
+
     if (session.isExpired(_clock())) {
       _expireSession(sessionTag);
       AppLogging.sip(
@@ -1058,6 +1097,20 @@ class SipDmManager {
       AppLogging.sipInk(
         'inbound_dropped reason=unknown_session '
         'tag=0x${sessionTag.toRadixString(16)}',
+      );
+      return null;
+    }
+
+    // Multi-path mesh dedupe — same wire frame sometimes arrives via
+    // two relays. Drop the second copy before any UI mutation.
+    if (!_markInboundFrameSeen(
+      sessionTag: sessionTag,
+      frameNonce: frame.nonce,
+    )) {
+      AppLogging.sipInk(
+        'inbound_dropped reason=duplicate_frame '
+        'tag=0x${sessionTag.toRadixString(16)} '
+        'nonce=0x${frame.nonce.toRadixString(16)}',
       );
       return null;
     }
@@ -1269,6 +1322,24 @@ class SipDmManager {
       return null;
     }
 
+    // Multi-path mesh dedupe (see _markInboundFrameSeen). Catches
+    // DM_PLAY move/accept/decline frames delivered via two relays;
+    // the offer-action duplicate guard further down handles the
+    // semantically-distinct case where the peer (or a buggy sender)
+    // creates a second offer for the same gameType while a previous
+    // instance is still pending/active.
+    if (!_markInboundFrameSeen(
+      sessionTag: sessionTag,
+      frameNonce: frame.nonce,
+    )) {
+      AppLogging.sipPlay(
+        'inbound_dropped reason=duplicate_frame '
+        'tag=0x${sessionTag.toRadixString(16)} '
+        'nonce=0x${frame.nonce.toRadixString(16)}',
+      );
+      return null;
+    }
+
     // T+S guard: silent drop. Mirror handleInboundInk — no info-level
     // log including the peer node id, no entry append, no engine
     // invocation. The peer's game stays "frozen" on our side without
@@ -1369,6 +1440,35 @@ class SipDmManager {
     }
     ring.add((seq: sequenceId, hash: payloadHash));
     if (ring.length > _kSignalDedupeRingBytes) {
+      ring.removeAt(0);
+    }
+    return true;
+  }
+
+  /// Per-(sessionTag) ring of recent inbound SIP-wrapper nonces for
+  /// content-bearing DM frames (DM_MSG, DM_REACTION, DM_DELETE,
+  /// DM_INK, DM_PLAY). Multi-radio meshes can deliver the same wire
+  /// frame to a single device through more than one path (the local
+  /// node's paired radio + a relay neighbor's paired radio both
+  /// hand the same packet to the BLE app), and without dedupe the
+  /// app appends the message twice to history.
+  ///
+  /// `frame.nonce` is set per-encode by the original sender and is
+  /// unique within a 1800 s window per [SipReplayCache] semantics, so
+  /// it's a stable dedupe key for content frames in a given session.
+  /// Idempotent paths (typing indicators, close acks) don't need
+  /// this — re-running them is a no-op.
+  final Map<int, List<int>> _inboundFrameDedupe = {};
+  static const int _kFrameDedupeRingBytes = 32;
+
+  bool _markInboundFrameSeen({
+    required int sessionTag,
+    required int frameNonce,
+  }) {
+    final ring = _inboundFrameDedupe.putIfAbsent(sessionTag, () => []);
+    if (ring.contains(frameNonce)) return false; // duplicate — drop
+    ring.add(frameNonce);
+    if (ring.length > _kFrameDedupeRingBytes) {
       ring.removeAt(0);
     }
     return true;
@@ -1557,6 +1657,7 @@ class SipDmManager {
     _peerTyping.clear();
     _typingSentAt.clear();
     _inboundSignalDedupe.clear();
+    _inboundFrameDedupe.clear();
     AppLogging.sip('SIP_DM: all sessions cleared');
   }
 
@@ -1576,6 +1677,7 @@ class SipDmManager {
     if (session == null) return false;
     session.messages.clear();
     _inboundSignalDedupe.remove(sessionTag);
+    _inboundFrameDedupe.remove(sessionTag);
     // Clear typing state only if no other session for this peer
     // remains tracked — the peer's typing flag is keyed by peer
     // node id, not by session tag.
@@ -1635,6 +1737,8 @@ class SipDmManager {
     _sessions.remove(sessionTag);
     _peerTyping.remove(sessionTag);
     _typingSentAt.remove(sessionTag);
+    _inboundSignalDedupe.remove(sessionTag);
+    _inboundFrameDedupe.remove(sessionTag);
   }
 
   // ---------------------------------------------------------------------------

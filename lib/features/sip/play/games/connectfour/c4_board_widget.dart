@@ -319,6 +319,11 @@ class _ColumnState extends State<_Column> with TickerProviderStateMixin {
                         context,
                       ).textTheme.bodyMedium!.color!.withValues(alpha: 0.85),
                       cellBg: context.card,
+                      // Board face matches the outer board container
+                      // colour so the column reads as one continuous
+                      // surface. Holes punched in this colour reveal
+                      // the cellBg "shaft" + any disc drawn below.
+                      boardFace: context.background,
                       gridLine: context.border.withValues(alpha: 0.5),
                     ),
                   ),
@@ -332,12 +337,28 @@ class _ColumnState extends State<_Column> with TickerProviderStateMixin {
   }
 }
 
-/// Custom painter for one Connect Four column. Draws the cell-hole
-/// lattice (rounded rectangle outer + 6 stacked circular cell
-/// backgrounds), the settled discs, the actively-dropping disc, and
-/// the pending ghost overlay. Does NOT draw across columns — each
-/// column is its own painter so the drop animation can be targeted
-/// to one column without re-painting the whole board.
+/// Custom painter for one Connect Four column. Paints in z-order so
+/// the disc visually slides DOWN BEHIND the board face, only visible
+/// through the cell-holes — exactly like a physical Connect Four
+/// frame:
+///
+///   1. Shaft (`cellBg`) fills the column — what's seen through holes
+///      when no disc is there.
+///   2. Settled / dropping / pending discs are painted at their hole
+///      positions with a subtle radial gradient (top-left highlight,
+///      bottom-right shade) for ball-like depth.
+///   3. A faint inner-shadow ring is drawn just inside each hole edge
+///      so the disc reads as "set into" the hole rather than printed
+///      flat on the surface.
+///   4. The board face is painted last as a single rect with circular
+///      holes punched out via [PathFillType.evenOdd]. Anything above
+///      (between holes during the drop animation, edges of discs, etc.)
+///      is hidden by the board face — discs only show through the
+///      holes.
+///
+/// Does NOT draw across columns — each column is its own painter so
+/// the drop animation can be targeted to one column without
+/// re-painting the whole board.
 class _C4ColumnPainter extends CustomPainter {
   final int column;
   final C4Board board;
@@ -350,6 +371,7 @@ class _C4ColumnPainter extends CustomPainter {
   final Color accent;
   final Color mutedDisc;
   final Color cellBg;
+  final Color boardFace;
   final Color gridLine;
 
   _C4ColumnPainter({
@@ -364,6 +386,7 @@ class _C4ColumnPainter extends CustomPainter {
     required this.accent,
     required this.mutedDisc,
     required this.cellBg,
+    required this.boardFace,
     required this.gridLine,
   });
 
@@ -371,28 +394,28 @@ class _C4ColumnPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final cellHeight = size.height / C4Board.rows;
     final cellWidth = size.width;
-    // Disc radius: padded inside the cell so adjacent discs don't
-    // touch and the lattice can show through.
-    final radius = (cellWidth.clamp(0.0, cellHeight) * 0.85) / 2;
+    // Hole radius — what the user reads as the "disc size" once the
+    // board face is overlaid. Same size as the disc itself; the
+    // depth cue comes from the hole inner-shadow + the disc radial
+    // gradient, not from a size mismatch.
+    final holeRadius = (cellWidth.clamp(0.0, cellHeight) * 0.85) / 2;
 
-    // 1. Paint the column background (cell-hole lattice). Each row's
-    //    cell shows as a circle in the cell-bg colour against the
-    //    column's outer surface.
-    final holePaint = Paint()..color = cellBg;
-    for (var row = 0; row < C4Board.rows; row += 1) {
-      final centre = Offset(cellWidth / 2, (row + 0.5) * cellHeight);
-      canvas.drawCircle(centre, radius, holePaint);
-    }
+    // 1. Shaft background. What shows through every hole when no
+    //    disc is there. Drawn over the entire column so the drop
+    //    animation has a continuous "behind the board" surface.
+    final shaftPaint = Paint()..color = cellBg;
+    canvas.drawRect(Offset.zero & size, shaftPaint);
 
-    // 2. Paint settled discs. The TOP-most settled row gets the drop
+    // 2. Settled discs. The TOP-most settled row gets the drop
     //    animation: when dropProgress < 1, render it at its current
-    //    falling y-offset instead of its final row position. All
-    //    other settled discs render in place.
+    //    falling y-offset instead of its final row centre. The
+    //    falling disc is drawn UNDER the board face, so between
+    //    rows it slides behind the plastic and disappears, then
+    //    reappears as it reaches the next hole — the desired
+    //    "drop through" feel.
     for (var row = 0; row < C4Board.rows; row += 1) {
       final disc = board.cellAt(row, column);
       if (disc == null) continue;
-      final colour = _discColour(disc);
-      final discPaint = Paint()..color = colour;
 
       double cy;
       if (row == topSettledRow && dropProgress < 1.0) {
@@ -401,38 +424,118 @@ class _C4ColumnPainter extends CustomPainter {
         // top edge) puts the disc's centre on that edge — top half
         // sits above the column, bottom half pokes into the first
         // hole. Looks like the disc was poised at the top, then
-        // released. Starting fully above (cy = -cellHeight * 0.5)
-        // made the disc travel an extra row before becoming visible
-        // and felt off-pace.
+        // released.
         final finalY = (row + 0.5) * cellHeight;
         const startY = 0.0;
         cy = startY + (finalY - startY) * dropProgress;
       } else {
         cy = (row + 0.5) * cellHeight;
       }
-      canvas.drawCircle(Offset(cellWidth / 2, cy), radius, discPaint);
+      _paintDisc(
+        canvas,
+        Offset(cellWidth / 2, cy),
+        holeRadius,
+        _discColour(disc),
+        opacity: 1.0,
+      );
     }
 
-    // 3. Pending overlay: ghost disc at the targeted column's
-    //    landing row, gently pulsing.
+    // 3. Pending overlay: same-size ghost disc at the targeted
+    //    column's landing row, gently pulsing alpha. Drawn in the
+    //    same layer as settled discs (under the board face) so the
+    //    preview hole shows the ghost only — outside the hole the
+    //    board face hides it.
     if (pendingDisc != null && pendingLandingRow != null) {
       final pulseT = 0.6 + (pulseValue * 0.4);
-      final ghostColour = _discColour(
-        pendingDisc!,
-      ).withValues(alpha: 0.5 * pulseT);
-      final ghostPaint = Paint()..color = ghostColour;
       final cy = (pendingLandingRow! + 0.5) * cellHeight;
-      canvas.drawCircle(Offset(cellWidth / 2, cy), radius, ghostPaint);
+      _paintDisc(
+        canvas,
+        Offset(cellWidth / 2, cy),
+        holeRadius,
+        _discColour(pendingDisc!),
+        opacity: 0.5 * pulseT,
+      );
     }
 
-    // 4. Subtle grid divider on the LEFT edge of the column (skipped
+    // 4. Inner shadow ring just inside the hole edge. Drawn as a
+    //    soft stroked ring at radius = holeRadius - strokeWidth so
+    //    the dark edge sits inside the hole — gives the disc the
+    //    "set into a recessed cup" look without darkening the disc
+    //    body. Subtle by design (alpha = 0.18). Drawn before the
+    //    board face so the face's hole boundary isn't disturbed.
+    final innerShadowStroke = holeRadius * 0.10;
+    final innerShadowPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = innerShadowStroke
+      ..color = Colors.black.withValues(alpha: 0.18);
+    final innerShadowRingRadius = holeRadius - innerShadowStroke / 2;
+    if (innerShadowRingRadius > 0) {
+      for (var row = 0; row < C4Board.rows; row += 1) {
+        final centre = Offset(cellWidth / 2, (row + 0.5) * cellHeight);
+        canvas.drawCircle(centre, innerShadowRingRadius, innerShadowPaint);
+      }
+    }
+
+    // 5. Board face with holes punched out. PathFillType.evenOdd
+    //    fills the outer rect and subtracts each cell-hole oval, so
+    //    the resulting shape is the plastic frame between cells.
+    //    Anything painted earlier in this column (discs, falling
+    //    disc, ghost) only shows through the hole regions.
+    final boardFacePath = Path()..fillType = PathFillType.evenOdd;
+    boardFacePath.addRect(Offset.zero & size);
+    for (var row = 0; row < C4Board.rows; row += 1) {
+      final centre = Offset(cellWidth / 2, (row + 0.5) * cellHeight);
+      boardFacePath.addOval(
+        Rect.fromCircle(center: centre, radius: holeRadius),
+      );
+    }
+    final boardFacePaint = Paint()..color = boardFace;
+    canvas.drawPath(boardFacePath, boardFacePaint);
+
+    // 6. Subtle grid divider on the LEFT edge of the column (skipped
     //    on column 0 so the leftmost edge isn't double-bordered).
+    //    Painted on top of the board face so adjacent columns read
+    //    as discrete vertical channels.
     if (column > 0) {
       final linePaint = Paint()
         ..color = gridLine
         ..strokeWidth = 0.5;
       canvas.drawLine(Offset.zero, Offset(0, size.height), linePaint);
     }
+  }
+
+  /// Paint one disc at [centre] with [radius] using a subtle radial
+  /// gradient — top-left highlight + slight bottom-right shade — so
+  /// the disc reads as a 3D ball without going overboard. [opacity]
+  /// modulates the entire shader (used for the pulsing ghost).
+  void _paintDisc(
+    Canvas canvas,
+    Offset centre,
+    double radius,
+    Color baseColour, {
+    required double opacity,
+  }) {
+    // Light-source assumption: upper-left, ~30° off-axis. Gives a
+    // ball-like read without specular highlights (which would push
+    // into OOT territory).
+    final highlight = Color.lerp(
+      baseColour,
+      Colors.white,
+      0.22,
+    )!.withValues(alpha: opacity);
+    final mid = baseColour.withValues(alpha: opacity);
+    final shade = Color.lerp(
+      baseColour,
+      Colors.black,
+      0.20,
+    )!.withValues(alpha: opacity);
+    final shader = RadialGradient(
+      center: const Alignment(-0.35, -0.35),
+      radius: 0.95,
+      colors: [highlight, mid, shade],
+      stops: const [0.0, 0.55, 1.0],
+    ).createShader(Rect.fromCircle(center: centre, radius: radius));
+    canvas.drawCircle(centre, radius, Paint()..shader = shader);
   }
 
   /// Theme the disc colour by local-vs-peer, NOT by the wire-side
@@ -455,6 +558,7 @@ class _C4ColumnPainter extends CustomPainter {
         old.accent != accent ||
         old.mutedDisc != mutedDisc ||
         old.cellBg != cellBg ||
+        old.boardFace != boardFace ||
         old.gridLine != gridLine;
   }
 }
