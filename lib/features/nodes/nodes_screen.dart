@@ -179,8 +179,11 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
       nodesList = nodesList.where((node) {
         final query = _searchQuery.toLowerCase();
         return node.displayName.toLowerCase().contains(query) ||
+            node.shortName?.toLowerCase().contains(query) == true ||
+            node.longName?.toLowerCase().contains(query) == true ||
             node.userId?.toLowerCase().contains(query) == true ||
-            node.nodeNum.toString().contains(query);
+            node.nodeNum.toString().contains(query) ||
+            node.nodeNum.toRadixString(16).toLowerCase().contains(query);
       }).toList();
     }
 
