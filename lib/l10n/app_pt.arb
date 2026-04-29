@@ -24292,6 +24292,88 @@
   "@nodedexMaxRangeLabel": {
     "description": "Label in node management"
   },
+  "nodedexMapTitle": "Mapa NodeDex",
+  "@nodedexMapTitle": {
+    "description": "Title for the NodeDex Map screen"
+  },
+  "nodedexMapTooltip": "Mostrar mapa",
+  "@nodedexMapTooltip": {
+    "description": "Tooltip for the Map button in the NodeDex header"
+  },
+  "nodedexMapFilter1h": "1h",
+  "@nodedexMapFilter1h": {
+    "description": "Time-window filter chip on NodeDex Map (last hour)"
+  },
+  "nodedexMapFilter24h": "24h",
+  "@nodedexMapFilter24h": {
+    "description": "Time-window filter chip on NodeDex Map (last 24 hours)"
+  },
+  "nodedexMapFilter7d": "7d",
+  "@nodedexMapFilter7d": {
+    "description": "Time-window filter chip on NodeDex Map (last 7 days)"
+  },
+  "nodedexMapFilterAll": "Tudo",
+  "@nodedexMapFilterAll": {
+    "description": "Time-window filter chip on NodeDex Map (no time limit)"
+  },
+  "nodedexMapFilterFavourites": "Favoritos",
+  "@nodedexMapFilterFavourites": {
+    "description": "Filter chip on NodeDex Map showing only favourite nodes"
+  },
+  "nodedexMapVisibleCount": "{visible} de {total} nós",
+  "@nodedexMapVisibleCount": {
+    "placeholders": {
+      "visible": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    },
+    "description": "Counter under filter chips on NodeDex Map"
+  },
+  "nodedexMapLastHeard": "Visto pela última vez {time}",
+  "@nodedexMapLastHeard": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    },
+    "description": "Last-heard line in the NodeDex Map marker bottom sheet"
+  },
+  "nodedexMapDistance": "Distância: {distance}",
+  "@nodedexMapDistance": {
+    "placeholders": {
+      "distance": {
+        "type": "String"
+      }
+    },
+    "description": "Distance line in the NodeDex Map marker bottom sheet"
+  },
+  "nodedexMapOpenDetails": "Abrir detalhes do nó",
+  "@nodedexMapOpenDetails": {
+    "description": "Action label in NodeDex Map marker bottom sheet"
+  },
+  "nodedexMapEmptyNoPositionsTitlePrefix": "Sem ",
+  "@nodedexMapEmptyNoPositionsTitlePrefix": {
+    "description": "Empty-state title prefix shown on NodeDex Map when nodes exist but none have positions"
+  },
+  "nodedexMapEmptyNoPositionsTitleKeyword": "posições",
+  "@nodedexMapEmptyNoPositionsTitleKeyword": {
+    "description": "Empty-state title keyword shown on NodeDex Map when nodes exist but none have positions"
+  },
+  "nodedexMapEmptyNoPositionsTitleSuffix": " disponíveis",
+  "@nodedexMapEmptyNoPositionsTitleSuffix": {
+    "description": "Empty-state title suffix shown on NodeDex Map when nodes exist but none have positions"
+  },
+  "nodedexMapEmptyNoPositionsTagline1": "Os nós aparecem aqui assim que partilham GPS",
+  "@nodedexMapEmptyNoPositionsTagline1": {
+    "description": "Empty-state tagline on NodeDex Map when no positions are known"
+  },
+  "nodedexMapEmptyNoPositionsTagline2": "Move-te para captar fixes de posição",
+  "@nodedexMapEmptyNoPositionsTagline2": {
+    "description": "Empty-state tagline on NodeDex Map when no positions are known"
+  },
   "nodedexMessageActivity": "Atividade de mensagens",
   "@nodedexMessageActivity": {
     "description": "Text displayed in node management"

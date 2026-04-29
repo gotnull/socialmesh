@@ -622,6 +622,13 @@ class ProtocolService {
   // Track pending messages by packet ID for delivery status updates
   final Map<int, String> _pendingMessages = {}; // packetId -> messageId
 
+  /// Per-connection cache of node ids that already received a PKI contact
+  /// sync admin packet this session. Mirrors meshtastic-ios's
+  /// `addContactFromURL` failsafe but with mild dedup so we don't spam the
+  /// radio's NodeDB on chatty PKI conversations. Cleared on `start()`,
+  /// transport disconnect, and `dispose()`.
+  final Set<int> _syncedContactsThisSession = <int>{};
+
   /// Tracks remote admin packets awaiting ACK from the mesh.
   final AdminAckTracker _adminAckTracker = AdminAckTracker();
 
@@ -1389,6 +1396,7 @@ class ProtocolService {
     // Clear previous connection state
     _channels.clear();
     _nodes.clear();
+    _syncedContactsThisSession.clear();
     _myNodeNum = null;
     _configurationComplete = false;
     _handshakePhase = _HandshakePhase.idle;
@@ -1417,6 +1425,9 @@ class ProtocolService {
       if (state == DeviceConnectionState.disconnected ||
           state == DeviceConnectionState.error) {
         AppLogging.protocol('Transport disconnected/error during config wait');
+        // Per-session contact-sync cache is invalid the moment the radio
+        // is gone — a different radio (different NodeDB) could attach next.
+        _syncedContactsThisSession.clear();
         // Only complete with error if we're actually waiting for config
         // This prevents double-errors when enableNotifications throws directly
         if (waitingForConfig &&
@@ -1918,6 +1929,15 @@ class ProtocolService {
     _rssiPaused = paused;
   }
 
+  /// Test-only seam: replicates the cache clear that the transport-state
+  /// listener performs on disconnect. Tests bypass `start()` so the
+  /// listener is not active; this lets them exercise the post-disconnect
+  /// re-sync path without driving a full reconnect handshake.
+  @visibleForTesting
+  void debugSimulateTransportDisconnectForContactSync() {
+    _syncedContactsThisSession.clear();
+  }
+
   /// Test-only seam: send the initial `wantConfigId` and enter the
   /// `awaitingInitialConfig` phase without running the full `start()`
   /// coroutine (which waits on BLE notifications and a 30-second timeout).
@@ -2249,6 +2269,15 @@ class ProtocolService {
       hopCount: _computeHopCount(packet),
       viaMqtt: packet.hasViaMqtt() ? packet.viaMqtt : null,
     );
+
+    // Mirror meshtastic-ios `UpdateCoreData.swift:413-415`: every inbound
+    // MeshPacket may carry the sender's curve25519 public key in its
+    // header (set when the firmware encrypts a unicast with PKI). Capture
+    // it onto the originating MeshNode so subsequent DMs to that peer can
+    // auto-attach `pki_encrypted=true` without waiting for a NodeInfo
+    // refresh. Header capture is in addition to the existing nested
+    // User.publicKey reads in `_handleNodeInfo` and `_handleAdminMessage`.
+    _maybeCaptureMeshPacketPubkey(packet);
 
     // Extract and emit SNR from received packets
     if (packet.hasRxSnr()) {
@@ -5355,6 +5384,17 @@ class ProtocolService {
         'payloadLen=${data.payload.length}',
       );
 
+      // Auto-PKI: if the caller didn't pre-resolve the recipient's pubkey
+      // but our nodeDB has one for [to], attach it so firmware encrypts
+      // with PKI instead of channel PSK. Mirrors meshtastic-ios behaviour
+      // where `UserEntity.pkiEncrypted == true` flips DMs to PKI without
+      // any caller-side decision. Broadcasts (`to == 0xFFFFFFFF`) are
+      // skipped — PKI is unicast-only.
+      final effectivePkiKey = _resolveEffectivePkiKey(
+        to: to,
+        callerPkiKey: pkiPublicKey,
+      );
+
       final packet = MeshPacketBuilder.userPayload(
         myNodeNum: _myNodeNum!,
         to: to,
@@ -5362,10 +5402,10 @@ class ProtocolService {
         packetId: packetId,
         channel: channel,
         wantAck: wantAck,
-        pkiPublicKey: pkiPublicKey,
+        pkiPublicKey: effectivePkiKey,
       );
 
-      final pkiAttached = pkiPublicKey != null && pkiPublicKey.isNotEmpty;
+      final pkiAttached = effectivePkiKey != null && effectivePkiKey.isNotEmpty;
       _logDmDispatchPrecheck(
         to: to,
         channel: channel,
@@ -5375,6 +5415,7 @@ class ProtocolService {
         '📤 Outbound message: packetId=$packetId, '
         'to=0x${to.toRadixString(16)}, channel=$channel, '
         'wantAck=$wantAck, pkiEncrypted=$pkiAttached, '
+        'pkiSource=${_pkiSourceLabel(callerPkiKey: pkiPublicKey, effectivePkiKey: effectivePkiKey)}, '
         'transport=radio '
         '(hopLimit/hopStart left to firmware)',
       );
@@ -5392,6 +5433,15 @@ class ProtocolService {
       // Track the message for delivery status
       if (messageId != null && wantAck) {
         _pendingMessages[packetId] = messageId;
+      }
+
+      // PKI failsafe: push the recipient's contact to the radio's local
+      // NodeDB so firmware doesn't NAK future DMs with "PKI Failed" if
+      // the entry rolls off. Mirrors meshtastic-ios `addContactFromURL`
+      // post-PKI-DM Task. Fire-and-forget — must never block or fail
+      // the DM.
+      if (pkiAttached) {
+        _maybeSyncContactAfterPkiDm(to);
       }
 
       // Get our node info to cache in message
@@ -6996,6 +7046,12 @@ class ProtocolService {
         data.emoji = 1;
       }
 
+      // Auto-PKI: see [sendMessage] for rationale.
+      final effectivePkiKey = _resolveEffectivePkiKey(
+        to: to,
+        callerPkiKey: pkiPublicKey,
+      );
+
       final packet = MeshPacketBuilder.userPayload(
         myNodeNum: _myNodeNum!,
         to: to,
@@ -7003,10 +7059,10 @@ class ProtocolService {
         packetId: packetId,
         channel: channel,
         wantAck: wantAck,
-        pkiPublicKey: pkiPublicKey,
+        pkiPublicKey: effectivePkiKey,
       );
 
-      final pkiAttached = pkiPublicKey != null && pkiPublicKey.isNotEmpty;
+      final pkiAttached = effectivePkiKey != null && effectivePkiKey.isNotEmpty;
       _logDmDispatchPrecheck(
         to: to,
         channel: channel,
@@ -7016,6 +7072,7 @@ class ProtocolService {
         '📤 Outbound message (pre-tracked): packetId=$packetId, '
         'to=0x${to.toRadixString(16)}, channel=$channel, '
         'wantAck=$wantAck, pkiEncrypted=$pkiAttached, '
+        'pkiSource=${_pkiSourceLabel(callerPkiKey: pkiPublicKey, effectivePkiKey: effectivePkiKey)}, '
         'transport=radio '
         '(hopLimit/hopStart left to firmware)',
       );
@@ -7033,6 +7090,12 @@ class ProtocolService {
       // Track the message for delivery status (internal tracking)
       if (messageId != null && wantAck) {
         _pendingMessages[packetId] = messageId;
+      }
+
+      // PKI failsafe — see [sendMessage] for rationale. Fire-and-forget,
+      // never blocks or fails the DM.
+      if (pkiAttached) {
+        _maybeSyncContactAfterPkiDm(to);
       }
 
       // Get our node info to cache in message
@@ -7717,6 +7780,205 @@ class ProtocolService {
       AppLogging.protocol('Error setting owner config: $e');
       rethrow;
     }
+  }
+
+  /// Pushes a peer's contact (nodeId + publicKey + identity fields) to the
+  /// connected radio's local NodeDB via `AdminMessage.addContact`.
+  ///
+  /// Mirrors the official Meshtastic iOS app's PKI failsafe in
+  /// `meshtastic-ios/Meshtastic/Accessory/Accessory Manager/AccessoryManager+ToRadio.swift`
+  /// (`addContactFromURL`, ~line 145, called from line 333 after every PKI DM
+  /// send). The intent — quoting the iOS source comment verbatim — is "so
+  /// that any nodes that have rolled out of the db are there and we don't
+  /// get a PKI Failed error".
+  ///
+  /// The packet is a LOCAL admin (`to == from == myNodeNum`, never on-air,
+  /// zero airtime cost) sent with `wantAck=true` + `priority=RELIABLE` to
+  /// match the iOS contract. Errors are swallowed and logged — they must
+  /// never fail an in-flight DM.
+  ///
+  /// Idempotency: per-session dedup via [_syncedContactsThisSession]. iOS
+  /// fires unconditionally on every PKI DM; we skip duplicates within a
+  /// session because the resulting addContact payload is identical.
+  Future<void> syncContactToDevice({
+    required int nodeNum,
+    required List<int> publicKey,
+    required String longName,
+    required String shortName,
+    int? hwModelId,
+    String? userId,
+    bool manuallyVerified = false,
+    bool shouldIgnore = false,
+  }) async {
+    if (publicKey.isEmpty) return;
+    if (_myNodeNum == null || !_transport.isConnected) return;
+    if (nodeNum == _myNodeNum) return;
+
+    try {
+      final user = pb.User()
+        ..id = userId ?? '!${nodeNum.toRadixString(16).padLeft(8, '0')}'
+        ..longName = longName
+        ..shortName = shortName
+        ..publicKey = publicKey;
+      if (hwModelId != null) {
+        final hwEnum = pb.HardwareModel.valueOf(hwModelId);
+        if (hwEnum != null) user.hwModel = hwEnum;
+      }
+
+      final contact = admin.SharedContact()
+        ..nodeNum = nodeNum
+        ..user = user
+        ..manuallyVerified = manuallyVerified
+        ..shouldIgnore = shouldIgnore;
+
+      final adminMsg = admin.AdminMessage()..addContact = contact;
+
+      final data = pb.Data()
+        ..portnum = pn.PortNum.ADMIN_APP
+        ..payload = adminMsg.writeToBuffer();
+
+      final packetId = _generatePacketId();
+      final packet = MeshPacketBuilder.localAdminContactSync(
+        myNodeNum: _myNodeNum!,
+        data: data,
+        packetId: packetId,
+      );
+
+      final toRadio = pb.ToRadio()..packet = packet;
+      final bytes = toRadio.writeToBuffer();
+
+      await _transport.send(_prepareForSend(bytes));
+      _syncedContactsThisSession.add(nodeNum);
+
+      AppLogging.protocol(
+        'CONTACT_SYNC_SENT '
+        'dest=0x${nodeNum.toRadixString(16).padLeft(8, '0')} '
+        'pubkeyLen=${publicKey.length} '
+        'longName="$longName" '
+        'shortName="$shortName" '
+        'hwModelId=${hwModelId ?? 'n/a'} '
+        'packetId=$packetId',
+      );
+    } catch (e) {
+      AppLogging.protocol(
+        'CONTACT_SYNC_FAIL '
+        'dest=0x${nodeNum.toRadixString(16).padLeft(8, '0')} '
+        'error=$e',
+      );
+    }
+  }
+
+  /// Resolves [destNodeNum] against the current node cache and fires a
+  /// fire-and-forget [syncContactToDevice]. Skips silently if the node is
+  /// unknown, lacks a pubkey, or has already been synced this session.
+  /// Mirrors the iOS post-PKI-DM trigger.
+  void _maybeSyncContactAfterPkiDm(int destNodeNum) {
+    if (_syncedContactsThisSession.contains(destNodeNum)) {
+      return;
+    }
+    final destNode = _nodes[destNodeNum];
+    if (destNode == null) return;
+    final pk = destNode.publicKey;
+    if (pk == null || pk.isEmpty) return;
+
+    unawaited(
+      syncContactToDevice(
+        nodeNum: destNodeNum,
+        publicKey: pk,
+        longName: destNode.longName ?? '',
+        shortName: destNode.shortName ?? '',
+        hwModelId: destNode.hwModelId,
+        userId: destNode.userId,
+      ),
+    );
+  }
+
+  /// Captures `MeshPacket.publicKey` from an inbound packet header onto
+  /// the originating MeshNode. Mirrors meshtastic-ios `UpdateCoreData.swift`
+  /// lines 413-415 where iOS reads the same field on every inbound packet
+  /// (not just NodeInfo or admin responses) and persists it to the sender's
+  /// `UserEntity.publicKey`.
+  ///
+  /// Skips silently when:
+  /// - the packet has no `publicKey` set (most non-PKI packets)
+  /// - the sender is unknown to the local nodeDB (no MeshNode to update —
+  ///   `_handleNodeInfo` handles node creation; we only augment existing)
+  /// - the cached pubkey already matches (idempotent)
+  ///
+  /// Logs `INBOUND_PUBKEY_LEARNED` for fresh keys and
+  /// `INBOUND_PUBKEY_UPDATED` for changed keys, both at protocol severity.
+  void _maybeCaptureMeshPacketPubkey(pb.MeshPacket packet) {
+    if (!packet.hasPublicKey() || packet.publicKey.isEmpty) return;
+
+    final senderNodeNum = packet.from;
+    final existingNode = _nodes[senderNodeNum];
+    if (existingNode == null) return;
+
+    final newKey = List<int>.unmodifiable(packet.publicKey);
+    final existingKey = existingNode.publicKey;
+    final senderHex = senderNodeNum.toRadixString(16).padLeft(8, '0');
+    final fp = AppLogging.pskFingerprint(newKey);
+
+    if (existingKey != null && _bytesEqual(existingKey, newKey)) {
+      return;
+    }
+
+    final isUpdate = existingKey != null && existingKey.isNotEmpty;
+    final updatedNode = existingNode.copyWith(
+      publicKey: newKey,
+      hasPublicKey: true,
+    );
+    _nodes[senderNodeNum] = updatedNode;
+    _nodeController.add(updatedNode);
+
+    AppLogging.protocol(
+      isUpdate
+          ? 'INBOUND_PUBKEY_UPDATED sender=0x$senderHex newFp=$fp '
+                'priorFp=${AppLogging.pskFingerprint(existingKey)}'
+          : 'INBOUND_PUBKEY_LEARNED sender=0x$senderHex fp=$fp',
+    );
+  }
+
+  bool _bytesEqual(List<int> a, List<int> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
+  /// Returns the curve25519 pubkey to attach on an outbound DM, in
+  /// preference order: caller-supplied, then nodeDB-resolved. Returns null
+  /// for broadcasts or when no key is available — falling back to channel
+  /// PSK encryption. Mirrors meshtastic-ios `UserEntity.pkiEncrypted`
+  /// behaviour where the send path consults the receiver's stored pubkey
+  /// without any caller decision.
+  List<int>? _resolveEffectivePkiKey({
+    required int to,
+    required List<int>? callerPkiKey,
+  }) {
+    if (callerPkiKey != null && callerPkiKey.isNotEmpty) {
+      return callerPkiKey;
+    }
+    if (to == 0xFFFFFFFF) return null;
+    final destNode = _nodes[to];
+    final pk = destNode?.publicKey;
+    if (pk == null || pk.isEmpty) return null;
+    return pk;
+  }
+
+  /// One-token label describing where the PKI pubkey on an outbound DM came
+  /// from, for log line greppability:
+  /// - `caller` — UI-layer resolver passed an explicit key
+  /// - `nodedb` — auto-resolved from the local nodeDB
+  /// - `none` — no PKI key in play (channel-PSK encryption)
+  String _pkiSourceLabel({
+    required List<int>? callerPkiKey,
+    required List<int>? effectivePkiKey,
+  }) {
+    if (effectivePkiKey == null || effectivePkiKey.isEmpty) return 'none';
+    if (callerPkiKey != null && callerPkiKey.isNotEmpty) return 'caller';
+    return 'nodedb';
   }
 
   /// Local-only: region/frequency is a radio hardware setting on the
@@ -10095,6 +10357,7 @@ class ProtocolService {
   Future<void> dispose() async {
     _adminAckTracker.cancelAll();
     _adminSessions.clear();
+    _syncedContactsThisSession.clear();
     _rssiTimer?.cancel();
     _rssiTimer = null;
     _receiveStallTimer?.cancel();

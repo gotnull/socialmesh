@@ -20197,6 +20197,102 @@ abstract class AppLocalizations {
   /// **'Max Range'**
   String get nodedexMaxRangeLabel;
 
+  /// Title for the NodeDex Map screen
+  ///
+  /// In en, this message translates to:
+  /// **'NodeDex Map'**
+  String get nodedexMapTitle;
+
+  /// Tooltip for the Map button in the NodeDex header
+  ///
+  /// In en, this message translates to:
+  /// **'Show map view'**
+  String get nodedexMapTooltip;
+
+  /// Time-window filter chip on NodeDex Map (last hour)
+  ///
+  /// In en, this message translates to:
+  /// **'1h'**
+  String get nodedexMapFilter1h;
+
+  /// Time-window filter chip on NodeDex Map (last 24 hours)
+  ///
+  /// In en, this message translates to:
+  /// **'24h'**
+  String get nodedexMapFilter24h;
+
+  /// Time-window filter chip on NodeDex Map (last 7 days)
+  ///
+  /// In en, this message translates to:
+  /// **'7d'**
+  String get nodedexMapFilter7d;
+
+  /// Time-window filter chip on NodeDex Map (no time limit)
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get nodedexMapFilterAll;
+
+  /// Filter chip on NodeDex Map showing only favourite nodes
+  ///
+  /// In en, this message translates to:
+  /// **'Favourites'**
+  String get nodedexMapFilterFavourites;
+
+  /// Counter under filter chips on NodeDex Map
+  ///
+  /// In en, this message translates to:
+  /// **'Showing {visible} of {total} nodes'**
+  String nodedexMapVisibleCount(int visible, int total);
+
+  /// Last-heard line in the NodeDex Map marker bottom sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Last heard {time}'**
+  String nodedexMapLastHeard(String time);
+
+  /// Distance line in the NodeDex Map marker bottom sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Distance: {distance}'**
+  String nodedexMapDistance(String distance);
+
+  /// Action label in NodeDex Map marker bottom sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Open Node Details'**
+  String get nodedexMapOpenDetails;
+
+  /// Empty-state title prefix shown on NodeDex Map when nodes exist but none have positions
+  ///
+  /// In en, this message translates to:
+  /// **'No node '**
+  String get nodedexMapEmptyNoPositionsTitlePrefix;
+
+  /// Empty-state title keyword shown on NodeDex Map when nodes exist but none have positions
+  ///
+  /// In en, this message translates to:
+  /// **'positions'**
+  String get nodedexMapEmptyNoPositionsTitleKeyword;
+
+  /// Empty-state title suffix shown on NodeDex Map when nodes exist but none have positions
+  ///
+  /// In en, this message translates to:
+  /// **' yet'**
+  String get nodedexMapEmptyNoPositionsTitleSuffix;
+
+  /// Empty-state tagline on NodeDex Map when no positions are known
+  ///
+  /// In en, this message translates to:
+  /// **'Nodes appear here once they share GPS'**
+  String get nodedexMapEmptyNoPositionsTagline1;
+
+  /// Empty-state tagline on NodeDex Map when no positions are known
+  ///
+  /// In en, this message translates to:
+  /// **'Move around to gather position fixes'**
+  String get nodedexMapEmptyNoPositionsTagline2;
+
   /// Text displayed in node management
   ///
   /// In en, this message translates to:

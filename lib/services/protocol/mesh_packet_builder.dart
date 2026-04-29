@@ -123,6 +123,32 @@ abstract final class MeshPacketBuilder {
     );
   }
 
+  /// Builds a LOCAL admin packet for the PKI contact-sync failsafe (post-PKI-DM
+  /// `addContact`). Dedicated helper because this is the one local-admin path
+  /// where iOS sets `wantAck` and `priority=RELIABLE` even with `to == from ==
+  /// myNodeNum`, contradicting [localAdmin]'s usual invariant. Documented in
+  /// `meshtastic-ios/Meshtastic/Accessory/Accessory Manager/AccessoryManager+ToRadio.swift`
+  /// (`addContactFromURL`, ~line 145).
+  ///
+  /// Do not generalize this to other admin commands — the wantAck/RELIABLE
+  /// pair is intentional here to match the iOS-firmware contract for
+  /// `addContact`, where the radio is expected to dispatch a SharedContact
+  /// admin response and update its local NodeDB.
+  static pb.MeshPacket localAdminContactSync({
+    required int myNodeNum,
+    required pb.Data data,
+    required int packetId,
+  }) {
+    return pb.MeshPacket()
+      ..from = myNodeNum
+      ..to = myNodeNum
+      ..decoded = data
+      ..id = packetId
+      ..channel = 0
+      ..priority = pbenum.MeshPacket_Priority.RELIABLE
+      ..wantAck = true;
+  }
+
   /// Builds a packet for user-originated payloads (messages, positions,
   /// traceroutes, node info requests, etc.).
   ///

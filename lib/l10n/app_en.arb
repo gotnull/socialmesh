@@ -15879,6 +15879,88 @@
     "@nodedexMaxRangeLabel": {
         "description": "Label in node management"
     },
+    "nodedexMapTitle": "NodeDex Map",
+    "@nodedexMapTitle": {
+        "description": "Title for the NodeDex Map screen"
+    },
+    "nodedexMapTooltip": "Show map view",
+    "@nodedexMapTooltip": {
+        "description": "Tooltip for the Map button in the NodeDex header"
+    },
+    "nodedexMapFilter1h": "1h",
+    "@nodedexMapFilter1h": {
+        "description": "Time-window filter chip on NodeDex Map (last hour)"
+    },
+    "nodedexMapFilter24h": "24h",
+    "@nodedexMapFilter24h": {
+        "description": "Time-window filter chip on NodeDex Map (last 24 hours)"
+    },
+    "nodedexMapFilter7d": "7d",
+    "@nodedexMapFilter7d": {
+        "description": "Time-window filter chip on NodeDex Map (last 7 days)"
+    },
+    "nodedexMapFilterAll": "All",
+    "@nodedexMapFilterAll": {
+        "description": "Time-window filter chip on NodeDex Map (no time limit)"
+    },
+    "nodedexMapFilterFavourites": "Favourites",
+    "@nodedexMapFilterFavourites": {
+        "description": "Filter chip on NodeDex Map showing only favourite nodes"
+    },
+    "nodedexMapVisibleCount": "Showing {visible} of {total} nodes",
+    "@nodedexMapVisibleCount": {
+        "placeholders": {
+            "visible": {
+                "type": "int"
+            },
+            "total": {
+                "type": "int"
+            }
+        },
+        "description": "Counter under filter chips on NodeDex Map"
+    },
+    "nodedexMapLastHeard": "Last heard {time}",
+    "@nodedexMapLastHeard": {
+        "placeholders": {
+            "time": {
+                "type": "String"
+            }
+        },
+        "description": "Last-heard line in the NodeDex Map marker bottom sheet"
+    },
+    "nodedexMapDistance": "Distance: {distance}",
+    "@nodedexMapDistance": {
+        "placeholders": {
+            "distance": {
+                "type": "String"
+            }
+        },
+        "description": "Distance line in the NodeDex Map marker bottom sheet"
+    },
+    "nodedexMapOpenDetails": "Open Node Details",
+    "@nodedexMapOpenDetails": {
+        "description": "Action label in NodeDex Map marker bottom sheet"
+    },
+    "nodedexMapEmptyNoPositionsTitlePrefix": "No node ",
+    "@nodedexMapEmptyNoPositionsTitlePrefix": {
+        "description": "Empty-state title prefix shown on NodeDex Map when nodes exist but none have positions"
+    },
+    "nodedexMapEmptyNoPositionsTitleKeyword": "positions",
+    "@nodedexMapEmptyNoPositionsTitleKeyword": {
+        "description": "Empty-state title keyword shown on NodeDex Map when nodes exist but none have positions"
+    },
+    "nodedexMapEmptyNoPositionsTitleSuffix": " yet",
+    "@nodedexMapEmptyNoPositionsTitleSuffix": {
+        "description": "Empty-state title suffix shown on NodeDex Map when nodes exist but none have positions"
+    },
+    "nodedexMapEmptyNoPositionsTagline1": "Nodes appear here once they share GPS",
+    "@nodedexMapEmptyNoPositionsTagline1": {
+        "description": "Empty-state tagline on NodeDex Map when no positions are known"
+    },
+    "nodedexMapEmptyNoPositionsTagline2": "Move around to gather position fixes",
+    "@nodedexMapEmptyNoPositionsTagline2": {
+        "description": "Empty-state tagline on NodeDex Map when no positions are known"
+    },
     "nodedexMessageActivity": "Message Activity",
     "@nodedexMessageActivity": {
         "description": "Text displayed in node management"

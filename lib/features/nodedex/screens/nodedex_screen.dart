@@ -49,6 +49,7 @@ import '../providers/nodedex_providers.dart';
 import '../services/trust_score.dart';
 
 import '../../settings/settings_screen.dart';
+import '../map/nodedex_map_screen.dart';
 import '../widgets/identity_overlay_painter.dart';
 import '../widgets/patina_stamp.dart';
 import '../widgets/sigil_painter.dart';
@@ -139,6 +140,18 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
                 notifier.toggle();
                 AppLogging.nodeDex(
                   'View mode toggled: ${isAlbumMode ? 'album → list' : 'list → album'}',
+                );
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.map_outlined, size: 22),
+              tooltip: context.l10n.nodedexMapTooltip,
+              onPressed: () {
+                AppLogging.nodeDex('Opening NodeDex Map');
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const NodeDexMapScreen(),
+                  ),
                 );
               },
             ),
