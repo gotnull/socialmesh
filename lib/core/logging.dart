@@ -361,6 +361,37 @@ class AppLogging {
     if (bleLoggingEnabled) debugPrint('📱 BLE: $message');
   }
 
+  /// Severity-2 BLE warning. Forwarded to the app log sink (in-app log
+  /// viewer / Crashlytics bridge) at warning level so support telemetry
+  /// can surface receive-pipeline stalls and recovery failures even
+  /// when verbose BLE logging is disabled at the device.
+  static void bleWarning(String message) {
+    if (bleLoggingEnabled) debugPrint('📱 BLE: $message');
+    _appLogSink?.call(2, 'ble', message);
+  }
+
+  /// Short fingerprint for a PSK / public-key byte string suitable for
+  /// log lines.
+  ///
+  /// Format: `<len>B:aabbccdd…eeff0011` — the byte length, a colon, and
+  /// the first 4 + last 4 bytes in lowercase hex. Empty/null PSKs
+  /// render as `0B:none`. Single-byte PSKs (the canonical default
+  /// LongFast `AQ==`) render as `1B:01`.
+  ///
+  /// Never log the full PSK — channel keys are user secrets. The
+  /// fingerprint is enough to spot mismatches between sent / saved /
+  /// re-read keys without leaking the encryption material.
+  static String pskFingerprint(List<int>? psk) {
+    if (psk == null || psk.isEmpty) return '0B:none';
+    final hex = psk.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+    if (psk.length <= 8) {
+      return '${psk.length}B:$hex';
+    }
+    final head = hex.substring(0, 8);
+    final tail = hex.substring(hex.length - 8);
+    return '${psk.length}B:$head…$tail';
+  }
+
   static Logger get mapLogger {
     if (mapLoggingEnabled) {
       _mapLogger ??= Logger(

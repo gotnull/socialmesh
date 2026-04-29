@@ -139,3 +139,39 @@ abstract class DeviceTransport {
   /// Check if connected
   bool get isConnected => state == DeviceConnectionState.connected;
 }
+
+/// Optional capability interface for transports that can surface
+/// receive-pipeline diagnostic counters.
+///
+/// Only BLE transports implement this — USB / TCP / test fakes don't,
+/// and the protocol-layer stall detector falls back to safe defaults
+/// (`null` / `0`) when the active transport isn't a
+/// `ReceiveDiagnosticsSupport`. Keeps every existing
+/// `implements DeviceTransport` callsite (production and test) free of
+/// no-op overrides.
+abstract class ReceiveDiagnosticsSupport {
+  /// Timestamp of the last raw notification received from the
+  /// underlying transport. Used by the protocol-layer receive-stall
+  /// detector.
+  DateTime? get lastNotificationAt;
+
+  /// Diagnostic counter: number of low-level notification events
+  /// observed (e.g. BLE `fromNum` notifications).
+  int get fromNumNotificationCount;
+
+  /// Diagnostic counter: number of non-empty data reads observed.
+  int get rxBytesReadCount;
+
+  /// Diagnostic counter: number of read failures observed.
+  int get rxReadFailureCount;
+
+  /// Diagnostic counter: number of accepted
+  /// `DeviceTransport.refreshNotifications` invocations.
+  int get refreshNotificationsCount;
+
+  /// Diagnostic counter: number of `refreshNotifications` failures.
+  /// A failure either preserves the prior subscription or transitions
+  /// to disconnected — never silently leaves the transport in a
+  /// "connected, no subscription" state.
+  int get refreshNotificationsFailureCount;
+}

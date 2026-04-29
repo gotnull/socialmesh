@@ -274,6 +274,15 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen>
 
     safeSetState(() => _isSaving = true);
 
+    // Audit-trail session ID so a single save round-trip can be
+    // correlated across the form, protocol service, transport, and
+    // channel-response handler in the logs. Stable string, no timing
+    // info embedded.
+    final saveSessionId = DateTime.now().microsecondsSinceEpoch.toRadixString(
+      36,
+    );
+    final saveStartedAt = DateTime.now();
+
     try {
       List<int> psk = [];
       if (_selectedKeySize != KeySize.none && _keyController.text.isNotEmpty) {
@@ -331,6 +340,15 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen>
         role: role,
       );
 
+      AppLogging.channels(
+        'CHANNEL_SAVE_START sessionId=$saveSessionId '
+        'channelIndex=$index name="${newChannel.name}" '
+        'role=$role pskLen=${psk.length} '
+        'pskFp=${AppLogging.pskFingerprint(psk)} '
+        'positionPrecision=$positionPrecision '
+        'uplink=$_uplinkEnabled downlink=$_downlinkEnabled',
+      );
+
       // Verify we have node info (indicates device is ready)
       if (protocol.myNodeNum == null) {
         throw Exception('device_not_ready');
@@ -338,6 +356,9 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen>
 
       await protocol.setChannel(newChannel);
       if (!mounted) return;
+      AppLogging.channels(
+        'CHANNEL_SAVE_PROTOCOL_RETURNED sessionId=$saveSessionId',
+      );
 
       // Small delay to allow device to process
       await Future.delayed(const Duration(milliseconds: 300));
@@ -346,9 +367,17 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen>
       // Request updated channel info from device to confirm
       await protocol.getChannel(index);
       if (!mounted) return;
+      AppLogging.channels(
+        'CHANNEL_SAVE_VERIFY_REQUESTED sessionId=$saveSessionId '
+        'channelIndex=$index',
+      );
 
       // Update local state only after successful device sync
       channelsNotifier.setChannel(newChannel);
+      AppLogging.channels(
+        'CHANNEL_SAVE_LOCAL_APPLIED sessionId=$saveSessionId '
+        'appliedPskFp=${AppLogging.pskFingerprint(psk)}',
+      );
 
       if (psk.isNotEmpty) {
         await secureStorage.storeChannelKey(
@@ -360,6 +389,11 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen>
         if (!mounted) return;
       }
 
+      AppLogging.channels(
+        'CHANNEL_SAVE_COMPLETE sessionId=$saveSessionId '
+        'elapsedMs=${DateTime.now().difference(saveStartedAt).inMilliseconds}',
+      );
+
       safeNavigatorPop();
       safeShowSnackBar(
         isEditing
@@ -367,6 +401,9 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen>
             : context.l10n.channelFormCreatedSnackbar,
       );
     } catch (e) {
+      AppLogging.channels(
+        'CHANNEL_SAVE_FAILED sessionId=$saveSessionId error=$e',
+      );
       if (mounted) {
         final errorStr = e.toString();
         if (errorStr.contains('max_channels')) {

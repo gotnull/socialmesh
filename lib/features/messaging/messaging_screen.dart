@@ -9,6 +9,7 @@ import '../../core/l10n/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import 'package:flutter/services.dart';
+import 'dm_channel_resolver.dart';
 import 'widgets/chat_composer.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../utils/text_sanitizer.dart';
@@ -1449,7 +1450,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
 
   void _setReplyTo(Message message) {
     setState(() => _replyingTo = message);
-    _messageFocusNode.requestFocus();
+    // Defer focus until after the modal context menu's pop animation
+    // settles. Calling requestFocus synchronously inside the menu's
+    // onTap loses to the modal route's focus restoration on dismiss,
+    // so the keyboard never appears.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _messageFocusNode.requestFocus();
+    });
   }
 
   void _clearReply() {
@@ -1515,9 +1523,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     final to = widget.type == ConversationType.channel
         ? 0xFFFFFFFF
         : widget.nodeNum!;
+    // For DMs, route through the iOS-parity resolver (always channel 0,
+    // attaches the recipient's curve25519 public key when known so the
+    // firmware encrypts with PKI rather than the channel PSK). For
+    // channel broadcasts, the channel index is fixed by the source tab.
+    final dmResolution =
+        widget.type == ConversationType.directMessage && widget.nodeNum != null
+        ? resolveDmChannel(
+            destinationNodeId: widget.nodeNum!,
+            destinationNode: nodes[widget.nodeNum!],
+          )
+        : null;
     final channel = widget.type == ConversationType.channel
         ? widget.channelIndex ?? 0
-        : 0;
+        : dmResolution?.channel ?? 0;
+    final pkiPublicKey = dmResolution?.publicKey;
     // Match official Meshtastic behaviour: wantAck=true for ALL user messages.
     // The firmware uses this for reliable delivery tracking. Channel broadcasts
     // won't receive explicit ACKs, but the firmware still benefits from the
@@ -1600,11 +1620,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
         // Channel messages don't get ACKs, so no tracking needed
       } else {
         // Pre-generate packet ID and track BEFORE sending to avoid race condition
-        // where ACK arrives before tracking is set up
+        // where ACK arrives before tracking is set up.
+        //
+        // Channel + pkiPublicKey come from the iOS-parity resolver:
+        // channel is always 0 for DMs (matches
+        // `MessageDestination.channelNum` in
+        // `meshtastic-ios/Meshtastic/Enums/MessageDestination.swift:13-18`)
+        // and the public key (when known) attaches `pki_encrypted=true`
+        // on the wire (matches `AccessoryManager+ToRadio.swift:327-329`).
         packetId = await protocol.sendMessageWithPreTracking(
           text: text,
           to: widget.nodeNum!,
-          channel: 0,
+          channel: dmResolution?.channel ?? 0,
           wantAck: true,
           messageId: messageId,
           onPacketIdGenerated: (id) {
@@ -1613,6 +1640,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
           },
           source: MessageSource.manual,
           replyId: replyPacketId,
+          pkiPublicKey: pkiPublicKey,
         );
       }
 
@@ -2100,17 +2128,20 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
           hasScrollBody: true,
           leading: IconButton(
             icon: Icon(Icons.arrow_back, color: context.textPrimary),
-            onPressed: () async {
+            onPressed: () {
               _dismissKeyboard();
               if (_isSearching) {
                 _toggleSearch();
-              } else {
-                final navigator = Navigator.of(context);
-                await _persistReadingPositionNow();
-                if (mounted) {
-                  navigator.pop();
-                }
+                return;
               }
+              // Pop synchronously. The PopScope above this scaffold
+              // already calls _persistReadingPositionNow() after the
+              // pop completes — awaiting before popping risked the
+              // tap appearing dead if the storage write was slow or
+              // wedged. Every other caller of _persistReadingPositionNow
+              // in this file uses `unawaited()`; the back button now
+              // matches that pattern.
+              Navigator.of(context).pop();
             },
           ),
           titleWidget: GestureDetector(

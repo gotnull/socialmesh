@@ -13554,6 +13554,18 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get qrScannerChannelNameCollisionTitle =>
+      'Sostituire canale esistente?';
+
+  @override
+  String qrScannerChannelNameCollisionBody(String name, int index) {
+    return 'Esiste già un canale chiamato \"$name\" nello slot $index con una chiave di crittografia diversa. Sostituirlo con la chiave scansionata o annullare e mantenere quello esistente?';
+  }
+
+  @override
+  String get qrScannerChannelNameCollisionReplace => 'Sostituisci';
+
+  @override
   String get qrScannerChannelCancel => 'Annulla';
 
   @override

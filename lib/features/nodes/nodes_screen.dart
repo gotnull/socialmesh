@@ -427,8 +427,14 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
               ),
             ),
             // Node list content
+            //
+            // Shimmer is bounded by the discovery cooldown (default
+            // 3 min) so a node-db reset that leaves the list empty
+            // doesn't render skeletons forever. Outside the cooldown
+            // window we fall through to the empty state below.
             if (nodesList.isEmpty &&
                 isConnected &&
+                isInDiscoveryCooldown &&
                 _activeFilter == NodeFilter.all &&
                 _searchQuery.isEmpty)
               // Loading shimmer as SliverList (not SliverFillRemaining to avoid intrinsic dimension issues)

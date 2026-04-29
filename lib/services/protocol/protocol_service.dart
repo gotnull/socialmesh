@@ -328,6 +328,81 @@ class _AdminSession {
   bool get isExpired => DateTime.now().isAfter(expiration);
 }
 
+/// Snapshot of the BLE/protocol receive pipeline used by the stall
+/// detector and the diagnostics provider.
+///
+/// Distinguishes the five failure classes called out in the iOS receive
+/// stall fix plan:
+///
+/// - **A — Raw BLE stopped**: `lastNotificationAt` stale, with
+///   `fromNumNotificationCount` provided for cross-tick comparison.
+/// - **B — Decode/ingest stopped**: `lastDataReceivedAt` recent but
+///   `lastSuccessfulDecodeAt` stale.
+/// - **C — DB insert stopped**: `lastTextMessageEmittedAt` recent but
+///   the `_MessagesNotifier.lastInsertAt` (carried separately by the
+///   provider) stale.
+/// - **D — Provider/UI invalidation stopped**: covered by tests, not
+///   by this snapshot.
+/// - **E — Notifications stopped**: out-of-scope for this snapshot
+///   (covered by `notificationBatchProvider` logging in a future
+///   follow-up).
+class ReceivePipelineDiagnostics {
+  final DateTime? lastNotificationAt;
+  final DateTime? lastDataReceivedAt;
+  final DateTime? lastSuccessfulDecodeAt;
+  final DateTime? lastTextMessageEmittedAt;
+  final int fromNumNotificationCount;
+  final int rxBytesReadCount;
+  final int rxReadFailureCount;
+  final int refreshNotificationsCount;
+  final int refreshNotificationsFailureCount;
+  final bool isForeground;
+  final bool isConnected;
+  final bool messageStreamHasListener;
+  final DateTime? stallEpisodeStartedAt;
+
+  const ReceivePipelineDiagnostics({
+    required this.lastNotificationAt,
+    required this.lastDataReceivedAt,
+    required this.lastSuccessfulDecodeAt,
+    required this.lastTextMessageEmittedAt,
+    required this.fromNumNotificationCount,
+    required this.rxBytesReadCount,
+    required this.rxReadFailureCount,
+    required this.refreshNotificationsCount,
+    required this.refreshNotificationsFailureCount,
+    required this.isForeground,
+    required this.isConnected,
+    required this.messageStreamHasListener,
+    required this.stallEpisodeStartedAt,
+  });
+
+  /// Single-line key=value payload for log lines. Includes
+  /// `refreshNotificationsFailureCount` so a failed recovery shows up
+  /// in the snapshot rather than only in surrounding lines.
+  String toLogPayload() {
+    final buf = StringBuffer();
+    buf.write('lastNotificationAt=${_fmt(lastNotificationAt)} ');
+    buf.write('lastDataReceivedAt=${_fmt(lastDataReceivedAt)} ');
+    buf.write('lastSuccessfulDecodeAt=${_fmt(lastSuccessfulDecodeAt)} ');
+    buf.write('lastTextMessageEmittedAt=${_fmt(lastTextMessageEmittedAt)} ');
+    buf.write('fromNumNotificationCount=$fromNumNotificationCount ');
+    buf.write('rxBytesReadCount=$rxBytesReadCount ');
+    buf.write('rxReadFailureCount=$rxReadFailureCount ');
+    buf.write('refreshNotificationsCount=$refreshNotificationsCount ');
+    buf.write(
+      'refreshNotificationsFailureCount=$refreshNotificationsFailureCount ',
+    );
+    buf.write('isForeground=$isForeground ');
+    buf.write('isConnected=$isConnected ');
+    buf.write('messageStreamHasListener=$messageStreamHasListener ');
+    buf.write('stallEpisodeStartedAt=${_fmt(stallEpisodeStartedAt)}');
+    return buf.toString();
+  }
+
+  static String _fmt(DateTime? t) => t?.toIso8601String() ?? 'null';
+}
+
 /// Protocol service for handling Meshtastic protocol
 class ProtocolService {
   final DeviceTransport _transport;
@@ -448,6 +523,39 @@ class ProtocolService {
   /// Additional grace period after a notification refresh before the service
   /// decides the receive path is truly broken and forces a disconnect.
   static const Duration _dataStaleDisconnectGrace = Duration(seconds: 30);
+
+  /// Timestamp of the last successful protobuf decode in [_processPacket].
+  /// Distinguishes failure class B (decode/ingest stopped) from class A
+  /// (raw BLE stopped) — class A is `_lastDataReceivedAt` stale, class B
+  /// is `_lastDataReceivedAt` recent but `_lastSuccessfulDecodeAt` stale.
+  DateTime? _lastSuccessfulDecodeAt;
+
+  /// Timestamp of the last text message emitted on `_messageController`.
+  /// Distinguishes failure class C (DB insert stopped, set by the
+  /// provider via `_lastInsertAt`) from earlier failures.
+  DateTime? _lastTextMessageEmittedAt;
+
+  /// When non-null, a BLE receive-stall episode is in progress and the
+  /// initial warning has already been emitted. Cleared on the next
+  /// successful inbound packet so a subsequent stall produces a new
+  /// warning. Single-warning-per-episode discipline.
+  DateTime? _stallEpisodeStartedAt;
+
+  /// Out-of-band timer that runs the receive-stall check independently
+  /// of the RSSI/health-check timer. Kept alive across
+  /// [pauseRssiPolling] / [resumeRssiPolling] so the check is not
+  /// logically gated on `_rssiPaused`. iOS may suspend the Dart isolate
+  /// while backgrounded; recovery on foreground is backstopped by an
+  /// immediate check inside [resumeRssiPolling].
+  Timer? _receiveStallTimer;
+
+  /// Stall-detection thresholds. The legacy [_dataStaleThreshold] (3 min)
+  /// path stays in `_checkDataFlowHealth`; this parallel path adds an
+  /// earlier diagnostic warning at 90 s and an even-firmer disconnect
+  /// fallback at 4 min when feature-flagged on.
+  static const Duration _receiveStallSuspectedThreshold = Duration(seconds: 90);
+  static const Duration _receiveStallHardThreshold = Duration(minutes: 4);
+  static const Duration _receiveStallTimerPeriod = Duration(seconds: 30);
 
   int? _myNodeNum;
   int _lastRssi = -90;
@@ -1442,6 +1550,16 @@ class ProtocolService {
       // connected but no data has arrived for longer than expected.
       _checkDataFlowHealth();
     });
+
+    // Out-of-band receive-stall timer. Survives `pauseRssiPolling()` so
+    // the stall check is not logically gated on `_rssiPaused`. iOS may
+    // suspend Dart timers while backgrounded; the immediate check inside
+    // `resumeRssiPolling()` backstops any missed ticks on resume.
+    _receiveStallTimer?.cancel();
+    _receiveStallTimer = Timer.periodic(
+      _receiveStallTimerPeriod,
+      (_) => _checkReceiveStall(),
+    );
   }
 
   /// Evaluate whether the receive path is still alive.
@@ -1499,6 +1617,108 @@ class ProtocolService {
     }
   }
 
+  /// Returns the active transport's diagnostic surface if it
+  /// implements [ReceiveDiagnosticsSupport], otherwise `null`. Only BLE
+  /// transports surface counters today; USB / TCP / test fakes return
+  /// null and the diagnostic snapshot uses safe defaults.
+  ReceiveDiagnosticsSupport? get _diagnosticsSupport {
+    final t = _transport;
+    return t is ReceiveDiagnosticsSupport
+        ? t as ReceiveDiagnosticsSupport
+        : null;
+  }
+
+  /// Out-of-band BLE receive-stall check.
+  ///
+  /// Runs from `_receiveStallTimer` every
+  /// [_receiveStallTimerPeriod] regardless of `_rssiPaused`, and is also
+  /// invoked immediately from [resumeRssiPolling] so foreground recovery
+  /// doesn't wait for the next tick.
+  ///
+  /// Distinct from [_checkDataFlowHealth]:
+  /// - Uses the transport's `lastNotificationAt` (transport-layer truth)
+  ///   so it can fire even when `_lastDataReceivedAt` is recent — e.g.
+  ///   when raw bytes are arriving but not being decoded.
+  /// - Emits exactly ONE structured `BLE_RX_STALL_SUSPECTED` warning
+  ///   per stall episode (gated by [_stallEpisodeStartedAt]).
+  /// - Recovery is feature-flagged: resubscribe by default, hard
+  ///   reconnect off by default.
+  void _checkReceiveStall() {
+    if (!_smFeatureFlag.bleReceiveStallDetectionEnabled) return;
+    if (!_configurationComplete || !_transport.isConnected) return;
+
+    final diag = _diagnosticsSupport;
+    final lastNotification = diag?.lastNotificationAt;
+    if (lastNotification == null) return;
+
+    final now = DateTime.now();
+    final staleness = now.difference(lastNotification);
+
+    if (staleness < _receiveStallSuspectedThreshold) return;
+
+    if (_stallEpisodeStartedAt == null) {
+      _stallEpisodeStartedAt = now;
+      final diag = receivePipelineDiagnostics;
+      final payload = diag.toLogPayload();
+      AppLogging.bleWarning(
+        'BLE_RX_STALL_SUSPECTED stalenessSeconds=${staleness.inSeconds} '
+        '$payload',
+      );
+
+      if (_smFeatureFlag.bleReceiveStallRecoveryResubscribe) {
+        AppLogging.protocol(
+          'BLE_RX_STALL_RESUBSCRIBE: triggering refreshNotifications',
+        );
+        unawaited(
+          _transport.refreshNotifications().catchError((Object e) {
+            AppLogging.protocol(
+              '⚠️ BLE_RX_STALL_RESUBSCRIBE: refreshNotifications failed: $e',
+            );
+          }),
+        );
+      }
+    }
+
+    if (staleness > _receiveStallHardThreshold &&
+        _smFeatureFlag.bleReceiveStallRecoveryReconnect) {
+      AppLogging.protocol(
+        '🔌 BLE_RX_STALL_HARD_RECONNECT: ${staleness.inSeconds}s '
+        'exceeds hard threshold — forcing disconnect for auto-reconnect',
+      );
+      unawaited(
+        _transport.disconnect().catchError((Object e) {
+          AppLogging.protocol(
+            '⚠️ BLE_RX_STALL_HARD_RECONNECT: disconnect failed: $e',
+          );
+        }),
+      );
+    }
+  }
+
+  /// Snapshot of receive-pipeline diagnostic state for logs and the
+  /// debug provider. Always returns fresh values — the caller may rely
+  /// on `toLogPayload()` for one-line logging or read individual fields
+  /// for in-app diagnostic surfaces.
+  ReceivePipelineDiagnostics get receivePipelineDiagnostics {
+    final diag = _diagnosticsSupport;
+    return ReceivePipelineDiagnostics(
+      lastNotificationAt: diag?.lastNotificationAt,
+      lastDataReceivedAt: _lastDataReceivedAt,
+      lastSuccessfulDecodeAt: _lastSuccessfulDecodeAt,
+      lastTextMessageEmittedAt: _lastTextMessageEmittedAt,
+      fromNumNotificationCount: diag?.fromNumNotificationCount ?? 0,
+      rxBytesReadCount: diag?.rxBytesReadCount ?? 0,
+      rxReadFailureCount: diag?.rxReadFailureCount ?? 0,
+      refreshNotificationsCount: diag?.refreshNotificationsCount ?? 0,
+      refreshNotificationsFailureCount:
+          diag?.refreshNotificationsFailureCount ?? 0,
+      isForeground: !_rssiPaused,
+      isConnected: _transport.isConnected,
+      messageStreamHasListener: _messageController.hasListener,
+      stallEpisodeStartedAt: _stallEpisodeStartedAt,
+    );
+  }
+
   /// Whether RSSI polling is currently paused (app backgrounded).
   bool _rssiPaused = false;
 
@@ -1524,6 +1744,15 @@ class ProtocolService {
     if (_transport.isConnected && _configurationComplete) {
       _startRssiPolling();
       AppLogging.protocol('🔋 RSSI polling resumed (app foregrounded)');
+      // Run an immediate stall check on resume so foreground recovery
+      // doesn't wait for the next 30 s tick. iOS may have suspended the
+      // out-of-band timer while backgrounded — this is the backstop.
+      final lastNotification = _diagnosticsSupport?.lastNotificationAt;
+      if (lastNotification != null &&
+          DateTime.now().difference(lastNotification) >
+              _receiveStallSuspectedThreshold) {
+        _checkReceiveStall();
+      }
     }
   }
 
@@ -1586,7 +1815,12 @@ class ProtocolService {
     AppLogging.protocol('Stopping protocol service');
     _rssiTimer?.cancel();
     _rssiTimer = null;
+    _receiveStallTimer?.cancel();
+    _receiveStallTimer = null;
     _lastDataReceivedAt = null;
+    _lastSuccessfulDecodeAt = null;
+    _lastTextMessageEmittedAt = null;
+    _stallEpisodeStartedAt = null;
     _notificationRefreshRequested = false;
     _transportStateSubscription?.cancel();
     _transportStateSubscription = null;
@@ -1626,6 +1860,7 @@ class ProtocolService {
     try {
       _lastDataReceivedAt = DateTime.now();
       _notificationRefreshRequested = false;
+      _stallEpisodeStartedAt = null;
       AppLogging.protocol('Received ${data.length} bytes');
 
       // --- SECURITY AUDIT LOGGING ---
@@ -1661,6 +1896,28 @@ class ProtocolService {
   Future<void> handleIncomingPacket(List<int> packet) =>
       _handleDataAsync(packet);
 
+  /// Test-only seam: drive the receive-stall check directly without
+  /// waiting for the 30-second timer tick.
+  @visibleForTesting
+  void debugRunReceiveStallCheck() => _checkReceiveStall();
+
+  /// Test-only seam: flip `_configurationComplete` so receive-stall
+  /// detection (gated on configuration being complete) can run without
+  /// driving the full BLE handshake in unit tests.
+  @visibleForTesting
+  void debugSetConfigurationComplete({required bool value}) {
+    _configurationComplete = value;
+  }
+
+  /// Test-only seam: simulate `pauseRssiPolling()` flipping foreground
+  /// state without actually requiring a connected transport. Used by
+  /// the stall-detection tests to verify the check is NOT logically
+  /// gated on `_rssiPaused`.
+  @visibleForTesting
+  void debugSetRssiPaused({required bool paused}) {
+    _rssiPaused = paused;
+  }
+
   /// Test-only seam: send the initial `wantConfigId` and enter the
   /// `awaitingInitialConfig` phase without running the full `start()`
   /// coroutine (which waits on BLE notifications and a 30-second timeout).
@@ -1682,6 +1939,7 @@ class ProtocolService {
       // --- END SECURITY AUDIT LOGGING ---
 
       final fromRadio = pb.FromRadio.fromBuffer(packet);
+      _lastSuccessfulDecodeAt = DateTime.now();
 
       // Debug: log which payload variant we got
       final variant = fromRadio.whichPayloadVariant();
@@ -1785,6 +2043,8 @@ class ProtocolService {
         );
       }
       AppLogging.protocol('==========================================');
+
+      _emitConfigSnapshot('config_complete');
 
       // Phase-1 done — kick off phase 2 and DO NOT run post-config setup
       // yet. Post-config admin chatter is deferred to the phase-2 branch
@@ -3104,6 +3364,8 @@ class ProtocolService {
           _nodes[_myNodeNum!] = updatedNode;
           _nodeController.add(updatedNode);
           AppLogging.protocol('Updated node $_myNodeNum with device metadata');
+
+          _emitConfigSnapshot('local_metadata');
         } else if (!isLocalResponse && _nodes.containsKey(packet.from)) {
           // Remote metadata response — update the remote node's metadata
           // without polluting the local device's cache. This mirrors the
@@ -3168,6 +3430,9 @@ class ProtocolService {
                 : existingNode.hwModelId,
             role: user.hasRole() ? user.role.name : existingNode.role,
             hasPublicKey: user.publicKey.isNotEmpty,
+            publicKey: user.publicKey.isNotEmpty
+                ? List<int>.unmodifiable(user.publicKey)
+                : existingNode.publicKey,
             lastHeard: DateTime.now(),
           );
           _nodes[packet.from] = updatedNode;
@@ -3205,6 +3470,9 @@ class ProtocolService {
             hardwareModel: hwModel,
             role: user.hasRole() ? user.role.name : 'CLIENT',
             hasPublicKey: user.publicKey.isNotEmpty,
+            publicKey: user.publicKey.isNotEmpty
+                ? List<int>.unmodifiable(user.publicKey)
+                : null,
             lastHeard: DateTime.now(),
             avatarColor: avatarColor,
             isFavorite: false,
@@ -3473,6 +3741,7 @@ class ProtocolService {
         );
       }
 
+      _lastTextMessageEmittedAt = DateTime.now();
       _messageController.add(message);
     } catch (e) {
       AppLogging.protocol('Error decoding text message: $e');
@@ -4434,6 +4703,7 @@ class ProtocolService {
     String role = 'CLIENT';
     String? userId;
     bool hasPublicKey = false;
+    List<int>? publicKeyBytes;
     if (nodeInfo.hasUser()) {
       final user = nodeInfo.user;
       AppLogging.protocol(
@@ -4455,6 +4725,9 @@ class ProtocolService {
       }
       // Check if user has a public key set (for PKI encryption)
       hasPublicKey = user.hasPublicKey() && user.publicKey.isNotEmpty;
+      if (hasPublicKey) {
+        publicKeyBytes = List<int>.unmodifiable(user.publicKey);
+      }
 
       // Emit user config if this is our own node
       if (_myNodeNum != null && nodeInfo.num == _myNodeNum) {
@@ -4534,6 +4807,7 @@ class ProtocolService {
         role: role,
         avatarColor: existingNode.avatarColor,
         hasPublicKey: hasPublicKey,
+        publicKey: publicKeyBytes ?? existingNode.publicKey,
         isMuted: nodeInfo.hasIsMuted()
             ? nodeInfo.isMuted
             : existingNode.isMuted,
@@ -4544,6 +4818,14 @@ class ProtocolService {
         hopCount: nodeInfo.hasHopsAway()
             ? nodeInfo.hopsAway
             : existingNode.hopCount,
+        // The firmware only populates `channel` on NodeInfo when the
+        // node was last heard on a NON-default channel (proto comment
+        // at `mesh.pb.dart:2401`). When unset, fall back to the prior
+        // value rather than zeroing — the firmware's silence on this
+        // field doesn't mean "now on Primary"; it means "no update".
+        lastHeardChannel: nodeInfo.hasChannel()
+            ? nodeInfo.channel
+            : existingNode.lastHeardChannel,
       );
     } else {
       // Use null for empty strings to trigger fallback display logic, sanitize to prevent UTF-16 crashes
@@ -4583,9 +4865,11 @@ class ProtocolService {
         avatarColor: avatarColor,
         isFavorite: nodeInfo.isFavorite,
         hasPublicKey: hasPublicKey,
+        publicKey: publicKeyBytes,
         isMuted: nodeInfo.hasIsMuted() ? nodeInfo.isMuted : false,
         viaMqtt: nodeInfo.hasViaMqtt() ? nodeInfo.viaMqtt : false,
         hopCount: nodeInfo.hasHopsAway() ? nodeInfo.hopsAway : null,
+        lastHeardChannel: nodeInfo.hasChannel() ? nodeInfo.channel : null,
       );
     }
 
@@ -4685,6 +4969,20 @@ class ProtocolService {
           : false,
       role: roleStr,
       positionPrecision: positionPrecision,
+    );
+
+    // Compare against any prior local view of this channel so a save
+    // round-trip can be diff'd at the response point.
+    final priorPskFp = channel.index < _channels.length
+        ? AppLogging.pskFingerprint(_channels[channel.index].psk)
+        : '0B:none';
+    final newPskFp = AppLogging.pskFingerprint(channelConfig.psk);
+    AppLogging.channels(
+      'CHANNEL_RESPONSE_RX index=${channelConfig.index} '
+      'role=$roleStr name="${channelConfig.name}" '
+      'pskLen=${channelConfig.psk.length} pskFp=$newPskFp '
+      'priorPskFp=$priorPskFp pskChanged=${priorPskFp != newPskFp} '
+      'positionPrecision=$positionPrecision',
     );
 
     // Extend list if needed, but don't add dummy entries to stream
@@ -4875,8 +5173,131 @@ class ProtocolService {
     );
   }
 
+  /// Diagnostic log line emitted at the moment a DM is about to be
+  /// dispatched to the radio. Captures everything the firmware will
+  /// use to decide whether the DM is routable: destination's
+  /// last-heard channel index (firmware uses this — or the channel
+  /// hash from NodeDB — to pick which channel-key to encrypt with),
+  /// hops away, last-heard time, PKI key state, plus a snapshot of
+  /// our local channel set with each channel's firmware-equivalent
+  /// hash byte.
+  ///
+  /// When a DM gets a `NO_CHANNEL` NAK back, this line is the
+  /// definitive ground truth for the question "did the firmware have
+  /// a channel-hash that matched the recipient's last-heard channel?".
+  /// If the recipient's `lastHeardChannel` index points to a channel
+  /// we have configured AND our `firmwareHash` for that channel
+  /// matches what the recipient expects, the DM should succeed. If
+  /// the index points to a slot we don't have, or our hash doesn't
+  /// align, the firmware refuses.
+  /// Emits a one-line CONFIG_SNAPSHOT capturing everything we know about
+  /// the connected radio (own role/region/preset/firmware/hwModel/channels/
+  /// pubkey). Dumped as a single greppable line so it can be diffed across
+  /// peers — connect to peer A, grab line, connect to peer B, grab line,
+  /// compare. Used to track down peer-firmware-side DM rejection where
+  /// channels match byte-for-byte but unicasts NAK NO_CHANNEL.
+  void _emitConfigSnapshot(String trigger) {
+    final myNodeHex = _myNodeNum == null
+        ? 'unknown'
+        : '0x${_myNodeNum!.toRadixString(16).padLeft(8, '0')}';
+    final ownNode = _myNodeNum == null ? null : _nodes[_myNodeNum];
+    final ownPubkey = ownNode?.publicKey;
+    final ownPubkeyFp = AppLogging.pskFingerprint(ownPubkey);
+
+    final lora = _currentLoraConfig;
+    final loraSummary = lora == null
+        ? 'lora=unset'
+        : 'region=${lora.region.name} '
+              'modemPreset=${lora.modemPreset.name} '
+              'usePreset=${lora.usePreset} '
+              'bandwidth=${lora.bandwidth} '
+              'spreadFactor=${lora.spreadFactor} '
+              'codingRate=${lora.codingRate} '
+              'hopLimit=${lora.hopLimit} '
+              'txEnabled=${lora.txEnabled} '
+              'txPower=${lora.txPower} '
+              'channelNum=${lora.channelNum} '
+              'sx126xRxBoostedGain=${lora.sx126xRxBoostedGain} '
+              'overrideDutyCycle=${lora.overrideDutyCycle} '
+              'ignoreMqtt=${lora.ignoreMqtt} '
+              'okToMqtt=${lora.configOkToMqtt}';
+
+    final device = _currentDeviceConfig;
+    final deviceSummary = device == null
+        ? 'device=unset'
+        : 'role=${device.role.name} '
+              'rebroadcastMode=${device.rebroadcastMode.name} '
+              'nodeInfoBroadcastSecs=${device.nodeInfoBroadcastSecs} '
+              'serialEnabled=${device.serialEnabled} '
+              'isManaged=${device.isManaged}';
+
+    final channelsDump = _channels
+        .where((c) => c.role != 'DISABLED' || c.index == 0)
+        .map(
+          (c) =>
+              'idx=${c.index}/role=${c.role}/name="${c.name}"'
+              '/pskFp=${AppLogging.pskFingerprint(c.psk)}'
+              '/hash=0x${c.firmwareHash.toRadixString(16).padLeft(2, '0')}'
+              '/uplink=${c.uplink}/downlink=${c.downlink}',
+        )
+        .join(' | ');
+
+    AppLogging.protocol(
+      'CONFIG_SNAPSHOT trigger=$trigger '
+      'myNodeNum=$myNodeHex '
+      'longName="${ownNode?.longName ?? 'unknown'}" '
+      'shortName="${ownNode?.shortName ?? 'unknown'}" '
+      'hwModel="${ownNode?.hardwareModel ?? 'unknown'}" '
+      'hwModelId=${ownNode?.hwModelId ?? 'n/a'} '
+      'firmwareVersion="${ownNode?.firmwareVersion ?? 'unknown'}" '
+      'ownHasPubkey=${ownNode?.hasPublicKey ?? false} '
+      'ownPubkeyFp=$ownPubkeyFp '
+      '$deviceSummary '
+      '$loraSummary '
+      'channels=[$channelsDump]',
+    );
+  }
+
+  void _logDmDispatchPrecheck({
+    required int to,
+    required int channel,
+    required bool pkiAttached,
+  }) {
+    final destNode = _nodes[to];
+    final channelsDump = _channels
+        .where((c) => c.role != 'DISABLED' || c.index == 0)
+        .map(
+          (c) =>
+              'idx=${c.index}/name="${c.name}"/pskFp=${AppLogging.pskFingerprint(c.psk)}/hash=0x${c.firmwareHash.toRadixString(16).padLeft(2, '0')}',
+        )
+        .join(' | ');
+    final lastHeard = destNode?.lastHeard;
+    final lastHeardSecondsAgo = lastHeard == null
+        ? 'n/a'
+        : '${DateTime.now().difference(lastHeard).inSeconds}';
+    AppLogging.messages(
+      'DM_DISPATCH_PRECHECK '
+      'destination=0x${to.toRadixString(16).padLeft(8, '0')} '
+      'wireChannel=$channel '
+      'pkiAttached=$pkiAttached '
+      'destLastHeardChannel=${destNode?.lastHeardChannel ?? 'n/a'} '
+      'destHopCount=${destNode?.hopCount ?? 'n/a'} '
+      'destHasPubkey=${destNode?.hasPublicKey ?? 'unknown'} '
+      'destLastHeardSecondsAgo=$lastHeardSecondsAgo '
+      'localChannels=[$channelsDump]',
+    );
+  }
+
   /// Send a text message
   /// Returns the packet ID for tracking delivery status
+  ///
+  /// When [pkiPublicKey] is non-null and non-empty, the outbound MeshPacket
+  /// is marked `pki_encrypted = true` and carries the recipient's
+  /// curve25519 public key — matching the official Meshtastic iOS app's
+  /// DM send path (`AccessoryManager+ToRadio.swift:327-329`). The local
+  /// firmware then encrypts the payload with PKI rather than the channel
+  /// PSK. Pass null/empty for non-PKI recipients (firmware falls back to
+  /// the channel PSK — same behaviour as iOS without `pkiEncrypted` set).
   Future<int> sendMessage({
     required String text,
     required int to,
@@ -4886,6 +5307,7 @@ class ProtocolService {
     MessageSource source = MessageSource.unknown,
     int? replyId,
     bool isEmoji = false,
+    List<int>? pkiPublicKey,
   }) async {
     // Validate we're ready to send
     if (_myNodeNum == null) {
@@ -4940,12 +5362,20 @@ class ProtocolService {
         packetId: packetId,
         channel: channel,
         wantAck: wantAck,
+        pkiPublicKey: pkiPublicKey,
       );
 
+      final pkiAttached = pkiPublicKey != null && pkiPublicKey.isNotEmpty;
+      _logDmDispatchPrecheck(
+        to: to,
+        channel: channel,
+        pkiAttached: pkiAttached,
+      );
       AppLogging.protocol(
         '📤 Outbound message: packetId=$packetId, '
         'to=0x${to.toRadixString(16)}, channel=$channel, '
-        'wantAck=$wantAck, transport=radio '
+        'wantAck=$wantAck, pkiEncrypted=$pkiAttached, '
+        'transport=radio '
         '(hopLimit/hopStart left to firmware)',
       );
 
@@ -6511,6 +6941,9 @@ class ProtocolService {
   /// Send a text message with pre-tracking callback
   /// This allows tracking to be set up BEFORE the message is sent,
   /// avoiding race conditions where ACK arrives before tracking is ready
+  /// See [sendMessage] for [pkiPublicKey] semantics — this variant adds
+  /// a `onPacketIdGenerated` pre-tracking callback so callers can wire
+  /// up ACK tracking before the packet hits the wire.
   Future<int> sendMessageWithPreTracking({
     required String text,
     required int to,
@@ -6521,6 +6954,7 @@ class ProtocolService {
     MessageSource source = MessageSource.unknown,
     int? replyId,
     bool isEmoji = false,
+    List<int>? pkiPublicKey,
   }) async {
     // Validate we're ready to send
     if (_myNodeNum == null) {
@@ -6569,12 +7003,20 @@ class ProtocolService {
         packetId: packetId,
         channel: channel,
         wantAck: wantAck,
+        pkiPublicKey: pkiPublicKey,
       );
 
+      final pkiAttached = pkiPublicKey != null && pkiPublicKey.isNotEmpty;
+      _logDmDispatchPrecheck(
+        to: to,
+        channel: channel,
+        pkiAttached: pkiAttached,
+      );
       AppLogging.protocol(
         '📤 Outbound message (pre-tracked): packetId=$packetId, '
         'to=0x${to.toRadixString(16)}, channel=$channel, '
-        'wantAck=$wantAck, transport=radio '
+        'wantAck=$wantAck, pkiEncrypted=$pkiAttached, '
+        'transport=radio '
         '(hopLimit/hopStart left to firmware)',
       );
 
@@ -7068,6 +7510,12 @@ class ProtocolService {
         '📡 Channel protobuf: index=${channel.index}, role=${channel.role.name}, '
         'name="${channel.settings.name}", psk=${channel.settings.psk.length} bytes',
       );
+      AppLogging.channels(
+        'CHANNEL_SAVE_PROTO_BUILD index=${channel.index} '
+        'role=${channel.role.name} name="${channel.settings.name}" '
+        'pskLen=${channel.settings.psk.length} '
+        'pskFp=${AppLogging.pskFingerprint(channel.settings.psk)}',
+      );
 
       final adminMsg = admin.AdminMessage()..setChannel = channel;
 
@@ -7076,17 +7524,24 @@ class ProtocolService {
         ..payload = adminMsg.writeToBuffer()
         ..wantResponse = true;
 
+      final packetId = _generatePacketId();
       final packet = MeshPacketBuilder.admin(
         myNodeNum: _myNodeNum!,
         targetNodeNum: _myNodeNum!,
         data: data,
-        packetId: _generatePacketId(),
+        packetId: packetId,
       );
 
       final toRadio = pb.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
 
       await _transport.send(_prepareForSend(bytes));
+      AppLogging.channels(
+        'CHANNEL_SAVE_WIRE_TX index=${config.index} packetId=$packetId '
+        'wireBytes=${bytes.length} '
+        'pskFp=${AppLogging.pskFingerprint(channel.settings.psk)} '
+        'transport=${_transport.type.name}',
+      );
       AppLogging.channels('Channel ${config.index} sent to device');
 
       // Wait a bit then request the channel back to verify
@@ -7094,6 +7549,9 @@ class ProtocolService {
       AppLogging.channels('Verifying channel ${config.index}...');
       await getChannel(config.index);
     } catch (e) {
+      AppLogging.channels(
+        'CHANNEL_SAVE_PROTO_FAILED index=${config.index} error=$e',
+      );
       AppLogging.protocol('Error setting channel: $e');
       rethrow;
     }
@@ -9637,6 +10095,10 @@ class ProtocolService {
   Future<void> dispose() async {
     _adminAckTracker.cancelAll();
     _adminSessions.clear();
+    _rssiTimer?.cancel();
+    _rssiTimer = null;
+    _receiveStallTimer?.cancel();
+    _receiveStallTimer = null;
     await _dataSubscription?.cancel();
     await _messageController.close();
     await _nodeController.close();

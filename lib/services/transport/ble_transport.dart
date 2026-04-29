@@ -24,7 +24,7 @@ class MeshtasticServiceNotFoundException implements Exception {
 }
 
 /// BLE implementation of DeviceTransport
-class BleTransport implements DeviceTransport {
+class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
   final StreamController<DeviceConnectionState> _stateController;
   final StreamController<List<int>> _dataController;
   final StreamController<pb.LogRecord> _deviceLogController;
@@ -50,7 +50,50 @@ class BleTransport implements DeviceTransport {
 
   /// When the last fromNum notification was received, or `null` if none
   /// has been received in this session.
+  @override
   DateTime? get lastNotificationAt => _lastNotificationAt;
+
+  /// Diagnostic counter: number of fromNum notification events delivered
+  /// by the BLE stack since this transport was created.
+  int _fromNumNotificationCount = 0;
+  @override
+  int get fromNumNotificationCount => _fromNumNotificationCount;
+
+  /// Diagnostic counter: number of non-empty `fromRadio` reads observed
+  /// since this transport was created. One fromNum notification can yield
+  /// multiple reads as the drain-loop consumes the queue.
+  int _rxBytesReadCount = 0;
+  @override
+  int get rxBytesReadCount => _rxBytesReadCount;
+
+  /// Diagnostic counter: number of `fromRadio` read failures since this
+  /// transport was created. Authentication errors are counted but also
+  /// trigger an `error` state transition.
+  int _rxReadFailureCount = 0;
+  @override
+  int get rxReadFailureCount => _rxReadFailureCount;
+
+  /// Diagnostic counter: number of accepted `refreshNotifications()`
+  /// invocations since this transport was created. Calls that bail out
+  /// on `_refreshInFlight` do not increment this counter.
+  int _refreshNotificationsCount = 0;
+  @override
+  int get refreshNotificationsCount => _refreshNotificationsCount;
+
+  /// Diagnostic counter: number of `refreshNotifications()` failures
+  /// since this transport was created. A failure preserves the existing
+  /// subscription (`setNotifyValue` failure) or transitions to
+  /// `disconnected` (post-cancel listener-install failure); either way
+  /// it never silently leaves the transport in a "connected, no
+  /// subscription" state.
+  int _refreshNotificationsFailureCount = 0;
+  @override
+  int get refreshNotificationsFailureCount => _refreshNotificationsFailureCount;
+
+  /// Concurrency guard for `refreshNotifications()`. Prevents two
+  /// concurrent refresh attempts from racing into a double-`listen()`
+  /// on the fromNum characteristic.
+  bool _refreshInFlight = false;
 
   /// Name of the currently-connected device, used for the foreground
   /// service notification and logging.
@@ -715,12 +758,14 @@ class BleTransport implements DeviceTransport {
           // fromNum value is just a counter - read fromRadio regardless
           if (_rxCharacteristic != null) {
             _lastNotificationAt = DateTime.now();
+            _fromNumNotificationCount++;
             AppLogging.ble('fromNum notified, reading fromRadio');
             try {
               // Read from fromRadio until empty
               while (true) {
                 final data = await _rxCharacteristic!.read();
                 if (data.isEmpty) break;
+                _rxBytesReadCount++;
                 AppLogging.ble(
                   'BLE_RX_RAW len=${data.length} ts=${DateTime.now().toIso8601String()}',
                 );
@@ -728,6 +773,7 @@ class BleTransport implements DeviceTransport {
                 _dataController.add(data);
               }
             } catch (e) {
+              _rxReadFailureCount++;
               AppLogging.ble('⚠️ Error reading fromRadio: $e');
               if (_isAuthenticationError(e)) {
                 AppLogging.ble(
@@ -784,66 +830,102 @@ class BleTransport implements DeviceTransport {
       AppLogging.ble('refreshNotifications: not connected, skipping');
       return;
     }
-
-    AppLogging.ble('🔄 Refreshing fromNum notification subscription');
+    if (_refreshInFlight) {
+      AppLogging.ble('refreshNotifications: already in flight — skip');
+      return;
+    }
+    _refreshInFlight = true;
+    _refreshNotificationsCount++;
     try {
-      // Cancel the existing listener before re-subscribing.
+      AppLogging.ble('🔄 Refreshing fromNum notification subscription');
+
+      // Step 1: re-enable BLE-level notification BEFORE cancelling the
+      // existing listener. If `setNotifyValue` throws or times out, the
+      // existing subscription is still good — preserve it and bail with
+      // a recoverable warning. This is the
+      // "preserve previous working subscription" branch from the plan's
+      // failure semantics.
+      try {
+        await _fromNumCharacteristic!
+            .setNotifyValue(true)
+            .timeout(
+              const Duration(seconds: 10),
+              onTimeout: () {
+                AppLogging.ble(
+                  '⚠️ refreshNotifications: setNotifyValue timed out',
+                );
+                throw TimeoutException(
+                  'setNotifyValue timed out',
+                  const Duration(seconds: 10),
+                );
+              },
+            );
+      } catch (e) {
+        _refreshNotificationsFailureCount++;
+        AppLogging.ble(
+          '⚠️ refreshNotifications: setNotifyValue failed: $e — '
+          'preserving existing subscription',
+        );
+        return;
+      }
+
+      // Step 2: cancel the old listener and install the new one. If the
+      // listener install fails after the cancel, we transition to
+      // `disconnected` so the auto-reconnect path establishes a fresh
+      // session — never leave the transport "connected, no subscription".
       await _fromNumSubscription?.cancel();
       _fromNumSubscription = null;
 
-      // Re-enable BLE-level notification on the fromNum characteristic.
-      // This is the key recovery step: on iOS/Android the OS can silently
-      // drop a GATT subscription while the connection stays alive.
-      await _fromNumCharacteristic!
-          .setNotifyValue(true)
-          .timeout(
-            const Duration(seconds: 10),
-            onTimeout: () {
-              AppLogging.ble(
-                '⚠️ refreshNotifications: setNotifyValue timed out',
-              );
-              return false;
-            },
-          );
-
-      // Re-attach the data-read listener (same logic as enableNotifications).
-      _fromNumSubscription = _fromNumCharacteristic!.lastValueStream.listen(
-        (value) async {
-          if (_rxCharacteristic != null) {
-            _lastNotificationAt = DateTime.now();
-            AppLogging.ble('fromNum notified, reading fromRadio');
-            try {
-              while (true) {
-                final data = await _rxCharacteristic!.read();
-                if (data.isEmpty) break;
-                AppLogging.ble(
-                  'BLE_RX_RAW len=${data.length} ts=${DateTime.now().toIso8601String()}',
-                );
-                AppLogging.ble('Read ${data.length} bytes from fromRadio');
-                _dataController.add(data);
-              }
-            } catch (e) {
-              AppLogging.ble('⚠️ Error reading fromRadio: $e');
-              if (_isAuthenticationError(e)) {
-                _updateState(DeviceConnectionState.error);
+      try {
+        _fromNumSubscription = _fromNumCharacteristic!.lastValueStream.listen(
+          (value) async {
+            if (_rxCharacteristic != null) {
+              _lastNotificationAt = DateTime.now();
+              _fromNumNotificationCount++;
+              AppLogging.ble('fromNum notified, reading fromRadio');
+              try {
+                while (true) {
+                  final data = await _rxCharacteristic!.read();
+                  if (data.isEmpty) break;
+                  _rxBytesReadCount++;
+                  AppLogging.ble(
+                    'BLE_RX_RAW len=${data.length} ts=${DateTime.now().toIso8601String()}',
+                  );
+                  AppLogging.ble('Read ${data.length} bytes from fromRadio');
+                  _dataController.add(data);
+                }
+              } catch (e) {
+                _rxReadFailureCount++;
+                AppLogging.ble('⚠️ Error reading fromRadio: $e');
+                if (_isAuthenticationError(e)) {
+                  _updateState(DeviceConnectionState.error);
+                }
               }
             }
-          }
-        },
-        onError: (error) {
-          AppLogging.ble('⚠️ fromNum error: $error');
-          if (_isAuthenticationError(error)) {
-            _updateState(DeviceConnectionState.error);
-          }
-        },
-        onDone: () {
-          AppLogging.ble(
-            '⚠️ fromNum notification stream completed — '
-            'BLE subscription lost while connection may still be alive',
-          );
-          _updateState(DeviceConnectionState.disconnected);
-        },
-      );
+          },
+          onError: (error) {
+            AppLogging.ble('⚠️ fromNum error: $error');
+            if (_isAuthenticationError(error)) {
+              _updateState(DeviceConnectionState.error);
+            }
+          },
+          onDone: () {
+            AppLogging.ble(
+              '⚠️ fromNum notification stream completed — '
+              'BLE subscription lost while connection may still be alive',
+            );
+            _updateState(DeviceConnectionState.disconnected);
+          },
+        );
+      } catch (e) {
+        _refreshNotificationsFailureCount++;
+        AppLogging.ble(
+          '⚠️ refreshNotifications: failed to install new listener — '
+          'declaring disconnect for auto-reconnect: $e',
+        );
+        _updateState(DeviceConnectionState.disconnected);
+        return;
+      }
 
       AppLogging.ble('🔄 fromNum notifications refreshed');
 
@@ -855,14 +937,16 @@ class BleTransport implements DeviceTransport {
             final data = await _rxCharacteristic!.read();
             if (data.isEmpty) break;
             _lastNotificationAt = DateTime.now();
+            _rxBytesReadCount++;
             _dataController.add(data);
           }
         } catch (e) {
+          _rxReadFailureCount++;
           AppLogging.ble('⚠️ Error draining fromRadio after refresh: $e');
         }
       }
-    } catch (e) {
-      AppLogging.ble('⚠️ refreshNotifications failed: $e');
+    } finally {
+      _refreshInFlight = false;
     }
   }
 

@@ -28003,6 +28003,26 @@
       }
     }
   },
+  "qrScannerChannelNameCollisionTitle": "Sostituire canale esistente?",
+  "@qrScannerChannelNameCollisionTitle": {
+    "description": "Bottom-sheet title shown when scanning a QR with a channel name that already exists at a slot but with a different encryption key"
+  },
+  "qrScannerChannelNameCollisionBody": "Esiste già un canale chiamato \"{name}\" nello slot {index} con una chiave di crittografia diversa. Sostituirlo con la chiave scansionata o annullare e mantenere quello esistente?",
+  "@qrScannerChannelNameCollisionBody": {
+    "description": "Bottom-sheet body for the name-collision sheet (interpolated)",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "qrScannerChannelNameCollisionReplace": "Sostituisci",
+  "@qrScannerChannelNameCollisionReplace": {
+    "description": "Confirm-replace button on the name-collision sheet"
+  },
   "qrScannerChannelCancel": "Annulla",
   "@qrScannerChannelCancel": {
     "description": "Channel import cancel button"

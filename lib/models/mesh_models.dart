@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
+import 'dart:convert';
+
 import 'package:uuid/uuid.dart';
 import 'presence_confidence.dart';
 import '../features/nodes/node_display_name_resolver.dart';
@@ -406,6 +408,34 @@ class MeshNode {
   final int? avatarColor; // Color value for avatar
   final bool hasPublicKey; // Whether node has encryption key set
 
+  /// Raw curve25519 public key bytes from the node's last NodeInfo.
+  ///
+  /// Mirrors `UserEntity.publicKey` in the official Meshtastic iOS app
+  /// (`meshtastic-ios/Meshtastic/Persistence/UpdateCoreData.swift:381`).
+  /// When non-empty, outbound DMs to this node attach `pkiEncrypted=true`
+  /// + `publicKey=<bytes>` on the MeshPacket so the local firmware encrypts
+  /// the payload with PKI rather than the channel PSK
+  /// (`meshtastic-ios/Meshtastic/Accessory/Accessory Manager/AccessoryManager+ToRadio.swift:327-329`).
+  /// `null` or empty when the node has not advertised a public key.
+  final List<int>? publicKey;
+
+  /// The local channel index on which this node was last heard.
+  ///
+  /// Field 6 in the firmware's `meshtastic.NodeInfo` proto — quote from
+  /// the proto comment: "local channel index we heard that node on.
+  /// Only populated if its not the default channel." `null` means the
+  /// firmware did not include it (i.e. the node was last heard on the
+  /// default Primary channel, or on a channel hash that didn't resolve
+  /// to a local index).
+  ///
+  /// Diagnostic value: when an outbound DM gets a `NO_CHANNEL` NAK, the
+  /// firmware uses this index (or the channel hash from NodeDB) to
+  /// decide which of our channels to encrypt with. If the recipient's
+  /// `lastHeardChannel` points to a slot we don't have configured —
+  /// or we have configured with a different PSK — the firmware refuses
+  /// to dispatch the DM.
+  final int? lastHeardChannel;
+
   // Device Metrics
   final double? voltage; // Battery voltage
   final double? channelUtilization; // Current channel utilization %
@@ -519,6 +549,8 @@ class MeshNode {
     this.isMuted = false,
     this.avatarColor,
     this.hasPublicKey = false,
+    this.publicKey,
+    this.lastHeardChannel,
     // Device Metrics
     this.voltage,
     this.channelUtilization,
@@ -626,6 +658,8 @@ class MeshNode {
     bool? isMuted,
     int? avatarColor,
     bool? hasPublicKey,
+    List<int>? publicKey,
+    int? lastHeardChannel,
     // Device Metrics
     double? voltage,
     double? channelUtilization,
@@ -730,6 +764,8 @@ class MeshNode {
       isMuted: isMuted ?? this.isMuted,
       avatarColor: avatarColor ?? this.avatarColor,
       hasPublicKey: hasPublicKey ?? this.hasPublicKey,
+      publicKey: publicKey ?? this.publicKey,
+      lastHeardChannel: lastHeardChannel ?? this.lastHeardChannel,
       // Device Metrics
       voltage: voltage ?? this.voltage,
       channelUtilization: channelUtilization ?? this.channelUtilization,
@@ -906,6 +942,31 @@ class ChannelConfig {
 
   /// Whether the channel uses the default simple key (AQ==)
   bool get isDefaultKey => psk.length == 1 && psk[0] == 1;
+
+  /// Firmware-equivalent channel-hash byte used for routing.
+  ///
+  /// Mirrors `meshtastic/firmware`'s `Channels::generateHash()` —
+  /// `xorHash(name_bytes) ^ xorHash(psk_bytes)` reduced to a single
+  /// byte. Two radios that have a channel with the same byte-equal
+  /// `name` and byte-equal `psk` produce the SAME hash; if either
+  /// differs by even one byte, the hash byte differs and the firmware
+  /// treats them as distinct channels.
+  ///
+  /// Used for diagnostic log lines (`CHANNEL_HASH_SUMMARY`) so a
+  /// support trace can confirm two devices' "RnsHarness" entries are
+  /// genuinely identical at the byte level. NEVER used for actual
+  /// encryption / routing decisions — that's firmware-side. Just a
+  /// sanity-check fingerprint.
+  int get firmwareHash {
+    int h = 0;
+    for (final byte in utf8.encode(name)) {
+      h ^= byte;
+    }
+    for (final byte in psk) {
+      h ^= byte;
+    }
+    return h & 0xFF;
+  }
 
   ChannelConfig copyWith({
     int? index,

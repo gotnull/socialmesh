@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 // lint-allow: scaffold — camera feed, glass blur would obscure scanner
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -546,11 +547,68 @@ class _UniversalQrScannerScreenState
     if (existingChannel != null) {
       if (mounted) {
         Navigator.pop(context);
+        // Meshtastic firmware stores Primary (index 0) with an empty
+        // `name` field by convention — empty name + AQ== PSK = the
+        // canonical default LongFast channel. Showing the literal `""`
+        // in the snackbar is jarring; fall back to the localized
+        // "Primary Channel" label (or `Channel <index>` for unnamed
+        // secondaries).
+        final displayName = existingChannel.name.isNotEmpty
+            ? existingChannel.name
+            : (existingChannel.index == 0
+                  ? context.l10n.channelsPrimaryChannelName
+                  : context.l10n.channelFormDefaultName(existingChannel.index));
         showInfoSnackBar(
           context,
-          context.l10n.qrScannerChannelAlreadyExists(existingChannel.name),
+          context.l10n.qrScannerChannelAlreadyExists(displayName),
         );
       }
+      return;
+    }
+
+    // Name collision with a DIFFERENT PSK — the user is scanning a QR
+    // for an existing channel but the encryption key has drifted (or
+    // the QR is from a different device). Silently appending at the
+    // next free index produces ghost duplicates ("RnsHarness" at slot
+    // 1 with key A and "RnsHarness" at slot 2 with key B), which is
+    // exactly the bug the user hit. Match the official Meshtastic iOS
+    // safety net by detecting the collision and asking the user
+    // whether to replace the existing channel in-place. iOS reference:
+    // `meshtastic-ios/Meshtastic/Accessory/Accessory Manager/AccessoryManager+ToRadio.swift:480-491`
+    // ("When adding channels the names must be unique").
+    final scannedName = channelName;
+    final nameCollisionTarget = (scannedName != null && scannedName.isNotEmpty)
+        ? channels.firstWhereOrNull((c) => c.name == scannedName)
+        : null;
+    if (nameCollisionTarget != null) {
+      if (!mounted) return;
+      final shouldReplace = await _showChannelNameCollisionSheet(
+        existing: nameCollisionTarget,
+      );
+      if (shouldReplace != true) {
+        if (mounted) {
+          Navigator.pop(context);
+        }
+        return;
+      }
+      // User opted to replace — overwrite at the existing index, keep
+      // the existing role/uplink/downlink so we don't silently flip
+      // any side settings the user already configured locally.
+      // `scannedName` is provably non-empty here (we entered this
+      // branch only because the name-collision lookup matched), but
+      // Dart can't carry that flow-promotion through the await above,
+      // so we re-read it from the matched target's name to keep the
+      // analyser happy without a `!`.
+      final replacementChannel = ChannelConfig(
+        index: nameCollisionTarget.index,
+        name: nameCollisionTarget.name,
+        psk: psk,
+        uplink: nameCollisionTarget.uplink,
+        downlink: nameCollisionTarget.downlink,
+        positionPrecision: nameCollisionTarget.positionPrecision,
+        role: nameCollisionTarget.role,
+      );
+      await _importChannel(replacementChannel);
       return;
     }
 
@@ -562,9 +620,17 @@ class _UniversalQrScannerScreenState
     }
     if (newIndex >= 8) throw Exception(context.l10n.qrScannerMaxChannels);
 
+    // The protobuf decode returns "" for an unset name field, not null,
+    // so a bare `??` fallback never fires. Empty name → use the
+    // localized default ("Imported Channel"). Without this guard the
+    // import sheet renders the channel with no displayable name and
+    // the receiving radio stores an empty channel name.
+    final hasUsableName = channelName != null && channelName.isNotEmpty;
     channel = ChannelConfig(
       index: newIndex,
-      name: channelName ?? context.l10n.qrScannerImportedChannelName,
+      name: hasUsableName
+          ? channelName
+          : context.l10n.qrScannerImportedChannelName,
       psk: psk,
       uplink: false,
       downlink: false,
@@ -740,6 +806,89 @@ class _UniversalQrScannerScreenState
                     ),
                   ),
                   child: Text(context.l10n.qrScannerChannelImport),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Confirmation sheet shown when a scanned QR's channel name matches
+  /// an existing channel but with a different PSK.
+  ///
+  /// Returns:
+  /// - `true` if the user confirms replacement (overwrite at the
+  ///   existing channel's slot with the scanned key)
+  /// - `null` if the user cancels (or dismisses the sheet)
+  ///
+  /// Replaces Socialmesh's prior silent "import at next free slot"
+  /// behaviour, which produced duplicate channels with the same name
+  /// at different indices. Mirrors the safety net the official
+  /// Meshtastic iOS app enforces in `AccessoryManager.saveChannelSet`
+  /// (Add mode rejects duplicate names with "Channel already exists";
+  /// Replace All wipes the channel set). We surface the equivalent
+  /// choice as Replace / Cancel — appropriate for the per-channel QR
+  /// shape Socialmesh uses today.
+  Future<bool?> _showChannelNameCollisionSheet({
+    required ChannelConfig existing,
+  }) {
+    return AppBottomSheet.show<bool>(
+      context: context,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            context.l10n.qrScannerChannelNameCollisionTitle,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: context.textPrimary,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing16),
+          Text(
+            context.l10n.qrScannerChannelNameCollisionBody(
+              existing.name,
+              existing.index,
+            ),
+            style: TextStyle(fontSize: 14, color: context.textSecondary),
+          ),
+          const SizedBox(height: AppTheme.spacing24),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context, null),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: BorderSide(color: SemanticColors.divider),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
+                    ),
+                  ),
+                  child: Text(
+                    context.l10n.qrScannerChannelCancel,
+                    style: TextStyle(color: context.textSecondary),
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing8),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: context.accentColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
+                    ),
+                  ),
+                  child: Text(
+                    context.l10n.qrScannerChannelNameCollisionReplace,
+                  ),
                 ),
               ),
             ],

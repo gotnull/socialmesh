@@ -4841,10 +4841,20 @@ class MessagesNotifier extends Notifier<List<Message>> {
 
   void _addMessageToState(Message message) {
     state = [...state, message];
+    _lastInsertAt = DateTime.now();
     _storage?.saveMessage(message);
     _recordMessageSignature(message);
     _recordNodeDexActivity(message);
   }
+
+  /// Timestamp of the last message added to the in-memory state. Used by
+  /// the BLE receive-pipeline diagnostics to distinguish failure class C
+  /// (DB insert / state add stopped) from earlier classes — if the
+  /// protocol service's `lastTextMessageEmittedAt` is recent but
+  /// `lastInsertAt` is stale, the stall is between the message stream
+  /// emit and the state add.
+  DateTime? _lastInsertAt;
+  DateTime? get lastInsertAt => _lastInsertAt;
 
   /// Forward inbound traffic to NodeDex so the Discovery card's
   /// `Messages` count and `Last Seen` reflect chat activity, not just
@@ -6238,6 +6248,24 @@ class NodeDiscoveryCooldownNotifier
     AppLogging.notifications('🔔 Reset node discovery cooldown');
   }
 
+  /// Public seam: restart the cooldown window from "now".
+  ///
+  /// Used by the Device Management → Reset Node Database flow. After a
+  /// node-db reset the radio rebuilds its NodeDB from neighbour
+  /// broadcasts, which trickle in over the next few minutes. Restarting
+  /// the cooldown gives the Nodes screen a bounded "Discovering"
+  /// window — without this, the unbounded shimmer at
+  /// `nodes_screen.dart` (the `nodesList.isEmpty + isConnected`
+  /// branch) renders skeleton cards forever because the radio's TCP
+  /// connection stays up across the reset and the cooldown never
+  /// re-arms via the disconnect→connect listener.
+  void restartCooldown() {
+    AppLogging.notifications(
+      '🔔 Restarting node discovery cooldown (e.g. after node-db reset)',
+    );
+    _startCooldown();
+  }
+
   /// Called when cooldown period ends
   Future<void> _onCooldownComplete() async {
     final discoveredCount = state.discoveredDuringCooldown.length;
@@ -7036,3 +7064,13 @@ final notificationBatchProvider =
     NotifierProvider<NotificationBatchNotifier, NotificationBatchState>(
       NotificationBatchNotifier.new,
     );
+
+/// Snapshot of the BLE / protocol receive pipeline used by support and
+/// debug surfaces. Re-reads the protocol service on every watch, so
+/// individual fields reflect the latest counters/timestamps. Pure read
+/// — does not register subscriptions on its own.
+final bleReceivePipelineDiagnosticsProvider =
+    Provider<ReceivePipelineDiagnostics>((ref) {
+      final protocol = ref.watch(protocolServiceProvider);
+      return protocol.receivePipelineDiagnostics;
+    });

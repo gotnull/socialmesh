@@ -128,6 +128,14 @@ abstract final class MeshPacketBuilder {
   ///
   /// Unlike admin packets, user payloads may legitimately set [wantAck]
   /// and [channel] since they travel over the mesh to other nodes.
+  ///
+  /// When [pkiPublicKey] is non-null and non-empty, the packet is marked
+  /// `pki_encrypted = true` and carries the recipient's curve25519 public
+  /// key — matching `meshtastic-ios/Meshtastic/Accessory/Accessory Manager/AccessoryManager+ToRadio.swift:327-329`
+  /// where the official Meshtastic iOS app sets these fields for any
+  /// outbound DM to a node whose `UserEntity.pkiEncrypted` is true. The
+  /// firmware then encrypts the payload with PKI rather than the channel
+  /// PSK.
   static pb.MeshPacket userPayload({
     required int myNodeNum,
     required int to,
@@ -135,6 +143,7 @@ abstract final class MeshPacketBuilder {
     required int packetId,
     int channel = 0,
     bool wantAck = false,
+    List<int>? pkiPublicKey,
   }) {
     final packet = pb.MeshPacket()
       ..from = myNodeNum
@@ -144,6 +153,11 @@ abstract final class MeshPacketBuilder {
 
     if (channel != 0) packet.channel = channel;
     if (wantAck) packet.wantAck = true;
+
+    if (pkiPublicKey != null && pkiPublicKey.isNotEmpty) {
+      packet.pkiEncrypted = true;
+      packet.publicKey = pkiPublicKey;
+    }
 
     return packet;
   }

@@ -352,6 +352,16 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                           '🔧 DeviceManagement: clearing local nodes cache',
                         );
                         nodesNotifier.clearNodes();
+                        // Restart the discovery-cooldown window so the
+                        // Nodes screen's "Discovering" shimmer is
+                        // bounded (default 3 min) instead of rendering
+                        // forever — the TCP-connected radio's link
+                        // stays up across this reset, so the cooldown
+                        // would otherwise never re-arm via the
+                        // disconnect→connect listener.
+                        ref
+                            .read(nodeDiscoveryCooldownProvider.notifier)
+                            .restartCooldown();
                         ref
                             .read(countdownProvider.notifier)
                             .startDeviceRebootCountdown(

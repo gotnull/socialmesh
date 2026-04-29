@@ -23585,6 +23585,24 @@ abstract class AppLocalizations {
   /// **'You already have this channel as \"{name}\"'**
   String qrScannerChannelAlreadyExists(String name);
 
+  /// Bottom-sheet title shown when scanning a QR with a channel name that already exists at a slot but with a different encryption key
+  ///
+  /// In en, this message translates to:
+  /// **'Replace existing channel?'**
+  String get qrScannerChannelNameCollisionTitle;
+
+  /// Bottom-sheet body for the name-collision sheet (interpolated)
+  ///
+  /// In en, this message translates to:
+  /// **'A channel named \"{name}\" already exists in slot {index} with a different encryption key. Replace it with the scanned key, or cancel and keep the existing one?'**
+  String qrScannerChannelNameCollisionBody(String name, int index);
+
+  /// Confirm-replace button on the name-collision sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Replace'**
+  String get qrScannerChannelNameCollisionReplace;
+
   /// Channel import cancel button
   ///
   /// In en, this message translates to:
