@@ -19,14 +19,23 @@
 /// The per-peer limiter NEVER bypasses the global limiter. The global
 /// is the spec-bound airtime authority.
 ///
-/// Policy (from the T+S brief, with one approved deviation):
-///   - text DM:    6 / 60s, burst 3
-///   - sketch:     2 / 60s, burst 1   (deviation: brief said 3; ink
-///                                     fills the global budget faster
-///                                     than text, so burst stays at 1)
-///   - reaction:   6 / 60s, burst 3
+/// Policy (T+S brief baseline, relaxed once for real-conversation
+/// pacing — the original 6/60s text caps pinched normal chat threads
+/// where users naturally burst 4-6 messages while finishing a
+/// thought):
+///   - text DM:    12 / 60s, burst 6
+///   - sketch:     3  / 60s, burst 2   (small bump — ink eats real
+///                                      airtime, can't be too lenient)
+///   - reaction:   12 / 60s, burst 6
+///   - play:       12 / 60s, burst 6
+///   - signal:     6  / 60s, burst 3
 ///   - typing:     not gated here — already 1/10s internally in
-///                                     `SipDmManager.buildTypingIndicator`.
+///                                   `SipDmManager.buildTypingIndicator`.
+///
+/// Headroom against the global SIP airtime ceiling (1024 bytes/60s):
+/// 12 text × ~50B = 600B — leaves ~400B/60s for reactions, sketches,
+/// and protocol overhead, so the per-peer caps still stay strictly
+/// below the global cap and the global remains authoritative.
 ///
 /// Idle eviction: a peer's bucket is dropped after 5 minutes of no
 /// activity to keep the map bounded on populated meshes.
@@ -52,7 +61,9 @@ class PeerRatePolicy {
   /// Sustained allowance per [windowMs] for sketches.
   final int sketchPerWindow;
 
-  /// Burst capacity for sketches. **1 by design** — see file header.
+  /// Burst capacity for sketches. Kept tight (2) relative to text
+  /// because each sketch frame is much larger on the wire — see
+  /// file header for the airtime-headroom math.
   final int sketchBurst;
 
   /// Sustained allowance per [windowMs] for reactions.
@@ -87,16 +98,16 @@ class PeerRatePolicy {
 
   const PeerRatePolicy({
     this.windowMs = 60 * 1000,
-    this.textPerWindow = 6,
-    this.textBurst = 3,
-    this.sketchPerWindow = 2,
-    this.sketchBurst = 1,
-    this.reactionPerWindow = 6,
-    this.reactionBurst = 3,
-    this.playPerWindow = 6,
-    this.playBurst = 3,
-    this.signalPerWindow = 4,
-    this.signalBurst = 2,
+    this.textPerWindow = 12,
+    this.textBurst = 6,
+    this.sketchPerWindow = 3,
+    this.sketchBurst = 2,
+    this.reactionPerWindow = 12,
+    this.reactionBurst = 6,
+    this.playPerWindow = 12,
+    this.playBurst = 6,
+    this.signalPerWindow = 6,
+    this.signalBurst = 3,
     this.idleEvictionMs = 5 * 60 * 1000,
   });
 

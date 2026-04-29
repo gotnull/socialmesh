@@ -11,43 +11,46 @@ import 'package:socialmesh/services/protocol/sip/peer_rate_limiter.dart';
 
 void main() {
   group('PeerRateLimiter — defaults', () {
-    test('text: burst of 3 then a rate-limit hit', () {
+    test('text: burst of 6 then a rate-limit hit', () {
       var nowMs = 1700000000000;
       final limiter = PeerRateLimiter(clock: () => nowMs);
       const peer = 0xAA;
 
-      expect(limiter.tryAcquire(peer, PeerRateKind.text), isTrue);
-      expect(limiter.tryAcquire(peer, PeerRateKind.text), isTrue);
-      expect(limiter.tryAcquire(peer, PeerRateKind.text), isTrue);
-      // 4th immediate acquire is denied — burst is 3, refill not in.
+      for (var i = 0; i < 6; i++) {
+        expect(limiter.tryAcquire(peer, PeerRateKind.text), isTrue);
+      }
+      // 7th immediate acquire is denied — burst is 6, refill not in.
       expect(
         limiter.tryAcquire(peer, PeerRateKind.text),
         isFalse,
-        reason: 'text burst=3; 4th send within the same instant must fail',
+        reason: 'text burst=6; 7th send within the same instant must fail',
       );
     });
 
-    test('sketch: burst of 1 (T+S calls override of brief)', () {
+    test('sketch: burst of 2', () {
       var nowMs = 1700000000000;
       final limiter = PeerRateLimiter(clock: () => nowMs);
       const peer = 0xAA;
 
       expect(limiter.tryAcquire(peer, PeerRateKind.sketch), isTrue);
+      expect(limiter.tryAcquire(peer, PeerRateKind.sketch), isTrue);
       expect(
         limiter.tryAcquire(peer, PeerRateKind.sketch),
         isFalse,
-        reason: 'sketch burst is intentionally 1, not 3',
+        reason:
+            'sketch burst is 2 — kept tight (vs. text=6) because ink '
+            'frames are much larger on the wire',
       );
     });
 
-    test('reaction: burst of 3', () {
+    test('reaction: burst of 6', () {
       var nowMs = 1700000000000;
       final limiter = PeerRateLimiter(clock: () => nowMs);
       const peer = 0xAA;
 
-      expect(limiter.tryAcquire(peer, PeerRateKind.reaction), isTrue);
-      expect(limiter.tryAcquire(peer, PeerRateKind.reaction), isTrue);
-      expect(limiter.tryAcquire(peer, PeerRateKind.reaction), isTrue);
+      for (var i = 0; i < 6; i++) {
+        expect(limiter.tryAcquire(peer, PeerRateKind.reaction), isTrue);
+      }
       expect(limiter.tryAcquire(peer, PeerRateKind.reaction), isFalse);
     });
   });
@@ -59,30 +62,32 @@ void main() {
       const peer = 0x55;
 
       // Drain the burst.
-      for (var i = 0; i < 3; i++) {
+      for (var i = 0; i < 6; i++) {
         expect(limiter.tryAcquire(peer, PeerRateKind.text), isTrue);
       }
       expect(limiter.canSend(peer, PeerRateKind.text), isFalse);
 
-      // 6 tokens per 60s = 0.1 token / s. Advance 10s → +1 token.
-      nowMs += 10 * 1000;
+      // 12 tokens per 60s = 0.2 token / s. Advance 5s → +1 token.
+      nowMs += 5 * 1000;
       expect(limiter.canSend(peer, PeerRateKind.text), isTrue);
       expect(limiter.tryAcquire(peer, PeerRateKind.text), isTrue);
       expect(limiter.canSend(peer, PeerRateKind.text), isFalse);
     });
 
-    test('sketch refills slower (2 per 60s = 30s per token)', () {
+    test('sketch refills slower (3 per 60s = 20s per token)', () {
       var nowMs = 1000;
       final limiter = PeerRateLimiter(clock: () => nowMs);
       const peer = 0x55;
 
+      // Drain the burst (2).
+      expect(limiter.tryAcquire(peer, PeerRateKind.sketch), isTrue);
       expect(limiter.tryAcquire(peer, PeerRateKind.sketch), isTrue);
       expect(limiter.canSend(peer, PeerRateKind.sketch), isFalse);
 
-      nowMs += 15 * 1000; // half a refill — still under 1 full token
+      nowMs += 10 * 1000; // half a refill — still under 1 full token
       expect(limiter.canSend(peer, PeerRateKind.sketch), isFalse);
 
-      nowMs += 16 * 1000; // total +31s → 1 full token replenished
+      nowMs += 11 * 1000; // total +21s → 1 full token replenished
       expect(limiter.canSend(peer, PeerRateKind.sketch), isTrue);
     });
 
@@ -91,11 +96,11 @@ void main() {
       final limiter = PeerRateLimiter(clock: () => nowMs);
       const peer = 0x55;
 
-      // Idle for hours; capacity is still capped at burst (3 for text).
+      // Idle for hours; capacity is still capped at burst (6 for text).
       nowMs += 60 * 60 * 1000;
       // Idle eviction window is 5 minutes — after an hour of inactivity
-      // the bucket is gone, so we get a fresh one at full capacity (3).
-      expect(limiter.tokensFor(peer, PeerRateKind.text), equals(3.0));
+      // the bucket is gone, so we get a fresh one at full capacity (6).
+      expect(limiter.tokensFor(peer, PeerRateKind.text), equals(6.0));
     });
   });
 
@@ -107,7 +112,7 @@ void main() {
       const peerB = 0xBBBB;
 
       // Drain peer A's text burst.
-      for (var i = 0; i < 3; i++) {
+      for (var i = 0; i < 6; i++) {
         expect(limiter.tryAcquire(peerA, PeerRateKind.text), isTrue);
       }
       expect(limiter.canSend(peerA, PeerRateKind.text), isFalse);
@@ -121,10 +126,10 @@ void main() {
       final limiter = PeerRateLimiter(clock: () => nowMs);
       const peer = 0x12;
 
-      for (var i = 0; i < 3; i++) {
+      for (var i = 0; i < 6; i++) {
         expect(limiter.tryAcquire(peer, PeerRateKind.text), isTrue);
       }
-      // Text is exhausted but sketch is still fresh (burst 1).
+      // Text is exhausted but sketch is still fresh (burst 2).
       expect(limiter.canSend(peer, PeerRateKind.text), isFalse);
       expect(limiter.canSend(peer, PeerRateKind.sketch), isTrue);
     });
@@ -185,11 +190,11 @@ void main() {
       expect(limiter.canSend(peer, PeerRateKind.text), isTrue);
       expect(
         limiter.tokensFor(peer, PeerRateKind.text),
-        closeTo(3.0, 0.001),
+        closeTo(6.0, 0.001),
         reason: 'canSend must not consume tokens',
       );
       limiter.recordSend(peer, PeerRateKind.text);
-      expect(limiter.tokensFor(peer, PeerRateKind.text), closeTo(2.0, 0.001));
+      expect(limiter.tokensFor(peer, PeerRateKind.text), closeTo(5.0, 0.001));
     });
   });
 }
