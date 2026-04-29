@@ -26,10 +26,12 @@ import '../../../core/constants.dart';
 import '../../../core/logging.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/widgets/animated_empty_state.dart';
+import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../pet/widgets/pet_mini_preview.dart';
 import '../../../providers/accessibility_providers.dart';
 import '../../../providers/app_providers.dart';
+import '../../../providers/help_providers.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/ico_help_system.dart';
@@ -132,7 +134,8 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
           resizeToAvoidBottomInset: false,
           title: context.l10n.nodedexTitle,
           actions: [
-            // View mode toggle (list ↔ album).
+            // Primary IconButton: view mode toggle (list ↔ album).
+            // Per CLAUDE.md, the rest goes into AppBarOverflowMenu.
             _ViewModeToggle(
               isAlbumMode: isAlbumMode,
               onToggle: () {
@@ -143,32 +146,54 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
                 );
               },
             ),
-            IconButton(
-              icon: const Icon(Icons.map_outlined, size: 22),
-              tooltip: context.l10n.nodedexMapTooltip,
-              onPressed: () {
-                AppLogging.nodeDex('Opening NodeDex Map');
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const NodeDexMapScreen(),
-                  ),
-                );
+            AppBarOverflowMenu<String>(
+              onSelected: (value) {
+                switch (value) {
+                  case 'map':
+                    openNodeDexMap(context);
+                  case 'help':
+                    ref
+                        .read(helpProvider.notifier)
+                        .startTour(
+                          isAlbumMode ? 'nodedex_album' : 'nodedex_overview',
+                        );
+                  case 'settings':
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const SettingsScreen(),
+                      ),
+                    );
+                }
               },
-            ),
-            IcoHelpAppBarButton(
-              topicId: isAlbumMode ? 'nodedex_album' : 'nodedex_overview',
-            ),
-            // Settings link
-            IconButton(
-              icon: const Icon(Icons.settings_outlined, size: 22),
-              tooltip: context.l10n.nodedexSettingsTooltip,
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const SettingsScreen(),
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'map',
+                  child: ListTile(
+                    leading: const Icon(Icons.map_outlined),
+                    title: Text(context.l10n.nodedexMapTooltip),
+                    contentPadding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
                   ),
-                );
-              },
+                ),
+                PopupMenuItem(
+                  value: 'help',
+                  child: ListTile(
+                    leading: const Icon(Icons.help_outline),
+                    title: Text(context.l10n.nodedexMenuHelp),
+                    contentPadding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'settings',
+                  child: ListTile(
+                    leading: const Icon(Icons.settings_outlined),
+                    title: Text(context.l10n.nodedexSettingsTooltip),
+                    contentPadding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+              ],
             ),
           ],
           slivers: isAlbumMode

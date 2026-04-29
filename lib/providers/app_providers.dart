@@ -2650,6 +2650,16 @@ Future<void> _runNetworkReconnect(Ref ref, String deviceId) async {
       protocol.setBleModelNumber(transport.bleModelNumber);
       protocol.setBleManufacturerName(transport.bleManufacturerName);
 
+      // Restored: NET RECONNECT awaits protocol.start() so it doesn't
+      // return AutoReconnectState.success until config has actually been
+      // received. Removing this for the "single-owner" experiment broke
+      // TCP — the transport-state listener fired its own start() in
+      // parallel and the unawaited NET RECONNECT path turned the
+      // connection over before config completed, producing endless
+      // "Transport disconnected during configuration" loops. The
+      // idempotency guard in `ProtocolService.start()` collapses the
+      // listener's parallel call into a no-op so we still avoid
+      // duplicate `_dataSubscription` listeners.
       await protocol.start();
 
       if (transport.state != DeviceConnectionState.connected) {

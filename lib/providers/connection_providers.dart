@@ -26,6 +26,7 @@ import '../core/transport.dart';
 import '../services/meshcore/connection_coordinator.dart' show ConnectionResult;
 import '../services/transport/background_ble_service.dart';
 import 'app_providers.dart';
+import 'scanner_lifecycle_providers.dart';
 import 'connectivity_providers.dart';
 import 'meshcore_providers.dart';
 import 'package:socialmesh/l10n/l10n_utils.dart';
@@ -526,13 +527,17 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       return;
     }
 
+    final transport = ref.read(transportProvider);
+    final transportLabel = transport.type.name.toUpperCase();
     AppLogging.connection(
-      '🔌 _initializeProtocolAfterAutoReconnect: BLE auto-reconnected, starting protocol... '
+      '🔌 _initializeProtocolAfterAutoReconnect: $transportLabel auto-reconnected, starting protocol... '
       '(autoReconnect=$autoReconnectState)',
+    );
+    AppLogging.connection(
+      'RECONNECT_PATH transport=$transportLabel source=state_listener',
     );
 
     try {
-      final transport = ref.read(transportProvider);
       final protocol = ref.read(protocolServiceProvider);
 
       // Guard: if the protocol is already configured (e.g. another code path
@@ -685,6 +690,18 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     if (_userDisconnected) {
       AppLogging.connection(
         '🔌 startBackgroundConnection: BLOCKED - user manually disconnected',
+      );
+      return;
+    }
+
+    // Manual scan is in flight (Scanner is actively driving the BLE
+    // adapter). Skip background reconnect so the two don't race for the
+    // adapter — the scanner publishes results into its own state and
+    // resumes auto-reconnect on dispose / scan completion.
+    if (ref.read(manualScanActiveProvider)) {
+      AppLogging.connection(
+        '🔌 startBackgroundConnection: BLOCKED - manual scan active '
+        '(BLE_SCAN_AUTORECONNECT_SUPPRESSED)',
       );
       return;
     }

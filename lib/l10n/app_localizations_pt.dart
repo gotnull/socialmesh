@@ -11609,60 +11609,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get nodedexMaxRangeLabel => 'Alcance máx.';
 
   @override
-  String get nodedexMapTitle => 'Mapa NodeDex';
-
-  @override
   String get nodedexMapTooltip => 'Mostrar mapa';
 
   @override
-  String get nodedexMapFilter1h => '1h';
-
-  @override
-  String get nodedexMapFilter24h => '24h';
-
-  @override
-  String get nodedexMapFilter7d => '7d';
-
-  @override
-  String get nodedexMapFilterAll => 'Tudo';
-
-  @override
-  String get nodedexMapFilterFavourites => 'Favoritos';
-
-  @override
-  String nodedexMapVisibleCount(int visible, int total) {
-    return '$visible de $total nós';
-  }
-
-  @override
-  String nodedexMapLastHeard(String time) {
-    return 'Visto pela última vez $time';
-  }
-
-  @override
-  String nodedexMapDistance(String distance) {
-    return 'Distância: $distance';
-  }
-
-  @override
-  String get nodedexMapOpenDetails => 'Abrir detalhes do nó';
-
-  @override
-  String get nodedexMapEmptyNoPositionsTitlePrefix => 'Sem ';
-
-  @override
-  String get nodedexMapEmptyNoPositionsTitleKeyword => 'posições';
-
-  @override
-  String get nodedexMapEmptyNoPositionsTitleSuffix => ' disponíveis';
-
-  @override
-  String get nodedexMapEmptyNoPositionsTagline1 =>
-      'Os nós aparecem aqui assim que partilham GPS';
-
-  @override
-  String get nodedexMapEmptyNoPositionsTagline2 =>
-      'Move-te para captar fixes de posição';
+  String get nodedexMenuHelp => 'Ajuda';
 
   @override
   String get nodedexMessageActivity => 'Atividade de mensagens';

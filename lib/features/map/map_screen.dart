@@ -865,53 +865,35 @@ class _MapScreenState extends ConsumerState<MapScreen>
           ),
         ),
         actions: [
-          // Filter toggle - hide in location only mode
-          if (!widget.locationOnlyMode)
-            IconButton(
-              icon: Icon(
-                _nodeFilter != NodeFilter.all || _showFilters
-                    ? Icons.filter_alt
-                    : Icons.filter_alt_outlined,
-                color: _nodeFilter != NodeFilter.all || _showFilters
-                    ? context.accentColor
-                    : context.textSecondary,
-              ),
-              onPressed: () => setState(() => _showFilters = !_showFilters),
-              tooltip: context.l10n.mapFilterNodesTooltip,
-            ),
-          // Map style
-          PopupMenuButton<MapTileStyle>(
-            icon: Icon(Icons.map, color: context.textSecondary),
-            tooltip: context.l10n.mapStyleTooltip,
-            onSelected: (style) {
-              setState(() => _mapStyle = style);
-              unawaited(_saveMapStyle(style));
-            },
-            itemBuilder: (context) => MapTileStyle.values.map((style) {
-              return PopupMenuItem(
-                value: style,
-                child: Row(
-                  children: [
-                    Icon(
-                      _mapStyle == style ? Icons.check : Icons.map_outlined,
-                      size: 18,
-                      color: _mapStyle == style
-                          ? context.accentColor
-                          : context.textSecondary,
-                    ),
-                    const SizedBox(width: AppTheme.spacing8),
-                    Text(style.label),
-                  ],
-                ),
-              );
-            }).toList(),
-          ),
-          // Device status - hide in location only mode
+          // Per CLAUDE.md "App bar: one primary IconButton, rest in
+          // AppBarOverflowMenu". DeviceStatusButton stays as the
+          // primary because it is a live, app-wide connection-state
+          // indicator (battery-icon-like). Filter, Map style, and
+          // everything else lives in the kebab.
           if (!widget.locationOnlyMode) const DeviceStatusButton(),
           // More options menu
           AppBarOverflowMenu<String>(
             onSelected: (value) {
               switch (value) {
+                case 'filter':
+                  setState(() => _showFilters = !_showFilters);
+                  break;
+                case 'style_dark':
+                  setState(() => _mapStyle = MapTileStyle.dark);
+                  unawaited(_saveMapStyle(MapTileStyle.dark));
+                  break;
+                case 'style_satellite':
+                  setState(() => _mapStyle = MapTileStyle.satellite);
+                  unawaited(_saveMapStyle(MapTileStyle.satellite));
+                  break;
+                case 'style_terrain':
+                  setState(() => _mapStyle = MapTileStyle.terrain);
+                  unawaited(_saveMapStyle(MapTileStyle.terrain));
+                  break;
+                case 'style_light':
+                  setState(() => _mapStyle = MapTileStyle.light);
+                  unawaited(_saveMapStyle(MapTileStyle.light));
+                  break;
                 case 'traceroute_route_only':
                   setState(() => _tracerouteRouteOnly = !_tracerouteRouteOnly);
                   break;
@@ -987,6 +969,46 @@ class _MapScreenState extends ConsumerState<MapScreen>
               }
             },
             itemBuilder: (context) => [
+              // Filter — hide in location-only mode (no nodes shown).
+              if (!widget.locationOnlyMode)
+                PopupMenuItem(
+                  value: 'filter',
+                  child: Row(
+                    children: [
+                      Icon(
+                        _nodeFilter != NodeFilter.all || _showFilters
+                            ? Icons.filter_alt
+                            : Icons.filter_alt_outlined,
+                        size: 18,
+                        color: _nodeFilter != NodeFilter.all || _showFilters
+                            ? context.accentColor
+                            : context.textSecondary,
+                      ),
+                      SizedBox(width: AppTheme.spacing8),
+                      Text(context.l10n.mapFilterNodesTooltip),
+                    ],
+                  ),
+                ),
+              // Map style — radio-like, check on the active style.
+              ...MapTileStyle.values.map(
+                (style) => PopupMenuItem(
+                  value: 'style_${style.name}',
+                  child: Row(
+                    children: [
+                      Icon(
+                        _mapStyle == style ? Icons.check : Icons.map_outlined,
+                        size: 18,
+                        color: _mapStyle == style
+                            ? context.accentColor
+                            : context.textSecondary,
+                      ),
+                      SizedBox(width: AppTheme.spacing8),
+                      Text(style.label),
+                    ],
+                  ),
+                ),
+              ),
+              const PopupMenuDivider(),
               // Traceroute: show route only toggle
               if (widget.tracerouteLog != null)
                 PopupMenuItem(

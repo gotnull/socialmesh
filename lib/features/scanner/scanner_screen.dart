@@ -10,6 +10,7 @@ import '../../core/logging.dart';
 import '../../core/safety/error_handler.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../providers/connection_providers.dart' as conn;
+import '../../providers/scanner_lifecycle_providers.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -79,12 +80,60 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   /// dead "No devices found" screen with a manual "Scan Again" button.
   Timer? _rescanTimer;
 
+  /// Set once per ScannerScreen instance — the first to read `count==1`
+  /// in its post-frame callback wins the BLE-adapter ownership for this
+  /// scanner session. Subsequent concurrent mounts (e.g. the state-
+  /// driven `_AppRouter` rebuild after `setNeedsScanner()` racing with
+  /// `pushNamedAndRemoveUntil('/app', …)`) stay quiet until they're the
+  /// last one alive — at which point the listener below promotes them.
+  /// This prevents two scanners contending for the BLE adapter while
+  /// both being disposed before `transport.scan()` actually opens
+  /// (see logs.txt evidence: hashCodes 701430859 + 445134485 both running
+  /// cleanup, both disposed during `Waiting 2000ms`).
+  bool _scanWorkStarted = false;
+
+  /// Subscription on [scannerMountCountProvider]. When sibling scanners
+  /// dispose and the count drops to 1, this listener promotes the lone
+  /// survivor by calling [_maybeStartScanWork].
+  ProviderSubscription<int>? _scannerCountSub;
+
+  /// Captured notifier references taken at `initState` so `dispose`
+  /// doesn't need `ref.read(...)` (unreliable during widget teardown
+  /// — `ref.read` after `unmount` throws "Bad state: Using `ref` when
+  /// a widget is about to or has been unmounted is unsafe", swallowed
+  /// by our defensive try/catch but leaving the mount counter inflated
+  /// by 1. That phantom is what stuck the lone-survivor pattern in the
+  /// `count > 1` branch forever, so `transport.scan()` never opened
+  /// and the UI showed only TCP).
+  late final ScannerMountCountNotifier _mountCounter;
+  late final ManualScanActiveNotifier _manualScanNotifier;
+
   @override
   void initState() {
     super.initState();
+    _mountCounter = ref.read(scannerMountCountProvider.notifier);
+    _manualScanNotifier = ref.read(manualScanActiveProvider.notifier);
+    _mountCounter.register();
+    final scannerCount = ref.read(scannerMountCountProvider);
+    _scannerCountSub = ref.listenManual<int>(scannerMountCountProvider, (
+      prev,
+      next,
+    ) {
+      if (next == 1 && mounted && !_scanWorkStarted) {
+        _maybeStartScanWork();
+      }
+    });
     AppLogging.connection(
-      '📡 SCANNER: initState - isOnboarding=${widget.isOnboarding}, isInline=${widget.isInline}, hashCode=$hashCode',
+      '📡 SCANNER: initState - isOnboarding=${widget.isOnboarding}, '
+      'isInline=${widget.isInline}, hashCode=$hashCode, '
+      'mountCount=$scannerCount',
     );
+    if (scannerCount > 1) {
+      AppLogging.connection(
+        'SCANNER_NAV_SUPPRESSED_DUPLICATE hashCode=$hashCode '
+        'mountCount=$scannerCount — waiting for siblings to dispose',
+      );
+    }
 
     // Check if we're being shown because auto-reconnect failed
     // In that case, we should immediately show the "device not found" banner
@@ -161,18 +210,39 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     // only Scanner #2 starts BLE operations. The synchronous state reads
     // above (hints, pairing invalidation) are harmless and stay in initState.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (widget.isOnboarding || widget.isInline) {
-        AppLogging.connection(
-          '📡 SCANNER: Onboarding/inline mode - starting manual scan',
-        );
-        _startScan();
-      } else {
-        AppLogging.connection(
-          '📡 SCANNER: Normal mode - trying auto-reconnect',
-        );
-        _tryAutoReconnect();
-      }
+      if (!mounted) return;
+      _maybeStartScanWork();
     });
+  }
+
+  /// Promotes this Scanner to "active" if (a) it's the only Scanner
+  /// alive and (b) it hasn't already started its work. Safe to call
+  /// repeatedly — the [_scanWorkStarted] latch makes subsequent calls
+  /// no-op. Called from initState's post-frame callback and from the
+  /// [_scannerCountSub] listener whenever sibling scanners dispose.
+  void _maybeStartScanWork() {
+    if (!mounted || _scanWorkStarted) return;
+    final count = ref.read(scannerMountCountProvider);
+    if (count > 1) {
+      AppLogging.connection(
+        '📡 SCANNER: deferring scan start hashCode=$hashCode '
+        'mountCount=$count (waiting for siblings to dispose)',
+      );
+      return;
+    }
+    _scanWorkStarted = true;
+    AppLogging.connection(
+      '📡 SCANNER: lone-survivor activation hashCode=$hashCode',
+    );
+    if (widget.isOnboarding || widget.isInline) {
+      AppLogging.connection(
+        '📡 SCANNER: Onboarding/inline mode - starting manual scan',
+      );
+      _startScan();
+    } else {
+      AppLogging.connection('📡 SCANNER: Normal mode - trying auto-reconnect');
+      _tryAutoReconnect();
+    }
   }
 
   @override
@@ -197,7 +267,32 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     } catch (_) {
       // ref may be invalid if container is already disposing — ignore
     }
-    AppLogging.connection('📡 SCANNER: dispose - hashCode=$hashCode');
+    // Close the lifecycle-counter subscription before unregister so we
+    // don't accidentally re-enter `_maybeStartScanWork` while disposing.
+    try {
+      _scannerCountSub?.close();
+    } catch (_) {
+      // Subscription may be invalid if the underlying container is
+      // already torn down — safe to ignore during dispose.
+    }
+    _scannerCountSub = null;
+
+    // Resume auto-reconnect if WE were the one driving the scan. Use
+    // the captured notifier reference (taken at initState) so we don't
+    // depend on `ref.read` working during widget teardown.
+    if (_scanWorkStarted) {
+      _manualScanNotifier.setActive(false);
+      AppLogging.connection(
+        'BLE_SCAN_AUTORECONNECT_RESUMED reason=scanner_dispose',
+      );
+    }
+    // Always unregister via the captured notifier — no `ref.read` here,
+    // so this can't silently fail and inflate the counter into a phantom.
+    _mountCounter.unregister();
+    AppLogging.connection(
+      '📡 SCANNER: dispose - hashCode=$hashCode '
+      'scanWorkStarted=$_scanWorkStarted',
+    );
     super.dispose();
   }
 
@@ -522,9 +617,12 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     }
 
     // CRITICAL: Don't scan or do BLE cleanup if a device is already
-    // connected. The aggressive cleanup (stopScan, system device
-    // disconnect) can destroy an active connection and trigger a
-    // cascade of auto-reconnect cycles.
+    // connected and the user did NOT explicitly disconnect to scan. The
+    // aggressive cleanup (stopScan, system device disconnect) can
+    // destroy an active connection and trigger a cascade of auto-
+    // reconnect cycles. When the user explicitly disconnected, we
+    // proceed even if the transport hasn't fully settled — the manual
+    // scan owns the BLE adapter for the duration of the session.
     final conn.DeviceConnectionState2 currentDeviceState;
     final bool userJustDisconnected;
     final Future<SettingsService> settingsFuture;
@@ -537,14 +635,34 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       // fires between mounted check and element detach). Safe to bail.
       return;
     }
-    if (currentDeviceState.isConnected ||
-        currentDeviceState.state == conn.DevicePairingState.configuring) {
+    final userDisconnectedFlag = ref.read(userDisconnectedProvider);
+    if ((currentDeviceState.isConnected ||
+            currentDeviceState.state == conn.DevicePairingState.configuring) &&
+        !userDisconnectedFlag) {
       AppLogging.connection(
         '📡 SCANNER: _startScan BLOCKED — device already '
-        '${currentDeviceState.state}, skipping destructive BLE cleanup',
+        '${currentDeviceState.state}, userDisconnected=false, '
+        'skipping destructive BLE cleanup',
       );
       return;
     }
+    if ((currentDeviceState.isConnected ||
+            currentDeviceState.state == conn.DevicePairingState.configuring) &&
+        userDisconnectedFlag) {
+      AppLogging.connection(
+        '📡 SCANNER: _startScan PROCEEDING DESPITE STALE STATE — '
+        'device=${currentDeviceState.state}, userDisconnected=true '
+        '(manual scan owns the adapter)',
+      );
+    }
+
+    // Manual scan is now imminent — suppress background auto-reconnect.
+    // Cleared in `dispose()` and in `_finishScan()` so a tear-down or
+    // natural completion lets background reconnect resume.
+    ref.read(manualScanActiveProvider.notifier).setActive(true);
+    AppLogging.connection(
+      'BLE_SCAN_AUTORECONNECT_SUPPRESSED reason=manual_scan_starting',
+    );
 
     // Capture providers BEFORE any await. Scan binds to the dedicated
     // BLE scan transport — see `bleScanTransportProvider` docs — so a
@@ -584,10 +702,14 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
     safeSetState(() {
       _scanning = true;
-      if (!isRescan) _devices.clear();
+      if (!isRescan) {
+        _devices.clear();
+        AppLogging.connection('BLE_SCAN_CLEARED reason=fresh_scan');
+      }
       _errorMessage = null;
       _showPairingInvalidationHint = false;
     });
+    AppLogging.connection('BLE_SCAN_STARTED transport=ble isRescan=$isRescan');
 
     try {
       // On the first scan (not a rescan), perform aggressive BLE cleanup to
@@ -767,8 +889,11 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
           '📡 SCANNER: Found device ${device.id} (${device.name})',
         );
         safeSetState(() {
-          // Avoid duplicates
-          final index = _devices.indexWhere((d) => d.id == device.id);
+          // Transport-aware dedupe: `DeviceInfo.==` matches `(id, type)`.
+          // Two devices with the same `id` but different transports
+          // (e.g. a saved network device and a freshly-scanned BLE one)
+          // remain distinct entries.
+          final index = _devices.indexWhere((d) => d == device);
           if (index >= 0) {
             _devices[index] = device;
           } else {
@@ -877,14 +1002,37 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       }).toList();
     }
 
-    // Add saved device placeholder if scanning and not found
+    // Add saved device placeholder if scanning and not found.
+    //
+    // Transport-aware gate: this scanner only drives the BLE transport
+    // (`bleScanTransportProvider`). Injecting a saved network/USB device
+    // into the BLE scan list misleads the user (e.g. a TCP device named
+    // `0864` shown as a "scan result" on a real iPhone where TCP is
+    // unreachable). Only inject when the saved device's transport
+    // matches what we're actually scanning. Identity dedupe is
+    // transport-aware via `DeviceInfo.==` (id + type).
     if ((_scanning || _autoReconnecting) &&
         _savedDeviceId != null &&
-        devices.every((d) => d.id != _savedDeviceId)) {
+        _savedDeviceTransportType == TransportType.ble) {
       final placeholder = _savedDevicePlaceholder();
-      if (placeholder != null) {
+      if (placeholder != null && devices.every((d) => d != placeholder)) {
         devices.insert(0, placeholder);
+        AppLogging.connection(
+          'BLE_SCAN_PLACEHOLDER_INJECTED savedId=$_savedDeviceId '
+          'type=${_savedDeviceTransportType?.name}',
+        );
       }
+    } else if ((_scanning || _autoReconnecting) &&
+        _savedDeviceId != null &&
+        _savedDeviceTransportType != null &&
+        _savedDeviceTransportType != TransportType.ble) {
+      // One-shot diagnostic so a future "scan only shows my TCP device"
+      // bug report points straight at the gate. Throttled by Dart's
+      // log-coalescing in `AppLogging.connection`.
+      AppLogging.connection(
+        'BLE_SCAN_PLACEHOLDER_SKIPPED reason=transport_mismatch '
+        'savedId=$_savedDeviceId savedType=${_savedDeviceTransportType?.name}',
+      );
     }
     return devices;
   }
@@ -893,6 +1041,9 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     if (_savedDeviceId == null) return null;
     final name =
         _savedDeviceName ?? 'Saved Device'; // lint-allow: hardcoded-string
+    // Only the BLE branch above calls this, so the placeholder is always
+    // BLE. Default kept for defensive resilience if a future caller
+    // forgets to pre-gate on transport type.
     final type = _savedDeviceTransportType ?? TransportType.ble;
     return DeviceInfo(id: _savedDeviceId!, name: name, type: type);
   }

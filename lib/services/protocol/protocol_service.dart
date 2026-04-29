@@ -475,6 +475,27 @@ class ProtocolService {
 
   StreamSubscription<List<int>>? _dataSubscription;
   StreamSubscription<DeviceConnectionState>? _transportStateSubscription;
+
+  /// Idempotency guard for [start]. Concurrent callers must serialize on a
+  /// single in-flight execution. Without this, two start() calls racing on
+  /// the same [ProtocolService] singleton produce duplicate
+  /// [_dataSubscription] listeners and inbound packets are processed
+  /// twice. See logs.txt evidence: line 174 + 182 both
+  /// `Protocol.start() called - instance: 227383919` followed by two
+  /// `DATA_SUBSCRIBED to transport` lines.
+  bool _startInFlight = false;
+
+  /// Tracks whether the service has completed at least one successful
+  /// [start] for the current connection. Used together with
+  /// [_startInFlight] to skip repeat starts when a transport-state listener
+  /// fires after the dispatcher already kicked off the start.
+  bool _isStarted = false;
+
+  /// Lets concurrent [start] callers await the in-flight start instead of
+  /// returning early with no signal. The future resolves (or errors) when
+  /// the in-flight start finishes.
+  Completer<void>? _startCompleter;
+
   Completer<void>? _configCompleter;
   Timer? _rssiTimer;
   bool _pollingConfig = false;
@@ -1382,161 +1403,240 @@ class ProtocolService {
   /// All channels
   List<ChannelConfig> get channels => List.unmodifiable(_channels);
 
-  /// Start listening to transport and wait for configuration
+  /// Start listening to transport and wait for configuration.
+  ///
+  /// **Idempotency contract** (matches the single-owner invariant
+  /// established to fix the duplicate-`DATA_SUBSCRIBED` bug):
+  /// - Concurrent callers awaiting the same in-flight start receive the
+  ///   same future via [_startCompleter] — no second body execution.
+  /// - Callers that arrive after a successful start while the transport
+  ///   is still connected are skipped with a `PROTOCOL_START_SKIPPED_*`
+  ///   log line. This is the common case when both the network reconnect
+  ///   path and the transport-state listener observe the same
+  ///   `connected` transition.
+  /// - If `_dataSubscription != null` at body entry the prior start left
+  ///   an orphan subscription. We cancel + replace and log the event as
+  ///   a serious lifecycle violation (`PROTOCOL_DATA_SUBSCRIPTION_REPLACED`)
+  ///   rather than crash; production behaviour favours recovery over
+  ///   process restart.
   Future<void> start() async {
-    AppLogging.debug('🔵 Protocol.start() called - instance: $hashCode');
-    AppLogging.protocol('Starting protocol service');
-
-    // Cancel any existing subscriptions to prevent duplicates
-    await _dataSubscription?.cancel();
-    _dataSubscription = null;
-    _transportStateSubscription?.cancel();
-    _transportStateSubscription = null;
-
-    // Clear previous connection state
-    _channels.clear();
-    _nodes.clear();
-    _syncedContactsThisSession.clear();
-    _myNodeNum = null;
-    _configurationComplete = false;
-    _handshakePhase = _HandshakePhase.idle;
-    if (_queueDrainCompleter != null && !_queueDrainCompleter!.isCompleted) {
-      _queueDrainCompleter!.completeError('Connection reset');
+    if (_startInFlight) {
+      AppLogging.protocol(
+        'PROTOCOL_START_SKIPPED_ALREADY_IN_FLIGHT instance=$hashCode',
+      );
+      // Caller awaits the existing in-flight start so they don't return
+      // before configuration is actually ready. Falls back to the
+      // original single-shot semantics if the completer is somehow null.
+      final pending = _startCompleter;
+      if (pending != null) return pending.future;
+      return;
     }
-    _queueDrainCompleter = null;
-    // Discard any SIP/MRRP frames buffered from a prior BLE session.
-    // Without this, frames from Device A remain in the buffer and are
-    // replayed to Device B's SipDiscovery / MrrpEngine after reconnect.
-    _clearStartupBuffers();
+    if (_isStarted && _transport.isConnected) {
+      AppLogging.protocol(
+        'PROTOCOL_START_SKIPPED_ALREADY_STARTED instance=$hashCode',
+      );
+      return;
+    }
 
-    _configCompleter = Completer<void>();
-    var waitingForConfig = false; // Track if we're past initial setup
-
-    _dataSubscription = _transport.dataStream.listen(
-      _handleData,
-      onError: (error) {
-        AppLogging.protocol('Transport error: $error');
-      },
-    );
-    AppLogging.protocol('DATA_SUBSCRIBED to transport');
-
-    // Listen for transport disconnection to fail fast
-    _transportStateSubscription = _transport.stateStream.listen((state) {
-      if (state == DeviceConnectionState.disconnected ||
-          state == DeviceConnectionState.error) {
-        AppLogging.protocol('Transport disconnected/error during config wait');
-        // Per-session contact-sync cache is invalid the moment the radio
-        // is gone — a different radio (different NodeDB) could attach next.
-        _syncedContactsThisSession.clear();
-        // Only complete with error if we're actually waiting for config
-        // This prevents double-errors when enableNotifications throws directly
-        if (waitingForConfig &&
-            _configCompleter != null &&
-            !_configCompleter!.isCompleted) {
-          _configCompleter!.completeError(
-            Exception('Transport disconnected during configuration'),
-          );
-        }
-      }
-    });
+    _startInFlight = true;
+    final localCompleter = Completer<void>();
+    _startCompleter = localCompleter;
+    // Defensive: if no concurrent caller awaits `_startCompleter.future`
+    // (the common case when only one path calls `start()`), a later
+    // `completeError` on it would surface as an unhandled async error.
+    // The async function's returned future already carries the same
+    // error to the original caller — this swallow only quiets the
+    // duplicate completer copy.
+    localCompleter.future.catchError((_) {});
 
     try {
-      // Enable notifications FIRST - device needs this to respond to config request
-      await _transport.enableNotifications();
+      AppLogging.protocol('PROTOCOL_START_BEGIN instance=$hashCode');
+      AppLogging.debug('🔵 Protocol.start() called - instance: $hashCode');
+      AppLogging.protocol('Starting protocol service');
 
-      // Short delay to let notifications settle
-      await Future.delayed(const Duration(milliseconds: 200));
+      // Defense-in-depth: an existing _dataSubscription at start entry
+      // means a prior start left an orphan listener. Recover by
+      // cancelling + replacing, but log loudly — this should never
+      // happen now that start() is guarded.
+      if (_dataSubscription != null) {
+        AppLogging.protocol(
+          '⚠️ PROTOCOL_DATA_SUBSCRIPTION_REPLACED instance=$hashCode '
+          '— orphan _dataSubscription detected on start; cancelling. '
+          'This indicates a prior lifecycle violation.',
+        );
+      }
 
-      // Send heartbeat to wake the device before requesting config.
-      // Follows the standard Meshtastic connection sequence (heartbeat first,
-      // then wantConfigId). Devices in low-power sleep (e.g. Heltec
-      // MeshPocket) may not process the first wantConfigId without this.
-      await _sendHeartbeat();
+      // Cancel any existing subscriptions to prevent duplicates
+      await _dataSubscription?.cancel();
+      _dataSubscription = null;
+      _transportStateSubscription?.cancel();
+      _transportStateSubscription = null;
 
-      // NOW request configuration - device will respond via notifications
-      await _requestConfiguration();
+      // Clear previous connection state
+      _channels.clear();
+      _nodes.clear();
+      _syncedContactsThisSession.clear();
+      _myNodeNum = null;
+      _configurationComplete = false;
+      _handshakePhase = _HandshakePhase.idle;
+      if (_queueDrainCompleter != null && !_queueDrainCompleter!.isCompleted) {
+        _queueDrainCompleter!.completeError('Connection reset');
+      }
+      _queueDrainCompleter = null;
+      // Discard any SIP/MRRP frames buffered from a prior BLE session.
+      // Without this, frames from Device A remain in the buffer and are
+      // replayed to Device B's SipDiscovery / MrrpEngine after reconnect.
+      _clearStartupBuffers();
 
-      // Start polling for configuration response
-      // Notifications should work, but poll as backup
-      _pollForConfigurationAsync();
+      _configCompleter = Completer<void>();
+      // Defensive: attach a no-op error swallower so a `stop()` that
+      // races ahead of the heartbeat/requestConfig/timeout-await chain
+      // does not surface as an unhandled async error. The real awaiter
+      // attached on `_configCompleter.future.timeout(...)` below still
+      // observes the same error and unwinds normally.
+      _configCompleter!.future.catchError((_) {});
+      var waitingForConfig = false; // Track if we're past initial setup
 
-      // Now we're waiting for config - enable the listener to complete on error
-      waitingForConfig = true;
+      _dataSubscription = _transport.dataStream.listen(
+        _handleData,
+        onError: (error) {
+          AppLogging.protocol('Transport error: $error');
+        },
+      );
+      AppLogging.protocol('DATA_SUBSCRIBED to transport');
 
-      // Wait for config to complete with timeout.
-      //
-      // Transport-aware early recovery: TCP sessions have a different
-      // failure profile than BLE. NOTIFY-style flakiness does not exist
-      // on a raw TCP socket — if bytes do not arrive it is almost always
-      // because the firmware missed the first `wantConfigId` (common
-      // after a remote reboot). Rather than consume the full 30s wait,
-      // fire a single early retry so the user is not staring at a blank
-      // configuring screen for half a minute. BLE/USB keep their
-      // original single-shot behavior; the existing data-flow watchdog
-      // handles stalled NOTIFY paths separately.
-      AppLogging.protocol('Protocol: Waiting for configCompleteId...');
-      const totalTimeout = Duration(seconds: 30);
-      const earlyRetryWindow = Duration(seconds: 8);
-      Timer? earlyRetryTimer;
-      if (_transport.reconnectMode == TransportReconnectMode.directEndpoint) {
-        earlyRetryTimer = Timer(earlyRetryWindow, () async {
-          // Idempotence: (1) completer nulled/completed means either
-          // success or stop()/error has already settled the wait — skip.
-          // (2) transport not connected means the socket already died
-          // and there is nothing to retry on.
-          final completer = _configCompleter;
-          if (completer == null || completer.isCompleted) return;
-          if (!_transport.isConnected) return;
+      // Listen for transport disconnection to fail fast
+      _transportStateSubscription = _transport.stateStream.listen((state) {
+        if (state == DeviceConnectionState.disconnected ||
+            state == DeviceConnectionState.error) {
           AppLogging.protocol(
-            'HANDSHAKE: phase-1 not observed within '
-            '${earlyRetryWindow.inSeconds}s on '
-            '${_transport.type.name} — resending wantConfigId once '
-            '(bounded retry, not a handshake restart)',
+            'Transport disconnected/error during config wait',
           );
-          try {
-            await _requestConfiguration();
-          } catch (e) {
-            AppLogging.protocol(
-              'HANDSHAKE: early phase-1 retry send failed — $e',
+          // Per-session contact-sync cache is invalid the moment the radio
+          // is gone — a different radio (different NodeDB) could attach next.
+          _syncedContactsThisSession.clear();
+          // Only complete with error if we're actually waiting for config
+          // This prevents double-errors when enableNotifications throws directly
+          if (waitingForConfig &&
+              _configCompleter != null &&
+              !_configCompleter!.isCompleted) {
+            _configCompleter!.completeError(
+              Exception('Transport disconnected during configuration'),
             );
           }
-        });
-      }
+        }
+      });
+
       try {
-        await _configCompleter!.future.timeout(
-          totalTimeout,
-          onTimeout: () {
-            throw TimeoutException(
-              'Configuration timed out waiting for device response',
+        // Enable notifications FIRST - device needs this to respond to config request
+        await _transport.enableNotifications();
+
+        // Short delay to let notifications settle
+        await Future.delayed(const Duration(milliseconds: 200));
+
+        // Send heartbeat to wake the device before requesting config.
+        // Follows the standard Meshtastic connection sequence (heartbeat first,
+        // then wantConfigId). Devices in low-power sleep (e.g. Heltec
+        // MeshPocket) may not process the first wantConfigId without this.
+        await _sendHeartbeat();
+
+        // NOW request configuration - device will respond via notifications
+        await _requestConfiguration();
+
+        // Start polling for configuration response
+        // Notifications should work, but poll as backup
+        _pollForConfigurationAsync();
+
+        // Now we're waiting for config - enable the listener to complete on error
+        waitingForConfig = true;
+
+        // Wait for config to complete with timeout.
+        //
+        // Transport-aware early recovery: TCP sessions have a different
+        // failure profile than BLE. NOTIFY-style flakiness does not exist
+        // on a raw TCP socket — if bytes do not arrive it is almost always
+        // because the firmware missed the first `wantConfigId` (common
+        // after a remote reboot). Rather than consume the full 30s wait,
+        // fire a single early retry so the user is not staring at a blank
+        // configuring screen for half a minute. BLE/USB keep their
+        // original single-shot behavior; the existing data-flow watchdog
+        // handles stalled NOTIFY paths separately.
+        AppLogging.protocol('Protocol: Waiting for configCompleteId...');
+        const totalTimeout = Duration(seconds: 30);
+        const earlyRetryWindow = Duration(seconds: 8);
+        Timer? earlyRetryTimer;
+        if (_transport.reconnectMode == TransportReconnectMode.directEndpoint) {
+          earlyRetryTimer = Timer(earlyRetryWindow, () async {
+            // Idempotence: (1) completer nulled/completed means either
+            // success or stop()/error has already settled the wait — skip.
+            // (2) transport not connected means the socket already died
+            // and there is nothing to retry on.
+            final completer = _configCompleter;
+            if (completer == null || completer.isCompleted) return;
+            if (!_transport.isConnected) return;
+            AppLogging.protocol(
+              'HANDSHAKE: phase-1 not observed within '
+              '${earlyRetryWindow.inSeconds}s on '
+              '${_transport.type.name} — resending wantConfigId once '
+              '(bounded retry, not a handshake restart)',
             );
-          },
-        );
-      } finally {
-        earlyRetryTimer?.cancel();
+            try {
+              await _requestConfiguration();
+            } catch (e) {
+              AppLogging.protocol(
+                'HANDSHAKE: early phase-1 retry send failed — $e',
+              );
+            }
+          });
+        }
+        try {
+          await _configCompleter!.future.timeout(
+            totalTimeout,
+            onTimeout: () {
+              throw TimeoutException(
+                'Configuration timed out waiting for device response',
+              );
+            },
+          );
+        } finally {
+          earlyRetryTimer?.cancel();
+        }
+        AppLogging.debug('✅ Protocol: Configuration was received');
+      } catch (e, st) {
+        AppLogging.debug('❌ Protocol: Configuration failed: $e');
+        AppLogging.debug('❌ Protocol: Stacktrace: $st');
+        // Convert FlutterBluePlus auth errors to user-friendly message
+        final errorStr = e.toString().toLowerCase();
+        if (errorStr.contains('authentication') ||
+            errorStr.contains('encryption') ||
+            errorStr.contains('insufficient')) {
+          throw Exception(
+            'Connection failed - please try again and enter the PIN when prompted',
+          );
+        }
+
+        // Wrap all other errors into an Exception to avoid bubbling Error types
+        // (e.g., FlutterError) which are surfaced as non-fatal FlutterErrors in Crashlytics.
+        throw Exception('Protocol configuration failed: $e');
       }
-      AppLogging.debug('✅ Protocol: Configuration was received');
+
+      // Start RSSI polling timer (every 2 seconds)
+      _startRssiPolling();
+
+      _isStarted = true;
+      if (!localCompleter.isCompleted) localCompleter.complete();
+      AppLogging.protocol('PROTOCOL_START_COMPLETE instance=$hashCode');
+      AppLogging.protocol('Protocol service started');
     } catch (e, st) {
-      AppLogging.debug('❌ Protocol: Configuration failed: $e');
-      AppLogging.debug('❌ Protocol: Stacktrace: $st');
-      // Convert FlutterBluePlus auth errors to user-friendly message
-      final errorStr = e.toString().toLowerCase();
-      if (errorStr.contains('authentication') ||
-          errorStr.contains('encryption') ||
-          errorStr.contains('insufficient')) {
-        throw Exception(
-          'Connection failed - please try again and enter the PIN when prompted',
-        );
-      }
-
-      // Wrap all other errors into an Exception to avoid bubbling Error types
-      // (e.g., FlutterError) which are surfaced as non-fatal FlutterErrors in Crashlytics.
-      throw Exception('Protocol configuration failed: $e');
+      _isStarted = false;
+      if (!localCompleter.isCompleted) localCompleter.completeError(e, st);
+      AppLogging.protocol('PROTOCOL_START_FAILED instance=$hashCode error=$e');
+      rethrow;
+    } finally {
+      _startInFlight = false;
+      // Leave _startCompleter pointing at the completed completer so any
+      // late awaiter can still observe the final state. Cleared on stop().
     }
-
-    // Start RSSI polling timer (every 2 seconds)
-    _startRssiPolling();
-
-    AppLogging.protocol('Protocol service started');
   }
 
   /// Start periodic RSSI polling from BLE connection.
@@ -1851,6 +1951,15 @@ class ProtocolService {
     _framer.clear();
     _configurationComplete = false;
     _handshakePhase = _HandshakePhase.idle;
+    // Lifecycle reset — a subsequent start() must be allowed to run as a
+    // fresh start (no skip on `_isStarted` or `_startInFlight`). Any
+    // in-flight body still mid-execution will see its `_configCompleter`
+    // errored above and unwind via its catch/finally. Its eventual
+    // `_startInFlight = false` write in `finally` is a no-op.
+    _isStarted = false;
+    _startInFlight = false;
+    _startCompleter = null;
+    AppLogging.protocol('PROTOCOL_STOP_COMPLETE instance=$hashCode');
   }
 
   /// Handle incoming data from transport

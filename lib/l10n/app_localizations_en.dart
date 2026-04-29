@@ -11517,60 +11517,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nodedexMaxRangeLabel => 'Max Range';
 
   @override
-  String get nodedexMapTitle => 'NodeDex Map';
-
-  @override
   String get nodedexMapTooltip => 'Show map view';
 
   @override
-  String get nodedexMapFilter1h => '1h';
-
-  @override
-  String get nodedexMapFilter24h => '24h';
-
-  @override
-  String get nodedexMapFilter7d => '7d';
-
-  @override
-  String get nodedexMapFilterAll => 'All';
-
-  @override
-  String get nodedexMapFilterFavourites => 'Favourites';
-
-  @override
-  String nodedexMapVisibleCount(int visible, int total) {
-    return 'Showing $visible of $total nodes';
-  }
-
-  @override
-  String nodedexMapLastHeard(String time) {
-    return 'Last heard $time';
-  }
-
-  @override
-  String nodedexMapDistance(String distance) {
-    return 'Distance: $distance';
-  }
-
-  @override
-  String get nodedexMapOpenDetails => 'Open Node Details';
-
-  @override
-  String get nodedexMapEmptyNoPositionsTitlePrefix => 'No node ';
-
-  @override
-  String get nodedexMapEmptyNoPositionsTitleKeyword => 'positions';
-
-  @override
-  String get nodedexMapEmptyNoPositionsTitleSuffix => ' yet';
-
-  @override
-  String get nodedexMapEmptyNoPositionsTagline1 =>
-      'Nodes appear here once they share GPS';
-
-  @override
-  String get nodedexMapEmptyNoPositionsTagline2 =>
-      'Move around to gather position fixes';
+  String get nodedexMenuHelp => 'Help';
 
   @override
   String get nodedexMessageActivity => 'Message Activity';

@@ -3,6 +3,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:socialmesh/providers/scanner_lifecycle_providers.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
@@ -358,6 +359,20 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
         width: double.infinity,
         child: ElevatedButton.icon(
           onPressed: () {
+            // Nav guard: if a Scanner is already mounted (e.g. the user
+            // double-tapped, or the post-disconnect router is mid-swap)
+            // suppress the duplicate push. The active Scanner already
+            // owns the BLE adapter and a second Navigator route would
+            // race its cleanup phase, leaving both disposed.
+            final activeScanners = ref.read(scannerMountCountProvider);
+            if (activeScanners > 0) {
+              AppLogging.connection(
+                'SCANNER_NAV_SUPPRESSED_DUPLICATE source=device_sheet '
+                'mountCount=$activeScanners',
+              );
+              Navigator.pop(context);
+              return;
+            }
             Navigator.pop(context);
             Navigator.of(context).pushNamed('/scanner');
           },
@@ -441,12 +456,6 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
       // _AppRouter reads appInitProvider (needsScanner) and shows
       // ScannerScreen. This replaces the ENTIRE nav stack — all sheets,
       // dialogs, and the old home route are removed.
-      //
-      // The declarative approach (setNeedsScanner + popUntil to let the
-      // existing _AppRouter rebuild) was unreliable: the widget swap
-      // from AppRootShell to ScannerScreen didn't always propagate
-      // through the navigator frame, leaving the user stranded on
-      // the Nodes screen.
       final nav = navigatorKey.currentState;
       if (nav != null) {
         AppLogging.connection(

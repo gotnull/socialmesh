@@ -11621,60 +11621,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get nodedexMaxRangeLabel => 'Portata max';
 
   @override
-  String get nodedexMapTitle => 'Mappa NodeDex';
-
-  @override
   String get nodedexMapTooltip => 'Mostra mappa';
 
   @override
-  String get nodedexMapFilter1h => '1h';
-
-  @override
-  String get nodedexMapFilter24h => '24h';
-
-  @override
-  String get nodedexMapFilter7d => '7g';
-
-  @override
-  String get nodedexMapFilterAll => 'Tutto';
-
-  @override
-  String get nodedexMapFilterFavourites => 'Preferiti';
-
-  @override
-  String nodedexMapVisibleCount(int visible, int total) {
-    return '$visible di $total nodi';
-  }
-
-  @override
-  String nodedexMapLastHeard(String time) {
-    return 'Ultimo contatto $time';
-  }
-
-  @override
-  String nodedexMapDistance(String distance) {
-    return 'Distanza: $distance';
-  }
-
-  @override
-  String get nodedexMapOpenDetails => 'Apri dettagli nodo';
-
-  @override
-  String get nodedexMapEmptyNoPositionsTitlePrefix => 'Nessuna ';
-
-  @override
-  String get nodedexMapEmptyNoPositionsTitleKeyword => 'posizione';
-
-  @override
-  String get nodedexMapEmptyNoPositionsTitleSuffix => ' disponibile';
-
-  @override
-  String get nodedexMapEmptyNoPositionsTagline1 =>
-      'I nodi appariranno qui appena condividono il GPS';
-
-  @override
-  String get nodedexMapEmptyNoPositionsTagline2 =>
-      'Spostati per raccogliere fix di posizione';
+  String get nodedexMenuHelp => 'Guida';
 
   @override
   String get nodedexMessageActivity => 'Attività messaggi';
