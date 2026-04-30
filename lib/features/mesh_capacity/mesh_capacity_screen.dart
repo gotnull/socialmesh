@@ -42,18 +42,21 @@ class MeshCapacityScreen extends ConsumerStatefulWidget {
 class _MeshCapacityScreenState extends ConsumerState<MeshCapacityScreen>
     with LifecycleSafeMixin<MeshCapacityScreen> {
   @override
+  void initState() {
+    super.initState();
+    // One-shot "screen opened" telemetry. The advisor's actual state
+    // transitions are logged inside [MeshCapacitySnapshotNotifier] using
+    // a stable dedupe key — logging from build() here would spam every
+    // time the activity histogram rebuilt.
+    AppLogging.meshCapacity('screen opened sourceSurface=mesh_capacity_screen');
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final snapshot = ref.watch(meshCapacitySnapshotProvider);
     final isConnected = ref.watch(isDeviceConnectedProvider);
     final pressureColor = _pressureColor(context, snapshot.pressureLevel);
-
-    AppLogging.meshCapacity(
-      'screen build pressureLevel=${snapshot.pressureLevel.name} '
-      'currentPreset=${snapshot.currentModemPreset?.name ?? 'unknown'} '
-      'reasonCode=${snapshot.recommendation.reasonCode.name} '
-      'sourceSurface=mesh_capacity_screen',
-    );
 
     return GlassScaffold(
       title: l10n.meshCapacityScreenTitle,

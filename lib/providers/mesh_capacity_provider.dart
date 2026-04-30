@@ -35,7 +35,13 @@ final currentLoraConfigProvider = StreamProvider<config_pb.Config_LoRaConfig?>((
 class MeshCapacitySnapshotNotifier extends Notifier<MeshCapacitySnapshot> {
   static const MeshCapacityAdvisor _advisor = MeshCapacityAdvisor();
 
-  MeshCapacityReasonCode? _lastReason;
+  // Canonical advisor-state dedupe key. Every screen / card consumer of
+  // the snapshot rebuilds many times per second as nodes update — but
+  // logging is only useful when the *advisor's verdict* changes, not
+  // when an individual node count ticks. Active node counts (5/15/60m)
+  // are intentionally NOT in the key so high-cadence histogram updates
+  // don't spam the log. See feedback in the original PR.
+  String? _lastLogKey;
 
   @override
   MeshCapacitySnapshot build() {
@@ -50,20 +56,27 @@ class MeshCapacitySnapshotNotifier extends Notifier<MeshCapacitySnapshot> {
       now: DateTime.now(),
     );
 
-    final reason = snapshot.recommendation.reasonCode;
-    if (_lastReason != reason) {
+    final key = _stateKey(snapshot);
+    if (key != _lastLogKey) {
       AppLogging.meshCapacity(
-        'snapshot generated activeRfNodes15m=${snapshot.activeRfNodes15m} '
+        'state changed pressureLevel=${snapshot.pressureLevel.name} '
         'currentPreset=${snapshot.currentModemPreset?.name ?? 'unknown'} '
-        'pressureLevel=${snapshot.pressureLevel.name} '
-        'reasonCode=${reason.name} '
-        'suggestedPreset=${snapshot.recommendation.suggestedPreset?.name ?? 'none'}',
+        'reasonCode=${snapshot.recommendation.reasonCode.name} '
+        'shouldShowCard=${snapshot.recommendation.shouldShowCard} '
+        'suggestedPreset=${snapshot.recommendation.suggestedPreset?.name ?? 'none'} '
+        'activeRfNodes15m=${snapshot.activeRfNodes15m}',
       );
-      _lastReason = reason;
+      _lastLogKey = key;
     }
 
     return snapshot;
   }
+
+  static String _stateKey(MeshCapacitySnapshot s) =>
+      '${s.pressureLevel.name}|'
+      '${s.currentModemPreset?.name ?? 'unknown'}|'
+      '${s.recommendation.reasonCode.name}|'
+      '${s.recommendation.shouldShowCard}';
 }
 
 final meshCapacitySnapshotProvider =
