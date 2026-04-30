@@ -72,6 +72,7 @@ import '../aether/widgets/aether_flight_detected_overlay.dart';
 // import '../global_layer/screens/global_layer_hub_screen.dart';
 import '../sip/sip_hub_screen.dart';
 import '../mrrp_harness/mrrp_harness_home_screen.dart';
+import '../mesh_capacity/mesh_capacity_screen.dart';
 import '../mesh_explorer/mesh_explorer_screen.dart';
 import '../mesh_feed/screens/mesh_feed_screen.dart';
 import '../nodeboard/screens/nodeboard_list_screen.dart';
@@ -453,6 +454,14 @@ class _MainShellState extends ConsumerState<MainShell> {
         requiresConnection: true,
         badgeProviderKey: 'mesh_explorer',
       ),
+    DrawerMenuItem(
+      icon: Icons.network_check,
+      label: l10n.meshCapacityDrawerLabel,
+      screen: const MeshCapacityScreen(),
+      iconColor: AccentColors.cyan,
+      requiresConnection: true,
+      whatsNewBadgeKey: 'mesh_capacity',
+    ),
     if (AppFeatureFlags.isMeshFeedEnabled)
       DrawerMenuItem(
         icon: Icons.dynamic_feed_outlined,

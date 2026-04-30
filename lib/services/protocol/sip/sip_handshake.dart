@@ -269,6 +269,28 @@ class SipHandshakeManager {
   /// Provider-layer hook used to play the rejected/declined SFX.
   void Function(int peerNodeId)? onHandshakeDeclined;
 
+  /// Called when an inbound `HS_HELLO` carries the peer's full
+  /// feature bitmap, so the SIP discovery cache can be upgraded from
+  /// the `features=sip0` passive-discovery placeholder to a fully-
+  /// resolved row WITHOUT waiting for the next CAP_BEACON or
+  /// ROLLCALL_RESP cycle (~60–300s).
+  ///
+  /// Wired by the provider layer to
+  /// [SipDiscovery.recordPeerFeaturesObserved]. Fire-and-forget;
+  /// exceptions are swallowed by the caller.
+  ///
+  /// **Asymmetry note.** Only fires on the *responder* side
+  /// ([handleHello]) because HS_HELLO is the only handshake message
+  /// that carries `requested_features` on the wire — HS_CHALLENGE /
+  /// HS_RESPONSE / HS_ACCEPT do not. The initiator side keeps using
+  /// the slower CAP_BEACON / ROLLCALL_RESP fallback for the peer's
+  /// caps. UI surfaces (e.g. the SIP DM compose trigger) hold the
+  /// "pending" disabled placeholder until either path completes.
+  /// Spec: [`docs/sip/SIP_V0_1.md`] §3.1; doc:
+  /// [`docs/engineering/SIP_MRRP_ARCHITECTURE.md`] §"Cap-cache
+  /// placeholder pattern".
+  void Function(int peerNodeId, int requestedFeatures)? onPeerFeaturesObserved;
+
   /// Whether DMs are available (handshakes accepted).
   ///
   /// When false, outbound handshake initiation returns null and incoming
@@ -768,6 +790,29 @@ class SipHandshakeManager {
       'client_nonce=${_hexPrefix(hello.clientNonce)} — '
       'queued for user consent',
     );
+
+    // Fast-path the SIP discovery cap cache: HS_HELLO carries the
+    // peer's full feature bitmap on the wire, so we can upgrade the
+    // `features=sip0` passive-discovery placeholder immediately
+    // instead of waiting ~60–300s for the next CAP_BEACON /
+    // ROLLCALL_RESP. The provider layer wires this to
+    // `SipDiscovery.recordPeerFeaturesObserved`. Caveat:
+    // `requestedFeatures` is what the peer is requesting *for this
+    // session*, which may be a subset of their full advertised
+    // features. For the rich-cap UI gates (dmInkV1 / dmPlayV1 /
+    // dmSignalV1) the gap is irrelevant — these are unconditionally
+    // advertised by every Socialmesh build — and even if the gap
+    // were real, the row gets corrected on the next CAP_BEACON.
+    final featuresHook = onPeerFeaturesObserved;
+    if (featuresHook != null) {
+      try {
+        featuresHook(peerNodeId, hello.requestedFeatures);
+      } catch (e, st) {
+        AppLogging.sip(
+          'SIP_HS: onPeerFeaturesObserved hook threw (ignored): $e\n$st',
+        );
+      }
+    }
 
     onStateChanged?.call();
     onHandshakeRequest?.call(peerNodeId);

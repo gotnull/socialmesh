@@ -474,5 +474,91 @@ void main() {
         expect(sip0Only.supportsSip3, isFalse);
       });
     });
+
+    // -----------------------------------------------------------------
+    // Cap-cache fast path from inbound HS_HELLO. The handshake manager
+    // calls `recordPeerFeaturesObserved` when an HS_HELLO arrives so
+    // discovery can upgrade the `features=sip0` passive-discovery
+    // placeholder without waiting on the next CAP_BEACON / ROLLCALL_RESP
+    // cycle. Spec / contract:
+    // `docs/engineering/SIP_MRRP_ARCHITECTURE.md` §"Cap-cache placeholder
+    // pattern".
+    // -----------------------------------------------------------------
+
+    group('recordPeerFeaturesObserved (handshake fast path)', () {
+      test('upgrades the features=sip0 placeholder to the real bitmap', () {
+        // Simulate the placeholder window: a passive-discovery row gets
+        // inserted (features=sip0) when the peer first appears, BEFORE
+        // any real CAP frame has been seen.
+        discovery.handleRollcallReq(0xBEEF);
+        expect(
+          discovery.getPeer(0xBEEF)?.features,
+          equals(SipFeatureBits.sip0),
+          reason: 'baseline: passive discovery inserts the sip0 placeholder',
+        );
+
+        // HS_HELLO from the peer carries the full feature bitmap.
+        const fullFeatures = 0x3F0B; // sip0|sip1|sip3|overlay|rich
+        discovery.recordPeerFeaturesObserved(0xBEEF, fullFeatures);
+
+        final upgraded = discovery.getPeer(0xBEEF);
+        expect(upgraded, isNotNull);
+        expect(
+          upgraded!.features,
+          equals(fullFeatures),
+          reason:
+              'fast path must replace the sip0 placeholder with the wire '
+              'bitmap so UI gates can read real cap bits',
+        );
+      });
+
+      test('inserts a minimal row when no entry exists yet', () {
+        expect(discovery.getPeer(0xCAFE), isNull);
+        discovery.recordPeerFeaturesObserved(0xCAFE, 0x3F0B);
+        final created = discovery.getPeer(0xCAFE);
+        expect(created, isNotNull);
+        expect(created!.features, equals(0x3F0B));
+        // Other fields stay zero — they're filled in on the next real
+        // CAP frame.
+        expect(created.mtuHint, equals(0));
+        expect(created.rxWindowS, equals(0));
+      });
+
+      test(
+        'never loses bits already present in the cache (bitwise-OR semantics)',
+        () {
+          // A real CAP_BEACON has already populated the row with the
+          // full set. A subsequent HS_HELLO that requests a NARROWER
+          // subset must NOT downgrade the cached bits.
+          discovery.recordPeerFeaturesObserved(0x1234, 0x3F0B);
+          discovery.recordPeerFeaturesObserved(0x1234, 0x000B); // narrower
+          expect(
+            discovery.getPeer(0x1234)!.features,
+            equals(0x3F0B),
+            reason:
+                'recordPeerFeaturesObserved is monotonic — bits already '
+                'observed must never be lost when a narrower observation '
+                'arrives',
+          );
+        },
+      );
+
+      test('preserves capsHash so a future real CAP_BEACON can replace', () {
+        // Insert a placeholder via passive discovery (capsHash = 0).
+        discovery.handleRollcallReq(0xDEAD);
+        final beforeHash = discovery.getPeer(0xDEAD)!.capsHash;
+
+        discovery.recordPeerFeaturesObserved(0xDEAD, 0x3F0B);
+
+        expect(
+          discovery.getPeer(0xDEAD)!.capsHash,
+          equals(beforeHash),
+          reason:
+              'capsHash must NOT change on the fast path — a future real '
+              'CAP_BEACON / CAP_RESP with a different hash still needs to '
+              'trigger a full _upsertPeer replacement',
+        );
+      });
+    });
   });
 }

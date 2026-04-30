@@ -43977,6 +43977,340 @@
     "@sipHubBlockConfirmCancel": {
         "description": "Cancel button label inside the Block confirmation sheet."
     },
+    "meshCapacityScreenTitle": "Capacity",
+    "@meshCapacityScreenTitle": {
+        "description": "Glass app bar title for the dedicated Mesh Capacity Advisor screen reachable from the drawer."
+    },
+    "meshCapacityDrawerLabel": "Mesh Capacity",
+    "@meshCapacityDrawerLabel": {
+        "description": "Drawer entry label for the Mesh Capacity Advisor screen."
+    },
+    "meshCapacityHeroNodesUnit": "active over RF (15 min)",
+    "@meshCapacityHeroNodesUnit": {
+        "description": "Unit label rendered next to the active-RF-node count in the Mesh Capacity hero card."
+    },
+    "meshCapacityHeroSubtitle": "Local mesh density for the active modem preset.",
+    "@meshCapacityHeroSubtitle": {
+        "description": "Subtitle line under the hero stat block on the Mesh Capacity screen."
+    },
+    "meshCapacityGaugeBusy": "Busy",
+    "@meshCapacityGaugeBusy": {
+        "description": "Gauge legend label for the busy threshold."
+    },
+    "meshCapacityGaugeCongested": "Congested",
+    "@meshCapacityGaugeCongested": {
+        "description": "Gauge legend label for the congested threshold."
+    },
+    "meshCapacityGaugeCapacityLimited": "Limited",
+    "@meshCapacityGaugeCapacityLimited": {
+        "description": "Gauge legend label for the capacity-limited threshold."
+    },
+    "meshCapacityGaugePresetUnknown": "Connect a device with a known modem preset to see capacity thresholds.",
+    "@meshCapacityGaugePresetUnknown": {
+        "description": "Fallback caption shown under the gauge when the active modem preset is unknown."
+    },
+    "meshCapacityStat5m": "5 min",
+    "@meshCapacityStat5m": {
+        "description": "Stat tile label for the 5-minute active RF node count."
+    },
+    "meshCapacityStat15m": "15 min",
+    "@meshCapacityStat15m": {
+        "description": "Stat tile label for the 15-minute active RF node count."
+    },
+    "meshCapacityStat60m": "60 min",
+    "@meshCapacityStat60m": {
+        "description": "Stat tile label for the 60-minute active RF node count."
+    },
+    "meshCapacityStatTotal": "Total",
+    "@meshCapacityStatTotal": {
+        "description": "Stat tile label for the total NodeDB count."
+    },
+    "meshCapacityLearnMore": "Learn more",
+    "@meshCapacityLearnMore": {
+        "description": "Secondary button label on the recommendation card — opens the explanation sheet."
+    },
+    "meshCapacityRecommendationBodyBusy": "Your mesh is starting to fill up. Long-range presets trade capacity for reach, which is fine for sparse deployments. Keep an eye on responsiveness.",
+    "@meshCapacityRecommendationBodyBusy": {
+        "description": "Recommendation body shown when pressure is busy but acceptable."
+    },
+    "meshCapacityRecommendationBodyLongPresetDense": "This area has many active radios. Long-range presets spend a lot of airtime on each packet, so contention can stall messages. A faster preset would carry more traffic at the cost of range.",
+    "@meshCapacityRecommendationBodyLongPresetDense": {
+        "description": "Recommendation body when on a long-range preset and the local mesh is dense."
+    },
+    "meshCapacityRecommendationBodyMediumPresetDense": "Density is high enough that even a medium-range preset can struggle. A short-range preset would prioritise capacity over reach.",
+    "@meshCapacityRecommendationBodyMediumPresetDense": {
+        "description": "Recommendation body when on a medium-range preset and the mesh is congested."
+    },
+    "meshCapacityRecommendationBodyEventLike": "This looks like a large, intentional gathering. Capacity is saturated. Consider reducing telemetry/location frequency or coordinating a faster preset across the group.",
+    "@meshCapacityRecommendationBodyEventLike": {
+        "description": "Recommendation body shown when the local mesh is event-scale dense."
+    },
+    "meshCapacityActivityTitle": "Recent activity",
+    "@meshCapacityActivityTitle": {
+        "description": "Header for the recent-activity histogram on the Mesh Capacity screen."
+    },
+    "meshCapacityBucket1m": "<1m",
+    "@meshCapacityBucket1m": {
+        "description": "Activity histogram x-axis label for the under-1-minute bucket."
+    },
+    "meshCapacityBucket5m": "<5m",
+    "@meshCapacityBucket5m": {
+        "description": "Activity histogram x-axis label for the under-5-minute bucket."
+    },
+    "meshCapacityBucket15m": "<15m",
+    "@meshCapacityBucket15m": {
+        "description": "Activity histogram x-axis label for the under-15-minute bucket."
+    },
+    "meshCapacityBucket60m": "<60m",
+    "@meshCapacityBucket60m": {
+        "description": "Activity histogram x-axis label for the under-60-minute bucket."
+    },
+    "meshCapacityBucket6h": "<6h",
+    "@meshCapacityBucket6h": {
+        "description": "Activity histogram x-axis label for the under-6-hour bucket."
+    },
+    "meshCapacityEducationHeader": "How presets work",
+    "@meshCapacityEducationHeader": {
+        "description": "Section header above the educational tiles on the Mesh Capacity screen."
+    },
+    "meshCapacityEducationRangeTitle": "Range",
+    "@meshCapacityEducationRangeTitle": {
+        "description": "Title of the range-tradeoff educational tile."
+    },
+    "meshCapacityEducationRangeBody": "Long-range presets reach further by spreading each packet over more on-air time. Great for discovery and sparse, exploratory networks.",
+    "@meshCapacityEducationRangeBody": {
+        "description": "Body of the range-tradeoff educational tile."
+    },
+    "meshCapacityEducationCapacityTitle": "Capacity",
+    "@meshCapacityEducationCapacityTitle": {
+        "description": "Title of the capacity-tradeoff educational tile."
+    },
+    "meshCapacityEducationCapacityBody": "Faster presets shorten time-on-air per packet, so the same airtime budget carries more messages. Better for dense urban areas and events.",
+    "@meshCapacityEducationCapacityBody": {
+        "description": "Body of the capacity-tradeoff educational tile."
+    },
+    "meshCapacityEducationCompatTitle": "Compatibility",
+    "@meshCapacityEducationCompatTitle": {
+        "description": "Title of the compatibility educational tile."
+    },
+    "meshCapacityEducationCompatBody": "Nearby radios must use compatible channel and preset settings to hear you. Move your group together when changing — solo changes can hide you from peers.",
+    "@meshCapacityEducationCompatBody": {
+        "description": "Body of the compatibility educational tile."
+    },
+    "meshCapacityReasonLabel": "Reason",
+    "@meshCapacityReasonLabel": {
+        "description": "Label for the reason-code row in the snapshot detail table."
+    },
+    "meshCapacityReasonHealthy": "Healthy for the active preset",
+    "@meshCapacityReasonHealthy": {
+        "description": "Reason-code value: healthyForPreset."
+    },
+    "meshCapacityReasonBusy": "Busy but acceptable",
+    "@meshCapacityReasonBusy": {
+        "description": "Reason-code value: busyButAcceptable."
+    },
+    "meshCapacityReasonLongDense": "Long-range preset in a dense mesh",
+    "@meshCapacityReasonLongDense": {
+        "description": "Reason-code value: longPresetDenseMesh."
+    },
+    "meshCapacityReasonMediumDense": "Medium-range preset in a dense mesh",
+    "@meshCapacityReasonMediumDense": {
+        "description": "Reason-code value: slowPresetDenseMesh."
+    },
+    "meshCapacityReasonEventLike": "Event-scale density",
+    "@meshCapacityReasonEventLike": {
+        "description": "Reason-code value: veryDenseEventLikeMesh."
+    },
+    "meshCapacityReasonPresetUnknown": "Modem preset not yet readable",
+    "@meshCapacityReasonPresetUnknown": {
+        "description": "Reason-code value: presetUnknown."
+    },
+    "meshCapacityReasonInsufficientData": "Not enough RF evidence yet",
+    "@meshCapacityReasonInsufficientData": {
+        "description": "Reason-code value: insufficientData."
+    },
+    "meshCapacityNotConnectedTitlePrefix": "Connect a device to",
+    "@meshCapacityNotConnectedTitlePrefix": {
+        "description": "Empty-state title prefix shown when no radio is connected."
+    },
+    "meshCapacityNotConnectedTitleKeyword": "see capacity",
+    "@meshCapacityNotConnectedTitleKeyword": {
+        "description": "Empty-state title keyword shown when no radio is connected."
+    },
+    "meshCapacityNotConnectedTitleSuffix": ".",
+    "@meshCapacityNotConnectedTitleSuffix": {
+        "description": "Empty-state title suffix shown when no radio is connected."
+    },
+    "meshCapacityNotConnectedTagline1": "Capacity insights need a paired radio.",
+    "@meshCapacityNotConnectedTagline1": {
+        "description": "Empty-state tagline shown when no radio is connected (variant 1)."
+    },
+    "meshCapacityNotConnectedTagline2": "Pair a Meshtastic device to read its modem preset.",
+    "@meshCapacityNotConnectedTagline2": {
+        "description": "Empty-state tagline shown when no radio is connected (variant 2)."
+    },
+    "meshCapacityNotConnectedTagline3": "We assess airtime, not range.",
+    "@meshCapacityNotConnectedTagline3": {
+        "description": "Empty-state tagline shown when no radio is connected (variant 3)."
+    },
+    "meshCapacityQuietMeshTitlePrefix": "Quiet mesh",
+    "@meshCapacityQuietMeshTitlePrefix": {
+        "description": "Empty-state title prefix shown when the local mesh has no RF evidence yet."
+    },
+    "meshCapacityQuietMeshTitleKeyword": "for now",
+    "@meshCapacityQuietMeshTitleKeyword": {
+        "description": "Empty-state title keyword shown when the local mesh has no RF evidence yet."
+    },
+    "meshCapacityQuietMeshTitleSuffix": ".",
+    "@meshCapacityQuietMeshTitleSuffix": {
+        "description": "Empty-state title suffix shown when the local mesh has no RF evidence yet."
+    },
+    "meshCapacityQuietMeshTagline1": "Capacity advice will appear once nearby radios are heard.",
+    "@meshCapacityQuietMeshTagline1": {
+        "description": "Empty-state tagline shown when the local mesh has no RF evidence yet (variant 1)."
+    },
+    "meshCapacityQuietMeshTagline2": "MQTT-only nodes don't count — only direct RF observations do.",
+    "@meshCapacityQuietMeshTagline2": {
+        "description": "Empty-state tagline shown when the local mesh has no RF evidence yet (variant 2)."
+    },
+    "meshCapacityQuietMeshTagline3": "Long-range presets are perfect for sparse mesh exploration.",
+    "@meshCapacityQuietMeshTagline3": {
+        "description": "Empty-state tagline shown when the local mesh has no RF evidence yet (variant 3)."
+    },
+    "meshCapacityCardTitleBusy": "Mesh is getting busy",
+    "@meshCapacityCardTitleBusy": {
+        "description": "Title of the Mesh Capacity Advisor card shown when the local mesh is starting to fill up but the current preset is still acceptable."
+    },
+    "meshCapacityCardSubtitleBusy": "{count, plural, =1{1 nearby node is active over RF in the last 15 minutes. Long-range presets trade capacity for reach.} other{{count} nearby nodes are active over RF in the last 15 minutes. Long-range presets trade capacity for reach.}}",
+    "@meshCapacityCardSubtitleBusy": {
+        "description": "Subtitle for the Mesh Capacity Advisor card at the busy pressure level. Surfaces the active RF node count.",
+        "placeholders": {
+            "count": {
+                "type": "int",
+                "format": "compact"
+            }
+        }
+    },
+    "meshCapacityCardTitleCongested": "Dense mesh detected",
+    "@meshCapacityCardTitleCongested": {
+        "description": "Title of the Mesh Capacity Advisor card when the active preset is being pushed into airtime contention."
+    },
+    "meshCapacityCardSubtitleCongested": "{count, plural, =1{1 nearby node is active over RF. This preset may be limiting capacity for the local network.} other{{count} nearby nodes are active over RF. This preset may be limiting capacity for the local network.}}",
+    "@meshCapacityCardSubtitleCongested": {
+        "description": "Subtitle for the Mesh Capacity Advisor card at the congested pressure level.",
+        "placeholders": {
+            "count": {
+                "type": "int",
+                "format": "compact"
+            }
+        }
+    },
+    "meshCapacityCardTitleCapacityLimited": "This area may need a faster preset",
+    "@meshCapacityCardTitleCapacityLimited": {
+        "description": "Title of the Mesh Capacity Advisor card when local density is at or beyond the safe envelope for the active preset."
+    },
+    "meshCapacityCardSubtitleCapacityLimited": "{count, plural, =1{1 nearby node is active over RF. Airtime is likely saturated. Tap to learn what preset would help.} other{{count} nearby nodes are active over RF. Airtime is likely saturated. Tap to learn what preset would help.}}",
+    "@meshCapacityCardSubtitleCapacityLimited": {
+        "description": "Subtitle for the Mesh Capacity Advisor card at the capacity-limited pressure level.",
+        "placeholders": {
+            "count": {
+                "type": "int",
+                "format": "compact"
+            }
+        }
+    },
+    "meshCapacityCardTitlePresetUnknown": "Preset not yet readable",
+    "@meshCapacityCardTitlePresetUnknown": {
+        "description": "Title of the Mesh Capacity Advisor card when the device has not yet advertised its modem preset, so suitability cannot be assessed."
+    },
+    "meshCapacityCardSubtitlePresetUnknown": "Socialmesh can't assess preset suitability until it can read the current modem preset from your device.",
+    "@meshCapacityCardSubtitlePresetUnknown": {
+        "description": "Subtitle of the Mesh Capacity Advisor card when the modem preset is unavailable."
+    },
+    "meshCapacitySheetTitle": "Why preset choice matters",
+    "@meshCapacitySheetTitle": {
+        "description": "Title of the Mesh Capacity Advisor explanation bottom sheet."
+    },
+    "meshCapacitySheetIntro": "Meshtastic radio presets are a tradeoff between range and capacity. Long-range presets are useful when the network is sparse or you are trying to discover other nodes. In dense areas, the same settings can consume too much airtime, causing delays, missed messages, and unreliable routing.",
+    "@meshCapacitySheetIntro": {
+        "description": "Intro paragraph in the Mesh Capacity explanation sheet — frames presets as a tradeoff."
+    },
+    "meshCapacitySheetTradeoff": "Faster presets reduce range but allow the local mesh to carry more traffic. Dense urban areas and large events usually need faster presets to stay responsive. Sparser, exploratory deployments still benefit from long-range presets.",
+    "@meshCapacitySheetTradeoff": {
+        "description": "Second paragraph in the Mesh Capacity explanation sheet — explains the capacity vs range tradeoff."
+    },
+    "meshCapacitySheetSnapshotHeader": "Local mesh snapshot",
+    "@meshCapacitySheetSnapshotHeader": {
+        "description": "Section header above the read-only snapshot table in the Mesh Capacity explanation sheet."
+    },
+    "meshCapacitySheetCurrentPresetLabel": "Current preset",
+    "@meshCapacitySheetCurrentPresetLabel": {
+        "description": "Row label for the active modem preset inside the snapshot table."
+    },
+    "meshCapacitySheetActiveNodes5mLabel": "Active over RF (5 min)",
+    "@meshCapacitySheetActiveNodes5mLabel": {
+        "description": "Row label for active RF nodes in the last 5 minutes inside the snapshot table."
+    },
+    "meshCapacitySheetActiveNodes15mLabel": "Active over RF (15 min)",
+    "@meshCapacitySheetActiveNodes15mLabel": {
+        "description": "Row label for active RF nodes in the last 15 minutes inside the snapshot table."
+    },
+    "meshCapacitySheetActiveNodes60mLabel": "Active over RF (60 min)",
+    "@meshCapacitySheetActiveNodes60mLabel": {
+        "description": "Row label for active RF nodes in the last 60 minutes inside the snapshot table."
+    },
+    "meshCapacitySheetTotalKnownLabel": "Total known nodes",
+    "@meshCapacitySheetTotalKnownLabel": {
+        "description": "Row label for the total NodeDB count inside the snapshot table."
+    },
+    "meshCapacitySheetPressureLabel": "Pressure",
+    "@meshCapacitySheetPressureLabel": {
+        "description": "Row label for the computed pressure level inside the snapshot table."
+    },
+    "meshCapacitySheetSuggestedPresetLabel": "Suggested preset",
+    "@meshCapacitySheetSuggestedPresetLabel": {
+        "description": "Row label for the advisor's suggested preset inside the snapshot table."
+    },
+    "meshCapacitySheetPresetUnknownValue": "Unknown",
+    "@meshCapacitySheetPresetUnknownValue": {
+        "description": "Value placeholder shown when the modem preset is not known yet."
+    },
+    "meshCapacitySheetRiskHeader": "Before changing presets",
+    "@meshCapacitySheetRiskHeader": {
+        "description": "Section header above the risk paragraph in the Mesh Capacity explanation sheet."
+    },
+    "meshCapacitySheetRiskBody": "Changing presets affects who you can communicate with. Your group should move together, or you may stop hearing nodes that remain on the old preset. Socialmesh never changes radio settings on its own.",
+    "@meshCapacitySheetRiskBody": {
+        "description": "Risk paragraph in the Mesh Capacity explanation sheet — warns the user that compatibility is impacted."
+    },
+    "meshCapacitySheetOpenSettings": "Open radio settings",
+    "@meshCapacitySheetOpenSettings": {
+        "description": "Primary action button label in the Mesh Capacity explanation sheet — navigates to the existing Radio Configuration screen so the user can change settings themselves."
+    },
+    "meshCapacitySheetClose": "Close",
+    "@meshCapacitySheetClose": {
+        "description": "Secondary action button label in the Mesh Capacity explanation sheet — dismisses the sheet without navigating."
+    },
+    "meshCapacityPressureUnknown": "Unknown",
+    "@meshCapacityPressureUnknown": {
+        "description": "Pressure label when not enough data is available to compute mesh capacity pressure."
+    },
+    "meshCapacityPressureHealthy": "Healthy",
+    "@meshCapacityPressureHealthy": {
+        "description": "Pressure label when the mesh is comfortably under the active preset's capacity envelope."
+    },
+    "meshCapacityPressureBusy": "Busy",
+    "@meshCapacityPressureBusy": {
+        "description": "Pressure label when the mesh is starting to fill up but is still acceptable."
+    },
+    "meshCapacityPressureCongested": "Congested",
+    "@meshCapacityPressureCongested": {
+        "description": "Pressure label when the mesh is dense for the active preset."
+    },
+    "meshCapacityPressureCapacityLimited": "Capacity-limited",
+    "@meshCapacityPressureCapacityLimited": {
+        "description": "Pressure label when the mesh is at or beyond the safe capacity for the active preset."
+    },
     "meshExplorerBlockConfirmTitle": "Block this node?",
     "@meshExplorerBlockConfirmTitle": {
         "description": "Title of the confirmation sheet shown when the user taps Block in the Mesh Explorer peer detail sheet."

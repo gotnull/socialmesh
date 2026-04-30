@@ -327,6 +327,22 @@ final sipDiscoveryProvider = Provider<SipDiscovery?>((ref) {
         .play(SipPlaySoundCue.consentRequested);
   };
 
+  // Fast-path the SIP discovery cap cache from inbound HS_HELLO.
+  // Wired here (not inside `sipHandshakeProvider`) so the back-edge
+  // discovery → handshake stays one-way and Dart's static analyser
+  // doesn't flag a top-level provider cycle. The handshake manager
+  // fires this hook from `handleHello` after the request is queued
+  // for user consent — the peer's full feature bitmap is on the
+  // HS_HELLO wire, so this skips the ~60–300s wait for the next
+  // CAP_BEACON / ROLLCALL_RESP. Only fires on the responder side
+  // (HS_HELLO is the only handshake message carrying features); the
+  // initiator side keeps the slower fallback. See
+  // `docs/engineering/SIP_MRRP_ARCHITECTURE.md` §"Cap-cache
+  // placeholder pattern" for the full contract.
+  hsManager?.onPeerFeaturesObserved = (peerNodeId, features) {
+    discovery.recordPeerFeaturesObserved(peerNodeId, features);
+  };
+
   // Start periodic CAP_BEACON broadcast.
   discovery.start();
 
@@ -342,6 +358,7 @@ final sipDiscoveryProvider = Provider<SipDiscovery?>((ref) {
     protocol.onSipHandshakeComplete = null;
     hsManager?.onHandshakeFailed = null;
     hsManager?.onHandshakeDeclined = null;
+    hsManager?.onPeerFeaturesObserved = null;
   });
 
   return discovery;
@@ -482,11 +499,17 @@ final sipHandshakeProvider = Provider<SipHandshakeManager?>((ref) {
     });
   };
 
+  // `onPeerFeaturesObserved` is wired from inside `sipDiscoveryProvider`
+  // (the only site that already references both providers) to avoid
+  // the top-level provider cycle Dart's static analyser would otherwise
+  // flag. See sipDiscoveryProvider for the wiring.
+
   final protocol = ref.read(protocolServiceProvider);
   protocol.attachSipHandshake(manager);
 
   ref.onDispose(() {
     manager.onStateChanged = null;
+    manager.onPeerFeaturesObserved = null;
     protocol.attachSipHandshake(null);
   });
 

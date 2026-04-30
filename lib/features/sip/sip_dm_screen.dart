@@ -57,6 +57,7 @@ import '../../services/protocol/sip/play/sip_play_registry.dart';
 import '../../services/protocol/sip/sip_dm.dart';
 import '../../services/protocol/sip/sip_ink_simplifier.dart';
 import '../../services/protocol/sip/sip_messages_dm.dart';
+import '../../services/protocol/sip/sip_types.dart';
 import '../../services/protocol/text_message_payload_budget.dart';
 import '../../utils/snackbar.dart';
 
@@ -1280,18 +1281,29 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
     return peer?.supportsDmSignalV1 ?? false;
   }
 
-  /// Whether SIP discovery has at least one cache entry for the
-  /// peer — i.e. we've seen a CAP_BEACON / CAP_RESP / ROLLCALL_RESP
-  /// / handshake-derived feature row for them. Distinct from "peer
-  /// supports X": even an `features=sip0` placeholder counts as
-  /// known here. Used to drive the rich-composer trigger's
-  /// "pending" placeholder so the leading slot is never empty
-  /// during the brief gap between session creation and first
-  /// observed CAP frame.
+  /// Whether SIP discovery has a *fully resolved* cap row for the
+  /// peer — i.e. we've actually observed their feature bitmap, not
+  /// just the `features=sip0` passive-discovery placeholder that
+  /// gets inserted the moment any inbound SIP frame is decoded.
+  ///
+  /// By the time an accepted SIP DM session exists, the peer MUST
+  /// support `sip1` (handshake) — otherwise the session wouldn't
+  /// have been created. Checking for that bit specifically
+  /// distinguishes the brief "sip0-only placeholder" window from
+  /// the real post-CAP_BEACON / CAP_RESP / ROLLCALL_RESP /
+  /// handshake-derived row.
+  ///
+  /// Returning false here keeps the rich-composer trigger in its
+  /// disabled "pending" placeholder state instead of flipping it
+  /// to "hidden" (which is what `peer != null && !hasAnyRichCap`
+  /// looks like during the placeholder window). Field-bug root
+  /// cause documented at the screen-build watch site.
   bool _peerCapsKnown(SipDmSession? session) {
     if (session == null) return false;
     final discovery = ref.read(sipDiscoveryProvider);
-    return discovery?.getPeer(session.peerNodeId) != null;
+    final peer = discovery?.getPeer(session.peerNodeId);
+    if (peer == null) return false;
+    return (peer.features & SipFeatureBits.sip1) == SipFeatureBits.sip1;
   }
 
   Widget _buildInputBar(BuildContext context, SipDmSession? session) {

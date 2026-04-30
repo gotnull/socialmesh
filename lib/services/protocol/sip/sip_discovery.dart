@@ -777,6 +777,91 @@ class SipDiscovery {
     onPeerDiscovered?.call(nodeId);
   }
 
+  /// Fast-path entry point for handshake-derived peer features.
+  ///
+  /// Wired by the provider layer to
+  /// [SipHandshakeManager.onPeerFeaturesObserved] so that an inbound
+  /// `HS_HELLO` upgrades the discovery cap cache from the
+  /// `features=sip0` passive-discovery placeholder to the peer's
+  /// real bitmap immediately, instead of forcing UI surfaces to wait
+  /// ~60–300s for the next CAP_BEACON / ROLLCALL_RESP cycle. See
+  /// [`docs/engineering/SIP_MRRP_ARCHITECTURE.md`] §"Cap-cache
+  /// placeholder pattern" for the full rationale + tri-state UI
+  /// contract.
+  ///
+  /// Semantics:
+  ///   - Existing row: bitwise-OR `features` into `existing.features`
+  ///     so we never lose bits a real CAP frame already gave us. The
+  ///     `capsHash` is preserved unchanged so a future genuine
+  ///     CAP_BEACON / CAP_RESP can still drive a full replacement
+  ///     via `_upsertPeer`.
+  ///   - No existing row: insert a minimal entry with the observed
+  ///     features. Other fields (mtuHint, rxWindowS, deviceClass)
+  ///     stay at zero until a real CAP frame fills them in.
+  ///
+  /// **Asymmetry caveat.** Only fires on the *responder* side of the
+  /// handshake — HS_HELLO is the only handshake message that carries
+  /// `requested_features` on the wire. The initiator side keeps
+  /// using the slower CAP_BEACON / ROLLCALL_RESP fallback. UI gates
+  /// hold the disabled "pending" placeholder for that side.
+  void recordPeerFeaturesObserved(int nodeId, int features) {
+    final nowMs = _nowMs();
+    final existing = _cache[nodeId];
+
+    if (existing != null) {
+      final merged = existing.features | features;
+      if (merged == existing.features) {
+        // No new bits — just bump lastSeen so the entry doesn't get
+        // evicted out from under us.
+        existing.lastSeenMs = nowMs;
+        return;
+      }
+      _cache[nodeId] = SipPeerCapability(
+        nodeId: nodeId,
+        features: merged,
+        deviceClass: existing.deviceClass,
+        maxProtoMinor: existing.maxProtoMinor,
+        mtuHint: existing.mtuHint,
+        rxWindowS: existing.rxWindowS,
+        // Preserve capsHash so a future real CAP_BEACON / CAP_RESP
+        // with a different hash still triggers full replacement
+        // through `_upsertPeer`.
+        capsHash: existing.capsHash,
+        lastSeenMs: nowMs,
+      );
+      AppLogging.sip(
+        'SIP_DISCOVERY: peer 0x${nodeId.toRadixString(16)} caps merged '
+        'from handshake, features=0x${merged.toRadixString(16)} '
+        '(was 0x${existing.features.toRadixString(16)})',
+      );
+      onPeersChanged?.call();
+      return;
+    }
+
+    // No entry exists yet — insert a minimal one. The real
+    // `mtuHint`, `rxWindowS`, etc. will fill in on the next CAP
+    // frame.
+    if (_cache.length >= maxPeers) {
+      _evictOldest();
+    }
+    _cache[nodeId] = SipPeerCapability(
+      nodeId: nodeId,
+      features: features,
+      deviceClass: 0,
+      maxProtoMinor: 0,
+      mtuHint: 0,
+      rxWindowS: 0,
+      capsHash: 0,
+      lastSeenMs: nowMs,
+    );
+    AppLogging.sip(
+      'SIP_DISCOVERY: peer 0x${nodeId.toRadixString(16)} inserted from '
+      'handshake, features=0x${features.toRadixString(16)}',
+    );
+    onPeersChanged?.call();
+    onPeerDiscovered?.call(nodeId);
+  }
+
   void _evictOldest() {
     if (_cache.isEmpty) return;
     int? oldestNodeId;

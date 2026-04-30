@@ -57656,6 +57656,480 @@ abstract class AppLocalizations {
   /// **'Cancel'**
   String get sipHubBlockConfirmCancel;
 
+  /// Glass app bar title for the dedicated Mesh Capacity Advisor screen reachable from the drawer.
+  ///
+  /// In en, this message translates to:
+  /// **'Capacity'**
+  String get meshCapacityScreenTitle;
+
+  /// Drawer entry label for the Mesh Capacity Advisor screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh Capacity'**
+  String get meshCapacityDrawerLabel;
+
+  /// Unit label rendered next to the active-RF-node count in the Mesh Capacity hero card.
+  ///
+  /// In en, this message translates to:
+  /// **'active over RF (15 min)'**
+  String get meshCapacityHeroNodesUnit;
+
+  /// Subtitle line under the hero stat block on the Mesh Capacity screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Local mesh density for the active modem preset.'**
+  String get meshCapacityHeroSubtitle;
+
+  /// Gauge legend label for the busy threshold.
+  ///
+  /// In en, this message translates to:
+  /// **'Busy'**
+  String get meshCapacityGaugeBusy;
+
+  /// Gauge legend label for the congested threshold.
+  ///
+  /// In en, this message translates to:
+  /// **'Congested'**
+  String get meshCapacityGaugeCongested;
+
+  /// Gauge legend label for the capacity-limited threshold.
+  ///
+  /// In en, this message translates to:
+  /// **'Limited'**
+  String get meshCapacityGaugeCapacityLimited;
+
+  /// Fallback caption shown under the gauge when the active modem preset is unknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect a device with a known modem preset to see capacity thresholds.'**
+  String get meshCapacityGaugePresetUnknown;
+
+  /// Stat tile label for the 5-minute active RF node count.
+  ///
+  /// In en, this message translates to:
+  /// **'5 min'**
+  String get meshCapacityStat5m;
+
+  /// Stat tile label for the 15-minute active RF node count.
+  ///
+  /// In en, this message translates to:
+  /// **'15 min'**
+  String get meshCapacityStat15m;
+
+  /// Stat tile label for the 60-minute active RF node count.
+  ///
+  /// In en, this message translates to:
+  /// **'60 min'**
+  String get meshCapacityStat60m;
+
+  /// Stat tile label for the total NodeDB count.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get meshCapacityStatTotal;
+
+  /// Secondary button label on the recommendation card — opens the explanation sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn more'**
+  String get meshCapacityLearnMore;
+
+  /// Recommendation body shown when pressure is busy but acceptable.
+  ///
+  /// In en, this message translates to:
+  /// **'Your mesh is starting to fill up. Long-range presets trade capacity for reach, which is fine for sparse deployments. Keep an eye on responsiveness.'**
+  String get meshCapacityRecommendationBodyBusy;
+
+  /// Recommendation body when on a long-range preset and the local mesh is dense.
+  ///
+  /// In en, this message translates to:
+  /// **'This area has many active radios. Long-range presets spend a lot of airtime on each packet, so contention can stall messages. A faster preset would carry more traffic at the cost of range.'**
+  String get meshCapacityRecommendationBodyLongPresetDense;
+
+  /// Recommendation body when on a medium-range preset and the mesh is congested.
+  ///
+  /// In en, this message translates to:
+  /// **'Density is high enough that even a medium-range preset can struggle. A short-range preset would prioritise capacity over reach.'**
+  String get meshCapacityRecommendationBodyMediumPresetDense;
+
+  /// Recommendation body shown when the local mesh is event-scale dense.
+  ///
+  /// In en, this message translates to:
+  /// **'This looks like a large, intentional gathering. Capacity is saturated. Consider reducing telemetry/location frequency or coordinating a faster preset across the group.'**
+  String get meshCapacityRecommendationBodyEventLike;
+
+  /// Header for the recent-activity histogram on the Mesh Capacity screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent activity'**
+  String get meshCapacityActivityTitle;
+
+  /// Activity histogram x-axis label for the under-1-minute bucket.
+  ///
+  /// In en, this message translates to:
+  /// **'<1m'**
+  String get meshCapacityBucket1m;
+
+  /// Activity histogram x-axis label for the under-5-minute bucket.
+  ///
+  /// In en, this message translates to:
+  /// **'<5m'**
+  String get meshCapacityBucket5m;
+
+  /// Activity histogram x-axis label for the under-15-minute bucket.
+  ///
+  /// In en, this message translates to:
+  /// **'<15m'**
+  String get meshCapacityBucket15m;
+
+  /// Activity histogram x-axis label for the under-60-minute bucket.
+  ///
+  /// In en, this message translates to:
+  /// **'<60m'**
+  String get meshCapacityBucket60m;
+
+  /// Activity histogram x-axis label for the under-6-hour bucket.
+  ///
+  /// In en, this message translates to:
+  /// **'<6h'**
+  String get meshCapacityBucket6h;
+
+  /// Section header above the educational tiles on the Mesh Capacity screen.
+  ///
+  /// In en, this message translates to:
+  /// **'How presets work'**
+  String get meshCapacityEducationHeader;
+
+  /// Title of the range-tradeoff educational tile.
+  ///
+  /// In en, this message translates to:
+  /// **'Range'**
+  String get meshCapacityEducationRangeTitle;
+
+  /// Body of the range-tradeoff educational tile.
+  ///
+  /// In en, this message translates to:
+  /// **'Long-range presets reach further by spreading each packet over more on-air time. Great for discovery and sparse, exploratory networks.'**
+  String get meshCapacityEducationRangeBody;
+
+  /// Title of the capacity-tradeoff educational tile.
+  ///
+  /// In en, this message translates to:
+  /// **'Capacity'**
+  String get meshCapacityEducationCapacityTitle;
+
+  /// Body of the capacity-tradeoff educational tile.
+  ///
+  /// In en, this message translates to:
+  /// **'Faster presets shorten time-on-air per packet, so the same airtime budget carries more messages. Better for dense urban areas and events.'**
+  String get meshCapacityEducationCapacityBody;
+
+  /// Title of the compatibility educational tile.
+  ///
+  /// In en, this message translates to:
+  /// **'Compatibility'**
+  String get meshCapacityEducationCompatTitle;
+
+  /// Body of the compatibility educational tile.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby radios must use compatible channel and preset settings to hear you. Move your group together when changing — solo changes can hide you from peers.'**
+  String get meshCapacityEducationCompatBody;
+
+  /// Label for the reason-code row in the snapshot detail table.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason'**
+  String get meshCapacityReasonLabel;
+
+  /// Reason-code value: healthyForPreset.
+  ///
+  /// In en, this message translates to:
+  /// **'Healthy for the active preset'**
+  String get meshCapacityReasonHealthy;
+
+  /// Reason-code value: busyButAcceptable.
+  ///
+  /// In en, this message translates to:
+  /// **'Busy but acceptable'**
+  String get meshCapacityReasonBusy;
+
+  /// Reason-code value: longPresetDenseMesh.
+  ///
+  /// In en, this message translates to:
+  /// **'Long-range preset in a dense mesh'**
+  String get meshCapacityReasonLongDense;
+
+  /// Reason-code value: slowPresetDenseMesh.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium-range preset in a dense mesh'**
+  String get meshCapacityReasonMediumDense;
+
+  /// Reason-code value: veryDenseEventLikeMesh.
+  ///
+  /// In en, this message translates to:
+  /// **'Event-scale density'**
+  String get meshCapacityReasonEventLike;
+
+  /// Reason-code value: presetUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Modem preset not yet readable'**
+  String get meshCapacityReasonPresetUnknown;
+
+  /// Reason-code value: insufficientData.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough RF evidence yet'**
+  String get meshCapacityReasonInsufficientData;
+
+  /// Empty-state title prefix shown when no radio is connected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect a device to'**
+  String get meshCapacityNotConnectedTitlePrefix;
+
+  /// Empty-state title keyword shown when no radio is connected.
+  ///
+  /// In en, this message translates to:
+  /// **'see capacity'**
+  String get meshCapacityNotConnectedTitleKeyword;
+
+  /// Empty-state title suffix shown when no radio is connected.
+  ///
+  /// In en, this message translates to:
+  /// **'.'**
+  String get meshCapacityNotConnectedTitleSuffix;
+
+  /// Empty-state tagline shown when no radio is connected (variant 1).
+  ///
+  /// In en, this message translates to:
+  /// **'Capacity insights need a paired radio.'**
+  String get meshCapacityNotConnectedTagline1;
+
+  /// Empty-state tagline shown when no radio is connected (variant 2).
+  ///
+  /// In en, this message translates to:
+  /// **'Pair a Meshtastic device to read its modem preset.'**
+  String get meshCapacityNotConnectedTagline2;
+
+  /// Empty-state tagline shown when no radio is connected (variant 3).
+  ///
+  /// In en, this message translates to:
+  /// **'We assess airtime, not range.'**
+  String get meshCapacityNotConnectedTagline3;
+
+  /// Empty-state title prefix shown when the local mesh has no RF evidence yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Quiet mesh'**
+  String get meshCapacityQuietMeshTitlePrefix;
+
+  /// Empty-state title keyword shown when the local mesh has no RF evidence yet.
+  ///
+  /// In en, this message translates to:
+  /// **'for now'**
+  String get meshCapacityQuietMeshTitleKeyword;
+
+  /// Empty-state title suffix shown when the local mesh has no RF evidence yet.
+  ///
+  /// In en, this message translates to:
+  /// **'.'**
+  String get meshCapacityQuietMeshTitleSuffix;
+
+  /// Empty-state tagline shown when the local mesh has no RF evidence yet (variant 1).
+  ///
+  /// In en, this message translates to:
+  /// **'Capacity advice will appear once nearby radios are heard.'**
+  String get meshCapacityQuietMeshTagline1;
+
+  /// Empty-state tagline shown when the local mesh has no RF evidence yet (variant 2).
+  ///
+  /// In en, this message translates to:
+  /// **'MQTT-only nodes don\'t count — only direct RF observations do.'**
+  String get meshCapacityQuietMeshTagline2;
+
+  /// Empty-state tagline shown when the local mesh has no RF evidence yet (variant 3).
+  ///
+  /// In en, this message translates to:
+  /// **'Long-range presets are perfect for sparse mesh exploration.'**
+  String get meshCapacityQuietMeshTagline3;
+
+  /// Title of the Mesh Capacity Advisor card shown when the local mesh is starting to fill up but the current preset is still acceptable.
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh is getting busy'**
+  String get meshCapacityCardTitleBusy;
+
+  /// Subtitle for the Mesh Capacity Advisor card at the busy pressure level. Surfaces the active RF node count.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 nearby node is active over RF in the last 15 minutes. Long-range presets trade capacity for reach.} other{{count} nearby nodes are active over RF in the last 15 minutes. Long-range presets trade capacity for reach.}}'**
+  String meshCapacityCardSubtitleBusy(int count);
+
+  /// Title of the Mesh Capacity Advisor card when the active preset is being pushed into airtime contention.
+  ///
+  /// In en, this message translates to:
+  /// **'Dense mesh detected'**
+  String get meshCapacityCardTitleCongested;
+
+  /// Subtitle for the Mesh Capacity Advisor card at the congested pressure level.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 nearby node is active over RF. This preset may be limiting capacity for the local network.} other{{count} nearby nodes are active over RF. This preset may be limiting capacity for the local network.}}'**
+  String meshCapacityCardSubtitleCongested(int count);
+
+  /// Title of the Mesh Capacity Advisor card when local density is at or beyond the safe envelope for the active preset.
+  ///
+  /// In en, this message translates to:
+  /// **'This area may need a faster preset'**
+  String get meshCapacityCardTitleCapacityLimited;
+
+  /// Subtitle for the Mesh Capacity Advisor card at the capacity-limited pressure level.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 nearby node is active over RF. Airtime is likely saturated. Tap to learn what preset would help.} other{{count} nearby nodes are active over RF. Airtime is likely saturated. Tap to learn what preset would help.}}'**
+  String meshCapacityCardSubtitleCapacityLimited(int count);
+
+  /// Title of the Mesh Capacity Advisor card when the device has not yet advertised its modem preset, so suitability cannot be assessed.
+  ///
+  /// In en, this message translates to:
+  /// **'Preset not yet readable'**
+  String get meshCapacityCardTitlePresetUnknown;
+
+  /// Subtitle of the Mesh Capacity Advisor card when the modem preset is unavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Socialmesh can\'t assess preset suitability until it can read the current modem preset from your device.'**
+  String get meshCapacityCardSubtitlePresetUnknown;
+
+  /// Title of the Mesh Capacity Advisor explanation bottom sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Why preset choice matters'**
+  String get meshCapacitySheetTitle;
+
+  /// Intro paragraph in the Mesh Capacity explanation sheet — frames presets as a tradeoff.
+  ///
+  /// In en, this message translates to:
+  /// **'Meshtastic radio presets are a tradeoff between range and capacity. Long-range presets are useful when the network is sparse or you are trying to discover other nodes. In dense areas, the same settings can consume too much airtime, causing delays, missed messages, and unreliable routing.'**
+  String get meshCapacitySheetIntro;
+
+  /// Second paragraph in the Mesh Capacity explanation sheet — explains the capacity vs range tradeoff.
+  ///
+  /// In en, this message translates to:
+  /// **'Faster presets reduce range but allow the local mesh to carry more traffic. Dense urban areas and large events usually need faster presets to stay responsive. Sparser, exploratory deployments still benefit from long-range presets.'**
+  String get meshCapacitySheetTradeoff;
+
+  /// Section header above the read-only snapshot table in the Mesh Capacity explanation sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Local mesh snapshot'**
+  String get meshCapacitySheetSnapshotHeader;
+
+  /// Row label for the active modem preset inside the snapshot table.
+  ///
+  /// In en, this message translates to:
+  /// **'Current preset'**
+  String get meshCapacitySheetCurrentPresetLabel;
+
+  /// Row label for active RF nodes in the last 5 minutes inside the snapshot table.
+  ///
+  /// In en, this message translates to:
+  /// **'Active over RF (5 min)'**
+  String get meshCapacitySheetActiveNodes5mLabel;
+
+  /// Row label for active RF nodes in the last 15 minutes inside the snapshot table.
+  ///
+  /// In en, this message translates to:
+  /// **'Active over RF (15 min)'**
+  String get meshCapacitySheetActiveNodes15mLabel;
+
+  /// Row label for active RF nodes in the last 60 minutes inside the snapshot table.
+  ///
+  /// In en, this message translates to:
+  /// **'Active over RF (60 min)'**
+  String get meshCapacitySheetActiveNodes60mLabel;
+
+  /// Row label for the total NodeDB count inside the snapshot table.
+  ///
+  /// In en, this message translates to:
+  /// **'Total known nodes'**
+  String get meshCapacitySheetTotalKnownLabel;
+
+  /// Row label for the computed pressure level inside the snapshot table.
+  ///
+  /// In en, this message translates to:
+  /// **'Pressure'**
+  String get meshCapacitySheetPressureLabel;
+
+  /// Row label for the advisor's suggested preset inside the snapshot table.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested preset'**
+  String get meshCapacitySheetSuggestedPresetLabel;
+
+  /// Value placeholder shown when the modem preset is not known yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get meshCapacitySheetPresetUnknownValue;
+
+  /// Section header above the risk paragraph in the Mesh Capacity explanation sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Before changing presets'**
+  String get meshCapacitySheetRiskHeader;
+
+  /// Risk paragraph in the Mesh Capacity explanation sheet — warns the user that compatibility is impacted.
+  ///
+  /// In en, this message translates to:
+  /// **'Changing presets affects who you can communicate with. Your group should move together, or you may stop hearing nodes that remain on the old preset. Socialmesh never changes radio settings on its own.'**
+  String get meshCapacitySheetRiskBody;
+
+  /// Primary action button label in the Mesh Capacity explanation sheet — navigates to the existing Radio Configuration screen so the user can change settings themselves.
+  ///
+  /// In en, this message translates to:
+  /// **'Open radio settings'**
+  String get meshCapacitySheetOpenSettings;
+
+  /// Secondary action button label in the Mesh Capacity explanation sheet — dismisses the sheet without navigating.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get meshCapacitySheetClose;
+
+  /// Pressure label when not enough data is available to compute mesh capacity pressure.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get meshCapacityPressureUnknown;
+
+  /// Pressure label when the mesh is comfortably under the active preset's capacity envelope.
+  ///
+  /// In en, this message translates to:
+  /// **'Healthy'**
+  String get meshCapacityPressureHealthy;
+
+  /// Pressure label when the mesh is starting to fill up but is still acceptable.
+  ///
+  /// In en, this message translates to:
+  /// **'Busy'**
+  String get meshCapacityPressureBusy;
+
+  /// Pressure label when the mesh is dense for the active preset.
+  ///
+  /// In en, this message translates to:
+  /// **'Congested'**
+  String get meshCapacityPressureCongested;
+
+  /// Pressure label when the mesh is at or beyond the safe capacity for the active preset.
+  ///
+  /// In en, this message translates to:
+  /// **'Capacity-limited'**
+  String get meshCapacityPressureCapacityLimited;
+
   /// Title of the confirmation sheet shown when the user taps Block in the Mesh Explorer peer detail sheet.
   ///
   /// In en, this message translates to:

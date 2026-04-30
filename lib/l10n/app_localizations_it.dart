@@ -33117,6 +33117,317 @@ class AppLocalizationsIt extends AppLocalizations {
   String get sipHubBlockConfirmCancel => 'Annulla';
 
   @override
+  String get meshCapacityScreenTitle => 'Capacità';
+
+  @override
+  String get meshCapacityDrawerLabel => 'Capacità mesh';
+
+  @override
+  String get meshCapacityHeroNodesUnit => 'attivi via radio (15 min)';
+
+  @override
+  String get meshCapacityHeroSubtitle =>
+      'Densità della mesh locale per il preset modem attivo.';
+
+  @override
+  String get meshCapacityGaugeBusy => 'Affollata';
+
+  @override
+  String get meshCapacityGaugeCongested => 'Congestionata';
+
+  @override
+  String get meshCapacityGaugeCapacityLimited => 'Limitata';
+
+  @override
+  String get meshCapacityGaugePresetUnknown =>
+      'Collega un dispositivo con un preset modem noto per vedere le soglie di capacità.';
+
+  @override
+  String get meshCapacityStat5m => '5 min';
+
+  @override
+  String get meshCapacityStat15m => '15 min';
+
+  @override
+  String get meshCapacityStat60m => '60 min';
+
+  @override
+  String get meshCapacityStatTotal => 'Totale';
+
+  @override
+  String get meshCapacityLearnMore => 'Scopri di più';
+
+  @override
+  String get meshCapacityRecommendationBodyBusy =>
+      'La tua rete sta iniziando a riempirsi. I preset a lungo raggio sacrificano capacità per portata, il che va bene per deployment poco densi. Tieni d\'occhio la reattività.';
+
+  @override
+  String get meshCapacityRecommendationBodyLongPresetDense =>
+      'Quest\'area ha molte radio attive. I preset a lungo raggio impiegano molto tempo d\'aria per ogni pacchetto, quindi la contesa può bloccare i messaggi. Un preset più rapido trasporterebbe più traffico al costo della portata.';
+
+  @override
+  String get meshCapacityRecommendationBodyMediumPresetDense =>
+      'La densità è abbastanza alta da mettere in difficoltà anche un preset a medio raggio. Un preset a corto raggio darebbe priorità alla capacità rispetto alla portata.';
+
+  @override
+  String get meshCapacityRecommendationBodyEventLike =>
+      'Sembra un grande raduno intenzionale. La capacità è satura. Considera di ridurre la frequenza di telemetria/posizione o di coordinare un preset più rapido nel gruppo.';
+
+  @override
+  String get meshCapacityActivityTitle => 'Attività recente';
+
+  @override
+  String get meshCapacityBucket1m => '<1m';
+
+  @override
+  String get meshCapacityBucket5m => '<5m';
+
+  @override
+  String get meshCapacityBucket15m => '<15m';
+
+  @override
+  String get meshCapacityBucket60m => '<60m';
+
+  @override
+  String get meshCapacityBucket6h => '<6h';
+
+  @override
+  String get meshCapacityEducationHeader => 'Come funzionano i preset';
+
+  @override
+  String get meshCapacityEducationRangeTitle => 'Portata';
+
+  @override
+  String get meshCapacityEducationRangeBody =>
+      'I preset a lungo raggio arrivano più lontano distribuendo ogni pacchetto su più tempo d\'aria. Ottimi per la scoperta e per reti esplorative poco dense.';
+
+  @override
+  String get meshCapacityEducationCapacityTitle => 'Capacità';
+
+  @override
+  String get meshCapacityEducationCapacityBody =>
+      'I preset più rapidi accorciano il tempo d\'aria per pacchetto, così lo stesso budget di tempo d\'aria trasporta più messaggi. Meglio per aree urbane dense ed eventi.';
+
+  @override
+  String get meshCapacityEducationCompatTitle => 'Compatibilità';
+
+  @override
+  String get meshCapacityEducationCompatBody =>
+      'Le radio vicine devono usare canali e preset compatibili per sentirti. Sposta il gruppo insieme quando cambi — cambi individuali possono nasconderti agli altri.';
+
+  @override
+  String get meshCapacityReasonLabel => 'Motivo';
+
+  @override
+  String get meshCapacityReasonHealthy => 'In salute per il preset attivo';
+
+  @override
+  String get meshCapacityReasonBusy => 'Affollata ma accettabile';
+
+  @override
+  String get meshCapacityReasonLongDense =>
+      'Preset a lungo raggio in una mesh densa';
+
+  @override
+  String get meshCapacityReasonMediumDense =>
+      'Preset a medio raggio in una mesh densa';
+
+  @override
+  String get meshCapacityReasonEventLike => 'Densità da evento';
+
+  @override
+  String get meshCapacityReasonPresetUnknown =>
+      'Preset modem non ancora leggibile';
+
+  @override
+  String get meshCapacityReasonInsufficientData =>
+      'Evidenza radio insufficiente';
+
+  @override
+  String get meshCapacityNotConnectedTitlePrefix =>
+      'Collega un dispositivo per';
+
+  @override
+  String get meshCapacityNotConnectedTitleKeyword => 'vedere la capacità';
+
+  @override
+  String get meshCapacityNotConnectedTitleSuffix => '.';
+
+  @override
+  String get meshCapacityNotConnectedTagline1 =>
+      'Le analisi di capacità richiedono una radio accoppiata.';
+
+  @override
+  String get meshCapacityNotConnectedTagline2 =>
+      'Accoppia un dispositivo Meshtastic per leggere il suo preset modem.';
+
+  @override
+  String get meshCapacityNotConnectedTagline3 =>
+      'Valutiamo il tempo d\'aria, non la portata.';
+
+  @override
+  String get meshCapacityQuietMeshTitlePrefix => 'Mesh tranquilla';
+
+  @override
+  String get meshCapacityQuietMeshTitleKeyword => 'per ora';
+
+  @override
+  String get meshCapacityQuietMeshTitleSuffix => '.';
+
+  @override
+  String get meshCapacityQuietMeshTagline1 =>
+      'I consigli di capacità appariranno una volta sentite radio vicine.';
+
+  @override
+  String get meshCapacityQuietMeshTagline2 =>
+      'I nodi solo MQTT non contano — solo le osservazioni radio dirette.';
+
+  @override
+  String get meshCapacityQuietMeshTagline3 =>
+      'I preset a lungo raggio sono perfetti per esplorare mesh poco dense.';
+
+  @override
+  String get meshCapacityCardTitleBusy => 'La rete sta diventando affollata';
+
+  @override
+  String meshCapacityCardSubtitleBusy(int count) {
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.compact(
+      locale: localeName,
+    );
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$countString nodi vicini sono attivi via radio negli ultimi 15 minuti. I preset a lungo raggio sacrificano capacità per portata.',
+      one:
+          '1 nodo vicino è attivo via radio negli ultimi 15 minuti. I preset a lungo raggio sacrificano capacità per portata.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshCapacityCardTitleCongested => 'Mesh densa rilevata';
+
+  @override
+  String meshCapacityCardSubtitleCongested(int count) {
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.compact(
+      locale: localeName,
+    );
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$countString nodi vicini sono attivi via radio. Questo preset potrebbe limitare la capacità della rete locale.',
+      one:
+          '1 nodo vicino è attivo via radio. Questo preset potrebbe limitare la capacità della rete locale.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshCapacityCardTitleCapacityLimited =>
+      'Quest\'area potrebbe richiedere un preset più rapido';
+
+  @override
+  String meshCapacityCardSubtitleCapacityLimited(int count) {
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.compact(
+      locale: localeName,
+    );
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$countString nodi vicini sono attivi via radio. Il tempo d\'aria è probabilmente saturo. Tocca per scoprire quale preset aiuterebbe.',
+      one:
+          '1 nodo vicino è attivo via radio. Il tempo d\'aria è probabilmente saturo. Tocca per scoprire quale preset aiuterebbe.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshCapacityCardTitlePresetUnknown =>
+      'Preset non ancora leggibile';
+
+  @override
+  String get meshCapacityCardSubtitlePresetUnknown =>
+      'Socialmesh non può valutare l\'idoneità del preset finché non riesce a leggere il preset modem corrente dal tuo dispositivo.';
+
+  @override
+  String get meshCapacitySheetTitle =>
+      'Perché la scelta del preset è importante';
+
+  @override
+  String get meshCapacitySheetIntro =>
+      'I preset radio Meshtastic sono un compromesso tra portata e capacità. I preset a lungo raggio sono utili quando la rete è poco densa o stai cercando di scoprire altri nodi. In aree dense, le stesse impostazioni possono consumare troppo tempo d\'aria, causando ritardi, messaggi persi e routing inaffidabile.';
+
+  @override
+  String get meshCapacitySheetTradeoff =>
+      'I preset più rapidi riducono la portata ma permettono alla mesh locale di gestire più traffico. Le aree urbane dense e i grandi eventi solitamente richiedono preset più rapidi per restare reattivi. I deployment più sparsi e esplorativi traggono ancora vantaggio dai preset a lungo raggio.';
+
+  @override
+  String get meshCapacitySheetSnapshotHeader => 'Snapshot della mesh locale';
+
+  @override
+  String get meshCapacitySheetCurrentPresetLabel => 'Preset corrente';
+
+  @override
+  String get meshCapacitySheetActiveNodes5mLabel => 'Attivi via radio (5 min)';
+
+  @override
+  String get meshCapacitySheetActiveNodes15mLabel =>
+      'Attivi via radio (15 min)';
+
+  @override
+  String get meshCapacitySheetActiveNodes60mLabel =>
+      'Attivi via radio (60 min)';
+
+  @override
+  String get meshCapacitySheetTotalKnownLabel => 'Nodi totali noti';
+
+  @override
+  String get meshCapacitySheetPressureLabel => 'Pressione';
+
+  @override
+  String get meshCapacitySheetSuggestedPresetLabel => 'Preset suggerito';
+
+  @override
+  String get meshCapacitySheetPresetUnknownValue => 'Sconosciuto';
+
+  @override
+  String get meshCapacitySheetRiskHeader => 'Prima di cambiare preset';
+
+  @override
+  String get meshCapacitySheetRiskBody =>
+      'Cambiare preset influenza con chi puoi comunicare. Il tuo gruppo dovrebbe spostarsi insieme, altrimenti potresti smettere di sentire i nodi rimasti sul vecchio preset. Socialmesh non cambia mai le impostazioni radio da solo.';
+
+  @override
+  String get meshCapacitySheetOpenSettings => 'Apri impostazioni radio';
+
+  @override
+  String get meshCapacitySheetClose => 'Chiudi';
+
+  @override
+  String get meshCapacityPressureUnknown => 'Sconosciuto';
+
+  @override
+  String get meshCapacityPressureHealthy => 'Buono stato';
+
+  @override
+  String get meshCapacityPressureBusy => 'Affollato';
+
+  @override
+  String get meshCapacityPressureCongested => 'Congestionato';
+
+  @override
+  String get meshCapacityPressureCapacityLimited => 'Capacità limitata';
+
+  @override
   String get meshExplorerBlockConfirmTitle => 'Bloccare questo nodo?';
 
   @override

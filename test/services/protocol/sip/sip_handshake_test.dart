@@ -1046,4 +1046,123 @@ void main() {
       });
     });
   });
+
+  // -------------------------------------------------------------------
+  // Cap-cache fast path: HS_HELLO surfaces the peer's `requestedFeatures`
+  // through the `onPeerFeaturesObserved` hook so SIP discovery can
+  // upgrade the `features=sip0` placeholder without waiting on the
+  // next CAP_BEACON / ROLLCALL_RESP. Responder side only — HS_RESPONSE
+  // / HS_CHALLENGE / HS_ACCEPT do not carry features on the wire, so
+  // the initiator side keeps the slow fallback. See
+  // `docs/engineering/SIP_MRRP_ARCHITECTURE.md` §"Cap-cache placeholder
+  // pattern".
+  // -------------------------------------------------------------------
+
+  group('handleHello fast-path: onPeerFeaturesObserved', () {
+    SipFrame makeHello({
+      required int targetNodeId,
+      required int requestedFeatures,
+      int nonce = 1,
+    }) {
+      final payload = SipHsMessages.encodeHello(
+        SipHsHello(
+          targetNodeId: targetNodeId,
+          clientNonce: Uint8List.fromList(List.generate(16, (i) => i)),
+          clientEphemeralPub: Uint8List.fromList(
+            List.generate(32, (i) => i + 16),
+          ),
+          requestedFeatures: requestedFeatures,
+        ),
+      );
+      expect(payload, isNotNull);
+      return SipFrame(
+        versionMajor: SipConstants.sipVersionMajor,
+        versionMinor: SipConstants.sipVersionMinor,
+        msgType: SipMessageType.hsHello,
+        flags: 0,
+        headerLen: SipConstants.sipWrapperMin,
+        sessionId: 0,
+        nonce: nonce,
+        timestampS: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+        payloadLen: payload!.length,
+        payload: payload,
+      );
+    }
+
+    test('fires once with peer\'s requestedFeatures on inbound HS_HELLO', () {
+      final mgr = SipHandshakeManager(
+        replayCache: SipReplayCache(),
+        localNodeId: 0x1111,
+      );
+      mgr.isDmAvailable = true;
+
+      final observed = <(int, int)>[];
+      mgr.onPeerFeaturesObserved = (peerNodeId, features) {
+        observed.add((peerNodeId, features));
+      };
+
+      // Peer advertises full Socialmesh feature set in HS_HELLO.
+      const fullFeatures = 0x3F0B; // sip0 | sip1 | sip3 | overlay bits | rich
+      mgr.handleHello(
+        0xAAAA,
+        makeHello(targetNodeId: 0x1111, requestedFeatures: fullFeatures),
+      );
+
+      expect(observed, hasLength(1));
+      expect(observed.single.$1, equals(0xAAAA));
+      expect(
+        observed.single.$2,
+        equals(fullFeatures),
+        reason:
+            'fast path must hand the discovery cache the wire bits, not '
+            'a placeholder — anything else collapses back to the ~60–300s '
+            'CAP_BEACON / ROLLCALL_RESP wait that motivated the fix',
+      );
+    });
+
+    test('does NOT fire on HS_HELLO that is dropped before consent queueing '
+        '(target mismatch / DM unavailable / replay)', () {
+      final mgr = SipHandshakeManager(
+        replayCache: SipReplayCache(),
+        localNodeId: 0x1111,
+      );
+
+      var fireCount = 0;
+      mgr.onPeerFeaturesObserved = (_, _) => fireCount++;
+
+      // DM unavailable — silently ignored, no callback.
+      mgr.isDmAvailable = false;
+      mgr.handleHello(
+        0xAAAA,
+        makeHello(targetNodeId: 0x1111, requestedFeatures: 0x3F0B),
+      );
+      expect(fireCount, equals(0), reason: 'DM unavailable path');
+
+      // SIP v0.2 target mismatch — silently dropped, no callback.
+      mgr.isDmAvailable = true;
+      mgr.handleHello(
+        0xAAAA,
+        makeHello(targetNodeId: 0x9999, requestedFeatures: 0x3F0B, nonce: 2),
+      );
+      expect(fireCount, equals(0), reason: 'target_node_id mismatch path');
+    });
+
+    test('hook exception is swallowed and does not break the handshake', () {
+      final mgr = SipHandshakeManager(
+        replayCache: SipReplayCache(),
+        localNodeId: 0x1111,
+      );
+      mgr.isDmAvailable = true;
+      mgr.onPeerFeaturesObserved = (_, _) =>
+          throw StateError('fake provider crash');
+
+      // Should not throw — and the handshake should still reach
+      // pendingApproval.
+      mgr.handleHello(
+        0xAAAA,
+        makeHello(targetNodeId: 0x1111, requestedFeatures: 0x3F0B),
+      );
+      expect(mgr.getState(0xAAAA), equals(SipHandshakeState.pendingApproval));
+    });
+  });
 }

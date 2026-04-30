@@ -108,18 +108,39 @@ void main() {
       );
     });
 
-    test('the rich-composer trigger only appears when at least one rich '
-        'tab is reachable', () {
-      // The trigger button on the inline ChatComposer is gated by
-      // `showComposerTrigger = showSketchTab || showPlayTab ||
-      // showSignalTab` — peers without any rich cap see no attach
-      // button at all.
+    test('rich-composer trigger uses the tri-state placeholder gate', () {
+      // After the field-bug fix for the "compose icon blips in" UX,
+      // the trigger gate is no longer a binary "any rich tab
+      // reachable". It's a tri-state:
+      //   - has any rich cap          → enabled "+"
+      //   - peer caps not yet known   → disabled placeholder "+"
+      //   - peer caps known, no rich  → trigger hidden
+      // This pins the new gate so future cleanup doesn't accidentally
+      // collapse it back to the old "absent until proven supported"
+      // behaviour. Full rationale: docs/engineering/SIP_MRRP_ARCHITECTURE.md
+      // §"Cap-cache placeholder pattern".
+      expect(
+        screenSrc.contains('hasAnyRichCap'),
+        isTrue,
+        reason: 'tri-state gate must compute hasAnyRichCap explicitly',
+      );
       expect(
         RegExp(
           r'showComposerTrigger\s*=\s*'
-          r'showSketchTab\s*\|\|\s*showPlayTab\s*\|\|\s*showSignalTab',
+          r'enabled\s*&&\s*\(hasAnyRichCap\s*\|\|\s*!peerCapsKnown\)',
         ).hasMatch(screenSrc),
         isTrue,
+        reason:
+            'showComposerTrigger must keep the slot rendered while peer '
+            'caps are pending — collapses back to "any rich tab" alone '
+            'will reintroduce the blip-in glitch',
+      );
+      expect(
+        screenSrc.contains('composerTriggerEnabled'),
+        isTrue,
+        reason:
+            'separate enabled flag is required so the placeholder can '
+            'render disabled while still rendering',
       );
     });
 
