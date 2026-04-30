@@ -17,7 +17,7 @@ import '../../providers/app_providers.dart';
 import '../../providers/countdown_providers.dart';
 import '../../providers/mqtt_client_proxy_providers.dart';
 import '../../services/mqtt/mqtt_client_proxy_service.dart'
-    show MqttProxyDiagnostics;
+    show MqttProxyDiagnostics, MqttProxyConnectionPhase, MqttProxyFailureReason;
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/module_config.pb.dart' as module_pb;
@@ -662,7 +662,17 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
     final none = l10n.mqttProxyNoneLabel;
     final dateFmt = AppTimeFormat.withDatePrefix(context, 'd MMM,');
 
-    final showNotConnectedBanner = _proxyToClientEnabled && !diag.isConnected;
+    final phaseLabel = _phaseLabel(l10n, diag.phase);
+    final reasonLabel = _failureReasonLabel(l10n, diag.failureReason);
+    final phaseColor = _phaseColor(diag.phase);
+
+    // Banner shows only on real failure / disconnected states; suppress
+    // it for healthy phases (connected / connecting / idle / disabled).
+    final showNotConnectedBanner =
+        _proxyToClientEnabled &&
+        (diag.phase == MqttProxyConnectionPhase.failed ||
+            diag.phase == MqttProxyConnectionPhase.disconnected ||
+            diag.phase == MqttProxyConnectionPhase.missingConfig);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -671,10 +681,10 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
         if (showNotConnectedBanner)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            child: diag.lastError != null
+            child: diag.failureReason != MqttProxyFailureReason.none
                 ? StatusBanner.error(
                     title: l10n.mqttProxyBannerNotConnectedTitle,
-                    subtitle: diag.lastError!,
+                    subtitle: diag.lastError ?? reasonLabel,
                   )
                 : StatusBanner.warning(
                     title: l10n.mqttProxyBannerNotConnectedTitle,
@@ -688,14 +698,17 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
             rows: [
               InfoTableRow(
                 label: l10n.mqttProxyStatusLabel,
-                value: diag.isConnected
-                    ? l10n.mqttProxyStatusConnected
-                    : l10n.mqttProxyStatusDisconnected,
+                value: phaseLabel,
                 icon: Icons.circle,
-                iconColor: diag.isConnected
-                    ? SemanticColors.success
-                    : SemanticColors.error,
+                iconColor: phaseColor,
               ),
+              if (diag.failureReason != MqttProxyFailureReason.none)
+                InfoTableRow(
+                  label: l10n.mqttProxyReason,
+                  value: reasonLabel,
+                  icon: Icons.error_outline,
+                  iconColor: SemanticColors.error,
+                ),
               InfoTableRow(
                 label: l10n.mqttProxyBroker,
                 value: diag.brokerHost != null
@@ -719,7 +732,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
               ),
               InfoTableRow(
                 label: l10n.mqttProxyTopic,
-                value: diag.subscribedTopic ?? none,
+                value: diag.subscribedTopic ?? diag.topicRoot ?? none,
                 icon: Icons.topic_outlined,
               ),
               InfoTableRow(
@@ -736,6 +749,13 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                     : none,
                 icon: Icons.check_circle_outline,
               ),
+              if (diag.lastFailureAt != null)
+                InfoTableRow(
+                  label: l10n.mqttProxyLastFailureAt,
+                  value: dateFmt.format(diag.lastFailureAt!),
+                  icon: Icons.report_outlined,
+                  iconColor: SemanticColors.error,
+                ),
               InfoTableRow(
                 label: l10n.mqttProxyPublished,
                 value: diag.messagesPublished.toString(),
@@ -777,13 +797,82 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
     );
   }
 
+  String _phaseLabel(dynamic l10n, MqttProxyConnectionPhase phase) {
+    switch (phase) {
+      case MqttProxyConnectionPhase.disabled:
+        return l10n.mqttProxyPhaseDisabled as String;
+      case MqttProxyConnectionPhase.missingConfig:
+        return l10n.mqttProxyPhaseMissingConfig as String;
+      case MqttProxyConnectionPhase.idle:
+        return l10n.mqttProxyPhaseIdle as String;
+      case MqttProxyConnectionPhase.connecting:
+        return l10n.mqttProxyPhaseConnecting as String;
+      case MqttProxyConnectionPhase.connected:
+        return l10n.mqttProxyPhaseConnected as String;
+      case MqttProxyConnectionPhase.disconnected:
+        return l10n.mqttProxyPhaseDisconnected as String;
+      case MqttProxyConnectionPhase.failed:
+        return l10n.mqttProxyPhaseFailed as String;
+    }
+  }
+
+  String _failureReasonLabel(dynamic l10n, MqttProxyFailureReason reason) {
+    switch (reason) {
+      case MqttProxyFailureReason.none:
+        return l10n.mqttProxyReasonNone as String;
+      case MqttProxyFailureReason.missingHost:
+        return l10n.mqttProxyReasonMissingHost as String;
+      case MqttProxyFailureReason.missingTopicRoot:
+        return l10n.mqttProxyReasonMissingTopicRoot as String;
+      case MqttProxyFailureReason.invalidPort:
+        return l10n.mqttProxyReasonInvalidPort as String;
+      case MqttProxyFailureReason.dnsFailure:
+        return l10n.mqttProxyReasonDnsFailure as String;
+      case MqttProxyFailureReason.tcpConnectionRefused:
+        return l10n.mqttProxyReasonTcpRefused as String;
+      case MqttProxyFailureReason.tcpTimeout:
+        return l10n.mqttProxyReasonTcpTimeout as String;
+      case MqttProxyFailureReason.tlsHandshakeFailed:
+        return l10n.mqttProxyReasonTlsHandshake as String;
+      case MqttProxyFailureReason.tlsCertificateRejected:
+        return l10n.mqttProxyReasonTlsCertificate as String;
+      case MqttProxyFailureReason.authenticationFailed:
+        return l10n.mqttProxyReasonAuthFailed as String;
+      case MqttProxyFailureReason.protocolRejected:
+        return l10n.mqttProxyReasonProtocolRejected as String;
+      case MqttProxyFailureReason.brokerDisconnected:
+        return l10n.mqttProxyReasonBrokerDisconnected as String;
+      case MqttProxyFailureReason.clientDisposed:
+        return l10n.mqttProxyReasonClientDisposed as String;
+      case MqttProxyFailureReason.unknown:
+        return l10n.mqttProxyReasonUnknown as String;
+    }
+  }
+
+  Color _phaseColor(MqttProxyConnectionPhase phase) {
+    switch (phase) {
+      case MqttProxyConnectionPhase.connected:
+        return SemanticColors.success;
+      case MqttProxyConnectionPhase.connecting:
+      case MqttProxyConnectionPhase.idle:
+        return SemanticColors.warning;
+      case MqttProxyConnectionPhase.disabled:
+      case MqttProxyConnectionPhase.disconnected:
+        return context.textTertiary;
+      case MqttProxyConnectionPhase.missingConfig:
+      case MqttProxyConnectionPhase.failed:
+        return SemanticColors.error;
+    }
+  }
+
   void _copyProxyDiagnostics(MqttProxyDiagnostics diag) {
     HapticFeedback.selectionClick();
     final timePart = AppTimeFormat.timeWithSecondsPattern(context);
     final dateFmt = DateFormat('d MMM, $timePart');
-    final status = diag.isConnected
-        ? context.l10n.mqttProxyStatusConnected
-        : context.l10n.mqttProxyStatusDisconnected;
+    final status = _phaseLabel(context.l10n, diag.phase);
+    final reason = diag.failureReason == MqttProxyFailureReason.none
+        ? null
+        : _failureReasonLabel(context.l10n, diag.failureReason);
     final broker = diag.brokerHost != null
         ? '${diag.brokerHost}:${diag.brokerPort ?? 1883}'
         : context.l10n.mqttProxyNoneLabel;
@@ -812,7 +901,13 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
       ) // lint-allow: hardcoded-string
       ..writeln(
         '${context.l10n.mqttProxyAuth}: $auth',
-      ) // lint-allow: hardcoded-string
+      ); // lint-allow: hardcoded-string
+    if (reason != null) {
+      buffer.writeln(
+        '${context.l10n.mqttProxyReason}: $reason',
+      ); // lint-allow: hardcoded-string
+    }
+    buffer
       ..writeln(
         '${context.l10n.mqttProxyLastConnectAttempt}: $lastAttempt',
       ) // lint-allow: hardcoded-string
@@ -826,6 +921,12 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
         '${context.l10n.mqttProxyRelayed}: ${diag.messagesRelayed}',
       ); // lint-allow: hardcoded-string
 
+    if (diag.lastFailureAt != null) {
+      buffer.writeln(
+        '${context.l10n.mqttProxyLastFailureAt}: '
+        '${dateFmt.format(diag.lastFailureAt!)}',
+      ); // lint-allow: hardcoded-string
+    }
     if (diag.reconnectAttempts > 0) {
       buffer.writeln(
         '${context.l10n.mqttProxyReconnects}: ${diag.reconnectAttempts}',

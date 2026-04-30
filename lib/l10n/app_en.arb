@@ -36799,6 +36799,98 @@
     "@mqttProxyBannerNotConnectedHint": {
         "description": "Status banner body shown when the client proxy bridge is not connected and there is no specific error to display"
     },
+    "mqttProxyPhaseDisabled": "Disabled",
+    "@mqttProxyPhaseDisabled": {
+        "description": "Phase: client proxy is off"
+    },
+    "mqttProxyPhaseMissingConfig": "Missing configuration",
+    "@mqttProxyPhaseMissingConfig": {
+        "description": "Phase: required config (host, topic root) is empty"
+    },
+    "mqttProxyPhaseIdle": "Idle",
+    "@mqttProxyPhaseIdle": {
+        "description": "Phase: configured but no connect attempted yet"
+    },
+    "mqttProxyPhaseConnecting": "Connecting",
+    "@mqttProxyPhaseConnecting": {
+        "description": "Phase: connect attempt in flight"
+    },
+    "mqttProxyPhaseConnected": "Connected",
+    "@mqttProxyPhaseConnected": {
+        "description": "Phase: broker connection established"
+    },
+    "mqttProxyPhaseDisconnected": "Disconnected",
+    "@mqttProxyPhaseDisconnected": {
+        "description": "Phase: cleanly disconnected"
+    },
+    "mqttProxyPhaseFailed": "Failed",
+    "@mqttProxyPhaseFailed": {
+        "description": "Phase: last attempt failed"
+    },
+    "mqttProxyReason": "Reason",
+    "@mqttProxyReason": {
+        "description": "Diagnostics row label for the structured failure reason"
+    },
+    "mqttProxyLastFailureAt": "Last Failure",
+    "@mqttProxyLastFailureAt": {
+        "description": "Diagnostics row label: timestamp of last failure"
+    },
+    "mqttProxyReasonNone": "None",
+    "@mqttProxyReasonNone": {
+        "description": "Failure reason: none / healthy"
+    },
+    "mqttProxyReasonMissingHost": "Broker address is missing",
+    "@mqttProxyReasonMissingHost": {
+        "description": "Failure reason: host field empty"
+    },
+    "mqttProxyReasonMissingTopicRoot": "Topic root is missing",
+    "@mqttProxyReasonMissingTopicRoot": {
+        "description": "Failure reason: root field empty"
+    },
+    "mqttProxyReasonInvalidPort": "Broker port is invalid",
+    "@mqttProxyReasonInvalidPort": {
+        "description": "Failure reason: port out of range"
+    },
+    "mqttProxyReasonDnsFailure": "DNS lookup failed",
+    "@mqttProxyReasonDnsFailure": {
+        "description": "Failure reason: hostname could not be resolved"
+    },
+    "mqttProxyReasonTcpRefused": "Connection refused by broker",
+    "@mqttProxyReasonTcpRefused": {
+        "description": "Failure reason: TCP connection refused / unreachable"
+    },
+    "mqttProxyReasonTcpTimeout": "Connection timed out",
+    "@mqttProxyReasonTcpTimeout": {
+        "description": "Failure reason: TCP connection timed out"
+    },
+    "mqttProxyReasonTlsHandshake": "TLS handshake failed",
+    "@mqttProxyReasonTlsHandshake": {
+        "description": "Failure reason: TLS handshake error"
+    },
+    "mqttProxyReasonTlsCertificate": "TLS certificate rejected",
+    "@mqttProxyReasonTlsCertificate": {
+        "description": "Failure reason: cert chain or hostname mismatch"
+    },
+    "mqttProxyReasonAuthFailed": "Authentication failed",
+    "@mqttProxyReasonAuthFailed": {
+        "description": "Failure reason: bad username/password or unauthorized"
+    },
+    "mqttProxyReasonProtocolRejected": "Broker rejected the connection",
+    "@mqttProxyReasonProtocolRejected": {
+        "description": "Failure reason: CONNACK refusal (protocol/identifier/unavailable)"
+    },
+    "mqttProxyReasonBrokerDisconnected": "Broker dropped the connection",
+    "@mqttProxyReasonBrokerDisconnected": {
+        "description": "Failure reason: unexpected disconnect after successful connect"
+    },
+    "mqttProxyReasonClientDisposed": "Client released",
+    "@mqttProxyReasonClientDisposed": {
+        "description": "Failure reason: provider/service was disposed"
+    },
+    "mqttProxyReasonUnknown": "Unknown error",
+    "@mqttProxyReasonUnknown": {
+        "description": "Failure reason: catch-all"
+    },
     "securityConfigTitle": "Security",
     "@securityConfigTitle": {
         "description": "Screen or section title"

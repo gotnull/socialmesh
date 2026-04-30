@@ -118,6 +118,32 @@ void _evaluateProxyState(Ref ref, String reason) {
   final topicPrefix = '$root/2/e'; // lint-allow: hardcoded-string
 
   if (cfg.enabled && cfg.proxyToClientEnabled) {
+    // Preflight gate: validate the config before attempting any connect.
+    // Distinguishes missingHost / missingTopicRoot / invalidPort so the UI
+    // can surface a structured reason instead of a bare "not connected".
+    final preflightResult = MqttClientProxyService.preflight(
+      mqttEnabled: cfg.enabled,
+      proxyToClientEnabled: cfg.proxyToClientEnabled,
+      address: cfg.address,
+      topicRoot: root,
+      tlsEnabled: cfg.tlsEnabled,
+      username: cfg.username,
+    );
+    if (!preflightResult.ok) {
+      AppLogging.mqttProxyWarning(
+        'evaluate($reason): config preflight failed '
+        'reason=${preflightResult.reason.name}',
+      );
+      proxyService.markMissingConfig(preflightResult.reason);
+      return;
+    }
+    AppLogging.mqttProxy(
+      'evaluate($reason): config preflight passed '
+      'host=${preflightResult.host} port=${preflightResult.port} '
+      'tls=${preflightResult.tlsEnabled} topicRoot=${preflightResult.topicRoot} '
+      'usernamePresent=${preflightResult.usernamePresent}',
+    );
+
     final channels = ref.read(channelsProvider);
     final hasAnyDownlinkEnabled = channels.any((ch) => ch.downlink);
 
@@ -140,9 +166,14 @@ void _evaluateProxyState(Ref ref, String reason) {
       nodeUserId: nodeUserId,
       shouldSubscribe: hasAnyDownlinkEnabled,
     );
-  } else if (proxyService.isConnected) {
-    AppLogging.mqttProxy('evaluate($reason): proxy disabled — disconnect');
-    proxyService.disconnect();
+  } else {
+    // Proxy off — mark disabled so the UI distinguishes "off" from "failed".
+    // Disconnect a live socket if one was previously settled.
+    if (proxyService.isConnected) {
+      AppLogging.mqttProxy('evaluate($reason): proxy disabled — disconnect');
+      proxyService.disconnect();
+    }
+    proxyService.markDisabled();
   }
 }
 

@@ -27399,6 +27399,75 @@ class AppLocalizationsPt extends AppLocalizations {
       'O app não conseguiu acessar o broker. Verifique o diagnóstico abaixo para o último erro.';
 
   @override
+  String get mqttProxyPhaseDisabled => 'Desativado';
+
+  @override
+  String get mqttProxyPhaseMissingConfig => 'Configuração ausente';
+
+  @override
+  String get mqttProxyPhaseIdle => 'Ocioso';
+
+  @override
+  String get mqttProxyPhaseConnecting => 'Conectando';
+
+  @override
+  String get mqttProxyPhaseConnected => 'Conectado';
+
+  @override
+  String get mqttProxyPhaseDisconnected => 'Desconectado';
+
+  @override
+  String get mqttProxyPhaseFailed => 'Falhou';
+
+  @override
+  String get mqttProxyReason => 'Motivo';
+
+  @override
+  String get mqttProxyLastFailureAt => 'Última falha';
+
+  @override
+  String get mqttProxyReasonNone => 'Nenhum';
+
+  @override
+  String get mqttProxyReasonMissingHost => 'Endereço do broker ausente';
+
+  @override
+  String get mqttProxyReasonMissingTopicRoot => 'Topic root ausente';
+
+  @override
+  String get mqttProxyReasonInvalidPort => 'Porta do broker inválida';
+
+  @override
+  String get mqttProxyReasonDnsFailure => 'Falha na resolução de DNS';
+
+  @override
+  String get mqttProxyReasonTcpRefused => 'Conexão recusada pelo broker';
+
+  @override
+  String get mqttProxyReasonTcpTimeout => 'Tempo de conexão esgotado';
+
+  @override
+  String get mqttProxyReasonTlsHandshake => 'Falha no handshake TLS';
+
+  @override
+  String get mqttProxyReasonTlsCertificate => 'Certificado TLS rejeitado';
+
+  @override
+  String get mqttProxyReasonAuthFailed => 'Falha na autenticação';
+
+  @override
+  String get mqttProxyReasonProtocolRejected => 'Broker rejeitou a conexão';
+
+  @override
+  String get mqttProxyReasonBrokerDisconnected => 'Broker encerrou a conexão';
+
+  @override
+  String get mqttProxyReasonClientDisposed => 'Cliente liberado';
+
+  @override
+  String get mqttProxyReasonUnknown => 'Erro desconhecido';
+
+  @override
   String get securityConfigTitle => 'Segurança';
 
   @override

@@ -27422,6 +27422,77 @@ class AppLocalizationsIt extends AppLocalizations {
       'L\'app non riesce a raggiungere il broker. Controlla la diagnostica qui sotto per l\'ultimo errore.';
 
   @override
+  String get mqttProxyPhaseDisabled => 'Disabilitato';
+
+  @override
+  String get mqttProxyPhaseMissingConfig => 'Configurazione mancante';
+
+  @override
+  String get mqttProxyPhaseIdle => 'Inattivo';
+
+  @override
+  String get mqttProxyPhaseConnecting => 'Connessione in corso';
+
+  @override
+  String get mqttProxyPhaseConnected => 'Connesso';
+
+  @override
+  String get mqttProxyPhaseDisconnected => 'Disconnesso';
+
+  @override
+  String get mqttProxyPhaseFailed => 'Errore';
+
+  @override
+  String get mqttProxyReason => 'Motivo';
+
+  @override
+  String get mqttProxyLastFailureAt => 'Ultimo errore';
+
+  @override
+  String get mqttProxyReasonNone => 'Nessuno';
+
+  @override
+  String get mqttProxyReasonMissingHost => 'Indirizzo broker mancante';
+
+  @override
+  String get mqttProxyReasonMissingTopicRoot => 'Topic root mancante';
+
+  @override
+  String get mqttProxyReasonInvalidPort => 'Porta broker non valida';
+
+  @override
+  String get mqttProxyReasonDnsFailure => 'Risoluzione DNS fallita';
+
+  @override
+  String get mqttProxyReasonTcpRefused => 'Connessione rifiutata dal broker';
+
+  @override
+  String get mqttProxyReasonTcpTimeout => 'Timeout connessione';
+
+  @override
+  String get mqttProxyReasonTlsHandshake => 'Handshake TLS fallito';
+
+  @override
+  String get mqttProxyReasonTlsCertificate => 'Certificato TLS rifiutato';
+
+  @override
+  String get mqttProxyReasonAuthFailed => 'Autenticazione fallita';
+
+  @override
+  String get mqttProxyReasonProtocolRejected =>
+      'Il broker ha rifiutato la connessione';
+
+  @override
+  String get mqttProxyReasonBrokerDisconnected =>
+      'Il broker ha chiuso la connessione';
+
+  @override
+  String get mqttProxyReasonClientDisposed => 'Client rilasciato';
+
+  @override
+  String get mqttProxyReasonUnknown => 'Errore sconosciuto';
+
+  @override
   String get securityConfigTitle => 'Sicurezza';
 
   @override

@@ -24,9 +24,62 @@ import '../../core/logging.dart';
 // Diagnostics state — exposed to UI for the diagnostics surface
 // ---------------------------------------------------------------------------
 
+/// High-level lifecycle phase of the MQTT client proxy. The mqtt_client
+/// package does not expose discrete DNS/TCP/TLS/AUTH stages, so this is a
+/// best-effort projection: `connecting` covers everything between the
+/// connect call and either a successful CONNACK or a thrown exception.
+enum MqttProxyConnectionPhase {
+  /// Proxy mode is off (or MQTT module disabled). No connection is desired.
+  disabled,
+
+  /// Proxy is desired but config is incomplete (host/topic root missing).
+  missingConfig,
+
+  /// Proxy is desired and configured but no connect has been attempted yet.
+  idle,
+
+  /// Connect call in flight (DNS / TCP / TLS / auth all collapse here).
+  connecting,
+
+  /// Connected — publish is allowed.
+  connected,
+
+  /// Cleanly disconnected (intentional or by remote with no error to report).
+  disconnected,
+
+  /// Last attempt failed. See [MqttProxyFailureReason] for the cause.
+  failed,
+}
+
+/// Reason for the last failure or for why a connect/publish was suppressed.
+/// `none` is used in healthy states (idle / connecting / connected).
+enum MqttProxyFailureReason {
+  none,
+  missingHost,
+  missingTopicRoot,
+  invalidPort,
+  dnsFailure,
+  tcpConnectionRefused,
+  tcpTimeout,
+  tlsHandshakeFailed,
+  tlsCertificateRejected,
+  authenticationFailed,
+  protocolRejected,
+  brokerDisconnected,
+  clientDisposed,
+  unknown,
+}
+
 /// Snapshot of the MQTT client proxy connection state for diagnostics.
 class MqttProxyDiagnostics {
-  /// Whether the proxy is currently connected to the broker.
+  /// High-level phase. Source of truth for UI status row.
+  final MqttProxyConnectionPhase phase;
+
+  /// Reason for the last failure / suppression. `none` when healthy.
+  final MqttProxyFailureReason failureReason;
+
+  /// Whether the proxy is currently connected to the broker. Derived from
+  /// [phase] but kept as a top-level field for backwards-compat callers.
   final bool isConnected;
 
   /// The broker host we are connecting to.
@@ -41,6 +94,9 @@ class MqttProxyDiagnostics {
   /// Whether authentication credentials are configured.
   final bool hasAuth;
 
+  /// The MQTT topic root currently in effect (e.g. `msh/US/OVMesh`).
+  final String? topicRoot;
+
   /// The MQTT topic we are subscribed to.
   final String? subscribedTopic;
 
@@ -53,7 +109,10 @@ class MqttProxyDiagnostics {
   /// Timestamp of the last disconnection.
   final DateTime? lastDisconnectedAt;
 
-  /// The last error message encountered.
+  /// Timestamp of the last failure transition.
+  final DateTime? lastFailureAt;
+
+  /// The last error message encountered (sanitized — no secrets).
   final String? lastError;
 
   /// Number of messages relayed from device to broker.
@@ -66,53 +125,97 @@ class MqttProxyDiagnostics {
   final int reconnectAttempts;
 
   const MqttProxyDiagnostics({
+    this.phase = MqttProxyConnectionPhase.idle,
+    this.failureReason = MqttProxyFailureReason.none,
     this.isConnected = false,
     this.brokerHost,
     this.brokerPort,
     this.tlsEnabled = false,
     this.hasAuth = false,
+    this.topicRoot,
     this.subscribedTopic,
     this.lastConnectAttempt,
     this.lastConnectedAt,
     this.lastDisconnectedAt,
+    this.lastFailureAt,
     this.lastError,
     this.messagesPublished = 0,
     this.messagesRelayed = 0,
     this.reconnectAttempts = 0,
   });
 
+  /// Whether a publish attempt should be allowed right now.
+  bool get canPublish => phase == MqttProxyConnectionPhase.connected;
+
   /// Creates a redacted copy safe for display (no secrets).
   MqttProxyDiagnostics copyWith({
+    MqttProxyConnectionPhase? phase,
+    MqttProxyFailureReason? failureReason,
     bool? isConnected,
     String? brokerHost,
     int? brokerPort,
     bool? tlsEnabled,
     bool? hasAuth,
+    String? topicRoot,
     String? subscribedTopic,
     DateTime? lastConnectAttempt,
     DateTime? lastConnectedAt,
     DateTime? lastDisconnectedAt,
+    DateTime? lastFailureAt,
     String? lastError,
     int? messagesPublished,
     int? messagesRelayed,
     int? reconnectAttempts,
   }) {
     return MqttProxyDiagnostics(
+      phase: phase ?? this.phase,
+      failureReason: failureReason ?? this.failureReason,
       isConnected: isConnected ?? this.isConnected,
       brokerHost: brokerHost ?? this.brokerHost,
       brokerPort: brokerPort ?? this.brokerPort,
       tlsEnabled: tlsEnabled ?? this.tlsEnabled,
       hasAuth: hasAuth ?? this.hasAuth,
+      topicRoot: topicRoot ?? this.topicRoot,
       subscribedTopic: subscribedTopic ?? this.subscribedTopic,
       lastConnectAttempt: lastConnectAttempt ?? this.lastConnectAttempt,
       lastConnectedAt: lastConnectedAt ?? this.lastConnectedAt,
       lastDisconnectedAt: lastDisconnectedAt ?? this.lastDisconnectedAt,
+      lastFailureAt: lastFailureAt ?? this.lastFailureAt,
       lastError: lastError ?? this.lastError,
       messagesPublished: messagesPublished ?? this.messagesPublished,
       messagesRelayed: messagesRelayed ?? this.messagesRelayed,
       reconnectAttempts: reconnectAttempts ?? this.reconnectAttempts,
     );
   }
+}
+
+/// Result of [MqttClientProxyService.preflight]: either a passing config
+/// with the resolved host/port, or a failing reason. Returned to callers
+/// so they can both log the structured outcome and pass through.
+class MqttProxyPreflightResult {
+  const MqttProxyPreflightResult.ok({
+    required this.host,
+    required this.port,
+    required this.tlsEnabled,
+    required this.topicRoot,
+    required this.usernamePresent,
+  }) : reason = MqttProxyFailureReason.none;
+
+  const MqttProxyPreflightResult.fail(this.reason)
+    : host = null,
+      port = null,
+      tlsEnabled = false,
+      topicRoot = null,
+      usernamePresent = false;
+
+  final MqttProxyFailureReason reason;
+  final String? host;
+  final int? port;
+  final bool tlsEnabled;
+  final String? topicRoot;
+  final bool usernamePresent;
+
+  bool get ok => reason == MqttProxyFailureReason.none;
 }
 
 // ---------------------------------------------------------------------------
@@ -229,19 +332,29 @@ class MqttClientProxyService {
   int _debugConnectAttemptsStarted = 0;
 
   // Diagnostics state
-  bool _isConnected = false;
+  MqttProxyConnectionPhase _phase = MqttProxyConnectionPhase.idle;
+  MqttProxyFailureReason _failureReason = MqttProxyFailureReason.none;
   String? _brokerHost;
   int? _brokerPort;
   bool _tlsEnabled = false;
   bool _hasAuth = false;
+  String? _topicRoot;
   String? _subscribedTopic;
   DateTime? _lastConnectAttempt;
   DateTime? _lastConnectedAt;
   DateTime? _lastDisconnectedAt;
+  DateTime? _lastFailureAt;
   String? _lastError;
   int _messagesPublished = 0;
   int _messagesRelayed = 0;
   int _reconnectAttempts = 0;
+
+  // Publish suppression dedupe — collapse repeated identical warnings on
+  // the same (phase, reason, topic-family) tuple to avoid log spam when
+  // the device fires bursts during an outage.
+  String? _lastSuppressionKey;
+  DateTime? _lastSuppressionLogAt;
+  static const Duration _suppressionDedupeWindow = Duration(seconds: 5);
 
   /// Stream controller for diagnostics updates.
   final StreamController<MqttProxyDiagnostics> _diagnosticsController =
@@ -253,15 +366,19 @@ class MqttClientProxyService {
 
   /// Current diagnostics snapshot.
   MqttProxyDiagnostics get diagnostics => MqttProxyDiagnostics(
-    isConnected: _isConnected,
+    phase: _phase,
+    failureReason: _failureReason,
+    isConnected: _phase == MqttProxyConnectionPhase.connected,
     brokerHost: _brokerHost,
     brokerPort: _brokerPort,
     tlsEnabled: _tlsEnabled,
     hasAuth: _hasAuth,
+    topicRoot: _topicRoot,
     subscribedTopic: _subscribedTopic,
     lastConnectAttempt: _lastConnectAttempt,
     lastConnectedAt: _lastConnectedAt,
     lastDisconnectedAt: _lastDisconnectedAt,
+    lastFailureAt: _lastFailureAt,
     lastError: _lastError,
     messagesPublished: _messagesPublished,
     messagesRelayed: _messagesRelayed,
@@ -269,7 +386,13 @@ class MqttClientProxyService {
   );
 
   /// Whether the proxy is currently connected.
-  bool get isConnected => _isConnected;
+  bool get isConnected => _phase == MqttProxyConnectionPhase.connected;
+
+  /// Current high-level lifecycle phase.
+  MqttProxyConnectionPhase get phase => _phase;
+
+  /// Current structured failure reason.
+  MqttProxyFailureReason get failureReason => _failureReason;
 
   /// Test-only: number of times [connect] proceeded past idempotency
   /// short-circuits and started actual reconnect work.
@@ -290,7 +413,8 @@ class MqttClientProxyService {
     required bool shouldSubscribe,
     String? nodeUserId,
   }) {
-    _isConnected = true;
+    _phase = MqttProxyConnectionPhase.connected;
+    _failureReason = MqttProxyFailureReason.none;
     _brokerHost = host;
     _brokerPort = port;
     _tlsEnabled = tlsEnabled;
@@ -376,11 +500,13 @@ class MqttClientProxyService {
 
     // Settled idempotency: already connected with these exact args AND
     // the live socket agrees. The third clause guards iOS background
-    // socket teardown where _isConnected may be stale `true`.
+    // socket teardown where the phase may be stale `connected`.
     final liveSocketConnected =
         _client?.connectionStatus?.state == MqttConnectionState.connected ||
         _debugSimulateLiveSocket;
-    if (_isConnected && _lastConnectArgs == newArgs && liveSocketConnected) {
+    if (_phase == MqttProxyConnectionPhase.connected &&
+        _lastConnectArgs == newArgs &&
+        liveSocketConnected) {
       AppLogging.mqttProxy(
         'connect: idempotent no-op (settled, args match $newArgs)',
       );
@@ -415,12 +541,19 @@ class MqttClientProxyService {
 
     _lastConnectAttempt = DateTime.now();
     _lastError = null;
-    _emitDiagnostics();
+    _failureReason = MqttProxyFailureReason.none;
+    _phase = MqttProxyConnectionPhase.connecting;
 
     _brokerHost = host;
     _brokerPort = port;
     _tlsEnabled = useTls;
     _hasAuth = username.isNotEmpty;
+    // topicPrefix is "<root>/2/e" — strip the suffix so diagnostics
+    // surface the user-configured root, not the derived publish prefix.
+    _topicRoot = topicPrefix.endsWith('/2/e')
+        ? topicPrefix.substring(0, topicPrefix.length - 4)
+        : topicPrefix;
+    _emitDiagnostics();
 
     AppLogging.mqttProxy(
       'Connecting to $host:$port '
@@ -476,7 +609,8 @@ class MqttClientProxyService {
       final status = await client.connect();
       if (status?.state == MqttConnectionState.connected) {
         AppLogging.mqttProxy('Connected to broker $host:$port');
-        _isConnected = true;
+        _phase = MqttProxyConnectionPhase.connected;
+        _failureReason = MqttProxyFailureReason.none;
         _lastConnectArgs = newArgs;
         _lastConnectedAt = DateTime.now();
         _reconnectAttempts = 0;
@@ -505,55 +639,70 @@ class MqttClientProxyService {
 
         _emitDiagnostics();
       } else {
-        final errorMsg =
-            'Connection failed: ${status?.state.name ?? "unknown"}'; // lint-allow: hardcoded-string
-        AppLogging.mqttProxyError(errorMsg);
-        _lastError = errorMsg;
-        _isConnected = false;
-        _lastConnectArgs = null;
-        await _disconnectClient();
-        _emitDiagnostics();
+        final stateName = status?.state.name ?? 'unknown';
+        final reason = _mapNoConnectionStatus(status);
+        await _failConnect(
+          reason: reason,
+          summary: 'Connection failed: $stateName',
+          rawDetail: stateName,
+        );
       }
     } on NoConnectionException catch (e) {
-      final errorMsg =
-          'Connection refused: ${e.toString()}'; // lint-allow: hardcoded-string
-      AppLogging.mqttProxyError(errorMsg);
-      _lastError = _sanitizeError(e.toString());
-      _isConnected = false;
-      _lastConnectArgs = null;
-      await _disconnectClient();
-      _emitDiagnostics();
+      final reason = _mapNoConnectionException(e);
+      await _failConnect(
+        reason: reason,
+        summary: 'Connection refused', // lint-allow: hardcoded-string
+        rawDetail: e.toString(),
+      );
     } on SocketException catch (e) {
-      final errorMsg =
-          'Socket error: ${e.message}'; // lint-allow: hardcoded-string
-      AppLogging.mqttProxyError(errorMsg);
-      _lastError = _sanitizeError(e.message);
-      _isConnected = false;
-      _lastConnectArgs = null;
-      await _disconnectClient();
-      _emitDiagnostics();
+      final reason = _mapSocketException(e);
+      await _failConnect(
+        reason: reason,
+        summary: 'Socket error', // lint-allow: hardcoded-string
+        rawDetail: e.message,
+      );
     } on HandshakeException catch (e) {
-      final errorMsg =
-          'TLS handshake failed: ${e.message}'; // lint-allow: hardcoded-string
-      AppLogging.mqttProxyError(errorMsg);
-      _lastError = _sanitizeError(e.message);
-      _isConnected = false;
-      _lastConnectArgs = null;
-      await _disconnectClient();
-      _emitDiagnostics();
+      final reason = _mapHandshakeException(e);
+      await _failConnect(
+        reason: reason,
+        summary: 'TLS handshake failed', // lint-allow: hardcoded-string
+        rawDetail: e.message,
+      );
+    } on TlsException catch (e) {
+      // SecureSocket / cert-store level failures (rare; handshake covers most).
+      await _failConnect(
+        reason: MqttProxyFailureReason.tlsHandshakeFailed,
+        summary: 'TLS error', // lint-allow: hardcoded-string
+        rawDetail: e.message,
+      );
     } catch (e) {
-      final errorMsg =
-          'Unexpected error: ${e.toString()}'; // lint-allow: hardcoded-string
-      AppLogging.mqttProxyError(errorMsg);
-      _lastError = _sanitizeError(e.toString());
-      _isConnected = false;
-      _lastConnectArgs = null;
-      await _disconnectClient();
-      _emitDiagnostics();
+      await _failConnect(
+        reason: MqttProxyFailureReason.unknown,
+        summary: 'Unexpected error', // lint-allow: hardcoded-string
+        rawDetail: e.toString(),
+      );
     } finally {
       _isConnecting = false;
       _pendingConnectArgs = null;
     }
+  }
+
+  /// Marks the service as failed with a structured reason, sanitizes and
+  /// records the raw detail, logs it, and tears down the underlying client.
+  Future<void> _failConnect({
+    required MqttProxyFailureReason reason,
+    required String summary,
+    required String rawDetail,
+  }) async {
+    final sanitized = _sanitizeError(rawDetail);
+    AppLogging.mqttProxyError('$summary [reason=${reason.name}]: $sanitized');
+    _phase = MqttProxyConnectionPhase.failed;
+    _failureReason = reason;
+    _lastError = sanitized;
+    _lastFailureAt = DateTime.now();
+    _lastConnectArgs = null;
+    await _disconnectClient();
+    _emitDiagnostics();
   }
 
   /// Handles a device publish request (publish to broker).
@@ -568,21 +717,43 @@ class MqttClientProxyService {
     String? text,
     bool retained = false,
   }) {
-    if (_disposed || _client == null || !_isConnected) {
-      AppLogging.mqttProxyWarning(
-        'Cannot publish: not connected (topic: $topic)',
+    if (_disposed) {
+      _logSuppressedPublish(
+        topic: topic,
+        phase: MqttProxyConnectionPhase.disabled,
+        reason: MqttProxyFailureReason.clientDisposed,
+        kind: 'suppressed',
       );
       return;
     }
 
-    // Guard against race where _isConnected is true but the MQTT client's
+    // Reason-aware gating: surface the actual phase/reason instead of a
+    // bare "not connected" so support can distinguish disabled vs missing
+    // config vs in-flight vs failed-with-reason.
+    if (_phase != MqttProxyConnectionPhase.connected || _client == null) {
+      _logSuppressedPublish(
+        topic: topic,
+        phase: _phase,
+        reason: _failureReason,
+        kind: _phase == MqttProxyConnectionPhase.connecting
+            ? 'deferred'
+            : 'suppressed',
+      );
+      return;
+    }
+
+    // Guard against race where phase is `connected` but the MQTT client's
     // internal state is still 'connecting' (e.g. reconnect in progress).
     // Publishing in this state throws a ConnectionException.
     final clientState =
         _client!.connectionStatus?.state ?? MqttConnectionState.disconnected;
     if (clientState != MqttConnectionState.connected) {
-      AppLogging.mqttProxyWarning(
-        'Cannot publish: client state is $clientState (topic: $topic)',
+      _logSuppressedPublish(
+        topic: topic,
+        phase: MqttProxyConnectionPhase.connecting,
+        reason: MqttProxyFailureReason.none,
+        kind: 'deferred',
+        clientStateLabel: clientState.name,
       );
       return;
     }
@@ -626,12 +797,38 @@ class MqttClientProxyService {
     _intentionalDisconnect = true;
     _reconnectTimer?.cancel();
     await _disconnectClient();
-    _isConnected = false;
+    _phase = MqttProxyConnectionPhase.disconnected;
+    _failureReason = MqttProxyFailureReason.none;
     _lastDisconnectedAt = DateTime.now();
     _subscribedTopic = null;
     _lastConnectArgs = null;
     _debugSimulateLiveSocket = false;
     AppLogging.mqttProxy('Disconnected from broker');
+    _emitDiagnostics();
+  }
+
+  /// Marks the service as `disabled` — proxy mode is off. Used by the
+  /// provider when MQTT or the proxy toggle is turned off so the UI can
+  /// distinguish "off" from "failed".
+  void markDisabled() {
+    _intentionalDisconnect = true;
+    _reconnectTimer?.cancel();
+    _phase = MqttProxyConnectionPhase.disabled;
+    _failureReason = MqttProxyFailureReason.none;
+    _lastError = null;
+    _subscribedTopic = null;
+    _lastConnectArgs = null;
+    _debugSimulateLiveSocket = false;
+    _emitDiagnostics();
+  }
+
+  /// Marks the service as `missingConfig` with a structured reason. Used
+  /// by the provider when preflight fails so the UI surfaces *why* the
+  /// proxy never attempted a connection.
+  void markMissingConfig(MqttProxyFailureReason reason) {
+    _phase = MqttProxyConnectionPhase.missingConfig;
+    _failureReason = reason;
+    _lastFailureAt = DateTime.now();
     _emitDiagnostics();
   }
 
@@ -643,6 +840,8 @@ class MqttClientProxyService {
     _reconnectTimer?.cancel();
     _subscription?.cancel();
     _client?.disconnect();
+    _phase = MqttProxyConnectionPhase.disconnected;
+    _failureReason = MqttProxyFailureReason.clientDisposed;
     _diagnosticsController.close();
     AppLogging.mqttProxy('Service disposed');
   }
@@ -679,17 +878,28 @@ class MqttClientProxyService {
 
   void _onConnected() {
     AppLogging.mqttProxy('Broker callback: connected');
-    _isConnected = true;
+    _phase = MqttProxyConnectionPhase.connected;
+    _failureReason = MqttProxyFailureReason.none;
     _lastConnectedAt = DateTime.now();
     _lastError = null;
     _emitDiagnostics();
   }
 
   void _onDisconnected() {
-    _isConnected = false;
     _lastDisconnectedAt = DateTime.now();
-    if (!_intentionalDisconnect) {
-      _lastError = 'Connection lost'; // lint-allow: hardcoded-string
+    if (_intentionalDisconnect) {
+      _phase = MqttProxyConnectionPhase.disconnected;
+      _failureReason = MqttProxyFailureReason.none;
+    } else {
+      // Unexpected drop after a previously good connection. Preserve any
+      // existing failureReason from a recent connect failure; otherwise
+      // attribute it to the broker.
+      _phase = MqttProxyConnectionPhase.failed;
+      if (_failureReason == MqttProxyFailureReason.none) {
+        _failureReason = MqttProxyFailureReason.brokerDisconnected;
+      }
+      _lastError ??= 'Connection lost'; // lint-allow: hardcoded-string
+      _lastFailureAt = DateTime.now();
     }
     AppLogging.mqttProxyWarning(
       'Broker callback: disconnected'
@@ -700,13 +910,15 @@ class MqttClientProxyService {
 
   void _onAutoReconnect() {
     _reconnectAttempts++;
+    _phase = MqttProxyConnectionPhase.connecting;
     AppLogging.mqttProxy('Auto-reconnect attempt $_reconnectAttempts');
     _emitDiagnostics();
   }
 
   void _onAutoReconnected() {
     AppLogging.mqttProxy('Auto-reconnected successfully');
-    _isConnected = true;
+    _phase = MqttProxyConnectionPhase.connected;
+    _failureReason = MqttProxyFailureReason.none;
     _lastConnectedAt = DateTime.now();
     _lastError = null;
     _emitDiagnostics();
@@ -729,6 +941,133 @@ class MqttClientProxyService {
     }
   }
 
+  /// Reason-aware publish suppression log with dedupe.
+  ///
+  /// Collapses bursts of identical (phase, reason, topic-family) warnings
+  /// inside [_suppressionDedupeWindow] so a sustained outage does not
+  /// flood the log. The first hit always logs; subsequent hits within the
+  /// window for the same key are dropped.
+  void _logSuppressedPublish({
+    required String topic,
+    required MqttProxyConnectionPhase phase,
+    required MqttProxyFailureReason reason,
+    required String kind, // 'suppressed' | 'deferred'
+    String? clientStateLabel,
+  }) {
+    final family = _topicFamily(topic);
+    final key =
+        '$kind|${phase.name}|${reason.name}|$family|${clientStateLabel ?? ''}';
+    final now = DateTime.now();
+    if (_lastSuppressionKey == key &&
+        _lastSuppressionLogAt != null &&
+        now.difference(_lastSuppressionLogAt!) < _suppressionDedupeWindow) {
+      return;
+    }
+    _lastSuppressionKey = key;
+    _lastSuppressionLogAt = now;
+
+    final phaseTag = phase.name;
+    final reasonTag = reason.name;
+    final clientTag = clientStateLabel != null
+        ? ' clientState=$clientStateLabel'
+        : '';
+    final msg =
+        'publish $kind: phase=$phaseTag reason=$reasonTag topic=$topic$clientTag'; // lint-allow: hardcoded-string
+    AppLogging.mqttProxyWarning(msg);
+  }
+
+  /// Strips the trailing node-id (or other unique tail) so dedupe keys
+  /// collapse `msh/.../!aaaa` and `msh/.../!bbbb` to one family.
+  String _topicFamily(String topic) {
+    final lastSlash = topic.lastIndexOf('/');
+    if (lastSlash <= 0) return topic;
+    return topic.substring(0, lastSlash);
+  }
+
+  /// Maps `NoConnectionException` to the most plausible structured reason.
+  /// The mqtt_client package uses this for both "max retries exceeded" and
+  /// "broker rejected CONNACK" — text inspection is the only way to tell.
+  MqttProxyFailureReason _mapNoConnectionException(NoConnectionException e) {
+    final msg = e.toString().toLowerCase();
+    if (msg.contains('not authori') || // lint-allow: hardcoded-string
+        msg.contains('bad username') || // lint-allow: hardcoded-string
+        msg.contains('bad password')) {
+      return MqttProxyFailureReason.authenticationFailed;
+    }
+    if (msg.contains('refused') || msg.contains('rejected')) {
+      return MqttProxyFailureReason.protocolRejected;
+    }
+    return MqttProxyFailureReason.unknown;
+  }
+
+  /// Maps a non-connected [MqttClientConnectionStatus] to a reason. The
+  /// mqtt_client package surfaces broker CONNACK refusal via the status'
+  /// `returnCode` enum.
+  MqttProxyFailureReason _mapNoConnectionStatus(
+    MqttClientConnectionStatus? status,
+  ) {
+    final code = status?.returnCode;
+    if (code == null) return MqttProxyFailureReason.unknown;
+    switch (code) {
+      case MqttConnectReturnCode.badUsernameOrPassword:
+      case MqttConnectReturnCode.notAuthorized:
+        return MqttProxyFailureReason.authenticationFailed;
+      case MqttConnectReturnCode.brokerUnavailable:
+      case MqttConnectReturnCode.identifierRejected:
+      case MqttConnectReturnCode.unacceptedProtocolVersion:
+        return MqttProxyFailureReason.protocolRejected;
+      case MqttConnectReturnCode.noneSpecified:
+      case MqttConnectReturnCode.connectionAccepted:
+        return MqttProxyFailureReason.unknown;
+    }
+  }
+
+  /// Maps a [SocketException] to DNS / TCP-refused / TCP-timeout where
+  /// possible. dart:io does not give us a structured error code, so we
+  /// inspect the [OSError.message] / message text as a best-effort.
+  MqttProxyFailureReason _mapSocketException(SocketException e) {
+    final raw = '${e.message} ${e.osError?.message ?? ''}'.toLowerCase();
+    if (raw.contains('failed host lookup') || // lint-allow: hardcoded-string
+        raw.contains('nodename nor servname') || // lint-allow: hardcoded-string
+        raw.contains('no address associated') || // lint-allow: hardcoded-string
+        raw.contains('name or service not known')) {
+      return MqttProxyFailureReason.dnsFailure;
+    }
+    if (raw.contains('timed out') || raw.contains('timeout')) {
+      return MqttProxyFailureReason.tcpTimeout;
+    }
+    if (raw.contains('connection refused') || // lint-allow: hardcoded-string
+        raw.contains('connection reset') || // lint-allow: hardcoded-string
+        raw.contains(
+          'network is unreachable',
+        ) || // lint-allow: hardcoded-string
+        raw.contains('host is unreachable')) {
+      return MqttProxyFailureReason.tcpConnectionRefused;
+    }
+    return MqttProxyFailureReason.unknown;
+  }
+
+  /// Maps a [HandshakeException] to a TLS-cert vs generic-handshake reason.
+  /// dart:io reports cert-chain failures via `CERTIFICATE_VERIFY_FAILED`
+  /// embedded in the message.
+  MqttProxyFailureReason _mapHandshakeException(HandshakeException e) {
+    final raw = e.message.toLowerCase();
+    if (raw.contains(
+          'certificate_verify_failed',
+        ) || // lint-allow: hardcoded-string
+        raw.contains(
+          'certificate verify failed',
+        ) || // lint-allow: hardcoded-string
+        raw.contains('hostname mismatch') || // lint-allow: hardcoded-string
+        raw.contains(
+          'unable to get local issuer',
+        ) || // lint-allow: hardcoded-string
+        raw.contains('self signed certificate')) {
+      return MqttProxyFailureReason.tlsCertificateRejected;
+    }
+    return MqttProxyFailureReason.tlsHandshakeFailed;
+  }
+
   /// Sanitizes error messages to avoid leaking credentials.
   String _sanitizeError(String error) {
     // Strip any embedded passwords or auth tokens
@@ -738,5 +1077,87 @@ class MqttClientProxyService {
           'password=***',
         )
         .replaceAll(RegExp(r'token[=:]\S+', caseSensitive: false), 'token=***');
+  }
+
+  // ---------------------------------------------------------------------------
+  // Static — preflight
+  // ---------------------------------------------------------------------------
+
+  /// Validates a candidate MQTT proxy configuration before any connect
+  /// is attempted. Pure / side-effect-free so the provider layer can
+  /// invoke it cheaply and call [markMissingConfig] on failure.
+  ///
+  /// Validates:
+  /// - MQTT module enabled
+  /// - Proxy-to-client toggle enabled
+  /// - host non-empty
+  /// - topic root non-empty
+  /// - port (if specified inline as `host:port`) is in `[1, 65535]`
+  ///
+  /// Returns the resolved host/port/TLS/topic-root on success, or a
+  /// structured failure reason on failure.
+  static MqttProxyPreflightResult preflight({
+    required bool mqttEnabled,
+    required bool proxyToClientEnabled,
+    required String address,
+    required String topicRoot,
+    required bool tlsEnabled,
+    required String username,
+  }) {
+    if (!mqttEnabled || !proxyToClientEnabled) {
+      // Caller should use markDisabled in this case; preflight returns a
+      // benign "missingHost" only as a stable failure path. The provider
+      // distinguishes disabled vs invalid before calling preflight.
+      return const MqttProxyPreflightResult.fail(
+        MqttProxyFailureReason.missingHost,
+      );
+    }
+    if (address.trim().isEmpty) {
+      return const MqttProxyPreflightResult.fail(
+        MqttProxyFailureReason.missingHost,
+      );
+    }
+    if (topicRoot.trim().isEmpty) {
+      return const MqttProxyPreflightResult.fail(
+        MqttProxyFailureReason.missingTopicRoot,
+      );
+    }
+
+    String host;
+    int port;
+    bool userSpecifiedPort = false;
+    if (address.contains(':')) {
+      final parts = address.split(':');
+      if (parts.length != 2 || parts[0].trim().isEmpty) {
+        return const MqttProxyPreflightResult.fail(
+          MqttProxyFailureReason.missingHost,
+        );
+      }
+      host = parts[0];
+      final parsed = int.tryParse(parts[1]);
+      if (parsed == null || parsed < 1 || parsed > 65535) {
+        return const MqttProxyPreflightResult.fail(
+          MqttProxyFailureReason.invalidPort,
+        );
+      }
+      userSpecifiedPort = true;
+      port = parsed;
+    } else {
+      host = address;
+      port = tlsEnabled ? 8883 : 1883;
+    }
+    // Force TLS for the default Meshtastic broker.
+    final useTls = tlsEnabled || host.toLowerCase() == 'mqtt.meshtastic.org';
+    if (useTls && !userSpecifiedPort && port == 1883) {
+      port = 8883;
+    }
+
+    return MqttProxyPreflightResult.ok(
+      host: host,
+      port: port,
+      tlsEnabled: useTls,
+      topicRoot: topicRoot,
+      usernamePresent: username.isNotEmpty,
+    );
   }
 }

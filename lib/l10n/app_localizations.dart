@@ -47974,6 +47974,144 @@ abstract class AppLocalizations {
   /// **'The app couldn\'t reach the broker. Check the diagnostics below for the last error.'**
   String get mqttProxyBannerNotConnectedHint;
 
+  /// Phase: client proxy is off
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled'**
+  String get mqttProxyPhaseDisabled;
+
+  /// Phase: required config (host, topic root) is empty
+  ///
+  /// In en, this message translates to:
+  /// **'Missing configuration'**
+  String get mqttProxyPhaseMissingConfig;
+
+  /// Phase: configured but no connect attempted yet
+  ///
+  /// In en, this message translates to:
+  /// **'Idle'**
+  String get mqttProxyPhaseIdle;
+
+  /// Phase: connect attempt in flight
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting'**
+  String get mqttProxyPhaseConnecting;
+
+  /// Phase: broker connection established
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get mqttProxyPhaseConnected;
+
+  /// Phase: cleanly disconnected
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnected'**
+  String get mqttProxyPhaseDisconnected;
+
+  /// Phase: last attempt failed
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get mqttProxyPhaseFailed;
+
+  /// Diagnostics row label for the structured failure reason
+  ///
+  /// In en, this message translates to:
+  /// **'Reason'**
+  String get mqttProxyReason;
+
+  /// Diagnostics row label: timestamp of last failure
+  ///
+  /// In en, this message translates to:
+  /// **'Last Failure'**
+  String get mqttProxyLastFailureAt;
+
+  /// Failure reason: none / healthy
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get mqttProxyReasonNone;
+
+  /// Failure reason: host field empty
+  ///
+  /// In en, this message translates to:
+  /// **'Broker address is missing'**
+  String get mqttProxyReasonMissingHost;
+
+  /// Failure reason: root field empty
+  ///
+  /// In en, this message translates to:
+  /// **'Topic root is missing'**
+  String get mqttProxyReasonMissingTopicRoot;
+
+  /// Failure reason: port out of range
+  ///
+  /// In en, this message translates to:
+  /// **'Broker port is invalid'**
+  String get mqttProxyReasonInvalidPort;
+
+  /// Failure reason: hostname could not be resolved
+  ///
+  /// In en, this message translates to:
+  /// **'DNS lookup failed'**
+  String get mqttProxyReasonDnsFailure;
+
+  /// Failure reason: TCP connection refused / unreachable
+  ///
+  /// In en, this message translates to:
+  /// **'Connection refused by broker'**
+  String get mqttProxyReasonTcpRefused;
+
+  /// Failure reason: TCP connection timed out
+  ///
+  /// In en, this message translates to:
+  /// **'Connection timed out'**
+  String get mqttProxyReasonTcpTimeout;
+
+  /// Failure reason: TLS handshake error
+  ///
+  /// In en, this message translates to:
+  /// **'TLS handshake failed'**
+  String get mqttProxyReasonTlsHandshake;
+
+  /// Failure reason: cert chain or hostname mismatch
+  ///
+  /// In en, this message translates to:
+  /// **'TLS certificate rejected'**
+  String get mqttProxyReasonTlsCertificate;
+
+  /// Failure reason: bad username/password or unauthorized
+  ///
+  /// In en, this message translates to:
+  /// **'Authentication failed'**
+  String get mqttProxyReasonAuthFailed;
+
+  /// Failure reason: CONNACK refusal (protocol/identifier/unavailable)
+  ///
+  /// In en, this message translates to:
+  /// **'Broker rejected the connection'**
+  String get mqttProxyReasonProtocolRejected;
+
+  /// Failure reason: unexpected disconnect after successful connect
+  ///
+  /// In en, this message translates to:
+  /// **'Broker dropped the connection'**
+  String get mqttProxyReasonBrokerDisconnected;
+
+  /// Failure reason: provider/service was disposed
+  ///
+  /// In en, this message translates to:
+  /// **'Client released'**
+  String get mqttProxyReasonClientDisposed;
+
+  /// Failure reason: catch-all
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown error'**
+  String get mqttProxyReasonUnknown;
+
   /// Screen or section title
   ///
   /// In en, this message translates to:

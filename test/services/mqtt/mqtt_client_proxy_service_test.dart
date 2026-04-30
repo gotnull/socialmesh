@@ -9,19 +9,36 @@ void main() {
     test('default construction has expected defaults', () {
       const diag = MqttProxyDiagnostics();
 
+      expect(diag.phase, MqttProxyConnectionPhase.idle);
+      expect(diag.failureReason, MqttProxyFailureReason.none);
+      expect(diag.canPublish, false);
       expect(diag.isConnected, false);
       expect(diag.brokerHost, isNull);
       expect(diag.brokerPort, isNull);
       expect(diag.tlsEnabled, false);
       expect(diag.hasAuth, false);
+      expect(diag.topicRoot, isNull);
       expect(diag.subscribedTopic, isNull);
       expect(diag.lastConnectAttempt, isNull);
       expect(diag.lastConnectedAt, isNull);
       expect(diag.lastDisconnectedAt, isNull);
+      expect(diag.lastFailureAt, isNull);
       expect(diag.lastError, isNull);
       expect(diag.messagesPublished, 0);
       expect(diag.messagesRelayed, 0);
       expect(diag.reconnectAttempts, 0);
+    });
+
+    test('canPublish is true only when phase is connected', () {
+      for (final phase in MqttProxyConnectionPhase.values) {
+        final diag = MqttProxyDiagnostics(phase: phase);
+        expect(
+          diag.canPublish,
+          phase == MqttProxyConnectionPhase.connected,
+          reason:
+              'phase=$phase canPublish must be ${phase == MqttProxyConnectionPhase.connected}',
+        );
+      }
     });
 
     test('construction with custom values', () {
@@ -347,6 +364,271 @@ void main() {
         1,
         reason: 'post-disconnect connect must NOT short-circuit',
       );
+    });
+  });
+
+  group('MqttClientProxyService.preflight', () {
+    test('passes for a fully populated config', () {
+      final result = MqttClientProxyService.preflight(
+        mqttEnabled: true,
+        proxyToClientEnabled: true,
+        address: 'mqtt.ovmesh.com',
+        topicRoot: 'msh/US/OVMesh',
+        tlsEnabled: true,
+        username: 'alice',
+      );
+
+      expect(result.ok, true);
+      expect(result.reason, MqttProxyFailureReason.none);
+      expect(result.host, 'mqtt.ovmesh.com');
+      expect(result.port, 8883, reason: 'TLS default port is 8883');
+      expect(result.tlsEnabled, true);
+      expect(result.topicRoot, 'msh/US/OVMesh');
+      expect(result.usernamePresent, true);
+    });
+
+    test('fails with missingHost when address is empty', () {
+      final result = MqttClientProxyService.preflight(
+        mqttEnabled: true,
+        proxyToClientEnabled: true,
+        address: '',
+        topicRoot: 'msh',
+        tlsEnabled: false,
+        username: '',
+      );
+      expect(result.ok, false);
+      expect(result.reason, MqttProxyFailureReason.missingHost);
+    });
+
+    test('fails with missingTopicRoot when root is empty', () {
+      final result = MqttClientProxyService.preflight(
+        mqttEnabled: true,
+        proxyToClientEnabled: true,
+        address: 'mqtt.example.com',
+        topicRoot: '   ',
+        tlsEnabled: false,
+        username: '',
+      );
+      expect(result.ok, false);
+      expect(result.reason, MqttProxyFailureReason.missingTopicRoot);
+    });
+
+    test('fails with invalidPort when port is non-numeric', () {
+      final result = MqttClientProxyService.preflight(
+        mqttEnabled: true,
+        proxyToClientEnabled: true,
+        address: 'mqtt.example.com:notaport',
+        topicRoot: 'msh',
+        tlsEnabled: false,
+        username: '',
+      );
+      expect(result.ok, false);
+      expect(result.reason, MqttProxyFailureReason.invalidPort);
+    });
+
+    test('fails with invalidPort when port is out of range', () {
+      final result = MqttClientProxyService.preflight(
+        mqttEnabled: true,
+        proxyToClientEnabled: true,
+        address: 'mqtt.example.com:99999',
+        topicRoot: 'msh',
+        tlsEnabled: false,
+        username: '',
+      );
+      expect(result.ok, false);
+      expect(result.reason, MqttProxyFailureReason.invalidPort);
+    });
+
+    test('uses port 1883 when TLS off and no port specified', () {
+      final result = MqttClientProxyService.preflight(
+        mqttEnabled: true,
+        proxyToClientEnabled: true,
+        address: 'mqtt.example.com',
+        topicRoot: 'msh',
+        tlsEnabled: false,
+        username: '',
+      );
+      expect(result.ok, true);
+      expect(result.port, 1883);
+      expect(result.tlsEnabled, false);
+    });
+
+    test('upgrades 1883→8883 when TLS forced for default broker', () {
+      final result = MqttClientProxyService.preflight(
+        mqttEnabled: true,
+        proxyToClientEnabled: true,
+        address: 'mqtt.meshtastic.org',
+        topicRoot: 'msh',
+        tlsEnabled: false, // not explicitly true; default broker forces TLS
+        username: '',
+      );
+      expect(result.ok, true);
+      expect(result.tlsEnabled, true);
+      expect(result.port, 8883);
+    });
+
+    test('preserves user-specified port', () {
+      final result = MqttClientProxyService.preflight(
+        mqttEnabled: true,
+        proxyToClientEnabled: true,
+        address: 'mqtt.example.com:1234',
+        topicRoot: 'msh',
+        tlsEnabled: false,
+        username: '',
+      );
+      expect(result.ok, true);
+      expect(result.port, 1234);
+    });
+  });
+
+  group('MqttClientProxyService phase + reason transitions', () {
+    late MqttClientProxyService service;
+
+    setUp(() {
+      service = MqttClientProxyService();
+    });
+
+    tearDown(() {
+      service.dispose();
+    });
+
+    test('initial phase is idle / no failure', () {
+      expect(service.phase, MqttProxyConnectionPhase.idle);
+      expect(service.failureReason, MqttProxyFailureReason.none);
+    });
+
+    test('markDisabled transitions to disabled / none', () {
+      service.markDisabled();
+      expect(service.phase, MqttProxyConnectionPhase.disabled);
+      expect(service.failureReason, MqttProxyFailureReason.none);
+      expect(service.diagnostics.canPublish, false);
+    });
+
+    test('markMissingConfig stamps phase + reason + lastFailureAt', () {
+      service.markMissingConfig(MqttProxyFailureReason.missingHost);
+      expect(service.phase, MqttProxyConnectionPhase.missingConfig);
+      expect(service.failureReason, MqttProxyFailureReason.missingHost);
+      expect(service.diagnostics.lastFailureAt, isNotNull);
+    });
+
+    test(
+      'connect failure to unreachable port maps to a non-none reason',
+      () async {
+        // 127.0.0.1:1 reliably refuses on macOS/Linux test boxes. We don't
+        // care about the *exact* reason mapping here — the OS error text
+        // varies by platform — only that we transition to phase=failed
+        // with a non-none reason and a sanitized lastError.
+        await service.connect(
+          address: '127.0.0.1:1',
+          tlsEnabled: false,
+          username: '',
+          password: '',
+          topicPrefix: 'msh/2/e',
+          shouldSubscribe: false,
+        );
+        expect(service.phase, MqttProxyConnectionPhase.failed);
+        expect(service.failureReason, isNot(MqttProxyFailureReason.none));
+        expect(service.diagnostics.lastError, isNotNull);
+        expect(service.diagnostics.lastFailureAt, isNotNull);
+      },
+    );
+
+    test(
+      'disconnect from settled clears phase to disconnected, reason none',
+      () async {
+        service.debugMarkSettledForTest(
+          host: 'broker.example',
+          port: 1883,
+          tlsEnabled: false,
+          username: '',
+          topicPrefix: 'msh/2/e',
+          shouldSubscribe: false,
+        );
+        expect(service.phase, MqttProxyConnectionPhase.connected);
+
+        await service.disconnect();
+        expect(service.phase, MqttProxyConnectionPhase.disconnected);
+        expect(service.failureReason, MqttProxyFailureReason.none);
+      },
+    );
+
+    test('dispose stamps clientDisposed reason', () {
+      service.dispose();
+      expect(service.failureReason, MqttProxyFailureReason.clientDisposed);
+      // Re-dispose is a no-op (separate test asserts safety).
+    });
+  });
+
+  group('MqttClientProxyService publish gating', () {
+    test(
+      'handleDevicePublish in idle/disconnected emits no Published count',
+      () {
+        final service = MqttClientProxyService();
+        addTearDown(service.dispose);
+
+        // Idle (initial): publish must be suppressed — no counter increment.
+        service.handleDevicePublish(
+          topic: 'msh/US/OVMesh/2/e/LongFast/!aaaa',
+          data: [1, 2, 3],
+        );
+        expect(service.diagnostics.messagesPublished, 0);
+        expect(service.diagnostics.canPublish, false);
+      },
+    );
+
+    test('handleDevicePublish on disposed service is suppressed safely', () {
+      final service = MqttClientProxyService();
+      service.dispose();
+
+      // Must not throw.
+      service.handleDevicePublish(topic: 'msh/2/e', data: [0]);
+      // No publish counter — service is fully disposed.
+    });
+
+    test(
+      'rapid identical publishes while disconnected emit at most one warning '
+      'per dedupe window (no exceptions, no count increment)',
+      () {
+        final service = MqttClientProxyService();
+        addTearDown(service.dispose);
+
+        // Fire 50 publishes in a tight loop while disconnected. The
+        // dedupe is tested via observable behavior: the publish counter
+        // must remain 0 and no exception is thrown. (Log-side dedupe
+        // is asserted by the source structure — single first-hit then
+        // suppression — and is not directly observable from a unit test
+        // without a log capture sink.)
+        for (var i = 0; i < 50; i++) {
+          service.handleDevicePublish(
+            topic: 'msh/US/OVMesh/2/e/LongFast/!aaaa',
+            data: [i],
+          );
+        }
+        expect(service.diagnostics.messagesPublished, 0);
+      },
+    );
+  });
+
+  group('MqttClientProxyService secret redaction', () {
+    test('lastError never contains the literal password text', () async {
+      final service = MqttClientProxyService();
+      addTearDown(service.dispose);
+
+      // Force a failed attempt with an unmistakable password value.
+      // The connect will fail (port 1) but should never store the
+      // raw password in lastError.
+      const sentinelPassword = 'p4ssw0rd-DO-NOT-LEAK-XYZ';
+      await service.connect(
+        address: '127.0.0.1:1',
+        tlsEnabled: false,
+        username: 'alice',
+        password: sentinelPassword,
+        topicPrefix: 'msh/2/e',
+        shouldSubscribe: false,
+      );
+
+      expect(service.diagnostics.lastError, isNotNull);
+      expect(service.diagnostics.lastError, isNot(contains(sentinelPassword)));
     });
   });
 }

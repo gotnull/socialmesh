@@ -27120,6 +27120,77 @@ class AppLocalizationsEn extends AppLocalizations {
       'The app couldn\'t reach the broker. Check the diagnostics below for the last error.';
 
   @override
+  String get mqttProxyPhaseDisabled => 'Disabled';
+
+  @override
+  String get mqttProxyPhaseMissingConfig => 'Missing configuration';
+
+  @override
+  String get mqttProxyPhaseIdle => 'Idle';
+
+  @override
+  String get mqttProxyPhaseConnecting => 'Connecting';
+
+  @override
+  String get mqttProxyPhaseConnected => 'Connected';
+
+  @override
+  String get mqttProxyPhaseDisconnected => 'Disconnected';
+
+  @override
+  String get mqttProxyPhaseFailed => 'Failed';
+
+  @override
+  String get mqttProxyReason => 'Reason';
+
+  @override
+  String get mqttProxyLastFailureAt => 'Last Failure';
+
+  @override
+  String get mqttProxyReasonNone => 'None';
+
+  @override
+  String get mqttProxyReasonMissingHost => 'Broker address is missing';
+
+  @override
+  String get mqttProxyReasonMissingTopicRoot => 'Topic root is missing';
+
+  @override
+  String get mqttProxyReasonInvalidPort => 'Broker port is invalid';
+
+  @override
+  String get mqttProxyReasonDnsFailure => 'DNS lookup failed';
+
+  @override
+  String get mqttProxyReasonTcpRefused => 'Connection refused by broker';
+
+  @override
+  String get mqttProxyReasonTcpTimeout => 'Connection timed out';
+
+  @override
+  String get mqttProxyReasonTlsHandshake => 'TLS handshake failed';
+
+  @override
+  String get mqttProxyReasonTlsCertificate => 'TLS certificate rejected';
+
+  @override
+  String get mqttProxyReasonAuthFailed => 'Authentication failed';
+
+  @override
+  String get mqttProxyReasonProtocolRejected =>
+      'Broker rejected the connection';
+
+  @override
+  String get mqttProxyReasonBrokerDisconnected =>
+      'Broker dropped the connection';
+
+  @override
+  String get mqttProxyReasonClientDisposed => 'Client released';
+
+  @override
+  String get mqttProxyReasonUnknown => 'Unknown error';
+
+  @override
   String get securityConfigTitle => 'Security';
 
   @override

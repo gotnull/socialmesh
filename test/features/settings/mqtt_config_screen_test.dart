@@ -173,6 +173,7 @@ void main() {
         _wrap(
           protocol: protocol,
           initialDiagnostics: const MqttProxyDiagnostics(
+            phase: MqttProxyConnectionPhase.connected,
             isConnected: true,
             brokerHost: 'broker.example',
             brokerPort: 1883,
@@ -183,8 +184,8 @@ void main() {
 
       // The diagnostics section header is visible without admin-mode gating.
       expect(find.text(_l10n.mqttProxySectionDiagnostics), findsOneWidget);
-      // Status row shows the connected label.
-      expect(find.text(_l10n.mqttProxyStatusConnected), findsWidgets);
+      // Status row shows the connected phase label.
+      expect(find.text(_l10n.mqttProxyPhaseConnected), findsWidgets);
     },
   );
 
@@ -204,6 +205,8 @@ void main() {
         _wrap(
           protocol: protocol,
           initialDiagnostics: const MqttProxyDiagnostics(
+            phase: MqttProxyConnectionPhase.failed,
+            failureReason: MqttProxyFailureReason.tcpConnectionRefused,
             lastError: 'Connection refused',
           ),
         ),
@@ -230,7 +233,10 @@ void main() {
     await tester.pumpWidget(
       _wrap(
         protocol: protocol,
-        initialDiagnostics: const MqttProxyDiagnostics(),
+        initialDiagnostics: const MqttProxyDiagnostics(
+          // disconnected phase, no specific reason → fallback hint banner.
+          phase: MqttProxyConnectionPhase.disconnected,
+        ),
       ),
     );
     await _settle(tester);
