@@ -386,7 +386,8 @@ class _MeshCapacityScreenState extends ConsumerState<MeshCapacityScreen>
   }
 
   Future<void> _openExplanation(MeshCapacitySnapshot snapshot) async {
-    await ref.read(hapticServiceProvider).trigger(HapticType.light);
+    final haptics = ref.read(hapticServiceProvider);
+    await haptics.trigger(HapticType.light);
     if (!mounted) return;
     AppLogging.meshCapacity(
       'explanation opened reasonCode=${snapshot.recommendation.reasonCode.name} '
@@ -400,7 +401,8 @@ class _MeshCapacityScreenState extends ConsumerState<MeshCapacityScreen>
   }
 
   Future<void> _openRadioSettings(MeshCapacitySnapshot snapshot) async {
-    await ref.read(hapticServiceProvider).trigger(HapticType.medium);
+    final haptics = ref.read(hapticServiceProvider);
+    await haptics.trigger(HapticType.medium);
     if (!mounted) return;
     AppLogging.meshCapacity(
       'radio settings opened from advisor '
