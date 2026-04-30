@@ -14,7 +14,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../../features/nodedex/widgets/sigil_painter.dart';
+import '../../../features/nodedex/widgets/tappable_sigil_avatar.dart';
 import '../../mesh_services/models/mesh_service_localization.dart';
 import '../../mesh_services/models/mesh_service_template.dart';
 import '../../mesh_services/presentation/mesh_service_presentation.dart';
@@ -204,8 +204,13 @@ class _ServiceDiscoveryCard extends ConsumerWidget {
               // Bottom row: creator + freshness + CTA
               Row(
                 children: [
-                  // Creator identity
-                  SigilAvatar(nodeNum: service.creatorSigilSeed, size: 22),
+                  // Creator identity — sigil tap jumps to NodeDex.
+                  // Anonymous creators (seed = ambient ID) stay inert.
+                  TappableSigilAvatar(
+                    nodeNum: service.creatorSigilSeed,
+                    size: 22,
+                    enableTap: service.isCreatorIdentified,
+                  ),
                   const SizedBox(width: AppTheme.spacing6),
                   Expanded(
                     child: Text(

@@ -24,7 +24,7 @@ import '../../nodes/node_display_name_resolver.dart';
 import '../models/nodedex_entry.dart';
 import '../providers/nodedex_providers.dart';
 import '../services/sigil_generator.dart';
-import 'sigil_painter.dart';
+import 'tappable_sigil_avatar.dart';
 
 /// Provider that builds [AvatarStackItem] view models for a given node's
 /// co-seen peers.
@@ -76,7 +76,7 @@ final nodeDexAvatarStackProvider = Provider.family<List<AvatarStackItem>, int>((
 
     return AvatarStackItem(
       id: peer.nodeNum.toString(),
-      child: SigilAvatar(
+      child: TappableSigilAvatar(
         sigil: sigil,
         nodeNum: peer.nodeNum,
         size:

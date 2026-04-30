@@ -18,8 +18,7 @@ import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/user_avatar.dart';
 import '../../../models/presence_confidence.dart';
-import '../../nodedex/screens/nodedex_detail_screen.dart';
-import '../../nodedex/widgets/sigil_painter.dart';
+import '../../nodedex/widgets/tappable_sigil_avatar.dart';
 import '../../../models/social.dart';
 import '../../../providers/app_providers.dart';
 import '../../../utils/mesh_identity.dart';
@@ -178,20 +177,11 @@ class _SignalHeader extends ConsumerWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Avatar — use Sigil for any signal with a meshNodeId so it matches
-          // what receivers see on their devices.
+          // Avatar — use Sigil for any signal with a meshNodeId so it
+          // matches what receivers see on their devices. Tap goes to
+          // NodeDex by default via TappableSigilAvatar.
           if (isMeshSignal)
-            GestureDetector(
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) =>
-                        NodeDexDetailScreen(nodeNum: signal.meshNodeId!),
-                  ),
-                );
-              },
-              child: SigilAvatar(nodeNum: signal.meshNodeId!, size: 40),
-            )
+            TappableSigilAvatar(nodeNum: signal.meshNodeId!, size: 40)
           else
             UserAvatar(
               imageUrl: avatarUrl,

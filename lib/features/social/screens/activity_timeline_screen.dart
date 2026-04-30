@@ -3,7 +3,6 @@
 // lint-allow: scaffold — FutureBuilder loading/error placeholders, main build uses GlassScaffold
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
@@ -29,8 +28,7 @@ import '../../../providers/social_providers.dart';
 
 import '../../../utils/mesh_identity.dart';
 
-import '../../nodedex/screens/nodedex_detail_screen.dart';
-import '../../nodedex/widgets/sigil_painter.dart';
+import '../../nodedex/widgets/tappable_sigil_avatar.dart';
 import '../../signals/screens/signal_detail_screen.dart';
 
 /// Activity timeline screen showing signal interactions.
@@ -824,64 +822,49 @@ class _TimelineActivityTile extends ConsumerWidget {
 
               const SizedBox(width: AppTheme.spacing12),
 
-              // Avatar — mesh actors get SigilAvatar (tappable → NodeDex),
-              // no-nodeNum actors get a generic person icon.
-              // Mirrors signal detail _ResponseTile exactly:
-              //   nodeNum → SigilAvatar
-              //   null    → generic person icon
-              // NEVER UserAvatar with profile avatar/displayName.
+              // Avatar — mesh actors get a TappableSigilAvatar
+              // (tap → NodeDex by default), no-nodeNum actors get a
+              // generic person icon. Mirrors signal detail _ResponseTile
+              // exactly. NEVER UserAvatar with profile avatar/displayName.
               Padding(
                 padding: const EdgeInsets.only(top: 8),
-                child: GestureDetector(
-                  onTap: isMeshActor
-                      ? () {
-                          HapticFeedback.lightImpact();
-                          Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) =>
-                                  NodeDexDetailScreen(nodeNum: meshNodeNum),
-                            ),
-                          );
-                        }
-                      : null,
-                  child: Stack(
-                    children: [
-                      if (isMeshActor)
-                        SigilAvatar(nodeNum: meshNodeNum, size: 40)
-                      else
-                        Container(
-                          width: 40,
-                          height: 40,
+                child: Stack(
+                  children: [
+                    if (isMeshActor)
+                      TappableSigilAvatar(nodeNum: meshNodeNum, size: 40)
+                    else
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: context.accentColor.withValues(alpha: 0.15),
+                        ),
+                        child: Icon(
+                          Icons.person_rounded,
+                          size: 24,
+                          color: context.accentColor.withValues(alpha: 0.7),
+                        ),
+                      ),
+                    // Unread indicator
+                    if (!activity.isRead)
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: Container(
+                          width: 10,
+                          height: 10,
                           decoration: BoxDecoration(
+                            color: context.accentColor,
                             shape: BoxShape.circle,
-                            color: context.accentColor.withValues(alpha: 0.15),
-                          ),
-                          child: Icon(
-                            Icons.person_rounded,
-                            size: 24,
-                            color: context.accentColor.withValues(alpha: 0.7),
-                          ),
-                        ),
-                      // Unread indicator
-                      if (!activity.isRead)
-                        Positioned(
-                          right: 0,
-                          top: 0,
-                          child: Container(
-                            width: 10,
-                            height: 10,
-                            decoration: BoxDecoration(
-                              color: context.accentColor,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: context.background,
-                                width: 2,
-                              ),
+                            border: Border.all(
+                              color: context.background,
+                              width: 2,
                             ),
                           ),
                         ),
-                    ],
-                  ),
+                      ),
+                  ],
                 ),
               ),
 

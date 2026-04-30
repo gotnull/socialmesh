@@ -31,8 +31,7 @@ import '../../../providers/signal_bookmark_provider.dart';
 import '../../../providers/signal_providers.dart';
 import '../../../providers/social_providers.dart';
 import '../../../utils/snackbar.dart';
-import '../../nodedex/screens/nodedex_detail_screen.dart';
-import '../../nodedex/widgets/sigil_painter.dart';
+import '../../nodedex/widgets/tappable_sigil_avatar.dart';
 import '../../settings/settings_screen.dart';
 import '../widgets/double_tap_heart.dart';
 import '../widgets/signal_card.dart';
@@ -2202,19 +2201,10 @@ class _AuthorAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Mesh author — bare SigilAvatar, same as signal card and activity tile.
-    // No extra Container, no foreign border, no accentColor glow.
+    // Mesh author — bare SigilAvatar, same as signal card and activity
+    // tile. Tap defaults to NodeDex via TappableSigilAvatar.
     if (author.meshNodeId != null) {
-      return GestureDetector(
-        onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (_) => NodeDexDetailScreen(nodeNum: author.meshNodeId!),
-            ),
-          );
-        },
-        child: SigilAvatar(nodeNum: author.meshNodeId!, size: size),
-      );
+      return TappableSigilAvatar(nodeNum: author.meshNodeId!, size: size);
     }
 
     // No mesh identity — generic person icon, never profile avatar/displayName.

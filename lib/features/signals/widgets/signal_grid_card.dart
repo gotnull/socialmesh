@@ -3,7 +3,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
@@ -12,8 +11,7 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/user_avatar.dart';
 import '../../../core/logging.dart';
-import '../../nodedex/screens/nodedex_detail_screen.dart';
-import '../../nodedex/widgets/sigil_painter.dart';
+import '../../nodedex/widgets/tappable_sigil_avatar.dart';
 import '../../../models/social.dart';
 import '../../social/widgets/subscribe_button.dart';
 import '../../../providers/app_providers.dart';
@@ -222,21 +220,9 @@ class SignalGridCard extends ConsumerWidget {
                       Row(
                         children: [
                           if (isMeshSignal)
-                            GestureDetector(
-                              onTap: () {
-                                HapticFeedback.lightImpact();
-                                Navigator.of(context).push(
-                                  MaterialPageRoute<void>(
-                                    builder: (_) => NodeDexDetailScreen(
-                                      nodeNum: signal.meshNodeId!,
-                                    ),
-                                  ),
-                                );
-                              },
-                              child: SigilAvatar(
-                                nodeNum: signal.meshNodeId!,
-                                size: 22,
-                              ),
+                            TappableSigilAvatar(
+                              nodeNum: signal.meshNodeId!,
+                              size: 22,
                             )
                           else
                             UserAvatar(

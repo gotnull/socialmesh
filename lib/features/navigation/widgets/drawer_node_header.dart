@@ -7,7 +7,7 @@ import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
 import '../../../core/transport.dart';
 import '../../../providers/app_providers.dart';
-import '../../nodedex/widgets/sigil_painter.dart';
+import '../../nodedex/widgets/tappable_sigil_avatar.dart';
 
 /// Node info header for the drawer — shows current node details
 /// including sigil avatar, name, ID, and connection status chip.
@@ -37,9 +37,12 @@ class DrawerNodeHeader extends ConsumerWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Node sigil avatar — matches NodeDex list style
-          SigilAvatar(
+          // Node sigil avatar — matches NodeDex list style. Tap opens
+          // self-NodeDex (the canonical "this is me" detail view).
+          // Disabled before myNodeNum is known.
+          TappableSigilAvatar(
             nodeNum: myNodeNum ?? 0,
+            enableTap: myNodeNum != null,
             size: 56,
             badge: Container(
               width: 14,

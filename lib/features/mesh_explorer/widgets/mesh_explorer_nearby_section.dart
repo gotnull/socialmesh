@@ -14,7 +14,7 @@ import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/logging.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
-import '../../../features/nodedex/widgets/sigil_painter.dart';
+import '../../../features/nodedex/widgets/tappable_sigil_avatar.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/sip_providers.dart';
 import '../../../services/haptic_service.dart';
@@ -114,8 +114,15 @@ class _PeerTile extends ConsumerWidget {
           ),
           child: Row(
             children: [
-              // Compact sigil avatar
-              SigilAvatar(nodeNum: sigilSeed, size: 32),
+              // Compact sigil avatar — IdentifiedPeer sigil taps jump
+              // to NodeDex; for AnonymousPeer the seed is an ambient ID
+              // (not a real nodeNum) so we leave the avatar inert and
+              // let the row's InkWell handle the peer-detail sheet.
+              TappableSigilAvatar(
+                nodeNum: sigilSeed,
+                size: 32,
+                enableTap: peer is IdentifiedPeer,
+              ),
 
               const SizedBox(width: AppTheme.spacing8),
 

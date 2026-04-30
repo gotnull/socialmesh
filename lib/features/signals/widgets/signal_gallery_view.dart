@@ -14,8 +14,7 @@ import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/user_avatar.dart';
 import '../../../models/social.dart';
-import '../../nodedex/screens/nodedex_detail_screen.dart';
-import '../../nodedex/widgets/sigil_painter.dart';
+import '../../nodedex/widgets/tappable_sigil_avatar.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/signal_bookmark_provider.dart';
 import '../../../core/logging.dart';
@@ -699,20 +698,11 @@ class _BottomInfoOverlay extends ConsumerWidget {
               // Author row
               Row(
                 children: [
-                  // Avatar — use Sigil for mesh nodes, UserAvatar for cloud authors
+                  // Avatar — use Sigil for mesh nodes, UserAvatar for
+                  // cloud authors. Tap goes to NodeDex by default via
+                  // TappableSigilAvatar.
                   if (signal.meshNodeId != null)
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => NodeDexDetailScreen(
-                              nodeNum: signal.meshNodeId!,
-                            ),
-                          ),
-                        );
-                      },
-                      child: SigilAvatar(nodeNum: signal.meshNodeId!, size: 40),
-                    )
+                    TappableSigilAvatar(nodeNum: signal.meshNodeId!, size: 40)
                   else
                     UserAvatar(
                       initials: _getInitials(

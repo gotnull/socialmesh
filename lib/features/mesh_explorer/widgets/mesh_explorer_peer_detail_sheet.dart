@@ -14,7 +14,7 @@ import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/logging.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
-import '../../../features/nodedex/widgets/sigil_painter.dart';
+import '../../../features/nodedex/widgets/tappable_sigil_avatar.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/peer_safety_providers.dart';
 import '../../../providers/sip_providers.dart';
@@ -125,7 +125,13 @@ class _PeerHeader extends StatelessWidget {
 
     return Row(
       children: [
-        SigilAvatar(nodeNum: sigilSeed, size: 56),
+        TappableSigilAvatar(
+          nodeNum: sigilSeed,
+          size: 56,
+          // Anonymous-tier sigils are seeded by an ambient ID (not a
+          // real nodeNum) and have no NodeDex entry — keep them inert.
+          enableTap: tier != InteractionTier.anonymous,
+        ),
         const SizedBox(width: AppTheme.spacing16),
         Expanded(
           child: Column(

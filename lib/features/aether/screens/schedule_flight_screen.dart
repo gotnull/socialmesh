@@ -29,7 +29,7 @@ import '../../../utils/snackbar.dart';
 import '../data/airports.dart';
 import '../providers/aether_providers.dart';
 import '../services/opensky_service.dart';
-import '../../nodedex/widgets/sigil_painter.dart';
+import '../../nodedex/widgets/tappable_sigil_avatar.dart';
 import '../widgets/airport_picker_sheet.dart';
 import '../widgets/flight_search_sheet.dart';
 
@@ -1082,7 +1082,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
       child: Row(
         children: [
           if (isConnected)
-            SigilAvatar(nodeNum: myNode.nodeNum, size: 40)
+            TappableSigilAvatar(nodeNum: myNode.nodeNum, size: 40)
           else
             Container(
               width: 40,

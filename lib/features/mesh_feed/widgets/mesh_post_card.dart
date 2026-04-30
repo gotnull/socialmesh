@@ -10,7 +10,7 @@ import 'package:socialmesh/l10n/app_localizations.dart';
 
 import '../../../core/theme.dart';
 import '../../../providers/app_providers.dart';
-import '../../nodedex/widgets/sigil_painter.dart';
+import '../../nodedex/widgets/tappable_sigil_avatar.dart';
 import '../../../services/mesh_feed/mesh_feed_ranking.dart';
 import '../../../services/mesh_feed/mesh_post.dart';
 
@@ -59,7 +59,7 @@ class MeshPostCard extends ConsumerWidget {
             // Header: avatar + name + provenance + expiry
             Row(
               children: [
-                SigilAvatar(nodeNum: post.authorNodeNum, size: 36),
+                TappableSigilAvatar(nodeNum: post.authorNodeNum, size: 36),
                 const SizedBox(width: AppTheme.spacing12),
                 Expanded(
                   child: Column(

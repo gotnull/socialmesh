@@ -16,7 +16,7 @@ import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/gradient_border_container.dart';
-import '../../../core/widgets/node_avatar.dart';
+import '../../nodedex/widgets/tappable_node_avatar.dart';
 import '../../../core/widgets/search_filter_header.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/status_filter_chip.dart';
@@ -809,7 +809,8 @@ class _ContactTile extends StatelessWidget {
           // Avatar with presence dot
           Stack(
             children: [
-              NodeAvatar(
+              TappableNodeAvatar(
+                nodeNum: contact.nodeNum,
                 text: shortText,
                 color: contact.avatarColor != null
                     ? Color(contact.avatarColor!)
@@ -1141,7 +1142,8 @@ class _ContactDetailSheet extends StatelessWidget {
                 ),
                 // NodeAvatar fallback (shown when sigil is not available)
                 if (contact.avatarColor != null)
-                  NodeAvatar(
+                  TappableNodeAvatar(
+                    nodeNum: contact.nodeNum,
                     text: shortText,
                     color: Color(contact.avatarColor!),
                     size: AppTheme.spacing40,

@@ -13,7 +13,7 @@ import '../../../core/theme.dart';
 import '../../../providers/app_providers.dart';
 import '../../../services/file_transfer/file_transfer_engine.dart';
 import '../../nodes/node_display_name_resolver.dart';
-import '../../nodedex/widgets/sigil_painter.dart';
+import '../../nodedex/widgets/tappable_sigil_avatar.dart';
 
 /// A fullscreen gallery view for file transfer images.
 ///
@@ -372,9 +372,9 @@ class _BottomInfoOverlay extends ConsumerWidget {
               // Author / node row
               Row(
                 children: [
-                  // Sigil avatar for the peer node
+                  // Sigil avatar for the peer node — tap opens NodeDex.
                   if (peerNodeNum != null)
-                    SigilAvatar(nodeNum: peerNodeNum, size: 40)
+                    TappableSigilAvatar(nodeNum: peerNodeNum, size: 40)
                   else
                     Container(
                       width: 40,
