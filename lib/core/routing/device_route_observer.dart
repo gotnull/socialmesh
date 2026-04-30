@@ -5,9 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/connection_providers.dart';
 import '../../utils/snackbar.dart';
 import '../l10n/l10n_extension.dart';
-import '../widgets/glass_scaffold.dart';
 import 'route_guard.dart';
-import 'package:socialmesh/core/theme.dart';
 
 /// Navigation observer that enforces route requirements.
 /// Intercepts navigation to device-required routes when disconnected.
@@ -102,66 +100,15 @@ class ProtectedRoute extends ConsumerWidget {
       return fallbackBuilder!(context);
     }
 
-    // Default blocked screen
-    return _BlockedRouteScreen(
-      message:
-          result.reason ??
-          'This screen is not available', // lint-allow: hardcoded-string
-      fallbackRoute: result.fallbackRoute,
-    );
-  }
-}
-
-/// Screen shown when a protected route is blocked
-class _BlockedRouteScreen extends StatelessWidget {
-  final String message;
-  final String? fallbackRoute;
-
-  const _BlockedRouteScreen({required this.message, this.fallbackRoute});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return GlassScaffold.body(
-      title: context.l10n.accessRestrictedTitle,
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(AppTheme.spacing32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: AccentColors.orange.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.lock_outline,
-                  size: 40,
-                  color: AccentColors.orange,
-                ),
-              ),
-              const SizedBox(height: AppTheme.spacing24),
-              Text(
-                message,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.titleMedium,
-              ),
-              const SizedBox(height: AppTheme.spacing32),
-              if (fallbackRoute != null)
-                FilledButton(
-                  onPressed: () {
-                    Navigator.of(context).pushReplacementNamed(fallbackRoute!);
-                  },
-                  child: Text(context.l10n.goBack),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
+    // No fallback supplied → bounce to Scanner. The "Access Restricted"
+    // blocking screen used to live here; it was a dead-end UI that
+    // confused users (especially after a factory-reset writeChar
+    // failure dropped the BLE link mid-action). Removed entirely —
+    // every blocked route now routes directly to the Scanner.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!context.mounted) return;
+      Navigator.of(context).pushReplacementNamed('/scanner');
+    });
+    return const SizedBox.shrink();
   }
 }

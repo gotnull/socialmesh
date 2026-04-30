@@ -64,8 +64,7 @@ import 'app_localizations_ru.dart';
 /// be consistent with the languages listed in the AppLocalizations.supportedLocales
 /// property.
 abstract class AppLocalizations {
-  AppLocalizations(String locale)
-    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -73,8 +72,7 @@ abstract class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
   }
 
-  static const LocalizationsDelegate<AppLocalizations> delegate =
-      _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -86,20 +84,19 @@ abstract class AppLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
-      <LocalizationsDelegate<dynamic>>[
-        delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ];
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
+    delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+  ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
     Locale('it'),
     Locale('pt'),
-    Locale('ru'),
+    Locale('ru')
   ];
 
   /// Text displayed in admin panel
@@ -1450,11 +1447,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{nodeName} already has a flight ({flightNumber} — {status})'**
-  String aetherNodeAlreadyHasFlight(
-    String nodeName,
-    String flightNumber,
-    String status,
-  );
+  String aetherNodeAlreadyHasFlight(String nodeName, String flightNumber, String status);
 
   /// Badge label shown when a flight node is detected in the mesh
   ///
@@ -1778,10 +1771,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{nodeName} already has an active flight ({flightNumber})'**
-  String aetherScheduleNodeHasActiveFlight(
-    String nodeName,
-    String flightNumber,
-  );
+  String aetherScheduleNodeHasActiveFlight(String nodeName, String flightNumber);
 
   /// Hint text for the notes field
   ///
@@ -1823,11 +1813,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{departure} and {arrival} are {distance} km apart — too close for a commercial flight'**
-  String aetherScheduleRouteTooClose(
-    String departure,
-    String arrival,
-    int distance,
-  );
+  String aetherScheduleRouteTooClose(String departure, String arrival, int distance);
 
   /// Warning snackbar when departure equals arrival airport
   ///
@@ -2067,12 +2053,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{flightNumber} {departure} → {arrival}\nTrack this Meshtastic flight on Aether:\n{url}'**
-  String aetherShareText(
-    Object flightNumber,
-    Object departure,
-    Object arrival,
-    Object url,
-  );
+  String aetherShareText(Object flightNumber, Object departure, Object arrival, Object url);
 
   /// Title shown when My Flights filter requires sign-in
   ///
@@ -9644,11 +9625,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{filename} is {fileSize} KB — mesh transfer limit is {limit} KB.'**
-  String fileTransferFileTooLarge(
-    String filename,
-    String fileSize,
-    String limit,
-  );
+  String fileTransferFileTooLarge(String filename, String fileSize, String limit);
 
   /// Filter chip label
   ///
@@ -11670,19 +11647,13 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{fromState} -> {toState} is not a valid transition'**
-  String incidentStateMachineInvalidTransition(
-    String fromState,
-    String toState,
-  );
+  String incidentStateMachineInvalidTransition(String fromState, String toState);
 
   /// Permission error when the actor's role lacks the required permission. Placeholders: permissionName, roleName
   ///
   /// In en, this message translates to:
   /// **'{permissionName} denied for role {roleName}'**
-  String incidentStateMachinePermissionDenied(
-    String permissionName,
-    String roleName,
-  );
+  String incidentStateMachinePermissionDenied(String permissionName, String roleName);
 
   /// Error when trying to transition an incident in a terminal state. Placeholder: stateName
   ///
@@ -12624,12 +12595,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'RF Link Budget (free-space path loss)\nDistance: {distance}\nFrequency: {frequency}\nPath Loss: {pathLoss}\nLink Margin: {linkMargin}'**
-  String mapRfLinkBudgetClipboard(
-    String distance,
-    String frequency,
-    String pathLoss,
-    String linkMargin,
-  );
+  String mapRfLinkBudgetClipboard(String distance, String frequency, String pathLoss, String linkMargin);
 
   /// Text displayed in map view
   ///
@@ -21155,11 +21121,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{count} encounters over {duration}{detail}'**
-  String nodedexTimelineEncounterSession(
-    int count,
-    String duration,
-    String detail,
-  );
+  String nodedexTimelineEncounterSession(int count, String duration, String detail);
 
   /// Text displayed in node management
   ///
@@ -23981,16 +23943,16 @@ abstract class AppLocalizations {
   /// **'Could not open Bluetooth Settings. Please open Settings > Bluetooth manually.'**
   String get regionSelectionOpenBluetoothSettingsError;
 
-  /// UI text: region selection pairing hint message
+  /// Reset-aware pairing hint shown during region setup when the saved BLE pairing no longer matches the rebooted radio. Avoids implying any phone-side fault.
   ///
   /// In en, this message translates to:
-  /// **'Bluetooth pairing was removed. Forget \"Meshtastic_XXXX\" in Settings > Bluetooth and reconnect to continue.'**
+  /// **'Pairing needs to be refreshed. The radio may have cleared its Bluetooth identity after the region change — forget the device in Bluetooth Settings and pair again.'**
   String get regionSelectionPairingHintMessage;
 
-  /// UI text: region selection pairing invalidation
+  /// Reset-aware pairing-invalidation message shown during region setup. Frames the cause as a radio-side identity reset, not a phone-side failure.
   ///
   /// In en, this message translates to:
-  /// **'Your phone removed the stored pairing info for this device.\nGo to Settings > Bluetooth, forget the Meshtastic device, and try again.'**
+  /// **'Pairing needs to be refreshed. The radio\'s Bluetooth identity has changed.\nForget the device in Settings > Bluetooth and pair again.'**
   String get regionSelectionPairingInvalidation;
 
   /// UI text: region selection reconnect timeout
@@ -25271,11 +25233,35 @@ abstract class AppLocalizations {
   /// **'MeshCore connection failed: {error}'**
   String scannerMeshCoreConnectionFailedWithError(String error);
 
-  /// Error message when the OS removes stored BLE pairing data for the device.
+  /// Short inline error shown when the saved BLE pairing no longer matches the device after a factory reset, region reset, or BLE identity reset on the radio side. Avoids implying any phone-side fault.
   ///
   /// In en, this message translates to:
-  /// **'Your phone removed the stored pairing info for this device. Return to Settings > Bluetooth, forget \"Meshtastic_XXXX\", and try again.'**
+  /// **'Pairing needs to be refreshed — the radio\'s Bluetooth identity has changed. Forget the device in Bluetooth Settings and pair again.'**
   String get scannerPairingInvalidatedError;
+
+  /// Title of the recovery card shown when the saved BLE pairing no longer matches the device. Reset-aware wording — does not blame the phone.
+  ///
+  /// In en, this message translates to:
+  /// **'Pairing needs to be refreshed'**
+  String get scannerPairingRefreshTitle;
+
+  /// Body copy of the pairing-refresh recovery card. Explains the radio-side reasons (factory reset / region reset / device reset) and the user-side recovery steps (forget then re-pair).
+  ///
+  /// In en, this message translates to:
+  /// **'This can happen after a factory reset or region/device reset. The radio may have cleared its Bluetooth identity, so your phone\'s saved pairing no longer matches this device.\n\nRemove the old pairing from your phone\'s Bluetooth settings, then pair with the device again.'**
+  String get scannerPairingRefreshBody;
+
+  /// Primary action on the pairing-refresh card — opens the OS Bluetooth Settings so the user can forget the stale pairing.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Bluetooth Settings'**
+  String get scannerPairingRefreshOpenBluetoothSettings;
+
+  /// Secondary action on the pairing-refresh card — re-runs the BLE scan after the user has forgotten the stale pairing in Bluetooth Settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan again'**
+  String get scannerPairingRefreshScanAgain;
 
   /// Error thrown when Meshtastic config is not received, indicating a PIN/auth issue.
   ///
@@ -36933,10 +36919,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'\"{templateName}\" uses {newDataType} instead, so your current selections won\'t be used.'**
-  String widgetBuilderSwitchTemplateIncompatible(
-    String templateName,
-    String newDataType,
-  );
+  String widgetBuilderSwitchTemplateIncompatible(String templateName, String newDataType);
 
   /// Template switch warning showing current selection count
   ///
@@ -37788,12 +37771,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'RF Link Budget (free-space path loss)\nDistance: {distance}\nFrequency: {frequency}\nPath Loss: {pathLoss}\nLink Margin: {linkMargin}'**
-  String worldMeshRfLinkBudgetClipboard(
-    String distance,
-    String frequency,
-    String pathLoss,
-    String linkMargin,
-  );
+  String worldMeshRfLinkBudgetClipboard(String distance, String frequency, String pathLoss, String linkMargin);
 
   /// UI text: world mesh scroll for more
   ///
@@ -42287,12 +42265,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Seeded {users} users, {posts} posts, {stories} stories, {comments} comments'**
-  String adminFollowSeededSummary(
-    int users,
-    int posts,
-    int stories,
-    int comments,
-  );
+  String adminFollowSeededSummary(int users, int posts, int stories, int comments);
 
   /// Title for the admin panel screen
   ///
@@ -46168,11 +46141,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Applied {applied} of {total}. {failed} failed.'**
-  String dataExportDeviceConfigRestoreSummaryWithFailures(
-    int applied,
-    int total,
-    int failed,
-  );
+  String dataExportDeviceConfigRestoreSummaryWithFailures(int applied, int total, int failed);
 
   /// Snackbar shown when the user taps Apply with no toggles enabled
   ///
@@ -54530,11 +54499,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{senderName} ({shortCode}) in {channelName}'**
-  String notificationChannelMessageTitle(
-    String senderName,
-    String shortCode,
-    String channelName,
-  );
+  String notificationChannelMessageTitle(String senderName, String shortCode, String channelName);
 
   /// Android notification channel description for node discovery
   ///
@@ -66657,8 +66622,7 @@ abstract class AppLocalizations {
   String get rnsCompanionStatusUnreachable;
 }
 
-class _AppLocalizationsDelegate
-    extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
@@ -66667,30 +66631,27 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool isSupported(Locale locale) =>
-      <String>['en', 'it', 'pt', 'ru'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>['en', 'it', 'pt', 'ru'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
+
+
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
-    case 'en':
-      return AppLocalizationsEn();
-    case 'it':
-      return AppLocalizationsIt();
-    case 'pt':
-      return AppLocalizationsPt();
-    case 'ru':
-      return AppLocalizationsRu();
+    case 'en': return AppLocalizationsEn();
+    case 'it': return AppLocalizationsIt();
+    case 'pt': return AppLocalizationsPt();
+    case 'ru': return AppLocalizationsRu();
   }
 
   throw FlutterError(
     'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
     'an issue with the localizations generation tool. Please file an issue '
     'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.',
+    'that was used.'
   );
 }

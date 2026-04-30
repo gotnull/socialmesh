@@ -1962,6 +1962,40 @@ class ProtocolService {
     AppLogging.protocol('PROTOCOL_STOP_COMPLETE instance=$hashCode');
   }
 
+  /// Light-weight reset called when the transport disconnects but the
+  /// protocol service stays alive (the common case — a reboot, an
+  /// out-of-range blip, a region apply). Clears the "we already
+  /// finished the handshake" flags so the next reconnect's `start()`
+  /// is allowed to run a fresh `wantConfig` exchange instead of being
+  /// skipped by the in-process SKIP guards.
+  ///
+  /// Specifically:
+  /// - `_isStarted = false` — re-enables `start()` after the
+  ///   disconnect window even if `_transport.isConnected` flips back
+  ///   to `true` before the next `start()` call.
+  /// - `_configurationComplete = false` and `_myNodeNum = null` — the
+  ///   prior session's configuration is no longer authoritative once
+  ///   the link drops; the radio may have rebooted and reset its node
+  ///   db. Without this, `_initializeProtocolAfterAutoReconnect`
+  ///   would skip `start()` thinking we're "already configured" and
+  ///   no fresh `NodeInfo` packets would arrive — leaving the Nodes
+  ///   screen permanently at 0.
+  ///
+  /// Does NOT cancel subscriptions, RSSI timers, or completers — the
+  /// transport disconnect already drives those, and a heavier teardown
+  /// belongs in `stop()`.
+  void resetForReconnect() {
+    AppLogging.protocol(
+      'PROTOCOL_RESET_FOR_RECONNECT instance=$hashCode '
+      'wasStarted=$_isStarted wasConfigured=$_configurationComplete '
+      'myNodeNum=$_myNodeNum',
+    );
+    _isStarted = false;
+    _configurationComplete = false;
+    _myNodeNum = null;
+    _handshakePhase = _HandshakePhase.idle;
+  }
+
   /// Handle incoming data from transport
   void _handleData(List<int> data) {
     unawaited(_handleDataAsync(data));
@@ -8457,10 +8491,48 @@ class ProtocolService {
     final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
 
+    AppLogging.protocol(
+      'NODEDB_RESET_SENT target=${isRemote ? "remote=$dest" : "local"} '
+      'myNodeNum=$_myNodeNum',
+    );
+
     // Only clear local cache when targeting the local device.
     if (!isRemote) {
       await Future.delayed(const Duration(milliseconds: 500));
       clearNodes();
+
+      // Transport-agnostic post-reset rehydration: the radio's NodeDB
+      // is now empty (or about to be once it processes the admin
+      // packet). Send a fresh `wantConfigId` so the firmware replays
+      // its config bundle — including the local NodeInfo and any
+      // peers it still has cached — into our data subscription.
+      //
+      // - On TCP, the link stays up across `nodeDbReset`. Without
+      //   this re-fetch the app would sit at Nodes (0) until peers
+      //   passively re-broadcast (could be many minutes), with no
+      //   way for the user to know whether the reset actually
+      //   succeeded.
+      // - On BLE, the radio typically reboots on `nodeDbReset` and
+      //   the transport disconnects almost immediately. The
+      //   `_transport.isConnected` guard inside `_requestConfiguration`
+      //   no-ops the call in that case, and the subsequent BLE
+      //   reconnect's `_handleDisconnect → resetForReconnect →
+      //   protocol.start()` path runs a fresh wantConfig anyway —
+      //   so this call never duplicates work on BLE.
+      try {
+        AppLogging.protocol(
+          'NODEDB_RESET_REQUESTING_REFRESH transportConnected='
+          '${_transport.isConnected} transportType=${_transport.type.name}',
+        );
+        await _requestConfiguration();
+        AppLogging.protocol('NODEDB_RESET_REFRESH_REQUESTED');
+      } catch (e) {
+        AppLogging.protocol(
+          'NODEDB_RESET_REFRESH_FAILED error=$e — '
+          'app cache will rely on passive peer rebroadcasts until '
+          'next manual connect',
+        );
+      }
     }
   }
 

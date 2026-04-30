@@ -550,11 +550,18 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                         '🔧 DeviceManagement: Local nodes + channels cleared',
                       );
 
-                      // 6. Set app state and navigate
+                      // 6. Set app state and navigate. Same route-first
+                      //    pattern as device_sheet._disconnect:
+                      //    `setNeedsScanner` first so the fresh
+                      //    `_AppRouter` reads the correct state on
+                      //    mount, then `pushNamedAndRemoveUntil` to
+                      //    swap the entire stack (clearing the device-
+                      //    management route below — Scanner becomes
+                      //    the bottom of the stack with no back arrow).
                       appInitNotifier.setNeedsScanner();
                       AppLogging.connection(
-                        '🔧 DeviceManagement: appInit set to needsScanner — '
-                        'navigating to /app for fresh _AppRouter rebuild',
+                        'FACTORY_RESET_ROUTE_REPLACE_SCANNER '
+                        'method=pushNamedAndRemoveUntil dest=/app',
                       );
 
                       if (mounted) {

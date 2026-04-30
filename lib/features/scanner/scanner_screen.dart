@@ -80,6 +80,25 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   /// dead "No devices found" screen with a manual "Scan Again" button.
   Timer? _rescanTimer;
 
+  /// Monotonic token for the in-flight manual connect attempt. Set by
+  /// `_connect` via `manualConnectSessionProvider.beginSession()`,
+  /// cleared by `_clearManualConnectIfCurrent` on terminal outcome.
+  /// `null` when no manual connect is in flight.
+  int? _activeManualSession;
+
+  /// Watchdog that fires `MANUAL_CONNECT_LATCH_EXPIRED` and clears the
+  /// latch if a manual connect doesn't reach a terminal outcome within
+  /// the timeout window. Defends against orphaned futures (scanner
+  /// disposed mid-connect, transport hangs without erroring, etc.).
+  Timer? _manualConnectTimeout;
+
+  /// Hard ceiling for a manual connect attempt before the watchdog
+  /// force-clears the latch. Picked to be longer than the longest
+  /// observed connect path (BLE pair + protocol config + region apply
+  /// reconnect ≈ 30 s) but short enough that a stale latch unblocks
+  /// recovery in under a minute.
+  static const Duration _manualConnectTimeoutDuration = Duration(seconds: 60);
+
   /// Set once per ScannerScreen instance — the first to read `count==1`
   /// in its post-frame callback wins the BLE-adapter ownership for this
   /// scanner session. Subsequent concurrent mounts (e.g. the state-
@@ -113,8 +132,11 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     super.initState();
     _mountCounter = ref.read(scannerMountCountProvider.notifier);
     _manualScanNotifier = ref.read(manualScanActiveProvider.notifier);
-    _mountCounter.register();
-    final scannerCount = ref.read(scannerMountCountProvider);
+
+    // Subscribe to scanner-mount-count changes so we can start scan work
+    // when our register-bump in the post-frame callback below settles
+    // the count to 1. listenManual is safe in initState — it just sets
+    // up a subscription, no state mutation.
     _scannerCountSub = ref.listenManual<int>(scannerMountCountProvider, (
       prev,
       next,
@@ -123,17 +145,39 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         _maybeStartScanWork();
       }
     });
-    AppLogging.connection(
-      '📡 SCANNER: initState - isOnboarding=${widget.isOnboarding}, '
-      'isInline=${widget.isInline}, hashCode=$hashCode, '
-      'mountCount=$scannerCount',
-    );
-    if (scannerCount > 1) {
+
+    // Riverpod 3 forbids mutating provider state during widget life-cycle
+    // methods (build/initState/dispose). Calling `_mountCounter.register()`
+    // synchronously here triggered "Tried to modify a provider while the
+    // widget tree was building" any time ScannerScreen mounted as part of
+    // a route-replace cascade (device-sheet Disconnect, banner Cancel,
+    // factory reset). Defer the register + duplicate-check log to the
+    // post-frame callback so the mutation lands outside the build phase.
+    // The duplicate-detection logic that depends on the bumped count
+    // moves with it; `_maybeStartScanWork` runs from the listenManual
+    // callback above when the count settles, so the timing works.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _mountCounter.register();
+      final scannerCount = ref.read(scannerMountCountProvider);
       AppLogging.connection(
-        'SCANNER_NAV_SUPPRESSED_DUPLICATE hashCode=$hashCode '
-        'mountCount=$scannerCount — waiting for siblings to dispose',
+        '📡 SCANNER: initState - isOnboarding=${widget.isOnboarding}, '
+        'isInline=${widget.isInline}, hashCode=$hashCode, '
+        'mountCount=$scannerCount',
       );
-    }
+      AppLogging.connection(
+        'SCANNER_ROOT_ENTERED hashCode=$hashCode '
+        'isOnboarding=${widget.isOnboarding} '
+        'isInline=${widget.isInline} '
+        'mountCount=$scannerCount',
+      );
+      if (scannerCount > 1) {
+        AppLogging.connection(
+          'SCANNER_NAV_SUPPRESSED_DUPLICATE hashCode=$hashCode '
+          'mountCount=$scannerCount — waiting for siblings to dispose',
+        );
+      }
+    });
 
     // Check if we're being shown because auto-reconnect failed
     // In that case, we should immediately show the "device not found" banner
@@ -250,22 +294,21 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     _rescanTimer?.cancel();
     _backgroundReconnectSub?.close();
     _disconnectSub?.close();
-    // If manualConnecting is still set when Scanner closes (e.g., user
-    // backed out after a failed connection, or connection succeeded and
-    // router swapped to MainShell), clear it so the auto-reconnect
-    // manager can resume normal operation.
-    try {
-      final currentState = ref.read(autoReconnectStateProvider);
-      if (currentState == AutoReconnectState.manualConnecting) {
-        AppLogging.connection(
-          '📡 SCANNER: dispose — clearing stale manualConnecting → idle',
-        );
-        ref
-            .read(autoReconnectStateProvider.notifier)
-            .setState(AutoReconnectState.idle);
+    // Cancel the watchdog. Once we're disposing, the timer can't usefully
+    // resolve any in-flight connect attempt anyway.
+    _manualConnectTimeout?.cancel();
+    _manualConnectTimeout = null;
+    // If our manual connect session was still in flight when this
+    // Scanner closes, clear the latch via the session-aware helper.
+    // The helper logs MANUAL_CONNECT_CLEAR_SKIPPED_STALE_SESSION and
+    // bails if the user has since tapped another device on a fresh
+    // Scanner mount (incrementing the session counter).
+    if (_activeManualSession != null) {
+      try {
+        _clearManualConnectIfCurrent(_activeManualSession!, reason: 'dispose');
+      } catch (_) {
+        // ref may be invalid if container is already disposing — ignore
       }
-    } catch (_) {
-      // ref may be invalid if container is already disposing — ignore
     }
     // Close the lifecycle-counter subscription before unregister so we
     // don't accidentally re-enter `_maybeStartScanWork` while disposing.
@@ -706,8 +749,14 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         _devices.clear();
         AppLogging.connection('BLE_SCAN_CLEARED reason=fresh_scan');
       }
-      _errorMessage = null;
-      _showPairingInvalidationHint = false;
+      // NOTE: do NOT clear `_errorMessage` or `_showPairingInvalidationHint`
+      // here. These cards (the red "phone removed stored pairing info" error
+      // and the purple "Bluetooth pairing was removed — forget in Settings"
+      // hint) carry critical context the user must act on (forget+re-pair in
+      // iOS Settings). Earlier behavior wiped them at the start of every
+      // rescan, replacing them with a transient "Scanning for nearby
+      // devices" banner — making the user lose the recovery instructions.
+      // Both cards now stay until the user explicitly dismisses via X.
     });
     AppLogging.connection('BLE_SCAN_STARTED transport=ble isRescan=$isRescan');
 
@@ -1091,14 +1140,69 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         return;
     }
 
-    // Clear userDisconnected flag since user is explicitly connecting
-    // This allows auto-reconnect to work for this new device
+    // Clear userDisconnected flag since user is explicitly connecting.
+    // This allows auto-reconnect to work for this new device.
     userDisconnectedNotifier.setUserDisconnected(false);
     deviceConnectionNotifier.clearUserDisconnected();
-    // Set state to manualConnecting to prevent auto-reconnect to the OLD saved device
-    // if this manual connection fails (e.g., device is already connected to another phone)
+
+    // Acquire a monotonic session token. Set the manualConnecting
+    // latch and arm the watchdog. The latch is cleared on terminal
+    // outcome via `_clearManualConnectIfCurrent`, with the session
+    // token gating to prevent a stale failed attempt from clearing a
+    // newer in-flight attempt.
+    final session = ref
+        .read(manualConnectSessionProvider.notifier)
+        .beginSession();
+    _activeManualSession = session;
     autoReconnectNotifier.setState(AutoReconnectState.manualConnecting);
-    await _connectToDevice(device, isAutoReconnect: false);
+    AppLogging.connection(
+      'MANUAL_CONNECT_STARTED session=$session device=${device.id}',
+    );
+    _manualConnectTimeout?.cancel();
+    _manualConnectTimeout = Timer(_manualConnectTimeoutDuration, () {
+      _clearManualConnectIfCurrent(session, reason: 'timeout');
+    });
+
+    try {
+      await _connectToDevice(device, isAutoReconnect: false);
+      // _connectToDevice's success path logs MANUAL_CONNECT_SUCCEEDED
+      // and clears via the helper. Failure path catches and clears too.
+    } finally {
+      _manualConnectTimeout?.cancel();
+      _manualConnectTimeout = null;
+    }
+  }
+
+  /// Atomic terminal-outcome clear of the `manualConnecting` latch.
+  /// Only clears when the supplied [session] still matches the current
+  /// monotonic token. A stale call (older session id) logs
+  /// `MANUAL_CONNECT_CLEAR_SKIPPED_STALE_SESSION` and is otherwise a
+  /// no-op — the newer session's lifecycle owns the latch.
+  void _clearManualConnectIfCurrent(int session, {required String reason}) {
+    if (!mounted) return;
+    final current = ref.read(manualConnectSessionProvider);
+    if (session != current) {
+      AppLogging.connection(
+        'MANUAL_CONNECT_CLEAR_SKIPPED_STALE_SESSION '
+        'old=$session current=$current reason=$reason',
+      );
+      return;
+    }
+    if (reason == 'timeout') {
+      AppLogging.connection('MANUAL_CONNECT_LATCH_EXPIRED session=$session');
+    }
+    final autoState = ref.read(autoReconnectStateProvider);
+    if (autoState == AutoReconnectState.manualConnecting) {
+      ref
+          .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.idle);
+    }
+    if (_activeManualSession == session) {
+      _activeManualSession = null;
+    }
+    AppLogging.connection(
+      'MANUAL_CONNECT_CLEARED session=$session reason=$reason',
+    );
   }
 
   /// Connect to a MeshCore device.
@@ -1415,6 +1519,13 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
       if (!mounted) return;
 
+      // Capture the manual-connect session id once. The region-UNSET
+      // branch hands off to auto-reconnect (clearing the latch early
+      // with reason=region_apply_handoff). The post-promotion success
+      // call below uses this same snapshot — the helper is idempotent
+      // when invoked twice for the same session.
+      final int? manualSession = !isAutoReconnect ? _activeManualSession : null;
+
       // Check current app state - if we're shown from needsScanner, update provider
       // These reads are after mounted check and need fresh state, safe with LifecycleSafeMixin
       final appState = ref.read(appInitProvider);
@@ -1463,7 +1574,22 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         // device is paired, protocol configured, region is the only
         // remaining step. Hand off reconnect responsibility to the
         // auto-reconnect manager so the reboot-reconnect cycle works.
-        autoReconnectNotifier.setState(AutoReconnectState.idle);
+        //
+        // Use the session-aware helper with reason=region_apply_handoff
+        // so this clear is distinguishable in logs from the
+        // post-promotion success clear (which fires below as an
+        // idempotent acknowledgment).
+        if (manualSession != null) {
+          _clearManualConnectIfCurrent(
+            manualSession,
+            reason: 'region_apply_handoff',
+          );
+        } else {
+          autoReconnectNotifier.setState(AutoReconnectState.idle);
+        }
+        AppLogging.connection(
+          'REGION_FLOW_STARTED isInitialSetup=true source=scanner_post_connect',
+        );
         await Navigator.of(context).push(
           MaterialPageRoute<void>(
             builder: (context) =>
@@ -1471,16 +1597,34 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
           ),
         );
         // RegionSelectionScreen popped — region is now applied (or timed
-        // out optimistically). Fall through to the normal post-connection
-        // navigation below to transition to MainShell.
+        // out optimistically). Promote to MainShell. The promotion is
+        // protected from `_handleDisconnect` re-entry by the
+        // `regionConfigProvider.applyStatus == applying` check at
+        // connection_providers.dart `_handleDisconnect` — the auth-fail
+        // / disconnect path will skip its setNeedsScanner() during
+        // the region apply window, so the call below cannot be stomped.
         if (!mounted) return;
         AppLogging.connection(
-          '📡 SCANNER: RegionSelectionScreen returned — transitioning to MainShell',
+          'REGION_FLOW_COMPLETED isInitialSetup=true '
+          'isFromNeedsScanner=$isFromNeedsScanner',
         );
         if (isFromNeedsScanner) {
           appInitNotifier.setInitialized();
+          AppLogging.connection(
+            'MAIN_SHELL_PROMOTED source=scanner_post_region '
+            'method=appInit.setInitialized',
+          );
         } else if (!widget.isInline) {
           _navigateToMain();
+          AppLogging.connection(
+            'MAIN_SHELL_PROMOTED source=scanner_post_region '
+            'method=navigateToMain',
+          );
+        } else {
+          AppLogging.connection(
+            'MAIN_SHELL_PROMOTION_SKIPPED_ALREADY_DONE '
+            'reason=inline_mode',
+          );
         }
       } else if (needsRegionSetup) {
         AppLogging.app(
@@ -1503,9 +1647,28 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       // If inline (shown within MainShell), don't navigate - just let the
       // connection state change trigger MainShell to rebuild and show main content
 
-      // Reset auto-reconnect state to idle on successful manual connection
-      // This clears any previous failed state from auto-reconnect attempts
-      autoReconnectNotifier.setState(AutoReconnectState.idle);
+      // Reset auto-reconnect state to idle on successful manual connection.
+      // For manual paths (`isAutoReconnect=false`), gate this behind the
+      // session token so a stale success from an in-flight older attempt
+      // can't unlatch a newer one. Auto-reconnect paths bypass the
+      // session check (they didn't acquire one).
+      //
+      // In the region-UNSET branch above, the latch was already cleared
+      // with reason=region_apply_handoff. Calling the helper again here
+      // with the captured `manualSession` is intentionally idempotent:
+      // state is already idle, `_activeManualSession` is already null,
+      // so it logs MANUAL_CONNECT_SUCCEEDED + MANUAL_CONNECT_CLEARED
+      // reason=success as the post-promotion acknowledgment without
+      // mutating any state.
+      if (manualSession != null) {
+        AppLogging.connection(
+          'MANUAL_CONNECT_SUCCEEDED session=$manualSession '
+          'device=${device.id}',
+        );
+        _clearManualConnectIfCurrent(manualSession, reason: 'success');
+      } else {
+        autoReconnectNotifier.setState(AutoReconnectState.idle);
+      }
 
       // Ensure offline queue is initialized and process any pending messages
       offlineQueue.processQueueIfNeeded();
@@ -1586,28 +1749,30 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         userMessage = sanitizedMessage;
       }
 
-      // CRITICAL: Do NOT clear manualConnecting here. The transport may
-      // still be firing state transitions (error → disconnecting →
-      // disconnected) asynchronously. If we set autoReconnectState to
-      // idle now, the auto-reconnect manager sees idle + disconnected +
-      // saved device ID and starts _performReconnect — which races with
-      // the user's ability to manually retry from this Scanner screen.
+      // Clear the manualConnecting latch on terminal failure. Without
+      // this, a failed manual attempt left autoReconnectState stuck at
+      // `manualConnecting`, blocking _initializeProtocolAfterAutoReconnect,
+      // startBackgroundConnection, and APP RESUMED recovery. The
+      // session token gates this clear so a stale failure (older
+      // session) cannot unlatch a newer in-flight attempt.
       //
-      // manualConnecting stays set, which blocks the auto-reconnect
-      // manager. It is cleared:
-      //  - On the next successful connection (success path above)
-      //  - When the user taps another device (_connect sets it again)
-      //  - In Scanner.dispose() when this screen closes
-      //
-      // For auto-reconnect paths (isAutoReconnect == true), the state
-      // is not manualConnecting so this is a no-op either way.
-      AppLogging.connection(
-        '📡 SCANNER: _connectToDevice error — keeping autoReconnectState '
-        'as-is to prevent background reconnect race '
-        '(isAutoReconnect=$isAutoReconnect)',
-      );
+      // The previous comment expressed worry about a race where
+      // clearing here lets auto-reconnect grab the OLD saved device
+      // before the user retries. That race window was a reading-the-
+      // error-snackbar window of a few seconds. The latch-survival
+      // bug it tried to prevent is much worse — it bricks the entire
+      // recovery path. The user's tapping another device increments
+      // the session token, atomically reasserting manualConnecting
+      // for the new attempt.
+      if (!isAutoReconnect && _activeManualSession != null) {
+        AppLogging.connection(
+          'MANUAL_CONNECT_FAILED session=$_activeManualSession '
+          'device=${device.id} error=${e.runtimeType}',
+        );
+        _clearManualConnectIfCurrent(_activeManualSession!, reason: 'failure');
+      }
       AppErrorHandler.addBreadcrumb(
-        'Scanner: connect error, race guard active ' // lint-allow: hardcoded-string
+        'Scanner: connect error ' // lint-allow: hardcoded-string
         '(isAutoReconnect=$isAutoReconnect, err=${e.runtimeType})', // lint-allow: hardcoded-string
       );
 
@@ -1653,6 +1818,17 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
   @override
   Widget build(BuildContext context) {
+    // The Scanner is always a dead-end with no logical "back" target
+    // — the user is here either because no device is paired yet, the
+    // device just disconnected, or they tapped Scan from the device
+    // sheet. Allowing iOS edge swipe / system back to dismiss it
+    // strands them on whatever stale screen is below (splash,
+    // disconnected MainShell, etc.) with no way to reconnect. Block
+    // both gestures unconditionally.
+    return PopScope(canPop: false, child: _buildBody(context));
+  }
+
+  Widget _buildBody(BuildContext context) {
     // When connecting, use EXACT same structure as onboarding
     if (_connecting) {
       return Scaffold(
@@ -1711,6 +1887,15 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       topicId: 'device_connection',
       stepKeys: const {},
       child: GlassScaffold(
+        // `automaticallyImplyLeading: false` UNCONDITIONALLY — even in
+        // onboarding. Auto-imply is the exact failure mode behind the
+        // inert back arrow: when `Navigator.canPop()` returns true
+        // (e.g. a stale push wasn't fully removed by
+        // `pushNamedAndRemoveUntil`), Scaffold inserts a chevron that
+        // does nothing under our PopScope. We never want Scaffold to
+        // infer the chevron — onboarding gets its back affordance
+        // from the explicit `leading: IconButton(...)` below.
+        automaticallyImplyLeading: false,
         leading: widget.isOnboarding
             ? IconButton(
                 icon: Icon(Icons.arrow_back, color: context.textPrimary),
@@ -1883,18 +2068,27 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                     ),
                   ),
 
-                if (_errorMessage != null)
+                // Suppress the generic red error card whenever the
+                // pairing-refresh card is showing — that card already
+                // carries the reset-aware title/body/actions, and
+                // showing both stacks two near-identical messages with
+                // contradictory framings (the old red copy still
+                // implies a phone-side fault).
+                if (_errorMessage != null && !_showPairingInvalidationHint)
                   StatusBanner.error(
                     title: _errorMessage!,
                     margin: const EdgeInsets.only(bottom: 16),
-                    onDismiss: () => setState(() {
-                      _errorMessage = null;
-                      _showPairingInvalidationHint = false;
-                    }),
+                    onDismiss: () {
+                      AppLogging.connection(
+                        'SCANNER_ERROR_DISMISSED reason=user_x',
+                      );
+                      setState(() => _errorMessage = null);
+                    },
                   ),
 
                 if (_showPairingInvalidationHint)
                   Container(
+                    key: const ValueKey('scanner-pairing-refresh-card'),
                     padding: const EdgeInsets.all(AppTheme.spacing12),
                     margin: const EdgeInsets.only(bottom: 16),
                     decoration: BoxDecoration(
@@ -1907,14 +2101,55 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                context.l10n.scannerPairingRefreshTitle,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: context.textPrimary,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: AppTheme.spacing8),
+                            InkWell(
+                              onTap: () {
+                                AppLogging.connection(
+                                  'SCANNER_PAIRING_HINT_DISMISSED reason=user_x',
+                                );
+                                setState(
+                                  () => _showPairingInvalidationHint = false,
+                                );
+                              },
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius4,
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(
+                                  AppTheme.spacing2,
+                                ),
+                                child: Icon(
+                                  Icons.close_rounded,
+                                  size: 18,
+                                  color: context.textTertiary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppTheme.spacing8),
                         Text(
-                          'Bluetooth pairing was removed. Forget “Meshtastic” in Settings > Bluetooth and reconnect to continue.', // lint-allow: hardcoded-string
+                          context.l10n.scannerPairingRefreshBody,
                           style: TextStyle(
                             fontSize: 13,
                             color: context.textSecondary,
+                            height: 1.4,
                           ),
                         ),
-                        const SizedBox(height: AppTheme.spacing8),
+                        const SizedBox(height: AppTheme.spacing12),
                         Row(
                           children: [
                             TextButton.icon(
@@ -1925,7 +2160,9 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                                 color: context.textPrimary,
                               ),
                               label: Text(
-                                context.l10n.scannerBluetoothSettings,
+                                context
+                                    .l10n
+                                    .scannerPairingRefreshOpenBluetoothSettings,
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
@@ -1944,10 +2181,14 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                             const SizedBox(width: AppTheme.spacing8),
                             TextButton(
                               onPressed: () {
-                                setState(() {
-                                  _errorMessage = null;
-                                  _showPairingInvalidationHint = false;
-                                });
+                                // Retry the scan but keep the pairing-refresh
+                                // card visible — the user still needs to
+                                // forget+re-pair in iOS Settings before any
+                                // scan result can produce a working pairing.
+                                AppLogging.connection(
+                                  'SCANNER_RETRY_SCAN_TAPPED '
+                                  'preservePairingHint=true',
+                                );
                                 _startScan();
                               },
                               style: TextButton.styleFrom(
@@ -1959,7 +2200,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               ),
                               child: Text(
-                                context.l10n.scannerRetryScan,
+                                context.l10n.scannerPairingRefreshScanAgain,
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,

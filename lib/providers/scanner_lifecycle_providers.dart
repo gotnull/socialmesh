@@ -59,3 +59,40 @@ final manualScanActiveProvider =
     NotifierProvider<ManualScanActiveNotifier, bool>(
       ManualScanActiveNotifier.new,
     );
+
+/// Monotonic session token issued every time the Scanner starts a
+/// manual connect attempt. Used to gate the
+/// `autoReconnectState=manualConnecting` latch so a stale failed
+/// attempt cannot clear (or be cleared by) a newer attempt.
+///
+/// Lifecycle (in `ScannerScreen._connect` → `_connectToDevice`):
+///
+/// 1. `beginSession()` increments the counter and returns the new id.
+///    Caller stores it as `_activeManualSession` and sets
+///    `autoReconnectStateProvider == manualConnecting`.
+/// 2. On any terminal outcome — success / failure / disconnect /
+///    timeout / scanner dispose — the caller invokes
+///    `clearIfCurrent(myToken)` which only clears the latch when
+///    `myToken == current`. If a newer `_connect` tap incremented
+///    the counter mid-attempt, the stale clear is logged as
+///    `MANUAL_CONNECT_CLEAR_SKIPPED_STALE_SESSION` and ignored.
+///
+/// This protects against the original B6 latch-survival bug: failed
+/// manual connect would leave `manualConnecting` set indefinitely,
+/// blocking `_initializeProtocolAfterAutoReconnect`,
+/// `startBackgroundConnection`, and `APP RESUMED` recovery paths.
+class ManualConnectSessionNotifier extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  /// Acquire a new monotonic session token. Returns the new id.
+  int beginSession() {
+    state = state + 1;
+    return state;
+  }
+}
+
+final manualConnectSessionProvider =
+    NotifierProvider<ManualConnectSessionNotifier, int>(
+      ManualConnectSessionNotifier.new,
+    );

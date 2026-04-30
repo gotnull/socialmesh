@@ -13665,11 +13665,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get regionSelectionPairingHintMessage =>
-      'Bluetooth pairing was removed. Forget \"Meshtastic_XXXX\" in Settings > Bluetooth and reconnect to continue.';
+      'Pairing needs to be refreshed. The radio may have cleared its Bluetooth identity after the region change — forget the device in Bluetooth Settings and pair again.';
 
   @override
   String get regionSelectionPairingInvalidation =>
-      'Your phone removed the stored pairing info for this device.\nGo to Settings > Bluetooth, forget the Meshtastic device, and try again.';
+      'Pairing needs to be refreshed. The radio\'s Bluetooth identity has changed.\nForget the device in Settings > Bluetooth and pair again.';
 
   @override
   String get regionSelectionReconnectTimeout =>
@@ -14386,7 +14386,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get scannerPairingInvalidatedError =>
-      'Your phone removed the stored pairing info for this device. Return to Settings > Bluetooth, forget \"Meshtastic_XXXX\", and try again.';
+      'Pairing needs to be refreshed — the radio\'s Bluetooth identity has changed. Forget the device in Bluetooth Settings and pair again.';
+
+  @override
+  String get scannerPairingRefreshTitle => 'Pairing needs to be refreshed';
+
+  @override
+  String get scannerPairingRefreshBody =>
+      'This can happen after a factory reset or region/device reset. The radio may have cleared its Bluetooth identity, so your phone\'s saved pairing no longer matches this device.\n\nRemove the old pairing from your phone\'s Bluetooth settings, then pair with the device again.';
+
+  @override
+  String get scannerPairingRefreshOpenBluetoothSettings =>
+      'Open Bluetooth Settings';
+
+  @override
+  String get scannerPairingRefreshScanAgain => 'Scan again';
 
   @override
   String get scannerPinRequiredError =>

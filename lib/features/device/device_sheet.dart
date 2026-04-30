@@ -257,8 +257,14 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
           ),
         ),
 
-        // Fixed bottom connection button
-        if (isConnected || !isReconnecting) ...[
+        // Fixed bottom connection button.
+        // Defensive guard: while teardown is in flight (`_disconnecting`),
+        // suppress the scan CTA. Without this, the async disconnect
+        // window between `userDisconnected=true` and the route swap
+        // can show a tappable "Scan for Devices" button — the user can
+        // tap it before `pushNamedAndRemoveUntil('/app', …)` lands,
+        // pushing Scanner onto a dead device-sheet stack.
+        if (!_disconnecting && (isConnected || !isReconnecting)) ...[
           Divider(color: context.border.withValues(alpha: 0.2), height: 1),
           Padding(
             padding: EdgeInsets.fromLTRB(
@@ -320,7 +326,12 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
       child: SizedBox(
         width: double.infinity,
         child: OutlinedButton.icon(
-          onPressed: _disconnecting ? null : () => _disconnect(context),
+          onPressed: _disconnecting
+              ? null
+              : () {
+                  AppLogging.connection('DEVICE_SHEET_DISCONNECT_TAPPED');
+                  _disconnect(context);
+                },
           icon: _disconnecting
               ? SizedBox(
                   width: 20,
@@ -359,6 +370,7 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
         width: double.infinity,
         child: ElevatedButton.icon(
           onPressed: () {
+            AppLogging.connection('DEVICE_SHEET_SCAN_TAPPED');
             // Nav guard: if a Scanner is already mounted (e.g. the user
             // double-tapped, or the post-disconnect router is mid-swap)
             // suppress the duplicate push. The active Scanner already
@@ -373,8 +385,36 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
               Navigator.pop(context);
               return;
             }
-            Navigator.pop(context);
-            Navigator.of(context).pushNamed('/scanner');
+            // Match the disconnect button's pattern: capture the root
+            // navigator, set needsScanner, then route-replace via the
+            // root navigator key. `pushNamedAndRemoveUntil('/app', (_)
+            // => false)` clears EVERY route — including the modal sheet
+            // itself — so a separate `Navigator.pop` is both unnecessary
+            // and harmful: dual-navigation on the same navigator races
+            // the rebuild and previously triggered a provider-during-
+            // build assertion when `setNeedsScanner` rebuilt
+            // `_AppRouter` mid-pop.
+            final nav = navigatorKey.currentState;
+            ref.read(appInitProvider.notifier).setNeedsScanner();
+            if (nav != null) {
+              AppLogging.connection('DEVICE_SHEET_SCAN_NAV_CONTEXT root=true');
+              AppLogging.connection(
+                'DEVICE_SHEET_SCAN_ROUTE_REPLACE_SCANNER source=device_sheet '
+                'method=pushNamedAndRemoveUntil dest=/app',
+              );
+              nav.pushNamedAndRemoveUntil('/app', (route) => false);
+            } else {
+              AppLogging.connection(
+                'DEVICE_SHEET_SCAN_NAV_CONTEXT root=false fallback=local',
+              );
+              AppLogging.connection(
+                'DEVICE_SHEET_SCAN_ROUTE_REPLACE_SCANNER source=device_sheet '
+                'method=local_fallback (navigatorKey.currentState=null)',
+              );
+              Navigator.of(
+                context,
+              ).pushNamedAndRemoveUntil('/app', (route) => false);
+            }
           },
           icon: Icon(Icons.bluetooth_searching, size: 20),
           label: Text(context.l10n.deviceSheetScanForDevices),
@@ -412,62 +452,54 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
     );
 
     if (confirmed == true && context.mounted) {
+      AppLogging.connection('DISCONNECT_REQUESTED source=device_sheet');
       AppLogging.connection('🔌 DISCONNECT: Starting disconnect sequence...');
 
       // Immediately disable UI and show disconnecting state
       safeSetState(() => _disconnecting = true);
 
-      // CRITICAL: Set userDisconnected flag FIRST to prevent ALL auto-reconnect logic
+      // CRITICAL: Set userDisconnected flag FIRST to prevent ALL
+      // auto-reconnect logic.
       AppLogging.connection('🔌 DISCONNECT: Setting userDisconnected=true');
       userDisconnectedNotifier.setUserDisconnected(true);
 
-      // Also set auto-reconnect state to idle for extra safety
       AppLogging.connection(
         '🔌 DISCONNECT: Setting autoReconnectState to idle (user disconnect)',
       );
       autoReconnectNotifier.setState(AutoReconnectState.idle);
 
-      // CRITICAL: Disconnect transport FIRST, before showing Scanner.
-      // If we pop to Scanner while the device is still connected, the
-      // Scanner's _tryAutoReconnect sees DevicePairingState.connected,
-      // thinks "why am I here?", calls setReady() → router shows MainShell
-      // → user ends up on Nodes instead of Scanner. The userDisconnected
-      // flag is already set above, so no auto-reconnect will trigger
-      // during or after this disconnect.
+      // ROUTE-FIRST policy: replace the route stack with the fresh
+      // `_AppRouter` (which renders Scanner via `needsScanner` state)
+      // BEFORE awaiting the async transport disconnect. This closes
+      // the visible window where the device sheet would otherwise
+      // remain mounted while teardown is async, briefly exposing the
+      // "Scan for devices" button as a tappable transient. The
+      // transport disconnect proceeds in the background; userDisconnected
+      // and autoReconnectState are already set above, so the Scanner
+      // sees the right state when it mounts.
+      ref.read(appInitProvider.notifier).setNeedsScanner();
+      final nav = navigatorKey.currentState;
+      if (nav != null) {
+        AppLogging.connection(
+          'DISCONNECT_ROUTE_REPLACE_SCANNER source=device_sheet '
+          'method=pushNamedAndRemoveUntil dest=/app',
+        );
+        nav.pushNamedAndRemoveUntil('/app', (route) => false);
+      } else {
+        AppLogging.connection(
+          'DISCONNECT_ROUTE_REPLACE_SCANNER source=device_sheet '
+          'method=declarative_only (navigatorKey.currentState=null)',
+        );
+      }
+
+      // Now do the actual teardown. UI has already moved to Scanner.
       AppLogging.connection(
         '🔌 DISCONNECT: Calling DeviceConnectionNotifier.disconnect()',
       );
       await deviceConnectionNotifier.disconnect();
 
-      // Stop protocol service while we're at it
       AppLogging.connection('🔌 DISCONNECT: Stopping protocol service');
       protocol.stop();
-
-      AppLogging.connection(
-        '🔌 DISCONNECT: Transport disconnected, now showing Scanner',
-      );
-
-      // Set appInit to needsScanner so _AppRouter shows Scanner when
-      // the '/app' route mounts.
-      if (!mounted) return;
-      ref.read(appInitProvider.notifier).setNeedsScanner();
-
-      // Navigate imperatively to '/app' which mounts a fresh _AppRouter.
-      // _AppRouter reads appInitProvider (needsScanner) and shows
-      // ScannerScreen. This replaces the ENTIRE nav stack — all sheets,
-      // dialogs, and the old home route are removed.
-      final nav = navigatorKey.currentState;
-      if (nav != null) {
-        AppLogging.connection(
-          '🔌 DISCONNECT: pushNamedAndRemoveUntil → /app (fresh _AppRouter)',
-        );
-        nav.pushNamedAndRemoveUntil('/app', (route) => false);
-      } else {
-        AppLogging.connection(
-          '🔌 DISCONNECT: navigatorKey.currentState is null — '
-          'needsScanner already set, _AppRouter should pick it up',
-        );
-      }
 
       AppLogging.connection('🔌 DISCONNECT: Disconnect sequence complete');
     } else {

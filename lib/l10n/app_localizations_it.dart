@@ -13788,11 +13788,11 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get regionSelectionPairingHintMessage =>
-      'L\'abbinamento Bluetooth è stato rimosso. Dimentica \"Meshtastic_XXXX\" in Impostazioni > Bluetooth e riconnettiti per continuare.';
+      'L\'abbinamento deve essere aggiornato. La radio potrebbe aver cancellato la sua identità Bluetooth dopo il cambio di regione — dimentica il dispositivo nelle Impostazioni Bluetooth e abbina di nuovo.';
 
   @override
   String get regionSelectionPairingInvalidation =>
-      'Il telefono ha rimosso le informazioni di abbinamento memorizzate per questo dispositivo.\nVai su Impostazioni > Bluetooth, dimentica il dispositivo Meshtastic e riprova.';
+      'L\'abbinamento deve essere aggiornato. L\'identità Bluetooth della radio è cambiata.\nDimentica il dispositivo in Impostazioni > Bluetooth e abbina di nuovo.';
 
   @override
   String get regionSelectionReconnectTimeout =>
@@ -14516,7 +14516,22 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get scannerPairingInvalidatedError =>
-      'Il telefono ha rimosso le informazioni di abbinamento memorizzate per questo dispositivo. Torna su Impostazioni > Bluetooth, dimentica \"Meshtastic_XXXX\" e riprova.';
+      'L\'abbinamento deve essere aggiornato — l\'identità Bluetooth della radio è cambiata. Dimentica il dispositivo nelle Impostazioni Bluetooth e abbina di nuovo.';
+
+  @override
+  String get scannerPairingRefreshTitle =>
+      'L\'abbinamento deve essere aggiornato';
+
+  @override
+  String get scannerPairingRefreshBody =>
+      'Può accadere dopo un ripristino di fabbrica o un reset della regione/dispositivo. La radio potrebbe aver cancellato la sua identità Bluetooth, quindi l\'abbinamento salvato sul telefono non corrisponde più a questo dispositivo.\n\nRimuovi il vecchio abbinamento dalle impostazioni Bluetooth del telefono, quindi abbina di nuovo il dispositivo.';
+
+  @override
+  String get scannerPairingRefreshOpenBluetoothSettings =>
+      'Apri Impostazioni Bluetooth';
+
+  @override
+  String get scannerPairingRefreshScanAgain => 'Scansiona di nuovo';
 
   @override
   String get scannerPinRequiredError =>

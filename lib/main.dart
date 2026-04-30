@@ -2135,29 +2135,68 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
     );
   }
 
-  /// Build a protected route that checks device connection requirements
+  /// Build a protected route that checks device connection requirements.
+  ///
+  /// Previously returned a "Device Required" blocking screen on
+  /// disconnect. That screen was a dead-end UI that confused users
+  /// (especially after a factory-reset writeCharacteristic failure
+  /// dropped the BLE link mid-action). It's been removed entirely —
+  /// disconnects on a protected route now route directly to the
+  /// Scanner so the user can pick a device and reconnect.
   Widget _buildProtectedRoute(
     BuildContext context,
     String routeName,
     Widget screen,
   ) {
-    return Consumer(
-      builder: (context, ref, _) {
-        final isConnected = ref.watch(conn.isDeviceConnectedProvider);
+    return _ProtectedRouteHost(routeName: routeName, screen: screen);
+  }
+}
 
-        if (isConnected) {
-          return screen;
-        }
+/// Stateful host so we can latch a single redirect when the device is
+/// disconnected. A naive `Consumer.builder + postFrame +
+/// pushReplacementNamed` redirect loops: every Riverpod state change
+/// rebuilds the Consumer, schedules another postFrame, fires another
+/// nav, mounting a fresh ScannerScreen each time (logs.txt evidence
+/// showed 16+ scanner mounts from one factory-reset). The latch
+/// ensures the redirect fires exactly once per mount.
+class _ProtectedRouteHost extends ConsumerStatefulWidget {
+  final String routeName;
+  final Widget screen;
 
-        // Show blocked screen
-        return _BlockedRouteScreen(
-          routeName: routeName,
-          message:
-              RouteRegistry.getMetadata(routeName)?.blockedMessage ??
-              context.l10n.blockedRouteConnectDevice,
-        );
-      },
-    );
+  const _ProtectedRouteHost({required this.routeName, required this.screen});
+
+  @override
+  ConsumerState<_ProtectedRouteHost> createState() =>
+      _ProtectedRouteHostState();
+}
+
+class _ProtectedRouteHostState extends ConsumerState<_ProtectedRouteHost> {
+  bool _redirectScheduled = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final isConnected = ref.watch(conn.isDeviceConnectedProvider);
+
+    if (isConnected) {
+      return widget.screen;
+    }
+
+    if (_redirectScheduled) {
+      // Already redirected once — don't pile on more navs while the
+      // route swap is in flight.
+      return const SizedBox.shrink();
+    }
+    _redirectScheduled = true;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      AppLogging.connection(
+        'PROTECTED_ROUTE_REDIRECT route=${widget.routeName} → /scanner '
+        '(device disconnected)',
+      );
+      Navigator.of(context).pushReplacementNamed('/scanner');
+    });
+    return const SizedBox.shrink();
   }
 }
 
@@ -2911,99 +2950,6 @@ class _ProfileDisplayNameLoader extends ConsumerWidget {
                 return const Center(child: CircularProgressIndicator());
               },
             ),
-    );
-  }
-}
-
-/// Screen shown when a device-required route is accessed while disconnected
-class _BlockedRouteScreen extends ConsumerWidget {
-  final String routeName;
-  final String message;
-
-  const _BlockedRouteScreen({required this.routeName, required this.message});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final deviceState = ref.watch(conn.deviceConnectionProvider);
-    final isInvalidated = deviceState.isTerminalInvalidated;
-
-    // Customize UI based on whether pairing was invalidated (factory reset, etc.)
-    final iconData = isInvalidated
-        ? Icons.error_outline
-        : Icons.bluetooth_disabled;
-    final iconColor = isInvalidated ? AppTheme.errorRed : AccentColors.orange;
-    final bgColor = isInvalidated
-        ? AppTheme.errorRed.withValues(alpha: 0.1)
-        : AccentColors.orange.withValues(alpha: 0.1);
-    final title = isInvalidated
-        ? context.l10n.blockedRouteDeviceReset
-        : context.l10n.blockedRouteDeviceNotConnected;
-    final description = isInvalidated
-        ? context.l10n.blockedRouteDeviceResetDescription
-        : message;
-
-    return Scaffold(
-      appBar: AppBar(title: Text(context.l10n.blockedRouteDeviceRequired)),
-      body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(AppTheme.spacing32),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: bgColor,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(iconData, size: 40, color: iconColor),
-                ),
-                const SizedBox(height: AppTheme.spacing24),
-                Text(
-                  title,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spacing8),
-                Text(
-                  description,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spacing32),
-                FilledButton.icon(
-                  onPressed: () {
-                    Navigator.of(context).pushNamed('/scanner');
-                  },
-                  icon: const Icon(Icons.bluetooth_searching),
-                  label: Text(
-                    isInvalidated
-                        ? context.l10n.blockedRouteScanForDevices
-                        : context.l10n.blockedRouteConnectDeviceButton,
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spacing12),
-                TextButton(
-                  onPressed: () {
-                    if (Navigator.of(context).canPop()) {
-                      Navigator.of(context).pop();
-                    } else {
-                      Navigator.of(context).pushReplacementNamed('/main');
-                    }
-                  },
-                  child: Text(context.l10n.commonGoBack),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

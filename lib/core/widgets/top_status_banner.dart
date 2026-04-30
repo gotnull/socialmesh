@@ -102,12 +102,30 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
     });
   }
 
-  /// Cancel the active auto-reconnect cycle and transition the banner
-  /// to the failed state with actionable options. This is called by
-  /// both the watchdog timer and the user-tapped Cancel button.
+  /// Cancel the active auto-reconnect cycle from the watchdog timer.
+  /// Transitions the banner to the failed state with actionable
+  /// options (Retry / Connect). For the user-tapped Cancel button see
+  /// [_userCancelReconnect] which also blocks re-arm.
   void _cancelReconnect() {
     _cancelReconnectWatchdog();
     ref.read(deviceConnectionProvider.notifier).cancelAutoReconnect();
+  }
+
+  /// User-tapped authoritative cancel. Stops the retry cycle, blocks
+  /// re-arm via `userDisconnected=true`, and clears the auto-reconnect
+  /// state to `idle` (the Scanner becomes the next surface — no
+  /// "Device not found" intermediate state). Tears down any in-flight
+  /// transport link.
+  void _userCancelReconnect() {
+    _cancelReconnectWatchdog();
+    _cancelDismissTimer();
+    AppLogging.connection('RECONNECT_BANNER_CANCEL_TAPPED');
+    // Fire-and-forget: the navigation to Scanner is dispatched
+    // immediately by the caller; we don't want the user staring at the
+    // banner while the transport disconnect awaits.
+    unawaited(
+      ref.read(deviceConnectionProvider.notifier).userCancelAutoReconnect(),
+    );
   }
 
   void _startDismissTimer() {
@@ -125,6 +143,10 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
     _animController.forward();
     if (!_actuallyVisible) {
       _actuallyVisible = true;
+      AppLogging.connection(
+        'RECONNECT_BANNER_VISIBLE reason=animate_in '
+        'autoReconnectState=${widget.autoReconnectState.name}',
+      );
       widget.onVisibilityChanged?.call(true);
     }
   }
@@ -135,6 +157,10 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
     // change to a stale state while the exit animation plays.
     _frozenReconnectState ??= widget.autoReconnectState;
     _frozenDeviceState ??= widget.deviceState;
+    AppLogging.connection(
+      'RECONNECT_BANNER_HIDDEN reason=animate_out '
+      'autoReconnectState=${widget.autoReconnectState.name}',
+    );
     _animController.reverse();
   }
 
@@ -416,10 +442,11 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
                   onTap: connectTappable
                       ? () {
                           if (isReconnecting) {
-                            // User tapped during reconnecting — cancel the
-                            // auto-reconnect cycle and navigate to scanner
-                            // so they can manually reconnect.
-                            _cancelReconnect();
+                            // User tapped during reconnecting — run the
+                            // authoritative cancel (stops timers, sets
+                            // userDisconnected, drives state to idle, tears
+                            // down transport) before routing to Scanner.
+                            _userCancelReconnect();
                           }
                           widget.onGoToScanner!();
                         }

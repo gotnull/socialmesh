@@ -273,13 +273,30 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     state = newState;
   }
 
+  /// Test-only seam that drives `_handleDisconnect` directly so unit
+  /// tests can pin the region-apply gate (must not call
+  /// `setNeedsScanner` while `regionConfigProvider.applyStatus ==
+  /// applying`). Production code reaches `_handleDisconnect` via the
+  /// transport state stream — driving that here is unnecessary
+  /// overhead.
+  @visibleForTesting
+  void debugHandleDisconnectForTest(DisconnectReason reason) {
+    _handleDisconnect(reason);
+  }
+
   /// Cancel any in-progress auto-reconnect cycle.
   ///
-  /// Called by [TopStatusBanner] when the user taps Cancel or when the
-  /// reconnect watchdog timer expires. Stops the retry timer, resets
-  /// internal flags, attempts to stop any active BLE scan, and sets
-  /// [AutoReconnectState] to [AutoReconnectState.failed] so the banner
-  /// shows actionable options (Retry / Go to Scanner).
+  /// Called by the reconnect watchdog timer in [TopStatusBanner] when
+  /// 90 s of continuous reconnecting elapses without progress. Stops
+  /// the retry timer, resets internal flags, attempts to stop any
+  /// active BLE scan, and sets [AutoReconnectState] to
+  /// [AutoReconnectState.failed] so the banner shows actionable
+  /// options (Retry / Go to Scanner).
+  ///
+  /// **Not authoritative**: this does NOT set `userDisconnected=true`,
+  /// so other entry points (connectivity-restored listener, app-resume
+  /// recovery) may legitimately re-arm. For user-tapped Cancel use
+  /// [userCancelAutoReconnect].
   void cancelAutoReconnect() {
     AppLogging.connection('🔌 cancelAutoReconnect: Cancelling reconnect cycle');
     _retryTimer?.cancel();
@@ -300,6 +317,61 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     state = state.copyWith(
       state: DevicePairingState.disconnected,
       reason: DisconnectReason.deviceNotFound,
+    );
+  }
+
+  /// User-initiated authoritative cancel (banner Cancel tap).
+  ///
+  /// Distinct from the watchdog [cancelAutoReconnect] in two ways:
+  ///
+  /// 1. Sets `userDisconnected=true` so connectivity-restored,
+  ///    app-resume, and any other re-arm path is blocked until the
+  ///    user explicitly initiates a new connect from Scanner.
+  /// 2. Drives `autoReconnectState` straight to `idle` (not `failed`)
+  ///    because the next surface the user sees is the Scanner — the
+  ///    "Device not found" banner state is never displayed.
+  ///
+  /// Also issues a best-effort transport disconnect so any in-flight
+  /// TCP socket / BLE GATT link is torn down before the Scanner mounts.
+  ///
+  /// Logs `RECONNECT_CANCEL_AUTHORED_STOP` for telemetry.
+  Future<void> userCancelAutoReconnect() async {
+    AppLogging.connection(
+      'RECONNECT_BANNER_CANCEL_TAPPED — running authoritative cancel',
+    );
+
+    _retryTimer?.cancel();
+    _retryTimer = null;
+    _backgroundScanInProgress = false;
+    _reconnectAttempt = 0;
+    _userDisconnected = true;
+
+    // Block re-arm via the global flag (read by the auto-reconnect
+    // manager and the connectivity-restored listener).
+    ref.read(userDisconnectedProvider.notifier).setUserDisconnected(true);
+
+    // Idle (not failed): the user is being routed to Scanner; no need
+    // to display the post-failure banner state.
+    ref
+        .read(autoReconnectStateProvider.notifier)
+        .setState(AutoReconnectState.idle);
+
+    // Best-effort stops.
+    try {
+      await FlutterBluePlus.stopScan();
+    } catch (_) {}
+    try {
+      await ref.read(transportProvider).disconnect();
+    } catch (_) {}
+
+    state = state.copyWith(
+      state: DevicePairingState.disconnected,
+      reason: DisconnectReason.userDisconnected,
+    );
+
+    AppLogging.connection(
+      'RECONNECT_CANCEL_AUTHORED_STOP userDisconnected=true '
+      'autoReconnectState=idle reconnectAttempt=$_reconnectAttempt',
     );
   }
 
@@ -462,7 +534,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
               '🔌 DeviceConnectionNotifier: BLE connected, state=configuring',
             );
             state = state.copyWith(state: DevicePairingState.configuring);
-            // BLE auto-reconnected - need to start protocol
+            // Transport auto-reconnected (BLE / USB / network) — start protocol
             _initializeProtocolAfterAutoReconnect();
           }
           break;
@@ -505,7 +577,9 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     });
   }
 
-  /// Initialize protocol after BLE auto-reconnected (without going through _connectToDevice)
+  /// Initialize protocol after the transport auto-reconnected (any
+  /// transport: BLE / USB / network). Bypasses `_connectToDevice` so
+  /// it doesn't run a fresh scan/connect.
   Future<void> _initializeProtocolAfterAutoReconnect() async {
     // Check if we should handle this reconnection
     // We handle it in these cases:
@@ -1639,6 +1713,29 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       reason: reason,
     );
 
+    // Tell the protocol service the prior session's config is no
+    // longer authoritative. Without this, `_isStarted`,
+    // `_configurationComplete`, and `_myNodeNum` survive the
+    // disconnect, and the next reconnect's
+    // `_initializeProtocolAfterAutoReconnect` skips `protocol.start()`
+    // (and `protocol.start()` itself skips on its internal
+    // `_isStarted && _transport.isConnected` guard once the transport
+    // flips back to connected). The result was Nodes (0) forever
+    // after any reboot — region apply, nodeDbReset, factoryReset —
+    // because no fresh `NodeInfo` packets ever arrived.
+    //
+    // We don't call the heavier `protocol.stop()` here: the transport
+    // already cleaned up its side of the link, and a full stop would
+    // also tear down RSSI/data subscriptions that the next
+    // `protocol.start()` is about to re-establish anyway.
+    try {
+      ref.read(protocolServiceProvider).resetForReconnect();
+    } catch (e) {
+      AppLogging.connection(
+        '🔌 _handleDisconnect: protocol.resetForReconnect failed (non-fatal): $e',
+      );
+    }
+
     // Preserve the user's chosen transport type across disconnect.
     // Previous behavior forced network → ble on disconnect to resume BLE
     // scanning, but that silently erased the user's intent and broke TCP
@@ -1658,15 +1755,39 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
           .setState(AutoReconnectState.idle);
     } else {
       if (reason == DisconnectReason.authFailed) {
-        // PIN/auth failure: route to Scanner where the user gets
-        // guidance cards (forget device in Bluetooth settings, etc.)
-        // instead of staying on MainShell with a misleading
-        // "Device not found" banner that just loops on retry.
-        AppLogging.connection(
-          '🔌 _handleDisconnect: Auth failure — '
-          'setting needsScanner to route to Scanner screen',
-        );
-        ref.read(appInitProvider.notifier).setNeedsScanner();
+        // Region apply triggers an EXPECTED transport disconnect (the
+        // device reboots after writing the new region). If a region
+        // apply is in flight, this is not a fault — skip the
+        // setNeedsScanner() that would otherwise stomp the
+        // RegionSelectionScreen's `setInitialized()` after it pops.
+        // The auto-reconnect manager handles the reboot reconnect on
+        // its own.
+        //
+        // We read `regionApplyInFlightProvider` (a leaf with no
+        // upstream dependencies) instead of `regionConfigProvider`
+        // because `RegionConfigNotifier.build()` listens to
+        // `deviceConnectionProvider`. Reading it from this method
+        // would close a cycle and Riverpod 3.x throws
+        // `CircularDependencyError`. The leaf is set true at apply
+        // start and false in the `finally` of `applyRegion`, so the
+        // gate is exact.
+        final regionApplying = ref.read(regionApplyInFlightProvider);
+        if (regionApplying) {
+          AppLogging.connection(
+            'DISCONNECT_HANDLER_SKIPPED_REGION_APPLYING reason=$reason '
+            'regionApplyInFlight=true',
+          );
+        } else {
+          // PIN/auth failure: route to Scanner where the user gets
+          // guidance cards (forget device in Bluetooth settings, etc.)
+          // instead of staying on MainShell with a misleading
+          // "Device not found" banner that just loops on retry.
+          AppLogging.connection(
+            '🔌 _handleDisconnect: Auth failure — '
+            'setting needsScanner to route to Scanner screen',
+          );
+          ref.read(appInitProvider.notifier).setNeedsScanner();
+        }
       } else {
         // Unexpected disconnect (e.g., device reboot after region change).
         // Do NOT call startBackgroundConnection() here — the
@@ -1686,6 +1807,28 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
           '🔌 _handleDisconnect: Unexpected disconnect — '
           'autoReconnectManagerProvider will handle reconnect',
         );
+
+        // Defense: if the latch is still set but the Scanner is no
+        // longer mounted, the manual connect's `try/catch/finally`
+        // can no longer clear it — the future is orphaned. Clear here
+        // as a safety net so recovery (auto-reconnect / APP RESUMED)
+        // is not perma-blocked. Scanner-still-mounted cases are
+        // handled by `_connectToDevice`'s catch + Scanner dispose's
+        // session-aware clear.
+        final autoState = ref.read(autoReconnectStateProvider);
+        if (autoState == AutoReconnectState.manualConnecting) {
+          final mountCount = ref.read(scannerMountCountProvider);
+          if (mountCount == 0) {
+            AppLogging.connection(
+              'MANUAL_CONNECT_CLEARED session=disconnect_handler '
+              'reason=unexpected_disconnect_no_scanner '
+              'scannerMountCount=$mountCount',
+            );
+            ref
+                .read(autoReconnectStateProvider.notifier)
+                .setState(AutoReconnectState.idle);
+          }
+        }
       }
       // Reset retry counter so the next startBackgroundConnection
       // (if triggered by autoReconnectManager) starts fresh.

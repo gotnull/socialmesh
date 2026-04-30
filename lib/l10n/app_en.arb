@@ -18817,13 +18817,13 @@
     "@regionSelectionOpenBluetoothSettingsError": {
         "description": "Error message shown to the user"
     },
-    "regionSelectionPairingHintMessage": "Bluetooth pairing was removed. Forget \"Meshtastic_XXXX\" in Settings > Bluetooth and reconnect to continue.",
+    "regionSelectionPairingHintMessage": "Pairing needs to be refreshed. The radio may have cleared its Bluetooth identity after the region change — forget the device in Bluetooth Settings and pair again.",
     "@regionSelectionPairingHintMessage": {
-        "description": "UI text: region selection pairing hint message"
+        "description": "Reset-aware pairing hint shown during region setup when the saved BLE pairing no longer matches the rebooted radio. Avoids implying any phone-side fault."
     },
-    "regionSelectionPairingInvalidation": "Your phone removed the stored pairing info for this device.\nGo to Settings > Bluetooth, forget the Meshtastic device, and try again.",
+    "regionSelectionPairingInvalidation": "Pairing needs to be refreshed. The radio's Bluetooth identity has changed.\nForget the device in Settings > Bluetooth and pair again.",
     "@regionSelectionPairingInvalidation": {
-        "description": "UI text: region selection pairing invalidation"
+        "description": "Reset-aware pairing-invalidation message shown during region setup. Frames the cause as a radio-side identity reset, not a phone-side failure."
     },
     "regionSelectionReconnectTimeout": "Reconnect timed out. Please try again.",
     "@regionSelectionReconnectTimeout": {
@@ -19847,9 +19847,25 @@
             }
         }
     },
-    "scannerPairingInvalidatedError": "Your phone removed the stored pairing info for this device. Return to Settings > Bluetooth, forget \"Meshtastic_XXXX\", and try again.",
+    "scannerPairingInvalidatedError": "Pairing needs to be refreshed — the radio's Bluetooth identity has changed. Forget the device in Bluetooth Settings and pair again.",
     "@scannerPairingInvalidatedError": {
-        "description": "Error message when the OS removes stored BLE pairing data for the device."
+        "description": "Short inline error shown when the saved BLE pairing no longer matches the device after a factory reset, region reset, or BLE identity reset on the radio side. Avoids implying any phone-side fault."
+    },
+    "scannerPairingRefreshTitle": "Pairing needs to be refreshed",
+    "@scannerPairingRefreshTitle": {
+        "description": "Title of the recovery card shown when the saved BLE pairing no longer matches the device. Reset-aware wording — does not blame the phone."
+    },
+    "scannerPairingRefreshBody": "This can happen after a factory reset or region/device reset. The radio may have cleared its Bluetooth identity, so your phone's saved pairing no longer matches this device.\n\nRemove the old pairing from your phone's Bluetooth settings, then pair with the device again.",
+    "@scannerPairingRefreshBody": {
+        "description": "Body copy of the pairing-refresh recovery card. Explains the radio-side reasons (factory reset / region reset / device reset) and the user-side recovery steps (forget then re-pair)."
+    },
+    "scannerPairingRefreshOpenBluetoothSettings": "Open Bluetooth Settings",
+    "@scannerPairingRefreshOpenBluetoothSettings": {
+        "description": "Primary action on the pairing-refresh card — opens the OS Bluetooth Settings so the user can forget the stale pairing."
+    },
+    "scannerPairingRefreshScanAgain": "Scan again",
+    "@scannerPairingRefreshScanAgain": {
+        "description": "Secondary action on the pairing-refresh card — re-runs the BLE scan after the user has forgotten the stale pairing in Bluetooth Settings."
     },
     "scannerPinRequiredError": "Connection failed - please try again and enter the PIN when prompted",
     "@scannerPinRequiredError": {

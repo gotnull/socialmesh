@@ -3,6 +3,7 @@
 // lint-allow: scaffold — navigation shell root scaffold with drawer and bottom nav
 import '../../core/constants.dart';
 import '../../core/logging.dart';
+import '../../core/navigation.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -1370,7 +1371,42 @@ class _MainShellState extends ConsumerState<MainShell> {
 
     // Build the main scaffold with Drawer
     // Determine if we should show the reconnection banner (only as a banner, never replaces screen)
-    final showReconnectionBanner = !isConnected && hasEverPaired;
+    //
+    // STABILITY GUARD: Tie banner visibility to "fully connected" — i.e.
+    // transport connected AND auto-reconnect not actively cycling — so a
+    // brief transport.state==connected window during a TCP retry (where
+    // the socket comes up but protocol.start() then times out) does NOT
+    // toggle the banner off and on. Without this guard, every TCP-conflict
+    // retry cycle (e.g. another client owns the radio at
+    // tcp:host:4403) flipped `isConnected` true→false in the seconds
+    // between socket-up and protocol-config-timeout, dragging the
+    // SizeTransition up/down and bopping the Nodes screen vertically
+    // each cycle. See logs.txt lines 88–161 for the smoking-gun
+    // sequence.
+    //
+    // USER-DISCONNECTED GATE: The route-replacement flows (banner
+    // Cancel, device-sheet Disconnect, factory reset) unmount MainShell,
+    // so in production the banner is never seen in the idle/manual-
+    // disconnected state. The `!userDisconnected` clause keeps the
+    // formula correct as a pure invariant — any future code path that
+    // leaves the user on MainShell while `userDisconnected=true` will
+    // not resurrect a stale "Disconnected" banner.
+    //
+    // NOTE: `ref.read` (not `ref.watch`) — the disconnect flow mutates
+    // `userDisconnectedProvider` synchronously alongside other writes
+    // (`autoReconnectStateProvider`, `appInitProvider`) inside a single
+    // callback that ends with `pushNamedAndRemoveUntil('/app', …)`. A
+    // `watch` here adds MainShell as another listener of that mid-
+    // teardown write, which (via Riverpod's notification path) caused
+    // a "Tried to modify a provider while the widget tree was building"
+    // assertion during the in-flight route replacement. The autoReconnect
+    // and connection providers MainShell already watches re-trigger
+    // its build whenever this gate would matter, so a one-shot read is
+    // sufficient.
+    final userDisconnected = ref.read(userDisconnectedProvider);
+    final isFullyConnected = isConnected && !isReconnecting;
+    final showReconnectionBanner =
+        hasEverPaired && !isFullyConnected && !userDisconnected;
 
     return Scaffold(
       key: _scaffoldKey,
@@ -1395,7 +1431,29 @@ class _MainShellState extends ConsumerState<MainShell> {
                   .read(deviceConnectionProvider.notifier)
                   .startBackgroundConnection();
             },
-            onGoToScanner: () => Navigator.of(context).pushNamed('/scanner'),
+            onGoToScanner: () {
+              // Route-replace to the scanner via the declarative router
+              // (mirrors the disconnect-button flow). Using the root
+              // navigator + setNeedsScanner avoids ending up with a
+              // scanner pushed on top of a still-mounted MainShell.
+              ref.read(appInitProvider.notifier).setNeedsScanner();
+              final nav = navigatorKey.currentState;
+              if (nav != null) {
+                AppLogging.connection(
+                  'RECONNECT_CANCEL_ROUTE_REPLACE_SCANNER source=banner '
+                  'method=pushNamedAndRemoveUntil dest=/app',
+                );
+                nav.pushNamedAndRemoveUntil('/app', (route) => false);
+              } else {
+                AppLogging.connection(
+                  'RECONNECT_CANCEL_ROUTE_REPLACE_SCANNER source=banner '
+                  'method=local_fallback (navigatorKey.currentState=null)',
+                );
+                Navigator.of(
+                  context,
+                ).pushNamedAndRemoveUntil('/app', (route) => false);
+              }
+            },
             deviceState: deviceState,
           ),
 

@@ -28717,13 +28717,13 @@
   "@regionSelectionOpenBluetoothSettingsError": {
     "description": "Error message shown to the user"
   },
-  "regionSelectionPairingHintMessage": "O pareamento Bluetooth foi removido. Esqueça \"Meshtastic_XXXX\" em Ajustes > Bluetooth e reconecte para continuar.",
+  "regionSelectionPairingHintMessage": "O pareamento precisa ser atualizado. O rádio pode ter limpado sua identidade Bluetooth após a mudança de região — esqueça o dispositivo nas Configurações de Bluetooth e pareie novamente.",
   "@regionSelectionPairingHintMessage": {
-    "description": "UI text: region selection pairing hint message"
+    "description": "Reset-aware pairing hint shown during region setup when the saved BLE pairing no longer matches the rebooted radio. Avoids implying any phone-side fault."
   },
-  "regionSelectionPairingInvalidation": "Seu telefone removeu as informações de pareamento armazenadas para este dispositivo.\nVá em Ajustes > Bluetooth, esqueça o dispositivo Meshtastic e tente novamente.",
+  "regionSelectionPairingInvalidation": "O pareamento precisa ser atualizado. A identidade Bluetooth do rádio mudou.\nEsqueça o dispositivo em Ajustes > Bluetooth e pareie novamente.",
   "@regionSelectionPairingInvalidation": {
-    "description": "UI text: region selection pairing invalidation"
+    "description": "Reset-aware pairing-invalidation message shown during region setup. Frames the cause as a radio-side identity reset, not a phone-side failure."
   },
   "regionSelectionReconnectTimeout": "Tempo de reconexão esgotado. Tente novamente.",
   "@regionSelectionReconnectTimeout": {
@@ -29917,9 +29917,25 @@
       }
     }
   },
-  "scannerPairingInvalidatedError": "Seu telefone removeu as informações de pareamento armazenadas para este dispositivo. Volte em Ajustes > Bluetooth, esqueça \"Meshtastic_XXXX\" e tente novamente.",
+  "scannerPairingInvalidatedError": "O pareamento precisa ser atualizado — a identidade Bluetooth do rádio mudou. Esqueça o dispositivo nas Configurações de Bluetooth e pareie novamente.",
   "@scannerPairingInvalidatedError": {
-    "description": "Error message when the OS removes stored BLE pairing data for the device."
+    "description": "Short inline error shown when the saved BLE pairing no longer matches the device after a factory reset, region reset, or BLE identity reset on the radio side. Avoids implying any phone-side fault."
+  },
+  "scannerPairingRefreshTitle": "O pareamento precisa ser atualizado",
+  "@scannerPairingRefreshTitle": {
+    "description": "Title of the recovery card shown when the saved BLE pairing no longer matches the device. Reset-aware wording — does not blame the phone."
+  },
+  "scannerPairingRefreshBody": "Isso pode acontecer após uma redefinição de fábrica ou redefinição de região/dispositivo. O rádio pode ter limpado sua identidade Bluetooth, então o pareamento salvo no seu telefone não corresponde mais a este dispositivo.\n\nRemova o pareamento antigo nas configurações de Bluetooth do telefone e, em seguida, pareie o dispositivo novamente.",
+  "@scannerPairingRefreshBody": {
+    "description": "Body copy of the pairing-refresh recovery card. Explains the radio-side reasons (factory reset / region reset / device reset) and the user-side recovery steps (forget then re-pair)."
+  },
+  "scannerPairingRefreshOpenBluetoothSettings": "Abrir Configurações de Bluetooth",
+  "@scannerPairingRefreshOpenBluetoothSettings": {
+    "description": "Primary action on the pairing-refresh card — opens the OS Bluetooth Settings so the user can forget the stale pairing."
+  },
+  "scannerPairingRefreshScanAgain": "Escanear novamente",
+  "@scannerPairingRefreshScanAgain": {
+    "description": "Secondary action on the pairing-refresh card — re-runs the BLE scan after the user has forgotten the stale pairing in Bluetooth Settings."
   },
   "scannerPinRequiredError": "Falha na conexão — tente novamente e insira o PIN quando solicitado",
   "@scannerPinRequiredError": {

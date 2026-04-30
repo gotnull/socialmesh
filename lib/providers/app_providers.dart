@@ -6521,6 +6521,9 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
       connectionSessionId: sessionId,
       targetDeviceId: deviceId,
     );
+    // Toggle the leaf in-flight provider that `_handleDisconnect`
+    // reads (avoids the regionConfigProvider circular dependency).
+    ref.read(regionApplyInFlightProvider.notifier).setActive(true);
     AppLogging.connection(
       '🌍 REGION_FLOW choose=${region.name} session=$sessionId device=$deviceId status=applying reason=$reason',
     );
@@ -6578,6 +6581,14 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
         );
       }
       rethrow;
+    } finally {
+      // Always clear the in-flight flag at the end of an apply
+      // attempt — regardless of success / failure / early return —
+      // so `_handleDisconnect` can resume normal scanner-routing
+      // behaviour as soon as the apply has settled.
+      if (ref.mounted) {
+        ref.read(regionApplyInFlightProvider.notifier).setActive(false);
+      }
     }
   }
 
@@ -6699,6 +6710,28 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
 final regionConfigProvider =
     NotifierProvider<RegionConfigNotifier, RegionConfigState>(
       RegionConfigNotifier.new,
+    );
+
+/// Lightweight leaf provider that mirrors `regionConfigProvider.state.
+/// applyStatus == applying`. Exists ONLY to break a circular
+/// dependency: `RegionConfigNotifier.build()` listens to
+/// `deviceConnectionProvider`, so reading `regionConfigProvider` from
+/// `DeviceConnectionNotifier._handleDisconnect` would close the cycle
+/// and Riverpod 3.x throws `CircularDependencyError`. This provider has
+/// no upstream dependencies — it's set/cleared imperatively by
+/// `RegionConfigNotifier` at the apply-start and apply-finish edges.
+class RegionApplyInFlightNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void setActive(bool value) {
+    state = value;
+  }
+}
+
+final regionApplyInFlightProvider =
+    NotifierProvider<RegionApplyInFlightNotifier, bool>(
+      RegionApplyInFlightNotifier.new,
     );
 
 /// Needs region setup - true if region is UNSET and we're not actively applying/applied
