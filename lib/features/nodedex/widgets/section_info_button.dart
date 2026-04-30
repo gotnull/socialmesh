@@ -40,51 +40,67 @@ class SectionInfoButton extends StatelessWidget {
     final rawText = HelpContent.nodeDexSectionHelp[helpKey];
     if (rawText == null) return;
 
+    HapticFeedback.selectionClick();
+    AppBottomSheet.show<void>(
+      context: context,
+      child: NodeDexHelpSheetBody(helpKey: helpKey),
+    );
+  }
+}
+
+/// Sheet-body widget for NodeDex section help. Renders a lightbulb +
+/// section title + localized help text. Use this as the
+/// `SectionTitle.helpSheetBuilder` for any NodeDex section header so
+/// the (i) icon flows through `SectionTitle` (canonical) instead of an
+/// inline `SectionInfoButton`.
+class NodeDexHelpSheetBody extends StatelessWidget {
+  final String helpKey;
+
+  const NodeDexHelpSheetBody({super.key, required this.helpKey});
+
+  @override
+  Widget build(BuildContext context) {
     final helpText = HelpContent.localizedNodeDexSectionHelp(
       helpKey,
       context.l10n,
     );
 
-    HapticFeedback.selectionClick();
-    AppBottomSheet.show<void>(
-      context: context,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(AppTheme.spacing24, 8, 24, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.lightbulb_outline,
-                  size: 18,
-                  color: context.accentColor,
-                ),
-                const SizedBox(width: AppTheme.spacing8),
-                Expanded(
-                  child: Text(
-                    _titleForKey(helpKey, context),
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: context.textPrimary,
-                    ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing24, 8, 24, 24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.lightbulb_outline,
+                size: 18,
+                color: context.accentColor,
+              ),
+              const SizedBox(width: AppTheme.spacing8),
+              Expanded(
+                child: Text(
+                  _titleForKey(helpKey, context),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: context.textPrimary,
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: AppTheme.spacing12),
-            Text(
-              helpText,
-              style: TextStyle(
-                fontSize: 14,
-                color: context.textSecondary,
-                height: 1.5,
               ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spacing12),
+          Text(
+            helpText,
+            style: TextStyle(
+              fontSize: 14,
+              color: context.textSecondary,
+              height: 1.5,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

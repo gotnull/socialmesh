@@ -409,88 +409,62 @@ class _SipInkComposerState extends ConsumerState<SipInkComposer>
         ? errorColor.withValues(alpha: 0.9)
         : context.textTertiary;
 
-    // Body (scrollable) + sticky full-width action bar at the
-    // bottom — mirrors the Signal composer panel for consistency.
-    // Action bar pinned to the BOTTOM of the available area, body
-    // fills everything above. `Expanded` (not `Flexible`) so the
-    // body always fills its slot — `Flexible` would let the body
-    // shrink to its natural size, which leaves dead space between
-    // the canvas and the action row when the parent sheet is
-    // taller than the canvas needs.
+    // Body + sticky full-width action bar at the bottom — mirrors
+    // the Signal composer panel for consistency. The canvas itself
+    // expands to fill the available vertical slot so it doesn't
+    // read as a tiny island in a sea of empty sheet. Wire output is
+    // unchanged: `SipInkCanvas` always maps screen pixels into
+    // 0..[_canvasSize] regardless of how large it's rendered.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.max,
       children: [
         Expanded(
-          // Centre the canvas in BOTH axes inside the available
-          // vertical slot. The body still scrolls if the parent sheet
-          // is dragged smaller than the canvas needs (`SingleChild
-          // ScrollView` outer), but `LayoutBuilder` + a
-          // `ConstrainedBox(minHeight: viewport)` lets the inner
-          // `Column` grow to the full viewport height when there's
-          // headroom — only then does `mainAxisAlignment.center`
-          // visually centre the hint + canvas as a group rather than
-          // hugging the top edge. This is the canonical Flutter
-          // recipe for "centre inside a scroll view".
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(
-                  AppTheme.spacing16,
-                  AppTheme.spacing8,
-                  AppTheme.spacing16,
-                  AppTheme.spacing8,
-                ),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    // Subtract the vertical padding above so the
-                    // intrinsic Column matches the visible viewport
-                    // exactly — otherwise the centring would float
-                    // slightly off-axis by spacing16.
-                    minHeight: constraints.maxHeight - AppTheme.spacing8 * 2,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppTheme.spacing16,
+              AppTheme.spacing8,
+              AppTheme.spacing16,
+              AppTheme.spacing8,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 150),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: hintColor,
+                    fontFamily: AppTheme.fontFamily,
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      AnimatedDefaultTextStyle(
-                        duration: const Duration(milliseconds: 150),
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: hintColor,
-                          fontFamily: AppTheme.fontFamily,
-                        ),
-                        child: Text(hintText, textAlign: TextAlign.center),
+                  child: Text(hintText, textAlign: TextAlign.center),
+                ),
+                const SizedBox(height: AppTheme.spacing8),
+                Expanded(
+                  // The canvas claims whatever vertical space remains
+                  // between the hint and the action bar. `Center` +
+                  // `AspectRatio(1)` keeps it square and horizontally
+                  // centred — width-limited on narrow phones,
+                  // height-limited when the sheet is dragged short.
+                  child: Center(
+                    child: AspectRatio(
+                      aspectRatio: 1,
+                      child: SipInkCanvas(
+                        simplifiedSketch: _simplifiedSketch,
+                        activeOverflow: _activeOverflowSlice,
+                        isOverBudget: overBudget,
+                        enabled: widget.enabled && !_sending,
+                        strokeWidth: _strokeWidth,
+                        canvasSize: _canvasSize,
+                        onStrokeStart: _onStrokeStart,
+                        onStrokeUpdate: _onStrokeUpdate,
+                        onStrokeEnd: _onStrokeEnd,
                       ),
-                      const SizedBox(height: AppTheme.spacing8),
-                      Center(
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(
-                            maxWidth: 280,
-                            maxHeight: 280,
-                          ),
-                          child: AspectRatio(
-                            aspectRatio: 1,
-                            child: SipInkCanvas(
-                              simplifiedSketch: _simplifiedSketch,
-                              activeOverflow: _activeOverflowSlice,
-                              isOverBudget: overBudget,
-                              enabled: widget.enabled && !_sending,
-                              strokeWidth: _strokeWidth,
-                              canvasSize: _canvasSize,
-                              onStrokeStart: _onStrokeStart,
-                              onStrokeUpdate: _onStrokeUpdate,
-                              onStrokeEnd: _onStrokeEnd,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
-              );
-            },
+              ],
+            ),
           ),
         ),
         _buildStickyActionBar(

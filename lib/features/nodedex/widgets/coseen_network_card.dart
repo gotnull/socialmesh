@@ -22,6 +22,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animated_avatar_stack.dart';
+import '../../../core/widgets/section_header.dart';
 import '../../../providers/accessibility_providers.dart';
 import 'nodedex_avatar_stack.dart';
 import 'section_info_button.dart';
@@ -122,51 +123,41 @@ class CoSeenNetworkCard extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header row: title left, avatar stack right.
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Title + icon
-                Icon(Icons.hub_outlined, size: 16, color: context.textTertiary),
-                const SizedBox(width: AppTheme.spacing8),
-                Text(
-                  context.l10n.nodedexCoSeenCardTitle.toUpperCase(),
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: context.textTertiary,
-                    letterSpacing: 0.8,
-                  ),
+            // Header — canonical SectionTitle owns layout, (i) icon,
+            // and help-sheet plumbing. The animated avatar cluster
+            // sits in the trailing slot. Hand-rolled subheader rows
+            // are banned project-wide; keeping a uniform header line
+            // means the (i) and the title baseline always agree with
+            // every other card on the screen.
+            SectionTitle(
+              title: context.l10n.nodedexCoSeenCardTitle,
+              leadingIcon: Icons.hub_outlined,
+              helpSheetBuilder: (ctx) =>
+                  const NodeDexHelpSheetBody(helpKey: 'coseen'),
+              trailing: AnimatedAvatarStack(
+                items: items,
+                maxVisible: AvatarStackDefaults.maxVisible,
+                avatarSize: AvatarStackDefaults.avatarSize,
+                animationEnabled: !reduceMotion,
+                showOverflowCount: true,
+                onOverflowTap: onTap != null
+                    ? () {
+                        HapticFeedback.selectionClick();
+                        onTap!();
+                      }
+                    : null,
+                overflowSemanticLabel:
+                    items.length > AvatarStackDefaults.maxVisible
+                    ? context.l10n.avatarStackOverflowLabel(
+                        items.length - AvatarStackDefaults.maxVisible,
+                      )
+                    : null,
+                semanticLabel: context.l10n.avatarStackCoSeenLabel(
+                  viewModel.totalCount,
                 ),
-                const SizedBox(width: AppTheme.spacing4),
-                const SectionInfoButton(helpKey: 'coseen'),
-                const Spacer(),
-                // Animated avatar cluster — top-right anchored
-                AnimatedAvatarStack(
-                  items: items,
-                  maxVisible: AvatarStackDefaults.maxVisible,
-                  avatarSize: AvatarStackDefaults.avatarSize,
-                  animationEnabled: !reduceMotion,
-                  showOverflowCount: true,
-                  onOverflowTap: onTap != null
-                      ? () {
-                          HapticFeedback.selectionClick();
-                          onTap!();
-                        }
-                      : null,
-                  overflowSemanticLabel:
-                      items.length > AvatarStackDefaults.maxVisible
-                      ? context.l10n.avatarStackOverflowLabel(
-                          items.length - AvatarStackDefaults.maxVisible,
-                        )
-                      : null,
-                  semanticLabel: context.l10n.avatarStackCoSeenLabel(
-                    viewModel.totalCount,
-                  ),
-                ),
-              ],
+              ),
             ),
-            const SizedBox(height: AppTheme.spacing12),
+            const SizedBox(height: AppTheme.spacing4),
             // Subtitle — peer count description
             Text(
               context.l10n.nodedexCoSeenCardSubtitle(viewModel.totalCount),

@@ -64,6 +64,7 @@ import '../widgets/observation_timeline.dart';
 import '../widgets/node_activity_timeline.dart';
 import '../widgets/node_summary_card.dart';
 import '../widgets/patina_stamp.dart';
+import '../../../core/widgets/section_header.dart';
 import '../widgets/section_info_button.dart';
 import '../widgets/sigil_card_sheet.dart';
 import '../widgets/sigil_painter.dart';
@@ -3315,49 +3316,21 @@ class _CardContainer extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
-          Row(
-            children: [
-              Icon(icon, size: 16, color: context.textTertiary),
-              const SizedBox(width: AppTheme.spacing8),
-              Text(
-                title.toUpperCase(),
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: context.textTertiary,
-                  letterSpacing: 0.8,
-                ),
-              ),
-              if (helpKey != null) ...[
-                const SizedBox(width: AppTheme.spacing4),
-                _SectionInfoButton(helpKey: helpKey!),
-              ],
-              const Spacer(),
-              if (trailing != null) trailing!,
-            ],
+          // Header — canonical SectionTitle owns layout, (i) icon, and
+          // help-sheet plumbing. Hand-rolled subheader rows are banned.
+          SectionTitle(
+            title: title,
+            leadingIcon: icon,
+            helpSheetBuilder: helpKey == null
+                ? null
+                : (ctx) => NodeDexHelpSheetBody(helpKey: helpKey!),
+            trailing: trailing,
           ),
-          const SizedBox(height: AppTheme.spacing8),
           child,
         ],
       ),
     );
   }
-}
-
-// =============================================================================
-// Section Info Button — inline contextual help
-// =============================================================================
-
-/// Private alias for the shared [SectionInfoButton] widget so existing
-/// callsites in this file keep working without churn.
-class _SectionInfoButton extends StatelessWidget {
-  final String helpKey;
-
-  const _SectionInfoButton({required this.helpKey});
-
-  @override
-  Widget build(BuildContext context) => SectionInfoButton(helpKey: helpKey);
 }
 
 // =============================================================================
@@ -3430,32 +3403,27 @@ class _NodeDexStickyHeaderDelegate extends SliverPersistentHeaderDelegate {
                     ]
                   : null,
             ),
-            child: Row(
-              children: [
-                Icon(icon, size: 16, color: context.textTertiary),
-                const SizedBox(width: AppTheme.spacing8),
-                Text(
-                  title.toUpperCase(),
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: context.textTertiary,
-                    letterSpacing: 0.8,
-                  ),
-                ),
-                const SizedBox(width: AppTheme.spacing4),
-                _SectionInfoButton(helpKey: helpKey),
-                const Spacer(),
-                if (trailing != null)
-                  Text(
-                    trailing!,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: context.textTertiary,
-                      fontFamily: AppTheme.fontFamily,
-                    ),
-                  ),
-              ],
+            // Header — canonical SectionTitle owns layout, (i) icon,
+            // and help-sheet plumbing. SectionTitle adds its own
+            // bottom padding (spacing8); we wrap in `Center` so the
+            // header sits vertically centred inside the sticky band.
+            child: Center(
+              child: SectionTitle(
+                title: title,
+                leadingIcon: icon,
+                helpSheetBuilder: (ctx) =>
+                    NodeDexHelpSheetBody(helpKey: helpKey),
+                trailing: trailing == null
+                    ? null
+                    : Text(
+                        trailing!,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: context.textTertiary,
+                          fontFamily: AppTheme.fontFamily,
+                        ),
+                      ),
+              ),
             ),
           ),
         ),
