@@ -678,8 +678,26 @@ class _ContactTile extends StatelessWidget {
 
   const _ContactTile({required this.contact, required this.onTap});
 
+  Color _blendColor(BuildContext context) {
+    if (contact.isFavorite) return AppTheme.warningYellow;
+    switch (contact.presence) {
+      case PresenceConfidence.active:
+        return AccentColors.green;
+      case PresenceConfidence.fading:
+        return AccentColors.orange;
+      case PresenceConfidence.stale:
+        return AccentColors.slate;
+      case PresenceConfidence.unknown:
+        return AccentColors.purple;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final blendColor = _blendColor(context);
+    final cardOpacity = contact.isFavorite
+        ? 1.0
+        : presenceOpacity(contact.presence);
     final cardContent = Padding(
       padding: const EdgeInsets.all(AppTheme.spacing12),
       child: Row(
@@ -791,25 +809,66 @@ class _ContactTile extends StatelessWidget {
     return BouncyTap(
       onTap: onTap,
       scaleFactor: 0.98,
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        decoration: !contact.isFavorite
-            ? BoxDecoration(
-                color: context.card,
-                borderRadius: BorderRadius.circular(AppTheme.radius12),
-                border: Border.all(color: context.border),
-              )
-            : null,
-        child: contact.isFavorite
-            ? GradientBorderContainer(
-                borderRadius: 12,
-                borderWidth: 2,
-                accentOpacity: 1.0,
-                accentColor: AccentColors.yellow,
-                backgroundColor: context.card,
-                child: cardContent,
-              )
-            : cardContent,
+      child: Opacity(
+        opacity: cardOpacity,
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
+            child: Stack(
+              children: [
+                // Layer 1: Background blend matching presence/favorite color
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          blendColor.withValues(alpha: 0.12),
+                          blendColor.withValues(alpha: 0.03),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
+                    ),
+                  ),
+                ),
+                // Layer 2: Border (favorites only)
+                if (contact.isFavorite)
+                  Positioned.fill(
+                    child: GradientBorderContainer(
+                      borderRadius: 12,
+                      borderWidth: 1,
+                      accentOpacity: 1.0,
+                      accentColor: AccentColors.yellow,
+                      defaultBorderColor: Colors.transparent,
+                      backgroundColor: Colors.transparent,
+                      child: const SizedBox.expand(),
+                    ),
+                  ),
+                // Layer 3: Bottom-right corner blend into background
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: const Alignment(-0.2, -0.2),
+                          end: Alignment.bottomRight,
+                          colors: [
+                            context.background.withValues(alpha: 0),
+                            context.background.withValues(alpha: 0.85),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                // Layer 4: Content — fully opaque on top
+                cardContent,
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
