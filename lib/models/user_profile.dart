@@ -15,6 +15,12 @@ class UserPreferences {
   final bool? notificationSoundEnabled;
   final bool? notificationVibrationEnabled;
 
+  /// SIP Play "your turn" notification toggle. Hard-gated upstream by
+  /// [AppFeatureFlags.isSipEnabled] — present in the model so cloud
+  /// sync round-trips the user's preference, but the UI tile only
+  /// surfaces on SIP-enabled builds.
+  final bool? sipPlayTurnNotificationsEnabled;
+
   /// Haptic feedback settings
   final bool? hapticFeedbackEnabled;
   final int? hapticIntensity;
@@ -63,6 +69,7 @@ class UserPreferences {
     this.channelMessageNotificationsEnabled,
     this.notificationSoundEnabled,
     this.notificationVibrationEnabled,
+    this.sipPlayTurnNotificationsEnabled,
     this.hapticFeedbackEnabled,
     this.hapticIntensity,
     this.animationsEnabled,
@@ -101,6 +108,8 @@ class UserPreferences {
       notificationSoundEnabled: json['notificationSoundEnabled'] as bool?,
       notificationVibrationEnabled:
           json['notificationVibrationEnabled'] as bool?,
+      sipPlayTurnNotificationsEnabled:
+          json['sipPlayTurnNotificationsEnabled'] as bool?,
       hapticFeedbackEnabled: json['hapticFeedbackEnabled'] as bool?,
       hapticIntensity: json['hapticIntensity'] as int?,
       animationsEnabled: json['animationsEnabled'] as bool?,
@@ -151,6 +160,8 @@ class UserPreferences {
         'notificationSoundEnabled': notificationSoundEnabled,
       if (notificationVibrationEnabled != null)
         'notificationVibrationEnabled': notificationVibrationEnabled,
+      if (sipPlayTurnNotificationsEnabled != null)
+        'sipPlayTurnNotificationsEnabled': sipPlayTurnNotificationsEnabled,
       if (hapticFeedbackEnabled != null)
         'hapticFeedbackEnabled': hapticFeedbackEnabled,
       if (hapticIntensity != null) 'hapticIntensity': hapticIntensity,
@@ -201,6 +212,7 @@ class UserPreferences {
     bool? channelMessageNotificationsEnabled,
     bool? notificationSoundEnabled,
     bool? notificationVibrationEnabled,
+    bool? sipPlayTurnNotificationsEnabled,
     bool? hapticFeedbackEnabled,
     int? hapticIntensity,
     bool? animationsEnabled,
@@ -241,6 +253,9 @@ class UserPreferences {
           notificationSoundEnabled ?? this.notificationSoundEnabled,
       notificationVibrationEnabled:
           notificationVibrationEnabled ?? this.notificationVibrationEnabled,
+      sipPlayTurnNotificationsEnabled:
+          sipPlayTurnNotificationsEnabled ??
+          this.sipPlayTurnNotificationsEnabled,
       hapticFeedbackEnabled:
           hapticFeedbackEnabled ?? this.hapticFeedbackEnabled,
       hapticIntensity: hapticIntensity ?? this.hapticIntensity,

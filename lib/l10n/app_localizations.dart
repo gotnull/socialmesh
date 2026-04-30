@@ -57956,6 +57956,90 @@ abstract class AppLocalizations {
   /// **'Long-range presets are perfect for sparse mesh exploration.'**
   String get meshCapacityQuietMeshTagline3;
 
+  /// Placeholder text in the search field above the RF-active node list.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name or ID'**
+  String get meshCapacityNodesSearchHint;
+
+  /// Filter chip label: show every RF-active node observed in the last 60 minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get meshCapacityNodeFilterAll;
+
+  /// Filter chip label: only nodes heard in the last 5 minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'<5m'**
+  String get meshCapacityNodeFilter5m;
+
+  /// Filter chip label: only nodes heard in the last 15 minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'<15m'**
+  String get meshCapacityNodeFilter15m;
+
+  /// Filter chip label: only nodes heard in the last 60 minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'<60m'**
+  String get meshCapacityNodeFilter60m;
+
+  /// Sticky section header above the filtered list of RF-active nodes.
+  ///
+  /// In en, this message translates to:
+  /// **'RF-active nodes'**
+  String get meshCapacityNodeListHeader;
+
+  /// Empty-state body shown when an active search returns no results.
+  ///
+  /// In en, this message translates to:
+  /// **'No nodes match your search.'**
+  String get meshCapacityNodeListNoMatchSearch;
+
+  /// Empty-state body shown when a window filter excludes everything.
+  ///
+  /// In en, this message translates to:
+  /// **'No nodes in this window.'**
+  String get meshCapacityNodeListNoMatchFilter;
+
+  /// Action label that resets the active window filter.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all'**
+  String get meshCapacityNodeListShowAll;
+
+  /// Last-heard chip label for nodes heard within the last minute.
+  ///
+  /// In en, this message translates to:
+  /// **'just now'**
+  String get meshCapacityNodeAgeJustNow;
+
+  /// Last-heard chip label, in minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 min ago} other{{count} min ago}}'**
+  String meshCapacityNodeAgeMinutes(int count);
+
+  /// Last-heard chip label, in hours.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 hr ago} other{{count} hr ago}}'**
+  String meshCapacityNodeAgeHours(int count);
+
+  /// Hop-count chip label when the node is a direct neighbor (0 hops).
+  ///
+  /// In en, this message translates to:
+  /// **'direct'**
+  String get meshCapacityNodeHopDirect;
+
+  /// Hop-count chip label for multi-hop neighbors.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 hop} other{{count} hops}}'**
+  String meshCapacityNodeHopCount(int count);
+
   /// Title of the Mesh Capacity Advisor card shown when the local mesh is starting to fill up but the current preset is still acceptable.
   ///
   /// In en, this message translates to:
@@ -59515,6 +59599,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'A Handshake peer is in range. Open Handshake to connect.'**
   String get notificationSipPeerFoundBody;
+
+  /// Notification title when the opponent has moved in a SIP Play game and it is now the local user's turn.
+  ///
+  /// In en, this message translates to:
+  /// **'Your turn'**
+  String get notificationSipPlayTurnTitle;
+
+  /// Notification body when it is the local user's turn in a SIP Play game. {gameName} is a localised game name like 'Tic-Tac-Toe' or 'Connect Four'.
+  ///
+  /// In en, this message translates to:
+  /// **'{gameName} — tap to play your move.'**
+  String notificationSipPlayTurnBody(String gameName);
+
+  /// Notification body for SIP Play turn when the gameType is unknown/unsupported on this build (forward-compat placeholder).
+  ///
+  /// In en, this message translates to:
+  /// **'It\'s your move — tap to play.'**
+  String get notificationSipPlayTurnBodyUnknownGame;
+
+  /// Notification channel name for SIP Play turn-notifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Game Turns'**
+  String get notificationChannelSipPlay;
+
+  /// Title of the SIP Play game-turn notification toggle in Settings → Notifications. Only shown on builds where AppFeatureFlags.isSipEnabled is true.
+  ///
+  /// In en, this message translates to:
+  /// **'Game turns'**
+  String get settingsTileGameTurnsTitle;
+
+  /// Subtitle for the game-turn notification toggle. Sets the expectation that the ping fires only on opponent moves that flip turn to the local user.
+  ///
+  /// In en, this message translates to:
+  /// **'Notify me when it\'s my turn in a SIP Play game.'**
+  String get settingsTileGameTurnsSubtitle;
+
+  /// Settings search index title for the SIP Play game-turn notification toggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Game turns'**
+  String get settingsSearchGameTurnsTitle;
+
+  /// Settings search index subtitle for the SIP Play game-turn notification toggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notify me when it\'s my turn in a game.'**
+  String get settingsSearchGameTurnsSubtitle;
+
+  /// Localised name for the Tic-Tac-Toe game in SIP Play.
+  ///
+  /// In en, this message translates to:
+  /// **'Tic-Tac-Toe'**
+  String get sipPlayGameNameTicTacToe;
+
+  /// Localised name for the Connect Four game in SIP Play.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect Four'**
+  String get sipPlayGameNameConnectFour;
 
   /// Notification channel name for SIP peer discovery alerts.
   ///

@@ -602,10 +602,50 @@ final sipDmManagerProvider = Provider<SipDmManager?>((ref) {
     });
   };
 
+  // Local notification when an inbound SIP Play move flips the
+  // turn to the local side. Field-test request — without this, a
+  // backgrounded user has no audible/visible cue that the opponent
+  // moved and it's now their turn.
+  //
+  // Triple-gate before firing:
+  //  1. `AppFeatureFlags.isSipEnabled` — env-level kill switch.
+  //     SIP Play is a sub-feature of SIP, so when SIP is off the
+  //     notification surface is off too. Mirrors the drawer-level
+  //     gate on the Handshake hub.
+  //  2. `notificationsEnabled` — user's master notification toggle
+  //     in Settings → Notifications.
+  //  3. `sipPlayTurnNotificationsEnabled` — user's per-feature
+  //     toggle for game-turn pings (default true, opt-out only).
+  //
+  // The settings are read from the synchronously-loaded
+  // SettingsService. Default-allow on the .when fallback so a
+  // brief "service still loading" window doesn't suppress
+  // notifications during cold start.
+  manager.onPlayMoveYourTurn = (peerNodeId, _, gameTypeCode, _) {
+    Future.microtask(() {
+      if (!AppFeatureFlags.isSipEnabled) return;
+      final settings = ref.read(settingsServiceProvider).value;
+      final masterEnabled = settings?.notificationsEnabled ?? true;
+      final turnEnabled = settings?.sipPlayTurnNotificationsEnabled ?? true;
+      if (!masterEnabled || !turnEnabled) {
+        AppLogging.notifications(
+          'sip_play_turn_notif_suppressed master=$masterEnabled '
+          'turn=$turnEnabled',
+        );
+        return;
+      }
+      NotificationService().showSipPlayTurnNotification(
+        peerNodeId: peerNodeId,
+        gameTypeCode: gameTypeCode,
+      );
+    });
+  };
+
   final protocol = ref.read(protocolServiceProvider);
   protocol.attachSipDm(manager);
 
   ref.onDispose(() {
+    manager.onPlayMoveYourTurn = null;
     protocol.attachSipDm(null);
   });
 

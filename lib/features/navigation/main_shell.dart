@@ -456,7 +456,7 @@ class _MainShellState extends ConsumerState<MainShell> {
       ),
     DrawerMenuItem(
       icon: Icons.network_check,
-      label: l10n.meshCapacityDrawerLabel,
+      label: l10n.meshCapacityScreenTitle,
       screen: const MeshCapacityScreen(),
       iconColor: AccentColors.cyan,
       requiresConnection: true,

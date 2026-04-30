@@ -8,6 +8,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:socialmesh/l10n/app_localizations.dart';
 import '../../features/pet/models/pet_enums.dart';
 import '../../models/mesh_models.dart';
+import '../protocol/sip/play/sip_play_constants.dart';
 import '../../utils/text_sanitizer.dart';
 import 'package:socialmesh/core/theme.dart';
 import 'package:socialmesh/l10n/l10n_utils.dart';
@@ -1658,6 +1659,86 @@ class NotificationService {
 
     AppLogging.notifications(
       '🔔 Showed SIP peer found notification for: $peerNodeId',
+    );
+  }
+
+  /// Local notification fired when an inbound SIP Play move from the
+  /// opponent transitions the local side into the active player.
+  /// Suppresses retransmits via the standard 30 s per-(event, peer)
+  /// dedupe window so multi-path mesh duplicates of the same move
+  /// don't fire two notifications.
+  ///
+  /// `gameTypeCode` is the wire byte from
+  /// [SipPlayConstants]/SipPlayGameType. Unknown codes (forward-compat
+  /// reserved values) render the unknown-game body so we still tell
+  /// the user they have a turn pending. Tapping the notification
+  /// brings the app forward; deep-linking into the specific game's
+  /// instance is a follow-up if/when payload routing supports it.
+  Future<void> showSipPlayTurnNotification({
+    required int peerNodeId,
+    required int gameTypeCode,
+  }) async {
+    if (!_initialized) return;
+    if (_shouldSuppressForDedupe('sip_play_turn', peerNodeId)) return;
+
+    final game = SipPlayGameType.fromCode(gameTypeCode);
+    final body = switch (game) {
+      SipPlayGameType.ticTacToe => _l10n.notificationSipPlayTurnBody(
+        _l10n.sipPlayGameNameTicTacToe,
+      ),
+      SipPlayGameType.connectFour => _l10n.notificationSipPlayTurnBody(
+        _l10n.sipPlayGameNameConnectFour,
+      ),
+      null => _l10n.notificationSipPlayTurnBodyUnknownGame,
+    };
+
+    final androidDetails = AndroidNotificationDetails(
+      'sip_play_turn',
+      'Game Turns', // lint-allow: hardcoded-string
+      channelDescription: _l10n.notificationChannelSipPlay,
+      importance: Importance.high,
+      priority: Priority.high,
+      icon: '@mipmap/ic_launcher',
+      groupKey: 'sip_play_turn',
+      // Quiet by default — same posture as peer-found / handshake-
+      // request notifications. Users opt into game-turn pings via
+      // system Settings; the SFX is the in-app cue.
+      playSound: false,
+      enableVibration: false,
+      color: AccentColors.purple,
+    );
+
+    final iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: false,
+      threadIdentifier: 'sip_play_turn',
+    );
+
+    final notificationDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+      macOS: iosDetails,
+    );
+
+    // Notification id namespace: 8_000_000..8_999_999 is SIP peer
+    // found; use 7_000_000..7_999_999 for SIP Play turns to keep
+    // them distinct (so a peer-found and turn-notification for the
+    // same node don't replace each other).
+    final notificationId = (peerNodeId.abs() % 1000000) + 7000000;
+
+    await _notifications.show(
+      id: notificationId,
+      title: _l10n.notificationSipPlayTurnTitle,
+      body: body,
+      notificationDetails: notificationDetails,
+      payload: 'sip_play_turn:$peerNodeId:$gameTypeCode',
+    );
+
+    AppLogging.notifications(
+      '🔔 Showed SIP Play turn notification for: peer=0x'
+      '${peerNodeId.toRadixString(16)} gameType=0x'
+      '${gameTypeCode.toRadixString(16)}',
     );
   }
 }

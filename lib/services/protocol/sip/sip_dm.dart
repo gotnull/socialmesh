@@ -269,6 +269,27 @@ class SipDmManager {
   /// The parameter is the session tag.
   void Function(int sessionTag)? onTypingReceived;
 
+  /// Called when an inbound SIP Play move transitions the local
+  /// side into the active player for a non-terminal game instance.
+  /// Provider layer wires this to a local notification so the user
+  /// gets pinged for their turn while the app is backgrounded.
+  ///
+  /// Args: `(peerNodeId, sessionTag, gameTypeCode, instanceId)`.
+  ///
+  /// Fires only on `move` actions — offer / accept / decline /
+  /// resign do NOT fire this hook (offers come from the local user
+  /// directly so they're already engaged, and terminal actions have
+  /// no follow-up turn). Multi-path retransmits are filtered by the
+  /// upstream `_markInboundFrameSeen` dedupe; this hook fires at most
+  /// once per genuinely-new move.
+  void Function(
+    int peerNodeId,
+    int sessionTag,
+    int gameTypeCode,
+    int instanceId,
+  )?
+  onPlayMoveYourTurn;
+
   /// Active sessions keyed by session_tag.
   final Map<int, SipDmSession> _sessions = {};
 
@@ -1416,8 +1437,72 @@ class SipDmManager {
       'bytes=${frame.payload.length}',
     );
 
+    // "Your turn" notification hook. Fires only when the inbound
+    // entry was a `move` action and replaying the per-instance log
+    // shows the local side is now the active player. Skipped for
+    // offers (initiator is already engaged), accepts (the offerer
+    // moves first — they got the turn from the offer itself), and
+    // terminal actions (decline / resign).
+    if (result.envelope!.action == SipPlayAction.move) {
+      _maybeFirePlayYourTurn(
+        peerNodeId: session.peerNodeId,
+        sessionTag: sessionTag,
+        session: session,
+        gameTypeCode: result.envelope!.gameTypeCode,
+        instanceId: result.envelope!.instanceId,
+      );
+    }
+
     onStateChanged?.call();
     return result.envelope;
+  }
+
+  /// Replay the per-instance entry log to find out whether the
+  /// local side is now the active player; if so, fire the
+  /// `onPlayMoveYourTurn` hook. Idempotent — the upstream
+  /// `_markInboundFrameSeen` dedupe ensures we don't fire twice for
+  /// the same wire move.
+  void _maybeFirePlayYourTurn({
+    required int peerNodeId,
+    required int sessionTag,
+    required SipDmSession session,
+    required int gameTypeCode,
+    required int instanceId,
+  }) {
+    final hook = onPlayMoveYourTurn;
+    if (hook == null) return;
+
+    // Build the per-instance entry list from session history, in
+    // arrival order. SipPlayEngine.replay needs the full log to
+    // derive the current turn marker.
+    final entries = <SipPlayEntry>[];
+    for (final m in session.messages) {
+      if (m.contentType != SipDmContentType.play) continue;
+      final p = m.payload;
+      if (p == null || p.isEmpty) continue;
+      final decoded = SipPlayEngine.decodeEntry(
+        payload: Uint8List.fromList(p),
+        direction: m.direction == SipDmDirection.outbound
+            ? SipPlayEntryDirection.outbound
+            : SipPlayEntryDirection.inbound,
+      );
+      if (decoded == null) continue;
+      if (decoded.envelope.gameTypeCode != gameTypeCode ||
+          decoded.envelope.instanceId != instanceId) {
+        continue;
+      }
+      entries.add(decoded);
+    }
+    if (entries.isEmpty) return;
+
+    final state = SipPlayEngine.replay(entries);
+    if (!state.isLocalTurn) return;
+
+    try {
+      hook(peerNodeId, sessionTag, gameTypeCode, instanceId);
+    } catch (e, st) {
+      AppLogging.sipPlay('onPlayMoveYourTurn hook threw (ignored): $e\n$st');
+    }
   }
 
   // ---------------------------------------------------------------------------

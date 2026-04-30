@@ -370,6 +370,9 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
         notificationVibrationEnabled:
             newPreferences.notificationVibrationEnabled ??
             existingPrefs.notificationVibrationEnabled,
+        sipPlayTurnNotificationsEnabled:
+            newPreferences.sipPlayTurnNotificationsEnabled ??
+            existingPrefs.sipPlayTurnNotificationsEnabled,
         hapticFeedbackEnabled:
             newPreferences.hapticFeedbackEnabled ??
             existingPrefs.hapticFeedbackEnabled,

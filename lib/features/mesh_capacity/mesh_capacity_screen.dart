@@ -21,16 +21,26 @@ import '../../core/widgets/animated_empty_state.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/info_table.dart';
+import '../../core/widgets/search_filter_header.dart';
 import '../../core/widgets/section_header.dart';
+import '../../core/widgets/status_filter_chip.dart';
 import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import '../../l10n/app_localizations.dart';
+import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/mesh_capacity_provider.dart';
 import '../../providers/connection_providers.dart';
 import '../../services/haptic_service.dart';
 import '../../services/mesh_capacity/mesh_capacity_models.dart';
+import '../nodedex/screens/nodedex_detail_screen.dart';
+import '../nodedex/widgets/sigil_painter.dart';
 import '../settings/radio_config_screen.dart';
 import 'mesh_capacity_explanation_sheet.dart';
+
+/// Time-window filter for the RF-active node list. Mirrors the bucket
+/// boundaries used by [_ActivitySection] so the histogram and the list
+/// share the same mental model.
+enum _NodeWindow { all, fiveMin, fifteenMin, sixtyMin }
 
 class MeshCapacityScreen extends ConsumerStatefulWidget {
   const MeshCapacityScreen({super.key});
@@ -41,6 +51,10 @@ class MeshCapacityScreen extends ConsumerStatefulWidget {
 
 class _MeshCapacityScreenState extends ConsumerState<MeshCapacityScreen>
     with LifecycleSafeMixin<MeshCapacityScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+  _NodeWindow _window = _NodeWindow.all;
+
   @override
   void initState() {
     super.initState();
@@ -52,106 +66,272 @@ class _MeshCapacityScreenState extends ConsumerState<MeshCapacityScreen>
   }
 
   @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _dismissKeyboard() {
+    FocusScope.of(context).unfocus();
+  }
+
+  /// All nodes considered RF-active for the screen — direct radio
+  /// observations (not MQTT-bridged), excluding self, heard within the
+  /// last 60 minutes (the broadest window the advisor reasons about).
+  /// This is the candidate set; window/search filters are applied on
+  /// top of it.
+  List<MeshNode> _rfActiveCandidates(
+    Map<int, MeshNode> nodes,
+    int? myNodeNum,
+    DateTime now,
+  ) {
+    final out = <MeshNode>[];
+    for (final node in nodes.values) {
+      if (node.viaMqtt) continue;
+      if (myNodeNum != null && node.nodeNum == myNodeNum) continue;
+      final last = node.lastHeard;
+      if (last == null) continue;
+      final age = now.difference(last);
+      if (age.isNegative) continue;
+      if (age > const Duration(minutes: 60)) continue;
+      out.add(node);
+    }
+    out.sort((a, b) => b.lastHeard!.compareTo(a.lastHeard!));
+    return out;
+  }
+
+  bool _matchesWindow(MeshNode node, DateTime now, _NodeWindow window) {
+    if (window == _NodeWindow.all) return true;
+    final age = now.difference(node.lastHeard!);
+    switch (window) {
+      case _NodeWindow.fiveMin:
+        return age <= const Duration(minutes: 5);
+      case _NodeWindow.fifteenMin:
+        return age <= const Duration(minutes: 15);
+      case _NodeWindow.sixtyMin:
+        return age <= const Duration(minutes: 60);
+      case _NodeWindow.all:
+        return true;
+    }
+  }
+
+  bool _matchesSearch(MeshNode node, String query) {
+    if (query.isEmpty) return true;
+    final q = query.toLowerCase();
+    return node.displayName.toLowerCase().contains(q) ||
+        node.nodeNum.toString().contains(q) ||
+        (node.userId?.toLowerCase().contains(q) ?? false);
+  }
+
+  int _countForWindow(
+    List<MeshNode> candidates,
+    DateTime now,
+    _NodeWindow window,
+  ) {
+    if (window == _NodeWindow.all) return candidates.length;
+    return candidates.where((n) => _matchesWindow(n, now, window)).length;
+  }
+
+  String _windowLabel(AppLocalizations l10n, _NodeWindow w) {
+    switch (w) {
+      case _NodeWindow.all:
+        return l10n.meshCapacityNodeFilterAll;
+      case _NodeWindow.fiveMin:
+        return l10n.meshCapacityNodeFilter5m;
+      case _NodeWindow.fifteenMin:
+        return l10n.meshCapacityNodeFilter15m;
+      case _NodeWindow.sixtyMin:
+        return l10n.meshCapacityNodeFilter60m;
+    }
+  }
+
+  Color _windowColor(BuildContext context, _NodeWindow w) {
+    switch (w) {
+      case _NodeWindow.all:
+        return AppTheme.primaryBlue;
+      case _NodeWindow.fiveMin:
+        return AccentColors.green;
+      case _NodeWindow.fifteenMin:
+        return AccentColors.cyan;
+      case _NodeWindow.sixtyMin:
+        return AccentColors.lavender;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final snapshot = ref.watch(meshCapacitySnapshotProvider);
     final isConnected = ref.watch(isDeviceConnectedProvider);
     final pressureColor = _pressureColor(context, snapshot.pressureLevel);
 
-    return GlassScaffold(
-      title: l10n.meshCapacityScreenTitle,
-      actions: [
-        IconButton(
-          tooltip: l10n.meshCapacitySheetOpenSettings,
-          icon: const Icon(Icons.settings_input_antenna, size: 22),
-          onPressed: isConnected ? () => _openRadioSettings(snapshot) : null,
-        ),
-        AppBarOverflowMenu<String>(
-          onSelected: (value) {
-            switch (value) {
-              case 'explain':
-                _openExplanation(snapshot);
-              case 'settings':
-                _openRadioSettings(snapshot);
-            }
-          },
-          itemBuilder: (context) => [
-            PopupMenuItem(
-              value: 'explain',
-              child: ListTile(
-                leading: const Icon(Icons.menu_book_outlined),
-                title: Text(l10n.meshCapacitySheetTitle),
-                contentPadding: EdgeInsets.zero,
-                visualDensity: VisualDensity.compact,
+    final nodes = ref.watch(nodesProvider);
+    final myNodeNum = ref.watch(myNodeNumProvider);
+    final now = DateTime.now();
+    final candidates = _rfActiveCandidates(nodes, myNodeNum, now);
+    final filtered = candidates
+        .where(
+          (n) =>
+              _matchesWindow(n, now, _window) &&
+              _matchesSearch(n, _searchQuery),
+        )
+        .toList(growable: false);
+
+    return GestureDetector(
+      onTap: _dismissKeyboard,
+      child: GlassScaffold(
+        resizeToAvoidBottomInset: false,
+        title: l10n.meshCapacityScreenTitle,
+        actions: [
+          IconButton(
+            tooltip: l10n.meshCapacitySheetOpenSettings,
+            icon: const Icon(Icons.settings_input_antenna, size: 22),
+            onPressed: isConnected ? () => _openRadioSettings(snapshot) : null,
+          ),
+          AppBarOverflowMenu<String>(
+            onSelected: (value) {
+              switch (value) {
+                case 'explain':
+                  _openExplanation(snapshot);
+                case 'settings':
+                  _openRadioSettings(snapshot);
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'explain',
+                child: ListTile(
+                  leading: const Icon(Icons.menu_book_outlined),
+                  title: Text(l10n.meshCapacitySheetTitle),
+                  contentPadding: EdgeInsets.zero,
+                  visualDensity: VisualDensity.compact,
+                ),
+              ),
+              PopupMenuItem(
+                value: 'settings',
+                enabled: isConnected,
+                child: ListTile(
+                  leading: const Icon(Icons.settings_input_antenna),
+                  title: Text(l10n.meshCapacitySheetOpenSettings),
+                  contentPadding: EdgeInsets.zero,
+                  visualDensity: VisualDensity.compact,
+                ),
+              ),
+            ],
+          ),
+        ],
+        slivers: [
+          const SliverToBoxAdapter(child: SizedBox(height: AppTheme.spacing8)),
+
+          if (!isConnected)
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: _buildNotConnectedState(l10n),
+            )
+          else if (!snapshot.hasSufficientSignalData) ...[
+            SliverToBoxAdapter(
+              child: _PressureHeroCard(
+                snapshot: snapshot,
+                pressureColor: pressureColor,
               ),
             ),
-            PopupMenuItem(
-              value: 'settings',
-              enabled: isConnected,
-              child: ListTile(
-                leading: const Icon(Icons.settings_input_antenna),
-                title: Text(l10n.meshCapacitySheetOpenSettings),
-                contentPadding: EdgeInsets.zero,
-                visualDensity: VisualDensity.compact,
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: _buildQuietMeshState(l10n),
+            ),
+          ] else ...[
+            SliverToBoxAdapter(
+              child: _PressureHeroCard(
+                snapshot: snapshot,
+                pressureColor: pressureColor,
+              ),
+            ),
+            SliverToBoxAdapter(child: _StatRow(snapshot: snapshot)),
+
+            if (snapshot.recommendation.shouldShowCard)
+              SliverToBoxAdapter(
+                child: _RecommendationCard(
+                  snapshot: snapshot,
+                  pressureColor: pressureColor,
+                  onOpenSettings: () => _openRadioSettings(snapshot),
+                  onLearnMore: () => _openExplanation(snapshot),
+                ),
+              ),
+
+            const SliverToBoxAdapter(child: _ActivitySection()),
+
+            // Pinned search + window filter chips for the RF-active
+            // node list — same primitive as Presence/NodeDex/Signals.
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: SearchFilterHeaderDelegate(
+                searchController: _searchController,
+                searchQuery: _searchQuery,
+                onSearchChanged: (value) =>
+                    setState(() => _searchQuery = value),
+                hintText: l10n.meshCapacityNodesSearchHint,
+                textScaler: MediaQuery.textScalerOf(context),
+                rebuildKey: Object.hashAll([
+                  _window,
+                  candidates.length,
+                  _countForWindow(candidates, now, _NodeWindow.fiveMin),
+                  _countForWindow(candidates, now, _NodeWindow.fifteenMin),
+                  _countForWindow(candidates, now, _NodeWindow.sixtyMin),
+                ]),
+                filterChips: [
+                  for (final w in _NodeWindow.values)
+                    StatusFilterChip(
+                      label: _windowLabel(l10n, w),
+                      count: _countForWindow(candidates, now, w),
+                      isSelected: _window == w,
+                      color: _windowColor(context, w),
+                      onTap: () => setState(() => _window = w),
+                    ),
+                ],
+              ),
+            ),
+
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: SectionHeaderDelegate(
+                title: l10n.meshCapacityNodeListHeader,
+                count: filtered.length,
+              ),
+            ),
+
+            if (filtered.isEmpty)
+              SliverToBoxAdapter(
+                child: _NoMatchState(
+                  hasSearch: _searchQuery.isNotEmpty,
+                  hasFilter: _window != _NodeWindow.all,
+                  onClearFilter: () =>
+                      setState(() => _window = _NodeWindow.all),
+                ),
+              )
+            else
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, i) =>
+                      _NodeRow(node: filtered[i], now: now, l10n: l10n),
+                  childCount: filtered.length,
+                ),
+              ),
+
+            const SliverToBoxAdapter(child: _EducationSection()),
+
+            SliverToBoxAdapter(
+              child: _SnapshotDetailsSection(snapshot: snapshot),
+            ),
+
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height:
+                    MediaQuery.of(context).padding.bottom + AppTheme.spacing24,
               ),
             ),
           ],
-        ),
-      ],
-      slivers: [
-        const SliverToBoxAdapter(child: SizedBox(height: AppTheme.spacing8)),
-
-        if (!isConnected)
-          SliverFillRemaining(
-            hasScrollBody: false,
-            child: _buildNotConnectedState(l10n),
-          )
-        else if (!snapshot.hasSufficientSignalData) ...[
-          SliverToBoxAdapter(
-            child: _PressureHeroCard(
-              snapshot: snapshot,
-              pressureColor: pressureColor,
-            ),
-          ),
-          SliverFillRemaining(
-            hasScrollBody: false,
-            child: _buildQuietMeshState(l10n),
-          ),
-        ] else ...[
-          SliverToBoxAdapter(
-            child: _PressureHeroCard(
-              snapshot: snapshot,
-              pressureColor: pressureColor,
-            ),
-          ),
-          SliverToBoxAdapter(child: _StatRow(snapshot: snapshot)),
-
-          if (snapshot.recommendation.shouldShowCard)
-            SliverToBoxAdapter(
-              child: _RecommendationCard(
-                snapshot: snapshot,
-                pressureColor: pressureColor,
-                onOpenSettings: () => _openRadioSettings(snapshot),
-                onLearnMore: () => _openExplanation(snapshot),
-              ),
-            ),
-
-          const SliverToBoxAdapter(child: _ActivitySection()),
-
-          const SliverToBoxAdapter(child: _EducationSection()),
-
-          SliverToBoxAdapter(
-            child: _SnapshotDetailsSection(snapshot: snapshot),
-          ),
-
-          SliverToBoxAdapter(
-            child: SizedBox(
-              height:
-                  MediaQuery.of(context).padding.bottom + AppTheme.spacing24,
-            ),
-          ),
         ],
-      ],
+      ),
     );
   }
 
@@ -316,74 +496,30 @@ class _PressureHeroCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            Wrap(
+              spacing: AppTheme.spacing8,
+              runSpacing: AppTheme.spacing8,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppTheme.spacing10,
-                    vertical: AppTheme.spacing4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: pressureColor.withValues(alpha: 0.18),
-                    borderRadius: BorderRadius.circular(AppTheme.radius20),
-                    border: Border.all(
-                      color: pressureColor.withValues(alpha: 0.4),
-                      width: 0.5,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        _pressureIcon(snapshot.pressureLevel),
-                        size: 12,
-                        color: pressureColor,
-                      ),
-                      const SizedBox(width: AppTheme.spacing6),
-                      Text(
-                        _pressureLabel(
-                          l10n,
-                          snapshot.pressureLevel,
-                        ).toUpperCase(),
-                        style: TextStyle(
-                          fontSize: 11,
-                          letterSpacing: 0.6,
-                          fontWeight: FontWeight.w700,
-                          color: pressureColor,
-                          fontFamily: AppTheme.fontFamily,
-                        ),
-                      ),
-                    ],
-                  ),
+                _HeroChip(
+                  icon: _pressureIcon(snapshot.pressureLevel),
+                  label: _pressureLabel(
+                    l10n,
+                    snapshot.pressureLevel,
+                  ).toUpperCase(),
+                  color: pressureColor,
+                  filled: true,
                 ),
-                const Spacer(),
-                if (presetMetadata != null)
-                  Flexible(
-                    child: Text(
-                      presetMetadata.label(l10n).toUpperCase(),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.right,
-                      style: TextStyle(
-                        fontSize: 11,
-                        letterSpacing: 0.6,
-                        fontWeight: FontWeight.w600,
-                        color: context.textSecondary,
-                        fontFamily: AppTheme.fontFamily,
-                      ),
-                    ),
-                  )
-                else
-                  Text(
-                    l10n.meshCapacitySheetPresetUnknownValue.toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 11,
-                      letterSpacing: 0.6,
-                      fontWeight: FontWeight.w600,
-                      color: context.textTertiary,
-                      fontFamily: AppTheme.fontFamily,
-                    ),
-                  ),
+                _HeroChip(
+                  icon: Icons.settings_input_antenna,
+                  label: presetMetadata != null
+                      ? presetMetadata.label(l10n).toUpperCase()
+                      : l10n.meshCapacitySheetPresetUnknownValue.toUpperCase(),
+                  color: presetMetadata != null
+                      ? context.textSecondary
+                      : context.textTertiary,
+                  filled: false,
+                ),
               ],
             ),
             const SizedBox(height: AppTheme.spacing16),
@@ -445,6 +581,57 @@ class _PressureHeroCard extends StatelessWidget {
       case MeshCapacityPressureLevel.unknown:
         return Icons.help_outline;
     }
+  }
+}
+
+class _HeroChip extends StatelessWidget {
+  const _HeroChip({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.filled,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+  final bool filled;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing10,
+        vertical: AppTheme.spacing4,
+      ),
+      decoration: BoxDecoration(
+        color: filled ? color.withValues(alpha: 0.18) : Colors.transparent,
+        borderRadius: BorderRadius.circular(AppTheme.radius20),
+        border: Border.all(
+          color: filled
+              ? color.withValues(alpha: 0.4)
+              : color.withValues(alpha: 0.35),
+          width: 0.5,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: AppTheme.spacing6),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              letterSpacing: 0.6,
+              fontWeight: filled ? FontWeight.w700 : FontWeight.w600,
+              color: color,
+              fontFamily: AppTheme.fontFamily,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -1059,7 +1246,7 @@ class _ActivitySection extends ConsumerWidget {
             ),
             const SizedBox(height: AppTheme.spacing16),
             SizedBox(
-              height: 80,
+              height: 96,
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: List.generate(5, (i) {
@@ -1073,6 +1260,7 @@ class _ActivitySection extends ConsumerWidget {
                       ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.end,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           if (c > 0)
                             Padding(
@@ -1089,16 +1277,18 @@ class _ActivitySection extends ConsumerWidget {
                                 ),
                               ),
                             ),
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 500),
-                            curve: Curves.easeOut,
-                            height: h,
-                            decoration: BoxDecoration(
-                              color: c > 0
-                                  ? color
-                                  : color.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(
-                                AppTheme.radius4,
+                          Flexible(
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 500),
+                              curve: Curves.easeOut,
+                              constraints: BoxConstraints(maxHeight: h),
+                              decoration: BoxDecoration(
+                                color: c > 0
+                                    ? color
+                                    : color.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius4,
+                                ),
                               ),
                             ),
                           ),
@@ -1311,28 +1501,16 @@ class _SnapshotDetailsSection extends StatelessWidget {
                     : l10n.meshCapacitySheetPresetUnknownValue,
               ),
               InfoTableRow(
-                label: l10n.meshCapacitySheetActiveNodes5mLabel,
-                value: '${snapshot.activeRfNodes5m}',
-              ),
-              InfoTableRow(
-                label: l10n.meshCapacitySheetActiveNodes15mLabel,
-                value: '${snapshot.activeRfNodes15m}',
-              ),
-              InfoTableRow(
-                label: l10n.meshCapacitySheetActiveNodes60mLabel,
-                value: '${snapshot.activeRfNodes60m}',
-              ),
-              InfoTableRow(
-                label: l10n.meshCapacitySheetTotalKnownLabel,
-                value: '${snapshot.totalKnownNodes}',
-              ),
-              InfoTableRow(
                 label: l10n.meshCapacitySheetPressureLabel,
                 value: _pressureLabel(l10n, snapshot.pressureLevel),
               ),
               InfoTableRow(
                 label: l10n.meshCapacityReasonLabel,
                 value: _reasonLabel(l10n, snapshot.recommendation.reasonCode),
+              ),
+              InfoTableRow(
+                label: l10n.meshCapacitySheetTotalKnownLabel,
+                value: '${snapshot.totalKnownNodes}',
               ),
               if (suggestedMetadata != null)
                 InfoTableRow(
@@ -1363,5 +1541,204 @@ class _SnapshotDetailsSection extends StatelessWidget {
       case MeshCapacityReasonCode.insufficientData:
         return l10n.meshCapacityReasonInsufficientData;
     }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// RF-active node row + no-match state.
+// ---------------------------------------------------------------------------
+
+class _NodeRow extends StatelessWidget {
+  const _NodeRow({required this.node, required this.now, required this.l10n});
+
+  final MeshNode node;
+  final DateTime now;
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final age = now.difference(node.lastHeard!);
+    final hop = node.hopCount;
+    final ageColor = _ageColor(context, age);
+
+    return Container(
+      margin: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing16,
+        vertical: AppTheme.spacing4,
+      ),
+      decoration: BoxDecoration(
+        color: context.surface,
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: AppTheme.spacing16,
+          vertical: AppTheme.spacing8,
+        ),
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => NodeDexDetailScreen(nodeNum: node.nodeNum),
+          ),
+        ),
+        leading: SigilAvatar(nodeNum: node.nodeNum, size: 40),
+        title: Text(
+          node.displayName,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+            color: context.textPrimary,
+            fontFamily: AppTheme.fontFamily,
+          ),
+        ),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: AppTheme.spacing4),
+          child: Wrap(
+            spacing: AppTheme.spacing6,
+            runSpacing: AppTheme.spacing4,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              _RowChip(
+                icon: Icons.schedule,
+                label: _ageLabel(l10n, age),
+                color: ageColor,
+              ),
+              if (hop != null)
+                _RowChip(
+                  icon: hop == 0 ? Icons.radio_button_checked : Icons.route,
+                  label: hop == 0
+                      ? l10n.meshCapacityNodeHopDirect
+                      : l10n.meshCapacityNodeHopCount(hop),
+                  color: hop == 0 ? AccentColors.green : context.textTertiary,
+                ),
+              if (node.snr != null)
+                _RowChip(
+                  icon: Icons.signal_cellular_alt,
+                  label: 'SNR ${node.snr}',
+                  color: context.textTertiary,
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Color _ageColor(BuildContext context, Duration age) {
+    if (age <= const Duration(minutes: 5)) return AccentColors.green;
+    if (age <= const Duration(minutes: 15)) return AccentColors.cyan;
+    if (age <= const Duration(minutes: 60)) return AccentColors.lavender;
+    return context.textTertiary;
+  }
+
+  String _ageLabel(AppLocalizations l10n, Duration age) {
+    if (age.inSeconds < 60) return l10n.meshCapacityNodeAgeJustNow;
+    final minutes = age.inMinutes;
+    if (minutes < 60) return l10n.meshCapacityNodeAgeMinutes(minutes);
+    final hours = age.inHours;
+    return l10n.meshCapacityNodeAgeHours(hours);
+  }
+}
+
+class _RowChip extends StatelessWidget {
+  const _RowChip({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing8,
+        vertical: AppTheme.spacing2,
+      ),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 0.5),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 11, color: color),
+          const SizedBox(width: AppTheme.spacing4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: color,
+              fontFamily: AppTheme.fontFamily,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NoMatchState extends StatelessWidget {
+  const _NoMatchState({
+    required this.hasSearch,
+    required this.hasFilter,
+    required this.onClearFilter,
+  });
+
+  final bool hasSearch;
+  final bool hasFilter;
+  final VoidCallback onClearFilter;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppTheme.spacing24,
+        AppTheme.spacing24,
+        AppTheme.spacing24,
+        AppTheme.spacing16,
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: context.card,
+              borderRadius: BorderRadius.circular(AppTheme.radius16),
+            ),
+            child: Icon(
+              hasSearch ? Icons.search_off : Icons.filter_list_off,
+              size: 28,
+              color: context.textTertiary,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing12),
+          Text(
+            hasSearch
+                ? l10n.meshCapacityNodeListNoMatchSearch
+                : l10n.meshCapacityNodeListNoMatchFilter,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14,
+              color: context.textSecondary,
+              fontFamily: AppTheme.fontFamily,
+            ),
+          ),
+          if (hasFilter && !hasSearch) ...[
+            const SizedBox(height: AppTheme.spacing8),
+            TextButton(
+              onPressed: onClearFilter,
+              child: Text(l10n.meshCapacityNodeListShowAll),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 }

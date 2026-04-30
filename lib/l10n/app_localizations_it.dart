@@ -33287,6 +33287,74 @@ class AppLocalizationsIt extends AppLocalizations {
       'I preset a lungo raggio sono perfetti per esplorare mesh poco dense.';
 
   @override
+  String get meshCapacityNodesSearchHint => 'Cerca per nome o ID';
+
+  @override
+  String get meshCapacityNodeFilterAll => 'Tutti';
+
+  @override
+  String get meshCapacityNodeFilter5m => '<5m';
+
+  @override
+  String get meshCapacityNodeFilter15m => '<15m';
+
+  @override
+  String get meshCapacityNodeFilter60m => '<60m';
+
+  @override
+  String get meshCapacityNodeListHeader => 'Nodi attivi via radio';
+
+  @override
+  String get meshCapacityNodeListNoMatchSearch =>
+      'Nessun nodo corrisponde alla ricerca.';
+
+  @override
+  String get meshCapacityNodeListNoMatchFilter =>
+      'Nessun nodo in questa finestra.';
+
+  @override
+  String get meshCapacityNodeListShowAll => 'Mostra tutto';
+
+  @override
+  String get meshCapacityNodeAgeJustNow => 'ora';
+
+  @override
+  String meshCapacityNodeAgeMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count min fa',
+      one: '1 min fa',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meshCapacityNodeAgeHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ore fa',
+      one: '1 ora fa',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshCapacityNodeHopDirect => 'diretto';
+
+  @override
+  String meshCapacityNodeHopCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hop',
+      one: '1 hop',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get meshCapacityCardTitleBusy => 'La rete sta diventando affollata';
 
   @override
@@ -34215,6 +34283,41 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get notificationSipPeerFoundBody =>
       'Un peer Handshake è nel raggio. Apri Handshake per connetterti.';
+
+  @override
+  String get notificationSipPlayTurnTitle => 'Tocca a te';
+
+  @override
+  String notificationSipPlayTurnBody(String gameName) {
+    return '$gameName — tocca per fare la tua mossa.';
+  }
+
+  @override
+  String get notificationSipPlayTurnBodyUnknownGame =>
+      'Tocca a te — tocca per giocare.';
+
+  @override
+  String get notificationChannelSipPlay => 'Turni di gioco';
+
+  @override
+  String get settingsTileGameTurnsTitle => 'Turni di gioco';
+
+  @override
+  String get settingsTileGameTurnsSubtitle =>
+      'Avvisami quando è il mio turno in una partita SIP Play.';
+
+  @override
+  String get settingsSearchGameTurnsTitle => 'Turni di gioco';
+
+  @override
+  String get settingsSearchGameTurnsSubtitle =>
+      'Avvisami quando è il mio turno in una partita.';
+
+  @override
+  String get sipPlayGameNameTicTacToe => 'Tris';
+
+  @override
+  String get sipPlayGameNameConnectFour => 'Forza Quattro';
 
   @override
   String get notificationChannelSipDiscovery => 'Scoperta peer';

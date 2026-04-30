@@ -322,6 +322,21 @@ class SettingsService {
   bool get channelMessageNotificationsEnabled =>
       _preferences.getBool('channel_notifications_enabled') ?? true;
 
+  /// Notification: SIP Play "your turn" pings.
+  ///
+  /// Field-test request — when an inbound SIP Play move from the
+  /// opponent transitions the local side into the active player, fire
+  /// a local notification so a backgrounded user gets a visible cue.
+  /// Default true; the user can opt out from the Notifications section
+  /// of Settings. Hard-gated upstream by [AppFeatureFlags.isSipEnabled]
+  /// so the toggle is hidden entirely on builds where SIP is off.
+  Future<void> setSipPlayTurnNotificationsEnabled(bool enabled) async {
+    await _preferences.setBool('sip_play_turn_notifications_enabled', enabled);
+  }
+
+  bool get sipPlayTurnNotificationsEnabled =>
+      _preferences.getBool('sip_play_turn_notifications_enabled') ?? true;
+
   // Notification: Sound
   Future<void> setNotificationSoundEnabled(bool enabled) async {
     await _preferences.setBool('notification_sound_enabled', enabled);

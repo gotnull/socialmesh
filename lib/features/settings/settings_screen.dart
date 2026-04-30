@@ -729,6 +729,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           section: context.l10n.settingsSectionNotifications,
           hasSwitch: true,
         ),
+        if (AppFeatureFlags.isSipEnabled)
+          _SearchableSettingItem(
+            icon: Icons.casino_outlined,
+            title: context.l10n.settingsSearchGameTurnsTitle,
+            subtitle: context.l10n.settingsSearchGameTurnsSubtitle,
+            keywords: [
+              'notification',
+              'game',
+              'play',
+              'turn',
+              'sip',
+              'tic-tac-toe',
+              'connect four',
+            ],
+            section: context.l10n.settingsSectionNotifications,
+            hasSwitch: true,
+          ),
         _SearchableSettingItem(
           icon: Icons.volume_up_outlined,
           title: context.l10n.settingsSearchNotificationSoundTitle,
@@ -2690,6 +2707,40 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                                 },
                               ),
                             ),
+                            // SIP Play "your turn" notification toggle.
+                            // Field-test request — only surfaces on
+                            // builds where SIP is enabled (mirrors how
+                            // the Handshake hub itself is gated in the
+                            // drawer). When the env flag is off, SIP
+                            // Play isn't reachable so the toggle would
+                            // be inert.
+                            if (AppFeatureFlags.isSipEnabled)
+                              _SettingsTile(
+                                icon: Icons.casino_outlined,
+                                title: context.l10n.settingsTileGameTurnsTitle,
+                                subtitle:
+                                    context.l10n.settingsTileGameTurnsSubtitle,
+                                trailing: ThemedSwitch(
+                                  value: settingsService
+                                      .sipPlayTurnNotificationsEnabled,
+                                  onChanged: (value) async {
+                                    HapticFeedback.selectionClick();
+                                    await settingsService
+                                        .setSipPlayTurnNotificationsEnabled(
+                                          value,
+                                        );
+                                    ref
+                                        .read(userProfileProvider.notifier)
+                                        .updatePreferences(
+                                          UserPreferences(
+                                            sipPlayTurnNotificationsEnabled:
+                                                value,
+                                          ),
+                                        );
+                                    safeSetState(() {});
+                                  },
+                                ),
+                              ),
                             _SettingsTile(
                               icon: Icons.volume_up_outlined,
                               title: context.l10n.settingsTileSoundTitle,

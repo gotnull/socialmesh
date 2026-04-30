@@ -44177,6 +44177,77 @@
     "@meshCapacityQuietMeshTagline3": {
         "description": "Empty-state tagline shown when the local mesh has no RF evidence yet (variant 3)."
     },
+    "meshCapacityNodesSearchHint": "Search by name or ID",
+    "@meshCapacityNodesSearchHint": {
+        "description": "Placeholder text in the search field above the RF-active node list."
+    },
+    "meshCapacityNodeFilterAll": "All",
+    "@meshCapacityNodeFilterAll": {
+        "description": "Filter chip label: show every RF-active node observed in the last 60 minutes."
+    },
+    "meshCapacityNodeFilter5m": "<5m",
+    "@meshCapacityNodeFilter5m": {
+        "description": "Filter chip label: only nodes heard in the last 5 minutes."
+    },
+    "meshCapacityNodeFilter15m": "<15m",
+    "@meshCapacityNodeFilter15m": {
+        "description": "Filter chip label: only nodes heard in the last 15 minutes."
+    },
+    "meshCapacityNodeFilter60m": "<60m",
+    "@meshCapacityNodeFilter60m": {
+        "description": "Filter chip label: only nodes heard in the last 60 minutes."
+    },
+    "meshCapacityNodeListHeader": "RF-active nodes",
+    "@meshCapacityNodeListHeader": {
+        "description": "Sticky section header above the filtered list of RF-active nodes."
+    },
+    "meshCapacityNodeListNoMatchSearch": "No nodes match your search.",
+    "@meshCapacityNodeListNoMatchSearch": {
+        "description": "Empty-state body shown when an active search returns no results."
+    },
+    "meshCapacityNodeListNoMatchFilter": "No nodes in this window.",
+    "@meshCapacityNodeListNoMatchFilter": {
+        "description": "Empty-state body shown when a window filter excludes everything."
+    },
+    "meshCapacityNodeListShowAll": "Show all",
+    "@meshCapacityNodeListShowAll": {
+        "description": "Action label that resets the active window filter."
+    },
+    "meshCapacityNodeAgeJustNow": "just now",
+    "@meshCapacityNodeAgeJustNow": {
+        "description": "Last-heard chip label for nodes heard within the last minute."
+    },
+    "meshCapacityNodeAgeMinutes": "{count, plural, =1{1 min ago} other{{count} min ago}}",
+    "@meshCapacityNodeAgeMinutes": {
+        "description": "Last-heard chip label, in minutes.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "meshCapacityNodeAgeHours": "{count, plural, =1{1 hr ago} other{{count} hr ago}}",
+    "@meshCapacityNodeAgeHours": {
+        "description": "Last-heard chip label, in hours.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "meshCapacityNodeHopDirect": "direct",
+    "@meshCapacityNodeHopDirect": {
+        "description": "Hop-count chip label when the node is a direct neighbor (0 hops)."
+    },
+    "meshCapacityNodeHopCount": "{count, plural, =1{1 hop} other{{count} hops}}",
+    "@meshCapacityNodeHopCount": {
+        "description": "Hop-count chip label for multi-hop neighbors.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
     "meshCapacityCardTitleBusy": "Mesh is getting busy",
     "@meshCapacityCardTitleBusy": {
         "description": "Title of the Mesh Capacity Advisor card shown when the local mesh is starting to fill up but the current preset is still acceptable."
@@ -45392,6 +45463,52 @@
     "notificationSipPeerFoundBody": "A Handshake peer is in range. Open Handshake to connect.",
     "@notificationSipPeerFoundBody": {
         "description": "Notification body when a new SIP peer is discovered."
+    },
+    "notificationSipPlayTurnTitle": "Your turn",
+    "@notificationSipPlayTurnTitle": {
+        "description": "Notification title when the opponent has moved in a SIP Play game and it is now the local user's turn."
+    },
+    "notificationSipPlayTurnBody": "{gameName} — tap to play your move.",
+    "@notificationSipPlayTurnBody": {
+        "description": "Notification body when it is the local user's turn in a SIP Play game. {gameName} is a localised game name like 'Tic-Tac-Toe' or 'Connect Four'.",
+        "placeholders": {
+            "gameName": {
+                "type": "String",
+                "example": "Tic-Tac-Toe"
+            }
+        }
+    },
+    "notificationSipPlayTurnBodyUnknownGame": "It's your move — tap to play.",
+    "@notificationSipPlayTurnBodyUnknownGame": {
+        "description": "Notification body for SIP Play turn when the gameType is unknown/unsupported on this build (forward-compat placeholder)."
+    },
+    "notificationChannelSipPlay": "Game Turns",
+    "@notificationChannelSipPlay": {
+        "description": "Notification channel name for SIP Play turn-notifications."
+    },
+    "settingsTileGameTurnsTitle": "Game turns",
+    "@settingsTileGameTurnsTitle": {
+        "description": "Title of the SIP Play game-turn notification toggle in Settings → Notifications. Only shown on builds where AppFeatureFlags.isSipEnabled is true."
+    },
+    "settingsTileGameTurnsSubtitle": "Notify me when it's my turn in a SIP Play game.",
+    "@settingsTileGameTurnsSubtitle": {
+        "description": "Subtitle for the game-turn notification toggle. Sets the expectation that the ping fires only on opponent moves that flip turn to the local user."
+    },
+    "settingsSearchGameTurnsTitle": "Game turns",
+    "@settingsSearchGameTurnsTitle": {
+        "description": "Settings search index title for the SIP Play game-turn notification toggle."
+    },
+    "settingsSearchGameTurnsSubtitle": "Notify me when it's my turn in a game.",
+    "@settingsSearchGameTurnsSubtitle": {
+        "description": "Settings search index subtitle for the SIP Play game-turn notification toggle."
+    },
+    "sipPlayGameNameTicTacToe": "Tic-Tac-Toe",
+    "@sipPlayGameNameTicTacToe": {
+        "description": "Localised name for the Tic-Tac-Toe game in SIP Play."
+    },
+    "sipPlayGameNameConnectFour": "Connect Four",
+    "@sipPlayGameNameConnectFour": {
+        "description": "Localised name for the Connect Four game in SIP Play."
     },
     "notificationChannelSipDiscovery": "Peer Discovery",
     "@notificationChannelSipDiscovery": {

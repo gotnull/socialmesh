@@ -33269,6 +33269,73 @@ class AppLocalizationsPt extends AppLocalizations {
       'Os presets de longo alcance são perfeitos para explorar malhas esparsas.';
 
   @override
+  String get meshCapacityNodesSearchHint => 'Buscar por nome ou ID';
+
+  @override
+  String get meshCapacityNodeFilterAll => 'Todos';
+
+  @override
+  String get meshCapacityNodeFilter5m => '<5m';
+
+  @override
+  String get meshCapacityNodeFilter15m => '<15m';
+
+  @override
+  String get meshCapacityNodeFilter60m => '<60m';
+
+  @override
+  String get meshCapacityNodeListHeader => 'Nós ativos via rádio';
+
+  @override
+  String get meshCapacityNodeListNoMatchSearch =>
+      'Nenhum nó corresponde à busca.';
+
+  @override
+  String get meshCapacityNodeListNoMatchFilter => 'Nenhum nó nesta janela.';
+
+  @override
+  String get meshCapacityNodeListShowAll => 'Mostrar tudo';
+
+  @override
+  String get meshCapacityNodeAgeJustNow => 'agora';
+
+  @override
+  String meshCapacityNodeAgeMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'há $count min',
+      one: 'há 1 min',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meshCapacityNodeAgeHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'há $count h',
+      one: 'há 1 h',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshCapacityNodeHopDirect => 'direto';
+
+  @override
+  String meshCapacityNodeHopCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hops',
+      one: '1 hop',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get meshCapacityCardTitleBusy => 'A malha está ficando movimentada';
 
   @override
@@ -34193,6 +34260,41 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get notificationSipPeerFoundBody =>
       'Um par Handshake está ao alcance. Abra o Handshake para ligar.';
+
+  @override
+  String get notificationSipPlayTurnTitle => 'É a sua vez';
+
+  @override
+  String notificationSipPlayTurnBody(String gameName) {
+    return '$gameName — toque para jogar.';
+  }
+
+  @override
+  String get notificationSipPlayTurnBodyUnknownGame =>
+      'É a sua vez — toque para jogar.';
+
+  @override
+  String get notificationChannelSipPlay => 'Turnos de jogo';
+
+  @override
+  String get settingsTileGameTurnsTitle => 'Turnos de jogo';
+
+  @override
+  String get settingsTileGameTurnsSubtitle =>
+      'Notifica-me quando for a minha vez num jogo SIP Play.';
+
+  @override
+  String get settingsSearchGameTurnsTitle => 'Turnos de jogo';
+
+  @override
+  String get settingsSearchGameTurnsSubtitle =>
+      'Notifica-me quando for a minha vez num jogo.';
+
+  @override
+  String get sipPlayGameNameTicTacToe => 'Jogo do Galo';
+
+  @override
+  String get sipPlayGameNameConnectFour => 'Quatro em Linha';
 
   @override
   String get notificationChannelSipDiscovery => 'Descoberta de Pares';
