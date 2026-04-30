@@ -3,6 +3,7 @@
 
 import 'dart:typed_data';
 
+import 'package:clock/clock.dart';
 import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/services/protocol/sip/sip_codec.dart';
@@ -886,6 +887,74 @@ void main() {
               'expiry must bump onStateChanged so the chip rebuilds out '
               'of "Connecting…"',
         );
+      });
+    });
+
+    test('cooldownRemaining tracks the per-peer fail cooldown live', () {
+      // After a handshake fails (timeout, in this case), the manager
+      // arms a per-peer cooldown for `handshakeCooldownPerPeer`. The
+      // SIP Hub peer-tile chip reads `cooldownRemaining` to render a
+      // live countdown and to disable the tap target — without this
+      // accessor the gate was UI-invisible and taps silently no-opped
+      // into a `SIP_HS: ... blocked by cooldown` log line.
+      FakeAsync().run((fake) {
+        // Inject `clock.now` from package:clock — `fake_async` runs
+        // inside a `withClock` zone where `clock.now()` advances with
+        // `fake.elapse()`. Plain `DateTime.now()` is wallclock and
+        // would make `cooldownRemaining` look frozen at the full
+        // window even after `fake.elapse(60s)`.
+        final mgr = SipHandshakeManager(
+          replayCache: SipReplayCache(),
+          localNodeId: 0xAAAA,
+          clock: () => clock.now(),
+        );
+        mgr.isDmAvailable = true;
+
+        // No cooldown before any handshake activity.
+        expect(mgr.cooldownRemaining(0x5555), Duration.zero);
+        expect(mgr.isInCooldown(0x5555), isFalse);
+
+        mgr.initiateHandshake(0x5555);
+        // Drive past the wire timeout so `_failSession` arms cooldown.
+        fake.elapse(SipConstants.handshakeTimeout + const Duration(seconds: 1));
+
+        // Cooldown is now armed for the full per-peer window.
+        expect(mgr.isInCooldown(0x5555), isTrue);
+        final initial = mgr.cooldownRemaining(0x5555);
+        expect(
+          initial,
+          lessThanOrEqualTo(SipConstants.handshakeCooldownPerPeer),
+          reason: 'cooldownRemaining must never exceed the constant',
+        );
+        expect(
+          initial,
+          greaterThan(
+            SipConstants.handshakeCooldownPerPeer - const Duration(seconds: 5),
+          ),
+          reason:
+              'cooldown should be near the full window immediately after '
+              'arming',
+        );
+
+        // Half-way through, the remaining time should reflect elapsed time.
+        fake.elapse(const Duration(seconds: 60));
+        final mid = mgr.cooldownRemaining(0x5555);
+        expect(
+          mid,
+          lessThan(initial - const Duration(seconds: 50)),
+          reason: 'cooldownRemaining must decrement as wall clock advances',
+        );
+        expect(mid, greaterThan(Duration.zero));
+        expect(mgr.isInCooldown(0x5555), isTrue);
+
+        // Past the cooldown window — accessor returns Duration.zero
+        // (not a negative value) and isInCooldown flips to false.
+        fake.elapse(SipConstants.handshakeCooldownPerPeer);
+        expect(mgr.cooldownRemaining(0x5555), Duration.zero);
+        expect(mgr.isInCooldown(0x5555), isFalse);
+
+        // A different peer is unaffected.
+        expect(mgr.cooldownRemaining(0x6666), Duration.zero);
       });
     });
 

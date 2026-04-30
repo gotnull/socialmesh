@@ -33305,6 +33305,7 @@
   "sipHandshakeFailed": "Handshake fallito",
   "sipHandshakeInProgress": "Handshake in corso…",
   "sipHandshakePendingLabel": "Vuole connettersi",
+  "sipHandshakeCooldown": "Attendi {time}",
   "sipHubAccept": "Accetta",
   "sipHubConnected": "Connesso",
   "sipHubDecline": "Rifiuta",

@@ -1181,6 +1181,20 @@ class SipHandshakeManager {
     return _clock().millisecondsSinceEpoch < cooldownUntilMs;
   }
 
+  /// Time remaining on the per-peer cooldown after a failed handshake,
+  /// or [Duration.zero] if no cooldown is active.
+  ///
+  /// Drives the SIP Hub peer-tile chip's live countdown so the user can
+  /// see exactly how long until the next initiation attempt is allowed,
+  /// instead of tapping into a silent rejection logged at SIP_HS level.
+  Duration cooldownRemaining(int peerNodeId) {
+    final cooldownUntilMs = _failCooldownMs[peerNodeId];
+    if (cooldownUntilMs == null) return Duration.zero;
+    final remainingMs = cooldownUntilMs - _clock().millisecondsSinceEpoch;
+    if (remainingMs <= 0) return Duration.zero;
+    return Duration(milliseconds: remainingMs);
+  }
+
   /// Reset all handshake state.
   void reset() {
     for (final session in _sessions.values) {

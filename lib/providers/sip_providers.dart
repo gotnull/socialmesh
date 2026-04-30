@@ -751,3 +751,27 @@ final sipPendingHandshakeProvider = Provider<List<int>>((ref) {
   final hs = ref.watch(sipHandshakeProvider);
   return hs?.pendingRequestNodeIds ?? const [];
 });
+
+/// 1Hz ticker that drives the live SIP handshake cooldown countdown in
+/// peer-tile chips. autoDispose so the timer stops the moment no chip
+/// is watching it. Single global timer regardless of peer count — every
+/// peer cooldown chip shares this one stream.
+final _sipHandshakeCooldownTickerProvider = StreamProvider.autoDispose<int>((
+  ref,
+) {
+  return Stream<int>.periodic(const Duration(seconds: 1), (i) => i);
+});
+
+/// Seconds remaining on the per-peer handshake fail cooldown, or 0 when
+/// no cooldown is active for [peerNodeId]. Combines the handshake state
+/// epoch (which bumps the moment a handshake fails and arms the
+/// cooldown) with the 1Hz ticker so the SIP Hub peer-tile chip can
+/// live-count down without the chip itself owning a timer.
+final sipHandshakeCooldownSecondsProvider = Provider.autoDispose
+    .family<int, int>((ref, peerNodeId) {
+      ref.watch(sipHandshakeEpochProvider);
+      ref.watch(_sipHandshakeCooldownTickerProvider);
+      final hs = ref.watch(sipHandshakeProvider);
+      if (hs == null) return 0;
+      return hs.cooldownRemaining(peerNodeId).inSeconds;
+    });

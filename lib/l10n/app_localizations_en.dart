@@ -32117,6 +32117,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sipHandshakePendingLabel => 'Wants to connect';
 
   @override
+  String sipHandshakeCooldown(String time) {
+    return 'Wait $time';
+  }
+
+  @override
   String get sipRequestIdentity => 'Request Identity';
 
   @override

@@ -32458,6 +32458,11 @@ class AppLocalizationsIt extends AppLocalizations {
   String get sipHandshakePendingLabel => 'Vuole connettersi';
 
   @override
+  String sipHandshakeCooldown(String time) {
+    return 'Attendi $time';
+  }
+
+  @override
   String get sipRequestIdentity => 'Richiedi identità';
 
   @override

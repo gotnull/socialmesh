@@ -1120,6 +1120,9 @@ class _PeerTileState extends ConsumerState<_PeerTile>
     final hsState = ref.watch(sipHandshakeStateProvider(widget.peer.nodeId));
     final patinaResult = ref.watch(nodeDexPatinaProvider(widget.peer.nodeId));
     final traitResult = ref.watch(nodeDexTraitProvider(widget.peer.nodeId));
+    final cooldownSeconds = ref.watch(
+      sipHandshakeCooldownSecondsProvider(widget.peer.nodeId),
+    );
 
     // Detect transitions to negative states.
     _onHandshakeStateChanged(hsState);
@@ -1136,8 +1139,12 @@ class _PeerTileState extends ConsumerState<_PeerTile>
         '!${widget.peer.nodeId.toRadixString(16).toUpperCase().padLeft(4, '0')}';
 
     // Block taps while handshake is in-progress (not pendingApproval —
-    // that requires user action so the card stays tappable).
+    // that requires user action so the card stays tappable) AND while
+    // the per-peer fail cooldown is active. Tapping during cooldown
+    // would silently no-op at the manager (`SIP_HS: ... blocked by
+    // cooldown`), so we surface the gate at the UI layer instead.
     final isBusy = _isHandshaking(hsState);
+    final isCoolingDown = cooldownSeconds > 0 && !hasDmSession;
     final isDeclined = _isNegative(hsState);
 
     return AnimatedBuilder(
@@ -1147,9 +1154,9 @@ class _PeerTileState extends ConsumerState<_PeerTile>
         child: child,
       ),
       child: BouncyTap(
-        onTap: isBusy ? null : widget.onHandshake,
-        onLongPress: isBusy ? null : widget.onHandshake,
-        enabled: !isBusy,
+        onTap: (isBusy || isCoolingDown) ? null : widget.onHandshake,
+        onLongPress: (isBusy || isCoolingDown) ? null : widget.onHandshake,
+        enabled: !isBusy && !isCoolingDown,
         scaleFactor: 0.98,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 300),
@@ -1216,6 +1223,7 @@ class _PeerTileState extends ConsumerState<_PeerTile>
                           _HandshakeChip(
                             state: hsState,
                             hasDmSession: hasDmSession,
+                            cooldownSeconds: cooldownSeconds,
                           ),
                           _LastSeenChip(lastSeenMs: widget.peer.lastSeenMs),
                         ],
@@ -1289,7 +1297,17 @@ class _HandshakeChip extends StatefulWidget {
   final SipHandshakeState state;
   final bool hasDmSession;
 
-  const _HandshakeChip({required this.state, this.hasDmSession = false});
+  /// Live per-peer fail-cooldown countdown in seconds, or 0 when no
+  /// cooldown is active. When > 0 (and the peer has no DM session
+  /// yet), the chip switches to a disabled cooldown variant — the
+  /// `_PeerTile` also gates taps to match.
+  final int cooldownSeconds;
+
+  const _HandshakeChip({
+    required this.state,
+    this.hasDmSession = false,
+    this.cooldownSeconds = 0,
+  });
 
   @override
   State<_HandshakeChip> createState() => _HandshakeChipState();
@@ -1316,13 +1334,21 @@ class _HandshakeChipState extends State<_HandshakeChip>
   @override
   void didUpdateWidget(_HandshakeChip old) {
     super.didUpdateWidget(old);
-    if (old.state != widget.state || old.hasDmSession != widget.hasDmSession) {
+    if (old.state != widget.state ||
+        old.hasDmSession != widget.hasDmSession ||
+        old.cooldownSeconds != widget.cooldownSeconds) {
       _syncAnimation();
     }
   }
 
+  bool get _isCoolingDown => !widget.hasDmSession && widget.cooldownSeconds > 0;
+
   void _syncAnimation() {
+    // Cooldown chip is intentionally static — the gate is by design,
+    // not an in-flight error. Pulse only for in-progress / negative
+    // states without a DM session.
     if (!widget.hasDmSession &&
+        !_isCoolingDown &&
         (_isInProgress(widget.state) || _isNegative(widget.state))) {
       _pulseController.repeat(reverse: true);
     } else {
@@ -1358,12 +1384,22 @@ class _HandshakeChipState extends State<_HandshakeChip>
     AppLogging.sip(
       'SIP_HUB_CHIP: state=${widget.state.name}, '
       'hasDm=${widget.hasDmSession}, '
-      'inProgress=${_isInProgress(widget.state)}', // lint-allow: hardcoded-string
+      'inProgress=${_isInProgress(widget.state)}, '
+      'cooldown=${widget.cooldownSeconds}s', // lint-allow: hardcoded-string
     );
 
     // If a DM session exists, show "Connected" regardless of handshake state.
+    // Cooldown takes precedence over the failed/declined chip when there's
+    // no DM session yet — the user wants to see how long until retry, not
+    // a stale "Could not connect" badge that they can't act on.
     final (label, color, icon) = widget.hasDmSession
         ? (l10n.sipHubConnected, AccentColors.green, Icons.chat_bubble_outline)
+        : _isCoolingDown
+        ? (
+            l10n.sipHandshakeCooldown(_formatCooldown(widget.cooldownSeconds)),
+            context.textTertiary,
+            Icons.timer_outlined,
+          )
         : switch (widget.state) {
             SipHandshakeState.idle => (
               l10n.sipHandshakeAction,
@@ -1424,11 +1460,28 @@ class _HandshakeChipState extends State<_HandshakeChip>
     );
 
     if (!widget.hasDmSession &&
+        !_isCoolingDown &&
         (_isInProgress(widget.state) || _isNegative(widget.state))) {
       chip = FadeTransition(opacity: _pulseAnimation, child: chip);
     }
 
     return chip;
+  }
+
+  /// Compact "1m 50s" / "50s" formatter for the cooldown chip. Kept
+  /// here rather than in a global util because the SIP fail cooldown
+  /// is the only place this exact format is needed (the traceroute
+  /// cooldown chip uses bare seconds — a 30 s window doesn't need the
+  /// minute split). Output is plain digits + 'm'/'s' so it's
+  /// understood without translation; surrounding ARB copy is the
+  /// translatable surface.
+  static String _formatCooldown(int seconds) {
+    if (seconds <= 0) return '0s';
+    if (seconds < 60) return '${seconds}s';
+    final m = seconds ~/ 60;
+    final s = seconds % 60;
+    if (s == 0) return '${m}m';
+    return '${m}m ${s}s';
   }
 }
 

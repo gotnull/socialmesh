@@ -56492,6 +56492,12 @@ abstract class AppLocalizations {
   /// **'Wants to connect'**
   String get sipHandshakePendingLabel;
 
+  /// Chip label shown on a peer tile while the per-peer fail cooldown is active after a failed handshake. The peer tile also disables taps for this duration so the user can't trigger a no-op initiation. {time} is a compact human-readable duration like '1m 50s' or '12s'.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait {time}'**
+  String sipHandshakeCooldown(String time);
+
   /// Button label to request identity from a SIP peer.
   ///
   /// In en, this message translates to:
