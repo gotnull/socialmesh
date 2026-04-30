@@ -454,14 +454,15 @@ class _MainShellState extends ConsumerState<MainShell> {
         requiresConnection: true,
         badgeProviderKey: 'mesh_explorer',
       ),
-    DrawerMenuItem(
-      icon: Icons.network_check,
-      label: l10n.meshCapacityScreenTitle,
-      screen: const MeshCapacityScreen(),
-      iconColor: AccentColors.cyan,
-      requiresConnection: true,
-      whatsNewBadgeKey: 'mesh_capacity',
-    ),
+    if (AppFeatureFlags.isMeshCapacityEnabled)
+      DrawerMenuItem(
+        icon: Icons.network_check,
+        label: l10n.meshCapacityScreenTitle,
+        screen: const MeshCapacityScreen(),
+        iconColor: AccentColors.cyan,
+        requiresConnection: true,
+        whatsNewBadgeKey: 'mesh_capacity',
+      ),
     if (AppFeatureFlags.isMeshFeedEnabled)
       DrawerMenuItem(
         icon: Icons.dynamic_feed_outlined,

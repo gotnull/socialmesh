@@ -550,6 +550,20 @@ class AppFeatureFlags {
     }
   }
 
+  /// Whether the Mesh Capacity Advisor drawer entry is enabled.
+  /// Set `MESH_CAPACITY_ENABLED=true` in `.env` to expose the screen
+  /// from the drawer. Default: false — feature is hidden until ready
+  /// for release. The advisor's pure logic (snapshots, providers) is
+  /// always available; this flag only controls the drawer surface.
+  static bool get isMeshCapacityEnabled {
+    try {
+      final raw = dotenv.env['MESH_CAPACITY_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Whether opportunistic peer sync (LAN/BLE) is enabled.
   /// Set `OPPORTUNISTIC_SYNC_ENABLED=true` in `.env` to enable.
   /// Requires [isMeshFeedEnabled] to be true.
