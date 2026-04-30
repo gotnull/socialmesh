@@ -1280,7 +1280,24 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
     return peer?.supportsDmSignalV1 ?? false;
   }
 
+  /// Whether SIP discovery has at least one cache entry for the
+  /// peer — i.e. we've seen a CAP_BEACON / CAP_RESP / ROLLCALL_RESP
+  /// / handshake-derived feature row for them. Distinct from "peer
+  /// supports X": even an `features=sip0` placeholder counts as
+  /// known here. Used to drive the rich-composer trigger's
+  /// "pending" placeholder so the leading slot is never empty
+  /// during the brief gap between session creation and first
+  /// observed CAP frame.
+  bool _peerCapsKnown(SipDmSession? session) {
+    if (session == null) return false;
+    final discovery = ref.read(sipDiscoveryProvider);
+    return discovery?.getPeer(session.peerNodeId) != null;
+  }
+
   Widget _buildInputBar(BuildContext context, SipDmSession? session) {
+    // The screen's top-level build already watches
+    // `sipPeerCacheEpochProvider`, so any peer-cap update rebuilds us
+    // here too. No second watch needed inside this helper.
     final enabled =
         session != null && session.status == SipDmSessionStatus.active;
     final peerSupportsInk = _peerSupportsInk(session);
@@ -1299,7 +1316,20 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
     final showSketchTab = enabled && peerSupportsInk;
     final showPlayTab = enabled && peerSupportsPlay && !peerBlocked;
     final showSignalTab = enabled && peerSupportsSignal && !peerBlocked;
-    final showComposerTrigger = showSketchTab || showPlayTab || showSignalTab;
+    final hasAnyRichCap = showSketchTab || showPlayTab || showSignalTab;
+
+    // Tri-state for the leading "+" trigger so the slot is never
+    // suddenly empty / suddenly populated mid-session:
+    //   - hasAnyRichCap                 → real "+" (tappable)
+    //   - !peerCapsKnown && enabled     → disabled placeholder
+    //                                     (greyed-out "+", inert)
+    //   - peerCapsKnown && !hasAnyRichCap → trigger hidden
+    //                                       (peer doesn't support any
+    //                                        rich mode — e.g. stock
+    //                                        Meshtastic / blocked peer)
+    final peerCapsKnown = _peerCapsKnown(session);
+    final showComposerTrigger = enabled && (hasAnyRichCap || !peerCapsKnown);
+    final composerTriggerEnabled = enabled && hasAnyRichCap;
 
     return AnimatedPadding(
       duration: const Duration(milliseconds: 100),
@@ -1324,6 +1354,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
             showPlayTab: showPlayTab,
             showSignalTab: showSignalTab,
             showComposerTrigger: showComposerTrigger,
+            composerTriggerEnabled: composerTriggerEnabled,
           ),
         ),
       ),
@@ -1353,6 +1384,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
     required bool showPlayTab,
     required bool showSignalTab,
     required bool showComposerTrigger,
+    required bool composerTriggerEnabled,
   }) {
     final l10n = context.l10n;
     return Column(
@@ -1438,8 +1470,15 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
                 ),
             leading: showComposerTrigger
                 ? _ComposerSheetTrigger(
-                    enabled: enabled && !_composerSheetOpen,
-                    tooltip: l10n.sipDmComposerSheetTooltip,
+                    // composerTriggerEnabled is false during the
+                    // pending state — peer in session but caps not
+                    // yet observed. The trigger still renders so the
+                    // input bar's leading slot stays visually stable;
+                    // the disabled grey says "not yet ready".
+                    enabled: composerTriggerEnabled && !_composerSheetOpen,
+                    tooltip: composerTriggerEnabled
+                        ? l10n.sipDmComposerSheetTooltip
+                        : l10n.sipDmComposerSheetTooltipPending,
                     onTap: () => _openComposerSheet(
                       session: session,
                       enabled: enabled,

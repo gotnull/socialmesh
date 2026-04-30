@@ -40740,6 +40740,7 @@
   "sipDmConversationPreviewGame": "🎮 Gioco",
   "sipDmComposerSheetTitle": "Componi",
   "sipDmComposerSheetTooltip": "Apri opzioni di composizione",
+  "sipDmComposerSheetTooltipPending": "Verifica delle capacità del peer…",
   "radioConfigPresetLiteFast": "Lite Veloce",
   "@radioConfigPresetLiteFast": {
     "description": "Modem preset label: EU 866MHz SRD-compliant lite fast"

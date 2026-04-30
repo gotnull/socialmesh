@@ -32406,6 +32406,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sipDmComposerSheetTooltip => 'Open compose options';
 
   @override
+  String get sipDmComposerSheetTooltipPending => 'Checking peer capabilities…';
+
+  @override
   String get sipSignalPanelTitle => 'Send a signal';
 
   @override

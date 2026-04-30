@@ -57014,6 +57014,12 @@ abstract class AppLocalizations {
   /// **'Open compose options'**
   String get sipDmComposerSheetTooltip;
 
+  /// Tooltip shown on the rich-composer trigger when the peer's CAP_BEACON / CAP_RESP / handshake-derived feature row hasn't arrived yet. Distinguishes the brief pending placeholder state from the unsupported / hidden state — the trigger is rendered greyed-out so the input bar's leading slot stays visually stable, then snaps to the regular tooltip the moment caps land.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking peer capabilities…'**
+  String get sipDmComposerSheetTooltipPending;
+
   /// Header inside the Signal composer panel.
   ///
   /// In en, this message translates to:

@@ -43466,6 +43466,10 @@
     "@sipDmComposerSheetTooltip": {
         "description": "Tooltip on the leading attach-style icon in the chat input row that opens the rich-composer bottom sheet (Sketch / Play / Signal)."
     },
+    "sipDmComposerSheetTooltipPending": "Checking peer capabilities…",
+    "@sipDmComposerSheetTooltipPending": {
+        "description": "Tooltip shown on the rich-composer trigger when the peer's CAP_BEACON / CAP_RESP / handshake-derived feature row hasn't arrived yet. Distinguishes the brief pending placeholder state from the unsupported / hidden state — the trigger is rendered greyed-out so the input bar's leading slot stays visually stable, then snaps to the regular tooltip the moment caps land."
+    },
     "sipSignalPanelTitle": "Send a signal",
     "@sipSignalPanelTitle": {
         "description": "Header inside the Signal composer panel."

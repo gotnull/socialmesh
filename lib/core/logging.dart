@@ -735,6 +735,21 @@ class AppLogging {
     if (meshExplorerDebugEnabled) debugPrint('MESH_EXPLORER: $message');
   }
 
+  /// Mesh Capacity Advisor logging — snapshot generation, recommendation
+  /// changes, and card lifecycle (shown / dismissed / explanation opened /
+  /// radio settings opened from advisor). Enable with
+  /// MESH_CAPACITY_LOGGING_ENABLED=true in .env file.
+  static bool? _meshCapacityLoggingEnabled;
+  static bool get meshCapacityLoggingEnabled {
+    _meshCapacityLoggingEnabled ??=
+        _safeGetEnv('MESH_CAPACITY_LOGGING_ENABLED')?.toLowerCase() == 'true';
+    return _meshCapacityLoggingEnabled!;
+  }
+
+  static void meshCapacity(String message) {
+    if (meshCapacityLoggingEnabled) debugPrint('MeshCapacity: $message');
+  }
+
   /// Voice message pipeline logging.
   /// Enable with VOICE_LOGGING_ENABLED=true in .env file.
   static bool get voiceLoggingEnabled {
@@ -955,6 +970,7 @@ class AppLogging {
     _sppNegotiationLoggingEnabled = null;
     _stlLoggingEnabled = null;
     _meshFeedLoggingEnabled = null;
+    _meshCapacityLoggingEnabled = null;
     _mqttProxyLoggingEnabled = null;
     _bleLogger = null;
     _noOpLogger = null;
