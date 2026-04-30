@@ -44248,6 +44248,15 @@
             }
         }
     },
+    "meshCapacityNodeSnr": "SNR {value}",
+    "@meshCapacityNodeSnr": {
+        "description": "Signal-to-noise ratio chip label on an RF-active node row. The integer dB value is appended after the SNR prefix.",
+        "placeholders": {
+            "value": {
+                "type": "int"
+            }
+        }
+    },
     "meshCapacityCardTitleBusy": "Mesh is getting busy",
     "@meshCapacityCardTitleBusy": {
         "description": "Title of the Mesh Capacity Advisor card shown when the local mesh is starting to fill up but the current preset is still acceptable."

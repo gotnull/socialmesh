@@ -40759,6 +40759,7 @@
   "meshCapacityNodeAgeHours": "{count, plural, =1{1 ora fa} other{{count} ore fa}}",
   "meshCapacityNodeHopDirect": "diretto",
   "meshCapacityNodeHopCount": "{count, plural, =1{1 hop} other{{count} hop}}",
+  "meshCapacityNodeSnr": "SNR {value}",
   "meshCapacityCardTitleBusy": "La rete sta diventando affollata",
   "meshCapacityCardSubtitleBusy": "{count, plural, =1{1 nodo vicino è attivo via radio negli ultimi 15 minuti. I preset a lungo raggio sacrificano capacità per portata.} other{{count} nodi vicini sono attivi via radio negli ultimi 15 minuti. I preset a lungo raggio sacrificano capacità per portata.}}",
   "meshCapacityCardTitleCongested": "Mesh densa rilevata",

@@ -40759,6 +40759,7 @@
   "meshCapacityNodeAgeHours": "{count, plural, =1{há 1 h} other{há {count} h}}",
   "meshCapacityNodeHopDirect": "direto",
   "meshCapacityNodeHopCount": "{count, plural, =1{1 hop} other{{count} hops}}",
+  "meshCapacityNodeSnr": "SNR {value}",
   "meshCapacityCardTitleBusy": "A malha está ficando movimentada",
   "meshCapacityCardSubtitleBusy": "{count, plural, =1{1 nó próximo está ativo via rádio nos últimos 15 minutos. Os presets de longo alcance trocam capacidade por alcance.} other{{count} nós próximos estão ativos via rádio nos últimos 15 minutos. Os presets de longo alcance trocam capacidade por alcance.}}",
   "meshCapacityCardTitleCongested": "Malha densa detectada",

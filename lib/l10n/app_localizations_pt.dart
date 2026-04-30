@@ -33336,6 +33336,11 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String meshCapacityNodeSnr(int value) {
+    return 'SNR $value';
+  }
+
+  @override
   String get meshCapacityCardTitleBusy => 'A malha está ficando movimentada';
 
   @override

@@ -1613,7 +1613,7 @@ class _NodeRow extends StatelessWidget {
               if (node.snr != null)
                 _RowChip(
                   icon: Icons.signal_cellular_alt,
-                  label: 'SNR ${node.snr}',
+                  label: l10n.meshCapacityNodeSnr(node.snr!),
                   color: context.textTertiary,
                 ),
             ],

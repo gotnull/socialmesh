@@ -58040,6 +58040,12 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 hop} other{{count} hops}}'**
   String meshCapacityNodeHopCount(int count);
 
+  /// Signal-to-noise ratio chip label on an RF-active node row. The integer dB value is appended after the SNR prefix.
+  ///
+  /// In en, this message translates to:
+  /// **'SNR {value}'**
+  String meshCapacityNodeSnr(int value);
+
   /// Title of the Mesh Capacity Advisor card shown when the local mesh is starting to fill up but the current preset is still acceptable.
   ///
   /// In en, this message translates to:

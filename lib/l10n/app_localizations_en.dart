@@ -33005,6 +33005,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String meshCapacityNodeSnr(int value) {
+    return 'SNR $value';
+  }
+
+  @override
   String get meshCapacityCardTitleBusy => 'Mesh is getting busy';
 
   @override

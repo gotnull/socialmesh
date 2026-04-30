@@ -33355,6 +33355,11 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String meshCapacityNodeSnr(int value) {
+    return 'SNR $value';
+  }
+
+  @override
   String get meshCapacityCardTitleBusy => 'La rete sta diventando affollata';
 
   @override
