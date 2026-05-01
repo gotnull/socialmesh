@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/l10n_extension.dart';
+import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
@@ -44,9 +45,38 @@ const _freeWidgetTypes = {
   DashboardWidgetType.custom, // Custom widgets are free
 };
 
+// Single source of truth for what the picker treats as "addable". Custom
+// widgets are excluded — those are added from the Widget Builder, not here.
+// Both _buildDashboard and _AddWidgetSheet.build consume this so the
+// dashboard's "unused premium count" can never drift from the picker's list.
+Iterable<DashboardWidgetType> _addableWidgetTypes() =>
+    DashboardWidgetType.values.where((t) => t != DashboardWidgetType.custom);
+
+// Count of premium widget types the user owns but hasn't added yet.
+// `addedTypes` is the set of currently-visible widget configs' types.
+int _unusedPremiumCount(Set<DashboardWidgetType> addedTypes) =>
+    _addableWidgetTypes()
+        .where((t) => !_freeWidgetTypes.contains(t) && !addedTypes.contains(t))
+        .length;
+
+// Live store-fetched display name for the Widgets Pack, with a sensible
+// fallback when storeProductsProvider hasn't resolved yet.
+String _packTitle(WidgetRef ref) {
+  final storeProductsAsync = ref.watch(storeProductsProvider);
+  final storeProducts = storeProductsAsync.when(
+    data: (data) => data,
+    loading: () => <String, StoreProductInfo>{},
+    error: (_, _) => <String, StoreProductInfo>{},
+  );
+  return storeProducts[RevenueCatConfig.widgetPackProductId]?.title ??
+      'Widget Pack'; // lint-allow: hardcoded-string
+}
+
 /// Customizable widget dashboard with drag/reorder/favorites
 class WidgetDashboardScreen extends ConsumerStatefulWidget {
-  const WidgetDashboardScreen({super.key});
+  final bool autoOpenPicker;
+
+  const WidgetDashboardScreen({super.key, this.autoOpenPicker = false});
 
   @override
   ConsumerState<WidgetDashboardScreen> createState() =>
@@ -56,6 +86,20 @@ class WidgetDashboardScreen extends ConsumerStatefulWidget {
 class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen>
     with LifecycleSafeMixin {
   bool _editMode = false;
+  bool _didAutoOpenPicker = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.autoOpenPicker) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || _didAutoOpenPicker) return;
+        _didAutoOpenPicker = true;
+        AppLogging.widgets('[Dashboard] autoOpenPicker fired (post-purchase)');
+        _showAddWidgetSheet(context);
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -154,6 +198,19 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen>
     final freeWidgetCount = _freeWidgetTypes.length;
     final premiumWidgetCount = totalWidgetTypes - freeWidgetCount;
 
+    // Owner-aware discovery state. Sourced from the same helper the picker
+    // uses so the count and the picker's addable list never drift.
+    final addedTypes = enabledWidgets.map((c) => c.type).toSet();
+    final unusedPremiumCount = _unusedPremiumCount(addedTypes);
+    final showOwnerDiscovery =
+        hasWidgetPack && !_editMode && unusedPremiumCount > 0;
+    final showUpsell = !hasWidgetPack && !_editMode;
+    // Sticky edit-mode add tile gating uses the visible widget list — hidden
+    // persisted configs must not suppress the tile.
+    final showEditAddTile =
+        _editMode &&
+        enabledWidgets.length < DashboardWidgetsNotifier.maxWidgets;
+
     return Column(
       children: [
         Expanded(
@@ -162,7 +219,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen>
               16,
               16,
               16,
-              !hasWidgetPack && !_editMode ? 8 : 16,
+              (showUpsell || showOwnerDiscovery || showEditAddTile) ? 8 : 16,
             ),
             buildDefaultDragHandles: false,
             proxyDecorator: (child, index, animation) {
@@ -204,9 +261,14 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen>
             },
           ),
         ),
-        // Upsell card for non-premium users
-        if (!hasWidgetPack && !_editMode)
-          _buildWidgetUpsellCard(premiumWidgetCount),
+        // Sticky edit-mode add-another-widget tile (visible-count gated)
+        if (showEditAddTile) _buildEditModeAddTile(context),
+        // Owner-aware footer card: upsell for non-owners, discovery for
+        // owners with unused premium widgets, nothing once everything is
+        // added (or in edit mode).
+        if (showUpsell) _buildWidgetUpsellCard(premiumWidgetCount),
+        if (showOwnerDiscovery)
+          _buildPackOwnerDiscoveryCard(context, unusedPremiumCount),
       ],
     );
   }
@@ -289,6 +351,149 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen>
                     child: Icon(
                       Icons.arrow_forward_ios,
                       size: 14,
+                      color: context.accentColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPackOwnerDiscoveryCard(BuildContext context, int unusedCount) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 16),
+      child: GradientBorderContainer(
+        borderRadius: 16,
+        borderWidth: 2,
+        accentOpacity: 0.4,
+        backgroundColor: context.card,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              AppLogging.widgets(
+                '[Dashboard] Owner discovery card tapped → opening picker',
+              );
+              _showAddWidgetSheet(context);
+            },
+            borderRadius: BorderRadius.circular(AppTheme.radius16),
+            child: Padding(
+              padding: const EdgeInsets.all(AppTheme.spacing16),
+              child: Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          context.accentColor.withValues(alpha: 0.3),
+                          context.accentColor.withValues(alpha: 0.1),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
+                      border: Border.all(
+                        color: context.accentColor.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.dashboard_customize,
+                      color: context.accentColor,
+                      size: 24,
+                    ),
+                  ),
+                  SizedBox(width: AppTheme.spacing16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.l10n.dashboardOwnerDiscoveryTitle,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: context.accentColor,
+                          ),
+                        ),
+                        SizedBox(height: AppTheme.spacing4),
+                        Text(
+                          context.l10n.dashboardOwnerDiscoverySubtitle(
+                            unusedCount,
+                          ),
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: context.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: context.accentColor.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
+                    ),
+                    child: Icon(
+                      Icons.arrow_forward_ios,
+                      size: 14,
+                      color: context.accentColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEditModeAddTile(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 16),
+      height: 56,
+      child: CustomPaint(
+        painter: DashedBorderPainter(
+          color: context.accentColor.withValues(alpha: 0.6),
+          strokeWidth: 2,
+          dashWidth: 8,
+          dashSpace: 4,
+          borderRadius: AppTheme.radius16,
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              AppLogging.widgets(
+                '[Dashboard] Edit-mode add tile tapped → opening picker',
+              );
+              _showAddWidgetSheet(context);
+            },
+            borderRadius: BorderRadius.circular(AppTheme.radius16),
+            child: Center(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.add_circle_outline,
+                    color: context.accentColor,
+                    size: 20,
+                  ),
+                  SizedBox(width: AppTheme.spacing8),
+                  Text(
+                    context.l10n.dashboardAddAnotherWidget,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
                       color: context.accentColor,
                     ),
                   ),
@@ -694,19 +899,20 @@ class _AddWidgetSheet extends ConsumerWidget {
       hasPurchasedProvider(RevenueCatConfig.widgetPackProductId),
     );
 
-    // Sort widgets: free first, then premium
-    // Filter out 'custom' type - those are added from Widget Builder, not here
-    final sortedTypes =
-        DashboardWidgetType.values
-            .where((t) => t != DashboardWidgetType.custom)
-            .toList()
-          ..sort((a, b) {
-            final aFree = _freeWidgetTypes.contains(a);
-            final bFree = _freeWidgetTypes.contains(b);
-            if (aFree && !bFree) return -1;
-            if (!aFree && bFree) return 1;
-            return a.index.compareTo(b.index);
-          });
+    final unusedPremiumCount = _unusedPremiumCount(enabledTypes);
+    final showOwnerHint = hasWidgetPack && unusedPremiumCount > 0;
+
+    // Sort widgets: free first, then premium. Source the addable list from
+    // the shared helper so the dashboard's "unused premium count" is derived
+    // from the same source as what the picker actually offers.
+    final sortedTypes = _addableWidgetTypes().toList()
+      ..sort((a, b) {
+        final aFree = _freeWidgetTypes.contains(a);
+        final bFree = _freeWidgetTypes.contains(b);
+        if (aFree && !bFree) return -1;
+        if (!aFree && bFree) return 1;
+        return a.index.compareTo(b.index);
+      });
 
     return Column(
       children: [
@@ -738,6 +944,34 @@ class _AddWidgetSheet extends ConsumerWidget {
             ],
           ),
         ),
+        if (showOwnerHint)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              20,
+              AppTheme.spacing4,
+              20,
+              AppTheme.spacing4,
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.lock_open, size: 14, color: context.accentColor),
+                SizedBox(width: AppTheme.spacing6),
+                Expanded(
+                  child: Text(
+                    context.l10n.dashboardManageWidgetsPackHint(
+                      unusedPremiumCount,
+                      _packTitle(ref),
+                    ),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: context.accentColor,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
@@ -832,15 +1066,7 @@ class _AddWidgetSheet extends ConsumerWidget {
   }
 
   Widget _buildUpsellCard(BuildContext context, WidgetRef ref) {
-    final storeProductsAsync = ref.watch(storeProductsProvider);
-    final storeProducts = storeProductsAsync.when(
-      data: (data) => data,
-      loading: () => <String, StoreProductInfo>{},
-      error: (e, s) => <String, StoreProductInfo>{},
-    );
-    final widgetPackName =
-        storeProducts[RevenueCatConfig.widgetPackProductId]?.title ??
-        'Widget Pack'; // lint-allow: hardcoded-string
+    final widgetPackName = _packTitle(ref);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16, top: 8),

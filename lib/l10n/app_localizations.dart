@@ -51460,6 +51460,12 @@ abstract class AppLocalizations {
   /// **'Filtered ({count})'**
   String adminPostsFilteredCount(int count);
 
+  /// Label on the sticky tile shown below the widget list in dashboard edit mode that opens the add-widget picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Add another widget'**
+  String get dashboardAddAnotherWidget;
+
   /// Text displayed in device dashboard
   ///
   /// In en, this message translates to:
@@ -51562,6 +51568,12 @@ abstract class AppLocalizations {
   /// **'LIVE'**
   String get dashboardLive;
 
+  /// Hint shown above the widget list in the Manage Widgets bottom sheet, only when the user owns Widgets Pack and still has unused premium widgets to add.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} widgets unlocked by your {packName}'**
+  String dashboardManageWidgetsPackHint(int count, String packName);
+
   /// Text displayed in device dashboard
   ///
   /// In en, this message translates to:
@@ -51591,6 +51603,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Nodes'**
   String get dashboardNodesLabel;
+
+  /// Subtitle on the dashboard discovery card shown to Widgets Pack owners who still have unused premium widgets — promotes opening the picker.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} ready to add: environment, mesh health, map, and more'**
+  String dashboardOwnerDiscoverySubtitle(int count);
+
+  /// Headline on the dashboard discovery card shown to Widgets Pack owners who still have unused premium widgets to add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add more widgets'**
+  String get dashboardOwnerDiscoveryTitle;
 
   /// Text displayed in device dashboard
   ///

@@ -8464,6 +8464,10 @@
     },
     "description": "UI text: countdown traceroute to Parameters: {displayName} = display name."
   },
+  "dashboardAddAnotherWidget": "Aggiungi un altro widget",
+  "@dashboardAddAnotherWidget": {
+    "description": "Label on the sticky tile shown below the widget list in dashboard edit mode that opens the add-widget picker."
+  },
   "dashboardAddToFavorites": "Aggiungi ai preferiti",
   "@dashboardAddToFavorites": {
     "description": "Text displayed in device dashboard"
@@ -8538,6 +8542,19 @@
   "@dashboardLive": {
     "description": "Text displayed in device dashboard"
   },
+  "dashboardManageWidgetsPackHint": "{count} widget sbloccati dal tuo {packName}",
+  "@dashboardManageWidgetsPackHint": {
+    "description": "Hint shown above the widget list in the Manage Widgets bottom sheet, only when the user owns Widgets Pack and still has unused premium widgets to add.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "packName": {
+        "type": "String",
+        "example": "Widget Pack"
+      }
+    }
+  },
   "dashboardNoChannelsConfigured": "Nessun canale configurato",
   "@dashboardNoChannelsConfigured": {
     "description": "Text displayed in device dashboard"
@@ -8557,6 +8574,19 @@
   "dashboardNodesLabel": "Nodi",
   "@dashboardNodesLabel": {
     "description": "Label in device dashboard"
+  },
+  "dashboardOwnerDiscoverySubtitle": "{count} pronti da aggiungere: ambiente, salute mesh, mappa e altro",
+  "@dashboardOwnerDiscoverySubtitle": {
+    "description": "Subtitle on the dashboard discovery card shown to Widgets Pack owners who still have unused premium widgets — promotes opening the picker.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dashboardOwnerDiscoveryTitle": "Aggiungi altri widget",
+  "@dashboardOwnerDiscoveryTitle": {
+    "description": "Headline on the dashboard discovery card shown to Widgets Pack owners who still have unused premium widgets to add."
   },
   "dashboardQuickMessage": "Messaggio\nrapido",
   "@dashboardQuickMessage": {

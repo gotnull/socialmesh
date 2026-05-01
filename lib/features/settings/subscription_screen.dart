@@ -22,7 +22,7 @@ import '../../services/haptic_service.dart';
 import '../../services/subscription/subscription_service.dart';
 import '../../utils/snackbar.dart';
 import '../automations/automations_screen.dart';
-import '../widget_builder/widget_builder_screen.dart';
+import '../dashboard/widget_dashboard_screen.dart';
 import 'ifttt_config_screen.dart';
 import 'ringtone_screen.dart';
 import 'theme_settings_screen.dart';
@@ -1177,7 +1177,9 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
   void _showUnlockedSnackBar(OneTimePurchase purchase) {
     final navigator = Navigator.of(context);
     final Widget targetScreen = switch (purchase.unlocksFeature) {
-      PremiumFeature.homeWidgets => const WidgetBuilderScreen(),
+      PremiumFeature.homeWidgets => const WidgetDashboardScreen(
+        autoOpenPicker: true,
+      ),
       PremiumFeature.automations => const AutomationsScreen(),
       PremiumFeature.premiumThemes => const ThemeSettingsScreen(),
       PremiumFeature.customRingtones => const RingtoneScreen(),

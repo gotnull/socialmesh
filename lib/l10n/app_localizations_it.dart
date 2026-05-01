@@ -29395,6 +29395,9 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get dashboardAddAnotherWidget => 'Aggiungi un altro widget';
+
+  @override
   String get dashboardAddToFavorites => 'Aggiungi ai preferiti';
 
   @override
@@ -29448,6 +29451,11 @@ class AppLocalizationsIt extends AppLocalizations {
   String get dashboardLive => 'LIVE';
 
   @override
+  String dashboardManageWidgetsPackHint(int count, String packName) {
+    return '$count widget sbloccati dal tuo $packName';
+  }
+
+  @override
   String get dashboardNoChannelsConfigured => 'Nessun canale configurato';
 
   @override
@@ -29461,6 +29469,14 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get dashboardNodesLabel => 'Nodi';
+
+  @override
+  String dashboardOwnerDiscoverySubtitle(int count) {
+    return '$count pronti da aggiungere: ambiente, salute mesh, mappa e altro';
+  }
+
+  @override
+  String get dashboardOwnerDiscoveryTitle => 'Aggiungi altri widget';
 
   @override
   String get dashboardQuickMessage => 'Messaggio\nrapido';
