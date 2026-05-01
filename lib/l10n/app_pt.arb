@@ -40518,10 +40518,6 @@
   "@worldMeshLinkBudgetCopied": {
     "description": "UI text: world mesh link budget copied"
   },
-  "worldMeshLoadingNodeInfo": "Carregando info do nó...",
-  "@worldMeshLoadingNodeInfo": {
-    "description": "UI text: world mesh loading node info"
-  },
   "worldMeshLongPressHint": "Pressione e segure para ações",
   "@worldMeshLongPressHint": {
     "description": "Input field hint text"

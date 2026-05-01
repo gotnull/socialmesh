@@ -4,6 +4,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -35,6 +36,8 @@ import 'favorites_screen.dart';
 import 'widgets/node_intelligence_panel.dart';
 import 'world_mesh_filter_sheet.dart';
 import '../../core/widgets/loading_indicator.dart';
+import '../../core/widgets/skeleton_config.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 /// World Mesh Map screen showing all Meshtastic nodes from mesh-observer
 class WorldMeshScreen extends ConsumerStatefulWidget {
@@ -48,13 +51,18 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
     with TickerProviderStateMixin, LifecycleSafeMixin<WorldMeshScreen> {
   final MapController _mapController = MapController();
   double _currentZoom = 3.0;
-  double _mapRotation = 0.0;
+  // Map rotation and selection use ValueNotifiers so that pan/rotate gestures
+  // and node selection do not trigger a full screen rebuild — only the
+  // compass, the highlight overlay, and the info card listen. This is what
+  // unblocks 12k+ markers from being reconstructed on every camera frame or
+  // marker tap.
+  final ValueNotifier<double> _mapRotationNotifier = ValueNotifier<double>(0.0);
+  final ValueNotifier<WorldMeshNode?> _selectedNodeNotifier =
+      ValueNotifier<WorldMeshNode?>(null);
   MapTileStyle _mapStyle = MapTileStyle.dark;
   String _searchQuery = '';
   bool _showSearch = false;
   bool _showSearchResults = false;
-  WorldMeshNode? _selectedNode;
-  bool _isLoadingNodeInfo = false;
 
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
@@ -69,6 +77,11 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
   // Animation controller for smooth movements
   AnimationController? _animationController;
 
+  // Tracks whether the node info sheet is currently open. New marker taps
+  // while the sheet is visible just update the selection notifier — the
+  // sheet body listens to it and rebuilds with the new node, no extra push.
+  bool _isNodeSheetOpen = false;
+
   @override
   void initState() {
     super.initState();
@@ -81,6 +94,8 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
     _mapController.dispose();
     _searchController.dispose();
     _searchFocusNode.dispose();
+    _mapRotationNotifier.dispose();
+    _selectedNodeNotifier.dispose();
     super.dispose();
   }
 
@@ -123,12 +138,43 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
         rotationTween.evaluate(animation),
       );
       final currentRotation = rotationTween.evaluate(animation);
-      if (currentRotation != _mapRotation) {
-        setState(() => _mapRotation = currentRotation);
+      if (currentRotation != _mapRotationNotifier.value) {
+        _mapRotationNotifier.value = currentRotation;
       }
     });
 
     _animationController!.forward();
+  }
+
+  /// Shows the node info bottom sheet for [node].
+  ///
+  /// Sets the selection notifier so the highlight overlay tracks the tapped
+  /// node, then opens (or refreshes) the modal scrollable sheet. Tapping a
+  /// new marker while the sheet is open updates the notifier — the sheet's
+  /// body is a `ValueListenableBuilder` that rebuilds with the new node
+  /// without dismissing/re-presenting.
+  Future<void> _showNodeInfoSheet(WorldMeshNode node) async {
+    _selectedNodeNotifier.value = node;
+    if (_isNodeSheetOpen) return;
+    _isNodeSheetOpen = true;
+    try {
+      await AppBottomSheet.showScrollable<void>(
+        context: context,
+        initialChildSize: 0.6,
+        minChildSize: 0.4,
+        maxChildSize: 0.95,
+        builder: (controller) => _WorldNodeInfoSheetBody(
+          selectedNodeNotifier: _selectedNodeNotifier,
+          scrollController: controller,
+          onFocus: (n) {
+            _animatedMove(LatLng(n.latitudeDecimal, n.longitudeDecimal), 14.0);
+          },
+        ),
+      );
+    } finally {
+      _isNodeSheetOpen = false;
+      _selectedNodeNotifier.value = null;
+    }
   }
 
   Future<void> _loadMapStyle() async {
@@ -157,13 +203,11 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
         builder: (ctx) => FavoritesScreen(
           allNodes: nodes,
           onShowOnMap: (node) {
-            safeSetState(() {
-              _selectedNode = node;
-            });
             _animatedMove(
               LatLng(node.latitudeDecimal, node.longitudeDecimal),
               14.0,
             );
+            _showNodeInfoSheet(node);
           },
         ),
       ),
@@ -252,16 +296,23 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                 ),
               // Filter button with badge
               _buildFilterButton(accentColor),
-              // Favorites
-              IconButton(
-                icon: ref.watch(favoritesCountProvider) > 0
-                    ? Badge.count(
-                        count: ref.watch(favoritesCountProvider),
-                        child: const Icon(Icons.star),
-                      )
-                    : const Icon(Icons.star_border),
-                tooltip: context.l10n.worldMeshFavoritesTooltip,
-                onPressed: () => _openFavorites(context),
+              // Favorites — Consumer subtree so the AppBar (and the rest of
+              // the screen) does not rebuild every time the favorites count
+              // changes.
+              Consumer(
+                builder: (context, ref, _) {
+                  final count = ref.watch(favoritesCountProvider);
+                  return IconButton(
+                    icon: count > 0
+                        ? Badge.count(
+                            count: count,
+                            child: const Icon(Icons.star),
+                          )
+                        : const Icon(Icons.star_border),
+                    tooltip: context.l10n.worldMeshFavoritesTooltip,
+                    onPressed: () => _openFavorites(context),
+                  );
+                },
               ),
               // Overflow menu for map style and refresh
               AppBarOverflowMenu<String>(
@@ -460,52 +511,62 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
     );
   }
 
-  /// Build filter button with active filter count badge
+  /// Build filter button with active filter count badge.
+  ///
+  /// Wrapped in a Consumer so the rest of the AppBar (and screen body) does
+  /// not rebuild when filter state toggles — only this subtree.
   Widget _buildFilterButton(Color accentColor) {
-    final filters = ref.watch(worldMeshFiltersProvider);
-    final activeCount = filters.activeFilterCount;
-
-    return Stack(
-      children: [
-        IconButton(
-          icon: Icon(
-            Icons.filter_list,
-            color: activeCount > 0 ? accentColor : null,
-          ),
-          tooltip: context.l10n.worldMeshFilterTooltip,
-          onPressed: () async {
-            HapticFeedback.selectionClick();
-            await showModalBottomSheet<void>(
-              context: context,
-              isScrollControlled: true,
-              backgroundColor: Colors.transparent,
-              builder: (context) => const WorldMeshFilterSheet(),
-            );
-          },
-        ),
-        if (activeCount > 0)
-          Positioned(
-            right: 6,
-            top: 6,
-            child: Container(
-              padding: const EdgeInsets.all(AppTheme.spacing4),
-              decoration: BoxDecoration(
-                color: accentColor,
-                shape: BoxShape.circle,
+    return Consumer(
+      builder: (context, ref, _) {
+        final activeCount = ref.watch(
+          worldMeshFiltersProvider.select((f) => f.activeFilterCount),
+        );
+        return Stack(
+          children: [
+            IconButton(
+              icon: Icon(
+                Icons.filter_list,
+                color: activeCount > 0 ? accentColor : null,
               ),
-              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-              child: Text(
-                '$activeCount',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
+              tooltip: context.l10n.worldMeshFilterTooltip,
+              onPressed: () async {
+                HapticFeedback.selectionClick();
+                await showModalBottomSheet<void>(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => const WorldMeshFilterSheet(),
+                );
+              },
             ),
-          ),
-      ],
+            if (activeCount > 0)
+              Positioned(
+                right: 6,
+                top: 6,
+                child: Container(
+                  padding: const EdgeInsets.all(AppTheme.spacing4),
+                  decoration: BoxDecoration(
+                    color: accentColor,
+                    shape: BoxShape.circle,
+                  ),
+                  constraints: const BoxConstraints(
+                    minWidth: 16,
+                    minHeight: 16,
+                  ),
+                  child: Text(
+                    '$activeCount',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 
@@ -570,15 +631,13 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                     _showSearch = false;
                     _searchQuery = '';
                     _searchController.clear();
-                    // Show the node info card for the selected node
-                    _selectedNode = node;
-                    _isLoadingNodeInfo = false;
                   });
                   // Animate to the node at high zoom to ensure it's visible
                   _animatedMove(
                     LatLng(node.latitudeDecimal, node.longitudeDecimal),
                     16.0,
                   );
+                  _showNodeInfoSheet(node);
                 },
               ),
             ),
@@ -656,12 +715,12 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
     ThemeData theme,
     WorldMeshMapState state,
   ) {
-    // Get filtered nodes for display - apply user filters to base nodes
-    final filters = ref.watch(worldMeshFiltersProvider);
+    // Memoised filtered list — Riverpod caches the result by (filters, nodes)
+    // so this provider returns the same List instance across screen rebuilds
+    // unless filters or underlying data change.
+    final displayNodes = ref.watch(worldMeshAdvancedFilteredNodesProvider);
     final allNodes = state.nodesWithPosition;
-    final displayNodes = filters.hasActiveFilters
-        ? filters.apply(allNodes)
-        : allNodes;
+    final hasActiveFilters = displayNodes.length != allNodes.length;
     final accentColor = theme.colorScheme.primary;
 
     return Stack(
@@ -682,8 +741,12 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
               ),
               onPositionChanged: (position, hasGesture) {
                 _currentZoom = position.zoom;
-                if (hasGesture && position.rotation != _mapRotation) {
-                  setState(() => _mapRotation = position.rotation);
+                if (hasGesture &&
+                    position.rotation != _mapRotationNotifier.value) {
+                  // ValueNotifier — only the compass overlay rebuilds.
+                  // Previously this was a setState that re-rendered the
+                  // FlutterMap and all 12k markers on every gesture frame.
+                  _mapRotationNotifier.value = position.rotation;
                 }
               },
               onTap: (tapPosition, point) {
@@ -696,14 +759,6 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                   _handleMeasureTap(point);
                   return;
                 }
-                // Deselect node when tapping empty map areas
-                // (Marker taps are handled by GestureDetector on each marker)
-                if (_selectedNode != null) {
-                  setState(() {
-                    _selectedNode = null;
-                    _isLoadingNodeInfo = false;
-                  });
-                }
               },
             ),
             children: [
@@ -715,7 +770,10 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                 retinaMode: _mapStyle != MapTileStyle.satellite,
                 evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
               ),
-              // Marker clustering for better visualization of dense areas
+              // Marker clustering for better visualization of dense areas.
+              // Markers do NOT capture selection state — selection styling is
+              // rendered by `_SelectionHighlightLayer` below, so a node tap
+              // does not invalidate all 12k marker decorations.
               MarkerClusterLayerWidget(
                 options: MarkerClusterLayerOptions(
                   maxClusterRadius: 80,
@@ -732,10 +790,9 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                   ),
                   markers: finiteMarkers(
                     displayNodes.map((node) {
-                      final isSelected = _selectedNode?.nodeNum == node.nodeNum;
                       // Use larger tap target (44px) but smaller visual marker
                       const tapTargetSize = 44.0;
-                      final visualSize = isSelected ? 24.0 : 14.0;
+                      const visualSize = 14.0;
                       return Marker(
                         point: LatLng(
                           node.latitudeDecimal,
@@ -751,21 +808,15 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                               _handleMeasureNodeTap(node);
                               return;
                             }
-                            setState(() {
-                              _isLoadingNodeInfo = true;
-                              _selectedNode = node;
-                            });
-                            Future.delayed(
-                              const Duration(milliseconds: 150),
-                              () {
-                                if (mounted) {
-                                  setState(() => _isLoadingNodeInfo = false);
-                                }
-                              },
-                            );
+                            _showNodeInfoSheet(node);
                           },
                           onLongPress: () {
                             HapticFeedback.heavyImpact();
+                            // If a sheet is open, dismiss it so the
+                            // measurement UI is unobstructed.
+                            if (_isNodeSheetOpen) {
+                              Navigator.of(context).maybePop();
+                            }
                             setState(() {
                               _measureMode = true;
                               _measureStart = LatLng(
@@ -775,8 +826,6 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                               _measureEnd = null;
                               _measureNodeA = node;
                               _measureNodeB = null;
-                              _selectedNode = null;
-                              _isLoadingNodeInfo = false;
                             });
                           },
                           child: Center(
@@ -785,30 +834,15 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                               height: visualSize,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: isSelected
-                                    ? accentColor
-                                    : node.isRecentlySeen
+                                color: node.isRecentlySeen
                                     ? accentColor.withValues(alpha: 0.8)
                                     : SemanticColors.disabled.withValues(
                                         alpha: 0.5,
                                       ),
                                 border: Border.all(
-                                  color: isSelected
-                                      ? Colors.white
-                                      : Colors.white.withValues(alpha: 0.6),
-                                  width: isSelected ? 2 : 1,
+                                  color: Colors.white.withValues(alpha: 0.6),
+                                  width: 1,
                                 ),
-                                boxShadow: isSelected
-                                    ? [
-                                        BoxShadow(
-                                          color: accentColor.withValues(
-                                            alpha: 0.5,
-                                          ),
-                                          blurRadius: 8,
-                                          spreadRadius: 2,
-                                        ),
-                                      ]
-                                    : null,
                               ),
                             ),
                           ),
@@ -918,6 +952,13 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                       ),
                   ]),
                 ),
+              // Selection highlight overlay — listens only to the selection
+              // notifier so tapping a node does not rebuild the screen or the
+              // 12k-marker cluster layer.
+              _SelectionHighlightLayer(
+                selectedNodeNotifier: _selectedNodeNotifier,
+                accentColor: accentColor,
+              ),
             ],
           ),
         ),
@@ -926,7 +967,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
         _MapControlsWithZoomState(
           mapController: _mapController,
           initialZoom: _currentZoom,
-          mapRotation: _mapRotation,
+          mapRotation: _mapRotationNotifier,
           minZoom: 2.0,
           maxZoom: 18.0,
           animatedMove: _animatedMove,
@@ -936,17 +977,37 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
             rotation: 0,
           ),
           onFitAll: () {
-            final finite = displayNodes
-                .where(
-                  (n) =>
-                      n.latitudeDecimal.isFinite && n.longitudeDecimal.isFinite,
-                )
-                .toList(growable: false);
-            if (finite.isEmpty) return;
-            final lats = finite.map((n) => n.latitudeDecimal).toList();
-            final lons = finite.map((n) => n.longitudeDecimal).toList();
-            final sw = safeLatLng(lats.reduce(math.min), lons.reduce(math.min));
-            final ne = safeLatLng(lats.reduce(math.max), lons.reduce(math.max));
+            // Single-pass bounds computation, ignoring nodes with garbage
+            // positions. The mesh-observer feed contains a small fraction
+            // of nodes with lat/lon outside the valid WGS-84 ranges — those
+            // would slip past `.isFinite` and then make `safeLatLng` return
+            // null, which silently no-op'd the whole fit. Filter strictly.
+            var minLat = double.infinity;
+            var maxLat = double.negativeInfinity;
+            var minLon = double.infinity;
+            var maxLon = double.negativeInfinity;
+            for (final n in displayNodes) {
+              final lat = n.latitudeDecimal;
+              final lon = n.longitudeDecimal;
+              if (!lat.isFinite || !lon.isFinite) continue;
+              if (lat < -90 || lat > 90 || lon < -180 || lon > 180) continue;
+              if (lat < minLat) minLat = lat;
+              if (lat > maxLat) maxLat = lat;
+              if (lon < minLon) minLon = lon;
+              if (lon > maxLon) maxLon = lon;
+            }
+            if (minLat > maxLat || minLon > maxLon) return;
+            // If bounds collapse to a single point, animate to it at a
+            // mid zoom rather than handing fitCamera a degenerate rect.
+            if ((maxLat - minLat) < 0.0001 && (maxLon - minLon) < 0.0001) {
+              _animatedMove(
+                safeLatLng(minLat, minLon) ?? const LatLng(0, 0),
+                12.0,
+              );
+              return;
+            }
+            final sw = safeLatLng(minLat, minLon);
+            final ne = safeLatLng(maxLat, maxLon);
             if (sw == null || ne == null) return;
             _mapController.fitCamera(
               CameraFit.bounds(
@@ -956,34 +1017,6 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
             );
           },
         ),
-
-        // Node info card when selected (with loading indicator)
-        // Position above the stats bar (which is ~60px) plus safe area
-        if (_selectedNode != null && !_showSearchResults && !_measureMode)
-          Positioned(
-            left: 16,
-            right: 16,
-            bottom: 100,
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              child: _isLoadingNodeInfo
-                  ? _buildLoadingCard(theme)
-                  : WorldNodeInfoCard(
-                      key: ValueKey(_selectedNode!.nodeNum),
-                      node: _selectedNode!,
-                      onClose: () => setState(() => _selectedNode = null),
-                      onFocus: () {
-                        _animatedMove(
-                          LatLng(
-                            _selectedNode!.latitudeDecimal,
-                            _selectedNode!.longitudeDecimal,
-                          ),
-                          14.0,
-                        );
-                      },
-                    ),
-            ),
-          ),
 
         // Measurement mode indicator pill
         if (_measureMode && (_measureStart == null || _measureEnd == null))
@@ -1095,44 +1128,10 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
             theme,
             state,
             displayNodes.length,
-            filters.hasActiveFilters,
+            hasActiveFilters,
           ),
         ),
       ],
-    );
-  }
-
-  /// Build a loading placeholder card with shimmer effect
-  Widget _buildLoadingCard(ThemeData theme) {
-    final accentColor = theme.colorScheme.primary;
-    return Container(
-      key: const ValueKey('loading'),
-      height: 120,
-      decoration: BoxDecoration(
-        color: context.card.withValues(alpha: 0.98),
-        borderRadius: BorderRadius.circular(AppTheme.radius16),
-        border: Border.all(color: accentColor.withValues(alpha: 0.3)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.4),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Center(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            LoadingIndicator(size: 20),
-            SizedBox(width: AppTheme.spacing12),
-            Text(
-              context.l10n.worldMeshLoadingNodeInfo,
-              style: TextStyle(color: context.textSecondary, fontSize: 14),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -1315,7 +1314,7 @@ class _MapControlsWithZoomState extends StatefulWidget {
 
   final MapController mapController;
   final double initialZoom;
-  final double mapRotation;
+  final ValueListenable<double> mapRotation;
   final double minZoom;
   final double maxZoom;
   final void Function(LatLng destLocation, double destZoom) animatedMove;
@@ -1354,29 +1353,91 @@ class _MapControlsWithZoomStateState extends State<_MapControlsWithZoomState> {
 
   @override
   Widget build(BuildContext context) {
-    return MapControlsOverlay(
-      currentZoom: _currentZoom,
-      minZoom: widget.minZoom,
-      maxZoom: widget.maxZoom,
-      onZoomIn: () {
-        final newZoom = math.min(_currentZoom + 1, widget.maxZoom);
-        widget.animatedMove(widget.mapController.camera.center, newZoom);
-        HapticFeedback.selectionClick();
+    return ValueListenableBuilder<double>(
+      valueListenable: widget.mapRotation,
+      builder: (context, rotation, _) {
+        return MapControlsOverlay(
+          currentZoom: _currentZoom,
+          minZoom: widget.minZoom,
+          maxZoom: widget.maxZoom,
+          onZoomIn: () {
+            final newZoom = math.min(_currentZoom + 1, widget.maxZoom);
+            widget.animatedMove(widget.mapController.camera.center, newZoom);
+            HapticFeedback.selectionClick();
+          },
+          onZoomOut: () {
+            final newZoom = math.max(_currentZoom - 1, widget.minZoom);
+            widget.animatedMove(widget.mapController.camera.center, newZoom);
+            HapticFeedback.selectionClick();
+          },
+          onFitAll: widget.onFitAll,
+          onResetNorth: () {
+            HapticFeedback.selectionClick();
+            widget.onResetNorth();
+          },
+          showFitAll: true,
+          showNavigation: false,
+          showCompass: true,
+          mapRotation: rotation,
+        );
       },
-      onZoomOut: () {
-        final newZoom = math.max(_currentZoom - 1, widget.minZoom);
-        widget.animatedMove(widget.mapController.camera.center, newZoom);
-        HapticFeedback.selectionClick();
+    );
+  }
+}
+
+/// Selection highlight overlay drawn above the marker cluster layer.
+///
+/// Listens to the `selectedNodeNotifier` directly so a node tap rebuilds only
+/// this single-marker layer rather than the screen's 12k-marker cluster.
+class _SelectionHighlightLayer extends StatelessWidget {
+  const _SelectionHighlightLayer({
+    required this.selectedNodeNotifier,
+    required this.accentColor,
+  });
+
+  final ValueListenable<WorldMeshNode?> selectedNodeNotifier;
+  final Color accentColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<WorldMeshNode?>(
+      valueListenable: selectedNodeNotifier,
+      builder: (context, node, _) {
+        if (node == null ||
+            !node.latitudeDecimal.isFinite ||
+            !node.longitudeDecimal.isFinite) {
+          return const SizedBox.shrink();
+        }
+        return MarkerLayer(
+          markers: [
+            Marker(
+              point: LatLng(node.latitudeDecimal, node.longitudeDecimal),
+              width: 32,
+              height: 32,
+              child: IgnorePointer(
+                child: Center(
+                  child: Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: accentColor,
+                      border: Border.all(color: Colors.white, width: 2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: accentColor.withValues(alpha: 0.5),
+                          blurRadius: 8,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
       },
-      onFitAll: widget.onFitAll,
-      onResetNorth: () {
-        HapticFeedback.selectionClick();
-        widget.onResetNorth();
-      },
-      showFitAll: true,
-      showNavigation: false,
-      showCompass: true,
-      mapRotation: widget.mapRotation,
     );
   }
 }
@@ -1645,18 +1706,23 @@ class _SearchResultTile extends StatelessWidget {
 }
 
 /// Rich info card for WorldMeshNode - shows all available data from mesh-observer
+/// Body content for the world-mesh node info bottom sheet.
+///
+/// Hosted inside `AppBottomSheet.showScrollable` — the parent provides the
+/// drag pill, sheet chrome, and scroll controller. The heavy intelligence
+/// panel + section cards are wrapped in `Skeletonizer` for the first frame
+/// so the sheet animates in with a shimmer placeholder rather than popping a
+/// half-built tree.
 class WorldNodeInfoCard extends ConsumerStatefulWidget {
   final WorldMeshNode node;
-  final VoidCallback? onClose;
   final VoidCallback? onFocus;
-  final bool isLoading;
+  final ScrollController scrollController;
 
   const WorldNodeInfoCard({
     super.key,
     required this.node,
-    this.onClose,
+    required this.scrollController,
     this.onFocus,
-    this.isLoading = false,
   });
 
   @override
@@ -1665,8 +1731,42 @@ class WorldNodeInfoCard extends ConsumerStatefulWidget {
 
 class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
   WorldMeshNode get node => widget.node;
-  VoidCallback? get onClose => widget.onClose;
   VoidCallback? get onFocus => widget.onFocus;
+
+  // Flips to `true` after the first frame so the heavy content section
+  // (NodeIntelligencePanel + sub-section grids) animates in via Skeletonizer
+  // rather than pop-rendering. One frame ≈ 16 ms of shimmer = polished entry.
+  bool _isReady = false;
+  // Holds the current node's identity for the skeleton gate. When the sheet
+  // is recycled for a different node we re-show the skeleton briefly.
+  int? _readyForNodeNum;
+
+  @override
+  void initState() {
+    super.initState();
+    _scheduleReady();
+  }
+
+  @override
+  void didUpdateWidget(covariant WorldNodeInfoCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.node.nodeNum != widget.node.nodeNum) {
+      _isReady = false;
+      _scheduleReady();
+    }
+  }
+
+  void _scheduleReady() {
+    final targetNodeNum = widget.node.nodeNum;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (_readyForNodeNum == targetNodeNum) return;
+      setState(() {
+        _isReady = true;
+        _readyForNodeNum = targetNodeNum;
+      });
+    });
+  }
 
   void _toggleFavorite() {
     HapticFeedback.mediumImpact();
@@ -1686,129 +1786,117 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
     final accentColor = theme.colorScheme.primary;
     final isFavorite = ref.watch(isNodeFavoriteProvider(node.nodeNum));
 
-    return Container(
-      constraints: const BoxConstraints(maxHeight: 400),
-      decoration: BoxDecoration(
-        color: context.card.withValues(alpha: 0.98),
-        borderRadius: BorderRadius.circular(AppTheme.radius16),
-        border: Border.all(color: accentColor.withValues(alpha: 0.3)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.4),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // STATIC HEADER - doesn't scroll
-          Padding(
-            padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 16, 16, 16),
-            child: Row(
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: accentColor.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(AppTheme.radius12),
-                  ),
-                  child: Center(
-                    child: Text(
-                      _getAvatarText(node),
-                      style: TextStyle(
-                        color: accentColor,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                        fontFamily: AppTheme.fontFamily,
-                      ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // STATIC HEADER - doesn't scroll
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 16, 16, 16),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
+                ),
+                child: Center(
+                  child: Text(
+                    _getAvatarText(node),
+                    style: TextStyle(
+                      color: accentColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      fontFamily: AppTheme.fontFamily,
                     ),
                   ),
                 ),
-                SizedBox(width: AppTheme.spacing12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        node.displayName,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+              ),
+              SizedBox(width: AppTheme.spacing12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      node.displayName,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
                       ),
-                      Row(
-                        children: [
-                          // Only show nodeId if different from displayName
-                          if (node.hasName)
-                            Text(
-                              node.nodeId,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Row(
+                      children: [
+                        // Only show nodeId if different from displayName
+                        if (node.hasName)
+                          Text(
+                            node.nodeId,
+                            style: TextStyle(
+                              color: context.textSecondary,
+                              fontFamily: AppTheme.fontFamily,
+                              fontSize: 12,
+                            ),
+                          ),
+                        if (node.hasName) SizedBox(width: AppTheme.spacing8),
+                        if (node.isRecentlySeen)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.successGreen.withValues(
+                                alpha: 0.2,
+                              ),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius4,
+                              ),
+                            ),
+                            child: Text(
+                              context.l10n.worldMeshBadgeActive,
                               style: TextStyle(
-                                color: context.textSecondary,
-                                fontFamily: AppTheme.fontFamily,
-                                fontSize: 12,
+                                color: AppTheme.successGreen,
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
-                          if (node.hasName) SizedBox(width: AppTheme.spacing8),
-                          if (node.isRecentlySeen)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppTheme.successGreen.withValues(
-                                  alpha: 0.2,
-                                ),
-                                borderRadius: BorderRadius.circular(
-                                  AppTheme.radius4,
-                                ),
-                              ),
-                              child: Text(
-                                context.l10n.worldMeshBadgeActive,
-                                style: TextStyle(
-                                  color: AppTheme.successGreen,
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ],
-                  ),
+                          ),
+                      ],
+                    ),
+                  ],
                 ),
-                // Favorite button
-                IconButton(
-                  icon: Icon(
-                    isFavorite ? Icons.star : Icons.star_border,
-                    size: 22,
-                    color: isFavorite
-                        ? const Color(0xFFFFD700)
-                        : context.textSecondary,
-                  ),
-                  onPressed: _toggleFavorite,
-                  tooltip: isFavorite
-                      ? context.l10n.worldMeshRemoveFromFavorites
-                      : context.l10n.worldMeshAddToFavorites,
+              ),
+              // Favorite button
+              IconButton(
+                icon: Icon(
+                  isFavorite ? Icons.star : Icons.star_border,
+                  size: 22,
+                  color: isFavorite
+                      ? const Color(0xFFFFD700)
+                      : context.textSecondary,
                 ),
-                IconButton(
-                  icon: Icon(Icons.close, size: 20),
-                  onPressed: onClose,
-                  color: context.textSecondary,
-                ),
-              ],
-            ),
+                onPressed: _toggleFavorite,
+                tooltip: isFavorite
+                    ? context.l10n.worldMeshRemoveFromFavorites
+                    : context.l10n.worldMeshAddToFavorites,
+              ),
+            ],
           ),
+        ),
 
-          Divider(height: 1),
+        Divider(height: 1),
 
-          // SCROLLABLE CONTENT - middle section
-          Flexible(
+        // SCROLLABLE CONTENT — heavy section, wrapped in Skeletonizer for
+        // the first frame so the sheet's slide-up animation doesn't reveal
+        // a half-built widget tree.
+        Expanded(
+          child: Skeletonizer(
+            enabled: !_isReady,
+            effect: AppSkeletonConfig.effect(context),
+            ignoreContainers: true,
             child: SingleChildScrollView(
+              controller: widget.scrollController,
               padding: const EdgeInsets.all(AppTheme.spacing16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -2080,46 +2168,46 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
               ),
             ),
           ),
+        ),
 
-          const Divider(height: 1),
+        const Divider(height: 1),
 
-          // STATIC FOOTER - action buttons
-          Padding(
-            padding: const EdgeInsets.all(AppTheme.spacing16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      Clipboard.setData(ClipboardData(text: node.nodeId));
-                      showSuccessSnackBar(
-                        context,
-                        context.l10n.worldMeshNodeIdCopied,
-                      );
-                    },
-                    icon: const Icon(Icons.copy, size: 16),
-                    label: Text(context.l10n.worldMeshCopyId),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
+        // STATIC FOOTER - action buttons
+        Padding(
+          padding: const EdgeInsets.all(AppTheme.spacing16),
+          child: Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: node.nodeId));
+                    showSuccessSnackBar(
+                      context,
+                      context.l10n.worldMeshNodeIdCopied,
+                    );
+                  },
+                  icon: const Icon(Icons.copy, size: 16),
+                  label: Text(context.l10n.worldMeshCopyId),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                 ),
-                const SizedBox(width: AppTheme.spacing12),
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: onFocus,
-                    icon: const Icon(Icons.center_focus_strong, size: 16),
-                    label: Text(context.l10n.worldMeshFocus),
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
+              ),
+              const SizedBox(width: AppTheme.spacing12),
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: onFocus,
+                  icon: const Icon(Icons.center_focus_strong, size: 16),
+                  label: Text(context.l10n.worldMeshFocus),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -2721,6 +2809,47 @@ class _WorldLosResultPanel extends StatelessWidget {
           }, style: TextStyle(fontSize: 11, color: context.textSecondary)),
         ],
       ),
+    );
+  }
+}
+
+/// Listens to the screen's selection notifier and renders the matching
+/// `WorldNodeInfoCard` inside `AppBottomSheet.showScrollable`.
+///
+/// Tapping a different marker while the sheet is open updates the notifier;
+/// this widget rebuilds with the new node without dismissing the sheet (the
+/// `WorldNodeInfoCard.didUpdateWidget` re-arms its one-frame skeleton).
+///
+/// **Important:** this widget never calls `Navigator.pop` itself. The sheet
+/// is dismissed by the user (drag-down, barrier tap, system back) which
+/// resolves the `showScrollable` future; the screen's `_showNodeInfoSheet`
+/// finally-block then clears the notifier. Popping from inside the body
+/// during that clear races with the sheet's own dismiss and ends up popping
+/// the underlying screen too.
+class _WorldNodeInfoSheetBody extends StatelessWidget {
+  const _WorldNodeInfoSheetBody({
+    required this.selectedNodeNotifier,
+    required this.scrollController,
+    required this.onFocus,
+  });
+
+  final ValueListenable<WorldMeshNode?> selectedNodeNotifier;
+  final ScrollController scrollController;
+  final ValueChanged<WorldMeshNode> onFocus;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<WorldMeshNode?>(
+      valueListenable: selectedNodeNotifier,
+      builder: (context, node, _) {
+        if (node == null) return const SizedBox.shrink();
+        return WorldNodeInfoCard(
+          key: ValueKey(node.nodeNum),
+          node: node,
+          scrollController: scrollController,
+          onFocus: () => onFocus(node),
+        );
+      },
     );
   }
 }

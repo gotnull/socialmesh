@@ -21306,9 +21306,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get worldMeshLinkBudgetCopied => 'Link budget copied to clipboard';
 
   @override
-  String get worldMeshLoadingNodeInfo => 'Loading node info...';
-
-  @override
   String get worldMeshLongPressHint => 'Long-press for actions';
 
   @override

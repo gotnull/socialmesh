@@ -21543,9 +21543,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get worldMeshLinkBudgetCopied => 'Link budget copiato negli appunti';
 
   @override
-  String get worldMeshLoadingNodeInfo => 'Caricamento info nodo...';
-
-  @override
   String get worldMeshLongPressHint => 'Tieni premuto per le azioni';
 
   @override

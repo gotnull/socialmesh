@@ -21526,9 +21526,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'Link budget copiado para a área de transferência';
 
   @override
-  String get worldMeshLoadingNodeInfo => 'Carregando info do nó...';
-
-  @override
   String get worldMeshLongPressHint => 'Pressione e segure para ações';
 
   @override

@@ -37652,12 +37652,6 @@ abstract class AppLocalizations {
   /// **'Link budget copied to clipboard'**
   String get worldMeshLinkBudgetCopied;
 
-  /// UI text: world mesh loading node info
-  ///
-  /// In en, this message translates to:
-  /// **'Loading node info...'**
-  String get worldMeshLoadingNodeInfo;
-
   /// Input field hint text
   ///
   /// In en, this message translates to:
