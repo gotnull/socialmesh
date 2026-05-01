@@ -12,11 +12,11 @@ class LegalConstants {
 
   /// Current Terms of Service version (matches "Last Updated" on website).
   /// Bump this value when Terms content changes materially.
-  static const String termsVersion = '2026-03-10';
+  static const String termsVersion = '2026-05-01';
 
   /// Current Privacy Policy version (matches "Last Updated" on website).
   /// Bump this value when Privacy Policy content changes materially.
-  static const String privacyVersion = '2026-03-10';
+  static const String privacyVersion = '2026-05-01';
 
   /// Age eligibility policy version. Increment to force re-confirmation
   /// from all users (e.g. when the minimum age or legal posture changes).
@@ -83,6 +83,9 @@ class LegalConstants {
   /// Payments, Subscriptions, and Refunds (Section G)
   static const String anchorPayments = 'payments';
 
+  /// Device Shop / Marketplace (third-party seller terms)
+  static const String anchorMarketplace = 'marketplace';
+
   /// Intellectual Property
   static const String anchorIntellectualProperty = 'intellectual-property';
 
@@ -121,6 +124,7 @@ class LegalConstants {
     anchorAcceptableUse,
     anchorRadioCompliance,
     anchorPayments,
+    anchorMarketplace,
     anchorIntellectualProperty,
     anchorPrivacyIncorporation,
     anchorThirdPartyServices,
