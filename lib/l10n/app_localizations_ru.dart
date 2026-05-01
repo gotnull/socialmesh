@@ -9265,7 +9265,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get navigationTakMap => 'TAK Карта';
 
   @override
-  String get navigationTelemetry => 'Telemetry';
+  String get navigationTelemetry => 'Telemetry & Sensors';
 
   @override
   String get navigationThemePack => 'Пакет тем';
@@ -29085,6 +29085,17 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get dashboardEditTitle => 'Edit Dashboard';
+
+  @override
+  String get dashboardEnvironmentMetricsOpenLog => 'Open log';
+
+  @override
+  String dashboardEnvironmentMetricsUpdated(String time) {
+    return 'Updated $time ago';
+  }
+
+  @override
+  String get dashboardEnvironmentMetricsViewAll => 'View all';
 
   @override
   String get dashboardHealthConnection => 'Connection';

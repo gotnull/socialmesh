@@ -8488,6 +8488,24 @@
   "@dashboardEditTitle": {
     "description": "Title for the device dashboard screen"
   },
+  "dashboardEnvironmentMetricsOpenLog": "Abrir registo",
+  "@dashboardEnvironmentMetricsOpenLog": {
+    "description": "Button on the dashboard Environment Metrics widget shown when there are no readings yet — opens the full environment metrics log screen."
+  },
+  "dashboardEnvironmentMetricsUpdated": "Atualizado há {time}",
+  "@dashboardEnvironmentMetricsUpdated": {
+    "description": "Footer label on the dashboard Environment Metrics widget showing how long ago the latest reading was recorded.",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "5m"
+      }
+    }
+  },
+  "dashboardEnvironmentMetricsViewAll": "Ver tudo",
+  "@dashboardEnvironmentMetricsViewAll": {
+    "description": "Tap target on the dashboard Environment Metrics widget that opens the full log screen."
+  },
   "dashboardHealthConnection": "Conexão",
   "@dashboardHealthConnection": {
     "description": "Text displayed in device dashboard"
@@ -20957,6 +20975,10 @@
   "navigationTakMap": "Mapa TAK",
   "@navigationTakMap": {
     "description": "Label for the TAK Map drawer item."
+  },
+  "navigationTelemetry": "Telemetria e sensores",
+  "@navigationTelemetry": {
+    "description": "Label for the Telemetry drawer item that opens the telemetry hub screen (device metrics, environment, air quality, position, traceroute, PAX, detection sensor, routes)."
   },
   "navigationThemePack": "Pacote de Tema",
   "@navigationThemePack": {

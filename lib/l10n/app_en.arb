@@ -12594,7 +12594,7 @@
     "@navigationTakMap": {
         "description": "Label for the TAK Map drawer item."
     },
-    "navigationTelemetry": "Telemetry",
+    "navigationTelemetry": "Telemetry & Sensors",
     "@navigationTelemetry": {
         "description": "Label for the Telemetry drawer item that opens the telemetry hub screen (device metrics, environment, air quality, position, traceroute, PAX, detection sensor, routes)."
     },
@@ -39481,6 +39481,24 @@
     "dashboardEditTitle": "Edit Dashboard",
     "@dashboardEditTitle": {
         "description": "Title for the device dashboard screen"
+    },
+    "dashboardEnvironmentMetricsOpenLog": "Open log",
+    "@dashboardEnvironmentMetricsOpenLog": {
+        "description": "Button on the dashboard Environment Metrics widget shown when there are no readings yet — opens the full environment metrics log screen."
+    },
+    "dashboardEnvironmentMetricsUpdated": "Updated {time} ago",
+    "@dashboardEnvironmentMetricsUpdated": {
+        "description": "Footer label on the dashboard Environment Metrics widget showing how long ago the latest reading was recorded.",
+        "placeholders": {
+            "time": {
+                "type": "String",
+                "example": "5m"
+            }
+        }
+    },
+    "dashboardEnvironmentMetricsViewAll": "View all",
+    "@dashboardEnvironmentMetricsViewAll": {
+        "description": "Tap target on the dashboard Environment Metrics widget that opens the full log screen."
     },
     "dashboardHealthConnection": "Connection",
     "@dashboardHealthConnection": {

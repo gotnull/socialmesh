@@ -12,6 +12,7 @@ enum DashboardWidgetType {
   meshHealth,
   quickCompose,
   nodeMap,
+  environmentMetrics,
   custom, // Schema-based custom widgets from Widget Builder
 }
 
@@ -185,6 +186,15 @@ class WidgetRegistry {
           'Map showing nodes with GPS positions', // lint-allow: hardcoded-string
       icon: Icons.map,
       defaultSize: WidgetSize.large,
+      supportedSizes: [WidgetSize.medium, WidgetSize.large],
+    ),
+    WidgetTypeInfo(
+      type: DashboardWidgetType.environmentMetrics,
+      name: 'Environment Metrics',
+      description:
+          'Latest temperature, humidity, pressure — tap for full log', // lint-allow: hardcoded-string
+      icon: Icons.thermostat,
+      defaultSize: WidgetSize.medium,
       supportedSizes: [WidgetSize.medium, WidgetSize.large],
     ),
     WidgetTypeInfo(

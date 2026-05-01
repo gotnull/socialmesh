@@ -16516,7 +16516,7 @@ abstract class AppLocalizations {
   /// Label for the Telemetry drawer item that opens the telemetry hub screen (device metrics, environment, air quality, position, traceroute, PAX, detection sensor, routes).
   ///
   /// In en, this message translates to:
-  /// **'Telemetry'**
+  /// **'Telemetry & Sensors'**
   String get navigationTelemetry;
 
   /// Label for the Theme Pack premium drawer item.
@@ -51495,6 +51495,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Edit Dashboard'**
   String get dashboardEditTitle;
+
+  /// Button on the dashboard Environment Metrics widget shown when there are no readings yet — opens the full environment metrics log screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open log'**
+  String get dashboardEnvironmentMetricsOpenLog;
+
+  /// Footer label on the dashboard Environment Metrics widget showing how long ago the latest reading was recorded.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {time} ago'**
+  String dashboardEnvironmentMetricsUpdated(String time);
+
+  /// Tap target on the dashboard Environment Metrics widget that opens the full log screen.
+  ///
+  /// In en, this message translates to:
+  /// **'View all'**
+  String get dashboardEnvironmentMetricsViewAll;
 
   /// Text displayed in device dashboard
   ///

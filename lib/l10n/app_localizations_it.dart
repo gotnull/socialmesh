@@ -9363,7 +9363,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get navigationTakMap => 'Mappa TAK';
 
   @override
-  String get navigationTelemetry => 'Telemetry';
+  String get navigationTelemetry => 'Telemetria e sensori';
 
   @override
   String get navigationThemePack => 'Pacchetto Tema';
@@ -29411,6 +29411,17 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get dashboardEditTitle => 'Modifica dashboard';
+
+  @override
+  String get dashboardEnvironmentMetricsOpenLog => 'Apri registro';
+
+  @override
+  String dashboardEnvironmentMetricsUpdated(String time) {
+    return 'Aggiornato $time fa';
+  }
+
+  @override
+  String get dashboardEnvironmentMetricsViewAll => 'Vedi tutti';
 
   @override
   String get dashboardHealthConnection => 'Connessione';

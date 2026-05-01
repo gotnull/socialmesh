@@ -29,6 +29,7 @@ import 'widgets/signal_strength_widget.dart';
 import 'widgets/channel_activity_widget.dart';
 import 'widgets/mesh_health_widget.dart';
 import 'widgets/node_map_widget.dart';
+import 'widgets/environment_metrics_widget.dart';
 import 'widgets/schema_widget_content.dart';
 import '../../config/revenuecat_config.dart';
 import '../../models/subscription_models.dart';
@@ -422,6 +423,8 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen>
         return const SignalStrengthContent();
       case DashboardWidgetType.nodeMap:
         return const NodeMapContent();
+      case DashboardWidgetType.environmentMetrics:
+        return const EnvironmentMetricsContent();
       case DashboardWidgetType.custom:
         // If no schemaId, show error
         return const Center(
