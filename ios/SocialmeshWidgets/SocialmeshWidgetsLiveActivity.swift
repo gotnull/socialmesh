@@ -97,6 +97,10 @@ struct LiveData {
         sharedDefault.bool(forKey: key(name))
     }
 
+    private func intArray(_ name: String) -> [Int] {
+        (sharedDefault.array(forKey: key(name)) as? [NSNumber])?.map { $0.intValue } ?? []
+    }
+
     // Device
     var deviceName: String { string("deviceName").isEmpty ? shortName : string("deviceName") }
     var shortName: String { let s = string("shortName"); return s.isEmpty ? "????" : s }
@@ -119,6 +123,28 @@ struct LiveData {
 
     // Environment
     var voltage: Double { double("voltage") }
+    var uptimeSeconds: Int { int("uptimeSeconds") }
+
+    // Route — Flighty-style "from → to" half of the lock screen card.
+    var destinationLabel: String {
+        let s = string("destinationLabel")
+        return s.isEmpty ? "MESH" : s
+    }
+    var destinationLongName: String {
+        let s = string("destinationLongName")
+        return s.isEmpty ? "Whole network" : s
+    }
+    var destinationLastHeardSec: Int { int("destinationLastHeardSec") }
+    var destinationNextEventSec: Int { int("destinationNextEventSec") }
+
+    /// "ok" | "stale" | "lost" | "idle" — drives the right-side status pill.
+    var linkStatus: String {
+        let s = string("linkStatus")
+        return s.isEmpty ? "idle" : s
+    }
+
+    /// Recent BLE RSSI samples (oldest first) feeding the aurora curve.
+    var signalHistory: [Int] { intArray("signalHistory") }
 }
 
 // MARK: - Widget Entry Point
@@ -153,7 +179,7 @@ struct SocialmeshWidgetsLiveActivity: Widget {
     }
 }
 
-// MARK: - Lock Screen
+// MARK: - Lock Screen — Flighty-aligned route + aurora layout
 
 @available(iOS 16.2, *)
 struct LockScreenView: View {
@@ -161,231 +187,304 @@ struct LockScreenView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Header — brand + device + battery
             headerRow
                 .padding(.horizontal, 16)
                 .padding(.top, 14)
                 .padding(.bottom, 10)
 
-            // Accent separator
             Rectangle()
-                .fill(SM.accent.opacity(0.5))
+                .fill(SM.accent.opacity(0.4))
                 .frame(height: 1)
-                .padding(.horizontal, 20)
+                .padding(.horizontal, 16)
 
-            // Stats — signal, nodes, packets
-            statsRow
-                .padding(.horizontal, 12)
+            routeRow
+                .padding(.horizontal, 16)
                 .padding(.top, 12)
-                .padding(.bottom, 8)
+                .padding(.bottom, 10)
 
-            // Footer — utilization bars
-            footerRow
+            heroFooter
                 .padding(.horizontal, 16)
                 .padding(.bottom, 14)
         }
     }
 
-    // MARK: Header
+    // MARK: Header — connection dot + names · link-status pill
 
     private var headerRow: some View {
-        HStack(alignment: .center) {
-            // Connection indicator + branding
-            HStack(spacing: 8) {
-                Circle()
-                    .fill(data.isConnected ? SM.green : SM.red)
-                    .frame(width: 10, height: 10)
+        HStack(alignment: .center, spacing: 8) {
+            Circle()
+                .fill(data.isConnected ? SM.green : SM.red)
+                .frame(width: 8, height: 8)
 
-                VStack(alignment: .leading, spacing: 1) {
-                    Text("Socialmesh")
-                        .font(SM.brand(13, weight: .bold))
-                        .foregroundColor(SM.textPrimary)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(data.shortName.uppercased())
+                    .font(SM.mono(13, weight: .heavy))
+                    .foregroundColor(SM.textPrimary)
+                    .tracking(0.6)
+                    .lineLimit(1)
 
-                    Text(data.deviceName)
-                        .font(SM.label(11, weight: .medium))
-                        .foregroundColor(SM.textSecondary)
-                        .lineLimit(1)
-                }
+                Text(data.deviceName)
+                    .font(SM.label(10.5, weight: .medium))
+                    .foregroundColor(SM.textSecondary)
+                    .lineLimit(1)
             }
 
             Spacer(minLength: 8)
 
-            // Battery
-            batteryView
+            LinkStatusPill(status: data.linkStatus)
         }
     }
 
-    private var batteryView: some View {
-        HStack(spacing: 5) {
-            if data.isCharging {
-                Image(systemName: "bolt.fill")
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundColor(SM.green)
-            }
+    // MARK: Route Row — YOU · aurora · DESTINATION
 
-            // Battery bar
-            ZStack(alignment: .leading) {
-                RoundedRectangle(cornerRadius: 2.5)
-                    .fill(SM.fill)
-                    .frame(width: 26, height: 11)
-
-                RoundedRectangle(cornerRadius: 2)
-                    .fill(SM.batteryColor(data.displayBattery))
-                    .frame(
-                        width: max(3, CGFloat(data.displayBattery) / 100.0 * 22),
-                        height: 7
-                    )
-                    .padding(.leading, 2)
-            }
-
-            // Terminal nub
-            RoundedRectangle(cornerRadius: 0.5)
-                .fill(SM.batteryColor(data.displayBattery).opacity(0.6))
-                .frame(width: 1.5, height: 5)
-
-            Text("\(data.displayBattery)%")
-                .font(SM.mono(12, weight: .bold))
-                .foregroundColor(SM.batteryColor(data.displayBattery))
-                .frame(minWidth: 32, alignment: .trailing)
-        }
-    }
-
-    // MARK: Stats Row
-
-    private var statsRow: some View {
-        HStack(spacing: 0) {
-            // Signal
-            signalCell
-                .frame(maxWidth: .infinity)
-
-            verticalDivider
-
-            // Nodes
-            nodesCell
-                .frame(maxWidth: .infinity)
-
-            verticalDivider
-
-            // Packets
-            packetsCell
-                .frame(maxWidth: .infinity)
-        }
-    }
-
-    private var signalCell: some View {
-        VStack(spacing: 4) {
-            HStack(alignment: .firstTextBaseline, spacing: 2) {
-                SignalBars(rssi: data.signal)
-                Text("\(data.signal)")
-                    .font(SM.mono(18, weight: .heavy))
-                    .foregroundColor(SM.signalColor(data.signal))
-            }
-
-            Text("dBm")
-                .font(SM.mono(8, weight: .semibold))
-                .foregroundColor(SM.textTertiary)
-                .textCase(.uppercase)
-
-            snrBadge
-        }
-    }
-
-    private var snrBadge: some View {
-        HStack(spacing: 2) {
-            Text("SNR")
-                .font(SM.mono(7, weight: .bold))
-                .foregroundColor(SM.textTertiary)
-            Text("\(data.snr >= 0 ? "+" : "")\(data.snr)")
-                .font(SM.mono(9, weight: .bold))
-                .foregroundColor(SM.snrColor(data.snr))
-        }
-        .padding(.horizontal, 6)
-        .padding(.vertical, 2)
-        .background(
-            RoundedRectangle(cornerRadius: 4)
-                .fill(SM.fill)
-        )
-    }
-
-    private var nodesCell: some View {
-        VStack(spacing: 4) {
-            HStack(alignment: .firstTextBaseline, spacing: 1) {
-                Text("\(data.nodesOnline)")
-                    .font(SM.mono(28, weight: .black))
-                    .foregroundColor(SM.green)
-                Text("/\(data.totalNodes)")
-                    .font(SM.mono(13, weight: .medium))
+    private var routeRow: some View {
+        HStack(alignment: .center, spacing: 10) {
+            // Origin — local node
+            VStack(alignment: .leading, spacing: 2) {
+                Text("YOU")
+                    .font(SM.mono(8, weight: .bold))
                     .foregroundColor(SM.textTertiary)
+                    .tracking(1.2)
+                Text("\(data.signal)")
+                    .font(SM.mono(20, weight: .heavy))
+                    .foregroundColor(SM.signalColor(data.signal))
+                Text("dBm")
+                    .font(SM.mono(8, weight: .semibold))
+                    .foregroundColor(SM.textTertiary)
+                    .tracking(0.8)
             }
+            .frame(minWidth: 56, alignment: .leading)
 
-            Text("NODES")
-                .font(SM.mono(8, weight: .bold))
-                .foregroundColor(SM.textTertiary)
-                .tracking(1.5)
+            // Aurora curve — RSSI history sparkline
+            AuroraCurve(
+                samples: data.signalHistory,
+                color: SM.signalColor(data.signal)
+            )
+            .frame(maxWidth: .infinity)
+            .frame(height: 44)
+
+            // Destination — mesh / best peer / active DM
+            VStack(alignment: .trailing, spacing: 2) {
+                Text(data.destinationLabel)
+                    .font(SM.mono(13, weight: .heavy))
+                    .foregroundColor(SM.textPrimary)
+                    .tracking(0.6)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                Text(formatAge(data.destinationLastHeardSec))
+                    .font(SM.mono(9, weight: .semibold))
+                    .foregroundColor(SM.textTertiary)
+                    .lineLimit(1)
+            }
+            .frame(minWidth: 64, alignment: .trailing)
         }
     }
 
-    private var packetsCell: some View {
-        VStack(spacing: 6) {
-            HStack(spacing: 4) {
-                Image(systemName: "arrow.up")
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundColor(SM.accent)
-                Text("\(data.tx)")
-                    .font(SM.mono(14, weight: .bold))
-                    .foregroundColor(SM.textPrimary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-            }
-            HStack(spacing: 4) {
-                Image(systemName: "arrow.down")
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundColor(SM.green)
-                Text("\(data.rx)")
-                    .font(SM.mono(14, weight: .bold))
-                    .foregroundColor(SM.textPrimary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-            }
+    // MARK: Hero Footer — battery · uptime · nodes online
+
+    private var heroFooter: some View {
+        HStack(spacing: 0) {
+            HeroStat(
+                icon: data.isCharging ? "bolt.fill" : "battery.100",
+                value: "\(data.displayBattery)%",
+                tint: SM.batteryColor(data.displayBattery)
+            )
+            .frame(maxWidth: .infinity)
+
+            verticalDivider
+
+            HeroStat(
+                icon: "clock",
+                value: formatUptime(data.uptimeSeconds),
+                tint: SM.cyan
+            )
+            .frame(maxWidth: .infinity)
+
+            verticalDivider
+
+            HeroStat(
+                icon: "person.2.fill",
+                value: "\(data.nodesOnline)/\(data.totalNodes)",
+                tint: SM.green
+            )
+            .frame(maxWidth: .infinity)
         }
     }
 
     private var verticalDivider: some View {
         Rectangle()
             .fill(SM.separator)
-            .frame(width: 1, height: 40)
+            .frame(width: 1, height: 22)
     }
+}
 
-    // MARK: Footer — Utilization
+// MARK: - Aurora Curve — RSSI history sparkline
 
-    private var footerRow: some View {
-        HStack(spacing: 12) {
-            UtilizationBar(label: "CH", value: data.channelUtil, color: SM.purple)
-            UtilizationBar(label: "AIR", value: data.airtime, color: SM.cyan)
+@available(iOS 16.2, *)
+struct AuroraCurve: View {
+    let samples: [Int]
+    let color: Color
 
-            if data.voltage > 0 {
-                Spacer(minLength: 4)
-                voltagePill
+    var body: some View {
+        GeometryReader { geo in
+            if samples.count >= 2 {
+                ZStack {
+                    Path { p in drawCurve(in: geo.size, path: &p, close: true) }
+                        .fill(LinearGradient(
+                            colors: [color.opacity(0.45), color.opacity(0.0)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        ))
+
+                    Path { p in drawCurve(in: geo.size, path: &p, close: false) }
+                        .stroke(color, style: StrokeStyle(lineWidth: 1.8, lineCap: .round, lineJoin: .round))
+                }
+            } else {
+                // Empty state — dashed mid-line.
+                Path { p in
+                    p.move(to: CGPoint(x: 0, y: geo.size.height / 2))
+                    p.addLine(to: CGPoint(x: geo.size.width, y: geo.size.height / 2))
+                }
+                .stroke(SM.separator, style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
             }
         }
     }
 
-    private var voltagePill: some View {
-        HStack(spacing: 3) {
-            Image(systemName: "bolt.fill")
-                .font(.system(size: 9, weight: .bold))
-                .foregroundColor(SM.cyan)
-            Text(String(format: "%.1fV", data.voltage))
-                .font(SM.mono(10, weight: .bold))
-                .foregroundColor(SM.textPrimary)
+    private func drawCurve(in size: CGSize, path: inout Path, close: Bool) {
+        guard samples.count >= 2 else { return }
+
+        // Clamp RSSI to a sensible mesh-radio band so the curve has
+        // visible amplitude even when the signal is steady.
+        let minDb = -120.0
+        let maxDb = -40.0
+        let range = maxDb - minDb
+        let pad: CGFloat = 4
+        let usableHeight = size.height - pad * 2
+        let stepX = size.width / CGFloat(samples.count - 1)
+
+        let points: [CGPoint] = samples.enumerated().map { i, s in
+            let dbm = max(minDb, min(maxDb, Double(s)))
+            let yNorm = 1.0 - (dbm - minDb) / range
+            return CGPoint(
+                x: CGFloat(i) * stepX,
+                y: pad + CGFloat(yNorm) * usableHeight
+            )
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
-        .background(
-            RoundedRectangle(cornerRadius: 6)
-                .fill(SM.fill)
-        )
+
+        guard let first = points.first, let last = points.last else { return }
+
+        if close {
+            path.move(to: CGPoint(x: 0, y: size.height))
+            path.addLine(to: first)
+        } else {
+            path.move(to: first)
+        }
+
+        // Smooth the curve with quadratic segments through midpoints —
+        // gives the Flighty-style flowing aurora silhouette.
+        for i in 1..<points.count {
+            let prev = points[i - 1]
+            let curr = points[i]
+            let mid = CGPoint(x: (prev.x + curr.x) / 2, y: (prev.y + curr.y) / 2)
+            path.addQuadCurve(to: mid, control: prev)
+            if i == points.count - 1 {
+                path.addLine(to: curr)
+            }
+        }
+
+        if close {
+            path.addLine(to: CGPoint(x: last.x, y: size.height))
+            path.closeSubpath()
+        }
     }
+}
+
+// MARK: - Link Status Pill — green/amber/red right-side header chip
+
+@available(iOS 16.2, *)
+struct LinkStatusPill: View {
+    let status: String
+
+    private var label: String {
+        switch status {
+        case "ok": return "LINK OK"
+        case "stale": return "STALE"
+        case "lost": return "LOST"
+        default: return "IDLE"
+        }
+    }
+
+    private var color: Color {
+        switch status {
+        case "ok": return SM.green
+        case "stale": return SM.orange
+        case "lost": return SM.red
+        default: return SM.textTertiary
+        }
+    }
+
+    var body: some View {
+        Text(label)
+            .font(SM.mono(9, weight: .heavy))
+            .tracking(1.0)
+            .foregroundColor(color)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(
+                RoundedRectangle(cornerRadius: 5)
+                    .fill(color.opacity(0.15))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 5)
+                    .stroke(color.opacity(0.45), lineWidth: 0.6)
+            )
+    }
+}
+
+// MARK: - Hero Stat Cell — icon + mono value (battery / uptime / nodes)
+
+@available(iOS 16.2, *)
+struct HeroStat: View {
+    let icon: String
+    let value: String
+    let tint: Color
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: icon)
+                .font(.system(size: 11, weight: .bold))
+                .foregroundColor(tint)
+            Text(value)
+                .font(SM.mono(13, weight: .heavy))
+                .foregroundColor(SM.textPrimary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+        }
+    }
+}
+
+// MARK: - Time formatters (shared by Lock Screen and DI)
+
+private func formatAge(_ sec: Int) -> String {
+    if sec < 0 { return "—" }
+    if sec == 0 { return "now" }
+    if sec < 60 { return "\(sec)s ago" }
+    if sec < 3600 { return "\(sec / 60)m ago" }
+    if sec < 86_400 { return "\(sec / 3600)h ago" }
+    return "\(sec / 86_400)d ago"
+}
+
+private func formatUptime(_ sec: Int) -> String {
+    if sec <= 0 { return "—" }
+    if sec < 3600 { return "\(sec / 60)m" }
+    if sec < 86_400 {
+        let h = sec / 3600
+        let m = (sec % 3600) / 60
+        return m == 0 ? "\(h)h" : "\(h)h \(m)m"
+    }
+    let d = sec / 86_400
+    let h = (sec % 86_400) / 3600
+    return h == 0 ? "\(d)d" : "\(d)d \(h)h"
 }
 
 // MARK: - Utilization Bar (shared between Lock Screen and DI)

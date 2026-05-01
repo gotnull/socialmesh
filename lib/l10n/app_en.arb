@@ -32965,6 +32965,34 @@
     "@bgConnLiveActivityDisableConfirm": {
         "description": "Confirmation button label when disabling Live Activity"
     },
+    "bgConnLiveActivityDestTitle": "Destination",
+    "@bgConnLiveActivityDestTitle": {
+        "description": "Title of the Live Activity destination picker — what the lock-screen route's right side shows"
+    },
+    "bgConnLiveActivityDestMesh": "Mesh",
+    "@bgConnLiveActivityDestMesh": {
+        "description": "Live Activity destination mode: show the whole mesh"
+    },
+    "bgConnLiveActivityDestBestPeer": "Best peer",
+    "@bgConnLiveActivityDestBestPeer": {
+        "description": "Live Activity destination mode: show the strongest-signal peer"
+    },
+    "bgConnLiveActivityDestActivePeer": "Active DM",
+    "@bgConnLiveActivityDestActivePeer": {
+        "description": "Live Activity destination mode: show the most-recent DM partner"
+    },
+    "bgConnLiveActivityDestMeshDesc": "Show your whole mesh — node count and overall link health.",
+    "@bgConnLiveActivityDestMeshDesc": {
+        "description": "Description of the Mesh destination mode"
+    },
+    "bgConnLiveActivityDestBestPeerDesc": "Show the strongest peer — auto-tracks the best signal.",
+    "@bgConnLiveActivityDestBestPeerDesc": {
+        "description": "Description of the Best peer destination mode"
+    },
+    "bgConnLiveActivityDestActivePeerDesc": "Show your most-recent DM partner — switches as you chat.",
+    "@bgConnLiveActivityDestActivePeerDesc": {
+        "description": "Description of the Active DM destination mode"
+    },
     "linkedDevicesTitle": "Linked Devices",
     "@linkedDevicesTitle": {
         "description": "Screen or section title"

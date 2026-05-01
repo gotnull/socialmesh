@@ -95,6 +95,12 @@ class LiveActivityService {
     String? role,
     double? latitude,
     double? longitude,
+    String? destinationLabel,
+    String? destinationLongName,
+    int? destinationLastHeardSec,
+    int? destinationNextEventSec,
+    String? linkStatus,
+    List<int>? signalHistory,
   }) async {
     if (!isSupported) {
       AppLogging.liveActivity('Live Activities not supported on this platform');
@@ -145,6 +151,12 @@ class LiveActivityService {
         role: role,
         latitude: latitude,
         longitude: longitude,
+        destinationLabel: destinationLabel,
+        destinationLongName: destinationLongName,
+        destinationLastHeardSec: destinationLastHeardSec,
+        destinationNextEventSec: destinationNextEventSec,
+        linkStatus: linkStatus,
+        signalHistory: signalHistory,
       );
 
       AppLogging.liveActivity(
@@ -209,6 +221,12 @@ class LiveActivityService {
     String? role,
     double? latitude,
     double? longitude,
+    String? destinationLabel,
+    String? destinationLongName,
+    int? destinationLastHeardSec,
+    int? destinationNextEventSec,
+    String? linkStatus,
+    List<int>? signalHistory,
     bool isConnected = true,
   }) async {
     if (!isSupported || _currentActivityId == null) {
@@ -254,6 +272,22 @@ class LiveActivityService {
       if (role != null) activityData['role'] = role;
       if (latitude != null) activityData['latitude'] = latitude;
       if (longitude != null) activityData['longitude'] = longitude;
+      if (destinationLabel != null) {
+        activityData['destinationLabel'] = destinationLabel;
+      }
+      if (destinationLongName != null) {
+        activityData['destinationLongName'] = destinationLongName;
+      }
+      if (destinationLastHeardSec != null) {
+        activityData['destinationLastHeardSec'] = destinationLastHeardSec;
+      }
+      if (destinationNextEventSec != null) {
+        activityData['destinationNextEventSec'] = destinationNextEventSec;
+      }
+      if (linkStatus != null) activityData['linkStatus'] = linkStatus;
+      if (signalHistory != null) {
+        activityData['signalHistory'] = signalHistory;
+      }
       activityData['isConnected'] = isConnected;
 
       // Update timestamp
@@ -338,6 +372,12 @@ class LiveActivityService {
     String? role,
     double? latitude,
     double? longitude,
+    String? destinationLabel,
+    String? destinationLongName,
+    int? destinationLastHeardSec,
+    int? destinationNextEventSec,
+    String? linkStatus,
+    List<int>? signalHistory,
   }) {
     // All values must be UserDefaults-compatible types
     return <String, dynamic>{
@@ -365,6 +405,12 @@ class LiveActivityService {
       'role': role ?? '',
       'latitude': latitude ?? 0.0,
       'longitude': longitude ?? 0.0,
+      'destinationLabel': destinationLabel ?? '',
+      'destinationLongName': destinationLongName ?? '',
+      'destinationLastHeardSec': destinationLastHeardSec ?? 0,
+      'destinationNextEventSec': destinationNextEventSec ?? 0,
+      'linkStatus': linkStatus ?? 'idle',
+      'signalHistory': signalHistory ?? const <int>[],
       'lastUpdated': DateTime.now().millisecondsSinceEpoch,
       'isConnected': true,
     };

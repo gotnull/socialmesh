@@ -24100,6 +24100,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bgConnLiveActivityDisableConfirm => 'End Activity';
 
   @override
+  String get bgConnLiveActivityDestTitle => 'Destination';
+
+  @override
+  String get bgConnLiveActivityDestMesh => 'Mesh';
+
+  @override
+  String get bgConnLiveActivityDestBestPeer => 'Best peer';
+
+  @override
+  String get bgConnLiveActivityDestActivePeer => 'Active DM';
+
+  @override
+  String get bgConnLiveActivityDestMeshDesc =>
+      'Show your whole mesh — node count and overall link health.';
+
+  @override
+  String get bgConnLiveActivityDestBestPeerDesc =>
+      'Show the strongest peer — auto-tracks the best signal.';
+
+  @override
+  String get bgConnLiveActivityDestActivePeerDesc =>
+      'Show your most-recent DM partner — switches as you chat.';
+
+  @override
   String get linkedDevicesTitle => 'Linked Devices';
 
   @override

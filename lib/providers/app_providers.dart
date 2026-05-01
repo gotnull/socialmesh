@@ -61,7 +61,12 @@ import 'muted_channels_provider.dart';
 import 'peer_safety_providers.dart';
 import '../services/messaging/dm_retry_coordinator.dart';
 import '../features/settings/background_connection_screen.dart'
-    show kLiveActivityEnabled;
+    show
+        kLiveActivityEnabled,
+        kLiveActivityDestination,
+        LiveActivityDestination;
+import 'sip_providers.dart';
+import '../services/protocol/sip/sip_dm.dart';
 
 // App initialization state - purely about app lifecycle, NOT device connection
 // Device connection is handled separately by DeviceConnectionNotifier in connection_providers.dart
@@ -3662,6 +3667,17 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
   static const _coalesceInterval = Duration(seconds: 2);
   bool _streamDirty = false;
 
+  /// Ring buffer of recent BLE RSSI samples — feeds the lock-screen aurora
+  /// curve. Oldest first, newest last. Capped at [_signalHistoryCap] entries
+  /// to keep UserDefaults writes small and the SwiftUI Path render cheap.
+  final List<int> _signalHistory = <int>[];
+  static const int _signalHistoryCap = 30;
+
+  /// User's chosen Live Activity destination mode (mesh / bestPeer /
+  /// activePeer). Reloaded from SharedPreferences each time a new activity
+  /// starts so changes in the settings screen apply on the next reconnect.
+  LiveActivityDestination _destinationMode = LiveActivityDestination.mesh;
+
   @override
   bool build() {
     _liveActivityService = ref.watch(liveActivityServiceProvider);
@@ -3736,6 +3752,12 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
       return;
     }
 
+    // Reload destination mode every start so the settings screen takes
+    // effect on the next reconnect without a full app relaunch.
+    _destinationMode = LiveActivityDestination.fromValue(
+      prefs.getInt(kLiveActivityDestination) ?? 0,
+    );
+
     final connectedDevice = ref.read(connectedDeviceProvider);
     final myNodeNum = ref.read(myNodeNumProvider);
     final nodes = ref.read(nodesProvider);
@@ -3765,9 +3787,18 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
     // Find nearest node with distance
     final nearestNode = _findNearestNode(nodes, myNodeNum);
 
+    // Resolve the route's "destination" half per the user's setting.
+    final destination = _resolveDestination(nodes, myNodeNum);
+
+    // Seed signal history with the current sample so the lock-screen
+    // aurora isn't empty until the rssi stream emits.
+    _signalHistory.clear();
+    if (rssi != null) _signalHistory.add(rssi);
+
     AppLogging.debug(
       '📱 Starting Live Activity: device=$deviceName, shortName=$shortName, '
-      'battery=$batteryLevel%, rssi=$rssi, snr=$snr, nodes=$activeCount/$totalCount',
+      'battery=$batteryLevel%, rssi=$rssi, snr=$snr, '
+      'nodes=$activeCount/$totalCount, dest=${_destinationMode.name}→${destination.label}',
     );
 
     final success = await _liveActivityService.startMeshActivity(
@@ -3795,6 +3826,12 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
       role: myNode?.role,
       latitude: myNode?.latitude,
       longitude: myNode?.longitude,
+      destinationLabel: destination.label,
+      destinationLongName: destination.longName,
+      destinationLastHeardSec: destination.lastHeardSec,
+      destinationNextEventSec: destination.nextEventSec,
+      linkStatus: _linkStatusFromAge(destination.lastHeardSec),
+      signalHistory: List<int>.unmodifiable(_signalHistory),
     );
 
     if (success) {
@@ -3805,11 +3842,20 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
       _startCoalesceTimer();
 
       // Set up BLE RSSI listener — accumulates into the coalesce window
-      // instead of crossing the native bridge on every poll event.
+      // instead of crossing the native bridge on every poll event. Also
+      // feeds the signal-history ring buffer that the lock-screen aurora
+      // curve renders from.
       _rssiSubscription?.cancel();
       _rssiSubscription = protocol.rssiStream.listen((rssi) {
         if (!_liveActivityService.isActive) return;
         _lastBleRssi = rssi;
+        _signalHistory.add(rssi);
+        if (_signalHistory.length > _signalHistoryCap) {
+          _signalHistory.removeRange(
+            0,
+            _signalHistory.length - _signalHistoryCap,
+          );
+        }
         _streamDirty = true;
       });
 
@@ -3857,6 +3903,7 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
 
     final currentOnlineCount = _activeNodeCount(currentNodes);
     final currentNearestNode = _findNearestNode(currentNodes, currentMyNodeNum);
+    final destination = _resolveDestination(currentNodes, currentMyNodeNum);
 
     _liveActivityService.updateActivity(
       batteryLevel: currentNode?.batteryLevel,
@@ -3876,6 +3923,12 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
       nearestNodeDistance: currentNearestNode?.$2,
       nearestNodeName:
           currentNearestNode?.$1.shortName ?? currentNearestNode?.$1.longName,
+      destinationLabel: destination.label,
+      destinationLongName: destination.longName,
+      destinationLastHeardSec: destination.lastHeardSec,
+      destinationNextEventSec: destination.nextEventSec,
+      linkStatus: _linkStatusFromAge(destination.lastHeardSec),
+      signalHistory: List<int>.unmodifiable(_signalHistory),
     );
   }
 
@@ -3889,8 +3942,12 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
     final onlineCount = _activeNodeCount(nodes);
     final totalCount = nodes.length;
     final nearestNode = _findNearestNode(nodes, myNodeNum);
+    final destination = _resolveDestination(nodes, myNodeNum);
 
-    AppLogging.debug('📱 Live Activity update: nodes=$onlineCount/$totalCount');
+    AppLogging.debug(
+      '📱 Live Activity update: nodes=$onlineCount/$totalCount, '
+      'dest=${_destinationMode.name}→${destination.label}',
+    );
 
     _liveActivityService.updateActivity(
       deviceName: myNode.longName,
@@ -3911,6 +3968,12 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
       voltage: myNode.voltage,
       nearestNodeDistance: nearestNode?.$2,
       nearestNodeName: nearestNode?.$1.shortName ?? nearestNode?.$1.longName,
+      destinationLabel: destination.label,
+      destinationLongName: destination.longName,
+      destinationLastHeardSec: destination.lastHeardSec,
+      destinationNextEventSec: destination.nextEventSec,
+      linkStatus: _linkStatusFromAge(destination.lastHeardSec),
+      signalHistory: List<int>.unmodifiable(_signalHistory),
     );
   }
 
@@ -3951,6 +4014,124 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
     return null;
   }
 
+  /// Resolves the route's "destination" half per the user's chosen mode.
+  /// Falls back to the mesh-wide view when peer-mode targets aren't
+  /// available (no online peers, no active DM, etc.).
+  _DestinationData _resolveDestination(
+    Map<int, MeshNode> nodes,
+    int? myNodeNum,
+  ) {
+    switch (_destinationMode) {
+      case LiveActivityDestination.bestPeer:
+        final best = _findBestPeer(nodes, myNodeNum);
+        if (best != null) return _peerToDestination(best);
+        return _meshDestination(nodes, myNodeNum);
+      case LiveActivityDestination.activePeer:
+        final active = _findActiveDmPeer(nodes);
+        if (active != null) return _peerToDestination(active);
+        return _meshDestination(nodes, myNodeNum);
+      case LiveActivityDestination.mesh:
+        return _meshDestination(nodes, myNodeNum);
+    }
+  }
+
+  /// Mesh-wide destination — uses "MESH" as the label and the most
+  /// recent lastHeard timestamp from any non-self node as the freshness
+  /// signal. Empty mesh → idle.
+  _DestinationData _meshDestination(Map<int, MeshNode> nodes, int? myNodeNum) {
+    DateTime? mostRecent;
+    for (final node in nodes.values) {
+      if (node.nodeNum == myNodeNum) continue;
+      final heard = node.lastHeard;
+      if (heard == null) continue;
+      if (mostRecent == null || heard.isAfter(mostRecent)) {
+        mostRecent = heard;
+      }
+    }
+    final lastHeardSec = mostRecent == null
+        ? -1
+        : DateTime.now().difference(mostRecent).inSeconds;
+    return _DestinationData(
+      label: 'MESH',
+      longName: 'Whole network',
+      lastHeardSec: lastHeardSec,
+      nextEventSec: 0,
+    );
+  }
+
+  /// Strongest-signal online peer — by `MeshNode.rssi` (mesh-layer
+  /// RSSI as observed by the local radio when the peer last spoke).
+  /// `null` if no peer has a valid RSSI reading.
+  MeshNode? _findBestPeer(Map<int, MeshNode> nodes, int? myNodeNum) {
+    final now = DateTime.now();
+    MeshNode? best;
+    int? bestRssi;
+    for (final node in nodes.values) {
+      if (node.nodeNum == myNodeNum) continue;
+      if (!PresenceCalculator.isOnline(node.lastHeard, now: now)) continue;
+      final rssi = node.rssi;
+      if (rssi == null || rssi >= 0) continue;
+      if (bestRssi == null || rssi > bestRssi) {
+        bestRssi = rssi;
+        best = node;
+      }
+    }
+    return best;
+  }
+
+  /// Most-recently-active DM peer — picks the SipDmSession with the
+  /// freshest message (or createdAtMs if no messages yet) and looks up
+  /// the matching MeshNode. `null` if no active sessions or the peer
+  /// isn't in the node table.
+  MeshNode? _findActiveDmPeer(Map<int, MeshNode> nodes) {
+    final sessions = ref.read(sipActiveSessionsProvider);
+    if (sessions.isEmpty) return null;
+
+    SipDmSession? freshest;
+    int freshestMs = 0;
+    for (final session in sessions) {
+      final lastMs = session.messages.isNotEmpty
+          ? session.messages.last.timestampMs
+          : session.createdAtMs;
+      if (lastMs > freshestMs) {
+        freshestMs = lastMs;
+        freshest = session;
+      }
+    }
+    if (freshest == null) return null;
+    return nodes[freshest.peerNodeId];
+  }
+
+  /// Convert a peer MeshNode into the destination tuple. Last-heard
+  /// is computed from `lastHeard` against now.
+  _DestinationData _peerToDestination(MeshNode peer) {
+    final lastHeardSec = peer.lastHeard == null
+        ? -1
+        : DateTime.now().difference(peer.lastHeard!).inSeconds;
+    final shortName = peer.shortName ?? '';
+    final longName = peer.longName ?? '';
+    final label = shortName.isNotEmpty
+        ? shortName.toUpperCase()
+        : (longName.isNotEmpty ? longName : '????');
+    return _DestinationData(
+      label: label,
+      longName: longName.isNotEmpty ? longName : label,
+      lastHeardSec: lastHeardSec,
+      nextEventSec: 0,
+    );
+  }
+
+  /// Map last-heard age (in seconds) to a coarse link-status bucket
+  /// that the lock-screen renders as a green/amber/red status pill.
+  /// Negative ages mean "never heard" → idle.
+  String _linkStatusFromAge(int lastHeardSec) {
+    if (lastHeardSec < 0) return 'idle';
+    if (lastHeardSec <= 30) return 'ok';
+    if (lastHeardSec <= 120) return 'stale';
+    if (lastHeardSec <= 600) return 'lost';
+    return 'idle';
+  }
+
   /// Ends the current Live Activity immediately.
   ///
   /// Called when the user disables the Live Activity toggle in settings.
@@ -3970,10 +4151,33 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
     _streamDirty = false;
     _lastBleRssi = null;
     _lastSnr = null;
+    _signalHistory.clear();
     await _liveActivityService.endActivity();
     state = false;
     AppLogging.debug('📱 Ended Live Activity - device disconnected');
   }
+}
+
+/// Resolved "destination" half of the Live Activity route row — what
+/// the user picked in settings, materialized into displayable strings
+/// + age fields the SwiftUI side can render directly.
+class _DestinationData {
+  const _DestinationData({
+    required this.label,
+    required this.longName,
+    required this.lastHeardSec,
+    required this.nextEventSec,
+  });
+
+  final String label;
+  final String longName;
+
+  /// Seconds since the destination was last heard. Negative → never heard.
+  final int lastHeardSec;
+
+  /// Seconds until the next expected event for this destination
+  /// (e.g. beacon ETA). 0 when no schedule is known.
+  final int nextEventSec;
 }
 
 final liveActivityManagerProvider =

@@ -12,6 +12,7 @@ import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
+import '../../core/widgets/chip_selector.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/animations.dart';
 import '../../providers/app_providers.dart';
@@ -22,6 +23,9 @@ import 'battery_optimization_guide.dart';
 /// SharedPreferences key to enable/disable the iOS Live Activity
 /// (Dynamic Island + Lock Screen). Default: true.
 const String kLiveActivityEnabled = 'live_activity_enabled';
+
+/// SharedPreferences key for the Live Activity destination mode.
+const String kLiveActivityDestination = 'live_activity_destination';
 
 /// SharedPreferences key for the Android persistent notification style.
 const String kBgNotifStyle = 'bg_notif_style';
@@ -41,6 +45,25 @@ enum NotificationStyle {
       values.firstWhere((e) => e.value == value, orElse: () => minimal);
 }
 
+/// What the Live Activity treats as the "destination" half of the
+/// route row on the lock-screen / Dynamic Island card.
+enum LiveActivityDestination {
+  /// Whole network — node count and overall mesh health.
+  mesh(0),
+
+  /// Strongest peer — auto-tracks the best-RSSI online peer.
+  bestPeer(1),
+
+  /// Most-recent DM partner — switches as you chat.
+  activePeer(2);
+
+  const LiveActivityDestination(this.value);
+  final int value;
+
+  static LiveActivityDestination fromValue(int value) =>
+      values.firstWhere((e) => e.value == value, orElse: () => mesh);
+}
+
 /// Settings screen for controlling background BLE connection and notification
 /// behaviour (Sprint 002 -- W3.1).
 class BackgroundConnectionScreen extends ConsumerStatefulWidget {
@@ -57,6 +80,8 @@ class _BackgroundConnectionScreenState
   bool _bgBleEnabled = true;
   NotificationStyle _notifStyle = NotificationStyle.minimal;
   bool _liveActivityEnabled = true;
+  LiveActivityDestination _liveActivityDestination =
+      LiveActivityDestination.mesh;
 
   bool _loaded = false;
 
@@ -75,6 +100,9 @@ class _BackgroundConnectionScreenState
         prefs.getInt(kBgNotifStyle) ?? 0,
       );
       _liveActivityEnabled = prefs.getBool(kLiveActivityEnabled) ?? true;
+      _liveActivityDestination = LiveActivityDestination.fromValue(
+        prefs.getInt(kLiveActivityDestination) ?? 0,
+      );
       _loaded = true;
     });
   }
@@ -145,6 +173,19 @@ class _BackgroundConnectionScreenState
     if (!mounted) return;
     await prefs.setBool(kLiveActivityEnabled, value);
     safeSetState(() => _liveActivityEnabled = value);
+  }
+
+  Future<void> _setLiveActivityDestination(
+    LiveActivityDestination destination,
+  ) async {
+    HapticFeedback.selectionClick();
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    await prefs.setInt(kLiveActivityDestination, destination.value);
+    safeSetState(() => _liveActivityDestination = destination);
+    AppLogging.liveActivity(
+      'BackgroundConnectionScreen: destination → ${destination.name}',
+    );
   }
 
   Future<void> _setNotifStyle(NotificationStyle style) async {
@@ -228,6 +269,14 @@ class _BackgroundConnectionScreenState
                             ),
                           ),
                         ),
+                ),
+                const SizedBox(height: AppTheme.spacing16),
+                _LiveActivityDestinationSelector(
+                  destination: _liveActivityDestination,
+                  enabled: _liveActivityEnabled,
+                  onChanged: _liveActivityEnabled
+                      ? _setLiveActivityDestination
+                      : null,
                 ),
               ],
 
@@ -360,7 +409,8 @@ class _SettingTile extends StatelessWidget {
   }
 }
 
-/// Segmented control for choosing the persistent notification style (Android).
+/// Chip selector for the persistent notification style (Android).
+/// Mirrors the StatusFilterChip row under the Nodes-screen search bar.
 class _NotifStyleSelector extends StatelessWidget {
   const _NotifStyleSelector({
     required this.style,
@@ -393,34 +443,115 @@ class _NotifStyleSelector extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppTheme.spacing12),
-            SizedBox(
-              width: double.infinity,
-              child: SegmentedButton<NotificationStyle>(
-                segments: [
-                  ButtonSegment(
-                    value: NotificationStyle.minimal,
-                    label: Text(context.l10n.bgConnStyleMinimal),
-                  ),
-                  ButtonSegment(
-                    value: NotificationStyle.detailed,
-                    label: Text(context.l10n.bgConnStyleDetailed),
-                  ),
-                ],
-                selected: {style},
-                onSelectionChanged: enabled
-                    ? (selection) {
-                        if (selection.isNotEmpty) {
-                          onChanged?.call(selection.first);
-                        }
-                      }
-                    : null,
-              ),
+            ChipSelector<NotificationStyle>(
+              value: style,
+              enabled: enabled,
+              onChanged: onChanged,
+              options: [
+                ChipOption(
+                  value: NotificationStyle.minimal,
+                  label: context.l10n.bgConnStyleMinimal,
+                  icon: Icons.notifications_none,
+                  color: AppTheme.primaryBlue,
+                ),
+                ChipOption(
+                  value: NotificationStyle.detailed,
+                  label: context.l10n.bgConnStyleDetailed,
+                  icon: Icons.notifications_active,
+                  color: AppTheme.primaryMagenta,
+                ),
+              ],
             ),
-            const SizedBox(height: AppTheme.spacing8),
+            const SizedBox(height: AppTheme.spacing12),
             Text(
               style == NotificationStyle.minimal
                   ? context.l10n.bgConnStyleMinimalDesc
                   : context.l10n.bgConnStyleDetailedDesc,
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: context.textTertiary),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Chip selector for choosing what the Live Activity card treats as
+/// the route's "destination" (iOS only). Mirrors the StatusFilterChip
+/// row used under the Nodes-screen search bar.
+class _LiveActivityDestinationSelector extends StatelessWidget {
+  const _LiveActivityDestinationSelector({
+    required this.destination,
+    required this.enabled,
+    this.onChanged,
+  });
+
+  final LiveActivityDestination destination;
+  final bool enabled;
+  final ValueChanged<LiveActivityDestination>? onChanged;
+
+  String _description(BuildContext context) {
+    switch (destination) {
+      case LiveActivityDestination.mesh:
+        return context.l10n.bgConnLiveActivityDestMeshDesc;
+      case LiveActivityDestination.bestPeer:
+        return context.l10n.bgConnLiveActivityDestBestPeerDesc;
+      case LiveActivityDestination.activePeer:
+        return context.l10n.bgConnLiveActivityDestActivePeerDesc;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppTheme.spacing16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              context.l10n.bgConnLiveActivityDestTitle,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w500,
+                color: context.textPrimary,
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacing12),
+            ChipSelector<LiveActivityDestination>(
+              value: destination,
+              enabled: enabled,
+              onChanged: onChanged,
+              options: [
+                ChipOption(
+                  value: LiveActivityDestination.mesh,
+                  label: context.l10n.bgConnLiveActivityDestMesh,
+                  icon: Icons.hub_outlined,
+                  color: AppTheme.primaryBlue,
+                ),
+                ChipOption(
+                  value: LiveActivityDestination.bestPeer,
+                  label: context.l10n.bgConnLiveActivityDestBestPeer,
+                  icon: Icons.signal_cellular_alt,
+                  color: AppTheme.successGreen,
+                ),
+                ChipOption(
+                  value: LiveActivityDestination.activePeer,
+                  label: context.l10n.bgConnLiveActivityDestActivePeer,
+                  icon: Icons.chat_bubble_outline,
+                  color: AppTheme.primaryMagenta,
+                ),
+              ],
+            ),
+            const SizedBox(height: AppTheme.spacing12),
+            Text(
+              _description(context),
               style: Theme.of(
                 context,
               ).textTheme.bodySmall?.copyWith(color: context.textTertiary),

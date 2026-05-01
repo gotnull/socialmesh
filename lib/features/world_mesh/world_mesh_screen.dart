@@ -3,6 +3,7 @@
 // lint-allow: scaffold — full-screen map, glass blur would obscure tiles
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -531,12 +532,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
               tooltip: context.l10n.worldMeshFilterTooltip,
               onPressed: () async {
                 HapticFeedback.selectionClick();
-                await showModalBottomSheet<void>(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (context) => const WorldMeshFilterSheet(),
-                );
+                await showWorldMeshFilterSheet(context);
               },
             ),
             if (activeCount > 0)
@@ -1151,101 +1147,94 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
         : _mapStyle == MapTileStyle.terrain
         ? '© OpenTopoMap © OSM'
         : '© OSM © CARTO';
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface.withValues(alpha: 0.95),
-        border: Border(
-          top: BorderSide(color: theme.dividerColor.withValues(alpha: 0.3)),
-        ),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Attribution row at the top
-            GestureDetector(
-              onTap: () => launchUrl(Uri.parse(attributionUrl)),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  attributionLabel,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.35),
-                    fontSize: 9,
-                  ),
+    final accentColor = theme.colorScheme.primary;
+    final filterColor = hasFilters
+        ? AppTheme.primaryMagenta
+        : AppTheme.primaryBlue;
+    final liveColor = state.isFromCache
+        ? AppTheme.errorRed
+        : AppTheme.successGreen;
+
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppTheme.radius16),
+          child: BackdropFilter(
+            filter: ui.ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+            child: Container(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface.withValues(alpha: 0.72),
+                borderRadius: BorderRadius.circular(AppTheme.radius16),
+                border: Border.all(
+                  color: accentColor.withValues(alpha: 0.18),
+                  width: 0.7,
                 ),
               ),
-            ),
-            const SizedBox(height: AppTheme.spacing6),
-            // Stats row below
-            Row(
-              children: [
-                _buildStatItem(
-                  theme,
-                  hasFilters ? Icons.filter_alt : Icons.public,
-                  visibleCount,
-                  hasFilters
-                      ? context.l10n.worldMeshStatsFiltered
-                      : context.l10n.worldMeshStatsVisible,
-                  highlight: hasFilters,
-                ),
-                const SizedBox(width: AppTheme.spacing16),
-                _buildStatItem(
-                  theme,
-                  Icons.cloud_done,
-                  state.nodeCount,
-                  context.l10n.worldMeshStatsTotal,
-                ),
-                const Spacer(),
-                if (state.lastUpdated != null)
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      _buildStatItem(
+                        theme,
+                        hasFilters ? Icons.filter_alt : Icons.public,
+                        visibleCount,
+                        hasFilters
+                            ? context.l10n.worldMeshStatsFiltered
+                            : context.l10n.worldMeshStatsVisible,
+                        tint: filterColor,
+                      ),
+                      const SizedBox(width: AppTheme.spacing12),
+                      _buildStatItem(
+                        theme,
+                        Icons.cloud_done,
+                        state.nodeCount,
+                        context.l10n.worldMeshStatsTotal,
+                        tint: accentColor,
+                      ),
+                      const Spacer(),
+                      if (state.lastUpdated != null)
+                        _LivePill(
+                          liveColor: liveColor,
+                          label: _formatLastUpdated(state.lastUpdated!),
+                          isStale: state.isFromCache,
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            ref
+                                .read(worldMeshMapProvider.notifier)
+                                .forceRefresh();
+                            showInfoSnackBar(
+                              context,
+                              context.l10n.worldMeshRefreshing,
+                            );
+                          },
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: AppTheme.spacing6),
                   GestureDetector(
-                    onTap: () {
-                      ref.read(worldMeshMapProvider.notifier).forceRefresh();
-                      showInfoSnackBar(
-                        context,
-                        context.l10n.worldMeshRefreshing,
-                      );
-                    },
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (state.isFromCache)
-                          Padding(
-                            padding: const EdgeInsets.only(right: 4),
-                            child: Icon(
-                              Icons.cloud_off,
-                              size: 12,
-                              color: theme.colorScheme.error.withValues(
-                                alpha: 0.7,
-                              ),
-                            ),
-                          ),
-                        Text(
-                          _formatLastUpdated(state.lastUpdated!),
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: state.isFromCache
-                                ? theme.colorScheme.error.withValues(alpha: 0.6)
-                                : theme.colorScheme.onSurface.withValues(
-                                    alpha: 0.5,
-                                  ),
-                          ),
-                        ),
-                        const SizedBox(width: AppTheme.spacing6),
-                        Icon(
-                          Icons.refresh,
-                          size: 14,
+                    onTap: () => launchUrl(Uri.parse(attributionUrl)),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        attributionLabel,
+                        style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurface.withValues(
-                            alpha: 0.4,
+                            alpha: 0.35,
                           ),
+                          fontSize: 9,
+                          letterSpacing: 0.4,
                         ),
-                      ],
+                      ),
                     ),
                   ),
-              ],
+                ],
+              ),
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -1256,32 +1245,50 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
     IconData icon,
     int value,
     String label, {
-    bool highlight = false,
+    required Color tint,
   }) {
-    final color = highlight
-        ? theme.colorScheme.primary
-        : theme.colorScheme.primary.withValues(alpha: 0.7);
     return Row(
       children: [
-        Icon(icon, size: 16, color: color),
-        const SizedBox(width: AppTheme.spacing6),
-        AnimatedCounter(
-          value: value,
-          duration: const Duration(milliseconds: 600),
-          formatter: (v) => NumberFormatUtils.formatWithThousandsSeparators(v),
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: highlight ? theme.colorScheme.primary : null,
+        Container(
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
+            color: tint.withValues(alpha: 0.16),
+            borderRadius: BorderRadius.circular(AppTheme.radius8),
+            border: Border.all(color: tint.withValues(alpha: 0.32), width: 0.6),
           ),
+          child: Icon(icon, size: 15, color: tint),
         ),
-        const SizedBox(width: AppTheme.spacing4),
-        Text(
-          label,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: highlight
-                ? theme.colorScheme.primary.withValues(alpha: 0.8)
-                : theme.colorScheme.onSurface.withValues(alpha: 0.6),
-          ),
+        const SizedBox(width: AppTheme.spacing8),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedCounter(
+              value: value,
+              duration: const Duration(milliseconds: 600),
+              formatter: (v) =>
+                  NumberFormatUtils.formatWithThousandsSeparators(v),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontFamily: AppTheme.fontFamily,
+                fontWeight: FontWeight.w800,
+                color: tint,
+                fontSize: 16,
+                height: 1.0,
+                letterSpacing: -0.2,
+              ),
+            ),
+            const SizedBox(height: 1),
+            Text(
+              label,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+                fontSize: 10,
+                letterSpacing: 0.4,
+                height: 1.0,
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -1296,6 +1303,79 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
       return context.l10n.worldMeshTimeMinutesAgo(diff.inMinutes);
     }
     return context.l10n.worldMeshTimeHoursAgo(diff.inHours);
+  }
+}
+
+/// Tappable pill at the right edge of the World Map stats bar — shows
+/// a pulsing live-status dot, the last-updated relative time, and a
+/// refresh affordance. Tapping anywhere on the pill triggers
+/// [onTap] (typically `forceRefresh()`).
+class _LivePill extends StatelessWidget {
+  const _LivePill({
+    required this.liveColor,
+    required this.label,
+    required this.isStale,
+    required this.onTap,
+  });
+
+  final Color liveColor;
+  final String label;
+  final bool isStale;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: liveColor.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(AppTheme.radius20),
+          border: Border.all(
+            color: liveColor.withValues(alpha: 0.35),
+            width: 0.6,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(
+                color: liveColor,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: liveColor.withValues(alpha: 0.7),
+                    blurRadius: 5,
+                    spreadRadius: 0.5,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: AppTheme.spacing6),
+            Text(
+              label,
+              style: TextStyle(
+                color: liveColor,
+                fontSize: 11,
+                fontFamily: AppTheme.fontFamily,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.3,
+              ),
+            ),
+            const SizedBox(width: AppTheme.spacing6),
+            Icon(
+              isStale ? Icons.cloud_off : Icons.refresh,
+              size: 12,
+              color: liveColor.withValues(alpha: 0.85),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -1786,8 +1866,11 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
     final accentColor = theme.colorScheme.primary;
     final isFavorite = ref.watch(isNodeFavoriteProvider(node.nodeNum));
 
+    // No `mainAxisSize: MainAxisSize.min` here: this Column fills the sheet's
+    // bounded height, with Expanded taking the remaining space after the
+    // header and footer. With `min` + `Expanded` the layout collapses during
+    // the dismiss animation and the sheet visibly narrows mid-pop.
     return Column(
-      mainAxisSize: MainAxisSize.min,
       children: [
         // STATIC HEADER - doesn't scroll
         Padding(

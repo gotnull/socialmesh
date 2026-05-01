@@ -24342,6 +24342,30 @@ class AppLocalizationsPt extends AppLocalizations {
   String get bgConnLiveActivityDisableConfirm => 'End Activity';
 
   @override
+  String get bgConnLiveActivityDestTitle => 'Destino';
+
+  @override
+  String get bgConnLiveActivityDestMesh => 'Mesh';
+
+  @override
+  String get bgConnLiveActivityDestBestPeer => 'Melhor peer';
+
+  @override
+  String get bgConnLiveActivityDestActivePeer => 'DM ativo';
+
+  @override
+  String get bgConnLiveActivityDestMeshDesc =>
+      'Mostre toda a sua mesh — contagem de nós e saúde geral do enlace.';
+
+  @override
+  String get bgConnLiveActivityDestBestPeerDesc =>
+      'Mostre o peer mais forte — segue automaticamente o melhor sinal.';
+
+  @override
+  String get bgConnLiveActivityDestActivePeerDesc =>
+      'Mostre o último parceiro de DM — muda enquanto você conversa.';
+
+  @override
   String get linkedDevicesTitle => 'Dispositivos vinculados';
 
   @override

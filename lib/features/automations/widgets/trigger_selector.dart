@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
+import '../../../core/widgets/chip_selector.dart';
 import '../../../core/widgets/node_selector_sheet.dart';
 import '../../../models/mesh_models.dart';
 import '../../settings/geofence_picker_screen.dart';
@@ -407,41 +408,43 @@ class _TriggerSelectorState extends State<TriggerSelector> {
             style: const TextStyle(color: SemanticColors.disabled),
           ),
           const SizedBox(height: AppTheme.spacing8),
-          SegmentedButton<bool?>(
-            segments: [
-              ButtonSegment(
+          ChipSelector<bool?>(
+            value: detectedStateFilter,
+            onChanged: _setDetectedStateFilter,
+            options: [
+              ChipOption(
                 value: null,
-                label: Text(context.l10n.automationTriggerSensorAny),
+                label: context.l10n.automationTriggerSensorAny,
+                icon: Icons.tune,
+                color: AppTheme.primaryBlue,
               ),
-              ButtonSegment(
+              ChipOption(
                 value: true,
-                label: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(context.l10n.automationTriggerSensorDetected),
-                ),
+                label: context.l10n.automationTriggerSensorDetected,
+                icon: Icons.sensors,
+                color: AppTheme.successGreen,
               ),
-              ButtonSegment(
+              ChipOption(
                 value: false,
-                label: Text(context.l10n.automationTriggerSensorClear),
+                label: context.l10n.automationTriggerSensorClear,
+                icon: Icons.sensors_off,
+                color: AppTheme.errorRed,
               ),
             ],
-            selected: {detectedStateFilter},
-            onSelectionChanged: (selected) {
-              final newConfig = Map<String, dynamic>.from(
-                widget.trigger.config,
-              );
-              final value = selected.first;
-              if (value == null) {
-                newConfig.remove('detectedStateFilter');
-              } else {
-                newConfig['detectedStateFilter'] = value;
-              }
-              widget.onChanged(widget.trigger.copyWith(config: newConfig));
-            },
           ),
         ],
       ),
     );
+  }
+
+  void _setDetectedStateFilter(bool? value) {
+    final newConfig = Map<String, dynamic>.from(widget.trigger.config);
+    if (value == null) {
+      newConfig.remove('detectedStateFilter');
+    } else {
+      newConfig['detectedStateFilter'] = value;
+    }
+    widget.onChanged(widget.trigger.copyWith(config: newConfig));
   }
 
   Widget _buildNodeFilterConfig(BuildContext context) {
@@ -762,33 +765,15 @@ class _TriggerSelectorState extends State<TriggerSelector> {
             style: const TextStyle(color: SemanticColors.disabled),
           ),
           const SizedBox(height: AppTheme.spacing8),
-          SegmentedButton<String>(
-            segments: [
-              ButtonSegment(
-                value: 'daily',
-                label: Text(context.l10n.automationTriggerDaily),
-              ),
-              ButtonSegment(
-                value: 'weekly',
-                label: Text(context.l10n.automationTriggerWeekly),
-              ),
-              ButtonSegment(
-                value: 'interval',
-                label: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(context.l10n.automationTriggerInterval),
-                ),
-              ),
-            ],
-            selected: {scheduleType},
-            onSelectionChanged: (selected) {
+          ChipSelector<String>(
+            value: scheduleType,
+            onChanged: (selected) {
               final newConfig = Map<String, dynamic>.from(
                 widget.trigger.config,
               );
-              newConfig['scheduleType'] = selected.first;
-              // Also update the schedule string for validation
+              newConfig['scheduleType'] = selected;
               newConfig['schedule'] = _buildScheduleString(
-                selected.first,
+                selected,
                 hour,
                 minute,
                 daysOfWeek,
@@ -796,6 +781,26 @@ class _TriggerSelectorState extends State<TriggerSelector> {
               );
               widget.onChanged(widget.trigger.copyWith(config: newConfig));
             },
+            options: [
+              ChipOption(
+                value: 'daily',
+                label: context.l10n.automationTriggerDaily,
+                icon: Icons.today,
+                color: AppTheme.primaryBlue,
+              ),
+              ChipOption(
+                value: 'weekly',
+                label: context.l10n.automationTriggerWeekly,
+                icon: Icons.calendar_view_week,
+                color: AppTheme.primaryMagenta,
+              ),
+              ChipOption(
+                value: 'interval',
+                label: context.l10n.automationTriggerInterval,
+                icon: Icons.timer_outlined,
+                color: AppTheme.successGreen,
+              ),
+            ],
           ),
           const SizedBox(height: AppTheme.spacing16),
 

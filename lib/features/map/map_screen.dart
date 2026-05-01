@@ -184,8 +184,12 @@ class _MapScreenState extends ConsumerState<MapScreen>
   // Animation controller for smooth camera movements
   AnimationController? _animationController;
 
-  // Compass rotation
-  double _mapRotation = 0.0;
+  // Compass rotation. Lives in a ValueNotifier so pan/rotate gestures don't
+  // rebuild the screen on every frame — only the compass needle (wrapped in
+  // ValueListenableBuilder around `MapControlsOverlay`) listens.
+  final ValueNotifier<double> _mapRotationNotifier = ValueNotifier<double>(0.0);
+  double get _mapRotation => _mapRotationNotifier.value;
+  set _mapRotation(double value) => _mapRotationNotifier.value = value;
 
   // Heading-up mode (map rotates to match device compass)
   bool _headingUpMode = false;
@@ -221,6 +225,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     _mapController.dispose();
     _searchController.dispose();
     _takSearchController.dispose();
+    _mapRotationNotifier.dispose();
     _elevationService = null;
     super.dispose();
   }
@@ -302,14 +307,14 @@ class _MapScreenState extends ConsumerState<MapScreen>
         zoomTween.evaluate(animation),
         rotationTween.evaluate(animation),
       );
-      // Keep compass state in sync during programmatic moves
+      // Keep compass state in sync during programmatic moves. Rotation goes
+      // through the notifier (compass-only rebuild). Zoom is mutated as a
+      // plain field — the next data/selection-driven setState will pick it up.
       final currentRotation = rotationTween.evaluate(animation);
       if (currentRotation != _mapRotation) {
-        setState(() {
-          _currentZoom = zoomTween.evaluate(animation);
-          _mapRotation = currentRotation;
-        });
+        _mapRotation = currentRotation;
       }
+      _currentZoom = zoomTween.evaluate(animation);
     });
 
     _animationController!.forward();
@@ -328,7 +333,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
         _currentZoom,
         heading,
       );
-      setState(() => _mapRotation = heading);
+      _mapRotation = heading;
     });
     if (_compassSubscription != null) {
       setState(() => _headingUpMode = true);
@@ -456,63 +461,55 @@ class _MapScreenState extends ConsumerState<MapScreen>
     }
   }
 
-  /// Filter nodes based on current filter
+  /// Filter nodes based on current filter.
+  ///
+  /// Single-pass evaluation — the previous chain of up to four
+  /// `.where(...).toList()` calls materialised an intermediate list per
+  /// filter step. Combined predicate, one walk, one allocation.
   List<_NodeWithPosition> _filterNodes(
     List<_NodeWithPosition> nodes,
     int? myNodeNum,
     Map<int, NodePresence> presenceMap,
   ) {
-    var filtered = nodes;
+    final hasQuery = _searchQuery.isNotEmpty;
+    final lowerQuery = hasQuery ? _searchQuery.toLowerCase() : '';
 
-    // Apply search filter
-    if (_searchQuery.isNotEmpty) {
-      filtered = filtered.where((n) {
+    // Pre-resolve the in-range pivot once instead of per-element.
+    _NodeWithPosition? rangePivot;
+    if (_nodeFilter == NodeFilter.inRange && myNodeNum != null) {
+      rangePivot = nodes.where((n) => n.node.nodeNum == myNodeNum).firstOrNull;
+    }
+
+    final result = <_NodeWithPosition>[];
+    for (final n in nodes) {
+      if (hasQuery) {
         final name = n.node.displayName.toLowerCase();
         final id = n.node.userId?.toLowerCase() ?? '';
-        final query = _searchQuery.toLowerCase();
-        return name.contains(query) || id.contains(query);
-      }).toList();
-    }
-
-    // Apply node filter
-    switch (_nodeFilter) {
-      case NodeFilter.all:
-        break;
-      case NodeFilter.active:
-        filtered = filtered
-            .where((n) => presenceConfidenceFor(presenceMap, n.node).isActive)
-            .toList();
-        break;
-      case NodeFilter.inactive:
-        filtered = filtered
-            .where((n) => presenceConfidenceFor(presenceMap, n.node).isInactive)
-            .toList();
-        break;
-      case NodeFilter.withGps:
-        filtered = filtered.where((n) => !n.isStale).toList();
-        break;
-      case NodeFilter.inRange:
-        if (myNodeNum != null) {
-          final myNode = nodes
-              .where((n) => n.node.nodeNum == myNodeNum)
-              .firstOrNull;
-          if (myNode != null) {
-            filtered = filtered.where((n) {
-              if (n.node.nodeNum == myNodeNum) return true;
-              final dist = _calculateDistance(
-                myNode.latitude,
-                myNode.longitude,
-                n.latitude,
-                n.longitude,
-              );
-              return dist <= 15.0; // Within 15km
-            }).toList();
+        if (!name.contains(lowerQuery) && !id.contains(lowerQuery)) continue;
+      }
+      switch (_nodeFilter) {
+        case NodeFilter.all:
+          break;
+        case NodeFilter.active:
+          if (!presenceConfidenceFor(presenceMap, n.node).isActive) continue;
+        case NodeFilter.inactive:
+          if (!presenceConfidenceFor(presenceMap, n.node).isInactive) continue;
+        case NodeFilter.withGps:
+          if (n.isStale) continue;
+        case NodeFilter.inRange:
+          if (rangePivot != null && n.node.nodeNum != myNodeNum) {
+            final dist = _calculateDistance(
+              rangePivot.latitude,
+              rangePivot.longitude,
+              n.latitude,
+              n.longitude,
+            );
+            if (dist > 15.0) continue;
           }
-        }
-        break;
+      }
+      result.add(n);
     }
-
-    return filtered;
+    return result;
   }
 
   double _calculateDistance(
@@ -1425,10 +1422,12 @@ class _MapScreenState extends ConsumerState<MapScreen>
                               _disableHeadingUp();
                             }
                           }
-                          setState(() {
-                            _currentZoom = position.zoom;
-                            _mapRotation = position.rotation;
-                          });
+                          // No setState: rotation flows through the notifier
+                          // (compass-only rebuild) and zoom is read on the
+                          // next data/selection-triggered build. Avoiding a
+                          // per-frame screen rebuild during pan/rotate.
+                          _mapRotation = position.rotation;
+                          _currentZoom = position.zoom;
                         }
                       },
                       onTap: (tapPos, point) {
@@ -2283,49 +2282,56 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         ),
                       ),
                     ),
-                  // Map controls - use shared overlay for consistency
-                  MapControlsOverlay(
-                    currentZoom: _currentZoom,
-                    minZoom: 4,
-                    maxZoom: 18,
-                    mapRotation: _mapRotation,
-                    isHeadingUp: _headingUpMode,
-                    onZoomIn: () {
-                      final newZoom = (_currentZoom + 1).clamp(4.0, 18.0);
-                      _animatedMove(_mapController.camera.center, newZoom);
-                      HapticFeedback.selectionClick();
-                    },
-                    onZoomOut: () {
-                      final newZoom = (_currentZoom - 1).clamp(4.0, 18.0);
-                      _animatedMove(_mapController.camera.center, newZoom);
-                      HapticFeedback.selectionClick();
-                    },
-                    onFitAll: () => _fitAllNodes(nodesWithPosition),
-                    onCenterOnMe: () =>
-                        _centerOnMyNode(nodesWithPosition, myNodeNum),
-                    onResetNorth: _onCompassTap,
-                    hasMyLocation: nodesWithPosition.any(
-                      (n) => n.node.nodeNum == myNodeNum,
-                    ),
-                    onLocationUnavailable: () {
-                      final navigator = Navigator.of(context);
-                      showActionSnackBar(
-                        context,
-                        'No position available. Enable GPS on your device or turn on "Provide phone location" in Settings.', // lint-allow: hardcoded-string
-                        actionLabel: context.l10n.actionView,
-                        onAction: () => navigator.push(
-                          MaterialPageRoute(
-                            builder: (_) => const SettingsScreen(
-                              initialSearchQuery: 'phone location',
-                            ),
-                          ),
+                  // Map controls — wrapped in ValueListenableBuilder so the
+                  // compass needle redraws on rotation changes without
+                  // rebuilding the whole screen.
+                  ValueListenableBuilder<double>(
+                    valueListenable: _mapRotationNotifier,
+                    builder: (context, rotation, _) {
+                      return MapControlsOverlay(
+                        currentZoom: _currentZoom,
+                        minZoom: 4,
+                        maxZoom: 18,
+                        mapRotation: rotation,
+                        isHeadingUp: _headingUpMode,
+                        onZoomIn: () {
+                          final newZoom = (_currentZoom + 1).clamp(4.0, 18.0);
+                          _animatedMove(_mapController.camera.center, newZoom);
+                          HapticFeedback.selectionClick();
+                        },
+                        onZoomOut: () {
+                          final newZoom = (_currentZoom - 1).clamp(4.0, 18.0);
+                          _animatedMove(_mapController.camera.center, newZoom);
+                          HapticFeedback.selectionClick();
+                        },
+                        onFitAll: () => _fitAllNodes(nodesWithPosition),
+                        onCenterOnMe: () =>
+                            _centerOnMyNode(nodesWithPosition, myNodeNum),
+                        onResetNorth: _onCompassTap,
+                        hasMyLocation: nodesWithPosition.any(
+                          (n) => n.node.nodeNum == myNodeNum,
                         ),
-                        type: SnackBarType.warning,
+                        onLocationUnavailable: () {
+                          final navigator = Navigator.of(context);
+                          showActionSnackBar(
+                            context,
+                            'No position available. Enable GPS on your device or turn on "Provide phone location" in Settings.', // lint-allow: hardcoded-string
+                            actionLabel: context.l10n.actionView,
+                            onAction: () => navigator.push(
+                              MaterialPageRoute(
+                                builder: (_) => const SettingsScreen(
+                                  initialSearchQuery: 'phone location',
+                                ),
+                              ),
+                            ),
+                            type: SnackBarType.warning,
+                          );
+                        },
+                        showFitAll: true,
+                        showNavigation: true,
+                        showCompass: true,
                       );
                     },
-                    showFitAll: true,
-                    showNavigation: true,
-                    showCompass: true,
                   ),
                 ],
               ),
@@ -2658,22 +2664,28 @@ class _MapScreenState extends ConsumerState<MapScreen>
   }
 
   void _fitAllNodes(List<_NodeWithPosition> nodes) {
-    final finite = nodes
-        .where((n) => n.latitude.isFinite && n.longitude.isFinite)
-        .toList(growable: false);
-    if (finite.isEmpty) return;
-
-    double minLat = finite.first.latitude;
-    double maxLat = finite.first.latitude;
-    double minLng = finite.first.longitude;
-    double maxLng = finite.first.longitude;
-
-    for (final n in finite) {
-      if (n.latitude < minLat) minLat = n.latitude;
-      if (n.latitude > maxLat) maxLat = n.latitude;
-      if (n.longitude < minLng) minLng = n.longitude;
-      if (n.longitude > maxLng) maxLng = n.longitude;
+    // Single-pass min/max with strict WGS-84 range filter. The mesh-observer
+    // / NodeDex feed contains a small fraction of nodes with garbage
+    // coordinates (e.g. lat=-211, lon=194) that pass `.isFinite` but fail
+    // `safeLatLng` — without this filter the bounds become invalid and
+    // `CameraFit.bounds` no-ops silently.
+    var minLat = double.infinity;
+    var maxLat = double.negativeInfinity;
+    var minLng = double.infinity;
+    var maxLng = double.negativeInfinity;
+    var anyValid = false;
+    for (final n in nodes) {
+      final lat = n.latitude;
+      final lng = n.longitude;
+      if (!lat.isFinite || !lng.isFinite) continue;
+      if (lat < -90 || lat > 90 || lng < -180 || lng > 180) continue;
+      if (lat < minLat) minLat = lat;
+      if (lat > maxLat) maxLat = lat;
+      if (lng < minLng) minLng = lng;
+      if (lng > maxLng) maxLng = lng;
+      anyValid = true;
     }
+    if (!anyValid) return;
 
     final latPadding = (maxLat - minLat) * 0.15;
     final lngPadding = (maxLng - minLng) * 0.15;

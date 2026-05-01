@@ -143,7 +143,16 @@ class AppBottomSheet extends StatelessWidget {
         minChildSize: minChildSize,
         maxChildSize: maxChildSize,
         expand: false,
+        // The full-width pin is mandatory: during the dismiss
+        // animation `showModalBottomSheet`'s SlideTransition can
+        // briefly invalidate the inherited BoxConstraints. A
+        // Container with no explicit width then collapses to its
+        // children's intrinsic min-width, which renders the sheet
+        // as a thin vertical bar mid-dismiss before disappearing.
+        // Pinning to `double.infinity` keeps the sheet at screen
+        // width through the entire reverse animation.
         builder: (context, scrollController) => Container(
+          width: double.infinity,
           decoration: BoxDecoration(
             color: context.card,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),

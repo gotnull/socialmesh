@@ -6801,6 +6801,34 @@
   "@bgConnToggleTitle": {
     "description": "Screen or section title"
   },
+  "bgConnLiveActivityDestTitle": "Destinazione",
+  "@bgConnLiveActivityDestTitle": {
+    "description": "Title of the Live Activity destination picker — what the lock-screen route's right side shows"
+  },
+  "bgConnLiveActivityDestMesh": "Mesh",
+  "@bgConnLiveActivityDestMesh": {
+    "description": "Live Activity destination mode: show the whole mesh"
+  },
+  "bgConnLiveActivityDestBestPeer": "Miglior peer",
+  "@bgConnLiveActivityDestBestPeer": {
+    "description": "Live Activity destination mode: show the strongest-signal peer"
+  },
+  "bgConnLiveActivityDestActivePeer": "DM attivo",
+  "@bgConnLiveActivityDestActivePeer": {
+    "description": "Live Activity destination mode: show the most-recent DM partner"
+  },
+  "bgConnLiveActivityDestMeshDesc": "Mostra l'intera mesh — numero di nodi e salute generale del collegamento.",
+  "@bgConnLiveActivityDestMeshDesc": {
+    "description": "Description of the Mesh destination mode"
+  },
+  "bgConnLiveActivityDestBestPeerDesc": "Mostra il peer più forte — segue automaticamente il segnale migliore.",
+  "@bgConnLiveActivityDestBestPeerDesc": {
+    "description": "Description of the Best peer destination mode"
+  },
+  "bgConnLiveActivityDestActivePeerDesc": "Mostra l'ultimo partner DM — cambia mentre chatti.",
+  "@bgConnLiveActivityDestActivePeerDesc": {
+    "description": "Description of the Active DM destination mode"
+  },
   "bindingSelectorNoResults": "Nessuna variabile trovata",
   "@bindingSelectorNoResults": {
     "description": "Empty state text when no binding variables match the search."

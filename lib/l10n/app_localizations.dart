@@ -42630,6 +42630,48 @@ abstract class AppLocalizations {
   /// **'End Activity'**
   String get bgConnLiveActivityDisableConfirm;
 
+  /// Title of the Live Activity destination picker — what the lock-screen route's right side shows
+  ///
+  /// In en, this message translates to:
+  /// **'Destination'**
+  String get bgConnLiveActivityDestTitle;
+
+  /// Live Activity destination mode: show the whole mesh
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh'**
+  String get bgConnLiveActivityDestMesh;
+
+  /// Live Activity destination mode: show the strongest-signal peer
+  ///
+  /// In en, this message translates to:
+  /// **'Best peer'**
+  String get bgConnLiveActivityDestBestPeer;
+
+  /// Live Activity destination mode: show the most-recent DM partner
+  ///
+  /// In en, this message translates to:
+  /// **'Active DM'**
+  String get bgConnLiveActivityDestActivePeer;
+
+  /// Description of the Mesh destination mode
+  ///
+  /// In en, this message translates to:
+  /// **'Show your whole mesh — node count and overall link health.'**
+  String get bgConnLiveActivityDestMeshDesc;
+
+  /// Description of the Best peer destination mode
+  ///
+  /// In en, this message translates to:
+  /// **'Show the strongest peer — auto-tracks the best signal.'**
+  String get bgConnLiveActivityDestBestPeerDesc;
+
+  /// Description of the Active DM destination mode
+  ///
+  /// In en, this message translates to:
+  /// **'Show your most-recent DM partner — switches as you chat.'**
+  String get bgConnLiveActivityDestActivePeerDesc;
+
   /// Screen or section title
   ///
   /// In en, this message translates to:

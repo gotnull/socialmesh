@@ -14,6 +14,7 @@ import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../utils/snackbar.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
+import '../../../core/widgets/chip_selector.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 
 import '../../../core/logging.dart';
@@ -536,29 +537,24 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
                       ),
                     ),
                     const SizedBox(height: AppTheme.spacing8),
-                    SizedBox(
-                      width: double.infinity,
-                      child: SegmentedButton<_TargetPlatform>(
-                        segments: [
-                          for (final platform in _TargetPlatform.values)
-                            ButtonSegment<_TargetPlatform>(
-                              value: platform,
-                              label: Text(platform.labelL10n(context)),
-                              icon: Icon(platform.icon),
-                            ),
-                        ],
-                        selected: {_selectedPlatform},
-                        onSelectionChanged: canInteract
-                            ? (selected) {
-                                ref
-                                    .read(hapticServiceProvider)
-                                    .trigger(HapticType.selection);
-                                safeSetState(
-                                  () => _selectedPlatform = selected.first,
-                                );
-                              }
-                            : null,
-                      ),
+                    ChipSelector<_TargetPlatform>(
+                      value: _selectedPlatform,
+                      enabled: canInteract,
+                      onChanged: (platform) {
+                        ref
+                            .read(hapticServiceProvider)
+                            .trigger(HapticType.selection);
+                        safeSetState(() => _selectedPlatform = platform);
+                      },
+                      options: [
+                        for (final platform in _TargetPlatform.values)
+                          ChipOption(
+                            value: platform,
+                            label: platform.labelL10n(context),
+                            icon: platform.icon,
+                            color: platform.chipColor,
+                          ),
+                      ],
                     ),
 
                     const SizedBox(height: AppTheme.spacing16),
@@ -1007,6 +1003,14 @@ enum _TargetPlatform {
       all => Icons.devices,
       android => Icons.android,
       ios => Icons.apple,
+    };
+  }
+
+  Color get chipColor {
+    return switch (this) {
+      all => AppTheme.primaryBlue,
+      android => AppTheme.successGreen,
+      ios => AppTheme.primaryMagenta,
     };
   }
 }
