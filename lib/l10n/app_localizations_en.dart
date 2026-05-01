@@ -10394,8 +10394,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Discover more nodes to build the historical graph.\nHistorically co-seen nodes form constellation links.';
 
   @override
-  String get nodedexConstellationEmptyTitle =>
-      'No Historical Constellation Yet';
+  String get nodedexConstellationEmptyTitle => 'Constellation is quiet';
 
   @override
   String nodedexConstellationLinkCount(int count) {
@@ -10420,7 +10419,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nodedexConstellationSearchNodes => 'Search nodes';
 
   @override
-  String get nodedexConstellationTitle => 'Historical Constellation';
+  String get nodedexConstellationTitle => 'Constellation';
 
   @override
   String get nodedexDayFri => 'Fri';
@@ -11518,6 +11517,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nodedexMapTooltip => 'Show map view';
+
+  @override
+  String get nodedexMapTitle => 'NodeDex Map';
 
   @override
   String get nodedexMenuHelp => 'Help';
@@ -38387,4 +38389,72 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rnsCompanionStatusUnreachable => 'Unreachable';
+
+  @override
+  String get nodedexConstellationOpen => 'Constellation';
+
+  @override
+  String get nodedexConstellationOpenTooltip => 'Open Constellation graph';
+
+  @override
+  String get nodedexConstellationFilterTimeNow => 'Now';
+
+  @override
+  String get nodedexConstellationFilterTime24h => '24h';
+
+  @override
+  String get nodedexConstellationFilterTime7d => '7d';
+
+  @override
+  String get nodedexConstellationFilterTimeAll => 'All';
+
+  @override
+  String get nodedexConstellationFilterRfOnly => 'RF only';
+
+  @override
+  String get nodedexConstellationFilterShowInferred => 'Inferred';
+
+  @override
+  String get nodedexConstellationEmptyMissing =>
+      'No NodeDex entry yet for this node — open Constellation again once an encounter is recorded.';
+
+  @override
+  String get nodedexConstellationEmptyFiltered =>
+      'The current filter excluded every card. Try a wider time window, or include MQTT and inferred edges.';
+
+  @override
+  String get nodedexConstellationEmptyAction => 'Reset filters';
+
+  @override
+  String get nodedexConstellationCardEncounters => 'Encounters';
+
+  @override
+  String get nodedexConstellationCardRouteRf => 'RF path';
+
+  @override
+  String get nodedexConstellationCardRouteMqtt => 'MQTT path';
+
+  @override
+  String get nodedexConstellationCardChannel => 'Channel';
+
+  @override
+  String get nodedexConstellationCardTelemetry => 'Telemetry';
+
+  @override
+  String get nodedexConstellationCardMessages => 'Messages';
+
+  @override
+  String get nodedexConstellationActionMessage => 'Message';
+
+  @override
+  String get nodedexConstellationActionFavourite => 'Favourite';
+
+  @override
+  String get nodedexConstellationActionUnfavourite => 'Unfavourite';
+
+  @override
+  String get nodedexConstellationActionMap => 'View on map';
+
+  @override
+  String get nodedexConstellationActionDetails => 'Inspect details';
 }

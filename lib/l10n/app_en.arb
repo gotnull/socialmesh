@@ -15883,6 +15883,10 @@
     "@nodedexMapTooltip": {
         "description": "Tooltip for the Map button in the NodeDex header"
     },
+    "nodedexMapTitle": "NodeDex Map",
+    "@nodedexMapTitle": {
+        "description": "App bar title shown when MapScreen runs in nodedexMode (drawer NodeDex → Map child + in-NodeDex overflow menu Map item)"
+    },
     "nodedexMenuHelp": "Help",
     "@nodedexMenuHelp": {
         "description": "Help item in the NodeDex header overflow menu"
@@ -51377,5 +51381,101 @@
     "rnsCompanionStatusUnreachable": "Unreachable",
     "@rnsCompanionStatusUnreachable": {
         "description": "Status-pill text when /health fails."
+    },
+    "nodedexConstellationTitle": "Constellation",
+    "@nodedexConstellationTitle": {
+        "description": "App bar title for the per-node Constellation graph."
+    },
+    "nodedexConstellationOpen": "Constellation",
+    "@nodedexConstellationOpen": {
+        "description": "App bar action label that opens the Constellation graph from a NodeDex detail screen."
+    },
+    "nodedexConstellationOpenTooltip": "Open Constellation graph",
+    "@nodedexConstellationOpenTooltip": {
+        "description": "Tooltip for the Constellation entry button in the NodeDex detail app bar."
+    },
+    "nodedexConstellationFilterTimeNow": "Now",
+    "@nodedexConstellationFilterTimeNow": {
+        "description": "Time-window filter chip for the Constellation: only nodes seen in the last few minutes."
+    },
+    "nodedexConstellationFilterTime24h": "24h",
+    "@nodedexConstellationFilterTime24h": {
+        "description": "Time-window filter chip for the Constellation: last 24 hours."
+    },
+    "nodedexConstellationFilterTime7d": "7d",
+    "@nodedexConstellationFilterTime7d": {
+        "description": "Time-window filter chip for the Constellation: last 7 days."
+    },
+    "nodedexConstellationFilterTimeAll": "All",
+    "@nodedexConstellationFilterTimeAll": {
+        "description": "Time-window filter chip for the Constellation: no recency limit."
+    },
+    "nodedexConstellationFilterRfOnly": "RF only",
+    "@nodedexConstellationFilterRfOnly": {
+        "description": "Toggle chip on the Constellation that hides MQTT-sourced evidence."
+    },
+    "nodedexConstellationFilterShowInferred": "Inferred",
+    "@nodedexConstellationFilterShowInferred": {
+        "description": "Toggle chip on the Constellation that shows or hides inferred (low-confidence) edges."
+    },
+    "nodedexConstellationEmptyTitle": "Constellation is quiet",
+    "@nodedexConstellationEmptyTitle": {
+        "description": "Empty-state title shown when there isn't enough data to render the Constellation."
+    },
+    "nodedexConstellationEmptyMissing": "No NodeDex entry yet for this node — open Constellation again once an encounter is recorded.",
+    "@nodedexConstellationEmptyMissing": {
+        "description": "Empty-state body when the centre node has no NodeDex entry."
+    },
+    "nodedexConstellationEmptyFiltered": "The current filter excluded every card. Try a wider time window, or include MQTT and inferred edges.",
+    "@nodedexConstellationEmptyFiltered": {
+        "description": "Empty-state body when the active filter removed every card."
+    },
+    "nodedexConstellationEmptyAction": "Reset filters",
+    "@nodedexConstellationEmptyAction": {
+        "description": "Button label that clears the Constellation filter back to defaults."
+    },
+    "nodedexConstellationCardEncounters": "Encounters",
+    "@nodedexConstellationCardEncounters": {
+        "description": "Title rendered on the encounter card inside the Constellation."
+    },
+    "nodedexConstellationCardRouteRf": "RF path",
+    "@nodedexConstellationCardRouteRf": {
+        "description": "Title rendered on the route-evidence card when the node was last heard over RF."
+    },
+    "nodedexConstellationCardRouteMqtt": "MQTT path",
+    "@nodedexConstellationCardRouteMqtt": {
+        "description": "Title rendered on the route-evidence card when the node was last heard via MQTT."
+    },
+    "nodedexConstellationCardChannel": "Channel",
+    "@nodedexConstellationCardChannel": {
+        "description": "Title rendered on the channel card inside the Constellation."
+    },
+    "nodedexConstellationCardTelemetry": "Telemetry",
+    "@nodedexConstellationCardTelemetry": {
+        "description": "Title rendered on the telemetry card inside the Constellation."
+    },
+    "nodedexConstellationCardMessages": "Messages",
+    "@nodedexConstellationCardMessages": {
+        "description": "Title rendered on the messages card inside the Constellation."
+    },
+    "nodedexConstellationActionMessage": "Message",
+    "@nodedexConstellationActionMessage": {
+        "description": "Action card label that opens a direct-message thread with the centre node."
+    },
+    "nodedexConstellationActionFavourite": "Favourite",
+    "@nodedexConstellationActionFavourite": {
+        "description": "Action card label that toggles the centre node's favourite status."
+    },
+    "nodedexConstellationActionUnfavourite": "Unfavourite",
+    "@nodedexConstellationActionUnfavourite": {
+        "description": "Action card label shown when the centre node is already a favourite."
+    },
+    "nodedexConstellationActionMap": "View on map",
+    "@nodedexConstellationActionMap": {
+        "description": "Action card label that opens the map centred on the node."
+    },
+    "nodedexConstellationActionDetails": "Inspect details",
+    "@nodedexConstellationActionDetails": {
+        "description": "Action card label that opens the node's NodeDex detail screen."
     }
 }

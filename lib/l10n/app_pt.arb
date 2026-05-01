@@ -24371,6 +24371,10 @@
   "@nodedexMapTooltip": {
     "description": "Tooltip for the Map button in the NodeDex header"
   },
+  "nodedexMapTitle": "Mapa NodeDex",
+  "@nodedexMapTitle": {
+    "description": "App bar title shown when MapScreen runs in nodedexMode (drawer NodeDex → Map child + in-NodeDex overflow menu Map item)"
+  },
   "nodedexMenuHelp": "Ajuda",
   "@nodedexMenuHelp": {
     "description": "Help item in the NodeDex header overflow menu"
@@ -41123,5 +41127,29 @@
   "requiresConnectionGuardReconnectingBanner": "Desconectado — reconectando…",
   "@requiresConnectionGuardReconnectingBanner": {
     "description": "Inline banner shown on a node-required screen during the grace window after a brief transport disconnect, while auto-reconnect is attempting recovery."
-  }
+  },
+  "nodedexConstellationTitle": "Constelação",
+  "nodedexConstellationOpen": "Constelação",
+  "nodedexConstellationOpenTooltip": "Abrir constelação",
+  "nodedexConstellationFilterTimeNow": "Agora",
+  "nodedexConstellationFilterTime24h": "24 h",
+  "nodedexConstellationFilterTime7d": "7 d",
+  "nodedexConstellationFilterTimeAll": "Tudo",
+  "nodedexConstellationFilterRfOnly": "Apenas RF",
+  "nodedexConstellationFilterShowInferred": "Inferidas",
+  "nodedexConstellationEmptyTitle": "Constelação silenciosa",
+  "nodedexConstellationEmptyMissing": "Sem registo NodeDex para este nó — reabra a constelação após um novo encontro.",
+  "nodedexConstellationEmptyFiltered": "O filtro atual excluiu todas as cartas. Aumente a janela de tempo ou inclua MQTT e arestas inferidas.",
+  "nodedexConstellationEmptyAction": "Repor filtros",
+  "nodedexConstellationCardEncounters": "Encontros",
+  "nodedexConstellationCardRouteRf": "Rota RF",
+  "nodedexConstellationCardRouteMqtt": "Rota MQTT",
+  "nodedexConstellationCardChannel": "Canal",
+  "nodedexConstellationCardTelemetry": "Telemetria",
+  "nodedexConstellationCardMessages": "Mensagens",
+  "nodedexConstellationActionMessage": "Mensagem",
+  "nodedexConstellationActionFavourite": "Favorito",
+  "nodedexConstellationActionUnfavourite": "Remover favorito",
+  "nodedexConstellationActionMap": "Ver no mapa",
+  "nodedexConstellationActionDetails": "Abrir detalhes"
 }

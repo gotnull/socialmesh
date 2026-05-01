@@ -10494,7 +10494,7 @@ class AppLocalizationsIt extends AppLocalizations {
       'Scopri più nodi per vedere come si connettono.\nI nodi visti insieme formano link di costellazione.';
 
   @override
-  String get nodedexConstellationEmptyTitle => 'Nessuna costellazione';
+  String get nodedexConstellationEmptyTitle => 'Costellazione silenziosa';
 
   @override
   String nodedexConstellationLinkCount(int count) {
@@ -11622,6 +11622,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get nodedexMapTooltip => 'Mostra mappa';
+
+  @override
+  String get nodedexMapTitle => 'Mappa NodeDex';
 
   @override
   String get nodedexMenuHelp => 'Guida';
@@ -38745,4 +38748,72 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get rnsCompanionStatusUnreachable => 'Unreachable';
+
+  @override
+  String get nodedexConstellationOpen => 'Costellazione';
+
+  @override
+  String get nodedexConstellationOpenTooltip => 'Apri la costellazione';
+
+  @override
+  String get nodedexConstellationFilterTimeNow => 'Ora';
+
+  @override
+  String get nodedexConstellationFilterTime24h => '24 h';
+
+  @override
+  String get nodedexConstellationFilterTime7d => '7 g';
+
+  @override
+  String get nodedexConstellationFilterTimeAll => 'Tutto';
+
+  @override
+  String get nodedexConstellationFilterRfOnly => 'Solo RF';
+
+  @override
+  String get nodedexConstellationFilterShowInferred => 'Inferite';
+
+  @override
+  String get nodedexConstellationEmptyMissing =>
+      'Nessuna voce NodeDex per questo nodo — riapri la costellazione dopo un nuovo incontro.';
+
+  @override
+  String get nodedexConstellationEmptyFiltered =>
+      'Il filtro attivo ha escluso tutte le card. Prova un intervallo di tempo più ampio o includi MQTT e collegamenti inferiti.';
+
+  @override
+  String get nodedexConstellationEmptyAction => 'Reimposta filtri';
+
+  @override
+  String get nodedexConstellationCardEncounters => 'Incontri';
+
+  @override
+  String get nodedexConstellationCardRouteRf => 'Percorso RF';
+
+  @override
+  String get nodedexConstellationCardRouteMqtt => 'Percorso MQTT';
+
+  @override
+  String get nodedexConstellationCardChannel => 'Canale';
+
+  @override
+  String get nodedexConstellationCardTelemetry => 'Telemetria';
+
+  @override
+  String get nodedexConstellationCardMessages => 'Messaggi';
+
+  @override
+  String get nodedexConstellationActionMessage => 'Messaggio';
+
+  @override
+  String get nodedexConstellationActionFavourite => 'Preferito';
+
+  @override
+  String get nodedexConstellationActionUnfavourite => 'Rimuovi preferito';
+
+  @override
+  String get nodedexConstellationActionMap => 'Mostra sulla mappa';
+
+  @override
+  String get nodedexConstellationActionDetails => 'Apri dettagli';
 }

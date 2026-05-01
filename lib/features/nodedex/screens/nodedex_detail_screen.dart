@@ -50,6 +50,7 @@ import '../../../services/protocol/sip/mrrp_types.dart';
 import '../models/nodedex_entry.dart';
 import '../models/observed_radio_preset.dart';
 import '../models/sigil_evolution.dart';
+import '../node_constellation/node_constellation_screen.dart';
 import '../providers/nodedex_providers.dart';
 import '../services/patina_score.dart';
 
@@ -179,6 +180,33 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
       child: GlassScaffold(
         title: displayName,
         actions: [
+          // Per-node Constellation view is gated behind a feature
+          // flag while the UX is iterating; default-off hides the
+          // icon so the feature is unreachable in production builds.
+          // Set `NODEDEX_CONSTELLATION_ENABLED=true` in `.env` to
+          // re-expose it.
+          if (AppFeatureFlags.isNodeDexConstellationEnabled)
+            IconButton(
+              icon: Icon(
+                Icons.scatter_plot_outlined,
+                size: 20,
+                color: context.accentColor,
+              ),
+              tooltip: context.l10n.nodedexConstellationOpenTooltip,
+              onPressed: () {
+                HapticFeedback.selectionClick();
+                AppLogging.nodeDex(
+                  'Constellation: app-bar action tapped for node '
+                  '${widget.nodeNum}',
+                );
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) =>
+                        NodeConstellationScreen(nodeNum: widget.nodeNum),
+                  ),
+                );
+              },
+            ),
           IconButton(
             icon: Icon(
               Icons.style_outlined,

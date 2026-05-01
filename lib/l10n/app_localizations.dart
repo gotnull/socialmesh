@@ -18445,10 +18445,10 @@ abstract class AppLocalizations {
   /// **'Discover more nodes to build the historical graph.\nHistorically co-seen nodes form constellation links.'**
   String get nodedexConstellationEmptySubtitle;
 
-  /// Title for the node management screen
+  /// Empty-state title shown when there isn't enough data to render the Constellation.
   ///
   /// In en, this message translates to:
-  /// **'No Historical Constellation Yet'**
+  /// **'Constellation is quiet'**
   String get nodedexConstellationEmptyTitle;
 
   /// Text in node management Parameters: {count} = numeric count.
@@ -18487,10 +18487,10 @@ abstract class AppLocalizations {
   /// **'Search nodes'**
   String get nodedexConstellationSearchNodes;
 
-  /// Title for the node management screen
+  /// App bar title for the per-node Constellation graph.
   ///
   /// In en, this message translates to:
-  /// **'Historical Constellation'**
+  /// **'Constellation'**
   String get nodedexConstellationTitle;
 
   /// Text displayed in node management
@@ -20202,6 +20202,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show map view'**
   String get nodedexMapTooltip;
+
+  /// App bar title shown when MapScreen runs in nodedexMode (drawer NodeDex → Map child + in-NodeDex overflow menu Map item)
+  ///
+  /// In en, this message translates to:
+  /// **'NodeDex Map'**
+  String get nodedexMapTitle;
 
   /// Help item in the NodeDex header overflow menu
   ///
@@ -67495,6 +67501,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unreachable'**
   String get rnsCompanionStatusUnreachable;
+
+  /// App bar action label that opens the Constellation graph from a NodeDex detail screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Constellation'**
+  String get nodedexConstellationOpen;
+
+  /// Tooltip for the Constellation entry button in the NodeDex detail app bar.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Constellation graph'**
+  String get nodedexConstellationOpenTooltip;
+
+  /// Time-window filter chip for the Constellation: only nodes seen in the last few minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Now'**
+  String get nodedexConstellationFilterTimeNow;
+
+  /// Time-window filter chip for the Constellation: last 24 hours.
+  ///
+  /// In en, this message translates to:
+  /// **'24h'**
+  String get nodedexConstellationFilterTime24h;
+
+  /// Time-window filter chip for the Constellation: last 7 days.
+  ///
+  /// In en, this message translates to:
+  /// **'7d'**
+  String get nodedexConstellationFilterTime7d;
+
+  /// Time-window filter chip for the Constellation: no recency limit.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get nodedexConstellationFilterTimeAll;
+
+  /// Toggle chip on the Constellation that hides MQTT-sourced evidence.
+  ///
+  /// In en, this message translates to:
+  /// **'RF only'**
+  String get nodedexConstellationFilterRfOnly;
+
+  /// Toggle chip on the Constellation that shows or hides inferred (low-confidence) edges.
+  ///
+  /// In en, this message translates to:
+  /// **'Inferred'**
+  String get nodedexConstellationFilterShowInferred;
+
+  /// Empty-state body when the centre node has no NodeDex entry.
+  ///
+  /// In en, this message translates to:
+  /// **'No NodeDex entry yet for this node — open Constellation again once an encounter is recorded.'**
+  String get nodedexConstellationEmptyMissing;
+
+  /// Empty-state body when the active filter removed every card.
+  ///
+  /// In en, this message translates to:
+  /// **'The current filter excluded every card. Try a wider time window, or include MQTT and inferred edges.'**
+  String get nodedexConstellationEmptyFiltered;
+
+  /// Button label that clears the Constellation filter back to defaults.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset filters'**
+  String get nodedexConstellationEmptyAction;
+
+  /// Title rendered on the encounter card inside the Constellation.
+  ///
+  /// In en, this message translates to:
+  /// **'Encounters'**
+  String get nodedexConstellationCardEncounters;
+
+  /// Title rendered on the route-evidence card when the node was last heard over RF.
+  ///
+  /// In en, this message translates to:
+  /// **'RF path'**
+  String get nodedexConstellationCardRouteRf;
+
+  /// Title rendered on the route-evidence card when the node was last heard via MQTT.
+  ///
+  /// In en, this message translates to:
+  /// **'MQTT path'**
+  String get nodedexConstellationCardRouteMqtt;
+
+  /// Title rendered on the channel card inside the Constellation.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel'**
+  String get nodedexConstellationCardChannel;
+
+  /// Title rendered on the telemetry card inside the Constellation.
+  ///
+  /// In en, this message translates to:
+  /// **'Telemetry'**
+  String get nodedexConstellationCardTelemetry;
+
+  /// Title rendered on the messages card inside the Constellation.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages'**
+  String get nodedexConstellationCardMessages;
+
+  /// Action card label that opens a direct-message thread with the centre node.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get nodedexConstellationActionMessage;
+
+  /// Action card label that toggles the centre node's favourite status.
+  ///
+  /// In en, this message translates to:
+  /// **'Favourite'**
+  String get nodedexConstellationActionFavourite;
+
+  /// Action card label shown when the centre node is already a favourite.
+  ///
+  /// In en, this message translates to:
+  /// **'Unfavourite'**
+  String get nodedexConstellationActionUnfavourite;
+
+  /// Action card label that opens the map centred on the node.
+  ///
+  /// In en, this message translates to:
+  /// **'View on map'**
+  String get nodedexConstellationActionMap;
+
+  /// Action card label that opens the node's NodeDex detail screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Inspect details'**
+  String get nodedexConstellationActionDetails;
 }
 
 class _AppLocalizationsDelegate

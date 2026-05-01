@@ -28,6 +28,9 @@ import '../../utils/snackbar.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../models/mesh_models.dart';
+import '../nodedex/map/nodedex_map_pin.dart';
+import '../nodedex/map/nodedex_map_pins_provider.dart';
+import '../nodedex/map/widgets/nodedex_sigil_marker.dart';
 import '../../models/presence_confidence.dart';
 import '../../providers/age_eligibility_provider.dart';
 import '../../providers/app_providers.dart';
@@ -103,6 +106,15 @@ class MapScreen extends ConsumerStatefulWidget {
   /// When provided, the map shows the traceroute path as polylines.
   final TraceRouteLog? tracerouteLog;
 
+  /// When true, the marker source switches from the live `nodesProvider`
+  /// to `nodedexMapPinsProvider` — every entry in NodeDex with a
+  /// positioned encounter is synthesized into a `MeshNode` and pinned at
+  /// its last-known coordinates. All other MapScreen features (filter,
+  /// search, controls, overlays, info card) keep working unchanged.
+  /// The title swaps to "NodeDex Map" so users can tell which dataset
+  /// they're looking at.
+  final bool nodedexMode;
+
   const MapScreen({
     super.key,
     this.initialNodeNum,
@@ -111,6 +123,7 @@ class MapScreen extends ConsumerStatefulWidget {
     this.initialLocationLabel,
     this.locationOnlyMode = false,
     this.tracerouteLog,
+    this.nodedexMode = false,
   });
 
   @override
@@ -341,6 +354,27 @@ class _MapScreenState extends ConsumerState<MapScreen>
       }
       _enableHeadingUp();
     }
+  }
+
+  /// Synthesize a `Map<int, MeshNode>` from NodeDex map pins so the
+  /// rest of MapScreen — which is built around live MeshNodes — works
+  /// unchanged. Only the fields the marker / filter / search / info-
+  /// card paths read are populated; everything else (snr, rssi, env
+  /// metrics, etc.) is null because NodeDex doesn't carry it.
+  Map<int, MeshNode> _nodedexPinsAsNodes(List<NodeDexMapPin> pins) {
+    final result = <int, MeshNode>{};
+    for (final pin in pins) {
+      result[pin.nodeNum] = MeshNode(
+        nodeNum: pin.nodeNum,
+        longName: pin.displayName,
+        shortName: pin.displayName,
+        latitude: pin.position.latitude,
+        longitude: pin.position.longitude,
+        firstHeard: pin.positionedAt,
+        lastHeard: pin.lastEncounterAt,
+      );
+    }
+    return result;
   }
 
   /// Update position cache and return nodes with valid (current or cached) positions
@@ -685,7 +719,21 @@ class _MapScreenState extends ConsumerState<MapScreen>
       }
     }
 
-    final nodes = ref.watch(nodesProvider);
+    // In NodeDex mode, the marker source is the NodeDex pin list —
+    // every entry with a positioned encounter, synthesized into a
+    // MeshNode so the rest of MapScreen (filtering, search, info card,
+    // overlays) keeps working unchanged.
+    final List<NodeDexMapPin> nodedexPins = widget.nodedexMode
+        ? ref.watch(nodedexMapPinsProvider)
+        : const <NodeDexMapPin>[];
+    // O(1) lookup so the marker builder doesn't scan the pin list per
+    // marker. Empty in live mesh mode.
+    final Map<int, NodeDexMapPin> nodedexPinsByNum = widget.nodedexMode
+        ? {for (final pin in nodedexPins) pin.nodeNum: pin}
+        : const <int, NodeDexMapPin>{};
+    final nodes = widget.nodedexMode
+        ? _nodedexPinsAsNodes(nodedexPins)
+        : ref.watch(nodesProvider);
     final presenceMap = ref.watch(presenceMapProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
 
@@ -857,6 +905,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
               ? context.l10n.tracerouteMapTitle
               : widget.locationOnlyMode
               ? (widget.initialLocationLabel ?? context.l10n.mapLocationTitle)
+              : widget.nodedexMode
+              ? context.l10n.nodedexMapTitle
               : context.l10n.mapScreenTitle,
           style: TextStyle(
             fontSize: 20,
@@ -1612,16 +1662,25 @@ class _MapScreenState extends ConsumerState<MapScreen>
                                           _selectedTakEntity = null;
                                         });
                                       },
-                                      child: _NodeMarker(
-                                        node: n.node,
-                                        presence: presenceConfidenceFor(
-                                          presenceMap,
-                                          n.node,
-                                        ),
-                                        isMyNode: isMyNode,
-                                        isSelected: isSelected,
-                                        isStale: n.isStale,
-                                      ),
+                                      child: widget.nodedexMode
+                                          ? NodeDexSigilMarker(
+                                              pin:
+                                                  nodedexPinsByNum[n
+                                                      .node
+                                                      .nodeNum]!,
+                                              isSelected: isSelected,
+                                              isStale: n.isStale,
+                                            )
+                                          : _NodeMarker(
+                                              node: n.node,
+                                              presence: presenceConfidenceFor(
+                                                presenceMap,
+                                                n.node,
+                                              ),
+                                              isMyNode: isMyNode,
+                                              isSelected: isSelected,
+                                              isStale: n.isStale,
+                                            ),
                                     ),
                                   );
                                 }),

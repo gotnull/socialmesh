@@ -24371,6 +24371,10 @@
   "@nodedexMapTooltip": {
     "description": "Tooltip for the Map button in the NodeDex header"
   },
+  "nodedexMapTitle": "Mappa NodeDex",
+  "@nodedexMapTitle": {
+    "description": "App bar title shown when MapScreen runs in nodedexMode (drawer NodeDex → Map child + in-NodeDex overflow menu Map item)"
+  },
   "nodedexMenuHelp": "Guida",
   "@nodedexMenuHelp": {
     "description": "Help item in the NodeDex header overflow menu"
@@ -41123,5 +41127,29 @@
   "requiresConnectionGuardReconnectingBanner": "Disconnesso — riconnessione…",
   "@requiresConnectionGuardReconnectingBanner": {
     "description": "Inline banner shown on a node-required screen during the grace window after a brief transport disconnect, while auto-reconnect is attempting recovery."
-  }
+  },
+  "nodedexConstellationTitle": "Costellazione",
+  "nodedexConstellationOpen": "Costellazione",
+  "nodedexConstellationOpenTooltip": "Apri la costellazione",
+  "nodedexConstellationFilterTimeNow": "Ora",
+  "nodedexConstellationFilterTime24h": "24 h",
+  "nodedexConstellationFilterTime7d": "7 g",
+  "nodedexConstellationFilterTimeAll": "Tutto",
+  "nodedexConstellationFilterRfOnly": "Solo RF",
+  "nodedexConstellationFilterShowInferred": "Inferite",
+  "nodedexConstellationEmptyTitle": "Costellazione silenziosa",
+  "nodedexConstellationEmptyMissing": "Nessuna voce NodeDex per questo nodo — riapri la costellazione dopo un nuovo incontro.",
+  "nodedexConstellationEmptyFiltered": "Il filtro attivo ha escluso tutte le card. Prova un intervallo di tempo più ampio o includi MQTT e collegamenti inferiti.",
+  "nodedexConstellationEmptyAction": "Reimposta filtri",
+  "nodedexConstellationCardEncounters": "Incontri",
+  "nodedexConstellationCardRouteRf": "Percorso RF",
+  "nodedexConstellationCardRouteMqtt": "Percorso MQTT",
+  "nodedexConstellationCardChannel": "Canale",
+  "nodedexConstellationCardTelemetry": "Telemetria",
+  "nodedexConstellationCardMessages": "Messaggi",
+  "nodedexConstellationActionMessage": "Messaggio",
+  "nodedexConstellationActionFavourite": "Preferito",
+  "nodedexConstellationActionUnfavourite": "Rimuovi preferito",
+  "nodedexConstellationActionMap": "Mostra sulla mappa",
+  "nodedexConstellationActionDetails": "Apri dettagli"
 }

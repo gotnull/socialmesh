@@ -348,6 +348,21 @@ class AppFeatureFlags {
     }
   }
 
+  /// Whether the per-node NodeDex Constellation view is reachable.
+  /// Set `NODEDEX_CONSTELLATION_ENABLED=true` in `.env` to expose the
+  /// Constellation app-bar icon on the NodeDex detail screen.
+  /// Default: false — the feature is dormant pending UX iteration.
+  static bool get isNodeDexConstellationEnabled {
+    try {
+      final raw = dotenv.env['NODEDEX_CONSTELLATION_ENABLED']
+          ?.toLowerCase()
+          .trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Whether the TAK Mesh Bridge (on-device TAK server) is enabled.
   /// Set `TAK_MESH_BRIDGE_ENABLED=true` in `.env` to enable.
   /// Default: false — bridge functionality is off unless explicitly enabled.

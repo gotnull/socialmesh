@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
+// lint-allow: haptic-feedback — onTap delegates to parent callback (caller fires ref.haptics)
 import 'package:flutter/material.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
@@ -35,6 +36,22 @@ class DrawerMenuItem {
   /// When true and [tabIndex] is set, the map tab activates TAK layer.
   final bool requestsTakMode;
 
+  /// Optional sub-items rendered indented beneath this tile when the
+  /// drawer expands the parent. The parent itself remains tappable
+  /// (opens its own [screen] / [tabIndex]); the chevron toggles the
+  /// children visibility — a split-tap affordance similar to the
+  /// macOS Finder sidebar.
+  final List<DrawerMenuItem>? children;
+
+  /// Custom open handler. When set, takes precedence over [screen] /
+  /// [tabIndex] in the drawer dispatch — used for entries that route
+  /// through a feature-specific entry-point function (e.g.
+  /// `openNodeDexMap` which fires NodeDex-tagged telemetry before
+  /// pushing the canonical MapScreen).
+  final void Function(BuildContext context)? onOpen;
+
+  bool get hasChildren => children != null && children!.isNotEmpty;
+
   const DrawerMenuItem({
     required this.icon,
     required this.label,
@@ -47,6 +64,8 @@ class DrawerMenuItem {
     this.badgeProviderKey,
     this.whatsNewBadgeKey,
     this.requestsTakMode = false,
+    this.children,
+    this.onOpen,
   });
 }
 
@@ -83,6 +102,25 @@ class DrawerMenuTile extends StatelessWidget {
   final Color? iconColor;
   final bool showNewChip;
 
+  /// When true, render a rotating expand chevron at the trailing edge
+  /// instead of the regular selected/premium indicators. Tapping the
+  /// chevron region calls [onChevronTap] (toggle expand) without
+  /// triggering [onTap] (open the parent screen).
+  final bool hasChildren;
+
+  /// Current expansion state of the parent's children — drives the
+  /// chevron rotation. Only meaningful when [hasChildren] is true.
+  final bool isExpanded;
+
+  /// Tap handler for the chevron region. Required when [hasChildren]
+  /// is true; ignored otherwise.
+  final VoidCallback? onChevronTap;
+
+  /// When true, the tile renders in compact "child" form: indented
+  /// from the leading edge, smaller icon, slightly smaller label —
+  /// used for sub-items beneath an expanded parent.
+  final bool isChild;
+
   const DrawerMenuTile({
     super.key,
     required this.icon,
@@ -96,6 +134,10 @@ class DrawerMenuTile extends StatelessWidget {
     this.badgeCount,
     this.iconColor,
     this.showNewChip = false,
+    this.hasChildren = false,
+    this.isExpanded = false,
+    this.onChevronTap,
+    this.isChild = false,
   });
 
   @override
@@ -109,14 +151,22 @@ class DrawerMenuTile extends StatelessWidget {
     // looks inviting rather than dimmed/locked.
     final effectivelyLocked = isLocked && !showNewChip;
 
-    return BouncyTap(
+    final iconSize = isChild ? 18.0 : 22.0;
+    final iconPadding = isChild ? AppTheme.spacing6 : AppTheme.spacing10;
+    final labelFontSize = isChild ? 14.0 : 15.0;
+    final tileVerticalPadding = isChild ? 10.0 : 14.0;
+
+    final tile = BouncyTap(
       onTap: onTap,
       enabled: !isDisabled,
       scaleFactor: 0.98,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: tileVerticalPadding,
+        ),
         decoration: BoxDecoration(
           color: isSelected
               ? accentColor.withValues(alpha: 0.15)
@@ -136,7 +186,7 @@ class DrawerMenuTile extends StatelessWidget {
             children: [
               AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.all(AppTheme.spacing10),
+                padding: EdgeInsets.all(iconPadding),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? accentColor.withValues(alpha: 0.2)
@@ -150,7 +200,7 @@ class DrawerMenuTile extends StatelessWidget {
                   children: [
                     Icon(
                       icon,
-                      size: 22,
+                      size: iconSize,
                       color: isSelected
                           ? accentColor
                           : effectivelyLocked
@@ -225,7 +275,7 @@ class DrawerMenuTile extends StatelessWidget {
                       child: Text(
                         label,
                         style: TextStyle(
-                          fontSize: 15,
+                          fontSize: labelFontSize,
                           fontWeight: isSelected
                               ? FontWeight.w600
                               : FontWeight.w500,
@@ -280,9 +330,43 @@ class DrawerMenuTile extends StatelessWidget {
                   ],
                 ),
               ),
+              // Expand affordance — sub-tap target separate from the
+              // tile's main onTap. Tapping this region toggles children
+              // visibility; tapping the icon/label area still opens the
+              // parent screen via [onTap]. Inner GestureDetector wins
+              // the gesture before the outer BouncyTap.
+              //
+              // Uses `Icons.expand_more` (downward V) — the Material
+              // convention for "this expands inline" — flipped 180° to
+              // expand_less when open. Intentionally distinct from
+              // `Icons.chevron_right` which means "tap to navigate".
+              if (hasChildren) ...[
+                const SizedBox(width: AppTheme.spacing8),
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: onChevronTap,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spacing8,
+                      vertical: AppTheme.spacing4,
+                    ),
+                    child: AnimatedRotation(
+                      duration: const Duration(milliseconds: 200),
+                      turns: isExpanded ? 0.5 : 0,
+                      child: Icon(
+                        Icons.expand_more,
+                        size: 22,
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.55,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ]
               // Show lock icon and PRO badge for locked premium features
               // Suppressed when NEW chip is visible to avoid squashing the label
-              if (isLocked && !showNewChip) ...[
+              else if (isLocked && !showNewChip) ...[
                 const SizedBox(width: AppTheme.spacing8),
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -376,5 +460,13 @@ class DrawerMenuTile extends StatelessWidget {
         ),
       ),
     );
+
+    if (isChild) {
+      return Padding(
+        padding: const EdgeInsets.only(left: AppTheme.spacing32),
+        child: tile,
+      );
+    }
+    return tile;
   }
 }
