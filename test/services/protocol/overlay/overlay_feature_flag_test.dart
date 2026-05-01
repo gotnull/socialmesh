@@ -4,6 +4,7 @@
 /// Tests for [OverlayFeatureFlags].
 library;
 
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/services/protocol/overlay/overlay_feature_flag.dart';
 
@@ -37,6 +38,42 @@ void main() {
       final flags = OverlayFeatureFlags.fromEnv();
       expect(flags.resourceEnabled, isFalse);
       expect(flags.secureEnabled, isFalse);
+    });
+  });
+
+  group('OverlayFeatureFlags.fromEnv HANDSHAKE_ENABLED shorthand', () {
+    tearDown(dotenv.clean);
+
+    test('HANDSHAKE_ENABLED=true forces all three overlay flags on', () {
+      dotenv.loadFromString(envString: 'HANDSHAKE_ENABLED=true');
+      final flags = OverlayFeatureFlags.fromEnv();
+      expect(flags.linkEnabled, isTrue);
+      expect(flags.resourceEnabled, isTrue);
+      expect(flags.secureEnabled, isTrue);
+    });
+
+    test('granular flags still work independently when shorthand is off', () {
+      dotenv.loadFromString(
+        envString: 'HANDSHAKE_ENABLED=false\nOVERLAY_LINK_ENABLED=true',
+      );
+      final flags = OverlayFeatureFlags.fromEnv();
+      expect(flags.linkEnabled, isTrue);
+      expect(flags.resourceEnabled, isFalse);
+      expect(flags.secureEnabled, isFalse);
+    });
+
+    test('shorthand overrides explicitly-false granular flags', () {
+      dotenv.loadFromString(
+        envString:
+            'HANDSHAKE_ENABLED=true\n'
+            'OVERLAY_LINK_ENABLED=false\n'
+            'OVERLAY_RESOURCE_ENABLED=false\n'
+            'OVERLAY_SECURE_ENABLED=false',
+      );
+      final flags = OverlayFeatureFlags.fromEnv();
+      expect(flags.linkEnabled, isTrue);
+      expect(flags.resourceEnabled, isTrue);
+      expect(flags.secureEnabled, isTrue);
     });
   });
 }

@@ -60,11 +60,16 @@ class OverlayFeatureFlags {
   /// Missing or unparseable values default to `false` — preserving the
   /// locked principle that overlay must be explicitly opt-in per
   /// install.
+  ///
+  /// `HANDSHAKE_ENABLED=true` is a shorthand that forces all three
+  /// overlay flags on; the granular flags still work independently when
+  /// the shorthand is off.
   factory OverlayFeatureFlags.fromEnv() {
+    final handshake = _readBool('HANDSHAKE_ENABLED');
     return OverlayFeatureFlags(
-      linkEnabled: _readBool('OVERLAY_LINK_ENABLED'),
-      resourceEnabled: _readBool('OVERLAY_RESOURCE_ENABLED'),
-      secureEnabled: _readBool('OVERLAY_SECURE_ENABLED'),
+      linkEnabled: handshake || _readBool('OVERLAY_LINK_ENABLED'),
+      resourceEnabled: handshake || _readBool('OVERLAY_RESOURCE_ENABLED'),
+      secureEnabled: handshake || _readBool('OVERLAY_SECURE_ENABLED'),
     );
   }
 

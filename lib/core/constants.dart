@@ -385,10 +385,30 @@ class AppFeatureFlags {
     }
   }
 
+  /// Shorthand that turns on every flag required for the SIP handshake
+  /// + secure-DM stack: SIP, MRRP, and the three overlay flags (link,
+  /// resource, secure). Set `HANDSHAKE_ENABLED=true` in `.env` to enable
+  /// the whole stack with one switch instead of toggling each flag.
+  ///
+  /// The individual flags (`SIP_ENABLED`, `MRRP_ENABLED`,
+  /// `OVERLAY_LINK_ENABLED`, `OVERLAY_RESOURCE_ENABLED`,
+  /// `OVERLAY_SECURE_ENABLED`) still work independently — useful for
+  /// testing partial stacks. This shorthand is OR'd in: if either the
+  /// shorthand OR the granular flag is on, the feature is enabled.
+  static bool get isHandshakeEnabled {
+    try {
+      final raw = dotenv.env['HANDSHAKE_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Whether the SIP (Socialmesh Identity Protocol) feature is enabled.
-  /// Set `SIP_ENABLED=true` in `.env` to enable.
+  /// Set `SIP_ENABLED=true` (or `HANDSHAKE_ENABLED=true`) in `.env`.
   /// Default: false — SIP UI is hidden unless explicitly enabled.
   static bool get isSipEnabled {
+    if (isHandshakeEnabled) return true;
     try {
       final raw = dotenv.env['SIP_ENABLED']?.toLowerCase().trim();
       return raw == 'true' || raw == '1';
@@ -424,10 +444,11 @@ class AppFeatureFlags {
   }
 
   /// Whether the MRRP (Mesh Request/Response Protocol) feature is enabled.
-  /// Set `MRRP_ENABLED=true` in `.env` to enable.
+  /// Set `MRRP_ENABLED=true` (or `HANDSHAKE_ENABLED=true`) in `.env`.
   /// Requires [isSipEnabled] to be true. Default: false.
   static bool get isMrrpEnabled {
     if (!isSipEnabled) return false;
+    if (isHandshakeEnabled) return true;
     try {
       final raw = dotenv.env['MRRP_ENABLED']?.toLowerCase().trim();
       return raw == 'true' || raw == '1';

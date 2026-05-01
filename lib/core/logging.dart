@@ -88,6 +88,7 @@ class AppLogging {
   static bool? _sipPlayLoggingEnabled;
   static bool? _sipSignalLoggingEnabled;
   static bool? _mrrpDebugEnabled;
+  static bool? _handshakeLoggingEnabled;
   static bool? _mrrpHarnessDebugEnabled;
   static bool? _meshExplorerDebugEnabled;
   static bool? _voiceLoggingEnabled;
@@ -640,8 +641,20 @@ class AppLogging {
     if (fileTransferLoggingEnabled) debugPrint('FileTransfer: $message');
   }
 
+  /// Shorthand that turns on every handshake-related logging stream:
+  /// SIP / SIP Ink / SIP Play / SIP Signal / Overlay / MRRP debug.
+  /// Set `HANDSHAKE_LOGGING_ENABLED=true` in `.env` to enable the whole
+  /// bundle with one switch instead of toggling each flag. Granular
+  /// flags still work independently — this shorthand is OR'd in.
+  static bool get handshakeLoggingEnabled {
+    _handshakeLoggingEnabled ??=
+        _safeGetEnv('HANDSHAKE_LOGGING_ENABLED')?.toLowerCase() == 'true';
+    return _handshakeLoggingEnabled!;
+  }
+
   static bool get sipLoggingEnabled {
     _sipLoggingEnabled ??=
+        handshakeLoggingEnabled ||
         _safeGetEnv('SIP_LOGGING_ENABLED')?.toLowerCase() == 'true';
     return _sipLoggingEnabled!;
   }
@@ -654,6 +667,7 @@ class AppLogging {
   /// Enable with SIP_INK_LOGGING_ENABLED=true in .env file.
   static bool get sipInkLoggingEnabled {
     _sipInkLoggingEnabled ??=
+        handshakeLoggingEnabled ||
         _safeGetEnv('SIP_INK_LOGGING_ENABLED')?.toLowerCase() == 'true';
     return _sipInkLoggingEnabled!;
   }
@@ -666,6 +680,7 @@ class AppLogging {
   /// Enable with SIP_PLAY_LOGGING_ENABLED=true in .env file.
   static bool get sipPlayLoggingEnabled {
     _sipPlayLoggingEnabled ??=
+        handshakeLoggingEnabled ||
         _safeGetEnv('SIP_PLAY_LOGGING_ENABLED')?.toLowerCase() == 'true';
     return _sipPlayLoggingEnabled!;
   }
@@ -680,6 +695,7 @@ class AppLogging {
   /// encode size, send attempts, dedupe drops, decode failures).
   static bool get sipSignalLoggingEnabled {
     _sipSignalLoggingEnabled ??=
+        handshakeLoggingEnabled ||
         _safeGetEnv('SIP_SIGNAL_LOGGING_ENABLED')?.toLowerCase() == 'true';
     return _sipSignalLoggingEnabled!;
   }
@@ -703,7 +719,9 @@ class AppLogging {
   /// MRRP protocol debug logging.
   /// Enable with MRRP_DEBUG=true in .env file.
   static bool get mrrpDebugEnabled {
-    _mrrpDebugEnabled ??= _safeGetEnv('MRRP_DEBUG')?.toLowerCase() == 'true';
+    _mrrpDebugEnabled ??=
+        handshakeLoggingEnabled ||
+        _safeGetEnv('MRRP_DEBUG')?.toLowerCase() == 'true';
     return _mrrpDebugEnabled!;
   }
 
@@ -815,6 +833,7 @@ class AppLogging {
   /// `OVERLAY_LOGGING_ENABLED=true` in the .env file.
   static bool get overlayLoggingEnabled {
     _overlayLoggingEnabled ??=
+        handshakeLoggingEnabled ||
         _safeGetEnv('OVERLAY_LOGGING_ENABLED')?.toLowerCase() == 'true';
     return _overlayLoggingEnabled!;
   }
@@ -962,6 +981,7 @@ class AppLogging {
     _sipPlayLoggingEnabled = null;
     _sipSignalLoggingEnabled = null;
     _mrrpDebugEnabled = null;
+    _handshakeLoggingEnabled = null;
     _mrrpHarnessDebugEnabled = null;
     _meshExplorerDebugEnabled = null;
     _voiceLoggingEnabled = null;
@@ -969,6 +989,7 @@ class AppLogging {
     _sppLoggingEnabled = null;
     _sppNegotiationLoggingEnabled = null;
     _stlLoggingEnabled = null;
+    _overlayLoggingEnabled = null;
     _meshFeedLoggingEnabled = null;
     _meshCapacityLoggingEnabled = null;
     _mqttProxyLoggingEnabled = null;

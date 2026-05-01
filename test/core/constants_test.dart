@@ -201,6 +201,49 @@ void main() {
       dotenv.loadFromString(envString: 'TEST_MODE=true\nPET_ENABLED=true');
       expect(AppFeatureFlags.isPetEnabled, isTrue);
     });
+
+    test('HANDSHAKE_ENABLED defaults to false', () {
+      dotenv.loadFromString(envString: 'TEST_MODE=true');
+      expect(AppFeatureFlags.isHandshakeEnabled, isFalse);
+      expect(AppFeatureFlags.isSipEnabled, isFalse);
+      expect(AppFeatureFlags.isMrrpEnabled, isFalse);
+    });
+
+    test('HANDSHAKE_ENABLED=true forces SIP and MRRP on', () {
+      dotenv.loadFromString(
+        envString: 'TEST_MODE=true\nHANDSHAKE_ENABLED=true',
+      );
+      expect(AppFeatureFlags.isHandshakeEnabled, isTrue);
+      expect(AppFeatureFlags.isSipEnabled, isTrue);
+      expect(AppFeatureFlags.isMrrpEnabled, isTrue);
+    });
+
+    test(
+      'HANDSHAKE_ENABLED=true overrides explicitly-false granular flags',
+      () {
+        dotenv.loadFromString(
+          envString:
+              'TEST_MODE=true\n'
+              'HANDSHAKE_ENABLED=true\n'
+              'SIP_ENABLED=false\n'
+              'MRRP_ENABLED=false',
+        );
+        expect(AppFeatureFlags.isSipEnabled, isTrue);
+        expect(AppFeatureFlags.isMrrpEnabled, isTrue);
+      },
+    );
+
+    test(
+      'granular SIP_ENABLED still works when HANDSHAKE_ENABLED is unset',
+      () {
+        dotenv.loadFromString(
+          envString: 'TEST_MODE=true\nSIP_ENABLED=true\nMRRP_ENABLED=true',
+        );
+        expect(AppFeatureFlags.isHandshakeEnabled, isFalse);
+        expect(AppFeatureFlags.isSipEnabled, isTrue);
+        expect(AppFeatureFlags.isMrrpEnabled, isTrue);
+      },
+    );
   });
 
   group('IdentityConstants', () {
