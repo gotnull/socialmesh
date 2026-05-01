@@ -4,7 +4,6 @@ import 'dart:io' show Platform;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../core/legal/legal_constants.dart';
 import '../core/legal/terms_acceptance_state.dart';
 import '../core/logging.dart';
 import 'app_providers.dart';
@@ -83,16 +82,22 @@ class TermsAcceptanceNotifier extends AsyncNotifier<TermsAcceptanceState> {
   ///
   /// Stores the **effective** versions (max of hardcoded and Firestore
   /// remote) so that server-side version bumps are correctly recorded.
-  /// If the remote versions provider hasn't resolved yet, falls back to
-  /// the hardcoded [LegalConstants] values.
+  ///
+  /// AWAITS the remote versions provider rather than reading its sync
+  /// snapshot — otherwise a user who taps Accept before Firestore
+  /// resolves stores the hardcoded floor, and gets re-prompted on the
+  /// next cold launch once the higher remote value arrives. The
+  /// provider has its own 5s timeout and falls back to the cached or
+  /// hardcoded value internally, so awaiting is bounded.
   ///
   /// Updates [state] synchronously after persisting so that any UI watching
   /// this provider will immediately reflect the accepted state.
   Future<void> accept({String? buildNumber}) async {
-    // Resolve effective versions (remote > hardcoded).
-    final effective = ref.read(effectiveLegalVersionsProvider).asData?.value;
-    final termsV = effective?.termsVersion ?? LegalConstants.termsVersion;
-    final privacyV = effective?.privacyVersion ?? LegalConstants.privacyVersion;
+    // Resolve effective versions (remote > hardcoded). Awaiting the
+    // future avoids the race where the sync .asData snapshot is null.
+    final effective = await ref.read(effectiveLegalVersionsProvider.future);
+    final termsV = effective.termsVersion;
+    final privacyV = effective.privacyVersion;
 
     AppLogging.app(
       'TermsAcceptance: User accepted - '
