@@ -452,7 +452,7 @@ class _NodeConstellationScreenState
         tiles.add(
           NodeConstellationStatTile(
             value: lastSeen,
-            label: 'Last heard',
+            label: context.l10n.nodedexLastHeard,
             accent: const Color(0xFFFFD180),
             icon: Icons.access_time_rounded,
           ),

@@ -92,7 +92,7 @@ class NodeConstellationStatTile extends StatelessWidget {
                 height: 1.05,
               ),
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: AppTheme.spacing2),
             Text(
               label,
               style: TextStyle(

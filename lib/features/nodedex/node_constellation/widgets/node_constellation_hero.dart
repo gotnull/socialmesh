@@ -126,7 +126,7 @@ class NodeConstellationHero extends StatelessWidget {
                   const SizedBox(width: AppTheme.spacing6),
                   if (viaMqtt)
                     _HeroPill(
-                      label: 'MQTT',
+                      label: l10n.nodedexConstellationCardRouteMqtt,
                       accent: const Color(0xFFFFA875),
                       background: Colors.black.withValues(alpha: 0.45),
                     )
@@ -170,7 +170,7 @@ class NodeConstellationHero extends StatelessWidget {
                     softWrap: true,
                   ),
                   if (lastSeen != null) ...[
-                    const SizedBox(height: 6),
+                    const SizedBox(height: AppTheme.spacing6),
                     Row(
                       children: [
                         Icon(
@@ -178,7 +178,7 @@ class NodeConstellationHero extends StatelessWidget {
                           size: 14,
                           color: Colors.white.withValues(alpha: 0.75),
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: AppTheme.spacing6),
                         Text(
                           lastSeen!,
                           style: TextStyle(
@@ -254,7 +254,7 @@ class _PeerPeek extends StatelessWidget {
                       child: ColoredBox(
                         color: Colors.black.withValues(alpha: 0.85),
                         child: Padding(
-                          padding: const EdgeInsets.all(8),
+                          padding: const EdgeInsets.all(AppTheme.spacing8),
                           child: SigilDisplay(
                             nodeNum: shown[i],
                             size: 48,
@@ -332,7 +332,7 @@ class _HeroPill extends StatelessWidget {
         children: [
           if (icon != null) ...[
             Icon(icon, size: 12, color: accent),
-            const SizedBox(width: 4),
+            const SizedBox(width: AppTheme.spacing4),
           ],
           Text(
             label,

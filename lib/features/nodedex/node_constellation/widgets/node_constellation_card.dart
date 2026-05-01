@@ -112,7 +112,7 @@ class NodeConstellationCard extends StatelessWidget {
                 softWrap: true,
               ),
               if (node.subtitle != null && node.subtitle!.isNotEmpty) ...[
-                const SizedBox(height: 2),
+                const SizedBox(height: AppTheme.spacing2),
                 Text(
                   node.subtitle!,
                   style: TextStyle(
@@ -216,7 +216,7 @@ class NodeConstellationCard extends StatelessWidget {
           softWrap: true,
         ),
         if (metaText.isNotEmpty) ...[
-          const SizedBox(height: 4),
+          const SizedBox(height: AppTheme.spacing4),
           Text(
             metaText,
             style: TextStyle(

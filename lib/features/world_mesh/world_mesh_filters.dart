@@ -144,86 +144,68 @@ class WorldMeshFilters {
     return WorldMeshFilters(searchQuery: searchQuery);
   }
 
-  /// Apply filters to a list of nodes
+  /// Apply filters to a list of nodes in a single pass.
+  ///
+  /// Combined predicate evaluation — one allocation, one walk. Replaces a
+  /// previous chain of nine `.where(...).toList()` calls that materialised an
+  /// intermediate list per filter and dominated frame time on 19k+ nodes.
   List<WorldMeshNode> apply(List<WorldMeshNode> nodes) {
-    var filtered = nodes;
+    if (!hasActiveFilters && searchQuery.isEmpty) return nodes;
 
-    // Apply search query
-    if (searchQuery.isNotEmpty) {
-      final lowerQuery = searchQuery.toLowerCase();
-      filtered = filtered.where((node) {
-        return node.longName.toLowerCase().contains(lowerQuery) ||
-            node.shortName.toLowerCase().contains(lowerQuery) ||
-            node.nodeId.toLowerCase().contains(lowerQuery) ||
-            node.hwModel.toLowerCase().contains(lowerQuery);
-      }).toList();
-    }
+    final lowerQuery = searchQuery.isEmpty ? null : searchQuery.toLowerCase();
+    final hasStatus = statusFilter.isNotEmpty;
+    final hasHardware = hardwareFilter.isNotEmpty;
+    final hasModem = modemPresetFilter.isNotEmpty;
+    final hasRegion = regionFilter.isNotEmpty;
+    final hasRole = roleFilter.isNotEmpty;
+    final hasFirmware = firmwareFilter.isNotEmpty;
+    final envSensorsRequired = hasEnvironmentSensors;
+    final batteryRequired = hasBattery;
 
-    // Apply status filter
-    if (statusFilter.isNotEmpty) {
-      filtered = filtered.where((node) {
-        return statusFilter.contains(node.presenceConfidence);
-      }).toList();
-    }
-
-    // Apply hardware filter
-    if (hardwareFilter.isNotEmpty) {
-      filtered = filtered.where((node) {
-        return hardwareFilter.contains(node.hwModel);
-      }).toList();
-    }
-
-    // Apply modem preset filter
-    if (modemPresetFilter.isNotEmpty) {
-      filtered = filtered.where((node) {
-        return node.modemPreset != null &&
-            modemPresetFilter.contains(node.modemPreset);
-      }).toList();
-    }
-
-    // Apply region filter
-    if (regionFilter.isNotEmpty) {
-      filtered = filtered.where((node) {
-        return node.region != null && regionFilter.contains(node.region);
-      }).toList();
-    }
-
-    // Apply role filter
-    if (roleFilter.isNotEmpty) {
-      filtered = filtered.where((node) {
-        return roleFilter.contains(node.role);
-      }).toList();
-    }
-
-    // Apply firmware filter
-    if (firmwareFilter.isNotEmpty) {
-      filtered = filtered.where((node) {
-        return node.fwVersion != null &&
-            firmwareFilter.contains(node.fwVersion);
-      }).toList();
-    }
-
-    // Apply environment sensors filter
-    if (hasEnvironmentSensors != null) {
-      filtered = filtered.where((node) {
+    final result = <WorldMeshNode>[];
+    for (final node in nodes) {
+      if (lowerQuery != null) {
+        if (!node.longName.toLowerCase().contains(lowerQuery) &&
+            !node.shortName.toLowerCase().contains(lowerQuery) &&
+            !node.nodeId.toLowerCase().contains(lowerQuery) &&
+            !node.hwModel.toLowerCase().contains(lowerQuery)) {
+          continue;
+        }
+      }
+      if (hasStatus && !statusFilter.contains(node.presenceConfidence)) {
+        continue;
+      }
+      if (hasHardware && !hardwareFilter.contains(node.hwModel)) continue;
+      if (hasModem &&
+          (node.modemPreset == null ||
+              !modemPresetFilter.contains(node.modemPreset))) {
+        continue;
+      }
+      if (hasRegion &&
+          (node.region == null || !regionFilter.contains(node.region))) {
+        continue;
+      }
+      if (hasRole && !roleFilter.contains(node.role)) continue;
+      if (hasFirmware &&
+          (node.fwVersion == null ||
+              !firmwareFilter.contains(node.fwVersion))) {
+        continue;
+      }
+      if (envSensorsRequired != null) {
         final hasSensors =
             node.temperature != null ||
             node.relativeHumidity != null ||
             node.barometricPressure != null ||
             node.lux != null;
-        return hasSensors == hasEnvironmentSensors;
-      }).toList();
+        if (hasSensors != envSensorsRequired) continue;
+      }
+      if (batteryRequired != null &&
+          (node.batteryLevel != null) != batteryRequired) {
+        continue;
+      }
+      result.add(node);
     }
-
-    // Apply battery filter
-    if (hasBattery != null) {
-      filtered = filtered.where((node) {
-        final hasBatteryInfo = node.batteryLevel != null;
-        return hasBatteryInfo == hasBattery;
-      }).toList();
-    }
-
-    return filtered;
+    return result;
   }
 }
 
