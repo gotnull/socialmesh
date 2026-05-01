@@ -363,6 +363,86 @@ void main() {
     });
   });
 
+  // Regression: if a user accepted a Firestore-bumped version on an older
+  // build (whose hardcoded floor was lower), the gate must NOT re-prompt
+  // them on every cold launch while `effectiveLegalVersionsProvider` is
+  // still loading and `reqTerms` falls back to the hardcoded floor.
+  group('stored version higher than required (cold-launch race)', () {
+    test('isCurrentWith is true when stored terms is newer', () {
+      const state = TermsAcceptanceState(
+        acceptedTermsVersion: '2026-05-01',
+        acceptedPrivacyVersion: '2026-05-01',
+      );
+      expect(
+        state.isCurrentWith(
+          requiredTermsVersion: '2026-03-10',
+          requiredPrivacyVersion: '2026-03-10',
+        ),
+        isTrue,
+        reason:
+            'Stored 2026-05-01 should satisfy a hardcoded floor of 2026-03-10. '
+            'Without this, the user is re-prompted on every cold launch while '
+            'effectiveLegalVersionsProvider is still fetching from Firestore.',
+      );
+    });
+
+    test('isCurrentWith is true when stored privacy is newer', () {
+      const state = TermsAcceptanceState(
+        acceptedTermsVersion: '2026-03-10',
+        acceptedPrivacyVersion: '2026-05-01',
+      );
+      expect(
+        state.isCurrentWith(
+          requiredTermsVersion: '2026-03-10',
+          requiredPrivacyVersion: '2026-03-10',
+        ),
+        isTrue,
+      );
+    });
+
+    test('isCurrentWith is false when stored terms is older', () {
+      const state = TermsAcceptanceState(
+        acceptedTermsVersion: '2026-03-10',
+        acceptedPrivacyVersion: '2026-05-01',
+      );
+      expect(
+        state.isCurrentWith(
+          requiredTermsVersion: '2026-05-01',
+          requiredPrivacyVersion: '2026-05-01',
+        ),
+        isFalse,
+        reason: 'Older stored terms must still trigger re-acceptance',
+      );
+    });
+
+    test('isCurrentWith is false when stored privacy is older', () {
+      const state = TermsAcceptanceState(
+        acceptedTermsVersion: '2026-05-01',
+        acceptedPrivacyVersion: '2026-03-10',
+      );
+      expect(
+        state.isCurrentWith(
+          requiredTermsVersion: '2026-05-01',
+          requiredPrivacyVersion: '2026-05-01',
+        ),
+        isFalse,
+        reason: 'Older stored privacy must still trigger re-acceptance',
+      );
+    });
+
+    test('termsVersionChanged is false when stored terms is newer', () {
+      const state = TermsAcceptanceState(
+        acceptedTermsVersion: '2099-01-01',
+        acceptedPrivacyVersion: '2099-01-01',
+      );
+      // Hardcoded floor is whatever LegalConstants currently has — 2099 is
+      // guaranteed newer.
+      expect(state.termsVersionChanged, isFalse);
+      expect(state.privacyVersionChanged, isFalse);
+      expect(state.needsAcceptance, isFalse);
+    });
+  });
+
   group('TermsAcceptanceState metadata', () {
     test('acceptedAt timestamp is preserved through copyWith', () {
       final now = DateTime(2026, 2, 1, 14, 30, 0);

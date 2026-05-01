@@ -39,21 +39,33 @@ class TermsAcceptanceState {
   bool get hasAccepted =>
       acceptedTermsVersion != null && acceptedPrivacyVersion != null;
 
-  /// Whether the currently accepted versions match the required versions.
+  /// Whether the currently accepted versions are at least as new as required.
+  ///
+  /// Comparison is `stored >= required` using lexicographic order, which is
+  /// correct because version strings are YYYY-MM-DD (ISO-8601 sortable).
+  /// A stored version *higher* than required must NOT trigger re-acceptance:
+  /// that case happens when the user previously accepted a Firestore-bumped
+  /// version on an older app build whose hardcoded floor was lower, and we
+  /// then resolve `effective` from the hardcoded floor while the Firestore
+  /// fetch is still loading. Strict equality would re-prompt them on every
+  /// cold launch.
   bool isCurrentWith({
     required String requiredTermsVersion,
     required String requiredPrivacyVersion,
   }) {
-    return acceptedTermsVersion == requiredTermsVersion &&
-        acceptedPrivacyVersion == requiredPrivacyVersion;
+    final terms = acceptedTermsVersion;
+    final privacy = acceptedPrivacyVersion;
+    if (terms == null || privacy == null) return false;
+    return terms.compareTo(requiredTermsVersion) >= 0 &&
+        privacy.compareTo(requiredPrivacyVersion) >= 0;
   }
 
   /// Whether the user needs to accept (or re-accept) the current terms.
   ///
   /// Returns true when:
   /// - The user has never accepted terms, or
-  /// - The accepted terms version differs from [LegalConstants.termsVersion], or
-  /// - The accepted privacy version differs from [LegalConstants.privacyVersion].
+  /// - The accepted terms version is older than [LegalConstants.termsVersion], or
+  /// - The accepted privacy version is older than [LegalConstants.privacyVersion].
   bool get needsAcceptance {
     return !isCurrentWith(
       requiredTermsVersion: LegalConstants.termsVersion,
@@ -61,15 +73,15 @@ class TermsAcceptanceState {
     );
   }
 
-  /// Whether only the terms version changed (privacy stayed the same).
+  /// Whether the accepted terms are older than the current required version.
   bool get termsVersionChanged =>
       acceptedTermsVersion != null &&
-      acceptedTermsVersion != LegalConstants.termsVersion;
+      acceptedTermsVersion!.compareTo(LegalConstants.termsVersion) < 0;
 
-  /// Whether only the privacy version changed (terms stayed the same).
+  /// Whether the accepted privacy is older than the current required version.
   bool get privacyVersionChanged =>
       acceptedPrivacyVersion != null &&
-      acceptedPrivacyVersion != LegalConstants.privacyVersion;
+      acceptedPrivacyVersion!.compareTo(LegalConstants.privacyVersion) < 0;
 
   /// Create a copy with updated fields.
   TermsAcceptanceState copyWith({

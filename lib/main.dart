@@ -3037,8 +3037,18 @@ class _AppRouterState extends ConsumerState<_AppRouter> {
                     effective?.termsVersion ?? LegalConstants.termsVersion;
                 final reqPrivacy =
                     effective?.privacyVersion ?? LegalConstants.privacyVersion;
-                return acceptedTerms != reqTerms ||
-                    acceptedPrivacy != reqPrivacy;
+                // String compare on YYYY-MM-DD: a stored version >= required
+                // is accepted. A stored version older than required prompts.
+                // This avoids a race where, while `effectiveAsync` is still
+                // resolving from Firestore, `reqTerms` falls back to the
+                // hardcoded floor — if the user had previously accepted a
+                // higher Firestore-bumped version on an older build, strict
+                // `!=` would re-prompt on every cold launch.
+                if (acceptedTerms == null || acceptedPrivacy == null) {
+                  return true;
+                }
+                return acceptedTerms.compareTo(reqTerms) < 0 ||
+                    acceptedPrivacy.compareTo(reqPrivacy) < 0;
               },
             ) ??
             false;
