@@ -5828,7 +5828,6 @@
     "worldMeshLegendIdle": "Idle (1-24h)",
     "worldMeshLegendOffline": "Offline (>24h)",
     "worldMeshLinkBudgetCopied": "Link budget copied to clipboard",
-    "worldMeshLoadingNodeInfo": "Loading node info...",
     "worldMeshLongPressHint": "Long-press for actions",
     "worldMeshLosAnalysis": "LOS Analysis",
     "worldMeshLosBulgeAndFresnel": "Bulge: {bulge}m · F1: {fresnel}m",
