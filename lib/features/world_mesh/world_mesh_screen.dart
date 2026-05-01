@@ -1158,7 +1158,12 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
     return SafeArea(
       top: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        padding: const EdgeInsets.fromLTRB(
+          AppTheme.spacing12,
+          AppTheme.spacing0,
+          AppTheme.spacing12,
+          AppTheme.spacing12,
+        ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(AppTheme.radius16),
           child: BackdropFilter(
@@ -1278,7 +1283,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                 letterSpacing: -0.2,
               ),
             ),
-            const SizedBox(height: 1),
+            const SizedBox(height: AppTheme.spacing1),
             Text(
               label,
               style: theme.textTheme.bodySmall?.copyWith(

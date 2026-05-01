@@ -42,240 +42,224 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
     final totalCount = ref.watch(worldMeshNodesWithPositionProvider).length;
     final scrollController = widget.scrollController;
 
-    return Column(
+    return ListView(
+      controller: scrollController,
+      padding: const EdgeInsets.fromLTRB(
+        AppTheme.spacing16,
+        AppTheme.spacing0,
+        AppTheme.spacing16,
+        AppTheme.spacing24,
+      ),
       children: [
         // Header
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            children: [
-              Icon(Icons.filter_list, color: accentColor),
-              const SizedBox(width: AppTheme.spacing12),
-              Text(
-                context.l10n.worldMeshFilterTitle,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
+        Row(
+          children: [
+            Icon(Icons.filter_list, color: accentColor),
+            const SizedBox(width: AppTheme.spacing12),
+            Text(
+              context.l10n.worldMeshFilterTitle,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const Spacer(),
+            if (filters.hasActiveFilters)
+              TextButton(
+                onPressed: () {
+                  HapticFeedback.lightImpact();
+                  ref.read(worldMeshFiltersProvider.notifier).clearAllFilters();
+                },
+                child: Text(
+                  context.l10n.worldMeshFilterClearAll,
+                  style: TextStyle(color: accentColor),
                 ),
               ),
-              const Spacer(),
-              if (filters.hasActiveFilters)
-                TextButton(
-                  onPressed: () {
-                    HapticFeedback.lightImpact();
-                    ref
-                        .read(worldMeshFiltersProvider.notifier)
-                        .clearAllFilters();
-                  },
-                  child: Text(
-                    context.l10n.worldMeshFilterClearAll,
-                    style: TextStyle(color: accentColor),
-                  ),
-                ),
-            ],
-          ),
+          ],
         ),
+        const SizedBox(height: AppTheme.spacing8),
         // Results count
-        Padding(
-          padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 16),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: accentColor.withAlpha(20),
-              borderRadius: BorderRadius.circular(AppTheme.radius8),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.location_on, size: 16, color: accentColor),
-                const SizedBox(width: AppTheme.spacing8),
-                Text(
-                  context.l10n.worldMeshFilterNodeCount(
-                    filteredCount,
-                    totalCount,
-                  ),
-                  style: TextStyle(
-                    color: accentColor,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                if (filters.hasActiveFilters) ...[
-                  const SizedBox(width: AppTheme.spacing8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: accentColor,
-                      borderRadius: BorderRadius.circular(AppTheme.radius12),
-                    ),
-                    child: Text(
-                      context.l10n.worldMeshFilterActiveCount(
-                        filters.activeFilterCount,
-                      ),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppTheme.spacing12,
+            vertical: AppTheme.spacing8,
           ),
-        ),
-        const Divider(height: 1),
-        // Filter categories
-        Expanded(
-          child: ListView(
-            controller: scrollController,
-            padding: const EdgeInsets.all(AppTheme.spacing16),
+          decoration: BoxDecoration(
+            color: accentColor.withAlpha(20),
+            borderRadius: BorderRadius.circular(AppTheme.radius8),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Status filter
-              _buildFilterSection(
-                category: WorldMeshFilterCategory.status,
-                title: context.l10n.worldMeshFilterStatus,
-                icon: Icons.circle,
-                isExpanded: _expandedCategory == WorldMeshFilterCategory.status,
-                activeCount: filters.statusFilter.length,
-                onToggle: () => _toggleCategory(WorldMeshFilterCategory.status),
-                child: _buildStatusFilters(options, filters, accentColor),
-              ),
-              const SizedBox(height: AppTheme.spacing12),
-
-              // Hardware filter
-              _buildFilterSection(
-                category: WorldMeshFilterCategory.hardware,
-                title: context.l10n.worldMeshFilterHardwareModel,
-                icon: Icons.memory,
-                isExpanded:
-                    _expandedCategory == WorldMeshFilterCategory.hardware,
-                activeCount: filters.hardwareFilter.length,
-                onToggle: () =>
-                    _toggleCategory(WorldMeshFilterCategory.hardware),
-                child: _buildChipFilters(
-                  items: options.sortedHardwareModels,
-                  selectedItems: filters.hardwareFilter,
-                  onToggle: (item) => ref
-                      .read(worldMeshFiltersProvider.notifier)
-                      .toggleHardware(item),
-                  accentColor: accentColor,
+              Icon(Icons.location_on, size: 16, color: accentColor),
+              const SizedBox(width: AppTheme.spacing8),
+              Text(
+                context.l10n.worldMeshFilterNodeCount(
+                  filteredCount,
+                  totalCount,
+                ),
+                style: TextStyle(
+                  color: accentColor,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(height: AppTheme.spacing12),
-
-              // Modem Preset filter
-              _buildFilterSection(
-                category: WorldMeshFilterCategory.modemPreset,
-                title: context.l10n.worldMeshFilterModemPreset,
-                icon: Icons.settings_input_antenna,
-                isExpanded:
-                    _expandedCategory == WorldMeshFilterCategory.modemPreset,
-                activeCount: filters.modemPresetFilter.length,
-                onToggle: () =>
-                    _toggleCategory(WorldMeshFilterCategory.modemPreset),
-                child: _buildChipFilters(
-                  items: options.sortedModemPresets,
-                  selectedItems: filters.modemPresetFilter,
-                  onToggle: (item) => ref
-                      .read(worldMeshFiltersProvider.notifier)
-                      .toggleModemPreset(item),
-                  accentColor: accentColor,
+              if (filters.hasActiveFilters) ...[
+                const SizedBox(width: AppTheme.spacing8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.spacing8,
+                    vertical: AppTheme.spacing2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: accentColor,
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
+                  ),
+                  child: Text(
+                    context.l10n.worldMeshFilterActiveCount(
+                      filters.activeFilterCount,
+                    ),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
-              ),
-              const SizedBox(height: AppTheme.spacing12),
-
-              // Region filter
-              _buildFilterSection(
-                category: WorldMeshFilterCategory.region,
-                title: context.l10n.worldMeshFilterRegion,
-                icon: Icons.public,
-                isExpanded: _expandedCategory == WorldMeshFilterCategory.region,
-                activeCount: filters.regionFilter.length,
-                onToggle: () => _toggleCategory(WorldMeshFilterCategory.region),
-                child: _buildChipFilters(
-                  items: options.sortedRegions,
-                  selectedItems: filters.regionFilter,
-                  onToggle: (item) => ref
-                      .read(worldMeshFiltersProvider.notifier)
-                      .toggleRegion(item),
-                  accentColor: accentColor,
-                ),
-              ),
-              const SizedBox(height: AppTheme.spacing12),
-
-              // Role filter
-              _buildFilterSection(
-                category: WorldMeshFilterCategory.role,
-                title: context.l10n.worldMeshFilterNodeRole,
-                icon: Icons.person,
-                isExpanded: _expandedCategory == WorldMeshFilterCategory.role,
-                activeCount: filters.roleFilter.length,
-                onToggle: () => _toggleCategory(WorldMeshFilterCategory.role),
-                child: _buildChipFilters(
-                  items: options.sortedRoles,
-                  selectedItems: filters.roleFilter,
-                  onToggle: (item) => ref
-                      .read(worldMeshFiltersProvider.notifier)
-                      .toggleRole(item),
-                  accentColor: accentColor,
-                ),
-              ),
-              const SizedBox(height: AppTheme.spacing12),
-
-              // Firmware filter
-              _buildFilterSection(
-                category: WorldMeshFilterCategory.firmware,
-                title: context.l10n.worldMeshFilterFirmwareVersion,
-                icon: Icons.system_update,
-                isExpanded:
-                    _expandedCategory == WorldMeshFilterCategory.firmware,
-                activeCount: filters.firmwareFilter.length,
-                onToggle: () =>
-                    _toggleCategory(WorldMeshFilterCategory.firmware),
-                child: _buildChipFilters(
-                  items: options.sortedFirmwareVersions,
-                  selectedItems: filters.firmwareFilter,
-                  onToggle: (item) => ref
-                      .read(worldMeshFiltersProvider.notifier)
-                      .toggleFirmware(item),
-                  accentColor: accentColor,
-                ),
-              ),
-              const SizedBox(height: AppTheme.spacing12),
-
-              // Boolean filters
-              _buildBooleanFilterSection(
-                title: context.l10n.worldMeshFilterEnvironmentSensors,
-                icon: Icons.thermostat,
-                subtitle: context.l10n.worldMeshFilterNodesWithSensors(
-                  options.withEnvironmentSensors,
-                ),
-                value: filters.hasEnvironmentSensors,
-                onChanged: (value) => ref
-                    .read(worldMeshFiltersProvider.notifier)
-                    .setHasEnvironmentSensors(value),
-                accentColor: accentColor,
-              ),
-              const SizedBox(height: AppTheme.spacing12),
-
-              _buildBooleanFilterSection(
-                title: context.l10n.worldMeshFilterBatteryInfo,
-                icon: Icons.battery_full,
-                subtitle: context.l10n.worldMeshFilterNodesWithBattery(
-                  options.withBattery,
-                ),
-                value: filters.hasBattery,
-                onChanged: (value) => ref
-                    .read(worldMeshFiltersProvider.notifier)
-                    .setHasBattery(value),
-                accentColor: accentColor,
-              ),
-
-              const SizedBox(height: AppTheme.spacing100), // Bottom padding
+              ],
             ],
           ),
+        ),
+        const SizedBox(height: AppTheme.spacing16),
+
+        // Status filter
+        _buildFilterSection(
+          category: WorldMeshFilterCategory.status,
+          title: context.l10n.worldMeshFilterStatus,
+          icon: Icons.circle,
+          isExpanded: _expandedCategory == WorldMeshFilterCategory.status,
+          activeCount: filters.statusFilter.length,
+          onToggle: () => _toggleCategory(WorldMeshFilterCategory.status),
+          child: _buildStatusFilters(options, filters, accentColor),
+        ),
+        const SizedBox(height: AppTheme.spacing12),
+
+        // Hardware filter
+        _buildFilterSection(
+          category: WorldMeshFilterCategory.hardware,
+          title: context.l10n.worldMeshFilterHardwareModel,
+          icon: Icons.memory,
+          isExpanded: _expandedCategory == WorldMeshFilterCategory.hardware,
+          activeCount: filters.hardwareFilter.length,
+          onToggle: () => _toggleCategory(WorldMeshFilterCategory.hardware),
+          child: _buildChipFilters(
+            items: options.sortedHardwareModels,
+            selectedItems: filters.hardwareFilter,
+            onToggle: (item) => ref
+                .read(worldMeshFiltersProvider.notifier)
+                .toggleHardware(item),
+            accentColor: accentColor,
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacing12),
+
+        // Modem Preset filter
+        _buildFilterSection(
+          category: WorldMeshFilterCategory.modemPreset,
+          title: context.l10n.worldMeshFilterModemPreset,
+          icon: Icons.settings_input_antenna,
+          isExpanded: _expandedCategory == WorldMeshFilterCategory.modemPreset,
+          activeCount: filters.modemPresetFilter.length,
+          onToggle: () => _toggleCategory(WorldMeshFilterCategory.modemPreset),
+          child: _buildChipFilters(
+            items: options.sortedModemPresets,
+            selectedItems: filters.modemPresetFilter,
+            onToggle: (item) => ref
+                .read(worldMeshFiltersProvider.notifier)
+                .toggleModemPreset(item),
+            accentColor: accentColor,
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacing12),
+
+        // Region filter
+        _buildFilterSection(
+          category: WorldMeshFilterCategory.region,
+          title: context.l10n.worldMeshFilterRegion,
+          icon: Icons.public,
+          isExpanded: _expandedCategory == WorldMeshFilterCategory.region,
+          activeCount: filters.regionFilter.length,
+          onToggle: () => _toggleCategory(WorldMeshFilterCategory.region),
+          child: _buildChipFilters(
+            items: options.sortedRegions,
+            selectedItems: filters.regionFilter,
+            onToggle: (item) =>
+                ref.read(worldMeshFiltersProvider.notifier).toggleRegion(item),
+            accentColor: accentColor,
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacing12),
+
+        // Role filter
+        _buildFilterSection(
+          category: WorldMeshFilterCategory.role,
+          title: context.l10n.worldMeshFilterNodeRole,
+          icon: Icons.person,
+          isExpanded: _expandedCategory == WorldMeshFilterCategory.role,
+          activeCount: filters.roleFilter.length,
+          onToggle: () => _toggleCategory(WorldMeshFilterCategory.role),
+          child: _buildChipFilters(
+            items: options.sortedRoles,
+            selectedItems: filters.roleFilter,
+            onToggle: (item) =>
+                ref.read(worldMeshFiltersProvider.notifier).toggleRole(item),
+            accentColor: accentColor,
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacing12),
+
+        // Firmware filter
+        _buildFilterSection(
+          category: WorldMeshFilterCategory.firmware,
+          title: context.l10n.worldMeshFilterFirmwareVersion,
+          icon: Icons.system_update,
+          isExpanded: _expandedCategory == WorldMeshFilterCategory.firmware,
+          activeCount: filters.firmwareFilter.length,
+          onToggle: () => _toggleCategory(WorldMeshFilterCategory.firmware),
+          child: _buildChipFilters(
+            items: options.sortedFirmwareVersions,
+            selectedItems: filters.firmwareFilter,
+            onToggle: (item) => ref
+                .read(worldMeshFiltersProvider.notifier)
+                .toggleFirmware(item),
+            accentColor: accentColor,
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacing12),
+
+        // Boolean filters
+        _buildBooleanFilterSection(
+          title: context.l10n.worldMeshFilterEnvironmentSensors,
+          icon: Icons.thermostat,
+          subtitle: context.l10n.worldMeshFilterNodesWithSensors(
+            options.withEnvironmentSensors,
+          ),
+          value: filters.hasEnvironmentSensors,
+          onChanged: (value) => ref
+              .read(worldMeshFiltersProvider.notifier)
+              .setHasEnvironmentSensors(value),
+          accentColor: accentColor,
+        ),
+        const SizedBox(height: AppTheme.spacing12),
+
+        _buildBooleanFilterSection(
+          title: context.l10n.worldMeshFilterBatteryInfo,
+          icon: Icons.battery_full,
+          subtitle: context.l10n.worldMeshFilterNodesWithBattery(
+            options.withBattery,
+          ),
+          value: filters.hasBattery,
+          onChanged: (value) =>
+              ref.read(worldMeshFiltersProvider.notifier).setHasBattery(value),
+          accentColor: accentColor,
         ),
       ],
     );
