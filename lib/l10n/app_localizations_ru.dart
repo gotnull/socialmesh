@@ -26958,6 +26958,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get mqttConfigSaveAnyway => 'Save Anyway';
 
   @override
+  String get mqttConfigSaveConfirmTitle => 'Save MQTT config?';
+
+  @override
+  String get mqttConfigSaveConfirmMessage =>
+      'After the config is saved, the node will reboot.';
+
+  @override
+  String get mqttConfigSaveConfirmCta => 'Save and Reboot';
+
+  @override
   String get mqttConfigSectionServer => 'SERVER';
 
   @override
@@ -27020,6 +27030,22 @@ class AppLocalizationsRu extends AppLocalizations {
       'Report position to public mesh map';
 
   @override
+  String get mqttConfigMapReportConsentHeader =>
+      'Consent to share unencrypted node data via MQTT';
+
+  @override
+  String get mqttConfigMapReportConsentBody1 =>
+      'By enabling this feature, you acknowledge and expressly consent to the transmission of your device\'s real-time geographic location over the MQTT protocol without encryption. This location data may be used for purposes such as live map reporting, device tracking, and related telemetry functions.';
+
+  @override
+  String get mqttConfigMapReportConsentBody2 =>
+      'Please be advised that because the map report is not encrypted, your data may be stored and displayed permanently by third parties. Socialmesh does not assume responsibility for any such storage, display, or disclosure of this data.';
+
+  @override
+  String get mqttConfigMapReportOptInLabel =>
+      'I have read and understand the above. I voluntarily consent to the unencrypted transmission of my node data via MQTT.';
+
+  @override
   String get mqttConfigMapReportSettingsHeader => 'MAP REPORT SETTINGS';
 
   @override
@@ -27079,6 +27105,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get mqttProxyBroker => 'Broker';
+
+  @override
+  String get mqttProxyPort => 'Port';
 
   @override
   String get mqttProxyTls => 'TLS';
@@ -27205,6 +27234,18 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get mqttProxyReasonUnknown => 'Unknown error';
+
+  @override
+  String get mqttProxyReasonMapReportingConsent =>
+      'Map reporting consent required';
+
+  @override
+  String get mqttProxyBannerConsentRequiredTitle =>
+      'Map reporting consent required';
+
+  @override
+  String get mqttProxyBannerConsentRequiredHint =>
+      'Tick the consent checkbox under Map Reporting to authorize the unencrypted broadcast of your location, then save.';
 
   @override
   String get securityConfigTitle => 'Security';

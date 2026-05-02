@@ -273,7 +273,7 @@ void main() {
 
   testWidgets(
     'typing mqtt.meshtastic.org auto-fills meshdev / large4cats on a fresh '
-    'install (Meshtastic-Apple parity)',
+    'install',
     (tester) async {
       tester.view.physicalSize = const Size(1080, 4000);
       tester.view.devicePixelRatio = 1.0;
@@ -304,8 +304,13 @@ void main() {
       await tester.enterText(addressFinder, 'mqtt.meshtastic.org');
       await tester.pump();
 
-      // After the controller listener fires, the auth fields must
-      // contain the public Meshtastic credentials.
+      // The auth section is now hidden on the default broker (Gap 5
+      // parity). Switch the address back to a custom host so the auth
+      // fields re-render — at that point the controller values still
+      // hold the autofilled public defaults.
+      await tester.enterText(addressFinder, 'mqtt.example.com');
+      await tester.pump();
+
       expect(find.text('meshdev'), findsOneWidget);
       // Password field is obscured, but the controller value is
       // observable through the rendered TextField widget.
@@ -321,7 +326,8 @@ void main() {
   );
 
   testWidgets(
-    'typing mqtt.meshtastic.org does NOT clobber existing user creds',
+    'switching to mqtt.meshtastic.org overwrites custom creds with public '
+    'defaults AND hides the auth fields',
     (tester) async {
       tester.view.physicalSize = const Size(1080, 4000);
       tester.view.devicePixelRatio = 1.0;
@@ -345,8 +351,14 @@ void main() {
       );
       await _settle(tester);
 
-      // User changes the address to the canonical host. Because creds
-      // were already populated, autofill must NOT overwrite them.
+      // The auth fields are visible while on the custom host…
+      final usernameLabel = find.byWidgetPredicate(
+        (w) =>
+            w is TextField &&
+            w.decoration?.labelText == _l10n.mqttConfigUsernameLabel,
+      );
+      expect(usernameLabel, findsOneWidget);
+
       final addressFinder = find.byWidgetPredicate(
         (w) =>
             w is TextField &&
@@ -355,7 +367,19 @@ void main() {
       await tester.enterText(addressFinder, 'mqtt.meshtastic.org');
       await tester.pump();
 
-      expect(find.text('alice'), findsOneWidget);
+      // …and disappear once the address resolves to the canonical
+      // broker — the auth section is hidden because the public creds
+      // are already auto-filled.
+      expect(usernameLabel, findsNothing);
+
+      // Switch back to a custom hostname so the auth fields re-render,
+      // and inspect the controllers via the now-visible TextFields. If
+      // the canonical-broker transition fired correctly, the creds are
+      // now meshdev/large4cats — alice/sekret have been replaced.
+      await tester.enterText(addressFinder, 'mqtt.example.com');
+      await tester.pump();
+
+      expect(find.text('meshdev'), findsOneWidget);
       final passwordField = tester.widget<TextField>(
         find.byWidgetPredicate(
           (w) =>
@@ -363,7 +387,7 @@ void main() {
               w.decoration?.labelText == _l10n.mqttConfigPasswordLabel,
         ),
       );
-      expect(passwordField.controller?.text, 'sekret');
+      expect(passwordField.controller?.text, 'large4cats');
     },
   );
 }

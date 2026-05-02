@@ -9656,6 +9656,12 @@ class ProtocolService {
     required bool mapReportingEnabled,
     int mapPublishIntervalSecs = 3600,
     int mapPositionPrecision = 14,
+    // GDPR / CCPA consent flag for the Map Report feature. Mirrors
+    // Meshtastic-Apple's MQTTConfig.swift wiring of
+    // `mqtt.mapReportSettings.shouldReportLocation = UserDefaults.mapReportingOptIn`.
+    // The user must tick the privacy disclaimer in the MQTT config screen
+    // before this flag is set true on the radio.
+    bool shouldReportLocation = false,
     AdminTarget? target,
   }) async {
     final isRemote = target is RemoteAdminTarget;
@@ -9665,7 +9671,8 @@ class ProtocolService {
 
     final mapReportSettings = module_pb.ModuleConfig_MapReportSettings()
       ..publishIntervalSecs = mapPublishIntervalSecs
-      ..positionPrecision = mapPositionPrecision;
+      ..positionPrecision = mapPositionPrecision
+      ..shouldReportLocation = shouldReportLocation;
 
     final mqttConfig = module_pb.ModuleConfig_MQTTConfig()
       ..enabled = enabled

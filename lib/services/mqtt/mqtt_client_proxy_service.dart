@@ -67,6 +67,13 @@ enum MqttProxyFailureReason {
   protocolRejected,
   brokerDisconnected,
   clientDisposed,
+  // User has enabled "Map Reporting" but has not opted-in to the
+  // privacy disclaimer that authorizes the unencrypted broadcast of
+  // their device's real-time location. The proxy refuses to come up at
+  // all in this state — the radio's MQTT config can still publish on
+  // its own (if the device has WiFi), but the app-side bridge stays
+  // disconnected until consent is recorded.
+  mapReportingConsentRequired,
   unknown,
 }
 
@@ -593,15 +600,22 @@ class MqttClientProxyService {
 
     // Connection message.
     //
-    // Do NOT call .withWillQos() here. Without a will-topic + will-message,
-    // the Will Flag stays 0, and per MQTT-3.1.2-13 the Will QoS MUST then be
-    // 0. mqtt_client's withWillQos sets the QoS bits unconditionally — strict
-    // brokers (e.g. ovmesh.com) silently TCP-close the malformed CONNECT,
-    // surfacing as a "Missing Connection Acknowledgement" timeout. Lenient
-    // brokers (mosquitto default, mqtt.meshtastic.org) accept it, which is
-    // why the bug was masked.
+    // Will message: topic="/will", payload="dieout". Setting Will Topic
+    // + Will Message turns Will Flag=1 with default Will QoS=0, which
+    // is spec-compliant per MQTT-3.1.2-13.
+    //
+    // Do NOT add `.withWillQos(MqttQos.atLeastOnce)` here unless you
+    // also call `.withWillTopic` + `.withWillMessage` — without those,
+    // the Will Flag stays 0 and a non-zero Will QoS violates the spec,
+    // causing strict brokers (ovmesh.com, EMQX) to silently TCP-close
+    // the CONNECT and surface as a "Missing Connection Acknowledgement"
+    // timeout 47 s later. Lenient brokers (mosquitto default,
+    // mqtt.meshtastic.org) accept it — which is why an earlier version
+    // of this code shipped the violation undetected.
     final connMessage = MqttConnectMessage()
         .withClientIdentifier(clientId)
+        .withWillTopic('/will') // lint-allow: hardcoded-string
+        .withWillMessage('dieout') // lint-allow: hardcoded-string
         .startClean();
 
     if (username.isNotEmpty) {
@@ -867,6 +881,18 @@ class MqttClientProxyService {
       final payload = publishMsg.payload.message;
       final topic = msg.topic;
       final retained = publishMsg.header!.retain;
+
+      // Drop broker stat / heartbeat traffic before forwarding to the
+      // radio. The public Meshtastic broker (and many compatible
+      // brokers) publishes node-status updates on `…/stat/…`
+      // subtopics — these are not LoRa frames and have no value to the
+      // radio's downlink path. Forwarding them wastes airtime + battery.
+      if (topic.contains('/stat/')) {
+        AppLogging.mqttProxy(
+          'Skipped broker stat topic: $topic (${payload.length} bytes)',
+        );
+        continue;
+      }
 
       AppLogging.mqttProxy(
         'Received from broker: $topic (${payload.length} bytes)',

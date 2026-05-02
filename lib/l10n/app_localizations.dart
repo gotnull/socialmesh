@@ -47680,6 +47680,24 @@ abstract class AppLocalizations {
   /// **'Save Anyway'**
   String get mqttConfigSaveAnyway;
 
+  /// Title of the confirmation sheet shown when the user taps Save on the MQTT config screen. Saving an MQTT config triggers a radio reboot, so warn before applying.
+  ///
+  /// In en, this message translates to:
+  /// **'Save MQTT config?'**
+  String get mqttConfigSaveConfirmTitle;
+
+  /// Body of the save-confirmation sheet. Warns the user that saving will reboot the radio.
+  ///
+  /// In en, this message translates to:
+  /// **'After the config is saved, the node will reboot.'**
+  String get mqttConfigSaveConfirmMessage;
+
+  /// Confirm-button label on the save-confirmation sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Save and Reboot'**
+  String get mqttConfigSaveConfirmCta;
+
   /// Text displayed in MQTT configuration
   ///
   /// In en, this message translates to:
@@ -47800,6 +47818,30 @@ abstract class AppLocalizations {
   /// **'Report position to public mesh map'**
   String get mqttConfigMapReportingSubtitle;
 
+  /// Header above the map-reporting consent disclaimer (GDPR / CCPA compliance). Map reporting publishes the device's real-time location and identity to a public broker without encryption.
+  ///
+  /// In en, this message translates to:
+  /// **'Consent to share unencrypted node data via MQTT'**
+  String get mqttConfigMapReportConsentHeader;
+
+  /// First paragraph of map-reporting consent disclaimer (GDPR / CCPA).
+  ///
+  /// In en, this message translates to:
+  /// **'By enabling this feature, you acknowledge and expressly consent to the transmission of your device\'s real-time geographic location over the MQTT protocol without encryption. This location data may be used for purposes such as live map reporting, device tracking, and related telemetry functions.'**
+  String get mqttConfigMapReportConsentBody1;
+
+  /// Second paragraph of map-reporting consent disclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Please be advised that because the map report is not encrypted, your data may be stored and displayed permanently by third parties. Socialmesh does not assume responsibility for any such storage, display, or disclosure of this data.'**
+  String get mqttConfigMapReportConsentBody2;
+
+  /// Opt-in checkbox label for map-reporting consent.
+  ///
+  /// In en, this message translates to:
+  /// **'I have read and understand the above. I voluntarily consent to the unencrypted transmission of my node data via MQTT.'**
+  String get mqttConfigMapReportOptInLabel;
+
   /// Text displayed in MQTT configuration
   ///
   /// In en, this message translates to:
@@ -47902,11 +47944,17 @@ abstract class AppLocalizations {
   /// **'Disconnected'**
   String get mqttProxyStatusDisconnected;
 
-  /// Label for the MQTT broker host:port in diagnostics
+  /// Label for the MQTT broker hostname in diagnostics. Port is shown in a separate row to avoid wrapping host:port onto two lines.
   ///
   /// In en, this message translates to:
   /// **'Broker'**
   String get mqttProxyBroker;
+
+  /// Label for the MQTT broker port number in the diagnostics card. Rendered as a separate row from the host so a long hostname doesn't wrap the port digits onto a new line.
+  ///
+  /// In en, this message translates to:
+  /// **'Port'**
+  String get mqttProxyPort;
 
   /// Label for TLS status in MQTT proxy diagnostics
   ///
@@ -48153,6 +48201,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unknown error'**
   String get mqttProxyReasonUnknown;
+
+  /// Failure reason: user has Map Reporting enabled but has not opted-in to the privacy disclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Map reporting consent required'**
+  String get mqttProxyReasonMapReportingConsent;
+
+  /// Banner title shown above the MQTT diagnostics card when Map Reporting is on but the user has not opted in to the privacy disclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Map reporting consent required'**
+  String get mqttProxyBannerConsentRequiredTitle;
+
+  /// Subtitle for the consent-required banner. Instructs the user how to resolve the gate.
+  ///
+  /// In en, this message translates to:
+  /// **'Tick the consent checkbox under Map Reporting to authorize the unencrypted broadcast of your location, then save.'**
+  String get mqttProxyBannerConsentRequiredHint;
 
   /// Screen or section title
   ///

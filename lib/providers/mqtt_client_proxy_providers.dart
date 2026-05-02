@@ -16,6 +16,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/logging.dart';
+import '../core/mqtt/mqtt_preferences.dart';
 import '../generated/meshtastic/mesh.pb.dart' as pb;
 import '../models/mesh_models.dart' show ChannelConfig;
 import '../services/mqtt/mqtt_client_proxy_service.dart';
@@ -104,7 +105,7 @@ final mqttClientProxyForwarderProvider = Provider<void>((ref) {
 /// Reasons used in logs (kept short, structured): `initial-build`,
 /// `config-stream-emit`, `link-connected`, `app-resumed`,
 /// `downlink-flag-changed`, `manual` (controller), `save-flow` (UI).
-void _evaluateProxyState(Ref ref, String reason) {
+Future<void> _evaluateProxyState(Ref ref, String reason) async {
   final protocol = ref.read(protocolServiceProvider);
   final proxyService = ref.read(mqttClientProxyServiceProvider);
   final cfg = protocol.currentMqttConfig;
@@ -118,6 +119,26 @@ void _evaluateProxyState(Ref ref, String reason) {
   final topicPrefix = '$root/2/e'; // lint-allow: hardcoded-string
 
   if (cfg.enabled && cfg.proxyToClientEnabled) {
+    // Map-reporting consent gate: if the radio has map-reporting on but
+    // the user has NOT opted-in to the privacy disclaimer in the MQTT
+    // config screen, refuse to bring the app-side proxy up. The radio's
+    // MQTT module can still publish via its own onboard WiFi (if
+    // present); the phone-proxy bridge stays disconnected until consent
+    // is recorded. This is the runtime backstop for the same gate that
+    // also runs at config-save time (`shouldReportLocation` field).
+    if (cfg.mapReportingEnabled) {
+      final optIn = await MqttPreferences.getMapReportingOptIn();
+      if (!optIn) {
+        AppLogging.mqttProxyWarning(
+          'evaluate($reason): map-reporting on but consent missing — '
+          'refusing to connect',
+        );
+        proxyService.markMissingConfig(
+          MqttProxyFailureReason.mapReportingConsentRequired,
+        );
+        return;
+      }
+    }
     // Preflight gate: validate the config before attempting any connect.
     // Distinguishes missingHost / missingTopicRoot / invalidPort so the UI
     // can surface a structured reason instead of a bare "not connected".
@@ -201,17 +222,17 @@ final mqttClientProxyAutoConnectProvider = Provider<void>((ref) {
   // Cold-start seed: the broadcast `mqttConfigStream` does not replay,
   // so a config that arrived before this provider mounted would be lost.
   // Reading `currentMqttConfig` synchronously closes that race.
-  _evaluateProxyState(ref, 'initial-build');
+  unawaited(_evaluateProxyState(ref, 'initial-build'));
 
   final subscription = protocol.mqttConfigStream.listen((_) {
-    _evaluateProxyState(ref, 'config-stream-emit');
+    unawaited(_evaluateProxyState(ref, 'config-stream-emit'));
   });
 
   // BLE link transitions to connected → re-evaluate (covers radio
   // reboot / BLE drop without a follow-up config emission).
   ref.listen<bool>(isLinkConnectedProvider, (previous, isConnected) {
     if (isConnected && previous != true) {
-      _evaluateProxyState(ref, 'link-connected');
+      unawaited(_evaluateProxyState(ref, 'link-connected'));
     }
   });
 
@@ -219,7 +240,7 @@ final mqttClientProxyAutoConnectProvider = Provider<void>((ref) {
   // socket teardown).
   ref.listen<bool>(appLifecycleProvider, (previous, isForeground) {
     if (isForeground && previous != true) {
-      _evaluateProxyState(ref, 'app-resumed');
+      unawaited(_evaluateProxyState(ref, 'app-resumed'));
     }
   });
 
@@ -230,7 +251,7 @@ final mqttClientProxyAutoConnectProvider = Provider<void>((ref) {
     final prevHas = previous?.any((c) => c.downlink) ?? false;
     final nextHas = next.any((c) => c.downlink);
     if (prevHas != nextHas) {
-      _evaluateProxyState(ref, 'downlink-flag-changed');
+      unawaited(_evaluateProxyState(ref, 'downlink-flag-changed'));
     }
   });
 
@@ -256,7 +277,7 @@ class MqttClientProxyController {
   /// current cached MQTT config. Safe to call repeatedly — the
   /// underlying connect/disconnect is idempotent.
   Future<void> refresh({String reason = 'manual'}) async {
-    _evaluateProxyState(_ref, reason);
+    await _evaluateProxyState(_ref, reason);
   }
 }
 

@@ -29,6 +29,8 @@ import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/info_table.dart';
 import '../../core/widgets/status_banner.dart';
 import '../../core/mqtt/mqtt_constants.dart' show BrokerPreset;
+import '../../core/mqtt/mqtt_preferences.dart';
+import '../../core/utils/utf8_byte_length_formatter.dart';
 
 /// Screen for configuring MQTT module settings
 class MqttConfigScreen extends ConsumerStatefulWidget {
@@ -54,7 +56,22 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
   bool _tlsEnabled = false;
   bool _proxyToClientEnabled = false;
   bool _mapReportingEnabled = false;
+  // App-local consent flag — sticky across sessions via SharedPreferences.
+  // The radio's mapReportingEnabled gates whether map-reporting attempts
+  // happen at all; this gates whether the unencrypted location is actually
+  // emitted (`shouldReportLocation`) and whether the app-side proxy will
+  // come up while map-reporting is on.
+  bool _mapReportingOptIn = false;
   bool _obscurePassword = true;
+  // Dirty-tracking gates the Save button: it stays disabled until the
+  // user actually edits something. Avoids no-op saves that would still
+  // trigger the radio's reboot countdown.
+  bool _hasChanges = false;
+  // Suppresses [_markDirty] while [_applyConfig] is mass-assigning the
+  // controllers from the device's emitted MQTT config. Without this flag
+  // every device-side push (cold-start cache or a fresh stream emit)
+  // would synthesize a fake "user edit" via the controller listeners.
+  bool _suppressDirtyTracking = false;
   // Map Report Settings
   int _mapPublishIntervalSecs = 3600;
   double _mapPositionPrecision = 14;
@@ -63,14 +80,79 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
   @override
   void initState() {
     super.initState();
-    _addressController.addListener(_maybeAutofillBrokerCredentials);
+    _addressController.addListener(_onAddressChanged);
+    // Dirty-tracking listeners on every text controller. The
+    // `_suppressDirtyTracking` guard inside [_markDirty] prevents the
+    // mass-assignment in [_applyConfig] from synthesizing fake user
+    // edits when the device pushes an MQTT config update.
+    _addressController.addListener(_markDirty);
+    _rootController.addListener(_markDirty);
+    _usernameController.addListener(_markDirty);
+    _passwordController.addListener(_markDirty);
+    _loadMapReportingOptIn();
     _loadCurrentConfig();
+  }
+
+  /// Single listener attached to [_addressController]. Drives both:
+  /// - the credential auto-fill on transition to the canonical broker, and
+  /// - the rebuild that hides/shows the username/password/TLS rows when
+  ///   the address transitions in/out of the default-broker bucket.
+  ///
+  /// Tracks the previous value via [_lastDefaultBrokerState] so the
+  /// autofill fires only on a false→true transition, not on every
+  /// keystroke (avoids clobbering a user mid-typing on the way to a
+  /// different host).
+  void _onAddressChanged() {
+    final wasDefault = _lastDefaultBrokerState;
+    final isDefault = _isDefaultBroker;
+    _lastDefaultBrokerState = isDefault;
+    if (isDefault && wasDefault == false) {
+      _autofillForDefaultBroker();
+    }
+    if (wasDefault != isDefault && mounted) {
+      // Trigger a UI rebuild so the form's conditional visibility (creds
+      // hidden on default broker, TLS toggle hidden when proxy is also
+      // on) re-evaluates against the new address.
+      safeSetState(() {});
+    }
+  }
+
+  /// Cached default-broker state from the previous [_onAddressChanged]
+  /// invocation. `null` means "not seeded yet" — the very first listener
+  /// fire will not trigger autofill, which lets [_applyConfig] set the
+  /// address from the radio's stored config without overwriting the
+  /// device-stored credentials with the public defaults.
+  bool? _lastDefaultBrokerState;
+
+  /// Whether the current address resolves to the canonical public
+  /// Meshtastic broker. Match must be case-insensitive and strict
+  /// (substring matches would let `mqtt.meshtastic.org.attacker.tld`
+  /// inherit the public credentials and TLS-forcing behavior).
+  bool get _isDefaultBroker =>
+      _addressController.text.trim().toLowerCase() ==
+      BrokerPreset.defaults.first.host.toLowerCase();
+
+  /// Marks the form dirty. No-op if either [_suppressDirtyTracking] is
+  /// active (we are inside [_applyConfig]) or the form is already dirty.
+  void _markDirty() {
+    if (_suppressDirtyTracking || _hasChanges) return;
+    safeSetState(() => _hasChanges = true);
+  }
+
+  Future<void> _loadMapReportingOptIn() async {
+    final value = await MqttPreferences.getMapReportingOptIn();
+    if (!mounted) return;
+    safeSetState(() => _mapReportingOptIn = value);
   }
 
   @override
   void dispose() {
     _configSubscription?.cancel();
-    _addressController.removeListener(_maybeAutofillBrokerCredentials);
+    _addressController.removeListener(_onAddressChanged);
+    _addressController.removeListener(_markDirty);
+    _rootController.removeListener(_markDirty);
+    _usernameController.removeListener(_markDirty);
+    _passwordController.removeListener(_markDirty);
     _addressController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
@@ -78,24 +160,23 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
     super.dispose();
   }
 
-  /// Mirrors the Meshtastic-Apple companion app: when the address field
-  /// resolves to a known public broker preset (currently
-  /// `mqtt.meshtastic.org`), auto-fill the public credentials from
-  /// `BrokerPreset.defaults` so a fresh-install user never has to know
-  /// `meshdev` / `large4cats`. We only fill when both auth fields are
-  /// empty so user-customized credentials saved on the radio are never
-  /// clobbered.
-  void _maybeAutofillBrokerCredentials() {
-    final addr = _addressController.text.trim().toLowerCase();
-    if (addr.isEmpty) return;
-    if (_usernameController.text.isNotEmpty ||
-        _passwordController.text.isNotEmpty) {
-      return;
-    }
+  /// When the address transitions into a known public-broker preset,
+  /// overwrite the credentials with that preset's defaults. Triggered
+  /// on the false→true transition of [_isDefaultBroker], not on every
+  /// keystroke, so partial typing (`m`, `mq`, …) doesn't accidentally
+  /// clobber a user who is on the way to a different host.
+  ///
+  /// The overwrite is unconditional once on the canonical host: the
+  /// AUTHENTICATION fields are hidden from the form on the default
+  /// broker, so the only way to hold non-default creds for that host is
+  /// to flip back to a custom hostname first. Documenting this here so
+  /// the behavior isn't reverted by a future "don't clobber" patch.
+  void _autofillForDefaultBroker() {
     BrokerPreset? match;
     for (final preset in BrokerPreset.defaults) {
       if (!preset.isCustom &&
-          preset.host.toLowerCase() == addr &&
+          preset.host.toLowerCase() ==
+              _addressController.text.trim().toLowerCase() &&
           preset.hasDefaultCredentials) {
         match = preset;
         break;
@@ -109,6 +190,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
   }
 
   void _applyConfig(module_pb.ModuleConfig_MQTTConfig config) {
+    _suppressDirtyTracking = true;
     safeSetState(() {
       _enabled = config.enabled;
       // Populate auth fields BEFORE the address so the auto-fill listener
@@ -134,7 +216,9 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
       } else {
         _mapPositionPrecision = 14;
       }
+      _hasChanges = false;
     });
+    _suppressDirtyTracking = false;
   }
 
   Future<void> _loadCurrentConfig() async {
@@ -189,19 +273,33 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
   }
 
   Future<void> _saveConfig() async {
-    safeSetState(() => _isSaving = true);
     final l10n = context.l10n;
+
+    // Pre-save confirmation. Saving an MQTT config triggers a radio
+    // reboot, so warn before kicking off the apply — the user has one
+    // last chance to back out of an accidental tap. We do this BEFORE
+    // flipping `_isSaving` so the spinner only spins for the real
+    // network round-trip, not for the human deciding.
+    final confirmed = await AppBottomSheet.showConfirm(
+      context: context,
+      title: l10n.mqttConfigSaveConfirmTitle,
+      message: l10n.mqttConfigSaveConfirmMessage,
+      confirmLabel: l10n.mqttConfigSaveConfirmCta,
+    );
+    if (confirmed != true || !mounted) return;
+
+    safeSetState(() => _isSaving = true);
 
     // Warn: MQTT on non-WiFi device without client proxy
     if (_enabled && !_proxyToClientEnabled && !_targetDeviceHasWifi()) {
-      final confirmed = await AppBottomSheet.showConfirm(
+      final wifiConfirmed = await AppBottomSheet.showConfirm(
         context: context,
         title: l10n.mqttConfigNoWifiTitle,
         message: l10n.mqttConfigNoWifiMsg,
         confirmLabel: l10n.mqttConfigSaveAnyway,
         isDestructive: true,
       );
-      if (confirmed != true) {
+      if (wifiConfirmed != true) {
         safeSetState(() => _isSaving = false);
         return;
       }
@@ -213,6 +311,12 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
         ref.read(remoteAdminTargetProvider),
       );
       final root = _rootController.text.trim();
+      // Persist the user's consent decision before pushing the config to
+      // the radio. The proxy provider reads this flag from
+      // SharedPreferences at connect time and refuses to come up if
+      // map-reporting is enabled but consent is missing.
+      await MqttPreferences.setMapReportingOptIn(_mapReportingOptIn);
+
       await protocol.setMQTTConfig(
         enabled: _enabled,
         address: _addressController.text,
@@ -226,6 +330,11 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
         mapReportingEnabled: _mapReportingEnabled,
         mapPublishIntervalSecs: _mapPublishIntervalSecs,
         mapPositionPrecision: _mapPositionPrecision.round(),
+        // Only authorize the firmware to emit unencrypted location once
+        // both the feature toggle and the privacy-disclaimer opt-in are
+        // checked. The radio's `shouldReportLocation` field is the
+        // firmware-level switch.
+        shouldReportLocation: _mapReportingEnabled && _mapReportingOptIn,
         target: target,
       );
 
@@ -235,6 +344,9 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
         // (phase + reason) without having to re-open the screen. Just
         // dismiss the keyboard so the diagnostics card scrolls into view.
         FocusScope.of(context).unfocus();
+        // Reset dirty flag so the Save button greys out until the user
+        // edits something else.
+        safeSetState(() => _hasChanges = false);
         showSuccessSnackBar(context, l10n.mqttConfigSaved);
         if (target.isLocal) {
           ref
@@ -270,13 +382,21 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: TextButton(
-              onPressed: (_isLoading || _isSaving) ? null : _saveConfig,
+              // Save is disabled while loading, in-flight, or — gated by
+              // [_hasChanges] — when no edit has been made yet. Prevents
+              // fat-finger no-op saves that would still trigger the radio
+              // reboot countdown.
+              onPressed: (_isLoading || _isSaving || !_hasChanges)
+                  ? null
+                  : _saveConfig,
               child: _isSaving
                   ? LoadingIndicator(size: 20)
                   : Text(
                       context.l10n.mqttConfigSave,
                       style: TextStyle(
-                        color: context.accentColor,
+                        color: _hasChanges
+                            ? context.accentColor
+                            : context.textTertiary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -330,6 +450,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                       onChanged: (value) {
                         HapticFeedback.selectionClick();
                         setState(() => _enabled = value);
+                        _markDirty();
                       },
                     ),
                   ),
@@ -392,7 +513,15 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           TextField(
+                            // maxLength caps the visible char count above
+                            // the byte formatter so the lint gate is
+                            // satisfied; the firmware-accurate limit is
+                            // applied by Utf8ByteLengthFormatter
+                            // (62 B = the firmware's address buffer).
                             maxLength: 256,
+                            inputFormatters: const [
+                              Utf8ByteLengthFormatter(62),
+                            ],
                             controller: _addressController,
                             // Hostnames must never be auto-corrected /
                             // auto-capitalized. iOS otherwise turns
@@ -444,7 +573,11 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                           ),
                           SizedBox(height: AppTheme.spacing16),
                           TextField(
+                            // Topic-root firmware buffer is 30 bytes.
                             maxLength: 256,
+                            inputFormatters: const [
+                              Utf8ByteLengthFormatter(30),
+                            ],
                             controller: _rootController,
                             autocorrect: false,
                             enableSuggestions: false,
@@ -492,142 +625,176 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                         ],
                       ),
                     ),
-                    _SettingsTile(
-                      icon: Icons.lock_outline,
-                      iconColor: _tlsEnabled ? context.accentColor : null,
-                      title: context.l10n.mqttConfigUseTls,
-                      subtitle: context.l10n.mqttConfigUseTlsSubtitle,
-                      trailing: ThemedSwitch(
-                        value: _tlsEnabled,
-                        onChanged: (value) {
-                          HapticFeedback.selectionClick();
-                          setState(() => _tlsEnabled = value);
-                        },
+                    // TLS toggle is hidden when both the default broker
+                    // and proxy-to-client are on: TLS is forced true at
+                    // connect time anyway, and showing a non-functional
+                    // toggle would mislead the user.
+                    if (!(_isDefaultBroker && _proxyToClientEnabled))
+                      _SettingsTile(
+                        icon: Icons.lock_outline,
+                        iconColor: _tlsEnabled ? context.accentColor : null,
+                        title: context.l10n.mqttConfigUseTls,
+                        subtitle: context.l10n.mqttConfigUseTlsSubtitle,
+                        trailing: ThemedSwitch(
+                          value: _tlsEnabled,
+                          onChanged: (value) {
+                            HapticFeedback.selectionClick();
+                            setState(() {
+                              // On the default broker, TLS is always on at
+                              // connect time. Refuse to flip the local
+                              // state false so saved config matches reality
+                              // (otherwise the user sees TLS=off saved but
+                              // the live socket runs TLS).
+                              _tlsEnabled = _isDefaultBroker ? true : value;
+                            });
+                            _markDirty();
+                          },
+                        ),
                       ),
-                    ),
-                    SizedBox(height: AppTheme.spacing16),
-                    _SectionHeader(title: context.l10n.mqttConfigSectionAuth),
-                    Container(
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 2,
-                      ),
-                      padding: const EdgeInsets.all(AppTheme.spacing16),
-                      decoration: BoxDecoration(
-                        color: context.card,
-                        borderRadius: BorderRadius.circular(AppTheme.radius12),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          TextField(
-                            maxLength: 100,
-                            controller: _usernameController,
-                            autocorrect: false,
-                            enableSuggestions: false,
-                            textCapitalization: TextCapitalization.none,
-                            textInputAction: TextInputAction.next,
-                            style: TextStyle(color: context.textPrimary),
-                            decoration: InputDecoration(
-                              labelText: context.l10n.mqttConfigUsernameLabel,
-                              labelStyle: TextStyle(
-                                color: context.textSecondary,
-                              ),
-                              hintText: context.l10n.mqttConfigOptionalHint,
-                              hintStyle: TextStyle(color: SemanticColors.muted),
-                              filled: true,
-                              fillColor: context.background,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(
-                                  AppTheme.radius8,
-                                ),
-                                borderSide: BorderSide(color: context.border),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(
-                                  AppTheme.radius8,
-                                ),
-                                borderSide: BorderSide(color: context.border),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(
-                                  AppTheme.radius8,
-                                ),
-                                borderSide: BorderSide(
-                                  color: context.accentColor,
-                                ),
-                              ),
-                              prefixIcon: Icon(
-                                Icons.person,
-                                color: context.textSecondary,
-                              ),
-                              counterText: '',
-                            ),
+                    // Username + Password are hidden on the default
+                    // broker: the public credentials (`meshdev` /
+                    // `large4cats`) are already auto-filled and there is
+                    // no scenario in which the user should override them.
+                    if (!_isDefaultBroker) ...[
+                      SizedBox(height: AppTheme.spacing16),
+                      _SectionHeader(title: context.l10n.mqttConfigSectionAuth),
+                      Container(
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 2,
+                        ),
+                        padding: const EdgeInsets.all(AppTheme.spacing16),
+                        decoration: BoxDecoration(
+                          color: context.card,
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
                           ),
-                          SizedBox(height: AppTheme.spacing16),
-                          TextField(
-                            maxLength: 64,
-                            controller: _passwordController,
-                            obscureText: _obscurePassword,
-                            autocorrect: false,
-                            enableSuggestions: false,
-                            textCapitalization: TextCapitalization.none,
-                            textInputAction: TextInputAction.done,
-                            onSubmitted: (_) =>
-                                FocusScope.of(context).unfocus(),
-                            style: TextStyle(color: context.textPrimary),
-                            decoration: InputDecoration(
-                              labelText: context.l10n.mqttConfigPasswordLabel,
-                              labelStyle: TextStyle(
-                                color: context.textSecondary,
-                              ),
-                              hintText: context.l10n.mqttConfigOptionalHint,
-                              hintStyle: TextStyle(color: SemanticColors.muted),
-                              filled: true,
-                              fillColor: context.background,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(
-                                  AppTheme.radius8,
-                                ),
-                                borderSide: BorderSide(color: context.border),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(
-                                  AppTheme.radius8,
-                                ),
-                                borderSide: BorderSide(color: context.border),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(
-                                  AppTheme.radius8,
-                                ),
-                                borderSide: BorderSide(
-                                  color: context.accentColor,
-                                ),
-                              ),
-                              prefixIcon: Icon(
-                                Icons.lock,
-                                color: context.textSecondary,
-                              ),
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  _obscurePassword
-                                      ? Icons.visibility
-                                      : Icons.visibility_off,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            TextField(
+                              // Username firmware buffer is 62 bytes.
+                              maxLength: 100,
+                              inputFormatters: const [
+                                Utf8ByteLengthFormatter(62),
+                              ],
+                              controller: _usernameController,
+                              autocorrect: false,
+                              enableSuggestions: false,
+                              textCapitalization: TextCapitalization.none,
+                              textInputAction: TextInputAction.next,
+                              style: TextStyle(color: context.textPrimary),
+                              decoration: InputDecoration(
+                                labelText: context.l10n.mqttConfigUsernameLabel,
+                                labelStyle: TextStyle(
                                   color: context.textSecondary,
                                 ),
-                                onPressed: () {
-                                  setState(
-                                    () => _obscurePassword = !_obscurePassword,
-                                  );
-                                },
+                                hintText: context.l10n.mqttConfigOptionalHint,
+                                hintStyle: TextStyle(
+                                  color: SemanticColors.muted,
+                                ),
+                                filled: true,
+                                fillColor: context.background,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radius8,
+                                  ),
+                                  borderSide: BorderSide(color: context.border),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radius8,
+                                  ),
+                                  borderSide: BorderSide(color: context.border),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radius8,
+                                  ),
+                                  borderSide: BorderSide(
+                                    color: context.accentColor,
+                                  ),
+                                ),
+                                prefixIcon: Icon(
+                                  Icons.person,
+                                  color: context.textSecondary,
+                                ),
+                                counterText: '',
                               ),
-                              counterText: '',
                             ),
-                          ),
-                        ],
+                            SizedBox(height: AppTheme.spacing16),
+                            TextField(
+                              // Password firmware buffer is 30 bytes.
+                              maxLength: 64,
+                              inputFormatters: const [
+                                Utf8ByteLengthFormatter(30),
+                              ],
+                              controller: _passwordController,
+                              obscureText: _obscurePassword,
+                              autocorrect: false,
+                              enableSuggestions: false,
+                              textCapitalization: TextCapitalization.none,
+                              textInputAction: TextInputAction.done,
+                              onSubmitted: (_) =>
+                                  FocusScope.of(context).unfocus(),
+                              style: TextStyle(color: context.textPrimary),
+                              decoration: InputDecoration(
+                                labelText: context.l10n.mqttConfigPasswordLabel,
+                                labelStyle: TextStyle(
+                                  color: context.textSecondary,
+                                ),
+                                hintText: context.l10n.mqttConfigOptionalHint,
+                                hintStyle: TextStyle(
+                                  color: SemanticColors.muted,
+                                ),
+                                filled: true,
+                                fillColor: context.background,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radius8,
+                                  ),
+                                  borderSide: BorderSide(color: context.border),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radius8,
+                                  ),
+                                  borderSide: BorderSide(color: context.border),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radius8,
+                                  ),
+                                  borderSide: BorderSide(
+                                    color: context.accentColor,
+                                  ),
+                                ),
+                                prefixIcon: Icon(
+                                  Icons.lock,
+                                  color: context.textSecondary,
+                                ),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscurePassword
+                                        ? Icons.visibility
+                                        : Icons.visibility_off,
+                                    color: context.textSecondary,
+                                  ),
+                                  onPressed: () {
+                                    setState(
+                                      () =>
+                                          _obscurePassword = !_obscurePassword,
+                                    );
+                                  },
+                                ),
+                                counterText: '',
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
+                    ], // close `if (!_isDefaultBroker) ...[`
                     SizedBox(height: AppTheme.spacing16),
                     _SectionHeader(
                       title: context.l10n.mqttConfigSectionOptions,
@@ -644,6 +811,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                         onChanged: (value) {
                           HapticFeedback.selectionClick();
                           setState(() => _encryptionEnabled = value);
+                          _markDirty();
                         },
                       ),
                     ),
@@ -656,7 +824,17 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                         value: _jsonEnabled,
                         onChanged: (value) {
                           HapticFeedback.selectionClick();
-                          setState(() => _jsonEnabled = value);
+                          setState(() {
+                            _jsonEnabled = value;
+                            // JSON output and Client Proxy are mutually
+                            // exclusive on the radio: JSON output
+                            // bypasses the encrypted proxy pipeline by
+                            // definition.
+                            if (value) {
+                              _proxyToClientEnabled = false;
+                            }
+                          });
+                          _markDirty();
                         },
                       ),
                     ),
@@ -680,6 +858,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                               _tlsEnabled = false;
                             }
                           });
+                          _markDirty();
                         },
                       ),
                     ),
@@ -697,6 +876,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                         onChanged: (value) {
                           HapticFeedback.selectionClick();
                           setState(() => _mapReportingEnabled = value);
+                          _markDirty();
                         },
                       ),
                     ),
@@ -731,6 +911,10 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
             diag.phase == MqttProxyConnectionPhase.disconnected ||
             diag.phase == MqttProxyConnectionPhase.missingConfig);
 
+    final isConsentRequired =
+        diag.failureReason ==
+        MqttProxyFailureReason.mapReportingConsentRequired;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -738,7 +922,15 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
         if (showNotConnectedBanner)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            child: diag.failureReason != MqttProxyFailureReason.none
+            // Map-reporting consent gets its own warning copy that points
+            // the user at the opt-in toggle instead of the generic
+            // "broker unreachable" framing.
+            child: isConsentRequired
+                ? StatusBanner.warning(
+                    title: l10n.mqttProxyBannerConsentRequiredTitle,
+                    subtitle: l10n.mqttProxyBannerConsentRequiredHint,
+                  )
+                : diag.failureReason != MqttProxyFailureReason.none
                 ? StatusBanner.error(
                     title: l10n.mqttProxyBannerNotConnectedTitle,
                     subtitle: diag.lastError ?? reasonLabel,
@@ -766,12 +958,17 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                   icon: Icons.error_outline,
                   iconColor: SemanticColors.error,
                 ),
+              // Host on its own row so a long FQDN never wraps the port
+              // onto a second line (e.g. "mqtt.meshtastic.org:8\n883").
               InfoTableRow(
                 label: l10n.mqttProxyBroker,
-                value: diag.brokerHost != null
-                    ? '${diag.brokerHost}:${diag.brokerPort ?? 1883}'
-                    : none,
+                value: diag.brokerHost ?? none,
                 icon: Icons.dns,
+              ),
+              InfoTableRow(
+                label: l10n.mqttProxyPort,
+                value: diag.brokerPort?.toString() ?? none,
+                icon: Icons.numbers,
               ),
               InfoTableRow(
                 label: l10n.mqttProxyTls,
@@ -901,6 +1098,8 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
         return l10n.mqttProxyReasonBrokerDisconnected as String;
       case MqttProxyFailureReason.clientDisposed:
         return l10n.mqttProxyReasonClientDisposed as String;
+      case MqttProxyFailureReason.mapReportingConsentRequired:
+        return l10n.mqttProxyReasonMapReportingConsent as String;
       case MqttProxyFailureReason.unknown:
         return l10n.mqttProxyReasonUnknown as String;
     }
@@ -1041,6 +1240,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
   }
 
   Widget _buildMapReportSettings() {
+    final l10n = context.l10n;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(AppTheme.spacing16),
@@ -1051,102 +1251,169 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // GDPR / CCPA consent block — must precede any
+          // interval/precision controls. Once the user toggles Map
+          // Reporting on, they must read and expressly opt in to the
+          // privacy disclaimer before the firmware-level
+          // "shouldReportLocation" can be authorized.
           Text(
-            context.l10n.mqttConfigMapReportSettingsHeader,
+            l10n.mqttConfigMapReportConsentHeader,
             style: TextStyle(
+              color: context.textPrimary,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          SizedBox(height: AppTheme.spacing8),
+          Text(
+            l10n.mqttConfigMapReportConsentBody1,
+            style: TextStyle(
+              color: context.textSecondary,
               fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: context.textTertiary,
-              letterSpacing: 1.2,
+              height: 1.4,
             ),
           ),
-          SizedBox(height: AppTheme.spacing16),
-          // Publish Interval
+          SizedBox(height: AppTheme.spacing8),
           Text(
-            context.l10n.mqttConfigPublishInterval(
-              _mapPublishIntervalSecs ~/ 60,
-            ),
+            l10n.mqttConfigMapReportConsentBody2,
             style: TextStyle(
-              color: context.textPrimary,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
+              color: context.textSecondary,
+              fontSize: 12,
+              height: 1.4,
             ),
           ),
-          const SizedBox(height: AppTheme.spacing4),
-          Text(
-            context.l10n.mqttConfigPublishIntervalDesc,
-            style: TextStyle(color: context.textSecondary, fontSize: 12),
+          SizedBox(height: AppTheme.spacing12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ThemedSwitch(
+                value: _mapReportingOptIn,
+                onChanged: (value) {
+                  HapticFeedback.selectionClick();
+                  setState(() => _mapReportingOptIn = value);
+                  _markDirty();
+                },
+              ),
+              SizedBox(width: AppTheme.spacing12),
+              Expanded(
+                child: Text(
+                  l10n.mqttConfigMapReportOptInLabel,
+                  style: TextStyle(
+                    color: context.textPrimary,
+                    fontSize: 13,
+                    height: 1.35,
+                  ),
+                ),
+              ),
+            ],
           ),
-          SliderTheme(
-            data: SliderThemeData(
-              activeTrackColor: context.accentColor,
-              inactiveTrackColor: context.accentColor.withValues(alpha: 0.2),
-              thumbColor: context.accentColor,
-              overlayColor: context.accentColor.withValues(alpha: 0.2),
-              trackHeight: 4,
+          // Interval + precision controls only render after the user has
+          // expressly opted in — no point letting them tune publish
+          // frequency for a broadcast they have not authorized.
+          if (!_mapReportingOptIn) const SizedBox.shrink(),
+          if (_mapReportingOptIn) ...[
+            SizedBox(height: AppTheme.spacing16),
+            Divider(color: context.border),
+            SizedBox(height: AppTheme.spacing16),
+            Text(
+              l10n.mqttConfigMapReportSettingsHeader,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: context.textTertiary,
+                letterSpacing: 1.2,
+              ),
             ),
-            child: Slider(
-              value: _mapPublishIntervalSecs.toDouble(),
-              min: 300,
-              max: 14400,
-              divisions: 28,
-              onChanged: (value) {
-                setState(() {
-                  _mapPublishIntervalSecs = value.round();
-                });
-              },
-            ),
-          ),
-          SizedBox(height: AppTheme.spacing16),
-          Divider(color: context.border),
-          SizedBox(height: AppTheme.spacing16),
-          // Position Precision
-          Text(
-            context.l10n.mqttConfigPositionPrecision,
-            style: TextStyle(
-              color: context.textPrimary,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing4),
-          Text(
-            context.l10n.mqttConfigPositionPrecisionDesc,
-            style: TextStyle(color: context.textSecondary, fontSize: 12),
-          ),
-          SliderTheme(
-            data: SliderThemeData(
-              activeTrackColor: context.accentColor,
-              inactiveTrackColor: context.accentColor.withValues(alpha: 0.2),
-              thumbColor: context.accentColor,
-              overlayColor: context.accentColor.withValues(alpha: 0.2),
-              trackHeight: 4,
-            ),
-            child: Slider(
-              value: _mapPositionPrecision,
-              min: 12,
-              max: 15,
-              divisions: 3,
-              onChanged: (value) {
-                setState(() {
-                  _mapPositionPrecision = value;
-                });
-              },
-            ),
-          ),
-          Center(
-            child: Text(
-              _getPositionPrecisionLabel(
-                context,
-                _mapPositionPrecision.round(),
+            SizedBox(height: AppTheme.spacing16),
+            // Publish Interval
+            Text(
+              context.l10n.mqttConfigPublishInterval(
+                _mapPublishIntervalSecs ~/ 60,
               ),
               style: TextStyle(
-                fontSize: 13,
-                color: context.accentColor,
+                color: context.textPrimary,
+                fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),
             ),
-          ),
+            const SizedBox(height: AppTheme.spacing4),
+            Text(
+              context.l10n.mqttConfigPublishIntervalDesc,
+              style: TextStyle(color: context.textSecondary, fontSize: 12),
+            ),
+            SliderTheme(
+              data: SliderThemeData(
+                activeTrackColor: context.accentColor,
+                inactiveTrackColor: context.accentColor.withValues(alpha: 0.2),
+                thumbColor: context.accentColor,
+                overlayColor: context.accentColor.withValues(alpha: 0.2),
+                trackHeight: 4,
+              ),
+              child: Slider(
+                value: _mapPublishIntervalSecs.toDouble(),
+                min: 300,
+                max: 14400,
+                divisions: 28,
+                onChanged: (value) {
+                  setState(() {
+                    _mapPublishIntervalSecs = value.round();
+                  });
+                  _markDirty();
+                },
+              ),
+            ),
+            SizedBox(height: AppTheme.spacing16),
+            Divider(color: context.border),
+            SizedBox(height: AppTheme.spacing16),
+            // Position Precision
+            Text(
+              context.l10n.mqttConfigPositionPrecision,
+              style: TextStyle(
+                color: context.textPrimary,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacing4),
+            Text(
+              context.l10n.mqttConfigPositionPrecisionDesc,
+              style: TextStyle(color: context.textSecondary, fontSize: 12),
+            ),
+            SliderTheme(
+              data: SliderThemeData(
+                activeTrackColor: context.accentColor,
+                inactiveTrackColor: context.accentColor.withValues(alpha: 0.2),
+                thumbColor: context.accentColor,
+                overlayColor: context.accentColor.withValues(alpha: 0.2),
+                trackHeight: 4,
+              ),
+              child: Slider(
+                value: _mapPositionPrecision,
+                min: 12,
+                max: 15,
+                divisions: 3,
+                onChanged: (value) {
+                  setState(() {
+                    _mapPositionPrecision = value;
+                  });
+                  _markDirty();
+                },
+              ),
+            ),
+            Center(
+              child: Text(
+                _getPositionPrecisionLabel(
+                  context,
+                  _mapPositionPrecision.round(),
+                ),
+                style: TextStyle(
+                  fontSize: 13,
+                  color: context.accentColor,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ], // close if (_mapReportingOptIn) ...[
         ],
       ),
     );
