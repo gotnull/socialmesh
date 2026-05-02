@@ -625,32 +625,20 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                         ],
                       ),
                     ),
-                    // TLS toggle is hidden when both the default broker
-                    // and proxy-to-client are on: TLS is forced true at
-                    // connect time anyway, and showing a non-functional
-                    // toggle would mislead the user.
-                    if (!(_isDefaultBroker && _proxyToClientEnabled))
-                      _SettingsTile(
-                        icon: Icons.lock_outline,
-                        iconColor: _tlsEnabled ? context.accentColor : null,
-                        title: context.l10n.mqttConfigUseTls,
-                        subtitle: context.l10n.mqttConfigUseTlsSubtitle,
-                        trailing: ThemedSwitch(
-                          value: _tlsEnabled,
-                          onChanged: (value) {
-                            HapticFeedback.selectionClick();
-                            setState(() {
-                              // On the default broker, TLS is always on at
-                              // connect time. Refuse to flip the local
-                              // state false so saved config matches reality
-                              // (otherwise the user sees TLS=off saved but
-                              // the live socket runs TLS).
-                              _tlsEnabled = _isDefaultBroker ? true : value;
-                            });
-                            _markDirty();
-                          },
-                        ),
+                    _SettingsTile(
+                      icon: Icons.lock_outline,
+                      iconColor: _tlsEnabled ? context.accentColor : null,
+                      title: context.l10n.mqttConfigUseTls,
+                      subtitle: context.l10n.mqttConfigUseTlsSubtitle,
+                      trailing: ThemedSwitch(
+                        value: _tlsEnabled,
+                        onChanged: (value) {
+                          HapticFeedback.selectionClick();
+                          setState(() => _tlsEnabled = value);
+                          _markDirty();
+                        },
                       ),
+                    ),
                     // Username + Password are hidden on the default
                     // broker: the public credentials (`meshdev` /
                     // `large4cats`) are already auto-filled and there is
@@ -851,12 +839,13 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                           HapticFeedback.selectionClick();
                           setState(() {
                             _proxyToClientEnabled = value;
-                            // When using phone proxy, JSON and TLS are handled by
-                            // the phone, not the device - disable them
-                            if (value) {
-                              _jsonEnabled = false;
-                              _tlsEnabled = false;
-                            }
+                            // JSON Output and Client Proxy are mutually
+                            // exclusive on the radio (JSON bypasses the
+                            // encrypted proxy pipeline). TLS, however, is
+                            // independent — Socialmesh's proxy fully
+                            // supports TLS to the broker, so do NOT force
+                            // TLS off when proxy is enabled.
+                            if (value) _jsonEnabled = false;
                           });
                           _markDirty();
                         },
