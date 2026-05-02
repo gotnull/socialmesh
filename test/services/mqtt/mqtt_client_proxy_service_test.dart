@@ -609,6 +609,59 @@ void main() {
     );
   });
 
+  group('MqttClientProxyService NoConnectionException reason mapping', () {
+    // Pinned against the actual mqtt_client package strings observed in the
+    // field. Strict brokers (ovmesh.com) silently TCP-close a malformed
+    // CONNECT, so mqtt_client surfaces a "Missing Connection Acknowledgement"
+    // timeout — must map to protocolRejected, not unknown.
+    test('missing CONNACK text maps to protocolRejected', () {
+      const text =
+          'mqtt-client::NoConnectionException: The maximum allowed connection '
+          'attempts ({3}) were exceeded. The broker is not responding to the '
+          'connection request message (Missing Connection Acknowledgement?';
+      expect(
+        MqttClientProxyService.debugMapNoConnectionExceptionMessage(text),
+        MqttProxyFailureReason.protocolRejected,
+      );
+    });
+
+    test('not authorized text maps to authenticationFailed', () {
+      expect(
+        MqttClientProxyService.debugMapNoConnectionExceptionMessage(
+          'NoConnectionException: not authorized',
+        ),
+        MqttProxyFailureReason.authenticationFailed,
+      );
+    });
+
+    test('bad username text maps to authenticationFailed', () {
+      expect(
+        MqttClientProxyService.debugMapNoConnectionExceptionMessage(
+          'NoConnectionException: bad username or password',
+        ),
+        MqttProxyFailureReason.authenticationFailed,
+      );
+    });
+
+    test('connection refused text maps to protocolRejected', () {
+      expect(
+        MqttClientProxyService.debugMapNoConnectionExceptionMessage(
+          'NoConnectionException: connection refused by broker',
+        ),
+        MqttProxyFailureReason.protocolRejected,
+      );
+    });
+
+    test('unrecognised text falls through to unknown', () {
+      expect(
+        MqttClientProxyService.debugMapNoConnectionExceptionMessage(
+          'something completely different',
+        ),
+        MqttProxyFailureReason.unknown,
+      );
+    });
+  });
+
   group('MqttClientProxyService secret redaction', () {
     test('lastError never contains the literal password text', () async {
       final service = MqttClientProxyService();

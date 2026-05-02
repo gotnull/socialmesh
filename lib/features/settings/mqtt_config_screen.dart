@@ -28,6 +28,7 @@ import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/info_table.dart';
 import '../../core/widgets/status_banner.dart';
+import '../../core/mqtt/mqtt_constants.dart' show BrokerPreset;
 
 /// Screen for configuring MQTT module settings
 class MqttConfigScreen extends ConsumerStatefulWidget {
@@ -62,12 +63,14 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
   @override
   void initState() {
     super.initState();
+    _addressController.addListener(_maybeAutofillBrokerCredentials);
     _loadCurrentConfig();
   }
 
   @override
   void dispose() {
     _configSubscription?.cancel();
+    _addressController.removeListener(_maybeAutofillBrokerCredentials);
     _addressController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
@@ -75,12 +78,45 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
     super.dispose();
   }
 
+  /// Mirrors the Meshtastic-Apple companion app: when the address field
+  /// resolves to a known public broker preset (currently
+  /// `mqtt.meshtastic.org`), auto-fill the public credentials from
+  /// `BrokerPreset.defaults` so a fresh-install user never has to know
+  /// `meshdev` / `large4cats`. We only fill when both auth fields are
+  /// empty so user-customized credentials saved on the radio are never
+  /// clobbered.
+  void _maybeAutofillBrokerCredentials() {
+    final addr = _addressController.text.trim().toLowerCase();
+    if (addr.isEmpty) return;
+    if (_usernameController.text.isNotEmpty ||
+        _passwordController.text.isNotEmpty) {
+      return;
+    }
+    BrokerPreset? match;
+    for (final preset in BrokerPreset.defaults) {
+      if (!preset.isCustom &&
+          preset.host.toLowerCase() == addr &&
+          preset.hasDefaultCredentials) {
+        match = preset;
+        break;
+      }
+    }
+    if (match == null) return;
+    safeSetState(() {
+      _usernameController.text = match!.defaultUsername;
+      _passwordController.text = match.defaultPassword;
+    });
+  }
+
   void _applyConfig(module_pb.ModuleConfig_MQTTConfig config) {
     safeSetState(() {
       _enabled = config.enabled;
-      _addressController.text = config.address;
+      // Populate auth fields BEFORE the address so the auto-fill listener
+      // attached to _addressController sees the radio's actual creds and
+      // doesn't transiently clobber them with the public defaults.
       _usernameController.text = config.username;
       _passwordController.text = config.password;
+      _addressController.text = config.address;
       _rootController.text = config.root.isNotEmpty ? config.root : 'msh';
       _encryptionEnabled = config.encryptionEnabled;
       _jsonEnabled = config.jsonEnabled;
@@ -194,6 +230,11 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
       );
 
       if (mounted) {
+        // Stay on the MQTT screen after save — the user wants to watch the
+        // CLIENT PROXY STATUS card update with the new connection result
+        // (phase + reason) without having to re-open the screen. Just
+        // dismiss the keyboard so the diagnostics card scrolls into view.
+        FocusScope.of(context).unfocus();
         showSuccessSnackBar(context, l10n.mqttConfigSaved);
         if (target.isLocal) {
           ref
@@ -209,7 +250,6 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                 .refresh(reason: 'save-flow'),
           );
         }
-        safeNavigatorPop();
       }
     } catch (e) {
       if (mounted) {
@@ -354,6 +394,14 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                           TextField(
                             maxLength: 256,
                             controller: _addressController,
+                            // Hostnames must never be auto-corrected /
+                            // auto-capitalized. iOS otherwise turns
+                            // "mqtt.ovmesh.com" → "Matt.ovmesh.com" and
+                            // breaks DNS at save time.
+                            keyboardType: TextInputType.url,
+                            autocorrect: false,
+                            enableSuggestions: false,
+                            textCapitalization: TextCapitalization.none,
                             textInputAction: TextInputAction.next,
                             style: TextStyle(color: context.textPrimary),
                             decoration: InputDecoration(
@@ -398,6 +446,9 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                           TextField(
                             maxLength: 256,
                             controller: _rootController,
+                            autocorrect: false,
+                            enableSuggestions: false,
+                            textCapitalization: TextCapitalization.none,
                             textInputAction: TextInputAction.done,
                             onSubmitted: (_) =>
                                 FocusScope.of(context).unfocus(),
@@ -472,6 +523,9 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                           TextField(
                             maxLength: 100,
                             controller: _usernameController,
+                            autocorrect: false,
+                            enableSuggestions: false,
+                            textCapitalization: TextCapitalization.none,
                             textInputAction: TextInputAction.next,
                             style: TextStyle(color: context.textPrimary),
                             decoration: InputDecoration(
@@ -515,6 +569,9 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                             maxLength: 64,
                             controller: _passwordController,
                             obscureText: _obscurePassword,
+                            autocorrect: false,
+                            enableSuggestions: false,
+                            textCapitalization: TextCapitalization.none,
                             textInputAction: TextInputAction.done,
                             onSubmitted: (_) =>
                                 FocusScope.of(context).unfocus(),

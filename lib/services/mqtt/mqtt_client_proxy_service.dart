@@ -591,11 +591,18 @@ class MqttClientProxyService {
       AppLogging.mqttProxy('Auth configured (username: $username)');
     }
 
-    // Connection message
+    // Connection message.
+    //
+    // Do NOT call .withWillQos() here. Without a will-topic + will-message,
+    // the Will Flag stays 0, and per MQTT-3.1.2-13 the Will QoS MUST then be
+    // 0. mqtt_client's withWillQos sets the QoS bits unconditionally — strict
+    // brokers (e.g. ovmesh.com) silently TCP-close the malformed CONNECT,
+    // surfacing as a "Missing Connection Acknowledgement" timeout. Lenient
+    // brokers (mosquitto default, mqtt.meshtastic.org) accept it, which is
+    // why the bug was masked.
     final connMessage = MqttConnectMessage()
         .withClientIdentifier(clientId)
-        .startClean()
-        .withWillQos(MqttQos.atLeastOnce);
+        .startClean();
 
     if (username.isNotEmpty) {
       connMessage.authenticateAs(username, password);
@@ -648,7 +655,7 @@ class MqttClientProxyService {
         );
       }
     } on NoConnectionException catch (e) {
-      final reason = _mapNoConnectionException(e);
+      final reason = debugMapNoConnectionExceptionMessage(e.toString());
       await _failConnect(
         reason: reason,
         summary: 'Connection refused', // lint-allow: hardcoded-string
@@ -987,12 +994,28 @@ class MqttClientProxyService {
   /// Maps `NoConnectionException` to the most plausible structured reason.
   /// The mqtt_client package uses this for both "max retries exceeded" and
   /// "broker rejected CONNACK" — text inspection is the only way to tell.
-  MqttProxyFailureReason _mapNoConnectionException(NoConnectionException e) {
-    final msg = e.toString().toLowerCase();
+  @visibleForTesting
+  static MqttProxyFailureReason debugMapNoConnectionExceptionMessage(
+    String exceptionText,
+  ) {
+    final msg = exceptionText.toLowerCase();
     if (msg.contains('not authori') || // lint-allow: hardcoded-string
         msg.contains('bad username') || // lint-allow: hardcoded-string
         msg.contains('bad password')) {
       return MqttProxyFailureReason.authenticationFailed;
+    }
+    // Strict brokers (ovmesh, EMQX) silently TCP-close on a protocol-violating
+    // CONNECT. mqtt_client surfaces this as "Missing Connection Acknowledgement"
+    // after maxConnectionAttempts retries. Map to protocolRejected so the
+    // diagnostics card shows something actionable instead of "unknown".
+    if (msg.contains(
+          'missing connection acknowledgement',
+        ) || // lint-allow: hardcoded-string
+        msg.contains(
+          'broker is not responding',
+        ) || // lint-allow: hardcoded-string
+        msg.contains('maximum allowed connection attempts')) {
+      return MqttProxyFailureReason.protocolRejected;
     }
     if (msg.contains('refused') || msg.contains('rejected')) {
       return MqttProxyFailureReason.protocolRejected;

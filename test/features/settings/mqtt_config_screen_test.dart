@@ -270,4 +270,100 @@ void main() {
     // render because MQTT itself is enabled.
     expect(find.text(_l10n.mqttProxyBannerNotConnectedTitle), findsNothing);
   });
+
+  testWidgets(
+    'typing mqtt.meshtastic.org auto-fills meshdev / large4cats on a fresh '
+    'install (Meshtastic-Apple parity)',
+    (tester) async {
+      tester.view.physicalSize = const Size(1080, 4000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      // Fresh install: MQTT module enabled (so the form renders) but
+      // no broker config saved yet — empty address, empty credentials.
+      final cached = module_pb.ModuleConfig_MQTTConfig()
+        ..enabled = true
+        ..root = 'msh';
+      final protocol = _FakeProtocolService(cachedConfig: cached);
+      addTearDown(protocol.closeStreams);
+
+      await tester.pumpWidget(
+        _wrap(
+          protocol: protocol,
+          initialDiagnostics: const MqttProxyDiagnostics(),
+        ),
+      );
+      await _settle(tester);
+
+      final addressFinder = find.byWidgetPredicate(
+        (w) =>
+            w is TextField &&
+            w.decoration?.labelText == _l10n.mqttConfigServerAddressLabel,
+      );
+      expect(addressFinder, findsOneWidget);
+      await tester.enterText(addressFinder, 'mqtt.meshtastic.org');
+      await tester.pump();
+
+      // After the controller listener fires, the auth fields must
+      // contain the public Meshtastic credentials.
+      expect(find.text('meshdev'), findsOneWidget);
+      // Password field is obscured, but the controller value is
+      // observable through the rendered TextField widget.
+      final passwordField = tester.widget<TextField>(
+        find.byWidgetPredicate(
+          (w) =>
+              w is TextField &&
+              w.decoration?.labelText == _l10n.mqttConfigPasswordLabel,
+        ),
+      );
+      expect(passwordField.controller?.text, 'large4cats');
+    },
+  );
+
+  testWidgets(
+    'typing mqtt.meshtastic.org does NOT clobber existing user creds',
+    (tester) async {
+      tester.view.physicalSize = const Size(1080, 4000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      // User had previously saved a non-default broker with custom creds.
+      final cached = module_pb.ModuleConfig_MQTTConfig()
+        ..enabled = true
+        ..address = 'mqtt.example.com'
+        ..username = 'alice'
+        ..password = 'sekret'
+        ..root = 'msh';
+      final protocol = _FakeProtocolService(cachedConfig: cached);
+      addTearDown(protocol.closeStreams);
+
+      await tester.pumpWidget(
+        _wrap(
+          protocol: protocol,
+          initialDiagnostics: const MqttProxyDiagnostics(),
+        ),
+      );
+      await _settle(tester);
+
+      // User changes the address to the canonical host. Because creds
+      // were already populated, autofill must NOT overwrite them.
+      final addressFinder = find.byWidgetPredicate(
+        (w) =>
+            w is TextField &&
+            w.decoration?.labelText == _l10n.mqttConfigServerAddressLabel,
+      );
+      await tester.enterText(addressFinder, 'mqtt.meshtastic.org');
+      await tester.pump();
+
+      expect(find.text('alice'), findsOneWidget);
+      final passwordField = tester.widget<TextField>(
+        find.byWidgetPredicate(
+          (w) =>
+              w is TextField &&
+              w.decoration?.labelText == _l10n.mqttConfigPasswordLabel,
+        ),
+      );
+      expect(passwordField.controller?.text, 'sekret');
+    },
+  );
 }
