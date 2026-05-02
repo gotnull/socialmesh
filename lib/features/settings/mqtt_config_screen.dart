@@ -1283,29 +1283,47 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
             ),
           ),
           SizedBox(height: AppTheme.spacing12),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ThemedSwitch(
-                value: _mapReportingOptIn,
-                onChanged: (value) {
-                  HapticFeedback.selectionClick();
-                  setState(() => _mapReportingOptIn = value);
-                  _markDirty();
-                },
-              ),
-              SizedBox(width: AppTheme.spacing12),
-              Expanded(
-                child: Text(
-                  l10n.mqttConfigMapReportOptInLabel,
-                  style: TextStyle(
-                    color: context.textPrimary,
-                    fontSize: 13,
-                    height: 1.35,
+          // Whole-row tap target: the parent Container's BoxDecoration
+          // and the multi-paragraph disclaimer above produce a single
+          // merged AXSwitch in the iOS accessibility tree, which steals
+          // taps from a child ThemedSwitch. Wrapping the row in an
+          // explicit InkWell gives the toggle its own gesture detector
+          // AND lets the user tap the label text — better UX anyway.
+          InkWell(
+            onTap: () {
+              HapticFeedback.selectionClick();
+              setState(() => _mapReportingOptIn = !_mapReportingOptIn);
+              _markDirty();
+            },
+            borderRadius: BorderRadius.circular(AppTheme.radius8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Switch is presentational only — the InkWell owns the
+                  // tap. `onChanged: null` would render disabled, so pass
+                  // a no-op closure that keeps the visual enabled state.
+                  IgnorePointer(
+                    child: ThemedSwitch(
+                      value: _mapReportingOptIn,
+                      onChanged: (_) {},
+                    ),
                   ),
-                ),
+                  SizedBox(width: AppTheme.spacing12),
+                  Expanded(
+                    child: Text(
+                      l10n.mqttConfigMapReportOptInLabel,
+                      style: TextStyle(
+                        color: context.textPrimary,
+                        fontSize: 13,
+                        height: 1.35,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
           // Interval + precision controls only render after the user has
           // expressly opted in — no point letting them tune publish
