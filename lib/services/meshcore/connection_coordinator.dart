@@ -14,6 +14,7 @@ import 'mesh_transport.dart';
 import 'meshcore_adapter.dart';
 import 'meshcore_ble_transport.dart';
 import 'meshcore_detector.dart';
+import 'meshcore_tcp_transport.dart';
 import 'meshtastic_adapter.dart';
 import 'protocol/meshcore_capture.dart';
 import 'package:socialmesh/l10n/l10n_utils.dart';
@@ -100,10 +101,13 @@ typedef MeshCoreAdapterFactoryFn =
 typedef MeshtasticAdapterFactoryFn =
     MeshtasticAdapter Function(ProtocolService protocolService);
 
-/// Factory function type for creating MeshCore BLE transport.
+/// Factory function type for creating a MeshCore transport.
 ///
-/// Injectable for testing to verify MeshCore transport is never created for Meshtastic.
-typedef MeshCoreTransportFactoryFn = MeshCoreBleTransport Function();
+/// Injectable for testing to verify MeshCore transport is never created for
+/// Meshtastic. Returns the [MeshTransport] interface so the production BLE
+/// path and the dev-only TCP path can both flow through here without the
+/// coordinator caring which concrete transport is in play.
+typedef MeshCoreTransportFactoryFn = MeshTransport Function();
 
 /// Coordinates connection to mesh devices based on detected protocol.
 ///
@@ -151,7 +155,11 @@ class ConnectionCoordinator {
   int _connectionAttemptId = 0;
 
   /// Transport created during in-flight MeshCore connect (for cleanup on cancel).
-  MeshCoreBleTransport? _pendingMeshCoreTransport;
+  ///
+  /// Typed as the abstract [MeshTransport] so the same cancel-cleanup path
+  /// covers BLE (production), USB, and TCP (dev/simulator) without the
+  /// coordinator needing to know which concrete transport is in flight.
+  MeshTransport? _pendingMeshCoreTransport;
 
   /// Stream controller for connection state changes.
   final StreamController<MeshConnectionState> _stateController =
@@ -360,24 +368,40 @@ class ConnectionCoordinator {
 
     // Create MeshCore transport using injectable factory
     final transport = _meshCoreTransportFactory();
+    return _runMeshCoreConnect(
+      device: device,
+      attemptId: attemptId,
+      transport: transport,
+    );
+  }
+
+  /// Drive the MeshCore connection sequence (transport.connect → adapter →
+  /// identify) given a pre-built transport. Shared between the BLE path
+  /// (factory-built) and the dev-only TCP path
+  /// (constructed directly in [connectMeshCoreTcp]).
+  Future<ConnectionResult> _runMeshCoreConnect({
+    required DeviceInfo device,
+    required int attemptId,
+    required MeshTransport transport,
+  }) async {
     _pendingMeshCoreTransport = transport;
 
     try {
       // -------------------------------------------------------------------------
       // MeshCore Connection Sequence:
-      // 1. BLE connect to device
-      // 2. Discover services (Nordic UART: 6e400001-...)
-      // 3. Subscribe to TX notify characteristic BEFORE any writes
-      // 4. Session now listening for responses
-      // 5. Send cmdDeviceQuery (0x07) to request device capabilities
+      // 1. Transport connect (BLE: scan+discover, TCP: socket)
+      // 2. Subscribe to incoming bytes (BLE: notify, TCP: socket data)
+      // 3. Session now listening for responses
+      // 4. Create adapter (wraps transport + builds session)
+      // 5. Send cmdDeviceQuery (0x16) to request device capabilities
       // 6. Send cmdAppStart (0x01) to initiate app protocol handshake
-      // 7. Wait for respSelfInfo (0x01) containing node identity
+      // 7. Wait for respSelfInfo (0x05) containing node identity
       //
-      // Key invariant: notify subscription must be active before any command
-      // is sent, otherwise responses may be missed.
+      // Key invariant: notify/data subscription must be active before any
+      // command is sent, otherwise responses may be missed.
       // -------------------------------------------------------------------------
 
-      // Step 1-3: Connect transport (handles BLE connect + service discovery + notify subscribe)
+      // Step 1-3: Connect transport
       await transport.connect(device);
 
       // Check for cancellation after await
@@ -446,8 +470,65 @@ class ConnectionCoordinator {
     }
   }
 
+  /// Connect to a MeshCore companion radio over TCP.
+  ///
+  /// Dev/simulator-only path: the BLE companion firmware variants also expose
+  /// the same `<` / `>` framed binary protocol over TCP (default port 5000)
+  /// when built with WIFI_SSID. This bypasses BLE scanning entirely — useful
+  /// for simulator builds that have no BLE peer available.
+  ///
+  /// Identical identify/start sequence to the BLE path
+  /// ([_connectMeshCore]) — the only difference is the byte source.
+  /// The single-flight guard, cancellation-by-attempt-id, and provider
+  /// state propagation all reuse the existing wiring.
+  ///
+  /// Returns [ConnectionResult.alreadyConnecting] if a connect is in flight.
+  Future<ConnectionResult> connectMeshCoreTcp({
+    required String host,
+    required int port,
+  }) async {
+    if (_connectInProgress != null) {
+      AppLogging.connection(
+        'ConnectionCoordinator: Connect blocked - already connecting',
+      );
+      return ConnectionResult.alreadyConnecting();
+    }
+
+    final completer = Completer<ConnectionResult>();
+    _connectInProgress = completer;
+
+    try {
+      AppLogging.connection(
+        'ConnectionCoordinator: Connecting to MeshCore TCP $host:$port...',
+      );
+      _stateController.add(MeshConnectionState.connecting);
+
+      final attemptId = _connectionAttemptId;
+      final synthDevice = DeviceInfo(
+        id: 'meshcore-tcp:$host:$port',
+        name: 'MeshCore TCP $host:$port',
+        type: TransportType.network,
+      );
+      final transport = MeshCoreTcpTransport(host: host, port: port);
+
+      final result = await _runMeshCoreConnect(
+        device: synthDevice,
+        attemptId: attemptId,
+        transport: transport,
+      );
+      completer.complete(result);
+      return result;
+    } catch (e) {
+      final failure = ConnectionResult.failure(e.toString());
+      completer.complete(failure);
+      return failure;
+    } finally {
+      _connectInProgress = null;
+    }
+  }
+
   /// Clean up MeshCore-specific resources on failure.
-  Future<void> _cleanupMeshCore(MeshCoreBleTransport transport) async {
+  Future<void> _cleanupMeshCore(MeshTransport transport) async {
     await transport.dispose();
     _activeAdapter = null;
     _activeProtocol = null;

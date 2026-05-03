@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -1256,6 +1257,112 @@ void main() {
         // Don't await connectFuture - it will never complete since the
         // transport.connect() never completes. This is intentional to test
         // the cleanup path.
+        await coordinator.dispose();
+      },
+    );
+  });
+
+  group('MeshCore TCP path', () {
+    test(
+      'typedef widening permits a non-BLE MeshTransport from the factory',
+      () async {
+        // The factory typedef was widened from `MeshCoreBleTransport Function()`
+        // to `MeshTransport Function()` so the coordinator can accept a TCP
+        // (or any future) transport without conditional dispatch. Pin that
+        // a non-BLE MeshTransport flows through the existing MeshCore connect
+        // sequence end-to-end.
+        final fakeTransport = FakeMeshTransport();
+
+        final coordinator = ConnectionCoordinator(
+          meshCoreAdapterFactory: (transport) => FakeMeshCoreAdapter(transport),
+          meshCoreTransportFactory: () => fakeTransport,
+        );
+
+        final device = DeviceInfo(
+          id: 'meshcore-test-id',
+          name: 'MeshCore Test',
+          type: TransportType.network,
+        );
+
+        final result = await coordinator.connect(
+          device: device,
+          advertisedServiceUuids: [MeshCoreBleUuids.serviceUuid],
+        );
+
+        expect(result.success, isTrue);
+        expect(result.deviceInfo?.protocolType, MeshProtocolType.meshcore);
+        expect(coordinator.activeProtocol, MeshProtocolType.meshcore);
+
+        await coordinator.dispose();
+      },
+    );
+
+    test(
+      'connectMeshCoreTcp to a closed port returns a failure result',
+      () async {
+        // Bind an ephemeral port and immediately close it so nothing is
+        // listening — the coordinator's TCP connect must surface a failure
+        // result, not throw, and must leave the coordinator idle (no
+        // active adapter, no in-flight connect).
+        final probe = await ServerSocket.bind('127.0.0.1', 0);
+        final closedPort = probe.port;
+        await probe.close();
+
+        final coordinator = ConnectionCoordinator();
+
+        final result = await coordinator.connectMeshCoreTcp(
+          host: '127.0.0.1',
+          port: closedPort,
+        );
+
+        expect(result.success, isFalse);
+        expect(coordinator.activeAdapter, isNull);
+        expect(coordinator.isConnecting, isFalse);
+
+        await coordinator.dispose();
+      },
+    );
+
+    test(
+      'connectMeshCoreTcp while another connect is in flight returns alreadyConnecting',
+      () async {
+        // Park a fake MeshCore connect in flight (transport.connect that
+        // never completes) so the single-flight guard is held, then
+        // verify a concurrent connectMeshCoreTcp call short-circuits with
+        // alreadyConnecting instead of constructing a real socket.
+        final coordinator = ConnectionCoordinator(
+          meshCoreAdapterFactory: (transport) => FakeMeshCoreAdapter(transport),
+          meshCoreTransportFactory: () => FakeMeshCoreBleTransportWithHooks(
+            onConnect: () async {
+              await Completer<void>().future;
+            },
+          ),
+        );
+
+        final device = DeviceInfo(
+          id: 'meshcore-test-id',
+          name: 'MeshCore Test',
+          type: TransportType.ble,
+        );
+
+        // Park the BLE connect in the single-flight slot.
+        unawaited(
+          coordinator.connect(
+            device: device,
+            advertisedServiceUuids: [MeshCoreBleUuids.serviceUuid],
+          ),
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 5));
+
+        final tcpResult = await coordinator.connectMeshCoreTcp(
+          host: '127.0.0.1',
+          port: 1,
+        );
+        expect(tcpResult.success, isFalse);
+        expect(tcpResult.protocolError, MeshProtocolError.connectionInProgress);
+
+        // Cleanup: cancel the in-flight BLE connect and dispose.
+        await coordinator.disconnect();
         await coordinator.dispose();
       },
     );
