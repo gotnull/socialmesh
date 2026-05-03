@@ -280,6 +280,58 @@ class FakeProtocolService implements ProtocolService {
 // =============================================================================
 
 void main() {
+  group('D5 — MeshCoreTcpDeviceId.tryParse', () {
+    // Regression: MeshCore TCP auto-reconnect needs to recognise saved
+    // device ids of the form `meshcore-tcp:<host>:<port>` and dispatch
+    // back into `connectMeshCoreTcp`. Before D5 the auto-reconnect path
+    // tried to BLE-scan for these ids and failed silently.
+    test('parses canonical IPv4 host:port form', () {
+      final id = MeshCoreTcpDeviceId.tryParse(
+        'meshcore-tcp:192.168.5.109:5000',
+      );
+      expect(id, isNotNull);
+      expect(id!.host, '192.168.5.109');
+      expect(id.port, 5000);
+    });
+
+    test('returns null for non-TCP ids (BLE devices fall through)', () {
+      expect(MeshCoreTcpDeviceId.tryParse('AA:BB:CC:DD:EE:FF'), isNull);
+      expect(
+        MeshCoreTcpDeviceId.tryParse('7D1EAAAB-C1BC-88DC-6BEB-BD2241C841DF'),
+        isNull,
+      );
+      expect(
+        MeshCoreTcpDeviceId.tryParse('meshcore-tcp'), // missing host:port
+        isNull,
+      );
+    });
+
+    test('rejects malformed host:port tails', () {
+      expect(MeshCoreTcpDeviceId.tryParse('meshcore-tcp:'), isNull);
+      expect(MeshCoreTcpDeviceId.tryParse('meshcore-tcp:host'), isNull);
+      expect(MeshCoreTcpDeviceId.tryParse('meshcore-tcp::5000'), isNull);
+      expect(MeshCoreTcpDeviceId.tryParse('meshcore-tcp:host:'), isNull);
+      expect(MeshCoreTcpDeviceId.tryParse('meshcore-tcp:host:abc'), isNull);
+    });
+
+    test('rejects out-of-range ports', () {
+      expect(MeshCoreTcpDeviceId.tryParse('meshcore-tcp:host:0'), isNull);
+      expect(MeshCoreTcpDeviceId.tryParse('meshcore-tcp:host:65536'), isNull);
+      expect(MeshCoreTcpDeviceId.tryParse('meshcore-tcp:host:-1'), isNull);
+    });
+
+    test('hostname can contain colons via lastIndexOf split', () {
+      // Future-proofing: bracketed IPv6 like `[::1]:5000` would have
+      // multiple colons. Current implementation splits on the LAST colon
+      // so the host portion preserves the inner colons. Validates that
+      // the parser is at least colon-tolerant on the host side.
+      final id = MeshCoreTcpDeviceId.tryParse('meshcore-tcp:[::1]:5000');
+      expect(id, isNotNull);
+      expect(id!.host, '[::1]');
+      expect(id.port, 5000);
+    });
+  });
+
   group('ConnectionCoordinator protocol detection', () {
     test('MeshCore device detected from Nordic UART service UUID', () async {
       final coordinator = ConnectionCoordinator();
@@ -331,6 +383,87 @@ void main() {
       expect(detection.protocolType, equals(MeshProtocolType.unknown));
       await coordinator.dispose();
     });
+  });
+
+  group('D3 regression: device-info uuid fallback', () {
+    // Regression: scanner detected MeshCore correctly via the advertised
+    // Nordic UART UUID, but the scanner-side `_connectMeshCore` then
+    // called `coordinator.connect(device: device)` *without* forwarding
+    // the UUIDs. The coordinator's `_doConnect` re-ran detection with an
+    // empty uuid list, fell back to name-based detection, and routed
+    // MeshCore companion firmware (advertised as `Meshtastic_<id>`) into
+    // the Meshtastic adapter. The fix: when the caller passes empty uuid
+    // list, fall back to whatever the DeviceInfo itself carries from the
+    // scan result.
+    test('MeshCore device named "Meshtastic_*" routes to MeshCore adapter '
+        'when advertisedServiceUuids parameter is empty but DeviceInfo '
+        'carries the Nordic UART uuid', () async {
+      final coordinator = ConnectionCoordinator(
+        meshtasticAdapterFactory: (_) {
+          throw FactoryShouldNotBeCalledException(
+            'MeshtasticAdapterFactory (D3 — should route to MeshCore)',
+          );
+        },
+        meshCoreAdapterFactory: (transport) => FakeMeshCoreAdapter(transport),
+        meshCoreTransportFactory: FakeMeshCoreBleTransport.new,
+      );
+
+      // Reproduces the field bug: a Heltec Tracker V2 running the
+      // MeshCore companion firmware advertises as "Meshtastic_5ed6"
+      // but only carries the Nordic UART service UUID.
+      final device = DeviceInfo(
+        id: '7D1EAAAB-C1BC-88DC-6BEB-BD2241C841DF',
+        name: 'Meshtastic_5ed6',
+        type: TransportType.ble,
+        serviceUuids: const [
+          // Nordic UART (MeshCore service)
+          '6e400001-b5a3-f393-e0a9-e50e24dcca9e',
+        ],
+      );
+
+      // Note: NOT passing advertisedServiceUuids — same as the buggy
+      // scanner callsite did before the fix.
+      final result = await coordinator.connect(device: device);
+
+      expect(result.success, isTrue);
+      expect(coordinator.activeProtocol, equals(MeshProtocolType.meshcore));
+
+      await coordinator.dispose();
+    });
+
+    test(
+      'explicit advertisedServiceUuids parameter still wins over DeviceInfo',
+      () async {
+        // If a caller wants to force a different protocol than what the
+        // scan saw, the explicit parameter takes precedence.
+        final coordinator = ConnectionCoordinator(
+          meshtasticAdapterFactory: (_) {
+            throw FactoryShouldNotBeCalledException('MeshtasticAdapterFactory');
+          },
+          meshCoreAdapterFactory: (transport) => FakeMeshCoreAdapter(transport),
+          meshCoreTransportFactory: FakeMeshCoreBleTransport.new,
+        );
+
+        // DeviceInfo carries Meshtastic UUID, but caller forces MeshCore
+        // detection by explicit override. This should not happen in
+        // practice — but the parameter must remain authoritative.
+        final device = DeviceInfo(
+          id: 'force-meshcore',
+          name: 'Some Device',
+          type: TransportType.ble,
+          serviceUuids: const ['6ba1b218-15a8-461f-9fa8-5dcae273eafd'],
+        );
+        final result = await coordinator.connect(
+          device: device,
+          advertisedServiceUuids: [MeshCoreBleUuids.serviceUuid],
+        );
+
+        expect(result.success, isTrue);
+        expect(coordinator.activeProtocol, equals(MeshProtocolType.meshcore));
+
+        await coordinator.dispose();
+      },
+    );
   });
 
   group('No clash: MeshCore connect never touches ProtocolService', () {

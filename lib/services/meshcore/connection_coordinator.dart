@@ -19,6 +19,37 @@ import 'meshtastic_adapter.dart';
 import 'protocol/meshcore_capture.dart';
 import 'package:socialmesh/l10n/l10n_utils.dart';
 
+/// Parsed `meshcore-tcp:<host>:<port>` device identifier, or `null` when
+/// the input is not a TCP id or the host/port substring is malformed.
+///
+/// The TCP form is what `connectMeshCoreTcp` synthesises into
+/// `DeviceInfo.id` and what `_connectMeshCoreEndpoint` persists into
+/// `lastDeviceId`. The auto-reconnect path uses this helper to decide
+/// whether to dispatch back into `connectMeshCoreTcp` (TCP fast-path)
+/// or fall through to the BLE strategies.
+class MeshCoreTcpDeviceId {
+  /// Wire prefix used for the synthesised TCP device id form.
+  static const String prefix = 'meshcore-tcp:';
+
+  final String host;
+  final int port;
+
+  const MeshCoreTcpDeviceId({required this.host, required this.port});
+
+  /// Parse a TCP device id. Returns `null` if [deviceId] does not start
+  /// with [prefix] or the trailing `host:port` portion is malformed.
+  static MeshCoreTcpDeviceId? tryParse(String deviceId) {
+    if (!deviceId.startsWith(prefix)) return null;
+    final rest = deviceId.substring(prefix.length);
+    final lastColon = rest.lastIndexOf(':');
+    if (lastColon <= 0 || lastColon == rest.length - 1) return null;
+    final host = rest.substring(0, lastColon);
+    final port = int.tryParse(rest.substring(lastColon + 1));
+    if (port == null || port <= 0 || port > 65535) return null;
+    return MeshCoreTcpDeviceId(host: host, port: port);
+  }
+}
+
 /// Result of a connection attempt through the coordinator.
 class ConnectionResult {
   /// Whether connection succeeded.
@@ -310,11 +341,22 @@ class ConnectionCoordinator {
     final attemptId = _connectionAttemptId;
 
     // -------------------------------------------------------------------------
-    // Protocol locked at entry: compute once, never change
+    // Protocol locked at entry: compute once, never change.
+    //
+    // Defence-in-depth: if the caller forgot to forward advertised UUIDs,
+    // fall back to whatever the DeviceInfo itself captured during scan.
+    // The DeviceInfo's `serviceUuids` field is populated by the BLE scan
+    // result, so this restores the on-air signal that name-based detection
+    // alone would miss — important for MeshCore companion firmware that
+    // ships under a `Meshtastic_*` advertised name (the only reliable
+    // discriminator is the Nordic UART vs Meshtastic service UUID).
     // -------------------------------------------------------------------------
+    final effectiveUuids = advertisedServiceUuids.isNotEmpty
+        ? advertisedServiceUuids
+        : device.serviceUuids;
     final detection = detectProtocol(
       device: device,
-      advertisedServiceUuids: advertisedServiceUuids,
+      advertisedServiceUuids: effectiveUuids,
     );
     final lockedProtocol = detection.protocolType;
 

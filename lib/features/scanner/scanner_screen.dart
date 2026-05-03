@@ -1384,8 +1384,21 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         '📡 SCANNER: Stopped Meshtastic ProtocolService for MeshCore connect',
       );
 
-      // Use ConnectionCoordinator to handle MeshCore connection
-      final result = await coordinator.connect(device: device);
+      // Use ConnectionCoordinator to handle MeshCore connection.
+      //
+      // Forward the advertised UUIDs explicitly so the coordinator can lock
+      // the protocol from the on-air signal rather than re-deriving it from
+      // the device name. MeshCore companion firmware ships under
+      // `Meshtastic_*` advertised names (only the Nordic UART service UUID
+      // distinguishes it from real Meshtastic), so name-based fallback
+      // would route into the Meshtastic adapter. Defence-in-depth: the
+      // coordinator also falls back to `device.serviceUuids` when this
+      // list is empty, but passing explicitly here keeps the contract
+      // honest for any future caller pattern.
+      final result = await coordinator.connect(
+        device: device,
+        advertisedServiceUuids: device.serviceUuids,
+      );
 
       if (!mounted) return;
 

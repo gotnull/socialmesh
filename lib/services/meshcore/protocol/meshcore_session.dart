@@ -143,6 +143,48 @@ enum MeshCoreSessionState {
 /// await session.sendFrame(MeshCoreFrame.simple(cmdGetContacts));
 /// ```
 class MeshCoreSession {
+  /// Outgoing command codes whose payload bytes can carry user-secret
+  /// material (message bodies, public keys, channel PSKs, contact names).
+  /// kDebugMode TX dumps redact the payload for these codes — only the
+  /// `code=` and `len=` are emitted.
+  ///
+  /// The `meshcore` observability channel still emits structured events
+  /// for these flows (e.g. `event=message.send.attempted size=N`) — those
+  /// are size-only by construction and are unaffected by this denylist.
+  ///
+  /// Visible for testing.
+  static const Set<int> sensitiveTxPayloadCodes = <int>{
+    // Outbound message bodies
+    MeshCoreCommands.sendTxtMsg, // 0x02
+    MeshCoreCommands.sendChannelTxtMsg, // 0x03
+    // Contact identity material
+    MeshCoreCommands.addUpdateContact, // 0x09
+    MeshCoreCommands.shareContact, // 0x10
+    MeshCoreCommands.exportContact, // 0x11
+    MeshCoreCommands.importContact, // 0x12
+    MeshCoreCommands.getContactByKey, // 0x1E
+    // Channel PSK
+    MeshCoreCommands.setChannel, // 0x20
+  };
+
+  /// Incoming response codes whose payload bytes can carry user-secret
+  /// material. See [sensitiveTxPayloadCodes] for redaction policy.
+  ///
+  /// Visible for testing.
+  static const Set<int> sensitiveRxPayloadCodes = <int>{
+    // Contact descriptor: full pk + name
+    MeshCoreResponses.contact, // 0x03
+    // Self info: full pk
+    MeshCoreResponses.selfInfo, // 0x05
+    // Inbound message bodies
+    MeshCoreResponses.contactMsgRecv, // 0x07
+    MeshCoreResponses.channelMsgRecv, // 0x08
+    MeshCoreResponses.contactMsgRecvV3, // 0x10
+    MeshCoreResponses.channelMsgRecvV3, // 0x11
+    // Channel info: PSK
+    MeshCoreResponses.channelInfo, // 0x12
+  };
+
   final MeshCoreTransport _transport;
   final MeshCoreCodec _codec;
 
@@ -225,15 +267,23 @@ class MeshCoreSession {
   }
 
   void _onFrameDecoded(MeshCoreFrame frame) {
-    // Debug logging: detailed RX info
+    // Debug logging: detailed RX info, payload-redacted for sensitive codes.
     if (kDebugMode) {
-      final payloadHex = frame.payload.isEmpty
-          ? '(empty)'
-          : _bytesToHex(frame.payload);
-      AppLogging.protocol(
-        'MeshCore RX decoded: code=0x${frame.command.toRadixString(16).padLeft(2, '0')} '
-        'len=${frame.payload.length} payload=[$payloadHex]',
-      );
+      final hexCode = frame.command.toRadixString(16).padLeft(2, '0');
+      if (sensitiveRxPayloadCodes.contains(frame.command)) {
+        AppLogging.protocol(
+          'MeshCore RX decoded: code=0x$hexCode '
+          'len=${frame.payload.length} payload=<redacted>',
+        );
+      } else {
+        final payloadHex = frame.payload.isEmpty
+            ? '(empty)'
+            : _bytesToHex(frame.payload);
+        AppLogging.protocol(
+          'MeshCore RX decoded: code=0x$hexCode '
+          'len=${frame.payload.length} payload=[$payloadHex]',
+        );
+      }
     }
 
     // Record RX if capture is enabled
@@ -325,15 +375,24 @@ class MeshCoreSession {
 
     final bytes = _codec.encode(frame);
 
-    // Debug logging: detailed TX info
+    // Debug logging: detailed TX info, payload+raw redacted for sensitive
+    // codes (message bodies, contact identity material, channel PSKs).
     if (kDebugMode) {
-      final payloadHex = frame.payload.isEmpty
-          ? '(empty)'
-          : _bytesToHex(frame.payload);
-      AppLogging.protocol(
-        'MeshCore TX: code=0x${frame.command.toRadixString(16).padLeft(2, '0')} '
-        'len=${frame.payload.length} payload=[$payloadHex] raw=[${_bytesToHex(bytes)}]',
-      );
+      final hexCode = frame.command.toRadixString(16).padLeft(2, '0');
+      if (sensitiveTxPayloadCodes.contains(frame.command)) {
+        AppLogging.protocol(
+          'MeshCore TX: code=0x$hexCode '
+          'len=${frame.payload.length} payload=<redacted> raw=<redacted>',
+        );
+      } else {
+        final payloadHex = frame.payload.isEmpty
+            ? '(empty)'
+            : _bytesToHex(frame.payload);
+        AppLogging.protocol(
+          'MeshCore TX: code=0x$hexCode '
+          'len=${frame.payload.length} payload=[$payloadHex] raw=[${_bytesToHex(bytes)}]',
+        );
+      }
     }
 
     await _transport.sendRaw(bytes);

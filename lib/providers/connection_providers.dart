@@ -23,7 +23,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/logging.dart';
 import '../core/safety/error_handler.dart';
 import '../core/transport.dart';
-import '../services/meshcore/connection_coordinator.dart' show ConnectionResult;
+import '../services/meshcore/connection_coordinator.dart'
+    show ConnectionResult, MeshCoreTcpDeviceId;
 import '../services/transport/background_ble_service.dart';
 import 'app_providers.dart';
 import 'scanner_lifecycle_providers.dart';
@@ -1187,6 +1188,73 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       AppLogging.connection(
         '🔌 MeshCore background connect: Connection already in progress, skipping',
       );
+      return;
+    }
+
+    // -------------------------------------------------------------------------
+    // TCP fast-path: when `lastDeviceId` is the synthesised TCP form
+    // `meshcore-tcp:<host>:<port>`, dispatch straight to the coordinator's
+    // TCP entry point. The BLE strategies below cannot find a TCP peer in
+    // any of their lookup mechanisms (FlutterBluePlus.systemDevices, scan
+    // results), so without this branch a TCP peer never reconnects.
+    //
+    // The TCP path doesn't require Bluetooth, so we also skip the BT
+    // adapter precondition for TCP devices.
+    // -------------------------------------------------------------------------
+    final tcpId = MeshCoreTcpDeviceId.tryParse(deviceId);
+    if (tcpId != null) {
+      AppLogging.connection(
+        '🔌 MeshCore background connect: TCP fast-path host=${tcpId.host} '
+        'port=${tcpId.port}',
+      );
+      state = state.copyWith(state: DevicePairingState.scanning);
+      ref
+          .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.connecting);
+
+      _backgroundScanInProgress = true;
+      try {
+        final result = await coordinator.connectMeshCoreTcp(
+          host: tcpId.host,
+          port: tcpId.port,
+        );
+        if (result.success) {
+          state = state.copyWith(
+            state: DevicePairingState.connected,
+            connectionSessionId: _connectionSessionId,
+          );
+          ref
+              .read(autoReconnectStateProvider.notifier)
+              .setState(AutoReconnectState.idle);
+          AppLogging.connection(
+            '🔌 MeshCore background connect: TCP fast-path succeeded',
+          );
+        } else {
+          state = state.copyWith(
+            state: DevicePairingState.error,
+            errorMessage: result.errorMessage,
+          );
+          ref
+              .read(autoReconnectStateProvider.notifier)
+              .setState(AutoReconnectState.failed);
+          AppLogging.connection(
+            '🔌 MeshCore background connect: TCP fast-path failed: '
+            '${result.errorMessage}',
+          );
+        }
+      } finally {
+        _backgroundScanInProgress = false;
+      }
+      return;
+    } else if (deviceId.startsWith(MeshCoreTcpDeviceId.prefix)) {
+      // Looks like a TCP id but didn't parse. Bail rather than fall
+      // through to BLE (which would scan forever for a non-BLE peer).
+      AppLogging.connection(
+        '🔌 MeshCore background connect: TCP id malformed: $deviceId',
+      );
+      ref
+          .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.failed);
       return;
     }
 

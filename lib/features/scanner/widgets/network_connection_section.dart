@@ -138,12 +138,19 @@ class _NetworkConnectionSectionState
   /// stack entirely and drives [ConnectionCoordinator.connectMeshCoreTcp].
   /// Endpoint persistence is the same as Meshtastic, but the connect
   /// flow has no provider/transport overlap.
+  ///
+  /// Also persists `lastDeviceId` and `lastDeviceProtocol` so the
+  /// auto-reconnect path on next app launch can re-dispatch through
+  /// the TCP fast-path in `_startMeshCoreBackgroundConnection`.
   Future<void> _connectMeshCoreEndpoint(
     NetworkEndpoint endpoint,
     AppLocalizations l10n,
   ) async {
+    // Capture providers before any await — ref invalidation is safe
+    // here because we re-check `mounted` after each await boundary.
     final coordinator = ref.read(connectionCoordinatorProvider);
     final endpointsNotifier = ref.read(networkEndpointsProvider.notifier);
+    final settingsFuture = ref.read(settingsServiceProvider.future);
 
     final result = await coordinator.connectMeshCoreTcp(
       host: endpoint.host,
@@ -156,11 +163,26 @@ class _NetworkConnectionSectionState
     }
     await endpointsNotifier.updateLastUsed(endpoint.id);
 
+    final deviceId = 'meshcore-tcp:${endpoint.host}:${endpoint.port}';
+    final deviceName = endpoint.name ?? 'MeshCore ${endpoint.displayAddress}';
+
+    // Persist for auto-reconnect on next launch. The synthesized id
+    // (`meshcore-tcp:host:port`) is recognised by the TCP fast-path in
+    // `_startMeshCoreBackgroundConnection`, which parses host/port from
+    // the prefix and re-dispatches via `connectMeshCoreTcp`.
+    final settings = await settingsFuture;
+    await settings.setLastDevice(
+      deviceId,
+      'network', // matches TransportType.network → string mapping
+      deviceName: deviceName,
+      protocol: 'meshcore',
+    );
+
     if (!mounted) return;
     widget.onConnectionSuccess?.call(
       DeviceInfo(
-        id: 'meshcore-tcp:${endpoint.host}:${endpoint.port}',
-        name: endpoint.name ?? 'MeshCore ${endpoint.displayAddress}',
+        id: deviceId,
+        name: deviceName,
         type: TransportType.network,
         address: endpoint.displayAddress,
       ),
