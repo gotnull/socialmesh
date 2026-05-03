@@ -2432,146 +2432,88 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                   ),
 
                 // Device list header and count - wrapped in Consumer for filtering
-                Consumer(
-                  builder: (context, ref, child) {
-                    final showAllDevices = ref.watch(showAllBleDevicesProvider);
-                    final filteredDevices = _buildDisplayDevices(
-                      showAllDevices: showAllDevices,
-                    );
-                    if (filteredDevices.isEmpty) {
-                      return const SizedBox.shrink();
-                    }
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Row(
-                        children: [
-                          Text(
-                            context.l10n.scannerAvailableDevices,
+                if (filteredDevices.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Row(
+                      children: [
+                        Text(
+                          context.l10n.scannerAvailableDevices,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: context.textSecondary,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        SizedBox(width: AppTheme.spacing8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: context.accentColor.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius8,
+                            ),
+                          ),
+                          child: Text(
+                            '${filteredDevices.length}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: context.accentColor,
+                            ),
+                          ),
+                        ),
+                        Spacer(),
+                        TextButton.icon(
+                          onPressed: _scanning ? null : _startScan,
+                          icon: Icon(Icons.refresh, size: 16),
+                          label: Text(
+                            context.l10n.scannerRetryScan,
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: context.textSecondary,
-
-                              letterSpacing: 0.5,
                             ),
                           ),
-                          SizedBox(width: AppTheme.spacing8),
-                          Container(
+                          style: TextButton.styleFrom(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
+                              vertical: 6,
+                              horizontal: 10,
                             ),
-                            decoration: BoxDecoration(
-                              color: context.accentColor.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(
-                                AppTheme.radius8,
-                              ),
-                            ),
-                            child: Text(
-                              '${filteredDevices.length}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: context.accentColor,
-                              ),
-                            ),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
-                          Spacer(),
-                          TextButton.icon(
-                            onPressed: _scanning ? null : _startScan,
-                            icon: Icon(Icons.refresh, size: 16),
-                            label: Text(
-                              context.l10n.scannerRetryScan,
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 6,
-                                horizontal: 10,
-                              ),
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-
-                Consumer(
-                  builder: (context, ref, child) {
-                    final showAllDevices = ref.watch(showAllBleDevicesProvider);
-                    final filteredDevices = _buildDisplayDevices(
-                      showAllDevices: showAllDevices,
-                    );
-                    final children = <Widget>[];
-                    MeshProtocolType? prevProtocol;
-                    var firstHeaderEmitted = false;
-                    for (final device in filteredDevices) {
-                      final detection = device.detectProtocol();
-                      final protocol = detection.protocolType;
-                      final isUnknown = protocol == MeshProtocolType.unknown;
-                      // The saved-device placeholder is pinned at index 0
-                      // before sorting and has no advertisement (rssi
-                      // null). Render it without a section header so it
-                      // doesn't get mislabelled as "Other Devices" while
-                      // its real protocol is still unknown.
-                      final isPlaceholder =
-                          device.id == _savedDeviceId && device.rssi == null;
-                      if (!isPlaceholder && protocol != prevProtocol) {
-                        children.add(
-                          Padding(
-                            padding: EdgeInsets.only(
-                              top: firstHeaderEmitted ? AppTheme.spacing12 : 0,
-                            ),
-                            child: SectionTitle(
-                              title: _protocolGroupLabel(context, protocol),
-                            ),
-                          ),
-                        );
-                        prevProtocol = protocol;
-                        firstHeaderEmitted = true;
-                      }
-                      children.add(
-                        _DeviceCard(
-                          device: device,
-                          protocolType: protocol,
-                          showDebugInfo: showAllDevices,
-                          onTap: () {
-                            if (isUnknown && !showAllDevices) {
-                              return;
-                            }
-                            if (isUnknown) {
-                              _showUnknownDeviceWarning(
-                                context,
-                                device,
-                                detection,
-                              );
-                            } else {
-                              _connect(device);
-                            }
-                          },
                         ),
-                      );
-                      if (device.rssi != null) {
-                        children.add(
-                          _DeviceDetailsTable(
-                            device: device,
-                            showAdvertisementData: showAllDevices,
-                          ),
-                        );
-                      }
-                    }
-                    return Column(children: children);
-                  },
-                ),
+                      ],
+                    ),
+                  ),
+              ]),
+            ),
+          ),
 
+          // Per-protocol pinned section headers + device lists.
+          // Mirrors the Nodes screen pattern (`SliverPersistentHeader`
+          // pinned + `SliverList`) so the heading sticks while you
+          // scroll within a group.
+          ..._buildProtocolGroupSlivers(
+            grouped: groupedDevices,
+            placeholder: placeholder,
+            showAllDevices: showAllBleDevices,
+          ),
+
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(
+              AppTheme.spacing16,
+              AppTheme.spacing24,
+              AppTheme.spacing16,
+              AppTheme.spacing16,
+            ),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
                 // mDNS auto-discovered Wi-Fi radios
-                const SizedBox(height: AppTheme.spacing24),
                 Divider(color: context.border, height: 1),
                 const SizedBox(height: AppTheme.spacing16),
                 MdnsDiscoverySection(
