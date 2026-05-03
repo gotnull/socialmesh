@@ -55,6 +55,15 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
   String _adminKey3 = '';
   bool _privateKeyVisible = false;
 
+  // Snapshots of the device-confirmed values from the most recent
+  // `_applyConfig`. `_saveConfig` compares against these to decide whether
+  // to send an explicit reboot admin packet after the SecurityConfig save.
+  // Some firmware applies `setConfig.security` changes (especially admin
+  // keys) in-memory only and never commits to NVRAM unless an explicit
+  // reboot follows.
+  String _originalPrivateKey = '';
+  List<String> _originalAdminKeys = const <String>[];
+
   late final TextEditingController _privateKeyController;
   late final TextEditingController _adminKey1Controller;
   late final TextEditingController _adminKey2Controller;
@@ -111,6 +120,15 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
         _adminKey3 = base64Encode(adminKeys[2]);
         _adminKey3Controller.text = _adminKey3;
       }
+
+      // Snapshot device-confirmed values for change detection in
+      // `_saveConfig` (explicit reboot trigger when keys differ).
+      _originalPrivateKey = _privateKey;
+      _originalAdminKeys = [
+        _adminKey1,
+        _adminKey2,
+        _adminKey3,
+      ].where((k) => k.isNotEmpty).toList(growable: false);
     });
   }
 
@@ -252,6 +270,44 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
         adminKeys: adminKeys,
         target: target,
       );
+
+      // Send an explicit reboot admin packet whenever any key changed
+      // (private key OR any admin key). Some firmware applies admin key
+      // changes via `setConfig.security` in-memory only; without an
+      // explicit reboot the change never reaches NVRAM and subsequent
+      // PKI admin packets are silently rejected.
+      final currentAdminKeys = [
+        _adminKey1,
+        _adminKey2,
+        _adminKey3,
+      ].where((k) => k.isNotEmpty).toList(growable: false);
+      bool adminKeysListEqual(List<String> a, List<String> b) {
+        if (a.length != b.length) return false;
+        for (var i = 0; i < a.length; i++) {
+          if (a[i] != b[i]) return false;
+        }
+        return true;
+      }
+
+      final keysChanged =
+          _privateKey != _originalPrivateKey ||
+          !adminKeysListEqual(currentAdminKeys, _originalAdminKeys);
+
+      if (keysChanged) {
+        try {
+          AppLogging.protocol(
+            '🔑 Security keys changed — sending explicit reboot to commit '
+            'NVRAM; '
+            'target=${target.isLocal ? 'local' : 'remote(${target.resolve(0).toRadixString(16)})'}',
+          );
+          await protocol.reboot(target: target);
+        } catch (e) {
+          AppLogging.protocol(
+            '🔑 Explicit reboot after security save failed: $e '
+            '(non-fatal; the setConfig already returned, firmware may auto-reboot)',
+          );
+        }
+      }
 
       if (!mounted) return;
       showSuccessSnackBar(context, l10n.securityConfigSaved);

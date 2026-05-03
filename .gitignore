@@ -18,6 +18,7 @@ logs_android.txt
 migrate_working_dir/
 meshtastic-ios/
 meshtastic-android/
+/MeshCore/
 /MeshCore-Firmware/
 /meshcore-open/
 .venv/

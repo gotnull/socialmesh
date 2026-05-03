@@ -21,6 +21,7 @@ import '../services/transport/ble_transport.dart';
 import '../services/transport/network_transport.dart';
 import '../services/transport/usb_transport.dart';
 import '../services/backup/device_config_backup_service.dart';
+import '../services/protocol/admin_target.dart';
 import '../services/protocol/protocol_service.dart';
 import '../services/protocol/reticulum/reticulum_fragment_event.dart';
 import '../services/storage/storage_service.dart';
@@ -6161,10 +6162,10 @@ class RemoteAdminState {
 class RemoteAdminNotifier extends Notifier<RemoteAdminState> {
   @override
   RemoteAdminState build() {
-    // Auto-clear remote target when BLE connection drops.
-    // This prevents stale remote targets from surviving across
-    // disconnect/reconnect cycles, matching the iOS app's behavior
-    // where the Settings picker resets on disconnect.
+    // Auto-clear remote target when BLE connection drops. This prevents
+    // stale remote targets from surviving across disconnect/reconnect
+    // cycles, where the next reconnect would silently dispatch admin
+    // writes to a stale remote and inject the wrong session passkey.
     ref.listen<AsyncValue<DeviceConnectionState>>(connectionStateProvider, (
       previous,
       next,
@@ -6184,13 +6185,54 @@ class RemoteAdminNotifier extends Notifier<RemoteAdminState> {
     return const RemoteAdminState();
   }
 
-  /// Set the target node for remote configuration
+  /// Set the target node for remote configuration.
+  ///
+  /// Side effect: fire-and-forgets a `getDeviceMetadata` admin request to
+  /// the new remote target so the response's `sessionPasskey` lands in
+  /// `ProtocolService._adminSessions` before any user-initiated config
+  /// screen issues its first admin packet.
+  ///
+  /// Without this pre-warm, the first remote admin packet (e.g. a
+  /// `getConfig` from any config screen) is sent without a
+  /// `sessionPasskey`, which firmware versions that require a passkey for
+  /// non-bootstrap admin operations reject with `NO_CHANNEL` even when the
+  /// remote already has the sender's public key in its `admin_key` list.
+  ///
+  /// Pre-warm failures are intentionally swallowed: the next user-initiated
+  /// admin packet will simply send without a passkey (the existing
+  /// `_applySessionPasskey` no-op fallback) — same behaviour as before this
+  /// change, so a failed pre-warm never regresses callers.
   void setTarget(int nodeNum, String? nodeName) {
     state = RemoteAdminState(
       targetNodeNum: nodeNum,
       targetNodeName: nodeName,
       isConfiguring: false,
     );
+    unawaited(_prewarmSessionPasskey(nodeNum));
+  }
+
+  Future<void> _prewarmSessionPasskey(int nodeNum) async {
+    try {
+      final protocol = ref.read(protocolServiceProvider);
+      if (!protocol.isConnected) {
+        AppLogging.protocol(
+          '🔑 Remote admin target set to ${nodeNum.toRadixString(16)} but '
+          'transport not connected — sessionPasskey pre-warm skipped',
+        );
+        return;
+      }
+      AppLogging.protocol(
+        '🔑 Pre-warming sessionPasskey for remote target '
+        '${nodeNum.toRadixString(16)} via getDeviceMetadata',
+      );
+      await protocol.getDeviceMetadata(target: AdminTarget.remote(nodeNum));
+    } catch (e) {
+      AppLogging.protocol(
+        '🔑 sessionPasskey pre-warm failed for ${nodeNum.toRadixString(16)}: '
+        '$e (non-fatal; subsequent admin operations will retry without '
+        'passkey)',
+      );
+    }
   }
 
   /// Clear the target (configure local device)
