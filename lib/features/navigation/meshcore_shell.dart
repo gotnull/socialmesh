@@ -19,6 +19,8 @@ import '../../providers/app_providers.dart';
 import '../../providers/meshcore_providers.dart';
 import '../../providers/connection_providers.dart' as conn;
 import '../../services/haptic_service.dart';
+import '../../services/meshcore/connection_coordinator.dart'
+    show ConnectionResult, MeshCoreTcpDeviceId;
 import '../../utils/snackbar.dart';
 import '../meshcore/screens/meshcore_contacts_screen.dart';
 import '../meshcore/screens/meshcore_channels_screen.dart';
@@ -613,16 +615,40 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
       duration: const Duration(seconds: 30),
     );
 
-    // Create device info and attempt connection
-    final device = DeviceInfo(
-      id: deviceId,
-      name: deviceName,
-      type: TransportType.ble,
-      address: deviceId,
-    );
-
     final coordinator = ref.read(connectionCoordinatorProvider);
-    final result = await coordinator.connect(device: device);
+
+    // Dispatch by saved-id shape: TCP ids go straight through the
+    // coordinator's TCP entry point (no BLE detection); BLE/USB ids
+    // continue through the canonical `connect(device)` path.
+    final tcpId = MeshCoreTcpDeviceId.tryParse(deviceId);
+    final ConnectionResult result;
+    final DeviceInfo device;
+    if (tcpId != null) {
+      device = DeviceInfo(
+        id: deviceId,
+        name: deviceName,
+        type: TransportType.network,
+        address: '${tcpId.host}:${tcpId.port}',
+      );
+      result = await coordinator.connectMeshCoreTcp(
+        host: tcpId.host,
+        port: tcpId.port,
+      );
+    } else {
+      device = DeviceInfo(
+        id: deviceId,
+        name: deviceName,
+        type: TransportType.ble,
+        address: deviceId,
+      );
+      result = await coordinator.connect(
+        device: device,
+        // Pass through any uuids carried on the DeviceInfo so the
+        // detection layer doesn't fall back to name-based routing
+        // (D3 lesson — `Meshtastic_*` named MeshCore peers).
+        advertisedServiceUuids: device.serviceUuids,
+      );
+    }
 
     if (!mounted) return;
 

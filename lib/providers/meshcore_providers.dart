@@ -128,7 +128,17 @@ final meshProtocolTypeProvider = Provider<MeshProtocolType>((ref) {
 /// Provider for the MeshCore adapter (null if not connected or not MeshCore).
 ///
 /// Use this to access MeshCore-specific functionality like the session.
+///
+/// CRITICAL: Watches [meshCoreConnectionStateProvider] for reactivity.
+/// `connectionCoordinatorProvider` is a plain `Provider` holding the
+/// singleton — `ref.watch` on it never fires again because the
+/// coordinator instance compares `==` to itself across rebuilds.
+/// Without the connection-state watch, this provider freezes at its
+/// first-built value (typically `null` at app launch, before connect).
+/// Downstream watchers (`meshCoreSessionProvider`, contacts/channels
+/// notifiers) would then never see the post-connect adapter.
 final meshCoreAdapterProvider = Provider<MeshCoreAdapter?>((ref) {
+  ref.watch(meshCoreConnectionStateProvider);
   final coordinator = ref.watch(connectionCoordinatorProvider);
   return coordinator.meshCoreAdapter;
 });
