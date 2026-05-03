@@ -7607,10 +7607,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshcoreChannelsEmptyTitleKeyword => 'canais';
 
   @override
-  String get meshcoreChannelsEmptyTitlePrefix => 'Sem';
+  String get meshcoreChannelsEmptyTitlePrefix => 'Sem ';
 
   @override
-  String get meshcoreChannelsEmptyTitleSuffix => 'ainda';
+  String get meshcoreChannelsEmptyTitleSuffix => ' ainda';
 
   @override
   String get meshcoreChannelInfoIndex => 'Índice';
@@ -7655,10 +7655,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshcoreChatEmptyTitleKeyword => 'mensagens';
 
   @override
-  String get meshcoreChatEmptyTitlePrefix => 'Sem';
+  String get meshcoreChatEmptyTitlePrefix => 'Sem ';
 
   @override
-  String get meshcoreChatEmptyTitleSuffix => 'ainda';
+  String get meshcoreChatEmptyTitleSuffix => ' ainda';
 
   @override
   String get meshcoreChatInfoLocation => 'Localização';
@@ -7771,10 +7771,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshcoreContactsEmptyTitleKeyword => 'contatos';
 
   @override
-  String get meshcoreContactsEmptyTitlePrefix => 'Sem';
+  String get meshcoreContactsEmptyTitlePrefix => 'Sem ';
 
   @override
-  String get meshcoreContactsEmptyTitleSuffix => 'ainda';
+  String get meshcoreContactsEmptyTitleSuffix => ' ainda';
 
   @override
   String get meshcoreContactsLabel => 'Contatos';

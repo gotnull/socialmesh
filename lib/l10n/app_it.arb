@@ -18779,11 +18779,11 @@
   "@meshcoreChannelsEmptyTitleKeyword": {
     "description": "Animated empty-state title keyword (gradient-animated word) for an empty channels list"
   },
-  "meshcoreChannelsEmptyTitlePrefix": "Nessun",
+  "meshcoreChannelsEmptyTitlePrefix": "Nessun ",
   "@meshcoreChannelsEmptyTitlePrefix": {
     "description": "Animated empty-state title prefix shown before the keyword for an empty channels list"
   },
-  "meshcoreChannelsEmptyTitleSuffix": "ancora",
+  "meshcoreChannelsEmptyTitleSuffix": " ancora",
   "@meshcoreChannelsEmptyTitleSuffix": {
     "description": "Animated empty-state title suffix shown after the keyword for an empty channels list"
   },
@@ -18839,11 +18839,11 @@
   "@meshcoreChatEmptyTitleKeyword": {
     "description": "Animated empty-state title keyword (gradient-animated word) for an empty chat"
   },
-  "meshcoreChatEmptyTitlePrefix": "Nessun",
+  "meshcoreChatEmptyTitlePrefix": "Nessun ",
   "@meshcoreChatEmptyTitlePrefix": {
     "description": "Animated empty-state title prefix shown before the keyword for an empty chat"
   },
-  "meshcoreChatEmptyTitleSuffix": "ancora",
+  "meshcoreChatEmptyTitleSuffix": " ancora",
   "@meshcoreChatEmptyTitleSuffix": {
     "description": "Animated empty-state title suffix shown after the keyword for an empty chat"
   },
@@ -19007,11 +19007,11 @@
   "@meshcoreContactsEmptyTitleKeyword": {
     "description": "Animated empty-state title keyword (gradient-animated word) for an empty contacts list"
   },
-  "meshcoreContactsEmptyTitlePrefix": "Nessun",
+  "meshcoreContactsEmptyTitlePrefix": "Nessun ",
   "@meshcoreContactsEmptyTitlePrefix": {
     "description": "Animated empty-state title prefix shown before the keyword for an empty contacts list"
   },
-  "meshcoreContactsEmptyTitleSuffix": "ancora",
+  "meshcoreContactsEmptyTitleSuffix": " ancora",
   "@meshcoreContactsEmptyTitleSuffix": {
     "description": "Animated empty-state title suffix shown after the keyword for an empty contacts list"
   },

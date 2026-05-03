@@ -13408,13 +13408,13 @@ abstract class AppLocalizations {
   /// Animated empty-state title prefix shown before the keyword for an empty channels list
   ///
   /// In en, this message translates to:
-  /// **'No'**
+  /// **'No '**
   String get meshcoreChannelsEmptyTitlePrefix;
 
   /// Animated empty-state title suffix shown after the keyword for an empty channels list
   ///
   /// In en, this message translates to:
-  /// **'yet'**
+  /// **' yet'**
   String get meshcoreChannelsEmptyTitleSuffix;
 
   /// Channel info row label for the channel slot index
@@ -13498,13 +13498,13 @@ abstract class AppLocalizations {
   /// Animated empty-state title prefix shown before the keyword for an empty chat
   ///
   /// In en, this message translates to:
-  /// **'No'**
+  /// **'No '**
   String get meshcoreChatEmptyTitlePrefix;
 
   /// Animated empty-state title suffix shown after the keyword for an empty chat
   ///
   /// In en, this message translates to:
-  /// **'yet'**
+  /// **' yet'**
   String get meshcoreChatEmptyTitleSuffix;
 
   /// Contact info row label for the geographic location (lat/lon)
@@ -13690,13 +13690,13 @@ abstract class AppLocalizations {
   /// Animated empty-state title prefix shown before the keyword for an empty contacts list
   ///
   /// In en, this message translates to:
-  /// **'No'**
+  /// **'No '**
   String get meshcoreContactsEmptyTitlePrefix;
 
   /// Animated empty-state title suffix shown after the keyword for an empty contacts list
   ///
   /// In en, this message translates to:
-  /// **'yet'**
+  /// **' yet'**
   String get meshcoreContactsEmptyTitleSuffix;
 
   /// Info row label for contacts count

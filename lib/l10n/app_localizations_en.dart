@@ -7540,10 +7540,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meshcoreChannelsEmptyTitleKeyword => 'channels';
 
   @override
-  String get meshcoreChannelsEmptyTitlePrefix => 'No';
+  String get meshcoreChannelsEmptyTitlePrefix => 'No ';
 
   @override
-  String get meshcoreChannelsEmptyTitleSuffix => 'yet';
+  String get meshcoreChannelsEmptyTitleSuffix => ' yet';
 
   @override
   String get meshcoreChannelInfoIndex => 'Index';
@@ -7587,10 +7587,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meshcoreChatEmptyTitleKeyword => 'messages';
 
   @override
-  String get meshcoreChatEmptyTitlePrefix => 'No';
+  String get meshcoreChatEmptyTitlePrefix => 'No ';
 
   @override
-  String get meshcoreChatEmptyTitleSuffix => 'yet';
+  String get meshcoreChatEmptyTitleSuffix => ' yet';
 
   @override
   String get meshcoreChatInfoLocation => 'Location';
@@ -7702,10 +7702,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meshcoreContactsEmptyTitleKeyword => 'contacts';
 
   @override
-  String get meshcoreContactsEmptyTitlePrefix => 'No';
+  String get meshcoreContactsEmptyTitlePrefix => 'No ';
 
   @override
-  String get meshcoreContactsEmptyTitleSuffix => 'yet';
+  String get meshcoreContactsEmptyTitleSuffix => ' yet';
 
   @override
   String get meshcoreContactsLabel => 'Contacts';

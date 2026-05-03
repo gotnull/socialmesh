@@ -10216,11 +10216,11 @@
     "@meshcoreChannelsEmptyTitleKeyword": {
         "description": "Animated empty-state title keyword (gradient-animated word) for an empty channels list"
     },
-    "meshcoreChannelsEmptyTitlePrefix": "No",
+    "meshcoreChannelsEmptyTitlePrefix": "No ",
     "@meshcoreChannelsEmptyTitlePrefix": {
         "description": "Animated empty-state title prefix shown before the keyword for an empty channels list"
     },
-    "meshcoreChannelsEmptyTitleSuffix": "yet",
+    "meshcoreChannelsEmptyTitleSuffix": " yet",
     "@meshcoreChannelsEmptyTitleSuffix": {
         "description": "Animated empty-state title suffix shown after the keyword for an empty channels list"
     },
@@ -10276,11 +10276,11 @@
     "@meshcoreChatEmptyTitleKeyword": {
         "description": "Animated empty-state title keyword (gradient-animated word) for an empty chat"
     },
-    "meshcoreChatEmptyTitlePrefix": "No",
+    "meshcoreChatEmptyTitlePrefix": "No ",
     "@meshcoreChatEmptyTitlePrefix": {
         "description": "Animated empty-state title prefix shown before the keyword for an empty chat"
     },
-    "meshcoreChatEmptyTitleSuffix": "yet",
+    "meshcoreChatEmptyTitleSuffix": " yet",
     "@meshcoreChatEmptyTitleSuffix": {
         "description": "Animated empty-state title suffix shown after the keyword for an empty chat"
     },
@@ -10444,11 +10444,11 @@
     "@meshcoreContactsEmptyTitleKeyword": {
         "description": "Animated empty-state title keyword (gradient-animated word) for an empty contacts list"
     },
-    "meshcoreContactsEmptyTitlePrefix": "No",
+    "meshcoreContactsEmptyTitlePrefix": "No ",
     "@meshcoreContactsEmptyTitlePrefix": {
         "description": "Animated empty-state title prefix shown before the keyword for an empty contacts list"
     },
-    "meshcoreContactsEmptyTitleSuffix": "yet",
+    "meshcoreContactsEmptyTitleSuffix": " yet",
     "@meshcoreContactsEmptyTitleSuffix": {
         "description": "Animated empty-state title suffix shown after the keyword for an empty contacts list"
     },
