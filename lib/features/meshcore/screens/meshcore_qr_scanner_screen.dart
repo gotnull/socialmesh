@@ -37,6 +37,9 @@ class _MeshCoreQrScannerScreenState
   void initState() {
     super.initState();
     AppLogging.ble('MeshCore QR Scanner: initState - mode=${widget.mode.name}');
+    AppLogging.meshcore(
+      'event=screen.opened name=qr_scanner mode=${widget.mode.name}',
+    );
 
     _controller.barcodes.listen(
       (capture) {

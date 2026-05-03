@@ -231,6 +231,11 @@ class ConnectionCoordinator {
     );
   }
 
+  /// Short label for the active connection attempt; used as a correlation
+  /// id in MeshCore log events. Format `c<id>` so the slot is small but
+  /// unique within a session.
+  String get _attemptTag => 'c$_connectionAttemptId';
+
   /// Connect to a device using the appropriate adapter.
   ///
   /// This is the main entry point for connecting to mesh devices.
@@ -359,6 +364,9 @@ class ConnectionCoordinator {
     int attemptId,
   ) async {
     AppLogging.connection('ConnectionCoordinator: Using MeshCore adapter');
+    AppLogging.meshcore(
+      'event=connect.requested transport=ble attempt=c$attemptId',
+    );
 
     // -------------------------------------------------------------------------
     // Note: MeshCore detection used pre-connect hints (name, advertised UUIDs).
@@ -372,6 +380,7 @@ class ConnectionCoordinator {
       device: device,
       attemptId: attemptId,
       transport: transport,
+      transportTag: 'ble',
     );
   }
 
@@ -379,12 +388,19 @@ class ConnectionCoordinator {
   /// identify) given a pre-built transport. Shared between the BLE path
   /// (factory-built) and the dev-only TCP path
   /// (constructed directly in [connectMeshCoreTcp]).
+  ///
+  /// [transportTag] tags structured `meshcore.*` events (`ble` or `tcp`).
   Future<ConnectionResult> _runMeshCoreConnect({
     required DeviceInfo device,
     required int attemptId,
     required MeshTransport transport,
+    required String transportTag,
   }) async {
     _pendingMeshCoreTransport = transport;
+    AppLogging.meshcore(
+      'event=connect.started transport=$transportTag attempt=c$attemptId '
+      'device=${device.id}',
+    );
 
     try {
       // -------------------------------------------------------------------------
@@ -408,6 +424,10 @@ class ConnectionCoordinator {
       if (_connectionAttemptId != attemptId) {
         AppLogging.connection(
           'ConnectionCoordinator: MeshCore connect cancelled after transport.connect',
+        );
+        AppLogging.meshcore(
+          'event=connect.cancelled stage=transport transport=$transportTag '
+          'attempt=c$attemptId',
         );
         // Only dispose if disconnect() hasn't already cleaned up this transport
         if (_pendingMeshCoreTransport == transport) {
@@ -440,12 +460,21 @@ class ConnectionCoordinator {
         AppLogging.connection(
           'ConnectionCoordinator: MeshCore connect cancelled after identify',
         );
+        AppLogging.meshcore(
+          'event=connect.cancelled stage=identify transport=$transportTag '
+          'attempt=c$attemptId',
+        );
         // Adapter owns the transport now, so cleanup via adapter
         await _cleanupMeshCore(transport);
         return ConnectionResult.cancelled();
       }
 
       if (identifyResult.isFailure) {
+        AppLogging.meshcore(
+          'event=connect.failed stage=identify transport=$transportTag '
+          'attempt=c$attemptId reason=${identifyResult.error?.name ?? "unknown"}',
+          error: true,
+        );
         await _cleanupMeshCore(transport);
         _stateController.add(MeshConnectionState.error);
         return ConnectionResult.failure(
@@ -460,10 +489,22 @@ class ConnectionCoordinator {
       AppLogging.connection(
         'ConnectionCoordinator: MeshCore connected and identified',
       );
+      final info = _currentDeviceInfo;
+      AppLogging.meshcore(
+        'event=connect.succeeded transport=$transportTag attempt=c$attemptId '
+        'node=${info?.nodeId ?? "none"} '
+        'name=${info?.displayName.length ?? 0}c '
+        'battery=${info?.batteryPercentage ?? "?"}%',
+      );
 
       return ConnectionResult.success(adapter, _currentDeviceInfo!);
     } catch (e) {
       _pendingMeshCoreTransport = null;
+      AppLogging.meshcore(
+        'event=connect.failed stage=exception transport=$transportTag '
+        'attempt=c$attemptId reason=${e.runtimeType}',
+        error: true,
+      );
       await _cleanupMeshCore(transport);
       _stateController.add(MeshConnectionState.error);
       return ConnectionResult.failure(e.toString());
@@ -504,6 +545,10 @@ class ConnectionCoordinator {
       _stateController.add(MeshConnectionState.connecting);
 
       final attemptId = _connectionAttemptId;
+      AppLogging.meshcore(
+        'event=connect.requested transport=tcp attempt=c$attemptId '
+        'host=$host port=$port',
+      );
       final synthDevice = DeviceInfo(
         id: 'meshcore-tcp:$host:$port',
         name: 'MeshCore TCP $host:$port',
@@ -515,6 +560,7 @@ class ConnectionCoordinator {
         device: synthDevice,
         attemptId: attemptId,
         transport: transport,
+        transportTag: 'tcp',
       );
       completer.complete(result);
       return result;
@@ -614,6 +660,12 @@ class ConnectionCoordinator {
       'ConnectionCoordinator: Disconnecting... '
       '(reason: ${reason ?? "unspecified"}, protocol: $_activeProtocol)',
     );
+    if (_activeProtocol == MeshProtocolType.meshcore) {
+      AppLogging.meshcore(
+        'event=disconnect.requested attempt=$_attemptTag '
+        'reason=${reason ?? "unspecified"}',
+      );
+    }
 
     // Debug: Log stack trace to identify disconnect caller
     if (kDebugMode) {
@@ -650,6 +702,7 @@ class ConnectionCoordinator {
     }
     // Meshtastic: no special cleanup needed (transport managed by scanner)
 
+    final wasMeshCore = _activeProtocol == MeshProtocolType.meshcore;
     await _activeAdapter?.disconnect();
     await _activeAdapter?.dispose();
     _activeAdapter = null;
@@ -658,6 +711,9 @@ class ConnectionCoordinator {
 
     _stateController.add(MeshConnectionState.disconnected);
     AppLogging.connection('ConnectionCoordinator: Disconnected');
+    if (wasMeshCore) {
+      AppLogging.meshcore('event=disconnect.completed');
+    }
   }
 
   /// Ping the connected device.

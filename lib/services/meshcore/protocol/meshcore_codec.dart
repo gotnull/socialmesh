@@ -15,6 +15,7 @@
 
 import 'dart:typed_data';
 
+import '../../../core/logging.dart';
 import 'meshcore_frame.dart';
 
 /// Encoder for MeshCore protocol frames.
@@ -112,6 +113,10 @@ class MeshCoreDecoder {
       onError?.call(
         'Frame exceeds max size (${data.length} > $meshCoreMaxFrameSize)',
       );
+      AppLogging.meshcore(
+        'event=codec.frame.oversize ${AppLogging.framePreview(data)}',
+        error: true,
+      );
       return;
     }
 
@@ -120,6 +125,11 @@ class MeshCoreDecoder {
       onFrame?.call(frame);
     } catch (e) {
       onError?.call('Failed to decode frame: $e');
+      AppLogging.meshcore(
+        'event=codec.frame.decode_error reason=${e.runtimeType} '
+        '${AppLogging.framePreview(data)}',
+        error: true,
+      );
     }
   }
 
@@ -189,6 +199,10 @@ class MeshCoreDecoder {
       onError?.call(
         'Frame exceeds max size (${data.length} > $meshCoreMaxFrameSize)',
       );
+      AppLogging.meshcore(
+        'event=codec.frame.oversize ${AppLogging.framePreview(data)}',
+        error: true,
+      );
       return;
     }
 
@@ -197,6 +211,11 @@ class MeshCoreDecoder {
       onFrame?.call(frame);
     } catch (e) {
       onError?.call('Failed to decode frame: $e');
+      AppLogging.meshcore(
+        'event=codec.frame.decode_error reason=${e.runtimeType} '
+        '${AppLogging.framePreview(data)}',
+        error: true,
+      );
     }
   }
 

@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,10 +12,13 @@ import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/transport.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
+import '../../../core/widgets/chip_selector.dart';
 import '../../../core/l10n/l10n_extension.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../models/network_endpoint.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/connection_providers.dart';
+import '../../../providers/meshcore_providers.dart';
 import '../../../providers/network_endpoint_providers.dart';
 import '../../../services/haptic_service.dart';
 import '../../../services/transport/network_transport.dart';
@@ -60,31 +64,11 @@ class _NetworkConnectionSectionState
     });
 
     try {
-      // Set network transport host/port
-      ref.read(networkTransportHostProvider.notifier).set(endpoint.host);
-      ref.read(networkTransportPortProvider.notifier).set(endpoint.port);
-
-      // Switch transport type to network (triggers transportProvider rebuild)
-      ref.read(transportTypeProvider.notifier).setType(TransportType.network);
-
-      // Create DeviceInfo for the network endpoint
-      final deviceInfo = DeviceInfo(
-        id: 'tcp:${endpoint.host}:${endpoint.port}',
-        name: endpoint.name ?? endpoint.displayAddress,
-        type: TransportType.network,
-        address: endpoint.displayAddress,
-      );
-
-      // Connect via the standard connection flow
-      final connectionNotifier = ref.read(deviceConnectionProvider.notifier);
-      final endpointsNotifier = ref.read(networkEndpointsProvider.notifier);
-      await connectionNotifier.connectToDevice(deviceInfo);
-
-      // Update last used
-      await endpointsNotifier.updateLastUsed(endpoint.id);
-
-      if (!mounted) return;
-      widget.onConnectionSuccess?.call(deviceInfo);
+      if (endpoint.protocol == NetworkEndpointProtocol.meshcore) {
+        await _connectMeshCoreEndpoint(endpoint, l10n);
+      } else {
+        await _connectMeshtasticEndpoint(endpoint, l10n);
+      }
     } catch (e) {
       AppLogging.protocol('Network connection failed: $e');
       if (!mounted) return;
@@ -116,6 +100,71 @@ class _NetworkConnectionSectionState
         });
       }
     }
+  }
+
+  /// Existing Meshtastic TCP path — wired through `deviceConnectionProvider`
+  /// and `transportTypeProvider`. Behaviour unchanged from the
+  /// pre-protocol-selector flow.
+  Future<void> _connectMeshtasticEndpoint(
+    NetworkEndpoint endpoint,
+    AppLocalizations l10n,
+  ) async {
+    // Set network transport host/port
+    ref.read(networkTransportHostProvider.notifier).set(endpoint.host);
+    ref.read(networkTransportPortProvider.notifier).set(endpoint.port);
+
+    // Switch transport type to network (triggers transportProvider rebuild)
+    ref.read(transportTypeProvider.notifier).setType(TransportType.network);
+
+    // Create DeviceInfo for the network endpoint
+    final deviceInfo = DeviceInfo(
+      id: 'tcp:${endpoint.host}:${endpoint.port}',
+      name: endpoint.name ?? endpoint.displayAddress,
+      type: TransportType.network,
+      address: endpoint.displayAddress,
+    );
+
+    final connectionNotifier = ref.read(deviceConnectionProvider.notifier);
+    final endpointsNotifier = ref.read(networkEndpointsProvider.notifier);
+    await connectionNotifier.connectToDevice(deviceInfo);
+
+    await endpointsNotifier.updateLastUsed(endpoint.id);
+
+    if (!mounted) return;
+    widget.onConnectionSuccess?.call(deviceInfo);
+  }
+
+  /// Dev/debug MeshCore TCP path — bypasses the Meshtastic transport
+  /// stack entirely and drives [ConnectionCoordinator.connectMeshCoreTcp].
+  /// Endpoint persistence is the same as Meshtastic, but the connect
+  /// flow has no provider/transport overlap.
+  Future<void> _connectMeshCoreEndpoint(
+    NetworkEndpoint endpoint,
+    AppLocalizations l10n,
+  ) async {
+    final coordinator = ref.read(connectionCoordinatorProvider);
+    final endpointsNotifier = ref.read(networkEndpointsProvider.notifier);
+
+    final result = await coordinator.connectMeshCoreTcp(
+      host: endpoint.host,
+      port: endpoint.port,
+    );
+
+    if (!mounted) return;
+    if (!result.success) {
+      throw Exception(result.errorMessage ?? 'MeshCore TCP connect failed');
+    }
+    await endpointsNotifier.updateLastUsed(endpoint.id);
+
+    if (!mounted) return;
+    widget.onConnectionSuccess?.call(
+      DeviceInfo(
+        id: 'meshcore-tcp:${endpoint.host}:${endpoint.port}',
+        name: endpoint.name ?? 'MeshCore ${endpoint.displayAddress}',
+        type: TransportType.network,
+        address: endpoint.displayAddress,
+      ),
+    );
   }
 
   void _showAddEndpointSheet() {
@@ -361,13 +410,47 @@ class _EndpointCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        endpoint.name ?? endpoint.displayAddress,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: context.textPrimary,
-                        ),
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              endpoint.name ?? endpoint.displayAddress,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: context.textPrimary,
+                              ),
+                            ),
+                          ),
+                          if (endpoint.protocol ==
+                              NetworkEndpointProtocol.meshcore) ...[
+                            const SizedBox(width: AppTheme.spacing8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AccentColors.purple.withValues(
+                                  alpha: 0.15,
+                                ),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius4,
+                                ),
+                              ),
+                              child: Text(
+                                // Brand identifier; not localized.
+                                'MeshCore', // lint-allow: hardcoded-string
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: AccentColors.purple,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                       const SizedBox(height: AppTheme.spacing4),
                       if (endpoint.name != null)
@@ -441,6 +524,7 @@ class _AddEndpointFormState extends ConsumerState<_AddEndpointForm>
   );
   final _nameController = TextEditingController();
   bool _saving = false;
+  NetworkEndpointProtocol _protocol = NetworkEndpointProtocol.meshtastic;
 
   @override
   void dispose() {
@@ -450,19 +534,43 @@ class _AddEndpointFormState extends ConsumerState<_AddEndpointForm>
     super.dispose();
   }
 
+  /// Default the port (and clear it from any previous default) when the
+  /// user toggles the protocol chip. Only changes the field if it
+  /// currently holds the *other* protocol's default — never overrides a
+  /// user-entered custom value.
+  void _setProtocol(NetworkEndpointProtocol next) {
+    if (_protocol == next) return;
+    final currentText = _portController.text.trim();
+    final isMeshtasticDefault =
+        currentText == kMeshtasticDefaultPort.toString();
+    final isMeshcoreDefault = currentText == kMeshCoreDefaultTcpPort.toString();
+    setState(() {
+      _protocol = next;
+      if (next == NetworkEndpointProtocol.meshcore && isMeshtasticDefault) {
+        _portController.text = kMeshCoreDefaultTcpPort.toString();
+      } else if (next == NetworkEndpointProtocol.meshtastic &&
+          isMeshcoreDefault) {
+        _portController.text = kMeshtasticDefaultPort.toString();
+      }
+    });
+  }
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _saving = true);
     final host = _hostController.text.trim();
-    final port =
-        int.tryParse(_portController.text.trim()) ?? kMeshtasticDefaultPort;
+    final fallbackPort = _protocol == NetworkEndpointProtocol.meshcore
+        ? kMeshCoreDefaultTcpPort
+        : kMeshtasticDefaultPort;
+    final port = int.tryParse(_portController.text.trim()) ?? fallbackPort;
     final name = _nameController.text.trim();
 
     final endpoint = NetworkEndpoint.create(
       host: host,
       port: port,
       name: name.isEmpty ? null : name,
+      protocol: _protocol,
     );
 
     await widget.onSave(endpoint);
@@ -490,6 +598,27 @@ class _AddEndpointFormState extends ConsumerState<_AddEndpointForm>
                 color: context.textPrimary,
               ),
             ),
+            if (kDebugMode) ...[
+              const SizedBox(height: AppTheme.spacing16),
+              ChipSelector<NetworkEndpointProtocol>(
+                value: _protocol,
+                onChanged: _saving ? null : _setProtocol,
+                options: [
+                  ChipOption(
+                    value: NetworkEndpointProtocol.meshtastic,
+                    label: l10n.networkProtocolMeshtastic,
+                    icon: Icons.lan,
+                    color: context.accentColor,
+                  ),
+                  ChipOption(
+                    value: NetworkEndpointProtocol.meshcore,
+                    label: l10n.networkProtocolMeshcoreDev,
+                    icon: Icons.developer_mode,
+                    color: AccentColors.purple,
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: AppTheme.spacing24),
             TextFormField(
               controller: _hostController,

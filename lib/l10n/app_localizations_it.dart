@@ -3906,6 +3906,20 @@ class AppLocalizationsIt extends AppLocalizations {
   String get debugScreenExportDebugJson => 'Esporta JSON debug';
 
   @override
+  String get debugScreenShareMeshcoreDiagnostics =>
+      'Condividi diagnostica MeshCore';
+
+  @override
+  String get debugScreenMeshcoreDiagnosticsSubject =>
+      'Diagnostica MeshCore Socialmesh';
+
+  @override
+  String get networkProtocolMeshtastic => 'Meshtastic';
+
+  @override
+  String get networkProtocolMeshcoreDev => 'MeshCore (dev)';
+
+  @override
   String debugScreenExportFailed(String error) {
     return 'Esportazione fallita: $error';
   }

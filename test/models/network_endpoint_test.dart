@@ -13,6 +13,44 @@ void main() {
       expect(e1.id, e2.id);
     });
 
+    test('create() defaults protocol to meshtastic', () {
+      final e = NetworkEndpoint.create(host: '10.0.0.1');
+      expect(e.protocol, NetworkEndpointProtocol.meshtastic);
+    });
+
+    test('same host:port on different protocols yield distinct IDs', () {
+      final mt = NetworkEndpoint.create(host: '10.0.0.1', port: 5000);
+      final mc = NetworkEndpoint.create(
+        host: '10.0.0.1',
+        port: 5000,
+        protocol: NetworkEndpointProtocol.meshcore,
+      );
+      expect(mt.id, isNot(equals(mc.id)));
+    });
+
+    test('toJson includes protocol id, fromJson round-trips', () {
+      final original = NetworkEndpoint.create(
+        host: '192.168.5.109',
+        port: 5000,
+        protocol: NetworkEndpointProtocol.meshcore,
+      );
+      final json = original.toJson();
+      expect(json['protocol'], 'meshcore');
+      final restored = NetworkEndpoint.fromJson(json);
+      expect(restored.protocol, NetworkEndpointProtocol.meshcore);
+    });
+
+    test('fromJson without protocol field defaults to meshtastic', () {
+      final json = {
+        'id': 'legacy',
+        'host': '10.0.0.1',
+        'port': 4403,
+        'lastUsed': '2025-01-01T00:00:00.000',
+      };
+      final endpoint = NetworkEndpoint.fromJson(json);
+      expect(endpoint.protocol, NetworkEndpointProtocol.meshtastic);
+    });
+
     test('create() uses default port', () {
       final e = NetworkEndpoint.create(host: 'mesh.local');
       expect(e.port, kMeshtasticDefaultPort);

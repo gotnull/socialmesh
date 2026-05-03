@@ -9379,6 +9379,10 @@
   "@debugScreenExportDebugJson": {
     "description": "Overflow menu item: export debug JSON"
   },
+  "debugScreenShareMeshcoreDiagnostics": "Condividi diagnostica MeshCore",
+  "debugScreenMeshcoreDiagnosticsSubject": "Diagnostica MeshCore Socialmesh",
+  "networkProtocolMeshtastic": "Meshtastic",
+  "networkProtocolMeshcoreDev": "MeshCore (dev)",
   "debugScreenExportFailed": "Esportazione fallita: {error}",
   "@debugScreenExportFailed": {
     "description": "Error snackbar when export fails",

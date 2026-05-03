@@ -4,6 +4,38 @@ import 'dart:convert';
 
 import '../services/transport/network_transport.dart';
 
+/// Default TCP port for MeshCore companion-radio firmware over Wi-Fi.
+const int kMeshCoreDefaultTcpPort = 5000;
+
+/// Mesh protocol carried over a saved TCP endpoint.
+///
+/// Each saved endpoint is bound to one protocol. Meshtastic is the
+/// production default; MeshCore is exposed only as a dev/debug option
+/// (gated in the UI) and goes through [ConnectionCoordinator]'s
+/// dedicated `connectMeshCoreTcp` path — never through the Meshtastic
+/// network transport.
+enum NetworkEndpointProtocol {
+  meshtastic,
+  meshcore;
+
+  /// Stable wire name for serialization. Do not rename; would break
+  /// already-saved endpoints in shared_preferences.
+  String get id => switch (this) {
+    NetworkEndpointProtocol.meshtastic => 'meshtastic',
+    NetworkEndpointProtocol.meshcore => 'meshcore',
+  };
+
+  static NetworkEndpointProtocol fromId(String? id) {
+    switch (id) {
+      case 'meshcore':
+        return NetworkEndpointProtocol.meshcore;
+      case 'meshtastic':
+      default:
+        return NetworkEndpointProtocol.meshtastic;
+    }
+  }
+}
+
 /// A saved network endpoint for TCP connections.
 ///
 /// Modelled after the standard Meshtastic companion app pattern of
@@ -14,6 +46,7 @@ class NetworkEndpoint {
   final int port;
   final DateTime lastUsed;
   final String? name;
+  final NetworkEndpointProtocol protocol;
 
   NetworkEndpoint({
     required this.id,
@@ -21,6 +54,7 @@ class NetworkEndpoint {
     required this.port,
     required this.lastUsed,
     this.name,
+    this.protocol = NetworkEndpointProtocol.meshtastic,
   });
 
   String get displayAddress => '$host:$port';
@@ -31,6 +65,7 @@ class NetworkEndpoint {
     int? port,
     DateTime? lastUsed,
     String? name,
+    NetworkEndpointProtocol? protocol,
   }) {
     return NetworkEndpoint(
       id: id ?? this.id,
@@ -38,6 +73,7 @@ class NetworkEndpoint {
       port: port ?? this.port,
       lastUsed: lastUsed ?? this.lastUsed,
       name: name ?? this.name,
+      protocol: protocol ?? this.protocol,
     );
   }
 
@@ -47,6 +83,7 @@ class NetworkEndpoint {
     'port': port,
     'lastUsed': lastUsed.toIso8601String(),
     'name': name,
+    'protocol': protocol.id,
   };
 
   factory NetworkEndpoint.fromJson(Map<String, dynamic> json) {
@@ -56,6 +93,7 @@ class NetworkEndpoint {
       port: json['port'] as int? ?? kMeshtasticDefaultPort,
       lastUsed: DateTime.parse(json['lastUsed'] as String),
       name: json['name'] as String?,
+      protocol: NetworkEndpointProtocol.fromId(json['protocol'] as String?),
     );
   }
 
@@ -64,9 +102,11 @@ class NetworkEndpoint {
     required String host,
     int port = kMeshtasticDefaultPort,
     String? name,
+    NetworkEndpointProtocol protocol = NetworkEndpointProtocol.meshtastic,
   }) {
-    // Deterministic ID based on host:port for stable identity across sessions
-    final idSource = '$host:$port';
+    // Deterministic ID per (protocol, host, port) so the same host:port
+    // can coexist for two different protocols without collision.
+    final idSource = '${protocol.id}:$host:$port';
     final id = idSource.hashCode.toRadixString(16);
     return NetworkEndpoint(
       id: id,
@@ -74,6 +114,7 @@ class NetworkEndpoint {
       port: port,
       lastUsed: DateTime.now(),
       name: name,
+      protocol: protocol,
     );
   }
 

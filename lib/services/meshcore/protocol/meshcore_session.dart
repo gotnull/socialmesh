@@ -684,6 +684,7 @@ class MeshCoreSession {
     Duration timeout = const Duration(seconds: 10),
   }) async {
     AppLogging.protocol('MeshCore: getContacts() starting...');
+    AppLogging.meshcore('event=contacts.fetch.started');
 
     final contacts = <MeshCoreContactInfo>[];
 
@@ -719,9 +720,17 @@ class MeshCoreSession {
       AppLogging.protocol(
         'MeshCore: getContacts() complete: ${contacts.length} contacts',
       );
+      AppLogging.meshcore(
+        'event=contacts.fetch.completed result=ok count=${contacts.length}',
+      );
       return contacts;
     } on TimeoutException {
       AppLogging.protocol('MeshCore: getContacts() timeout');
+      AppLogging.meshcore(
+        'event=contacts.fetch.completed result=timeout '
+        'count=${contacts.length}',
+        error: true,
+      );
       return contacts; // Return what we got so far
     } finally {
       await contactSubscription.cancel();
@@ -743,6 +752,7 @@ class MeshCoreSession {
     Duration timeout = const Duration(seconds: 5),
   }) async {
     AppLogging.protocol('MeshCore: getChannels() starting...');
+    AppLogging.meshcore('event=channels.fetch.started max=$maxChannels');
 
     final channels = <MeshCoreChannelInfo>[];
 
@@ -775,6 +785,9 @@ class MeshCoreSession {
 
     AppLogging.protocol(
       'MeshCore: getChannels() complete: ${channels.length} channels',
+    );
+    AppLogging.meshcore(
+      'event=channels.fetch.completed count=${channels.length}',
     );
     return channels;
   }

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import '../../../core/l10n/l10n_extension.dart';
+import '../../../core/logging.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 
 import 'package:flutter/material.dart';
@@ -40,6 +41,12 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
     with LifecycleSafeMixin<MeshCoreContactsScreen> {
   String _searchQuery = '';
   final _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    AppLogging.meshcore('event=screen.opened name=contacts');
+  }
 
   @override
   void dispose() {

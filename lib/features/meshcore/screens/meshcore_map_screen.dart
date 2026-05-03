@@ -10,6 +10,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../core/logging.dart';
 import '../../../core/los_analysis.dart';
 import '../../../core/map_config.dart';
 import '../../../core/safe_lat_lng.dart';
@@ -64,6 +65,7 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
   @override
   void initState() {
     super.initState();
+    AppLogging.meshcore('event=screen.opened name=map');
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _mapController.safeMove(widget.highlightPosition, widget.highlightZoom);

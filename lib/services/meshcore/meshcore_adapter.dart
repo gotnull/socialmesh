@@ -93,11 +93,16 @@ class MeshCoreAdapter implements MeshDeviceAdapter {
 
     try {
       AppLogging.protocol('MeshCore: Starting device identification...');
+      AppLogging.meshcore('event=identify.started');
 
       // Use session's high-level getSelfInfo
       final selfInfo = await session.getSelfInfo();
 
       if (selfInfo == null) {
+        AppLogging.meshcore(
+          'event=identify.failed reason=timeout',
+          error: true,
+        );
         return const MeshProtocolResult.failure(
           MeshProtocolError.timeout,
           'Device info request timed out',
@@ -149,6 +154,13 @@ class MeshCoreAdapter implements MeshDeviceAdapter {
       );
 
       AppLogging.protocol('MeshCore: Identified as $_deviceInfo');
+      AppLogging.meshcore(
+        'event=identify.succeeded '
+        'pk=${AppLogging.publicKeyFingerprint(selfInfo.pubKey)} '
+        'node=${nodeId ?? "none"} '
+        'name=${displayName.length}c '
+        'battery=${batteryPercentage ?? "?"}%',
+      );
 
       return MeshProtocolResult.success(_deviceInfo!);
     } on MeshCoreParseException catch (e) {
@@ -157,12 +169,21 @@ class MeshCoreAdapter implements MeshDeviceAdapter {
         'MeshCore: Parse error: ${e.message} '
         '(code=0x${e.code.toRadixString(16)}, ${e.payload.length} bytes)',
       );
+      AppLogging.meshcore(
+        'event=identify.failed reason=parse '
+        'code=0x${e.code.toRadixString(16)} size=${e.payload.length}',
+        error: true,
+      );
       return MeshProtocolResult.failure(
         MeshProtocolError.identificationFailed,
         e.message,
       );
     } catch (e) {
       AppLogging.protocol('MeshCore: Identify error: $e');
+      AppLogging.meshcore(
+        'event=identify.failed reason=${e.runtimeType}',
+        error: true,
+      );
       return MeshProtocolResult.failure(
         MeshProtocolError.communicationError,
         e.toString(),

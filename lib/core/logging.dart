@@ -104,6 +104,8 @@ class AppLogging {
   static bool? _meshGameSessionLoggingEnabled;
   static bool? _meshGameUiLoggingEnabled;
   static bool? _mqttProxyLoggingEnabled;
+  static bool? _meshcoreLoggingEnabled;
+  static bool? _meshcoreLoggingLocationEnabled;
   static bool? _forceEmptyStates;
   static Logger? _bleLogger;
   static Logger? _mapLogger;
@@ -931,6 +933,108 @@ class AppLogging {
     _appLogSink?.call(2, 'mqtt_proxy', message); // lint-allow: hardcoded-string
   }
 
+  /// MeshCore observability channel.
+  ///
+  /// Sparse, transition-based events for the MeshCore protocol stack
+  /// (TCP/BLE transports, adapter, session, providers, screens).
+  /// Always sink-routes to [AppLogger] so they show up in the in-app
+  /// "Share MeshCore Diagnostics" export — even if the console flag is
+  /// off — because dual-device E2E debugging needs the events to reach
+  /// the developer.
+  ///
+  /// Default flag: enabled in debug builds, disabled in release. Override
+  /// with `MESHCORE_LOGGING_ENABLED=true|false` in `.env`.
+  ///
+  /// Pass `error: true` for failure-class events; they sink at level 3.
+  static bool get meshcoreLoggingEnabled {
+    _meshcoreLoggingEnabled ??=
+        _safeGetEnv('MESHCORE_LOGGING_ENABLED')?.toLowerCase() == 'true' ||
+        (_safeGetEnv('MESHCORE_LOGGING_ENABLED') == null && kDebugMode);
+    return _meshcoreLoggingEnabled!;
+  }
+
+  /// Whether [coordRedact] is permitted to emit coarse coordinates.
+  /// Off by default — even rounded coordinates are PII, so callers must
+  /// opt in explicitly via `MESHCORE_LOGGING_LOCATION_ENABLED=true`.
+  static bool get meshcoreLoggingLocationEnabled {
+    _meshcoreLoggingLocationEnabled ??=
+        _safeGetEnv('MESHCORE_LOGGING_LOCATION_ENABLED')?.toLowerCase() ==
+        'true';
+    return _meshcoreLoggingLocationEnabled!;
+  }
+
+  static void meshcore(String message, {bool error = false}) {
+    if (!meshcoreLoggingEnabled) return;
+    debugPrint('MeshCore: $message');
+    _appLogSink?.call(
+      error ? 3 : 1,
+      'meshcore', // lint-allow: hardcoded-string
+      message,
+    );
+  }
+
+  /// Short fingerprint for a public-key byte string suitable for log
+  /// lines. Format: `<lenB:first4…last4hex>`. Empty/null renders as
+  /// `0B:none`. Keys ≤8 bytes are emitted in full hex (still safe — too
+  /// short to identify rotation material). Larger keys get head/tail
+  /// only.
+  ///
+  /// Never log a full public key — even though pks are not strictly
+  /// secret, the fingerprint is enough to correlate sender/receiver
+  /// across logs without leaking the canonical identity for downstream
+  /// joins.
+  static String publicKeyFingerprint(List<int>? key) {
+    if (key == null || key.isEmpty) return '0B:none';
+    final hex = key.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+    if (key.length <= 8) {
+      return '${key.length}B:$hex';
+    }
+    final head = hex.substring(0, 8);
+    final tail = hex.substring(hex.length - 8);
+    return '${key.length}B:$head…$tail';
+  }
+
+  /// Compact 4-byte hex form for a 32-bit Meshtastic / MeshCore node ID.
+  /// Format: `0xAABBCCDD`. Null renders as `none`.
+  static String nodeIdShort(int? id) {
+    if (id == null) return 'none';
+    return '0x${id.toRadixString(16).toUpperCase().padLeft(8, '0')}';
+  }
+
+  /// Coarse coordinate string for diagnostic logs. Rounds to 1 decimal
+  /// place (~11 km precision) and only renders when
+  /// [meshcoreLoggingLocationEnabled] is true. Disabled callers get the
+  /// fixed string `redacted`.
+  ///
+  /// Never log raw GPS coordinates — even rounded coords are PII; the
+  /// flag is opt-in for lab triage and should never be on for shipped
+  /// builds.
+  static String coordRedact(double? lat, double? lon) {
+    if (!meshcoreLoggingLocationEnabled) return 'redacted';
+    if (lat == null || lon == null) return 'none';
+    final latStr = lat.toStringAsFixed(1);
+    final lonStr = lon.toStringAsFixed(1);
+    return '$latStr,$lonStr';
+  }
+
+  /// Bounded preview of a frame's leading bytes for malformed-frame
+  /// diagnostics. Format: `len=NNN head=AA BB CC …`. Caller must NEVER
+  /// pass plaintext or post-decryption payloads — preview is for
+  /// codec-layer error paths only (oversize, undersized, decode failed).
+  ///
+  /// [max] caps the head length at 32 bytes regardless of input.
+  static String framePreview(List<int>? bytes, {int max = 16}) {
+    if (bytes == null) return 'len=0 head=()';
+    final cap = max.clamp(0, 32).toInt();
+    final headLen = bytes.length < cap ? bytes.length : cap;
+    final head = bytes
+        .take(headLen)
+        .map((b) => b.toRadixString(16).padLeft(2, '0'))
+        .join(' ');
+    final ellipsis = bytes.length > headLen ? ' …' : '';
+    return 'len=${bytes.length} head=$head$ellipsis';
+  }
+
   static void reset() {
     _appLogSink = null;
     _bleLoggingEnabled = null;
@@ -993,6 +1097,8 @@ class AppLogging {
     _meshFeedLoggingEnabled = null;
     _meshCapacityLoggingEnabled = null;
     _mqttProxyLoggingEnabled = null;
+    _meshcoreLoggingEnabled = null;
+    _meshcoreLoggingLocationEnabled = null;
     _bleLogger = null;
     _noOpLogger = null;
   }

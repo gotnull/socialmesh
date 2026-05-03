@@ -5121,6 +5121,22 @@
     "@debugScreenExportDebugJson": {
         "description": "Overflow menu item: export debug JSON"
     },
+    "debugScreenShareMeshcoreDiagnostics": "Share MeshCore Diagnostics",
+    "@debugScreenShareMeshcoreDiagnostics": {
+        "description": "Overflow menu item: share MeshCore diagnostics bundle (logs + state JSON)"
+    },
+    "debugScreenMeshcoreDiagnosticsSubject": "Socialmesh MeshCore Diagnostics",
+    "@debugScreenMeshcoreDiagnosticsSubject": {
+        "description": "Share-sheet subject line for the MeshCore diagnostics bundle"
+    },
+    "networkProtocolMeshtastic": "Meshtastic",
+    "@networkProtocolMeshtastic": {
+        "description": "Protocol chip label — Meshtastic TCP. Brand name; do not translate."
+    },
+    "networkProtocolMeshcoreDev": "MeshCore (dev)",
+    "@networkProtocolMeshcoreDev": {
+        "description": "Protocol chip label — MeshCore TCP. Debug-only path; brand name plus a (dev) suffix indicating non-production status."
+    },
     "debugScreenExportFailed": "Export failed: {error}",
     "@debugScreenExportFailed": {
         "description": "Error snackbar when export fails",

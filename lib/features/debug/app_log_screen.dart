@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
+import 'dart:convert';
+
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -246,6 +249,75 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen>
     shareText(content, subject: 'Socialmesh App Log', context: context);
   }
 
+  /// Bundle the in-memory log buffer (filtered to MeshCore + connection +
+  /// BLE sources) and the structured DebugExportService snapshot into one
+  /// text payload, then share via the OS share sheet. Debug/internal
+  /// builds only.
+  Future<void> _shareMeshcoreDiagnostics() async {
+    final logger = ref.read(appLoggerProvider);
+    final exportService = ref.read(debugExportServiceProvider);
+
+    final box = context.findRenderObject() as RenderBox?;
+    final sharePosition = box != null
+        ? box.localToGlobal(Offset.zero) & box.size
+        : const Rect.fromLTWH(0, 0, 100, 100);
+
+    try {
+      // Filter buffer to channels relevant for MeshCore E2E debugging.
+      // Other sources (mqtt_proxy, app, etc.) are excluded to keep the
+      // bundle focused.
+      const meshcoreSources = {'meshcore', 'ble', 'connection'};
+      final relevant = logger.logs
+          .where((e) => meshcoreSources.contains(e.source))
+          .toList();
+      final logBuffer = StringBuffer();
+      for (final entry in relevant) {
+        logBuffer.writeln(
+          '[${entry.timestamp.toIso8601String()}] '
+          '[${entry.level.label}] '
+          '[${entry.source}] '
+          '${entry.message}',
+        );
+      }
+
+      final stateJson = await exportService.exportAsJson();
+
+      final ts = DateTime.now()
+          .toIso8601String()
+          .replaceAll(':', '-')
+          .split('.')[0];
+      final bundle = StringBuffer()
+        ..writeln('=== MeshCore Diagnostics Bundle ===')
+        ..writeln('generated=$ts')
+        ..writeln('logEntries=${relevant.length}')
+        ..writeln('')
+        ..writeln('--- App Logs (meshcore + ble + connection) ---')
+        ..write(logBuffer)
+        ..writeln('')
+        ..writeln('--- Debug State Snapshot (JSON) ---')
+        ..writeln(
+          const JsonEncoder.withIndent('  ').convert(jsonDecode(stateJson)),
+        );
+
+      if (!mounted) return;
+      await shareTextAsFile(
+        bundle.toString(),
+        filename: 'socialmesh_meshcore_diag_$ts.txt',
+        mimeType: 'text/plain',
+        subject: context.l10n.debugScreenMeshcoreDiagnosticsSubject,
+        context: context,
+        sharePositionOrigin: sharePosition,
+      );
+    } catch (e) {
+      if (mounted) {
+        showErrorSnackBar(
+          context,
+          context.l10n.debugScreenExportFailed(e.toString()),
+        );
+      }
+    }
+  }
+
   Future<void> _exportDebug() async {
     // Disclosure gate: inform user what the export contains
     final confirmed = await AppBottomSheet.showConfirm(
@@ -343,6 +415,9 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen>
               case 'debug_export':
                 _exportDebug();
                 break;
+              case 'meshcore_diag':
+                _shareMeshcoreDiagnostics();
+                break;
               case 'clear':
                 _clearLogs();
                 break;
@@ -407,6 +482,24 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen>
                 ],
               ),
             ),
+            if (kDebugMode)
+              PopupMenuItem(
+                value: 'meshcore_diag',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.lan_outlined,
+                      color: context.accentColor,
+                      size: 20,
+                    ),
+                    SizedBox(width: AppTheme.spacing12),
+                    Text(
+                      context.l10n.debugScreenShareMeshcoreDiagnostics,
+                      style: TextStyle(color: context.accentColor),
+                    ),
+                  ],
+                ),
+              ),
             PopupMenuItem(
               value: 'clear',
               child: Row(

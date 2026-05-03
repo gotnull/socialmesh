@@ -77,11 +77,16 @@ class MeshCoreTcpTransport implements MeshTransport {
 
     _updateState(DeviceConnectionState.connecting);
     AppLogging.connection('MeshCoreTcpTransport: Connecting to $host:$port...');
+    AppLogging.meshcore('event=tcp.connect host=$host port=$port');
 
     try {
       _socket = await Socket.connect(host, port, timeout: connectTimeout);
     } catch (e) {
       AppLogging.connection('MeshCoreTcpTransport: Connect failed: $e');
+      AppLogging.meshcore(
+        'event=tcp.error stage=connect reason=${e.runtimeType}',
+        error: true,
+      );
       _updateState(DeviceConnectionState.error);
       rethrow;
     }
@@ -90,10 +95,15 @@ class MeshCoreTcpTransport implements MeshTransport {
       _onSocketData,
       onError: (Object error, StackTrace _) {
         AppLogging.connection('MeshCoreTcpTransport: Socket error: $error');
+        AppLogging.meshcore(
+          'event=tcp.error stage=stream reason=${error.runtimeType}',
+          error: true,
+        );
         _handleDisconnect(reason: 'socket-error');
       },
       onDone: () {
         AppLogging.connection('MeshCoreTcpTransport: Socket closed by peer');
+        AppLogging.meshcore('event=tcp.peer_close', error: true);
         _handleDisconnect(reason: 'peer-closed');
       },
       cancelOnError: false,
@@ -101,6 +111,7 @@ class MeshCoreTcpTransport implements MeshTransport {
 
     _updateState(DeviceConnectionState.connected);
     AppLogging.connection('MeshCoreTcpTransport: Connected to $host:$port');
+    AppLogging.meshcore('event=tcp.connected host=$host port=$port');
   }
 
   void _onSocketData(List<int> bytes) {
@@ -123,6 +134,7 @@ class MeshCoreTcpTransport implements MeshTransport {
     AppLogging.connection(
       'MeshCoreTcpTransport: Disconnected (reason: $reason)',
     );
+    AppLogging.meshcore('event=tcp.closed reason=$reason');
     _updateState(DeviceConnectionState.disconnected);
   }
 

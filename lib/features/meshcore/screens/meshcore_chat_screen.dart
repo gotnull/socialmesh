@@ -98,6 +98,10 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
   @override
   void initState() {
     super.initState();
+    AppLogging.meshcore(
+      'event=screen.opened name=chat '
+      'type=${widget.chatType == MeshCoreChatType.contact ? "contact" : "channel"}',
+    );
     _loadMessages();
     _subscribeToIncomingMessages();
   }
@@ -214,6 +218,10 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
       _persistMessage(message);
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
     }
+    AppLogging.meshcore(
+      'event=message.received type=contact size=${text.length} '
+      'sender=${AppLogging.publicKeyFingerprint(senderKey)}',
+    );
   }
 
   void _handleIncomingChannelMessage(MeshCoreFrame frame) {
@@ -241,6 +249,10 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
       _persistMessage(message);
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
     }
+    AppLogging.meshcore(
+      'event=message.received type=channel slot=$channelIndex '
+      'size=${text.length}',
+    );
   }
 
   void _handleDeliveryConfirmation(MeshCoreFrame frame) {
@@ -360,6 +372,13 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
       _isSending = true;
     });
 
+    final chatTypeTag = widget.chatType == MeshCoreChatType.contact
+        ? 'contact'
+        : 'channel';
+    AppLogging.meshcore(
+      'event=message.send.attempted type=$chatTypeTag size=${text.length}',
+    );
+
     try {
       // Create local message with pending status
       final message = MeshCoreMessage(
@@ -388,6 +407,10 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
 
       if (adapter == null) {
         _markMessageFailed(message.id);
+        AppLogging.meshcore(
+          'event=message.send.failed type=$chatTypeTag reason=no_adapter',
+          error: true,
+        );
         if (mounted) {
           showErrorSnackBar(context, context.l10n.meshcoreNotConnectedToDevice);
         }
@@ -398,6 +421,10 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
       final session = adapter.session;
       if (session == null || !session.isActive) {
         _markMessageFailed(message.id);
+        AppLogging.meshcore(
+          'event=message.send.failed type=$chatTypeTag reason=session_inactive',
+          error: true,
+        );
         if (mounted) {
           showErrorSnackBar(context, context.l10n.meshcoreSessionNotActive);
         }
@@ -430,8 +457,15 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
       }
 
       AppLogging.protocol('MeshCore Chat: Sent message to $_title: $text');
+      AppLogging.meshcore(
+        'event=message.send.accepted type=$chatTypeTag size=${text.length}',
+      );
     } catch (e) {
       AppLogging.protocol('MeshCore Chat: Error sending message: $e');
+      AppLogging.meshcore(
+        'event=message.send.failed type=$chatTypeTag reason=${e.runtimeType}',
+        error: true,
+      );
       if (mounted) {
         showErrorSnackBar(context, context.l10n.meshcoreFailedToSendMessage);
       }

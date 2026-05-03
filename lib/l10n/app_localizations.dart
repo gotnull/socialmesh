@@ -6868,6 +6868,30 @@ abstract class AppLocalizations {
   /// **'Export Debug JSON'**
   String get debugScreenExportDebugJson;
 
+  /// Overflow menu item: share MeshCore diagnostics bundle (logs + state JSON)
+  ///
+  /// In en, this message translates to:
+  /// **'Share MeshCore Diagnostics'**
+  String get debugScreenShareMeshcoreDiagnostics;
+
+  /// Share-sheet subject line for the MeshCore diagnostics bundle
+  ///
+  /// In en, this message translates to:
+  /// **'Socialmesh MeshCore Diagnostics'**
+  String get debugScreenMeshcoreDiagnosticsSubject;
+
+  /// Protocol chip label — Meshtastic TCP. Brand name; do not translate.
+  ///
+  /// In en, this message translates to:
+  /// **'Meshtastic'**
+  String get networkProtocolMeshtastic;
+
+  /// Protocol chip label — MeshCore TCP. Debug-only path; brand name plus a (dev) suffix indicating non-production status.
+  ///
+  /// In en, this message translates to:
+  /// **'MeshCore (dev)'**
+  String get networkProtocolMeshcoreDev;
+
   /// Error snackbar when export fails
   ///
   /// In en, this message translates to:

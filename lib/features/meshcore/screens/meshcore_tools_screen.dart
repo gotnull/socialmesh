@@ -6,6 +6,7 @@ import '../../../core/l10n/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/logging.dart';
 import '../../../core/meshcore_constants.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
@@ -34,6 +35,12 @@ class MeshCoreToolsScreen extends ConsumerStatefulWidget {
 class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
     with LifecycleSafeMixin {
   bool _isRefreshing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    AppLogging.meshcore('event=screen.opened name=tools');
+  }
 
   @override
   Widget build(BuildContext context) {

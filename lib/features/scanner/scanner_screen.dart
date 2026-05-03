@@ -38,7 +38,6 @@ import 'widgets/protocol_badge.dart';
 import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import 'widgets/connecting_animation.dart';
 import 'widgets/mdns_discovery_section.dart';
-import 'widgets/meshcore_tcp_dev_section.dart';
 import 'widgets/network_connection_section.dart';
 import '../device/region_selection_screen.dart';
 
@@ -2540,26 +2539,6 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                 const SizedBox(height: AppTheme.spacing16),
                 NetworkConnectionSection(
                   compact: true,
-                  onConnectionSuccess: (device) {
-                    if (!mounted) return;
-                    if (widget.isOnboarding) {
-                      Navigator.of(context).pop(device);
-                      return;
-                    }
-                    final appState = ref.read(appInitProvider);
-                    if (appState == AppInitState.needsScanner) {
-                      ref.read(appInitProvider.notifier).setReady();
-                    } else if (!widget.isInline) {
-                      _navigateToMain();
-                    }
-                  },
-                ),
-
-                // Dev-only MeshCore TCP entry — invisible in release builds,
-                // exposes a host/port form for connecting the simulator to
-                // a MeshCore companion radio over the network. See
-                // [MeshCoreTcpDevSection] for the kDebugMode gate.
-                MeshCoreTcpDevSection(
                   onConnectionSuccess: (device) {
                     if (!mounted) return;
                     if (widget.isOnboarding) {

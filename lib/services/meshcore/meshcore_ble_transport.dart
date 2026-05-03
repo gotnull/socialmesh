@@ -106,6 +106,7 @@ class MeshCoreBleTransport implements MeshTransport {
 
     try {
       AppLogging.ble('MeshCore: Connecting to ${device.name}...');
+      AppLogging.meshcore('event=ble.connect device=${device.id}');
 
       // Get or create BluetoothDevice
       final systemDevices = await FlutterBluePlus.systemDevices([]);
@@ -146,8 +147,13 @@ class MeshCoreBleTransport implements MeshTransport {
 
       _updateState(DeviceConnectionState.connected);
       AppLogging.ble('MeshCore: Connected and ready');
+      AppLogging.meshcore('event=ble.connected device=${device.id}');
     } catch (e) {
       AppLogging.ble('MeshCore: Connection error: $e');
+      AppLogging.meshcore(
+        'event=ble.error stage=connect reason=${e.runtimeType}',
+        error: true,
+      );
       await disconnect();
       _updateState(DeviceConnectionState.error);
       rethrow;
@@ -180,6 +186,10 @@ class MeshCoreBleTransport implements MeshTransport {
     if (meshCoreService == null) {
       AppLogging.ble(
         'MeshCore: Nordic UART service not found (${MeshCoreBleUuids.serviceUuid})',
+      );
+      AppLogging.meshcore(
+        'event=ble.error stage=discover reason=service_missing',
+        error: true,
       );
       throw MeshCoreServiceNotFoundException(
         'MeshCore Nordic UART service (${MeshCoreBleUuids.serviceUuid}) not found. '
@@ -297,6 +307,7 @@ class MeshCoreBleTransport implements MeshTransport {
 
     _updateState(DeviceConnectionState.disconnected);
     AppLogging.ble('MeshCore: Disconnected');
+    AppLogging.meshcore('event=ble.closed');
   }
 
   @override

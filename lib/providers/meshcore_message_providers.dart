@@ -313,6 +313,10 @@ class MeshCoreConversationsNotifier
       state = MeshCoreConversationsState(conversations: conversations);
     } catch (e) {
       AppLogging.storage('MeshCore: Error loading conversations: $e');
+      AppLogging.meshcore(
+        'event=provider.error scope=conversations.load reason=${e.runtimeType}',
+        error: true,
+      );
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
@@ -508,6 +512,11 @@ final meshCoreMessageHistoryProvider =
 
         return MeshCoreMessageHistoryState(messages: messages);
       } catch (e) {
+        AppLogging.meshcore(
+          'event=provider.error scope=history.load '
+          'isChannel=${params.isChannel} reason=${e.runtimeType}',
+          error: true,
+        );
         return MeshCoreMessageHistoryState(error: e.toString());
       }
     });
