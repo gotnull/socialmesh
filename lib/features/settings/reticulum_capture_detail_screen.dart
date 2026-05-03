@@ -14,6 +14,7 @@ import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/info_table.dart';
 import '../../core/widgets/section_header.dart';
+import '../../core/widgets/settings_primitives.dart';
 import '../../providers/reticulum_providers.dart';
 import '../../services/protocol/reticulum/reticulum_capture_classifier.dart';
 import '../../services/protocol/reticulum/reticulum_capture_library.dart';
@@ -305,51 +306,57 @@ class _DetailBody extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppTheme.spacing16),
-        _SectionHeader(title: context.l10n.reticulumDetailSectionProvenance),
+        SettingsSectionHeader(
+          title: context.l10n.reticulumDetailSectionProvenance,
+        ),
         _SourcePicker(value: source, onChanged: onSourceChanged),
         const SizedBox(height: AppTheme.spacing12),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
-          child: _FieldGroupCard(
-            children: [
-              _ProvField(
-                controller: deviceModelController,
-                label: context.l10n.reticulumDetailDeviceModel,
-                hint: context.l10n.reticulumDetailDeviceModelHint,
-                icon: Icons.memory,
-                maxLength: 64,
-              ),
-              _ProvField(
-                controller: firmwareVersionController,
-                label: context.l10n.reticulumDetailFirmwareVersion,
-                hint: context.l10n.reticulumDetailFirmwareVersionHint,
-                icon: Icons.bolt_outlined,
-                maxLength: 64,
-              ),
-              _ProvField(
-                controller: regionController,
-                label: context.l10n.reticulumDetailRegion,
-                hint: context.l10n.reticulumDetailRegionHint,
-                icon: Icons.public,
-                maxLength: 16,
-              ),
-              _ProvField(
-                controller: channelIndexController,
-                label: context.l10n.reticulumDetailChannelIndex,
-                hint: context.l10n.reticulumDetailChannelIndexHint,
-                icon: Icons.format_list_numbered,
-                keyboardType: TextInputType.number,
-                maxLength: 3,
-              ),
-              _ProvField(
-                controller: notesController,
-                label: context.l10n.reticulumDetailNotes,
-                hint: context.l10n.reticulumDetailNotesHint,
-                icon: Icons.notes_outlined,
-                maxLength: 256,
-                maxLines: 3,
-              ),
-            ],
+          child: FieldGroupCard(
+            margin: EdgeInsets.zero,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _ProvField(
+                  controller: deviceModelController,
+                  label: context.l10n.reticulumDetailDeviceModel,
+                  hint: context.l10n.reticulumDetailDeviceModelHint,
+                  icon: Icons.memory,
+                  maxLength: 64,
+                ),
+                _ProvField(
+                  controller: firmwareVersionController,
+                  label: context.l10n.reticulumDetailFirmwareVersion,
+                  hint: context.l10n.reticulumDetailFirmwareVersionHint,
+                  icon: Icons.bolt_outlined,
+                  maxLength: 64,
+                ),
+                _ProvField(
+                  controller: regionController,
+                  label: context.l10n.reticulumDetailRegion,
+                  hint: context.l10n.reticulumDetailRegionHint,
+                  icon: Icons.public,
+                  maxLength: 16,
+                ),
+                _ProvField(
+                  controller: channelIndexController,
+                  label: context.l10n.reticulumDetailChannelIndex,
+                  hint: context.l10n.reticulumDetailChannelIndexHint,
+                  icon: Icons.format_list_numbered,
+                  keyboardType: TextInputType.number,
+                  maxLength: 3,
+                ),
+                _ProvField(
+                  controller: notesController,
+                  label: context.l10n.reticulumDetailNotes,
+                  hint: context.l10n.reticulumDetailNotesHint,
+                  icon: Icons.notes_outlined,
+                  maxLength: 256,
+                  maxLines: 3,
+                ),
+              ],
+            ),
           ),
         ),
         const SizedBox(height: AppTheme.spacing16),
@@ -362,18 +369,20 @@ class _DetailBody extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppTheme.spacing16),
-        _SettingsTile(
+        SettingsTile(
           icon: Icons.ios_share,
           title: context.l10n.reticulumDetailShare,
           subtitle: entry.file.path,
           onTap: onShare,
+          trailing: Icon(Icons.chevron_right, color: context.textTertiary),
         ),
-        _SettingsTile(
+        SettingsTile(
           icon: Icons.delete_outline,
           iconColor: AppTheme.errorRed,
           title: context.l10n.reticulumDetailDelete,
           subtitle: entry.checksumShortPrefix,
           onTap: onDelete,
+          trailing: Icon(Icons.chevron_right, color: context.textTertiary),
         ),
       ],
     );
@@ -513,28 +522,6 @@ class _ProvField extends StatelessWidget {
   }
 }
 
-class _FieldGroupCard extends StatelessWidget {
-  const _FieldGroupCard({required this.children});
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spacing16),
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: children,
-      ),
-    );
-  }
-}
-
-// -----------------------------------------------------------------------------
-
 class _DeleteConfirmSheet extends StatelessWidget {
   const _DeleteConfirmSheet({required this.filename});
   final String filename;
@@ -587,106 +574,6 @@ class _DeleteConfirmSheet extends StatelessWidget {
             ],
           ),
         ],
-      ),
-    );
-  }
-}
-
-// -----------------------------------------------------------------------------
-
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title});
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppTheme.spacing16,
-        AppTheme.spacing8,
-        AppTheme.spacing16,
-        AppTheme.spacing8,
-      ),
-      child: Text(
-        title,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-          color: context.textTertiary,
-          letterSpacing: 1.2,
-        ),
-      ),
-    );
-  }
-}
-
-class _SettingsTile extends StatelessWidget {
-  const _SettingsTile({
-    required this.icon,
-    this.iconColor,
-    required this.title,
-    required this.subtitle,
-    this.onTap,
-  });
-
-  final IconData icon;
-  final Color? iconColor;
-  final String title;
-  final String subtitle;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(
-        horizontal: AppTheme.spacing16,
-        vertical: AppTheme.spacing2,
-      ),
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(AppTheme.radius12),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppTheme.spacing16,
-              vertical: AppTheme.spacing12,
-            ),
-            child: Row(
-              children: [
-                Icon(icon, color: iconColor ?? context.textSecondary),
-                const SizedBox(width: AppTheme.spacing16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500,
-                          color: context.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: AppTheme.spacing2),
-                      Text(
-                        subtitle,
-                        style: context.bodySmallStyle?.copyWith(
-                          color: context.textTertiary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(Icons.chevron_right, color: context.textTertiary),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }

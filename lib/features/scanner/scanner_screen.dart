@@ -34,6 +34,7 @@ import '../../utils/snackbar.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../providers/app_providers.dart';
 import '../../services/storage/storage_service.dart';
+import 'widgets/protocol_badge.dart';
 import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import 'widgets/connecting_animation.dart';
 import 'widgets/mdns_discovery_section.dart';
@@ -2737,7 +2738,7 @@ class _DeviceCard extends StatelessWidget {
                           if (protocolType != MeshProtocolType.unknown ||
                               showDebugInfo) ...[
                             const SizedBox(width: AppTheme.spacing8),
-                            _ProtocolBadge(protocolType: protocolType),
+                            ProtocolBadge(protocolType: protocolType),
                           ],
                         ],
                       ),
@@ -2781,48 +2782,6 @@ class _DeviceCard extends StatelessWidget {
     if (rssi >= -80) return 2;
     if (rssi >= -90) return 1;
     return 0;
-  }
-}
-
-/// Protocol type badge for device cards
-class _ProtocolBadge extends StatelessWidget {
-  final MeshProtocolType protocolType;
-
-  const _ProtocolBadge({required this.protocolType});
-
-  @override
-  Widget build(BuildContext context) {
-    final (label, color) = switch (protocolType) {
-      MeshProtocolType.meshtastic => (
-        context.l10n.scannerProtocolMeshtastic,
-        AppTheme.successGreen,
-      ),
-      MeshProtocolType.meshcore => (
-        context.l10n.scannerProtocolMeshCore,
-        AccentColors.blue,
-      ),
-      MeshProtocolType.unknown => (
-        context.l10n.scannerProtocolUnknown,
-        AccentColors.orange,
-      ),
-    };
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(AppTheme.radius4),
-        border: Border.all(color: color.withValues(alpha: 0.5)),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w600,
-          color: color,
-        ),
-      ),
-    );
   }
 }
 

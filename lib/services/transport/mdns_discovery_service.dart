@@ -6,6 +6,7 @@ import 'package:bonsoir/bonsoir.dart';
 
 import '../../core/logging.dart';
 import '../../core/transport.dart';
+import '../../models/mesh_device.dart';
 import '../../services/transport/network_transport.dart';
 
 /// Discovered Meshtastic device via mDNS/Bonjour on the local network.
@@ -19,12 +20,18 @@ class MdnsDeviceInfo {
   final String? shortName;
   final String? nodeId;
 
+  /// Protocol the device speaks. Bonjour service type determines this:
+  /// `_meshtastic._tcp` → meshtastic. Reserved for future MeshCore mDNS
+  /// service-type discovery — UI groups and badges keys off this value.
+  final MeshProtocolType protocol;
+
   MdnsDeviceInfo({
     required this.host,
     required this.port,
     required this.serviceName,
     this.shortName,
     this.nodeId,
+    this.protocol = MeshProtocolType.meshtastic,
   });
 
   /// Display name following the standard Meshtastic discovery format:

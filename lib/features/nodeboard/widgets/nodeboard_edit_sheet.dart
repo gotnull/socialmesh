@@ -16,6 +16,7 @@ import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
+import '../../../core/widgets/settings_primitives.dart';
 import '../../../providers/app_providers.dart';
 import '../../../utils/snackbar.dart';
 import '../models/nodeboard.dart';
@@ -157,47 +158,50 @@ class _NodeBoardEditSheetState extends ConsumerState<_NodeBoardEditSheet>
             ),
             children: [
               // lint-allow: hardcoded-string
-              const _SectionHeader(title: 'IDENTITY'),
-              _FieldGroupCard(
-                children: [
-                  _LabeledField(
-                    controller: _titleCtrl,
-                    // lint-allow: hardcoded-string
-                    label: 'Title',
-                    prefixIcon: Icons.title,
-                    maxLength: 100,
-                  ),
-                  const SizedBox(height: AppTheme.spacing16),
-                  _LabeledField(
-                    controller: _sysopCtrl,
-                    // lint-allow: hardcoded-string
-                    label: 'Sysop name',
-                    prefixIcon: Icons.badge_outlined,
-                    maxLength: 60,
-                  ),
-                  const SizedBox(height: AppTheme.spacing16),
-                  _LabeledField(
-                    controller: _taglineCtrl,
-                    // lint-allow: hardcoded-string
-                    label: 'Tagline',
-                    prefixIcon: Icons.short_text,
-                    maxLength: 140,
-                  ),
-                  const SizedBox(height: AppTheme.spacing16),
-                  _LabeledField(
-                    controller: _descCtrl,
-                    // lint-allow: hardcoded-string
-                    label: 'Description',
-                    prefixIcon: Icons.notes,
-                    maxLength: 5000,
-                    maxLines: 4,
-                  ),
-                ],
+              const SettingsSectionHeader(title: 'IDENTITY'),
+              FieldGroupCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _LabeledField(
+                      controller: _titleCtrl,
+                      // lint-allow: hardcoded-string
+                      label: 'Title',
+                      prefixIcon: Icons.title,
+                      maxLength: 100,
+                    ),
+                    const SizedBox(height: AppTheme.spacing16),
+                    _LabeledField(
+                      controller: _sysopCtrl,
+                      // lint-allow: hardcoded-string
+                      label: 'Sysop name',
+                      prefixIcon: Icons.badge_outlined,
+                      maxLength: 60,
+                    ),
+                    const SizedBox(height: AppTheme.spacing16),
+                    _LabeledField(
+                      controller: _taglineCtrl,
+                      // lint-allow: hardcoded-string
+                      label: 'Tagline',
+                      prefixIcon: Icons.short_text,
+                      maxLength: 140,
+                    ),
+                    const SizedBox(height: AppTheme.spacing16),
+                    _LabeledField(
+                      controller: _descCtrl,
+                      // lint-allow: hardcoded-string
+                      label: 'Description',
+                      prefixIcon: Icons.notes,
+                      maxLength: 5000,
+                      maxLines: 4,
+                    ),
+                  ],
+                ),
               ),
 
               const SizedBox(height: AppTheme.spacing16),
               // lint-allow: hardcoded-string
-              const _SectionHeader(title: 'NODE LINKING'),
+              const SettingsSectionHeader(title: 'NODE LINKING'),
               _NodeLinkTile(
                 myHexId: myHexId,
                 linked: nodeLinked,
@@ -219,7 +223,7 @@ class _NodeBoardEditSheetState extends ConsumerState<_NodeBoardEditSheet>
 
               const SizedBox(height: AppTheme.spacing16),
               // lint-allow: hardcoded-string
-              const _SectionHeader(title: 'VISIBILITY'),
+              const SettingsSectionHeader(title: 'VISIBILITY'),
               _VisibilityRadioGroup(
                 selected: _visibility,
                 onChanged: (v) {
@@ -228,7 +232,7 @@ class _NodeBoardEditSheetState extends ConsumerState<_NodeBoardEditSheet>
                 },
               ),
 
-              _SettingsTile(
+              SettingsTile(
                 icon: Icons.public,
                 iconColor: _listed ? context.accentColor : null,
                 // lint-allow: hardcoded-string
@@ -243,7 +247,7 @@ class _NodeBoardEditSheetState extends ConsumerState<_NodeBoardEditSheet>
                   },
                 ),
               ),
-              _SettingsTile(
+              SettingsTile(
                 icon: Icons.group_outlined,
                 iconColor: _guestPosting ? context.accentColor : null,
                 // lint-allow: hardcoded-string
@@ -258,7 +262,7 @@ class _NodeBoardEditSheetState extends ConsumerState<_NodeBoardEditSheet>
                   },
                 ),
               ),
-              _SettingsTile(
+              SettingsTile(
                 icon: Icons.lock_outline,
                 iconColor: _readOnly ? context.accentColor : null,
                 // lint-allow: hardcoded-string
@@ -276,7 +280,7 @@ class _NodeBoardEditSheetState extends ConsumerState<_NodeBoardEditSheet>
 
               const SizedBox(height: AppTheme.spacing16),
               // lint-allow: hardcoded-string
-              const _SectionHeader(title: 'THEME'),
+              const SettingsSectionHeader(title: 'THEME'),
               _ThemeListTile(
                 selectedId: _themeId,
                 onSelected: (id) {
@@ -287,27 +291,30 @@ class _NodeBoardEditSheetState extends ConsumerState<_NodeBoardEditSheet>
 
               const SizedBox(height: AppTheme.spacing16),
               // lint-allow: hardcoded-string
-              const _SectionHeader(title: 'WELCOME & SPLASH'),
-              _FieldGroupCard(
-                children: [
-                  _LabeledField(
-                    controller: _welcomeCtrl,
-                    // lint-allow: hardcoded-string
-                    label: 'Welcome text',
-                    prefixIcon: Icons.waving_hand_outlined,
-                    maxLength: 2000,
-                    maxLines: 4,
-                  ),
-                  const SizedBox(height: AppTheme.spacing16),
-                  _LabeledField(
-                    controller: _splashCtrl,
-                    // lint-allow: hardcoded-string
-                    label: 'ANSI / ASCII splash',
-                    prefixIcon: Icons.terminal,
-                    maxLength: 4000,
-                    maxLines: 6,
-                  ),
-                ],
+              const SettingsSectionHeader(title: 'WELCOME & SPLASH'),
+              FieldGroupCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _LabeledField(
+                      controller: _welcomeCtrl,
+                      // lint-allow: hardcoded-string
+                      label: 'Welcome text',
+                      prefixIcon: Icons.waving_hand_outlined,
+                      maxLength: 2000,
+                      maxLines: 4,
+                    ),
+                    const SizedBox(height: AppTheme.spacing16),
+                    _LabeledField(
+                      controller: _splashCtrl,
+                      // lint-allow: hardcoded-string
+                      label: 'ANSI / ASCII splash',
+                      prefixIcon: Icons.terminal,
+                      maxLength: 4000,
+                      maxLines: 6,
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -342,140 +349,6 @@ class _NodeBoardEditSheetState extends ConsumerState<_NodeBoardEditSheet>
           ),
         ),
       ],
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Canonical inner-settings primitives — matches mqtt_config_screen.dart.
-// ---------------------------------------------------------------------------
-
-class _SectionHeader extends StatelessWidget {
-  final String title;
-  const _SectionHeader({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppTheme.spacing16,
-        AppTheme.spacing8,
-        AppTheme.spacing16,
-        AppTheme.spacing8,
-      ),
-      child: Text(
-        title,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-          color: context.textTertiary,
-          letterSpacing: 1.2,
-        ),
-      ),
-    );
-  }
-}
-
-class _SettingsTile extends StatelessWidget {
-  final IconData icon;
-  final Color? iconColor;
-  final String title;
-  final String subtitle;
-  final Widget? trailing;
-  final VoidCallback? onTap;
-
-  const _SettingsTile({
-    required this.icon,
-    this.iconColor,
-    required this.title,
-    required this.subtitle,
-    this.trailing,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final card = Container(
-      margin: const EdgeInsets.symmetric(
-        horizontal: AppTheme.spacing16,
-        vertical: AppTheme.spacing2,
-      ),
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppTheme.spacing16,
-          vertical: AppTheme.spacing12,
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: iconColor ?? context.textSecondary),
-            const SizedBox(width: AppTheme.spacing16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: context.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: AppTheme.spacing2),
-                  Text(
-                    subtitle,
-                    style: context.bodySmallStyle?.copyWith(
-                      color: context.textTertiary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (trailing != null) trailing!,
-          ],
-        ),
-      ),
-    );
-
-    if (onTap == null) return card;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-        child: card,
-      ),
-    );
-  }
-}
-
-/// Container that groups multiple form fields in the canonical
-/// inner-settings style (same as mqtt_config_screen.dart server card).
-class _FieldGroupCard extends StatelessWidget {
-  final List<Widget> children;
-
-  const _FieldGroupCard({required this.children});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(
-        horizontal: AppTheme.spacing16,
-        vertical: AppTheme.spacing2,
-      ),
-      padding: const EdgeInsets.all(AppTheme.spacing16),
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: children,
-      ),
     );
   }
 }
@@ -728,7 +601,7 @@ class _ThemeListTile extends ConsumerWidget {
             selected?.name ??
             // lint-allow: hardcoded-string
             'Default';
-        return _SettingsTile(
+        return SettingsTile(
           icon: Icons.palette_outlined,
           // lint-allow: hardcoded-string
           title: 'Preset',
@@ -737,7 +610,7 @@ class _ThemeListTile extends ConsumerWidget {
           onTap: () => _pickTheme(context, themes),
         );
       },
-      loading: () => _SettingsTile(
+      loading: () => SettingsTile(
         icon: Icons.palette_outlined,
         // lint-allow: hardcoded-string
         title: 'Preset',
@@ -749,7 +622,7 @@ class _ThemeListTile extends ConsumerWidget {
           child: CircularProgressIndicator(strokeWidth: 2),
         ),
       ),
-      error: (_, _) => _SettingsTile(
+      error: (_, _) => SettingsTile(
         icon: Icons.palette_outlined,
         // lint-allow: hardcoded-string
         title: 'Preset',
@@ -872,7 +745,7 @@ class _NodeLinkTile extends StatelessWidget {
 
     return Column(
       children: [
-        _SettingsTile(
+        SettingsTile(
           icon: linked ? Icons.link : Icons.link_off,
           iconColor: linked ? context.accentColor : null,
           title: title,

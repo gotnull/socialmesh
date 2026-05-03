@@ -12,6 +12,7 @@ import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animated_empty_state.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../core/widgets/settings_primitives.dart';
 import '../../providers/reticulum_providers.dart';
 import '../../services/protocol/reticulum/reticulum_capture_classifier.dart';
 import '../../services/protocol/reticulum/reticulum_capture_library.dart';
@@ -119,7 +120,7 @@ class _ReticulumCaptureLibraryScreenState
           padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing8),
           sliver: SliverList.list(
             children: [
-              _SectionHeader(
+              SettingsSectionHeader(
                 title: context.l10n.reticulumLibrarySectionCaptures,
               ),
               entriesAsync.when(
@@ -371,32 +372,6 @@ class _MetaChip extends StatelessWidget {
 }
 
 // -----------------------------------------------------------------------------
-
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title});
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppTheme.spacing16,
-        AppTheme.spacing8,
-        AppTheme.spacing16,
-        AppTheme.spacing8,
-      ),
-      child: Text(
-        title,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-          color: context.textTertiary,
-          letterSpacing: 1.2,
-        ),
-      ),
-    );
-  }
-}
 
 class _GradientActionButton extends StatelessWidget {
   const _GradientActionButton({

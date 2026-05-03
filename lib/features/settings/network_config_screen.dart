@@ -6,6 +6,7 @@ import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/settings_primitives.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
@@ -219,7 +220,9 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen>
               sliver: SliverList.list(
                 children: [
                   // WiFi Section
-                  _SectionHeader(title: context.l10n.networkConfigSectionWifi),
+                  SettingsSectionHeader(
+                    title: context.l10n.networkConfigSectionWifi,
+                  ),
 
                   // Show warning if device lacks WiFi hardware
                   if (!_targetDeviceHasWifi())
@@ -260,7 +263,7 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen>
                       ),
                     ),
 
-                  _SettingsTile(
+                  SettingsTile(
                     icon: Icons.wifi,
                     iconColor: _wifiEnabled ? context.accentColor : null,
                     title: context.l10n.networkConfigWifiEnabled,
@@ -385,11 +388,11 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen>
                   SizedBox(height: AppTheme.spacing16),
 
                   // Ethernet Section
-                  _SectionHeader(
+                  SettingsSectionHeader(
                     title: context.l10n.networkConfigSectionEthernet,
                   ),
 
-                  _SettingsTile(
+                  SettingsTile(
                     icon: Icons.settings_ethernet,
                     iconColor: _ethEnabled ? context.accentColor : null,
                     title: context.l10n.networkConfigEthernetEnabled,
@@ -405,14 +408,14 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen>
                   SizedBox(height: AppTheme.spacing16),
 
                   // Address Mode Section
-                  _SectionHeader(
+                  SettingsSectionHeader(
                     title: context.l10n.networkConfigSectionIpAddress,
                   ),
                   _buildAddressModeSelector(),
                   SizedBox(height: AppTheme.spacing16),
 
                   // NTP Server Section
-                  _SectionHeader(
+                  SettingsSectionHeader(
                     title: context.l10n.networkConfigSectionTimeSync,
                   ),
 
@@ -490,10 +493,10 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen>
                   SizedBox(height: AppTheme.spacing16),
 
                   // UDP Broadcast Section
-                  _SectionHeader(
+                  SettingsSectionHeader(
                     title: context.l10n.networkConfigSectionUdpBroadcast,
                   ),
-                  _SettingsTile(
+                  SettingsTile(
                     icon: Icons.cell_tower,
                     iconColor: _udpEnabled ? context.accentColor : null,
                     title: context.l10n.networkConfigUdpBroadcast,
@@ -543,7 +546,7 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen>
                   SizedBox(height: AppTheme.spacing16),
 
                   // Rsyslog Server Section
-                  _SectionHeader(
+                  SettingsSectionHeader(
                     title: context.l10n.networkConfigSectionLogging,
                   ),
                   _buildRsyslogSettings(),
@@ -734,87 +737,6 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen>
             style: TextStyle(color: context.textSecondary, fontSize: 13),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  final String title;
-
-  const _SectionHeader({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 8),
-      child: Text(
-        title,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-          color: context.textTertiary,
-          letterSpacing: 1.2,
-        ),
-      ),
-    );
-  }
-}
-
-class _SettingsTile extends StatelessWidget {
-  final IconData icon;
-  final Color? iconColor;
-  final String title;
-  final String subtitle;
-  final Widget? trailing;
-
-  const _SettingsTile({
-    required this.icon,
-    this.iconColor,
-    required this.title,
-    required this.subtitle,
-    this.trailing,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            Icon(icon, color: iconColor ?? context.textSecondary),
-            SizedBox(width: AppTheme.spacing16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: context.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: AppTheme.spacing2),
-                  Text(
-                    subtitle,
-                    style: context.bodySmallStyle?.copyWith(
-                      color: context.textTertiary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (trailing != null) trailing!,
-          ],
-        ),
       ),
     );
   }

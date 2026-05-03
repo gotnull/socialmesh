@@ -12,6 +12,7 @@ import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/loading_indicator.dart';
+import '../../core/widgets/settings_primitives.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/telemetry_providers.dart';
@@ -50,7 +51,9 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
           padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing8),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
-              _SectionHeader(title: l10n.dataExportSectionMessages),
+              SettingsSectionHeader(
+                title: l10n.dataExportSectionMessages.toUpperCase(),
+              ),
               _buildExportTile(
                 icon: Icons.message_outlined,
                 title: l10n.dataExportAllMessages,
@@ -62,7 +65,9 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
                     _confirmClear('messages', l10n.dataExportClearAllMessages),
               ),
 
-              _SectionHeader(title: l10n.dataExportSectionTelemetry),
+              SettingsSectionHeader(
+                title: l10n.dataExportSectionTelemetry.toUpperCase(),
+              ),
               _buildExportTile(
                 icon: Icons.battery_charging_full,
                 title: l10n.dataExportDeviceMetrics,
@@ -112,7 +117,9 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
                 ),
               ),
 
-              _SectionHeader(title: l10n.dataExportSectionPositionData),
+              SettingsSectionHeader(
+                title: l10n.dataExportSectionPositionData.toUpperCase(),
+              ),
               _buildExportTile(
                 icon: Icons.location_on_outlined,
                 title: l10n.dataExportPositionHistory,
@@ -148,7 +155,9 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
                 ),
               ),
 
-              _SectionHeader(title: l10n.dataExportSectionDeviceConfig),
+              SettingsSectionHeader(
+                title: l10n.dataExportSectionDeviceConfig.toUpperCase(),
+              ),
               _buildExportTile(
                 icon: Icons.settings_backup_restore,
                 title: l10n.dataExportDeviceConfigBackupTitle,
@@ -168,7 +177,9 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
                 actionTooltip: l10n.dataExportDeviceConfigRestoreTitle,
               ),
 
-              _SectionHeader(title: l10n.dataExportSectionAutomations),
+              SettingsSectionHeader(
+                title: l10n.dataExportSectionAutomations.toUpperCase(),
+              ),
               _buildExportTile(
                 icon: Icons.auto_awesome,
                 title: l10n.dataExportAutomationRules,
@@ -194,7 +205,9 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
                 ),
               ),
 
-              _SectionHeader(title: l10n.dataExportSectionNetwork),
+              SettingsSectionHeader(
+                title: l10n.dataExportSectionNetwork.toUpperCase(),
+              ),
               _buildExportTile(
                 icon: Icons.hub_outlined,
                 title: l10n.dataExportNodeList,
@@ -204,7 +217,9 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
                 onExport: _exportNodes,
               ),
 
-              _SectionHeader(title: l10n.dataExportSectionCompleteExport),
+              SettingsSectionHeader(
+                title: l10n.dataExportSectionCompleteExport.toUpperCase(),
+              ),
               _buildExportTile(
                 icon: Icons.archive_outlined,
                 title: l10n.dataExportExportAll,
@@ -215,7 +230,9 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
                 isHighlighted: true,
               ),
 
-              _SectionHeader(title: l10n.dataExportSectionClearData),
+              SettingsSectionHeader(
+                title: l10n.dataExportSectionClearData.toUpperCase(),
+              ),
               _ClearAllTile(
                 label: l10n.dataExportClearAll,
                 subtitle: l10n.dataExportClearAllSubtitle,
@@ -1074,34 +1091,6 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
         .replaceAll('>', '&gt;')
         .replaceAll('"', '&quot;')
         .replaceAll("'", '&apos;');
-  }
-}
-
-/// Canonical inner-settings section header, mirroring `_SectionHeader` in
-/// `mqtt_config_screen.dart`.
-class _SectionHeader extends StatelessWidget {
-  final String title;
-  const _SectionHeader({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppTheme.spacing16,
-        AppTheme.spacing8,
-        AppTheme.spacing16,
-        AppTheme.spacing8,
-      ),
-      child: Text(
-        title.toUpperCase(),
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-          color: context.textTertiary,
-          letterSpacing: 1.2,
-        ),
-      ),
-    );
   }
 }
 

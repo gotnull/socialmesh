@@ -13,6 +13,7 @@ import '../../../core/l10n/l10n_extension.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/connection_providers.dart';
 import '../../../providers/mdns_providers.dart';
+import 'protocol_badge.dart';
 import '../../../services/haptic_service.dart';
 import '../../../services/transport/mdns_discovery_service.dart';
 import '../../../utils/snackbar.dart';
@@ -297,34 +298,31 @@ class _MdnsDeviceCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: AppTheme.spacing4),
+                        Row(
+                          children: [
+                            Text(
+                              l10n.deviceSheetNetwork,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: context.textTertiary,
+                              ),
+                            ),
+                            const SizedBox(width: AppTheme.spacing8),
+                            ProtocolBadge(protocolType: device.protocol),
+                          ],
+                        ),
+                        const SizedBox(height: AppTheme.spacing4),
                         Text(
                           '${device.host}:${device.port}',
                           style: TextStyle(
-                            fontSize: 14,
-                            color: context.textTertiary,
+                            fontSize: 12,
+                            color: context.textTertiary.withValues(alpha: 0.7),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppTheme.spacing8,
-                      vertical: AppTheme.spacing4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AccentColors.cyan.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(AppTheme.radius4),
-                    ),
-                    child: Text(
-                      l10n.mdnsTransportTcp,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: AccentColors.cyan,
-                      ),
-                    ),
-                  ),
+                  Icon(Icons.chevron_right, color: context.textTertiary),
                 ],
               ),
             ),

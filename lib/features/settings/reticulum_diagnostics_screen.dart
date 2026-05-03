@@ -13,6 +13,7 @@ import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animated_empty_state.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/settings_primitives.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/info_table.dart';
 import '../../core/widgets/section_header.dart';
@@ -298,8 +299,10 @@ class _ReassemblySection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader(title: context.l10n.reticulumDiagSectionReassembly),
-        _SettingsTile(
+        SettingsSectionHeader(
+          title: context.l10n.reticulumDiagSectionReassembly,
+        ),
+        SettingsTile(
           icon: Icons.merge_outlined,
           iconColor: enabled ? context.accentColor : null,
           title: context.l10n.reticulumDiagReassemblyEnable,
@@ -419,8 +422,8 @@ class _CaptureSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader(title: context.l10n.reticulumDiagSectionCapture),
-        _SettingsTile(
+        SettingsSectionHeader(title: context.l10n.reticulumDiagSectionCapture),
+        SettingsTile(
           icon: Icons.fiber_manual_record_outlined,
           iconColor: flags.captureEnabled ? context.accentColor : null,
           title: context.l10n.reticulumDiagCaptureEnable,
@@ -480,10 +483,10 @@ class _ReplaySection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader(title: context.l10n.reticulumDiagSectionReplay),
+        SettingsSectionHeader(title: context.l10n.reticulumDiagSectionReplay),
         InkWell(
           onTap: onOpen,
-          child: _SettingsTile(
+          child: SettingsTile(
             icon: Icons.play_circle_outline,
             title: context.l10n.reticulumDiagOpenReplay,
             subtitle: context.l10n.reticulumDiagOpenReplaySubtitle,
@@ -503,7 +506,7 @@ class _LibrarySection extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onOpen,
-      child: _SettingsTile(
+      child: SettingsTile(
         icon: Icons.library_books_outlined,
         title: context.l10n.reticulumDiagOpenLibrary,
         subtitle: context.l10n.reticulumDiagOpenLibrarySubtitle,
@@ -514,97 +517,6 @@ class _LibrarySection extends StatelessWidget {
 }
 
 // -----------------------------------------------------------------------------
-
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title});
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppTheme.spacing16,
-        AppTheme.spacing8,
-        AppTheme.spacing16,
-        AppTheme.spacing8,
-      ),
-      child: Text(
-        title,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-          color: context.textTertiary,
-          letterSpacing: 1.2,
-        ),
-      ),
-    );
-  }
-}
-
-class _SettingsTile extends StatelessWidget {
-  const _SettingsTile({
-    required this.icon,
-    this.iconColor,
-    required this.title,
-    required this.subtitle,
-    this.trailing,
-  });
-
-  final IconData icon;
-  final Color? iconColor;
-  final String title;
-  final String subtitle;
-  final Widget? trailing;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(
-        horizontal: AppTheme.spacing16,
-        vertical: AppTheme.spacing2,
-      ),
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppTheme.spacing16,
-          vertical: AppTheme.spacing12,
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: iconColor ?? context.textSecondary),
-            const SizedBox(width: AppTheme.spacing16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: context.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: AppTheme.spacing2),
-                  Text(
-                    subtitle,
-                    style: context.bodySmallStyle?.copyWith(
-                      color: context.textTertiary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (trailing != null) trailing!,
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 class _GradientActionButton extends StatelessWidget {
   const _GradientActionButton({

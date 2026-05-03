@@ -10,6 +10,7 @@ import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/bottom_action_bar.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../core/widgets/settings_primitives.dart';
 import '../../providers/rns_companion_providers.dart';
 import '../../services/rns_companion/rns_companion_client.dart';
 import '../../utils/snackbar.dart';
@@ -71,7 +72,9 @@ class _RnsCompanionSettingsScreenState
             padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing8),
             sliver: SliverList.list(
               children: [
-                const _SectionHeader(),
+                SettingsSectionHeader(
+                  title: context.l10n.rnsCompanionSettingsSectionEndpoint,
+                ),
                 _Hint(text: context.l10n.rnsCompanionSettingsHint),
                 Padding(
                   padding: const EdgeInsets.symmetric(
@@ -162,31 +165,6 @@ class _RnsCompanionSettingsScreenState
       ),
       prefixIcon: Icon(icon, color: context.textSecondary),
       counterText: '',
-    );
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppTheme.spacing16,
-        AppTheme.spacing8,
-        AppTheme.spacing16,
-        AppTheme.spacing8,
-      ),
-      child: Text(
-        context.l10n.rnsCompanionSettingsSectionEndpoint,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-          color: context.textTertiary,
-          letterSpacing: 1.2,
-        ),
-      ),
     );
   }
 }

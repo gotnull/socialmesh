@@ -7,6 +7,7 @@ import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/settings_primitives.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
@@ -429,15 +430,15 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
               padding: const EdgeInsets.symmetric(vertical: 8),
               sliver: SliverList.list(
                 children: [
-                  _SectionHeader(
+                  SettingsSectionHeader(
                     title: context.l10n.positionConfigSectionGpsMode,
                   ),
                   _buildGpsModeSelector(),
                   SizedBox(height: AppTheme.spacing16),
-                  _SectionHeader(
+                  SettingsSectionHeader(
                     title: context.l10n.positionConfigSectionBroadcast,
                   ),
-                  _SettingsTile(
+                  SettingsTile(
                     icon: Icons.tune,
                     iconColor: _smartBroadcastEnabled
                         ? context.accentColor
@@ -544,10 +545,10 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                   // already toggled on (matches official iOS behaviour).
                   // Local-only (uses localAdmin routing).
                   if (!isRemote && (!_isGpsEnabled || _fixedPosition)) ...[
-                    _SectionHeader(
+                    SettingsSectionHeader(
                       title: context.l10n.positionConfigSectionFixed,
                     ),
-                    _SettingsTile(
+                    SettingsTile(
                       icon: Icons.pin_drop,
                       iconColor: _fixedPosition ? context.accentColor : null,
                       title: context.l10n.positionConfigUseFixed,
@@ -807,7 +808,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                   ], // end if (!isRemote)
                   SizedBox(height: AppTheme.spacing16),
                   if (_smartBroadcastEnabled) ...[
-                    _SectionHeader(
+                    SettingsSectionHeader(
                       title: context.l10n.positionConfigSectionSmartBroadcast,
                     ),
                     Container(
@@ -940,13 +941,13 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                   // GPS Settings and GPIO only shown when GPS is enabled
                   // (matches official Meshtastic iOS behaviour)
                   if (_isGpsEnabled) ...[
-                    _SectionHeader(
+                    SettingsSectionHeader(
                       title: context.l10n.positionConfigSectionGpsGpio,
                     ),
                     _buildGpioSettings(),
                     SizedBox(height: AppTheme.spacing16),
                   ],
-                  _SectionHeader(
+                  SettingsSectionHeader(
                     title: context.l10n.positionConfigSectionFlags,
                   ),
                   Padding(
@@ -1369,87 +1370,6 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
     if (seconds == 0) return context.l10n.positionConfigIntervalDefault;
     if (seconds >= 2147483647) return context.l10n.positionConfigIntervalOnBoot;
     return _formatDuration(seconds);
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  final String title;
-
-  const _SectionHeader({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 8),
-      child: Text(
-        title,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-          color: context.textTertiary,
-          letterSpacing: 1.2,
-        ),
-      ),
-    );
-  }
-}
-
-class _SettingsTile extends StatelessWidget {
-  final IconData icon;
-  final Color? iconColor;
-  final String title;
-  final String subtitle;
-  final Widget? trailing;
-
-  const _SettingsTile({
-    required this.icon,
-    this.iconColor,
-    required this.title,
-    required this.subtitle,
-    this.trailing,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            Icon(icon, color: iconColor ?? context.textSecondary),
-            SizedBox(width: AppTheme.spacing16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: context.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: AppTheme.spacing2),
-                  Text(
-                    subtitle,
-                    style: context.bodySmallStyle?.copyWith(
-                      color: context.textTertiary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (trailing != null) trailing!,
-          ],
-        ),
-      ),
-    );
   }
 }
 

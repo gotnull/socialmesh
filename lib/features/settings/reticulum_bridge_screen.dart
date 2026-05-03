@@ -12,6 +12,7 @@ import '../../core/widgets/animations.dart';
 import '../../core/widgets/bottom_action_bar.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/info_table.dart';
+import '../../core/widgets/settings_primitives.dart';
 import '../../core/widgets/section_header.dart';
 import '../../providers/reticulum_bridge_provider.dart';
 import '../../providers/reticulum_providers.dart';
@@ -328,8 +329,10 @@ class _ConnectionSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader(title: context.l10n.reticulumBridgeSectionConnection),
-        _SettingsTile(
+        SettingsSectionHeader(
+          title: context.l10n.reticulumBridgeSectionConnection,
+        ),
+        SettingsTile(
           icon: Icons.link,
           iconColor: state.enabled ? context.accentColor : null,
           title: context.l10n.reticulumBridgeEnable,
@@ -390,7 +393,9 @@ class _EndpointSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader(title: context.l10n.reticulumBridgeSectionEndpoint),
+        SettingsSectionHeader(
+          title: context.l10n.reticulumBridgeSectionEndpoint,
+        ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
           child: Container(
@@ -556,97 +561,6 @@ class _UptimeSection extends StatelessWidget {
 }
 
 // -----------------------------------------------------------------------------
-
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title});
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppTheme.spacing16,
-        AppTheme.spacing8,
-        AppTheme.spacing16,
-        AppTheme.spacing8,
-      ),
-      child: Text(
-        title,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-          color: context.textTertiary,
-          letterSpacing: 1.2,
-        ),
-      ),
-    );
-  }
-}
-
-class _SettingsTile extends StatelessWidget {
-  const _SettingsTile({
-    required this.icon,
-    this.iconColor,
-    required this.title,
-    required this.subtitle,
-    this.trailing,
-  });
-
-  final IconData icon;
-  final Color? iconColor;
-  final String title;
-  final String subtitle;
-  final Widget? trailing;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(
-        horizontal: AppTheme.spacing16,
-        vertical: AppTheme.spacing2,
-      ),
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppTheme.spacing16,
-          vertical: AppTheme.spacing12,
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: iconColor ?? context.textSecondary),
-            const SizedBox(width: AppTheme.spacing16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: context.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: AppTheme.spacing2),
-                  Text(
-                    subtitle,
-                    style: context.bodySmallStyle?.copyWith(
-                      color: context.textTertiary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (trailing != null) trailing!,
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 class _GradientActionButton extends StatelessWidget {
   const _GradientActionButton({
