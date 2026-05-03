@@ -13,5 +13,4 @@
 // - Direct encrypted messaging with public keys
 // - Channel-based group communication
 
-export 'models/models.dart';
 export 'screens/screens.dart';

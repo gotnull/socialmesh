@@ -3635,6 +3635,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get commonNever => 'Nunca';
 
   @override
+  String get commonNo => 'Não';
+
+  @override
   String get commonJustNow => 'Agora';
 
   @override
@@ -3784,6 +3787,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get commonSave => 'Salvar';
+
+  @override
+  String get commonYes => 'Sim';
 
   @override
   String get debugScreenAppLogTitle => 'Log do app';
@@ -7586,6 +7592,33 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshcoreChannelNameHintHashtag => 'ex. geral';
 
   @override
+  String get meshcoreChannelsEmptyTagline1 =>
+      'Canais são espaços compartilhados para comunicação em grupo';
+
+  @override
+  String get meshcoreChannelsEmptyTagline2 =>
+      'Crie um canal privado ou junte-se a um canal por hashtag';
+
+  @override
+  String get meshcoreChannelsEmptyTagline3 =>
+      'Canais são criptografados com uma chave compartilhada (PSK)';
+
+  @override
+  String get meshcoreChannelsEmptyTitleKeyword => 'canais';
+
+  @override
+  String get meshcoreChannelsEmptyTitlePrefix => 'Sem';
+
+  @override
+  String get meshcoreChannelsEmptyTitleSuffix => 'ainda';
+
+  @override
+  String get meshcoreChannelInfoIndex => 'Índice';
+
+  @override
+  String get meshcoreChannelInfoPsk => 'PSK';
+
+  @override
   String get meshcoreChannelNameLabel => 'Nome do Canal';
 
   @override
@@ -7605,6 +7638,39 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get meshcoreChannelsTitle => 'Canais';
+
+  @override
+  String get meshcoreChatEmptyTagline1 =>
+      'Envie a primeira para começar uma conversa';
+
+  @override
+  String get meshcoreChatEmptyTagline2 =>
+      'Mensagens viajam de mesh em mesh, sem Internet';
+
+  @override
+  String get meshcoreChatEmptyTagline3 =>
+      'Toque abaixo para enviar seu primeiro pacote';
+
+  @override
+  String get meshcoreChatEmptyTitleKeyword => 'mensagens';
+
+  @override
+  String get meshcoreChatEmptyTitlePrefix => 'Sem';
+
+  @override
+  String get meshcoreChatEmptyTitleSuffix => 'ainda';
+
+  @override
+  String get meshcoreChatInfoLocation => 'Localização';
+
+  @override
+  String get meshcoreChatInfoLastSeen => 'Visto pela Última Vez';
+
+  @override
+  String get meshcoreChatInfoPath => 'Caminho';
+
+  @override
+  String get meshcoreChatInfoType => 'Tipo';
 
   @override
   String get meshcoreChatNode => 'Nó de Chat';
@@ -7688,6 +7754,27 @@ class AppLocalizationsPt extends AppLocalizations {
   String meshcoreContactRemoved(String contactName) {
     return '$contactName removido';
   }
+
+  @override
+  String get meshcoreContactsEmptyTagline1 =>
+      'Os contatos aparecem aqui quando descobertos por anúncios mesh';
+
+  @override
+  String get meshcoreContactsEmptyTagline2 =>
+      'Adicione um manualmente com um código de contato ou leitura de QR';
+
+  @override
+  String get meshcoreContactsEmptyTagline3 =>
+      'Puxe para atualizar do seu dispositivo';
+
+  @override
+  String get meshcoreContactsEmptyTitleKeyword => 'contatos';
+
+  @override
+  String get meshcoreContactsEmptyTitlePrefix => 'Sem';
+
+  @override
+  String get meshcoreContactsEmptyTitleSuffix => 'ainda';
 
   @override
   String get meshcoreContactsLabel => 'Contatos';
@@ -8057,6 +8144,28 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshcorePasteChannelCodeHint => 'Cole o código do canal aqui...';
 
   @override
+  String get meshcorePathDirect => 'Direto';
+
+  @override
+  String get meshcorePathDirectForced => 'Direto (forçado)';
+
+  @override
+  String get meshcorePathFlood => 'Flood';
+
+  @override
+  String get meshcorePathFloodForced => 'Flood (forçado)';
+
+  @override
+  String meshcorePathHops(int count) {
+    return '$count saltos';
+  }
+
+  @override
+  String meshcorePathHopsForced(int count) {
+    return '$count saltos (forçado)';
+  }
+
+  @override
   String get meshcorePasteContactCodeHint => 'Cole o código de contato aqui...';
 
   @override
@@ -8205,6 +8314,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get meshcoreSave => 'Salvar';
+
+  @override
+  String get meshcoreSensorNode => 'Nó Sensor';
 
   @override
   String get meshcoreScanChannelQrSubtitle => 'Escaneie um código QR de canal';
@@ -14401,6 +14513,15 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get scannerAvailableDevices => 'Dispositivos Disponíveis';
+
+  @override
+  String get scannerProtocolGroupMeshtastic => 'Meshtastic';
+
+  @override
+  String get scannerProtocolGroupMeshcore => 'MeshCore';
+
+  @override
+  String get scannerProtocolGroupOther => 'Outros Dispositivos';
 
   @override
   String get scannerBluetoothSettings => 'Configurações Bluetooth';

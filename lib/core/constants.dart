@@ -325,6 +325,18 @@ class AppFeatureFlags {
     }
   }
 
+  /// Whether MeshCore radios are surfaced alongside Meshtastic in the
+  /// default BLE scanner filter. Set `MESHCORE_ENABLED=true` in `.env`.
+  /// Default: false — the scanner only matches the Meshtastic service UUID.
+  static bool get isMeshCoreEnabled {
+    try {
+      final raw = dotenv.env['MESHCORE_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Whether the Aether flight tracking feature is enabled.
   /// Set `AETHER_ENABLED=true` in `.env` to enable.
   static bool get isAetherEnabled {

@@ -13,9 +13,14 @@ import '../../../core/logging.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/meshcore_constants.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/animated_empty_state.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/info_table.dart';
+import '../../../core/widgets/section_header.dart';
 import '../../../models/meshcore_contact.dart';
 import '../../../models/meshcore_channel.dart';
+import '../contact_l10n.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/meshcore_providers.dart';
 import '../../../providers/meshcore_message_providers.dart';
@@ -527,39 +532,41 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
             const SizedBox(height: AppTheme.spacing16),
             Text(
               context.l10n.meshcoreLoadingMessages,
-              style: const TextStyle(color: Colors.white70),
+              style: TextStyle(color: context.textSecondary),
             ),
           ],
         ),
       );
     }
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            widget.chatType == MeshCoreChatType.contact
-                ? Icons.chat_bubble_outline_rounded
-                : Icons.forum_outlined,
-            size: 64,
-            color: Colors.white.withValues(alpha: 0.3),
-          ),
-          const SizedBox(height: AppTheme.spacing16),
-          Text(
-            context.l10n.meshcoreNoMessagesYet,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Colors.white.withValues(alpha: 0.6),
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing8),
-          Text(
-            context.l10n.meshcoreSendMessageToStart,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.4),
-              fontSize: 14,
-            ),
-          ),
+    final isContact = widget.chatType == MeshCoreChatType.contact;
+    return AnimatedEmptyState(
+      config: AnimatedEmptyStateConfig(
+        icons: isContact
+            ? const [
+                Icons.chat_bubble_outline_rounded,
+                Icons.send_rounded,
+                Icons.forum_outlined,
+                Icons.markunread_outlined,
+                Icons.alternate_email_rounded,
+                Icons.bolt_outlined,
+              ]
+            : const [
+                Icons.forum_outlined,
+                Icons.tag_rounded,
+                Icons.broadcast_on_personal_outlined,
+                Icons.cell_tower_rounded,
+                Icons.podcasts_rounded,
+                Icons.public_rounded,
+              ],
+        taglines: [
+          context.l10n.meshcoreChatEmptyTagline1,
+          context.l10n.meshcoreChatEmptyTagline2,
+          context.l10n.meshcoreChatEmptyTagline3,
         ],
+        titlePrefix: context.l10n.meshcoreChatEmptyTitlePrefix,
+        titleKeyword: context.l10n.meshcoreChatEmptyTitleKeyword,
+        titleSuffix: context.l10n.meshcoreChatEmptyTitleSuffix,
+        accentColor: _accentColor,
       ),
     );
   }
@@ -581,7 +588,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
               decoration: BoxDecoration(
                 color: isOutgoing
                     ? _accentColor.withValues(alpha: 0.3)
-                    : Colors.white.withValues(alpha: 0.1),
+                    : context.card,
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(16),
                   topRight: const Radius.circular(16),
@@ -594,7 +601,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
                 children: [
                   Text(
                     message.text,
-                    style: const TextStyle(color: Colors.white, fontSize: 15),
+                    style: TextStyle(color: context.textPrimary, fontSize: 15),
                   ),
                   const SizedBox(height: AppTheme.spacing4),
                   Row(
@@ -603,7 +610,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
                       Text(
                         _formatTime(message.timestamp),
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.5),
+                          color: context.textTertiary,
                           fontSize: 11,
                         ),
                       ),
@@ -637,15 +644,11 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
           height: 14,
           child: CircularProgressIndicator(
             strokeWidth: 1.5,
-            color: Colors.white.withValues(alpha: 0.5),
+            color: context.textTertiary,
           ),
         );
       case MeshCoreMessageDeliveryStatus.sent:
-        return Icon(
-          Icons.done_rounded,
-          size: 14,
-          color: Colors.white.withValues(alpha: 0.5),
-        );
+        return Icon(Icons.done_rounded, size: 14, color: context.textTertiary);
       case MeshCoreMessageDeliveryStatus.delivered:
         return Icon(Icons.done_all_rounded, size: 14, color: _accentColor);
       case MeshCoreMessageDeliveryStatus.failed:
@@ -667,9 +670,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
       ),
       decoration: BoxDecoration(
         color: context.card.withValues(alpha: 0.5),
-        border: Border(
-          top: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-        ),
+        border: Border(top: BorderSide(color: context.border)),
       ),
       child: Row(
         children: [
@@ -685,9 +686,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
               textCapitalization: TextCapitalization.sentences,
               decoration: InputDecoration(
                 hintText: context.l10n.meshcoreTypeMessageHint,
-                hintStyle: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.4),
-                ),
+                hintStyle: TextStyle(color: SemanticColors.muted),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -695,7 +694,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
                 ),
                 counterText: '',
               ),
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: context.textPrimary),
               onSubmitted: (_) => _sendMessage(),
             ),
           ),
@@ -725,30 +724,22 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
   }
 
   void _showChatInfo() {
-    showModalBottomSheet(
+    AppBottomSheet.show<void>(
       context: context,
-      backgroundColor: context.card,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        if (widget.chatType == MeshCoreChatType.contact) {
-          return _buildContactInfo();
-        } else {
-          return _buildChannelInfo();
-        }
-      },
+      child: widget.chatType == MeshCoreChatType.contact
+          ? _buildContactInfo()
+          : _buildChannelInfo(),
     );
   }
 
   Widget _buildContactInfo() {
     final contact = widget.contact!;
-    return Padding(
-      padding: const EdgeInsets.all(AppTheme.spacing24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          CircleAvatar(
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Center(
+          child: CircleAvatar(
             radius: 40,
             backgroundColor: _accentColor.withValues(alpha: 0.2),
             child: Text(
@@ -760,56 +751,73 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
               ),
             ),
           ),
-          const SizedBox(height: AppTheme.spacing16),
-          Text(
+        ),
+        SizedBox(height: AppTheme.spacing16),
+        Center(
+          child: Text(
             contact.name,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: context.textPrimary,
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: AppTheme.spacing8),
-          Text(
-            contact.typeLabel,
+        ),
+        SizedBox(height: AppTheme.spacing8),
+        Center(
+          child: Text(
+            contact.localizedTypeLabel(context.l10n),
             style: TextStyle(color: _accentColor, fontSize: 14),
           ),
-          const SizedBox(height: AppTheme.spacing16),
-          _buildInfoRow('Public Key', contact.shortPubKeyHex),
-          _buildInfoRow('Path', contact.pathLabel),
-          _buildInfoRow('Last Seen', _formatDateTime(contact.lastSeen)),
-          const SizedBox(height: AppTheme.spacing16),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () {
-                Clipboard.setData(ClipboardData(text: contact.publicKeyHex));
-                showSuccessSnackBar(
-                  context,
-                  context.l10n.meshcorePublicKeyCopied,
-                );
-              },
-              icon: const Icon(Icons.copy_rounded),
-              label: Text(context.l10n.meshcoreCopyPublicKey),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.white.withValues(alpha: 0.8),
-                side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
-              ),
+        ),
+        SizedBox(height: AppTheme.spacing16),
+        SectionTitle(title: context.l10n.meshcoreDeviceInfo),
+        InfoTable(
+          rows: [
+            InfoTableRow(
+              label: context.l10n.meshcorePublicKeySettingsLabel,
+              value: contact.publicKeyHex,
+              icon: Icons.key_outlined,
             ),
+            InfoTableRow(
+              label: context.l10n.meshcoreChatInfoPath,
+              value: contact.localizedPathLabel(context.l10n),
+              icon: Icons.alt_route_outlined,
+            ),
+            InfoTableRow(
+              label: context.l10n.meshcoreChatInfoLastSeen,
+              value: _formatDateTime(contact.lastSeen),
+              icon: Icons.schedule_outlined,
+            ),
+          ],
+        ),
+        SizedBox(height: AppTheme.spacing16),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: contact.publicKeyHex));
+              showSuccessSnackBar(
+                context,
+                context.l10n.meshcorePublicKeyCopied,
+              );
+            },
+            icon: const Icon(Icons.copy_rounded),
+            label: Text(context.l10n.meshcoreCopyPublicKey),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
   Widget _buildChannelInfo() {
     final channel = widget.channel!;
-    return Padding(
-      padding: const EdgeInsets.all(AppTheme.spacing24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          CircleAvatar(
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Center(
+          child: CircleAvatar(
             radius: 40,
             backgroundColor: _accentColor.withValues(alpha: 0.2),
             child: Icon(
@@ -818,76 +826,59 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
               size: 32,
             ),
           ),
-          const SizedBox(height: AppTheme.spacing16),
-          Text(
+        ),
+        SizedBox(height: AppTheme.spacing16),
+        Center(
+          child: Text(
             channel.displayName,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: context.textPrimary,
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: AppTheme.spacing8),
-          Text(
+        ),
+        SizedBox(height: AppTheme.spacing8),
+        Center(
+          child: Text(
             channel.isPublic
                 ? context.l10n.meshcorePublicChannel
                 : context.l10n.meshcorePrivateChannel,
             style: TextStyle(color: _accentColor, fontSize: 14),
           ),
-          const SizedBox(height: AppTheme.spacing16),
-          _buildInfoRow('Index', '${channel.index}'),
-          _buildInfoRow(
-            'PSK',
-            channel.pskHex.length >= 16
-                ? '${channel.pskHex.substring(0, 8)}…${channel.pskHex.substring(channel.pskHex.length - 8)}'
-                : channel.pskHex,
-          ),
-          const SizedBox(height: AppTheme.spacing16),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () {
-                Clipboard.setData(ClipboardData(text: channel.pskHex));
-                showSuccessSnackBar(
-                  context,
-                  context.l10n.meshcoreChannelPskCopied,
-                );
-              },
-              icon: const Icon(Icons.copy_rounded),
-              label: Text(context.l10n.meshcoreCopyChannelCode),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.white.withValues(alpha: 0.8),
-                side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
-              ),
+        ),
+        SizedBox(height: AppTheme.spacing16),
+        SectionTitle(title: context.l10n.meshcoreDeviceInfo),
+        InfoTable(
+          rows: [
+            InfoTableRow(
+              label: context.l10n.meshcoreChannelInfoIndex,
+              value: '${channel.index}',
+              icon: Icons.tag,
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
-          ),
-          Flexible(
-            child: Text(
-              value,
-              style: const TextStyle(
-                color: Colors.white,
-                fontFamily: 'monospace',
-              ),
-              textAlign: TextAlign.end,
+            InfoTableRow(
+              label: context.l10n.meshcoreChannelInfoPsk,
+              value: channel.pskHex,
+              icon: Icons.vpn_key_outlined,
             ),
+          ],
+        ),
+        SizedBox(height: AppTheme.spacing16),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: channel.pskHex));
+              showSuccessSnackBar(
+                context,
+                context.l10n.meshcoreChannelPskCopied,
+              );
+            },
+            icon: const Icon(Icons.copy_rounded),
+            label: Text(context.l10n.meshcoreCopyChannelCode),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

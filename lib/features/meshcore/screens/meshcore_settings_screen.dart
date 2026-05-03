@@ -1,18 +1,19 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-import '../../../core/l10n/l10n_extension.dart';
-import '../../../core/safety/lifecycle_mixin.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/meshcore_constants.dart';
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
-import '../../../core/widgets/glass_scaffold.dart';
-import '../../../core/widgets/gradient_border_container.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
+import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/info_table.dart';
+import '../../../core/widgets/section_header.dart';
+import '../../../core/widgets/settings_primitives.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/meshcore_providers.dart';
 import '../../../services/meshcore/protocol/meshcore_frame.dart';
@@ -33,11 +34,6 @@ class MeshCoreSettingsScreen extends ConsumerStatefulWidget {
 
 class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
     with LifecycleSafeMixin<MeshCoreSettingsScreen> {
-  void _dismissKeyboard() {
-    HapticFeedback.selectionClick();
-    FocusScope.of(context).unfocus();
-  }
-
   String _appVersion = '';
   bool _showBatteryVoltage = false;
   bool _isSendingAdvert = false;
@@ -51,11 +47,13 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
 
   Future<void> _loadVersionInfo() async {
     final packageInfo = await PackageInfo.fromPlatform();
-    if (mounted) {
-      setState(() {
-        _appVersion = packageInfo.version;
-      });
-    }
+    if (!mounted) return;
+    safeSetState(() => _appVersion = packageInfo.version);
+  }
+
+  void _dismissKeyboard() {
+    HapticFeedback.selectionClick();
+    FocusScope.of(context).unfocus();
   }
 
   @override
@@ -74,17 +72,12 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
         leading: const MeshCoreHamburgerMenuButton(),
         title: context.l10n.meshcoreSettingsTitle,
         actions: [const MeshCoreDeviceStatusButton()],
-        // Use hasScrollBody: true because the child is a ListView.
-        // hasScrollBody: false would force intrinsic dimension computation
-        // which ListView cannot provide, causing a null check crash in
-        // RenderViewportBase.layoutChildSequence.
         slivers: [
-          SliverFillRemaining(
-            hasScrollBody: true,
-            child: ListView(
-              padding: const EdgeInsets.all(AppTheme.spacing16),
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing8),
+            sliver: SliverList.list(
               children: [
-                _buildDeviceInfoCard(
+                _buildDeviceInfoSection(
                   context,
                   isConnected: isConnected,
                   selfInfo: selfInfo,
@@ -92,14 +85,104 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
                   contactCount: contactsState.contacts.length,
                   channelCount: channelsState.channels.length,
                 ),
-                const SizedBox(height: AppTheme.spacing16),
-                _buildNodeSettingsCard(context, selfInfo),
-                const SizedBox(height: AppTheme.spacing16),
-                _buildActionsCard(context, isConnected),
-                const SizedBox(height: AppTheme.spacing16),
-                _buildDebugCard(context),
-                const SizedBox(height: AppTheme.spacing16),
-                _buildAboutCard(context),
+                SizedBox(height: AppTheme.spacing16),
+                SettingsSectionHeader(title: context.l10n.meshcoreNodeSettings),
+                SettingsTile(
+                  icon: Icons.person_outline_rounded,
+                  title: context.l10n.meshcoreNodeNameSetting,
+                  subtitle: selfInfo?.nodeName ?? context.l10n.meshcoreNotSet,
+                  trailing: _chevron(context),
+                  onTap: () => _editNodeName(context, selfInfo?.nodeName),
+                ),
+                SettingsTile(
+                  icon: Icons.radio_rounded,
+                  title: context.l10n.meshcoreRadioSettings,
+                  subtitle: context.l10n.meshcoreRadioSettingsSubtitle,
+                  trailing: _chevron(context),
+                  onTap: () => _showRadioSettings(context),
+                ),
+                SettingsTile(
+                  icon: Icons.location_on_outlined,
+                  title: context.l10n.meshcoreLocationSetting,
+                  subtitle: context.l10n.meshcoreSetNodePosition,
+                  trailing: _chevron(context),
+                  onTap: () => _editLocation(context),
+                ),
+                SettingsTile(
+                  icon: Icons.visibility_off_outlined,
+                  title: context.l10n.meshcorePrivacyMode,
+                  subtitle: context.l10n.meshcoreControlAdvertVisibility,
+                  trailing: _chevron(context),
+                  onTap: () => _togglePrivacy(context),
+                ),
+                SizedBox(height: AppTheme.spacing16),
+                SettingsSectionHeader(title: context.l10n.meshcoreActions),
+                _maybeDisabled(
+                  enabled: isConnected && !_isSendingAdvert,
+                  child: SettingsTile(
+                    icon: Icons.cell_tower_rounded,
+                    title: context.l10n.meshcoreSendAdvertisement,
+                    subtitle: _isSendingAdvert
+                        ? context.l10n.meshcoreSending
+                        : context.l10n.meshcoreBroadcastYourPresence,
+                    trailing: _chevron(context),
+                    onTap: _sendAdvert,
+                  ),
+                ),
+                _maybeDisabled(
+                  enabled: isConnected && !_isSyncingTime,
+                  child: SettingsTile(
+                    icon: Icons.sync_rounded,
+                    title: context.l10n.meshcoreSyncTime,
+                    subtitle: _isSyncingTime
+                        ? context.l10n.meshcoreSyncing
+                        : context.l10n.meshcoreUpdateDeviceClock,
+                    trailing: _chevron(context),
+                    onTap: _syncTime,
+                  ),
+                ),
+                _maybeDisabled(
+                  enabled: isConnected,
+                  child: SettingsTile(
+                    icon: Icons.refresh_rounded,
+                    title: context.l10n.meshcoreRefreshContactsSetting,
+                    subtitle: context.l10n.meshcoreReloadContactsFromDevice,
+                    trailing: _chevron(context),
+                    onTap: () => _refreshContacts(context),
+                  ),
+                ),
+                _maybeDisabled(
+                  enabled: isConnected,
+                  child: SettingsTile(
+                    icon: Icons.restart_alt_rounded,
+                    iconColor: AppTheme.warningYellow,
+                    title: context.l10n.meshcoreRebootDevice,
+                    subtitle: context.l10n.meshcoreRestartMeshCoreDevice,
+                    trailing: _chevron(context),
+                    onTap: () => _confirmReboot(context),
+                  ),
+                ),
+                SizedBox(height: AppTheme.spacing16),
+                SettingsSectionHeader(title: context.l10n.meshcoreDebug),
+                SettingsTile(
+                  icon: Icons.code_rounded,
+                  title: context.l10n.meshcoreProtocolCapture,
+                  subtitle: context.l10n.meshcoreViewFrameLogs,
+                  trailing: _chevron(context),
+                  onTap: () => _showProtocolCapture(context),
+                ),
+                SizedBox(height: AppTheme.spacing16),
+                SettingsSectionHeader(title: context.l10n.meshcoreAbout),
+                SettingsTile(
+                  icon: Icons.info_outline_rounded,
+                  title: context.l10n.meshcoreAboutSocialMesh,
+                  subtitle: context.l10n.meshcoreVersion(
+                    _appVersion.isEmpty ? '…' : _appVersion,
+                  ),
+                  trailing: _chevron(context),
+                  onTap: () => _showAbout(context),
+                ),
+                SizedBox(height: AppTheme.spacing32),
               ],
             ),
           ),
@@ -108,7 +191,7 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
     );
   }
 
-  Widget _buildDeviceInfoCard(
+  Widget _buildDeviceInfoSection(
     BuildContext context, {
     required bool isConnected,
     MeshCoreSelfInfo? selfInfo,
@@ -116,74 +199,69 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
     required int contactCount,
     required int channelCount,
   }) {
-    return GradientBorderContainer(
-      accentColor: AccentColors.cyan,
-      borderRadius: 16,
-      borderWidth: 1,
-      padding: const EdgeInsets.all(AppTheme.spacing16),
+    final rows = <InfoTableRow>[
+      InfoTableRow(
+        label: context.l10n.meshcoreStatusLabel,
+        value: isConnected
+            ? context.l10n.meshcoreConnected
+            : context.l10n.meshcoreDisconnectedStatus,
+        icon: Icons.circle,
+        iconColor: isConnected ? SemanticColors.success : SemanticColors.error,
+      ),
+      if (selfInfo != null) ...[
+        InfoTableRow(
+          label: context.l10n.meshcoreNodeNameLabel,
+          value: selfInfo.nodeName,
+          icon: Icons.badge_outlined,
+        ),
+        InfoTableRow(
+          label: context.l10n.meshcorePublicKeySettingsLabel,
+          value: _bytesToHex(selfInfo.pubKey),
+          icon: Icons.key_outlined,
+          onTap: () {
+            HapticFeedback.selectionClick();
+            Clipboard.setData(
+              ClipboardData(text: _bytesToHex(selfInfo.pubKey)),
+            );
+            showSuccessSnackBar(
+              context,
+              context.l10n.meshcorePublicKeyCopiedSettings,
+            );
+          },
+        ),
+      ],
+      _batteryRow(batteryState),
+      InfoTableRow(
+        label: context.l10n.meshcoreContactsLabel,
+        value: '$contactCount',
+        icon: Icons.contacts_outlined,
+      ),
+      InfoTableRow(
+        label: context.l10n.meshcoreChannelsLabel,
+        value: '$channelCount',
+        icon: Icons.tag,
+      ),
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing16,
+        vertical: AppTheme.spacing8,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(Icons.info_outline_rounded, color: AccentColors.cyan),
-              const SizedBox(width: AppTheme.spacing8),
-              Text(
-                context.l10n.meshcoreDeviceInfo,
-                style: TextStyle(
-                  color: AccentColors.cyan,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppTheme.spacing16),
-          _buildInfoRow(
-            context.l10n.meshcoreStatusLabel,
-            isConnected
-                ? context.l10n.meshcoreConnected
-                : context.l10n.meshcoreDisconnectedStatus,
-            valueColor: isConnected ? AccentColors.green : AppTheme.errorRed,
-          ),
-          if (selfInfo != null) ...[
-            _buildInfoRow(
-              context.l10n.meshcoreNodeNameLabel,
-              selfInfo.nodeName,
-            ),
-            () {
-              final hex = _bytesToHex(selfInfo.pubKey);
-              final display = hex.length >= 16
-                  ? '${hex.substring(0, 16)}…'
-                  : hex;
-              return _buildInfoRow(
-                context.l10n.meshcorePublicKeySettingsLabel,
-                display,
-                onTap: () {
-                  Clipboard.setData(
-                    ClipboardData(text: _bytesToHex(selfInfo.pubKey)),
-                  );
-                  showSuccessSnackBar(
-                    context,
-                    context.l10n.meshcorePublicKeyCopiedSettings,
-                  );
-                },
-              );
-            }(),
-          ],
-          _buildBatteryRow(batteryState),
-          _buildInfoRow(context.l10n.meshcoreContactsLabel, '$contactCount'),
-          _buildInfoRow(context.l10n.meshcoreChannelsLabel, '$channelCount'),
+          SectionTitle(title: context.l10n.meshcoreDeviceInfo),
+          InfoTable(rows: rows),
         ],
       ),
     );
   }
 
-  Widget _buildBatteryRow(MeshCoreBatteryState? state) {
+  InfoTableRow _batteryRow(MeshCoreBatteryState? state) {
     String displayValue;
     IconData icon;
     Color? iconColor;
-    Color? valueColor;
 
     if (state == null || state.voltageMillivolts == null) {
       displayValue = context.l10n.meshcoreBatteryUnknown;
@@ -197,8 +275,7 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
       displayValue = '${state.percentage}%';
       if (state.percentage! <= 15) {
         icon = Icons.battery_alert_rounded;
-        iconColor = AccentColors.orange;
-        valueColor = AccentColors.orange;
+        iconColor = SemanticColors.warning;
       } else {
         icon = Icons.battery_full_rounded;
       }
@@ -208,302 +285,32 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
       icon = Icons.battery_full_rounded;
     }
 
-    return _buildInfoRow(
-      context.l10n.meshcoreBatteryStatusLabel,
-      displayValue,
-      leading: Icon(icon, size: 18, color: iconColor),
-      valueColor: valueColor,
-      onTap: state?.voltageMillivolts != null
-          ? () => setState(() => _showBatteryVoltage = !_showBatteryVoltage)
-          : null,
+    return InfoTableRow(
+      label: context.l10n.meshcoreBatteryStatusLabel,
+      value: displayValue,
+      icon: icon,
+      iconColor: iconColor,
+      // Tapping the battery row toggles between % and voltage display.
+      onTap: state?.voltageMillivolts == null
+          ? null
+          : () {
+              HapticFeedback.selectionClick();
+              safeSetState(() => _showBatteryVoltage = !_showBatteryVoltage);
+            },
     );
   }
 
-  Widget _buildNodeSettingsCard(
-    BuildContext context,
-    MeshCoreSelfInfo? selfInfo,
-  ) {
-    return GradientBorderContainer(
-      accentColor: AccentColors.purple,
-      borderRadius: 16,
-      borderWidth: 1,
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 8),
-            child: Row(
-              children: [
-                Icon(Icons.tune_rounded, color: AccentColors.purple),
-                const SizedBox(width: AppTheme.spacing8),
-                Text(
-                  context.l10n.meshcoreNodeSettings,
-                  style: TextStyle(
-                    color: AccentColors.purple,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          _buildSettingsTile(
-            icon: Icons.person_outline_rounded,
-            title: context.l10n.meshcoreNodeNameSetting,
-            subtitle: selfInfo?.nodeName ?? context.l10n.meshcoreNotSet,
-            onTap: () => _editNodeName(context, selfInfo?.nodeName),
-          ),
-          _buildDivider(),
-          _buildSettingsTile(
-            icon: Icons.radio_rounded,
-            title: context.l10n.meshcoreRadioSettings,
-            subtitle: context.l10n.meshcoreRadioSettingsSubtitle,
-            onTap: () => _showRadioSettings(context),
-          ),
-          _buildDivider(),
-          _buildSettingsTile(
-            icon: Icons.location_on_outlined,
-            title: context.l10n.meshcoreLocationSetting,
-            subtitle: context.l10n.meshcoreSetNodePosition,
-            onTap: () => _editLocation(context),
-          ),
-          _buildDivider(),
-          _buildSettingsTile(
-            icon: Icons.visibility_off_outlined,
-            title: context.l10n.meshcorePrivacyMode,
-            subtitle: context.l10n.meshcoreControlAdvertVisibility,
-            onTap: () => _togglePrivacy(context),
-          ),
-        ],
-      ),
-    );
-  }
+  /// Right-chevron used as the trailing affordance on action/navigation
+  /// tiles. Distinct from a [ThemedSwitch] trailing, which marks a toggle.
+  Widget _chevron(BuildContext context) =>
+      Icon(Icons.chevron_right, color: context.textTertiary);
 
-  Widget _buildActionsCard(BuildContext context, bool isConnected) {
-    return GradientBorderContainer(
-      accentColor: AccentColors.green,
-      borderRadius: 16,
-      borderWidth: 1,
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 8),
-            child: Row(
-              children: [
-                Icon(Icons.bolt_rounded, color: AccentColors.green),
-                const SizedBox(width: AppTheme.spacing8),
-                Text(
-                  context.l10n.meshcoreActions,
-                  style: TextStyle(
-                    color: AccentColors.green,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          _buildSettingsTile(
-            icon: Icons.cell_tower_rounded,
-            title: context.l10n.meshcoreSendAdvertisement,
-            subtitle: _isSendingAdvert
-                ? context.l10n.meshcoreSending
-                : context.l10n.meshcoreBroadcastYourPresence,
-            enabled: isConnected && !_isSendingAdvert,
-            onTap: _sendAdvert,
-          ),
-          _buildDivider(),
-          _buildSettingsTile(
-            icon: Icons.sync_rounded,
-            title: context.l10n.meshcoreSyncTime,
-            subtitle: _isSyncingTime
-                ? context.l10n.meshcoreSyncing
-                : context.l10n.meshcoreUpdateDeviceClock,
-            enabled: isConnected && !_isSyncingTime,
-            onTap: _syncTime,
-          ),
-          _buildDivider(),
-          _buildSettingsTile(
-            icon: Icons.refresh_rounded,
-            title: context.l10n.meshcoreRefreshContactsSetting,
-            subtitle: context.l10n.meshcoreReloadContactsFromDevice,
-            enabled: isConnected,
-            onTap: () => _refreshContacts(context),
-          ),
-          _buildDivider(),
-          _buildSettingsTile(
-            icon: Icons.restart_alt_rounded,
-            iconColor: AccentColors.orange,
-            title: context.l10n.meshcoreRebootDevice,
-            subtitle: context.l10n.meshcoreRestartMeshCoreDevice,
-            enabled: isConnected,
-            onTap: () => _confirmReboot(context),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDebugCard(BuildContext context) {
-    return GradientBorderContainer(
-      accentColor: SemanticColors.disabled,
-      borderRadius: 16,
-      borderWidth: 1,
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 8),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.bug_report_outlined,
-                  color: SemanticColors.disabled,
-                ),
-                const SizedBox(width: AppTheme.spacing8),
-                Text(
-                  context.l10n.meshcoreDebug,
-                  style: TextStyle(
-                    color: SemanticColors.disabled,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          _buildSettingsTile(
-            icon: Icons.code_rounded,
-            title: context.l10n.meshcoreProtocolCapture,
-            subtitle: context.l10n.meshcoreViewFrameLogs,
-            onTap: () => _showProtocolCapture(context),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAboutCard(BuildContext context) {
-    return GradientBorderContainer(
-      accentColor: AccentColors.slate,
-      borderRadius: 16,
-      borderWidth: 1,
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      child: ListTile(
-        contentPadding: EdgeInsets.zero,
-        leading: Icon(Icons.info_outline_rounded, color: AccentColors.slate),
-        title: Text(
-          context.l10n.meshcoreAbout,
-          style: const TextStyle(color: Colors.white),
-        ),
-        subtitle: Text(
-          'SocialMesh v${_appVersion.isEmpty ? '...' : _appVersion}',
-          style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
-        ),
-        onTap: () => _showAbout(context),
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(
-    String label,
-    String value, {
-    Widget? leading,
-    Color? valueColor,
-    VoidCallback? onTap,
-  }) {
-    final content = Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              if (leading != null) ...[
-                leading,
-                const SizedBox(width: AppTheme.spacing8),
-              ],
-              Text(
-                label,
-                style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
-              ),
-            ],
-          ),
-          Flexible(
-            child: Text(
-              value,
-              style: TextStyle(
-                color: valueColor ?? Colors.white,
-                fontWeight: FontWeight.w500,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-
-    if (onTap != null) {
-      return InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppTheme.radius4),
-        child: content,
-      );
-    }
-    return content;
-  }
-
-  Widget _buildSettingsTile({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    Color? iconColor,
-    bool enabled = true,
-    VoidCallback? onTap,
-  }) {
-    return ListTile(
-      enabled: enabled,
-      leading: Icon(
-        icon,
-        color: enabled
-            ? (iconColor ?? Colors.white.withValues(alpha: 0.8))
-            : Colors.white.withValues(alpha: 0.3),
-      ),
-      title: Text(
-        title,
-        style: TextStyle(
-          color: enabled ? Colors.white : Colors.white.withValues(alpha: 0.4),
-        ),
-      ),
-      subtitle: Text(
-        subtitle,
-        style: TextStyle(
-          color: enabled
-              ? Colors.white.withValues(alpha: 0.6)
-              : Colors.white.withValues(alpha: 0.3),
-        ),
-      ),
-      trailing: Icon(
-        Icons.chevron_right_rounded,
-        color: enabled
-            ? Colors.white.withValues(alpha: 0.5)
-            : Colors.white.withValues(alpha: 0.2),
-      ),
-      onTap: enabled ? onTap : null,
-    );
-  }
-
-  Widget _buildDivider() {
-    return Divider(
-      height: 1,
-      indent: 16,
-      endIndent: 16,
-      color: Colors.white.withValues(alpha: 0.1),
-    );
+  /// Wraps a [SettingsTile] in an [Opacity]+[IgnorePointer] when disabled.
+  /// Keeps the tile visible (so the user understands the affordance exists)
+  /// but blocks interaction without leaning on the tile API for state.
+  Widget _maybeDisabled({required bool enabled, required Widget child}) {
+    if (enabled) return child;
+    return Opacity(opacity: 0.4, child: IgnorePointer(child: child));
   }
 
   // ---------------------------------------------------------------------------
@@ -512,7 +319,7 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
 
   void _editNodeName(BuildContext context, String? currentName) {
     final controller = TextEditingController(text: currentName ?? '');
-    AppBottomSheet.show(
+    AppBottomSheet.show<void>(
       context: context,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -520,56 +327,59 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
         children: [
           Text(
             context.l10n.meshcoreEditNodeName,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: AppTheme.spacing16),
+          SizedBox(height: AppTheme.spacing16),
           TextField(
-            onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
             controller: controller,
             autofocus: true,
             maxLength: 31,
-            style: const TextStyle(color: Colors.white),
+            onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
+            style: TextStyle(color: context.textPrimary),
             decoration: InputDecoration(
               hintText: context.l10n.meshcoreEnterNodeNameHint,
-              hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
+              hintStyle: TextStyle(color: SemanticColors.muted),
               filled: true,
-              fillColor: Colors.white.withValues(alpha: 0.1),
+              fillColor: context.background,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppTheme.radius12),
-                borderSide: BorderSide.none,
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
+                borderSide: BorderSide(color: context.border),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
+                borderSide: BorderSide(color: context.border),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
+                borderSide: BorderSide(color: context.accentColor),
+              ),
+              prefixIcon: Icon(
+                Icons.person_outline_rounded,
+                color: context.textSecondary,
               ),
               counterText: '',
             ),
           ),
-          const SizedBox(height: AppTheme.spacing16),
+          SizedBox(height: AppTheme.spacing16),
           Row(
             children: [
               Expanded(
                 child: OutlinedButton(
                   onPressed: () => Navigator.pop(context),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white.withValues(alpha: 0.8),
-                    side: BorderSide(
-                      color: Colors.white.withValues(alpha: 0.3),
-                    ),
-                  ),
                   child: Text(context.l10n.meshcoreCancel),
                 ),
               ),
-              const SizedBox(width: AppTheme.spacing12),
+              SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: FilledButton(
                   onPressed: () async {
                     Navigator.pop(context);
                     await _setNodeName(controller.text.trim());
                   },
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AccentColors.cyan.withValues(alpha: 0.3),
-                    foregroundColor: AccentColors.cyan,
-                  ),
                   child: Text(context.l10n.meshcoreSave),
                 ),
               ),
@@ -582,9 +392,8 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
 
   Future<void> _setNodeName(String name) async {
     if (name.isEmpty) return;
-
-    // Capture providers before any await
     if (!mounted) return;
+
     final session = ref.read(meshCoreSessionProvider);
     final selfInfoNotifier = ref.read(meshCoreSelfInfoProvider.notifier);
 
@@ -596,7 +405,6 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
     }
 
     try {
-      // CMD_SET_ADVERT_NAME = 0x08
       final payload = Uint8List.fromList([...name.codeUnits, 0]);
       await session.sendFrame(
         MeshCoreFrame(
@@ -605,10 +413,9 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
         ),
       );
       if (!mounted) return;
-      // Refresh self info
       selfInfoNotifier.refresh();
       showSuccessSnackBar(context, context.l10n.meshcoreNodeNameUpdated);
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         showErrorSnackBar(context, context.l10n.meshcoreFailedToSetName);
       }
@@ -616,52 +423,37 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
   }
 
   void _showRadioSettings(BuildContext context) {
-    AppBottomSheet.show(
+    AppBottomSheet.show<void>(
       context: context,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            context.l10n.meshcoreRadioSettingsDialogTitle,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
+          SectionTitle(title: context.l10n.meshcoreRadioSettingsDialogTitle),
+          InfoTable(
+            rows: [
+              InfoTableRow(
+                label: context.l10n.meshcoreFrequencyLabel,
+                value: context.l10n.meshcoreNotYetImplemented,
+                icon: Icons.broadcast_on_personal_outlined,
+              ),
+              InfoTableRow(
+                label: context.l10n.meshcoreTxPowerLabel,
+                value: context.l10n.meshcoreNotYetImplemented,
+                icon: Icons.bolt_outlined,
+              ),
+              InfoTableRow(
+                label: context.l10n.meshcoreBandwidthLabel,
+                value: context.l10n.meshcoreNotYetImplemented,
+                icon: Icons.speed_outlined,
+              ),
+            ],
           ),
-          const SizedBox(height: AppTheme.spacing16),
-          Container(
-            padding: const EdgeInsets.all(AppTheme.spacing16),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(AppTheme.radius12),
-            ),
-            child: Column(
-              children: [
-                _buildInfoRow(
-                  context.l10n.meshcoreFrequencyLabel,
-                  context.l10n.meshcoreNotYetImplemented,
-                ),
-                _buildInfoRow(
-                  context.l10n.meshcoreTxPowerLabel,
-                  context.l10n.meshcoreNotYetImplemented,
-                ),
-                _buildInfoRow(
-                  context.l10n.meshcoreBandwidthLabel,
-                  context.l10n.meshcoreNotYetImplemented,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing16),
+          SizedBox(height: AppTheme.spacing16),
           SizedBox(
             width: double.infinity,
             child: OutlinedButton(
               onPressed: () => Navigator.pop(context),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.white.withValues(alpha: 0.8),
-                side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
-              ),
               child: Text(context.l10n.meshcoreClose),
             ),
           ),
@@ -671,83 +463,47 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
   }
 
   void _editLocation(BuildContext context) {
-    AppBottomSheet.show(
-      context: context,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            context.l10n.meshcoreSetLocation,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing16),
-          Container(
-            padding: const EdgeInsets.all(AppTheme.spacing16),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(AppTheme.radius12),
-            ),
-            child: Text(
-              context.l10n.meshcoreLocationComingSoon,
-              style: const TextStyle(color: Colors.white70),
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing16),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton(
-              onPressed: () => Navigator.pop(context),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.white.withValues(alpha: 0.8),
-                side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
-              ),
-              child: Text(context.l10n.meshcoreClose),
-            ),
-          ),
-        ],
-      ),
+    _showStubSheet(
+      context,
+      title: context.l10n.meshcoreSetLocation,
+      body: context.l10n.meshcoreLocationComingSoon,
     );
   }
 
   void _togglePrivacy(BuildContext context) {
-    AppBottomSheet.show(
+    _showStubSheet(
+      context,
+      title: context.l10n.meshcorePrivacyModeDialogTitle,
+      body: context.l10n.meshcorePrivacyComingSoon,
+    );
+  }
+
+  void _showStubSheet(
+    BuildContext context, {
+    required String title,
+    required String body,
+  }) {
+    AppBottomSheet.show<void>(
       context: context,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            context.l10n.meshcorePrivacyModeDialogTitle,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
+            title,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: AppTheme.spacing16),
-          Container(
-            padding: const EdgeInsets.all(AppTheme.spacing16),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(AppTheme.radius12),
-            ),
-            child: Text(
-              context.l10n.meshcorePrivacyComingSoon,
-              style: const TextStyle(color: Colors.white70),
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing16),
+          SizedBox(height: AppTheme.spacing12),
+          Text(body, style: TextStyle(color: context.textSecondary)),
+          SizedBox(height: AppTheme.spacing16),
           SizedBox(
             width: double.infinity,
             child: OutlinedButton(
               onPressed: () => Navigator.pop(context),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.white.withValues(alpha: 0.8),
-                side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
-              ),
               child: Text(context.l10n.meshcoreClose),
             ),
           ),
@@ -772,7 +528,7 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
       if (mounted) {
         showSuccessSnackBar(context, context.l10n.meshcoreAdvertisementSent);
       }
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         showErrorSnackBar(
           context,
@@ -812,7 +568,7 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
       if (mounted) {
         showSuccessSnackBar(context, context.l10n.meshcoreTimeSynchronized);
       }
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         showErrorSnackBar(context, context.l10n.meshcoreFailedToSyncTime);
       }
@@ -837,13 +593,15 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
     if (confirmed != true) return;
     if (!mounted) return;
 
-    _rebootDevice();
+    await _rebootDevice();
   }
 
   Future<void> _rebootDevice() async {
     final session = ref.read(meshCoreSessionProvider);
     if (session == null || !session.isActive) {
-      showErrorSnackBar(context, context.l10n.meshcoreNotConnected);
+      if (mounted) {
+        showErrorSnackBar(context, context.l10n.meshcoreNotConnected);
+      }
       return;
     }
 
@@ -852,7 +610,7 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
       if (mounted) {
         showSuccessSnackBar(context, context.l10n.meshcoreRebootCommandSent);
       }
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         showErrorSnackBar(context, context.l10n.meshcoreFailedToRebootDevice);
       }
@@ -862,41 +620,35 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
   void _showProtocolCapture(BuildContext context) {
     final captureState = ref.read(meshCoreCaptureSnapshotProvider);
 
-    AppBottomSheet.show(
+    AppBottomSheet.show<void>(
       context: context,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            context.l10n.meshcoreProtocolCaptureDialogTitle,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
+          SectionTitle(title: context.l10n.meshcoreProtocolCaptureDialogTitle),
+          InfoTable(
+            rows: [
+              InfoTableRow(
+                label: context.l10n.meshcoreActiveLabel,
+                value: captureState.isActive
+                    ? context.l10n.commonYes
+                    : context.l10n.commonNo,
+                icon: captureState.isActive
+                    ? Icons.fiber_manual_record
+                    : Icons.fiber_manual_record_outlined,
+                iconColor: captureState.isActive
+                    ? SemanticColors.success
+                    : SemanticColors.disabled,
+              ),
+              InfoTableRow(
+                label: context.l10n.meshcoreFramesLabel,
+                value: '${captureState.totalCount}',
+                icon: Icons.layers_outlined,
+              ),
+            ],
           ),
-          const SizedBox(height: AppTheme.spacing16),
-          Container(
-            padding: const EdgeInsets.all(AppTheme.spacing16),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(AppTheme.radius12),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildInfoRow(
-                  context.l10n.meshcoreActiveLabel,
-                  captureState.isActive ? 'Yes' : 'No',
-                ),
-                _buildInfoRow(
-                  context.l10n.meshcoreFramesLabel,
-                  '${captureState.totalCount}',
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing16),
+          SizedBox(height: AppTheme.spacing16),
           Row(
             children: [
               Expanded(
@@ -907,17 +659,11 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
                         .refresh();
                     Navigator.pop(context);
                   },
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white.withValues(alpha: 0.8),
-                    side: BorderSide(
-                      color: Colors.white.withValues(alpha: 0.3),
-                    ),
-                  ),
                   child: Text(context.l10n.meshcoreRefresh),
                 ),
               ),
               if (captureState.hasFrames) ...[
-                const SizedBox(width: AppTheme.spacing12),
+                SizedBox(width: AppTheme.spacing12),
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () {
@@ -927,8 +673,8 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
                       Navigator.pop(context);
                     },
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: AccentColors.orange,
-                      side: const BorderSide(color: AccentColors.orange),
+                      foregroundColor: SemanticColors.warning,
+                      side: BorderSide(color: SemanticColors.warning),
                     ),
                     child: Text(context.l10n.meshcoreClear),
                   ),
@@ -942,10 +688,11 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
   }
 
   void _showAbout(BuildContext context) {
-    AppBottomSheet.show(
+    AppBottomSheet.show<void>(
       context: context,
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             context.l10n.meshcoreAboutSocialMesh,
@@ -955,29 +702,21 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
               color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: AppTheme.spacing12),
+          SizedBox(height: AppTheme.spacing12),
           Text(
             context.l10n.meshcoreVersion(_appVersion),
             style: TextStyle(color: context.textSecondary),
           ),
-          const SizedBox(height: AppTheme.spacing12),
+          SizedBox(height: AppTheme.spacing12),
           Text(
             context.l10n.meshcoreAboutDescription,
-            textAlign: TextAlign.center,
             style: TextStyle(color: context.textSecondary),
           ),
-          const SizedBox(height: AppTheme.spacing24),
+          SizedBox(height: AppTheme.spacing24),
           SizedBox(
             width: double.infinity,
             child: FilledButton(
               onPressed: () => Navigator.pop(context),
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                backgroundColor: context.accentColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radius12),
-                ),
-              ),
               child: Text(context.l10n.meshcoreClose),
             ),
           ),

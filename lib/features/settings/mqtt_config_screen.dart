@@ -27,6 +27,7 @@ import '../../services/protocol/admin_target.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/info_table.dart';
+import '../../core/widgets/settings_primitives.dart';
 import '../../core/widgets/status_banner.dart';
 import '../../core/mqtt/mqtt_constants.dart' show BrokerPreset;
 import '../../core/mqtt/mqtt_preferences.dart';
@@ -440,7 +441,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                       );
                     },
                   ),
-                  _SettingsTile(
+                  SettingsTile(
                     icon: Icons.cloud,
                     iconColor: _enabled ? context.accentColor : null,
                     title: context.l10n.mqttConfigEnable,
@@ -498,17 +499,10 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                         ),
                       ),
                     SizedBox(height: AppTheme.spacing16),
-                    _SectionHeader(title: context.l10n.mqttConfigSectionServer),
-                    Container(
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 2,
-                      ),
-                      padding: const EdgeInsets.all(AppTheme.spacing16),
-                      decoration: BoxDecoration(
-                        color: context.card,
-                        borderRadius: BorderRadius.circular(AppTheme.radius12),
-                      ),
+                    SettingsSectionHeader(
+                      title: context.l10n.mqttConfigSectionServer,
+                    ),
+                    FieldGroupCard(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -625,7 +619,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                         ],
                       ),
                     ),
-                    _SettingsTile(
+                    SettingsTile(
                       icon: Icons.lock_outline,
                       iconColor: _tlsEnabled ? context.accentColor : null,
                       title: context.l10n.mqttConfigUseTls,
@@ -645,19 +639,10 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                     // no scenario in which the user should override them.
                     if (!_isDefaultBroker) ...[
                       SizedBox(height: AppTheme.spacing16),
-                      _SectionHeader(title: context.l10n.mqttConfigSectionAuth),
-                      Container(
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 2,
-                        ),
-                        padding: const EdgeInsets.all(AppTheme.spacing16),
-                        decoration: BoxDecoration(
-                          color: context.card,
-                          borderRadius: BorderRadius.circular(
-                            AppTheme.radius12,
-                          ),
-                        ),
+                      SettingsSectionHeader(
+                        title: context.l10n.mqttConfigSectionAuth,
+                      ),
+                      FieldGroupCard(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -784,10 +769,10 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                       ),
                     ], // close `if (!_isDefaultBroker) ...[`
                     SizedBox(height: AppTheme.spacing16),
-                    _SectionHeader(
+                    SettingsSectionHeader(
                       title: context.l10n.mqttConfigSectionOptions,
                     ),
-                    _SettingsTile(
+                    SettingsTile(
                       icon: Icons.enhanced_encryption,
                       iconColor: _encryptionEnabled
                           ? context.accentColor
@@ -803,7 +788,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                         },
                       ),
                     ),
-                    _SettingsTile(
+                    SettingsTile(
                       icon: Icons.data_object,
                       iconColor: _jsonEnabled ? context.accentColor : null,
                       title: context.l10n.mqttConfigJsonOutput,
@@ -826,7 +811,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                         },
                       ),
                     ),
-                    _SettingsTile(
+                    SettingsTile(
                       icon: Icons.phone_android,
                       iconColor: _proxyToClientEnabled
                           ? context.accentColor
@@ -853,7 +838,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                     ),
                     if (_enabled || _proxyToClientEnabled)
                       _buildProxyDiagnostics(),
-                    _SettingsTile(
+                    SettingsTile(
                       icon: Icons.map_outlined,
                       iconColor: _mapReportingEnabled
                           ? context.accentColor
@@ -929,7 +914,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                     subtitle: l10n.mqttProxyBannerNotConnectedHint,
                   ),
           ),
-        _SectionHeader(title: l10n.mqttProxySectionDiagnostics),
+        SettingsSectionHeader(title: l10n.mqttProxySectionDiagnostics),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
           child: InfoTable(
@@ -1230,13 +1215,8 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
 
   Widget _buildMapReportSettings() {
     final l10n = context.l10n;
-    return Container(
+    return FieldGroupCard(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(AppTheme.spacing16),
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1432,84 +1412,3 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
 /// for regulatory data); see `lib/core/meshtastic/region_metadata.dart`.
 int _dutyCycleForRegion(config_pbenum.Config_LoRaConfig_RegionCode region) =>
     region_metadata.dutyCycleForRegion(region);
-
-class _SectionHeader extends StatelessWidget {
-  final String title;
-
-  const _SectionHeader({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 8),
-      child: Text(
-        title,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-          color: context.textTertiary,
-          letterSpacing: 1.2,
-        ),
-      ),
-    );
-  }
-}
-
-class _SettingsTile extends StatelessWidget {
-  final IconData icon;
-  final Color? iconColor;
-  final String title;
-  final String subtitle;
-  final Widget? trailing;
-
-  const _SettingsTile({
-    required this.icon,
-    this.iconColor,
-    required this.title,
-    required this.subtitle,
-    this.trailing,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            Icon(icon, color: iconColor ?? context.textSecondary),
-            SizedBox(width: AppTheme.spacing16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: context.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: AppTheme.spacing2),
-                  Text(
-                    subtitle,
-                    style: context.bodySmallStyle?.copyWith(
-                      color: context.textTertiary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (trailing != null) trailing!,
-          ],
-        ),
-      ),
-    );
-  }
-}

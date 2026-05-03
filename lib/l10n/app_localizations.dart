@@ -6430,6 +6430,12 @@ abstract class AppLocalizations {
   /// **'Never'**
   String get commonNever;
 
+  /// Generic short label for a negative or absent state (e.g. an Active row showing No).
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get commonNo;
+
   /// Relative time label for less than a minute ago.
   ///
   /// In en, this message translates to:
@@ -6675,6 +6681,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save'**
   String get commonSave;
+
+  /// Generic short label for a positive or present state (e.g. an Active row showing Yes).
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get commonYes;
 
   /// Screen title
   ///
@@ -13369,6 +13381,54 @@ abstract class AppLocalizations {
   /// **'e.g. general'**
   String get meshcoreChannelNameHintHashtag;
 
+  /// Animated empty-state tagline shown when the channels list is empty
+  ///
+  /// In en, this message translates to:
+  /// **'Channels are shared spaces for group communication'**
+  String get meshcoreChannelsEmptyTagline1;
+
+  /// Animated empty-state tagline shown when the channels list is empty
+  ///
+  /// In en, this message translates to:
+  /// **'Create a private channel or join a hashtag channel'**
+  String get meshcoreChannelsEmptyTagline2;
+
+  /// Animated empty-state tagline shown when the channels list is empty
+  ///
+  /// In en, this message translates to:
+  /// **'Channels are encrypted with a shared key (PSK)'**
+  String get meshcoreChannelsEmptyTagline3;
+
+  /// Animated empty-state title keyword (gradient-animated word) for an empty channels list
+  ///
+  /// In en, this message translates to:
+  /// **'channels'**
+  String get meshcoreChannelsEmptyTitleKeyword;
+
+  /// Animated empty-state title prefix shown before the keyword for an empty channels list
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get meshcoreChannelsEmptyTitlePrefix;
+
+  /// Animated empty-state title suffix shown after the keyword for an empty channels list
+  ///
+  /// In en, this message translates to:
+  /// **'yet'**
+  String get meshcoreChannelsEmptyTitleSuffix;
+
+  /// Channel info row label for the channel slot index
+  ///
+  /// In en, this message translates to:
+  /// **'Index'**
+  String get meshcoreChannelInfoIndex;
+
+  /// Channel info row label for the channel pre-shared key
+  ///
+  /// In en, this message translates to:
+  /// **'PSK'**
+  String get meshcoreChannelInfoPsk;
+
   /// Text field label for channel name input
   ///
   /// In en, this message translates to:
@@ -13410,6 +13470,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Channels'**
   String get meshcoreChannelsTitle;
+
+  /// Animated empty-state tagline shown when a chat has no messages
+  ///
+  /// In en, this message translates to:
+  /// **'Send the first one to start a conversation'**
+  String get meshcoreChatEmptyTagline1;
+
+  /// Animated empty-state tagline shown when a chat has no messages
+  ///
+  /// In en, this message translates to:
+  /// **'Messages travel mesh-to-mesh, no internet needed'**
+  String get meshcoreChatEmptyTagline2;
+
+  /// Animated empty-state tagline shown when a chat has no messages
+  ///
+  /// In en, this message translates to:
+  /// **'Tap below to send your first packet'**
+  String get meshcoreChatEmptyTagline3;
+
+  /// Animated empty-state title keyword (gradient-animated word) for an empty chat
+  ///
+  /// In en, this message translates to:
+  /// **'messages'**
+  String get meshcoreChatEmptyTitleKeyword;
+
+  /// Animated empty-state title prefix shown before the keyword for an empty chat
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get meshcoreChatEmptyTitlePrefix;
+
+  /// Animated empty-state title suffix shown after the keyword for an empty chat
+  ///
+  /// In en, this message translates to:
+  /// **'yet'**
+  String get meshcoreChatEmptyTitleSuffix;
+
+  /// Contact info row label for the geographic location (lat/lon)
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get meshcoreChatInfoLocation;
+
+  /// Contact info row label for the most recent advertisement timestamp
+  ///
+  /// In en, this message translates to:
+  /// **'Last Seen'**
+  String get meshcoreChatInfoLastSeen;
+
+  /// Contact info row label for the routing path to the contact
+  ///
+  /// In en, this message translates to:
+  /// **'Path'**
+  String get meshcoreChatInfoPath;
+
+  /// Contact info row label for the contact's advertisement type (chat/repeater/room/sensor)
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get meshcoreChatInfoType;
 
   /// Device type label for chat nodes
   ///
@@ -13542,6 +13662,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{contactName} removed'**
   String meshcoreContactRemoved(String contactName);
+
+  /// Animated empty-state tagline shown when the contacts list is empty
+  ///
+  /// In en, this message translates to:
+  /// **'Contacts appear here when discovered via mesh advertisements'**
+  String get meshcoreContactsEmptyTagline1;
+
+  /// Animated empty-state tagline shown when the contacts list is empty
+  ///
+  /// In en, this message translates to:
+  /// **'Add one manually with a contact code or QR scan'**
+  String get meshcoreContactsEmptyTagline2;
+
+  /// Animated empty-state tagline shown when the contacts list is empty
+  ///
+  /// In en, this message translates to:
+  /// **'Pull down to refresh from your device'**
+  String get meshcoreContactsEmptyTagline3;
+
+  /// Animated empty-state title keyword (gradient-animated word) for an empty contacts list
+  ///
+  /// In en, this message translates to:
+  /// **'contacts'**
+  String get meshcoreContactsEmptyTitleKeyword;
+
+  /// Animated empty-state title prefix shown before the keyword for an empty contacts list
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get meshcoreContactsEmptyTitlePrefix;
+
+  /// Animated empty-state title suffix shown after the keyword for an empty contacts list
+  ///
+  /// In en, this message translates to:
+  /// **'yet'**
+  String get meshcoreContactsEmptyTitleSuffix;
 
   /// Info row label for contacts count
   ///
@@ -14221,6 +14377,42 @@ abstract class AppLocalizations {
   /// **'Paste channel code here...'**
   String get meshcorePasteChannelCodeHint;
 
+  /// Routing path label: directly reachable peer (zero hops)
+  ///
+  /// In en, this message translates to:
+  /// **'Direct'**
+  String get meshcorePathDirect;
+
+  /// Routing path label: user-forced direct route (overrides auto-discovered path)
+  ///
+  /// In en, this message translates to:
+  /// **'Direct (forced)'**
+  String get meshcorePathDirectForced;
+
+  /// Routing path label: flood-routed (no specific path)
+  ///
+  /// In en, this message translates to:
+  /// **'Flood'**
+  String get meshcorePathFlood;
+
+  /// Routing path label: user-forced flood route (overrides auto-discovered path)
+  ///
+  /// In en, this message translates to:
+  /// **'Flood (forced)'**
+  String get meshcorePathFloodForced;
+
+  /// Routing path label: hop count for an auto-discovered direct route
+  ///
+  /// In en, this message translates to:
+  /// **'{count} hops'**
+  String meshcorePathHops(int count);
+
+  /// Routing path label: user-forced hop count (overrides auto-discovered path)
+  ///
+  /// In en, this message translates to:
+  /// **'{count} hops (forced)'**
+  String meshcorePathHopsForced(int count);
+
   /// Hint text for contact code input field
   ///
   /// In en, this message translates to:
@@ -14496,6 +14688,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save'**
   String get meshcoreSave;
+
+  /// Device type label for sensor nodes
+  ///
+  /// In en, this message translates to:
+  /// **'Sensor Node'**
+  String get meshcoreSensorNode;
 
   /// Join option subtitle for channel QR scanning
   ///
@@ -25114,6 +25312,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Available Devices'**
   String get scannerAvailableDevices;
+
+  /// Section header above Meshtastic devices in the scanner list.
+  ///
+  /// In en, this message translates to:
+  /// **'Meshtastic'**
+  String get scannerProtocolGroupMeshtastic;
+
+  /// Section header above MeshCore devices in the scanner list.
+  ///
+  /// In en, this message translates to:
+  /// **'MeshCore'**
+  String get scannerProtocolGroupMeshcore;
+
+  /// Section header above devices of unknown protocol (only shown in Show all BLE devices mode).
+  ///
+  /// In en, this message translates to:
+  /// **'Other Devices'**
+  String get scannerProtocolGroupOther;
 
   /// Label for the button that opens the OS Bluetooth settings.
   ///

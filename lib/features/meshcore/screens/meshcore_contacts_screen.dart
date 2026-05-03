@@ -7,13 +7,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/animated_empty_state.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/info_table.dart';
 import '../../../core/widgets/search_filter_header.dart';
+import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
-import '../../../core/widgets/gradient_border_container.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/qr_share_sheet.dart';
 import '../../../models/meshcore_contact.dart';
+import '../contact_l10n.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/meshcore_providers.dart';
 import '../../../utils/snackbar.dart';
@@ -189,25 +192,21 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.link_off_rounded,
-              size: 64,
-              color: Colors.white.withValues(alpha: 0.4),
-            ),
+            Icon(Icons.link_off_rounded, size: 64, color: context.textTertiary),
             const SizedBox(height: AppTheme.spacing16),
             Text(
               context.l10n.meshcoreDisconnectedTitle,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: Colors.white.withValues(alpha: 0.8),
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(color: context.textPrimary),
             ),
             const SizedBox(height: AppTheme.spacing8),
             Text(
               context.l10n.meshcoreDisconnectedContactsDescription,
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.white.withValues(alpha: 0.6),
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: context.textSecondary),
             ),
           ],
         ),
@@ -216,98 +215,34 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
   }
 
   Widget _buildEmptyState(String deviceName) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppTheme.spacing32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            GradientBorderContainer(
-              borderRadius: 20,
-              borderWidth: 1.5,
-              accentColor: AccentColors.cyan,
-              padding: const EdgeInsets.all(AppTheme.spacing24),
-              child: Icon(
-                Icons.people_outline_rounded,
-                size: 64,
-                color: AccentColors.cyan.withValues(alpha: 0.8),
-              ),
-            ),
-            const SizedBox(height: AppTheme.spacing24),
-            Text(
-              context.l10n.meshcoreNoContacts,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: Colors.white.withValues(alpha: 0.9),
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: AppTheme.spacing12),
-            Text(
-              context.l10n.meshcoreNoContactsDescription,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.white.withValues(alpha: 0.6),
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: AppTheme.spacing32),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                FilledButton.icon(
-                  onPressed: _showAddContactOptions,
-                  icon: const Icon(Icons.person_add_rounded),
-                  label: Text(context.l10n.meshcoreAddContactButton),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AccentColors.cyan.withValues(alpha: 0.3),
-                    foregroundColor: AccentColors.cyan,
-                  ),
-                ),
-                const SizedBox(width: AppTheme.spacing12),
-                OutlinedButton.icon(
-                  onPressed: _refreshContacts,
-                  icon: const Icon(Icons.refresh_rounded),
-                  label: Text(context.l10n.meshcoreRefreshButton),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white.withValues(alpha: 0.8),
-                    side: BorderSide(
-                      color: Colors.white.withValues(alpha: 0.3),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppTheme.spacing24),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: AccentColors.green.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(AppTheme.radius12),
-                border: Border.all(
-                  color: AccentColors.green.withValues(alpha: 0.3),
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.check_circle_rounded,
-                    size: 18,
-                    color: AccentColors.green,
-                  ),
-                  const SizedBox(width: AppTheme.spacing8),
-                  Text(
-                    context.l10n.meshcoreConnectedTo(deviceName),
-                    style: TextStyle(
-                      color: AccentColors.green,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+    // [deviceName] is no longer surfaced inline — the connected device is
+    // already visible via the device-status button in the app bar; keeping
+    // a separate "Connected to X" badge inside the empty state would be
+    // duplicate UI and clash with the canonical AnimatedEmptyState shape.
+    // The pull-to-refresh affordance on the list itself preserves the
+    // refresh path without a secondary button.
+    return AnimatedEmptyState(
+      config: AnimatedEmptyStateConfig(
+        icons: const [
+          Icons.people_outline_rounded,
+          Icons.contact_page_outlined,
+          Icons.person_search_rounded,
+          Icons.qr_code_scanner_rounded,
+          Icons.cell_tower_rounded,
+          Icons.podcasts_rounded,
+        ],
+        taglines: [
+          context.l10n.meshcoreContactsEmptyTagline1,
+          context.l10n.meshcoreContactsEmptyTagline2,
+          context.l10n.meshcoreContactsEmptyTagline3,
+        ],
+        titlePrefix: context.l10n.meshcoreContactsEmptyTitlePrefix,
+        titleKeyword: context.l10n.meshcoreContactsEmptyTitleKeyword,
+        titleSuffix: context.l10n.meshcoreContactsEmptyTitleSuffix,
+        actionLabel: context.l10n.meshcoreAddContactButton,
+        actionIcon: Icons.person_add_rounded,
+        onAction: _showAddContactOptions,
+        accentColor: AccentColors.cyan,
       ),
     );
   }
@@ -425,11 +360,8 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
         ),
         child: Icon(icon, color: AccentColors.cyan),
       ),
-      title: Text(title, style: const TextStyle(color: Colors.white)),
-      subtitle: Text(
-        subtitle,
-        style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
-      ),
+      title: Text(title, style: TextStyle(color: context.textPrimary)),
+      subtitle: Text(subtitle, style: TextStyle(color: context.textSecondary)),
       onTap: onTap,
     );
   }
@@ -458,7 +390,7 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
   }
 
   void _showContactDetails(MeshCoreContact contact) {
-    AppBottomSheet.show(
+    AppBottomSheet.show<void>(
       context: context,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -466,22 +398,42 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
         children: [
           Text(
             contact.name,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: Colors.white,
+            style: TextStyle(
+              fontSize: 20,
               fontWeight: FontWeight.bold,
+              color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: AppTheme.spacing16),
-          _buildDetailRow('Type', contact.typeLabel),
-          _buildDetailRow('Path', contact.pathLabel),
-          _buildDetailRow('Public Key', contact.shortPubKeyHex),
-          if (contact.hasLocation)
-            _buildDetailRow(
-              'Location',
-              '${contact.latitude?.toStringAsFixed(4)}, '
-                  '${contact.longitude?.toStringAsFixed(4)}',
-            ),
-          const SizedBox(height: AppTheme.spacing16),
+          SizedBox(height: AppTheme.spacing16),
+          SectionTitle(title: context.l10n.meshcoreDeviceInfo),
+          InfoTable(
+            rows: [
+              InfoTableRow(
+                label: context.l10n.meshcoreChatInfoType,
+                value: contact.localizedTypeLabel(context.l10n),
+                icon: Icons.badge_outlined,
+              ),
+              InfoTableRow(
+                label: context.l10n.meshcoreChatInfoPath,
+                value: contact.localizedPathLabel(context.l10n),
+                icon: Icons.alt_route_outlined,
+              ),
+              InfoTableRow(
+                label: context.l10n.meshcorePublicKeySettingsLabel,
+                value: contact.publicKeyHex,
+                icon: Icons.key_outlined,
+              ),
+              if (contact.hasLocation)
+                InfoTableRow(
+                  label: context.l10n.meshcoreChatInfoLocation,
+                  value:
+                      '${contact.latitude?.toStringAsFixed(4)}, '
+                      '${contact.longitude?.toStringAsFixed(4)}',
+                  icon: Icons.place_outlined,
+                ),
+            ],
+          ),
+          SizedBox(height: AppTheme.spacing16),
           Row(
             children: [
               Expanded(
@@ -497,13 +449,9 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
                   },
                   icon: const Icon(Icons.chat_rounded),
                   label: Text(context.l10n.meshcoreMessageButton),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AccentColors.cyan.withValues(alpha: 0.3),
-                    foregroundColor: AccentColors.cyan,
-                  ),
                 ),
               ),
-              const SizedBox(width: AppTheme.spacing12),
+              SizedBox(width: AppTheme.spacing12),
               OutlinedButton.icon(
                 onPressed: () {
                   final code = generateContactCode(contact);
@@ -515,34 +463,8 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
                 },
                 icon: const Icon(Icons.share_rounded),
                 label: Text(context.l10n.meshcoreShare),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.white.withValues(alpha: 0.8),
-                  side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
-                ),
               ),
             ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
-          ),
-          Flexible(
-            child: Text(
-              value,
-              style: const TextStyle(color: Colors.white),
-              textAlign: TextAlign.end,
-            ),
           ),
         ],
       ),
@@ -676,18 +598,26 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
             maxLines: 3,
             decoration: InputDecoration(
               hintText: context.l10n.meshcorePasteContactCodeHint,
-              hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
+              hintStyle: TextStyle(color: SemanticColors.muted),
               filled: true,
-              fillColor: Colors.white.withValues(alpha: 0.05),
+              fillColor: context.background,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppTheme.radius12),
-                borderSide: BorderSide.none,
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
+                borderSide: BorderSide(color: context.border),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
+                borderSide: BorderSide(color: context.border),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
+                borderSide: BorderSide(color: context.accentColor),
               ),
               counterText: '',
             ),
-            style: const TextStyle(
-              color: Colors.white,
-              fontFamily: 'monospace',
+            style: TextStyle(
+              color: context.textPrimary,
+              fontFamily: AppTheme.fontFamily,
             ),
           ),
           const SizedBox(height: AppTheme.spacing24),
@@ -850,7 +780,7 @@ class _ContactCard extends StatelessWidget {
                         ),
                         const SizedBox(width: AppTheme.spacing4),
                         Text(
-                          contact.typeLabel,
+                          contact.localizedTypeLabel(context.l10n),
                           style: TextStyle(
                             color: context.textTertiary,
                             fontSize: 12,
@@ -864,7 +794,7 @@ class _ContactCard extends StatelessWidget {
                         ),
                         const SizedBox(width: AppTheme.spacing4),
                         Text(
-                          contact.pathLabel,
+                          contact.localizedPathLabel(context.l10n),
                           style: TextStyle(
                             color: context.textTertiary,
                             fontSize: 12,

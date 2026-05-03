@@ -17,8 +17,11 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/info_table.dart';
+import '../../../core/widgets/section_header.dart';
 import '../../../utils/snackbar.dart';
 import '../../../models/meshcore_contact.dart';
+import '../contact_l10n.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/meshcore_providers.dart';
 import '../../navigation/meshcore_shell.dart';
@@ -440,25 +443,21 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.link_off_rounded,
-              size: 64,
-              color: Colors.white.withValues(alpha: 0.4),
-            ),
+            Icon(Icons.link_off_rounded, size: 64, color: context.textTertiary),
             const SizedBox(height: AppTheme.spacing16),
             Text(
               context.l10n.meshcoreDisconnectedMapTitle,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: Colors.white.withValues(alpha: 0.8),
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(color: context.textPrimary),
             ),
             const SizedBox(height: AppTheme.spacing8),
             Text(
               context.l10n.meshcoreDisconnectedMapDescription,
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.white.withValues(alpha: 0.6),
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: context.textSecondary),
             ),
           ],
         ),
@@ -476,21 +475,21 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
             Icon(
               Icons.location_off_rounded,
               size: 64,
-              color: Colors.white.withValues(alpha: 0.4),
+              color: context.textTertiary,
             ),
             const SizedBox(height: AppTheme.spacing16),
             Text(
               context.l10n.meshcoreNoContactsWithLocation,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: Colors.white.withValues(alpha: 0.8),
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(color: context.textPrimary),
             ),
             const SizedBox(height: AppTheme.spacing8),
             Text(
               context.l10n.meshcoreNoContactsWithLocationDescription,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.white.withValues(alpha: 0.6),
+                color: context.textSecondary,
                 height: 1.5,
               ),
             ),
@@ -673,138 +672,106 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
   }
 
   void _showContactInfo(MeshCoreContact contact) {
-    showModalBottomSheet<void>(
+    AppBottomSheet.show<void>(
       context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        decoration: BoxDecoration(
-          color: context.card,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        padding: const EdgeInsets.all(AppTheme.spacing20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: _getContactColor(
-                      contact.type,
-                    ).withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(AppTheme.radius12),
-                  ),
-                  child: Icon(
-                    _getContactIcon(contact.type),
-                    color: _getContactColor(contact.type),
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: AppTheme.spacing12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        contact.name.isNotEmpty ? contact.name : 'Unknown',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: context.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: AppTheme.spacing4),
-                      Text(
-                        contact.typeLabel,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: context.textTertiary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.close, color: context.textTertiary),
-                  onPressed: () => Navigator.pop(ctx),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppTheme.spacing16),
-            // Location
-            _buildInfoRow(
-              'Location',
-              '${contact.latitude?.toStringAsFixed(5)}, ${contact.longitude?.toStringAsFixed(5)}',
-            ),
-            _buildInfoRow('Path', contact.pathLabel),
-            _buildInfoRow('Public Key', contact.shortPubKeyHex),
-            const SizedBox(height: AppTheme.spacing16),
-            // Actions
-            Row(
-              children: [
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: () {
-                      Navigator.pop(ctx);
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              MeshCoreChatScreen.contact(contact: contact),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.chat_rounded),
-                    label: Text(context.l10n.meshcoreMessageButton),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: context.accentColor.withValues(
-                        alpha: 0.3,
-                      ),
-                      foregroundColor: context.accentColor,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppTheme.spacing12),
-                OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(ctx);
-                    _centerOnContact(contact);
-                  },
-                  icon: const Icon(Icons.center_focus_strong),
-                  label: Text(context.l10n.meshcoreCenter),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: context.textSecondary,
-                    side: BorderSide(color: context.border),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: TextStyle(color: context.textTertiary, fontSize: 14),
+          // Header
+          Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: _getContactColor(contact.type).withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
+                ),
+                child: Icon(
+                  _getContactIcon(contact.type),
+                  color: _getContactColor(contact.type),
+                  size: 24,
+                ),
+              ),
+              SizedBox(width: AppTheme.spacing12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      contact.name.isNotEmpty
+                          ? contact.name
+                          : context.l10n.meshcoreUnknown,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: context.textPrimary,
+                      ),
+                    ),
+                    SizedBox(height: AppTheme.spacing4),
+                    Text(
+                      contact.localizedTypeLabel(context.l10n),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: context.textTertiary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          Flexible(
-            child: Text(
-              value,
-              style: TextStyle(color: context.textPrimary, fontSize: 14),
-              textAlign: TextAlign.end,
-              overflow: TextOverflow.ellipsis,
-            ),
+          SizedBox(height: AppTheme.spacing16),
+          SectionTitle(title: context.l10n.meshcoreDeviceInfo),
+          InfoTable(
+            rows: [
+              InfoTableRow(
+                label: context.l10n.meshcoreChatInfoLocation,
+                value:
+                    '${contact.latitude?.toStringAsFixed(5)}, ${contact.longitude?.toStringAsFixed(5)}',
+                icon: Icons.place_outlined,
+              ),
+              InfoTableRow(
+                label: context.l10n.meshcoreChatInfoPath,
+                value: contact.localizedPathLabel(context.l10n),
+                icon: Icons.alt_route_outlined,
+              ),
+              InfoTableRow(
+                label: context.l10n.meshcorePublicKeySettingsLabel,
+                value: contact.publicKeyHex,
+                icon: Icons.key_outlined,
+              ),
+            ],
+          ),
+          SizedBox(height: AppTheme.spacing16),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            MeshCoreChatScreen.contact(contact: contact),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.chat_rounded),
+                  label: Text(context.l10n.meshcoreMessageButton),
+                ),
+              ),
+              SizedBox(width: AppTheme.spacing12),
+              OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _centerOnContact(contact);
+                },
+                icon: const Icon(Icons.center_focus_strong),
+                label: Text(context.l10n.meshcoreCenter),
+              ),
+            ],
           ),
         ],
       ),
@@ -820,75 +787,67 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
   }
 
   void _showFilterDialog(BuildContext context) {
-    showModalBottomSheet<void>(
+    AppBottomSheet.show<void>(
       context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setSheetState) => Container(
-          decoration: BoxDecoration(
-            color: this.context.card,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          padding: const EdgeInsets.all(AppTheme.spacing20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                context.l10n.meshcoreFilterMap,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: this.context.textPrimary,
-                ),
+      child: StatefulBuilder(
+        builder: (ctx, setSheetState) => Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              context.l10n.meshcoreFilterMap,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: this.context.textPrimary,
               ),
-              const SizedBox(height: AppTheme.spacing16),
-              _buildFilterSwitch(
-                ctx,
-                setSheetState,
-                context.l10n.meshcoreFilterChatNodes,
-                Icons.person,
-                AccentColors.blue,
-                _showChatNodes,
-                (value) {
-                  setSheetState(() => _showChatNodes = value);
-                  setState(() {});
-                },
+            ),
+            SizedBox(height: AppTheme.spacing16),
+            _buildFilterSwitch(
+              ctx,
+              setSheetState,
+              context.l10n.meshcoreFilterChatNodes,
+              Icons.person,
+              AccentColors.blue,
+              _showChatNodes,
+              (value) {
+                setSheetState(() => _showChatNodes = value);
+                setState(() {});
+              },
+            ),
+            _buildFilterSwitch(
+              ctx,
+              setSheetState,
+              context.l10n.meshcoreFilterRepeaters,
+              Icons.cell_tower_rounded,
+              AppTheme.successGreen,
+              _showRepeaters,
+              (value) {
+                setSheetState(() => _showRepeaters = value);
+                setState(() {});
+              },
+            ),
+            _buildFilterSwitch(
+              ctx,
+              setSheetState,
+              context.l10n.meshcoreFilterOtherNodes,
+              Icons.device_unknown,
+              SemanticColors.disabled,
+              _showOtherNodes,
+              (value) {
+                setSheetState(() => _showOtherNodes = value);
+                setState(() {});
+              },
+            ),
+            SizedBox(height: AppTheme.spacing16),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(context.l10n.meshcoreDone),
               ),
-              _buildFilterSwitch(
-                ctx,
-                setSheetState,
-                context.l10n.meshcoreFilterRepeaters,
-                Icons.cell_tower_rounded,
-                AppTheme.successGreen,
-                _showRepeaters,
-                (value) {
-                  setSheetState(() => _showRepeaters = value);
-                  setState(() {});
-                },
-              ),
-              _buildFilterSwitch(
-                ctx,
-                setSheetState,
-                context.l10n.meshcoreFilterOtherNodes,
-                Icons.device_unknown,
-                SemanticColors.disabled,
-                _showOtherNodes,
-                (value) {
-                  setSheetState(() => _showOtherNodes = value);
-                  setState(() {});
-                },
-              ),
-              const SizedBox(height: AppTheme.spacing16),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: Text(context.l10n.meshcoreDone),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

@@ -8302,6 +8302,10 @@
   "@commonNever": {
     "description": "Label indicating an event has never occurred."
   },
+  "commonNo": "Não",
+  "@commonNo": {
+    "description": "Generic short label for a negative or absent state (e.g. an Active row showing No)."
+  },
   "commonNext": "Próximo",
   "@commonNext": {
     "description": "Label for a Next button."
@@ -8325,6 +8329,10 @@
   "commonSignIn": "Entrar",
   "@commonSignIn": {
     "description": "Text displayed in common UI"
+  },
+  "commonYes": "Sim",
+  "@commonYes": {
+    "description": "Generic short label for a positive or present state (e.g. an Active row showing Yes)."
   },
   "connectDevice": "Conectar dispositivo",
   "@connectDevice": {
@@ -18755,6 +18763,38 @@
   "@meshcoreChannelNameHintHashtag": {
     "description": "Hint text for hashtag channel name input"
   },
+  "meshcoreChannelsEmptyTagline1": "Canais são espaços compartilhados para comunicação em grupo",
+  "@meshcoreChannelsEmptyTagline1": {
+    "description": "Animated empty-state tagline shown when the channels list is empty"
+  },
+  "meshcoreChannelsEmptyTagline2": "Crie um canal privado ou junte-se a um canal por hashtag",
+  "@meshcoreChannelsEmptyTagline2": {
+    "description": "Animated empty-state tagline shown when the channels list is empty"
+  },
+  "meshcoreChannelsEmptyTagline3": "Canais são criptografados com uma chave compartilhada (PSK)",
+  "@meshcoreChannelsEmptyTagline3": {
+    "description": "Animated empty-state tagline shown when the channels list is empty"
+  },
+  "meshcoreChannelsEmptyTitleKeyword": "canais",
+  "@meshcoreChannelsEmptyTitleKeyword": {
+    "description": "Animated empty-state title keyword (gradient-animated word) for an empty channels list"
+  },
+  "meshcoreChannelsEmptyTitlePrefix": "Sem",
+  "@meshcoreChannelsEmptyTitlePrefix": {
+    "description": "Animated empty-state title prefix shown before the keyword for an empty channels list"
+  },
+  "meshcoreChannelsEmptyTitleSuffix": "ainda",
+  "@meshcoreChannelsEmptyTitleSuffix": {
+    "description": "Animated empty-state title suffix shown after the keyword for an empty channels list"
+  },
+  "meshcoreChannelInfoIndex": "Índice",
+  "@meshcoreChannelInfoIndex": {
+    "description": "Channel info row label for the channel slot index"
+  },
+  "meshcoreChannelInfoPsk": "PSK",
+  "@meshcoreChannelInfoPsk": {
+    "description": "Channel info row label for the channel pre-shared key"
+  },
   "meshcoreChannelNameLabel": "Nome do Canal",
   "@meshcoreChannelNameLabel": {
     "description": "Text field label for channel name input"
@@ -18782,6 +18822,46 @@
   "meshcoreChannelsTitle": "Canais",
   "@meshcoreChannelsTitle": {
     "description": "Channels screen title (with optional count suffix)"
+  },
+  "meshcoreChatEmptyTagline1": "Envie a primeira para começar uma conversa",
+  "@meshcoreChatEmptyTagline1": {
+    "description": "Animated empty-state tagline shown when a chat has no messages"
+  },
+  "meshcoreChatEmptyTagline2": "Mensagens viajam de mesh em mesh, sem Internet",
+  "@meshcoreChatEmptyTagline2": {
+    "description": "Animated empty-state tagline shown when a chat has no messages"
+  },
+  "meshcoreChatEmptyTagline3": "Toque abaixo para enviar seu primeiro pacote",
+  "@meshcoreChatEmptyTagline3": {
+    "description": "Animated empty-state tagline shown when a chat has no messages"
+  },
+  "meshcoreChatEmptyTitleKeyword": "mensagens",
+  "@meshcoreChatEmptyTitleKeyword": {
+    "description": "Animated empty-state title keyword (gradient-animated word) for an empty chat"
+  },
+  "meshcoreChatEmptyTitlePrefix": "Sem",
+  "@meshcoreChatEmptyTitlePrefix": {
+    "description": "Animated empty-state title prefix shown before the keyword for an empty chat"
+  },
+  "meshcoreChatEmptyTitleSuffix": "ainda",
+  "@meshcoreChatEmptyTitleSuffix": {
+    "description": "Animated empty-state title suffix shown after the keyword for an empty chat"
+  },
+  "meshcoreChatInfoLocation": "Localização",
+  "@meshcoreChatInfoLocation": {
+    "description": "Contact info row label for the geographic location (lat/lon)"
+  },
+  "meshcoreChatInfoLastSeen": "Visto pela Última Vez",
+  "@meshcoreChatInfoLastSeen": {
+    "description": "Contact info row label for the most recent advertisement timestamp"
+  },
+  "meshcoreChatInfoPath": "Caminho",
+  "@meshcoreChatInfoPath": {
+    "description": "Contact info row label for the routing path to the contact"
+  },
+  "meshcoreChatInfoType": "Tipo",
+  "@meshcoreChatInfoType": {
+    "description": "Contact info row label for the contact's advertisement type (chat/repeater/room/sensor)"
   },
   "meshcoreChatNode": "Nó de Chat",
   "@meshcoreChatNode": {
@@ -18910,6 +18990,30 @@
         "type": "String"
       }
     }
+  },
+  "meshcoreContactsEmptyTagline1": "Os contatos aparecem aqui quando descobertos por anúncios mesh",
+  "@meshcoreContactsEmptyTagline1": {
+    "description": "Animated empty-state tagline shown when the contacts list is empty"
+  },
+  "meshcoreContactsEmptyTagline2": "Adicione um manualmente com um código de contato ou leitura de QR",
+  "@meshcoreContactsEmptyTagline2": {
+    "description": "Animated empty-state tagline shown when the contacts list is empty"
+  },
+  "meshcoreContactsEmptyTagline3": "Puxe para atualizar do seu dispositivo",
+  "@meshcoreContactsEmptyTagline3": {
+    "description": "Animated empty-state tagline shown when the contacts list is empty"
+  },
+  "meshcoreContactsEmptyTitleKeyword": "contatos",
+  "@meshcoreContactsEmptyTitleKeyword": {
+    "description": "Animated empty-state title keyword (gradient-animated word) for an empty contacts list"
+  },
+  "meshcoreContactsEmptyTitlePrefix": "Sem",
+  "@meshcoreContactsEmptyTitlePrefix": {
+    "description": "Animated empty-state title prefix shown before the keyword for an empty contacts list"
+  },
+  "meshcoreContactsEmptyTitleSuffix": "ainda",
+  "@meshcoreContactsEmptyTitleSuffix": {
+    "description": "Animated empty-state title suffix shown after the keyword for an empty contacts list"
   },
   "meshcoreContactsLabel": "Contatos",
   "@meshcoreContactsLabel": {
@@ -19383,6 +19487,40 @@
   "@meshcorePasteChannelCodeHint": {
     "description": "Hint text for channel code input field"
   },
+  "meshcorePathDirect": "Direto",
+  "@meshcorePathDirect": {
+    "description": "Routing path label: directly reachable peer (zero hops)"
+  },
+  "meshcorePathDirectForced": "Direto (forçado)",
+  "@meshcorePathDirectForced": {
+    "description": "Routing path label: user-forced direct route (overrides auto-discovered path)"
+  },
+  "meshcorePathFlood": "Flood",
+  "@meshcorePathFlood": {
+    "description": "Routing path label: flood-routed (no specific path)"
+  },
+  "meshcorePathFloodForced": "Flood (forçado)",
+  "@meshcorePathFloodForced": {
+    "description": "Routing path label: user-forced flood route (overrides auto-discovered path)"
+  },
+  "meshcorePathHops": "{count} saltos",
+  "@meshcorePathHops": {
+    "description": "Routing path label: hop count for an auto-discovered direct route",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "meshcorePathHopsForced": "{count} saltos (forçado)",
+  "@meshcorePathHopsForced": {
+    "description": "Routing path label: user-forced hop count (overrides auto-discovered path)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "meshcorePasteContactCodeHint": "Cole o código de contato aqui...",
   "@meshcorePasteContactCodeHint": {
     "description": "Hint text for contact code input field"
@@ -19569,6 +19707,10 @@
     "description": "Device type label for room nodes"
   },
   "meshcoreSave": "Salvar",
+  "meshcoreSensorNode": "Nó Sensor",
+  "@meshcoreSensorNode": {
+    "description": "Device type label for sensor nodes"
+  },
   "@meshcoreSave": {
     "description": "Save button label"
   },
@@ -29889,6 +30031,9 @@
   "@scannerAutoReconnectDisabledTitle": {
     "description": "Title of the info banner shown when auto-reconnect is off."
   },
+  "scannerProtocolGroupMeshtastic": "Meshtastic",
+  "scannerProtocolGroupMeshcore": "MeshCore",
+  "scannerProtocolGroupOther": "Outros Dispositivos",
   "scannerAvailableDevices": "Dispositivos Disponíveis",
   "@scannerAvailableDevices": {
     "description": "Header label above the list of discovered BLE/USB devices."

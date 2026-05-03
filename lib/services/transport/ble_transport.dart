@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
+import '../../core/constants.dart';
 import '../../core/logging.dart';
 import '../../core/meshcore_constants.dart';
 import '../../core/transport.dart';
@@ -265,22 +266,25 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
 
         while (retryCount < maxRetries) {
           try {
-            // Build service filter list for logging
-            final serviceFilters = scanAll
-                ? <String>[]
-                : [_serviceUuid, MeshCoreBleUuids.serviceUuid];
+            // MESHCORE_ENABLED gates whether MeshCore radios appear
+            // alongside Meshtastic in the default (non "show all") list.
+            final meshCoreEnabled = AppFeatureFlags.isMeshCoreEnabled;
+            final defaultServiceFilters = <String>[
+              _serviceUuid,
+              if (meshCoreEnabled) MeshCoreBleUuids.serviceUuid,
+            ];
+            final serviceFilters = scanAll ? <String>[] : defaultServiceFilters;
             AppLogging.ble(
               '📡 BLE_TRANSPORT: Calling FlutterBluePlus.startScan() '
               '(attempt ${retryCount + 1}, scanAll=$scanAll, '
+              'meshCoreEnabled=$meshCoreEnabled, '
               'serviceFilters=${serviceFilters.isEmpty ? "NONE" : serviceFilters})...',
             );
-            // When scanAll is true, scan without service filter to see ALL devices
-            // When false, filter by Meshtastic AND MeshCore service UUIDs
             await FlutterBluePlus.startScan(
               timeout: scanDuration,
               withServices: scanAll
-                  ? []
-                  : [Guid(_serviceUuid), Guid(MeshCoreBleUuids.serviceUuid)],
+                  ? const <Guid>[]
+                  : defaultServiceFilters.map(Guid.new).toList(),
             );
             AppLogging.ble(
               '📡 BLE_TRANSPORT: startScan() completed successfully',

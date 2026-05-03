@@ -6,6 +6,7 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
 
+import '../../core/constants.dart';
 import '../../core/logging.dart';
 import '../../core/safety/error_handler.dart';
 import '../../core/safety/lifecycle_mixin.dart';
@@ -23,6 +24,7 @@ import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/ico_help_system.dart';
+import '../../core/widgets/section_header.dart';
 import '../../core/widgets/status_banner.dart';
 import '../../models/mesh_device.dart';
 import '../../services/meshcore/meshcore_detector.dart';
@@ -1034,22 +1036,48 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
   /// Build the list of devices to display in the scanner.
   ///
-  /// By default, only shows devices with recognized protocols (Meshtastic, MeshCore).
-  /// Unknown devices are only shown when "Show all BLE devices" dev mode is enabled.
+  /// By default, only shows devices with recognized protocols. MeshCore is
+  /// included alongside Meshtastic when `MESHCORE_ENABLED=true` in `.env`.
+  /// Unknown devices are only shown when "Show all BLE devices" dev mode
+  /// is enabled. Within the result, devices are grouped by protocol
+  /// (Meshtastic → MeshCore → unknown) and sorted by id within each
+  /// group so a new arrival or drop doesn't shuffle unrelated devices.
   List<DeviceInfo> _buildDisplayDevices({bool showAllDevices = false}) {
+    final meshCoreEnabled = AppFeatureFlags.isMeshCoreEnabled;
     List<DeviceInfo> devices;
 
     if (showAllDevices) {
       // Dev mode: show all scanned devices
       devices = [..._devices];
     } else {
-      // Normal mode: filter to only recognized protocols
       devices = _devices.where((device) {
         final protocol = device.detectProtocol().protocolType;
-        return protocol == MeshProtocolType.meshtastic;
-        //|| protocol == MeshProtocolType.meshcore;
+        if (protocol == MeshProtocolType.meshtastic) return true;
+        if (protocol == MeshProtocolType.meshcore && meshCoreEnabled) {
+          return true;
+        }
+        return false;
       }).toList();
     }
+
+    int protocolRank(MeshProtocolType p) {
+      switch (p) {
+        case MeshProtocolType.meshtastic:
+          return 0;
+        case MeshProtocolType.meshcore:
+          return 1;
+        case MeshProtocolType.unknown:
+          return 2;
+      }
+    }
+
+    devices.sort((a, b) {
+      final byProtocol = protocolRank(
+        a.detectProtocol().protocolType,
+      ).compareTo(protocolRank(b.detectProtocol().protocolType));
+      if (byProtocol != 0) return byProtocol;
+      return a.id.compareTo(b.id);
+    });
 
     // Add saved device placeholder if scanning and not found.
     //
@@ -1084,6 +1112,106 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       );
     }
     return devices;
+  }
+
+  String _protocolGroupLabel(BuildContext context, MeshProtocolType protocol) {
+    switch (protocol) {
+      case MeshProtocolType.meshtastic:
+        return context.l10n.scannerProtocolGroupMeshtastic;
+      case MeshProtocolType.meshcore:
+        return context.l10n.scannerProtocolGroupMeshcore;
+      case MeshProtocolType.unknown:
+        return context.l10n.scannerProtocolGroupOther;
+    }
+  }
+
+  /// Builds the per-protocol slivers — one pinned `SliverPersistentHeader`
+  /// (Nodes-screen-style sticky header) plus a `SliverList` of device
+  /// cards for each non-empty group. The saved-device placeholder
+  /// renders above all groups without a header.
+  List<Widget> _buildProtocolGroupSlivers({
+    required Map<MeshProtocolType, List<DeviceInfo>> grouped,
+    required DeviceInfo? placeholder,
+    required bool showAllDevices,
+  }) {
+    final slivers = <Widget>[];
+    if (placeholder != null) {
+      slivers.add(
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(
+            AppTheme.spacing16,
+            AppTheme.spacing12,
+            AppTheme.spacing16,
+            0,
+          ),
+          sliver: SliverToBoxAdapter(
+            child: _buildDeviceItem(placeholder, showAllDevices),
+          ),
+        ),
+      );
+    }
+    for (final protocol in const [
+      MeshProtocolType.meshtastic,
+      MeshProtocolType.meshcore,
+      MeshProtocolType.unknown,
+    ]) {
+      final devices = grouped[protocol];
+      if (devices == null || devices.isEmpty) continue;
+      slivers.add(
+        SliverPersistentHeader(
+          pinned: true,
+          delegate: SectionHeaderDelegate(
+            title: _protocolGroupLabel(context, protocol),
+            count: devices.length,
+          ),
+        ),
+      );
+      slivers.add(
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(
+            AppTheme.spacing16,
+            AppTheme.spacing12,
+            AppTheme.spacing16,
+            0,
+          ),
+          sliver: SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) =>
+                  _buildDeviceItem(devices[index], showAllDevices),
+              childCount: devices.length,
+            ),
+          ),
+        ),
+      );
+    }
+    return slivers;
+  }
+
+  Widget _buildDeviceItem(DeviceInfo device, bool showAllDevices) {
+    final detection = device.detectProtocol();
+    final isUnknown = detection.protocolType == MeshProtocolType.unknown;
+    return Column(
+      children: [
+        _DeviceCard(
+          device: device,
+          protocolType: detection.protocolType,
+          showDebugInfo: showAllDevices,
+          onTap: () {
+            if (isUnknown && !showAllDevices) return;
+            if (isUnknown) {
+              _showUnknownDeviceWarning(context, device, detection);
+            } else {
+              _connect(device);
+            }
+          },
+        ),
+        if (device.rssi != null)
+          _DeviceDetailsTable(
+            device: device,
+            showAdvertisementData: showAllDevices,
+          ),
+      ],
+    );
   }
 
   DeviceInfo? _savedDevicePlaceholder() {
@@ -1883,6 +2011,23 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       );
     }
 
+    final showAllBleDevices = ref.watch(showAllBleDevicesProvider);
+    final filteredDevices = _buildDisplayDevices(
+      showAllDevices: showAllBleDevices,
+    );
+    DeviceInfo? placeholder;
+    final groupedDevices = <MeshProtocolType, List<DeviceInfo>>{};
+    for (final device in filteredDevices) {
+      if (placeholder == null &&
+          device.id == _savedDeviceId &&
+          device.rssi == null) {
+        placeholder = device;
+        continue;
+      }
+      final protocol = device.detectProtocol().protocolType;
+      (groupedDevices[protocol] ??= <DeviceInfo>[]).add(device);
+    }
+
     return HelpTourController(
       topicId: 'device_connection',
       stepKeys: const {},
@@ -1959,7 +2104,12 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         ),
         slivers: [
           SliverPadding(
-            padding: const EdgeInsets.all(AppTheme.spacing16),
+            padding: const EdgeInsets.fromLTRB(
+              AppTheme.spacing16,
+              AppTheme.spacing16,
+              AppTheme.spacing16,
+              0,
+            ),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 // Info banner when saved device wasn't found
@@ -2243,18 +2393,39 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                         margin: const EdgeInsets.only(bottom: 16),
                         trailing: ThemedSwitch(
                           value: showAllDevices,
-                          onChanged: _scanning
-                              ? null
-                              : (value) async {
-                                  final storage = await ref.read(
-                                    settingsServiceProvider.future,
-                                  );
-                                  await storage.setShowAllBleDevices(value);
-                                  ref.invalidate(settingsServiceProvider);
-                                  if (mounted) {
-                                    _startScan();
-                                  }
-                                },
+                          onChanged: (value) async {
+                            final storage = await ref.read(
+                              settingsServiceProvider.future,
+                            );
+                            await storage.setShowAllBleDevices(value);
+                            ref.invalidate(settingsServiceProvider);
+                            if (!mounted) return;
+                            // Auto-rescan keeps `_scanning` true almost
+                            // continuously; stop the in-flight scan and
+                            // wait for its finally block before
+                            // restarting with the new filter.
+                            if (_scanning) {
+                              try {
+                                await FlutterBluePlus.stopScan();
+                              } catch (e) {
+                                AppLogging.connection(
+                                  '📡 SCANNER: stopScan on toggle error: $e',
+                                );
+                              }
+                              _rescanTimer?.cancel();
+                              for (
+                                var i = 0;
+                                i < 40 && _scanning && mounted;
+                                i++
+                              ) {
+                                await Future.delayed(
+                                  const Duration(milliseconds: 50),
+                                );
+                              }
+                              if (!mounted) return;
+                            }
+                            _startScan();
+                          },
                         ),
                       );
                     },
@@ -2334,47 +2505,68 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                 Consumer(
                   builder: (context, ref, child) {
                     final showAllDevices = ref.watch(showAllBleDevicesProvider);
-                    // Build filtered device list based on dev mode
                     final filteredDevices = _buildDisplayDevices(
                       showAllDevices: showAllDevices,
                     );
-                    return Column(
-                      children: filteredDevices.map((device) {
-                        final detection = device.detectProtocol();
-                        final isUnknown =
-                            detection.protocolType == MeshProtocolType.unknown;
-                        return Column(
-                          children: [
-                            _DeviceCard(
-                              device: device,
-                              protocolType: detection.protocolType,
-                              showDebugInfo: showAllDevices,
-                              onTap: () {
-                                // Allow unknown devices only in dev mode
-                                if (isUnknown && !showAllDevices) {
-                                  return;
-                                }
-                                if (isUnknown) {
-                                  // Show warning dialog for unknown devices
-                                  _showUnknownDeviceWarning(
-                                    context,
-                                    device,
-                                    detection,
-                                  );
-                                } else {
-                                  _connect(device);
-                                }
-                              },
+                    final children = <Widget>[];
+                    MeshProtocolType? prevProtocol;
+                    var firstHeaderEmitted = false;
+                    for (final device in filteredDevices) {
+                      final detection = device.detectProtocol();
+                      final protocol = detection.protocolType;
+                      final isUnknown = protocol == MeshProtocolType.unknown;
+                      // The saved-device placeholder is pinned at index 0
+                      // before sorting and has no advertisement (rssi
+                      // null). Render it without a section header so it
+                      // doesn't get mislabelled as "Other Devices" while
+                      // its real protocol is still unknown.
+                      final isPlaceholder =
+                          device.id == _savedDeviceId && device.rssi == null;
+                      if (!isPlaceholder && protocol != prevProtocol) {
+                        children.add(
+                          Padding(
+                            padding: EdgeInsets.only(
+                              top: firstHeaderEmitted ? AppTheme.spacing12 : 0,
                             ),
-                            if (device.rssi != null)
-                              _DeviceDetailsTable(
-                                device: device,
-                                showAdvertisementData: showAllDevices,
-                              ),
-                          ],
+                            child: SectionTitle(
+                              title: _protocolGroupLabel(context, protocol),
+                            ),
+                          ),
                         );
-                      }).toList(),
-                    );
+                        prevProtocol = protocol;
+                        firstHeaderEmitted = true;
+                      }
+                      children.add(
+                        _DeviceCard(
+                          device: device,
+                          protocolType: protocol,
+                          showDebugInfo: showAllDevices,
+                          onTap: () {
+                            if (isUnknown && !showAllDevices) {
+                              return;
+                            }
+                            if (isUnknown) {
+                              _showUnknownDeviceWarning(
+                                context,
+                                device,
+                                detection,
+                              );
+                            } else {
+                              _connect(device);
+                            }
+                          },
+                        ),
+                      );
+                      if (device.rssi != null) {
+                        children.add(
+                          _DeviceDetailsTable(
+                            device: device,
+                            showAdvertisementData: showAllDevices,
+                          ),
+                        );
+                      }
+                    }
+                    return Column(children: children);
                   },
                 ),
 
