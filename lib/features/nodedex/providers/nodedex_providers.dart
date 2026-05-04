@@ -53,6 +53,60 @@ import 'package:socialmesh/l10n/l10n_utils.dart';
 const Duration _kCoSeenRecentActivityWindow = Duration(minutes: 30);
 const double _kCoSeenMaxPlausibleDistanceMeters = 100000.0;
 
+/// Maximum age of a node's `lastHeard` before its update is treated as a
+/// device-DB sync replay rather than a live sighting. Updates older than
+/// this don't count as encounters, don't bump the activity histogram, and
+/// don't refresh radio observation metadata. Tuned to match the firmware's
+/// own freshness window and to absorb normal BLE/TCP backhaul latency.
+const Duration _kLiveSightingMaxAge = Duration(minutes: 2);
+
+/// Classification of how a node observation entered the NodeDex pipeline.
+///
+/// Encounters and activity stats only count [livePacket] sightings. Sync
+/// replays — whether the device's NodeDB after reconnect, a buffered
+/// MeshPacket whose `rxTime` is older than [_kLiveSightingMaxAge], or an
+/// `_init` seed pass — must update metadata only.
+///
+/// Derived from `node.lastHeard` age: the protocol layer maps incoming
+/// MeshPackets to the firmware's `packet.rxTime`, so a stale buffered
+/// packet replayed at reconnect surfaces here with an old timestamp.
+enum NodeIngestSource {
+  /// Genuinely live RF sighting — `lastHeard` is within
+  /// [_kLiveSightingMaxAge] of now. Counts as an encounter.
+  livePacket,
+
+  /// Replayed from the device's NodeDB or buffered packet queue at
+  /// reconnect. `lastHeard` reflects when the device originally received
+  /// the packet, which can be minutes to hours ago. Metadata-only.
+  deviceDbSync,
+
+  /// Bulk replay during NodeDex's `_init()` against `nodesProvider`'s
+  /// current snapshot. Always metadata-only regardless of age.
+  initSeed,
+
+  /// `lastHeard` is missing or invalid. Cannot decide freshness, so we
+  /// default to metadata-only and never inflate metrics.
+  unknown,
+}
+
+NodeIngestSource _classifyIngestSource(
+  MeshNode node,
+  DateTime now, {
+  required bool isInitSeed,
+}) {
+  if (isInitSeed) return NodeIngestSource.initSeed;
+  final lastHeard = node.lastHeard;
+  if (lastHeard == null) return NodeIngestSource.unknown;
+  final age = now.difference(lastHeard);
+  if (age.isNegative) {
+    // Future-dated lastHeard — distrust and treat as unknown rather than
+    // assuming live, since clock skew can fabricate "fresher than now".
+    return NodeIngestSource.unknown;
+  }
+  if (age <= _kLiveSightingMaxAge) return NodeIngestSource.livePacket;
+  return NodeIngestSource.deviceDbSync;
+}
+
 // =============================================================================
 // Storage Provider
 // =============================================================================
@@ -282,6 +336,13 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
   ///
   /// Creates new entries for newly discovered nodes and updates
   /// encounter records for re-seen nodes.
+  ///
+  /// Each node update is classified via [NodeIngestSource]:
+  /// - [NodeIngestSource.livePacket] → may record an encounter, refresh
+  ///   activity stats, and bump co-seen / region metadata.
+  /// - [NodeIngestSource.deviceDbSync] / [NodeIngestSource.initSeed] /
+  ///   [NodeIngestSource.unknown] → metadata-only. lastSeen/encounter
+  ///   counts/activity histograms are not inflated by reconnect replay.
   void _handleNodesUpdate(
     Map<int, MeshNode> previous,
     Map<int, MeshNode> current, {
@@ -292,6 +353,16 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
     final myNodeNum = ref.read(myNodeNumProvider);
     final updated = Map<int, NodeDexEntry>.from(state);
     var changed = false;
+
+    // Per-call counters for structured logging — surface how many node
+    // updates landed as live sightings vs. sync replay vs. unknown so
+    // production logs can confirm the bug-fix gate is firing.
+    var liveCount = 0;
+    var syncReplayCount = 0;
+    var unknownCount = 0;
+    var initSeedCount = 0;
+    var encountersRecorded = 0;
+    var encountersSkippedSyncReplay = 0;
 
     for (final entry in current.entries) {
       final nodeNum = entry.key;
@@ -311,6 +382,19 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
 
       final existing = updated[nodeNum];
       final now = clock.now();
+      final source = _classifyIngestSource(node, now, isInitSeed: seedOnly);
+
+      // Tally for the per-call summary log.
+      switch (source) {
+        case NodeIngestSource.livePacket:
+          liveCount++;
+        case NodeIngestSource.deviceDbSync:
+          syncReplayCount++;
+        case NodeIngestSource.initSeed:
+          initSeedCount++;
+        case NodeIngestSource.unknown:
+          unknownCount++;
+      }
 
       // Resolve a meaningful display name from the live node data.
       // Only cache non-hex names (longName/shortName set by the user
@@ -320,18 +404,27 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
       if (existing == null) {
         // New discovery: create a fresh NodeDex entry.
         final sigil = SigilGenerator.generate(nodeNum);
-        // Only attach the local radio's current preset/frequency offset when
-        // the node is actually freshly heard. Stale entries from the device's
-        // NodeDB (heard hours or days ago on some other preset) must not be
-        // tagged with whatever preset the radio happens to be on right now.
-        final freshlyHeard = !isOwnNode && _isRecentCoSeenActivity(node, now);
-        final currentPreset = freshlyHeard ? _resolveCurrentPreset() : null;
-        final currentFreqOffset = freshlyHeard
+        // Only attach the local radio's current preset/frequency offset
+        // when the node is actually freshly heard. Stale entries from the
+        // device's NodeDB (heard hours or days ago on some other preset)
+        // must not be tagged with whatever preset the radio happens to be
+        // on right now.
+        final isLive = !isOwnNode && source == NodeIngestSource.livePacket;
+        final currentPreset = isLive ? _resolveCurrentPreset() : null;
+        final currentFreqOffset = isLive
             ? _resolveCurrentFrequencyOffset()
             : null;
+        // Discovery timestamp prefers the device's authoritative
+        // firstHeard, falling back to the node's lastHeard (which the
+        // protocol layer derives from `packet.rxTime`), and only finally
+        // to `now`. Important during reconnect: a node that the device
+        // first heard 2 hours ago should not be stamped as "discovered
+        // just now" simply because the phone learned about it on this
+        // sync.
+        final discoveryTimestamp = node.firstHeard ?? node.lastHeard ?? now;
         final newEntry = NodeDexEntry.discovered(
           nodeNum: nodeNum,
-          timestamp: node.firstHeard ?? now,
+          timestamp: discoveryTimestamp,
           distance: isOwnNode ? null : node.distance,
           snr: isOwnNode ? null : node.snr,
           rssi: isOwnNode ? null : node.rssi,
@@ -346,12 +439,12 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
           lastKnownFirmware: node.firmwareVersion,
         );
 
-        // Add region if we can determine one.
-        final withRegion = _addRegionFromNode(
-          newEntry,
-          node,
-          timestamp: node.firstHeard ?? now,
-        );
+        // Add region only when this is a live sighting; a discovered-
+        // from-sync node should not anchor a region pin at a location
+        // the user wasn't actually at.
+        final withRegion = isLive
+            ? _addRegionFromNode(newEntry, node, timestamp: discoveryTimestamp)
+            : newEntry;
         updated[nodeNum] = withRegion;
 
         // Only track encounters and co-seen for nodes that are
@@ -368,6 +461,8 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
         AppLogging.nodeDex(
           '${isOwnNode ? "Own device added" : "New discovery"}: '
           '$hexId (${node.displayName}), '
+          'source: ${source.name}, '
+          'lastHeard: ${node.lastHeard?.toIso8601String() ?? "null"}, '
           'SNR: ${node.snr ?? "n/a"}, '
           'distance: ${node.distance != null ? "${node.distance!.round()}m" : "n/a"}',
         );
@@ -399,24 +494,21 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
         }
       } else {
         // Existing node: check if we should record a new encounter.
-        // Gate on the node being genuinely heard recently — stale
-        // entries from the device's node database should not get
-        // new encounters or update co-seen relationship timestamps.
-        final isRecentlyHeard = PresenceCalculator.isOnline(
-          node.lastHeard,
-          now: now,
-        );
+        // Encounters require a live sighting — a sync-replay update with
+        // a stale `node.lastHeard` (the device replayed a packet it
+        // received hours ago) must not count as a fresh encounter.
         // A packet was genuinely heard since our last tick only when the
         // device's lastHeard has advanced. Without this, a nodesProvider
-        // refresh (e.g. triggered by a local config change such as a preset
-        // switch) would re-record encounters for every online-window node
-        // and smear the new preset across nodes that were actually heard on
-        // the previous one.
+        // refresh (e.g. triggered by a local config change such as a
+        // preset switch) would re-record encounters for every online-
+        // window node and smear the new preset across nodes that were
+        // actually heard on the previous one.
         final prevLastHeard = previous[nodeNum]?.lastHeard;
         final hasFreshLastHeard =
             node.lastHeard != null &&
             (prevLastHeard == null || node.lastHeard!.isAfter(prevLastHeard));
         final lastEncounter = _lastEncounterTime[nodeNum];
+        final isLive = source == NodeIngestSource.livePacket;
         // isOwnNode is checked again here (in addition to the new-discovery
         // branch above) so a reconnect or nodesProvider refresh that surfaces
         // the local node with an advanced lastHeard cannot record a fake
@@ -424,7 +516,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
         final shouldRecord =
             !seedOnly &&
             !isOwnNode &&
-            isRecentlyHeard &&
+            isLive &&
             hasFreshLastHeard &&
             (lastEncounter == null ||
                 now.difference(lastEncounter) >= _encounterCooldown);
@@ -432,8 +524,14 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
         if (shouldRecord) {
           final currentPreset = _resolveCurrentPreset();
           final currentFreqOffset = _resolveCurrentFrequencyOffset();
+          // Encounter timestamp tracks when the node was actually heard
+          // (the firmware-stamped `node.lastHeard`), not when the phone
+          // processed the update. This keeps the activity histogram and
+          // recent-activity bucket aligned with reality even when there
+          // is a small delay between receipt and ingestion.
+          final encounterTimestamp = node.lastHeard ?? now;
           var updatedEntry = existing.recordEncounter(
-            timestamp: now,
+            timestamp: encounterTimestamp,
             distance: node.distance,
             snr: node.snr,
             rssi: node.rssi,
@@ -459,7 +557,11 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
           updatedEntry = _updateDeviceInfo(updatedEntry, node);
 
           // Update region data.
-          updatedEntry = _addRegionFromNode(updatedEntry, node, timestamp: now);
+          updatedEntry = _addRegionFromNode(
+            updatedEntry,
+            node,
+            timestamp: encounterTimestamp,
+          );
 
           updated[nodeNum] = updatedEntry;
           _lastEncounterTime[nodeNum] = now;
@@ -467,15 +569,29 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
             _sessionSeenNodes.add(nodeNum);
           }
           changed = true;
+          encountersRecorded++;
 
           final hexId =
               '!${nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}';
           AppLogging.nodeDex(
             'Encounter recorded: $hexId, '
+            'source: ${source.name}, '
             'total encounters: ${updatedEntry.encounterCount}, '
+            'lastHeard: ${node.lastHeard?.toIso8601String() ?? "null"}, '
             'SNR: ${node.snr ?? "n/a"}, RSSI: ${node.rssi ?? "n/a"}',
           );
         } else {
+          if (!isOwnNode &&
+              !seedOnly &&
+              !isLive &&
+              hasFreshLastHeard &&
+              source == NodeIngestSource.deviceDbSync) {
+            // The node update advanced its lastHeard but the new
+            // timestamp is still old enough to be classified as sync
+            // replay. Track it for the per-call summary log so it's
+            // visible how many encounters the gate suppressed.
+            encountersSkippedSyncReplay++;
+          }
           // Node didn't qualify for a new encounter (stale or within
           // cooldown), but we should still refresh cached metadata
           // from the live node data. Metadata updates don't inflate
@@ -536,6 +652,27 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
           'session seen: ${_sessionSeenNodes.length}',
         );
       }
+    }
+
+    // Per-call ingest summary. Surfaces whether reconnect replay is
+    // being correctly classified as deviceDbSync and shows how many
+    // encounters were suppressed because of it. Suppress when nothing
+    // would be informative to keep production logs quiet.
+    final totalProcessed =
+        liveCount + syncReplayCount + initSeedCount + unknownCount;
+    if (totalProcessed > 0 &&
+        (syncReplayCount > 0 ||
+            unknownCount > 0 ||
+            encountersRecorded > 0 ||
+            encountersSkippedSyncReplay > 0)) {
+      AppLogging.nodeDex(
+        'NodesIngest summary: total=$totalProcessed '
+        'live=$liveCount syncReplay=$syncReplayCount '
+        'initSeed=$initSeedCount unknown=$unknownCount '
+        'encountersRecorded=$encountersRecorded '
+        'encountersSkippedSyncReplay=$encountersSkippedSyncReplay '
+        'seedOnly=$seedOnly',
+      );
     }
   }
 

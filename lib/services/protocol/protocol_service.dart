@@ -2407,6 +2407,10 @@ class ProtocolService {
     // MQTT badge stay current as mesh topology changes.
     _updateNodeLastHeard(
       packet.from,
+      lastHeard: _resolvePacketLastHeard(
+        packet,
+        existing: _nodes[packet.from]?.lastHeard,
+      ),
       rxRssi: packet.hasRxRssi() ? packet.rxRssi : null,
       rxSnr: packet.hasRxSnr() ? packet.rxSnr.toInt() : null,
       hopCount: _computeHopCount(packet),
@@ -3184,7 +3188,10 @@ class ProtocolService {
         if (existingNode != null) {
           final updatedNode = existingNode.copyWith(
             nodeStatus: status,
-            lastHeard: DateTime.now(),
+            lastHeard: _resolvePacketLastHeard(
+              packet,
+              existing: existingNode.lastHeard,
+            ),
           );
           _nodes[packet.from] = updatedNode;
           _nodeController.add(updatedNode);
@@ -3193,7 +3200,7 @@ class ProtocolService {
           final newNode = MeshNode(
             nodeNum: packet.from,
             nodeStatus: status,
-            lastHeard: DateTime.now(),
+            lastHeard: _resolvePacketLastHeard(packet),
           );
           _nodes[packet.from] = newNode;
           _nodeController.add(newNode);
@@ -3605,7 +3612,10 @@ class ProtocolService {
             publicKey: user.publicKey.isNotEmpty
                 ? List<int>.unmodifiable(user.publicKey)
                 : existingNode.publicKey,
-            lastHeard: DateTime.now(),
+            lastHeard: _resolvePacketLastHeard(
+              packet,
+              existing: existingNode.lastHeard,
+            ),
           );
           _nodes[packet.from] = updatedNode;
           _nodeController.add(updatedNode);
@@ -3645,7 +3655,7 @@ class ProtocolService {
             publicKey: user.publicKey.isNotEmpty
                 ? List<int>.unmodifiable(user.publicKey)
                 : null,
-            lastHeard: DateTime.now(),
+            lastHeard: _resolvePacketLastHeard(packet),
             avatarColor: avatarColor,
             isFavorite: false,
           );
@@ -3858,10 +3868,11 @@ class ProtocolService {
         AppLogging.protocol(
           'Creating placeholder node for unknown sender ${packet.from}',
         );
+        final placeholderLastHeard = _resolvePacketLastHeard(packet);
         final placeholderNode = MeshNode(
           nodeNum: packet.from,
-          lastHeard: DateTime.now(),
-          firstHeard: DateTime.now(),
+          lastHeard: placeholderLastHeard,
+          firstHeard: placeholderLastHeard,
           rssi: packet.hasRxRssi() ? packet.rxRssi : null,
           snr: packet.hasRxSnr() ? packet.rxSnr.toInt() : null,
           hopCount: _computeHopCount(packet),
@@ -4060,7 +4071,10 @@ class ProtocolService {
               channelUtilization: channelUtil,
               airUtilTx: airUtilTx,
               uptimeSeconds: uptimeSeconds,
-              lastHeard: DateTime.now(),
+              lastHeard: _resolvePacketLastHeard(
+                packet,
+                existing: existingDeviceNode.lastHeard,
+              ),
             );
             _nodes[packet.from] = updatedDeviceNode;
             _nodeController.add(updatedDeviceNode);
@@ -4139,7 +4153,10 @@ class ProtocolService {
               envVoltage: envMetrics.hasVoltage()
                   ? envMetrics.voltage.toDouble()
                   : null,
-              lastHeard: DateTime.now(),
+              lastHeard: _resolvePacketLastHeard(
+                packet,
+                existing: existingEnvNode.lastHeard,
+              ),
             );
             _nodes[packet.from] = updatedEnvNode;
             _nodeController.add(updatedEnvNode);
@@ -4196,7 +4213,10 @@ class ProtocolService {
                   ? aqMetrics.particles100um
                   : null,
               co2: aqMetrics.hasCo2() ? aqMetrics.co2 : null,
-              lastHeard: DateTime.now(),
+              lastHeard: _resolvePacketLastHeard(
+                packet,
+                existing: existingAqNode.lastHeard,
+              ),
             );
             _nodes[packet.from] = updatedAqNode;
             _nodeController.add(updatedAqNode);
@@ -4235,7 +4255,10 @@ class ProtocolService {
               ch3Current: pwrMetrics.hasCh3Current()
                   ? pwrMetrics.ch3Current.toDouble()
                   : null,
-              lastHeard: DateTime.now(),
+              lastHeard: _resolvePacketLastHeard(
+                packet,
+                existing: existingPwrNode.lastHeard,
+              ),
             );
             _nodes[packet.from] = updatedPwrNode;
             _nodeController.add(updatedPwrNode);
@@ -4282,7 +4305,10 @@ class ProtocolService {
                   : null,
               numTxDropped: stats.hasNumTxDropped() ? stats.numTxDropped : null,
               noiseFloor: stats.hasNoiseFloor() ? stats.noiseFloor : null,
-              lastHeard: DateTime.now(),
+              lastHeard: _resolvePacketLastHeard(
+                packet,
+                existing: existingStatsNode.lastHeard,
+              ),
             );
             _nodes[packet.from] = updatedStatsNode;
             _nodeController.add(updatedStatsNode);
@@ -4339,7 +4365,10 @@ class ProtocolService {
               tmRouterHopsPreserved: stats.hasRouterHopsPreserved()
                   ? stats.routerHopsPreserved
                   : null,
-              lastHeard: DateTime.now(),
+              lastHeard: _resolvePacketLastHeard(
+                packet,
+                existing: tmNode.lastHeard,
+              ),
             );
             _nodes[packet.from] = updatedTmNode;
             _nodeController.add(updatedTmNode);
@@ -4380,6 +4409,7 @@ class ProtocolService {
         ];
         final avatarColor = colors[packet.from % colors.length];
 
+        final telemetryLastHeard = _resolvePacketLastHeard(packet);
         final newNode = MeshNode(
           nodeNum: packet.from,
           batteryLevel: batteryLevel,
@@ -4387,8 +4417,8 @@ class ProtocolService {
           channelUtilization: channelUtil,
           airUtilTx: airUtilTx,
           uptimeSeconds: uptimeSeconds,
-          lastHeard: DateTime.now(),
-          firstHeard: DateTime.now(),
+          lastHeard: telemetryLastHeard,
+          firstHeard: telemetryLastHeard,
           rssi: packet.hasRxRssi() ? packet.rxRssi : null,
           snr: packet.hasRxSnr() ? packet.rxSnr.toInt() : null,
           hopCount: _computeHopCount(packet),
@@ -4486,7 +4516,7 @@ class ProtocolService {
           latitude: position.latitudeI / 1e7,
           longitude: position.longitudeI / 1e7,
           altitude: position.hasAltitude() ? position.altitude : node.altitude,
-          lastHeard: DateTime.now(),
+          lastHeard: _resolvePacketLastHeard(packet, existing: node.lastHeard),
           positionTimestamp: posTime,
           // GPS extended fields
           satsInView: position.hasSatsInView()
@@ -4512,7 +4542,9 @@ class ProtocolService {
         );
       } else if (node != null) {
         // Update lastHeard even if position is invalid
-        final updatedNode = node.copyWith(lastHeard: DateTime.now());
+        final updatedNode = node.copyWith(
+          lastHeard: _resolvePacketLastHeard(packet, existing: node.lastHeard),
+        );
         _nodes[packet.from] = updatedNode;
         _nodeController.add(updatedNode);
       } else if (hasValidPosition) {
@@ -4545,8 +4577,8 @@ class ProtocolService {
           altitude: position.hasAltitude() ? position.altitude : null,
           rssi: packet.hasRxRssi() ? packet.rxRssi : null,
           snr: packet.hasRxSnr() ? packet.rxSnr.toInt() : null,
-          lastHeard: DateTime.now(),
-          firstHeard: DateTime.now(),
+          lastHeard: _resolvePacketLastHeard(packet),
+          firstHeard: _resolvePacketLastHeard(packet),
           hopCount: _computeHopCount(packet),
           viaMqtt: packet.hasViaMqtt() ? packet.viaMqtt : false,
           avatarColor: avatarColor,
@@ -4637,6 +4669,10 @@ class ProtocolService {
           ? NodeDisplayNameResolver.sanitizeName(existingNode.shortName)
           : null;
 
+      final updatedLastHeard = _resolvePacketLastHeard(
+        packet,
+        existing: existingNode?.lastHeard,
+      );
       final updatedNode =
           existingNode?.copyWith(
             longName: resolvedLongName,
@@ -4651,7 +4687,7 @@ class ProtocolService {
                 : existingNode.hwModelId,
             role: role,
             snr: packet.hasRxSnr() ? packet.rxSnr.toInt() : existingNode.snr,
-            lastHeard: DateTime.now(),
+            lastHeard: updatedLastHeard,
           ) ??
           MeshNode(
             nodeNum: packet.from,
@@ -4666,8 +4702,8 @@ class ProtocolService {
             role: role,
             rssi: packet.hasRxRssi() ? packet.rxRssi : null,
             snr: packet.hasRxSnr() ? packet.rxSnr.toInt() : null,
-            lastHeard: DateTime.now(),
-            firstHeard: DateTime.now(),
+            lastHeard: updatedLastHeard,
+            firstHeard: updatedLastHeard,
             hopCount: _computeHopCount(packet),
             viaMqtt: packet.hasViaMqtt() ? packet.viaMqtt : false,
             avatarColor: avatarColor,
@@ -4701,8 +4737,17 @@ class ProtocolService {
   /// [hopCount] is derived from hopStart - hopLimit on the packet.
   /// [viaMqtt] indicates whether the packet traversed MQTT transport.
   /// Both are null-safe: null means "no update", preserving existing values.
+  ///
+  /// [lastHeard] is the firmware's authoritative receive time (from
+  /// `packet.rxTime`, validated through [_plausibleTimestamp]). Passing
+  /// the device timestamp instead of `DateTime.now()` is the difference
+  /// between live packets and replayed buffered packets after a reconnect:
+  /// a packet the device received 30 minutes ago must keep its true age.
+  /// A monotonic guard inside this method prevents a stale buffered
+  /// packet from moving the stored lastHeard backwards.
   void _updateNodeLastHeard(
     int nodeNum, {
+    required DateTime lastHeard,
     int? rxRssi,
     int? rxSnr,
     int? hopCount,
@@ -4710,8 +4755,14 @@ class ProtocolService {
   }) {
     final node = _nodes[nodeNum];
     if (node != null) {
+      final resolvedLastHeard = _monotonicLastHeard(
+        node.lastHeard,
+        lastHeard,
+        nodeNum: nodeNum,
+        source: 'mesh_packet',
+      );
       final updatedNode = node.copyWith(
-        lastHeard: DateTime.now(),
+        lastHeard: resolvedLastHeard,
         rssi: rxRssi ?? node.rssi,
         snr: rxSnr ?? node.snr,
         hopCount: hopCount ?? node.hopCount,
@@ -4720,6 +4771,91 @@ class ProtocolService {
       _nodes[nodeNum] = updatedNode;
       _nodeController.add(updatedNode);
     }
+  }
+
+  /// Resolve the lastHeard timestamp for an inbound mesh packet, applying
+  /// the firmware's `rxTime` plus a monotonic guard against [existing].
+  ///
+  /// Use this anywhere a MeshPacket handler updates a node's lastHeard.
+  /// Falls back to `DateTime.now()` only when the firmware lacks a clock
+  /// (`rxTime == 0` or implausible drift). When a stale buffered packet
+  /// reports an rxTime older than the existing lastHeard, the existing
+  /// value is preserved so reconnect replay cannot rewind a node's age.
+  DateTime _resolvePacketLastHeard(pb.MeshPacket packet, {DateTime? existing}) {
+    final fromPacket = _plausibleTimestamp(packet);
+    return _monotonicLastHeard(
+      existing,
+      fromPacket,
+      nodeNum: packet.from,
+      source: 'packet_rxtime',
+    );
+  }
+
+  /// Pick the newer of two candidate lastHeard timestamps.
+  ///
+  /// When [incoming] would move the stored value backwards (i.e. older
+  /// than [existing]), [existing] wins. Logs the rejection through
+  /// [_recordReplayObservation] so production logs surface how often
+  /// reconnect replay is being filtered without spamming on every packet.
+  DateTime _monotonicLastHeard(
+    DateTime? existing,
+    DateTime incoming, {
+    required int nodeNum,
+    required String source,
+  }) {
+    if (existing == null) return incoming;
+    if (existing.isAfter(incoming)) {
+      _recordReplayObservation(
+        nodeNum: nodeNum,
+        existing: existing,
+        incoming: incoming,
+        source: source,
+        outcome: 'monotonic_skip',
+      );
+      return existing;
+    }
+    final ageSeconds = DateTime.now().difference(incoming).inSeconds;
+    if (ageSeconds >= _replayLogThresholdSeconds) {
+      _recordReplayObservation(
+        nodeNum: nodeNum,
+        existing: existing,
+        incoming: incoming,
+        source: source,
+        outcome: 'replayed',
+      );
+    }
+    return incoming;
+  }
+
+  /// Threshold (seconds) above which an inbound packet's rxTime is
+  /// considered "replayed/buffered" rather than live. Tuned to suppress
+  /// per-packet noise from clock skew while still flagging the reconnect
+  /// replay window.
+  static const int _replayLogThresholdSeconds = 60;
+
+  /// Per-node dedupe of replay-observation logs so a flood of buffered
+  /// packets after reconnect produces one log entry per node, not one
+  /// per packet. Bounded by the number of distinct nodes seen.
+  final Map<int, DateTime> _lastReplayLogAt = {};
+
+  void _recordReplayObservation({
+    required int nodeNum,
+    required DateTime? existing,
+    required DateTime incoming,
+    required String source,
+    required String outcome,
+  }) {
+    final now = DateTime.now();
+    final last = _lastReplayLogAt[nodeNum];
+    if (last != null && now.difference(last).inSeconds < 30) return;
+    _lastReplayLogAt[nodeNum] = now;
+    AppLogging.protocol(
+      'NodeReplay nodeNum=${nodeNum.toRadixString(16)} '
+      'source=$source outcome=$outcome '
+      'existing=${existing?.toIso8601String() ?? 'null'} '
+      'incoming=${incoming.toIso8601String()} '
+      'incomingAgeSeconds=${now.difference(incoming).inSeconds}',
+    );
   }
 
   /// Handle my node info
